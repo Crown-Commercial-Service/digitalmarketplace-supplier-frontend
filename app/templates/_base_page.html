@@ -1,0 +1,23 @@
+{% extends "govuk_template.html" %}
+
+{% block head %}
+{% include "_stylesheets.html" %}
+{% endblock %}
+
+{% block cookie_message %}
+{% include "_cookie_message.html" %}
+{% endblock %}
+
+{% block header_class %}with-proposition{% endblock %}
+
+{% block proposition_header %}
+{% include "_proposition_header.html" %}
+{% endblock %}
+
+{% block footer_top %}
+{% include "_footer_categories.html" %}
+{% endblock %}
+
+{% block body_end %}
+{% include "_javascripts.html" %}
+{% endblock %}

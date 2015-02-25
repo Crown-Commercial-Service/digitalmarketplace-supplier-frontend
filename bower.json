@@ -1,0 +1,9 @@
+{
+  "name": "digitalmarketplace-supplier-frontend",
+  "version": "0.0.1",
+  "dependencies": {
+    "jquery": "1.11.2",
+    "digitalmarketplace-frontend-toolkit": "git://github.com/alphagov/digitalmarketplace-frontend-toolkit#v1.1.0",
+    "govuk_template": "https://github.com/alphagov/govuk_template/releases/download/v0.12.0/jinja_govuk_template-0.12.0.tgz"
+  }
+}

@@ -1,0 +1,24 @@
+{% extends "_base_page.html" %}
+
+{% block content %}
+
+{% if service_data %}
+<!-- Font color used here just to make Tom and Chris happy :) -->
+<h1>List services for <font color="DarkGreen">{{ service_data[0]['supplierName'] }}</font></h1>
+<ol>
+    {% for service in service_data %}
+<li><h2>
+    <a href="/viewservice?service_id={{ service['id'] }}" alt="View this service">
+        {{ service['serviceName'] }}</a> (Service ID: {{ service['id'] }})
+    </h2></li>
+    {% endfor %}
+</ol>    
+
+{% else %}
+<h2>Error: No service data.</h2>
+{% endif %}
+
+<p>
+    <a href="/" alt="Back to home">Back to supplier home page</a>
+</p>
+{% endblock %}
