@@ -1,3 +1,7 @@
+venv/
+.idea/
+*.iml
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -52,3 +56,11 @@ docs/_build/
 
 # PyBuilder
 target/
+
+# Front end dependencies
+node_modules
+bower_components
+npm-debug.log
+
+# Front end generated assets
+app/static
