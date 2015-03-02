@@ -58,4 +58,4 @@ Do the (temporary) gulp thing
 python application.py runserver
 ```
 
-Use the app at [http://127.0.0.1:5000/](http://127.0.0.1:5000/)
+The supplier frontend runs on port 5003. Use the app at [http://127.0.0.1:5003/](http://127.0.0.1:5003/)
