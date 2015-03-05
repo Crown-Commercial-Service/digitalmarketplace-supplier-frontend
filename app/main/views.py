@@ -4,6 +4,17 @@ from . import main
 from flask import json, render_template, Response, request
 
 
+api_url = os.getenv('DM_API_URL')
+api_access_token = os.getenv('DM_SUPPLIER_FRONTEND_API_AUTH_TOKEN')
+
+if api_access_token is None:
+    print('Token must be supplied in DM_SUPPLIER_FRONTEND_API_AUTH_TOKEN')
+    raise Exception("DM_SUPPLIER_FRONTEND_API_AUTH_TOKEN token is not set")
+if api_url is None:
+    print('API URL must be supplied in DM_API_URL')
+    raise Exception("DM_API_URL is not set")
+
+
 @main.route('/')
 def index():
     template_data = main.config['BASE_TEMPLATE_DATA']
@@ -23,21 +34,6 @@ def list_services():
         return Response("No services for supplier '%s'" % supplier_id, 404)
 
 
-def get_services_json_for_supplier(supplier_id):
-    access_token = os.getenv('DM_API_BEARER')
-    if access_token is None:
-        print('Bearer token must be supplied in DM_API_BEARER')
-        raise Exception("DM_API_BEARER token is not set")
-    url = os.getenv('DM_API_URL') + "/services?supplier_id=" + supplier_id
-    response = requests.get(
-        url,
-        headers={
-            "authorization": "Bearer {}".format(access_token)
-        }
-    )
-    return response.content
-
-
 @main.route('/viewservice')
 def get_service_by_id():
     try:
@@ -49,15 +45,24 @@ def get_service_by_id():
 
 
 def get_service_json(service_id):
-    access_token = os.getenv('DM_API_BEARER')
-    if access_token is None:
-        print('Bearer token must be supplied in DM_API_BEARER')
-        raise Exception("DM_API_BEARER token is not set")
-    url = os.getenv('DM_API_URL') + "/services/" + service_id
+    url = api_url + "/services/" + service_id
     response = requests.get(
         url,
         headers={
-            "authorization": "Bearer {}".format(access_token)
+            "authorization": "Bearer {}".format(api_access_token)
+        }
+    )
+    return response.content
+
+
+def get_services_json_for_supplier(supplier_id):
+    url = api_url + "/services"
+    payload = {"supplier_id": supplier_id}
+    response = requests.get(
+        url,
+        params=payload,
+        headers={
+            "authorization": "Bearer {}".format(api_access_token)
         }
     )
     return response.content

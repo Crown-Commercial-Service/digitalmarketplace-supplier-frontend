@@ -22,7 +22,7 @@ Set the required environment variables (for dev use local API instance if you
 have it running):
 ```
 export DM_API_URL=http://localhost:5000
-export DM_API_BEARER=<bearer_token>
+export DM_SUPPLIER_FRONTEND_API_AUTH_TOKEN=<auth_token>
 ```
 
 ### Activate the virtual environment
