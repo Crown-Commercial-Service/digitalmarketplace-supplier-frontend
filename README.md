@@ -59,7 +59,7 @@ script, which sets the required environment variables to defaults if they have
 not already been set:
 
 ```
-./run_app.sh
+./scripts/run_app.sh
 ```
 
 More generally, the command to start the server is:
