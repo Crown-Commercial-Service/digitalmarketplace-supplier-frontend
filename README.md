@@ -21,8 +21,8 @@ Create a virtual environment
 Set the required environment variables (for dev use local API instance if you 
 have it running):
 ```
-export DM_API_URL=https://api.digitalmarketplace.service.gov.uk
-export DM_API_BEARER=<bearer_token>
+export DM_API_URL=http://localhost:5000
+export DM_SUPPLIER_FRONTEND_API_AUTH_TOKEN=<auth_token>
 ```
 
 ### Activate the virtual environment
@@ -53,6 +53,16 @@ Do the (temporary) gulp thing
 
 
 ### Run the server
+
+To run the Supplier Frontend App for local development you can use the convenient run
+script, which sets the required environment variables to defaults if they have
+not already been set:
+
+```
+./scripts/run_app.sh
+```
+
+More generally, the command to start the server is:
 
 ```
 python application.py runserver
