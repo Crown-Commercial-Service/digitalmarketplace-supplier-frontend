@@ -4,7 +4,15 @@ import jinja2
 basedir = os.path.abspath(os.path.dirname(__file__))
 
 
-class Config:
+class Config(object):
+    DEBUG = False
+    STATIC_URL_PATH = '/supplier/static'
+    ASSET_PATH = STATIC_URL_PATH + '/'
+    BASE_TEMPLATE_DATA = {
+        'asset_path': ASSET_PATH,
+        'header_class': 'with-proposition'
+    }
+
     @staticmethod
     def init_app(app):
         repo_root = os.path.abspath(os.path.dirname(__file__))
@@ -23,10 +31,6 @@ class Test(Config):
 
 class Development(Config):
     DEBUG = True,
-    BASE_TEMPLATE_DATA = {
-        'asset_path': '/static/',
-        'header_class': 'with-proposition'
-    }
 
 
 class Live(Config):
