@@ -2,7 +2,7 @@
 
 {% block content %}
 <h1>Digital Marketplace Suppliers Console</h1>
-<form action="/listservices" method="get">
+<form action="{{ url_for('.list_services') }}" method="get">
     Supplier ID: <input type="text" name="supplier_id">
     <br><br>
     <input type="submit" value="List services for this supplier">
