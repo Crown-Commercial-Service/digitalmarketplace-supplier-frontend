@@ -3,6 +3,7 @@ from flask.ext.bootstrap import Bootstrap
 from config import config
 
 from .main import main as main_blueprint
+from .status import status as status_blueprint
 
 
 def create_app(config_name):
@@ -17,6 +18,7 @@ def create_app(config_name):
     bootstrap = Bootstrap()
     bootstrap.init_app(application)
 
+    application.register_blueprint(status_blueprint)
     application.register_blueprint(main_blueprint,
                                    url_prefix='/supplier')
     main_blueprint.config = {
