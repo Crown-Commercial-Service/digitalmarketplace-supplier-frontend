@@ -1,0 +1,17 @@
+@import "_grid_layout.scss";
+
+.grid-row {
+  @extend %grid-row;
+}
+
+.column-one-whole {
+  @include grid-column( 1 );
+}
+
+.column-one-third {
+  @include grid-column( 1/3 );
+}
+
+.column-two-thirds {
+  @include grid-column( 2/3 );
+}

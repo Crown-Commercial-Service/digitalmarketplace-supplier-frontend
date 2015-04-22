@@ -15,7 +15,7 @@ if api_url is None:
     raise Exception("DM_API_URL is not set")
 
 
-@main.route('/listservices')
+@main.route('/dashboard')
 def list_services():
     try:
         supplier_id = request.args.get("supplier_id")

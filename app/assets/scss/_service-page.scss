@@ -1,0 +1,169 @@
+// styles specific to service pages
+
+%sub-heading {
+  @include core-24;
+  font-weight: bold;
+  padding: 0;
+  margin: 0 0 10px 0;
+  @include box-sizing(border-box);
+}
+
+%plain-list {
+  list-style-type: none;
+  padding-left: 0;
+}
+
+.service-attributes {
+  padding-bottom: (3 * $gutter);
+}
+
+.service-summary-lede,
+.service-summary-features-and-benefits {
+  @include core-19;
+}
+
+.service-summary-lede {
+  margin: 0;
+}
+
+.service-summary-heading {
+  @extend %sub-heading;
+  margin-top: 35px;
+}
+
+.service-summary-features-and-benefits {
+  margin: 0;
+  padding-left: 20px;
+
+  @include media(tablet) {
+    padding-left: 0;
+  }
+
+  li {
+    list-style-type: disc;
+    margin-bottom: 10px;
+  }
+}
+
+table.summary-item-body tbody td {
+  float: left;
+
+  @include media(tablet) {
+    float: none;
+  }
+
+  &.summary-item-field-name {
+    width: 100%;
+
+    @include media(tablet) {
+      width: 50%;
+    }
+  }
+
+  &.summary-item-field-content {
+    padding-left: $gutter-half;
+    width: auto;
+
+    @include media(tablet) {
+      padding-left: 25px;
+      width: 50%;
+    }
+
+    li {
+      margin-bottom: 5px;
+    }
+  }
+}
+
+.price {
+  @extend %sub-heading;
+  margin-top: 35px;
+
+  @include media(tablet) {
+    margin-top: 0;
+  }
+}
+
+.price-caveats {
+  @include core-19;
+  color: $grey-1;
+  @extend %plain-list;
+  margin: 0 0 20px;
+
+  li {
+    margin-bottom: 5px;
+  }
+}
+
+.service-id-heading {
+  @include core-19;
+  margin-bottom: 5px;
+}
+
+.service-id {
+  @include core-16;
+  @include inline-block;
+  background: $highlight-colour;
+  padding: 5px 10px;
+  border: 1px dotted $grey-3;
+  margin: 0 4px ($gutter + 10px) 0;
+}
+
+.contact {
+  @include core-19;
+
+  .summary {
+    color: $link-colour;
+    display: block;
+    cursor: pointer;
+    text-decoration: underline;
+
+    &:hover {
+      color: $link-hover-colour;
+    }
+
+    &:active {
+      color: $link-active-colour;
+    }
+  }
+
+  @include ie-lte(7) {
+    .summary {
+      padding-left: 20px;
+      background: file-url('arrow-sprite.png') no-repeat 0px 2px;
+    }
+
+    &.open .summary { background-position: 0px -78px; }
+  }
+
+  .indented {
+    border-left: solid 4px $grey-2;
+    padding: 10px 0 10px 15px;
+    margin: 10px 0 $gutter;
+
+    @include media(tablet) {
+      margin-bottom: 0;
+    }
+
+    ul {
+      @extend %plain-list;
+      margin: 0;
+
+      li {
+        margin-bottom: 5px;
+      }
+    }
+  }
+}
+
+.no-details .contact {
+  .summary:before {
+    float: left;
+    width: 20px;
+    content: '► ';
+  }
+
+  &.open .summary:before {
+    content: '▼ ';
+  }
+}

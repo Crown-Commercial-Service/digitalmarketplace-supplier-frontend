@@ -1,0 +1,32 @@
+// styles specific to index pages
+
+.index-page {
+
+  .lead {
+    @include core-19;
+  }
+
+  .search-box {
+
+    position: relative;
+
+    input {
+      margin-right: 180px;
+      width: 100%;
+    }
+
+    button {
+      width: 180px;
+      position: absolute;
+      top: 0;
+      right: -180px + 15px + 1px;
+      padding: 9px 0;
+    }
+
+  }
+
+  .browse-list {
+    padding-bottom: $gutter * 1.5;
+  }
+
+}
