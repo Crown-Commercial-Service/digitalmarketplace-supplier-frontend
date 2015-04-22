@@ -15,12 +15,6 @@ if api_url is None:
     raise Exception("DM_API_URL is not set")
 
 
-@main.route('/')
-def index():
-    template_data = main.config['BASE_TEMPLATE_DATA']
-    return render_template("index.html", **template_data), 200
-
-
 @main.route('/listservices')
 def list_services():
     try:
