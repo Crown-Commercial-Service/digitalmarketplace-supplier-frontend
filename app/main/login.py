@@ -32,7 +32,7 @@ def change_password():
 
 @main.route('/change-password', methods=["POST"])
 def update_password():
-    return redirect(url_for('.dashboard'))
+    return redirect(url_for('.password_changed'))
 
 @main.route('/password-changed', methods=["GET"])
 def password_changed():
