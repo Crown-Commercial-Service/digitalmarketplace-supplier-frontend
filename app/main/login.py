@@ -6,11 +6,36 @@ def render_login():
     template_data = main.config['BASE_TEMPLATE_DATA']
     return render_template("login/login.html", **template_data), 200
 
-
 @main.route('/login', methods=["POST"])
 def process_login():
-    template_data = main.config['BASE_TEMPLATE_DATA']
-
-    #return render_template("login/login.html", **template_data), 200
     return redirect(url_for('.dashboard'))
 
+@main.route('/logout', methods=["GET"])
+def logout():
+    return redirect(url_for('.render_login'))
+
+@main.route('/forgotten-password', methods=["GET"])
+def forgotten_password():
+    template_data = main.config['BASE_TEMPLATE_DATA']
+
+    return render_template("login/forgotten-password.html", **template_data), 200
+
+@main.route('/forgotten-password', methods=["POST"])
+def send_reset_email():
+    return redirect(url_for('.change_password'))
+
+@main.route('/change-password', methods=["GET"])
+def change_password():
+    template_data = main.config['BASE_TEMPLATE_DATA']
+
+    return render_template("login/change-password.html", **template_data), 200
+
+@main.route('/change-password', methods=["POST"])
+def update_password():
+    return redirect(url_for('.dashboard'))
+
+@main.route('/password-changed', methods=["GET"])
+def password_changed():
+    template_data = main.config['BASE_TEMPLATE_DATA']
+
+    return render_template("login/password-changed.html", **template_data), 200

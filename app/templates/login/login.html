@@ -2,7 +2,7 @@
 
 {% block main_content %}
 <header class="page-heading">
-  <h1>Login</h1>
+    <h1>Login</h1>
 </header>
 <form action="{{ url_for('.process_login') }}" method="POST">
 
@@ -27,5 +27,10 @@
 
 
     <button class="button-save">Login</button>
+    <header class="page-heading-smaller">
+        <p class="context">
+            <a href="{{ url_for('.forgotten_password') }}">Forgotten password</a>
+        </p>
+    </header>
 </form>
 {% endblock %}
