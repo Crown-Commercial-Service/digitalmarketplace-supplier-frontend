@@ -9,6 +9,7 @@ def dashboard():
         "services/dashboard.html",
         **template_data), 200
 
+
 @main.route('/services')
 def services():
     template_data = main.config['BASE_TEMPLATE_DATA']

@@ -3,6 +3,7 @@ import re
 
 from flask import Flask
 from config import config
+from flask._compat import string_types
 
 from .main import main as main_blueprint
 from .status import status as status_blueprint
@@ -29,6 +30,7 @@ def create_app(config_name):
     }
 
     return application
+
 
 def config_attrs(config):
     """Returns config attributes from a Config object"""
