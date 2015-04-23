@@ -37,13 +37,43 @@ Install new Python dependencies with pip
 
 ```pip install -r requirements.txt```
 
-Install frontend dependencies with npm
 
-```npm install```
+## Front-end
 
-Do the (temporary) gulp thing
+Front-end code (both development and production) is compiled using [Node](http://nodejs.org/) and [Gulp](http://gulpjs.com/).
 
-```./node_modules/gulp/bin/gulp.js build:development```
+### Requirements
+
+You need Node, minimum version of 0.10.0, which will also get you [NPM](npmjs.org), Node's package management tool.
+
+To check the version you're running, type:
+
+```
+node --version
+```
+
+### Installation
+
+To install the required Node modules, type:
+
+```
+npm install
+```
+
+## Frontend tasks
+
+[NPM](https://www.npmjs.org/) is used for all frontend build tasks. The commands available are:
+
+- `npm run frontend-build:development` (compile the frontend files for development)
+- `npm run frontend-build:production` (compile the frontend files for production)
+- `npm run frontend-build:watch` (watch all frontend files & rebuild when anything changes) FAILED
+- `npm run frontend-install` (install all non-NPM dependancies)
+
+Note: `npm run frontend-install` is run automatically as a post-install task when you run `npm install`.
+
+
+
+
 
 ### Run the tests
 

@@ -1,4 +1,4 @@
-from flask import jsonify
+from flask import jsonify, current_app
 
 from . import status
 from . import utils

@@ -1,0 +1,36 @@
+{% extends "_base_page.html" %}
+
+{% block main_content %}
+<header class="page-heading">
+    <h1>Login</h1>
+</header>
+<form action="{{ url_for('.process_login') }}" method="POST">
+
+    <div class="question">
+        <label for="email-address" class="question-heading-with-hint">
+            Email address
+        </label>
+
+        <p class="hint">
+            Email used to register with the digital marketplace.
+        </p>
+        <input type="text" name="email-address" id="email-address" class="text-box" value=""/>
+    </div>
+
+    <div class="question">
+        <label for="passphrase" class="question-heading">
+            Passphrase
+        </label>
+
+        <input type="password" name="email-address" id="passphrase" class="text-box" value=""/>
+    </div>
+
+
+    <button class="button-save">Login</button>
+    <header class="page-heading-smaller">
+        <p class="context">
+            <a href="{{ url_for('.forgotten_password') }}">Forgotten password</a>
+        </p>
+    </header>
+</form>
+{% endblock %}

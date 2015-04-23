@@ -6,6 +6,7 @@ basedir = os.path.abspath(os.path.dirname(__file__))
 
 class Config(object):
     DEBUG = False
+    SECRET_KEY = 'this is not secret'
     STATIC_URL_PATH = '/supplier/static'
     ASSET_PATH = STATIC_URL_PATH + '/'
     BASE_TEMPLATE_DATA = {

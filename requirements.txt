@@ -1,11 +1,7 @@
 Flask==0.10.1
-Flask-Bootstrap==3.3.0.1
 Flask-Script==2.0.5
 requests==2.5.1
-
-#Required for testing
-pep8==1.5.7
-nose==1.3.4
+Flask-WTF==0.11
 
 # Required for SNI to work in requests 
 pyOpenSSL==0.14

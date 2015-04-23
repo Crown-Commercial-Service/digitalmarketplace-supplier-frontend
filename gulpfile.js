@@ -121,7 +121,7 @@ gulp.task('copy_template_assets', function () {
    gulp.start('copy_template_assets:javascripts');
 });
 
-gulp.task('watch', ['build'], function () {
+gulp.task('watch', ['build:development'], function () {
   var jsWatcher = gulp.watch([ assetsFolder + '/**/*.js' ], ['js']);
   var cssWatcher = gulp.watch([ assetsFolder + '/**/*.scss' ], ['sass']);
   var notice = function (event) {

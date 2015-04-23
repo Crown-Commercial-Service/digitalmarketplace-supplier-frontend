@@ -1,0 +1,20 @@
+{% extends "_base_page.html" %}
+
+{% block main_content %}
+<header class="page-heading">
+  <h1>Dashboard</h1>
+</header>
+
+<header class="page-heading-smaller">
+  <p class="context">
+    Service Details
+  </p>
+  <ul>
+      <li><a href="{{ url_for('.services') }}">Service Name 1</a></li>
+      <li><a href="{{ url_for('.services') }}">Service Name 2</a></li>
+      <li><a href="{{ url_for('.services') }}">Service Name 3</a></li>
+  </ul>
+</header>
+
+
+{% endblock %}
