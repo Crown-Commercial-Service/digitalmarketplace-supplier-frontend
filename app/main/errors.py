@@ -10,6 +10,5 @@ def page_not_found(e):
 
 @main.app_errorhandler(500)
 def page_not_found(e):
-    print e.message
     template_data = main.config['BASE_TEMPLATE_DATA']
     return render_template("errors/500.html", **template_data), 500
