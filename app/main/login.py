@@ -4,7 +4,7 @@ from flask import render_template, redirect, url_for
 @main.route('/login', methods=["GET"])
 def render_login():
     template_data = main.config['BASE_TEMPLATE_DATA']
-    return render_template("login/login.html", **template_data), 200
+    return render_template("auth/login.html", **template_data), 200
 
 @main.route('/login', methods=["POST"])
 def process_login():
@@ -18,7 +18,7 @@ def logout():
 def forgotten_password():
     template_data = main.config['BASE_TEMPLATE_DATA']
 
-    return render_template("login/forgotten-password.html", **template_data), 200
+    return render_template("auth/forgotten-password.html", **template_data), 200
 
 @main.route('/forgotten-password', methods=["POST"])
 def send_reset_email():
@@ -28,7 +28,7 @@ def send_reset_email():
 def change_password():
     template_data = main.config['BASE_TEMPLATE_DATA']
 
-    return render_template("login/change-password.html", **template_data), 200
+    return render_template("auth/change-password.html", **template_data), 200
 
 @main.route('/change-password', methods=["POST"])
 def update_password():
@@ -38,4 +38,4 @@ def update_password():
 def password_changed():
     template_data = main.config['BASE_TEMPLATE_DATA']
 
-    return render_template("login/password-changed.html", **template_data), 200
+    return render_template("auth/password-changed.html", **template_data), 200
