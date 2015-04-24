@@ -14,6 +14,12 @@ class Config(object):
         'header_class': 'with-proposition'
     }
 
+    # Logging
+    DM_LOG_LEVEL = 'DEBUG'
+    DM_APP_NAME = 'buyer-frontend'
+    DM_LOG_PATH = '/var/log/digitalmarketplace/application.log'
+    DM_DOWNSTREAM_REQUEST_ID_HEADER = 'X-Amz-Cf-Id'
+
     @staticmethod
     def init_app(app):
         repo_root = os.path.abspath(os.path.dirname(__file__))
