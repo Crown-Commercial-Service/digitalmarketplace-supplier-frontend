@@ -21,6 +21,14 @@
     </div>
     {% endif %}
 
+    {% for message in get_flashed_messages() %}
+    <div class="validation-masthead" aria-labelledby="validation-masthead-heading">
+        <h3 class="validation-masthead-heading" id="validation-masthead-heading">
+            {{ message }} </h3>
+    </div>
+    {% endfor %}
+
+
     {{ form.hidden_tag() }}
     <div class="question">
         {{ form.email_address.label(class="question-heading-with-hint") }}

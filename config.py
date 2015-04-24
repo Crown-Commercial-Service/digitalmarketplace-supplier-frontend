@@ -5,6 +5,7 @@ basedir = os.path.abspath(os.path.dirname(__file__))
 
 
 class Config(object):
+    WTF_CSRF_ENABLED = True
     DM_API_URL = None
     DM_API_AUTH_TOKEN = None
     DEBUG = False
@@ -32,6 +33,7 @@ class Test(Config):
     DEBUG = True
     DM_API_AUTH_TOKEN = 'test'
     DM_API_URL = 'http://localhost'
+    WTF_CSRF_ENABLED = False
 
 
 class Development(Config):

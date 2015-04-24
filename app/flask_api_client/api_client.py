@@ -6,7 +6,6 @@ from app.model import User
 class ApiClient:
     root_url = None
     token = None
-    enabled = False
 
     def __init__(self, app=None):
         self.app = app
@@ -37,20 +36,23 @@ class ApiClient:
             headers=self.headers()
         )
         if res.status_code is 200:
-            return True, self.user_json_to_user(res.json())
+            return self.user_json_to_user(res.json())
         elif res.status_code is 400:
             # TODO log bad request
-            return False, None
+            return None
         elif res.status_code is 403:
             # TODO log unauthorized
-            return False, None
+            return None
         elif res.status_code is 404:
             # TODO log not found
-            return False, None
+            return None
         else:
             # TODO log error
-            return False, None
+            return None
 
     @staticmethod
     def user_json_to_user(user_json):
-        return User(user_json["id"], user_json['email_address'])
+        return User(
+            user_json["users"]["id"],
+            user_json["users"]['email_address']
+        )

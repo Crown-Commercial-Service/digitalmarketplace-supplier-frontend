@@ -25,11 +25,10 @@ class TestApiClient():
                 text=json.dumps(self.user()),
                 status_code=200)
 
-            result, user = self.api_client.users_auth(
+            user = self.api_client.users_auth(
                 'email_address',
                 'password'
             )
-            assert_equal(result, True)
             assert_equal(user.id, 'id')
             assert_equal(user.email_address, 'email_address')
 
@@ -40,11 +39,10 @@ class TestApiClient():
                 text=json.dumps({'authorization': False}),
                 status_code=404)
 
-            result, user = self.api_client.users_auth(
+            user = self.api_client.users_auth(
                 'email_address',
                 'password'
             )
-            assert_equal(result, False)
             assert_equal(user, None)
 
     def test_auth_returns_none_on_403(self):
@@ -54,11 +52,10 @@ class TestApiClient():
                 text=json.dumps({'authorization': False}),
                 status_code=403)
 
-            result, user = self.api_client.users_auth(
+            user = self.api_client.users_auth(
                 'email_address',
                 'password'
             )
-            assert_equal(result, False)
             assert_equal(user, None)
 
     def test_auth_returns_none_on_400(self):
@@ -68,11 +65,10 @@ class TestApiClient():
                 text=json.dumps({'authorization': False}),
                 status_code=400)
 
-            result, user = self.api_client.users_auth(
+            user = self.api_client.users_auth(
                 'email_address',
                 'password'
             )
-            assert_equal(result, False)
             assert_equal(user, None)
 
     def test_auth_returns_none_on_500(self):
@@ -82,11 +78,10 @@ class TestApiClient():
                 text=json.dumps({'authorization': False}),
                 status_code=500)
 
-            result, user = self.api_client.users_auth(
+            user = self.api_client.users_auth(
                 'email_address',
                 'password'
             )
-            assert_equal(result, False)
             assert_equal(user, None)
 
     def test_user_json_to_user(self):
@@ -98,7 +93,7 @@ class TestApiClient():
     def user():
         timestamp = datetime.now()
 
-        return {
+        return {'users': {
             'id': 'id',
             'email_address': 'email_address',
             'name': 'name',
@@ -108,4 +103,4 @@ class TestApiClient():
             'created_at': timestamp,
             'updated_at': timestamp,
             'password_changed_at': timestamp
-        }
+        }}
