@@ -9,6 +9,9 @@ fi
 export DM_SUPPLIER_FRONTEND_API_AUTH_TOKEN=${DM_SUPPLIER_FRONTEND_API_AUTH_TOKEN:=myToken}
 export DM_API_URL=${DM_API_URL:=http://localhost:5000}
 export DM_API_AUTH_TOKEN=${DM_API_AUTH_TOKEN:=myToken}
+export DM_MANDRILL_API_KEY=${DM_MANDRILL_API_KEY:=not_a_real_key}
+export DM_PASSWORD_SECRET_KEY=${DM_PASSWORD_SECRET_KEY:=verySecretKey}
+export DM_DM_SECRET_SALT=${DM_SECRET_SALT:=itsSalty}
 
 echo "Environment variables in use:"
 env | grep DM_
