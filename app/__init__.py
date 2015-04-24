@@ -4,6 +4,7 @@ import re
 from flask import Flask
 from config import config
 from flask._compat import string_types
+from dmutils import logging
 
 from .main import main as main_blueprint
 from .status import status as status_blueprint
@@ -21,6 +22,8 @@ def create_app(config_name):
 
     application.config.from_object(config[config_name])
     config[config_name].init_app(application)
+
+    logging.init_app(application)
 
     application.register_blueprint(status_blueprint)
     application.register_blueprint(main_blueprint,
