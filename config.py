@@ -5,6 +5,8 @@ basedir = os.path.abspath(os.path.dirname(__file__))
 
 
 class Config(object):
+    DM_API_URL = None
+    DM_API_AUTH_TOKEN = None
     DEBUG = False
     SECRET_KEY = 'this is not secret'
     STATIC_URL_PATH = '/supplier/static'
@@ -28,6 +30,8 @@ class Config(object):
 
 class Test(Config):
     DEBUG = True
+    DM_API_AUTH_TOKEN = 'test'
+    DM_API_URL = 'http://localhost'
 
 
 class Development(Config):

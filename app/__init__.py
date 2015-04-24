@@ -7,10 +7,12 @@ from flask._compat import string_types
 
 from .main import main as main_blueprint
 from .status import status as status_blueprint
+from .flask_api_client.api_client import ApiClient
+
+api_client = ApiClient()
 
 
 def create_app(config_name):
-
     application = Flask(__name__,
                         static_folder='static/',
                         static_url_path=config[config_name].STATIC_URL_PATH)
@@ -28,6 +30,8 @@ def create_app(config_name):
     main_blueprint.config = {
         'BASE_TEMPLATE_DATA': application.config['BASE_TEMPLATE_DATA']
     }
+
+    api_client.init_app(application)
 
     return application
 
