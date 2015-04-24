@@ -1,16 +1,22 @@
 from . import main
 from flask import render_template, redirect, url_for
+from app.main.forms.login_form import LoginForm
 
 
 @main.route('/login', methods=["GET"])
 def render_login():
     template_data = main.config['BASE_TEMPLATE_DATA']
-    return render_template("auth/login.html", **template_data), 200
+    return render_template("auth/login.html", form=LoginForm(), **template_data), 200
 
 
 @main.route('/login', methods=["POST"])
 def process_login():
-    return redirect(url_for('.dashboard'))
+    form = LoginForm()
+    template_data = main.config['BASE_TEMPLATE_DATA']
+    if form.validate_on_submit():
+        return redirect(url_for('.dashboard'))
+    else:
+        return render_template("auth/login.html", form=form, **template_data), 400
 
 
 @main.route('/logout', methods=["GET"])
