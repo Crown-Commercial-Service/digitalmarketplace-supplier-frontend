@@ -2,12 +2,13 @@ import os
 import re
 
 from flask import Flask
+from flask_login import LoginManager
 from config import config
 from flask._compat import string_types
-
 from .flask_api_client.api_client import ApiClient
 
 api_client = ApiClient()
+login_manager = LoginManager()
 
 
 def create_app(config_name):
@@ -26,7 +27,8 @@ def create_app(config_name):
 
     config[config_name].init_app(application)
     api_client.init_app(application)
-
+    login_manager.init_app(application)
+    login_manager.login_view = '/suppliers/login'
     application.register_blueprint(status_blueprint)
     application.register_blueprint(main_blueprint,
                                    url_prefix='/suppliers')
@@ -35,6 +37,10 @@ def create_app(config_name):
     }
 
     return application
+
+@login_manager.user_loader
+def load_user(user_id):
+    return api_client.user_by_id(int(user_id))
 
 
 def config_attrs(config):
