@@ -22,6 +22,20 @@ class ApiClient:
             "Authorization": "Bearer {}".format(self.token)
         }
 
+    def services_by_supplier_id(self, supplier_id):
+        res = requests.get(
+            "{}/{}?supplier_id={}".format(self.root_url, "services", supplier_id),
+            headers=self.headers()
+        )
+        if res.status_code is 200:
+            return res.json()
+        elif res.status_code is 400:
+            # TODO log bad request
+            return None
+        else:
+            # TODO log error
+            return None
+
     def user_by_id(self, user_id):
         res = requests.get(
             "{}/{}/{}".format(self.root_url, "users", user_id),

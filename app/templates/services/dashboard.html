@@ -1,21 +1,49 @@
 {% extends "_base_page.html" %}
 
 {% block main_content %}
+
+<div id="global-breadcrumb" class="header-context">
+  <nav>
+    <ol class="group" role="breadcrumbs">
+      <li>
+        <a href="#">{{ current_user.supplier_name }}</a>
+      </li>
+      <li>
+        <a href="#">{{ current_user.email_address }}</a>
+      </li>
+    </ol>
+  </nav>
+</div>
+
 <header class="page-heading">
-  <h1>Dashboard</h1>
+    <h1>Dashboard</h1>
 </header>
 
-{{ current_user.email_address }}
-
 <header class="page-heading-smaller">
-  <p class="context">
-    Service Details
-  </p>
-  <ul>
-      <li><a href="{{ url_for('.services') }}">Service Name 1</a></li>
-      <li><a href="{{ url_for('.services') }}">Service Name 2</a></li>
-      <li><a href="{{ url_for('.services') }}">Service Name 3</a></li>
-  </ul>
+    <p class="context">
+        Service Details
+    </p>
+
+    {% for service in services %}
+    <div class="search-result">
+        <h2 class="search-result-title">
+            <a href="https://www.digitalmarketplace.service.gov.uk/services/{{ service.id }}">{{ service.serviceName }}</a>
+        </h2>
+
+        <p class="search-result-excerpt">
+            {{ service.serviceSummary }}
+        </p>
+        <ul class="search-result-metadata">
+            <li class="search-result-metadata-item" aria-label="Framework">
+                G-Cloud 6
+            </li>
+            <li class="search-result-metadata-item" aria-label="Lot">
+                {{ service.lot }}
+            </li>
+        </ul>
+        <button class="button-destructive">Unpublish</button>
+    </div>
+    {% endfor %}
 </header>
 
 
