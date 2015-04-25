@@ -2,6 +2,7 @@ Flask==0.10.1
 Flask-Script==2.0.5
 requests==2.5.1
 Flask-WTF==0.11
+Flask-Login==0.2.11
 
 # Required for SNI to work in requests 
 pyOpenSSL==0.14
