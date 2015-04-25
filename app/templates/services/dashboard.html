@@ -35,13 +35,17 @@
         </p>
         <ul class="search-result-metadata">
             <li class="search-result-metadata-item" aria-label="Framework">
-                G-Cloud 6
+                {{ service.frameworkName}}
             </li>
             <li class="search-result-metadata-item" aria-label="Lot">
                 {{ service.lot }}
             </li>
         </ul>
-        <button class="button-destructive">Unpublish</button>
+        {% if service.status == 'published' %}
+            <button class="button-destructive">Unpublish</button>
+        {% else %}
+            <button class="button-save">Publish</button>
+        {% endif %}
     </div>
     {% endfor %}
 </header>
