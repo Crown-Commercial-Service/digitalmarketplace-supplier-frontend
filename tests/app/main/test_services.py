@@ -6,12 +6,12 @@ from tests.app.helpers import BaseApplicationTest
 
 class TestDashboard(BaseApplicationTest):
     def test_should_show_dashboard_if_logged_in(self):
-        with self.app.test_client() as c:
+        with self.app.test_client():
             api_client.users_auth = Mock(
-                return_value=(self.user(123, "email@email.com")))
+                return_value=(self.user(123, "email@email.com", 1234, 'name')))
 
             api_client.user_by_id = Mock(
-                return_value=(self.user(123, "email@email.com")))
+                return_value=(self.user(123, "email@email.com", 1234, 'name')))
 
             self.client.post("/suppliers/login", data={
                 'email_address': 'valid@email.com',
@@ -39,10 +39,10 @@ class TestServices(BaseApplicationTest):
     def test_should_show_dashboard_if_logged_in(self):
         with self.app.test_client() as c:
             api_client.users_auth = Mock(
-                return_value=(self.user(123, "email@email.com")))
+                return_value=(self.user(123, "email@email.com", 1234, 'name')))
 
             api_client.user_by_id = Mock(
-                return_value=(self.user(123, "email@email.com")))
+                return_value=(self.user(123, "email@email.com", 1234, 'name')))
 
             self.client.post("/suppliers/login", data={
                 'email_address': 'valid@email.com',
