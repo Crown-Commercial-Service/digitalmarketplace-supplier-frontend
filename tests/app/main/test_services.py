@@ -8,10 +8,15 @@ class TestDashboard(BaseApplicationTest):
     def test_should_show_dashboard_if_logged_in(self):
         with self.app.test_client():
             api_client.users_auth = Mock(
-                return_value=(self.user(123, "email@email.com", 1234, 'name')))
+                return_value=(self.user(
+                    123, "email@email.com", 1234, 'Supplier Name')))
 
             api_client.user_by_id = Mock(
-                return_value=(self.user(123, "email@email.com", 1234, 'name')))
+                return_value=(self.user(
+                    123, "email@email.com", 1234, 'Supplier Name')))
+
+            api_client.services_by_supplier_id = Mock(
+                return_value=self.services())
 
             self.client.post("/suppliers/login", data={
                 'email_address': 'valid@email.com',
@@ -23,7 +28,7 @@ class TestDashboard(BaseApplicationTest):
             assert_equal(res.status_code, 200)
 
             assert_true(
-                self.strip_all_whitespace('<h1>Dashboard</h1>')
+                self.strip_all_whitespace('<h1>Supplier Name</h1>')
                 in self.strip_all_whitespace(res.get_data(as_text=True))
             )
 

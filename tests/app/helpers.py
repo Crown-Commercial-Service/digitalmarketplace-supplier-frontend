@@ -29,3 +29,16 @@ class BaseApplicationTest(object):
     def strip_all_whitespace(content):
         pattern = re.compile(r'\s+')
         return re.sub(pattern, '', content)
+
+    @staticmethod
+    def services():
+        return {
+            'services': [
+                {
+                    'serviceName': 'serviceName',
+                    'frameworkName': 'frameworkName',
+                    'lot': 'lot',
+                    'serviceSummary': 'serviceSummary'
+                }
+            ]
+        }
