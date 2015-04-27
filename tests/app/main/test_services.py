@@ -16,7 +16,8 @@ class TestDashboardContent(BaseApplicationTest):
 
             res = self.client.get('/suppliers/dashboard')
             assert_equal(res.status_code, 200)
-            assert_true("You haven't submitted any services yet." in res.get_data(as_text=True))
+            assert_true("You haven't submitted any services yet."
+                        in res.get_data(as_text=True))
 
     def test_shows_services_on_dashboard(self):
         with self.app.test_client():
