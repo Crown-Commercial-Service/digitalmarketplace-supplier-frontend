@@ -1,4 +1,5 @@
-from nose.tools import assert_equal, assert_true
+from nose.tools import assert_equal, assert_true, \
+    assert_is_not_none
 from app.model import User
 from ..helpers import BaseApplicationTest
 from mock import Mock
@@ -35,6 +36,28 @@ class TestLogin(BaseApplicationTest):
         })
         assert_equal(res.status_code, 302)
         assert_equal(res.location, 'http://localhost/suppliers/dashboard')
+
+    def test_should_have_cookie_on_redirect(self):
+        with self.app.app_context():
+            self.app.config['SESSION_COOKIE_DOMAIN'] = '127.0.0.1'
+            self.app.config['SESSION_COOKIE_SECURE'] = True
+            api_client.users_auth = Mock(
+                return_value=(self.user(123, "email@email.com")))
+            res = self.client.post("/suppliers/login", data={
+                'email_address': 'valid@email.com',
+                'password': '1234567890'
+            })
+            cookie_value = self.get_cookie_by_name(res, 'dm_session')
+            assert_is_not_none(cookie_value['dm_session'])
+            assert_true('Secure' in str(cookie_value))
+            assert_true('HttpOnly' in str(cookie_value))
+            assert_true("Path': u'/" in str(cookie_value))
+            assert_true("Domain': u'127.0.0.1'" in str(cookie_value))
+
+    def test_should_redirect_to_login_on_logout(self):
+        res = self.client.get('/suppliers/logout')
+        assert_equal(res.status_code, 302)
+        assert_equal(res.location, 'http://localhost/suppliers/login')
 
     def test_should_return_a_403_for_invalid_login(self):
         api_client.users_auth = Mock(
@@ -77,12 +100,3 @@ class TestLogin(BaseApplicationTest):
         assert_true(
             self.strip_all_whitespace(self.invalid_email_field_error)
             in self.strip_all_whitespace(res.get_data(as_text=True)))
-
-    @staticmethod
-    def user(id, email_address):
-        return User(user_id=id, email_address=email_address)
-
-    @staticmethod
-    def strip_all_whitespace(content):
-        pattern = re.compile(r'\s+')
-        return re.sub(pattern, '', content)

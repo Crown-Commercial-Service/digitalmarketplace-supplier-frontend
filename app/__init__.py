@@ -28,10 +28,10 @@ def create_app(config_name):
     config[config_name].init_app(application)
     api_client.init_app(application)
     login_manager.init_app(application)
-    login_manager.login_view = '/suppliers/login'
     application.register_blueprint(status_blueprint)
     application.register_blueprint(main_blueprint,
                                    url_prefix='/suppliers')
+    login_manager.login_view = 'main.render_login'
     main_blueprint.config = {
         'BASE_TEMPLATE_DATA': application.config['BASE_TEMPLATE_DATA']
     }
