@@ -1,7 +1,7 @@
 from __future__ import absolute_import
 
 from . import main
-from flask import render_template, redirect, url_for
+from flask import render_template, redirect, url_for, flash
 from flask_login import logout_user, login_required, login_user, current_user
 from .forms.login_form import LoginForm
 from .. import api_client
@@ -21,9 +21,21 @@ def process_login():
     form = LoginForm()
     template_data = main.config['BASE_TEMPLATE_DATA']
     if form.validate_on_submit():
-        login_user(api_client.users_auth(
+
+        user = api_client.users_auth(
             form.email_address.data,
-            form.password.data))
+            form.password.data)
+
+        if not user:
+            flash(
+                "Sorry, we couldn't find a user with "
+                "that username and password")
+            return render_template(
+                "auth/login.html",
+                form=form,
+                **template_data), 403
+
+        login_user(user)
         return redirect(url_for('.dashboard'))
     else:
         return render_template(

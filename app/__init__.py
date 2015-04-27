@@ -38,6 +38,7 @@ def create_app(config_name):
 
     return application
 
+
 @login_manager.user_loader
 def load_user(user_id):
     return api_client.user_by_id(int(user_id))

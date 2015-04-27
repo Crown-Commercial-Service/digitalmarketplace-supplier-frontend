@@ -23,12 +23,10 @@ class ApiClient:
         }
 
     def user_by_id(self, user_id):
-        print "CALLING {}".format("{}/{}/{}".format(self.root_url, "users/", user_id))
         res = requests.get(
             "{}/{}/{}".format(self.root_url, "users", user_id),
             headers=self.headers()
         )
-        print res.status_code
         if res.status_code is 200:
             return self.user_json_to_user(res.json())
         elif res.status_code is 400:
@@ -52,7 +50,6 @@ class ApiClient:
             headers=self.headers()
         )
         if res.status_code is 200:
-            print res.json()
             return self.user_json_to_user(res.json())
         elif res.status_code is 400:
             # TODO log bad request

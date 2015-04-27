@@ -19,9 +19,6 @@ class User():
         return False
 
     def get_id(self):
-
-        print " GETTING ID {}".format(self.id)
-
         try:
             return unicode(self.id)  # python 2
         except NameError:
