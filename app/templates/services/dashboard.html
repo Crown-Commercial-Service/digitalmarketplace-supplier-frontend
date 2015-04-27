@@ -4,33 +4,43 @@
 
 <header class="page-heading page-heading-with-context">
     <p class="context">{{ current_user.email_address }}</p>
+
     <h1>{{ current_user.supplier_name }}</h1>
 </header>
 
-{% for service in services %}
-<div class="search-result">
-    <h2 class="search-result-title">
-        <a href="https://www.digitalmarketplace.service.gov.uk/service/{{ service.id }}">{{ service.serviceName }}</a>
-    </h2>
 
-    <p class="search-result-excerpt">
-        {{ service.serviceSummary }}
-    </p>
-    <ul class="search-result-metadata">
-        <li class="search-result-metadata-item" aria-label="Framework">
+<table class="summary-item-body">
+    <thead class="summary-item-field-headings">
+    <tr>
+        <th scope="col">
+            <a href="">Name</a>
+        </th>
+        <th scope="col">
+            Framework
+        </th>
+        <th scope="col">
+            Lot
+        </th>
+    </tr>
+    </thead>
+    <tbody>
+    {% for service in services %}
+    <tr class="summary-item-row">
+        <td class="summary-item-field-name">
+            <a href="https://www.digitalmarketplace.service.gov.uk/service/{{ service.id }}">{{ service.serviceName
+                }}</a>
+        </td>
+        <td class="summary-item-field-content">
             {{ service.frameworkName}}
-        </li>
-        <li class="search-result-metadata-item" aria-label="Lot">
-            {{ service.lot }}
-        </li>
-    </ul>
-    {% if service.status == 'published' %}
-    <button class="button-destructive">Unpublish</button>
-    {% else %}
-    <button class="button-save">Publish</button>
-    {% endif %}
-</div>
-{% endfor %}
-
-
+        </td>
+        <td class="summary-item-field-content">
+            {{ service.lot}}
+        </td>
+        <td class="summary-item-action-field">
+            <a href="{{ url_for('.services') }}">Edit</a>
+        </td>
+    </tr>
+    {% endfor %}
+    </tbody>
+</table>
 {% endblock %}
