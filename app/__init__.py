@@ -6,6 +6,7 @@ from flask_login import LoginManager
 from config import config
 from flask._compat import string_types
 from .flask_api_client.api_client import ApiClient
+from dmutils import logging
 
 api_client = ApiClient()
 login_manager = LoginManager()
@@ -26,8 +27,11 @@ def create_app(config_name):
             application.config[name] = convert_to_boolean(os.environ[name])
 
     config[config_name].init_app(application)
+
     api_client.init_app(application)
     login_manager.init_app(application)
+    logging.init_app(application)
+
     application.register_blueprint(status_blueprint)
     application.register_blueprint(main_blueprint,
                                    url_prefix='/suppliers')

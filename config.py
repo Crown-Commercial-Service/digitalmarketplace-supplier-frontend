@@ -14,12 +14,18 @@ class Config(object):
     DM_API_AUTH_TOKEN = None
     DEBUG = False
     SECRET_KEY = 'this is not secret'
-    STATIC_URL_PATH = '/supplier/static'
+    STATIC_URL_PATH = '/suppliers/static'
     ASSET_PATH = STATIC_URL_PATH + '/'
     BASE_TEMPLATE_DATA = {
         'asset_path': ASSET_PATH,
         'header_class': 'with-proposition'
     }
+
+    # Logging
+    DM_LOG_LEVEL = 'DEBUG'
+    DM_APP_NAME = 'buyer-frontend'
+    DM_LOG_PATH = '/var/log/digitalmarketplace/application.log'
+    DM_DOWNSTREAM_REQUEST_ID_HEADER = 'X-Amz-Cf-Id'
 
     @staticmethod
     def init_app(app):
