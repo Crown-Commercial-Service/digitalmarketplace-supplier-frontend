@@ -2,53 +2,39 @@
 
 {% block main_content %}
 
-<div id="global-breadcrumb" class="header-context">
-  <nav>
-    <ol class="group" role="breadcrumbs">
-      <li>
-        <a href="#">{{ current_user.supplier_name }}</a>
-      </li>
-      <li>
-        <a href="#">{{ current_user.email_address }}</a>
-      </li>
-    </ol>
-  </nav>
-</div>
-
-<header class="page-heading">
-    <h1>Dashboard</h1>
+<header class="page-heading page-heading-with-context">
+    <p class="context">{{ current_user.email_address }}</p>
+    <h1>{{ current_user.supplier_name }}</h1>
 </header>
 
-<header class="page-heading-smaller">
-    <p class="context">
-        Service Details
+<p class="context">
+
+</p>
+
+{% for service in services %}
+<div class="search-result">
+    <h2 class="search-result-title">
+        <a href="https://www.digitalmarketplace.service.gov.uk/services/{{ service.id }}">{{ service.serviceName }}</a>
+    </h2>
+
+    <p class="search-result-excerpt">
+        {{ service.serviceSummary }}
     </p>
-
-    {% for service in services %}
-    <div class="search-result">
-        <h2 class="search-result-title">
-            <a href="https://www.digitalmarketplace.service.gov.uk/services/{{ service.id }}">{{ service.serviceName }}</a>
-        </h2>
-
-        <p class="search-result-excerpt">
-            {{ service.serviceSummary }}
-        </p>
-        <ul class="search-result-metadata">
-            <li class="search-result-metadata-item" aria-label="Framework">
-                {{ service.frameworkName}}
-            </li>
-            <li class="search-result-metadata-item" aria-label="Lot">
-                {{ service.lot }}
-            </li>
-        </ul>
-        {% if service.status == 'published' %}
-            <button class="button-destructive">Unpublish</button>
-        {% else %}
-            <button class="button-save">Publish</button>
-        {% endif %}
-    </div>
-    {% endfor %}
-</header>
+    <ul class="search-result-metadata">
+        <li class="search-result-metadata-item" aria-label="Framework">
+            {{ service.frameworkName}}
+        </li>
+        <li class="search-result-metadata-item" aria-label="Lot">
+            {{ service.lot }}
+        </li>
+    </ul>
+    {% if service.status == 'published' %}
+    <button class="button-destructive">Unpublish</button>
+    {% else %}
+    <button class="button-save">Publish</button>
+    {% endif %}
+</div>
+{% endfor %}
 
 
 {% endblock %}
