@@ -1,10 +1,10 @@
 
 class User():
-    def __init__(self, user_id, email_address):
+    def __init__(self, user_id, email_address, supplier_id, supplier_name):
         self.id = user_id
         self.email_address = email_address
-        self.supplier_id = 585274
-        self.supplier_name = "Company 123"
+        self.supplier_id = supplier_id
+        self.supplier_name = supplier_name
 
     @staticmethod
     def is_authenticated():

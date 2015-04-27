@@ -31,6 +31,8 @@ class TestApiClient():
             )
             assert_equal(user.id, 'id')
             assert_equal(user.email_address, 'email_address')
+            assert_equal(user.supplier_id, 1234)
+            assert_equal(user.supplier_name, 'name')
 
     def test_auth_returns_none_on_404(self):
         with requests_mock.mock() as m:
@@ -46,6 +48,19 @@ class TestApiClient():
             assert_equal(user, None)
 
     def test_auth_returns_none_on_403(self):
+        with requests_mock.mock() as m:
+            m.post(
+                'http://localhost/users/auth',
+                text=json.dumps({'authorization': False}),
+                status_code=403)
+
+            user = self.api_client.users_auth(
+                'email_address',
+                'password'
+            )
+            assert_equal(user, None)
+
+    def test_auth_returns_none_on_a_non_supplier_user(self):
         with requests_mock.mock() as m:
             m.post(
                 'http://localhost/users/auth',
@@ -102,5 +117,9 @@ class TestApiClient():
             'locked': False,
             'created_at': timestamp,
             'updated_at': timestamp,
-            'password_changed_at': timestamp
+            'password_changed_at': timestamp,
+            'supplier': {
+                'supplier_id': 1234,
+                'name': 'name'
+            }
         }}

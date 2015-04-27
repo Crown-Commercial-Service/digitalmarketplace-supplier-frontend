@@ -8,7 +8,9 @@ from .. import api_client
 @login_required
 def dashboard():
     template_data = main.config['BASE_TEMPLATE_DATA']
-    suppliers_services = api_client.services_by_supplier_id(current_user.supplier_id)
+    suppliers_services = api_client.services_by_supplier_id(
+        current_user.supplier_id
+    )
 
     return render_template(
         "services/dashboard.html",

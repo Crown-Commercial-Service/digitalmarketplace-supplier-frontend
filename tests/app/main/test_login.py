@@ -29,7 +29,7 @@ class TestLogin(BaseApplicationTest):
 
     def test_should_redirect_to_dashboard_on_login(self):
         api_client.users_auth = Mock(
-            return_value=(self.user(123, "email@email.com")))
+            return_value=(self.user(123, "email@email.com", 1234, 'name')))
         res = self.client.post("/suppliers/login", data={
             'email_address': 'valid@email.com',
             'password': '1234567890'

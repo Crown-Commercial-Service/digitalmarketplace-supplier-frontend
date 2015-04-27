@@ -18,8 +18,12 @@ class BaseApplicationTest(object):
         return None
 
     @staticmethod
-    def user(id, email_address):
-        return User(user_id=id, email_address=email_address)
+    def user(id, email_address, supplier_id, supplier_name):
+        return User(
+            user_id=id,
+            email_address=email_address,
+            supplier_id=supplier_id,
+            supplier_name=supplier_name)
 
     @staticmethod
     def strip_all_whitespace(content):

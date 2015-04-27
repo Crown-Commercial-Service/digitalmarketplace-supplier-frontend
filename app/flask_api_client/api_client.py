@@ -24,7 +24,10 @@ class ApiClient:
 
     def services_by_supplier_id(self, supplier_id):
         res = requests.get(
-            "{}/{}?supplier_id={}".format(self.root_url, "services", supplier_id),
+            "{}/{}?supplier_id={}".format(
+                self.root_url,
+                "services",
+                supplier_id),
             headers=self.headers()
         )
         if res.status_code is 200:
@@ -81,6 +84,8 @@ class ApiClient:
     @staticmethod
     def user_json_to_user(user_json):
         return User(
-            user_json["users"]["id"],
-            user_json["users"]['email_address']
+            user_id=user_json["users"]["id"],
+            email_address=user_json["users"]['email_address'],
+            supplier_id=user_json["users"]["supplier"]["supplier_id"],
+            supplier_name=user_json["users"]["supplier"]["name"],
         )
