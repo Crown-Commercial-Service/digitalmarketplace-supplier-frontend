@@ -1,6 +1,6 @@
 from flask_login import login_required, current_user
 from app.main import main
-from flask import render_template
+from flask import render_template, url_for
 from .. import api_client
 
 
@@ -18,10 +18,11 @@ def dashboard():
         **template_data), 200
 
 
-@main.route('/services')
+@main.route('/services/<string:service_id>')
 @login_required
-def services():
+def services(service_id):
     template_data = main.config['BASE_TEMPLATE_DATA']
     return render_template(
         "services/services.html",
+        service_id=service_id,
         **template_data), 200

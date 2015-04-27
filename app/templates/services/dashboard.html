@@ -27,8 +27,9 @@
     {% for service in services %}
     <tr class="summary-item-row">
         <td class="summary-item-field-name">
-            <a href="https://www.digitalmarketplace.service.gov.uk/service/{{ service.id }}">{{ service.serviceName
-                }}</a>
+            <a href="https://www.digitalmarketplace.service.gov.uk/service/{{ service.id.lower() }}">
+                {{ service.serviceName }}
+            </a>
         </td>
         <td class="summary-item-field-content">
             {{ service.frameworkName}}
@@ -37,9 +38,17 @@
             {{ service.lot}}
         </td>
         <td class="summary-item-action-field">
-            <a href="{{ url_for('.services') }}">Edit</a>
+            <a href="{{ url_for('.services', service_id=service.id) }}">Edit</a>
         </td>
     </tr>
+    {% else %}
+    <h2 class="summary-item-heading first-summary-item-heading">
+        Summary item with no entries
+    </h2>
+
+    <p class="hint summary-item-no-content">
+        You haven't submitted any services yet.
+    </p>
     {% endfor %}
     </tbody>
 </table>

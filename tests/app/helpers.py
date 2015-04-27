@@ -35,6 +35,7 @@ class BaseApplicationTest(object):
         return {
             'services': [
                 {
+                    'id': 'id',
                     'serviceName': 'serviceName',
                     'frameworkName': 'frameworkName',
                     'lot': 'lot',
