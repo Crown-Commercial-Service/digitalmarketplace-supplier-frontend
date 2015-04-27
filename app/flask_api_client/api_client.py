@@ -67,7 +67,9 @@ class ApiClient:
             headers=self.headers()
         )
         if res.status_code is 200:
-            return self.user_json_to_user(res.json())
+            if self.is_supplier_user(res.json()):
+                return self.user_json_to_user(res.json())
+            return None
         elif res.status_code is 400:
             # TODO log bad request
             return None
@@ -89,3 +91,9 @@ class ApiClient:
             supplier_id=user_json["users"]["supplier"]["supplier_id"],
             supplier_name=user_json["users"]["supplier"]["name"],
         )
+
+    @staticmethod
+    def is_supplier_user(user_json):
+        if "supplier" in user_json["users"]:
+            return True
+        return False
