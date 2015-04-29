@@ -1,6 +1,7 @@
 from __future__ import absolute_import
 
-from flask import flash, redirect, render_template, request, Response, url_for
+from flask import current_app, flash, redirect, render_template, request, \
+    Response, url_for
 from flask_login import logout_user, login_required, login_user, current_user
 
 from . import main
@@ -64,10 +65,24 @@ def forgotten_password():
 def send_reset_email():
     try:
         email_address = request.form['email-address']
-        # TODO: Check in API that the user account exists
-
-        # Send a password reset email with token
-        email.send_password_email(email_address)
+        print("GETTING USER...")
+        user = api_client.user_by_email(email_address)
+        print("GOT USER: " + email_address)
+        if user is not None:
+            print("USER NOT NONE.")
+            # Send a password reset email with token
+            current_app.logger.info(
+                "Sending password reset email for user %d (%s)",
+                user.id, user.email_address
+            )
+            email.send_password_email(user.id, email_address)
+            # TODO: Add to count in "forgotten password emails sent" metric
+        else:
+            current_app.logger.info(
+                "Password reset request for invalid email address %s",
+                email_address
+            )
+            # TODO: Add to count in "forgotten password - invalid" metric
 
         flash('If that Digital Marketplace account exists, you will be sent '
               'an email containing a link to reset your password.')
@@ -77,11 +92,13 @@ def send_reset_email():
 
 
 @main.route('/change-password/<token>', methods=["GET"])
-@login_required
 def change_password(token):
     try:
-        email_address = email.decode_email(token)
+        decoded = email.decode_email(token)
+        user_id = decoded.split()[0]
+        email_address = decoded.split()[1]
     except Exception as e:
+        current_app.logger.info("Error changing password: %s", e)
         flash('The token supplied was invalid or has expired. Password reset'
               ' links are only valid for 24 hours. You can generate a new one'
               ' using the form below.', 'error')
@@ -89,25 +106,27 @@ def change_password(token):
     print("Change password for: " + email_address)
     template_data = main.config['BASE_TEMPLATE_DATA']
     return render_template("auth/change-password.html", email=email_address,
-                           **template_data), 200
+                           user_id=user_id, **template_data), 200
 
 
 @main.route('/change-password', methods=["POST"])
 def update_password():
     email_address = request.form['email-address']
+    user_id = request.form['user-id']
     password = request.form['password']
     confirm = request.form['confirm-password']
 
+    if not password:
+        flash('Please enter a new password.', 'error')
+        return redirect(email.generate_reset_url(user_id, email_address))
     if password != confirm:
         flash('The passwords you entered do not match.', 'error')
-        return redirect(email.generate_reset_url(email_address))
+        return redirect(email.generate_reset_url(user_id, email_address))
+    # TODO: Add any other password requirements here (e.g. min length = ?)
 
-    print("changing password for {0} to '{1}'".format(email_address, password))
-    # TODO: send API call to update password
-    return redirect(url_for('.password_changed'))
-
-
-@main.route('/password-changed', methods=["GET"])
-def password_changed():
-    template_data = main.config['BASE_TEMPLATE_DATA']
-    return render_template("auth/password-changed.html", **template_data), 200
+    if api_client.user_update_password(user_id, password):
+        current_app.logger.info("Changed password for user ID %s", user_id)
+        flash('You have successfully changed your password.')
+    else:
+        flash('Could not update password due to an error.', 'error')
+    return redirect(url_for('.render_login'))
