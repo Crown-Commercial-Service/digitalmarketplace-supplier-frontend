@@ -6,27 +6,55 @@
 </header>
 <form action="{{ url_for('.process_login') }}" method="POST">
 
-    <div class="question">
-        <label for="email-address" class="question-heading-with-hint">
-            Email address
-        </label>
+    {% if form.errors %}
+    <div class="validation-masthead" aria-labelledby="validation-masthead-heading">
+        <h3 class="validation-masthead-heading" id="validation-masthead-heading">
+            There was a problem with your answer to the following questions
+        </h3>
 
+        {% for field_name, field_errors in form.errors|dictsort if field_errors %}
+        {% for error in field_errors %}
+        <a href="#example-textbox" class="validation-masthead-link">{{ form[field_name].label }}</a>
+        {% endfor %}
+        {% endfor %}
+
+    </div>
+    {% endif %}
+
+    {% for message in get_flashed_messages() %}
+    <div class="validation-masthead" aria-labelledby="validation-masthead-heading">
+        <h3 class="validation-masthead-heading" id="validation-masthead-heading">
+            {{ message }} </h3>
+    </div>
+    {% endfor %}
+
+
+    {{ form.hidden_tag() }}
+    <div class="question">
+        {{ form.email_address.label(class="question-heading-with-hint") }}
         <p class="hint">
             Email used to register with the digital marketplace.
         </p>
-        <input type="text" name="email-address" id="email-address" class="text-box" value=""/>
+        {% if form.email_address.errors %}
+        <p class="validation-message" id="error-email-address-textbox">
+            {% for error in form.email_address.errors %}{{ error }}{% endfor %}
+        </p>
+        {% endif %}
+        {{ form.email_address(class="text-box") }}
     </div>
 
     <div class="question">
-        <label for="passphrase" class="question-heading">
-            Passphrase
-        </label>
-
-        <input type="password" name="email-address" id="passphrase" class="text-box" value=""/>
+        {{ form.password.label(class="question-heading") }}
+        {% if form.password.errors %}
+        <p class="validation-message" id="error-password-textbox">
+            {% for error in form.password.errors %}{{ error }}{% endfor %}
+        </p>
+        {% endif %}
+        {{ form.password(class="text-box") }}
     </div>
 
 
-    <button class="button-save">Login</button>
+    <button class="button-save">Log in</button>
     <header class="page-heading-smaller">
         <p class="context">
             <a href="{{ url_for('.forgotten_password') }}">Forgotten password</a>

@@ -5,6 +5,13 @@ basedir = os.path.abspath(os.path.dirname(__file__))
 
 
 class Config(object):
+    SESSION_COOKIE_NAME = 'dm_session'
+    SESSION_COOKIE_PATH = '/'
+    SESSION_COOKIE_HTTPONLY = True
+    SESSION_COOKIE_SECURE = False
+    WTF_CSRF_ENABLED = True
+    DM_API_URL = None
+    DM_API_AUTH_TOKEN = None
     DEBUG = False
     SECRET_KEY = 'this is not secret'
     STATIC_URL_PATH = '/suppliers/static'
@@ -34,6 +41,9 @@ class Config(object):
 
 class Test(Config):
     DEBUG = True
+    DM_API_AUTH_TOKEN = 'test'
+    DM_API_URL = 'http://localhost'
+    WTF_CSRF_ENABLED = False
 
 
 class Development(Config):
@@ -41,7 +51,9 @@ class Development(Config):
 
 
 class Live(Config):
+    SESSION_COOKIE_DOMAIN = 'www.digitalmarketplace.service.gov.uk'
     DEBUG = False
+    SESSION_COOKIE_SECURE = True
 
 
 config = {
