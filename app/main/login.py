@@ -9,7 +9,6 @@ from .. import api_client
 from .helpers import email
 
 
-
 @main.route('/login', methods=["GET"])
 def render_login():
     template_data = main.config['BASE_TEMPLATE_DATA']
@@ -32,7 +31,7 @@ def process_login():
         if not user:
             flash(
                 "Sorry, we couldn't find a user with "
-                "that username and password")
+                "that username and password", "error")
             return render_template(
                 "auth/login.html",
                 form=form,

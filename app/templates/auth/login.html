@@ -21,13 +21,19 @@
     </div>
     {% endif %}
 
-    {% for message in get_flashed_messages() %}
-    <div class="validation-masthead" aria-labelledby="validation-masthead-heading">
-        <h3 class="validation-masthead-heading" id="validation-masthead-heading">
-            {{ message }} </h3>
-    </div>
-    {% endfor %}
-
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                {% if category == 'error' %}
+                    <div class="banner-destructive-without-action">
+                {% else %}
+                    <div class="banner-success-without-action">
+                {% endif %}
+            <p class="banner-message">{{ message }}</p>
+            {% endfor %}
+        </div>
+        {% endif %}
+     {% endwith %}
 
     {{ form.hidden_tag() }}
     <div class="question">
