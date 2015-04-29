@@ -1,6 +1,6 @@
 import requests
 from flask import json
-from app.model import User
+from ..model import User
 
 
 class ApiClient:
