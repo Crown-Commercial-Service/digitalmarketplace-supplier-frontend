@@ -58,8 +58,8 @@ class ApiClient:
             "{}/{}".format(self.root_url, "users/auth"),
             data=json.dumps(
                 {
-                    "auth_users": {
-                        "email_address": email_address,
+                    "authUsers": {
+                        "emailAddress": email_address,
                         "password": password
                     }
                 }
@@ -87,8 +87,8 @@ class ApiClient:
     def user_json_to_user(user_json):
         return User(
             user_id=user_json["users"]["id"],
-            email_address=user_json["users"]['email_address'],
-            supplier_id=user_json["users"]["supplier"]["supplier_id"],
+            email_address=user_json["users"]['emailAddress'],
+            supplier_id=user_json["users"]["supplier"]["supplierId"],
             supplier_name=user_json["users"]["supplier"]["name"],
         )
 

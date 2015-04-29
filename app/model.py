@@ -27,7 +27,7 @@ class User():
     def serialize(self):
         return {
             'id': self.id,
-            'email_address': self.email_address,
-            'supplier_id': self.supplier_id,
-            'supplier_name': self.supplier_name,
+            'emailAddress': self.email_address,
+            'supplierId': self.supplier_id,
+            'supplierName': self.supplier_name,
         }

@@ -115,16 +115,16 @@ class TestApiClient():
 
         return {'users': {
             'id': 'id',
-            'email_address': 'email_address',
+            'emailAddress': 'email_address',
             'name': 'name',
             'role': 'role',
             'active': 'active',
             'locked': False,
-            'created_at': timestamp,
-            'updated_at': timestamp,
-            'password_changed_at': timestamp,
+            'createdAt': timestamp,
+            'updatedAt': timestamp,
+            'passwordChangedAt': timestamp,
             'supplier': {
-                'supplier_id': 1234,
+                'supplierId': 1234,
                 'name': 'name'
             }
         }}
