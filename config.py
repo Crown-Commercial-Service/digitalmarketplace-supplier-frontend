@@ -53,6 +53,7 @@ class Config(object):
 
 class Test(Config):
     DEBUG = True
+    DM_LOG_LEVEL = 'CRITICAL'
     DM_API_AUTH_TOKEN = 'test'
     DM_API_URL = 'http://localhost'
     DM_DATA_API_URL = os.getenv('DM_DATA_API_URL')
