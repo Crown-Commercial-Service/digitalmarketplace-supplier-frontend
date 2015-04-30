@@ -5,11 +5,15 @@ from itsdangerous import URLSafeTimedSerializer
 from .. import main
 
 
+with open("./email_templates/forgotten_password_email.html", "r") as f:
+    forgot_password_email_body = f.read()
+
+
 def send_password_email(user_id, email_address):
     try:
         mandrill_client = mandrill.Mandrill(main.config['MANDRILL_API_KEY'])
         url = generate_reset_url(user_id, email_address)
-        body = main.config['FORGOT_PASSWORD_EMAIL_BODY'].format(url)
+        body = forgot_password_email_body.format(url)
         message = {'html': body,
                    'subject': main.config['FORGOT_PASSWORD_EMAIL_SUBJECT'],
                    'from_email': main.config['FORGOT_PASSWORD_EMAIL_FROM'],

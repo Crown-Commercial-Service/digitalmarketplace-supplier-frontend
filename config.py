@@ -23,14 +23,6 @@ class Config(object):
     FORGOT_PASSWORD_EMAIL_NAME = 'Digital Marketplace Admin'
     FORGOT_PASSWORD_EMAIL_FROM = 'enquiries@digitalmarketplace.service.gov.uk'
     FORGOT_PASSWORD_EMAIL_SUBJECT = 'Reset your Digital Marketplace password'
-    FORGOT_PASSWORD_EMAIL_BODY = \
-        'Hello,<br /><br />You recently asked to reset your Digital ' \
-        'Marketplace password. <br /><br />You can change your password ' \
-        'now using the link below:<br /><br />{0}<br /><br />Please don\'t ' \
-        'reply to this email - it\'s an automated message. If you need to ' \
-        'get in touch, you can reach us at ' \
-        'enquiries@digitalmarketplace.service.gov.uk<br /><br />Thanks,' \
-        '<br /><br />The Digital Marketplace Admin Team'
     SECRET_KEY = os.getenv('DM_PASSWORD_SECRET_KEY')
     SECRET_SALT = os.getenv('DM_SECRET_SALT')
 
