@@ -31,7 +31,7 @@ def process_login():
 
         if not user:
             flash(
-                "Sorry, we couldn't find a user with "
+                "Sorry, we couldn't find a supplier account with "
                 "that username and password", "error")
             return render_template(
                 "auth/login.html",
@@ -65,27 +65,24 @@ def forgotten_password():
 def send_reset_email():
     try:
         email_address = request.form['email-address']
-        print("GETTING USER...")
         user = api_client.user_by_email(email_address)
-        print("GOT USER: " + email_address)
         if user is not None:
-            print("USER NOT NONE.")
             # Send a password reset email with token
             current_app.logger.info(
-                "Sending password reset email for user %d (%s)",
+                "Sending password reset email for supplier %d (%s)",
                 user.id, user.email_address
             )
             email.send_password_email(user.id, email_address)
             # TODO: Add to count in "forgotten password emails sent" metric
         else:
             current_app.logger.info(
-                "Password reset request for invalid email address %s",
+                "Password reset request for invalid supplier email address %s",
                 email_address
             )
             # TODO: Add to count in "forgotten password - invalid" metric
 
-        flash('If that Digital Marketplace account exists, you will be sent '
-              'an email containing a link to reset your password.')
+        flash('If that Digital Marketplace supplier account exists, you will '
+              'be sent an email containing a link to reset your password.')
         return redirect(url_for('.forgotten_password'))
     except Exception as e:
         return Response("Error: %s" % str(e), 500)
