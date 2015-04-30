@@ -13,8 +13,8 @@ class TestApiClient():
     api_client = None
 
     def __init__(self):
-        app = create_app('test')
-        self.api_client = ApiClient(app)
+        self.app = create_app('test')
+        self.api_client = ApiClient(self.app)
         self.session = requests.Session()
         self.adapter = requests_mock.Adapter()
         self.session.mount('mock', self.adapter)
@@ -37,72 +37,76 @@ class TestApiClient():
 
     def test_auth_returns_none_on_404(self):
         with requests_mock.mock() as m:
-            m.post(
-                'http://localhost/users/auth',
-                text=json.dumps({'authorization': False}),
-                status_code=404)
+            with self.app.app_context():
+                m.post(
+                    'http://localhost/users/auth',
+                    text=json.dumps({'authorization': False}),
+                    status_code=404)
 
-            user = self.api_client.users_auth(
-                'email_address',
-                'password'
-            )
-            assert_equal(user, None)
+                user = self.api_client.users_auth(
+                    'email_address',
+                    'password'
+                )
+                assert_equal(user, None)
 
     def test_auth_returns_none_on_403(self):
         with requests_mock.mock() as m:
-            m.post(
-                'http://localhost/users/auth',
-                text=json.dumps({'authorization': False}),
-                status_code=403)
+            with self.app.app_context():
+                m.post(
+                    'http://localhost/users/auth',
+                    text=json.dumps({'authorization': False}),
+                    status_code=403)
 
-            user = self.api_client.users_auth(
-                'email_address',
-                'password'
-            )
-            assert_equal(user, None)
+                user = self.api_client.users_auth(
+                    'email_address',
+                    'password'
+                )
+                assert_equal(user, None)
 
     def test_auth_returns_none_on_a_non_supplier_user(self):
         with requests_mock.mock() as m:
+            with self.app.app_context():
+                user_with_no_supplier = self.user()
+                del user_with_no_supplier["users"]["supplier"]
 
-            user_with_no_supplier = self.user()
-            del user_with_no_supplier["users"]["supplier"]
+                m.post(
+                    'http://localhost/users/auth',
+                    text=json.dumps(user_with_no_supplier),
+                    status_code=200)
 
-            m.post(
-                'http://localhost/users/auth',
-                text=json.dumps(user_with_no_supplier),
-                status_code=200)
-
-            user = self.api_client.users_auth(
-                'email_address',
-                'password'
-            )
-            assert_equal(user, None)
+                user = self.api_client.users_auth(
+                    'email_address',
+                    'password'
+                )
+                assert_equal(user, None)
 
     def test_auth_returns_none_on_400(self):
         with requests_mock.mock() as m:
-            m.post(
-                'http://localhost/users/auth',
-                text=json.dumps({'authorization': False}),
-                status_code=400)
+            with self.app.app_context():
+                m.post(
+                    'http://localhost/users/auth',
+                    text=json.dumps({'authorization': False}),
+                    status_code=400)
 
-            user = self.api_client.users_auth(
-                'email_address',
-                'password'
-            )
-            assert_equal(user, None)
+                user = self.api_client.users_auth(
+                    'email_address',
+                    'password'
+                )
+                assert_equal(user, None)
 
     def test_auth_returns_none_on_500(self):
         with requests_mock.mock() as m:
-            m.post(
-                'http://localhost/users/auth',
-                text=json.dumps({'authorization': False}),
-                status_code=500)
+            with self.app.app_context():
+                m.post(
+                    'http://localhost/users/auth',
+                    text=json.dumps({'authorization': False}),
+                    status_code=500)
 
-            user = self.api_client.users_auth(
-                'email_address',
-                'password'
-            )
-            assert_equal(user, None)
+                user = self.api_client.users_auth(
+                    'email_address',
+                    'password'
+                )
+                assert_equal(user, None)
 
     def test_user_json_to_user(self):
         result = User.from_json(self.user())
