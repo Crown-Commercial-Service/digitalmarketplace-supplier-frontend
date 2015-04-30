@@ -100,7 +100,6 @@ def change_password(token):
               ' links are only valid for 24 hours. You can generate a new one'
               ' using the form below.', 'error')
         return redirect(url_for('.forgotten_password'))
-    print("Change password for: " + email_address)
     template_data = main.config['BASE_TEMPLATE_DATA']
     return render_template("auth/change-password.html", email=email_address,
                            user_id=user_id, **template_data), 200
