@@ -105,7 +105,7 @@ class TestApiClient():
             assert_equal(user, None)
 
     def test_user_json_to_user(self):
-        result = self.api_client.user_json_to_user(self.user())
+        result = User.from_json(self.user())
         assert_equal(result.id, 'id')
         assert_equal(result.email_address, 'email_address')
 

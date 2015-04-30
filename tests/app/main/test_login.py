@@ -25,7 +25,7 @@ class TestLogin(BaseApplicationTest):
     def test_should_show_login_page(self):
         res = self.client.get("/suppliers/login")
         assert_equal(res.status_code, 200)
-        assert_true("<h1>Login</h1>" in res.get_data(as_text=True))
+        assert_true("<h1>Supplier login</h1>" in res.get_data(as_text=True))
 
     def test_should_redirect_to_dashboard_on_login(self):
         api_client.users_auth = Mock(
@@ -65,8 +65,10 @@ class TestLogin(BaseApplicationTest):
             'password': '1234567890'
         })
         assert_true(
-            self.strip_all_whitespace("Sorry, we couldn&#39;t find a "
-                                      "user with that username and password")
+            self.strip_all_whitespace(
+                "Sorry, we couldn&#39;t find a supplier account with that"
+                "username and password"
+            )
             in self.strip_all_whitespace(res.get_data(as_text=True)))
         assert_equal(res.status_code, 403)
 

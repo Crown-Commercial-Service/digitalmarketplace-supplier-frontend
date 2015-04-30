@@ -34,9 +34,9 @@ class ApiClient:
             return res.json()
         else:
             current_app.logger.error("Error getting services for %s: %s - %s",
-                                    supplier_id, res.status_code,
-                                    res.json()["error"])
-            return {"services":{}}
+                                     supplier_id, res.status_code,
+                                     res.json()["error"])
+            return {"services": {}}
 
     def user_by_id(self, user_id):
         res = requests.get(
@@ -44,11 +44,11 @@ class ApiClient:
             headers=self.headers()
         )
         if res.status_code == 200:
-            return self.user_json_to_user(res.json())
+            return User.from_json(res.json())
         else:
             current_app.logger.error("Error getting user by id %s: %s - %s",
-                                      user_id, res.status_code,
-                                      res.json()["error"])
+                                     user_id, res.status_code,
+                                     res.json()["error"])
         return None
 
     def user_by_email(self, email_address):
@@ -58,7 +58,7 @@ class ApiClient:
             headers=self.headers()
         )
         if res.status_code == 200:
-            return self.user_json_to_user(res.json())
+            return User.from_json(res.json())
         elif res.status_code != 404:
             current_app.logger.error("Error getting user by email %s: %s - %s",
                                      email_address, res.status_code,
@@ -82,7 +82,7 @@ class ApiClient:
         if code == 200:
             # Only log in supplier users to this app
             if self.is_supplier_user(res.json()):
-                return self.user_json_to_user(res.json())
+                return User.from_json(res.json())
             else:
                 current_app.logger.info("Login by non-supplier user %s",
                                         email_address)
@@ -116,21 +116,6 @@ class ApiClient:
             current_app.logger.info("Password update failed for user %s: %s",
                                     user_id, res.status_code)
             return False
-
-    @staticmethod
-    def user_json_to_user(user_json):
-        user = user_json["users"]
-        supplier_id = None
-        supplier_name = None
-        if "supplier" in user:
-            supplier_id = user["supplier"]["supplierId"]
-            supplier_name = user["supplier"]["name"]
-        return User(
-            user_id=user["id"],
-            email_address=user['emailAddress'],
-            supplier_id=supplier_id,
-            supplier_name=supplier_name
-        )
 
     @staticmethod
     def is_supplier_user(user_json):

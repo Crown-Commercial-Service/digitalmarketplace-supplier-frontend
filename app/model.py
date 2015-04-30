@@ -31,3 +31,18 @@ class User():
             'supplierId': self.supplier_id,
             'supplierName': self.supplier_name,
         }
+
+    @staticmethod
+    def from_json(user_json):
+        user = user_json["users"]
+        supplier_id = None
+        supplier_name = None
+        if "supplier" in user:
+            supplier_id = user["supplier"]["supplierId"]
+            supplier_name = user["supplier"]["name"]
+        return User(
+            user_id=user["id"],
+            email_address=user['emailAddress'],
+            supplier_id=supplier_id,
+            supplier_name=supplier_name
+        )
