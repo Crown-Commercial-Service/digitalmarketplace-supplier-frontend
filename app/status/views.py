@@ -12,13 +12,13 @@ def status():
         api_client.status
     )
 
-    apis_wot_got_errors = []
+    apis_with_errors = []
 
-    if api_response is None or api_response.status_code is not 200:
-        apis_wot_got_errors.append("(Data) API")
+    if api_response is None or api_response.status_code != 200:
+        apis_with_errors.append("(Data) API")
 
     # if no errors found, return everything
-    if not apis_wot_got_errors:
+    if not apis_with_errors:
         return jsonify(
             status="ok",
             version=utils.get_version_label(),
@@ -26,7 +26,7 @@ def status():
         )
 
     message = "Error connecting to the " \
-              + (" and the ".join(apis_wot_got_errors)) \
+              + (" and the ".join(apis_with_errors)) \
               + "."
 
     current_app.logger.error(message)
