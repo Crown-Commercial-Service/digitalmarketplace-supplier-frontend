@@ -56,9 +56,9 @@ class Live(Config):
     SESSION_COOKIE_SECURE = True
 
 
-config = {
+configs = {
     'development': Development,
-    'preview': Development,
+    'preview': Live,
     'staging': Live,
     'production': Live,
     'test': Test,

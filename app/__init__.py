@@ -3,10 +3,10 @@ import re
 
 from flask import Flask
 from flask_login import LoginManager
-from config import config
 from flask._compat import string_types
 from .flask_api_client.api_client import ApiClient
-from dmutils import logging
+from dmutils import logging, config
+from config import configs
 
 api_client = ApiClient()
 login_manager = LoginManager()
@@ -15,18 +15,14 @@ login_manager = LoginManager()
 def create_app(config_name):
     application = Flask(__name__,
                         static_folder='static/',
-                        static_url_path=config[config_name].STATIC_URL_PATH)
+                        static_url_path=configs[config_name].STATIC_URL_PATH)
+
+    application.config.from_object(configs[config_name])
+    configs[config_name].init_app(application)
+    config.init_app(application)
 
     from .main import main as main_blueprint
     from .status import status as status_blueprint
-
-    application.config.from_object(config[config_name])
-
-    for name in config_attrs(config[config_name]):
-        if name in os.environ:
-            application.config[name] = convert_to_boolean(os.environ[name])
-
-    config[config_name].init_app(application)
 
     api_client.init_app(application)
     login_manager.init_app(application)
