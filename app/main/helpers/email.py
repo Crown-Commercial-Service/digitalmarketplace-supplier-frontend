@@ -1,19 +1,15 @@
-from flask import url_for, current_app
+from flask import url_for, current_app, render_template
 import mandrill
 from itsdangerous import URLSafeTimedSerializer
 
 from .. import main
 
 
-with open("./email_templates/forgotten_password_email.html", "r") as f:
-    forgot_password_email_body = f.read()
-
-
 def send_password_email(user_id, email_address):
     try:
         mandrill_client = mandrill.Mandrill(main.config['MANDRILL_API_KEY'])
         url = generate_reset_url(user_id, email_address)
-        body = forgot_password_email_body.format(url)
+        body = render_template("emails/forgotten_password_email.html", url=url)
         message = {'html': body,
                    'subject': main.config['FORGOT_PASSWORD_EMAIL_SUBJECT'],
                    'from_email': main.config['FORGOT_PASSWORD_EMAIL_FROM'],
@@ -29,21 +25,13 @@ def send_password_email(user_id, email_address):
                    'headers': {'Reply-To': main.config['FORGOT_PASSWORD_EMAIL_FROM']},  # noqa
                    'recipient_metadata': [
                        {'rcpt': email_address,
-                        'values': {'user_id': 123456}}]
+                        'values': {'user_id': user_id}}]
         }
         result = mandrill_client.messages.send(message=message, async=False,
                                                ip_pool='Main Pool')
-        '''
-        [{'_id': 'abc123abc123abc123abc123abc123',
-          'email': 'recipient.email@example.com',
-          'reject_reason': 'hard-bounce',
-          'status': 'sent'}]
-        '''
     except mandrill.Error as e:
         # Mandrill errors are thrown as exceptions
         current_app.logger.error("A mandrill error occurred: %s", e)
-        # A mandrill error occurred: <class 'mandrill.UnknownSubaccountError'>
-        # - No subaccount exists with the id 'customer-123'
         return
     current_app.logger.info("Sent password email: %s", result)
 
