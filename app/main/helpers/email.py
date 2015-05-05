@@ -39,7 +39,8 @@ def send_password_email(user_id, email_address):
 def generate_reset_url(user_id, email_address):
     encoded_string = str(user_id) + " " + email_address
     ts = URLSafeTimedSerializer(main.config["SECRET_KEY"])
-    token = ts.dumps(encoded_string, salt=main.config["SECRET_SALT"])
+    token = ts.dumps({"user": user_id, "email": email_address},
+                     salt=main.config["RESET_PASSWORD_SALT"])
     url = url_for('.change_password', token=token, _external=True)
     current_app.logger.debug("Generated reset URL: %s", url)
     return url
@@ -47,5 +48,7 @@ def generate_reset_url(user_id, email_address):
 
 def decode_email(token):
     ts = URLSafeTimedSerializer(main.config["SECRET_KEY"])
-    decoded = ts.loads(token, salt=main.config["SECRET_SALT"], max_age=86400)
+    decoded = ts.loads(token,
+                       salt=main.config["RESET_PASSWORD_SALT"],
+                       max_age=86400)
     return decoded

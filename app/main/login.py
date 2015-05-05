@@ -1,4 +1,5 @@
 from __future__ import absolute_import
+from itsdangerous import BadSignature, SignatureExpired
 
 from flask import current_app, flash, redirect, render_template, request, \
     Response, url_for
@@ -63,41 +64,43 @@ def forgotten_password():
 
 @main.route('/forgotten-password', methods=["POST"])
 def send_reset_email():
-    try:
-        email_address = request.form['email-address']
-        user = api_client.user_by_email(email_address)
-        if user is not None:
-            # Send a password reset email with token
-            current_app.logger.info(
-                "Sending password reset email for supplier %d (%s)",
-                user.id, user.email_address
-            )
-            email.send_password_email(user.id, email_address)
-            # TODO: Add to count in "forgotten password emails sent" metric
-        else:
-            current_app.logger.info(
-                "Password reset request for invalid supplier email address %s",
-                email_address
-            )
-            # TODO: Add to count in "forgotten password - invalid" metric
+    email_address = request.form['email-address']
+    user = api_client.user_by_email(email_address)
+    if user is not None:
+        # Send a password reset email with token
+        current_app.logger.info(
+            "Sending password reset email for supplier %d (%s)",
+            user.id, user.email_address
+        )
+        email.send_password_email(user.id, email_address)
+        # TODO: Add to count in "forgotten password emails sent" metric
+    else:
+        current_app.logger.info(
+            "Password reset request for invalid supplier email address %s",
+            email_address
+        )
+        # TODO: Add to count in "forgotten password - invalid" metric
 
-        flash('If that Digital Marketplace supplier account exists, you will '
-              'be sent an email containing a link to reset your password.')
-        return redirect(url_for('.forgotten_password'))
-    except Exception as e:
-        return Response("Error: %s" % str(e), 500)
+    flash('If that Digital Marketplace supplier account exists, you will '
+          'be sent an email containing a link to reset your password.')
+    return redirect(url_for('.forgotten_password'))
 
 
 @main.route('/change-password/<token>', methods=["GET"])
 def change_password(token):
     try:
         decoded = email.decode_email(token)
-        user_id = decoded.split()[0]
-        email_address = decoded.split()[1]
-    except Exception as e:
+        user_id = decoded["user"]
+        email_address = decoded["email"]
+    except SignatureExpired:
+        current_app.logger.info("Password reset attempt with expired token.")
+        flash('The token supplied has expired. Password reset links are only'
+              ' valid for 24 hours. You can generate a new one using the form'
+              ' below.', 'error')
+        return redirect(url_for('.forgotten_password'))
+    except BadSignature as e:
         current_app.logger.info("Error changing password: %s", e)
-        flash('The token supplied was invalid or has expired. Password reset'
-              ' links are only valid for 24 hours. You can generate a new one'
+        flash('The token supplied was invalid. You can generate a new one'
               ' using the form below.', 'error')
         return redirect(url_for('.forgotten_password'))
     template_data = main.config['BASE_TEMPLATE_DATA']
@@ -121,7 +124,8 @@ def update_password():
     # TODO: Add any other password requirements here (e.g. min length = ?)
 
     if api_client.user_update_password(user_id, password):
-        current_app.logger.info("Changed password for user ID %s", user_id)
+        current_app.logger.info("User %s successfully changed their password",
+                                user_id)
         flash('You have successfully changed your password.')
     else:
         flash('Could not update password due to an error.', 'error')
