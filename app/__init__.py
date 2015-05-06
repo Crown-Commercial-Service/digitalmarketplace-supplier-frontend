@@ -4,11 +4,9 @@ import re
 from flask import Flask
 from flask_login import LoginManager
 from flask._compat import string_types
-from .flask_api_client.api_client import ApiClient
 from dmutils import apiclient, logging, config
 from config import configs
 
-api_client = ApiClient()
 data_api_client = apiclient.DataAPIClient()
 login_manager = LoginManager()
 
@@ -25,7 +23,6 @@ def create_app(config_name):
     from .main import main as main_blueprint
     from .status import status as status_blueprint
 
-    api_client.init_app(application)
     login_manager.init_app(application)
     logging.init_app(application)
     data_api_client.init_app(application)
@@ -41,7 +38,7 @@ def create_app(config_name):
 
 @login_manager.user_loader
 def load_user(user_id):
-    return api_client.user_by_id(int(user_id))
+    return data_api_client.get_user(user_id=int(user_id))
 
 
 def config_attrs(config):
