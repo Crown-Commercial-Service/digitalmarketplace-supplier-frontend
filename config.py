@@ -12,6 +12,8 @@ class Config(object):
     WTF_CSRF_ENABLED = True
     DM_API_URL = None
     DM_API_AUTH_TOKEN = None
+    DM_DATA_API_URL = None
+    DM_DATA_API_AUTH_TOKEN = None
     DEBUG = False
     SECRET_KEY = 'this is not secret'
     STATIC_URL_PATH = '/suppliers/static'
@@ -43,6 +45,8 @@ class Test(Config):
     DEBUG = True
     DM_API_AUTH_TOKEN = 'test'
     DM_API_URL = 'http://localhost'
+    DM_DATA_API_URL = os.getenv('DM_DATA_API_URL')
+    DM_DATA_API_AUTH_TOKEN = os.getenv('DM_DATA_API_AUTH_TOKEN')
     WTF_CSRF_ENABLED = False
 
 

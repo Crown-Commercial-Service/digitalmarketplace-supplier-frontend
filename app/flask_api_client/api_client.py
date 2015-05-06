@@ -22,11 +22,6 @@ class ApiClient:
             "Authorization": "Bearer {}".format(self.token)
         }
 
-    def status(self):
-        return requests.get(
-            self.root_url + "/_status",
-        )
-
     def services_by_supplier_id(self, supplier_id):
         res = requests.get(
             "{}/{}?supplier_id={}".format(

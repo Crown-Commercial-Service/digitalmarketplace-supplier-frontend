@@ -2,14 +2,14 @@ from flask import jsonify, current_app
 
 from . import status
 from . import utils
-from .. import api_client
+from .. import data_api_client
 
 
 @status.route('/_status')
 def status():
 
     api_response = utils.return_response_from_api_status_call(
-        api_client.status
+        data_api_client.get_status
     )
 
     apis_with_errors = []
@@ -25,9 +25,9 @@ def status():
             api_status=api_response.json(),
         )
 
-    message = "Error connecting to the " \
-              + (" and the ".join(apis_with_errors)) \
-              + "."
+    message = "Error connecting to the {}.".format(
+        " and the ".join(apis_with_errors)
+    )
 
     current_app.logger.error(message)
 
