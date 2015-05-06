@@ -1,9 +1,7 @@
 from nose.tools import assert_equal, assert_true, \
     assert_is_not_none
-from app.model import User
 from ..helpers import BaseApplicationTest
 from mock import Mock
-import re
 from app import api_client
 
 
@@ -66,8 +64,8 @@ class TestLogin(BaseApplicationTest):
         })
         assert_true(
             self.strip_all_whitespace(
-                "Sorry, we couldn&#39;t find a supplier account with that"
-                "username and password"
+                "Sorry, we couldn't find a supplier account with that username"
+                "and password."
             )
             in self.strip_all_whitespace(res.get_data(as_text=True)))
         assert_equal(res.status_code, 403)

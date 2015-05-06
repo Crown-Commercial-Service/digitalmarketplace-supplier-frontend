@@ -29,7 +29,20 @@
                 {% else %}
                     <div class="banner-success-without-action">
                 {% endif %}
-            <p class="banner-message">{{ message }}</p>
+            <p class="banner-message">
+                {% if message == 'no_account' %}
+                Sorry, we couldn't find a supplier account with that username 
+                and password.
+                {% endif %}
+                
+                {% if message == 'password_updated' %}
+                You have successfully changed your password.
+                {% endif %}
+                
+                {% if message == 'password_not_updated' %}
+                Could not update password due to an error.
+                {% endif %}
+            </p>
             {% endfor %}
         </div>
         {% endif %}
