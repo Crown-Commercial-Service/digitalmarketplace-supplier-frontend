@@ -5,10 +5,11 @@ from flask import Flask
 from flask_login import LoginManager
 from flask._compat import string_types
 from .flask_api_client.api_client import ApiClient
-from dmutils import logging, config
+from dmutils import apiclient, logging, config
 from config import configs
 
 api_client = ApiClient()
+data_api_client = apiclient.DataAPIClient()
 login_manager = LoginManager()
 
 
@@ -27,6 +28,7 @@ def create_app(config_name):
     api_client.init_app(application)
     login_manager.init_app(application)
     logging.init_app(application)
+    data_api_client.init_app(application)
 
     application.register_blueprint(status_blueprint)
     application.register_blueprint(main_blueprint,
