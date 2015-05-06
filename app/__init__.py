@@ -1,11 +1,12 @@
-import os
 import re
 
 from flask import Flask
 from flask_login import LoginManager
 from flask._compat import string_types
 from dmutils import apiclient, logging, config
+
 from config import configs
+from .model import User
 
 data_api_client = apiclient.DataAPIClient()
 login_manager = LoginManager()
@@ -38,7 +39,7 @@ def create_app(config_name):
 
 @login_manager.user_loader
 def load_user(user_id):
-    return data_api_client.get_user(user_id=int(user_id))
+    return User.from_json(data_api_client.get_user(user_id=int(user_id)))
 
 
 def config_attrs(config):
