@@ -2,7 +2,7 @@
 
 {% block main_content %}
 <header class="page-heading">
-    <h1>Login</h1>
+    <h1>Supplier login</h1>
 </header>
 <form action="{{ url_for('.process_login') }}" method="POST">
 
@@ -21,13 +21,32 @@
     </div>
     {% endif %}
 
-    {% for message in get_flashed_messages() %}
-    <div class="validation-masthead" aria-labelledby="validation-masthead-heading">
-        <h3 class="validation-masthead-heading" id="validation-masthead-heading">
-            {{ message }} </h3>
-    </div>
-    {% endfor %}
-
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                {% if category == 'error' %}
+                    <div class="banner-destructive-without-action">
+                {% else %}
+                    <div class="banner-success-without-action">
+                {% endif %}
+            <p class="banner-message">
+                {% if message == 'no_account' %}
+                Sorry, we couldn't find a supplier account with that username 
+                and password.
+                {% endif %}
+                
+                {% if message == 'password_updated' %}
+                You have successfully changed your password.
+                {% endif %}
+                
+                {% if message == 'password_not_updated' %}
+                Could not update password due to an error.
+                {% endif %}
+            </p>
+            {% endfor %}
+        </div>
+        {% endif %}
+     {% endwith %}
 
     {{ form.hidden_tag() }}
     <div class="question">

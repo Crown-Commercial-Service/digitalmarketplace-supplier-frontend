@@ -15,7 +15,17 @@ class Config(object):
     DM_DATA_API_URL = None
     DM_DATA_API_AUTH_TOKEN = None
     DEBUG = False
-    SECRET_KEY = 'this is not secret'
+
+    API_URL = os.getenv('DM_API_URL')
+    API_AUTH_TOKEN = os.getenv('DM_SUPPLIER_FRONTEND_API_AUTH_TOKEN')
+
+    MANDRILL_API_KEY = os.getenv('DM_MANDRILL_API_KEY')
+    FORGOT_PASSWORD_EMAIL_NAME = 'Digital Marketplace Admin'
+    FORGOT_PASSWORD_EMAIL_FROM = 'enquiries@digitalmarketplace.service.gov.uk'
+    FORGOT_PASSWORD_EMAIL_SUBJECT = 'Reset your Digital Marketplace password'
+    SECRET_KEY = os.getenv('DM_PASSWORD_SECRET_KEY')
+    RESET_PASSWORD_SALT = 'ResetPasswordSalt'
+
     STATIC_URL_PATH = '/suppliers/static'
     ASSET_PATH = STATIC_URL_PATH + '/'
     BASE_TEMPLATE_DATA = {
@@ -43,6 +53,7 @@ class Config(object):
 
 class Test(Config):
     DEBUG = True
+    DM_LOG_LEVEL = 'CRITICAL'
     DM_API_AUTH_TOKEN = 'test'
     DM_API_URL = 'http://localhost'
     DM_DATA_API_URL = os.getenv('DM_DATA_API_URL')
@@ -51,7 +62,7 @@ class Test(Config):
 
 
 class Development(Config):
-    DEBUG = True,
+    DEBUG = True
 
 
 class Live(Config):

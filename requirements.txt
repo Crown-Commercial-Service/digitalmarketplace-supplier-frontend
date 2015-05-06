@@ -1,10 +1,12 @@
 Flask==0.10.1
-Flask-Script==2.0.5
-requests==2.5.1
-Flask-WTF==0.11
 Flask-Login==0.2.11
+Flask-Script==2.0.5
+Flask-WTF==0.11
 -e git+https://github.com/alphagov/digitalmarketplace-utils.git@0.5.0#egg=digitalmarketplace-utils
 
+mandrill==1.0.57
+
+requests==2.5.1
 # Required for SNI to work in requests 
 pyOpenSSL==0.14
 ndg-httpsclient==0.3.3
