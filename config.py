@@ -24,7 +24,7 @@ class Config(object):
     FORGOT_PASSWORD_EMAIL_FROM = 'enquiries@digitalmarketplace.service.gov.uk'
     FORGOT_PASSWORD_EMAIL_SUBJECT = 'Reset your Digital Marketplace password'
     SECRET_KEY = os.getenv('DM_PASSWORD_SECRET_KEY')
-    RESET_PASSWORD_SALT = os.getenv('DM_RESET_PASSWORD_SALT')
+    RESET_PASSWORD_SALT = 'ResetPasswordSalt'
 
     STATIC_URL_PATH = '/suppliers/static'
     ASSET_PATH = STATIC_URL_PATH + '/'
