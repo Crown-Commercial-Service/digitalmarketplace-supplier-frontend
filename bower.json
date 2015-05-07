@@ -4,7 +4,7 @@
   "dependencies": {
     "jquery": "1.11.2",
     "jquery-details": "https://github.com/mathiasbynens/jquery-details/archive/v0.1.0.tar.gz",
-    "digitalmarketplace-frontend-toolkit": "git://github.com/alphagov/digitalmarketplace-frontend-toolkit#v2.0.2",
+    "digitalmarketplace-frontend-toolkit": "git://github.com/alphagov/digitalmarketplace-frontend-toolkit#v2.0.4",
     "govuk_template": "https://github.com/alphagov/govuk_template/releases/download/v0.12.0/jinja_govuk_template-0.12.0.tgz"
   }
 }

@@ -10,6 +10,7 @@ $path: "/suppliers/static/images/";
   @extend %site-width-container;
 }
 
+@import "_grids.scss";
 @import "_buttons.scss";
 @import "_breadcrumb.scss";
 @import "_footer.scss";
@@ -24,6 +25,7 @@ $path: "/suppliers/static/images/";
 @import "forms/_validation.scss";
 @import "forms/_summary.scss";
 @import "forms/_hint.scss";
+@import "forms/_selection-buttons.scss";
 @import "_document.scss";
 
 @import "_service-page.scss";
@@ -41,5 +43,3 @@ $path: "/suppliers/static/images/";
   @include core-19;
   margin: (1.5 * $gutter) 0 (2 * $gutter);
 }
-
-@import "_grids.scss";
