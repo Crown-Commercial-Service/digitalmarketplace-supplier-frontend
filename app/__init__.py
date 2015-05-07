@@ -3,6 +3,7 @@ import re
 from flask import Flask
 from flask_login import LoginManager
 from flask._compat import string_types
+from werkzeug.contrib.fixers import ProxyFix
 from dmutils import apiclient, logging, config
 
 from config import configs
@@ -16,7 +17,7 @@ def create_app(config_name):
     application = Flask(__name__,
                         static_folder='static/',
                         static_url_path=configs[config_name].STATIC_URL_PATH)
-
+    application.wsgi_app = ProxyFix(application.wsgi_app)
     application.config.from_object(configs[config_name])
     configs[config_name].init_app(application)
     config.init_app(application)
