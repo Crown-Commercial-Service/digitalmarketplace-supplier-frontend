@@ -9,12 +9,61 @@
   ]) }}
 {% endblock %}
 {% block main_content %}
-  <header class="page-heading-smaller">
-    <p class="context">
-      Edit
-    </p>
-    <h1>
-      Service name {{ service_id }}
-    </h1>
-  </header>
+  <div class="grid-row">
+    <div class="column-two-thirds">
+      <header class="page-heading-smaller">
+        <p class="context">
+          Edit
+        </p>
+        <h1>
+          Service name {{ service_id }}
+        </h1>
+      </header>
+      <form>
+        <fieldset class="question">
+          <legend class="question-heading question-heading-with-hint ">
+            Service status
+          </legend>
+          <p class="hint">
+            If you hide your service it won't be accessible or show up in search
+            results
+          </p>
+          <label class="selection-button">
+            <input type="radio" name="service_status" id="service_status_visible" value="visible" />
+            Visible
+          </label>
+          <label class="selection-button">
+            <input type="radio" name="service_status" id="service_status_hidden" value="hidden" />
+            Hidden
+          </label>
+        </fieldset>
+        <button type="submit" class="button-save">Save and return</button>
+      </form>
+      <div class="question">
+        <p class="question-heading question-heading-with-hint ">
+          Service status
+        </legend>
+        <p class="question-heading service-status-removed">
+          Removed
+        </p>
+        <p class="hint">
+          If you are unsure why your service has been removed contact
+          <a href="mailto:enquiries@digitalmarketplace.service.gov.uk">enquiries@digitalmarketplace.service.gov.uk</a>
+        </p>
+      </div>
+      <a href="{{ url_for(".dashboard") }}" class="return-link">Return to services</a>
+      <div class="question">
+        <p class="question-heading question-heading-with-hint ">
+          Service status
+        </legend>
+        <p class="question-heading service-status-expired">
+          Expired
+        </p>
+        <p class="hint">
+          This service is on a framework that has expired
+        </p>
+      </div>
+      <a href="{{ url_for(".dashboard") }}" class="return-link">Return to services</a>
+    </div>
+  </div>
 {% endblock %}

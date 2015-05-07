@@ -1,0 +1,7 @@
+.service-status-removed {
+  color: $red;
+}
+
+.service-status-expired {
+  color: $accessible-orange;
+}

@@ -2,33 +2,37 @@
 @import "_grid_layout.scss";
 @import "_typography.scss";
 @import "_url-helpers.scss";
-@import "_colours.scss";
 
 // Path to assets for use with file-url()
 $path: "/suppliers/static/images/";
+
+@import "_reset.scss";
 
 #wrapper {
   @extend %site-width-container;
 }
 
+main {
+  @extend %contain-floats;
+  margin-bottom: $gutter * 2;
+}
+
+@import "_digital-marketplace-colours.scss";
 @import "_grids.scss";
 @import "_buttons.scss";
 @import "_breadcrumb.scss";
 @import "_footer.scss";
 @import "_page-headings.scss";
 @import "_search-result.scss";
-@import "_browse_list.scss";
 @import "_notification-banners.scss";
-@import "forms/_option-select.scss";
-@import "forms/_summary.scss";
-@import "forms/_textboxes.scss";
 @import "forms/_questions.scss";
-@import "forms/_validation.scss";
 @import "forms/_summary.scss";
 @import "forms/_hint.scss";
 @import "forms/_selection-buttons.scss";
-@import "_document.scss";
+@import "forms/_textboxes.scss";
 
+@import "_service-status.scss";
+@import "_return-link.scss";
 
 .filter-field-text {
   @include core-16;
@@ -41,8 +45,4 @@ $path: "/suppliers/static/images/";
   display: block;
   @include core-19;
   margin: (1.5 * $gutter) 0 (2 * $gutter);
-}
-
-.service-status-disabled {
-  color: $red;
 }
