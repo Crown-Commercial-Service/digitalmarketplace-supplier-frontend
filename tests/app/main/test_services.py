@@ -1,6 +1,6 @@
 from mock import Mock
+from app import data_api_client
 from nose.tools import assert_equal, assert_true
-from app import api_client
 from tests.app.helpers import BaseApplicationTest
 
 
@@ -9,13 +9,15 @@ class TestDashboardContent(BaseApplicationTest):
         with self.app.test_client():
             self.login()
 
-            api_client.services_by_supplier_id = Mock(
+            data_api_client.find_services = Mock(
                 return_value={
                     "services": []
                 })
 
             res = self.client.get('/suppliers/dashboard')
             assert_equal(res.status_code, 200)
+            data_api_client.find_services.assert_called_once_with(
+                supplier_id=1234)
             assert_true("You haven't submitted any services yet."
                         in res.get_data(as_text=True))
 
@@ -23,12 +25,14 @@ class TestDashboardContent(BaseApplicationTest):
         with self.app.test_client():
             self.login()
 
-            api_client.services_by_supplier_id = Mock(
+            data_api_client.find_services = Mock(
                 return_value=self.services()
             )
 
             res = self.client.get('/suppliers/dashboard')
             assert_equal(res.status_code, 200)
+            data_api_client.find_services.assert_called_once_with(
+                supplier_id=1234)
             assert_true("serviceName" in res.get_data(as_text=True))
             assert_true("lot" in res.get_data(as_text=True))
             assert_true("frameworkName" in res.get_data(as_text=True))
@@ -37,20 +41,22 @@ class TestDashboardContent(BaseApplicationTest):
         with self.app.test_client():
             self.login()
 
-            api_client.services_by_supplier_id = Mock(
+            data_api_client.find_services = Mock(
                 return_value=self.services()
             )
 
             res = self.client.get('/suppliers/dashboard')
             assert_equal(res.status_code, 200)
+            data_api_client.find_services.assert_called_once_with(
+                supplier_id=1234)
             assert_true("/suppliers/services/id" in res.get_data(as_text=True))
 
     def login(self):
-        api_client.users_auth = Mock(
+        data_api_client.authenticate_user = Mock(
             return_value=(self.user(
                 123, "email@email.com", 1234, 'Supplier Name')))
 
-        api_client.user_by_id = Mock(
+        data_api_client.get_user = Mock(
             return_value=(self.user(
                 123, "email@email.com", 1234, 'Supplier Name')))
 
@@ -59,19 +65,22 @@ class TestDashboardContent(BaseApplicationTest):
             'password': '1234567890'
         })
 
+        data_api_client.authenticate_user.assert_called_once_with(
+            "valid@email.com", "1234567890")
+
 
 class TestDashboardLogin(BaseApplicationTest):
     def test_should_show_dashboard_if_logged_in(self):
         with self.app.test_client():
-            api_client.users_auth = Mock(
+            data_api_client.authenticate_user = Mock(
                 return_value=(self.user(
                     123, "email@email.com", 1234, 'Supplier Name')))
 
-            api_client.user_by_id = Mock(
+            data_api_client.get_user = Mock(
                 return_value=(self.user(
                     123, "email@email.com", 1234, 'Supplier Name')))
 
-            api_client.services_by_supplier_id = Mock(
+            data_api_client.find_services = Mock(
                 return_value=self.services())
 
             self.client.post("/suppliers/login", data={
@@ -102,11 +111,11 @@ class TestDashboardLogin(BaseApplicationTest):
 
 class TestServicesLogin(BaseApplicationTest):
     def test_should_show_dashboard_if_logged_in(self):
-        with self.app.test_client() as c:
-            api_client.users_auth = Mock(
+        with self.app.test_client():
+            data_api_client.authenticate_user = Mock(
                 return_value=(self.user(123, "email@email.com", 1234, 'name')))
 
-            api_client.user_by_id = Mock(
+            data_api_client.get_user = Mock(
                 return_value=(self.user(123, "email@email.com", 1234, 'name')))
 
             self.client.post("/suppliers/login", data={

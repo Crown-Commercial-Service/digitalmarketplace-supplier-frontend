@@ -7,7 +7,8 @@ from flask_login import logout_user, login_user
 
 from . import main
 from .forms.login_form import LoginForm
-from .. import api_client
+from .. import data_api_client
+from ..model import User
 from .helpers import email
 
 
@@ -26,17 +27,18 @@ def process_login():
     template_data = main.config['BASE_TEMPLATE_DATA']
     if form.validate_on_submit():
 
-        user = api_client.users_auth(
+        user_json = data_api_client.authenticate_user(
             form.email_address.data,
             form.password.data)
 
-        if not user:
+        if not user_json:
             flash("no_account", "error")
             return render_template(
                 "auth/login.html",
                 form=form,
                 **template_data), 403
 
+        user = User.from_json(user_json)
         login_user(user)
         return redirect(url_for('.dashboard'))
     else:
@@ -63,8 +65,9 @@ def forgotten_password():
 @main.route('/forgotten-password', methods=["POST"])
 def send_reset_email():
     email_address = request.form['email-address']
-    user = api_client.user_by_email(email_address)
+    user = data_api_client.get_user(email_address=email_address)
     if user is not None:
+        user = User.from_json(user['users'])
         # Send a password reset email with token
         current_app.logger.info(
             "Sending password reset email for supplier %d (%s)",
@@ -117,7 +120,7 @@ def update_password():
         return redirect(email.generate_reset_url(user_id, email_address))
     # TODO: Add any other password requirements here (e.g. min length = ?)
 
-    if api_client.user_update_password(user_id, password):
+    if data_api_client.update_user_password(user_id, password):
         current_app.logger.info("User %s successfully changed their password",
                                 user_id)
         flash('password_updated')

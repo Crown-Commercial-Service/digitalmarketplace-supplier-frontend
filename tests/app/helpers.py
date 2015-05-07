@@ -19,11 +19,16 @@ class BaseApplicationTest(object):
 
     @staticmethod
     def user(id, email_address, supplier_id, supplier_name):
-        return User(
-            user_id=id,
-            email_address=email_address,
-            supplier_id=supplier_id,
-            supplier_name=supplier_name)
+        return {
+            "users": {
+                "id": id,
+                "emailAddress": email_address,
+                "supplier": {
+                    "supplierId": supplier_id,
+                    "name": supplier_name,
+                }
+            }
+        }
 
     @staticmethod
     def strip_all_whitespace(content):

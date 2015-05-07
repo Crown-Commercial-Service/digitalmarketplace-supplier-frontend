@@ -2,7 +2,7 @@ from nose.tools import assert_equal, assert_true, \
     assert_is_not_none
 from ..helpers import BaseApplicationTest
 from mock import Mock
-from app import api_client
+from app import data_api_client
 
 
 class TestLogin(BaseApplicationTest):
@@ -26,7 +26,7 @@ class TestLogin(BaseApplicationTest):
         assert_true("<h1>Supplier login</h1>" in res.get_data(as_text=True))
 
     def test_should_redirect_to_dashboard_on_login(self):
-        api_client.users_auth = Mock(
+        data_api_client.authenticate_user = Mock(
             return_value=(self.user(123, "email@email.com", 1234, 'name')))
         res = self.client.post("/suppliers/login", data={
             'email_address': 'valid@email.com',
@@ -39,7 +39,7 @@ class TestLogin(BaseApplicationTest):
         with self.app.app_context():
             self.app.config['SESSION_COOKIE_DOMAIN'] = '127.0.0.1'
             self.app.config['SESSION_COOKIE_SECURE'] = True
-            api_client.users_auth = Mock(
+            data_api_client.authenticate_user = Mock(
                 return_value=(self.user(123, "email@email.com", 1234, 'name')))
             res = self.client.post("/suppliers/login", data={
                 'email_address': 'valid@email.com',
@@ -56,7 +56,7 @@ class TestLogin(BaseApplicationTest):
         assert_equal(res.location, 'http://localhost/suppliers/login')
 
     def test_should_return_a_403_for_invalid_login(self):
-        api_client.users_auth = Mock(
+        data_api_client.authenticate_user = Mock(
             return_value=None)
         res = self.client.post("/suppliers/login", data={
             'email_address': 'valid@email.com',

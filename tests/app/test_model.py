@@ -1,4 +1,4 @@
-from app import create_app, ApiClient
+from app import create_app
 from .flask_api_client.test_api_client import TestApiClient
 from .helpers import BaseApplicationTest
 
@@ -10,7 +10,6 @@ class TestModel(BaseApplicationTest):
 
     def __init__(self):
         self.app = create_app('test')
-        self.api_client = ApiClient(self.app)
 
     def test_user_from_json(self):
         result = User.from_json(TestApiClient.user())
