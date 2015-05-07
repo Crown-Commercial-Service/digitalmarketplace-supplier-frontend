@@ -4,7 +4,7 @@
   {{ breadcrumb([
     {
       "link": url_for(".dashboard"),
-      "text": "Company name"
+      "text": current_user.supplier_name
     }
   ]) }}
 {% endblock %}
@@ -16,7 +16,7 @@
           Edit
         </p>
         <h1>
-          Service name {{ service_id }}
+          {{ service_data['serviceName'] }}
         </h1>
       </header>
       <form>

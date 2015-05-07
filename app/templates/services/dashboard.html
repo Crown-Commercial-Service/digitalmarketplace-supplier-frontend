@@ -7,11 +7,14 @@
 
 {% block main_content %}
 
-<header class="page-heading page-heading-with-context">
-    <p class="context">{{ current_user.email_address }}</p>
-
-    <h1>{{ current_user.supplier_name }}</h1>
-</header>
+<div class="grid-row">
+  <div class="column-two-thirds">
+    <header class="page-heading page-heading-with-context">
+      <p class="context">{{ current_user.email_address }}</p>
+      <h1>{{ current_user.supplier_name }}</h1>
+    </header>
+  </div>
+</div>
 
 
 <table class="summary-item-body">

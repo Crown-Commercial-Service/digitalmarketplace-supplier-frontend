@@ -4,7 +4,6 @@ from flask import render_template
 from app.main import main
 from .. import data_api_client
 
-
 @main.route('/dashboard')
 @login_required
 def dashboard():
@@ -26,4 +25,5 @@ def services(service_id):
     return render_template(
         "services/services.html",
         service_id=service_id,
+        service_data=data_api_client.get_service(service_id),
         **template_data), 200
