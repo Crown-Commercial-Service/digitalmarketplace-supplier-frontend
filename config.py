@@ -66,7 +66,6 @@ class Development(Config):
 
 
 class Live(Config):
-    SESSION_COOKIE_DOMAIN = 'www.digitalmarketplace.service.gov.uk'
     DEBUG = False
     SESSION_COOKIE_SECURE = True
 
