@@ -119,11 +119,11 @@ class TestServicesLogin(BaseApplicationTest):
             assert_equal(res.status_code, 200)
 
             assert_true(
-                self.strip_all_whitespace('<h1>Service</h1>')
+                self.strip_all_whitespace('<p class="context">Edit</p>')
                 in self.strip_all_whitespace(res.get_data(as_text=True))
             )
             assert_true(
-                'Service Details for 123' in res.get_data(as_text=True)
+                'Service name 123' in res.get_data(as_text=True)
             )
 
     def test_should_redirect_to_login_if_not_logged_in(self):

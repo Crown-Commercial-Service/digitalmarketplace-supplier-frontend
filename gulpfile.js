@@ -10,6 +10,7 @@ var dmToolkitSCSS = repoRoot + 'bower_components/digitalmarketplace-frontend-too
 var assetsFolder = repoRoot + 'app/assets';
 var staticFolder = repoRoot + 'app/static';
 var govukTemplateAssetsFolder = repoRoot + 'bower_components/govuk_template/assets';
+var dmToolkitAssetsFolder = repoRoot + 'bower_components/digitalmarketplace-frontend-toolkit/toolkit/';
 
 // JavaScript paths
 var jsVendorFiles = [
@@ -121,6 +122,11 @@ gulp.task('copy_template_assets', function () {
    gulp.start('copy_template_assets:javascripts');
 });
 
+gulp.task('copy_toolkit_assets:images', function () {
+  return gulp.src(dmToolkitAssetsFolder + '/images/**/*', { base : dmToolkitAssetsFolder + '/images' })
+    .pipe(gulp.dest(staticFolder + '/images'));
+});
+
 gulp.task('watch', ['build:development'], function () {
   var jsWatcher = gulp.watch([ assetsFolder + '/**/*.js' ], ['js']);
   var cssWatcher = gulp.watch([ assetsFolder + '/**/*.scss' ], ['sass']);
@@ -136,10 +142,12 @@ gulp.task('build:development', ['clean'], function () {
   environment = 'development';
   gulp.start('sass', 'js');
   gulp.start('copy_template_assets');
+  gulp.start('copy_toolkit_assets:images');
 });
 
 gulp.task('build:production', ['clean'], function () {
   environment = 'production';
   gulp.start('sass', 'js');
   gulp.start('copy_template_assets');
+  gulp.start('copy_toolkit_assets:images');
 });
