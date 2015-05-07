@@ -19,12 +19,12 @@ def dashboard():
         **template_data), 200
 
 
-@main.route('/service/<string:service_id>')
+@main.route('/services/<string:service_id>')
 @login_required
 def services(service_id):
     template_data = main.config['BASE_TEMPLATE_DATA']
     return render_template(
         "services/service.html",
         service_id=service_id,
-        service_data=data_api_client.get_service(service_id),
+        service_data=data_api_client.get_service(service_id).get('services'),
         **template_data), 200

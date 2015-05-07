@@ -14,7 +14,7 @@ class TestDashboardContent(BaseApplicationTest):
                     "services": []
                 })
 
-            res = self.client.get('/suppliers/dashboard')
+            res = self.client.get('/suppliers/')
             assert_equal(res.status_code, 200)
             data_api_client.find_services.assert_called_once_with(
                 supplier_id=1234)
@@ -29,7 +29,7 @@ class TestDashboardContent(BaseApplicationTest):
                 return_value=self.services()
             )
 
-            res = self.client.get('/suppliers/dashboard')
+            res = self.client.get('/suppliers/')
             assert_equal(res.status_code, 200)
             data_api_client.find_services.assert_called_once_with(
                 supplier_id=1234)
@@ -45,7 +45,7 @@ class TestDashboardContent(BaseApplicationTest):
                 return_value=self.services()
             )
 
-            res = self.client.get('/suppliers/dashboard')
+            res = self.client.get('/suppliers/')
             assert_equal(res.status_code, 200)
             data_api_client.find_services.assert_called_once_with(
                 supplier_id=1234)
@@ -88,7 +88,7 @@ class TestDashboardLogin(BaseApplicationTest):
                 'password': '1234567890'
             })
 
-            res = self.client.get('/suppliers/dashboard')
+            res = self.client.get('/suppliers/')
 
             assert_equal(res.status_code, 200)
 
@@ -102,11 +102,11 @@ class TestDashboardLogin(BaseApplicationTest):
             )
 
     def test_should_redirect_to_login_if_not_logged_in(self):
-        res = self.client.get("/suppliers/dashboard")
+        res = self.client.get("/suppliers/")
         assert_equal(res.status_code, 302)
         assert_equal(res.location,
                      'http://localhost/suppliers/login'
-                     '?next=%2Fsuppliers%2Fdashboard')
+                     '?next=%2Fsuppliers%2F')
 
 
 class TestServicesLogin(BaseApplicationTest):
@@ -117,6 +117,9 @@ class TestServicesLogin(BaseApplicationTest):
 
             data_api_client.get_user = Mock(
                 return_value=(self.user(123, "email@email.com", 1234, 'name')))
+
+            data_api_client.get_service = Mock(
+                return_value={'services': {'serviceName': 'Service name 123'}})
 
             self.client.post("/suppliers/login", data={
                 'email_address': 'valid@email.com',

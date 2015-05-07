@@ -32,7 +32,7 @@ class TestLogin(BaseApplicationTest):
             'password': '1234567890'
         })
         assert_equal(res.status_code, 302)
-        assert_equal(res.location, 'http://localhost/suppliers/dashboard')
+        assert_equal(res.location, 'http://localhost/suppliers/')
 
     def test_should_have_cookie_on_redirect(self):
         with self.app.app_context():
