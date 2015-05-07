@@ -65,9 +65,9 @@ def forgotten_password():
 @main.route('/forgotten-password', methods=["POST"])
 def send_reset_email():
     email_address = request.form['email-address']
-    user = data_api_client.get_user(email_address=email_address)
-    if user is not None:
-        user = User.from_json(user['users'])
+    user_json = data_api_client.get_user(email_address=email_address)
+    if user_json is not None:
+        user = User.from_json(user_json)
         # Send a password reset email with token
         current_app.logger.info(
             "Sending password reset email for supplier %d (%s)",
