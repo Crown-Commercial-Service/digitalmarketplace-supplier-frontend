@@ -27,17 +27,18 @@ def process_login():
     template_data = main.config['BASE_TEMPLATE_DATA']
     if form.validate_on_submit():
 
-        user = data_api_client.authenticate_user(
+        user_json = data_api_client.authenticate_user(
             form.email_address.data,
             form.password.data)
 
-        if not user:
+        if not user_json:
             flash("no_account", "error")
             return render_template(
                 "auth/login.html",
                 form=form,
                 **template_data), 403
 
+        user = User.from_json(user_json)
         login_user(user)
         return redirect(url_for('.dashboard'))
     else:
