@@ -2,6 +2,7 @@
 @import "_grid_layout.scss";
 @import "_typography.scss";
 @import "_url-helpers.scss";
+@import "_colours.scss";
 
 // Path to assets for use with file-url()
 $path: "/suppliers/static/images/";
@@ -40,4 +41,8 @@ $path: "/suppliers/static/images/";
   display: block;
   @include core-19;
   margin: (1.5 * $gutter) 0 (2 * $gutter);
+}
+
+.service-status-disabled {
+  color: $red;
 }

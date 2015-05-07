@@ -2,6 +2,7 @@ var gulp = require('gulp');
 var uglify = require('gulp-uglifyjs');
 var deleteFiles = require('del');
 var sass = require('gulp-sass');
+var include = require('gulp-include');
 
 var environment;
 var repoRoot = __dirname + '/';
@@ -18,8 +19,7 @@ var jsVendorFiles = [
   assetsFolder + '/javascripts/vendor/hogan-3.0.2.min.js'
 ];
 var jsSourceFiles = [
-  assetsFolder + '/javascripts/test1.js',
-  assetsFolder + '/javascripts/test2.js'
+  assetsFolder + '/javascripts/application.js'
 ];
 var jsDistributionFolder = staticFolder + '/javascripts';
 var jsDistributionFile = 'application.js';
@@ -78,7 +78,7 @@ gulp.task('sass', function () {
     .pipe(gulp.dest(cssDistributionFolder));
 
   stream.on('end', function () {
-    console.log('Compressed CSS saved as .css files in ' + cssDistributionFolder)
+    console.log('Compressed CSS saved as .css files in ' + cssDistributionFolder);
   });
 
   return stream;
@@ -88,6 +88,7 @@ gulp.task('js', function () {
   // produce full array of JS files from vendor + local scripts
   jsFiles = jsVendorFiles.concat(jsSourceFiles);
   var stream = gulp.src(jsFiles)
+    .pipe(include())
     .pipe(uglify(
       jsDistributionFile,
       uglifyOptions[environment]
@@ -122,20 +123,20 @@ gulp.task('copy_template_assets', function () {
    gulp.start('copy_template_assets:javascripts');
 });
 
-gulp.task('copy_toolkit_assets:images', function () {
-  return gulp.src(dmToolkitAssetsFolder + '/images/**/*', { base : dmToolkitAssetsFolder + '/images' })
-    .pipe(gulp.dest(staticFolder + '/images'));
-});
-
 gulp.task('watch', ['build:development'], function () {
   var jsWatcher = gulp.watch([ assetsFolder + '/**/*.js' ], ['js']);
   var cssWatcher = gulp.watch([ assetsFolder + '/**/*.scss' ], ['sass']);
   var notice = function (event) {
     console.log('File ' + event.path + ' was ' + event.type + ' running tasks...');
-  }
+  };
 
   cssWatcher.on('change', notice);
   jsWatcher.on('change', notice);
+});
+
+gulp.task('copy_toolkit_assets:images', function () {
+  return gulp.src(dmToolkitAssetsFolder + '/images/**/*', { base : dmToolkitAssetsFolder + '/images' })
+    .pipe(gulp.dest(staticFolder + '/images'));
 });
 
 gulp.task('build:development', ['clean'], function () {
