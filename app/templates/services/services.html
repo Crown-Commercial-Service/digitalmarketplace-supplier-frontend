@@ -1,24 +1,20 @@
 {% extends "_base_page.html" %}
-
+{% from 'macros/_breadcrumbs.html' import breadcrumb %}
+{% block breadcrumb %}
+  {{ breadcrumb([
+    {
+      "link": url_for(".dashboard"),
+      "text": "Company name"
+    }
+  ]) }}
+{% endblock %}
 {% block main_content %}
-<header class="page-heading">
-    <h1>Service</h1>
-</header>
-
-<header class="page-heading-smaller">
+  <header class="page-heading-smaller">
     <p class="context">
-        Service Details for {{ service_id }}
+      Edit
     </p>
-
-    <h1>Some stuff about the service</h1>
-</header>
-
-
-<header class="page-heading-smaller">
-    <p class="context">
-        <a href="{{ url_for('.dashboard') }}">Dashboard</a>
-    </p>
-</header>
-
-
+    <h1>
+      Service name {{ service_id }}
+    </h1>
+  </header>
 {% endblock %}

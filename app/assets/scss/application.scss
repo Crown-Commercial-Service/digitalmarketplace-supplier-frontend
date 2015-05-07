@@ -4,7 +4,7 @@
 @import "_url-helpers.scss";
 
 // Path to assets for use with file-url()
-$path: "/static/images/";
+$path: "/suppliers/static/images/";
 
 #wrapper {
   @extend %site-width-container;
