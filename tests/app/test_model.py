@@ -1,5 +1,4 @@
 from app import create_app
-from .flask_api_client.test_api_client import TestApiClient
 from .helpers import BaseApplicationTest
 
 from app.model import User
@@ -12,6 +11,16 @@ class TestModel(BaseApplicationTest):
         self.app = create_app('test')
 
     def test_user_from_json(self):
-        result = User.from_json(TestApiClient.user())
+        result = User.from_json({
+            'users': {
+                'id': 987,
+                'emailAddress': 'email_address',
+                'name': 'name',
+                'supplier': {
+                    'supplierId': 1234,
+                    'name': 'name'
+                }
+            }
+        })
         assert_equal(result.id, 987)
         assert_equal(result.email_address, 'email_address')
