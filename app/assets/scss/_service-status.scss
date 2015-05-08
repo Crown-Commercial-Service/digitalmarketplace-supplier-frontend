@@ -1,3 +1,22 @@
-.service-status-removed {
+.service-status,
+%service-status {
+  font-weight: bold;
+}
+
+.service-status-removed,
+.service-status-disabled {
+  @extend %service-status;
   color: $red;
+}
+
+.service-status-published,
+.service-status-public {
+  @extend %service-status;
+  color: $button-colour;
+}
+
+.service-status-unpublished,
+.service-status-private {
+  @extend %service-status;
+  color: $grey-2;
 }

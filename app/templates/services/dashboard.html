@@ -18,13 +18,16 @@
     <thead class="summary-item-field-headings">
       <tr>
         <th scope="col">
-          <a href="">Name</a>
+          Name
         </th>
         <th scope="col">
           Framework
         </th>
         <th scope="col">
           Lot
+        </th>
+        <th scope="col">
+          Status
         </th>
       </tr>
     </thead>
@@ -36,11 +39,14 @@
             {{ service.serviceName }}
           </a>
         </td>
-        <td class="summary-item-field-content">
+        <td class="summary-item-field">
           {{ service.frameworkName}}
         </td>
-        <td class="summary-item-field-content">
+        <td class="summary-item-field">
           {{ service.lot}}
+        </td>
+        <td class="summary-item-field service-status-{{ service.status }}">
+          {{ service.status|title }}
         </td>
         <td class="summary-item-action-field">
           <a href="{{ url_for('.services', service_id=service.id) }}">Edit</a>
@@ -48,10 +54,10 @@
       </tr>
     {% else %}
       <h2 class="summary-item-heading first-summary-item-heading">
-        Summary item with no entries
+        No services
       </h2>
       <p class="hint summary-item-no-content">
-        You haven't submitted any services yet.
+        You don't have any services on the Digital Marketplace
       </p>
     {% endfor %}
     </tbody>

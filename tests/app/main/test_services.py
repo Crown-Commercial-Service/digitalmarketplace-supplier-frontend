@@ -18,7 +18,7 @@ class TestDashboardContent(BaseApplicationTest):
             assert_equal(res.status_code, 200)
             data_api_client.find_services.assert_called_once_with(
                 supplier_id=1234)
-            assert_true("You haven't submitted any services yet."
+            assert_true("You don't have any services"
                         in res.get_data(as_text=True))
 
     def test_shows_services_on_dashboard(self):
@@ -26,30 +26,41 @@ class TestDashboardContent(BaseApplicationTest):
             self.login()
 
             data_api_client.find_services = Mock(
-                return_value=self.services()
+                return_value={'services': [{
+                    'serviceName': 'Service name 123',
+                    'status': 'published',
+                    'id': '123',
+                    'lot': 'SaaaaaaaS',
+                    'frameworkName': 'G-Cloud 1'
+                }]}
             )
 
             res = self.client.get('/suppliers/')
             assert_equal(res.status_code, 200)
             data_api_client.find_services.assert_called_once_with(
                 supplier_id=1234)
-            assert_true("serviceName" in res.get_data(as_text=True))
-            assert_true("lot" in res.get_data(as_text=True))
-            assert_true("frameworkName" in res.get_data(as_text=True))
+            assert_true("Service name 123" in res.get_data(as_text=True))
+            assert_true("SaaaaaaaS" in res.get_data(as_text=True))
+            assert_true("G-Cloud 1" in res.get_data(as_text=True))
 
     def test_shows_services_edit_button_with_id_on_dashboard(self):
         with self.app.test_client():
             self.login()
 
             data_api_client.find_services = Mock(
-                return_value=self.services()
+                return_value={'services': [{
+                    'serviceName': 'Service name 123',
+                    'status': 'published',
+                    'id': '123'
+                }]}
             )
 
             res = self.client.get('/suppliers/')
             assert_equal(res.status_code, 200)
             data_api_client.find_services.assert_called_once_with(
                 supplier_id=1234)
-            assert_true("/suppliers/services/id" in res.get_data(as_text=True))
+            assert_true(
+                "/suppliers/services/123" in res.get_data(as_text=True))
 
     def login(self):
         data_api_client.authenticate_user = Mock(
@@ -81,7 +92,12 @@ class TestDashboardLogin(BaseApplicationTest):
                     123, "email@email.com", 1234, 'Supplier Name')))
 
             data_api_client.find_services = Mock(
-                return_value=self.services())
+                return_value={'services': [{
+                    'serviceName': 'Service name 123',
+                    'status': 'published',
+                    'id': '123'
+                }]}
+            )
 
             self.client.post("/suppliers/login", data={
                 'email_address': 'valid@email.com',
@@ -121,7 +137,8 @@ class TestServicesLogin(BaseApplicationTest):
             data_api_client.get_service = Mock(
                 return_value={'services': {
                     'serviceName': 'Service name 123',
-                    'status': 'published'
+                    'status': 'published',
+                    'id': '123'
                 }})
 
             self.client.post("/suppliers/login", data={
