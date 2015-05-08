@@ -6,56 +6,54 @@
 {% endblock %}
 
 {% block main_content %}
-
-<div class="grid-row">
-  <div class="column-two-thirds">
-    <header class="page-heading page-heading-with-context">
-      <p class="context">{{ current_user.email_address }}</p>
-      <h1>{{ current_user.supplier_name }}</h1>
-    </header>
+  <div class="grid-row">
+    <div class="column-two-thirds">
+      <header class="page-heading page-heading-with-context">
+        <p class="context">{{ current_user.email_address }}</p>
+        <h1>{{ current_user.supplier_name }}</h1>
+      </header>
+    </div>
   </div>
-</div>
-
-
-<table class="summary-item-body">
+  <table class="summary-item-body">
     <thead class="summary-item-field-headings">
-    <tr>
+      <tr>
         <th scope="col">
-            <a href="">Name</a>
+          <a href="">Name</a>
         </th>
         <th scope="col">
-            Framework
+          Framework
         </th>
         <th scope="col">
-            Lot
+          Lot
         </th>
-    </tr>
+      </tr>
     </thead>
     <tbody>
     {% for service in services %}
-    <tr class="summary-item-row">
+      <tr class="summary-item-row">
         <td class="summary-item-field-name">
-            <a href="/service/{{ service.id.lower() }}">{{ service.serviceName }}</a>
+          <a href="https://www.digitalmarketplace.service.gov.uk/service/{{ service.id.lower() }}">
+            {{ service.serviceName }}
+          </a>
         </td>
         <td class="summary-item-field-content">
-            {{ service.frameworkName}}
+          {{ service.frameworkName}}
         </td>
         <td class="summary-item-field-content">
-            {{ service.lot}}
+          {{ service.lot}}
         </td>
         <td class="summary-item-action-field">
-            <a href="{{ url_for('.services', service_id=service.id) }}">Edit</a>
+          <a href="{{ url_for('.services', service_id=service.id) }}">Edit</a>
         </td>
-    </tr>
+      </tr>
     {% else %}
-    <h2 class="summary-item-heading first-summary-item-heading">
+      <h2 class="summary-item-heading first-summary-item-heading">
         Summary item with no entries
-    </h2>
-
-    <p class="hint summary-item-no-content">
+      </h2>
+      <p class="hint summary-item-no-content">
         You haven't submitted any services yet.
-    </p>
+      </p>
     {% endfor %}
     </tbody>
-</table>
+  </table>
 {% endblock %}
