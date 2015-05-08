@@ -119,7 +119,10 @@ class TestServicesLogin(BaseApplicationTest):
                 return_value=(self.user(123, "email@email.com", 1234, 'name')))
 
             data_api_client.get_service = Mock(
-                return_value={'services': {'serviceName': 'Service name 123'}})
+                return_value={'services': {
+                    'serviceName': 'Service name 123',
+                    'status': 'published'
+                }})
 
             self.client.post("/suppliers/login", data={
                 'email_address': 'valid@email.com',
