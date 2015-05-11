@@ -33,9 +33,7 @@
     {% for service in services %}
     <tr class="summary-item-row">
         <td class="summary-item-field-name">
-            <a href="https://www.digitalmarketplace.service.gov.uk/service/{{ service.id.lower() }}">
-                {{ service.serviceName }}
-            </a>
+            <a href="/service/{{ service.id.lower() }}">{{ service.serviceName }}</a>
         </td>
         <td class="summary-item-field-content">
             {{ service.frameworkName}}
