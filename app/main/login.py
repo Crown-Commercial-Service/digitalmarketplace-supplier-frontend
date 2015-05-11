@@ -69,18 +69,14 @@ def send_reset_email():
     if user_json is not None:
         user = User.from_json(user_json)
         # Send a password reset email with token
-        current_app.logger.info(
-            "Sending password reset email for supplier %d (%s)",
-            user.id, user.email_address
-        )
         email.send_password_email(user.id, email_address)
-        # TODO: Add to count in "forgotten password emails sent" metric
+        message = "login.reset-email.sent: " \
+                  "Sending password reset email for supplier %d (%s)"
+        current_app.logger.info(message, user.id, user.email_address)
     else:
-        current_app.logger.info(
-            "Password reset request for invalid supplier email address %s",
-            email_address
-        )
-        # TODO: Add to count in "forgotten password - invalid" metric
+        message = "login.reset-email.invalid-email: " \
+                  "Password reset request for invalid supplier email %s"
+        current_app.logger.info(message, email_address)
 
     flash('email_sent')
     return redirect(url_for('.forgotten_password'))
