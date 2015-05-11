@@ -49,6 +49,10 @@
      {% endwith %}
 
     {{ form.hidden_tag() }}
+
+    {% if form.email_address.errors %}
+        <div class="validation-wrapper">
+    {% endif %}
     <div class="question">
         {{ form.email_address.label(class="question-heading-with-hint") }}
         <p class="hint">
@@ -61,7 +65,13 @@
         {% endif %}
         {{ form.email_address(class="text-box") }}
     </div>
+    {% if form.email_address.errors %}
+        </div>
+    {% endif %}
 
+    {% if form.password.errors %}
+        <div class="validation-wrapper">
+    {% endif %}                        
     <div class="question">
         {{ form.password.label(class="question-heading") }}
         {% if form.password.errors %}
@@ -71,9 +81,11 @@
         {% endif %}
         {{ form.password(class="text-box") }}
     </div>
+    {% if form.password.errors %}
+        </div>
+    {% endif %}
 
-
-    <button class="button-save">Log in</button>
+                <button class="button-save">Log in</button>
     <header class="page-heading-smaller">
         <p class="context">
             <a href="{{ url_for('.forgotten_password') }}">Forgotten password</a>
