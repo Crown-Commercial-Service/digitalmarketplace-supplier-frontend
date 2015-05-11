@@ -29,7 +29,8 @@ def create_app(config_name):
     logging.init_app(application)
     data_api_client.init_app(application)
 
-    application.register_blueprint(status_blueprint)
+    application.register_blueprint(status_blueprint,
+                                   url_prefix='/suppliers')
     application.register_blueprint(main_blueprint,
                                    url_prefix='/suppliers')
     login_manager.login_view = 'main.render_login'

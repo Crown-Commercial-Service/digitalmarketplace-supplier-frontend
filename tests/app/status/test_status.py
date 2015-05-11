@@ -13,7 +13,7 @@ class TestStatus(BaseApplicationTest):
             "status": "ok"
         }
 
-        status_response = self.client.get('/_status')
+        status_response = self.client.get('/suppliers/_status')
         assert_equal(200, status_response.status_code)
 
         json_data = json.loads(status_response.get_data().decode('utf-8'))
@@ -31,7 +31,7 @@ class TestStatus(BaseApplicationTest):
             'message': 'Cannot connect to (Data) API'
         }
 
-        status_response = self.client.get('/_status')
+        status_response = self.client.get('/suppliers/_status')
         assert_equal(500, status_response.status_code)
 
         json_data = json.loads(status_response.get_data().decode('utf-8'))
