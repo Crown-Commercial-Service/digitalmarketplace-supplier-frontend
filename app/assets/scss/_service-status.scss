@@ -16,6 +16,7 @@
 }
 
 .service-status-unpublished,
+.service-status-enabled,
 .service-status-private {
   @extend %service-status;
   color: $grey-2;
