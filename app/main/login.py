@@ -7,6 +7,7 @@ from flask_login import logout_user, login_user
 
 from . import main
 from .forms.login_form import LoginForm
+from .forms.forgotten_password_form import ForgottenPasswordForm
 from .. import data_api_client
 from ..model import User
 from .helpers import email
@@ -59,27 +60,35 @@ def forgotten_password():
     template_data = main.config['BASE_TEMPLATE_DATA']
 
     return render_template("auth/forgotten-password.html",
+                           form=ForgottenPasswordForm(),
                            **template_data), 200
 
 
 @main.route('/forgotten-password', methods=["POST"])
 def send_reset_email():
-    email_address = request.form['email-address']
-    user_json = data_api_client.get_user(email_address=email_address)
-    if user_json is not None:
-        user = User.from_json(user_json)
-        # Send a password reset email with token
-        email.send_password_email(user.id, email_address)
-        message = "login.reset-email.sent: " \
-                  "Sending password reset email for supplier %d (%s)"
-        current_app.logger.info(message, user.id, user.email_address)
-    else:
-        message = "login.reset-email.invalid-email: " \
-                  "Password reset request for invalid supplier email %s"
-        current_app.logger.info(message, email_address)
+    form = ForgottenPasswordForm()
+    if form.validate_on_submit():
+        email_address = form.email_address.data
+        user_json = data_api_client.get_user(email_address=email_address)
+        if user_json is not None:
+            user = User.from_json(user_json)
+            # Send a password reset email with token
+            email.send_password_email(user.id, email_address)
+            message = "login.reset-email.sent: " \
+                      "Sending password reset email for supplier %d (%s)"
+            current_app.logger.info(message, user.id, user.email_address)
+        else:
+            message = "login.reset-email.invalid-email: " \
+                      "Password reset request for invalid supplier email %s"
+            current_app.logger.info(message, email_address)
 
-    flash('email_sent')
-    return redirect(url_for('.forgotten_password'))
+        flash('email_sent')
+        return redirect(url_for('.forgotten_password'))
+    else:
+        template_data = main.config['BASE_TEMPLATE_DATA']
+        return render_template("auth/forgotten-password.html",
+                               form=form,
+                               **template_data), 400
 
 
 @main.route('/change-password/<token>', methods=["GET"])
