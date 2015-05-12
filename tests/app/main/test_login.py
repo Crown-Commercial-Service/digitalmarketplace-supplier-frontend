@@ -1,24 +1,14 @@
-from nose.tools import assert_equal, assert_true, \
-    assert_is_not_none
+from nose.tools import assert_equal, assert_true, assert_is_not_none
 from ..helpers import BaseApplicationTest
 from mock import Mock
 from app import data_api_client
 
 
 class TestLogin(BaseApplicationTest):
-    email_head_error = '<a href="#example-textbox" class="validation-masthead-link">' \
-                       '<label for="email_address">Email address</label></a>'
-    email_field_error = '<p class="validation-message" ' \
-                        'id="error-email-address-textbox">' \
-                        'This field is required.</p>'
-    invalid_email_field_error = '<p class="validation-message" ' \
-                                'id="error-email-address-textbox">' \
-                                'Invalid email address.</p>'
-    password_head_error = '<a href="#example-textbox" class="validation-masthead-link">' \
-                          '<label for="password">Password</label></a>'
-    password_field_error = '<p class="validation-message" ' \
-                           'id="error-password-textbox">' \
-                           'This field is required.</p>'
+    email_empty_error = "Email can not be empty"
+    email_invalid_error = "Please enter a valid email address"
+    password_empty_error = "Please enter your password"
+    password_invalid_error = "Passwords must be between 10 and 50 characters"
 
     def test_should_show_login_page(self):
         res = self.client.get("/suppliers/login")
@@ -72,29 +62,22 @@ class TestLogin(BaseApplicationTest):
 
     def test_should_be_validation_error_if_no_email_or_password(self):
         res = self.client.post("/suppliers/login", data={})
+        content = self.strip_all_whitespace(res.get_data(as_text=True))
         assert_equal(res.status_code, 400)
         assert_true(
-            self.strip_all_whitespace(self.email_head_error)
-            in self.strip_all_whitespace(res.get_data(as_text=True)))
+            self.strip_all_whitespace(self.email_empty_error)
+            in content)
         assert_true(
-            self.strip_all_whitespace(self.email_field_error)
-            in self.strip_all_whitespace(res.get_data(as_text=True)))
-        assert_true(
-            self.strip_all_whitespace(self.password_head_error)
-            in self.strip_all_whitespace(res.get_data(as_text=True)))
-        assert_true(
-            self.strip_all_whitespace(self.password_field_error)
-            in self.strip_all_whitespace(res.get_data(as_text=True)))
+            self.strip_all_whitespace(self.password_empty_error)
+            in content)
 
     def test_should_be_validation_error_if_invalid_email(self):
         res = self.client.post("/suppliers/login", data={
             'email_address': 'invalid',
             'password': '1234567890'
         })
+        content = self.strip_all_whitespace(res.get_data(as_text=True))
         assert_equal(res.status_code, 400)
         assert_true(
-            self.strip_all_whitespace(self.email_head_error)
-            in self.strip_all_whitespace(res.get_data(as_text=True)))
-        assert_true(
-            self.strip_all_whitespace(self.invalid_email_field_error)
-            in self.strip_all_whitespace(res.get_data(as_text=True)))
+            self.strip_all_whitespace(self.email_invalid_error)
+            in content)
