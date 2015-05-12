@@ -86,7 +86,9 @@
               Service ID
             </td>
             <td class="summary-item-field-content">
-              {{ service_data['id'] }}
+              <span class="service-id">
+                {% for chunk in service_id -%}<span class="service-id-chunk">{{chunk}}</span>{%- endfor %}
+              </span>
             </td>
           </tr>
           <tr class="summary-item-row">

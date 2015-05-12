@@ -1,3 +1,5 @@
+import re
+
 from flask_login import login_required, current_user
 from flask import render_template, request, redirect, url_for
 
@@ -27,10 +29,15 @@ def dashboard():
 @login_required
 def services(service_id):
     template_data = main.config['BASE_TEMPLATE_DATA']
+    service_data = data_api_client.get_service(service_id).get('services')
+    if service_data['frameworkName'] == 'G-Cloud 5':
+        service_id = [service_id]
+    else:
+        service_id = re.findall("....", str(service_id))
     return render_template(
         "services/service.html",
         service_id=service_id,
-        service_data=data_api_client.get_service(service_id).get('services'),
+        service_data=service_data,
         **template_data), 200
 
 
