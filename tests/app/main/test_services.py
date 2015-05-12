@@ -138,7 +138,8 @@ class TestServicesLogin(BaseApplicationTest):
                 return_value={'services': {
                     'serviceName': 'Service name 123',
                     'status': 'published',
-                    'id': '123'
+                    'id': '123',
+                    'frameworkName': 'G-Cloud 6'
                 }})
 
             self.client.post("/suppliers/login", data={
