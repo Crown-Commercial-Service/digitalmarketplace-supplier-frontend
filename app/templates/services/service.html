@@ -12,7 +12,7 @@
   <div class="grid-row">
     <div class="column-two-thirds">
       <header class="page-heading-smaller">
-        {% if service_data.status == 'published' %}
+        {% if service_data.status != 'disabled' %}
           <p class="context">
             Edit
           </p>
@@ -21,7 +21,15 @@
           {{ service_data['serviceName'] }}
         </h1>
       </header>
-      <form>
+        {% if service_data.status != 'disabled' %}
+        {% if error %}
+        <div class="validation-masthead" aria-labelledby="validation-masthead-heading">
+            <h3 class="validation-masthead-heading" id="validation-masthead-heading">
+                {{ error }}
+            </h3>
+        </div>
+        {% endif %}
+      <form action="{{ url_for('.update_service_status', service_id=service_id ) }}" method="POST">
         <fieldset class="question">
           <legend class="question-heading question-heading-with-hint ">
             Choose service status
@@ -31,16 +39,18 @@
             from public view
           </p>
           <label class="selection-button">
-            <input type="radio" name="service_status" id="service_status_visible" value="visible" />
+            <input type="radio" name="service_status" id="service_status_published" value="public" {{'checked="checked"' if service_data['status'] == 'published' }} />
             Public
           </label>
           <label class="selection-button">
-            <input type="radio" name="service_status" id="service_status_hidden" value="hidden" />
+            <input type="radio" name="service_status" id="service_status_private" value="private" {{'checked="checked"' if service_data['status'] == 'enabled' }} />
             Private
           </label>
         </fieldset>
         <button type="submit" class="button-save">Save and return</button>
       </form>
+        {% endif %}
+        {% if service_data.status == 'disabled' %}
       <div class="question">
         <h2 class="question-heading service-status-removed">
           This service has been removed
@@ -50,6 +60,7 @@
           <a href="mailto:enquiries@digitalmarketplace.service.gov.uk">enquiries@digitalmarketplace.service.gov.uk</a>
         </p>
       </div>
+        {% endif %}
     </div>
     <div class="column-one-whole">
       <h2 class="summary-item-heading">
