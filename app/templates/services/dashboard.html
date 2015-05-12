@@ -58,7 +58,15 @@
           {{ service.lot}}
         </td>
         <td class="summary-item-field service-status-{{ service.status }}">
-          {{ service.status|title }}
+          {% if service.status == "published" %}
+            Public
+          {% elif service.status == "enabled" %}
+            Private
+          {% elif service.status == "disabled" %}
+            Removed
+          {% else %}
+            {{ service.status|title }}
+          {% endif %}
         </td>
         <td class="summary-item-action-field">
           <a href="{{ url_for('.services', service_id=service.id) }}">
