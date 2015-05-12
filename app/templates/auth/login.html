@@ -1,51 +1,52 @@
 {% extends "_base_page.html" %}
 
 {% block main_content %}
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+{% if messages %}
+{% for category, message in messages %}
+    {% if category == 'error' %}
+    <div class="banner-destructive-without-action">
+    {% else %}
+    <div class="banner-success-without-action">
+    {% endif %}
+        <p class="banner-message">
+            {% if message == 'no_account' %}
+            Sorry, we couldn't find a supplier account with that username
+            and password.
+            {% endif %}
+
+            {% if message == 'password_updated' %}
+            You have successfully changed your password.
+            {% endif %}
+
+            {% if message == 'password_not_updated' %}
+            Could not update password due to an error.
+            {% endif %}
+        </p>
+    </div>
+{% endfor %}
+{% endif %}
+{% endwith %}
+
+{% if form.errors|length > 1 %}
+    <div class="validation-masthead" aria-labelledby="validation-masthead-heading">
+        <h3 class="validation-masthead-heading" id="validation-masthead-heading">
+            There was a problem with your answer to the following questions
+        </h3>
+        {% for field_name, field_errors in form.errors|dictsort if field_errors %}
+        {% for error in field_errors %}
+        <a href="#example-textbox" class="validation-masthead-link">{{ form[field_name].label }}</a>
+        {% endfor %}
+        {% endfor %}
+    </div>
+{% endif %}
+
 <header class="page-heading">
     <h1>Supplier login</h1>
 </header>
 
-{% with messages = get_flashed_messages(with_categories=true) %}
-    {% if messages %}
-        {% for category, message in messages %}
-            {% if category == 'error' %}
-                <div class="banner-destructive-without-action">
-            {% else %}
-                <div class="banner-success-without-action">
-            {% endif %}
-                    <p class="banner-message">
-                        {% if message == 'no_account' %}
-                        Sorry, we couldn't find a supplier account with that username
-                        and password.
-                        {% endif %}
-            
-                        {% if message == 'password_updated' %}
-                        You have successfully changed your password.
-                        {% endif %}
-            
-                        {% if message == 'password_not_updated' %}
-                        Could not update password due to an error.
-                        {% endif %}
-                    </p>
-                </div>
-        {% endfor %}
-    {% endif %}
-{% endwith %}
-
 <form action="{{ url_for('.process_login') }}" method="POST">
-
-    {% if form.errors %}
-        <div class="validation-masthead" aria-labelledby="validation-masthead-heading">
-            <h3 class="validation-masthead-heading" id="validation-masthead-heading">
-                There was a problem with your answer to the following questions
-            </h3>
-            {% for field_name, field_errors in form.errors|dictsort if field_errors %}
-            {% for error in field_errors %}
-            <a href="#example-textbox" class="validation-masthead-link">{{ form[field_name].label }}</a>
-            {% endfor %}
-            {% endfor %}
-        </div>
-    {% endif %}
 
     {{ form.hidden_tag() }}
 

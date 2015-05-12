@@ -31,7 +31,7 @@ class ChangePasswordForm(Form):
         Length(min=10,
                max=50,
                message="Passwords must be between 10 and 50 characters long"
-        )
+               )
     ])
     confirm_password = PasswordField('Confirm password', validators=[
         DataRequired(message="Please confirm your new password"),
