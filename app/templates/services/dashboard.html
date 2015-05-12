@@ -61,7 +61,9 @@
           {{ service.status|title }}
         </td>
         <td class="summary-item-action-field">
-          <a href="{{ url_for('.services', service_id=service.id) }}">Edit</a>
+          <a href="{{ url_for('.services', service_id=service.id) }}">
+            {{ 'Details' if service.status == 'disabled' else 'Edit' }}
+          </a>
         </td>
       </tr>
     {% else %}

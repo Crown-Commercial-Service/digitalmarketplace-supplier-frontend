@@ -35,14 +35,14 @@
             Choose service status
           </legend>
           <p class="hint">
-            Private services don't appear in search results and are hidden
-            from public view
+            Private services don't appear in search results and don't have a
+            <acronym title="Uniform resource locator">URL</acronym>
           </p>
-          <label class="selection-button">
+          <label class="selection-button selection-button-boolean">
             <input type="radio" name="service_status" id="service_status_published" value="public" {{'checked="checked"' if service_data['status'] == 'published' }} />
             Public
           </label>
-          <label class="selection-button">
+          <label class="selection-button  selection-button-boolean">
             <input type="radio" name="service_status" id="service_status_private" value="private" {{'checked="checked"' if service_data['status'] == 'enabled' }} />
             Private
           </label>

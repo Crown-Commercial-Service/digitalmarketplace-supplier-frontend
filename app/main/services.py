@@ -38,7 +38,6 @@ def services(service_id):
 @main.route('/services/<string:service_id>', methods=['POST'])
 @login_required
 def update_service_status(service_id):
-    template_data = main.config['BASE_TEMPLATE_DATA']
 
     # Value should be either public or private
     status = request.form['service_status']
@@ -50,6 +49,11 @@ def update_service_status(service_id):
 
     if status in translate_frontend_to_api.keys():
         status = translate_frontend_to_api[status]
+    else:
+        return _update_service_status_error(
+            service_id,
+            "Sorry, but '{}' is not a valid status.".format(status)
+        )
 
     try:
         updated_service = data_api_client.update_service_status(
@@ -57,23 +61,12 @@ def update_service_status(service_id):
             current_user.email_address, "Status changed to '{0}'".format(
                 status))
 
-    except APIError as e:
+    except APIError:
 
-        error_message = "Sorry, there's been a problem updating the status."
-
-        # If we try to update with a status that's not a real status
-        if "400 Client Error: BAD REQUEST" in e.message:
-            error_message = "Sorry, but '{}' is not a valid status.".format(
-                status
-            )
-
-        return render_template(
-            "services/service.html",
-            service_id=service_id,
-            service_data=data_api_client.get_service(
-                service_id).get('services'),
-            error=error_message,
-            **template_data), 200
+        return _update_service_status_error(
+            service_id,
+            "Sorry, there's been a problem updating the status."
+        )
 
     updated_service = updated_service.get("services")
     return redirect(
@@ -83,3 +76,15 @@ def update_service_status(service_id):
                 updated_service_status=updated_service.get("status")
                 )
     )
+
+
+def _update_service_status_error(service_id, error_message):
+    template_data = main.config['BASE_TEMPLATE_DATA']
+
+    return render_template(
+        "services/service.html",
+        service_id=service_id,
+        service_data=data_api_client.get_service(
+            service_id).get('services'),
+        error=error_message,
+        **template_data), 200
