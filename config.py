@@ -59,6 +59,7 @@ class Test(Config):
     DM_DATA_API_URL = os.getenv('DM_DATA_API_URL')
     DM_DATA_API_AUTH_TOKEN = os.getenv('DM_DATA_API_AUTH_TOKEN')
     WTF_CSRF_ENABLED = False
+    SERVER_NAME = 'localhost'
 
 
 class Development(Config):

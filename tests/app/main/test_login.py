@@ -1,14 +1,23 @@
+from app.main import helpers
 from nose.tools import assert_equal, assert_true, assert_is_not_none
 from ..helpers import BaseApplicationTest
 from mock import Mock
 from app import data_api_client
 
 
+email_empty_error = "Email can not be empty"
+email_invalid_error = "Please enter a valid email address"
+email_sent_message = "If that Digital Marketplace supplier account exists, " \
+                     "you will be sent an email containing a link to reset " \
+                     "your password."
+password_empty_error = "Please enter your password"
+password_invalid_error = "Passwords must be between 10 and 50 characters"
+password_mismatch_error = "The passwords you entered do not match"
+new_password_empty_error = "Please enter a new password"
+new_password_confirm_empty_error = "Please confirm your new password"
+
+
 class TestLogin(BaseApplicationTest):
-    email_empty_error = "Email can not be empty"
-    email_invalid_error = "Please enter a valid email address"
-    password_empty_error = "Please enter your password"
-    password_invalid_error = "Passwords must be between 10 and 50 characters"
 
     def test_should_show_login_page(self):
         res = self.client.get("/suppliers/login")
@@ -65,10 +74,10 @@ class TestLogin(BaseApplicationTest):
         content = self.strip_all_whitespace(res.get_data(as_text=True))
         assert_equal(res.status_code, 400)
         assert_true(
-            self.strip_all_whitespace(self.email_empty_error)
+            self.strip_all_whitespace(email_empty_error)
             in content)
         assert_true(
-            self.strip_all_whitespace(self.password_empty_error)
+            self.strip_all_whitespace(password_empty_error)
             in content)
 
     def test_should_be_validation_error_if_invalid_email(self):
@@ -79,5 +88,113 @@ class TestLogin(BaseApplicationTest):
         content = self.strip_all_whitespace(res.get_data(as_text=True))
         assert_equal(res.status_code, 400)
         assert_true(
-            self.strip_all_whitespace(self.email_invalid_error)
+            self.strip_all_whitespace(email_invalid_error)
             in content)
+
+
+class TestForgottenPassword(BaseApplicationTest):
+
+    def test_email_should_not_be_empty(self):
+        res = self.client.post("/suppliers/forgotten-password", data={})
+        content = self.strip_all_whitespace(res.get_data(as_text=True))
+        assert_equal(res.status_code, 400)
+        assert_true(
+            self.strip_all_whitespace(email_empty_error)
+            in content)
+
+    def test_email_should_be_valid(self):
+        res = self.client.post("/suppliers/forgotten-password", data={
+            'email_address': 'invalid'
+        })
+        content = self.strip_all_whitespace(res.get_data(as_text=True))
+        assert_equal(res.status_code, 400)
+        assert_true(
+            self.strip_all_whitespace(email_invalid_error)
+            in content)
+
+    def test_redirect_to_same_page_on_success(self):
+        data_api_client.get_user = Mock(
+            return_value=(self.user(123, "email@email.com", 1234, 'name')))
+        res = self.client.post("/suppliers/forgotten-password", data={
+            'email_address': 'email@email.com'
+        })
+        assert_equal(res.status_code, 302)
+        assert_equal(res.location,
+                     'http://localhost/suppliers/forgotten-password')
+
+
+class TestChangePassword(BaseApplicationTest):
+
+    def test_email_should_be_decoded_from_token(self):
+        with self.app.app_context():
+            url = helpers.email.generate_reset_url(123, "email@email.com")
+        res = self.client.get(url)
+        assert_equal(res.status_code, 200)
+        assert_true(
+            "New password for email@email.com" in res.get_data(as_text=True)
+        )
+
+    def test_password_should_not_be_empty(self):
+        res = self.client.post("/suppliers/change-password", data={
+            'user_id': 123,
+            'email_address': 'email@email.com',
+            'password': '',
+            'confirm_password': ''
+        })
+        assert_equal(res.status_code, 400)
+        assert_true(
+            new_password_empty_error in res.get_data(as_text=True)
+        )
+        assert_true(
+            new_password_confirm_empty_error in res.get_data(as_text=True)
+        )
+
+    def test_password_should_be_over_ten_chars_long(self):
+        res = self.client.post("/suppliers/change-password", data={
+            'user_id': 123,
+            'email_address': 'email@email.com',
+            'password': '123456789',
+            'confirm_password': '123456789'
+        })
+        assert_equal(res.status_code, 400)
+        assert_true(
+            password_invalid_error in res.get_data(as_text=True)
+        )
+
+    def test_password_should_be_under_51_chars_long(self):
+        res = self.client.post("/suppliers/change-password", data={
+            'user_id': 123,
+            'email_address': 'email@email.com',
+            'password':
+                '123456789012345678901234567890123456789012345678901',
+            'confirm_password':
+                '123456789012345678901234567890123456789012345678901'
+        })
+        assert_equal(res.status_code, 400)
+        assert_true(
+            password_invalid_error in res.get_data(as_text=True)
+        )
+
+    def test_passwords_should_match(self):
+        res = self.client.post("/suppliers/change-password", data={
+            'user_id': 123,
+            'email_address': 'email@email.com',
+            'password': '1234567890',
+            'confirm_password': '0123456789'
+        })
+        assert_equal(res.status_code, 400)
+        assert_true(
+            password_mismatch_error in res.get_data(as_text=True)
+        )
+
+    def test_redirect_to_login_page_on_success(self):
+        data_api_client.update_user_password = Mock()
+        res = self.client.post("/suppliers/change-password", data={
+            'user_id': 123,
+            'email_address': 'email@email.com',
+            'password': '1234567890',
+            'confirm_password': '1234567890'
+        })
+        assert_equal(res.status_code, 302)
+        assert_equal(res.location,
+                     'http://localhost/suppliers/login')
