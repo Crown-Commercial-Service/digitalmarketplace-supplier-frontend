@@ -1,13 +1,12 @@
 from __future__ import absolute_import
 from itsdangerous import BadSignature, SignatureExpired
 
-from flask import current_app, flash, redirect, render_template, request, \
-    url_for
+from flask import current_app, flash, redirect, render_template, url_for
 from flask_login import logout_user, login_user
 
 from . import main
-from .forms.login_form import LoginForm
-from .forms.forgotten_password_form import ForgottenPasswordForm
+from .forms.auth_forms \
+    import LoginForm, ForgottenPasswordForm, ChangePasswordForm
 from .. import data_api_client
 from ..model import User
 from .helpers import email
@@ -106,29 +105,27 @@ def change_password(token):
         flash('token_invalid', 'error')
         return redirect(url_for('.forgotten_password'))
     template_data = main.config['BASE_TEMPLATE_DATA']
-    return render_template("auth/change-password.html", email=email_address,
-                           user_id=user_id, **template_data), 200
+    return render_template("auth/change-password.html",
+                           form=ChangePasswordForm(email_address=email_address,
+                                                   user_id=user_id,),
+                           **template_data), 200
 
 
 @main.route('/change-password', methods=["POST"])
 def update_password():
-    email_address = request.form['email-address']
-    user_id = request.form['user-id']
-    password = request.form['password']
-    confirm = request.form['confirm-password']
-
-    if not password:
-        flash('passwords_empty', 'error')
-        return redirect(email.generate_reset_url(user_id, email_address))
-    if password != confirm:
-        flash('passwords_differ', 'error')
-        return redirect(email.generate_reset_url(user_id, email_address))
-    # TODO: Add any other password requirements here (e.g. min length = ?)
-
-    if data_api_client.update_user_password(user_id, password):
-        current_app.logger.info("User %s successfully changed their password",
-                                user_id)
-        flash('password_updated')
+    form = ChangePasswordForm()
+    if form.validate_on_submit():
+        user_id = form.user_id.data
+        password = form.password.data
+        if data_api_client.update_user_password(user_id, password):
+            current_app.logger.info(
+                "User %s successfully changed their password", user_id)
+            flash('password_updated')
+        else:
+            flash('password_not_updated', 'error')
+        return redirect(url_for('.render_login'))
     else:
-        flash('password_not_updated', 'error')
-    return redirect(url_for('.render_login'))
+        template_data = main.config['BASE_TEMPLATE_DATA']
+        return render_template("auth/change-password.html",
+                               form=form,
+                               **template_data), 400
