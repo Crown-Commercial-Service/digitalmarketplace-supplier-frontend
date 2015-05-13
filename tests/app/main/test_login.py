@@ -5,16 +5,16 @@ from mock import Mock
 from app import data_api_client
 
 
-email_empty_error = "Email can not be empty"
-email_invalid_error = "Please enter a valid email address"
-email_sent_message = "If that Digital Marketplace supplier account exists, " \
+EMAIL_EMPTY_ERROR = "Email can not be empty"
+EMAIL_INVALID_ERROR = "Please enter a valid email address"
+EMAIL_SENT_MESSAGE = "If that Digital Marketplace supplier account exists, " \
                      "you will be sent an email containing a link to reset " \
                      "your password."
-password_empty_error = "Please enter your password"
-password_invalid_error = "Passwords must be between 10 and 50 characters"
-password_mismatch_error = "The passwords you entered do not match"
-new_password_empty_error = "Please enter a new password"
-new_password_confirm_empty_error = "Please confirm your new password"
+PASSWORD_EMPTY_ERROR = "Please enter your password"
+PASSWORD_INVALID_ERROR = "Passwords must be between 10 and 50 characters"
+PASSWORD_MISMATCH_ERROR = "The passwords you entered do not match"
+NEW_PASSWORD_EMPTY_ERROR = "Please enter a new password"
+NEW_PASSWORD_CONFIRM_EMPTY_ERROR = "Please confirm your new password"
 
 
 class TestLogin(BaseApplicationTest):
@@ -74,10 +74,10 @@ class TestLogin(BaseApplicationTest):
         content = self.strip_all_whitespace(res.get_data(as_text=True))
         assert_equal(res.status_code, 400)
         assert_true(
-            self.strip_all_whitespace(email_empty_error)
+            self.strip_all_whitespace(EMAIL_EMPTY_ERROR)
             in content)
         assert_true(
-            self.strip_all_whitespace(password_empty_error)
+            self.strip_all_whitespace(PASSWORD_EMPTY_ERROR)
             in content)
 
     def test_should_be_validation_error_if_invalid_email(self):
@@ -88,7 +88,7 @@ class TestLogin(BaseApplicationTest):
         content = self.strip_all_whitespace(res.get_data(as_text=True))
         assert_equal(res.status_code, 400)
         assert_true(
-            self.strip_all_whitespace(email_invalid_error)
+            self.strip_all_whitespace(EMAIL_INVALID_ERROR)
             in content)
 
 
@@ -99,7 +99,7 @@ class TestForgottenPassword(BaseApplicationTest):
         content = self.strip_all_whitespace(res.get_data(as_text=True))
         assert_equal(res.status_code, 400)
         assert_true(
-            self.strip_all_whitespace(email_empty_error)
+            self.strip_all_whitespace(EMAIL_EMPTY_ERROR)
             in content)
 
     def test_email_should_be_valid(self):
@@ -109,7 +109,7 @@ class TestForgottenPassword(BaseApplicationTest):
         content = self.strip_all_whitespace(res.get_data(as_text=True))
         assert_equal(res.status_code, 400)
         assert_true(
-            self.strip_all_whitespace(email_invalid_error)
+            self.strip_all_whitespace(EMAIL_INVALID_ERROR)
             in content)
 
     def test_redirect_to_same_page_on_success(self):
@@ -143,10 +143,10 @@ class TestChangePassword(BaseApplicationTest):
         })
         assert_equal(res.status_code, 400)
         assert_true(
-            new_password_empty_error in res.get_data(as_text=True)
+            NEW_PASSWORD_EMPTY_ERROR in res.get_data(as_text=True)
         )
         assert_true(
-            new_password_confirm_empty_error in res.get_data(as_text=True)
+            NEW_PASSWORD_CONFIRM_EMPTY_ERROR in res.get_data(as_text=True)
         )
 
     def test_password_should_be_over_ten_chars_long(self):
@@ -158,7 +158,7 @@ class TestChangePassword(BaseApplicationTest):
         })
         assert_equal(res.status_code, 400)
         assert_true(
-            password_invalid_error in res.get_data(as_text=True)
+            PASSWORD_INVALID_ERROR in res.get_data(as_text=True)
         )
 
     def test_password_should_be_under_51_chars_long(self):
@@ -172,7 +172,7 @@ class TestChangePassword(BaseApplicationTest):
         })
         assert_equal(res.status_code, 400)
         assert_true(
-            password_invalid_error in res.get_data(as_text=True)
+            PASSWORD_INVALID_ERROR in res.get_data(as_text=True)
         )
 
     def test_passwords_should_match(self):
@@ -184,7 +184,7 @@ class TestChangePassword(BaseApplicationTest):
         })
         assert_equal(res.status_code, 400)
         assert_true(
-            password_mismatch_error in res.get_data(as_text=True)
+            PASSWORD_MISMATCH_ERROR in res.get_data(as_text=True)
         )
 
     def test_redirect_to_login_page_on_success(self):
