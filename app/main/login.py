@@ -32,6 +32,9 @@ def process_login():
             form.password.data)
 
         if not user_json:
+            message = "login.fail: " \
+                      "Failed to log in: %s"
+            current_app.logger.info(message, form.email_address.data)
             flash("no_account", "error")
             return render_template(
                 "auth/login.html",
