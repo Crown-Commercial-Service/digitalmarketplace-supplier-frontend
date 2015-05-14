@@ -21,7 +21,6 @@
           {{ service_data['serviceName'] }}
         </h1>
       </header>
-        {% if service_data.status != 'disabled' %}
         {% if error %}
         <div class="validation-masthead" aria-labelledby="validation-masthead-heading">
             <h3 class="validation-masthead-heading" id="validation-masthead-heading">
@@ -29,6 +28,7 @@
             </h3>
         </div>
         {% endif %}
+        {% if service_data.status != 'disabled' %}
       <form action="{{ url_for('.update_service_status', service_id=service_data['id'] ) }}" method="POST">
         <fieldset class="question">
           <legend class="question-heading question-heading-with-hint ">

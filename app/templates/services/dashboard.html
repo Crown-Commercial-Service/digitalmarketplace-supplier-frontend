@@ -12,7 +12,7 @@
       <div class="banner-success-without-action">
         <p class="banner-message">
           <a href="{{ url_for('.update_service_status', service_id=updated_service_id ) }}">{{ updated_service_name }}</a>
-           is now {{ updated_service_status }}
+           is now {{ 'public' if updated_service_status == 'published' else 'private' }}
         </p>
       </div>
     </div>
