@@ -1,7 +1,7 @@
 import re
 
 from flask_login import login_required, current_user
-from flask import render_template, request, redirect, url_for
+from flask import render_template, request, redirect, url_for, abort
 
 from app.main import main
 from .. import data_api_client
@@ -31,7 +31,7 @@ def services(service_id):
     service = data_api_client.get_service(service_id).get('services')
 
     if not _is_service_associated_with_supplier(service):
-        return redirect(url_for(".dashboard"))
+        abort(404)
 
     template_data = main.config['BASE_TEMPLATE_DATA']
 
@@ -54,7 +54,7 @@ def update_service_status(service_id):
     service = data_api_client.get_service(service_id).get('services')
 
     if not _is_service_associated_with_supplier(service):
-        return redirect(url_for(".dashboard"))
+        abort(404)
 
     if not _is_service_modifiable(service):
         return _update_service_status_error(
@@ -119,4 +119,4 @@ def _update_service_status_error(service, error_message):
         service_id=service.get('id'),
         service_data=service,
         error=error_message,
-        **template_data), 200
+        **template_data), 400
