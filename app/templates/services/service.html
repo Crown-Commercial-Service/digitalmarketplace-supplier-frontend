@@ -1,0 +1,106 @@
+{% extends "_base_page.html" %}
+{% from 'macros/_breadcrumbs.html' import breadcrumb %}
+{% block breadcrumb %}
+  {{ breadcrumb([
+    {
+      "link": url_for(".dashboard"),
+      "text": current_user.supplier_name
+    }
+  ]) }}
+{% endblock %}
+{% block main_content %}
+  <div class="grid-row">
+    <div class="column-two-thirds">
+      <header class="page-heading-smaller">
+        {% if service_data.status != 'disabled' %}
+          <p class="context">
+            Edit
+          </p>
+        {% endif %}
+        <h1>
+          {{ service_data['serviceName'] }}
+        </h1>
+      </header>
+        {% if error %}
+        <div class="validation-masthead" aria-labelledby="validation-masthead-heading">
+            <h3 class="validation-masthead-heading" id="validation-masthead-heading">
+                {{ error }}
+            </h3>
+        </div>
+        {% endif %}
+        {% if service_data.status != 'disabled' %}
+      <form action="{{ url_for('.update_service_status', service_id=service_data['id'] ) }}" method="POST">
+        <fieldset class="question">
+          <legend class="question-heading question-heading-with-hint ">
+            Choose service status
+          </legend>
+          <p class="hint">
+            Private services don't appear in search results and don't have a
+            <acronym title="Uniform resource locator">URL</acronym>
+          </p>
+          <label class="selection-button selection-button-boolean">
+            <input type="radio" name="service_status" id="service_status_published" value="public" {% if service_data['status'] == 'published' %}checked="checked"{% endif %} />
+            Public
+          </label>
+          <label class="selection-button  selection-button-boolean">
+            <input type="radio" name="service_status" id="service_status_private" value="private" {% if service_data['status'] == 'enabled' %}checked="checked"{% endif %} />
+            Private
+          </label>
+        </fieldset>
+        <button type="submit" class="button-save">Save and return</button>
+      </form>
+        {% endif %}
+        {% if service_data.status == 'disabled' %}
+      <div class="question">
+        <h2 class="question-heading service-status-removed">
+          This service has been removed
+        </h2>
+        <p class="hint">
+          If you don't know why this service has been removed, contact
+          <a href="mailto:enquiries@digitalmarketplace.service.gov.uk">enquiries@digitalmarketplace.service.gov.uk</a>
+        </p>
+      </div>
+        {% endif %}
+    </div>
+    <div class="column-one-whole">
+      <h2 class="summary-item-heading">
+        Service details
+      </h2>
+      <table class="summary-item-body">
+        <thead class="summary-item-field-headings">
+          <tr>
+              <th scope="col">
+                  <a href="">Name</a>
+              </th>
+              <th scope="col">
+                  Framework
+              </th>
+              <th scope="col">
+                  Lot
+              </th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="summary-item-row">
+            <td class="summary-item-field-name">
+              Service ID
+            </td>
+            <td class="summary-item-field-content">
+              <span class="service-id">
+                {% for chunk in service_id -%}<span class="service-id-chunk">{{chunk}}</span>{%- endfor %}
+              </span>
+            </td>
+          </tr>
+          <tr class="summary-item-row">
+            <td class="summary-item-field-name">
+              Description
+            </td>
+            <td class="summary-item-field-content">
+              {{ service_data['serviceSummary'] }}
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+{% endblock %}
