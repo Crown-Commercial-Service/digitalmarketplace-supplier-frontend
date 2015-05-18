@@ -44,7 +44,8 @@ class TestDashboardContent(BaseApplicationTest):
             assert_true("SaaaaaaaS" in res.get_data(as_text=True))
             assert_true("G-Cloud 1" in res.get_data(as_text=True))
 
-    def test_shows_services_edit_button_with_id_on_dashboard(self):
+    # remove 'x' once suppliers can edit their services' statuses again
+    def xtest_shows_services_edit_button_with_id_on_dashboard(self):
         with self.app.test_client():
             self.login()
 
