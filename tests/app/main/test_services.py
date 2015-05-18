@@ -191,6 +191,7 @@ class TestSupplierUpdateService(BaseApplicationTest):
         self._post_status_update('orange', failing_status_code)
         self._post_status_update('banana', failing_status_code)
 
+    # remove 'x' once suppliers can edit their services' statuses again
     def xtest_should_view_public_service_with_correct_input_checked(
             self, data_api_client
     ):
@@ -219,6 +220,7 @@ class TestSupplierUpdateService(BaseApplicationTest):
             service_should_be_modifiable=True
         )
 
+    # remove 'x' once suppliers can edit their services' statuses again
     def xtest_should_view_private_service_with_correct_input_checked(
             self, data_api_client
     ):
@@ -247,6 +249,7 @@ class TestSupplierUpdateService(BaseApplicationTest):
             service_should_be_modifiable=True
         )
 
+    # remove 'x' once suppliers can edit their services' statuses again
     def xtest_should_view_disabled_service_with_removed_message(
             self, data_api_client
     ):
@@ -270,6 +273,7 @@ class TestSupplierUpdateService(BaseApplicationTest):
             service_should_be_modifiable=False
         )
 
+    # remove 'x' once suppliers can edit their services' statuses again
     def xtest_should_not_view_other_suppliers_services(
             self, data_api_client
     ):
