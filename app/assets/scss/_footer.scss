@@ -49,7 +49,7 @@
         margin-top: $gutter-half;
 
       }
-    
+
       li {
         display: block;
         margin-bottom: 5px;
@@ -73,6 +73,16 @@
       @include media(tablet) {
         margin: 0;
       }
+    }
+
+  }
+
+  .footer-meta {
+
+    .terms-and-conditions {
+      display: block;
+      @include core-16;
+      margin: 0 0 20px 0;
     }
 
   }
