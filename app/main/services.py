@@ -28,6 +28,8 @@ def dashboard():
 @main.route('/services/<string:service_id>', methods=['GET'])
 @login_required
 def services(service_id):
+    abort(404)
+
     service = data_api_client.get_service(service_id).get('services')
 
     if not _is_service_associated_with_supplier(service):
@@ -51,6 +53,8 @@ def services(service_id):
 @main.route('/services/<string:service_id>', methods=['POST'])
 @login_required
 def update_service_status(service_id):
+    abort(404)
+
     service = data_api_client.get_service(service_id).get('services')
 
     if not _is_service_associated_with_supplier(service):
