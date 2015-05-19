@@ -8,7 +8,7 @@ from .. import data_api_client
 from dmutils.apiclient import APIError
 
 
-@main.route('/')
+@main.route('')
 @login_required
 def dashboard():
     template_data = main.config['BASE_TEMPLATE_DATA']
