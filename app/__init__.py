@@ -1,6 +1,6 @@
 import re
 
-from flask import Flask
+from flask import Flask, request, redirect
 from flask_login import LoginManager
 from flask._compat import string_types
 from dmutils import apiclient, logging, config, proxy_fix
@@ -34,6 +34,11 @@ def create_app(config_name):
                                    url_prefix='/suppliers')
     login_manager.login_view = 'main.render_login'
     main_blueprint.config = application.config.copy()
+
+    @application.before_request
+    def remove_trailing_slash():
+        if request.path.endswith('/'):
+            return redirect(request.path[:-1])
 
     return application
 
