@@ -1,5 +1,5 @@
-from mock import Mock
 import mock
+from mock import Mock
 from app import data_api_client
 from nose.tools import assert_equal, assert_true, assert_false
 from tests.app.helpers import BaseApplicationTest
@@ -62,23 +62,6 @@ class TestDashboardContent(BaseApplicationTest):
                 supplier_id=1234)
             assert_true(
                 "/suppliers/services/123" in res.get_data(as_text=True))
-
-    def login(self):
-        data_api_client.authenticate_user = Mock(
-            return_value=(self.user(
-                123, "email@email.com", 1234, 'Supplier Name')))
-
-        data_api_client.get_user = Mock(
-            return_value=(self.user(
-                123, "email@email.com", 1234, 'Supplier Name')))
-
-        self.client.post("/suppliers/login", data={
-            'email_address': 'valid@email.com',
-            'password': '1234567890'
-        })
-
-        data_api_client.authenticate_user.assert_called_once_with(
-            "valid@email.com", "1234567890")
 
 
 class TestDashboardLogin(BaseApplicationTest):
