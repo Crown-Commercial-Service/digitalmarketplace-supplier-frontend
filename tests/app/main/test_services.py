@@ -2,6 +2,7 @@ from mock import Mock
 import mock
 from app import data_api_client
 from nose.tools import assert_equal, assert_true, assert_false
+from nose.plugins.skip import SkipTest
 from tests.app.helpers import BaseApplicationTest
 
 
@@ -44,8 +45,8 @@ class TestDashboardContent(BaseApplicationTest):
             assert_true("SaaaaaaaS" in res.get_data(as_text=True))
             assert_true("G-Cloud 1" in res.get_data(as_text=True))
 
-    # remove 'x' once suppliers can edit their services' statuses again
-    def xtest_shows_services_edit_button_with_id_on_dashboard(self):
+    @SkipTest
+    def test_shows_services_edit_button_with_id_on_dashboard(self):
         with self.app.test_client():
             self.login()
 
@@ -192,8 +193,9 @@ class TestSupplierUpdateService(BaseApplicationTest):
         self._post_status_update('orange', failing_status_code)
         self._post_status_update('banana', failing_status_code)
 
-    # remove 'x' once suppliers can edit their services' statuses again
-    def xtest_should_view_public_service_with_correct_input_checked(
+    # remove decorator once suppliers can edit their services' statuses again
+    @SkipTest
+    def test_should_view_public_service_with_correct_input_checked(
             self, data_api_client
     ):
         self._login(
@@ -221,8 +223,9 @@ class TestSupplierUpdateService(BaseApplicationTest):
             service_should_be_modifiable=True
         )
 
-    # remove 'x' once suppliers can edit their services' statuses again
-    def xtest_should_view_private_service_with_correct_input_checked(
+    # remove decorator once suppliers can edit their services' statuses again
+    @SkipTest
+    def test_should_view_private_service_with_correct_input_checked(
             self, data_api_client
     ):
         self._login(
@@ -250,8 +253,9 @@ class TestSupplierUpdateService(BaseApplicationTest):
             service_should_be_modifiable=True
         )
 
-    # remove 'x' once suppliers can edit their services' statuses again
-    def xtest_should_view_disabled_service_with_removed_message(
+    # remove decorator once suppliers can edit their services' statuses again
+    @SkipTest
+    def test_should_view_disabled_service_with_removed_message(
             self, data_api_client
     ):
         self._login(
@@ -274,8 +278,9 @@ class TestSupplierUpdateService(BaseApplicationTest):
             service_should_be_modifiable=False
         )
 
-    # remove 'x' once suppliers can edit their services' statuses again
-    def xtest_should_not_view_other_suppliers_services(
+    # remove decorator once suppliers can edit their services' statuses again
+    @SkipTest
+    def test_should_not_view_other_suppliers_services(
             self, data_api_client
     ):
         self._login(
