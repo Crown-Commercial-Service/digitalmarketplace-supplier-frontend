@@ -1,7 +1,9 @@
 import re
+from mock import Mock
 from app import create_app
 from werkzeug.http import parse_cookie
 from app.model import User
+from app import data_api_client
 
 
 class BaseApplicationTest(object):
@@ -48,3 +50,20 @@ class BaseApplicationTest(object):
                 }
             ]
         }
+
+    def login(self):
+        data_api_client.authenticate_user = Mock(
+            return_value=(self.user(
+                123, "email@email.com", 1234, 'Supplier Name')))
+
+        data_api_client.get_user = Mock(
+            return_value=(self.user(
+                123, "email@email.com", 1234, 'Supplier Name')))
+
+        self.client.post("/suppliers/login", data={
+            'email_address': 'valid@email.com',
+            'password': '1234567890'
+        })
+
+        data_api_client.authenticate_user.assert_called_once_with(
+            "valid@email.com", "1234567890")
