@@ -36,12 +36,12 @@ class TestApplication(BaseApplicationTest):
         with self.app.test_client():
             self.login()
 
-            data_api_client.get_service = Mock(
+            data_api_client.find_services = Mock(
                 side_effect=ConnectionError('API is down')
             )
             self.app.config['DEBUG'] = False
 
-            res = self.client.get('/suppliers/services/12345')
+            res = self.client.get('/suppliers')
             assert_equal(500, res.status_code)
             assert_true(
                 "Sorry, we're experiencing technical difficulties"
