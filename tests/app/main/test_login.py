@@ -92,10 +92,10 @@ class TestLogin(BaseApplicationTest):
             in content)
 
 
-class TestForgottenPassword(BaseApplicationTest):
+class TestResetPassword(BaseApplicationTest):
 
     def test_email_should_not_be_empty(self):
-        res = self.client.post("/suppliers/forgotten-password", data={})
+        res = self.client.post("/suppliers/reset-password", data={})
         content = self.strip_all_whitespace(res.get_data(as_text=True))
         assert_equal(res.status_code, 400)
         assert_true(
@@ -103,7 +103,7 @@ class TestForgottenPassword(BaseApplicationTest):
             in content)
 
     def test_email_should_be_valid(self):
-        res = self.client.post("/suppliers/forgotten-password", data={
+        res = self.client.post("/suppliers/reset-password", data={
             'email_address': 'invalid'
         })
         content = self.strip_all_whitespace(res.get_data(as_text=True))
@@ -115,12 +115,12 @@ class TestForgottenPassword(BaseApplicationTest):
     def test_redirect_to_same_page_on_success(self):
         data_api_client.get_user = Mock(
             return_value=(self.user(123, "email@email.com", 1234, 'name')))
-        res = self.client.post("/suppliers/forgotten-password", data={
+        res = self.client.post("/suppliers/reset-password", data={
             'email_address': 'email@email.com'
         })
         assert_equal(res.status_code, 302)
         assert_equal(res.location,
-                     'http://localhost/suppliers/forgotten-password')
+                     'http://localhost/suppliers/reset-password')
 
 
 class TestChangePassword(BaseApplicationTest):

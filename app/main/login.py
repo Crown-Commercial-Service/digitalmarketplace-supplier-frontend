@@ -6,7 +6,7 @@ from flask_login import logout_user, login_user
 
 from . import main
 from .forms.auth_forms \
-    import LoginForm, ForgottenPasswordForm, ChangePasswordForm
+    import LoginForm, ResetPasswordForm, ChangePasswordForm
 from .. import data_api_client
 from ..model import User
 from .helpers import email
@@ -57,18 +57,18 @@ def logout():
     return redirect(url_for('.render_login'))
 
 
-@main.route('/forgotten-password', methods=["GET"])
-def forgotten_password():
+@main.route('/reset-password', methods=["GET"])
+def reset_password():
     template_data = main.config['BASE_TEMPLATE_DATA']
 
-    return render_template("auth/forgotten-password.html",
-                           form=ForgottenPasswordForm(),
+    return render_template("auth/reset-password.html",
+                           form=ResetPasswordForm(),
                            **template_data), 200
 
 
-@main.route('/forgotten-password', methods=["POST"])
+@main.route('/reset-password', methods=["POST"])
 def send_reset_email():
-    form = ForgottenPasswordForm()
+    form = ResetPasswordForm()
     if form.validate_on_submit():
         email_address = form.email_address.data
         user_json = data_api_client.get_user(email_address=email_address)
@@ -85,10 +85,10 @@ def send_reset_email():
             current_app.logger.info(message, email_address)
 
         flash('email_sent')
-        return redirect(url_for('.forgotten_password'))
+        return redirect(url_for('.reset_password'))
     else:
         template_data = main.config['BASE_TEMPLATE_DATA']
-        return render_template("auth/forgotten-password.html",
+        return render_template("auth/reset-password.html",
                                form=form,
                                **template_data), 400
 
@@ -102,11 +102,11 @@ def change_password(token):
     except SignatureExpired:
         current_app.logger.info("Password reset attempt with expired token.")
         flash('token_expired', 'error')
-        return redirect(url_for('.forgotten_password'))
+        return redirect(url_for('.reset_password'))
     except BadSignature as e:
         current_app.logger.info("Error changing password: %s", e)
         flash('token_invalid', 'error')
-        return redirect(url_for('.forgotten_password'))
+        return redirect(url_for('.reset_password'))
     template_data = main.config['BASE_TEMPLATE_DATA']
     return render_template("auth/change-password.html",
                            form=ChangePasswordForm(email_address=email_address,
