@@ -1,0 +1,9 @@
+
+.lede {
+  font-size: 100%;
+  margin-bottom: 2em;
+
+  @include media(desktop) {
+    width: 66%;
+  }
+}
