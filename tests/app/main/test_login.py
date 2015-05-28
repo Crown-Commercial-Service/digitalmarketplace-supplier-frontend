@@ -122,20 +122,17 @@ class TestResetPassword(BaseApplicationTest):
         assert_equal(res.location,
                      'http://localhost/suppliers/reset-password')
 
-
-class TestChangePassword(BaseApplicationTest):
-
     def test_email_should_be_decoded_from_token(self):
         with self.app.app_context():
             url = helpers.email.generate_reset_url(123, "email@email.com")
         res = self.client.get(url)
         assert_equal(res.status_code, 200)
         assert_true(
-            "New password for email@email.com" in res.get_data(as_text=True)
+            "Reset password for email@email.com" in res.get_data(as_text=True)
         )
 
     def test_password_should_not_be_empty(self):
-        res = self.client.post("/suppliers/change-password", data={
+        res = self.client.post("/suppliers/update-password", data={
             'user_id': 123,
             'email_address': 'email@email.com',
             'password': '',
@@ -150,7 +147,7 @@ class TestChangePassword(BaseApplicationTest):
         )
 
     def test_password_should_be_over_ten_chars_long(self):
-        res = self.client.post("/suppliers/change-password", data={
+        res = self.client.post("/suppliers/update-password", data={
             'user_id': 123,
             'email_address': 'email@email.com',
             'password': '123456789',
@@ -162,7 +159,7 @@ class TestChangePassword(BaseApplicationTest):
         )
 
     def test_password_should_be_under_51_chars_long(self):
-        res = self.client.post("/suppliers/change-password", data={
+        res = self.client.post("/suppliers/update-password", data={
             'user_id': 123,
             'email_address': 'email@email.com',
             'password':
@@ -176,7 +173,7 @@ class TestChangePassword(BaseApplicationTest):
         )
 
     def test_passwords_should_match(self):
-        res = self.client.post("/suppliers/change-password", data={
+        res = self.client.post("/suppliers/update-password", data={
             'user_id': 123,
             'email_address': 'email@email.com',
             'password': '1234567890',
@@ -189,7 +186,7 @@ class TestChangePassword(BaseApplicationTest):
 
     def test_redirect_to_login_page_on_success(self):
         data_api_client.update_user_password = Mock()
-        res = self.client.post("/suppliers/change-password", data={
+        res = self.client.post("/suppliers/update-password", data={
             'user_id': 123,
             'email_address': 'email@email.com',
             'password': '1234567890',

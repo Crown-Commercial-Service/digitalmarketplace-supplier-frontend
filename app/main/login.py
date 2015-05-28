@@ -58,16 +58,16 @@ def logout():
 
 
 @main.route('/reset-password', methods=["GET"])
-def reset_password():
+def request_password_reset():
     template_data = main.config['BASE_TEMPLATE_DATA']
 
-    return render_template("auth/reset-password.html",
+    return render_template("auth/request-password-reset.html",
                            form=ResetPasswordForm(),
                            **template_data), 200
 
 
 @main.route('/reset-password', methods=["POST"])
-def send_reset_email():
+def send_reset_password_email():
     form = ResetPasswordForm()
     if form.validate_on_submit():
         email_address = form.email_address.data
@@ -85,16 +85,16 @@ def send_reset_email():
             current_app.logger.info(message, email_address)
 
         flash('email_sent')
-        return redirect(url_for('.reset_password'))
+        return redirect(url_for('.request_password_reset'))
     else:
         template_data = main.config['BASE_TEMPLATE_DATA']
-        return render_template("auth/reset-password.html",
+        return render_template("auth/request-password-reset.html",
                                form=form,
                                **template_data), 400
 
 
-@main.route('/change-password/<token>', methods=["GET"])
-def change_password(token):
+@main.route('/reset-password/<token>', methods=["GET"])
+def reset_password(token):
     try:
         decoded = email.decode_email(token)
         user_id = decoded["user"]
@@ -102,19 +102,19 @@ def change_password(token):
     except SignatureExpired:
         current_app.logger.info("Password reset attempt with expired token.")
         flash('token_expired', 'error')
-        return redirect(url_for('.reset_password'))
+        return redirect(url_for('.request_password_reset'))
     except BadSignature as e:
         current_app.logger.info("Error changing password: %s", e)
         flash('token_invalid', 'error')
-        return redirect(url_for('.reset_password'))
+        return redirect(url_for('.request_password_reset'))
     template_data = main.config['BASE_TEMPLATE_DATA']
-    return render_template("auth/change-password.html",
+    return render_template("auth/reset-password.html",
                            form=ChangePasswordForm(email_address=email_address,
                                                    user_id=user_id,),
                            **template_data), 200
 
 
-@main.route('/change-password', methods=["POST"])
+@main.route('/update-password', methods=["POST"])
 def update_password():
     form = ChangePasswordForm()
     if form.validate_on_submit():
@@ -129,6 +129,6 @@ def update_password():
         return redirect(url_for('.render_login'))
     else:
         template_data = main.config['BASE_TEMPLATE_DATA']
-        return render_template("auth/change-password.html",
+        return render_template("auth/reset-password.html",
                                form=form,
                                **template_data), 400

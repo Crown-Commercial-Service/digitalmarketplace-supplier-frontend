@@ -40,7 +40,7 @@ def generate_reset_url(user_id, email_address):
     ts = URLSafeTimedSerializer(main.config["SECRET_KEY"])
     token = ts.dumps({"user": user_id, "email": email_address},
                      salt=main.config["RESET_PASSWORD_SALT"])
-    url = url_for('main.change_password', token=token, _external=True)
+    url = url_for('main.reset_password', token=token, _external=True)
     current_app.logger.debug("Generated reset URL: %s", url)
     return url
 
