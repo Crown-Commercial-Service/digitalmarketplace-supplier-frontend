@@ -1,6 +1,7 @@
 import re
 
 from flask_login import login_required, current_user
+import flask_featureflags as feature
 from flask import render_template, request, redirect, url_for, abort
 
 from app.main import main
@@ -27,9 +28,8 @@ def dashboard():
 
 @main.route('/services/<string:service_id>', methods=['GET'])
 @login_required
+@feature.is_active_feature('edit_service_page')
 def services(service_id):
-    abort(404)
-
     service = data_api_client.get_service(service_id).get('services')
 
     if not _is_service_associated_with_supplier(service):
@@ -52,9 +52,8 @@ def services(service_id):
 # Might have to change the route if we're generalizing this to update
 @main.route('/services/<string:service_id>', methods=['POST'])
 @login_required
+@feature.is_active_feature('edit_service_page')
 def update_service_status(service_id):
-    abort(404)
-
     service = data_api_client.get_service(service_id).get('services')
 
     if not _is_service_associated_with_supplier(service):
