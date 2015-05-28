@@ -33,6 +33,11 @@ class Config(object):
         'header_class': 'with-proposition'
     }
 
+    # Feature Flag feature names
+    FEATURE_FLAGS = {
+        'edit_service_page': False,
+    }
+
     # Logging
     DM_LOG_LEVEL = 'DEBUG'
     DM_APP_NAME = 'supplier-frontend'
@@ -61,9 +66,17 @@ class Test(Config):
     WTF_CSRF_ENABLED = False
     SERVER_NAME = 'localhost'
 
+    FEATURE_FLAGS = {
+        'edit_service_page': True,
+    }
+
 
 class Development(Config):
     DEBUG = True
+
+    FEATURE_FLAGS = {
+        'edit_service_page': True,
+    }
 
 
 class Live(Config):

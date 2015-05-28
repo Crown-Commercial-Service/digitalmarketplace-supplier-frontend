@@ -2,6 +2,7 @@ import re
 
 from flask import Flask, request, redirect
 from flask_login import LoginManager
+from flask_featureflags import FeatureFlag
 from flask._compat import string_types
 from dmutils import apiclient, logging, config, proxy_fix
 
@@ -10,6 +11,7 @@ from .model import User
 
 data_api_client = apiclient.DataAPIClient()
 login_manager = LoginManager()
+feature_flags = FeatureFlag()
 
 
 def create_app(config_name):
@@ -25,6 +27,7 @@ def create_app(config_name):
 
     proxy_fix.init_app(application)
     login_manager.init_app(application)
+    feature_flags.init_app(application)
     logging.init_app(application)
     data_api_client.init_app(application)
 
