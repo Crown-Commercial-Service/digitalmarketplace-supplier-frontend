@@ -111,11 +111,12 @@ def reset_password(token):
     return render_template("auth/reset-password.html",
                            form=ChangePasswordForm(email_address=email_address,
                                                    user_id=user_id,),
+                           token=token,
                            **template_data), 200
 
 
-@main.route('/update-password', methods=["POST"])
-def update_password():
+@main.route('/reset-password/<token>', methods=["POST"])
+def update_password(token):
     form = ChangePasswordForm()
     if form.validate_on_submit():
         user_id = form.user_id.data
@@ -131,4 +132,5 @@ def update_password():
         template_data = main.config['BASE_TEMPLATE_DATA']
         return render_template("auth/reset-password.html",
                                form=form,
+                               token=token,
                                **template_data), 400

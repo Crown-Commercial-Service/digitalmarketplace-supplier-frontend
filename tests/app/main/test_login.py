@@ -132,7 +132,7 @@ class TestResetPassword(BaseApplicationTest):
         )
 
     def test_password_should_not_be_empty(self):
-        res = self.client.post("/suppliers/update-password", data={
+        res = self.client.post("/suppliers/reset-password/token", data={
             'user_id': 123,
             'email_address': 'email@email.com',
             'password': '',
@@ -147,7 +147,7 @@ class TestResetPassword(BaseApplicationTest):
         )
 
     def test_password_should_be_over_ten_chars_long(self):
-        res = self.client.post("/suppliers/update-password", data={
+        res = self.client.post("/suppliers/reset-password/token", data={
             'user_id': 123,
             'email_address': 'email@email.com',
             'password': '123456789',
@@ -159,7 +159,7 @@ class TestResetPassword(BaseApplicationTest):
         )
 
     def test_password_should_be_under_51_chars_long(self):
-        res = self.client.post("/suppliers/update-password", data={
+        res = self.client.post("/suppliers/reset-password/token", data={
             'user_id': 123,
             'email_address': 'email@email.com',
             'password':
@@ -173,7 +173,7 @@ class TestResetPassword(BaseApplicationTest):
         )
 
     def test_passwords_should_match(self):
-        res = self.client.post("/suppliers/update-password", data={
+        res = self.client.post("/suppliers/reset-password/token", data={
             'user_id': 123,
             'email_address': 'email@email.com',
             'password': '1234567890',
@@ -186,7 +186,7 @@ class TestResetPassword(BaseApplicationTest):
 
     def test_redirect_to_login_page_on_success(self):
         data_api_client.update_user_password = Mock()
-        res = self.client.post("/suppliers/update-password", data={
+        res = self.client.post("/suppliers/reset-password/token", data={
             'user_id': 123,
             'email_address': 'email@email.com',
             'password': '1234567890',
