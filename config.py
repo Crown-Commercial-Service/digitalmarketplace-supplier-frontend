@@ -20,10 +20,10 @@ class Config(object):
     API_AUTH_TOKEN = os.getenv('DM_SUPPLIER_FRONTEND_API_AUTH_TOKEN')
 
     MANDRILL_API_KEY = os.getenv('DM_MANDRILL_API_KEY')
-    FORGOT_PASSWORD_EMAIL_NAME = 'Digital Marketplace Admin'
-    FORGOT_PASSWORD_EMAIL_FROM = 'enquiries@digitalmarketplace.service.gov.uk'
-    FORGOT_PASSWORD_EMAIL_SUBJECT = 'Reset your Digital Marketplace password'
-    SECRET_KEY = os.getenv('DM_PASSWORD_SECRET_KEY')
+    RESET_PASSWORD_EMAIL_NAME = 'Digital Marketplace Admin'
+    RESET_PASSWORD_EMAIL_FROM = 'enquiries@digitalmarketplace.service.gov.uk'
+    RESET_PASSWORD_EMAIL_SUBJECT = 'Reset your Digital Marketplace password'
+    SECRET_KEY = os.getenv('DM_PASSWORD_SECRET_KEY', "not_very_secret")
     RESET_PASSWORD_SALT = 'ResetPasswordSalt'
 
     STATIC_URL_PATH = '/suppliers/static'

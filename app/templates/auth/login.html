@@ -56,7 +56,7 @@
         <div class="question">
             {{ form.email_address.label(class="question-heading-with-hint") }}
             <p class="hint">
-                Email used to register with the digital marketplace.
+                Enter the email address you used to register with the Digital Marketplace
             </p>
             {% if form.email_address.errors %}
             <p class="validation-message" id="error-email-address-textbox">
@@ -88,7 +88,7 @@
     <button class="button-save">Log in</button>
     <header class="page-heading-smaller">
         <p class="context">
-            <a href="{{ url_for('.forgotten_password') }}">Forgotten password</a>
+            <a href="{{ url_for('.request_password_reset') }}">Reset password</a>
         </p>
     </header>
 </form>
