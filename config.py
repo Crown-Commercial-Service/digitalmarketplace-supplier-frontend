@@ -34,9 +34,15 @@ class Config(object):
     }
 
     # Feature Flag feature names
+    FEATURE_FLAGS_EDIT_SERVICE_PAGE = False
+    FEATURE_FLAGS_NEW_SERVICE_PAGE = False
+
     FEATURE_FLAGS = {
-        'edit_service_page': False,
+        'finished_feature': True,
+        'unfinished_feature': False,
     }
+
+    # RAISE_ERROR_ON_MISSING_FEATURES = True
 
     # Logging
     DM_LOG_LEVEL = 'DEBUG'
@@ -66,17 +72,13 @@ class Test(Config):
     WTF_CSRF_ENABLED = False
     SERVER_NAME = 'localhost'
 
-    FEATURE_FLAGS = {
-        'edit_service_page': True,
-    }
+    FEATURE_FLAGS_EDIT_SERVICE_PAGE = True
 
 
 class Development(Config):
     DEBUG = True
 
-    FEATURE_FLAGS = {
-        'edit_service_page': True,
-    }
+    FEATURE_FLAGS_EDIT_SERVICE_PAGE = True
 
 
 class Live(Config):

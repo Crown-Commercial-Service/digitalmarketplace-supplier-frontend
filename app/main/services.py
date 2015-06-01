@@ -28,7 +28,7 @@ def dashboard():
 
 @main.route('/services/<string:service_id>', methods=['GET'])
 @login_required
-@feature.is_active_feature('edit_service_page')
+@feature.is_active_feature('EDIT_SERVICE_PAGE')
 def services(service_id):
     service = data_api_client.get_service(service_id).get('services')
 
@@ -52,7 +52,7 @@ def services(service_id):
 # Might have to change the route if we're generalizing this to update
 @main.route('/services/<string:service_id>', methods=['POST'])
 @login_required
-@feature.is_active_feature('edit_service_page')
+@feature.is_active_feature('EDIT_SERVICE_PAGE')
 def update_service_status(service_id):
     service = data_api_client.get_service(service_id).get('services')
 

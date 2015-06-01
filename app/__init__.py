@@ -3,6 +3,7 @@ import re
 from flask import Flask, request, redirect
 from flask_login import LoginManager
 from flask_featureflags import FeatureFlag
+from flask_featureflags.contrib.inline import InlineFeatureFlag
 from flask._compat import string_types
 from dmutils import apiclient, logging, config, proxy_fix
 
@@ -28,6 +29,7 @@ def create_app(config_name):
     proxy_fix.init_app(application)
     login_manager.init_app(application)
     feature_flags.init_app(application)
+    feature_flags.add_handler(InlineFeatureFlag())
     logging.init_app(application)
     data_api_client.init_app(application)
 
