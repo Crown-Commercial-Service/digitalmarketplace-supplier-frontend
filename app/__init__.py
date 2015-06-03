@@ -2,10 +2,8 @@ import re
 
 from flask import Flask, request, redirect
 from flask_login import LoginManager
-from flask_featureflags import FeatureFlag
-from flask_featureflags.contrib.inline import InlineFeatureFlag
 from flask._compat import string_types
-from dmutils import apiclient, logging, config, proxy_fix
+from dmutils import apiclient, init_app, FeatureFlag
 
 from config import configs
 from .model import User
@@ -19,19 +17,17 @@ def create_app(config_name):
     application = Flask(__name__,
                         static_folder='static/',
                         static_url_path=configs[config_name].STATIC_URL_PATH)
-    application.config.from_object(configs[config_name])
-    configs[config_name].init_app(application)
-    config.init_app(application)
+
+    init_app(
+        application,
+        configs[config_name],
+        data_api_client=data_api_client,
+        feature_flags=feature_flags,
+        login_manager=login_manager,
+    )
 
     from .main import main as main_blueprint
     from .status import status as status_blueprint
-
-    proxy_fix.init_app(application)
-    login_manager.init_app(application)
-    feature_flags.init_app(application)
-    feature_flags.add_handler(InlineFeatureFlag())
-    logging.init_app(application)
-    data_api_client.init_app(application)
 
     application.register_blueprint(status_blueprint,
                                    url_prefix='/suppliers')
