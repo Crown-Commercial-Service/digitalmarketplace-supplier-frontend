@@ -3,8 +3,8 @@ import re
 from flask_login import login_required, current_user
 from flask import render_template, request, redirect, url_for, abort
 
-from app.main import main
-from .. import data_api_client, flask_featureflags
+from ...main import main
+from ... import data_api_client, flask_featureflags
 from dmutils.apiclient import APIError
 
 
