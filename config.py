@@ -1,5 +1,7 @@
 import os
 import jinja2
+import datetime
+from dmutils.status import enabled_since
 
 basedir = os.path.abspath(os.path.dirname(__file__))
 
@@ -35,14 +37,9 @@ class Config(object):
 
     # Feature Flag feature names
     FEATURE_FLAGS_EDIT_SERVICE_PAGE = False
-    FEATURE_FLAGS_NEW_SERVICE_PAGE = False
+    FEATURE_FLAGS_SOMETHING_ELSE = False
 
-    FEATURE_FLAGS = {
-        'finished_feature': True,
-        'unfinished_feature': False,
-    }
-
-    # RAISE_ERROR_ON_MISSING_FEATURES = True
+    RAISE_ERROR_ON_MISSING_FEATURES = True
 
     # Logging
     DM_LOG_LEVEL = 'DEBUG'
@@ -78,7 +75,8 @@ class Test(Config):
 class Development(Config):
     DEBUG = True
 
-    FEATURE_FLAGS_EDIT_SERVICE_PAGE = True
+    # Dates not formatted like YYYY-(0)M-(0)D will fail
+    FEATURE_FLAGS_EDIT_SERVICE_PAGE = enabled_since('2015-06-03')
 
 
 class Live(Config):
