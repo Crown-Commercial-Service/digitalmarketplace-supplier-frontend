@@ -2,7 +2,12 @@
 {% from 'macros/_breadcrumbs.html' import breadcrumb %}
 
 {% block breadcrumb %}
-  {{ breadcrumb() }}
+  {{ breadcrumb([
+    {
+      "link": url_for(".dashboard"),
+      "text": current_user.supplier_name
+    }
+  ]) }}
 {% endblock %}
 
 {% block main_content %}
@@ -72,7 +77,7 @@
         </td>
         {% if 'EDIT_SERVICE_PAGE' is active_feature %}
         <td class="summary-item-action-field">
-          <a href="{{ url_for('.services', service_id=service.id) }}">
+          <a href="{{ url_for('.edit_service', service_id=service.id) }}">
             {{ 'Details' if service.status == 'disabled' else 'Edit' }}
           </a>
         </td>
