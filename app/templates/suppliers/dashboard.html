@@ -1,0 +1,96 @@
+{% extends "_base_page.html" %}
+{% from "macros/_breadcrumbs.html" import breadcrumb %}
+
+{% block breadcrumb %}
+  {{ breadcrumb() }}
+{% endblock %}
+
+{% block main_content %}
+  <div class="grid-row">
+    <div class="column-two-thirds">
+      <header class="page-heading page-heading-with-context">
+        <p class="context">{{ current_user.email_address }}</p>
+        <h1>{{ current_user.supplier_name }}</h1>
+      </header>
+    </div>
+  </div>
+
+  <div class="grid-row">
+    <h2 class="summary-item-heading">Services</h2>
+    <p class="summary-item-top-level-action">
+      <a href="" class="edit-dashboard">Edit</a>
+    </p>
+  </div>
+
+  <div class="grid-row">
+    <h2 class="summary-item-heading">Supplier information</h2>
+    <p class="summary-item-top-level-action">
+      <a href="" class="edit-dashboard">Edit</a>
+    </p>
+    <table class="summary-item-body">
+      <thead></thead>
+        <tbody class="summary-item-body">
+          <tr class="summary-item-row">
+            <td class="summary-item-field-name">Supplier summary</td>
+            <td class="summary-item-field-content">{{ supplier.description }}</td>
+          </tr>
+          <tr class="summary-item-row">
+            <td class="summary-item-field-name">Clients</td>
+            <td class="summary-item-field-content">
+              {% if supplier.clients %}
+              <ul>
+              {% for client in supplier.clients %}
+                <li>{{ client }}</li>
+              {% endfor %}
+              </ul>
+              {% else %}
+                <span class="hint summary-item-no-content"> — </p>
+              {% endif %}
+            </td>
+          </tr>
+          <tr class="summary-item-row">
+            <td class="summary-item-field-name">Contact name</td>
+            <td class="summary-item-field-content">{{ supplier.contact.contactName }}</td>
+          </tr>
+          <tr class="summary-item-row">
+            <td class="summary-item-field-name">Website</td>
+            <td class="summary-item-field-content">{{ supplier.contact.website }}</td>
+          </tr>
+          <tr class="summary-item-row">
+            <td class="summary-item-field-name">Email address</td>
+            <td class="summary-item-field-content">{{ supplier.contact.email }}</td>
+          </tr>
+          <tr class="summary-item-row">
+            <td class="summary-item-field-name">Phone number</td>
+            <td class="summary-item-field-content">{{ supplier.contact.phoneNumber }}</td>
+          </tr>
+          <tr class="summary-item-row">
+            <td class="summary-item-field-name">Address</td>
+            <td class="summary-item-field-content">
+              <address>
+                {{ supplier.contact.address1 }}<br>
+                {{ supplier.contact.address2}}<br>
+                {{ supplier.contact.city }}<br>
+                {{ supplier.contact.country }}<br>
+                {{ supplier.contact.postcode }}<br>
+              </address>
+            </td>
+          </tr>
+        </tbody>
+    </table>
+  </div>
+
+  <div class="grid-row">
+    <h2 class="summary-item-heading">Account information</h2>
+    <table class="summary-item-body">
+      <thead></thead>
+        <tbody>
+          <tr class="summary-item-row">
+            <td class="summary-item-field-name">Email address</td>
+            <td class="summary-item-field-content">{{ current_user.email_address }}</td>
+          </tr>
+        </tbody>
+    </table>
+  </div>
+
+{% endblock %}
