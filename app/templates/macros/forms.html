@@ -1,0 +1,13 @@
+{% macro text_input(name, label, value='', hint='') -%}
+  <div class="question">
+    <label for="{{ name }}-text-box" class="question-heading{% if hint %}-with-hint{% endif %}">
+      {{ label }}
+    </label>
+    {% if hint %}
+      <p class="hint box-label">
+        {{ hint }}
+      </p>
+    {% endif %}
+    <input type="text" class="text-box" name="{{ name }}" id="{{ name }}-text-box" value="{{ value }}" />
+  </div>
+{%- endmacro %}

@@ -1,0 +1,98 @@
+{% extends "_base_page.html" %}
+
+{% import "macros/forms.html" as forms %}
+{% from "macros/_breadcrumbs.html" import breadcrumb %}
+
+{% block breadcrumb %}
+  {{ breadcrumb([
+    {
+      "link": url_for(".dashboard"),
+      "text": current_user.supplier_name
+    }
+  ]) }}
+{% endblock %}
+
+{% block main_content %}
+  <div class="grid-row">
+    <div class="column-one-whole">
+      <div class="page-heading">
+        <p class="context">Edit supplier information</p>
+        <h1>{{ supplier.name }}</h1>
+      </div>
+    </div>
+  </div>
+
+  {% if error %}
+  <div class="validation-masthead" aria-labelledby="validation-masthead-heading">
+    <h3 class="validation-masthead-heading" id="validation-masthead-heading">
+      {{ error }}
+    </h3>
+  </div>
+  {% endif %}
+
+  <form action="" method="post" enctype="multipart/form-data">
+
+  <div class="grid-row">
+    <div class="column-one-whole">
+      <div class="question">
+        <label for="description-text-box" class="question-heading-with-hint">
+          Supplier summary
+        </label>
+        <p class="hint box-label">
+          200 words max
+        </p>
+        <div class="word-count">
+          <textarea class="text-box text-box-large" name="description" id="description-text-box" data-max-length-in-words="200">{{ supplier.description }}</textarea>
+        </div>
+      </div>
+
+      <div class="question">
+        <label for="clients" class="question-heading-with-hint">
+          Clients
+        </label>
+        <p class="hint box-label">
+          1 client per box, max 10 clients
+        </p>
+        <div class="input-list" id="clients" data-list-item-name="client">
+        {% for index in range(1,11) %}
+          <div class="list-entry">
+            <label for="clients-{{ index }}" class="text-box-number-label">
+              <span class="visuallyhidden">client number </span>{{ index }}.
+            </label>
+            <input type="text" name="clients" id="clients-{{ index }}" class="text-box" value="{{ supplier.clients[index - 1] }}" />
+          </div>
+        {% endfor %}
+        </div>
+      </div>
+
+      {{ forms.text_input('contactName', 'Contact name', supplier.contact.contactName, 'Primary contact') }}
+      {{ forms.text_input('website', 'Website', supplier.contact.website) }}
+      {{ forms.text_input('email', 'Email address', supplier.contact.email) }}
+      {{ forms.text_input('phoneNumber', 'Phone number', supplier.contact.phoneNumber) }}
+
+      <div class="question">
+        <label class="question-heading-with-hint">
+          Business address
+        </label>
+        <input name="contactId" type="hidden" value="{{ supplier.contact.id }}" />
+        <div class="box-label">Building and street</div>
+        <input name="address1" id="address1-text-box" class="text-box" value="{{ supplier.contact.address1 }}" />
+        <input name="address2" id="address2-text-box" class="text-box" value="{{ supplier.contact.address2 }}" />
+        <div class="box-label">Town or city</div>
+        <input name="city" id="city-text-box" class="text-box" value="{{ supplier.contact.city }}" />
+        <div class="box-label">Country</div>
+        <input name="country" id="country-text-box" class="text-box" value="{{ supplier.contact.country }}" />
+        <div class="box-label">Postcode</div>
+        <input name="postcode" id="postcode-text-box" class="text-box" value="{{ supplier.contact.postcode }}" />
+      </div>
+
+    </div>
+  </div>
+
+  <button class="button-save" type="submit">Save and return</button>
+  <p>
+    <a href="{{ url_for('.dashboard') }}">Return without saving</a>
+  </p>
+  </form>
+
+{% endblock %}
