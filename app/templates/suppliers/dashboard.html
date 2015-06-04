@@ -16,81 +16,87 @@
   </div>
 
   <div class="grid-row">
-    <h2 class="summary-item-heading">Services</h2>
-    <p class="summary-item-top-level-action">
-      <a href="{{ url_for('.list_services') }}">Edit</a>
-    </p>
+    <div class="column-one-whole">
+      <h2 class="summary-item-heading">Services</h2>
+      <p class="summary-item-top-level-action">
+        <a href="{{ url_for('.list_services') }}">Edit</a>
+      </p>
+    </div>
   </div>
 
   <div class="grid-row">
-    <h2 class="summary-item-heading">Supplier information</h2>
-    <p class="summary-item-top-level-action">
-      <a href="">Edit</a>
-    </p>
-    <table class="summary-item-body">
-      <thead></thead>
-        <tbody class="summary-item-body">
-          <tr class="summary-item-row">
-            <td class="summary-item-field-name">Supplier summary</td>
-            <td class="summary-item-field-content">{{ supplier.description }}</td>
-          </tr>
-          <tr class="summary-item-row">
-            <td class="summary-item-field-name">Clients</td>
-            <td class="summary-item-field-content">
-              {% if supplier.clients %}
-              <ul>
-              {% for client in supplier.clients %}
-                <li>{{ client }}</li>
-              {% endfor %}
-              </ul>
-              {% else %}
-                <span class="hint summary-item-no-content"> — </p>
-              {% endif %}
-            </td>
-          </tr>
-          <tr class="summary-item-row">
-            <td class="summary-item-field-name">Contact name</td>
-            <td class="summary-item-field-content">{{ supplier.contact.contactName }}</td>
-          </tr>
-          <tr class="summary-item-row">
-            <td class="summary-item-field-name">Website</td>
-            <td class="summary-item-field-content">{{ supplier.contact.website }}</td>
-          </tr>
-          <tr class="summary-item-row">
-            <td class="summary-item-field-name">Email address</td>
-            <td class="summary-item-field-content">{{ supplier.contact.email }}</td>
-          </tr>
-          <tr class="summary-item-row">
-            <td class="summary-item-field-name">Phone number</td>
-            <td class="summary-item-field-content">{{ supplier.contact.phoneNumber }}</td>
-          </tr>
-          <tr class="summary-item-row">
-            <td class="summary-item-field-name">Address</td>
-            <td class="summary-item-field-content">
-              <address>
-                {{ supplier.contact.address1 }}<br>
-                {{ supplier.contact.address2}}<br>
-                {{ supplier.contact.city }}<br>
-                {{ supplier.contact.country }}<br>
-                {{ supplier.contact.postcode }}<br>
-              </address>
-            </td>
-          </tr>
-        </tbody>
-    </table>
+    <div class="column-one-whole">
+      <h2 class="summary-item-heading">Supplier information</h2>
+      <p class="summary-item-top-level-action">
+        <a href="{{ url_for('.edit_supplier') }}">Edit</a>
+      </p>
+      <table class="summary-item-body">
+        <thead></thead>
+          <tbody class="summary-item-body">
+            <tr class="summary-item-row">
+              <td class="summary-item-field-name">Supplier summary</td>
+              <td class="summary-item-field-content">{{ supplier.description }}</td>
+            </tr>
+            <tr class="summary-item-row">
+              <td class="summary-item-field-name">Clients</td>
+              <td class="summary-item-field-content">
+                {% if supplier.clients %}
+                <ul>
+                {% for client in supplier.clients %}
+                  <li>{{ client }}</li>
+                {% endfor %}
+                </ul>
+                {% else %}
+                  <span class="hint summary-item-no-content"> — </p>
+                {% endif %}
+              </td>
+            </tr>
+            <tr class="summary-item-row">
+              <td class="summary-item-field-name">Contact name</td>
+              <td class="summary-item-field-content">{{ supplier.contact.contactName }}</td>
+            </tr>
+            <tr class="summary-item-row">
+              <td class="summary-item-field-name">Website</td>
+              <td class="summary-item-field-content">{{ supplier.contact.website }}</td>
+            </tr>
+            <tr class="summary-item-row">
+              <td class="summary-item-field-name">Email address</td>
+              <td class="summary-item-field-content">{{ supplier.contact.email }}</td>
+            </tr>
+            <tr class="summary-item-row">
+              <td class="summary-item-field-name">Phone number</td>
+              <td class="summary-item-field-content">{{ supplier.contact.phoneNumber }}</td>
+            </tr>
+            <tr class="summary-item-row">
+              <td class="summary-item-field-name">Address</td>
+              <td class="summary-item-field-content">
+                <address>
+                  {{ supplier.contact.address1 }}<br>
+                  {{ supplier.contact.address2}}<br>
+                  {{ supplier.contact.city }}<br>
+                  {{ supplier.contact.country }}<br>
+                  {{ supplier.contact.postcode }}<br>
+                </address>
+              </td>
+            </tr>
+          </tbody>
+      </table>
+    </div>
   </div>
 
   <div class="grid-row">
-    <h2 class="summary-item-heading">Account information</h2>
-    <table class="summary-item-body">
-      <thead></thead>
-        <tbody>
-          <tr class="summary-item-row">
-            <td class="summary-item-field-name">Email address</td>
-            <td class="summary-item-field-content">{{ current_user.email_address }}</td>
-          </tr>
-        </tbody>
-    </table>
+    <div class="column-one-whole">
+      <h2 class="summary-item-heading">Account information</h2>
+      <table class="summary-item-body">
+        <thead></thead>
+          <tbody>
+            <tr class="summary-item-row">
+              <td class="summary-item-field-name">Email address</td>
+              <td class="summary-item-field-content">{{ current_user.email_address }}</td>
+            </tr>
+          </tbody>
+      </table>
+    </div>
   </div>
 
 {% endblock %}
