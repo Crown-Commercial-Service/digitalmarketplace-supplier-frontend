@@ -21,11 +21,6 @@ class ResetPasswordForm(Form):
 
 
 class ChangePasswordForm(Form):
-    email_address = HiddenField('Email address', validators=[
-        DataRequired(message="Email can not be empty"),
-        Email(message="Please enter a valid email address")
-    ])
-    user_id = HiddenField('User ID')
     password = PasswordField('Password', validators=[
         DataRequired(message="Please enter a new password"),
         Length(min=10,
