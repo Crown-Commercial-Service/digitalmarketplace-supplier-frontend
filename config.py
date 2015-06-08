@@ -66,7 +66,7 @@ class Test(Config):
     WTF_CSRF_ENABLED = False
     SERVER_NAME = 'localhost'
 
-    FEATURE_FLAGS_EDIT_SERVICE_PAGE = True
+    FEATURE_FLAGS_EDIT_SERVICE_PAGE = enabled_since('2015-06-03')
 
 
 class Development(Config):
