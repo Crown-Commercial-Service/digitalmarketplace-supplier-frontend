@@ -5,6 +5,7 @@ from dmutils.apiclient import APIError
 
 from ...main import main
 from ... import data_api_client
+from ..forms.suppliers import EditSupplierForm, EditContactInformationForm
 
 
 @main.route('')
@@ -29,21 +30,31 @@ def dashboard():
 
 @main.route('/edit', methods=['GET'])
 @login_required
-def edit_supplier(error=None):
+def edit_supplier(supplier_form=None, contact_form=None, error=None):
     template_data = main.config['BASE_TEMPLATE_DATA']
 
     try:
         supplier = data_api_client.get_supplier(
             current_user.supplier_id
         )['suppliers']
-        supplier['contact'] = supplier['contactInformation'][0]
     except APIError as e:
         abort(e.status_code)
 
+    if supplier_form is None:
+        supplier_form = EditSupplierForm(
+            description=supplier['description'],
+            clients=supplier['clients']
+        )
+        contact_form = EditContactInformationForm(
+            prefix='contact_',
+            **supplier['contactInformation'][0]
+        )
+
     return render_template(
         "suppliers/edit_supplier.html",
-        supplier=supplier,
         error=error,
+        supplier_form=supplier_form,
+        contact_form=contact_form,
         **template_data
     ), 200
 
@@ -51,28 +62,39 @@ def edit_supplier(error=None):
 @main.route('/edit', methods=['POST'])
 @login_required
 def update_supplier():
+    # FieldList expects post parameter keys to have number suffixes
+    # (eg client-0, client-1 ...), which is incompatible with how
+    # JS list-entry plugin generates input names. So instead of letting
+    # the form search for request keys we pass in the values directly as data
+    supplier_form = EditSupplierForm(
+        formdata=None,
+        description=request.form['description'],
+        clients=filter(None, request.form.getlist('clients'))
+    )
+
+    contact_form = EditContactInformationForm(prefix='contact_')
+
+    if not (supplier_form.validate_on_submit() and
+            contact_form.validate_on_submit()):
+        return edit_supplier(supplier_form=supplier_form,
+                             contact_form=contact_form)
+
     try:
         data_api_client.update_supplier(
             current_user.supplier_id,
-            {
-                "description": request.form['description'],
-                "clients": request.form.getlist('clients'),
-            },
-            current_user.email_address,
-            "Update supplier info"
+            supplier_form.data,
+            current_user.email_address
         )
 
         data_api_client.update_contact_information(
             current_user.supplier_id,
-            request.form['contactId'],
-            {k: request.form[k] for k in [
-                "address1", "address2", "city", "country", "postcode",
-                "website", "phoneNumber", "email", "contactName",
-            ]},
-            current_user.email_address,
-            "Update supplier info"
+            contact_form.id.data,
+            contact_form.data,
+            current_user.email_address
         )
     except APIError as e:
-        return edit_supplier(error=e.message)
+        return edit_supplier(supplier_form=supplier_form,
+                             contact_form=contact_form,
+                             error=e.message)
 
     return redirect(url_for(".dashboard"))

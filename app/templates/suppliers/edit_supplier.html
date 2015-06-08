@@ -17,7 +17,7 @@
     <div class="column-one-whole">
       <div class="page-heading">
         <p class="context">Edit supplier information</p>
-        <h1>{{ supplier.name }}</h1>
+        <h1>{{ current_user.supplier_name }}</h1>
       </div>
     </div>
   </div>
@@ -29,61 +29,54 @@
     </h3>
   </div>
   {% endif %}
+  {% if supplier_form.errors or contact_form.errors %}
+      <div class="validation-masthead" aria-labelledby="validation-masthead-heading">
+          <h3 class="validation-masthead-heading" id="validation-masthead-heading">
+              There was a problem with your answer to the following questions
+          </h3>
+          {% for field_name, field_errors in supplier_form.errors|dictsort %}
+            {% for error in field_errors %}
+              <a href="#{{ field_name }}-label" class="validation-masthead-link">{{ supplier_form[field_name].label }}</a>
+            {% endfor %}
+          {% endfor %}
 
-  <form action="" method="post" enctype="multipart/form-data">
+          {% for field_name, field_errors in contact_form.errors|dictsort %}
+            {% for error in field_errors %}
+            <a href="#contact_{{ field_name }}-label" class="validation-masthead-link">{{ contact_form[field_name].label }}</a>
+            {% endfor %}
+          {% endfor %}
+      </div>
+  {% endif %}
+
+  <form action="{{ url_for('.update_supplier') }}" method="post" enctype="multipart/form-data">
+
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
 
   <div class="grid-row">
     <div class="column-one-whole">
-      <div class="question">
-        <label for="description-text-box" class="question-heading-with-hint">
-          Supplier summary
-        </label>
-        <p class="hint box-label">
-          200 words max
-        </p>
-        <div class="word-count">
-          <textarea class="text-box text-box-large" name="description" id="description-text-box" data-max-length-in-words="200">{{ supplier.description }}</textarea>
-        </div>
-      </div>
+      {{ forms.question_textarea('description', 'Supplier summary', supplier_form.description.data, '50 words max', errors=supplier_form.description.errors, words=50) }}
 
-      <div class="question">
-        <label for="clients" class="question-heading-with-hint">
-          Clients
-        </label>
-        <p class="hint box-label">
-          1 client per box, max 10 clients
-        </p>
-        <div class="input-list" id="clients" data-list-item-name="client">
-        {% for index in range(1,11) %}
-          <div class="list-entry">
-            <label for="clients-{{ index }}" class="text-box-number-label">
-              <span class="visuallyhidden">client number </span>{{ index }}.
-            </label>
-            <input type="text" name="clients" id="clients-{{ index }}" class="text-box" value="{{ supplier.clients[index - 1] }}" />
-          </div>
-        {% endfor %}
-        </div>
-      </div>
+      {{ forms.question_list_entry('clients', 'Clients', supplier_form.clients.data, '1 client per box, max 10 clients', errors=supplier_form.clients.errors, item_name='client', count=10) }}
 
-      {{ forms.text_input('contactName', 'Contact name', supplier.contact.contactName, 'Primary contact') }}
-      {{ forms.text_input('website', 'Website', supplier.contact.website) }}
-      {{ forms.text_input('email', 'Email address', supplier.contact.email) }}
-      {{ forms.text_input('phoneNumber', 'Phone number', supplier.contact.phoneNumber) }}
+      {{ forms.question_input('contact_contactName', 'Contact name', contact_form.contactName.data, 'Primary contact', errors=contact_form.contactName.errors) }}
+      {{ forms.question_input('contact_website', 'Website', contact_form.website.data, errors=contact_form.website.errors) }}
+      {{ forms.question_input('contact_email', 'Email address', contact_form.email.data, errors=contact_form.email.errors) }}
+      {{ forms.question_input('contact_phoneNumber', 'Phone number', contact_form.phoneNumber.data, errors=contact_form.phoneNumber.errors) }}
 
       <div class="question">
         <label class="question-heading-with-hint">
           Business address
         </label>
-        <input name="contactId" type="hidden" value="{{ supplier.contact.id }}" />
-        <div class="box-label">Building and street</div>
-        <input name="address1" id="address1-text-box" class="text-box" value="{{ supplier.contact.address1 }}" />
-        <input name="address2" id="address2-text-box" class="text-box" value="{{ supplier.contact.address2 }}" />
-        <div class="box-label">Town or city</div>
-        <input name="city" id="city-text-box" class="text-box" value="{{ supplier.contact.city }}" />
-        <div class="box-label">Country</div>
-        <input name="country" id="country-text-box" class="text-box" value="{{ supplier.contact.country }}" />
-        <div class="box-label">Postcode</div>
-        <input name="postcode" id="postcode-text-box" class="text-box" value="{{ supplier.contact.postcode }}" />
+        {{ forms.input('contact_id', contact_form.id.data, type='hidden') }}
+        <div class="box-label" id="address1-label">Building and street</div>
+        {{ forms.input('contact_address1', contact_form.address1.data, errors=contact_form.address1.errors) }}
+        {{ forms.input('contact_address2', contact_form.address2.data, errors=contact_form.address2.errors) }}
+        <div class="box-label" id="city-label">Town or city</div>
+        {{ forms.input('contact_city', contact_form.city.data, errors=contact_form.city.errors) }}
+        <div class="box-label" id="country-label">Country</div>
+        {{ forms.input('contact_country', contact_form.country.data, errors=contact_form.country.errors) }}
+        <div class="box-label" id="postcode-label">Postcode</div>
+        {{ forms.input('contact_postcode', contact_form.postcode.data, errors=contact_form.postcode.errors) }}
       </div>
 
     </div>
