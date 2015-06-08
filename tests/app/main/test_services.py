@@ -15,7 +15,7 @@ class TestDashboardContent(BaseApplicationTest):
                     "services": []
                 })
 
-            res = self.client.get('/suppliers')
+            res = self.client.get('/suppliers/services')
             assert_equal(res.status_code, 200)
             data_api_client.find_services.assert_called_once_with(
                 supplier_id=1234)
@@ -36,7 +36,7 @@ class TestDashboardContent(BaseApplicationTest):
                 }]}
             )
 
-            res = self.client.get('/suppliers')
+            res = self.client.get('/suppliers/services')
             assert_equal(res.status_code, 200)
             data_api_client.find_services.assert_called_once_with(
                 supplier_id=1234)
@@ -56,7 +56,7 @@ class TestDashboardContent(BaseApplicationTest):
                 }]}
             )
 
-            res = self.client.get('/suppliers')
+            res = self.client.get('/suppliers/services')
             assert_equal(res.status_code, 200)
             data_api_client.find_services.assert_called_once_with(
                 supplier_id=1234)
@@ -88,7 +88,7 @@ class TestDashboardLogin(BaseApplicationTest):
                 'password': '1234567890'
             })
 
-            res = self.client.get('/suppliers')
+            res = self.client.get('/suppliers/services')
 
             assert_equal(res.status_code, 200)
 
