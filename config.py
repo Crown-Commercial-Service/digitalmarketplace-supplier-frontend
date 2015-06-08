@@ -1,6 +1,5 @@
 import os
 import jinja2
-import datetime
 from dmutils.status import enabled_since
 
 basedir = os.path.abspath(os.path.dirname(__file__))
@@ -35,11 +34,9 @@ class Config(object):
         'header_class': 'with-proposition'
     }
 
-    # Feature Flag feature names
-    FEATURE_FLAGS_EDIT_SERVICE_PAGE = False
-    FEATURE_FLAGS_SOMETHING_ELSE = False
-
+    # Feature Flags
     RAISE_ERROR_ON_MISSING_FEATURES = True
+    FEATURE_FLAGS_EDIT_SERVICE_PAGE = False
 
     # Logging
     DM_LOG_LEVEL = 'DEBUG'
