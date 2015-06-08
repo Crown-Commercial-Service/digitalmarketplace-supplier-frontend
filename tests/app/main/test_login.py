@@ -132,66 +132,66 @@ class TestResetPassword(BaseApplicationTest):
         )
 
     def test_password_should_not_be_empty(self):
-        res = self.client.post("/suppliers/reset-password/token", data={
-            'user_id': 123,
-            'email_address': 'email@email.com',
-            'password': '',
-            'confirm_password': ''
-        })
-        assert_equal(res.status_code, 400)
-        assert_true(
-            NEW_PASSWORD_EMPTY_ERROR in res.get_data(as_text=True)
-        )
-        assert_true(
-            NEW_PASSWORD_CONFIRM_EMPTY_ERROR in res.get_data(as_text=True)
-        )
+        with self.app.app_context():
+            url = helpers.email.generate_reset_url(123, 'email@email.com')
+            res = self.client.post(url, data={
+                'password': '',
+                'confirm_password': ''
+            })
+            assert_equal(res.status_code, 400)
+            assert_true(
+                NEW_PASSWORD_EMPTY_ERROR in res.get_data(as_text=True)
+            )
+            assert_true(
+                NEW_PASSWORD_CONFIRM_EMPTY_ERROR in res.get_data(as_text=True)
+            )
 
     def test_password_should_be_over_ten_chars_long(self):
-        res = self.client.post("/suppliers/reset-password/token", data={
-            'user_id': 123,
-            'email_address': 'email@email.com',
-            'password': '123456789',
-            'confirm_password': '123456789'
-        })
-        assert_equal(res.status_code, 400)
-        assert_true(
-            PASSWORD_INVALID_ERROR in res.get_data(as_text=True)
-        )
+        with self.app.app_context():
+            url = helpers.email.generate_reset_url(123, 'email@email.com')
+            res = self.client.post(url, data={
+                'password': '123456789',
+                'confirm_password': '123456789'
+            })
+            assert_equal(res.status_code, 400)
+            assert_true(
+                PASSWORD_INVALID_ERROR in res.get_data(as_text=True)
+            )
 
     def test_password_should_be_under_51_chars_long(self):
-        res = self.client.post("/suppliers/reset-password/token", data={
-            'user_id': 123,
-            'email_address': 'email@email.com',
-            'password':
-                '123456789012345678901234567890123456789012345678901',
-            'confirm_password':
-                '123456789012345678901234567890123456789012345678901'
-        })
-        assert_equal(res.status_code, 400)
-        assert_true(
-            PASSWORD_INVALID_ERROR in res.get_data(as_text=True)
-        )
+        with self.app.app_context():
+            url = helpers.email.generate_reset_url(123, 'email@email.com')
+            res = self.client.post(url, data={
+                'password':
+                    '123456789012345678901234567890123456789012345678901',
+                'confirm_password':
+                    '123456789012345678901234567890123456789012345678901'
+            })
+            assert_equal(res.status_code, 400)
+            assert_true(
+                PASSWORD_INVALID_ERROR in res.get_data(as_text=True)
+            )
 
     def test_passwords_should_match(self):
-        res = self.client.post("/suppliers/reset-password/token", data={
-            'user_id': 123,
-            'email_address': 'email@email.com',
-            'password': '1234567890',
-            'confirm_password': '0123456789'
-        })
-        assert_equal(res.status_code, 400)
-        assert_true(
-            PASSWORD_MISMATCH_ERROR in res.get_data(as_text=True)
-        )
+        with self.app.app_context():
+            url = helpers.email.generate_reset_url(123, 'email@email.com')
+            res = self.client.post(url, data={
+                'password': '1234567890',
+                'confirm_password': '0123456789'
+            })
+            assert_equal(res.status_code, 400)
+            assert_true(
+                PASSWORD_MISMATCH_ERROR in res.get_data(as_text=True)
+            )
 
     def test_redirect_to_login_page_on_success(self):
         data_api_client.update_user_password = Mock()
-        res = self.client.post("/suppliers/reset-password/token", data={
-            'user_id': 123,
-            'email_address': 'email@email.com',
-            'password': '1234567890',
-            'confirm_password': '1234567890'
-        })
-        assert_equal(res.status_code, 302)
-        assert_equal(res.location,
-                     'http://localhost/suppliers/login')
+        with self.app.app_context():
+            url = helpers.email.generate_reset_url(123, 'email@email.com')
+            res = self.client.post(url, data={
+                'password': '1234567890',
+                'confirm_password': '1234567890'
+            })
+            assert_equal(res.status_code, 302)
+            assert_equal(res.location,
+                         'http://localhost/suppliers/login')
