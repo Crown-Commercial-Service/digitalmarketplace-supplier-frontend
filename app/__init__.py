@@ -3,14 +3,18 @@ import re
 from flask import Flask, request, redirect
 from flask_login import LoginManager
 from flask._compat import string_types
+from flask_wtf.csrf import CsrfProtect
+
 from dmutils import apiclient, init_app, flask_featureflags
 
 from config import configs
 from .model import User
 
+
 data_api_client = apiclient.DataAPIClient()
 login_manager = LoginManager()
 feature_flags = flask_featureflags.FeatureFlag()
+csrf = CsrfProtect()
 
 
 def create_app(config_name):
@@ -35,6 +39,8 @@ def create_app(config_name):
                                    url_prefix='/suppliers')
     login_manager.login_view = 'main.render_login'
     main_blueprint.config = application.config.copy()
+
+    csrf.init_app(application)
 
     @application.before_request
     def remove_trailing_slash():
