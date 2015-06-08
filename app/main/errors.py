@@ -12,3 +12,9 @@ def page_not_found(e):
 def exception(e):
     template_data = main.config['BASE_TEMPLATE_DATA']
     return render_template("errors/500.html", **template_data), 500
+
+
+@main.app_errorhandler(503)
+def service_unavailable(e):
+    template_data = main.config['BASE_TEMPLATE_DATA']
+    return render_template("errors/500.html", **template_data), 503
