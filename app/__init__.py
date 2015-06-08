@@ -3,14 +3,14 @@ import re
 from flask import Flask, request, redirect
 from flask_login import LoginManager
 from flask._compat import string_types
-from dmutils import apiclient, init_app, FeatureFlag
+from dmutils import apiclient, init_app, flask_featureflags
 
 from config import configs
 from .model import User
 
 data_api_client = apiclient.DataAPIClient()
 login_manager = LoginManager()
-feature_flags = FeatureFlag()
+feature_flags = flask_featureflags.FeatureFlag()
 
 
 def create_app(config_name):

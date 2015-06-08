@@ -1,11 +1,10 @@
 import re
 
 from flask_login import login_required, current_user
-import flask_featureflags as feature
 from flask import render_template, request, redirect, url_for, abort
 
 from app.main import main
-from .. import data_api_client
+from .. import data_api_client, flask_featureflags
 from dmutils.apiclient import APIError
 
 
@@ -28,7 +27,7 @@ def dashboard():
 
 @main.route('/services/<string:service_id>', methods=['GET'])
 @login_required
-@feature.is_active_feature('EDIT_SERVICE_PAGE')
+@flask_featureflags.is_active_feature('EDIT_SERVICE_PAGE')
 def services(service_id):
     service = data_api_client.get_service(service_id).get('services')
 
@@ -52,7 +51,7 @@ def services(service_id):
 # Might have to change the route if we're generalizing this to update
 @main.route('/services/<string:service_id>', methods=['POST'])
 @login_required
-@feature.is_active_feature('EDIT_SERVICE_PAGE')
+@flask_featureflags.is_active_feature('EDIT_SERVICE_PAGE')
 def update_service_status(service_id):
     service = data_api_client.get_service(service_id).get('services')
 
