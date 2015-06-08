@@ -4,7 +4,7 @@ from flask_login import login_required, current_user
 from flask import render_template, request, redirect, url_for, abort
 
 from app.main import main
-from .. import data_api_client
+from .. import data_api_client, flask_featureflags
 from dmutils.apiclient import APIError
 
 
@@ -27,9 +27,8 @@ def dashboard():
 
 @main.route('/services/<string:service_id>', methods=['GET'])
 @login_required
+@flask_featureflags.is_active_feature('EDIT_SERVICE_PAGE')
 def services(service_id):
-    abort(404)
-
     service = data_api_client.get_service(service_id).get('services')
 
     if not _is_service_associated_with_supplier(service):
@@ -52,9 +51,8 @@ def services(service_id):
 # Might have to change the route if we're generalizing this to update
 @main.route('/services/<string:service_id>', methods=['POST'])
 @login_required
+@flask_featureflags.is_active_feature('EDIT_SERVICE_PAGE')
 def update_service_status(service_id):
-    abort(404)
-
     service = data_api_client.get_service(service_id).get('services')
 
     if not _is_service_associated_with_supplier(service):

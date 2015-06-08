@@ -1,8 +1,8 @@
-from flask import jsonify
+from flask import jsonify, current_app
 
 from . import status
-from . import utils
 from .. import data_api_client
+from dmutils.status import get_version_label, get_flags
 
 
 @status.route('/_status')
@@ -13,13 +13,15 @@ def status():
     if api_status['status'] == "ok":
         return jsonify(
             status="ok",
-            version=utils.get_version_label(),
+            version=get_version_label(),
             api_status=api_status,
+            flags=get_flags(current_app)
         )
 
     return jsonify(
         status="error",
-        version=utils.get_version_label(),
+        version=get_version_label(),
         api_status=api_status,
         message="Error connecting to the (Data) API.",
+        flags=get_flags(current_app)
     ), 500

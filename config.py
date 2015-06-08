@@ -1,5 +1,6 @@
 import os
 import jinja2
+from dmutils.status import enabled_since
 
 basedir = os.path.abspath(os.path.dirname(__file__))
 
@@ -33,6 +34,10 @@ class Config(object):
         'header_class': 'with-proposition'
     }
 
+    # Feature Flags
+    RAISE_ERROR_ON_MISSING_FEATURES = True
+    FEATURE_FLAGS_EDIT_SERVICE_PAGE = False
+
     # Logging
     DM_LOG_LEVEL = 'DEBUG'
     DM_APP_NAME = 'supplier-frontend'
@@ -61,9 +66,14 @@ class Test(Config):
     WTF_CSRF_ENABLED = False
     SERVER_NAME = 'localhost'
 
+    FEATURE_FLAGS_EDIT_SERVICE_PAGE = enabled_since('2015-06-03')
+
 
 class Development(Config):
     DEBUG = True
+
+    # Dates not formatted like YYYY-(0)M-(0)D will fail
+    FEATURE_FLAGS_EDIT_SERVICE_PAGE = enabled_since('2015-06-03')
 
 
 class Live(Config):
