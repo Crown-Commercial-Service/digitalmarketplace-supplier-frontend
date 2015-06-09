@@ -169,6 +169,17 @@ gulp.task('copy_dm_toolkit_assets:images', function () {
   return stream;
 });
 
+gulp.task('copy_dm_toolkit_assets:templates', function () {
+  stream = gulp.src(dmToolkitRoot + '/templates/**/*', { base : dmToolkitRoot + '/templates' })
+    .pipe(gulp.dest('app/templates/toolkit'));
+
+  stream.on('end', function () {
+    console.log('Copied templates from the digital marketplace front-end toolkit');
+  });
+
+  return stream;
+});
+
 gulp.task('copy_template_assets', [
   'copy_template_assets:stylesheets',
   'copy_template_assets:images',
@@ -177,7 +188,7 @@ gulp.task('copy_template_assets', [
 
 gulp.task('copy:images', function () {
   stream = gulp.src(assetsFolder + '/images/**/*', { base : assetsFolder + '/images' })
-    .pipe(gulp.dest(staticFolder + '/images'))
+    .pipe(gulp.dest(staticFolder + '/images'));
 
   stream.on('end', function () {
     console.log('Copied image assets into static folder');
@@ -186,7 +197,10 @@ gulp.task('copy:images', function () {
   return stream;
 });
 
-gulp.task('copy_dm_toolkit_assets', ['copy_dm_toolkit_assets:images']);
+gulp.task('copy_dm_toolkit_assets', [
+  'copy_dm_toolkit_assets:images',
+  'copy_dm_toolkit_assets:templates'
+]);
 
 gulp.task('watch', ['build:development'], function () {
   var jsWatcher = gulp.watch([ assetsFolder + '/**/*.js' ], ['js']);
