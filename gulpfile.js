@@ -38,7 +38,6 @@ var sassOptions = {
     includePaths: [
       assetsFolder + '/scss',
       govukToolkitRoot + '/stylesheets',
-      dmToolkitRoot + '/scss'
     ],
     sourceComments: true,
     errLogToConsole: true
@@ -49,7 +48,6 @@ var sassOptions = {
     includePaths: [
       assetsFolder + '/scss',
       govukToolkitRoot + '/stylesheets',
-      dmToolkitRoot + '/scss'
     ],
   },
 };
@@ -165,6 +163,14 @@ gulp.task(
 );
 
 gulp.task(
+  'copy:dm_toolkit_assets:stylesheets',
+  copyFactory(
+    "stylesheets from the Digital Marketplace frontend toolkit",
+    dmToolkitRoot + '/scss', 'app/assets/scss/toolkit'
+  )
+);
+
+gulp.task(
   'copy:dm_toolkit_assets:images',
   copyFactory(
     "images from the Digital Marketplace frontend toolkit",
@@ -215,6 +221,7 @@ gulp.task(
     'copy:template_assets:images',
     'copy:template_assets:stylesheets',
     'copy:template_assets:javascripts',
+    'copy:dm_toolkit_assets:stylesheets',
     'copy:dm_toolkit_assets:images',
     'copy:dm_toolkit_assets:templates',
     'copy:images',

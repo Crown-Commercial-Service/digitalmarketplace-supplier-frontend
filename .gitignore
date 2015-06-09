@@ -60,6 +60,7 @@ node_modules
 bower_components
 npm-debug.log
 app/templates/toolkit
+app/assets/scss/toolkit
 
 # Front end generated assets
 app/static
