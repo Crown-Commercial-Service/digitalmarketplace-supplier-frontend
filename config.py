@@ -1,11 +1,13 @@
 import os
 import jinja2
-from dmutils.status import enabled_since
-
-basedir = os.path.abspath(os.path.dirname(__file__))
+from dmutils.status import enabled_since, get_version_label
 
 
 class Config(object):
+
+    VERSION = get_version_label(
+        os.path.abspath(os.path.dirname(__file__))
+    )
     SESSION_COOKIE_NAME = 'dm_session'
     SESSION_COOKIE_PATH = '/'
     SESSION_COOKIE_HTTPONLY = True
