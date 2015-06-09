@@ -92,6 +92,12 @@ not already been set:
 ./scripts/run_app.sh
 ```
 
+If you want the app to be available on the network, you need to set the `DM_HOST` environment variable to '0.0.0.0':
+
+```
+DM_HOST='0.0.0.0' ./scripts/run_app.sh
+```
+
 More generally, the command to start the server is:
 
 ```
