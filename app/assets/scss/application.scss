@@ -12,7 +12,7 @@ $path: "/suppliers/static/images/";
   @extend %site-width-container;
 }
 
-main {
+#content {
   @extend %contain-floats;
   clear: both;
   margin-bottom: $gutter * 2;
