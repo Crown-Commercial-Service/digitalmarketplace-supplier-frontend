@@ -215,6 +215,31 @@ class TestSupplierUpdate(BaseApplicationTest):
         assert_in('value="Supplierland"', resp)
         assert_in('value="11 AB"', resp)
 
+    def test_description_below_word_length(self, data_api_client):
+        self._login(data_api_client)
+
+        status, resp = self.post_supplier_edit(
+            description="DESCR " * 49
+        )
+
+        assert_equal(status, 302)
+
+        assert_true(data_api_client.update_supplier.called)
+        assert_true(data_api_client.update_contact_information.called)
+
+    def test_description_above_word_length(self, data_api_client):
+        self._login(data_api_client)
+
+        status, resp = self.post_supplier_edit(
+            description="DESCR " * 51
+        )
+
+        assert_equal(status, 200)
+        assert_in('must not be more than 50', resp)
+
+        assert_false(data_api_client.update_supplier.called)
+        assert_false(data_api_client.update_contact_information.called)
+
     def test_should_redirect_to_login_if_not_logged_in(self, data_api_client):
         res = self.client.get("/suppliers/edit")
         assert_equal(res.status_code, 302)
