@@ -27,7 +27,7 @@ var jsDistributionFolder = staticFolder + '/javascripts';
 var jsDistributionFile = 'application.js';
 
 // CSS paths
-var cssSourceGlob = assetsFolder + '/scss/**/*.scss';
+var cssSourceGlob = assetsFolder + '/scss/application*.scss';
 var cssDistributionFolder = staticFolder + '/stylesheets';
 
 // Configuration
@@ -37,6 +37,7 @@ var sassOptions = {
     lineNumbers: true,
     includePaths: [
       assetsFolder + '/scss',
+      dmToolkitRoot + '/scss',
       govukToolkitRoot + '/stylesheets',
     ],
     sourceComments: true,
@@ -47,6 +48,7 @@ var sassOptions = {
     lineNumbers: true,
     includePaths: [
       assetsFolder + '/scss',
+      dmToolkitRoot + '/scss',
       govukToolkitRoot + '/stylesheets',
     ],
   },
