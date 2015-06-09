@@ -21,7 +21,11 @@ class EditSupplierForm(Form):
     description = StringField('Supplier summary', validators=[
         word_length(50, 'Your summary must not be more than %d words')
     ])
-    clients = FieldList(StringField(), max_entries=10)
+    clients = FieldList(StringField())
+
+    def validate_clients(form, field):
+        if len(field.data) > 10:
+            raise ValidationError('You must have 10 or fewer clients')
 
 
 class EditContactInformationForm(Form):

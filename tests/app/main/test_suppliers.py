@@ -240,6 +240,16 @@ class TestSupplierUpdate(BaseApplicationTest):
         assert_false(data_api_client.update_supplier.called)
         assert_false(data_api_client.update_contact_information.called)
 
+    def test_clients_above_limit(self, data_api_client):
+        self._login(data_api_client)
+
+        status, resp = self.post_supplier_edit(
+            clients=["", "A Client"] * 11
+        )
+
+        assert_equal(status, 200)
+        assert_in('You must have 10 or fewer clients', resp)
+
     def test_should_redirect_to_login_if_not_logged_in(self, data_api_client):
         res = self.client.get("/suppliers/edit")
         assert_equal(res.status_code, 302)
