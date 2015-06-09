@@ -81,7 +81,7 @@ gulp.task('clean', function (cb) {
   var logOutputFor = function (fileType) {
     return function (err, paths) {
       if (paths !== undefined) {
-        console.log('Deleted the following ' + fileType + ' files:\n', paths.join('\n'));
+        console.log('💥  Deleted the following ' + fileType + ' files:\n', paths.join('\n'));
       }
       complete(fileType);
     };
@@ -101,7 +101,7 @@ gulp.task('sass', function () {
     .pipe(gulp.dest(cssDistributionFolder));
 
   stream.on('end', function () {
-    console.log('Compressed CSS saved as .css files in ' + cssDistributionFolder)
+    console.log('💾  Compressed CSS saved as .css files in ' + cssDistributionFolder);
   });
 
   return stream;
@@ -119,95 +119,81 @@ gulp.task('js', function () {
     .pipe(gulp.dest(jsDistributionFolder));
 
   stream.on('end', function () {
-    console.log('Compressed JavaScript saved as ' + jsDistributionFolder + '/' + jsDistributionFile)
+    console.log('💾 Compressed JavaScript saved as ' + jsDistributionFolder + '/' + jsDistributionFile);
   });
 
   return stream;
 });
 
-gulp.task('copy_template_assets:stylesheets', function () {
-  stream = gulp.src(govukTemplateAssetsFolder + '/stylesheets/**/*', { base : govukTemplateAssetsFolder + '/stylesheets' })
-    .pipe(gulp.dest(staticFolder + '/stylesheets'))
+function copyFactory(what, base, destination) {
 
-  stream.on('end', function () {
-    console.log('Copied CSS assets from the govuk template');
-  });
+  return function() {
 
-  return stream;
-});
+    return gulp
+      .src(base + "/**/*", { base: base })
+      .pipe(gulp.dest(destination))
+      .on('end', function () {
+        console.log('📂  Copied ' + what);
+      });
 
-gulp.task('copy_template_assets:images', function () {
-  stream = gulp.src(govukTemplateAssetsFolder + '/images/**/*', { base : govukTemplateAssetsFolder + '/images' })
-    .pipe(gulp.dest(staticFolder + '/images'))
+  };
 
-  stream.on('end', function () {
-    console.log('Copied image assets from the govuk template');
-  });
+}
 
-  return stream;
-});
+gulp.task(
+  'copy:template_assets:stylesheets',
+  copyFactory(
+    "GOV.UK template stylesheets",
+    govukTemplateAssetsFolder + '/stylesheets', staticFolder + '/stylesheets'
+  )
+);
 
-gulp.task('copy_template_assets:javascripts', function () {
-  stream = gulp.src(govukTemplateAssetsFolder + '/javascripts/**/*', { base : govukTemplateAssetsFolder + '/javascripts' })
-    .pipe(gulp.dest(staticFolder + '/javascripts'))
+gulp.task(
+  'copy:template_assets:images',
+  copyFactory(
+    "GOV.UK template images",
+    govukTemplateAssetsFolder + '/images', staticFolder + '/images'
+  )
+);
 
-  stream.on('end', function () {
-    console.log('Copied JS assets from the govuk template');
-  });
+gulp.task(
+  'copy:template_assets:javascripts',
+  copyFactory(
+    'GOV.UK template Javascript files',
+    govukTemplateAssetsFolder + '/javascripts', staticFolder + '/javascripts'
+  )
+);
 
-  return stream;
-});
+gulp.task(
+  'copy:dm_toolkit_assets:images',
+  copyFactory(
+    "images from the Digital Marketplace frontend toolkit",
+    dmToolkitRoot + '/images', staticFolder + '/images'
+  )
+);
 
-gulp.task('copy_dm_toolkit_assets:images', function () {
-  stream = gulp.src(dmToolkitRoot + '/images/**/*', { base : dmToolkitRoot + '/images' })
-    .pipe(gulp.dest(staticFolder + '/images'))
+gulp.task(
+  'copy:dm_toolkit_assets:templates',
+  copyFactory(
+    "templates from the Digital Marketplace frontend toolkit",
+    dmToolkitRoot + '/templates', 'app/templates/toolkit'
+  )
+);
 
-  stream.on('end', function () {
-    console.log('Copied image assets from the digital marketplace front-end toolkit');
-  });
-
-  return stream;
-});
-
-gulp.task('copy_dm_toolkit_assets:templates', function () {
-  stream = gulp.src(dmToolkitRoot + '/templates/**/*', { base : dmToolkitRoot + '/templates' })
-    .pipe(gulp.dest('app/templates/toolkit'));
-
-  stream.on('end', function () {
-    console.log('Copied templates from the digital marketplace front-end toolkit');
-  });
-
-  return stream;
-});
-
-gulp.task('copy_template_assets', [
-  'copy_template_assets:stylesheets',
-  'copy_template_assets:images',
-  'copy_template_assets:javascripts'
-]);
-
-gulp.task('copy:images', function () {
-  stream = gulp.src(assetsFolder + '/images/**/*', { base : assetsFolder + '/images' })
-    .pipe(gulp.dest(staticFolder + '/images'));
-
-  stream.on('end', function () {
-    console.log('Copied image assets into static folder');
-  });
-
-  return stream;
-});
-
-gulp.task('copy_dm_toolkit_assets', [
-  'copy_dm_toolkit_assets:images',
-  'copy_dm_toolkit_assets:templates'
-]);
+gulp.task(
+  'copy:images',
+  copyFactory(
+    "image assets from app to static folder",
+    assetsFolder + '/images', staticFolder + '/images'
+  )
+);
 
 gulp.task('watch', ['build:development'], function () {
   var jsWatcher = gulp.watch([ assetsFolder + '/**/*.js' ], ['js']);
   var cssWatcher = gulp.watch([ assetsFolder + '/**/*.scss' ], ['sass']);
   var notice = function (event) {
     console.log('File ' + event.path + ' was ' + event.type + ' running tasks...');
-  }
+  };
 
   cssWatcher.on('change', notice);
   jsWatcher.on('change', notice);
@@ -223,18 +209,24 @@ gulp.task('set_environment_to_production', function (cb) {
   cb();
 });
 
-gulp.task('copy_and_compile', ['sass', 'js', 'copy_template_assets', 'copy_dm_toolkit_assets']);
+gulp.task(
+  'copy_and_compile',
+  [
+    'copy:template_assets:images',
+    'copy:template_assets:stylesheets',
+    'copy:template_assets:javascripts',
+    'copy:dm_toolkit_assets:images',
+    'copy:dm_toolkit_assets:templates',
+    'copy:images',
+    'sass',
+    'js'
+  ]
+);
 
 gulp.task('build:development', ['set_environment_to_development', 'clean'], function () {
-  gulp.start('sass', 'js');
-  gulp.start('copy:images');
-  gulp.start('copy_template_assets');
-  gulp.start('copy_dm_toolkit_assets');
+  gulp.start('copy_and_compile');
 });
 
 gulp.task('build:production', ['set_environment_to_production', 'clean'], function () {
-  gulp.start('sass', 'js');
-  gulp.start('copy:images');
-  gulp.start('copy_template_assets');
-  gulp.start('copy_dm_toolkit_assets');
+  gulp.start('copy_and_compile');
 });
