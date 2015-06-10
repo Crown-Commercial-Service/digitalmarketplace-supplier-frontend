@@ -47,7 +47,7 @@ def process_login():
 
         user = User.from_json(user_json)
         login_user(user)
-        if next_url and routes.next_url_is_valid(next_url):
+        if next_url and next_url.startswith('/suppliers'):
             return redirect(next_url)
 
         return redirect(url_for('.dashboard'))
