@@ -1,4 +1,5 @@
 #!/bin/bash
+
 if [ -n "$VIRTUAL_ENV" ]; then
   echo "Already in virtual environment $VIRTUAL_ENV"
 else
@@ -15,4 +16,4 @@ export DM_PASSWORD_SECRET_KEY=${DM_PASSWORD_SECRET_KEY:=verySecretKey}
 echo "Environment variables in use:"
 env | grep DM_
 
-python application.py runserver
+python application.py runserver $@
