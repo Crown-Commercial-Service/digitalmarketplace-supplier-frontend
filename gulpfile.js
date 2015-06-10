@@ -5,6 +5,7 @@ var sass = require('gulp-sass');
 var filelog = require('gulp-filelog');
 var include = require('gulp-include');
 
+// Paths
 var environment;
 var repoRoot = __dirname + '/';
 var bowerRoot = repoRoot + 'bower_components';
@@ -18,14 +19,7 @@ var govukTemplateAssetsFolder = govukTemplateFolder + '/assets';
 var govukTemplateLayoutsFolder = govukTemplateFolder + '/views/layouts';
 
 // JavaScript paths
-var jsVendorFiles = [
-  govukToolkitRoot + '/javascripts/govuk/analytics/tracker.js',
-  govukToolkitRoot + '/javascripts/govuk/analytics/google-analytics-universal-tracker.js',
-  govukToolkitRoot + '/javascripts/govuk/analytics/google-analytics-classic-tracker.js',
-];
-var jsSourceFiles = [
-  assetsFolder + '/javascripts/application.js',
-];
+var jsSourceFile = assetsFolder + '/javascripts/application.js';
 var jsDistributionFolder = staticFolder + '/javascripts';
 var jsDistributionFile = 'application.js';
 
@@ -111,9 +105,7 @@ gulp.task('sass', function () {
 });
 
 gulp.task('js', function () {
-  // produce full array of JS files from vendor + local scripts
-  jsFiles = jsVendorFiles.concat(jsSourceFiles);
-  var stream = gulp.src(jsFiles)
+  var stream = gulp.src(jsSourceFile)
     .pipe(filelog('Compressing JavaScript files'))
     .pipe(include())
     .pipe(uglify(
