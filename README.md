@@ -92,6 +92,12 @@ not already been set:
 ./scripts/run_app.sh
 ```
 
+To set the host the app will run on, use the `h` flag:
+
+```
+./scripts/run_app.sh -h '0.0.0.0'
+```
+
 More generally, the command to start the server is:
 
 ```
