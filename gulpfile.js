@@ -13,7 +13,9 @@ var govukToolkitRoot = npmRoot + '/govuk_frontend_toolkit';
 var dmToolkitRoot = bowerRoot + '/digitalmarketplace-frontend-toolkit/toolkit';
 var assetsFolder = repoRoot + 'app/assets';
 var staticFolder = repoRoot + 'app/static';
-var govukTemplateAssetsFolder = repoRoot + 'bower_components/govuk_template/assets';
+var govukTemplateFolder = repoRoot + 'bower_components/govuk_template';
+var govukTemplateAssetsFolder = govukTemplateFolder + '/assets';
+var govukTemplateLayoutsFolder = govukTemplateFolder + '/views/layouts';
 
 // JavaScript paths
 var jsVendorFiles = [
@@ -198,6 +200,14 @@ gulp.task(
   )
 );
 
+gulp.task(
+  'copy:govuk_template',
+  copyFactory(
+    "GOV.UK template into app folder",
+    govukTemplateLayoutsFolder, 'app/templates/govuk'
+  )
+);
+
 gulp.task('watch', ['build:development'], function () {
   var jsWatcher = gulp.watch([ assetsFolder + '/**/*.js' ], ['js']);
   var cssWatcher = gulp.watch([ assetsFolder + '/**/*.scss' ], ['sass']);
@@ -228,7 +238,8 @@ gulp.task(
     'copy:dm_toolkit_assets:stylesheets',
     'copy:dm_toolkit_assets:images',
     'copy:dm_toolkit_assets:templates',
-    'copy:images'
+    'copy:images',
+    'copy:govuk_template'
   ]
 );
 
