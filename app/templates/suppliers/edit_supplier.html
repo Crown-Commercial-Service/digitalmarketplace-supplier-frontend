@@ -15,10 +15,12 @@
 {% block main_content %}
   <div class="grid-row">
     <div class="column-one-whole">
-      <div class="page-heading">
-        <p class="context">Edit supplier information</p>
-        <h1>{{ current_user.supplier_name }}</h1>
-      </div>
+      {% with
+        context = "Edit supplier information",
+        heading = current_user.supplier_name
+      %}
+        {% include 'toolkit/page-heading.html' %}
+      {% endwith %}
     </div>
   </div>
 

@@ -8,10 +8,12 @@
 {% block main_content %}
   <div class="grid-row">
     <div class="column-two-thirds">
-      <header class="page-heading page-heading-with-context">
-        <p class="context">{{ current_user.email_address }}</p>
-        <h1>{{ current_user.supplier_name }}</h1>
-      </header>
+      {% with
+        context = current_user.email_address,
+        heading = current_user.supplier_name
+      %}
+        {% include 'toolkit/page-heading.html' %}
+      {% endwith %}
     </div>
   </div>
 
