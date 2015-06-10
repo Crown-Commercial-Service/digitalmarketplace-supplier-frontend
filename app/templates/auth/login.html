@@ -14,14 +14,15 @@
             {% if message == 'no_account' %}
             Sorry, we couldn't find a supplier account with that username
             and password.
-            {% endif %}
-
-            {% if message == 'password_updated' %}
+            
+            {% elif message == 'password_updated' %}
             You have successfully changed your password.
-            {% endif %}
-
-            {% if message == 'password_not_updated' %}
+            
+            {% elif message == 'password_not_updated' %}
             Could not update password due to an error.
+            
+            {% else %}
+            {{ message }}
             {% endif %}
         </p>
     </div>
