@@ -218,7 +218,7 @@ gulp.task('set_environment_to_production', function (cb) {
 });
 
 gulp.task(
-  'copy_and_compile',
+  'copy',
   [
     'copy:template_assets:images',
     'copy:template_assets:stylesheets',
@@ -226,16 +226,25 @@ gulp.task(
     'copy:dm_toolkit_assets:stylesheets',
     'copy:dm_toolkit_assets:images',
     'copy:dm_toolkit_assets:templates',
-    'copy:images',
-    'sass',
-    'js'
+    'copy:images'
   ]
 );
 
+gulp.task(
+  'compile',
+  [
+    'copy'
+  ],
+  function() {
+    gulp.start('sass');
+    gulp.start('js');
+  }
+);
+
 gulp.task('build:development', ['set_environment_to_development', 'clean'], function () {
-  gulp.start('copy_and_compile');
+  gulp.start('compile');
 });
 
 gulp.task('build:production', ['set_environment_to_production', 'clean'], function () {
-  gulp.start('copy_and_compile');
+  gulp.start('compile');
 });
