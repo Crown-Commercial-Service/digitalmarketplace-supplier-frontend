@@ -39,6 +39,7 @@ class Config(object):
     # Feature Flags
     RAISE_ERROR_ON_MISSING_FEATURES = True
     FEATURE_FLAGS_EDIT_SERVICE_PAGE = False
+    FEATURE_FLAGS_SUPPLIER_DASHBOARD = False
 
     # Logging
     DM_LOG_LEVEL = 'DEBUG'
@@ -69,6 +70,7 @@ class Test(Config):
     SERVER_NAME = 'localhost'
 
     FEATURE_FLAGS_EDIT_SERVICE_PAGE = enabled_since('2015-06-03')
+    FEATURE_FLAGS_SUPPLIER_DASHBOARD = enabled_since('2015-06-10')
 
 
 class Development(Config):
@@ -76,6 +78,7 @@ class Development(Config):
 
     # Dates not formatted like YYYY-(0)M-(0)D will fail
     FEATURE_FLAGS_EDIT_SERVICE_PAGE = enabled_since('2015-06-03')
+    FEATURE_FLAGS_SUPPLIER_DASHBOARD = enabled_since('2015-06-10')
 
 
 class Live(Config):
