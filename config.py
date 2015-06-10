@@ -26,7 +26,7 @@ class Config(object):
     RESET_PASSWORD_EMAIL_NAME = 'Digital Marketplace Admin'
     RESET_PASSWORD_EMAIL_FROM = 'enquiries@digitalmarketplace.service.gov.uk'
     RESET_PASSWORD_EMAIL_SUBJECT = 'Reset your Digital Marketplace password'
-    SECRET_KEY = os.getenv('DM_PASSWORD_SECRET_KEY', "not_very_secret")
+    SECRET_KEY = os.getenv('DM_PASSWORD_SECRET_KEY')
     RESET_PASSWORD_SALT = 'ResetPasswordSalt'
 
     STATIC_URL_PATH = '/suppliers/static'
@@ -39,6 +39,7 @@ class Config(object):
     # Feature Flags
     RAISE_ERROR_ON_MISSING_FEATURES = True
     FEATURE_FLAGS_EDIT_SERVICE_PAGE = False
+    FEATURE_FLAGS_SUPPLIER_DASHBOARD = False
 
     # Logging
     DM_LOG_LEVEL = 'DEBUG'
@@ -69,6 +70,7 @@ class Test(Config):
     SERVER_NAME = 'localhost'
 
     FEATURE_FLAGS_EDIT_SERVICE_PAGE = enabled_since('2015-06-03')
+    FEATURE_FLAGS_SUPPLIER_DASHBOARD = enabled_since('2015-06-10')
 
 
 class Development(Config):
@@ -76,6 +78,7 @@ class Development(Config):
 
     # Dates not formatted like YYYY-(0)M-(0)D will fail
     FEATURE_FLAGS_EDIT_SERVICE_PAGE = enabled_since('2015-06-03')
+    FEATURE_FLAGS_SUPPLIER_DASHBOARD = enabled_since('2015-06-10')
 
 
 class Live(Config):

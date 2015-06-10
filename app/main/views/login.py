@@ -4,12 +4,11 @@ from itsdangerous import BadSignature, SignatureExpired
 from flask import current_app, flash, redirect, render_template, url_for
 from flask_login import logout_user, login_user
 
-from . import main
-from .forms.auth_forms \
-    import LoginForm, ResetPasswordForm, ChangePasswordForm
-from .. import data_api_client
-from ..model import User
-from .helpers import email
+from .. import main
+from ..forms.auth_forms import LoginForm, ResetPasswordForm, ChangePasswordForm
+from ... import data_api_client
+from ...model import User
+from ..helpers import email
 
 
 @main.route('/login', methods=["GET"])

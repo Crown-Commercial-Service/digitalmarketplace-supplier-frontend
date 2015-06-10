@@ -6,6 +6,10 @@
 // Path to assets for use with file-url()
 $path: "/suppliers/static/images/";
 
+// Digital Marketplace front end toolkit components
+@import "forms/word-counter";
+@import "forms/list-entry";
+
 @import "_reset.scss";
 
 #wrapper {

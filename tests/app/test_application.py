@@ -32,7 +32,7 @@ class TestApplication(BaseApplicationTest):
             "enquiries@digitalmarketplace.service.gov.uk</a>"
             in res.get_data(as_text=True))
 
-    def test_500(self):
+    def test_503(self):
         with self.app.test_client():
             self.login()
 
@@ -42,7 +42,7 @@ class TestApplication(BaseApplicationTest):
             self.app.config['DEBUG'] = False
 
             res = self.client.get('/suppliers')
-            assert_equal(500, res.status_code)
+            assert_equal(503, res.status_code)
             assert_true(
                 "Sorry, we're experiencing technical difficulties"
                 in res.get_data(as_text=True))

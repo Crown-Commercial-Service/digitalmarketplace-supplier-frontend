@@ -30,6 +30,7 @@
         {% endif %}
         {% if service_data.status != 'disabled' %}
       <form action="{{ url_for('.update_service_status', service_id=service_data['id'] ) }}" method="POST">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
         <fieldset class="question">
           <legend class="question-heading question-heading-with-hint ">
             Choose service status

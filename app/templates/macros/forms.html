@@ -1,0 +1,79 @@
+{% macro question_input(name, label, value='', hint='', errors=None) -%}
+  {{ _question_header(name, label, hint, errors) }}
+    <input type="text" class="text-box" name="{{ name }}" id="{{ name }}-input" value="{{ value }}" />
+  {{ _question_footer(name, label, hint, errors) }}
+{%- endmacro %}
+
+
+{% macro input(name, value='', errors=None, type='text') -%}
+  {{ field_errors(name, errors) }}
+  <input type="{{ type }}" class="text-box" name="{{ name }}" id="{{ name }}-input" value="{{ value }}" />
+{%- endmacro %}
+
+
+{% macro question_textarea(name, label, value='', hint='', errors=None, words=None) -%}
+  {{ _question_header(name, label, hint, errors) }}
+    {% if words %}
+    <div class="word-count">
+      <textarea class="text-box text-box-large" name="{{ name }}" id="{{ name }}-input" data-max-length-in-words="{{ words }}">{{ value }}</textarea>
+    </div>
+    {% else %}
+    <textarea class="text-box text-box-large" name="{{ name }}" id="{{ name }}-input">{{ value }}</textarea>
+    {% endif %}
+  {{ _question_footer(name, label, hint, errors) }}
+{%- endmacro %}
+
+
+{% macro question_list_entry(name, label, value='', hint='', errors=None, item_name='', count=10) -%}
+  {{ _question_header(name, label, hint, errors) }}
+    <div class="input-list" id="{{ name }}" data-list-item-name="{{ item_name }}">
+    {% for index in range(count) %}
+      <div class="list-entry">
+        <label for="{{ name }}-input-{{ index }}" class="text-box-number-label">
+          <span class="visuallyhidden">{{ item_name }} number </span>{{ index + 1 }}.
+        </label>
+        <input type="text" name="{{ name }}-{{ index }}" id="{{ name }}-input-{{ index }}" class="text-box" value="{{ value[index] }}" />
+      </div>
+    {% endfor %}
+    </div>
+  {{ _question_footer(name, label, hint, errors) }}
+{%- endmacro %}
+
+
+{% macro field_label(name, label, hint='') -%}
+  <label id="{{ name }}-label" for="{{ name }}-input" class="question-heading{% if hint %}-with-hint{% endif %}">
+    {{ label }}
+  </label>
+  {% if hint %}
+    <p class="hint box-label">
+      {{ hint }}
+    </p>
+  {% endif %}
+{%- endmacro %}
+
+
+{% macro field_errors(name, errors=None) -%}
+  {% if errors %}
+  <p class="validation-message" id="{{ name }}-errors">
+      {% for error in errors %}{{ error }}{% endfor %}
+  </p>
+  {% endif %}
+{%- endmacro %}
+
+
+{% macro _question_header(name, label, hint='', errors=None) -%}
+  {% if errors %}
+  <div class="validation-wrapper">
+  {% endif %}
+  <div class="question">
+    {{ field_label(name, label, hint) }}
+    {{ field_errors(name, errors) }}
+{%- endmacro %}
+
+
+{% macro _question_footer(name, label, hint='', errors=None) -%}
+  </div>
+  {% if errors %}
+  </div>
+  {% endif %}
+{%- endmacro %}

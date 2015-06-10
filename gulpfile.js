@@ -3,13 +3,14 @@ var uglify = require('gulp-uglifyjs');
 var deleteFiles = require('del');
 var sass = require('gulp-sass');
 var filelog = require('gulp-filelog');
+var include = require('gulp-include');
 
 var environment;
 var repoRoot = __dirname + '/';
 var bowerRoot = repoRoot + 'bower_components';
 var npmRoot = repoRoot + 'node_modules';
 var govukToolkitRoot = npmRoot + '/govuk_frontend_toolkit';
-var dmToolkitRoot = bowerRoot + '/digitalmarketplace_frontend_toolkit/toolkit';
+var dmToolkitRoot = bowerRoot + '/digitalmarketplace-frontend-toolkit/toolkit';
 var assetsFolder = repoRoot + 'app/assets';
 var staticFolder = repoRoot + 'app/static';
 var govukTemplateAssetsFolder = repoRoot + 'bower_components/govuk_template/assets';
@@ -21,7 +22,7 @@ var jsVendorFiles = [
   govukToolkitRoot + '/javascripts/govuk/analytics/google-analytics-classic-tracker.js',
 ];
 var jsSourceFiles = [
-  assetsFolder + '/javascripts/_analytics.js',
+  assetsFolder + '/javascripts/application.js',
 ];
 var jsDistributionFolder = staticFolder + '/javascripts';
 var jsDistributionFile = 'application.js';
@@ -112,6 +113,7 @@ gulp.task('js', function () {
   jsFiles = jsVendorFiles.concat(jsSourceFiles);
   var stream = gulp.src(jsFiles)
     .pipe(filelog('Compressing JavaScript files'))
+    .pipe(include())
     .pipe(uglify(
       jsDistributionFile,
       uglifyOptions[environment]
