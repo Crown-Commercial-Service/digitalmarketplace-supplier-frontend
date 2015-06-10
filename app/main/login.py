@@ -97,7 +97,6 @@ def send_reset_password_email():
 def reset_password(token):
     try:
         decoded = email.decode_email(token)
-        user_id = decoded["user"]
         email_address = decoded["email"]
     except SignatureExpired:
         current_app.logger.info("Password reset attempt with expired token.")
@@ -109,8 +108,8 @@ def reset_password(token):
         return redirect(url_for('.request_password_reset'))
     template_data = main.config['BASE_TEMPLATE_DATA']
     return render_template("auth/reset-password.html",
-                           form=ChangePasswordForm(email_address=email_address,
-                                                   user_id=user_id,),
+                           email_address=email_address,
+                           form=ChangePasswordForm(),
                            token=token,
                            **template_data), 200
 
@@ -118,9 +117,21 @@ def reset_password(token):
 @main.route('/reset-password/<token>', methods=["POST"])
 def update_password(token):
     form = ChangePasswordForm()
-    if form.validate_on_submit():
-        user_id = form.user_id.data
+    try:
+        decoded = email.decode_email(token)
+        user_id = decoded["user"]
+        email_address = decoded["email"]
         password = form.password.data
+    except SignatureExpired:
+        current_app.logger.info("Password reset attempt with expired token.")
+        flash('token_expired', 'error')
+        return redirect(url_for('.request_password_reset'))
+    except BadSignature as e:
+        current_app.logger.info("Error changing password: %s", e)
+        flash('token_invalid', 'error')
+        return redirect(url_for('.request_password_reset'))
+
+    if form.validate_on_submit():
         if data_api_client.update_user_password(user_id, password):
             current_app.logger.info(
                 "User %s successfully changed their password", user_id)
@@ -131,6 +142,7 @@ def update_password(token):
     else:
         template_data = main.config['BASE_TEMPLATE_DATA']
         return render_template("auth/reset-password.html",
+                               email_address=email_address,
                                form=form,
                                token=token,
                                **template_data), 400
