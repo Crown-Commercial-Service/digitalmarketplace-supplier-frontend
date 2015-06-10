@@ -47,7 +47,7 @@
     <h1>Supplier login</h1>
 </header>
 
-<form action="{{ url_for('.process_login') }}" method="POST">
+<form action="{{ url_for('.process_login', next=next) }}" method="POST">
 
     {{ form.hidden_tag() }}
 
