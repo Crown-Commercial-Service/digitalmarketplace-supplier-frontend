@@ -92,7 +92,8 @@ not already been set:
 ./scripts/run_app.sh
 ```
 
-To set the host the app will run on, use the `h` flag:
+The script is a wrapper around `python application.py runserver` so all the options available there
+can also be sent in. For example, to set the host:
 
 ```
 ./scripts/run_app.sh -h '0.0.0.0'
