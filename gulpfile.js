@@ -5,6 +5,7 @@ var sass = require('gulp-sass');
 var filelog = require('gulp-filelog');
 var include = require('gulp-include');
 
+// Paths
 var environment;
 var repoRoot = __dirname + '/';
 var bowerRoot = repoRoot + 'bower_components';
@@ -13,17 +14,12 @@ var govukToolkitRoot = npmRoot + '/govuk_frontend_toolkit';
 var dmToolkitRoot = bowerRoot + '/digitalmarketplace-frontend-toolkit/toolkit';
 var assetsFolder = repoRoot + 'app/assets';
 var staticFolder = repoRoot + 'app/static';
-var govukTemplateAssetsFolder = repoRoot + 'bower_components/govuk_template/assets';
+var govukTemplateFolder = repoRoot + 'bower_components/govuk_template';
+var govukTemplateAssetsFolder = govukTemplateFolder + '/assets';
+var govukTemplateLayoutsFolder = govukTemplateFolder + '/views/layouts';
 
 // JavaScript paths
-var jsVendorFiles = [
-  govukToolkitRoot + '/javascripts/govuk/analytics/tracker.js',
-  govukToolkitRoot + '/javascripts/govuk/analytics/google-analytics-universal-tracker.js',
-  govukToolkitRoot + '/javascripts/govuk/analytics/google-analytics-classic-tracker.js',
-];
-var jsSourceFiles = [
-  assetsFolder + '/javascripts/application.js',
-];
+var jsSourceFile = assetsFolder + '/javascripts/application.js';
 var jsDistributionFolder = staticFolder + '/javascripts';
 var jsDistributionFile = 'application.js';
 
@@ -109,9 +105,7 @@ gulp.task('sass', function () {
 });
 
 gulp.task('js', function () {
-  // produce full array of JS files from vendor + local scripts
-  jsFiles = jsVendorFiles.concat(jsSourceFiles);
-  var stream = gulp.src(jsFiles)
+  var stream = gulp.src(jsSourceFile)
     .pipe(filelog('Compressing JavaScript files'))
     .pipe(include())
     .pipe(uglify(
@@ -198,6 +192,14 @@ gulp.task(
   )
 );
 
+gulp.task(
+  'copy:govuk_template',
+  copyFactory(
+    "GOV.UK template into app folder",
+    govukTemplateLayoutsFolder, 'app/templates/govuk'
+  )
+);
+
 gulp.task('watch', ['build:development'], function () {
   var jsWatcher = gulp.watch([ assetsFolder + '/**/*.js' ], ['js']);
   var cssWatcher = gulp.watch([ assetsFolder + '/**/*.scss' ], ['sass']);
@@ -228,7 +230,8 @@ gulp.task(
     'copy:dm_toolkit_assets:stylesheets',
     'copy:dm_toolkit_assets:images',
     'copy:dm_toolkit_assets:templates',
-    'copy:images'
+    'copy:images',
+    'copy:govuk_template'
   ]
 );
 

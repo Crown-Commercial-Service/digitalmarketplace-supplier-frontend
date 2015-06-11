@@ -27,6 +27,9 @@ function display_result {
   fi
 }
 
+# Build front-end static assets
+npm run frontend-build:production
+
 pep8 .
 display_result $? 1 "Code style check"
 
