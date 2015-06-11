@@ -34,6 +34,7 @@ class TestLogin(BaseApplicationTest):
         assert_equal(res.status_code, 302)
         assert_equal(res.location, 'http://localhost/suppliers')
         assert_in('Secure;', res.headers['Set-Cookie'])
+        assert_in('DENY', res.headers['X-Frame-Options'])
 
     def test_ok_next_url_redirects_on_login(self):
         data_api_client.authenticate_user = Mock(

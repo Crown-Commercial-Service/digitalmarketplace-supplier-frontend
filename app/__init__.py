@@ -53,6 +53,11 @@ def create_app(config_name):
         session.permanent = True
         session.modified = True
 
+    @application.after_request
+    def add_header(response):
+        response.headers['X-Frame-Options'] = 'DENY'
+        return response
+
     return application
 
 
