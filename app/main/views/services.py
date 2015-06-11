@@ -6,6 +6,12 @@ from flask import render_template, request, redirect, url_for, abort
 from ...main import main
 from ... import data_api_client, flask_featureflags
 from dmutils.apiclient import APIError
+from dmutils.content_loader import ContentLoader
+
+content = ContentLoader(
+    "app/section_order.yml",
+    "bower_components/digital-marketplace-ssp-content/g6/"
+)
 
 
 @main.route('/services')
