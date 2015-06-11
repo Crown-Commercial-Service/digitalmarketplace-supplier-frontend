@@ -22,57 +22,26 @@
 {% block main_content %}
   <div class="grid-row">
     <div class="column-two-thirds">
-      <header class="page-heading-smaller">
-        {% if service_data.status != 'disabled' %}
-          <p class="context">
-            Edit
-          </p>
-        {% endif %}
-        <h1>
-          {{ service_data['serviceName'] }}
-        </h1>
-      </header>
-        {% if error %}
-        <div class="validation-masthead" aria-labelledby="validation-masthead-heading">
-            <h3 class="validation-masthead-heading" id="validation-masthead-heading">
-                {{ error }}
-            </h3>
-        </div>
-        {% endif %}
-        {% if service_data.status != 'disabled' %}
-      <form action="{{ url_for('.update_service_status', service_id=service_data['id'] ) }}" method="POST">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
-        <fieldset class="question">
-          <legend class="question-heading question-heading-with-hint ">
-            Choose service status
-          </legend>
-          <p class="hint">
-            Private services don't appear in search results and don't have a
-            <acronym title="Uniform resource locator">URL</acronym>
-          </p>
-          <label class="selection-button selection-button-boolean">
-            <input type="radio" name="service_status" id="service_status_published" value="public" {% if service_data['status'] == 'published' %}checked="checked"{% endif %} />
-            Public
-          </label>
-          <label class="selection-button  selection-button-boolean">
-            <input type="radio" name="service_status" id="service_status_private" value="private" {% if service_data['status'] == 'enabled' %}checked="checked"{% endif %} />
-            Private
-          </label>
-        </fieldset>
-        <button type="submit" class="button-save">Save and return</button>
-      </form>
-        {% endif %}
-        {% if service_data.status == 'disabled' %}
-      <div class="question">
-        <h2 class="question-heading service-status-removed">
-          This service has been removed
-        </h2>
-        <p class="hint">
-          If you don't know why this service has been removed, contact
-          <a href="mailto:enquiries@digitalmarketplace.service.gov.uk">enquiries@digitalmarketplace.service.gov.uk</a>
-        </p>
-      </div>
-        {% endif %}
+      {% with
+        context = "Edit" if service_data.status != 'disabled',
+        heading = service_data['serviceName'],
+        smaller = true
+      %}
+        {% include "toolkit/page-heading.html" %}
+      {% endwith %}
+    </div>
+  {% if error %}
+    <div class="column-one-whole">
+      {% with
+        lede = error,
+        errors = {}
+      %}
+        {% include "toolkit/forms/validation.html" %}
+      {% endwith %}
+    </div>
+  {% endif %}
+    <div class="column-two-thirds">
+      {% include "services/_edit-status.html" %}
     </div>
     <div class="column-one-whole">
       {% for section in sections %}
@@ -99,8 +68,7 @@
                     <td class="summary-item-field-content">
                       {% if question.type == "service_id" %}
                         {%
-                          with
-                          id = service_data[question.id]
+                          with id = service_data[question.id]
                         %}
                           {% include "toolkit/service-id.html" %}
                         {% endwith %}
