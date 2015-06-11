@@ -75,44 +75,66 @@
         {% endif %}
     </div>
     <div class="column-one-whole">
-      <h2 class="summary-item-heading">
-        Service details
-      </h2>
-      <table class="summary-item-body">
-        <thead class="summary-item-field-headings">
-          <tr>
-              <th scope="col">
-                  <a href="">Name</a>
-              </th>
-              <th scope="col">
-                  Framework
-              </th>
-              <th scope="col">
-                  Lot
-              </th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr class="summary-item-row">
-            <td class="summary-item-field-name">
-              Service ID
-            </td>
-            <td class="summary-item-field-content">
-              <span class="service-id">
-                {% for chunk in service_id -%}<span class="service-id-chunk">{{chunk}}</span>{%- endfor %}
-              </span>
-            </td>
-          </tr>
-          <tr class="summary-item-row">
-            <td class="summary-item-field-name">
-              Description
-            </td>
-            <td class="summary-item-field-content">
-              {{ service_data['serviceSummary'] }}
-            </td>
-          </tr>
-        </tbody>
-      </table>
+      {% for section in sections %}
+        {% if service_data['lot']|lower in section['depends_on_lots'] %}
+          <h2 class="summary-item-heading">
+            {{section.name}}
+          </h2>
+          {% if section.editable %}
+            <p class="summary-item-top-level-action">
+              <a href="#">Edit</a>
+            </p>
+          {% endif %}
+          <table class="summary-item-body">
+            <thead class="summary-item-field-headings">
+              <tr>
+                <th>Service attribute name</th><th>Service attribute</th>
+              </tr>
+            </thead>
+            <tbody class="summary-item-body">
+              {% for question in section.questions %}
+                {% if service_data['lot']|lower in question['depends_on_lots'] %}
+                  <tr class="summary-item-row">
+                    <td class="summary-item-field-name">{{ question.question }}</td>
+                    <td class="summary-item-field-content">
+                      {% if question.type == "service_id" %}
+                        {%
+                          with
+                          id = service_data[question.id]
+                        %}
+                          {% include "toolkit/service-id.html" %}
+                        {% endwith %}
+                      {% elif
+                        question.type == "list" or
+                        question.type == "checkboxes"
+                      %}
+                        {%
+                          if service_data[question.id] is string or
+                          service_data[question.id]|length == 1
+                        %}
+                          {{ service_data[question.id] }}
+                        {% else %}
+                          <ul>
+                            {% for item in service_data[question.id] %}
+                              <li>{{ item }}</li>
+                            {% endfor %}
+                          </ul>
+                        {% endif %}
+                      {% elif question.type == "upload" %}
+                        <a href="{{ service_data[question.id].url }}">
+                          {{ service_data[question.id].filename }}
+                        </a>
+                      {% else %}
+                        {{ service_data[question.id] }}
+                      {% endif %}
+                    </td>
+                  </tr>
+                {% endif %}
+              {% endfor %}
+            </tbody>
+          </table>
+        {% endif %}
+      {% endfor %}
     </div>
   </div>
 {% endblock %}

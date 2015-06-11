@@ -1,0 +1,55 @@
+-
+  name: Service attributes
+  editable: false
+  questions:
+    - id
+    - lot
+-
+  name: Categories
+  editable: true
+  questions:
+    - serviceTypesSCS
+-
+  name: Description
+  editable: true
+  questions:
+    - serviceName
+    - serviceSummary
+-
+  name: Features and benefits
+  editable: true
+  questions:
+    - serviceFeatures
+    - serviceBenefits
+-
+  name: Pricing
+  editable: true
+  questions:
+    - priceString
+    - vatIncluded
+    - educationPricing
+    - terminationCost
+    - trialOption
+    - freeOption
+    - minimumContractPeriod
+-
+  name: Documents
+  editable: true
+  questions:
+    - serviceDefinitionDocumentURL
+    - termsAndConditionsDocumentURL
+    - sfiaRateDocumentURL
+    - pricingDocumentURL
+-
+  name: Support
+  editable: true
+  questions:
+    - supportTypes
+    - supportForThirdParties
+    - supportAvailability
+    - supportResponseTime
+    - incidentEscalation
+-
+  name: Certifications
+  questions:
+    - vendorCertifications

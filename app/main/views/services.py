@@ -7,11 +7,13 @@ from ...main import main
 from ... import data_api_client, flask_featureflags
 from dmutils.apiclient import APIError
 from dmutils.content_loader import ContentLoader
+from dmutils.presenters import Presenters
 
 content = ContentLoader(
     "app/section_order.yml",
     "bower_components/digital-marketplace-ssp-content/g6/"
 )
+presenters = Presenters()
 
 
 @main.route('/services')
@@ -42,15 +44,17 @@ def edit_service(service_id):
 
     template_data = main.config['BASE_TEMPLATE_DATA']
 
-    if service.get('frameworkName') == 'G-Cloud 5':
-        service_id = [service_id]
-    else:
-        service_id = re.findall("....", str(service_id))
+    presented_service_data = {}
+    for key, value in service.items():
+        presented_service_data[key] = presenters.present(
+            value, content.get_question(key)
+        )
 
     return render_template(
         "services/service.html",
         service_id=service_id,
-        service_data=service,
+        service_data=presented_service_data,
+        sections=content.sections,
         **template_data), 200
 
 
