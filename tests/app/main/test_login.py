@@ -34,6 +34,28 @@ class TestLogin(BaseApplicationTest):
         assert_equal(res.status_code, 302)
         assert_equal(res.location, 'http://localhost/suppliers')
 
+    def test_ok_next_url_redirects_on_login(self):
+        data_api_client.authenticate_user = Mock(
+            return_value=(self.user(123, "email@email.com", 1234, 'name')))
+        res = self.client.post("/suppliers/login?next=/suppliers/services/123",
+                               data={
+                                   'email_address': 'valid@email.com',
+                                   'password': '1234567890'
+                               })
+        assert_equal(res.status_code, 302)
+        assert_equal(res.location, 'http://localhost/suppliers/services/123')
+
+    def test_bad_next_url_takes_user_to_dashboard(self):
+        data_api_client.authenticate_user = Mock(
+            return_value=(self.user(123, "email@email.com", 1234, 'name')))
+        res = self.client.post("/suppliers/login?next=http://badness.com",
+                               data={
+                                   'email_address': 'valid@email.com',
+                                   'password': '1234567890'
+                               })
+        assert_equal(res.status_code, 302)
+        assert_equal(res.location, 'http://localhost/suppliers')
+
     def test_should_have_cookie_on_redirect(self):
         with self.app.app_context():
             self.app.config['SESSION_COOKIE_DOMAIN'] = '127.0.0.1'

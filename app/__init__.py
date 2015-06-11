@@ -1,6 +1,7 @@
 import re
 
-from flask import Flask, request, redirect
+from datetime import timedelta
+from flask import Flask, request, redirect, session
 from flask_login import LoginManager
 from flask._compat import string_types
 from flask_wtf.csrf import CsrfProtect
@@ -29,7 +30,7 @@ def create_app(config_name):
         feature_flags=feature_flags,
         login_manager=login_manager,
     )
-
+    application.permanent_session_lifetime = timedelta(hours=1)
     from .main import main as main_blueprint
     from .status import status as status_blueprint
 
@@ -46,6 +47,11 @@ def create_app(config_name):
     def remove_trailing_slash():
         if request.path.endswith('/'):
             return redirect(request.path[:-1], code=301)
+
+    @application.before_request
+    def refresh_session():
+        session.permanent = True
+        session.modified = True
 
     return application
 

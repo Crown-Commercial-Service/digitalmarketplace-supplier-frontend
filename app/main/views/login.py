@@ -1,7 +1,8 @@
 from __future__ import absolute_import
 from itsdangerous import BadSignature, SignatureExpired
 
-from flask import current_app, flash, redirect, render_template, url_for
+from flask import current_app, flash, redirect, render_template, url_for, \
+    request
 from flask_login import logout_user, login_user
 
 from .. import main
@@ -13,16 +14,19 @@ from ..helpers import email
 
 @main.route('/login', methods=["GET"])
 def render_login():
+    next_url = request.args.get('next')
     template_data = main.config['BASE_TEMPLATE_DATA']
     return render_template(
         "auth/login.html",
         form=LoginForm(),
+        next=next_url,
         **template_data), 200
 
 
 @main.route('/login', methods=["POST"])
 def process_login():
     form = LoginForm()
+    next_url = request.args.get('next')
     template_data = main.config['BASE_TEMPLATE_DATA']
     if form.validate_on_submit():
 
@@ -38,15 +42,21 @@ def process_login():
             return render_template(
                 "auth/login.html",
                 form=form,
+                next=next_url,
                 **template_data), 403
 
         user = User.from_json(user_json)
         login_user(user)
+        if next_url and next_url.startswith('/suppliers'):
+            return redirect(next_url)
+
         return redirect(url_for('.dashboard'))
+
     else:
         return render_template(
             "auth/login.html",
             form=form,
+            next=next_url,
             **template_data), 400
 
 
