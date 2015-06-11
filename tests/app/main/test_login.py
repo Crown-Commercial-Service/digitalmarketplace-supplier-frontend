@@ -1,5 +1,5 @@
 from app.main import helpers
-from nose.tools import assert_equal, assert_true, assert_is_not_none
+from nose.tools import assert_equal, assert_true, assert_is_not_none, assert_in
 from ..helpers import BaseApplicationTest
 from mock import Mock
 from app import data_api_client
@@ -33,6 +33,7 @@ class TestLogin(BaseApplicationTest):
         })
         assert_equal(res.status_code, 302)
         assert_equal(res.location, 'http://localhost/suppliers')
+        assert_in('Secure;', res.headers['Set-Cookie'])
 
     def test_should_have_cookie_on_redirect(self):
         with self.app.app_context():

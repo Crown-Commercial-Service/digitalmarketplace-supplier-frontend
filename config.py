@@ -11,7 +11,7 @@ class Config(object):
     SESSION_COOKIE_NAME = 'dm_session'
     SESSION_COOKIE_PATH = '/'
     SESSION_COOKIE_HTTPONLY = True
-    SESSION_COOKIE_SECURE = False
+    SESSION_COOKIE_SECURE = True
     WTF_CSRF_ENABLED = True
     DM_API_URL = None
     DM_API_AUTH_TOKEN = None
@@ -75,6 +75,7 @@ class Test(Config):
 
 class Development(Config):
     DEBUG = True
+    SESSION_COOKIE_SECURE = False
 
     # Dates not formatted like YYYY-(0)M-(0)D will fail
     FEATURE_FLAGS_EDIT_SERVICE_PAGE = enabled_since('2015-06-03')
@@ -83,7 +84,6 @@ class Development(Config):
 
 class Live(Config):
     DEBUG = False
-    SESSION_COOKIE_SECURE = True
     DM_HTTP_PROTO = 'https'
 
 
