@@ -1,0 +1,64 @@
+{% macro textbox(value='') -%}
+  {{ value }}
+{%- endmacro %}
+
+
+{% macro text(value='') -%}
+  {{ value }}
+{%- endmacro %}
+
+
+{% macro upload(value) -%}
+  {% if 'url' in value and 'filename' in value %}
+    <a href="{{ value.url }}">{{ value.filename }}</a>
+  {% endif %}
+{%- endmacro %}
+
+
+{% macro service_id(value='') -%}
+  <div class="service-id">
+    {% for chunk in value -%}
+      <span>{{ chunk }}</span>
+    {%- endfor %}
+  </div>
+{%- endmacro %}
+
+
+{% macro checkboxes(value='') -%}
+  {{ value }}
+{%- endmacro %}
+
+
+{% macro radios(value='') -%}
+  {{ value }}
+{%- endmacro %}
+
+
+{% macro boolean(value='') -%}
+  {{ 'Yes' if value else 'No' }}
+{%- endmacro %}
+
+
+{% macro textbox_large(value='') -%}
+  {{ value }}
+{%- endmacro %}
+
+
+{% macro pricing(value='') -%}
+  {{ value }}
+{%- endmacro %}
+
+
+{% macro list(value='') -%}
+  {% if value|length > 1 %}
+    <ul>
+      {% for item in value %}
+        <li>
+          {{ item }}
+        </li>
+      {% endfor %}
+    </ul>
+  {% elif value|length == 1 %}
+    {{ value.0 }}
+  {% endif %}
+{%- endmacro %}
