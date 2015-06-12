@@ -1,5 +1,6 @@
 {% extends "_base_page.html" %}
-{% from 'macros/_breadcrumbs.html' import breadcrumb %}
+{% import 'macros/answers.html' as answers %}
+
 {% block breadcrumb %}
   {%
     with items = [
@@ -16,8 +17,6 @@
     {% include "toolkit/breadcrumb.html" %}
   {% endwith %}
 {% endblock %}
-
-
 
 {% block main_content %}
   <div class="grid-row">
@@ -66,35 +65,7 @@
                   <tr class="summary-item-row">
                     <td class="summary-item-field-name">{{ question.question }}</td>
                     <td class="summary-item-field-content">
-                      {% if question.type == "service_id" %}
-                        {%
-                          with id = service_data[question.id]
-                        %}
-                          {% include "toolkit/service-id.html" %}
-                        {% endwith %}
-                      {% elif
-                        question.type == "list" or
-                        question.type == "checkboxes"
-                      %}
-                        {%
-                          if service_data[question.id] is string or
-                          service_data[question.id]|length == 1
-                        %}
-                          {{ service_data[question.id] }}
-                        {% else %}
-                          <ul>
-                            {% for item in service_data[question.id] %}
-                              <li>{{ item }}</li>
-                            {% endfor %}
-                          </ul>
-                        {% endif %}
-                      {% elif question.type == "upload" %}
-                        <a href="{{ service_data[question.id].url }}">
-                          {{ service_data[question.id].filename }}
-                        </a>
-                      {% else %}
-                        {{ service_data[question.id] }}
-                      {% endif %}
+                      {{ answers[question.type](service_data[question.id]) }}
                     </td>
                   </tr>
                 {% endif %}

@@ -25,7 +25,7 @@
 
 
 {% macro checkboxes(value='') -%}
-  {{ value }}
+  {{ list(value) }}
 {%- endmacro %}
 
 
@@ -35,7 +35,7 @@
 
 
 {% macro boolean(value='') -%}
-  {{ 'Yes' if value else 'No' }}
+  {{ value }}
 {%- endmacro %}
 
 
@@ -50,7 +50,9 @@
 
 
 {% macro list(value='') -%}
-  {% if value|length > 1 %}
+  {% if value is string %}
+    {{ value }}
+  {% elif value|length > 1 %}
     <ul>
       {% for item in value %}
         <li>
