@@ -1,13 +1,24 @@
 {% extends "_base_page.html" %}
 {% from 'macros/_breadcrumbs.html' import breadcrumb %}
 {% block breadcrumb %}
-  {{ breadcrumb([
-    {
-      "link": url_for(".dashboard"),
-      "text": current_user.supplier_name
-    }
-  ]) }}
+  {%
+    with items = [
+      {
+        "link": "/",
+        "label": "Digital Marketplace"
+      },
+      {
+        "link": url_for(".dashboard"),
+        "label": current_user.supplier_name
+      }
+    ]
+  %}
+    {% include "toolkit/breadcrumb.html" %}
+  {% endwith %}
 {% endblock %}
+
+
+
 {% block main_content %}
   <div class="grid-row">
     <div class="column-two-thirds">
