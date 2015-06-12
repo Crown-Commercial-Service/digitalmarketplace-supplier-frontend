@@ -106,3 +106,8 @@ python application.py runserver
 ```
 
 The supplier frontend runs on port 5003. Use the app at [http://127.0.0.1:5003/](http://127.0.0.1:5003/)
+
+### Using FeatureFlags
+
+To use feature flags, check out the documentation in (the README of)
+[digitalmarketplace-utils](https://github.com/alphagov/digitalmarketplace-utils#using-featureflags).
