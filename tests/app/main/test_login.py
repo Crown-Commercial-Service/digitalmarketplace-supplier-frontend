@@ -1,9 +1,8 @@
 from app.main import helpers
 from nose.tools import assert_equal, assert_true, assert_is_not_none, assert_in
 from ..helpers import BaseApplicationTest
-from mock import Mock
-from app import data_api_client
 from lxml import html
+import mock
 
 
 EMAIL_EMPTY_ERROR = "Email can not be empty"
@@ -17,8 +16,26 @@ PASSWORD_MISMATCH_ERROR = "The passwords you entered do not match"
 NEW_PASSWORD_EMPTY_ERROR = "Please enter a new password"
 NEW_PASSWORD_CONFIRM_EMPTY_ERROR = "Please confirm your new password"
 
+TOKEN_CREATED_BEFORE_PASSWORD_LAST_CHANGED_ERROR = \
+    'Password has been changed since this reset link was requested.'
+
 
 class TestLogin(BaseApplicationTest):
+
+    def setup(self):
+        super(TestLogin, self).setup()
+
+        data_api_client_config = {'authenticate_user.return_value': self.user(
+            123, "email@email.com", 1234, 'name'
+        )}
+
+        self._data_api_client = mock.patch(
+            'app.main.views.login.data_api_client', **data_api_client_config
+        )
+        self._data_api_client.start()
+
+    def teardown(self):
+        self._data_api_client.stop()
 
     def test_should_show_login_page(self):
         res = self.client.get("/suppliers/login")
@@ -26,8 +43,6 @@ class TestLogin(BaseApplicationTest):
         assert_true("<h1>Supplier login</h1>" in res.get_data(as_text=True))
 
     def test_should_redirect_to_dashboard_on_login(self):
-        data_api_client.authenticate_user = Mock(
-            return_value=(self.user(123, "email@email.com", 1234, 'name')))
         res = self.client.post("/suppliers/login", data={
             'email_address': 'valid@email.com',
             'password': '1234567890'
@@ -37,8 +52,6 @@ class TestLogin(BaseApplicationTest):
         assert_in('Secure;', res.headers['Set-Cookie'])
 
     def test_ok_next_url_redirects_on_login(self):
-        data_api_client.authenticate_user = Mock(
-            return_value=(self.user(123, "email@email.com", 1234, 'name')))
         res = self.client.post("/suppliers/login?next=/suppliers/services/123",
                                data={
                                    'email_address': 'valid@email.com',
@@ -48,8 +61,6 @@ class TestLogin(BaseApplicationTest):
         assert_equal(res.location, 'http://localhost/suppliers/services/123')
 
     def test_bad_next_url_takes_user_to_dashboard(self):
-        data_api_client.authenticate_user = Mock(
-            return_value=(self.user(123, "email@email.com", 1234, 'name')))
         res = self.client.post("/suppliers/login?next=http://badness.com",
                                data={
                                    'email_address': 'valid@email.com',
@@ -62,8 +73,6 @@ class TestLogin(BaseApplicationTest):
         with self.app.app_context():
             self.app.config['SESSION_COOKIE_DOMAIN'] = '127.0.0.1'
             self.app.config['SESSION_COOKIE_SECURE'] = True
-            data_api_client.authenticate_user = Mock(
-                return_value=(self.user(123, "email@email.com", 1234, 'name')))
             res = self.client.post("/suppliers/login", data={
                 'email_address': 'valid@email.com',
                 'password': '1234567890'
@@ -78,9 +87,10 @@ class TestLogin(BaseApplicationTest):
         assert_equal(res.status_code, 302)
         assert_equal(res.location, 'http://localhost/suppliers/login')
 
-    def test_should_return_a_403_for_invalid_login(self):
-        data_api_client.authenticate_user = Mock(
-            return_value=None)
+    @mock.patch('app.main.views.login.data_api_client')
+    def test_should_return_a_403_for_invalid_login(self, data_api_client):
+        data_api_client.authenticate_user.return_value = None
+
         res = self.client.post("/suppliers/login", data={
             'email_address': 'valid@email.com',
             'password': '1234567890'
@@ -118,6 +128,21 @@ class TestLogin(BaseApplicationTest):
 
 class TestResetPassword(BaseApplicationTest):
 
+    def setup(self):
+        super(TestResetPassword, self).setup()
+
+        data_api_client_config = {'get_user.return_value': self.user(
+            123, "email@email.com", 1234, 'name'
+        )}
+
+        self._data_api_client = mock.patch(
+            'app.main.views.login.data_api_client', **data_api_client_config
+        )
+        self._data_api_client.start()
+
+    def teardown(self):
+        self._data_api_client.stop()
+
     def test_email_should_not_be_empty(self):
         res = self.client.post("/suppliers/reset-password", data={})
         content = self.strip_all_whitespace(res.get_data(as_text=True))
@@ -137,8 +162,6 @@ class TestResetPassword(BaseApplicationTest):
             in content)
 
     def test_redirect_to_same_page_on_success(self):
-        data_api_client.get_user = Mock(
-            return_value=(self.user(123, "email@email.com", 1234, 'name')))
         res = self.client.post("/suppliers/reset-password", data={
             'email_address': 'email@email.com'
         })
@@ -209,7 +232,6 @@ class TestResetPassword(BaseApplicationTest):
             )
 
     def test_redirect_to_login_page_on_success(self):
-        data_api_client.update_user_password = Mock()
         with self.app.app_context():
             url = helpers.email.generate_reset_url(123, 'email@email.com')
             res = self.client.post(url, data={
@@ -219,6 +241,26 @@ class TestResetPassword(BaseApplicationTest):
             assert_equal(res.status_code, 302)
             assert_equal(res.location,
                          'http://localhost/suppliers/login')
+
+    @mock.patch('app.main.views.login.data_api_client')
+    def test_token_created_before_last_updated_password_cannot_be_used(
+            self, data_api_client
+    ):
+        with self.app.app_context():
+            data_api_client.get_user.return_value = self.user(
+                123, "email@email.com", 1234, 'email', is_token_valid=False
+            )
+            url = helpers.email.generate_reset_url(123, 'email@email.com')
+            res = self.client.post(url, data={
+                'password': '1234567890',
+                'confirm_password': '1234567890'
+            }, follow_redirects=True)
+
+            assert_equal(res.status_code, 200)
+            assert_true(
+                TOKEN_CREATED_BEFORE_PASSWORD_LAST_CHANGED_ERROR
+                in res.get_data(as_text=True)
+            )
 
 
 class TestLoginFormsNotAutofillable(BaseApplicationTest):
