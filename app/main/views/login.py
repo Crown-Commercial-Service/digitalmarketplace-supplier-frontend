@@ -104,17 +104,12 @@ def send_reset_password_email():
 
 @main.route('/reset-password/<token>', methods=["GET"])
 def reset_password(token):
-    try:
-        decoded = email.decode_email(token)
-        email_address = decoded["email"]
-    except SignatureExpired:
-        current_app.logger.info("Password reset attempt with expired token.")
-        flash('token_expired', 'error')
+    decoded = decode_password_reset_token(token)
+    if not decoded:
         return redirect(url_for('.request_password_reset'))
-    except BadSignature as e:
-        current_app.logger.info("Error changing password: %s", e)
-        flash('token_invalid', 'error')
-        return redirect(url_for('.request_password_reset'))
+
+    email_address = decoded["email"]
+
     template_data = main.config['BASE_TEMPLATE_DATA']
     return render_template("auth/reset-password.html",
                            email_address=email_address,
@@ -126,19 +121,13 @@ def reset_password(token):
 @main.route('/reset-password/<token>', methods=["POST"])
 def update_password(token):
     form = ChangePasswordForm()
-    try:
-        decoded = email.decode_email(token)
-        user_id = decoded["user"]
-        email_address = decoded["email"]
-        password = form.password.data
-    except SignatureExpired:
-        current_app.logger.info("Password reset attempt with expired token.")
-        flash('token_expired', 'error')
+    decoded = decode_password_reset_token(token)
+    if not decoded:
         return redirect(url_for('.request_password_reset'))
-    except BadSignature as e:
-        current_app.logger.info("Error changing password: %s", e)
-        flash('token_invalid', 'error')
-        return redirect(url_for('.request_password_reset'))
+
+    user_id = decoded["user"]
+    email_address = decoded["email"]
+    password = form.password.data
 
     if form.validate_on_submit():
         if data_api_client.update_user_password(user_id, password):
@@ -155,3 +144,30 @@ def update_password(token):
                                form=form,
                                token=token,
                                **template_data), 400
+
+
+def decode_password_reset_token(token):
+    try:
+        decoded, timestamp = email.decode_email(token)
+
+    except SignatureExpired:
+        current_app.logger.info("Password reset attempt with expired token.")
+        flash('token_expired', 'error')
+        return None
+    except BadSignature as e:
+        current_app.logger.info("Error changing password: %s", e)
+        flash('token_invalid', 'error')
+        return None
+
+    if email.token_created_before_password_last_changed(
+            timestamp,
+            data_api_client.get_user(decoded["user"])
+    ):
+        current_app.logger.info(
+            "Error changing password: "
+            + "Token generated earlier than password was last changed."
+        )
+        flash('token_used', 'error')
+        return None
+
+    return decoded
