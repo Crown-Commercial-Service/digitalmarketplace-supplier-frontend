@@ -3,22 +3,29 @@ import re
 from flask import Flask, request, redirect
 from flask_login import LoginManager
 from flask._compat import string_types
-from dmutils import apiclient, logging, config, proxy_fix
+from dmutils import apiclient, logging, \
+    proxy_fix, init_app, flask_featureflags
 
 from config import configs
 from .model import User
 
 data_api_client = apiclient.DataAPIClient()
 login_manager = LoginManager()
+feature_flags = flask_featureflags.FeatureFlag()
 
 
 def create_app(config_name):
     application = Flask(__name__,
                         static_folder='static/',
                         static_url_path=configs[config_name].STATIC_URL_PATH)
-    application.config.from_object(configs[config_name])
-    configs[config_name].init_app(application)
-    config.init_app(application)
+
+    init_app(
+        application,
+        configs[config_name],
+        bootstrap=None,
+        data_api_client=data_api_client,
+        feature_flags=feature_flags
+    )
 
     from .main import main as main_blueprint
     from .status import status as status_blueprint

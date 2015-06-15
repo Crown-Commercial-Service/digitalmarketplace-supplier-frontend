@@ -12,6 +12,39 @@ class TestApplication(BaseApplicationTest):
     def setup(self):
         super(TestApplication, self).setup()
 
+    def test_response_headers(self):
+        response = self.client.get('/suppliers/login')
+
+        assert 200 == response.status_code
+        assert (
+            response.headers['X-WebKit-CSP'] ==
+            "default-src 'self'"
+        )
+        assert (
+            response.headers['Content-Security-Policy'] ==
+            "default-src 'self'"
+        )
+        assert (
+            response.headers['X-Content-Security-Policy'] ==
+            "default-src 'self'"
+        )
+        assert (
+            response.headers['X-XSS-Protection'] ==
+            "1; mode=block"
+        )
+        assert (
+            response.headers['X-Permitted-Cross-Domain-Policies'] ==
+            "none"
+        )
+        assert (
+            response.headers['X-Content-Type-Options'] ==
+            "nosniff"
+        )
+        assert (
+            response.headers['cache-control'] ==
+            "no-cache"
+        )
+
     def test_url_with_non_canonical_trailing_slash(self):
         response = self.client.get('/suppliers/')
         assert 301 == response.status_code
