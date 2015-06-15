@@ -47,7 +47,7 @@
     <h1>Supplier login</h1>
 </header>
 
-<form action="{{ url_for('.process_login', next=next) }}" method="POST">
+<form autocomplete="off" action="{{ url_for('.process_login', next=next) }}" method="POST">
 
     {{ form.hidden_tag() }}
 
@@ -64,7 +64,7 @@
                 {% for error in form.email_address.errors %}{{ error }}{% endfor %}
             </p>
             {% endif %}
-            {{ form.email_address(class="text-box") }}
+            {{ form.email_address(class="text-box", autocomplete="off") }}
         </div>
     {% if form.email_address.errors %}
         </div>
@@ -80,7 +80,7 @@
                 {% for error in form.password.errors %}{{ error }}{% endfor %}
             </p>
             {% endif %}
-            {{ form.password(class="text-box") }}
+            {{ form.password(class="text-box", autocomplete="off") }}
         </div>
     {% if form.password.errors %}
         </div>
