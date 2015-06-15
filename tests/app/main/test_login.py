@@ -3,6 +3,7 @@ from nose.tools import assert_equal, assert_true, assert_is_not_none, assert_in
 from ..helpers import BaseApplicationTest
 from mock import Mock
 from app import data_api_client
+from lxml import html
 
 
 EMAIL_EMPTY_ERROR = "Email can not be empty"
@@ -218,3 +219,54 @@ class TestResetPassword(BaseApplicationTest):
             assert_equal(res.status_code, 302)
             assert_equal(res.location,
                          'http://localhost/suppliers/login')
+
+
+class TestLoginFormsNotAutofillable(BaseApplicationTest):
+
+    def _forms_and_inputs_not_autofillable(
+            self, url, expected_title, expected_lede=None
+    ):
+        response = self.client.get(url)
+        assert_equal(response.status_code, 200)
+
+        document = html.fromstring(response.get_data(as_text=True))
+
+        page_title = document.xpath(
+            '//main[@id="content"]//h1/text()')[0].strip()
+        assert_equal(expected_title, page_title)
+
+        if expected_lede:
+            page_lede = document.xpath(
+                '//main[@id="content"]//p[@class="lede"]/text()')[0].strip()
+            assert_equal(expected_lede, page_lede)
+
+        forms = document.xpath('//main[@id="content"]//form')
+
+        for form in forms:
+            assert_equal("off", form.get('autocomplete'))
+            non_hidden_inputs = form.xpath('//input[@type!="hidden"]')
+
+            for input in non_hidden_inputs:
+                assert_equal("off", input.get('autocomplete'))
+
+    def test_login_form_and_inputs_not_autofillable(self):
+        self._forms_and_inputs_not_autofillable(
+            "/suppliers/login",
+            "Supplier login"
+        )
+
+    def test_request_password_reset_form_and_inputs_not_autofillable(self):
+        self._forms_and_inputs_not_autofillable(
+            "/suppliers/reset-password",
+            "Reset password"
+        )
+
+    def test_reset_password_form_and_inputs_not_autofillable(self):
+        with self.app.app_context():
+            url = helpers.email.generate_reset_url(123, "email@email.com")
+
+        self._forms_and_inputs_not_autofillable(
+            url,
+            "Reset password",
+            "Reset password for email@email.com"
+        )
