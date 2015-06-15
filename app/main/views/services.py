@@ -11,7 +11,7 @@ from dmutils.presenters import Presenters
 
 content = ContentLoader(
     "app/section_order.yml",
-    "bower_components/digital-marketplace-ssp-content/g6/"
+    "app/content/g6/"
 )
 presenters = Presenters()
 
