@@ -2,8 +2,8 @@ import re
 from mock import Mock
 from app import create_app
 from werkzeug.http import parse_cookie
-from app.model import User
 from app import data_api_client
+from datetime import datetime, timedelta
 
 
 class BaseApplicationTest(object):
@@ -20,7 +20,14 @@ class BaseApplicationTest(object):
         return None
 
     @staticmethod
-    def user(id, email_address, supplier_id, supplier_name):
+    def user(id, email_address, supplier_id, supplier_name,
+             is_token_valid=True):
+
+        hours_offset = -1 if is_token_valid else 1
+        date = datetime.now() + timedelta(hours=hours_offset)
+        # will be formatted like 'Mon, 15 Jun 2015 00:00:00 GMT'
+        password_changed_at = date.strftime('%a, %d %b %Y %H:%M:%S GMT')
+
         return {
             "users": {
                 "id": id,
@@ -28,7 +35,8 @@ class BaseApplicationTest(object):
                 "supplier": {
                     "supplierId": supplier_id,
                     "name": supplier_name,
-                }
+                },
+                'passwordChangedAt': password_changed_at
             }
         }
 
