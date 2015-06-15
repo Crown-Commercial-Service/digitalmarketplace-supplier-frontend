@@ -49,3 +49,8 @@ class TestApplication(BaseApplicationTest):
             assert_true(
                 "Try again later."
                 in res.get_data(as_text=True))
+
+    def test_header_xframeoptions_set_to_deny(self):
+        res = self.client.get('/suppliers/login')
+        assert 200 == res.status_code
+        assert 'DENY', res.headers['X-Frame-Options']
