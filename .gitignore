@@ -62,6 +62,7 @@ npm-debug.log
 app/templates/govuk
 app/templates/toolkit
 app/assets/scss/toolkit
+app/content
 
 # Front end generated assets
 app/static

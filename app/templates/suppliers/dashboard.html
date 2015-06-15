@@ -1,8 +1,16 @@
 {% extends "_base_page.html" %}
-{% from "macros/_breadcrumbs.html" import breadcrumb %}
 
 {% block breadcrumb %}
-  {{ breadcrumb() }}
+  {%
+    with items = [
+      {
+        "link": "/",
+        "label": "Digital Marketplace"
+      }
+    ]
+  %}
+    {% include "toolkit/breadcrumb.html" %}
+  {% endwith %}
 {% endblock %}
 
 {% block main_content %}
