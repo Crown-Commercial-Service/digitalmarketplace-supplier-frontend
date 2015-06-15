@@ -18,7 +18,7 @@
 {% macro service_id(value='') -%}
   <div class="service-id">
     {% for chunk in value -%}
-      <span>{{ chunk }}</span>
+      <span class="service-id-chunk">{{ chunk }}</span>
     {%- endfor %}
   </div>
 {%- endmacro %}
