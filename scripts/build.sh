@@ -7,3 +7,4 @@ npm run frontend-build:production 1>&2
 echo "app/static"
 echo "app/templates/toolkit"
 echo "app/templates/govuk"
+echo "app/content"
