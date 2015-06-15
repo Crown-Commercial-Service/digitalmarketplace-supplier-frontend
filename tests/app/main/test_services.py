@@ -32,7 +32,7 @@ class TestListServices(BaseApplicationTest):
                     'serviceName': 'Service name 123',
                     'status': 'published',
                     'id': '123',
-                    'lot': 'SaaaaaaaS',
+                    'lot': 'SaaS',
                     'frameworkName': 'G-Cloud 1'
                 }]}
             )
@@ -42,7 +42,7 @@ class TestListServices(BaseApplicationTest):
             data_api_client.find_services.assert_called_once_with(
                 supplier_id=1234)
             assert_true("Service name 123" in res.get_data(as_text=True))
-            assert_true("SaaaaaaaS" in res.get_data(as_text=True))
+            assert_true("SaaS" in res.get_data(as_text=True))
             assert_true("G-Cloud 1" in res.get_data(as_text=True))
 
     @mock.patch('app.main.views.services.data_api_client')
