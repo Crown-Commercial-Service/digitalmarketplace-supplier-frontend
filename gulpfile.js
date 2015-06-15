@@ -68,6 +68,14 @@ var uglifyOptions = {
   }
 };
 
+var logErrorAndExit = function logErrorAndExit(err) {
+
+  // coloured text: https://coderwall.com/p/yphywg/printing-colorful-text-in-terminal-when-run-node-js-script
+  console.log('\x1b[41m\x1b[37m  Error: ' + err.message + '\x1b[0m');
+  process.exit(1);
+
+};
+
 gulp.task('clean', function (cb) {
   var fileTypes = [];
   var complete = function (fileType) {
@@ -92,10 +100,9 @@ gulp.task('clean', function (cb) {
 gulp.task('sass', function () {
   var stream = gulp.src(cssSourceGlob)
     .pipe(filelog('Compressing SCSS files'))
-    .pipe(sass(sassOptions[environment]))
-    .on('error', function (err) {
-      console.log(err.message);
-    })
+    .pipe(
+      sass(sassOptions[environment]))
+        .on('error', logErrorAndExit)
     .pipe(gulp.dest(cssDistributionFolder));
 
   stream.on('end', function () {
