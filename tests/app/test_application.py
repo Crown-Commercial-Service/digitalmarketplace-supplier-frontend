@@ -41,7 +41,7 @@ class TestApplication(BaseApplicationTest):
             "enquiries@digitalmarketplace.service.gov.uk</a>"
             in res.get_data(as_text=True))
 
-    def test_500(self):
+    def test_503(self):
         with self.app.test_client():
             self.login()
 
@@ -51,10 +51,15 @@ class TestApplication(BaseApplicationTest):
             self.app.config['DEBUG'] = False
 
             res = self.client.get('/suppliers')
-            assert_equal(500, res.status_code)
+            assert_equal(503, res.status_code)
             assert_true(
                 "Sorry, we're experiencing technical difficulties"
                 in res.get_data(as_text=True))
             assert_true(
                 "Try again later."
                 in res.get_data(as_text=True))
+
+    def test_header_xframeoptions_set_to_deny(self):
+        res = self.client.get('/suppliers/login')
+        assert 200 == res.status_code
+        assert 'DENY', res.headers['X-Frame-Options']

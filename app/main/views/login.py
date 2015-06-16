@@ -1,29 +1,32 @@
 from __future__ import absolute_import
 from itsdangerous import BadSignature, SignatureExpired
 
-from flask import current_app, flash, redirect, render_template, url_for
+from flask import current_app, flash, redirect, render_template, url_for, \
+    request
 from flask_login import logout_user, login_user
 
-from . import main
-from .forms.auth_forms \
-    import LoginForm, ResetPasswordForm, ChangePasswordForm
-from .. import data_api_client
-from ..model import User
-from .helpers import email
+from .. import main
+from ..forms.auth_forms import LoginForm, ResetPasswordForm, ChangePasswordForm
+from ... import data_api_client
+from ...model import User
+from ..helpers import email
 
 
 @main.route('/login', methods=["GET"])
 def render_login():
+    next_url = request.args.get('next')
     template_data = main.config['BASE_TEMPLATE_DATA']
     return render_template(
         "auth/login.html",
         form=LoginForm(),
+        next=next_url,
         **template_data), 200
 
 
 @main.route('/login', methods=["POST"])
 def process_login():
     form = LoginForm()
+    next_url = request.args.get('next')
     template_data = main.config['BASE_TEMPLATE_DATA']
     if form.validate_on_submit():
 
@@ -39,15 +42,21 @@ def process_login():
             return render_template(
                 "auth/login.html",
                 form=form,
+                next=next_url,
                 **template_data), 403
 
         user = User.from_json(user_json)
         login_user(user)
+        if next_url and next_url.startswith('/suppliers'):
+            return redirect(next_url)
+
         return redirect(url_for('.dashboard'))
+
     else:
         return render_template(
             "auth/login.html",
             form=form,
+            next=next_url,
             **template_data), 400
 
 
@@ -97,7 +106,6 @@ def send_reset_password_email():
 def reset_password(token):
     try:
         decoded = email.decode_email(token)
-        user_id = decoded["user"]
         email_address = decoded["email"]
     except SignatureExpired:
         current_app.logger.info("Password reset attempt with expired token.")
@@ -109,8 +117,8 @@ def reset_password(token):
         return redirect(url_for('.request_password_reset'))
     template_data = main.config['BASE_TEMPLATE_DATA']
     return render_template("auth/reset-password.html",
-                           form=ChangePasswordForm(email_address=email_address,
-                                                   user_id=user_id,),
+                           email_address=email_address,
+                           form=ChangePasswordForm(),
                            token=token,
                            **template_data), 200
 
@@ -118,9 +126,21 @@ def reset_password(token):
 @main.route('/reset-password/<token>', methods=["POST"])
 def update_password(token):
     form = ChangePasswordForm()
-    if form.validate_on_submit():
-        user_id = form.user_id.data
+    try:
+        decoded = email.decode_email(token)
+        user_id = decoded["user"]
+        email_address = decoded["email"]
         password = form.password.data
+    except SignatureExpired:
+        current_app.logger.info("Password reset attempt with expired token.")
+        flash('token_expired', 'error')
+        return redirect(url_for('.request_password_reset'))
+    except BadSignature as e:
+        current_app.logger.info("Error changing password: %s", e)
+        flash('token_invalid', 'error')
+        return redirect(url_for('.request_password_reset'))
+
+    if form.validate_on_submit():
         if data_api_client.update_user_password(user_id, password):
             current_app.logger.info(
                 "User %s successfully changed their password", user_id)
@@ -131,6 +151,7 @@ def update_password(token):
     else:
         template_data = main.config['BASE_TEMPLATE_DATA']
         return render_template("auth/reset-password.html",
+                               email_address=email_address,
                                form=form,
                                token=token,
                                **template_data), 400

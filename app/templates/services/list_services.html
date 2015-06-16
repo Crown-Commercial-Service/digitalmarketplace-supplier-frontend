@@ -1,8 +1,20 @@
 {% extends "_base_page.html" %}
-{% from 'macros/_breadcrumbs.html' import breadcrumb %}
 
 {% block breadcrumb %}
-  {{ breadcrumb() }}
+  {%
+    with items = [
+      {
+        "link": "/",
+        "label": "Digital Marketplace"
+      },
+      {
+        "link": url_for(".dashboard"),
+        "label": current_user.supplier_name
+      }
+    ]
+  %}
+    {% include "toolkit/breadcrumb.html" %}
+  {% endwith %}
 {% endblock %}
 
 {% block main_content %}
@@ -20,10 +32,12 @@
   {% endif %}
   <div class="grid-row">
     <div class="column-two-thirds">
-      <header class="page-heading page-heading-with-context">
-        <p class="context">{{ current_user.email_address }}</p>
-        <h1>{{ current_user.supplier_name }}</h1>
-      </header>
+      {% with
+        context = current_user.email_address,
+        heading = current_user.supplier_name
+      %}
+        {% include 'toolkit/page-heading.html' %}
+      {% endwith %}
     </div>
   </div>
   <table class="summary-item-body">
@@ -68,6 +82,13 @@
             {{ service.status|title }}
           {% endif %}
         </td>
+        {% if 'EDIT_SERVICE_PAGE' is active_feature %}
+        <td class="summary-item-action-field">
+          <a href="{{ url_for('.edit_service', service_id=service.id) }}">
+            {{ 'Details' if service.status == 'disabled' else 'Edit' }}
+          </a>
+        </td>
+        {% endif %}
       </tr>
     {% else %}
       <h2 class="summary-item-heading first-summary-item-heading">

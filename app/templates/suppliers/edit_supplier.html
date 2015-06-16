@@ -1,0 +1,99 @@
+{% extends "_base_page.html" %}
+{% import "macros/forms.html" as forms %}
+
+{% block breadcrumb %}
+  {%
+    with items = [
+      {
+        "link": "/",
+        "label": "Digital Marketplace"
+      },
+      {
+        "link": url_for(".dashboard"),
+        "label": current_user.supplier_name
+      }
+    ]
+  %}
+    {% include "toolkit/breadcrumb.html" %}
+  {% endwith %}
+{% endblock %}
+
+{% block main_content %}
+  <div class="grid-row">
+    <div class="column-one-whole">
+      {% with
+        context = "Edit supplier information",
+        heading = current_user.supplier_name
+      %}
+        {% include 'toolkit/page-heading.html' %}
+      {% endwith %}
+    </div>
+  </div>
+
+  {% if error %}
+  <div class="validation-masthead" aria-labelledby="validation-masthead-heading">
+    <h3 class="validation-masthead-heading" id="validation-masthead-heading">
+      {{ error }}
+    </h3>
+  </div>
+  {% endif %}
+  {% if supplier_form.errors or contact_form.errors %}
+      <div class="validation-masthead" aria-labelledby="validation-masthead-heading">
+          <h3 class="validation-masthead-heading" id="validation-masthead-heading">
+              There was a problem with your answer to the following questions
+          </h3>
+          {% for field_name, field_errors in supplier_form.errors|dictsort %}
+            {% for error in field_errors %}
+              <a href="#{{ field_name }}-label" class="validation-masthead-link">{{ supplier_form[field_name].label }}</a>
+            {% endfor %}
+          {% endfor %}
+
+          {% for field_name, field_errors in contact_form.errors|dictsort %}
+            {% for error in field_errors %}
+            <a href="#contact_{{ field_name }}-label" class="validation-masthead-link">{{ contact_form[field_name].label }}</a>
+            {% endfor %}
+          {% endfor %}
+      </div>
+  {% endif %}
+
+  <form action="{{ url_for('.update_supplier') }}" method="post" enctype="multipart/form-data">
+
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+
+  <div class="grid-row">
+    <div class="column-one-whole">
+      {{ forms.question_textarea('description', 'Supplier summary', supplier_form.description.data, '50 words max', errors=supplier_form.description.errors, words=50) }}
+
+      {{ forms.question_list_entry('clients', 'Clients', supplier_form.clients.data, '1 client per box, max 10 clients', errors=supplier_form.clients.errors, item_name='client', count=10) }}
+
+      {{ forms.question_input('contact_contactName', 'Contact name', contact_form.contactName.data, 'Primary contact', errors=contact_form.contactName.errors) }}
+      {{ forms.question_input('contact_website', 'Website', contact_form.website.data, errors=contact_form.website.errors) }}
+      {{ forms.question_input('contact_email', 'Email address', contact_form.email.data, errors=contact_form.email.errors) }}
+      {{ forms.question_input('contact_phoneNumber', 'Phone number', contact_form.phoneNumber.data, errors=contact_form.phoneNumber.errors) }}
+
+      <div class="question">
+        <label class="question-heading-with-hint">
+          Business address
+        </label>
+        {{ forms.input('contact_id', contact_form.id.data, type='hidden') }}
+        <div class="box-label" id="address1-label">Building and street</div>
+        {{ forms.input('contact_address1', contact_form.address1.data, errors=contact_form.address1.errors) }}
+        {{ forms.input('contact_address2', contact_form.address2.data, errors=contact_form.address2.errors) }}
+        <div class="box-label" id="city-label">Town or city</div>
+        {{ forms.input('contact_city', contact_form.city.data, errors=contact_form.city.errors) }}
+        <div class="box-label" id="country-label">Country</div>
+        {{ forms.input('contact_country', contact_form.country.data, errors=contact_form.country.errors) }}
+        <div class="box-label" id="postcode-label">Postcode</div>
+        {{ forms.input('contact_postcode', contact_form.postcode.data, errors=contact_form.postcode.errors) }}
+      </div>
+
+    </div>
+  </div>
+
+  <button class="button-save" type="submit">Save and return</button>
+  <p>
+    <a href="{{ url_for('.dashboard') }}">Return without saving</a>
+  </p>
+  </form>
+
+{% endblock %}

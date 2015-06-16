@@ -92,6 +92,13 @@ not already been set:
 ./scripts/run_app.sh
 ```
 
+The script is a wrapper around `python application.py runserver` so all the options available there
+can also be sent in. For example, to set the host:
+
+```
+./scripts/run_app.sh -h '0.0.0.0'
+```
+
 More generally, the command to start the server is:
 
 ```
@@ -99,3 +106,8 @@ python application.py runserver
 ```
 
 The supplier frontend runs on port 5003. Use the app at [http://127.0.0.1:5003/](http://127.0.0.1:5003/)
+
+### Using FeatureFlags
+
+To use feature flags, check out the documentation in (the README of)
+[digitalmarketplace-utils](https://github.com/alphagov/digitalmarketplace-utils#using-featureflags).

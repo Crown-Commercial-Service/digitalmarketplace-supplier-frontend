@@ -3,21 +3,29 @@ import re
 from flask_login import login_required, current_user
 from flask import render_template, request, redirect, url_for, abort
 
-from app.main import main
-from .. import data_api_client
+from ...main import main
+from ... import data_api_client, flask_featureflags
 from dmutils.apiclient import APIError
+from dmutils.content_loader import ContentLoader
+from dmutils.presenters import Presenters
+
+content = ContentLoader(
+    "app/section_order.yml",
+    "app/content/g6/"
+)
+presenters = Presenters()
 
 
-@main.route('')
+@main.route('/services')
 @login_required
-def dashboard():
+def list_services():
     template_data = main.config['BASE_TEMPLATE_DATA']
     suppliers_services = data_api_client.find_services(
         supplier_id=current_user.supplier_id
     )
 
     return render_template(
-        "services/dashboard.html",
+        "services/list_services.html",
         services=suppliers_services["services"],
         updated_service_id=request.args.get('updated_service_id'),
         updated_service_name=request.args.get('updated_service_name'),
@@ -27,9 +35,8 @@ def dashboard():
 
 @main.route('/services/<string:service_id>', methods=['GET'])
 @login_required
-def services(service_id):
-    abort(404)
-
+@flask_featureflags.is_active_feature('EDIT_SERVICE_PAGE')
+def edit_service(service_id):
     service = data_api_client.get_service(service_id).get('services')
 
     if not _is_service_associated_with_supplier(service):
@@ -37,24 +44,25 @@ def services(service_id):
 
     template_data = main.config['BASE_TEMPLATE_DATA']
 
-    if service.get('frameworkName') == 'G-Cloud 5':
-        service_id = [service_id]
-    else:
-        service_id = re.findall("....", str(service_id))
+    presented_service_data = {}
+    for key, value in service.items():
+        presented_service_data[key] = presenters.present(
+            value, content.get_question(key)
+        )
 
     return render_template(
         "services/service.html",
         service_id=service_id,
-        service_data=service,
+        service_data=presented_service_data,
+        sections=content.sections,
         **template_data), 200
 
 
 # Might have to change the route if we're generalizing this to update
 @main.route('/services/<string:service_id>', methods=['POST'])
 @login_required
+@flask_featureflags.is_active_feature('EDIT_SERVICE_PAGE')
 def update_service_status(service_id):
-    abort(404)
-
     service = data_api_client.get_service(service_id).get('services')
 
     if not _is_service_associated_with_supplier(service):
@@ -97,7 +105,7 @@ def update_service_status(service_id):
 
     updated_service = updated_service.get("services")
     return redirect(
-        url_for(".dashboard",
+        url_for(".list_services",
                 updated_service_id=updated_service.get("id"),
                 updated_service_name=updated_service.get("serviceName"),
                 updated_service_status=updated_service.get("status")

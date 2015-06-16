@@ -1,17 +1,21 @@
 import re
 
-from flask import Flask, request, redirect
+from datetime import timedelta
+from flask import Flask, request, redirect, session
 from flask_login import LoginManager
 from flask._compat import string_types
-from dmutils import apiclient, logging, \
-    proxy_fix, init_app, flask_featureflags
+from flask_wtf.csrf import CsrfProtect
+
+from dmutils import apiclient, init_app, flask_featureflags
 
 from config import configs
 from .model import User
 
+
 data_api_client = apiclient.DataAPIClient()
 login_manager = LoginManager()
 feature_flags = flask_featureflags.FeatureFlag()
+csrf = CsrfProtect()
 
 
 def create_app(config_name):
@@ -22,18 +26,13 @@ def create_app(config_name):
     init_app(
         application,
         configs[config_name],
-        bootstrap=None,
         data_api_client=data_api_client,
-        feature_flags=feature_flags
+        feature_flags=feature_flags,
+        login_manager=login_manager,
     )
-
+    application.permanent_session_lifetime = timedelta(hours=1)
     from .main import main as main_blueprint
     from .status import status as status_blueprint
-
-    proxy_fix.init_app(application)
-    login_manager.init_app(application)
-    logging.init_app(application)
-    data_api_client.init_app(application)
 
     application.register_blueprint(status_blueprint,
                                    url_prefix='/suppliers')
@@ -42,10 +41,17 @@ def create_app(config_name):
     login_manager.login_view = 'main.render_login'
     main_blueprint.config = application.config.copy()
 
+    csrf.init_app(application)
+
     @application.before_request
     def remove_trailing_slash():
         if request.path.endswith('/'):
             return redirect(request.path[:-1], code=301)
+
+    @application.before_request
+    def refresh_session():
+        session.permanent = True
+        session.modified = True
 
     return application
 

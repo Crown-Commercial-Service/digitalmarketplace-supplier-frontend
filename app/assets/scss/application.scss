@@ -6,34 +6,39 @@
 // Path to assets for use with file-url()
 $path: "/suppliers/static/images/";
 
+// Digital Marketplace front end toolkit components
+@import "forms/word-counter";
+@import "forms/list-entry";
+
 @import "_reset.scss";
 
 #wrapper {
   @extend %site-width-container;
 }
 
-main {
+#content {
   @extend %contain-floats;
   clear: both;
   margin-bottom: $gutter * 2;
 }
 
-@import "_digital-marketplace-colours.scss";
-@import "_grids.scss";
-@import "_buttons.scss";
-@import "_breadcrumb.scss";
-@import "_footer.scss";
-@import "_page-headings.scss";
-@import "search/_search-result.scss";
-@import "_notification-banners.scss";
-@import "_service-id.scss";
+@import "toolkit/_digital-marketplace-colours.scss";
+@import "toolkit/_buttons.scss";
+@import "toolkit/_breadcrumb.scss";
+@import "toolkit/_page-headings.scss";
+@import "toolkit/search/_search-result.scss";
+@import "toolkit/_notification-banners.scss";
+@import "toolkit/_service-id.scss";
+@import "toolkit/forms/_questions.scss";
+@import "toolkit/forms/_summary.scss";
+@import "toolkit/forms/_hint.scss";
+@import "toolkit/forms/_selection-buttons.scss";
+@import "toolkit/forms/_textboxes.scss";
+@import "toolkit/forms/_validation.scss";
+
 @import "_text.scss";
-@import "forms/_questions.scss";
-@import "forms/_summary.scss";
-@import "forms/_hint.scss";
-@import "forms/_selection-buttons.scss";
-@import "forms/_textboxes.scss";
-@import "forms/_validation.scss";
+@import "_grids.scss";
+@import "_footer.scss";
 
 @import "_service-status.scss";
 @import "_return-link.scss";
