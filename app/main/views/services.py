@@ -43,17 +43,11 @@ def edit_service(service_id):
         abort(404)
 
     template_data = main.config['BASE_TEMPLATE_DATA']
-
-    presented_service_data = {}
-    for key, value in service.items():
-        presented_service_data[key] = presenters.present(
-            value, content.get_question(key)
-        )
-
+    content.filter(service)
     return render_template(
         "services/service.html",
         service_id=service_id,
-        service_data=presented_service_data,
+        service_data=presenters.present_all(service, content),
         sections=content.sections,
         **template_data), 200
 
