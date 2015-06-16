@@ -167,7 +167,7 @@ def decode_password_reset_token(token):
             "Error changing password: "
             + "Token generated earlier than password was last changed."
         )
-        flash('token_used', 'error')
+        flash('token_invalid', 'error')
         return None
 
     return decoded

@@ -17,7 +17,7 @@ NEW_PASSWORD_EMPTY_ERROR = "Please enter a new password"
 NEW_PASSWORD_CONFIRM_EMPTY_ERROR = "Please confirm your new password"
 
 TOKEN_CREATED_BEFORE_PASSWORD_LAST_CHANGED_ERROR = \
-    'Password has been changed since this reset link was requested.'
+    'This password reset link is invalid.'
 
 
 class TestLogin(BaseApplicationTest):
