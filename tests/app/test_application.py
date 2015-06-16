@@ -17,30 +17,6 @@ class TestApplication(BaseApplicationTest):
 
         assert 200 == response.status_code
         assert (
-            response.headers['X-WebKit-CSP'] ==
-            "default-src 'self'"
-        )
-        assert (
-            response.headers['Content-Security-Policy'] ==
-            "default-src 'self'"
-        )
-        assert (
-            response.headers['X-Content-Security-Policy'] ==
-            "default-src 'self'"
-        )
-        assert (
-            response.headers['X-XSS-Protection'] ==
-            "1; mode=block"
-        )
-        assert (
-            response.headers['X-Permitted-Cross-Domain-Policies'] ==
-            "none"
-        )
-        assert (
-            response.headers['X-Content-Type-Options'] ==
-            "nosniff"
-        )
-        assert (
             response.headers['cache-control'] ==
             "no-cache"
         )
