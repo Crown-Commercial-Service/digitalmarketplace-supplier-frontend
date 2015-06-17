@@ -1,0 +1,37 @@
+{% macro text(question_content, service_data, errors) -%}
+  {%
+    with
+    question=question_content.question,
+    name=question_content.id,
+    value=service_data[question_content.id],
+    error=errors.get(question_content.id) or None
+  %}
+    {% include "toolkit/forms/textbox.html" %}
+  {% endwith %}
+{%- endmacro %}
+
+{% macro textbox_large(question_content, service_data, errors) -%}
+  {%
+    with
+    question=question_content.question,
+    name=question_content.id,
+    value=service_data[question_content.id],
+    large=True
+  %}
+    {% include "toolkit/forms/textbox.html" %}
+  {% endwith %}
+{%- endmacro %}
+
+{% macro list(question_content, service_data, errors) -%}
+  {%
+    with
+    values=service_data[question_content.id],
+    number_of_items=10,
+    question=question_content.question,
+    id=question_content.id,
+    hint=question_content.hint
+  %}
+    {{question_content.id}}
+    {% include "toolkit/forms/list-entry.html" %}
+  {% endwith %}
+{%- endmacro %}
