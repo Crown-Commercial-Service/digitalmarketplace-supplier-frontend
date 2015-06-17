@@ -15,6 +15,10 @@
       {
         "link": url_for(".list_services"),
         "label": "Services"
+      },
+      {
+        "link": url_for(".edit_service", service_id=service_id),
+        "label": service_data["serviceName"]
       }
     ]
   %}
@@ -25,13 +29,20 @@
 {% block main_content %}
   <div class="grid-row">
     <div class="column-two-thirds">
+
+      {% if error %}
+        {% with lede = error %}
+          {% include 'toolkit/forms/validation.html' %}
+        {% endwith %}
+      {% endif %}
+
       {% with
-        context = service_data["serviceName"],
         heading = section.name,
         smaller = true
       %}
         {% include 'toolkit/page-heading.html' %}
       {% endwith %}
+
     </div>
   </div>
   <form method="post" action="{{ url_for(".update_section", service_id=service_id, section=section.id) }}">

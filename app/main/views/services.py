@@ -149,13 +149,9 @@ def update_section(service_id, section):
     for key in request.form:
         item_as_list = request.form.getlist(key)
         list_types = ['list', 'checkboxes', 'pricing']
-        print("============================")
-        print(key)
-        print(content.get_question(key))
-        print(content.get_question(key).get("type"))
-        print("============================")
         if (
             key != 'csrf_token' and
+            # 'type' in content.get_question(key) and
             content.get_question(key)['type'] in list_types
         ):
             posted_data[key] = item_as_list
@@ -168,9 +164,16 @@ def update_section(service_id, section):
                 "user",
                 "supplier app")
         except HTTPError as e:
-            return e.message
+            return render_template(
+                "services/edit_section.html",
+                section=content.get_section(section),
+                service_data=service_data,
+                service_id=service_id,
+                error=e.message,
+                **main.config['BASE_TEMPLATE_DATA']
+            )
 
-    return "Ohai"
+    return redirect(url_for(".edit_service", service_id=service_id))
 
 
 def _is_service_associated_with_supplier(service):

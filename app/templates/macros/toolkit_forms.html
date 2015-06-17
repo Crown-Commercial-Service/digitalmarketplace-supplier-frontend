@@ -16,7 +16,8 @@
     question=question_content.question,
     name=question_content.id,
     value=service_data[question_content.id],
-    large=True
+    large=True,
+    max_length_in_words=question_content["maxLengthInWords"] or False
   %}
     {% include "toolkit/forms/textbox.html" %}
   {% endwith %}
@@ -31,7 +32,6 @@
     id=question_content.id,
     hint=question_content.hint
   %}
-    {{question_content.id}}
     {% include "toolkit/forms/list-entry.html" %}
   {% endwith %}
 {%- endmacro %}
