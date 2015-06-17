@@ -107,6 +107,16 @@ def update_service_status(service_id):
     )
 
 
+@main.route(
+    '/services/<string:service_id>/edit/<string:section>',
+    methods=['GET']
+)
+@login_required
+@flask_featureflags.is_active_feature('EDIT_SERVICE_PAGE')
+def edit_section(service_id, section):
+    return "hey"
+
+
 def _is_service_associated_with_supplier(service):
 
     return service.get('supplierId') == current_user.supplier_id
