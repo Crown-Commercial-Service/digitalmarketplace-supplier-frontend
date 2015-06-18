@@ -151,7 +151,6 @@ def update_section(service_id, section):
         list_types = ['list', 'checkboxes', 'pricing']
         if (
             key != 'csrf_token' and
-            # 'type' in content.get_question(key) and
             content.get_question(key)['type'] in list_types
         ):
             posted_data[key] = item_as_list
