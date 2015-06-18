@@ -1,0 +1,54 @@
+{% extends "_base_page.html" %}
+
+{% block breadcrumb %}
+  {%
+    with items = [
+      {
+        "link": "/",
+        "label": "Digital Marketplace",
+      },
+      {
+        "link": url_for(".dashboard"),
+        "label": current_user.supplier_name,
+      }
+    ]
+  %}
+    {% include "toolkit/breadcrumb.html" %}
+  {% endwith %}
+{% endblock %}
+
+{% block main_content %}
+  <div class="grid-row">
+    <div class="column-two-thirds">
+      {% with
+         context = current_user.email_address,
+         heading = "Apply for G-Cloud 7"
+      %}
+        {% include "toolkit/page-heading.html" %}
+      {% endwith %}
+    </div>
+  </div>
+
+  {% with
+     items = [
+      {
+        "title": "Pre-qualification questionnaire (PQQ)",
+        "body": "This must be comlete!",
+      },
+      {
+        "title": "Add a service",
+      },
+      {
+        "title": "View your services",
+      },
+      {
+        "title": "View communications"
+      },
+      {
+        "title": "Ask a question"
+      }
+     ]
+  %}
+    {% include "toolkit/browse-list.html" %}
+  {% endwith %}
+{% endblock %}
