@@ -84,6 +84,8 @@ class Live(Config):
     DEBUG = False
     DM_HTTP_PROTO = 'https'
 
+    FEATURE_FLAGS_SUPPLIER_DASHBOARD = enabled_since('2015-06-18')
+
 
 configs = {
     'development': Development,
