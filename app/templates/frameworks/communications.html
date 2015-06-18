@@ -12,7 +12,8 @@
         "label": current_user.supplier_name,
       },
       {
-        "label": "Apply for G-Cloud 7"
+        "link": url_for(".framework_dashboard"),
+        "label": "Apply for G-Cloud 7",
       }
     ]
   %}
@@ -25,35 +26,10 @@
     <div class="column-two-thirds">
       {% with
          context = current_user.email_address,
-         heading = "Apply for G-Cloud 7"
+         heading = "G-Cloud 7 communications"
       %}
         {% include "toolkit/page-heading.html" %}
       {% endwith %}
     </div>
   </div>
-
-  {% with
-     items = [
-      {
-        "title": "Pre-qualification questionnaire (PQQ)",
-        "body": "This must be comlete!",
-        "link": url_for(".framework_pqq"),
-      },
-      {
-        "title": "Add a service",
-      },
-      {
-        "title": "View your services",
-      },
-      {
-        "title": "View communications",
-      },
-      {
-        "title": "Ask a question",
-        "link": url_for(".framework_ask_a_question"),
-      }
-     ]
-  %}
-    {% include "toolkit/browse-list.html" %}
-  {% endwith %}
 {% endblock %}

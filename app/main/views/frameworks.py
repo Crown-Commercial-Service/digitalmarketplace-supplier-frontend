@@ -1,31 +1,58 @@
-from flask import render_template, abort
-from flask_login import login_required, current_user
+from flask import render_template
+from flask_login import login_required
 
-from dmutils.apiclient import APIError
 from dmutils import flask_featureflags
 
 from ...main import main
-from ... import data_api_client
 
 
 @main.route('/frameworks/g-cloud-7', methods=['GET'])
 @login_required
-@flask_featureflags.is_active_feature('FRAMEWORK_DASHBOARD')
+@flask_featureflags.is_active_feature('GCLOUD7_OPEN')
 def framework_dashboard():
     template_data = main.config['BASE_TEMPLATE_DATA']
-
-    try:
-        supplier = data_api_client.get_supplier(
-            current_user.supplier_id
-        )['suppliers']
-    except APIError as e:
-        abort(e.status_code)
 
     # get the framework
     # get the list of
 
     return render_template(
         "frameworks/dashboard.html",
-        supplier=supplier,
+        **template_data
+    ), 200
+
+
+@main.route('/frameworks/g-cloud-7/pre-qualification-questionnaire',
+            methods=['GET', 'POST'])
+@login_required
+@flask_featureflags.is_active_feature('GCLOUD7_OPEN')
+def framework_pqq():
+    template_data = main.config['BASE_TEMPLATE_DATA']
+
+    return render_template(
+        "frameworks/pre-qualification-questionnaire.html",
+        **template_data
+    ), 200
+
+
+@main.route('/frameworks/g-cloud-7/ask-a-question', methods=['GET', 'POST'])
+@login_required
+@flask_featureflags.is_active_feature('GCLOUD7_OPEN')
+def framework_ask_a_question():
+    template_data = main.config['BASE_TEMPLATE_DATA']
+
+    return render_template(
+        "frameworks/ask-a-question.html",
+        **template_data
+    ), 200
+
+
+@main.route('/frameworks/g-cloud-7/communications', methods=['GET'])
+@login_required
+@flask_featureflags.is_active_feature('GCLOUD7_OPEN')
+def framework_communications():
+    template_data = main.config['BASE_TEMPLATE_DATA']
+
+    return render_template(
+        "frameworks/communications.html",
         **template_data
     ), 200

@@ -1,18 +1,17 @@
-import re
-
 from flask_login import login_required, current_user
 from flask import render_template, request, redirect, url_for, abort
 
 from ...main import main
 from ... import data_api_client, flask_featureflags
 from dmutils.apiclient import APIError, HTTPError
-from dmutils.content_loader import ContentLoader
+from dmutils.content_loader import ContentBuilder, YAMLLoader
 from dmutils.presenters import Presenters
 
-content = ContentLoader(
+existing_service_options = [
     "app/section_order.yml",
-    "app/content/g6/"
-)
+    "app/content/g6/",
+    YAMLLoader()
+]
 presenters = Presenters()
 
 
@@ -112,6 +111,7 @@ def edit_section(service_id, section):
 
     if not _is_service_associated_with_supplier(service):
         abort(404)
+    content = ContentBuilder(*existing_service_options)
 
     return render_template(
         "services/edit_section.html",
@@ -133,6 +133,8 @@ def update_section(service_id, section):
 
     if not _is_service_associated_with_supplier(service):
         abort(404)
+
+    content = ContentBuilder(*existing_service_options)
 
     posted_data = dict(
         list(request.form.items()) + list(request.files.items())
@@ -183,6 +185,7 @@ def _is_service_modifiable(service):
 def _update_service_status(service, error_message=None):
 
     template_data = main.config['BASE_TEMPLATE_DATA']
+    content = ContentBuilder(*existing_service_options)
     status_code = 400 if error_message else 200
 
     question = {
