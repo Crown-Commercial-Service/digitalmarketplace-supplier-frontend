@@ -42,14 +42,12 @@ def edit_service(service_id):
     if not _is_service_associated_with_supplier(service):
         abort(404)
 
-    template_data = main.config['BASE_TEMPLATE_DATA']
-    content.filter(service)
     return render_template(
         "services/service.html",
         service_id=service_id,
         service_data=presenters.present_all(service, content),
-        sections=content.sections,
-        **template_data), 200
+        sections=content.get_sections_filtered_by(service),
+        **main.config['BASE_TEMPLATE_DATA']), 200
 
 
 # Might have to change the route if we're generalizing this to update
@@ -115,10 +113,9 @@ def update_service_status(service_id):
 @flask_featureflags.is_active_feature('EDIT_SERVICE_PAGE')
 def edit_section(service_id, section):
     service_data = data_api_client.get_service(service_id)['services']
-    content.filter(service_data)
     return render_template(
         "services/edit_section.html",
-        section=content.get_section(section),
+        section=content.get_section_filtered_by(section, service_data),
         service_data=service_data,
         service_id=service_id,
         **main.config['BASE_TEMPLATE_DATA']
@@ -136,8 +133,6 @@ def update_section(service_id, section):
 
     if not _is_service_associated_with_supplier(service):
         abort(404)
-
-    content.filter(service)
 
     posted_data = dict(
         list(request.form.items()) + list(request.files.items())
@@ -166,7 +161,7 @@ def update_section(service_id, section):
         except HTTPError as e:
             return render_template(
                 "services/edit_section.html",
-                section=content.get_section(section),
+                section=content.get_section_filtered_by(section, service),
                 service_data=service_data,
                 service_id=service_id,
                 error=e.message,
