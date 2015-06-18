@@ -6,13 +6,13 @@
     - lot
 -
   name: Description
-  editable: false
+  editable: edit
   questions:
     - serviceName
     - serviceSummary
 -
   name: Features and benefits
-  editable: false
+  editable: edit
   questions:
     - serviceFeatures
     - serviceBenefits
