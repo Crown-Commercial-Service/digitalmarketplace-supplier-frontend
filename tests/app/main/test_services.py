@@ -280,3 +280,25 @@ class TestSupplierUpdateService(BaseApplicationTest):
         assert_equal(res.location,
                      'http://localhost/suppliers/login'
                      '?next=%2Fsuppliers%2Fservices%2F123')
+
+
+class TestCreateService(BaseApplicationTest):
+
+    def test_gets_create_service_page(self):
+        with self.app.test_client():
+            self.login()
+
+        res = self.client.get('/suppliers/services/create')
+        assert_equal(res.status_code, 200)
+        assert_true("Create new service"
+                    in res.get_data(as_text=True))
+
+        lots = [
+            'Infrastructure as a Service (IaaS)',
+            'Software as a Service (SaaS)',
+            'Platform as a Service (PaaS)',
+            'Specialist Cloud Services (SCS)'
+        ]
+
+        for lot in lots:
+            assert_true(lot in res.get_data(as_text=True))

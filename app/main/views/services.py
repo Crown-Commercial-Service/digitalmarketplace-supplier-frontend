@@ -260,6 +260,23 @@ def update_section_submission(service_id, section):
             **main.config['BASE_TEMPLATE_DATA']
         )
 
+@main.route('/services/create', methods=['GET'])
+@login_required
+@flask_featureflags.is_active_feature('CREATE_SERVICE_PAGE')
+def create_service():
+    """
+    Page to kick off creation of a new (G7) service.
+    """
+    template_data = main.config['BASE_TEMPLATE_DATA']
+
+    lots = content.get_question('lot')
+    lots['type'] = 'radio'
+
+    return render_template(
+        "services/create_service.html",
+        **dict(template_data, **lots)
+    ), 200
+
 
 def _is_service_associated_with_supplier(service):
 

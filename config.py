@@ -39,6 +39,7 @@ class Config(object):
     FEATURE_FLAGS_SUPPLIER_DASHBOARD = False
     FEATURE_FLAGS_EDIT_SUPPLIER_PAGE = False
     FEATURE_FLAGS_GCLOUD7_OPEN = False
+    FEATURE_FLAGS_CREATE_SERVICE_PAGE = enabled_since('2015-06-18')
 
     # Logging
     DM_LOG_LEVEL = 'DEBUG'
