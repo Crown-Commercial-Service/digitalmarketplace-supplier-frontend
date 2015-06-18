@@ -112,11 +112,16 @@ def update_service_status(service_id):
 @login_required
 @flask_featureflags.is_active_feature('EDIT_SERVICE_PAGE')
 def edit_section(service_id, section):
-    service_data = data_api_client.get_service(service_id)['services']
+
+    service = data_api_client.get_service(service_id)['services']
+
+    if not _is_service_associated_with_supplier(service):
+        abort(404)
+
     return render_template(
         "services/edit_section.html",
-        section=content.get_section_filtered_by(section, service_data),
-        service_data=service_data,
+        section=content.get_section_filtered_by(section, service),
+        service_data=service,
         service_id=service_id,
         **main.config['BASE_TEMPLATE_DATA']
     )
