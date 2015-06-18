@@ -303,7 +303,14 @@ class TestLoginFormsNotAutofillable(BaseApplicationTest):
             "Reset password"
         )
 
-    def test_reset_password_form_and_inputs_not_autofillable(self):
+    @mock.patch('app.main.views.login.data_api_client')
+    def test_reset_password_form_and_inputs_not_autofillable(
+            self, data_api_client
+    ):
+        data_api_client.get_user.return_value = self.user(
+            123, "email@email.com", 1234, 'email'
+        )
+
         with self.app.app_context():
             url = helpers.email.generate_reset_url(123, "email@email.com")
 
