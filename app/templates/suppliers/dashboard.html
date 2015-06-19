@@ -29,8 +29,25 @@
     <div class="column-one-whole">
       <h2 class="summary-item-heading">Services</h2>
       <p class="summary-item-top-level-action">
-        <a href="{{ url_for('.list_services') }}">Edit</a>
+        <a href="{{ url_for('.list_services') }}">View</a>
       </p>
+      {% if supplier.service_counts %}
+      <table class="summary-item-body">
+        <thead></thead>
+        <tbody class="summary-item-body">
+          {% for framework, service_count in supplier.service_counts|dictsort %}
+          <tr class="summary-item-row">
+            <td class="summary-item-field-name">
+              {{ framework }}
+            </td>
+            <td class="summary-item-field-content">
+              {{ service_count }} service{{ "s" if service_count > 1 }}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% endif %}
     </div>
   </div>
 
