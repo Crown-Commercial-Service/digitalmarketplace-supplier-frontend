@@ -4,6 +4,7 @@ from app import create_app
 from werkzeug.http import parse_cookie
 from app import data_api_client
 from datetime import datetime, timedelta
+from dmutils.formats import DATETIME_FORMAT
 
 
 class BaseApplicationTest(object):
@@ -24,9 +25,8 @@ class BaseApplicationTest(object):
              is_token_valid=True):
 
         hours_offset = -1 if is_token_valid else 1
-        date = datetime.now() + timedelta(hours=hours_offset)
-        # will be formatted like 'Mon, 15 Jun 2015 00:00:00 GMT'
-        password_changed_at = date.strftime('%a, %d %b %Y %H:%M:%S GMT')
+        date = datetime.utcnow() + timedelta(hours=hours_offset)
+        password_changed_at = date.strftime(DATETIME_FORMAT)
 
         return {
             "users": {

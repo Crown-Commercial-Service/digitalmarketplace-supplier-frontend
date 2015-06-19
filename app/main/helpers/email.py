@@ -2,6 +2,7 @@ from flask import url_for, current_app, render_template
 import mandrill
 from itsdangerous import URLSafeTimedSerializer
 from datetime import datetime
+from dmutils.formats import DATETIME_FORMAT
 
 from .. import main
 
@@ -57,5 +58,5 @@ def decode_email(token):
 def token_created_before_password_last_changed(token_timestamp, user):
 
         password_last_changed = datetime.strptime(
-            user['users']['passwordChangedAt'], '%a, %d %b %Y %H:%M:%S %Z')
+            user['users']['passwordChangedAt'], DATETIME_FORMAT)
         return token_timestamp < password_last_changed
