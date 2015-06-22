@@ -259,7 +259,8 @@ def update_section_submission(service_id, section):
             **main.config['BASE_TEMPLATE_DATA']
         )
 
-@main.route('/services/create', methods=['GET'])
+
+@main.route('/submission/g-cloud-7/create', methods=['GET'])
 @login_required
 @flask_featureflags.is_active_feature('CREATE_SERVICE_PAGE')
 def create_service():
@@ -289,7 +290,7 @@ def create_service():
     ), 200
 
 
-@main.route('/services/create', methods=['POST'])
+@main.route('/submission/g-cloud-7/create', methods=['POST'])
 @login_required
 @flask_featureflags.is_active_feature('CREATE_SERVICE_PAGE')
 def post_new_service():

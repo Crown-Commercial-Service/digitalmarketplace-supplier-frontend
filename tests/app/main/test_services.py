@@ -2,6 +2,12 @@ import mock
 from mock import Mock
 from nose.tools import assert_equal, assert_true, assert_false
 from tests.app.helpers import BaseApplicationTest
+from dmutils.content_loader import ContentLoader
+
+content = ContentLoader(
+    "app/section_order.yml",
+    "app/content/g6/"
+)
 
 
 class TestListServices(BaseApplicationTest):
@@ -288,17 +294,12 @@ class TestCreateService(BaseApplicationTest):
         with self.app.test_client():
             self.login()
 
-        res = self.client.get('/suppliers/services/create')
+        res = self.client.get('/suppliers/submission/g-cloud-7/create')
         assert_equal(res.status_code, 200)
         assert_true("Create new service"
                     in res.get_data(as_text=True))
 
-        lots = [
-            'Infrastructure as a Service (IaaS)',
-            'Software as a Service (SaaS)',
-            'Platform as a Service (PaaS)',
-            'Specialist Cloud Services (SCS)'
-        ]
+        lots = content.get_question('lot')
 
-        for lot in lots:
-            assert_true(lot in res.get_data(as_text=True))
+        for lot in lots['options']:
+            assert_true(lot['label'] in res.get_data(as_text=True))
