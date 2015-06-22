@@ -38,7 +38,6 @@ def edit_service(service_id):
     return _update_service_status(service)
 
 
-# Might have to change the route if we're generalizing this to update
 @main.route('/services/<string:service_id>', methods=['POST'])
 @login_required
 @flask_featureflags.is_active_feature('EDIT_SERVICE_PAGE')
@@ -271,11 +270,42 @@ def create_service():
 
     lots = content.get_question('lot')
     lots['type'] = 'radio'
+    lots['name'] = 'lot'
+    lots.pop('error', None)
+
+    # errors if they exist
+    error, errors = request.args.get('error', None), []
+    if error:
+        lots['error'] = error
+        errors.append({
+            "input_name": lots['name'],
+            "question": lots['question']
+        })
 
     return render_template(
         "services/create_service.html",
+        errors=errors,
         **dict(template_data, **lots)
     ), 200
+
+
+@main.route('/services/create', methods=['POST'])
+@login_required
+@flask_featureflags.is_active_feature('CREATE_SERVICE_PAGE')
+def post_new_service():
+    """
+    Hits up the data API to create a new draft (G7) service.
+    """
+    lot = request.form.get('lot', None)
+
+    if not lot:
+        return redirect(
+            url_for(".create_service", error="Answer is required")
+        )
+
+    return redirect(
+        url_for(".create_service")
+    )
 
 
 def _is_service_associated_with_supplier(service):

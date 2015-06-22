@@ -33,7 +33,7 @@
     </div>
   {% endif %}
     <div class="column-two-thirds">
-      <form id="lots">
+      <form id="{{ name }}" method="POST">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
         {% include "toolkit/forms/selection-buttons.html" %}
         <button type="submit" class="button-save">Save and continue</button>
