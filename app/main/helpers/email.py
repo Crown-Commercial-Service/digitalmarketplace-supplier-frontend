@@ -1,6 +1,8 @@
 from flask import url_for, current_app, render_template
 import mandrill
 from itsdangerous import URLSafeTimedSerializer
+from datetime import datetime
+from dmutils.formats import DATETIME_FORMAT
 
 from .. import main
 
@@ -49,5 +51,12 @@ def decode_email(token):
     ts = URLSafeTimedSerializer(main.config["SECRET_KEY"])
     decoded = ts.loads(token,
                        salt=main.config["RESET_PASSWORD_SALT"],
-                       max_age=86400)
+                       max_age=86400, return_timestamp=True)
     return decoded
+
+
+def token_created_before_password_last_changed(token_timestamp, user):
+
+        password_last_changed = datetime.strptime(
+            user['users']['passwordChangedAt'], DATETIME_FORMAT)
+        return token_timestamp < password_last_changed
