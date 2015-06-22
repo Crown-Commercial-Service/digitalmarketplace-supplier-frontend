@@ -172,6 +172,43 @@ def update_section(service_id, section):
     return redirect(url_for(".edit_service", service_id=service_id))
 
 
+@main.route('/submission/services/<string:service_id>', methods=['GET'])
+@login_required
+@flask_featureflags.is_active_feature('EDIT_SERVICE_PAGE')
+def view_service_submission(service_id):
+    service = data_api_client.get_service(service_id).get('services')
+
+    if not _is_service_associated_with_supplier(service):
+        abort(404)
+
+    return render_template(
+        "services/service.html",
+        service_id=service_id,
+        service_data=presenters.present_all(service, content),
+        sections=content.get_sections_filtered_by(service),
+        **main.config['BASE_TEMPLATE_DATA']), 200
+
+
+@main.route(
+    '/submission/services/<string:service_id>/edit/<string:section>',
+    methods=['GET']
+)
+@login_required
+@flask_featureflags.is_active_feature('EDIT_SERVICE_PAGE')
+def edit_service_submission(service_id, section):
+    return "{} section of service {}".format(section, service_id)
+
+
+@main.route(
+    '/submission/services/<string:service_id>/edit/<string:section>',
+    methods=['POST']
+)
+@login_required
+@flask_featureflags.is_active_feature('EDIT_SERVICE_PAGE')
+def update_service_submission(service_id, section):
+    return "Edited {} section of service {}".format(section, service_id)
+
+
 def _is_service_associated_with_supplier(service):
 
     return service.get('supplierId') == current_user.supplier_id
