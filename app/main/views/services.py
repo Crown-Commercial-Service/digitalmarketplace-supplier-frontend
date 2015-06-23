@@ -189,7 +189,7 @@ def update_section(service_id, section):
 @login_required
 @flask_featureflags.is_active_feature('EDIT_SERVICE_PAGE')
 def view_service_submission(service_id):
-    service = data_api_client.get_service(service_id).get('services')
+    service = data_api_client.get_draft_service(service_id).get('services')
 
     if not _is_service_associated_with_supplier(service):
         abort(404)
@@ -212,7 +212,7 @@ def view_service_submission(service_id):
 @flask_featureflags.is_active_feature('EDIT_SERVICE_PAGE')
 def edit_service_submission(service_id, section):
 
-    service = data_api_client.get_service(service_id).get('services')
+    service = data_api_client.get_draft_service(service_id).get('services')
 
     if not _is_service_associated_with_supplier(service):
         abort(404)
@@ -238,7 +238,7 @@ def edit_service_submission(service_id, section):
 @flask_featureflags.is_active_feature('EDIT_SERVICE_PAGE')
 def update_section_submission(service_id, section):
 
-    service = data_api_client.get_service(service_id).get('services')
+    service = data_api_client.get_draft_service(service_id).get('services')
 
     if not _is_service_associated_with_supplier(service):
         abort(404)
@@ -263,13 +263,13 @@ def update_section_submission(service_id, section):
 @main.route('/submission/g-cloud-7/create', methods=['GET'])
 @login_required
 @flask_featureflags.is_active_feature('CREATE_SERVICE_PAGE')
-def create_service():
+def start_new_draft_service():
     """
     Page to kick off creation of a new (G7) service.
     """
     template_data = main.config['BASE_TEMPLATE_DATA']
 
-    lots = content.get_question('lot')
+    lots = new_service_content.get_question('lot')
     lots['type'] = 'radio'
     lots['name'] = 'lot'
     lots.pop('error', None)
@@ -284,16 +284,16 @@ def create_service():
         })
 
     return render_template(
-        "services/create_service.html",
+        "services/create_new_draft_service.html",
         errors=errors,
         **dict(template_data, **lots)
-    ), 200
+    ), 200 if not errors else 400
 
 
 @main.route('/submission/g-cloud-7/create', methods=['POST'])
 @login_required
 @flask_featureflags.is_active_feature('CREATE_SERVICE_PAGE')
-def post_new_service():
+def create_new_draft_service():
     """
     Hits up the data API to create a new draft (G7) service.
     """
@@ -301,11 +301,33 @@ def post_new_service():
 
     if not lot:
         return redirect(
-            url_for(".create_service", error="Answer is required")
+            url_for(".start_new_draft_service", error="Answer is required")
         )
 
+    # hard-coding in a framework slug :/
+    framework_slug = 'g-cloud-7'
+    supplier_id = current_user.supplier_id
+    user = current_user.email_address
+
+    try:
+        draft_service = data_api_client.create_new_draft_service(
+            framework_slug, supplier_id, user, lot
+        )
+
+    except APIError as e:
+        abort(e.status_code)
+
+    draft_service = draft_service.get('services')
+    content = new_service_content.get_builder().filter(
+        {'lot': draft_service.get('lot')}
+    )
+
     return redirect(
-        url_for(".create_service")
+        url_for(
+            ".edit_service_submission",
+            service_id=draft_service.get('id'),
+            section=content.get_next_editable_section_id()
+        )
     )
 
 
