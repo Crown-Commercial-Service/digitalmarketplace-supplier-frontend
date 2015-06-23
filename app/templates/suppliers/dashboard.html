@@ -54,9 +54,11 @@
   <div class="grid-row">
     <div class="column-one-whole">
       <h2 class="summary-item-heading">Supplier information</h2>
+      {% if 'EDIT_SUPPLIER_PAGE' is active_feature %}
       <p class="summary-item-top-level-action">
         <a href="{{ url_for('.edit_supplier') }}">Edit</a>
       </p>
+      {% endif %}
       <table class="summary-item-body">
         <thead></thead>
           <tbody class="summary-item-body">
