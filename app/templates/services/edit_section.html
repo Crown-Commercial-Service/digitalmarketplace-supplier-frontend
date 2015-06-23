@@ -45,7 +45,7 @@
 
     </div>
   </div>
-  <form method="post" action="{{ url_for(".update_section", service_id=service_id, section=section.id) }}">
+  <form method="post" action="{{ url_for(post_to, service_id=service_id, section=section.id) }}">
 
     {% for question in section.questions %}
       {{ forms[question.type](question, service_data, {}) }}

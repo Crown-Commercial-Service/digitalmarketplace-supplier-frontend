@@ -4,7 +4,7 @@ from flask import render_template, request, redirect, url_for, abort
 from ...main import main
 from ... import data_api_client, flask_featureflags
 from dmutils.apiclient import APIError, HTTPError
-from dmutils.content_loader import ContentBuilder, YAMLLoader
+from dmutils.content_loader import YAMLLoader, ContentBuilder
 from dmutils.presenters import Presenters
 
 existing_service_options = [
@@ -111,13 +111,16 @@ def edit_section(service_id, section):
 
     if not _is_service_associated_with_supplier(service):
         abort(404)
+
     content = ContentBuilder(*existing_service_options)
+    content.filter(service)
 
     return render_template(
         "services/edit_section.html",
-        section=content.get_section_filtered_by(section, service),
+        section=content.get_section(section),
         service_data=service,
         service_id=service_id,
+        post_to=".update_section",
         **main.config['BASE_TEMPLATE_DATA']
     )
 
@@ -135,6 +138,7 @@ def update_section(service_id, section):
         abort(404)
 
     content = ContentBuilder(*existing_service_options)
+    content.filter(service)
 
     posted_data = dict(
         list(request.form.items()) + list(request.files.items())
@@ -162,8 +166,8 @@ def update_section(service_id, section):
         except HTTPError as e:
             return render_template(
                 "services/edit_section.html",
-                section=content.get_section_filtered_by(section, service),
-                service_data=service,
+                section=content.get_section(section),
+                service_data=service_data,
                 service_id=service_id,
                 error=e.message,
                 **main.config['BASE_TEMPLATE_DATA']
@@ -181,11 +185,14 @@ def view_service_submission(service_id):
     if not _is_service_associated_with_supplier(service):
         abort(404)
 
+    content = ContentBuilder(*existing_service_options)
+    content.filter(service)
+
     return render_template(
-        "services/service.html",
+        "services/service_submission.html",
         service_id=service_id,
         service_data=presenters.present_all(service, content),
-        sections=content.get_sections_filtered_by(service),
+        sections=content.sections,
         **main.config['BASE_TEMPLATE_DATA']), 200
 
 
@@ -196,7 +203,23 @@ def view_service_submission(service_id):
 @login_required
 @flask_featureflags.is_active_feature('EDIT_SERVICE_PAGE')
 def edit_service_submission(service_id, section):
-    return "{} section of service {}".format(section, service_id)
+
+    service = data_api_client.get_service(service_id).get('services')
+
+    if not _is_service_associated_with_supplier(service):
+        abort(404)
+
+    content = ContentBuilder(*existing_service_options)
+    content.filter(service)
+
+    return render_template(
+        "services/edit_section.html",
+        section=content.get_section(section),
+        service_data=service,
+        service_id=service_id,
+        post_to=".update_section_submission",
+        **main.config['BASE_TEMPLATE_DATA']
+    )
 
 
 @main.route(
@@ -205,8 +228,21 @@ def edit_service_submission(service_id, section):
 )
 @login_required
 @flask_featureflags.is_active_feature('EDIT_SERVICE_PAGE')
-def update_service_submission(service_id, section):
-    return "Edited {} section of service {}".format(section, service_id)
+def update_section_submission(service_id, section):
+
+    if "success":
+        return redirect(
+            url_for(".view_service_submission", service_id=service_id)
+        )
+    else:
+        return render_template(
+            "services/edit_section.html",
+            section=content.get_section_filtered_by(section, service),
+            service_data=service_data,
+            service_id=service_id,
+            error=e.message,
+            **main.config['BASE_TEMPLATE_DATA']
+        )
 
 
 def _is_service_associated_with_supplier(service):

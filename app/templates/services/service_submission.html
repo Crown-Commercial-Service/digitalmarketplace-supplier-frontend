@@ -1,0 +1,66 @@
+{% extends "_base_page.html" %}
+{% import 'macros/answers.html' as answers %}
+
+{% block breadcrumb %}
+  {%
+    with items = [
+      {
+        "link": "/",
+        "label": "Digital Marketplace"
+      },
+      {
+        "link": url_for(".dashboard"),
+        "label": current_user.supplier_name
+      },
+      {
+        "link": url_for(".list_services"),
+        "label": "Services"
+      }
+    ]
+  %}
+    {% include "toolkit/breadcrumb.html" %}
+  {% endwith %}
+{% endblock %}
+
+{% block main_content %}
+  <div class="grid-row">
+    <div class="column-two-thirds">
+      {% with
+        context = "Edit",
+        heading = service_data['serviceName'],
+        smaller = true
+      %}
+        {% include "toolkit/page-heading.html" %}
+      {% endwith %}
+    </div>
+    <div class="column-one-whole">
+      {% for section in sections %}
+        <h2 class="summary-item-heading">
+          {{section.name}}
+        </h2>
+        {% if section.editable %}
+          <p class="summary-item-top-level-action">
+            <a href="{{ url_for('.edit_service_submission', service_id=service_id, section=section.id ) }}">Edit</a>
+          </p>
+        {% endif %}
+        <table class="summary-item-body">
+          <thead class="summary-item-field-headings">
+            <tr>
+              <th>Service attribute name</th><th>Service attribute</th>
+            </tr>
+          </thead>
+          <tbody class="summary-item-body">
+            {% for question in section.questions %}
+              <tr class="summary-item-row">
+                <td class="summary-item-field-name">{{ question.question }}</td>
+                <td class="summary-item-field-content">
+                  {{ answers[question.type](service_data[question.id]) }}
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% endfor %}
+    </div>
+  </div>
+{% endblock %}
