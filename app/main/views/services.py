@@ -42,12 +42,31 @@ def edit_service(service_id):
     if not _is_service_associated_with_supplier(service):
         abort(404)
 
+    question = {
+        'question': 'Choose service status',
+        'hint': 'Private services don\'t appear in search results '
+                'and don\'t have a URL',
+        'name': 'status',
+        'type': 'radio',
+        'inline': True,
+        'options': [
+            {
+                'checked': service['status'] == 'published',
+                'label': 'Public'
+            },
+            {
+                'checked': service['status'] == 'enabled',
+                'label': 'Private'
+            }
+        ]
+    }
+
     return render_template(
         "services/service.html",
         service_id=service_id,
         service_data=presenters.present_all(service, content),
         sections=content.get_sections_filtered_by(service),
-        **main.config['BASE_TEMPLATE_DATA']), 200
+        **dict(question, **main.config['BASE_TEMPLATE_DATA'])), 200
 
 
 # Might have to change the route if we're generalizing this to update
@@ -67,7 +86,7 @@ def update_service_status(service_id):
         )
 
     # Value should be either public or private
-    status = request.form['service_status']
+    status = request.form.get('status', '').lower()
 
     translate_frontend_to_api = {
         'public': 'published',
