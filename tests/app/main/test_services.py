@@ -149,7 +149,7 @@ class TestSupplierUpdateService(BaseApplicationTest):
             self, status, expected_status_code):
 
         res = self.client.post('/suppliers/services/123', data={
-            'service_status': status,
+            'status': status,
         })
         assert_equal(res.status_code, expected_status_code)
 
@@ -193,11 +193,11 @@ class TestSupplierUpdateService(BaseApplicationTest):
 
         # check that 'public' is selected.
         assert_true(
-            '<input type="radio" name="service_status" id="service_status_published" value="public" checked="checked"'  # noqa
+            '<input type="radio" name="status" id="status-1" value="Public" checked="checked"'  # noqa
             in res.get_data(as_text=True)
         )
         assert_false(
-            '<input type="radio" name="service_status" id="service_status_private" value="private" checked="checked"'  # noqa
+            '<input type="radio" name="status" id="status-2" value="Private" checked="checked"'  # noqa
             in res.get_data(as_text=True)
         )
 
@@ -221,11 +221,11 @@ class TestSupplierUpdateService(BaseApplicationTest):
 
         # check that 'public' is not selected.
         assert_false(
-            '<input type="radio" name="service_status" id="service_status_published" value="public" checked="checked"'  # noqa
+            '<input type="radio" name="status" id="status-1" value="Public" checked="checked"'  # noqa
             in res.get_data(as_text=True)
         )
         assert_true(
-            '<input type="radio" name="service_status" id="service_status_private" value="private" checked="checked"'  # noqa
+            '<input type="radio" name="status" id="status-2" value="Private" checked="checked"'  # noqa
             in res.get_data(as_text=True)
         )
 

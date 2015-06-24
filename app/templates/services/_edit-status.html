@@ -1,23 +1,7 @@
 {% if service_data.status != 'disabled' %}
   <form action="{{ url_for('.update_service_status', service_id=service_id ) }}" method="POST">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
-    <fieldset class="question">
-      <legend class="question-heading question-heading-with-hint ">
-        Choose service status
-      </legend>
-      <p class="hint">
-        Private services don't appear in search results and don't have a
-        <acronym title="Uniform resource locator">URL</acronym>
-      </p>
-      <label class="selection-button selection-button-boolean">
-        <input type="radio" name="service_status" id="service_status_published" value="public" {% if service_data['status'] == 'published' %}checked="checked"{% endif %} />
-        Public
-      </label>
-      <label class="selection-button  selection-button-boolean">
-        <input type="radio" name="service_status" id="service_status_private" value="private" {% if service_data['status'] == 'enabled' %}checked="checked"{% endif %} />
-        Private
-      </label>
-    </fieldset>
+      {% include "toolkit/forms/selection-buttons.html" %}
     <button type="submit" class="button-save">Save and return</button>
   </form>
 {% endif %}

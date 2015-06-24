@@ -42,12 +42,7 @@ def edit_service(service_id):
     if not _is_service_associated_with_supplier(service):
         abort(404)
 
-    return render_template(
-        "services/service.html",
-        service_id=service_id,
-        service_data=presenters.present_all(service, content),
-        sections=content.get_sections_filtered_by(service),
-        **main.config['BASE_TEMPLATE_DATA']), 200
+    return _update_service_status(service)
 
 
 # Might have to change the route if we're generalizing this to update
@@ -61,13 +56,13 @@ def update_service_status(service_id):
         abort(404)
 
     if not _is_service_modifiable(service):
-        return _update_service_status_error(
+        return _update_service_status(
             service,
             "Sorry, but this service isn't modifiable."
         )
 
     # Value should be either public or private
-    status = request.form['service_status']
+    status = request.form.get('status', '').lower()
 
     translate_frontend_to_api = {
         'public': 'published',
@@ -77,7 +72,7 @@ def update_service_status(service_id):
     if status in translate_frontend_to_api.keys():
         status = translate_frontend_to_api[status]
     else:
-        return _update_service_status_error(
+        return _update_service_status(
             service,
             "Sorry, but '{}' is not a valid status.".format(status)
         )
@@ -90,7 +85,7 @@ def update_service_status(service_id):
 
     except APIError:
 
-        return _update_service_status_error(
+        return _update_service_status(
             service,
             "Sorry, there's been a problem updating the status."
         )
@@ -185,12 +180,34 @@ def _is_service_modifiable(service):
     return service.get('status') != 'disabled'
 
 
-def _update_service_status_error(service, error_message):
+def _update_service_status(service, error_message=None):
+
     template_data = main.config['BASE_TEMPLATE_DATA']
+    status_code = 400 if error_message else 200
+
+    question = {
+        'question': 'Choose service status',
+        'hint': 'Private services don\'t appear in search results '
+                'and don\'t have a URL',
+        'name': 'status',
+        'type': 'radio',
+        'inline': True,
+        'options': [
+            {
+                'checked': service['status'] == 'published',
+                'label': 'Public'
+            },
+            {
+                'checked': service['status'] == 'enabled',
+                'label': 'Private'
+            }
+        ]
+    }
 
     return render_template(
         "services/service.html",
         service_id=service.get('id'),
-        service_data=service,
+        service_data=presenters.present_all(service, content),
+        sections=content.get_sections_filtered_by(service),
         error=error_message,
-        **template_data), 400
+        **dict(question, **template_data)), status_code
