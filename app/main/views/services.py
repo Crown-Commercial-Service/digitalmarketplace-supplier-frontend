@@ -185,7 +185,6 @@ def _is_service_modifiable(service):
 def _update_service_status(service, error_message=None):
 
     template_data = main.config['BASE_TEMPLATE_DATA']
-    content = ContentBuilder(*existing_service_options)
     status_code = 400 if error_message else 200
 
     question = {
@@ -207,10 +206,13 @@ def _update_service_status(service, error_message=None):
         ]
     }
 
+    content = ContentBuilder(*existing_service_options)
+    content.filter(service)
+
     return render_template(
         "services/service.html",
         service_id=service.get('id'),
         service_data=presenters.present_all(service, content),
-        sections=content.get_sections_filtered_by(service),
+        sections=content.sections,
         error=error_message,
         **dict(question, **template_data)), status_code
