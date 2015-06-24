@@ -59,7 +59,7 @@
       {% with
          question = form.registration_number.label.text,
          name = form.registration_number.name,
-         value = form.registration_number.data
+         value = form.registration_number.data or ""
       %}
         {% include "toolkit/forms/textbox.html" %}       
       {% endwith %}
