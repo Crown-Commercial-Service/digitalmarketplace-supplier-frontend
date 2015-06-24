@@ -163,7 +163,7 @@ def update_section(service_id, section):
             return render_template(
                 "services/edit_section.html",
                 section=content.get_section_filtered_by(section, service),
-                service_data=service_data,
+                service_data=service,
                 service_id=service_id,
                 error=e.message,
                 **main.config['BASE_TEMPLATE_DATA']
