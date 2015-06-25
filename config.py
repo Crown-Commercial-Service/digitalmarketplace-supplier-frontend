@@ -17,6 +17,7 @@ class Config(object):
     DM_API_AUTH_TOKEN = None
     DM_DATA_API_URL = None
     DM_DATA_API_AUTH_TOKEN = None
+    DM_G7_DRAFT_DOCUMENTS_BUCKET = None
     DEBUG = False
 
     API_URL = os.getenv('DM_API_URL')
