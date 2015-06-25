@@ -19,7 +19,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
 
 
 @mock.patch('app.main.views.frameworks.data_api_client')
-class TestSelectionQuestionnaire(BaseApplicationTest):
+class TestSupplierDeclaration(BaseApplicationTest):
     def test_get_with_no_previous_answers(self, data_api_client):
         with self.app.test_client():
             self.login()
@@ -30,7 +30,7 @@ class TestSelectionQuestionnaire(BaseApplicationTest):
                 APIError(response)
 
             res = self.client.get(
-                '/suppliers/frameworks/g-cloud-7/selection-questions')
+                '/suppliers/frameworks/g-cloud-7/declaration')
 
             assert_equal(res.status_code, 200)
             doc = html.fromstring(res.get_data(as_text=True))
@@ -50,7 +50,7 @@ class TestSelectionQuestionnaire(BaseApplicationTest):
             }
 
             res = self.client.get(
-                '/suppliers/frameworks/g-cloud-7/selection-questions')
+                '/suppliers/frameworks/g-cloud-7/declaration')
 
             assert_equal(res.status_code, 200)
             doc = html.fromstring(res.get_data(as_text=True))
@@ -62,7 +62,7 @@ class TestSelectionQuestionnaire(BaseApplicationTest):
         with self.app.test_client():
             self.login()
             res = self.client.post(
-                '/suppliers/frameworks/g-cloud-7/selection-questions',
+                '/suppliers/frameworks/g-cloud-7/declaration',
                 data={
                     'registration_number': '12345',
                     'bankrupt': 'val-2',
@@ -87,11 +87,11 @@ class TestSelectionQuestionnaire(BaseApplicationTest):
 
             response = Mock()
             response.status_code = 400
-            data_api_client.get_selection_answers.side_effect = \
+            data_api_client.answer_selection_questions.side_effect = \
                 APIError(response)
 
             res = self.client.post(
-                '/suppliers/frameworks/g-cloud-7/selection-questions',
+                '/suppliers/frameworks/g-cloud-7/declaration',
                 data={
                     'registration_number': '12345',
                     'bankrupt': 'val-2',

@@ -24,11 +24,11 @@ def framework_dashboard():
     ), 200
 
 
-@main.route('/frameworks/g-cloud-7/selection-questions',
+@main.route('/frameworks/g-cloud-7/declaration',
             methods=['GET', 'POST'])
 @login_required
 @flask_featureflags.is_active_feature('GCLOUD7_OPEN')
-def framework_selection_questions():
+def framework_supplier_declaration():
     template_data = main.config['BASE_TEMPLATE_DATA']
 
     if request.method == 'POST':
@@ -56,7 +56,7 @@ def framework_selection_questions():
         form = G7SelectionQuestions(formdata=None, data=answers)
 
     return render_template(
-        "frameworks/selection-questions.html",
+        "frameworks/declaration.html",
         form=form,
         errors=[
             {'input_name': k,

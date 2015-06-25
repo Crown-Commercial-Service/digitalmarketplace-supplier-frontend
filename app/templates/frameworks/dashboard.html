@@ -24,8 +24,7 @@
   <div class="grid-row">
     <div class="column-two-thirds">
       {% with
-         context = current_user.email_address,
-         heading = "Apply for G-Cloud 7"
+         heading = "Apply to G-Cloud 7"
       %}
         {% include "toolkit/page-heading.html" %}
       {% endwith %}
@@ -35,9 +34,9 @@
   {% with
      items = [
       {
-        "title": "Selection questions",
-        "body": "This must be comlete!",
-        "link": url_for(".framework_selection_questions"),
+        "title": "Make supplier declaration",
+        "body": "You must do this to supply services on the Digital Marketplace",
+        "link": url_for(".framework_supplier_declaration"),
       }
      ]
   %}
