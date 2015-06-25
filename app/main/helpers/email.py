@@ -9,7 +9,7 @@ from .. import main
 
 def send_password_email(user_id, email_address):
     try:
-        mandrill_client = mandrill.Mandrill(main.config['MANDRILL_API_KEY'])
+        mandrill_client = mandrill.Mandrill(main.config['DM_MANDRILL_API_KEY'])
         url = generate_reset_url(user_id, email_address)
         body = render_template("emails/reset_password_email.html", url=url)
         message = {'html': body,

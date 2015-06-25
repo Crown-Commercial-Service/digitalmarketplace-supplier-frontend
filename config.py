@@ -15,10 +15,10 @@ class Config(object):
     WTF_CSRF_ENABLED = True
     DM_DATA_API_URL = None
     DM_DATA_API_AUTH_TOKEN = None
+    DM_MANDRILL_API_KEY = None
     DM_G7_DRAFT_DOCUMENTS_BUCKET = None
     DEBUG = False
 
-    MANDRILL_API_KEY = os.getenv('DM_MANDRILL_API_KEY')
     RESET_PASSWORD_EMAIL_NAME = 'Digital Marketplace Admin'
     RESET_PASSWORD_EMAIL_FROM = 'enquiries@digitalmarketplace.service.gov.uk'
     RESET_PASSWORD_EMAIL_SUBJECT = 'Reset your Digital Marketplace password'
