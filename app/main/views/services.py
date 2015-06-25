@@ -276,6 +276,9 @@ def _update_service_status(service, error_message=None):
     template_data = main.config['BASE_TEMPLATE_DATA']
     status_code = 400 if error_message else 200
 
+    content = ContentBuilder(*existing_service_options)
+    content.filter(service)
+
     question = {
         'question': 'Choose service status',
         'hint': 'Private services don\'t appear in search results '
