@@ -35,3 +35,16 @@
     {% include "toolkit/forms/list-entry.html" %}
   {% endwith %}
 {%- endmacro %}
+
+{% macro checkboxes(question_content, service_data, errors) -%}
+  {%
+    with
+    question=question_content.question,
+    id=question_content.id,
+    hint=question_content.hint,
+    options=question_content.options,
+    type='checkbox'
+  %}
+    {% include "toolkit/forms/selection-buttons.html" %}
+  {% endwith %}
+{%- endmacro %}

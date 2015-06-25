@@ -7,10 +7,16 @@ from dmutils.apiclient import APIError, HTTPError
 from dmutils.content_loader import YAMLLoader, ContentBuilder
 from dmutils.presenters import Presenters
 
+yaml_loader = YAMLLoader()
 existing_service_options = [
-    "app/section_order.yml",
+    "app/existing_service_manifest.yml",
     "app/content/g6/",
-    YAMLLoader()
+    yaml_loader
+]
+new_service_options = [
+    "app/new_service_manifest.yml",
+    "app/content/g6/",
+    yaml_loader
 ]
 presenters = Presenters()
 
@@ -121,6 +127,7 @@ def edit_section(service_id, section):
         service_data=service,
         service_id=service_id,
         post_to=".update_section",
+        return_to=".edit_service",
         **main.config['BASE_TEMPLATE_DATA']
     )
 
@@ -185,7 +192,7 @@ def view_service_submission(service_id):
     if not _is_service_associated_with_supplier(service):
         abort(404)
 
-    content = ContentBuilder(*existing_service_options)
+    content = ContentBuilder(*new_service_options)
     content.filter(service)
 
     return render_template(
@@ -209,7 +216,7 @@ def edit_service_submission(service_id, section):
     if not _is_service_associated_with_supplier(service):
         abort(404)
 
-    content = ContentBuilder(*existing_service_options)
+    content = ContentBuilder(*new_service_options)
     content.filter(service)
 
     return render_template(
@@ -218,6 +225,7 @@ def edit_service_submission(service_id, section):
         service_data=service,
         service_id=service_id,
         post_to=".update_section_submission",
+        return_to=".view_service_submission",
         **main.config['BASE_TEMPLATE_DATA']
     )
 
@@ -229,6 +237,14 @@ def edit_service_submission(service_id, section):
 @login_required
 @flask_featureflags.is_active_feature('EDIT_SERVICE_PAGE')
 def update_section_submission(service_id, section):
+
+    service = data_api_client.get_service(service_id).get('services')
+
+    if not _is_service_associated_with_supplier(service):
+        abort(404)
+
+    content = ContentBuilder(*new_service_options)
+    content.filter(service)
 
     if "success":
         return redirect(

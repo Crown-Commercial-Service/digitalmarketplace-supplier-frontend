@@ -60,7 +60,7 @@
     %}
       {% include "toolkit/button.html" %}
     {% endwith %}
-    <a href="{{ url_for(".edit_service", service_id=service_id) }}">Return to service</a>
+    <a href="{{ url_for(return_to, service_id=service_id) }}">Return to service</a>
 
   </form>
 {% endblock %}
