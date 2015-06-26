@@ -1,0 +1,84 @@
+{% extends "_base_page.html" %}
+
+{% block breadcrumb %}
+  {%
+    with items = [
+      {
+        "link": "/",
+        "label": "Digital Marketplace",
+      },
+      {
+        "link": url_for(".dashboard"),
+        "label": current_user.supplier_name,
+      },
+      {
+        "link": url_for(".framework_dashboard"),
+        "label": "Apply for G-Cloud 7",
+      }
+    ]
+  %}
+    {% include "toolkit/breadcrumb.html" %}
+  {% endwith %}
+{% endblock %}
+
+{% block main_content %}
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for category, message in messages %}
+      <div class="banner-success-without-action">
+        <p class="banner-message">
+          {% if message == 'questions_updated' %}
+          You questions were updated.
+          {% endif %}
+        </p>
+      </div>
+    {% endfor %}
+  {% endwith %}
+
+  {% if errors %}
+  {% include "toolkit/forms/validation.html" %}
+  {% endif %}
+
+  <div class="grid-row">
+    <div class="column-two-thirds">
+      {% with
+         heading = "Make supplier declaration"
+      %}
+        {% include "toolkit/page-heading.html" %}
+      {% endwith %}
+    </div>
+  </div>
+
+  <form method="post" enctype="mltipart/form-data">
+
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+
+  <div class="grid-row">
+    <div class="column-one-whole">
+      {% with
+         question = form.registration_number.label.text,
+         name = form.registration_number.name,
+         value = form.registration_number.data or ""
+      %}
+        {% include "toolkit/forms/textbox.html" %}       
+      {% endwith %}
+
+      {% with
+         question = form.bankrupt.label.text,
+         type = "boolean",
+         name = form.bankrupt.name,
+         value = form.bankrupt.data
+      %}
+        {% include "toolkit/forms/selection-buttons.html" %}
+      {% endwith %}
+
+      {% with
+         label = "Save answers",
+         type  = "save"
+      %}
+        {% include "toolkit/button.html" %}
+      {% endwith %}
+    </div>
+  </div>
+  </form>
+{% endblock %}

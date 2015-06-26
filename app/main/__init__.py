@@ -10,4 +10,4 @@ def add_cache_control(response):
 
 
 from . import errors
-from .views import services, suppliers, login
+from .views import services, suppliers, login, frameworks

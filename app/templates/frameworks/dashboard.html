@@ -1,0 +1,65 @@
+{% extends "_base_page.html" %}
+
+{% block breadcrumb %}
+  {%
+    with items = [
+      {
+        "link": "/",
+        "label": "Digital Marketplace",
+      },
+      {
+        "link": url_for(".dashboard"),
+        "label": current_user.supplier_name,
+      },
+      {
+        "label": "Apply for G-Cloud 7"
+      }
+    ]
+  %}
+    {% include "toolkit/breadcrumb.html" %}
+  {% endwith %}
+{% endblock %}
+
+{% block main_content %}
+  <div class="grid-row">
+    <div class="column-two-thirds">
+      {% with
+         heading = "Apply to G-Cloud 7"
+      %}
+        {% include "toolkit/page-heading.html" %}
+      {% endwith %}
+    </div>
+  </div>
+
+  {% with
+     items = [
+      {
+        "title": "Make supplier declaration",
+        "body": "You must do this to supply services on the Digital Marketplace",
+        "link": url_for(".framework_supplier_declaration"),
+      }
+     ]
+  %}
+    {% include "toolkit/browse-list.html" %}
+  {% endwith %}
+
+  <div class="grid-row">
+    <div class="column-one-whole">
+      <h2 class="summary-item-heading">Services</h2>
+      <p class="summary-item-top-level-action">
+        <a href="#">Add a service</a>
+      </p>
+      <table class="summary-item-body">
+        <thead></thead>
+        <tbody class="summary-item-body">
+          <tr class="summary-item-row">
+            <td class="summary-item-field-name">
+              <span class="hint">You haven't added any services yet.</span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+{% endblock %}
