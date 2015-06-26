@@ -13,16 +13,12 @@ class Config(object):
     SESSION_COOKIE_HTTPONLY = True
     SESSION_COOKIE_SECURE = True
     WTF_CSRF_ENABLED = True
-    DM_API_URL = None
-    DM_API_AUTH_TOKEN = None
     DM_DATA_API_URL = None
     DM_DATA_API_AUTH_TOKEN = None
+    DM_MANDRILL_API_KEY = None
+    DM_G7_DRAFT_DOCUMENTS_BUCKET = None
     DEBUG = False
 
-    API_URL = os.getenv('DM_API_URL')
-    API_AUTH_TOKEN = os.getenv('DM_SUPPLIER_FRONTEND_API_AUTH_TOKEN')
-
-    MANDRILL_API_KEY = os.getenv('DM_MANDRILL_API_KEY')
     RESET_PASSWORD_EMAIL_NAME = 'Digital Marketplace Admin'
     RESET_PASSWORD_EMAIL_FROM = 'enquiries@digitalmarketplace.service.gov.uk'
     RESET_PASSWORD_EMAIL_SUBJECT = 'Reset your Digital Marketplace password'
@@ -64,8 +60,6 @@ class Test(Config):
     DM_LOG_LEVEL = 'CRITICAL'
     DM_API_AUTH_TOKEN = 'test'
     DM_API_URL = 'http://localhost'
-    DM_DATA_API_URL = os.getenv('DM_DATA_API_URL')
-    DM_DATA_API_AUTH_TOKEN = os.getenv('DM_DATA_API_AUTH_TOKEN')
     WTF_CSRF_ENABLED = False
     SERVER_NAME = 'localhost'
 
