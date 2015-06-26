@@ -15,9 +15,6 @@ from ..forms.frameworks import G7SelectionQuestions
 def framework_dashboard():
     template_data = main.config['BASE_TEMPLATE_DATA']
 
-    # get the framework
-    # get the list of
-
     return render_template(
         "frameworks/dashboard.html",
         **template_data
