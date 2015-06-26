@@ -145,7 +145,7 @@ def update_section(service_id, section):
         list_types = ['list', 'checkboxes', 'pricing']
         if (
             key != 'csrf_token' and
-            content.get_question(key)['type'] in list_types
+            existing_service_content.get_question(key)['type'] in list_types
         ):
             posted_data[key] = item_as_list
 
@@ -160,8 +160,9 @@ def update_section(service_id, section):
             return render_template(
                 "services/edit_section.html",
                 section=content.get_section(section),
-                service_data=service_data,
+                service_data=posted_data,
                 service_id=service_id,
+                post_to=".update_section",
                 error=e.message,
                 **main.config['BASE_TEMPLATE_DATA']
             )
@@ -237,9 +238,9 @@ def update_section_submission(service_id, section):
         return render_template(
             "services/edit_section.html",
             section=content.get_section(section),
-            service_data=service_data,
+            service_data=service,
             service_id=service_id,
-            error=e.message,
+            error="There was an error",
             **main.config['BASE_TEMPLATE_DATA']
         )
 
@@ -279,9 +280,6 @@ def _update_service_status(service, error_message=None):
             }
         ]
     }
-
-    content = ContentBuilder(*existing_service_options)
-    content.filter(service)
 
     return render_template(
         "services/service.html",
