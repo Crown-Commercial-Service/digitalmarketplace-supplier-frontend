@@ -1,23 +1,11 @@
 from flask_login import login_required, current_user
 from flask import render_template, request, redirect, url_for, abort
 
-from ...main import main
+from ...main import main, existing_service_content, new_service_content
 from ... import data_api_client, flask_featureflags
 from dmutils.apiclient import APIError, HTTPError
-from dmutils.content_loader import YAMLLoader, ContentBuilder
 from dmutils.presenters import Presenters
 
-yaml_loader = YAMLLoader()
-existing_service_options = [
-    "app/existing_service_manifest.yml",
-    "app/content/g6/",
-    yaml_loader
-]
-new_service_options = [
-    "app/new_service_manifest.yml",
-    "app/content/g6/",
-    yaml_loader
-]
 presenters = Presenters()
 
 
@@ -118,8 +106,7 @@ def edit_section(service_id, section):
     if not _is_service_associated_with_supplier(service):
         abort(404)
 
-    content = ContentBuilder(*existing_service_options)
-    content.filter(service)
+    content = existing_service_content.get_builder().filter(service)
 
     return render_template(
         "services/edit_section.html",
@@ -144,8 +131,7 @@ def update_section(service_id, section):
     if not _is_service_associated_with_supplier(service):
         abort(404)
 
-    content = ContentBuilder(*existing_service_options)
-    content.filter(service)
+    content = existing_service_content.get_builder().filter(service)
 
     posted_data = dict(
         list(request.form.items()) + list(request.files.items())
@@ -192,14 +178,13 @@ def view_service_submission(service_id):
     if not _is_service_associated_with_supplier(service):
         abort(404)
 
-    content = ContentBuilder(*new_service_options)
-    content.filter(service)
+    content = new_service_content.get_builder().filter(service)
 
     return render_template(
         "services/service_submission.html",
         service_id=service_id,
-        service_data=presenters.present_all(service, content),
-        sections=content.sections,
+        service_data=presenters.present_all(service, new_service_content),
+        sections=content,
         **main.config['BASE_TEMPLATE_DATA']), 200
 
 
@@ -216,8 +201,7 @@ def edit_service_submission(service_id, section):
     if not _is_service_associated_with_supplier(service):
         abort(404)
 
-    content = ContentBuilder(*new_service_options)
-    content.filter(service)
+    content = new_service_content.get_builder().filter(service)
 
     return render_template(
         "services/edit_section.html",
@@ -243,8 +227,7 @@ def update_section_submission(service_id, section):
     if not _is_service_associated_with_supplier(service):
         abort(404)
 
-    content = ContentBuilder(*new_service_options)
-    content.filter(service)
+    content = new_service_content.get_builder().filter(service)
 
     if "success":
         return redirect(
@@ -253,7 +236,7 @@ def update_section_submission(service_id, section):
     else:
         return render_template(
             "services/edit_section.html",
-            section=content.get_section_filtered_by(section, service),
+            section=content.get_section(section),
             service_data=service_data,
             service_id=service_id,
             error=e.message,
@@ -276,8 +259,7 @@ def _update_service_status(service, error_message=None):
     template_data = main.config['BASE_TEMPLATE_DATA']
     status_code = 400 if error_message else 200
 
-    content = ContentBuilder(*existing_service_options)
-    content.filter(service)
+    content = existing_service_content.get_builder().filter(service)
 
     question = {
         'question': 'Choose service status',
@@ -304,7 +286,7 @@ def _update_service_status(service, error_message=None):
     return render_template(
         "services/service.html",
         service_id=service.get('id'),
-        service_data=presenters.present_all(service, content),
-        sections=content.sections,
+        service_data=presenters.present_all(service, existing_service_content),
+        sections=content,
         error=error_message,
         **dict(question, **template_data)), status_code
