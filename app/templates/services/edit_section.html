@@ -27,13 +27,15 @@
 {% endblock %}
 
 {% block main_content %}
+
+  {% if errors %}
+    {% with errors = errors.values() %}
+      {% include 'toolkit/forms/validation.html' %}
+    {% endwith %}
+  {% endif %}
+
   <div class="grid-row">
     <div class="column-two-thirds">
-      {% if errors %}
-        {% with errors = errors.values() %}
-          {% include 'toolkit/forms/validation.html' %}
-        {% endwith %}
-      {% endif %}
 
       {% with
         heading = section.name,
