@@ -35,3 +35,69 @@
     {% include "toolkit/forms/list-entry.html" %}
   {% endwith %}
 {%- endmacro %}
+
+{% macro checkboxes(question_content, service_data, errors) -%}
+  {%
+    with
+    question=question_content.question,
+    id=question_content.id,
+    hint=question_content.hint,
+    options=question_content.options,
+    type='checkbox'
+  %}
+    {% include "toolkit/forms/selection-buttons.html" %}
+  {% endwith %}
+{%- endmacro %}
+
+{% macro radios(question_content, service_data, errors) -%}
+  {%
+    with
+    question=question_content.question,
+    id=question_content.id,
+    hint=question_content.hint,
+    options=question_content.options,
+    type='radio'
+  %}
+    {% include "toolkit/forms/selection-buttons.html" %}
+  {% endwith %}
+{%- endmacro %}
+
+{% macro boolean(question_content, service_data, errors) -%}
+  {%
+    with
+    question=question_content.question,
+    id=question_content.id,
+    hint=question_content.hint,
+    type='boolean'
+  %}
+    {% include "toolkit/forms/selection-buttons.html" %}
+  {% endwith %}
+{%- endmacro %}
+
+{% macro upload(question_content, service_data, errors) -%}
+  {%
+    with
+    value=service_data[question_content.id],
+    question=question_content.question,
+    id=question_content.id,
+    hint=question_content.hint,
+    type='boolean'
+  %}
+      <p>
+        {{ value }}
+      </p>
+      <input type="file" name="{{ question.id }}" id="{{ question.id }}-file-upload" />
+  {% endwith %}
+{%- endmacro %}
+
+{% macro pricing(question_content, service_data, errors) -%}
+  {%
+    with
+    value=service_data[question_content.id],
+    question=question_content.question,
+    id=question_content.id,
+    hint=question_content.hint
+  %}
+    {% include "toolkit/forms/textbox.html" %}
+  {% endwith %}
+{%- endmacro %}
