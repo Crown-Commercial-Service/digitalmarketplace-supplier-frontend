@@ -163,6 +163,7 @@ def update_section(service_id, section):
                 service_data=posted_data,
                 service_id=service_id,
                 post_to=".update_section",
+                return_to=".edit_service",
                 error=e.message,
                 **main.config['BASE_TEMPLATE_DATA']
             )
