@@ -77,16 +77,12 @@
 {% macro upload(question_content, service_data, errors) -%}
   {%
     with
-    value=service_data[question_content.id],
     question=question_content.question,
-    id=question_content.id,
     hint=question_content.hint,
-    type='boolean'
+    name=question_content.id,
+    value=service_data[question_content.id]
   %}
-      <p>
-        {{ value }}
-      </p>
-      <input type="file" name="{{ question.id }}" id="{{ question.id }}-file-upload" />
+    {% include "toolkit/forms/upload.html" %}
   {% endwith %}
 {%- endmacro %}
 

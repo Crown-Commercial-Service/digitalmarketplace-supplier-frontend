@@ -30,12 +30,14 @@ $path: "/suppliers/static/images/";
 @import "toolkit/search/_search-result.scss";
 @import "toolkit/_notification-banners.scss";
 @import "toolkit/_service-id.scss";
+@import "toolkit/document";
 @import "toolkit/forms/_questions.scss";
 @import "toolkit/forms/_summary.scss";
 @import "toolkit/forms/_hint.scss";
 @import "toolkit/forms/_selection-buttons.scss";
 @import "toolkit/forms/_textboxes.scss";
 @import "toolkit/forms/_validation.scss";
+@import "toolkit/forms/_upload.scss";
 
 @import "_text.scss";
 @import "_grids.scss";
