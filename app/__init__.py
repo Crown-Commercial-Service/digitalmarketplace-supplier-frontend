@@ -7,9 +7,9 @@ from flask._compat import string_types
 from flask_wtf.csrf import CsrfProtect
 
 from dmutils import apiclient, init_app, flask_featureflags
+from dmutils.user import User
 
 from config import configs
-from .model import User
 
 
 data_api_client = apiclient.DataAPIClient()

@@ -36,6 +36,7 @@ class BaseApplicationTest(object):
                     "supplierId": supplier_id,
                     "name": supplier_name,
                 },
+                "role": "supplier",
                 'passwordChangedAt': password_changed_at
             }
         }
