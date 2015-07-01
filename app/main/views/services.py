@@ -160,13 +160,14 @@ def update_section(service_id, section):
             errors_map = {}
             for error in e.response.json()['error'].keys():
                 id = existing_service_content.get_question(error)['id']
-                errors_map[id] = {
+                errors_map[id] = \
+                    {
                     'input_name': error,
                     'question': existing_service_content
-                    .get_question(error)['question'],
+                        .get_question(error)['question'],
                     'message': existing_service_content
-                    .get_question(error)['validations'][-1]['message']
-                }
+                        .get_question(error)['validations'][-1]['message']
+                    }
 
             return render_template(
                 "services/edit_section.html",
