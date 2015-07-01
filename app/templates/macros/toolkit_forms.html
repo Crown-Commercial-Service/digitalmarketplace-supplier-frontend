@@ -4,7 +4,7 @@
     question=question_content.question,
     name=question_content.id,
     value=service_data[question_content.id],
-    error=errors.get(question_content.id)['message'] or None
+    error=errors.get(question_content.id)['message']
   %}
     {% include "toolkit/forms/textbox.html" %}
   {% endwith %}
@@ -17,8 +17,8 @@
     name=question_content.id,
     value=service_data[question_content.id],
     large=True,
-    max_length_in_words=question_content["maxLengthInWords"] or False,
-    error=errors.get(question_content.id)['message'] or None
+    max_length_in_words=question_content["maxLengthInWords"],
+    error=errors.get(question_content.id)['message']
   %}
     {% include "toolkit/forms/textbox.html" %}
   {% endwith %}
@@ -32,7 +32,7 @@
     question=question_content.question,
     id=question_content.id,
     hint=question_content.hint,
-    error=errors.get(question_content.id)['message'] or None
+    error=errors.get(question_content.id)['message']
   %}
     {% include "toolkit/forms/list-entry.html" %}
   {% endwith %}
@@ -46,7 +46,7 @@
     hint=question_content.hint,
     options=question_content.options,
     type='checkbox',
-    error=errors.get(question_content.id)['message'] or None
+    error=errors.get(question_content.id)['message']
   %}
     {% include "toolkit/forms/selection-buttons.html" %}
   {% endwith %}
@@ -60,7 +60,7 @@
     hint=question_content.hint,
     options=question_content.options,
     type='radio',
-    error=errors.get(question_content.id)['message'] or None
+    error=errors.get(question_content.id)['message']
   %}
     {% include "toolkit/forms/selection-buttons.html" %}
   {% endwith %}
@@ -73,7 +73,7 @@
     id=question_content.id,
     hint=question_content.hint,
     type='boolean',
-    error=errors.get(question_content.id)['message'] or None
+    error=errors.get(question_content.id)['message']
   %}
     {% include "toolkit/forms/selection-buttons.html" %}
   {% endwith %}
@@ -86,7 +86,7 @@
     hint=question_content.hint,
     name=question_content.id,
     value=service_data[question_content.id],
-    error=errors.get(question_content.id)['message'] or None
+    error=errors.get(question_content.id)['message']
   %}
     {% include "toolkit/forms/upload.html" %}
   {% endwith %}
@@ -99,7 +99,7 @@
     question=question_content.question,
     id=question_content.id,
     hint=question_content.hint,
-    error=errors.get(question_content.id)['message'] or None
+    error=errors.get(question_content.id)['message']
   %}
     {% include "toolkit/forms/textbox.html" %}
   {% endwith %}
