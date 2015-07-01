@@ -84,7 +84,7 @@ def send_reset_password_email():
         if user_json is not None:
             user = User.from_json(user_json)
             # Send a password reset email with token
-            email.send_password_email(user.id, email_address)
+            email.send_password_email(user.id, user.email_address, user.locked)
             message = "login.reset-email.sent: " \
                       "Sending password reset email for supplier %d (%s)"
             current_app.logger.info(message, user.id, user.email_address)

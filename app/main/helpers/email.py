@@ -7,11 +7,12 @@ from dmutils.formats import DATETIME_FORMAT
 from .. import main
 
 
-def send_password_email(user_id, email_address):
+def send_password_email(user_id, email_address, locked):
     try:
         mandrill_client = mandrill.Mandrill(main.config['DM_MANDRILL_API_KEY'])
         url = generate_reset_url(user_id, email_address)
-        body = render_template("emails/reset_password_email.html", url=url)
+        body = render_template("emails/reset_password_email.html",
+                               url=url, locked=locked)
         message = {'html': body,
                    'subject': main.config['RESET_PASSWORD_EMAIL_SUBJECT'],
                    'from_email': main.config['RESET_PASSWORD_EMAIL_FROM'],
