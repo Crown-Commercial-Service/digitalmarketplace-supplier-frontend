@@ -157,6 +157,21 @@ def update_section(service_id, section):
                 "user",
                 "supplier app")
         except HTTPError as e:
+            errors_map = {}
+            for error in e.response.json()['error'].keys():
+                if error == '_form':
+                    abort(400, "Submitted data was not in a valid format")
+                else:
+                    id = existing_service_content.get_question(error)['id']
+                    errors_map[id] = \
+                        {
+                        'input_name': error,
+                        'question': existing_service_content
+                            .get_question(error)['question'],
+                        'message': existing_service_content
+                            .get_question(error)['validations'][-1]['message']
+                        }
+
             return render_template(
                 "services/edit_section.html",
                 section=content.get_section(section),
@@ -164,7 +179,7 @@ def update_section(service_id, section):
                 service_id=service_id,
                 post_to=".update_section",
                 return_to=".edit_service",
-                error=e.message,
+                errors=errors_map,
                 **main.config['BASE_TEMPLATE_DATA']
             )
 
