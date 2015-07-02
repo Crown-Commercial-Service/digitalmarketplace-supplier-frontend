@@ -268,6 +268,20 @@ def start_new_draft_service():
     Page to kick off creation of a new (G7) service.
     """
     template_data = main.config['BASE_TEMPLATE_DATA']
+    breadcrumbs = [
+        {
+            "link": "/",
+            "label": "Digital Marketplace"
+        },
+        {
+            "link": url_for(".dashboard"),
+            "label": "Your account"
+        },
+        {
+            "link": "/suppliers/submission/g-cloud-7",
+            "label": "Apply to G-Cloud 7"
+        }
+    ]
 
     lots = new_service_content.get_question('lot')
     lots['type'] = 'radio'
@@ -286,6 +300,7 @@ def start_new_draft_service():
     return render_template(
         "services/create_new_draft_service.html",
         errors=errors,
+        breadcrumbs=breadcrumbs,
         **dict(template_data, **lots)
     ), 200 if not errors else 400
 
@@ -304,14 +319,12 @@ def create_new_draft_service():
             url_for(".start_new_draft_service", error="Answer is required")
         )
 
-    # hard-coding in a framework slug :/
-    framework_slug = 'g-cloud-7'
     supplier_id = current_user.supplier_id
     user = current_user.email_address
 
     try:
         draft_service = data_api_client.create_new_draft_service(
-            framework_slug, supplier_id, user, lot
+            'g-cloud-7', supplier_id, user, lot
         )
 
     except APIError as e:
