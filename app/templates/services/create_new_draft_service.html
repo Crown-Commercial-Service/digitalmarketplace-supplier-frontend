@@ -1,0 +1,33 @@
+{% extends "_base_page.html" %}
+
+{% block breadcrumb %}
+  {%
+    with items = breadcrumbs
+  %}
+    {% include "toolkit/breadcrumb.html" %}
+  {% endwith %}
+{% endblock %}
+
+{% block main_content %}
+  <div class="grid-row">
+    <div class="column-two-thirds">
+      {% with
+        heading = 'Create new service'
+      %}
+        {% include "toolkit/page-heading.html" %}
+      {% endwith %}
+    </div>
+  {% if error %}
+    <div class="column-one-whole">
+        {% include "toolkit/forms/validation.html" %}
+    </div>
+  {% endif %}
+    <div class="column-two-thirds">
+      <form id="{{ name }}" method="POST">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+        {% include "toolkit/forms/selection-buttons.html" %}
+        <button type="submit" class="button-save">Save and continue</button>
+      </form>
+    </div>
+  </div>
+{% endblock %}

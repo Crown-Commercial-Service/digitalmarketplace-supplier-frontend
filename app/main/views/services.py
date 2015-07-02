@@ -38,7 +38,6 @@ def edit_service(service_id):
     return _update_service_status(service)
 
 
-# Might have to change the route if we're generalizing this to update
 @main.route('/services/<string:service_id>', methods=['POST'])
 @login_required
 @flask_featureflags.is_active_feature('EDIT_SERVICE_PAGE')
@@ -190,7 +189,7 @@ def update_section(service_id, section):
 @login_required
 @flask_featureflags.is_active_feature('EDIT_SERVICE_PAGE')
 def view_service_submission(service_id):
-    service = data_api_client.get_service(service_id).get('services')
+    service = data_api_client.get_draft_service(service_id).get('services')
 
     if not _is_service_associated_with_supplier(service):
         abort(404)
@@ -213,7 +212,7 @@ def view_service_submission(service_id):
 @flask_featureflags.is_active_feature('EDIT_SERVICE_PAGE')
 def edit_service_submission(service_id, section):
 
-    service = data_api_client.get_service(service_id).get('services')
+    service = data_api_client.get_draft_service(service_id).get('services')
 
     if not _is_service_associated_with_supplier(service):
         abort(404)
@@ -239,7 +238,7 @@ def edit_service_submission(service_id, section):
 @flask_featureflags.is_active_feature('EDIT_SERVICE_PAGE')
 def update_section_submission(service_id, section):
 
-    service = data_api_client.get_service(service_id).get('services')
+    service = data_api_client.get_draft_service(service_id).get('services')
 
     if not _is_service_associated_with_supplier(service):
         abort(404)
@@ -259,6 +258,90 @@ def update_section_submission(service_id, section):
             error="There was an error",
             **main.config['BASE_TEMPLATE_DATA']
         )
+
+
+@main.route('/submission/g-cloud-7/create', methods=['GET'])
+@login_required
+@flask_featureflags.is_active_feature('CREATE_SERVICE_PAGE')
+def start_new_draft_service():
+    """
+    Page to kick off creation of a new (G7) service.
+    """
+    template_data = main.config['BASE_TEMPLATE_DATA']
+    breadcrumbs = [
+        {
+            "link": "/",
+            "label": "Digital Marketplace"
+        },
+        {
+            "link": url_for(".dashboard"),
+            "label": "Your account"
+        },
+        {
+            "link": "/suppliers/submission/g-cloud-7",
+            "label": "Apply to G-Cloud 7"
+        }
+    ]
+
+    lots = new_service_content.get_question('lot')
+    lots['type'] = 'radio'
+    lots['name'] = 'lot'
+    lots.pop('error', None)
+
+    # errors if they exist
+    error, errors = request.args.get('error', None), []
+    if error:
+        lots['error'] = error
+        errors.append({
+            "input_name": lots['name'],
+            "question": lots['question']
+        })
+
+    return render_template(
+        "services/create_new_draft_service.html",
+        errors=errors,
+        breadcrumbs=breadcrumbs,
+        **dict(template_data, **lots)
+    ), 200 if not errors else 400
+
+
+@main.route('/submission/g-cloud-7/create', methods=['POST'])
+@login_required
+@flask_featureflags.is_active_feature('CREATE_SERVICE_PAGE')
+def create_new_draft_service():
+    """
+    Hits up the data API to create a new draft (G7) service.
+    """
+    lot = request.form.get('lot', None)
+
+    if not lot:
+        return redirect(
+            url_for(".start_new_draft_service", error="Answer is required")
+        )
+
+    supplier_id = current_user.supplier_id
+    user = current_user.email_address
+
+    try:
+        draft_service = data_api_client.create_new_draft_service(
+            'g-cloud-7', supplier_id, user, lot
+        )
+
+    except APIError as e:
+        abort(e.status_code)
+
+    draft_service = draft_service.get('services')
+    content = new_service_content.get_builder().filter(
+        {'lot': draft_service.get('lot')}
+    )
+
+    return redirect(
+        url_for(
+            ".edit_service_submission",
+            service_id=draft_service.get('id'),
+            section=content.get_next_editable_section_id()
+        )
+    )
 
 
 def _is_service_associated_with_supplier(service):

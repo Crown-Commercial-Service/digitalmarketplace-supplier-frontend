@@ -1,7 +1,9 @@
 import mock
 from mock import Mock
-from nose.tools import assert_equal, assert_true, assert_false
+from nose.tools import assert_equal, assert_true, assert_false, \
+    assert_in, assert_not_in
 from tests.app.helpers import BaseApplicationTest
+from app.main import new_service_content
 
 
 class TestListServices(BaseApplicationTest):
@@ -112,7 +114,7 @@ class TestListServicesLogin(BaseApplicationTest):
                      '?next=%2Fsuppliers%2Fservices')
 
 
-@mock.patch('app.main.services.data_api_client')
+@mock.patch('app.main.views.services.data_api_client')
 class TestSupplierUpdateService(BaseApplicationTest):
 
     def _login(
@@ -280,3 +282,87 @@ class TestSupplierUpdateService(BaseApplicationTest):
         assert_equal(res.location,
                      'http://localhost/suppliers/login'
                      '?next=%2Fsuppliers%2Fservices%2F123')
+
+
+@mock.patch('app.main.views.services.request')
+class TestCreateService(BaseApplicationTest):
+
+    def setup(self):
+        super(TestCreateService, self).setup()
+        self._answer_required = 'Answer is required'
+        self._validation_error = \
+            'There was a problem with your answer to the following questions'
+
+    @staticmethod
+    def _format_for_request(phrase):
+        return phrase.replace(' ', '+')
+
+    def _test_get_create_service_page(self, if_error_expected):
+        with self.app.test_client():
+            self.login()
+
+        res = self.client.get('/suppliers/submission/g-cloud-7/create')
+        assert_equal(res.status_code, 200 if not if_error_expected else 400)
+        assert_true("Create new service"
+                    in res.get_data(as_text=True))
+
+        lots = new_service_content.get_question('lot')
+
+        for lot in lots['options']:
+            assert_true(lot['label'] in res.get_data(as_text=True))
+
+        if if_error_expected:
+            assert_in(self._validation_error, res.get_data(as_text=True))
+        else:
+            assert_not_in(self._validation_error, res.get_data(as_text=True))
+
+    def _test_post_create_service(self, if_error_expected):
+        with self.app.test_client():
+            self.login()
+
+        with mock.patch('app.main.views.services.data_api_client') \
+                as data_api_client:
+
+            data_api_client.create_new_draft_service.return_value = {
+                'services': {
+                    'id': 1,
+                    'supplierId': 1234,
+                    'supplierName': "supplierName",
+                    'lot': "SCS",
+                    'status': "not-submitted",
+                    'frameworkName': "frameworkName",
+                    'links': {},
+                    'updatedAt': "2015-06-29T15:26:07.650368Z"
+                }
+            }
+
+            res = self.client.post(
+                '/suppliers/submission/g-cloud-7/create'
+            )
+
+            assert_equal(res.status_code, 302)
+
+            error_message = '?error={}'.format(
+                self._format_for_request(self._answer_required)
+            )
+
+            if if_error_expected:
+                assert_in(error_message, res.location)
+            else:
+                assert_not_in(error_message, res.location)
+
+    def test_get_create_service_page_succeeds(self, request):
+        request.args.get.return_value = None
+        self._test_get_create_service_page(if_error_expected=False)
+
+    def test_get_create_service_page_fails(self, request):
+        request.args.get.return_value = self._answer_required
+        self._test_get_create_service_page(if_error_expected=True)
+
+    def test_post_create_service_with_lot_selected_succeeds(self, request):
+        request.form.get.return_value = "SCS"
+        self._test_post_create_service(if_error_expected=False)
+
+    def test_post_create_service_without_lot_selected_fails(self, request):
+        request.form.get.return_value = None
+        self._test_post_create_service(if_error_expected=True)
