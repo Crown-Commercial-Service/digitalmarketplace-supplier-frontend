@@ -19,7 +19,7 @@
         "label": "Services"
       },
       {
-        "link": url_for(return_to, service_id=service_id),
+        "link": url_for(return_to, service_id=service_id, section=section if section),
         "label": service_data["serviceName"] or 'New service'
       }
     ]
@@ -67,7 +67,7 @@
     %}
       {% include "toolkit/button.html" %}
     {% endwith %}
-    <a href="{{ url_for(return_to, service_id=service_id) }}">Return to service</a>
+    <a href="{{ url_for(return_to, service_id=service_id, section=section if section) }}">Return to service</a>
 
   </form>
 {% endblock %}

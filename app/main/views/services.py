@@ -26,6 +26,9 @@ def list_services():
         **template_data), 200
 
 
+#  #######################  EDITING LIVE SERVICES #############################
+
+
 @main.route('/services/<string:service_id>', methods=['GET'])
 @login_required
 @flask_featureflags.is_active_feature('EDIT_SERVICE_PAGE')
@@ -153,7 +156,7 @@ def update_section(service_id, section):
             data_api_client.update_service(
                 service_id,
                 posted_data,
-                "user",
+                current_user.email_address,
                 "supplier app")
         except HTTPError as e:
             errors_map = {}
@@ -185,79 +188,7 @@ def update_section(service_id, section):
     return redirect(url_for(".edit_service", service_id=service_id))
 
 
-@main.route('/submission/services/<string:service_id>', methods=['GET'])
-@login_required
-@flask_featureflags.is_active_feature('GCLOUD7_OPEN')
-def view_service_submission(service_id):
-    service = data_api_client.get_draft_service(service_id).get('services')
-
-    if not _is_service_associated_with_supplier(service):
-        abort(404)
-
-    content = new_service_content.get_builder().filter(service)
-
-    return render_template(
-        "services/service_submission.html",
-        service_id=service_id,
-        service_data=presenters.present_all(service, new_service_content),
-        sections=content,
-        **main.config['BASE_TEMPLATE_DATA']), 200
-
-
-@main.route(
-    '/submission/services/<string:service_id>/edit/<string:section>',
-    methods=['GET']
-)
-@login_required
-@flask_featureflags.is_active_feature('GCLOUD7_OPEN')
-def edit_service_submission(service_id, section):
-
-    service = data_api_client.get_draft_service(service_id).get('services')
-
-    if not _is_service_associated_with_supplier(service):
-        abort(404)
-
-    content = new_service_content.get_builder().filter(service)
-
-    return render_template(
-        "services/edit_section.html",
-        section=content.get_section(section),
-        service_data=service,
-        service_id=service_id,
-        post_to=".update_section_submission",
-        return_to=".view_service_submission",
-        **main.config['BASE_TEMPLATE_DATA']
-    )
-
-
-@main.route(
-    '/submission/services/<string:service_id>/edit/<string:section>',
-    methods=['POST']
-)
-@login_required
-@flask_featureflags.is_active_feature('GCLOUD7_OPEN')
-def update_section_submission(service_id, section):
-
-    service = data_api_client.get_draft_service(service_id).get('services')
-
-    if not _is_service_associated_with_supplier(service):
-        abort(404)
-
-    content = new_service_content.get_builder().filter(service)
-
-    if "success":
-        return redirect(
-            url_for(".view_service_submission", service_id=service_id)
-        )
-    else:
-        return render_template(
-            "services/edit_section.html",
-            section=content.get_section(section),
-            service_data=service,
-            service_id=service_id,
-            error="There was an error",
-            **main.config['BASE_TEMPLATE_DATA']
-        )
+#  ####################  CREATING NEW DRAFT SERVICES ##########################
 
 
 @main.route('/submission/g-cloud-7/create', methods=['GET'])
@@ -342,6 +273,118 @@ def create_new_draft_service():
             section=content.get_next_editable_section_id()
         )
     )
+
+
+@main.route('/submission/services/<string:service_id>', methods=['GET'])
+@login_required
+@flask_featureflags.is_active_feature('GCLOUD7_OPEN')
+def view_service_submission(service_id):
+
+    draft = data_api_client.get_draft_service(service_id).get('services')
+
+    if not _is_service_associated_with_supplier(draft):
+        abort(404)
+
+    content = new_service_content.get_builder().filter(draft)
+
+    return render_template(
+        "services/service_submission.html",
+        service_id=service_id,
+        service_data=presenters.present_all(draft, new_service_content),
+        sections=content,
+        **main.config['BASE_TEMPLATE_DATA']), 200
+
+
+@main.route(
+    '/submission/services/<string:service_id>/edit/<string:section>',
+    methods=['GET']
+)
+@login_required
+@flask_featureflags.is_active_feature('GCLOUD7_OPEN')
+def edit_service_submission(service_id, section):
+
+    draft = data_api_client.get_draft_service(service_id).get('services')
+
+    if not _is_service_associated_with_supplier(draft):
+        abort(404)
+
+    content = new_service_content.get_builder().filter(draft)
+
+    return render_template(
+        "services/edit_section.html",
+        section=content.get_section(section),
+        service_data=draft,
+        service_id=service_id,
+        post_to=".update_section_submission",
+        return_to=".view_service_submission",
+        **main.config['BASE_TEMPLATE_DATA']
+    )
+
+
+@main.route(
+    '/submission/services/<string:service_id>/edit/<string:section>',
+    methods=['POST']
+)
+@login_required
+@flask_featureflags.is_active_feature('GCLOUD7_OPEN')
+def update_section_submission(service_id, section):
+    draft = data_api_client.get_draft_service(service_id).get('services')
+
+    if not _is_service_associated_with_supplier(draft):
+        abort(404)
+
+    content = new_service_content.get_builder().filter(draft)
+    posted_data = dict(
+        list(request.form.items()) + list(request.files.items())
+    )
+    posted_data.pop('csrf_token', None)
+    # Turn responses which have multiple parts into lists
+    for key in request.form:
+        item_as_list = request.form.getlist(key)
+        list_types = ['list', 'checkboxes', 'pricing']
+        if (
+            key != 'csrf_token' and
+            new_service_content.get_question(key)['type'] in list_types
+        ):
+            posted_data[key] = item_as_list
+
+    if posted_data:
+        try:
+            data_api_client.update_draft_service(
+                service_id,
+                posted_data,
+                current_user.email_address)
+        except HTTPError as e:
+            errors_map = {}
+            for error in e.response.json()['error'].keys():
+                if error == '_form':
+                    abort(400, "Submitted data was not in a valid format")
+                else:
+                    id = new_service_content.get_question(error)['id']
+                    errors_map[id] = {
+                        'input_name': error,
+                        'question': new_service_content.get_question(error)['question'],
+                        'message': new_service_content.get_question(error)['validations'][-1]['message']
+                    }
+
+            return render_template(
+                "services/edit_section.html",
+                section=content.get_section(section),
+                service_data=posted_data,
+                service_id=service_id,
+                post_to=".update_section_submission",
+                return_to=".edit_service_submission",
+                errors=errors_map,
+                **main.config['BASE_TEMPLATE_DATA']
+            )
+
+    if request.args.get("return_to_summary"):
+        return redirect(url_for(".view_service_submission", service_id=service_id))
+    else:
+        return redirect(url_for(".edit_service_submission",
+                                service_id=service_id,
+                                section=content.get_next_editable_section_id(section))
+                        )
 
 
 def _is_service_associated_with_supplier(service):
