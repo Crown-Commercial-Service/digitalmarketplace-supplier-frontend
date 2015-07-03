@@ -187,7 +187,7 @@ def update_section(service_id, section):
 
 @main.route('/submission/services/<string:service_id>', methods=['GET'])
 @login_required
-@flask_featureflags.is_active_feature('EDIT_SERVICE_PAGE')
+@flask_featureflags.is_active_feature('GCLOUD7_OPEN')
 def view_service_submission(service_id):
     service = data_api_client.get_draft_service(service_id).get('services')
 
@@ -209,7 +209,7 @@ def view_service_submission(service_id):
     methods=['GET']
 )
 @login_required
-@flask_featureflags.is_active_feature('EDIT_SERVICE_PAGE')
+@flask_featureflags.is_active_feature('GCLOUD7_OPEN')
 def edit_service_submission(service_id, section):
 
     service = data_api_client.get_draft_service(service_id).get('services')
@@ -235,7 +235,7 @@ def edit_service_submission(service_id, section):
     methods=['POST']
 )
 @login_required
-@flask_featureflags.is_active_feature('EDIT_SERVICE_PAGE')
+@flask_featureflags.is_active_feature('GCLOUD7_OPEN')
 def update_section_submission(service_id, section):
 
     service = data_api_client.get_draft_service(service_id).get('services')
@@ -262,7 +262,7 @@ def update_section_submission(service_id, section):
 
 @main.route('/submission/g-cloud-7/create', methods=['GET'])
 @login_required
-@flask_featureflags.is_active_feature('CREATE_SERVICE_PAGE')
+@flask_featureflags.is_active_feature('GCLOUD7_OPEN')
 def start_new_draft_service():
     """
     Page to kick off creation of a new (G7) service.
@@ -307,7 +307,7 @@ def start_new_draft_service():
 
 @main.route('/submission/g-cloud-7/create', methods=['POST'])
 @login_required
-@flask_featureflags.is_active_feature('CREATE_SERVICE_PAGE')
+@flask_featureflags.is_active_feature('GCLOUD7_OPEN')
 def create_new_draft_service():
     """
     Hits up the data API to create a new draft (G7) service.
