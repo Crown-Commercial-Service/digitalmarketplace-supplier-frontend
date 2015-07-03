@@ -20,7 +20,11 @@ def get_supplier(*args, **kwargs):
             "city": "Supplierville",
             "country": "Supplierland",
             "postcode": "11 AB",
-        }]
+        }],
+        "service_counts": {
+            "G-Cloud 6": 12,
+            "G-Cloud 5": 34
+        }
     }}
 
 
