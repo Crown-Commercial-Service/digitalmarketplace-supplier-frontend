@@ -2,7 +2,7 @@ from flask_login import login_required, current_user
 from flask import render_template, request, redirect, url_for, abort
 
 from ...main import main, existing_service_content, new_service_content
-from ... import data_api_client, flask_featureflags
+from ... import data_api_client, flask_featureflags, convert_to_boolean
 from dmutils.apiclient import APIError, HTTPError
 from dmutils.presenters import Presenters
 
@@ -335,7 +335,7 @@ def update_section_submission(service_id, section):
         list(request.form.items()) + list(request.files.items())
     )
     posted_data.pop('csrf_token', None)
-    # Turn responses which have multiple parts into lists
+    # Turn responses which have multiple parts into lists and booleans into booleans
     for key in request.form:
         item_as_list = request.form.getlist(key)
         list_types = ['list', 'checkboxes', 'pricing']
@@ -344,6 +344,11 @@ def update_section_submission(service_id, section):
             new_service_content.get_question(key)['type'] in list_types
         ):
             posted_data[key] = item_as_list
+        elif (
+            key != 'csrf_token' and
+            new_service_content.get_question(key)['type'] == 'boolean'
+        ):
+            posted_data[key] = convert_to_boolean(posted_data[key])
 
     if posted_data:
         try:
@@ -374,12 +379,17 @@ def update_section_submission(service_id, section):
                 **main.config['BASE_TEMPLATE_DATA']
             )
 
-    if request.args.get("return_to_summary"):
-        return redirect(url_for(".view_service_submission", service_id=service_id))
+    if (
+            request.args.get("return_to_summary")
+            or not content.get_next_editable_section_id(section)
+    ):
+        return redirect(
+            url_for(".view_service_submission", service_id=service_id))
     else:
         return redirect(url_for(".edit_service_submission",
                                 service_id=service_id,
-                                section=content.get_next_editable_section_id(section))
+                                section=content.get_next_editable_section_id(
+                                    section))
                         )
 
 
