@@ -7,9 +7,9 @@ from flask._compat import string_types
 from flask_wtf.csrf import CsrfProtect
 
 from dmutils import apiclient, init_app, flask_featureflags
+from dmutils.user import User
 
 from config import configs
-from .model import User
 
 
 data_api_client = apiclient.DataAPIClient()
@@ -58,7 +58,9 @@ def create_app(config_name):
 
 @login_manager.user_loader
 def load_user(user_id):
-    return User.from_json(data_api_client.get_user(user_id=int(user_id)))
+    user_json = data_api_client.get_user(user_id=int(user_id))
+    if user_json:
+        return User.from_json(user_json)
 
 
 def config_attrs(config):

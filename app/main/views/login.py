@@ -4,11 +4,11 @@ from itsdangerous import BadSignature, SignatureExpired
 from flask import current_app, flash, redirect, render_template, url_for, \
     request
 from flask_login import logout_user, login_user
+from dmutils.user import user_has_role, User
 
 from .. import main
 from ..forms.auth_forms import LoginForm, ResetPasswordForm, ChangePasswordForm
 from ... import data_api_client
-from ...model import User
 from ..helpers import email
 
 
@@ -34,7 +34,7 @@ def process_login():
             form.email_address.data,
             form.password.data)
 
-        if not user_json:
+        if not user_has_role(user_json, 'supplier'):
             message = "login.fail: " \
                       "Failed to log in: %s"
             current_app.logger.info(message, form.email_address.data)
@@ -84,7 +84,7 @@ def send_reset_password_email():
         if user_json is not None:
             user = User.from_json(user_json)
             # Send a password reset email with token
-            email.send_password_email(user.id, email_address)
+            email.send_password_email(user.id, user.email_address, user.locked)
             message = "login.reset-email.sent: " \
                       "Sending password reset email for supplier %d (%s)"
             current_app.logger.info(message, user.id, user.email_address)

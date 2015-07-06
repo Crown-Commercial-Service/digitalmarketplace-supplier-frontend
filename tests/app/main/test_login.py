@@ -95,12 +95,9 @@ class TestLogin(BaseApplicationTest):
             'email_address': 'valid@email.com',
             'password': '1234567890'
         })
-        assert_true(
-            self.strip_all_whitespace(
-                "Sorry, we couldn't find a supplier account with that username"
-                "and password."
-            )
-            in self.strip_all_whitespace(res.get_data(as_text=True)))
+        assert_in(
+            self.strip_all_whitespace("Sorry, we couldn't log you in"),
+            self.strip_all_whitespace(res.get_data(as_text=True)))
         assert_equal(res.status_code, 403)
 
     def test_should_be_validation_error_if_no_email_or_password(self):

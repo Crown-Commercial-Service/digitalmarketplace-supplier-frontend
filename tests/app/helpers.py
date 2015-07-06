@@ -22,7 +22,7 @@ class BaseApplicationTest(object):
 
     @staticmethod
     def user(id, email_address, supplier_id, supplier_name,
-             is_token_valid=True):
+             is_token_valid=True, locked=False):
 
         hours_offset = -1 if is_token_valid else 1
         date = datetime.utcnow() + timedelta(hours=hours_offset)
@@ -36,6 +36,8 @@ class BaseApplicationTest(object):
                     "supplierId": supplier_id,
                     "name": supplier_name,
                 },
+                "role": "supplier",
+                "locked": locked,
                 'passwordChangedAt': password_changed_at
             }
         }

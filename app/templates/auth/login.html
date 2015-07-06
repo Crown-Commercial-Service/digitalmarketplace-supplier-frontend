@@ -12,8 +12,10 @@
     {% endif %}
         <p class="banner-message">
             {% if message == 'no_account' %}
-            Sorry, we couldn't find a supplier account with that username
-            and password.
+            Sorry, we couldn't log you in with that username and password.
+            Accounts are locked after five failed attempts. If you think your
+            account has been locked, please contact
+            <a href="mailto:enquiries@digitalmarketplace.service.gov.uk">enquiries@digitalmarketplace.service.gov.uk</a>.
             
             {% elif message == 'password_updated' %}
             You have successfully changed your password.
