@@ -1,6 +1,8 @@
 {% extends "_base_page.html" %}
 {% import "macros/forms.html" as forms %}
 
+{% block page_title %}Edit {{current_user.supplier_name}} – Digital Marketplace{% endblock %}
+
 {% block breadcrumb %}
   {%
     with items = [

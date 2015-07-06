@@ -1,6 +1,8 @@
 {% extends "_base_page.html" %}
 {% import "macros/toolkit_forms.html" as forms %}
 
+{% block page_title %}{{ section.name }} – Digital Marketplace{% endblock %}
+
 {% block breadcrumb %}
   {%
     with items = [

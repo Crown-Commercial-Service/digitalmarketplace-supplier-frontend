@@ -1,5 +1,7 @@
 {% extends "_base_page.html" %}
 
+{% block page_title %}Log in – Digital Marketplace{% endblock %}
+
 {% block main_content %}
 
 {% with messages = get_flashed_messages(with_categories=true) %}
@@ -16,13 +18,13 @@
             Accounts are locked after five failed attempts. If you think your
             account has been locked, please contact
             <a href="mailto:enquiries@digitalmarketplace.service.gov.uk">enquiries@digitalmarketplace.service.gov.uk</a>.
-            
+
             {% elif message == 'password_updated' %}
             You have successfully changed your password.
-            
+
             {% elif message == 'password_not_updated' %}
             Could not update password due to an error.
-            
+
             {% else %}
             {{ message }}
             {% endif %}
@@ -74,7 +76,7 @@
 
     {% if form.password.errors %}
         <div class="validation-wrapper">
-    {% endif %}                        
+    {% endif %}
         <div class="question">
             {{ form.password.label(class="question-heading") }}
             {% if form.password.errors %}

@@ -9,11 +9,11 @@
       },
       {
         "link": url_for(".dashboard"),
-        "label": current_user.supplier_name,
+        "label": "Your account",
       },
       {
         "link": url_for(".framework_dashboard"),
-        "label": "Apply for G-Cloud 7",
+        "label": "Apply to G-Cloud 7",
       }
     ]
   %}
@@ -60,7 +60,7 @@
          name = form.registration_number.name,
          value = form.registration_number.data or ""
       %}
-        {% include "toolkit/forms/textbox.html" %}       
+        {% include "toolkit/forms/textbox.html" %}
       {% endwith %}
 
       {% with
