@@ -30,6 +30,7 @@
     name=question_content.id,
     number_of_items=10,
     question=question_content.question,
+    values=service_data[question_content.id],
     id=question_content.id,
     hint=question_content.hint,
     error=errors.get(question_content.id)['message']
@@ -43,6 +44,7 @@
     with
     name=question_content.id,
     question=question_content.question,
+    value=service_data[question_content.id],
     id=question_content.id,
     hint=question_content.hint,
     options=question_content.options,
@@ -58,6 +60,7 @@
     with
     name=question_content.id,
     question=question_content.question,
+    value=service_data[question_content.id],
     id=question_content.id,
     hint=question_content.hint,
     options=question_content.options,
@@ -73,6 +76,7 @@
     with
     name=question_content.id,
     question=question_content.question,
+    value=service_data[question_content.id],
     id=question_content.id,
     hint=question_content.hint,
     type='boolean',
