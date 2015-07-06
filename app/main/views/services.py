@@ -115,7 +115,6 @@ def edit_section(service_id, section):
         section=content.get_section(section),
         service_data=service,
         service_id=service_id,
-        post_to=".update_section",
         return_to=".edit_service",
         **main.config['BASE_TEMPLATE_DATA']
     )
@@ -179,7 +178,6 @@ def update_section(service_id, section):
                 section=content.get_section(section),
                 service_data=posted_data,
                 service_id=service_id,
-                post_to=".update_section",
                 return_to=".edit_service",
                 errors=errors_map,
                 **main.config['BASE_TEMPLATE_DATA']
@@ -315,7 +313,6 @@ def edit_service_submission(service_id, section):
         section=content.get_section(section),
         service_data=draft,
         service_id=service_id,
-        post_to=".update_section_submission",
         return_to=".view_service_submission",
         **main.config['BASE_TEMPLATE_DATA']
     )
@@ -372,8 +369,7 @@ def update_section_submission(service_id, section):
                 section=content.get_section(section),
                 service_data=posted_data,
                 service_id=service_id,
-                post_to=".update_section_submission",
-                return_to=".edit_service_submission",
+                return_to=".view_service_submission",
                 errors=errors_map,
                 **main.config['BASE_TEMPLATE_DATA']
             )
