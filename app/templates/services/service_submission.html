@@ -1,6 +1,8 @@
 {% extends "_base_page.html" %}
 {% import 'macros/answers.html' as answers %}
 
+{% block page_title %}{{service_data['serviceName']}} – Digital Marketplace{% endblock %}
+
 {% block breadcrumb %}
   {%
     with items = [

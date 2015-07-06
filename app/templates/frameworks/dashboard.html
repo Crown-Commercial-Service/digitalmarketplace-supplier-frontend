@@ -1,5 +1,7 @@
 {% extends "_base_page.html" %}
 
+{% block page_title %}Apply to G-Cloud 7 – Digital Marketplace{% endblock %}
+
 {% block breadcrumb %}
   {%
     with items = [
@@ -9,10 +11,7 @@
       },
       {
         "link": url_for(".dashboard"),
-        "label": current_user.supplier_name,
-      },
-      {
-        "label": "Apply for G-Cloud 7"
+        "label": "Your account",
       }
     ]
   %}
@@ -24,24 +23,58 @@
   <div class="grid-row">
     <div class="column-two-thirds">
       {% with
-         heading = "Apply to G-Cloud 7"
+         heading = "Apply to G-Cloud 7",
+         smaller = True,
+         with_breadcrumb = True
       %}
         {% include "toolkit/page-heading.html" %}
       {% endwith %}
     </div>
   </div>
 
-  {% with
-     items = [
-      {
-        "title": "Make supplier declaration",
-        "body": "You must do this to supply services on the Digital Marketplace",
-        "link": url_for(".framework_supplier_declaration"),
-      }
-     ]
-  %}
-    {% include "toolkit/browse-list.html" %}
-  {% endwith %}
+  <div class="grid-row">
+    <div class="column-two-thirds framework-application-browse-list">
+      <div class="validation-wrapper">
+        <h2 class="framework-application-deadline">
+          0 services will be submitted on 2 October 2015
+        </h2>
+        <p>
+
+        </p>
+        <p class="validation-message">
+          Supplier declaration must be completed to submit services
+        </p>
+      </div>
+      {% with
+         items = [
+          {
+            "title": "Make supplier declaration",
+            "body": "You must do this to supply services on the Digital Marketplace",
+            "link": url_for(".framework_supplier_declaration"),
+          }
+         ]
+      %}
+        {% include "toolkit/browse-list.html" %}
+      {% endwith %}
+    </div>
+    <div class="column-one-third framework-application-updates">
+      <p>
+        <a href="#" class="clarification-link">Read updates or ask clarification questions</a>
+      </p>
+      {%
+        with
+        items = [
+          {
+            "file_type": "ZIP",
+            "link": "#",
+            "title": "Download supplier pack"
+          }
+        ]
+      %}
+        {% include "toolkit/documents.html" %}
+      {% endwith %}
+    </div>
+  </div>
 
   <div class="grid-row">
     <div class="column-one-whole">
