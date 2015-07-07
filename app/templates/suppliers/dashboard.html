@@ -28,6 +28,20 @@
   </div>
   <div class="grid-row">
     <div class="column-one-whole">
+
+      {% if 'GCLOUD7_OPEN' is active_feature %}
+        {%
+          with
+          items = [{
+            "title": "Apply to become a G-Cloud 7 supplier and add services",
+            "link": url_for(".framework_dashboard"),
+            "body": "G-Cloud 7 is open for applications until 1 October 2015"
+          }]
+        %}
+          {% include "toolkit/browse-list.html" %}
+        {% endwith %}
+      {% endif %}
+
       <h2 class="summary-item-heading">Current services</h2>
       {% if supplier.service_counts %}
       <p class="summary-item-top-level-action">
