@@ -207,7 +207,7 @@ def start_new_draft_service():
             "label": "Your account"
         },
         {
-            "link": "/suppliers/submission/g-cloud-7",
+            "link": url_for(".framework_dashboard"),
             "label": "Apply to G-Cloud 7"
         }
     ]
