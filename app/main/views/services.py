@@ -417,13 +417,12 @@ def _update_service_status(service, error_message=None):
         'name': 'status',
         'type': 'radio',
         'inline': True,
+        'value': "Public" if service['status'] == 'published' else "Private",
         'options': [
             {
-                'checked': service['status'] == 'published',
                 'label': 'Public'
             },
             {
-                'checked': service['status'] == 'enabled',
                 'label': 'Private'
             }
         ]
