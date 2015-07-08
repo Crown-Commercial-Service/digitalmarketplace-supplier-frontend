@@ -84,6 +84,12 @@ class Development(Config):
     FEATURE_FLAGS_EDIT_SUPPLIER_PAGE = enabled_since('2015-06-18')
 
 
+class Preview(Config):
+    FEATURE_FLAGS_EDIT_SERVICE_PAGE = enabled_since('2015-06-03')
+    FEATURE_FLAGS_SUPPLIER_DASHBOARD = enabled_since('2015-06-10')
+    FEATURE_FLAGS_EDIT_SUPPLIER_PAGE = enabled_since('2015-06-18')
+
+
 class Live(Config):
     DEBUG = False
     DM_HTTP_PROTO = 'https'
@@ -93,7 +99,7 @@ class Live(Config):
 
 configs = {
     'development': Development,
-    'preview': Live,
+    'preview': Preview,
     'staging': Live,
     'production': Live,
     'test': Test,
