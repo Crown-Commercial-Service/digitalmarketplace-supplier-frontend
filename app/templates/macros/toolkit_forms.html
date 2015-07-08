@@ -27,9 +27,10 @@
 {% macro list(question_content, service_data, errors) -%}
   {%
     with
-    values=service_data[question_content.id],
+    name=question_content.id,
     number_of_items=10,
     question=question_content.question,
+    values=service_data[question_content.id],
     id=question_content.id,
     hint=question_content.hint,
     error=errors.get(question_content.id)['message']
@@ -41,7 +42,9 @@
 {% macro checkboxes(question_content, service_data, errors) -%}
   {%
     with
+    name=question_content.id,
     question=question_content.question,
+    value=service_data[question_content.id],
     id=question_content.id,
     hint=question_content.hint,
     options=question_content.options,
@@ -55,7 +58,9 @@
 {% macro radios(question_content, service_data, errors) -%}
   {%
     with
+    name=question_content.id,
     question=question_content.question,
+    value=service_data[question_content.id],
     id=question_content.id,
     hint=question_content.hint,
     options=question_content.options,
@@ -69,7 +74,9 @@
 {% macro boolean(question_content, service_data, errors) -%}
   {%
     with
+    name=question_content.id,
     question=question_content.question,
+    value=service_data[question_content.id],
     id=question_content.id,
     hint=question_content.hint,
     type='boolean',
@@ -95,6 +102,7 @@
 {% macro pricing(question_content, service_data, errors) -%}
   {%
     with
+    name=question_content.id,
     value=service_data[question_content.id],
     question=question_content.question,
     id=question_content.id,

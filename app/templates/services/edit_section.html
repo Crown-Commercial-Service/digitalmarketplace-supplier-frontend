@@ -19,8 +19,8 @@
         "label": "Services"
       },
       {
-        "link": url_for(".edit_service", service_id=service_id),
-        "label": service_data["serviceName"]
+        "link": url_for(return_to, service_id=service_id),
+        "label": service_data["serviceName"] or 'New service'
       }
     ]
   %}
@@ -48,7 +48,7 @@
 
     </div>
   </div>
-  <form method="post" action="{{ url_for(post_to, service_id=service_id, section=section.id) }}">
+  <form method="post" action="">
 
     {% for question in section.questions %}
       {% if errors and errors[question.id] %}
@@ -59,14 +59,24 @@
     {% endfor %}
 
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
-
-    {%
-      with
-      label="Save and return to service",
-      type="save"
-    %}
+    {% if request.args.get('return_to_summary') or "suppliers/submission/" not in request.url %}
+      {%
+        with
+        label="Save and return to service",
+        type="save"
+      %}
       {% include "toolkit/button.html" %}
-    {% endwith %}
+      {% endwith %}
+    {% else %}
+      {%
+        with
+        label="Save and continue",
+        type="save"
+      %}
+      {% include "toolkit/button.html" %}
+      {% endwith %}
+    {% endif %}
+    
     <a href="{{ url_for(return_to, service_id=service_id) }}">Return to service</a>
 
   </form>

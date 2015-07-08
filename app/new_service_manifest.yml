@@ -18,7 +18,7 @@
   name: Service type
   editable: true
   questions:
-    - serviceTypesSCS
+    - serviceTypes
 -
   name: Features and benefits
   editable: true
