@@ -340,6 +340,7 @@ def update_section_submission(service_id, section):
         item_as_list = request.form.getlist(key)
         list_types = ['list', 'checkboxes', 'pricing']
         if (
+            key == 'serviceTypes' or
             key != 'csrf_token' and
             new_service_content.get_question(key)['type'] in list_types
         ):
