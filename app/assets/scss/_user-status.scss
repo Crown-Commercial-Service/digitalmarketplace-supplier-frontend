@@ -1,0 +1,10 @@
+.user-status,
+%user-status {
+  font-weight: bold;
+}
+
+.user-status-locked,
+.user-status-locked {
+  @extend %user-status;
+  color: $red;
+}
