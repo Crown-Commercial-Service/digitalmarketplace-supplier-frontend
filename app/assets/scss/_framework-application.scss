@@ -1,47 +1,22 @@
-.framework-application-browse-list {
+.framework-deadline {
+  padding-left: $gutter-half;
+  border-left: solid 5px $error-colour;
+  margin-bottom: $gutter;
 
-  .browse-list-item {
+  .framework-notification {
+    color: $error-colour;
+  }
+}
+
+.framework-declaration {
+  margin-bottom: $gutter;
+
+  @include media(tablet) {
     margin-bottom: 0;
   }
 
-  .browse-list-item-link {
+  h3 {
     @include heading-24;
     font-weight: bold;
   }
-
-  .validation-wrapper {
-    padding-right: $gutter;
-  }
-
-  .validation-message {
-    margin-bottom: 0;
-  }
-
-}
-
-.framework-application-updates {
-
-  @include core-16;
-  margin-top: 10px;
-
-  .document-list {
-    border-top: 1px solid $border-colour;
-    margin-top: 15px;
-    padding-top: 10px;
-  }
-
-  .document-link-with-icon {
-    @include core-16;
-  }
-
-  .clarification-link {
-    font-weight: bold;
-  }
-
-}
-
-.framework-application-deadline {
-  @include core-24;
-  margin-bottom: 5px;
-  font-weight: bold;
 }
