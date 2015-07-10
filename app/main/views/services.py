@@ -113,11 +113,21 @@ def edit_section(service_id, section):
     return render_template(
         "services/edit_section.html",
         section=content.get_section(section),
+        page_questions=get_section_questions(content.get_section(section)),
         service_data=service,
         service_id=service_id,
         return_to=".edit_service",
+        dashboard=".list_services",
+        dash_label="Services",
         **main.config['BASE_TEMPLATE_DATA']
     )
+
+
+def get_section_questions(section):
+    questions = []
+    for question in section.get('questions', None):
+        questions.append(question.get('id', None))
+    return questions
 
 
 @main.route(
@@ -169,16 +179,18 @@ def update_section(service_id, section):
                         'input_name': error,
                         'question': existing_service_content
                             .get_question(error)['question'],
-                        'message': existing_service_content
-                            .get_question(error)['validations'][-1]['message']
+                        'message': e.response.json()['error'][error]
                         }
 
             return render_template(
                 "services/edit_section.html",
                 section=content.get_section(section),
+                page_questions=get_section_questions(content.get_section(section)),
                 service_data=posted_data,
                 service_id=service_id,
                 return_to=".edit_service",
+                dashboard=".list_services",
+                dash_label="Services",
                 errors=errors_map,
                 **main.config['BASE_TEMPLATE_DATA']
             )
@@ -332,8 +344,11 @@ def edit_service_submission(service_id, section):
     return render_template(
         "services/edit_section.html",
         section=content.get_section(section),
+        page_questions=get_section_questions(content.get_section(section)),
         service_data=draft,
         service_id=service_id,
+        dashboard=".framework_dashboard",
+        dash_label="Apply to G-Cloud 7",
         return_to=".view_service_submission",
         **main.config['BASE_TEMPLATE_DATA']
     )
@@ -363,11 +378,13 @@ def update_section_submission(service_id, section):
         if (
             key == 'serviceTypes' or
             key != 'csrf_token' and
+            key != 'page_questions' and
             new_service_content.get_question(key)['type'] in list_types
         ):
             posted_data[key] = item_as_list
         elif (
             key != 'csrf_token' and
+            key != 'page_questions' and
             new_service_content.get_question(key)['type'] == 'boolean'
         ):
             posted_data[key] = convert_to_boolean(posted_data[key])
@@ -384,19 +401,28 @@ def update_section_submission(service_id, section):
                 if error == '_form':
                     abort(400, "Submitted data was not in a valid format")
                 else:
+                    message_key = e.response.json()['error'][error]
+                    if error == 'serviceTypes':
+                        error = 'serviceTypes{}'.format(draft['lot'])
+                    validation_message = _get_error_message(error,
+                                                            message_key,
+                                                            new_service_content)
                     id = new_service_content.get_question(error)['id']
                     errors_map[id] = {
                         'input_name': error,
                         'question': new_service_content.get_question(error)['question'],
-                        'message': new_service_content.get_question(error)['validations'][-1]['message']
+                        'message': validation_message
                     }
 
             return render_template(
                 "services/edit_section.html",
                 section=content.get_section(section),
+                page_questions=get_section_questions(content.get_section(section)),
                 service_data=posted_data,
                 service_id=service_id,
                 return_to=".view_service_submission",
+                dashboard=".framework_dashboard",
+                dash_label="Apply to G-Cloud 7",
                 errors=errors_map,
                 **main.config['BASE_TEMPLATE_DATA']
             )
@@ -423,6 +449,17 @@ def _is_service_associated_with_supplier(service):
 def _is_service_modifiable(service):
 
     return service.get('status') != 'disabled'
+
+
+def _get_error_message(error, message_key, content):
+    validations_list = filter(
+        lambda(x): x['name'] == message_key,
+        content.get_question(error)['validations']
+    )
+    validation_message = validations_list[0]['message'] \
+        if len(validations_list) > 0 \
+        else 'There was a problem with the answer to this question'
+    return validation_message
 
 
 def _update_service_status(service, error_message=None):

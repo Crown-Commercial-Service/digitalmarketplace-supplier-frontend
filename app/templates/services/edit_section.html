@@ -15,8 +15,8 @@
         "label": current_user.supplier_name
       },
       {
-        "link": url_for(".list_services"),
-        "label": "Services"
+        "link": url_for(dashboard),
+        "label": dash_label
       },
       {
         "link": url_for(return_to, service_id=service_id),
@@ -59,6 +59,7 @@
     {% endfor %}
 
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+    <input type="hidden" name="page_questions" value="{{ page_questions }}" />
     {% if request.args.get('return_to_summary') or "suppliers/submission/" not in request.url %}
       {%
         with
