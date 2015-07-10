@@ -14,9 +14,4 @@
   @include media(tablet) {
     margin-bottom: 0;
   }
-
-  h3 {
-    @include heading-24;
-    font-weight: bold;
-  }
 }
