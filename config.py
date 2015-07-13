@@ -97,10 +97,22 @@ class Live(Config):
     FEATURE_FLAGS_SUPPLIER_DASHBOARD = enabled_since('2015-06-18')
 
 
+class Staging(Config):
+    DEBUG = False
+    WTF_CSRF_ENABLED = False
+    DM_HTTP_PROTO = 'https'
+
+    FEATURE_FLAGS_EDIT_SERVICE_PAGE = enabled_since('2015-07-13')
+    FEATURE_FLAGS_SUPPLIER_DASHBOARD = enabled_since('2015-07-13')
+    FEATURE_FLAGS_EDIT_SUPPLIER_PAGE = enabled_since('2015-07-13')
+    FEATURE_FLAGS_GCLOUD7_OPEN = enabled_since('2015-07-13')
+    FEATURE_FLAGS_CREATE_SERVICE_PAGE = enabled_since('2015-07-13')
+
+
 configs = {
     'development': Development,
     'preview': Preview,
-    'staging': Live,
+    'staging': Staging,
     'production': Live,
     'test': Test,
 }
