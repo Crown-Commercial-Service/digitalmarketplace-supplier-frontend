@@ -2,10 +2,16 @@ import json
 from ..helpers import BaseApplicationTest
 
 import mock
-from nose.tools import assert_equal, assert_in
+from nose.tools import assert_equal, assert_in, assert_false
 
 
 class TestStatus(BaseApplicationTest):
+
+    @mock.patch('app.status.views.data_api_client')
+    def test_should_return_200_from_elb_status_check(self, data_api_client):
+        status_response = self.client.get('/suppliers/_status?ignore-dependencies')
+        assert_equal(200, status_response.status_code)
+        assert_false(data_api_client.called)
 
     @mock.patch('app.status.views.data_api_client')
     def test_status_ok(self, data_api_client):
