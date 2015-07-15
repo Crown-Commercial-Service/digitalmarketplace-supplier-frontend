@@ -144,21 +144,8 @@ def update_section(service_id, section):
 
     content = existing_service_content.get_builder().filter(service)
 
-    posted_data = dict(
-        list(request.form.items()) + list(request.files.items())
-    )
-
-    posted_data.pop('csrf_token', None)
-
-    # Turn responses which have multiple parts into lists
-    for key in request.form:
-        item_as_list = request.form.getlist(key)
-        list_types = ['list', 'checkboxes', 'pricing']
-        if (
-            key != 'csrf_token' and
-            existing_service_content.get_question(key)['type'] in list_types
-        ):
-            posted_data[key] = item_as_list
+    posted_data = _get_formatted_section_data()
+    posted_data.pop('page_questions')
 
     if posted_data:
         try:
@@ -168,20 +155,9 @@ def update_section(service_id, section):
                 current_user.email_address,
                 "supplier app")
         except HTTPError as e:
-            errors_map = {}
-            for error in e.response.json()['error'].keys():
-                if error == '_form':
-                    abort(400, "Submitted data was not in a valid format")
-                else:
-                    id = existing_service_content.get_question(error)['id']
-                    errors_map[id] = \
-                        {
-                        'input_name': error,
-                        'question': existing_service_content
-                            .get_question(error)['question'],
-                        'message': e.response.json()['error'][error]
-                        }
-
+            errors_map = _get_section_error_messages(e, service['lot'])
+            if not posted_data.get('serviceName', None):
+                posted_data['serviceName'] = service.get('serviceName', '')
             return render_template(
                 "services/edit_section.html",
                 section=content.get_section(section),
@@ -367,27 +343,7 @@ def update_section_submission(service_id, section):
         abort(404)
 
     content = new_service_content.get_builder().filter(draft)
-    posted_data = dict(
-        list(request.form.items()) + list(request.files.items())
-    )
-    posted_data.pop('csrf_token', None)
-    # Turn responses which have multiple parts into lists and booleans into booleans
-    for key in request.form:
-        item_as_list = request.form.getlist(key)
-        list_types = ['list', 'checkboxes', 'pricing']
-        if (
-            key == 'serviceTypes' or
-            key != 'csrf_token' and
-            key != 'page_questions' and
-            new_service_content.get_question(key)['type'] in list_types
-        ):
-            posted_data[key] = item_as_list
-        elif (
-            key != 'csrf_token' and
-            key != 'page_questions' and
-            new_service_content.get_question(key)['type'] == 'boolean'
-        ):
-            posted_data[key] = convert_to_boolean(posted_data[key])
+    posted_data = _get_formatted_section_data()
 
     if posted_data:
         try:
@@ -396,24 +352,9 @@ def update_section_submission(service_id, section):
                 posted_data,
                 current_user.email_address)
         except HTTPError as e:
-            errors_map = {}
-            for error in e.response.json()['error'].keys():
-                if error == '_form':
-                    abort(400, "Submitted data was not in a valid format")
-                else:
-                    message_key = e.response.json()['error'][error]
-                    if error == 'serviceTypes':
-                        error = 'serviceTypes{}'.format(draft['lot'])
-                    validation_message = _get_error_message(error,
-                                                            message_key,
-                                                            new_service_content)
-                    id = new_service_content.get_question(error)['id']
-                    errors_map[id] = {
-                        'input_name': error,
-                        'question': new_service_content.get_question(error)['question'],
-                        'message': validation_message
-                    }
-
+            errors_map = _get_section_error_messages(e, draft['lot'])
+            if not posted_data.get('serviceName', None):
+                posted_data['serviceName'] = draft.get('serviceName', '')
             return render_template(
                 "services/edit_section.html",
                 section=content.get_section(section),
@@ -462,6 +403,32 @@ def _get_error_message(error, message_key, content):
     return validation_message
 
 
+def _get_formatted_section_data():
+    section_data = dict(
+        list(request.form.items()) + list(request.files.items())
+    )
+    section_data.pop('csrf_token', None)
+    # Turn responses which have multiple parts into lists and booleans into booleans
+    for key in request.form:
+        item_as_list = request.form.getlist(key)
+        list_types = ['list', 'checkboxes', 'pricing']
+        if (
+            key == 'serviceTypes' or
+            key != 'csrf_token' and
+            key != 'page_questions' and
+            new_service_content.get_question(key)['type'] in list_types
+        ):
+            section_data[key] = item_as_list
+        elif (
+                            key != 'csrf_token' and
+                            key != 'page_questions' and
+                        new_service_content.get_question(key)['type'] == 'boolean'
+        ):
+            section_data[key] = convert_to_boolean(section_data[key])
+
+    return section_data
+
+
 def _update_service_status(service, error_message=None):
 
     template_data = main.config['BASE_TEMPLATE_DATA']
@@ -494,3 +461,24 @@ def _update_service_status(service, error_message=None):
         sections=content,
         error=error_message,
         **dict(question, **template_data)), status_code
+
+
+def _get_section_error_messages(e, lot):
+    errors_map = {}
+    for error in e.response.json()['error'].keys():
+        if error == '_form':
+            abort(400, "Submitted data was not in a valid format")
+        else:
+            message_key = e.response.json()['error'][error]
+            if error == 'serviceTypes':
+                error = 'serviceTypes{}'.format(lot)
+            validation_message = _get_error_message(error,
+                                                    message_key,
+                                                    new_service_content)
+            id = new_service_content.get_question(error)['id']
+            errors_map[id] = {
+                'input_name': error,
+                'question': new_service_content.get_question(error)['question'],
+                'message': validation_message
+            }
+    return errors_map
