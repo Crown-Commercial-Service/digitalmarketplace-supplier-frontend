@@ -8,28 +8,31 @@
 {% if messages %}
 {% for category, message in messages %}
     {% if category == 'error' %}
-    <div class="banner-destructive-without-action">
-    {% else %}
-    <div class="banner-success-without-action">
+      <div class="banner-destructive-without-action">
+    {% elif category != 'must_login' %}
+      <div class="banner-success-without-action">
     {% endif %}
-        <p class="banner-message">
             {% if message == 'no_account' %}
-            Sorry, we couldn't log you in with that username and password.
-            Accounts are locked after five failed attempts. If you think your
-            account has been locked, please contact
-            <a href="mailto:enquiries@digitalmarketplace.service.gov.uk">enquiries@digitalmarketplace.service.gov.uk</a>.
-
+              <p class="banner-message">
+                Sorry, we couldn't log you in with that username and password.
+                Accounts are locked after five failed attempts. If you think your
+                account has been locked, please contact
+                <a href="mailto:enquiries@digitalmarketplace.service.gov.uk">enquiries@digitalmarketplace.service.gov.uk</a>.
+              </p>
             {% elif message == 'password_updated' %}
-            You have successfully changed your password.
-
+              <p class="banner-message">
+                You have successfully changed your password.
+              </p>
             {% elif message == 'password_not_updated' %}
-            Could not update password due to an error.
-
-            {% else %}
-            {{ message }}
+              <p class="banner-message">
+                Could not update password due to an error.
+              </p>
+            {% elif category != 'must_login' %}
+              {{ message }}
             {% endif %}
-        </p>
-    </div>
+    {% if category != 'must_login' %}
+      </div>
+    {% endif %}
 {% endfor %}
 {% endif %}
 {% endwith %}
@@ -47,9 +50,12 @@
     </div>
 {% endif %}
 
-<header class="page-heading">
-    <h1>Supplier login</h1>
-</header>
+{% with
+  heading = "Log in to the Digital Marketplace",
+  context = "Account"
+%}
+  {% include "toolkit/page-heading.html" %}
+{% endwith %}
 
 <form autocomplete="off" action="{{ url_for('.process_login', next=next) }}" method="POST">
 
@@ -93,7 +99,7 @@
     <button class="button-save">Log in</button>
     <header class="page-heading-smaller">
         <p class="context">
-            <a href="{{ url_for('.request_password_reset') }}">Reset password</a>
+            <a href="{{ url_for('.request_password_reset') }}">Forgotten password</a>
         </p>
     </header>
 </form>

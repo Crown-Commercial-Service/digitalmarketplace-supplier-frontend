@@ -40,7 +40,7 @@ class TestLogin(BaseApplicationTest):
     def test_should_show_login_page(self):
         res = self.client.get("/suppliers/login")
         assert_equal(res.status_code, 200)
-        assert_true("<h1>Supplier login</h1>" in res.get_data(as_text=True))
+        assert_true("Log in to the Digital Marketplace" in res.get_data(as_text=True))
 
     def test_should_redirect_to_dashboard_on_login(self):
         res = self.client.post("/suppliers/login", data={
@@ -291,7 +291,7 @@ class TestLoginFormsNotAutofillable(BaseApplicationTest):
     def test_login_form_and_inputs_not_autofillable(self):
         self._forms_and_inputs_not_autofillable(
             "/suppliers/login",
-            "Supplier login"
+            "Log in to the Digital Marketplace"
         )
 
     def test_request_password_reset_form_and_inputs_not_autofillable(self):
