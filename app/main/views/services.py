@@ -394,7 +394,7 @@ def _is_service_modifiable(service):
 
 def _get_error_message(error, message_key, content):
     validations_list = filter(
-        lambda(x): x['name'] == message_key,
+        lambda x: x['name'] == message_key,
         content.get_question(error)['validations']
     )
     validation_message = validations_list[0]['message'] \
@@ -420,9 +420,9 @@ def _get_formatted_section_data():
         ):
             section_data[key] = item_as_list
         elif (
-                            key != 'csrf_token' and
-                            key != 'page_questions' and
-                        new_service_content.get_question(key)['type'] == 'boolean'
+            key != 'csrf_token' and
+            key != 'page_questions' and
+            new_service_content.get_question(key)['type'] == 'boolean'
         ):
             section_data[key] = convert_to_boolean(section_data[key])
 
