@@ -113,7 +113,7 @@ def edit_section(service_id, section):
     return render_template(
         "services/edit_section.html",
         section=content.get_section(section),
-        page_questions=get_section_questions(content.get_section(section)),
+        page_questions='|'.join(get_section_questions(content.get_section(section))),
         service_data=service,
         service_id=service_id,
         return_to=".edit_service",
@@ -161,7 +161,7 @@ def update_section(service_id, section):
             return render_template(
                 "services/edit_section.html",
                 section=content.get_section(section),
-                page_questions=get_section_questions(content.get_section(section)),
+                page_questions='|'.join(get_section_questions(content.get_section(section))),
                 service_data=posted_data,
                 service_id=service_id,
                 return_to=".edit_service",
@@ -320,7 +320,7 @@ def edit_service_submission(service_id, section):
     return render_template(
         "services/edit_section.html",
         section=content.get_section(section),
-        page_questions=get_section_questions(content.get_section(section)),
+        page_questions='|'.join(get_section_questions(content.get_section(section))),
         service_data=draft,
         service_id=service_id,
         dashboard=".framework_dashboard",
@@ -358,7 +358,7 @@ def update_section_submission(service_id, section):
             return render_template(
                 "services/edit_section.html",
                 section=content.get_section(section),
-                page_questions=get_section_questions(content.get_section(section)),
+                page_questions='|'.join(get_section_questions(content.get_section(section))),
                 service_data=posted_data,
                 service_id=service_id,
                 return_to=".view_service_submission",
@@ -425,7 +425,8 @@ def _get_formatted_section_data():
             new_service_content.get_question(key)['type'] == 'boolean'
         ):
             section_data[key] = convert_to_boolean(section_data[key])
-
+        elif (key == 'page_questions'):
+            section_data[key] = section_data[key].split('|')
     return section_data
 
 
