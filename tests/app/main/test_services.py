@@ -1,3 +1,4 @@
+from dmutils.apiclient import HTTPError
 import mock
 from mock import Mock
 from nose.tools import assert_equal, assert_true, assert_false, \
@@ -283,10 +284,10 @@ class TestSupplierUpdateService(BaseApplicationTest):
 
 
 @mock.patch('app.main.views.services.request')
-class TestCreateService(BaseApplicationTest):
+class TestCreateDraftService(BaseApplicationTest):
 
     def setup(self):
-        super(TestCreateService, self).setup()
+        super(TestCreateDraftService, self).setup()
         self._answer_required = 'Answer is required'
         self._validation_error = \
             'There was a problem with your answer to the following questions'
@@ -295,7 +296,7 @@ class TestCreateService(BaseApplicationTest):
     def _format_for_request(phrase):
         return phrase.replace(' ', '+')
 
-    def _test_get_create_service_page(self, if_error_expected):
+    def _test_get_create_draft_service_page(self, if_error_expected):
         with self.app.test_client():
             self.login()
 
@@ -314,7 +315,7 @@ class TestCreateService(BaseApplicationTest):
         else:
             assert_not_in(self._validation_error, res.get_data(as_text=True))
 
-    def _test_post_create_service(self, if_error_expected):
+    def _test_post_create_draft_service(self, if_error_expected):
         with self.app.test_client():
             self.login()
 
@@ -349,19 +350,19 @@ class TestCreateService(BaseApplicationTest):
             else:
                 assert_not_in(error_message, res.location)
 
-    def test_get_create_service_page_succeeds(self, request):
+    def test_get_create_draft_service_page_succeeds(self, request):
         request.args.get.return_value = None
-        self._test_get_create_service_page(if_error_expected=False)
+        self._test_get_create_draft_service_page(if_error_expected=False)
 
-    def test_get_create_service_page_fails(self, request):
+    def test_get_create_draft_service_page_fails(self, request):
         request.args.get.return_value = self._answer_required
-        self._test_get_create_service_page(if_error_expected=True)
+        self._test_get_create_draft_service_page(if_error_expected=True)
 
-    def test_post_create_service_with_lot_selected_succeeds(self, request):
+    def test_post_create_draft_service_with_lot_selected_succeeds(self, request):
         request.form.get.return_value = "SCS"
-        self._test_post_create_service(if_error_expected=False)
+        self._test_post_create_draft_service(if_error_expected=False)
 
-    def test_post_create_service_without_lot_selected_fails(self, request):
+    def test_post_create_draft_service_without_lot_selected_fails(self, request):
         request.form.get.return_value = None
         self._test_post_create_service(if_error_expected=True)
 
@@ -398,3 +399,46 @@ class TestCopyDraft(BaseApplicationTest):
 
         res = self.client.post('/suppliers/submission/services/1/copy')
         assert_equal(res.status_code, 404)
+
+
+@mock.patch('app.main.views.services.request')
+class TestEditDraftService(BaseApplicationTest):
+
+    empty_draft = {
+        'services': {
+            'id': 1,
+            'supplierId': 1234,
+            'supplierName': "supplierName",
+            'lot': "SCS",
+            'status': "not-submitted",
+            'frameworkName': "frameworkName",
+            'links': {},
+            'updatedAt': "2015-06-29T15:26:07.650368Z"
+        }
+    }
+
+    #  TODO: Write some tests for updates that result in these errors and check the messages displayed
+    error_missing = HTTPError(
+        response=400,
+        message={"serviceSummary": "answer_required", "serviceName": "answer_required"}
+    )
+    error_too_long = HTTPError(
+        response=400,
+        message={"serviceSummary": "under_50_words", "serviceName": "under_character_limit"}
+    )
+
+    def setup(self):
+        super(TestEditDraftService, self).setup()
+        with self.app.test_client():
+            self.login()
+
+    def test_edit_draft_section_contains_hidden_page_questions(self, request):
+        with mock.patch('app.main.views.services.data_api_client') as data_api_client:
+            data_api_client.get_draft_service.return_value = self.empty_draft
+            res = self.client.get(
+                '/suppliers/submission/services/1/edit/service_description'
+            )
+            assert_true(
+                '<input type="hidden" name="page_questions" value="serviceName|serviceSummary" />'
+                in res.get_data(as_text=True)
+            )
