@@ -63,3 +63,11 @@ class TestApplication(BaseApplicationTest):
         res = self.client.get('/suppliers/login')
         assert 200 == res.status_code
         assert 'DENY', res.headers['X-Frame-Options']
+
+    def test_should_use_local_cookie_page_on_cookie_message(self):
+        res = self.client.get('/suppliers/login')
+        assert_equal(200, res.status_code)
+        assert_true(
+            '<p>GOV.UK uses cookies to make the site simpler. <a href="/cookies">Find out more about cookies</a></p>'
+            in res.get_data(as_text=True)
+        )
