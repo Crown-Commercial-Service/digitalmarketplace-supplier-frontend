@@ -284,7 +284,6 @@ class TestSupplierUpdateService(BaseApplicationTest):
                      '?next=%2Fsuppliers%2Fservices%2F123')
 
 
-@mock.patch('app.main.views.services.request')
 class TestEditService(BaseApplicationTest):
 
     empty_service = {
@@ -304,7 +303,7 @@ class TestEditService(BaseApplicationTest):
         with self.app.test_client():
             self.login()
 
-    def test_edit_section_contains_hidden_page_questions(self, request):
+    def test_edit_section_contains_hidden_page_questions(self):
         with mock.patch('app.main.views.services.data_api_client') as data_api_client:
             data_api_client.get_service.return_value = self.empty_service
             res = self.client.get('/suppliers/services/1/edit/description')
@@ -315,14 +314,14 @@ class TestEditService(BaseApplicationTest):
                 'serviceName|serviceSummary',
                 document.xpath('//input[@name="page_questions"]/@value')[0])
 
-    def test_edit_non_existent_service_returns_404(self, request):
+    def test_edit_non_existent_service_returns_404(self):
         with mock.patch('app.main.views.services.data_api_client') as data_api_client:
             data_api_client.get_service.return_value = None
             res = self.client.get('/suppliers/services/1/edit/description')
 
             assert_equal(res.status_code, 404)
 
-    def test_edit_non_existent_section_returns_404(self, request):
+    def test_edit_non_existent_section_returns_404(self):
         with mock.patch('app.main.views.services.data_api_client') as data_api_client:
             data_api_client.get_service.return_value = self.empty_service
             res = self.client.get(
@@ -330,14 +329,50 @@ class TestEditService(BaseApplicationTest):
             )
             assert_equal(404, res.status_code)
 
-    def test_update_non_existent_service_returns_404(self, request):
+    def test_update_with_answer_required_error(self):
+        with mock.patch('app.main.views.services.data_api_client') as data_api_client:
+            data_api_client.get_service.return_value = self.empty_service
+            data_api_client.update_service.side_effect = HTTPError(
+                mock.Mock(status_code=400),
+                {'serviceSummary': 'answer_required'})
+            res = self.client.post(
+                '/suppliers/services/1/edit/description',
+                data={
+                    'page_questions': '',
+                })
+
+            assert_equal(res.status_code, 200)
+            document = html.fromstring(res.get_data(as_text=True))
+            assert_equal(
+                "This question requires an answer.",
+                document.xpath('//span[@id="error-serviceSummary"]/text()')[0].strip())
+
+    def test_update_with_under_50_words_error(self):
+        with mock.patch('app.main.views.services.data_api_client') as data_api_client:
+            data_api_client.get_service.return_value = self.empty_service
+            data_api_client.update_service.side_effect = HTTPError(
+                mock.Mock(status_code=400),
+                {'serviceSummary': 'under_50_words'})
+            res = self.client.post(
+                '/suppliers/services/1/edit/description',
+                data={
+                    'page_questions': '',
+                })
+
+            assert_equal(res.status_code, 200)
+            document = html.fromstring(res.get_data(as_text=True))
+            assert_equal(
+                "Your description must not be more than 50 words.",
+                document.xpath('//span[@id="error-serviceSummary"]/text()')[0].strip())
+
+    def test_update_non_existent_service_returns_404(self):
         with mock.patch('app.main.views.services.data_api_client') as data_api_client:
             data_api_client.get_service.return_value = None
             res = self.client.post('/suppliers/services/1/edit/description')
 
             assert_equal(res.status_code, 404)
 
-    def test_update_non_existent_section_returns_404(self, request):
+    def test_update_non_existent_section_returns_404(self):
         with mock.patch('app.main.views.services.data_api_client') as data_api_client:
             data_api_client.get_service.return_value = self.empty_service
             res = self.client.post(
@@ -464,7 +499,6 @@ class TestCopyDraft(BaseApplicationTest):
         assert_equal(res.status_code, 404)
 
 
-@mock.patch('app.main.views.services.request')
 class TestEditDraftService(BaseApplicationTest):
 
     empty_draft = {
@@ -480,22 +514,12 @@ class TestEditDraftService(BaseApplicationTest):
         }
     }
 
-    #  TODO: Write some tests for updates that result in these errors and check the messages displayed
-    error_missing = HTTPError(
-        response=400,
-        message={"serviceSummary": "answer_required", "serviceName": "answer_required"}
-    )
-    error_too_long = HTTPError(
-        response=400,
-        message={"serviceSummary": "under_50_words", "serviceName": "under_character_limit"}
-    )
-
     def setup(self):
         super(TestEditDraftService, self).setup()
         with self.app.test_client():
             self.login()
 
-    def test_edit_draft_section_contains_hidden_page_questions(self, request):
+    def test_edit_draft_section_contains_hidden_page_questions(self):
         with mock.patch('app.main.views.services.data_api_client') as data_api_client:
             data_api_client.get_draft_service.return_value = self.empty_draft
             res = self.client.get('/suppliers/submission/services/1/edit/service_description')
@@ -506,14 +530,14 @@ class TestEditDraftService(BaseApplicationTest):
                 'serviceName|serviceSummary',
                 document.xpath('//input[@name="page_questions"]/@value')[0])
 
-    def test_edit_non_existent_draft_service_returns_404(self, request):
+    def test_edit_non_existent_draft_service_returns_404(self):
         with mock.patch('app.main.views.services.data_api_client') as data_api_client:
             data_api_client.get_draft_service.side_effect = HTTPError(mock.Mock(status_code=404))
             res = self.client.get('/suppliers/submission/services/1/edit/service_description')
 
             assert_equal(res.status_code, 404)
 
-    def test_edit_non_existent_draft_section_returns_404(self, request):
+    def test_edit_non_existent_draft_section_returns_404(self):
         with mock.patch('app.main.views.services.data_api_client') as data_api_client:
             data_api_client.get_draft_service.return_value = self.empty_draft
             res = self.client.get(
@@ -521,14 +545,50 @@ class TestEditDraftService(BaseApplicationTest):
             )
             assert_equal(404, res.status_code)
 
-    def test_update_non_existent_draft_service_returns_404(self, request):
+    def test_update_with_answer_required_error(self):
+        with mock.patch('app.main.views.services.data_api_client') as data_api_client:
+            data_api_client.get_draft_service.return_value = self.empty_draft
+            data_api_client.update_draft_service.side_effect = HTTPError(
+                mock.Mock(status_code=400),
+                {'serviceSummary': 'answer_required'})
+            res = self.client.post(
+                '/suppliers/submission/services/1/edit/service_description',
+                data={
+                    'page_questions': '',
+                })
+
+            assert_equal(res.status_code, 200)
+            document = html.fromstring(res.get_data(as_text=True))
+            assert_equal(
+                "This question requires an answer.",
+                document.xpath('//span[@id="error-serviceSummary"]/text()')[0].strip())
+
+    def test_update_with_under_50_words_error(self):
+        with mock.patch('app.main.views.services.data_api_client') as data_api_client:
+            data_api_client.get_draft_service.return_value = self.empty_draft
+            data_api_client.update_draft_service.side_effect = HTTPError(
+                mock.Mock(status_code=400),
+                {'serviceSummary': 'under_50_words'})
+            res = self.client.post(
+                '/suppliers/submission/services/1/edit/service_description',
+                data={
+                    'page_questions': '',
+                })
+
+            assert_equal(res.status_code, 200)
+            document = html.fromstring(res.get_data(as_text=True))
+            assert_equal(
+                "Your description must not be more than 50 words.",
+                document.xpath('//span[@id="error-serviceSummary"]/text()')[0].strip())
+
+    def test_update_non_existent_draft_service_returns_404(self):
         with mock.patch('app.main.views.services.data_api_client') as data_api_client:
             data_api_client.get_draft_service.side_effect = HTTPError(mock.Mock(status_code=404))
             res = self.client.post('/suppliers/submission/services/1/edit/service_description')
 
             assert_equal(res.status_code, 404)
 
-    def test_update_non_existent_draft_section_returns_404(self, request):
+    def test_update_non_existent_draft_section_returns_404(self):
         with mock.patch('app.main.views.services.data_api_client') as data_api_client:
             data_api_client.get_draft_service.return_value = self.empty_draft
             res = self.client.post(

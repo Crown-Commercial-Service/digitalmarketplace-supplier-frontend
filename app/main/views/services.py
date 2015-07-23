@@ -90,8 +90,7 @@ def update_service_status(service_id):
         url_for(".list_services",
                 updated_service_id=updated_service.get("id"),
                 updated_service_name=updated_service.get("serviceName"),
-                updated_service_status=updated_service.get("status")
-                )
+                updated_service_status=updated_service.get("status"))
     )
 
 
@@ -153,31 +152,30 @@ def update_section(service_id, section):
         abort(404)
 
     posted_data = _get_formatted_section_data()
-    posted_data.pop('page_questions')
+    del posted_data['page_questions']
 
-    if posted_data:
-        try:
-            data_api_client.update_service(
-                service_id,
-                posted_data,
-                current_user.email_address,
-                "supplier app")
-        except HTTPError as e:
-            errors_map = _get_section_error_messages(e, service['lot'])
-            if not posted_data.get('serviceName', None):
-                posted_data['serviceName'] = service.get('serviceName', '')
-            return render_template(
-                "services/edit_section.html",
-                section=section,
-                page_questions='|'.join(get_section_questions(section)),
-                service_data=posted_data,
-                service_id=service_id,
-                return_to=".edit_service",
-                dashboard=".list_services",
-                dash_label="Services",
-                errors=errors_map,
-                **main.config['BASE_TEMPLATE_DATA']
-            )
+    try:
+        data_api_client.update_service(
+            service_id,
+            posted_data,
+            current_user.email_address,
+            "supplier app")
+    except HTTPError as e:
+        errors_map = _get_section_error_messages(e, service['lot'])
+        if not posted_data.get('serviceName', None):
+            posted_data['serviceName'] = service.get('serviceName', '')
+        return render_template(
+            "services/edit_section.html",
+            section=section,
+            page_questions='|'.join(get_section_questions(section)),
+            service_data=posted_data,
+            service_id=service_id,
+            return_to=".edit_service",
+            dashboard=".list_services",
+            dash_label="Services",
+            errors=errors_map,
+            **main.config['BASE_TEMPLATE_DATA']
+        )
 
     return redirect(url_for(".edit_service", service_id=service_id))
 
@@ -367,27 +365,26 @@ def update_section_submission(service_id, section):
 
     posted_data = _get_formatted_section_data()
 
-    if posted_data:
-        try:
-            data_api_client.update_draft_service(
-                service_id,
-                posted_data,
-                current_user.email_address)
-        except HTTPError as e:
-            errors_map = _get_section_error_messages(e, draft['lot'])
-            if not posted_data.get('serviceName', None):
-                posted_data['serviceName'] = draft.get('serviceName', '')
-            return render_template(
-                "services/edit_section.html",
-                section=section,
-                page_questions='|'.join(get_section_questions(section)),
-                service_data=posted_data,
-                service_id=service_id,
-                return_to=".view_service_submission",
-                dashboard=".framework_dashboard",
-                dash_label="Apply to G-Cloud 7",
-                errors=errors_map,
-                **main.config['BASE_TEMPLATE_DATA']
+    try:
+        data_api_client.update_draft_service(
+            service_id,
+            posted_data,
+            current_user.email_address)
+    except HTTPError as e:
+        errors_map = _get_section_error_messages(e, draft['lot'])
+        if not posted_data.get('serviceName', None):
+            posted_data['serviceName'] = draft.get('serviceName', '')
+        return render_template(
+            "services/edit_section.html",
+            section=section,
+            page_questions='|'.join(get_section_questions(section)),
+            service_data=posted_data,
+            service_id=service_id,
+            return_to=".view_service_submission",
+            dashboard=".framework_dashboard",
+            dash_label="Apply to G-Cloud 7",
+            errors=errors_map,
+            **main.config['BASE_TEMPLATE_DATA']
             )
 
     if (
@@ -405,24 +402,38 @@ def update_section_submission(service_id, section):
 
 
 def _is_service_associated_with_supplier(service):
-
     return service.get('supplierId') == current_user.supplier_id
 
 
 def _is_service_modifiable(service):
-
     return service.get('status') != 'disabled'
 
 
 def _get_error_message(error, message_key, content):
-    validations_list = filter(
-        lambda x: x['name'] == message_key,
-        content.get_question(error)['validations']
-    )
-    validation_message = validations_list[0]['message'] \
-        if len(validations_list) > 0 \
-        else 'There was a problem with the answer to this question'
-    return validation_message
+    validations = [
+        validation for validation in content.get_question(error)['validations']
+        if validation['name'] == message_key]
+
+    if len(validations):
+        return validations[0]['message']
+    else:
+        return 'There was a problem with the answer to this question'
+
+
+def _is_list_type(key):
+    """Return True if a given key is a list type"""
+    if key in ['csrf_token', 'page_questions']:
+        return False
+    if key == 'serviceTypes':
+        return True
+    return new_service_content.get_question(key)['type'] in ['list', 'checkbox', 'pricing']
+
+
+def _is_boolean_type(key):
+    """Return True if a given key is a boolean type"""
+    if key in ['csrf_token', 'page_questions']:
+        return False
+    return new_service_content.get_question(key)['type'] == 'boolean'
 
 
 def _get_formatted_section_data():
@@ -432,22 +443,11 @@ def _get_formatted_section_data():
     section_data.pop('csrf_token', None)
     # Turn responses which have multiple parts into lists and booleans into booleans
     for key in request.form:
-        item_as_list = request.form.getlist(key)
-        list_types = ['list', 'checkboxes', 'pricing']
-        if (
-            key == 'serviceTypes' or
-            key != 'csrf_token' and
-            key != 'page_questions' and
-            new_service_content.get_question(key)['type'] in list_types
-        ):
-            section_data[key] = item_as_list
-        elif (
-            key != 'csrf_token' and
-            key != 'page_questions' and
-            new_service_content.get_question(key)['type'] == 'boolean'
-        ):
+        if _is_list_type(key):
+            section_data[key] = request.form.getlist(key)
+        elif _is_boolean_type(key):
             section_data[key] = convert_to_boolean(section_data[key])
-        elif (key == 'page_questions'):
+        elif key == 'page_questions':
             section_data[key] = section_data[key].split('|')
     return section_data
 
@@ -488,18 +488,18 @@ def _update_service_status(service, error_message=None):
 
 def _get_section_error_messages(e, lot):
     errors_map = {}
-    for error in e.response.json()['error'].keys():
+    for error in e.message.keys():
         if error == '_form':
             abort(400, "Submitted data was not in a valid format")
         else:
-            message_key = e.response.json()['error'][error]
+            message_key = e.message[error]
             if error == 'serviceTypes':
                 error = 'serviceTypes{}'.format(lot)
             validation_message = _get_error_message(error,
                                                     message_key,
                                                     new_service_content)
-            id = new_service_content.get_question(error)['id']
-            errors_map[id] = {
+            question_id = new_service_content.get_question(error)['id']
+            errors_map[question_id] = {
                 'input_name': error,
                 'question': new_service_content.get_question(error)['question'],
                 'message': validation_message
