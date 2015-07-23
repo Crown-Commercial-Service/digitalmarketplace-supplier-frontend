@@ -284,6 +284,43 @@ class TestSupplierUpdateService(BaseApplicationTest):
 
 
 @mock.patch('app.main.views.services.request')
+class TestEditService(BaseApplicationTest):
+
+    empty_service = {
+        'services': {
+            'serviceName': 'Service name 123',
+            'status': 'published',
+            'id': '123',
+            'frameworkName': 'G-Cloud 6',
+            'supplierId': 1234,
+            'supplierName': 'We supply any',
+            'lot': 'SCS',
+        }
+    }
+
+    def setup(self):
+        super(TestEditService, self).setup()
+        with self.app.test_client():
+            self.login()
+
+    def test_edit_non_existent_section_returns_404(self, request):
+        with mock.patch('app.main.views.services.data_api_client') as data_api_client:
+            data_api_client.get_service.return_value = self.empty_service
+            res = self.client.get(
+                '/suppliers/services/1/edit/invalid_section'
+            )
+            assert_equal(404, res.status_code)
+
+    def test_update_non_existent_section_returns_404(self, request):
+        with mock.patch('app.main.views.services.data_api_client') as data_api_client:
+            data_api_client.get_service.return_value = self.empty_service
+            res = self.client.post(
+                '/suppliers/services/1/edit/invalid_section'
+            )
+            assert_equal(404, res.status_code)
+
+
+@mock.patch('app.main.views.services.request')
 class TestCreateDraftService(BaseApplicationTest):
 
     def setup(self):
@@ -438,7 +475,23 @@ class TestEditDraftService(BaseApplicationTest):
             res = self.client.get(
                 '/suppliers/submission/services/1/edit/service_description'
             )
-            assert_true(
-                '<input type="hidden" name="page_questions" value="serviceName|serviceSummary" />'
-                in res.get_data(as_text=True)
+            assert_in(
+                '<input type="hidden" name="page_questions" value="serviceName|serviceSummary" />',
+                res.get_data(as_text=True)
             )
+
+    def test_edit_non_existent_draft_section_returns_404(self, request):
+        with mock.patch('app.main.views.services.data_api_client') as data_api_client:
+            data_api_client.get_draft_service.return_value = self.empty_draft
+            res = self.client.get(
+                '/suppliers/submission/services/1/edit/invalid_section'
+            )
+            assert_equal(404, res.status_code)
+
+    def test_update_non_existent_draft_section_returns_404(self, request):
+        with mock.patch('app.main.views.services.data_api_client') as data_api_client:
+            data_api_client.get_draft_service.return_value = self.empty_draft
+            res = self.client.post(
+                '/suppliers/submission/services/1/edit/invalid_section'
+            )
+            assert_equal(404, res.status_code)

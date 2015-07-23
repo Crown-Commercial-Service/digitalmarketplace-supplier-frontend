@@ -109,11 +109,14 @@ def edit_section(service_id, section):
         abort(404)
 
     content = existing_service_content.get_builder().filter(service)
+    section = content.get_section(section)
+    if section is None:
+        abort(404)
 
     return render_template(
         "services/edit_section.html",
-        section=content.get_section(section),
-        page_questions='|'.join(get_section_questions(content.get_section(section))),
+        section=section,
+        page_questions='|'.join(get_section_questions(section)),
         service_data=service,
         service_id=service_id,
         return_to=".edit_service",
@@ -124,10 +127,7 @@ def edit_section(service_id, section):
 
 
 def get_section_questions(section):
-    questions = []
-    for question in section.get('questions', None):
-        questions.append(question.get('id', None))
-    return questions
+    return [question['id'] for question in section['questions']]
 
 
 @main.route(
@@ -143,6 +143,9 @@ def update_section(service_id, section):
         abort(404)
 
     content = existing_service_content.get_builder().filter(service)
+    section = content.get_section(section)
+    if section is None:
+        abort(404)
 
     posted_data = _get_formatted_section_data()
     posted_data.pop('page_questions')
@@ -160,8 +163,8 @@ def update_section(service_id, section):
                 posted_data['serviceName'] = service.get('serviceName', '')
             return render_template(
                 "services/edit_section.html",
-                section=content.get_section(section),
-                page_questions='|'.join(get_section_questions(content.get_section(section))),
+                section=section,
+                page_questions='|'.join(get_section_questions(section)),
                 service_data=posted_data,
                 service_id=service_id,
                 return_to=".edit_service",
@@ -316,11 +319,14 @@ def edit_service_submission(service_id, section):
         abort(404)
 
     content = new_service_content.get_builder().filter(draft)
+    section = content.get_section(section)
+    if section is None:
+        abort(404)
 
     return render_template(
         "services/edit_section.html",
-        section=content.get_section(section),
-        page_questions='|'.join(get_section_questions(content.get_section(section))),
+        section=section,
+        page_questions='|'.join(get_section_questions(section)),
         service_data=draft,
         service_id=service_id,
         dashboard=".framework_dashboard",
@@ -343,6 +349,10 @@ def update_section_submission(service_id, section):
         abort(404)
 
     content = new_service_content.get_builder().filter(draft)
+    section = content.get_section(section)
+    if section is None:
+        abort(404)
+
     posted_data = _get_formatted_section_data()
 
     if posted_data:
@@ -357,8 +367,8 @@ def update_section_submission(service_id, section):
                 posted_data['serviceName'] = draft.get('serviceName', '')
             return render_template(
                 "services/edit_section.html",
-                section=content.get_section(section),
-                page_questions='|'.join(get_section_questions(content.get_section(section))),
+                section=section,
+                page_questions='|'.join(get_section_questions(section)),
                 service_data=posted_data,
                 service_id=service_id,
                 return_to=".view_service_submission",
