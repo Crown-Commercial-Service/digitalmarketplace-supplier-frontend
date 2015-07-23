@@ -102,8 +102,10 @@ def update_service_status(service_id):
 @login_required
 @flask_featureflags.is_active_feature('EDIT_SERVICE_PAGE')
 def edit_section(service_id, section):
-
-    service = data_api_client.get_service(service_id)['services']
+    service = data_api_client.get_service(service_id)
+    if service is None:
+        abort(404)
+    service = service['services']
 
     if not _is_service_associated_with_supplier(service):
         abort(404)
@@ -137,7 +139,10 @@ def get_section_questions(section):
 @login_required
 @flask_featureflags.is_active_feature('EDIT_SERVICE_PAGE')
 def update_section(service_id, section):
-    service = data_api_client.get_service(service_id).get('services')
+    service = data_api_client.get_service(service_id)
+    if service is None:
+        abort(404)
+    service = service['services']
 
     if not _is_service_associated_with_supplier(service):
         abort(404)
@@ -289,8 +294,10 @@ def copy_draft_service(service_id):
 @login_required
 @flask_featureflags.is_active_feature('GCLOUD7_OPEN')
 def view_service_submission(service_id):
-
-    draft = data_api_client.get_draft_service(service_id).get('services')
+    try:
+        draft = data_api_client.get_draft_service(service_id)['services']
+    except HTTPError as e:
+        abort(e.status_code)
 
     if not _is_service_associated_with_supplier(draft):
         abort(404)
@@ -312,8 +319,10 @@ def view_service_submission(service_id):
 @login_required
 @flask_featureflags.is_active_feature('GCLOUD7_OPEN')
 def edit_service_submission(service_id, section):
-
-    draft = data_api_client.get_draft_service(service_id).get('services')
+    try:
+        draft = data_api_client.get_draft_service(service_id)['services']
+    except HTTPError as e:
+        abort(e.status_code)
 
     if not _is_service_associated_with_supplier(draft):
         abort(404)
@@ -343,7 +352,10 @@ def edit_service_submission(service_id, section):
 @login_required
 @flask_featureflags.is_active_feature('GCLOUD7_OPEN')
 def update_section_submission(service_id, section):
-    draft = data_api_client.get_draft_service(service_id).get('services')
+    try:
+        draft = data_api_client.get_draft_service(service_id)['services']
+    except HTTPError as e:
+        abort(e.status_code)
 
     if not _is_service_associated_with_supplier(draft):
         abort(404)

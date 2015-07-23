@@ -315,6 +315,13 @@ class TestEditService(BaseApplicationTest):
                 'serviceName|serviceSummary',
                 document.xpath('//input[@name="page_questions"]/@value')[0])
 
+    def test_edit_non_existent_service_returns_404(self, request):
+        with mock.patch('app.main.views.services.data_api_client') as data_api_client:
+            data_api_client.get_service.return_value = None
+            res = self.client.get('/suppliers/services/1/edit/description')
+
+            assert_equal(res.status_code, 404)
+
     def test_edit_non_existent_section_returns_404(self, request):
         with mock.patch('app.main.views.services.data_api_client') as data_api_client:
             data_api_client.get_service.return_value = self.empty_service
@@ -322,6 +329,13 @@ class TestEditService(BaseApplicationTest):
                 '/suppliers/services/1/edit/invalid_section'
             )
             assert_equal(404, res.status_code)
+
+    def test_update_non_existent_service_returns_404(self, request):
+        with mock.patch('app.main.views.services.data_api_client') as data_api_client:
+            data_api_client.get_service.return_value = None
+            res = self.client.post('/suppliers/services/1/edit/description')
+
+            assert_equal(res.status_code, 404)
 
     def test_update_non_existent_section_returns_404(self, request):
         with mock.patch('app.main.views.services.data_api_client') as data_api_client:
@@ -492,6 +506,13 @@ class TestEditDraftService(BaseApplicationTest):
                 'serviceName|serviceSummary',
                 document.xpath('//input[@name="page_questions"]/@value')[0])
 
+    def test_edit_non_existent_draft_service_returns_404(self, request):
+        with mock.patch('app.main.views.services.data_api_client') as data_api_client:
+            data_api_client.get_draft_service.side_effect = HTTPError(mock.Mock(status_code=404))
+            res = self.client.get('/suppliers/submission/services/1/edit/service_description')
+
+            assert_equal(res.status_code, 404)
+
     def test_edit_non_existent_draft_section_returns_404(self, request):
         with mock.patch('app.main.views.services.data_api_client') as data_api_client:
             data_api_client.get_draft_service.return_value = self.empty_draft
@@ -499,6 +520,13 @@ class TestEditDraftService(BaseApplicationTest):
                 '/suppliers/submission/services/1/edit/invalid_section'
             )
             assert_equal(404, res.status_code)
+
+    def test_update_non_existent_draft_service_returns_404(self, request):
+        with mock.patch('app.main.views.services.data_api_client') as data_api_client:
+            data_api_client.get_draft_service.side_effect = HTTPError(mock.Mock(status_code=404))
+            res = self.client.post('/suppliers/submission/services/1/edit/service_description')
+
+            assert_equal(res.status_code, 404)
 
     def test_update_non_existent_draft_section_returns_404(self, request):
         with mock.patch('app.main.views.services.data_api_client') as data_api_client:
