@@ -1,5 +1,6 @@
 from dmutils.apiclient import HTTPError
 import mock
+from lxml import html
 from mock import Mock
 from nose.tools import assert_equal, assert_true, assert_false, \
     assert_in, assert_not_in
@@ -303,6 +304,17 @@ class TestEditService(BaseApplicationTest):
         with self.app.test_client():
             self.login()
 
+    def test_edit_section_contains_hidden_page_questions(self, request):
+        with mock.patch('app.main.views.services.data_api_client') as data_api_client:
+            data_api_client.get_service.return_value = self.empty_service
+            res = self.client.get('/suppliers/services/1/edit/description')
+
+            assert_equal(res.status_code, 200)
+            document = html.fromstring(res.get_data(as_text=True))
+            assert_equal(
+                'serviceName|serviceSummary',
+                document.xpath('//input[@name="page_questions"]/@value')[0])
+
     def test_edit_non_existent_section_returns_404(self, request):
         with mock.patch('app.main.views.services.data_api_client') as data_api_client:
             data_api_client.get_service.return_value = self.empty_service
@@ -472,13 +484,13 @@ class TestEditDraftService(BaseApplicationTest):
     def test_edit_draft_section_contains_hidden_page_questions(self, request):
         with mock.patch('app.main.views.services.data_api_client') as data_api_client:
             data_api_client.get_draft_service.return_value = self.empty_draft
-            res = self.client.get(
-                '/suppliers/submission/services/1/edit/service_description'
-            )
-            assert_in(
-                '<input type="hidden" name="page_questions" value="serviceName|serviceSummary" />',
-                res.get_data(as_text=True)
-            )
+            res = self.client.get('/suppliers/submission/services/1/edit/service_description')
+
+            assert_equal(res.status_code, 200)
+            document = html.fromstring(res.get_data(as_text=True))
+            assert_equal(
+                'serviceName|serviceSummary',
+                document.xpath('//input[@name="page_questions"]/@value')[0])
 
     def test_edit_non_existent_draft_section_returns_404(self, request):
         with mock.patch('app.main.views.services.data_api_client') as data_api_client:
