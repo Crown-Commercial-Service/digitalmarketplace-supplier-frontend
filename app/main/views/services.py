@@ -326,7 +326,7 @@ def edit_service_submission(service_id, section):
         abort(404)
 
     content = new_service_content.get_builder().filter(draft)
-    section = content.get_section(section)
+    section = content.get_section(section_id)
     if section is None:
         abort(404)
 
@@ -344,12 +344,12 @@ def edit_service_submission(service_id, section):
 
 
 @main.route(
-    '/submission/services/<string:service_id>/edit/<string:section>',
+    '/submission/services/<string:service_id>/edit/<string:section_id>',
     methods=['POST']
 )
 @login_required
 @flask_featureflags.is_active_feature('GCLOUD7_OPEN')
-def update_section_submission(service_id, section):
+def update_section_submission(service_id, section_id):
     try:
         draft = data_api_client.get_draft_service(service_id)['services']
     except HTTPError as e:
@@ -387,18 +387,13 @@ def update_section_submission(service_id, section):
             **main.config['BASE_TEMPLATE_DATA']
             )
 
-    if (
-            request.args.get("return_to_summary")
-            or not content.get_next_editable_section_id(section)
-    ):
-        return redirect(
-            url_for(".view_service_submission", service_id=service_id))
+    return_to_summary = bool(request.args.get('return_to_summary'))
+    next_section = content.get_next_editable_section_id(section_id)
+
+    if next_section and not return_to_summary:
+        return redirect(url_for(".edit_service_submission", service_id=service_id, section=next_section))
     else:
-        return redirect(url_for(".edit_service_submission",
-                                service_id=service_id,
-                                section=content.get_next_editable_section_id(
-                                    section))
-                        )
+        return redirect(url_for(".view_service_submission", service_id=service_id))
 
 
 def _is_service_associated_with_supplier(service):

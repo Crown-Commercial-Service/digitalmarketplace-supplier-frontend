@@ -545,6 +545,51 @@ class TestEditDraftService(BaseApplicationTest):
             )
             assert_equal(404, res.status_code)
 
+    def test_update_redirects_to_next_editable_section(self):
+        with mock.patch('app.main.views.services.data_api_client') as data_api_client:
+            data_api_client.get_draft_service.return_value = self.empty_draft
+            data_api_client.update_draft_service.return_value = None
+
+            res = self.client.post(
+                '/suppliers/submission/services/1/edit/service_description',
+                data={
+                    'page_questions': '',
+                })
+
+            assert_equal(302, res.status_code)
+            assert_equal('http://localhost/suppliers/submission/services/1/edit/service_definition',
+                         res.headers['Location'])
+
+    def test_update_redirects_to_edit_submission_if_no_next_editable_section(self):
+        with mock.patch('app.main.views.services.data_api_client') as data_api_client:
+            data_api_client.get_draft_service.return_value = self.empty_draft
+            data_api_client.update_draft_service.return_value = None
+
+            res = self.client.post(
+                '/suppliers/submission/services/1/edit/certifications',
+                data={
+                    'page_questions': '',
+                })
+
+            assert_equal(302, res.status_code)
+            assert_equal('http://localhost/suppliers/submission/services/1',
+                         res.headers['Location'])
+
+    def test_update_redirects_to_edit_submission_if_return_to_summary(self):
+        with mock.patch('app.main.views.services.data_api_client') as data_api_client:
+            data_api_client.get_draft_service.return_value = self.empty_draft
+            data_api_client.update_draft_service.return_value = None
+
+            res = self.client.post(
+                '/suppliers/submission/services/1/edit/service_description?return_to_summary=1',
+                data={
+                    'page_questions': '',
+                })
+
+            assert_equal(302, res.status_code)
+            assert_equal('http://localhost/suppliers/submission/services/1',
+                         res.headers['Location'])
+
     def test_update_with_answer_required_error(self):
         with mock.patch('app.main.views.services.data_api_client') as data_api_client:
             data_api_client.get_draft_service.return_value = self.empty_draft
