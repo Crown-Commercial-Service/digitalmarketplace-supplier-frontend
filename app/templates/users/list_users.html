@@ -1,4 +1,5 @@
 {% extends "_base_page.html" %}
+{% import "toolkit/summary-table.html" as summary %}
 
 {% block page_title %}Current users – Digital Marketplace{% endblock %}
 
@@ -30,40 +31,24 @@
       {% endwith %}
     </div>
   </div>
-  <table class="summary-item-body">
-    <thead class="summary-item-field-headings">
-      <tr>
-        <th scope="col">
-          Name
-        </th>
-        <th scope="col">
-          Email address
-        </th>
-        <th scope="col">
-          Logged in at
-        </th>
-        <th scope="col">
-          Locked
-        </th>
-      </tr>
-    </thead>
-    <tbody>
-    {% for user in users %}
-      <tr class="summary-item-row">
-        <td class="summary-item-field-name">
-            {{ user.name }}
-        </td>
-        <td class="summary-item-field">
-          {{ user.email_address }}
-        </td>
-        <td class="summary-item-field">
-          {{ user.logged_in_at }}
-        </td>
-        <td class="summary-item-field {{ 'user-status-locked' if user.locked }}">
-          {{ 'Locked' if user.locked }}
-        </td>
-      </tr>
-    {% endfor %}
-    </tbody>
-  </table>
+  {% call(item) summary.table(
+    users,
+    caption="Users for " + current_user.supplier_name,
+    field_headings=[
+      "Name",
+      "Email address",
+      "Logged in at",
+      summary.hidden_field_heading("Locked")
+    ],
+    field_headings_visible=True
+  ) %}
+    {% call summary.row() %}
+      {{ summary.field_name(item.name) }}
+      {{ summary.text(item.email_address) }}
+      {{ summary.text(item.logged_in_at) }}
+      <td class="summary-item-field {{ 'user-status-locked' if item.locked }}">
+        {{ 'Locked' if item.locked }}
+      </td>
+    {% endcall %}
+  {% endcall %}
 {% endblock %}

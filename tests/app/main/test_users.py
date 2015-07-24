@@ -37,7 +37,7 @@ class TestListUsers(BaseApplicationTest):
                 assert_in(
                     self.strip_all_whitespace(
                         # class names are slightly different for different cells >.<
-                        '{}</td>'.format(string)
+                        '{}</span></td>'.format(string)
                     ),
                     self.strip_all_whitespace(res.get_data(as_text=True))
                 )
