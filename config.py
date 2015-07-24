@@ -1,6 +1,15 @@
 import os
+import hashlib
 import jinja2
 from dmutils.status import enabled_since, get_version_label
+
+
+def get_asset_fingerprint(asset_file_path):
+    hasher = hashlib.md5()
+    with open(asset_file_path, 'rb') as asset_file:
+        buf = asset_file.read()
+        hasher.update(buf)
+    return hasher.hexdigest()
 
 
 class Config(object):
@@ -29,7 +38,11 @@ class Config(object):
     ASSET_PATH = STATIC_URL_PATH + '/'
     BASE_TEMPLATE_DATA = {
         'asset_path': ASSET_PATH,
-        'header_class': 'with-proposition'
+        'header_class': 'with-proposition',
+        "asset_fingerprints": {
+            "css": get_asset_fingerprint("app/static/stylesheets/application.css"),
+            "js": get_asset_fingerprint("app/static/javascripts/application.js")
+        }
     }
 
     # Feature Flags
