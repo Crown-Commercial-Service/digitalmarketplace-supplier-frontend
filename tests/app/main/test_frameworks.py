@@ -2,14 +2,14 @@ from nose.tools import assert_equal
 import mock
 from mock import Mock
 from lxml import html
-from lxml import etree
 from dmutils.apiclient import APIError
 
 from ..helpers import BaseApplicationTest
 
 
+@mock.patch('app.main.views.frameworks.data_api_client')
 class TestFrameworksDashboard(BaseApplicationTest):
-    def test_shows(self):
+    def test_shows(self, data_api_client):
         with self.app.test_client():
             self.login()
 

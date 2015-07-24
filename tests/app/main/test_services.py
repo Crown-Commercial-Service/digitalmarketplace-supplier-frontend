@@ -364,3 +364,37 @@ class TestCreateService(BaseApplicationTest):
     def test_post_create_service_without_lot_selected_fails(self, request):
         request.form.get.return_value = None
         self._test_post_create_service(if_error_expected=True)
+
+
+@mock.patch('app.main.views.services.data_api_client')
+class TestCopyDraft(BaseApplicationTest):
+
+    def setup(self):
+        super(TestCopyDraft, self).setup()
+
+        with self.app.test_client():
+            self.login()
+
+        self.draft = {
+            'id': 1,
+            'supplierId': 1234,
+            'supplierName': "supplierName",
+            'lot': "SCS",
+            'status': "not-submitted",
+            'frameworkName': "frameworkName",
+            'links': {},
+            'updatedAt': "2015-06-29T15:26:07.650368Z"
+        }
+
+    def test_copy_draft(self, api_client):
+        api_client.get_draft_service.return_value = {'services': self.draft}
+
+        res = self.client.post('/suppliers/submission/services/1/copy')
+        assert_equal(res.status_code, 302)
+
+    def test_copy_draft_checks_supplier_id(self, api_client):
+        self.draft['supplierId'] = 2
+        api_client.get_draft_service.return_value = {'services': self.draft}
+
+        res = self.client.post('/suppliers/submission/services/1/copy')
+        assert_equal(res.status_code, 404)
