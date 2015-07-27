@@ -1,6 +1,7 @@
 import os
 import jinja2
 from dmutils.status import enabled_since, get_version_label
+from dmutils.asset_fingerprint import AssetFingerprinter
 
 
 class Config(object):
@@ -28,8 +29,9 @@ class Config(object):
     STATIC_URL_PATH = '/suppliers/static'
     ASSET_PATH = STATIC_URL_PATH + '/'
     BASE_TEMPLATE_DATA = {
+        'header_class': 'with-proposition',
         'asset_path': ASSET_PATH,
-        'header_class': 'with-proposition'
+        'asset_fingerprinter': AssetFingerprinter(asset_root=ASSET_PATH)
     }
 
     # Feature Flags
