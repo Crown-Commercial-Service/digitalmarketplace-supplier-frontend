@@ -5,11 +5,13 @@ from flask import current_app, flash, redirect, render_template, url_for, \
     request
 from flask_login import logout_user, login_user
 from dmutils.user import user_has_role, User
+from dmutils.email import send_email, \
+    token_created_before_password_last_changed, \
+    generate_token, decode_token
 
 from .. import main
 from ..forms.auth_forms import LoginForm, ResetPasswordForm, ChangePasswordForm
 from ... import data_api_client
-from ..helpers import email
 
 
 @main.route('/login', methods=["GET"])
@@ -83,10 +85,35 @@ def send_reset_password_email():
         user_json = data_api_client.get_user(email_address=email_address)
         if user_json is not None:
             user = User.from_json(user_json)
-            # Send a password reset email with token
-            email.send_password_email(user.id, user.email_address, user.locked)
+
+            token = generate_token(
+                {
+                    "user": user.id,
+                    "email": user.email_address
+                },
+                main.config['SECRET_KEY'],
+                main.config['RESET_PASSWORD_SALT']
+            )
+
+            url = url_for('main.reset_password', token=token, _external=True)
+
+            email_body = render_template(
+                "emails/reset_password_email.html",
+                url=url,
+                locked=user.locked)
+
+            send_email(
+                user.id,
+                user.email_address,
+                email_body,
+                main.config['DM_MANDRILL_API_KEY'],
+                main.config['RESET_PASSWORD_EMAIL_SUBJECT'],
+                main.config['RESET_PASSWORD_EMAIL_FROM'],
+                main.config['RESET_PASSWORD_EMAIL_NAME'])
+
             message = "login.reset-email.sent: " \
                       "Sending password reset email for supplier %d (%s)"
+
             current_app.logger.info(message, user.id, user.email_address)
         else:
             message = "login.reset-email.invalid-email: " \
@@ -148,7 +175,7 @@ def update_password(token):
 
 def decode_password_reset_token(token):
     try:
-        decoded, timestamp = email.decode_email(token)
+        decoded, timestamp = decode_token(token, main.config["SECRET_KEY"], main.config["RESET_PASSWORD_SALT"])
 
     except SignatureExpired:
         current_app.logger.info("Password reset attempt with expired token.")
@@ -159,7 +186,7 @@ def decode_password_reset_token(token):
         flash('token_invalid', 'error')
         return None
 
-    if email.token_created_before_password_last_changed(
+    if token_created_before_password_last_changed(
             timestamp,
             data_api_client.get_user(decoded["user"])
     ):

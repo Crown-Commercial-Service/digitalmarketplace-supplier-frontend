@@ -1,9 +1,8 @@
-from app.main import helpers
+from dmutils.email import generate_token
 from nose.tools import assert_equal, assert_true, assert_is_not_none, assert_in
 from ..helpers import BaseApplicationTest
 from lxml import html
 import mock
-
 
 EMAIL_EMPTY_ERROR = "Email can not be empty"
 EMAIL_INVALID_ERROR = "Please enter a valid email address"
@@ -125,12 +124,19 @@ class TestLogin(BaseApplicationTest):
 
 class TestResetPassword(BaseApplicationTest):
 
+    _user = None
+
     def setup(self):
         super(TestResetPassword, self).setup()
 
         data_api_client_config = {'get_user.return_value': self.user(
             123, "email@email.com", 1234, 'name'
         )}
+
+        self._user = {
+            "user": 123,
+            "email": 'email@email.com',
+        }
 
         self._data_api_client = mock.patch(
             'app.main.views.login.data_api_client', **data_api_client_config
@@ -168,7 +174,12 @@ class TestResetPassword(BaseApplicationTest):
 
     def test_email_should_be_decoded_from_token(self):
         with self.app.app_context():
-            url = helpers.email.generate_reset_url(123, "email@email.com")
+            token = generate_token(
+                self._user,
+                self.app.config['SECRET_KEY'],
+                self.app.config['RESET_PASSWORD_SALT'])
+            url = '/suppliers/reset-password/{}'.format(token)
+
         res = self.client.get(url)
         assert_equal(res.status_code, 200)
         assert_true(
@@ -177,7 +188,12 @@ class TestResetPassword(BaseApplicationTest):
 
     def test_password_should_not_be_empty(self):
         with self.app.app_context():
-            url = helpers.email.generate_reset_url(123, 'email@email.com')
+            token = generate_token(
+                self._user,
+                self.app.config['SECRET_KEY'],
+                self.app.config['RESET_PASSWORD_SALT'])
+            url = '/suppliers/reset-password/{}'.format(token)
+
             res = self.client.post(url, data={
                 'password': '',
                 'confirm_password': ''
@@ -192,7 +208,12 @@ class TestResetPassword(BaseApplicationTest):
 
     def test_password_should_be_over_ten_chars_long(self):
         with self.app.app_context():
-            url = helpers.email.generate_reset_url(123, 'email@email.com')
+            token = generate_token(
+                self._user,
+                self.app.config['SECRET_KEY'],
+                self.app.config['RESET_PASSWORD_SALT'])
+            url = '/suppliers/reset-password/{}'.format(token)
+
             res = self.client.post(url, data={
                 'password': '123456789',
                 'confirm_password': '123456789'
@@ -204,7 +225,12 @@ class TestResetPassword(BaseApplicationTest):
 
     def test_password_should_be_under_51_chars_long(self):
         with self.app.app_context():
-            url = helpers.email.generate_reset_url(123, 'email@email.com')
+            token = generate_token(
+                self._user,
+                self.app.config['SECRET_KEY'],
+                self.app.config['RESET_PASSWORD_SALT'])
+            url = '/suppliers/reset-password/{}'.format(token)
+
             res = self.client.post(url, data={
                 'password':
                     '123456789012345678901234567890123456789012345678901',
@@ -218,7 +244,12 @@ class TestResetPassword(BaseApplicationTest):
 
     def test_passwords_should_match(self):
         with self.app.app_context():
-            url = helpers.email.generate_reset_url(123, 'email@email.com')
+            token = generate_token(
+                self._user,
+                self.app.config['SECRET_KEY'],
+                self.app.config['RESET_PASSWORD_SALT'])
+            url = '/suppliers/reset-password/{}'.format(token)
+
             res = self.client.post(url, data={
                 'password': '1234567890',
                 'confirm_password': '0123456789'
@@ -230,7 +261,12 @@ class TestResetPassword(BaseApplicationTest):
 
     def test_redirect_to_login_page_on_success(self):
         with self.app.app_context():
-            url = helpers.email.generate_reset_url(123, 'email@email.com')
+            token = generate_token(
+                self._user,
+                self.app.config['SECRET_KEY'],
+                self.app.config['RESET_PASSWORD_SALT'])
+            url = '/suppliers/reset-password/{}'.format(token)
+
             res = self.client.post(url, data={
                 'password': '1234567890',
                 'confirm_password': '1234567890'
@@ -247,7 +283,12 @@ class TestResetPassword(BaseApplicationTest):
             data_api_client.get_user.return_value = self.user(
                 123, "email@email.com", 1234, 'email', is_token_valid=False
             )
-            url = helpers.email.generate_reset_url(123, 'email@email.com')
+            token = generate_token(
+                self._user,
+                self.app.config['SECRET_KEY'],
+                self.app.config['RESET_PASSWORD_SALT'])
+            url = '/suppliers/reset-password/{}'.format(token)
+
             res = self.client.post(url, data={
                 'password': '1234567890',
                 'confirm_password': '1234567890'
@@ -261,7 +302,6 @@ class TestResetPassword(BaseApplicationTest):
 
 
 class TestLoginFormsNotAutofillable(BaseApplicationTest):
-
     def _forms_and_inputs_not_autofillable(
             self, url, expected_title, expected_lede=None
     ):
@@ -309,7 +349,15 @@ class TestLoginFormsNotAutofillable(BaseApplicationTest):
         )
 
         with self.app.app_context():
-            url = helpers.email.generate_reset_url(123, "email@email.com")
+            token = generate_token(
+                {
+                    "user": 123,
+                    "email": 'email@email.com',
+                },
+                self.app.config['SECRET_KEY'],
+                self.app.config['RESET_PASSWORD_SALT'])
+
+            url = '/suppliers/reset-password/{}'.format(token)
 
         self._forms_and_inputs_not_autofillable(
             url,
