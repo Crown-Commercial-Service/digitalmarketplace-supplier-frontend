@@ -76,20 +76,24 @@
 
   <div class="grid-row">
     <div class="column-one-whole">
-      <h2 class="summary-item-heading">Services</h2>
-      <p class="summary-item-top-level-action">
-        <a href="{{ url_for('.start_new_draft_service') }}">Add a service</a>
-      </p>
-      <table class="summary-item-body">
-        <thead></thead>
-        <tbody class="summary-item-body">
-          <tr class="summary-item-row">
-            <td class="summary-item-field-name">
-              <span class="hint">You haven't added any services yet.</span>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+      {% import "toolkit/summary-table.html" as summary %}
+      {{ summary.heading("Draft services") }}
+      {{ summary.top_link("Add a service", url_for(".start_new_draft_service")) }}
+      {% call(draft) summary.list_table(
+        drafts,
+        caption="Draft services",
+        empty_message="You haven't added any services yet.",
+        field_headings=["Service name", "Lot", summary.hidden_field_heading("Make a copy")],
+        field_headings_visible=False
+      ) %}
+        {% call summary.row() %}
+          {{ summary.service_link(draft.serviceName,
+                                  url_for(".view_service_submission", service_id=draft.id)) }}
+          {{ summary.text(draft.lot) }}
+          {{ summary.button(text="Make a copy",
+                             action=url_for('.copy_draft_service', service_id=draft.id)) }}
+        {% endcall %}
+      {% endcall %}
     </div>
   </div>
 

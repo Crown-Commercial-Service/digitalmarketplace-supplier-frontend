@@ -15,8 +15,18 @@ from ..forms.frameworks import G7SelectionQuestions
 def framework_dashboard():
     template_data = main.config['BASE_TEMPLATE_DATA']
 
+    try:
+        drafts = data_api_client.find_draft_services(
+            current_user.supplier_id,
+            framework='g-cloud-7'
+        )['services']
+
+    except APIError as e:
+        abort(e.status_code)
+
     return render_template(
         "frameworks/dashboard.html",
+        drafts=drafts,
         **template_data
     ), 200
 
