@@ -38,6 +38,7 @@ class BaseApplicationTest(object):
                 },
                 "role": "supplier",
                 "locked": locked,
+                "active": True,
                 'passwordChangedAt': password_changed_at
             }
         }
