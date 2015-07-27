@@ -21,8 +21,10 @@ class TestListServices(BaseApplicationTest):
             assert_equal(res.status_code, 200)
             data_api_client.find_services.assert_called_once_with(
                 supplier_id=1234)
-            assert_true("You don't have any services"
-                        in res.get_data(as_text=True))
+            assert_in(
+                "You don&#39;t have any services on the Digital Marketplace",
+                res.get_data(as_text=True)
+            )
 
     @mock.patch('app.main.views.services.data_api_client')
     def test_shows_services_list(self, data_api_client):
@@ -98,11 +100,7 @@ class TestListServicesLogin(BaseApplicationTest):
             assert_equal(res.status_code, 200)
 
             assert_true(
-                self.strip_all_whitespace('<h1>Supplier Name</h1>')
-                in self.strip_all_whitespace(res.get_data(as_text=True))
-            )
-            assert_true(
-                self.strip_all_whitespace('email@email.com')
+                self.strip_all_whitespace('<h1>Current services</h1>')
                 in self.strip_all_whitespace(res.get_data(as_text=True))
             )
 
