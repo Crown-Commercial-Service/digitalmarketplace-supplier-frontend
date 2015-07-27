@@ -125,6 +125,24 @@
     </div>
   </div>
 
+  {{ summary.heading("Contributors") }}
+  {% if 'USER_DASHBOARD' is active_feature %}
+    {{ summary.top_link("Add or remove", '/suppliers/users') }}
+  {% endif %}
+  {% call(item) summary.table(
+    users,
+    caption="Users for " + current_user.supplier_name,
+    field_headings=[
+      "Name",
+      "Email address"
+    ],
+    field_headings_visible=False
+  ) %}
+    {% call summary.row() %}
+      {{ summary.field_name(item.name) }}
+      {{ summary.text(item.emailAddress) }}
+    {% endcall %}
+  {% endcall %}
   <div class="grid-row">
     <div class="column-one-whole">
       {{ summary.heading("Account information") }}

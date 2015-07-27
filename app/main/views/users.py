@@ -1,12 +1,27 @@
 from flask_login import login_required, current_user
-from flask import render_template
-from datetime import datetime
+from flask import render_template, abort, flash, url_for, redirect, current_app
 
 from ...main import main
-from ... import data_api_client, flask_featureflags
-from dmutils.formats import DATETIME_FORMAT
+from ... import flask_featureflags
+from ..helpers.helpers import call_data_api_client
 
-DISPLAY_DATETIME_FORMAT = '%A, %d %B %Y at %H:%M'
+
+def get_current_suppliers_users():
+
+    users = call_data_api_client(
+        'find_users',
+        supplier_id=current_user.supplier_id
+    ).get('users')
+
+    active_users = [user for user in users if user['active']]
+
+    for index, user in enumerate(active_users):
+        if user['id'] == current_user.id:
+            # insert current user into front of list
+            active_users.insert(0, active_users.pop(index))
+            break
+
+    return active_users
 
 
 @main.route('/users')
@@ -14,31 +29,59 @@ DISPLAY_DATETIME_FORMAT = '%A, %d %B %Y at %H:%M'
 @flask_featureflags.is_active_feature('USER_DASHBOARD')
 def list_users():
 
-    def display_last_logged_in_date(last_logged_in):
-        if not last_logged_in:
-            return ''
-
-        return datetime.strptime(
-            last_logged_in, DATETIME_FORMAT
-        ).strftime(DISPLAY_DATETIME_FORMAT)
-
     template_data = main.config['BASE_TEMPLATE_DATA']
-    template_users = []
-
-    suppliers_users = data_api_client.find_users(
-        supplier_id=current_user.supplier_id
-    )
-
-    for user in suppliers_users["users"]:
-
-        template_users.append({
-            'name': user['name'],
-            'email_address': user['emailAddress'],
-            'logged_in_at': display_last_logged_in_date(user['loggedInAt']),
-            'locked': user['locked']
-        })
 
     return render_template(
         "users/list_users.html",
-        users=template_users,
+        current_user=current_user,
+        users=get_current_suppliers_users(),
         **template_data), 200
+
+
+@main.route('/users/<int:user_id>/deactivate', methods=['POST'])
+@login_required
+@flask_featureflags.is_active_feature('USER_DASHBOARD')
+def deactivate_user(user_id):
+
+    # check that id is not current user
+    if user_id == current_user.id:
+        current_app.logger.error(
+            "deactivate_user cannot deactivate self, user_id={} supplier_id={}".format(
+                current_user.id, current_user.supplier_id
+            )
+        )
+        abort(404)
+
+    # check that user exists
+    user_to_deactivate = call_data_api_client('get_user', user_id=user_id)
+
+    if not user_to_deactivate or not user_to_deactivate.get('users'):
+        current_app.logger.error(
+            "deactivate_user user to deactivate not found, "
+            "user_id={} supplier_id={} user_id_to_deactivate={}".format(
+                current_user.id, current_user.supplier_id, user_id
+            )
+        )
+        abort(404)
+
+    user_to_deactivate = user_to_deactivate.get('users')
+
+    # check that user to deactivate belongs to supplier of current user
+    if user_to_deactivate['role'] != 'supplier' \
+            or user_to_deactivate['supplier']['supplierId'] != current_user.supplier_id:
+        current_app.logger.error(
+            "deactivate_user cannot deactivate another suppliers' users, "
+            "user_id={} supplier_id={} user_id_to_deactivate={}".format(
+                current_user.id, current_user.supplier_id, user_id
+            )
+        )
+        abort(404)
+
+    call_data_api_client(
+        'update_user',
+        user_id=user_to_deactivate['id'],
+        active=False
+    )
+
+    flash('{}\'s account has been deactivated'.format(user_to_deactivate['name']))
+    return redirect(url_for('.list_users'))

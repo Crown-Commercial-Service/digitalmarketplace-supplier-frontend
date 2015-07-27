@@ -7,6 +7,7 @@ from dmutils import flask_featureflags
 from ...main import main
 from ... import data_api_client
 from ..forms.suppliers import EditSupplierForm, EditContactInformationForm
+from .users import get_current_suppliers_users
 
 
 @main.route('')
@@ -27,6 +28,7 @@ def dashboard():
     return render_template(
         "suppliers/dashboard.html",
         supplier=supplier,
+        users=get_current_suppliers_users(),
         **template_data
     ), 200
 

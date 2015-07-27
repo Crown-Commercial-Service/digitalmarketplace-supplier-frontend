@@ -21,11 +21,23 @@
 {% endblock %}
 
 {% block main_content %}
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+        {%
+          with
+          message = message,
+          type = "destructive" if category == 'error' else "success"
+        %}
+          {% include "toolkit/notification-banner.html" %}
+        {% endwith %}
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
   <div class="grid-row">
     <div class="column-two-thirds">
       {% with
-        context = current_user.supplier_name,
-        heading = "Users"
+        heading = "Contributors"
       %}
         {% include 'toolkit/page-heading.html' %}
       {% endwith %}
@@ -33,22 +45,22 @@
   </div>
   {% call(item) summary.table(
     users,
-    caption="Users for " + current_user.supplier_name,
+    caption="Contributors for " + current_user.supplier_name,
     field_headings=[
       "Name",
       "Email address",
-      "Logged in at",
-      summary.hidden_field_heading("Locked")
+      summary.hidden_field_heading("Action")
     ],
     field_headings_visible=True
   ) %}
     {% call summary.row() %}
       {{ summary.field_name(item.name) }}
-      {{ summary.text(item.email_address) }}
-      {{ summary.text(item.logged_in_at) }}
-      <td class="summary-item-field {{ 'user-status-locked' if item.locked }}">
-        {{ 'Locked' if item.locked }}
-      </td>
+      {{ summary.text(item.emailAddress) }}
+      {% if item.id != current_user.id %}
+        {{ summary.button("Deactivate", url_for('main.deactivate_user', user_id=item.id), csrf_token_value=csrf_token()) }}
+      {% else %}
+        {{ summary.text('') }}
+      {% endif %}
     {% endcall %}
   {% endcall %}
 {% endblock %}

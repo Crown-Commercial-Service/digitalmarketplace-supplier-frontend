@@ -28,10 +28,28 @@ def get_supplier(*args, **kwargs):
     }}
 
 
+def get_user():
+    return [{
+        'id': 123,
+        'name': "User Name",
+        'emailAddress': "email@email.com",
+        'loggedInAt': "2015-05-06T11:57:28.008690Z",
+        'locked': False,
+        'active': True,
+        'role': 'supplier',
+        'supplier': {
+            'name': "Supplier Name",
+            'supplierId': 1234
+        }
+    }]
+
+
 class TestSuppliersDashboard(BaseApplicationTest):
     @mock.patch("app.main.views.suppliers.data_api_client")
-    def test_shows_supplier_info(self, data_api_client):
+    @mock.patch("app.main.views.suppliers.get_current_suppliers_users")
+    def test_shows_supplier_info(self, get_current_suppliers_users, data_api_client):
         data_api_client.get_supplier.side_effect = get_supplier
+        get_current_suppliers_users.side_effect = get_user
         with self.app.test_client():
             self.login()
 
@@ -56,9 +74,25 @@ class TestSuppliersDashboard(BaseApplicationTest):
             assert_in("Supplierland", resp_data)
             assert_in("11 AB", resp_data)
 
+            # Check contributors table exists
+            assert_in(
+                self.strip_all_whitespace('Contributors</h2>'),
+                self.strip_all_whitespace(resp_data)
+            )
+            assert_in(
+                self.strip_all_whitespace('User Name</span></td>'),
+                self.strip_all_whitespace(resp_data)
+            )
+            assert_in(
+                self.strip_all_whitespace('email@email.com</span></td>'),
+                self.strip_all_whitespace(resp_data)
+            )
+
     @mock.patch("app.main.views.suppliers.data_api_client")
-    def test_shows_edit_buttons(self, data_api_client):
+    @mock.patch("app.main.views.suppliers.get_current_suppliers_users")
+    def test_shows_edit_buttons(self, get_current_suppliers_users, data_api_client):
         data_api_client.get_supplier.side_effect = get_supplier
+        get_current_suppliers_users.side_effect = get_user
         with self.app.test_client():
             self.login()
 
@@ -71,7 +105,11 @@ class TestSuppliersDashboard(BaseApplicationTest):
 
 class TestSupplierDashboardLogin(BaseApplicationTest):
     @mock.patch("app.main.views.suppliers.data_api_client")
-    def test_should_show_supplier_dashboard_logged_in(self, data_api_client):
+    @mock.patch("app.main.views.suppliers.get_current_suppliers_users")
+    def test_should_show_supplier_dashboard_logged_in(
+            self, get_current_suppliers_users, data_api_client
+    ):
+        get_current_suppliers_users.side_effect = get_user
         with self.app.test_client():
             data_api_client.authenticate_user = Mock(
                 return_value=(self.user(
