@@ -49,32 +49,28 @@
       {% include "services/_edit-status.html" %}
     </div>
     <div class="column-one-whole">
+      {% import "toolkit/summary-table.html" as summary %}
       {% for section in sections %}
-        <h2 class="summary-item-heading">
-          {{section.name}}
-        </h2>
+        {{ summary.heading(section.name) }}
         {% if section.editable %}
-          <p class="summary-item-top-level-action">
-            <a href="{{ url_for('.edit_section', service_id=service_id, section=section.id ) }}">Edit</a>
-          </p>
+          {{ summary.top_link("Edit", url_for(".edit_section", service_id=service_id, section=section.id)) }}
         {% endif %}
-        <table class="summary-item-body">
-          <thead class="summary-item-field-headings">
-            <tr>
-              <th>Service attribute name</th><th>Service attribute</th>
-            </tr>
-          </thead>
-          <tbody class="summary-item-body">
-            {% for question in section.questions %}
-              <tr class="summary-item-row">
-                <td class="summary-item-field-name">{{ question.question }}</td>
-                <td class="summary-item-field-content">
-                  {{ answers[question.type](service_data[question.id]) }}
-                </td>
-              </tr>
-            {% endfor %}
-          </tbody>
-        </table>
+        {% call(question) summary.list_table(
+          section.questions,
+          caption=section.name,
+          field_headings=[
+            "Service attribute name",
+            "Service attribute"
+          ],
+          field_headings_visible=True
+        ) %}
+          {% call summary.row() %}
+            {{ summary.field_name(question.question) }}
+            {% call summary.field() %}
+              {{ answers[question.type](service_data[question.id]) }}
+            {% endcall %}
+          {% endcall %}
+        {% endcall %}
       {% endfor %}
     </div>
   </div>
