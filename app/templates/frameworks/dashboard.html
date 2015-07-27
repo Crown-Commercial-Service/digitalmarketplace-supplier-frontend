@@ -42,12 +42,17 @@
         </p>
       </div>
       <div class="framework-declaration">
-        <h3 class="browse-list-item-link">
-          <a href='{{ url_for('.framework_supplier_declaration') }}'>Make supplier declaration</a>
-        </h3>
-        <p class="browse-list-item-body">
-          Legal declaration required to supply G-Cloud 7 services
-        </p>
+        {%
+          with items = [
+            {
+                "title": "Make supplier declaration",
+                "body": "Legal declaration required to supply G-Cloud 7 services",
+                "link": url_for('.framework_supplier_declaration')
+            }
+          ]
+        %}
+          {% include "toolkit/browse-list.html" %}
+        {% endwith %}
       </div>
     </div>
     <aside role="complementary" class="column-one-third framework-help">
