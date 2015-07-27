@@ -1,12 +1,12 @@
 from __future__ import absolute_import
 from itsdangerous import BadSignature, SignatureExpired
-
+from datetime import datetime
 from flask import current_app, flash, redirect, render_template, url_for, \
     request
 from flask_login import logout_user, login_user
 from dmutils.user import user_has_role, User
+from dmutils.formats import DATETIME_FORMAT
 from dmutils.email import send_email, \
-    token_created_before_password_last_changed, \
     generate_token, decode_token
 
 from .. import main
@@ -186,9 +186,15 @@ def decode_password_reset_token(token):
         flash('token_invalid', 'error')
         return None
 
+    user = data_api_client.get_user(decoded["user"])
+    user_last_changed_password_at = datetime.strptime(
+        user['users']['passwordChangedAt'],
+        DATETIME_FORMAT
+    )
+
     if token_created_before_password_last_changed(
             timestamp,
-            data_api_client.get_user(decoded["user"])
+            user_last_changed_password_at
     ):
         current_app.logger.info(
             "Error changing password: "
@@ -198,3 +204,7 @@ def decode_password_reset_token(token):
         return None
 
     return decoded
+
+
+def token_created_before_password_last_changed(token_timestamp, user_timestamp):
+        return token_timestamp < user_timestamp
