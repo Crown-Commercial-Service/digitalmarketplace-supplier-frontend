@@ -190,6 +190,15 @@ gulp.task(
 );
 
 gulp.task(
+  'copy:govuk_toolkit_assets:images',
+  copyFactory(
+    "images from the GOVUK frontend toolkit",
+    govukToolkitRoot + '/images',
+    staticFolder + '/images'
+  )
+);
+
+gulp.task(
   'copy:dm_toolkit_assets:templates',
   copyFactory(
     "templates from the Digital Marketplace frontend toolkit",
@@ -252,6 +261,7 @@ gulp.task(
     'copy:template_assets:images',
     'copy:template_assets:stylesheets',
     'copy:template_assets:javascripts',
+    'copy:govuk_toolkit_assets:images',
     'copy:dm_toolkit_assets:stylesheets',
     'copy:dm_toolkit_assets:images',
     'copy:dm_toolkit_assets:templates',
