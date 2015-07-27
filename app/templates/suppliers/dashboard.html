@@ -1,4 +1,5 @@
 {% extends "_base_page.html" %}
+{% import "toolkit/summary-table.html" as summary %}
 
 {% block page_title %}{{current_user.supplier_name}} – Digital Marketplace{% endblock %}
 
@@ -42,108 +43,107 @@
         {% endwith %}
       {% endif %}
 
-      <h2 class="summary-item-heading">Current services</h2>
+      {{ summary.heading("Current services") }}
       {% if supplier.service_counts %}
-      <p class="summary-item-top-level-action">
-        <a href="{{ url_for('.list_services') }}">View</a>
-      </p>
-      <table class="summary-item-body">
-        <thead></thead>
-        <tbody class="summary-item-body">
-          {% for framework, service_count in supplier.service_counts|dictsort %}
-          <tr class="summary-item-row">
-            <td class="summary-item-field-name">
-              {{ framework }}
-            </td>
-            <td class="summary-item-field-content">
-              {{ service_count }} service{{ "s" if service_count > 1 }}
-            </td>
-          </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-      {% else %}
-      <p class="hint summary-item-no-content">
-        You don't have any services on the Digital Marketplace
-      </p>
+        {{ summary.top_link('View', url_for('.list_services')) }}
       {% endif %}
+      {% call(item) summary.list_table(
+        supplier.service_counts|dictsort,
+        caption='Supplier information',
+        field_headings=[
+          'Label',
+          'Value'
+        ],
+        field_headings_visible=False,
+        empty_message="You don't have any services on the Digital Marketplace"
+      ) %}
+        {% call summary.row() %}
+          {{ summary.field_name(item[0]) }}
+          {{ summary.text(item[1]|string + " services") }}
+        {% endcall %}
+      {% endcall %}
+
     </div>
   </div>
 
   <div class="grid-row">
     <div class="column-one-whole">
-      <h2 class="summary-item-heading">Supplier information</h2>
+      {{ summary.heading("Supplier information") }}
       {% if 'EDIT_SUPPLIER_PAGE' is active_feature %}
-      <p class="summary-item-top-level-action">
-        <a href="{{ url_for('.edit_supplier') }}">Edit</a>
-      </p>
+        {{ summary.top_link('Edit', url_for('.edit_supplier')) }}
       {% endif %}
-      <table class="summary-item-body">
-        <thead></thead>
-          <tbody class="summary-item-body">
-            <tr class="summary-item-row">
-              <td class="summary-item-field-name">Supplier summary</td>
-              <td class="summary-item-field-content">{{ supplier.description }}</td>
-            </tr>
-            <tr class="summary-item-row">
-              <td class="summary-item-field-name">Clients</td>
-              <td class="summary-item-field-content">
-                {% if supplier.clients %}
-                <ul>
-                {% for client in supplier.clients %}
-                  <li>{{ client }}</li>
-                {% endfor %}
-                </ul>
-                {% else %}
-                  <span class="hint summary-item-no-content">None entered</p>
-                {% endif %}
-              </td>
-            </tr>
-            <tr class="summary-item-row">
-              <td class="summary-item-field-name">Contact name</td>
-              <td class="summary-item-field-content">{{ supplier.contact.contactName }}</td>
-            </tr>
-            <tr class="summary-item-row">
-              <td class="summary-item-field-name">Website</td>
-              <td class="summary-item-field-content">{{ supplier.contact.website }}</td>
-            </tr>
-            <tr class="summary-item-row">
-              <td class="summary-item-field-name">Email address</td>
-              <td class="summary-item-field-content">{{ supplier.contact.email }}</td>
-            </tr>
-            <tr class="summary-item-row">
-              <td class="summary-item-field-name">Phone number</td>
-              <td class="summary-item-field-content">{{ supplier.contact.phoneNumber }}</td>
-            </tr>
-            <tr class="summary-item-row">
-              <td class="summary-item-field-name">Address</td>
-              <td class="summary-item-field-content">
-                <address>
-                  {{ supplier.contact.address1 }}<br>
-                  {{ supplier.contact.address2}}<br>
-                  {{ supplier.contact.city }}<br>
-                  {{ supplier.contact.country }}<br>
-                  {{ supplier.contact.postcode }}<br>
-                </address>
-              </td>
-            </tr>
-          </tbody>
-      </table>
+      {% call(item) summary.mapping_table(
+        caption='Supplier information',
+        field_headings=[
+          'Label',
+          'Value'
+        ],
+        field_headings_visible=False
+      ) %}
+        {% call summary.row() %}
+          {{ summary.field_name('Supplier summary') }}
+          {{ summary.text(supplier.description) }}
+        {% endcall %}
+        {% call summary.row() %}
+          {{ summary.field_name('Clients') }}
+          {{ summary.list(supplier.clients) }}
+        {% endcall %}
+        {% call summary.row() %}
+          {{ summary.field_name('Contact name') }}
+          {{ summary.text(supplier.contact.contactName) }}
+        {% endcall %}
+        {% call summary.row() %}
+          {{ summary.field_name('Website') }}
+          {{ summary.text(supplier.contact.website) }}
+        {% endcall %}
+        {% call summary.row() %}
+          {{ summary.field_name('Email address') }}
+          {{ summary.text(supplier.contact.email) }}
+        {% endcall %}
+        {% call summary.row() %}
+          {{ summary.field_name('Phone number') }}
+          {{ summary.text(supplier.contact.phoneNumber) }}
+        {% endcall %}
+        {% call summary.row() %}
+          {{ summary.field_name('Address') }}
+          {% call summary.field() %}
+            {%
+              with
+              without_spacing = true,
+              postcode = supplier.contact.get("postcode"),
+              street_address = True,
+              street_address_line_1 = supplier.contact.get("address1"),
+              street_address_line_2 = supplier.contact.get("address2"),
+              locality = supplier.contact.get("city"),
+              country = supplier.contact.get("country")
+            %}
+              {% include "toolkit/contact-details.html" %}
+            {% endwith %}
+          {% endcall %}
+        {% endcall %}
+      {% endcall %}
     </div>
   </div>
 
   <div class="grid-row">
     <div class="column-one-whole">
-      <h2 class="summary-item-heading">Account information</h2>
-      <table class="summary-item-body">
-        <thead></thead>
-          <tbody>
-            <tr class="summary-item-row">
-              <td class="summary-item-field-name">Email address</td>
-              <td class="summary-item-field-content">{{ current_user.email_address }}</td>
-            </tr>
-          </tbody>
-      </table>
+      {{ summary.heading("Account information") }}
+      {% call(item) summary.table(
+        [
+          ("Email address", current_user.email_address)
+        ],
+        caption="Account information",
+        field_headings=[
+          "Label",
+          "Value"
+        ],
+        field_headings_visible=False
+      ) %}
+        {% call summary.row() %}
+          {{ summary.field_name(item[0]) }}
+          {{ summary.text(item[1]) }}
+        {% endcall %}
+      {% endcall %}
     </div>
   </div>
 
