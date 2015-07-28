@@ -90,98 +90,83 @@ def update_service_status(service_id):
         url_for(".list_services",
                 updated_service_id=updated_service.get("id"),
                 updated_service_name=updated_service.get("serviceName"),
-                updated_service_status=updated_service.get("status")
-                )
+                updated_service_status=updated_service.get("status"))
     )
 
 
-@main.route(
-    '/services/<string:service_id>/edit/<string:section>',
-    methods=['GET']
-)
+@main.route('/services/<string:service_id>/edit/<string:section_id>', methods=['GET'])
 @login_required
 @flask_featureflags.is_active_feature('EDIT_SERVICE_PAGE')
-def edit_section(service_id, section):
-
-    service = data_api_client.get_service(service_id)['services']
+def edit_section(service_id, section_id):
+    service = data_api_client.get_service(service_id)
+    if service is None:
+        abort(404)
+    service = service['services']
 
     if not _is_service_associated_with_supplier(service):
         abort(404)
 
     content = existing_service_content.get_builder().filter(service)
+    section = content.get_section(section_id)
+    if section is None:
+        abort(404)
 
     return render_template(
         "services/edit_section.html",
-        section=content.get_section(section),
+        section=section,
         service_data=service,
         service_id=service_id,
         return_to=".edit_service",
+        dashboard=".list_services",
+        dash_label="Services",
         **main.config['BASE_TEMPLATE_DATA']
     )
 
 
-@main.route(
-    '/services/<string:service_id>/edit/<string:section>',
-    methods=['POST']
-)
+def get_section_questions(section):
+    return [question['id'] for question in section['questions']]
+
+
+@main.route('/services/<string:service_id>/edit/<string:section_id>', methods=['POST'])
 @login_required
 @flask_featureflags.is_active_feature('EDIT_SERVICE_PAGE')
-def update_section(service_id, section):
-    service = data_api_client.get_service(service_id).get('services')
+def update_section(service_id, section_id):
+    service = data_api_client.get_service(service_id)
+    if service is None:
+        abort(404)
+    service = service['services']
 
     if not _is_service_associated_with_supplier(service):
         abort(404)
 
     content = existing_service_content.get_builder().filter(service)
+    section = content.get_section(section_id)
+    if section is None:
+        abort(404)
 
-    posted_data = dict(
-        list(request.form.items()) + list(request.files.items())
-    )
+    posted_data = _get_formatted_section_data(section)
 
-    posted_data.pop('csrf_token', None)
-
-    # Turn responses which have multiple parts into lists
-    for key in request.form:
-        item_as_list = request.form.getlist(key)
-        list_types = ['list', 'checkboxes', 'pricing']
-        if (
-            key != 'csrf_token' and
-            existing_service_content.get_question(key)['type'] in list_types
-        ):
-            posted_data[key] = item_as_list
-
-    if posted_data:
-        try:
-            data_api_client.update_service(
-                service_id,
-                posted_data,
-                current_user.email_address,
-                "supplier app")
-        except HTTPError as e:
-            errors_map = {}
-            for error in e.response.json()['error'].keys():
-                if error == '_form':
-                    abort(400, "Submitted data was not in a valid format")
-                else:
-                    id = existing_service_content.get_question(error)['id']
-                    errors_map[id] = \
-                        {
-                        'input_name': error,
-                        'question': existing_service_content
-                            .get_question(error)['question'],
-                        'message': existing_service_content
-                            .get_question(error)['validations'][-1]['message']
-                        }
-
-            return render_template(
-                "services/edit_section.html",
-                section=content.get_section(section),
-                service_data=posted_data,
-                service_id=service_id,
-                return_to=".edit_service",
-                errors=errors_map,
-                **main.config['BASE_TEMPLATE_DATA']
-            )
+    try:
+        data_api_client.update_service(
+            service_id,
+            posted_data,
+            current_user.email_address,
+            "supplier app")
+    except HTTPError as e:
+        errors_map = _get_section_error_messages(e, service['lot'])
+        if not posted_data.get('serviceName', None):
+            posted_data['serviceName'] = service.get('serviceName', '')
+        return render_template(
+            "services/edit_section.html",
+            section=section,
+            service_data=posted_data,
+            service_id=service_id,
+            return_to=".edit_service",
+            dashboard=".list_services",
+            dash_label="Services",
+            errors=errors_map,
+            **main.config['BASE_TEMPLATE_DATA']
+        )
 
     return redirect(url_for(".edit_service", service_id=service_id))
 
@@ -268,7 +253,7 @@ def create_new_draft_service():
         url_for(
             ".edit_service_submission",
             service_id=draft_service.get('id'),
-            section=content.get_next_editable_section_id()
+            section_id=content.get_next_editable_section_id()
         )
     )
 
@@ -298,8 +283,10 @@ def copy_draft_service(service_id):
 @login_required
 @flask_featureflags.is_active_feature('GCLOUD7_OPEN')
 def view_service_submission(service_id):
-
-    draft = data_api_client.get_draft_service(service_id).get('services')
+    try:
+        draft = data_api_client.get_draft_service(service_id)['services']
+    except HTTPError as e:
+        abort(e.status_code)
 
     if not _is_service_associated_with_supplier(draft):
         abort(404)
@@ -314,115 +301,136 @@ def view_service_submission(service_id):
         **main.config['BASE_TEMPLATE_DATA']), 200
 
 
-@main.route(
-    '/submission/services/<string:service_id>/edit/<string:section>',
-    methods=['GET']
-)
+@main.route('/submission/services/<string:service_id>/edit/<string:section_id>', methods=['GET'])
 @login_required
 @flask_featureflags.is_active_feature('GCLOUD7_OPEN')
-def edit_service_submission(service_id, section):
-
-    draft = data_api_client.get_draft_service(service_id).get('services')
+def edit_service_submission(service_id, section_id):
+    try:
+        draft = data_api_client.get_draft_service(service_id)['services']
+    except HTTPError as e:
+        abort(e.status_code)
 
     if not _is_service_associated_with_supplier(draft):
         abort(404)
 
     content = new_service_content.get_builder().filter(draft)
+    section = content.get_section(section_id)
+    if section is None:
+        abort(404)
 
     return render_template(
         "services/edit_section.html",
-        section=content.get_section(section),
+        section=section,
         service_data=draft,
         service_id=service_id,
+        dashboard=".framework_dashboard",
+        dash_label="Apply to G-Cloud 7",
         return_to=".view_service_submission",
         **main.config['BASE_TEMPLATE_DATA']
     )
 
 
-@main.route(
-    '/submission/services/<string:service_id>/edit/<string:section>',
-    methods=['POST']
-)
+@main.route('/submission/services/<string:service_id>/edit/<string:section_id>', methods=['POST'])
 @login_required
 @flask_featureflags.is_active_feature('GCLOUD7_OPEN')
-def update_section_submission(service_id, section):
-    draft = data_api_client.get_draft_service(service_id).get('services')
+def update_section_submission(service_id, section_id):
+    try:
+        draft = data_api_client.get_draft_service(service_id)['services']
+    except HTTPError as e:
+        abort(e.status_code)
 
     if not _is_service_associated_with_supplier(draft):
         abort(404)
 
     content = new_service_content.get_builder().filter(draft)
-    posted_data = dict(
-        list(request.form.items()) + list(request.files.items())
-    )
-    posted_data.pop('csrf_token', None)
-    # Turn responses which have multiple parts into lists and booleans into booleans
-    for key in request.form:
-        item_as_list = request.form.getlist(key)
-        list_types = ['list', 'checkboxes', 'pricing']
-        if (
-            key == 'serviceTypes' or
-            key != 'csrf_token' and
-            new_service_content.get_question(key)['type'] in list_types
-        ):
-            posted_data[key] = item_as_list
-        elif (
-            key != 'csrf_token' and
-            new_service_content.get_question(key)['type'] == 'boolean'
-        ):
-            posted_data[key] = convert_to_boolean(posted_data[key])
+    section = content.get_section(section_id)
+    if section is None:
+        abort(404)
 
-    if posted_data:
-        try:
-            data_api_client.update_draft_service(
-                service_id,
-                posted_data,
-                current_user.email_address)
-        except HTTPError as e:
-            errors_map = {}
-            for error in e.response.json()['error'].keys():
-                if error == '_form':
-                    abort(400, "Submitted data was not in a valid format")
-                else:
-                    id = new_service_content.get_question(error)['id']
-                    errors_map[id] = {
-                        'input_name': error,
-                        'question': new_service_content.get_question(error)['question'],
-                        'message': new_service_content.get_question(error)['validations'][-1]['message']
-                    }
+    posted_data = _get_formatted_section_data(section)
+    posted_data['page_questions'] = get_section_questions(section)
 
-            return render_template(
-                "services/edit_section.html",
-                section=content.get_section(section),
-                service_data=posted_data,
-                service_id=service_id,
-                return_to=".view_service_submission",
-                errors=errors_map,
-                **main.config['BASE_TEMPLATE_DATA']
+    try:
+        data_api_client.update_draft_service(
+            service_id,
+            posted_data,
+            current_user.email_address)
+    except HTTPError as e:
+        errors_map = _get_section_error_messages(e, draft['lot'])
+        if not posted_data.get('serviceName', None):
+            posted_data['serviceName'] = draft.get('serviceName', '')
+        return render_template(
+            "services/edit_section.html",
+            section=section,
+            service_data=posted_data,
+            service_id=service_id,
+            return_to=".view_service_submission",
+            dashboard=".framework_dashboard",
+            dash_label="Apply to G-Cloud 7",
+            errors=errors_map,
+            **main.config['BASE_TEMPLATE_DATA']
             )
 
-    if (
-            request.args.get("return_to_summary")
-            or not content.get_next_editable_section_id(section)
-    ):
-        return redirect(
-            url_for(".view_service_submission", service_id=service_id))
+    return_to_summary = bool(request.args.get('return_to_summary'))
+    next_section = content.get_next_editable_section_id(section_id)
+
+    if next_section and not return_to_summary:
+        return redirect(url_for(".edit_service_submission", service_id=service_id, section_id=next_section))
     else:
-        return redirect(url_for(".edit_service_submission",
-                                service_id=service_id,
-                                section=content.get_next_editable_section_id(
-                                    section))
-                        )
+        return redirect(url_for(".view_service_submission", service_id=service_id))
 
 
 def _is_service_associated_with_supplier(service):
-
     return service.get('supplierId') == current_user.supplier_id
 
 
 def _is_service_modifiable(service):
-
     return service.get('status') != 'disabled'
+
+
+def _get_error_message(error, message_key, content):
+    validations = [
+        validation for validation in content.get_question(error)['validations']
+        if validation['name'] == message_key]
+
+    if len(validations):
+        return validations[0]['message']
+    else:
+        return 'There was a problem with the answer to this question'
+
+
+def _is_list_type(key):
+    """Return True if a given key is a list type"""
+    if key == 'serviceTypes':
+        return True
+    return new_service_content.get_question(key)['type'] in ['list', 'checkbox', 'pricing']
+
+
+def _is_boolean_type(key):
+    """Return True if a given key is a boolean type"""
+    return new_service_content.get_question(key)['type'] == 'boolean'
+
+
+def _get_formatted_section_data(section):
+    section_data = dict(list(request.form.items()))
+    section_data = _filter_keys(section_data, get_section_questions(section))
+    # Turn responses which have multiple parts into lists and booleans into booleans
+    for key in section_data:
+        if _is_list_type(key):
+            section_data[key] = request.form.getlist(key)
+        elif _is_boolean_type(key):
+            section_data[key] = convert_to_boolean(section_data[key])
+    return section_data
+
+
+def _filter_keys(data, keys):
+    """Return a dictionary filtered by a list of keys
+
+    >>> _filter_keys({'a': 1, 'b': 2}, ['a'])
+    {'a': 1}
+    """
+    key_set = set(keys) & set(data.keys())
+    return {key: data[key] for key in key_set}
 
 
 def _update_service_status(service, error_message=None):
@@ -457,3 +465,24 @@ def _update_service_status(service, error_message=None):
         sections=content,
         error=error_message,
         **dict(question, **template_data)), status_code
+
+
+def _get_section_error_messages(e, lot):
+    errors_map = {}
+    for error in e.message.keys():
+        if error == '_form':
+            abort(400, "Submitted data was not in a valid format")
+        else:
+            message_key = e.message[error]
+            if error == 'serviceTypes':
+                error = 'serviceTypes{}'.format(lot)
+            validation_message = _get_error_message(error,
+                                                    message_key,
+                                                    new_service_content)
+            question_id = new_service_content.get_question(error)['id']
+            errors_map[question_id] = {
+                'input_name': error,
+                'question': new_service_content.get_question(error)['question'],
+                'message': validation_message
+            }
+    return errors_map

@@ -1,4 +1,6 @@
+from dmutils.apiclient import HTTPError
 import mock
+from lxml import html
 from mock import Mock
 from nose.tools import assert_equal, assert_true, assert_false, \
     assert_in, assert_not_in
@@ -282,11 +284,114 @@ class TestSupplierUpdateService(BaseApplicationTest):
                      '?next=%2Fsuppliers%2Fservices%2F123')
 
 
-@mock.patch('app.main.views.services.request')
-class TestCreateService(BaseApplicationTest):
+@mock.patch('app.main.views.services.data_api_client')
+class TestEditService(BaseApplicationTest):
+
+    empty_service = {
+        'services': {
+            'serviceName': 'Service name 123',
+            'status': 'published',
+            'id': '123',
+            'frameworkName': 'G-Cloud 6',
+            'supplierId': 1234,
+            'supplierName': 'We supply any',
+            'lot': 'SCS',
+        }
+    }
 
     def setup(self):
-        super(TestCreateService, self).setup()
+        super(TestEditService, self).setup()
+        with self.app.test_client():
+            self.login()
+
+    def test_questions_for_this_section_can_be_changed(self, data_api_client):
+        data_api_client.get_service.return_value = self.empty_service
+        res = self.client.post(
+            '/suppliers/services/1/edit/description',
+            data={
+                'serviceName': 'The service',
+                'serviceSummary': 'This is the service',
+            })
+
+        assert_equal(res.status_code, 302)
+        data_api_client.update_service.assert_called_once_with(
+            '1', {'serviceName': 'The service', 'serviceSummary': 'This is the service'},
+            'email@email.com', 'supplier app')
+
+    def test_only_questions_for_this_section_can_be_changed(self, data_api_client):
+        data_api_client.get_service.return_value = self.empty_service
+        res = self.client.post(
+            '/suppliers/services/1/edit/description',
+            data={
+                'serviceFeatures': '',
+            })
+
+        assert_equal(res.status_code, 302)
+        data_api_client.update_service.assert_called_one_with(
+            '1', dict(), 'email@email.com', 'supplier app')
+
+    def test_edit_non_existent_service_returns_404(self, data_api_client):
+        data_api_client.get_service.return_value = None
+        res = self.client.get('/suppliers/services/1/edit/description')
+
+        assert_equal(res.status_code, 404)
+
+    def test_edit_non_existent_section_returns_404(self, data_api_client):
+        data_api_client.get_service.return_value = self.empty_service
+        res = self.client.get(
+            '/suppliers/services/1/edit/invalid_section'
+        )
+        assert_equal(404, res.status_code)
+
+    def test_update_with_answer_required_error(self, data_api_client):
+        data_api_client.get_service.return_value = self.empty_service
+        data_api_client.update_service.side_effect = HTTPError(
+            mock.Mock(status_code=400),
+            {'serviceSummary': 'answer_required'})
+        res = self.client.post(
+            '/suppliers/services/1/edit/description',
+            data={})
+
+        assert_equal(res.status_code, 200)
+        document = html.fromstring(res.get_data(as_text=True))
+        assert_equal(
+            "This question requires an answer.",
+            document.xpath('//span[@id="error-serviceSummary"]/text()')[0].strip())
+
+    def test_update_with_under_50_words_error(self, data_api_client):
+        data_api_client.get_service.return_value = self.empty_service
+        data_api_client.update_service.side_effect = HTTPError(
+            mock.Mock(status_code=400),
+            {'serviceSummary': 'under_50_words'})
+        res = self.client.post(
+            '/suppliers/services/1/edit/description',
+            data={})
+
+        assert_equal(res.status_code, 200)
+        document = html.fromstring(res.get_data(as_text=True))
+        assert_equal(
+            "Your description must not be more than 50 words.",
+            document.xpath('//span[@id="error-serviceSummary"]/text()')[0].strip())
+
+    def test_update_non_existent_service_returns_404(self, data_api_client):
+        data_api_client.get_service.return_value = None
+        res = self.client.post('/suppliers/services/1/edit/description')
+
+        assert_equal(res.status_code, 404)
+
+    def test_update_non_existent_section_returns_404(self, data_api_client):
+        data_api_client.get_service.return_value = self.empty_service
+        res = self.client.post(
+            '/suppliers/services/1/edit/invalid_section'
+        )
+        assert_equal(404, res.status_code)
+
+
+@mock.patch('app.main.views.services.request')
+class TestCreateDraftService(BaseApplicationTest):
+
+    def setup(self):
+        super(TestCreateDraftService, self).setup()
         self._answer_required = 'Answer is required'
         self._validation_error = \
             'There was a problem with your answer to the following questions'
@@ -295,7 +400,7 @@ class TestCreateService(BaseApplicationTest):
     def _format_for_request(phrase):
         return phrase.replace(' ', '+')
 
-    def _test_get_create_service_page(self, if_error_expected):
+    def _test_get_create_draft_service_page(self, if_error_expected):
         with self.app.test_client():
             self.login()
 
@@ -314,7 +419,7 @@ class TestCreateService(BaseApplicationTest):
         else:
             assert_not_in(self._validation_error, res.get_data(as_text=True))
 
-    def _test_post_create_service(self, if_error_expected):
+    def _test_post_create_draft_service(self, if_error_expected):
         with self.app.test_client():
             self.login()
 
@@ -349,21 +454,21 @@ class TestCreateService(BaseApplicationTest):
             else:
                 assert_not_in(error_message, res.location)
 
-    def test_get_create_service_page_succeeds(self, request):
+    def test_get_create_draft_service_page_succeeds(self, request):
         request.args.get.return_value = None
-        self._test_get_create_service_page(if_error_expected=False)
+        self._test_get_create_draft_service_page(if_error_expected=False)
 
-    def test_get_create_service_page_fails(self, request):
+    def test_get_create_draft_service_page_fails(self, request):
         request.args.get.return_value = self._answer_required
-        self._test_get_create_service_page(if_error_expected=True)
+        self._test_get_create_draft_service_page(if_error_expected=True)
 
-    def test_post_create_service_with_lot_selected_succeeds(self, request):
+    def test_post_create_draft_service_with_lot_selected_succeeds(self, request):
         request.form.get.return_value = "SCS"
-        self._test_post_create_service(if_error_expected=False)
+        self._test_post_create_draft_service(if_error_expected=False)
 
-    def test_post_create_service_without_lot_selected_fails(self, request):
+    def test_post_create_draft_service_without_lot_selected_fails(self, request):
         request.form.get.return_value = None
-        self._test_post_create_service(if_error_expected=True)
+        self._test_post_create_draft_service(if_error_expected=True)
 
 
 @mock.patch('app.main.views.services.data_api_client')
@@ -398,3 +503,145 @@ class TestCopyDraft(BaseApplicationTest):
 
         res = self.client.post('/suppliers/submission/services/1/copy')
         assert_equal(res.status_code, 404)
+
+
+@mock.patch('app.main.views.services.data_api_client')
+class TestEditDraftService(BaseApplicationTest):
+
+    empty_draft = {
+        'services': {
+            'id': 1,
+            'supplierId': 1234,
+            'supplierName': "supplierName",
+            'lot': "SCS",
+            'status': "not-submitted",
+            'frameworkName': "frameworkName",
+            'links': {},
+            'updatedAt': "2015-06-29T15:26:07.650368Z"
+        }
+    }
+
+    def setup(self):
+        super(TestEditDraftService, self).setup()
+        with self.app.test_client():
+            self.login()
+
+    def test_questions_for_this_section_can_be_changed(self, data_api_client):
+        data_api_client.get_draft_service.return_value = self.empty_draft
+        res = self.client.post(
+            '/suppliers/submission/services/1/edit/service_description',
+            data={
+                'serviceName': 'The service',
+                'serviceSummary': 'This is the service',
+            })
+
+        assert_equal(res.status_code, 302)
+        data_api_client.update_draft_service.assert_called_once_with(
+            '1',
+            {'serviceName': 'The service', 'serviceSummary': 'This is the service',
+             'page_questions': ['serviceName', 'serviceSummary']},
+            'email@email.com')
+
+    def test_only_questions_for_this_section_can_be_changed(self, data_api_client):
+        data_api_client.get_draft_service.return_value = self.empty_draft
+        res = self.client.post(
+            '/suppliers/submission/services/1/edit/service_description',
+            data={
+                'serviceFeatures': '',
+            })
+
+        assert_equal(res.status_code, 302)
+        data_api_client.update_draft_service.assert_called_once_with(
+            '1', {'page_questions': ['serviceName', 'serviceSummary']}, 'email@email.com')
+
+    def test_edit_non_existent_draft_service_returns_404(self, data_api_client):
+        data_api_client.get_draft_service.side_effect = HTTPError(mock.Mock(status_code=404))
+        res = self.client.get('/suppliers/submission/services/1/edit/service_description')
+
+        assert_equal(res.status_code, 404)
+
+    def test_edit_non_existent_draft_section_returns_404(self, data_api_client):
+        data_api_client.get_draft_service.return_value = self.empty_draft
+        res = self.client.get(
+            '/suppliers/submission/services/1/edit/invalid_section'
+        )
+        assert_equal(404, res.status_code)
+
+    def test_update_redirects_to_next_editable_section(self, data_api_client):
+        data_api_client.get_draft_service.return_value = self.empty_draft
+        data_api_client.update_draft_service.return_value = None
+
+        res = self.client.post(
+            '/suppliers/submission/services/1/edit/service_description',
+            data={})
+
+        assert_equal(302, res.status_code)
+        assert_equal('http://localhost/suppliers/submission/services/1/edit/service_definition',
+                     res.headers['Location'])
+
+    def test_update_redirects_to_edit_submission_if_no_next_editable_section(self, data_api_client):
+        data_api_client.get_draft_service.return_value = self.empty_draft
+        data_api_client.update_draft_service.return_value = None
+
+        res = self.client.post(
+            '/suppliers/submission/services/1/edit/certifications',
+            data={})
+
+        assert_equal(302, res.status_code)
+        assert_equal('http://localhost/suppliers/submission/services/1',
+                     res.headers['Location'])
+
+    def test_update_redirects_to_edit_submission_if_return_to_summary(self, data_api_client):
+        data_api_client.get_draft_service.return_value = self.empty_draft
+        data_api_client.update_draft_service.return_value = None
+
+        res = self.client.post(
+            '/suppliers/submission/services/1/edit/service_description?return_to_summary=1',
+            data={})
+
+        assert_equal(302, res.status_code)
+        assert_equal('http://localhost/suppliers/submission/services/1',
+                     res.headers['Location'])
+
+    def test_update_with_answer_required_error(self, data_api_client):
+        data_api_client.get_draft_service.return_value = self.empty_draft
+        data_api_client.update_draft_service.side_effect = HTTPError(
+            mock.Mock(status_code=400),
+            {'serviceSummary': 'answer_required'})
+        res = self.client.post(
+            '/suppliers/submission/services/1/edit/service_description',
+            data={})
+
+        assert_equal(res.status_code, 200)
+        document = html.fromstring(res.get_data(as_text=True))
+        assert_equal(
+            "This question requires an answer.",
+            document.xpath('//span[@id="error-serviceSummary"]/text()')[0].strip())
+
+    def test_update_with_under_50_words_error(self, data_api_client):
+        data_api_client.get_draft_service.return_value = self.empty_draft
+        data_api_client.update_draft_service.side_effect = HTTPError(
+            mock.Mock(status_code=400),
+            {'serviceSummary': 'under_50_words'})
+        res = self.client.post(
+            '/suppliers/submission/services/1/edit/service_description',
+            data={})
+
+        assert_equal(res.status_code, 200)
+        document = html.fromstring(res.get_data(as_text=True))
+        assert_equal(
+            "Your description must not be more than 50 words.",
+            document.xpath('//span[@id="error-serviceSummary"]/text()')[0].strip())
+
+    def test_update_non_existent_draft_service_returns_404(self, data_api_client):
+        data_api_client.get_draft_service.side_effect = HTTPError(mock.Mock(status_code=404))
+        res = self.client.post('/suppliers/submission/services/1/edit/service_description')
+
+        assert_equal(res.status_code, 404)
+
+    def test_update_non_existent_draft_section_returns_404(self, data_api_client):
+        data_api_client.get_draft_service.return_value = self.empty_draft
+        res = self.client.post(
+            '/suppliers/submission/services/1/edit/invalid_section'
+        )
+        assert_equal(404, res.status_code)

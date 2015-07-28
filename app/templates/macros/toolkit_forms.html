@@ -112,3 +112,18 @@
     {% include "toolkit/forms/textbox.html" %}
   {% endwith %}
 {%- endmacro %}
+
+{% macro percentage(question_content, service_data, errors) -%}
+  {%
+    with
+    unit_in_full="percent",
+    unit_position="after",
+    unit="%",
+    question=question_content.question,
+    name=question_content.id,
+    value=service_data[question_content.id],
+    error=errors.get(question_content.id)['message']
+  %}
+    {% include "toolkit/forms/textbox.html" %}
+  {% endwith %}
+{%- endmacro %}
