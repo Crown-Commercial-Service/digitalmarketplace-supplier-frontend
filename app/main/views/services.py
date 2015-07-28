@@ -114,7 +114,6 @@ def edit_section(service_id, section_id):
     return render_template(
         "services/edit_section.html",
         section=section,
-        page_questions='|'.join(get_section_questions(section)),
         service_data=service,
         service_id=service_id,
         return_to=".edit_service",
@@ -161,7 +160,6 @@ def update_section(service_id, section_id):
         return render_template(
             "services/edit_section.html",
             section=section,
-            page_questions='|'.join(get_section_questions(section)),
             service_data=posted_data,
             service_id=service_id,
             return_to=".edit_service",
@@ -324,7 +322,6 @@ def edit_service_submission(service_id, section_id):
     return render_template(
         "services/edit_section.html",
         section=section,
-        page_questions='|'.join(get_section_questions(section)),
         service_data=draft,
         service_id=service_id,
         dashboard=".framework_dashboard",
@@ -352,7 +349,8 @@ def update_section_submission(service_id, section_id):
         abort(404)
 
     posted_data = _get_formatted_section_data()
-    posted_data = _filter_keys(posted_data, get_section_questions(section) + ['page_questions'])
+    posted_data = _filter_keys(posted_data, get_section_questions(section))
+    posted_data['page_questions'] = get_section_questions(section)
 
     try:
         data_api_client.update_draft_service(
@@ -366,7 +364,6 @@ def update_section_submission(service_id, section_id):
         return render_template(
             "services/edit_section.html",
             section=section,
-            page_questions='|'.join(get_section_questions(section)),
             service_data=posted_data,
             service_id=service_id,
             return_to=".view_service_submission",
@@ -406,8 +403,6 @@ def _get_error_message(error, message_key, content):
 
 def _is_list_type(key):
     """Return True if a given key is a list type"""
-    if key in ['csrf_token', 'page_questions']:
-        return False
     if key == 'serviceTypes':
         return True
     return new_service_content.get_question(key)['type'] in ['list', 'checkbox', 'pricing']
@@ -415,8 +410,6 @@ def _is_list_type(key):
 
 def _is_boolean_type(key):
     """Return True if a given key is a boolean type"""
-    if key in ['csrf_token', 'page_questions']:
-        return False
     return new_service_content.get_question(key)['type'] == 'boolean'
 
 
@@ -431,8 +424,6 @@ def _get_formatted_section_data():
             section_data[key] = request.form.getlist(key)
         elif _is_boolean_type(key):
             section_data[key] = convert_to_boolean(section_data[key])
-        elif key == 'page_questions':
-            section_data[key] = section_data[key].split('|')
     return section_data
 
 

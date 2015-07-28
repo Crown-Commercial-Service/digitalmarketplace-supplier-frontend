@@ -59,7 +59,6 @@
     {% endfor %}
 
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
-    <input type="hidden" name="page_questions" value="{{ page_questions }}" />
     {% if request.args.get('return_to_summary') or "suppliers/submission/" not in request.url %}
       {%
         with

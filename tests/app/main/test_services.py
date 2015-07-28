@@ -303,24 +303,12 @@ class TestEditService(BaseApplicationTest):
         with self.app.test_client():
             self.login()
 
-    def test_edit_section_contains_hidden_page_questions(self):
-        with mock.patch('app.main.views.services.data_api_client') as data_api_client:
-            data_api_client.get_service.return_value = self.empty_service
-            res = self.client.get('/suppliers/services/1/edit/description')
-
-            assert_equal(res.status_code, 200)
-            document = html.fromstring(res.get_data(as_text=True))
-            assert_equal(
-                'serviceName|serviceSummary',
-                document.xpath('//input[@name="page_questions"]/@value')[0])
-
     def test_questions_for_this_section_can_be_changed(self):
         with mock.patch('app.main.views.services.data_api_client') as data_api_client:
             data_api_client.get_service.return_value = self.empty_service
             res = self.client.post(
                 '/suppliers/services/1/edit/description',
                 data={
-                    'page_questions': '',
                     'serviceName': 'The service',
                     'serviceSummary': 'This is the service',
                 })
@@ -336,7 +324,6 @@ class TestEditService(BaseApplicationTest):
             res = self.client.post(
                 '/suppliers/services/1/edit/description',
                 data={
-                    'page_questions': '',
                     'serviceFeatures': '',
                 })
 
@@ -367,9 +354,7 @@ class TestEditService(BaseApplicationTest):
                 {'serviceSummary': 'answer_required'})
             res = self.client.post(
                 '/suppliers/services/1/edit/description',
-                data={
-                    'page_questions': '',
-                })
+                data={})
 
             assert_equal(res.status_code, 200)
             document = html.fromstring(res.get_data(as_text=True))
@@ -385,9 +370,7 @@ class TestEditService(BaseApplicationTest):
                 {'serviceSummary': 'under_50_words'})
             res = self.client.post(
                 '/suppliers/services/1/edit/description',
-                data={
-                    'page_questions': '',
-                })
+                data={})
 
             assert_equal(res.status_code, 200)
             document = html.fromstring(res.get_data(as_text=True))
@@ -549,24 +532,12 @@ class TestEditDraftService(BaseApplicationTest):
         with self.app.test_client():
             self.login()
 
-    def test_edit_draft_section_contains_hidden_page_questions(self):
-        with mock.patch('app.main.views.services.data_api_client') as data_api_client:
-            data_api_client.get_draft_service.return_value = self.empty_draft
-            res = self.client.get('/suppliers/submission/services/1/edit/service_description')
-
-            assert_equal(res.status_code, 200)
-            document = html.fromstring(res.get_data(as_text=True))
-            assert_equal(
-                'serviceName|serviceSummary',
-                document.xpath('//input[@name="page_questions"]/@value')[0])
-
     def test_questions_for_this_section_can_be_changed(self):
         with mock.patch('app.main.views.services.data_api_client') as data_api_client:
             data_api_client.get_draft_service.return_value = self.empty_draft
             res = self.client.post(
                 '/suppliers/submission/services/1/edit/service_description',
                 data={
-                    'page_questions': '',
                     'serviceName': 'The service',
                     'serviceSummary': 'This is the service',
                 })
@@ -575,7 +546,7 @@ class TestEditDraftService(BaseApplicationTest):
             data_api_client.update_draft_service.assert_called_once_with(
                 '1',
                 {'serviceName': 'The service', 'serviceSummary': 'This is the service',
-                 'page_questions': ['']},
+                 'page_questions': ['serviceName', 'serviceSummary']},
                 'email@email.com')
 
     def test_only_questions_for_this_section_can_be_changed(self):
@@ -584,13 +555,12 @@ class TestEditDraftService(BaseApplicationTest):
             res = self.client.post(
                 '/suppliers/submission/services/1/edit/service_description',
                 data={
-                    'page_questions': '',
                     'serviceFeatures': '',
                 })
 
             assert_equal(res.status_code, 302)
             data_api_client.update_draft_service.assert_called_once_with(
-                '1', {'page_questions': ['']}, 'email@email.com')
+                '1', {'page_questions': ['serviceName', 'serviceSummary']}, 'email@email.com')
 
     def test_edit_non_existent_draft_service_returns_404(self):
         with mock.patch('app.main.views.services.data_api_client') as data_api_client:
@@ -614,9 +584,7 @@ class TestEditDraftService(BaseApplicationTest):
 
             res = self.client.post(
                 '/suppliers/submission/services/1/edit/service_description',
-                data={
-                    'page_questions': '',
-                })
+                data={})
 
             assert_equal(302, res.status_code)
             assert_equal('http://localhost/suppliers/submission/services/1/edit/service_definition',
@@ -629,9 +597,7 @@ class TestEditDraftService(BaseApplicationTest):
 
             res = self.client.post(
                 '/suppliers/submission/services/1/edit/certifications',
-                data={
-                    'page_questions': '',
-                })
+                data={})
 
             assert_equal(302, res.status_code)
             assert_equal('http://localhost/suppliers/submission/services/1',
@@ -644,9 +610,7 @@ class TestEditDraftService(BaseApplicationTest):
 
             res = self.client.post(
                 '/suppliers/submission/services/1/edit/service_description?return_to_summary=1',
-                data={
-                    'page_questions': '',
-                })
+                data={})
 
             assert_equal(302, res.status_code)
             assert_equal('http://localhost/suppliers/submission/services/1',
@@ -660,9 +624,7 @@ class TestEditDraftService(BaseApplicationTest):
                 {'serviceSummary': 'answer_required'})
             res = self.client.post(
                 '/suppliers/submission/services/1/edit/service_description',
-                data={
-                    'page_questions': '',
-                })
+                data={})
 
             assert_equal(res.status_code, 200)
             document = html.fromstring(res.get_data(as_text=True))
@@ -678,9 +640,7 @@ class TestEditDraftService(BaseApplicationTest):
                 {'serviceSummary': 'under_50_words'})
             res = self.client.post(
                 '/suppliers/submission/services/1/edit/service_description',
-                data={
-                    'page_questions': '',
-                })
+                data={})
 
             assert_equal(res.status_code, 200)
             document = html.fromstring(res.get_data(as_text=True))
