@@ -40,7 +40,7 @@
       {% for section in sections %}
         {{ summary.heading(section.name) }}
         {% if section.editable %}
-          {{ summary.top_link("Edit", url_for(".edit_service_submission", service_id=service_id, section=section.id)) }}
+          {{ summary.top_link("Edit", url_for(".edit_service_submission", service_id=service_id, section_id=section.id)) }}
         {% endif %}
         {% call(question) summary.list_table(
           section.questions,
