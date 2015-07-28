@@ -13,7 +13,7 @@ class LoginForm(Form):
     ])
 
 
-class ResetPasswordForm(Form):
+class EmailAddressForm(Form):
     email_address = StringField('Email address', validators=[
         DataRequired(message="Email can not be empty"),
         Email(message="Please enter a valid email address")

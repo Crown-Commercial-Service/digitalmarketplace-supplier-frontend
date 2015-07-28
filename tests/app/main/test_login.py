@@ -164,7 +164,8 @@ class TestResetPassword(BaseApplicationTest):
             self.strip_all_whitespace(EMAIL_INVALID_ERROR)
             in content)
 
-    def test_redirect_to_same_page_on_success(self):
+    @mock.patch('app.main.views.login.send_email')
+    def test_redirect_to_same_page_on_success(self, send_email):
         res = self.client.post("/suppliers/reset-password", data={
             'email_address': 'email@email.com'
         })
@@ -298,6 +299,43 @@ class TestResetPassword(BaseApplicationTest):
             assert_true(
                 TOKEN_CREATED_BEFORE_PASSWORD_LAST_CHANGED_ERROR
                 in res.get_data(as_text=True)
+            )
+
+    @mock.patch('app.main.views.login.send_email')
+    def test_should_call_send_email(
+            self, send_email
+    ):
+        with self.app.app_context():
+
+            self.app.config['DM_MANDRILL_API_KEY'] = "API KEY"
+            self.app.config['RESET_PASSWORD_EMAIL_SUBJECT'] = "SUBJECT"
+            self.app.config['RESET_PASSWORD_EMAIL_FROM'] = "EMAIL FROM"
+            self.app.config['RESET_PASSWORD_EMAIL_NAME'] = "EMAIL NAME"
+
+            data_api_client_config = {
+                'get_user.return_value': self.user(
+                    123,
+                    "email@email.com",
+                    1234,
+                    'name'
+                )}
+
+            res = self.client.post(
+                '/suppliers/reset-password',
+                data={'email_address': 'email@email.com'}
+            )
+
+            assert_equal(res.status_code, 302)
+
+            send_email.assert_called_once_with(
+                123,
+                "email@email.com",
+                mock.ANY,
+                "API KEY",
+                "SUBJECT",
+                "EMAIL FROM",
+                "EMAIL NAME",
+                ["password-resets"]
             )
 
 

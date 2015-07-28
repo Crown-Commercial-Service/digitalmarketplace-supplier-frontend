@@ -10,7 +10,7 @@ from dmutils.email import send_email, \
     generate_token, decode_token, MandrillException
 
 from .. import main
-from ..forms.auth_forms import LoginForm, ResetPasswordForm, ChangePasswordForm
+from ..forms.auth_forms import LoginForm, EmailAddressForm, ChangePasswordForm
 from ... import data_api_client
 
 
@@ -73,17 +73,19 @@ def request_password_reset():
     template_data = main.config['BASE_TEMPLATE_DATA']
 
     return render_template("auth/request-password-reset.html",
-                           form=ResetPasswordForm(),
+                           form=EmailAddressForm(),
                            **template_data), 200
 
 
 @main.route('/reset-password', methods=["POST"])
 def send_reset_password_email():
-    form = ResetPasswordForm()
+    form = EmailAddressForm()
     if form.validate_on_submit():
         email_address = form.email_address.data
         user_json = data_api_client.get_user(email_address=email_address)
+
         if user_json is not None:
+
             user = User.from_json(user_json)
 
             token = generate_token(
@@ -102,9 +104,6 @@ def send_reset_password_email():
                 url=url,
                 locked=user.locked)
 
-            ###TEST THIS
-
-
             try:
                 send_email(
                     user.id,
@@ -117,6 +116,7 @@ def send_reset_password_email():
                     ["password-resets"]
                 )
             except MandrillException as e:
+                print e.message
                 current_app.logger.error("Email failed to send {}".format(e.message))
                 abort(503, "Failed to send password reset")
 
@@ -184,8 +184,7 @@ def update_password(token):
 
 @main.route('/invite-user', methods=["POST"])
 def invite_user():
-
-
+    return redirect(url_for('.dashboard'))
 
 
 def decode_password_reset_token(token):
