@@ -412,9 +412,7 @@ def _is_boolean_type(key):
 
 
 def _get_formatted_section_data(section):
-    section_data = dict(
-        list(request.form.items()) + list(request.files.items())
-    )
+    section_data = dict(list(request.form.items()))
     section_data = _filter_keys(section_data, get_section_questions(section))
     # Turn responses which have multiple parts into lists and booleans into booleans
     for key in section_data:
