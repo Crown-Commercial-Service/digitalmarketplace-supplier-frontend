@@ -462,7 +462,7 @@ class TestCreateDraftService(BaseApplicationTest):
 
     def test_post_create_draft_service_without_lot_selected_fails(self, request):
         request.form.get.return_value = None
-        self._test_post_create_service(if_error_expected=True)
+        self._test_post_create_draft_service(if_error_expected=True)
 
 
 @mock.patch('app.main.views.services.data_api_client')

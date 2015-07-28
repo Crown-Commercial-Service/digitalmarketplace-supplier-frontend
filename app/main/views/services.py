@@ -262,7 +262,7 @@ def create_new_draft_service():
         url_for(
             ".edit_service_submission",
             service_id=draft_service.get('id'),
-            section=content.get_next_editable_section_id()
+            section_id=content.get_next_editable_section_id()
         )
     )
 
@@ -310,13 +310,10 @@ def view_service_submission(service_id):
         **main.config['BASE_TEMPLATE_DATA']), 200
 
 
-@main.route(
-    '/submission/services/<string:service_id>/edit/<string:section>',
-    methods=['GET']
-)
+@main.route('/submission/services/<string:service_id>/edit/<string:section_id>', methods=['GET'])
 @login_required
 @flask_featureflags.is_active_feature('GCLOUD7_OPEN')
-def edit_service_submission(service_id, section):
+def edit_service_submission(service_id, section_id):
     try:
         draft = data_api_client.get_draft_service(service_id)['services']
     except HTTPError as e:
@@ -359,7 +356,7 @@ def update_section_submission(service_id, section_id):
         abort(404)
 
     content = new_service_content.get_builder().filter(draft)
-    section = content.get_section(section)
+    section = content.get_section(section_id)
     if section is None:
         abort(404)
 
@@ -391,7 +388,7 @@ def update_section_submission(service_id, section_id):
     next_section = content.get_next_editable_section_id(section_id)
 
     if next_section and not return_to_summary:
-        return redirect(url_for(".edit_service_submission", service_id=service_id, section=next_section))
+        return redirect(url_for(".edit_service_submission", service_id=service_id, section_id=next_section))
     else:
         return redirect(url_for(".view_service_submission", service_id=service_id))
 
