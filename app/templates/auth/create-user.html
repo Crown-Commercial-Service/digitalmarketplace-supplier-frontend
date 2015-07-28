@@ -9,34 +9,27 @@
 {% for category, message in messages %}
 {% if category == 'error' %}
 <div class="banner-destructive-without-action">
-    {% else %}
+{% else %}
     <div class="banner-success-without-action">
-        {% endif %}
+{% endif %}
         <p class="banner-message">
-            {% if message == 'token_expired' %}
-            This password reset link has expired because you requested it more than
-            24 hours ago. Get a new one using the form below.
-
-            {% elif message == 'token_invalid' %}
-            This password reset link is invalid. Get a new one using the form below.
+            {% if message == 'token_invalid' %}
+            This invitation link is invalid, please refer to you're invitation email for contact details to get a new one sent out.
 
             {% else %}
-            {{ message }}
-            {% endif %}
-        </p>
-    </div>
-    {% endfor %}
-    {% endif %}
-    {% endwith %}
+
 
     <header class="page-heading">
         <h1>Create user</h1>
     </header>
     <p class="lede">
-    Create user to work on {{ supplier }} with email address {{ email_address }}
+    Create user to work on
+        <h1>{{ supplier.name }}</h1>
+        email address
+        <h1>{{ email_address }}</h1>
     </p>
 
-    <form autocomplete="off" action="{{ url_for('.create_user') }}" method="POST" id="createUserForm">
+    <form autocomplete="off" action="{{ url_for('.submit_create_user') }}" method="POST" id="createUserForm">
 
         {{ form.hidden_tag() }}
 
@@ -59,45 +52,52 @@
         </div>
         {% endif %}
 
-        {% if form.confirm_password.errors %}
+        {% if form.password.errors %}
         <div class="validation-wrapper">
-        {% endif %}
-            <div class="question">
-                {{ form.confirm_password.label(class="question-heading-with-hint") }}
-                <p class="hint">
-                    Repeat password used above
-                </p>
-                {% if form.confirm_password.errors %}
-                <p class="validation-message" id="error-confirm-password-textbox">
-                    {% for error in form.confirm_password.errors %}{{ error }}{% endfor %}
-                </p>
-                {% endif %}
-                {{ form.confirm_password(class="text-box", autocomplete="off") }}
-            </div>
-            {% if form.confirm_password.errors %}
-        </div>
-        {% endif %}
-
-
-        {% if form.confirm_password.errors %}
-        <div class="validation-wrapper">
+    {% endif %}
+        <div class="question">
+            {{ form.password.label(class="question-heading-with-hint") }}
+            <p class="hint">
+              Must be between 10 and 50 characters
+            </p>
+            {% if form.password.errors %}
+            <p class="validation-message" id="error-password-textbox">
+                {% for error in form.password.errors %}{{ error }}{% endfor %}
+            </p>
             {% endif %}
-            <div class="question">
-                {{ form.confirm_password.label(class="question-heading-with-hint") }}
-                <p class="hint">
-                    Repeat password used above
-                </p>
-                {% if form.confirm_password.errors %}
-                <p class="validation-message" id="error-confirm-password-textbox">
-                    {% for error in form.confirm_password.errors %}{{ error }}{% endfor %}
-                </p>
-                {% endif %}
-                {{ form.confirm_password(class="text-box", autocomplete="off") }}
-            </div>
-            {% if form.confirm_password.errors %}
+            {{ form.password(class="text-box", autocomplete="off") }}
         </div>
-        {% endif %}
+    {% if form.password.errors %}
+        </div>
+    {% endif %}
 
-        <button class="button-save">Send reset email</button>
+    {% if form.confirm_password.errors %}
+        <div class="validation-wrapper">
+    {% endif %}
+        <div class="question">
+            {{ form.confirm_password.label(class="question-heading-with-hint") }}
+            <p class="hint">
+                Repeat password used above
+            </p>
+            {% if form.confirm_password.errors %}
+            <p class="validation-message" id="error-confirm-password-textbox">
+                {% for error in form.confirm_password.errors %}{{ error }}{% endfor %}
+            </p>
+            {% endif %}
+            {{ form.confirm_password(class="text-box", autocomplete="off") }}
+        </div>
+    {% if form.confirm_password.errors %}
+        </div>
+    {% endif %}
+
+        <button class="button-save">Create user</button>
     </form>
+
+            {% endif %}
+        </p>
+    </div>
+
+    {% endfor %}
+{% endif %}
+{% endwith %}
     {% endblock %}
