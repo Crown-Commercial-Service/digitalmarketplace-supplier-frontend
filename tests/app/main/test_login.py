@@ -302,7 +302,7 @@ class TestResetPassword(BaseApplicationTest):
             )
 
     @mock.patch('app.main.views.login.send_email')
-    def test_should_call_send_email(
+    def test_should_call_send_email_with_correct_params(
             self, send_email
     ):
         with self.app.app_context():

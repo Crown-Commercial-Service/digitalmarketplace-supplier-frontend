@@ -93,8 +93,8 @@ def send_reset_password_email():
                     "user": user.id,
                     "email": user.email_address
                 },
-                main.config['SECRET_KEY'],
-                main.config['RESET_PASSWORD_SALT']
+                current_app.config['SECRET_KEY'],
+                current_app.config['RESET_PASSWORD_SALT']
             )
 
             url = url_for('main.reset_password', token=token, _external=True)
@@ -109,10 +109,10 @@ def send_reset_password_email():
                     user.id,
                     user.email_address,
                     email_body,
-                    main.config['DM_MANDRILL_API_KEY'],
-                    main.config['RESET_PASSWORD_EMAIL_SUBJECT'],
-                    main.config['RESET_PASSWORD_EMAIL_FROM'],
-                    main.config['RESET_PASSWORD_EMAIL_NAME'],
+                    current_app.config['DM_MANDRILL_API_KEY'],
+                    current_app.config['RESET_PASSWORD_EMAIL_SUBJECT'],
+                    current_app.config['RESET_PASSWORD_EMAIL_FROM'],
+                    current_app.config['RESET_PASSWORD_EMAIL_NAME'],
                     ["password-resets"]
                 )
             except MandrillException as e:
