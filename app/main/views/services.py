@@ -144,8 +144,7 @@ def update_section(service_id, section_id):
     if section is None:
         abort(404)
 
-    posted_data = _get_formatted_section_data()
-    posted_data = _filter_keys(posted_data, get_section_questions(section))
+    posted_data = _get_formatted_section_data(section)
 
     try:
         data_api_client.update_service(
@@ -348,8 +347,7 @@ def update_section_submission(service_id, section_id):
     if section is None:
         abort(404)
 
-    posted_data = _get_formatted_section_data()
-    posted_data = _filter_keys(posted_data, get_section_questions(section))
+    posted_data = _get_formatted_section_data(section)
     posted_data['page_questions'] = get_section_questions(section)
 
     try:
@@ -413,13 +411,13 @@ def _is_boolean_type(key):
     return new_service_content.get_question(key)['type'] == 'boolean'
 
 
-def _get_formatted_section_data():
+def _get_formatted_section_data(section):
     section_data = dict(
         list(request.form.items()) + list(request.files.items())
     )
-    section_data.pop('csrf_token', None)
+    section_data = _filter_keys(section_data, get_section_questions(section))
     # Turn responses which have multiple parts into lists and booleans into booleans
-    for key in request.form:
+    for key in section_data:
         if _is_list_type(key):
             section_data[key] = request.form.getlist(key)
         elif _is_boolean_type(key):
