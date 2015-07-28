@@ -64,9 +64,9 @@
 
   <div class="grid-row">
     <div class="column-one-whole">
-      {{ forms.question_textarea('description', 'Supplier summary', supplier_form.description.data, '50 words max', errors=supplier_form.description.errors, words=50) }}
+      {{ forms.question_textarea('description', 'Supplier summary', supplier_form.description.data, '50 words max', errors=supplier_form.description.errors, max_length_in_words=50) }}
 
-      {{ forms.question_list_entry('clients', 'Clients', supplier_form.clients.data, '1 client per box, max 10 clients', errors=supplier_form.clients.errors, item_name='client', count=10) }}
+      {{ forms.question_list_entry('clients', 'Clients', supplier_form.clients.data, '1 client per box, max 10 clients', errors=supplier_form.clients.errors, item_name='client', number_of_items=10) }}
 
       {{ forms.question_input('contact_contactName', 'Contact name', contact_form.contactName.data, 'Primary contact', errors=contact_form.contactName.errors) }}
       {{ forms.question_input('contact_website', 'Website', contact_form.website.data, errors=contact_form.website.errors) }}
