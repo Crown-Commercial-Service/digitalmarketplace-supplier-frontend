@@ -1,0 +1,57 @@
+<!-- place holder page until pull requests that will use invite supplier code is finished -->
+
+{% extends "_base_page.html" %}
+
+{% block page_title %}Invite user – Digital Marketplace{% endblock %}
+
+{% block main_content %}
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+{% if messages %}
+{% for category, message in messages %}
+    {% if category == 'error' %}
+      <div class="banner-destructive-without-action">
+    {% elif category == 'success' %}
+      <div class="banner-success-without-action">
+    {% endif %}
+    {% if message == 'user_invited' %}
+    <p class="banner-message">
+        User invited
+    </p>
+    {% elif message == 'user_not_invited' %}
+    <p class="banner-message">
+        Not Invited
+    </p>
+    {% endif %}
+{% endfor %}
+{% endif %}
+{% endwith %}
+
+
+<form autocomplete="off" action="{{ url_for('.send_invite_user') }}" method="POST">
+
+    {{ form.hidden_tag() }}
+
+    {% if form.email_address.errors %}
+        <div class="validation-wrapper">
+    {% endif %}
+        <div class="question">
+            {{ form.email_address.label(class="question-heading-with-hint") }}
+            <p class="hint">
+                Enter the email address you of the user you wish to add
+            </p>
+            {% if form.email_address.errors %}
+            <p class="validation-message" id="error-email-address-textbox">
+                {% for error in form.email_address.errors %}{{ error }}{% endfor %}
+            </p>
+            {% endif %}
+            {{ form.email_address(class="text-box", autocomplete="off") }}
+        </div>
+    {% if form.email_address.errors %}
+        </div>
+    {% endif %}
+
+    <button class="button-save">Invite</button>
+</form>
+
+{% endblock %}

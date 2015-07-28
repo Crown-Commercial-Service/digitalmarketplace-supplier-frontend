@@ -1,4 +1,5 @@
 from __future__ import absolute_import
+from flask_login import login_required, current_user
 from itsdangerous import BadSignature, SignatureExpired
 from datetime import datetime
 from flask import current_app, flash, redirect, render_template, url_for, \
@@ -181,9 +182,72 @@ def update_password(token):
                                **template_data), 400
 
 
-@main.route('/invite-user', methods=["POST"])
+@main.route('/invite-user', methods=["GET"])
+@login_required
 def invite_user():
-    return redirect(url_for('.dashboard'))
+    form = EmailAddressForm()
+
+    template_data = main.config['BASE_TEMPLATE_DATA']
+
+    return render_template(
+        "auth/submit-email-address.html",
+        form=form,
+        **template_data), 200
+
+
+@main.route('/invite-user', methods=["POST"])
+@login_required
+def send_invite_user():
+    form = EmailAddressForm()
+
+    if form.validate_on_submit():
+
+        token = generate_token(
+            {
+                "supplier_id": current_user.supplier_id,
+                "email_address": form.email_address.data
+            },
+            current_app.config['SECRET_KEY'],
+            current_app.config['RESET_PASSWORD_SALT']
+        )
+
+        url = url_for('main.reset_password', token=token, _external=True)
+
+        email_body = render_template(
+            "emails/invite_user_email.html",
+            url=url,
+            user=current_user.email_address,
+            supplier=current_user.supplier_name)
+
+        try:
+            send_email(
+                'unknown',
+                form.email_address.data,
+                email_body,
+                current_app.config['DM_MANDRILL_API_KEY'],
+                current_app.config['INVITE_EMAIL_SUBJECT'],
+                current_app.config['INVITE_EMAIL_FROM'],
+                current_app.config['INVITE_EMAIL_NAME'],
+                ["user-invite"]
+            )
+        except MandrillException as e:
+            current_app.logger.error(
+                "Invitation email failed to send error {} to {} suppluer {} supplier id {} ".format(
+                    e.message,
+                    form.email_address.data,
+                    current_user.supplier_name.
+                        current_user.supplier_id)
+            )
+            abort(503, "Failed to send user invite reset")
+
+        flash('user_invited', 'success')
+        return redirect(url_for('.invite_user'))
+    else:
+        template_data = main.config['BASE_TEMPLATE_DATA']
+        return render_template(
+            "auth/submit-email-address.html",
+            form=form,
+            **template_data), 400
 
 
 def decode_password_reset_token(token):

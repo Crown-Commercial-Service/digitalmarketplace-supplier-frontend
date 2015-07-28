@@ -427,3 +427,89 @@ class TestLoginFormsNotAutofillable(BaseApplicationTest):
             "Reset password",
             "Reset password for email@email.com"
         )
+
+class TestInviteUser(BaseApplicationTest):
+
+    def test_should_be_an_error_for_invalid_email(self):
+        with self.app.app_context():
+            self.login()
+            res = self.client.post(
+                '/suppliers/invite-user',
+                data={
+                    'email_address': 'invalid',
+                }
+            )
+            assert_true("Please enter a valid email address" in res.get_data())
+            assert_equal(res.status_code, 400)
+
+    def test_should_be_an_error_for_missing_email(self):
+        with self.app.app_context():
+            self.login()
+            res = self.client.post(
+                '/suppliers/invite-user',
+                data={}
+            )
+            assert_true("Email can not be empty" in res.get_data())
+            assert_equal(res.status_code, 400)
+
+    def test_should_redirect_in_success(self):
+        with self.app.app_context():
+            self.login()
+            res = self.client.post(
+                '/suppliers/invite-user',
+                data={
+                    'email_address': 'this@isvalid.com'
+                }
+            )
+            assert_equal(res.status_code, 302)
+            assert_equal(res.location, 'http://localhost/suppliers/invite-user')
+
+    def test_should_show_success_message(self):
+        with self.app.app_context():
+            self.login()
+            res = self.client.post(
+                '/suppliers/invite-user',
+                data={
+                    'email_address': 'this@isvalid.com'
+                },
+                follow_redirects=True)
+            assert_equal(res.status_code, 200)
+            assert_true("User invited" in res.get_data())
+
+    @mock.patch('app.main.views.login.generate_token')
+    def test_should_call_generate_token_with_correct_params(self, generate_token):
+        with self.app.app_context():
+
+            self.app.config['SECRET_KEY'] = "KEY"
+            self.app.config['RESET_PASSWORD_SALT'] = "SALT"
+
+            self.login()
+            res = self.client.post(
+                '/suppliers/invite-user',
+                data={
+                    'email_address': 'this@isvalid.com'
+                })
+            assert_equal(res.status_code, 302)
+            generate_token.assert_called_once_with(
+                {
+                    "supplier_id": 1234,
+                    "email_address": "this@isvalid.com"
+                },
+                'KEY',
+                'SALT'
+            )
+
+    @mock.patch('app.main.views.login.send_email')
+    @mock.patch('app.main.views.login.generate_token')
+    def test_should_not_generate_token_or_send_email_if_invalid_email(self, send_email, generate_token):
+        with self.app.app_context():
+
+            self.login()
+            res = self.client.post(
+                '/suppliers/invite-user',
+                data={
+                    'email_address': 'total rubbish'
+                })
+            assert_equal(res.status_code, 400)
+            assert not send_email.called
+            assert not generate_token.called
