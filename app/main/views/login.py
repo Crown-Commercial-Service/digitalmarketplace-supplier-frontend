@@ -2,12 +2,12 @@ from __future__ import absolute_import
 from itsdangerous import BadSignature, SignatureExpired
 from datetime import datetime
 from flask import current_app, flash, redirect, render_template, url_for, \
-    request
+    request, abort
 from flask_login import logout_user, login_user
 from dmutils.user import user_has_role, User
 from dmutils.formats import DATETIME_FORMAT
 from dmutils.email import send_email, \
-    generate_token, decode_token
+    generate_token, decode_token, MandrillException
 
 from .. import main
 from ..forms.auth_forms import LoginForm, ResetPasswordForm, ChangePasswordForm
@@ -102,14 +102,23 @@ def send_reset_password_email():
                 url=url,
                 locked=user.locked)
 
-            send_email(
-                user.id,
-                user.email_address,
-                email_body,
-                main.config['DM_MANDRILL_API_KEY'],
-                main.config['RESET_PASSWORD_EMAIL_SUBJECT'],
-                main.config['RESET_PASSWORD_EMAIL_FROM'],
-                main.config['RESET_PASSWORD_EMAIL_NAME'])
+            ###TEST THIS
+
+
+            try:
+                send_email(
+                    user.id,
+                    user.email_address,
+                    email_body,
+                    main.config['DM_MANDRILL_API_KEY'],
+                    main.config['RESET_PASSWORD_EMAIL_SUBJECT'],
+                    main.config['RESET_PASSWORD_EMAIL_FROM'],
+                    main.config['RESET_PASSWORD_EMAIL_NAME'],
+                    ["password-resets"]
+                )
+            except MandrillException as e:
+                current_app.logger.error("Email failed to send {}".format(e.message))
+                abort(503, "Failed to send password reset")
 
             message = "login.reset-email.sent: " \
                       "Sending password reset email for supplier %d (%s)"
@@ -171,6 +180,12 @@ def update_password(token):
                                form=form,
                                token=token,
                                **template_data), 400
+
+
+@main.route('/invite-user', methods=["POST"])
+def invite_user():
+
+
 
 
 def decode_password_reset_token(token):
