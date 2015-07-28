@@ -9,9 +9,9 @@ from dmutils.user import user_has_role, User
 from dmutils.formats import DATETIME_FORMAT
 from dmutils.email import send_email, \
     generate_token, decode_token, MandrillException
-
+from dmutils.apiclient.errors import HTTPError
 from .. import main
-from ..forms.auth_forms import LoginForm, EmailAddressForm, ChangePasswordForm
+from ..forms.auth_forms import LoginForm, EmailAddressForm, ChangePasswordForm, CreateUserForm
 from ... import data_api_client
 
 
@@ -181,6 +181,54 @@ def update_password(token):
                                **template_data), 400
 
 
+
+@main.route('/create-user/<string:token>', methods=["GET"])
+def create_user(token):
+
+    form = CreateUserForm()
+    template_data = main.config['BASE_TEMPLATE_DATA']
+
+    try:
+        token, timestamp = decode_token(
+            token,
+            current_app.config['SECRET_KEY'],
+            current_app.config['RESET_PASSWORD_SALT']
+        )
+        if not token.get('email_address', None):
+            raise Exception('Missing email address from token')
+        if not token.get('supplier_id', None):
+            raise Exception('Missing supplier from token')
+    except Exception as e:
+        current_app.logger.error(e.message)
+        flash('token_invalid', 'error')
+        return render_template(
+            "auth/create-user.html",
+            form=form,
+            email_address=None,
+            supplier=None,
+            **template_data), 400
+
+    try:
+        data_api_client.get_user(email_address=token['email_address'])
+    except HTTPError as e:
+        current_app.logger.error(e.message)
+    try:
+        supplier = data_api_client.get_supplier(token['supplier_id'])
+    except HTTPError as e:
+        current_app.logger.error(e.message)
+        abort(404, "Failed to find supplier")
+
+    return render_template(
+        "auth/create-user.html",
+        form=form,
+        email_address=token['email_address'],
+        supplier=supplier["suppliers"],
+        **template_data), 200
+
+@main.route('/create-user', methods=["POST"])
+def submit_create_user():
+    return redirect(url_for('.request_password_reset'))
+
 @main.route('/invite-user', methods=["GET"])
 @login_required
 def invite_user():
@@ -210,7 +258,7 @@ def send_invite_user():
             current_app.config['RESET_PASSWORD_SALT']
         )
 
-        url = url_for('main.reset_password', token=token, _external=True)
+        url = url_for('main.create_user', token=token, _external=True)
 
         email_body = render_template(
             "emails/invite_user_email.html",

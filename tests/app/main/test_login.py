@@ -1,4 +1,6 @@
 from dmutils.email import generate_token, MandrillException
+from dmutils.apiclient.errors import HTTPError
+from itsdangerous import BadTimeSignature
 from nose.tools import assert_equal, assert_true, assert_is_not_none, assert_in
 from ..helpers import BaseApplicationTest
 from lxml import html
@@ -565,4 +567,111 @@ class TestInviteUser(BaseApplicationTest):
                 "EMAIL FROM",
                 "EMAIL NAME",
                 ["user-invite"]
+            )
+
+class TestInviteUser(BaseApplicationTest):
+
+    def test_should_be_an_error_for_invalid_token(self):
+        with self.app.app_context():
+            token = "1234"
+            res = self.client.get(
+                '/suppliers/create-user/{}'.format(token)
+            )
+            assert_equal(res.status_code, 400)
+
+    def test_should_be_an_error_for_missing_token(self):
+        with self.app.app_context():
+            res = self.client.get(
+                '/suppliers/create-user'
+            )
+            assert_equal(res.status_code, 405)
+
+    def test_should_be_an_error_for_missing_token_trailing_slash(self):
+        with self.app.app_context():
+            res = self.client.get(
+                '/suppliers/create-user/'
+            )
+            assert_equal(res.status_code, 301)
+            assert_equal(res.location, 'http://localhost/suppliers/create-user')
+
+    @mock.patch('app.main.views.login.data_api_client')
+    def test_should_be_an_error_for_invalid_token_contents(self, data_api_client):
+        with self.app.app_context():
+
+            token = generate_token(
+                {
+                    'this_is_not_expected': 1234
+                },
+                self.app.config['SECRET_KEY'],
+                self.app.config['RESET_PASSWORD_SALT']
+            )
+
+            res = self.client.get(
+                '/suppliers/create-user/{}'.format(token)
+            )
+            assert_equal(res.status_code, 400)
+            assert_equal(data_api_client.get_user.called, False)
+            assert_equal(data_api_client.get_supplier.called, False)
+
+    @mock.patch('app.main.views.login.data_api_client')
+    def test_should_lookup_user_and_supplier_with_info_from_token(self, data_api_client):
+        with self.app.app_context():
+
+            token = generate_token(
+                {
+                    'supplier_id': 1234,
+                    'email_address': 'testme@email.com'
+                },
+                self.app.config['SECRET_KEY'],
+                self.app.config['RESET_PASSWORD_SALT']
+            )
+
+            res = self.client.get(
+                '/suppliers/create-user/{}'.format(token)
+            )
+
+            data_api_client.get_user.assert_called_once_with(email_address='testme@email.com')
+            data_api_client.get_supplier.assert_called_once_with(1234)
+            assert_equal(res.status_code, 200)
+
+    @mock.patch('app.main.views.login.data_api_client')
+    def test_should_be_a_bad_request_if_supplier_does_not_exist_on_invite_token(self, data_api_client):
+        with self.app.app_context():
+
+            token = generate_token(
+                {
+                    'supplier_id': 1234,
+                    'email_address': 'testme@email.com'
+                },
+                self.app.config['SECRET_KEY'],
+                self.app.config['RESET_PASSWORD_SALT']
+            )
+
+            data_api_client.get_supplier = mock.Mock(
+                side_effect=HTTPError("Failed")
+            )
+
+            res = self.client.get(
+                '/suppliers/create-user/{}'.format(token)
+            )
+
+            data_api_client.get_supplier.assert_called_once_with(1234)
+            assert_equal(res.status_code, 404)
+
+    @mock.patch('app.main.views.login.generate_token')
+    def test_should_be_a_bad_request_if_supplier_does_not_exist_on_invite_token(self, generate_token):
+        with self.app.app_context():
+
+            generate_token = mock.Mock(
+                side_effect=BadTimeSignature("Too old")
+            )
+
+            res = self.client.get(
+                '/suppliers/create-user/12345'
+            )
+
+            assert_equal(res.status_code, 400)
+            assert_true(
+                "This invitation link is invalid, please refer to you're invitation email for contact details to get a new one sent out." #  noqa
+                in res.get_data(as_text=True)
             )

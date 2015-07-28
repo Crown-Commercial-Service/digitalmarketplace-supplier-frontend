@@ -1,0 +1,103 @@
+{% extends "_base_page.html" %}
+
+{% block page_title %}User invitation – Digital Marketplace{% endblock %}
+
+{% block main_content %}
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+{% if messages %}
+{% for category, message in messages %}
+{% if category == 'error' %}
+<div class="banner-destructive-without-action">
+    {% else %}
+    <div class="banner-success-without-action">
+        {% endif %}
+        <p class="banner-message">
+            {% if message == 'token_expired' %}
+            This password reset link has expired because you requested it more than
+            24 hours ago. Get a new one using the form below.
+
+            {% elif message == 'token_invalid' %}
+            This password reset link is invalid. Get a new one using the form below.
+
+            {% else %}
+            {{ message }}
+            {% endif %}
+        </p>
+    </div>
+    {% endfor %}
+    {% endif %}
+    {% endwith %}
+
+    <header class="page-heading">
+        <h1>Create user</h1>
+    </header>
+    <p class="lede">
+    Create user to work on {{ supplier }} with email address {{ email_address }}
+    </p>
+
+    <form autocomplete="off" action="{{ url_for('.create_user') }}" method="POST" id="createUserForm">
+
+        {{ form.hidden_tag() }}
+
+        {% if form.name.errors %}
+        <div class="validation-wrapper">
+            {% endif %}
+            <div class="question">
+                {{ form.name.label(class="question-heading-with-hint") }}
+                <p class="hint">
+                    Enter the name to be referred to on the Digital Marketplace
+                </p>
+                {% if form.name.errors %}
+                <p class="validation-message" id="error-name-textbox">
+                    {% for error in form.name.errors %}{{ error }}{% endfor %}
+                </p>
+                {% endif %}
+                {{ form.name(class="text-box", autocomplete="off") }}
+            </div>
+            {% if form.name.errors %}
+        </div>
+        {% endif %}
+
+        {% if form.confirm_password.errors %}
+        <div class="validation-wrapper">
+        {% endif %}
+            <div class="question">
+                {{ form.confirm_password.label(class="question-heading-with-hint") }}
+                <p class="hint">
+                    Repeat password used above
+                </p>
+                {% if form.confirm_password.errors %}
+                <p class="validation-message" id="error-confirm-password-textbox">
+                    {% for error in form.confirm_password.errors %}{{ error }}{% endfor %}
+                </p>
+                {% endif %}
+                {{ form.confirm_password(class="text-box", autocomplete="off") }}
+            </div>
+            {% if form.confirm_password.errors %}
+        </div>
+        {% endif %}
+
+
+        {% if form.confirm_password.errors %}
+        <div class="validation-wrapper">
+            {% endif %}
+            <div class="question">
+                {{ form.confirm_password.label(class="question-heading-with-hint") }}
+                <p class="hint">
+                    Repeat password used above
+                </p>
+                {% if form.confirm_password.errors %}
+                <p class="validation-message" id="error-confirm-password-textbox">
+                    {% for error in form.confirm_password.errors %}{{ error }}{% endfor %}
+                </p>
+                {% endif %}
+                {{ form.confirm_password(class="text-box", autocomplete="off") }}
+            </div>
+            {% if form.confirm_password.errors %}
+        </div>
+        {% endif %}
+
+        <button class="button-save">Send reset email</button>
+    </form>
+    {% endblock %}
