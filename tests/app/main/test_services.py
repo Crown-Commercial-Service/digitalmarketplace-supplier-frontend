@@ -314,6 +314,36 @@ class TestEditService(BaseApplicationTest):
                 'serviceName|serviceSummary',
                 document.xpath('//input[@name="page_questions"]/@value')[0])
 
+    def test_questions_for_this_section_can_be_changed(self):
+        with mock.patch('app.main.views.services.data_api_client') as data_api_client:
+            data_api_client.get_service.return_value = self.empty_service
+            res = self.client.post(
+                '/suppliers/services/1/edit/description',
+                data={
+                    'page_questions': '',
+                    'serviceName': 'The service',
+                    'serviceSummary': 'This is the service',
+                })
+
+            assert_equal(res.status_code, 302)
+            data_api_client.update_service.assert_called_once_with(
+                '1', {'serviceName': 'The service', 'serviceSummary': 'This is the service'},
+                'email@email.com', 'supplier app')
+
+    def test_only_questions_for_this_section_can_be_changed(self):
+        with mock.patch('app.main.views.services.data_api_client') as data_api_client:
+            data_api_client.get_service.return_value = self.empty_service
+            res = self.client.post(
+                '/suppliers/services/1/edit/description',
+                data={
+                    'page_questions': '',
+                    'serviceFeatures': '',
+                })
+
+            assert_equal(res.status_code, 302)
+            data_api_client.update_service.assert_called_one_with(
+                '1', dict(), 'email@email.com', 'supplier app')
+
     def test_edit_non_existent_service_returns_404(self):
         with mock.patch('app.main.views.services.data_api_client') as data_api_client:
             data_api_client.get_service.return_value = None
@@ -529,6 +559,38 @@ class TestEditDraftService(BaseApplicationTest):
             assert_equal(
                 'serviceName|serviceSummary',
                 document.xpath('//input[@name="page_questions"]/@value')[0])
+
+    def test_questions_for_this_section_can_be_changed(self):
+        with mock.patch('app.main.views.services.data_api_client') as data_api_client:
+            data_api_client.get_draft_service.return_value = self.empty_draft
+            res = self.client.post(
+                '/suppliers/submission/services/1/edit/service_description',
+                data={
+                    'page_questions': '',
+                    'serviceName': 'The service',
+                    'serviceSummary': 'This is the service',
+                })
+
+            assert_equal(res.status_code, 302)
+            data_api_client.update_draft_service.assert_called_once_with(
+                '1',
+                {'serviceName': 'The service', 'serviceSummary': 'This is the service',
+                 'page_questions': ['']},
+                'email@email.com')
+
+    def test_only_questions_for_this_section_can_be_changed(self):
+        with mock.patch('app.main.views.services.data_api_client') as data_api_client:
+            data_api_client.get_draft_service.return_value = self.empty_draft
+            res = self.client.post(
+                '/suppliers/submission/services/1/edit/service_description',
+                data={
+                    'page_questions': '',
+                    'serviceFeatures': '',
+                })
+
+            assert_equal(res.status_code, 302)
+            data_api_client.update_draft_service.assert_called_once_with(
+                '1', {'page_questions': ['']}, 'email@email.com')
 
     def test_edit_non_existent_draft_service_returns_404(self):
         with mock.patch('app.main.views.services.data_api_client') as data_api_client:

@@ -146,7 +146,7 @@ def update_section(service_id, section_id):
         abort(404)
 
     posted_data = _get_formatted_section_data()
-    del posted_data['page_questions']
+    posted_data = _filter_keys(posted_data, get_section_questions(section))
 
     try:
         data_api_client.update_service(
@@ -352,6 +352,7 @@ def update_section_submission(service_id, section_id):
         abort(404)
 
     posted_data = _get_formatted_section_data()
+    posted_data = _filter_keys(posted_data, get_section_questions(section) + ['page_questions'])
 
     try:
         data_api_client.update_draft_service(
@@ -433,6 +434,16 @@ def _get_formatted_section_data():
         elif key == 'page_questions':
             section_data[key] = section_data[key].split('|')
     return section_data
+
+
+def _filter_keys(data, keys):
+    """Return a dictionary filtered by a list of keys
+
+    >>> _filter_keys({'a': 1, 'b': 2}, ['a'])
+    {'a': 1}
+    """
+    key_set = set(keys) & set(data.keys())
+    return {key: data[key] for key in key_set}
 
 
 def _update_service_status(service, error_message=None):
