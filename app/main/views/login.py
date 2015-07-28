@@ -107,7 +107,6 @@ def send_reset_password_email():
 
             try:
                 send_email(
-                    user.id,
                     user.email_address,
                     email_body,
                     current_app.config['DM_MANDRILL_API_KEY'],
@@ -216,12 +215,13 @@ def send_invite_user():
         email_body = render_template(
             "emails/invite_user_email.html",
             url=url,
-            user=current_user.email_address,
+            user=current_user.name,
             supplier=current_user.supplier_name)
+
+        print current_app.config['DM_MANDRILL_API_KEY']
 
         try:
             send_email(
-                'unknown',
                 form.email_address.data,
                 email_body,
                 current_app.config['DM_MANDRILL_API_KEY'],
@@ -235,8 +235,8 @@ def send_invite_user():
                 "Invitation email failed to send error {} to {} suppluer {} supplier id {} ".format(
                     e.message,
                     form.email_address.data,
-                    current_user.supplier_name.
-                        current_user.supplier_id)
+                    current_user.supplier_name,
+                    current_user.supplier_id)
             )
             abort(503, "Failed to send user invite reset")
 

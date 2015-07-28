@@ -25,7 +25,7 @@ class TestLogin(BaseApplicationTest):
         super(TestLogin, self).setup()
 
         data_api_client_config = {'authenticate_user.return_value': self.user(
-            123, "email@email.com", 1234, 'name'
+            123, "email@email.com", 1234, 'name', 'name'
         )}
 
         self._data_api_client = mock.patch(
@@ -130,7 +130,7 @@ class TestResetPassword(BaseApplicationTest):
         super(TestResetPassword, self).setup()
 
         data_api_client_config = {'get_user.return_value': self.user(
-            123, "email@email.com", 1234, 'name'
+            123, "email@email.com", 1234, 'name', 'Name'
         )}
 
         self._user = {
@@ -282,7 +282,7 @@ class TestResetPassword(BaseApplicationTest):
     ):
         with self.app.app_context():
             data_api_client.get_user.return_value = self.user(
-                123, "email@email.com", 1234, 'email', is_token_valid=False
+                123, "email@email.com", 1234, 'email', 'Name', is_token_valid=False
             )
             token = generate_token(
                 self._user,
@@ -317,6 +317,7 @@ class TestResetPassword(BaseApplicationTest):
                     123,
                     "email@email.com",
                     1234,
+                    'name',
                     'name'
                 )}
 
@@ -328,7 +329,6 @@ class TestResetPassword(BaseApplicationTest):
             assert_equal(res.status_code, 302)
 
             send_email.assert_called_once_with(
-                123,
                 "email@email.com",
                 mock.ANY,
                 "API KEY",
@@ -353,6 +353,7 @@ class TestResetPassword(BaseApplicationTest):
                     123,
                     "email@email.com",
                     1234,
+                    'name',
                     'name'
                 )}
 
@@ -408,7 +409,7 @@ class TestLoginFormsNotAutofillable(BaseApplicationTest):
             self, data_api_client
     ):
         data_api_client.get_user.return_value = self.user(
-            123, "email@email.com", 1234, 'email'
+            123, "email@email.com", 1234, 'email', 'name'
         )
 
         with self.app.app_context():
@@ -427,6 +428,7 @@ class TestLoginFormsNotAutofillable(BaseApplicationTest):
             "Reset password",
             "Reset password for email@email.com"
         )
+
 
 class TestInviteUser(BaseApplicationTest):
 
@@ -452,7 +454,8 @@ class TestInviteUser(BaseApplicationTest):
             assert_true("Email can not be empty" in res.get_data())
             assert_equal(res.status_code, 400)
 
-    def test_should_redirect_in_success(self):
+    @mock.patch('app.main.views.login.send_email')
+    def test_should_redirect_in_success(self, send_email):
         with self.app.app_context():
             self.login()
             res = self.client.post(
@@ -464,7 +467,8 @@ class TestInviteUser(BaseApplicationTest):
             assert_equal(res.status_code, 302)
             assert_equal(res.location, 'http://localhost/suppliers/invite-user')
 
-    def test_should_show_success_message(self):
+    @mock.patch('app.main.views.login.send_email')
+    def test_should_show_success_message(self, send_email):
         with self.app.app_context():
             self.login()
             res = self.client.post(
@@ -477,7 +481,8 @@ class TestInviteUser(BaseApplicationTest):
             assert_true("User invited" in res.get_data())
 
     @mock.patch('app.main.views.login.generate_token')
-    def test_should_call_generate_token_with_correct_params(self, generate_token):
+    @mock.patch('app.main.views.login.send_email')
+    def test_should_call_generate_token_with_correct_params(self, send_email, generate_token):
         with self.app.app_context():
 
             self.app.config['SECRET_KEY'] = "KEY"
@@ -513,3 +518,51 @@ class TestInviteUser(BaseApplicationTest):
             assert_equal(res.status_code, 400)
             assert not send_email.called
             assert not generate_token.called
+
+    @mock.patch('app.main.views.login')
+    def test_should_be_an_error_if_send_invitation_email_fails(
+            self, send_email
+    ):
+        with self.app.app_context():
+            self.login()
+
+            send_email = mock.Mock(
+                side_effect=MandrillException(Exception('API is down'))
+            )
+
+            res = self.client.post(
+                '/suppliers/invite-user',
+                data={'email_address': 'email@email.com'}
+            )
+
+            assert_equal(res.status_code, 503)
+
+    @mock.patch('app.main.views.login.send_email')
+    def test_should_call_send_invitation_email_with_correct_params(
+            self, send_email
+    ):
+        with self.app.app_context():
+
+            self.login()
+
+            self.app.config['DM_MANDRILL_API_KEY'] = "API KEY"
+            self.app.config['INVITE_EMAIL_SUBJECT'] = "SUBJECT"
+            self.app.config['INVITE_EMAIL_FROM'] = "EMAIL FROM"
+            self.app.config['INVITE_EMAIL_NAME'] = "EMAIL NAME"
+
+            res = self.client.post(
+                '/suppliers/invite-user',
+                data={'email_address': 'email@email.com'}
+            )
+
+            assert_equal(res.status_code, 302)
+
+            send_email.assert_called_once_with(
+                "email@email.com",
+                mock.ANY,
+                "API KEY",
+                "SUBJECT",
+                "EMAIL FROM",
+                "EMAIL NAME",
+                ["user-invite"]
+            )

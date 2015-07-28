@@ -113,11 +113,11 @@ class TestSupplierDashboardLogin(BaseApplicationTest):
         with self.app.test_client():
             data_api_client.authenticate_user = Mock(
                 return_value=(self.user(
-                    123, "email@email.com", 1234, "Supplier Name")))
+                    123, "email@email.com", 1234, "Supplier Name", "Name")))
 
             data_api_client.get_user = Mock(
                 return_value=(self.user(
-                    123, "email@email.com", 1234, "Supplier Name")))
+                    123, "email@email.com", 1234, "Supplier Name", "Name")))
 
             data_api_client.get_supplier = Mock(side_effect=get_supplier)
 
@@ -153,11 +153,11 @@ class TestSupplierUpdate(BaseApplicationTest):
     def _login(self, data_api_client):
 
         data_api_client.authenticate_user.return_value = self.user(
-            123, "email@email.com", 1234, "name"
+            123, "email@email.com", 1234, "name", "Name"
         )
 
         data_api_client.get_user.return_value = self.user(
-            123, "email@email.com", 1234, "name"
+            123, "email@email.com", 1234, "name", "Name"
         )
 
         data_api_client.get_supplier.side_effect = get_supplier

@@ -21,7 +21,7 @@ class BaseApplicationTest(object):
         return None
 
     @staticmethod
-    def user(id, email_address, supplier_id, supplier_name,
+    def user(id, email_address, supplier_id, supplier_name, name,
              is_token_valid=True, locked=False, active=True):
 
         hours_offset = -1 if is_token_valid else 1
@@ -40,7 +40,8 @@ class BaseApplicationTest(object):
                 "role": "supplier",
                 "locked": locked,
                 'active': active,
-                'passwordChangedAt': password_changed_at,
+                "name": name,
+                'passwordChangedAt': password_changed_at
             }
         }
 
@@ -66,11 +67,11 @@ class BaseApplicationTest(object):
     def login(self):
         data_api_client.authenticate_user = Mock(
             return_value=(self.user(
-                123, "email@email.com", 1234, 'Supplier Name')))
+                123, "email@email.com", 1234, 'Supplier Name', 'Name')))
 
         data_api_client.get_user = Mock(
             return_value=(self.user(
-                123, "email@email.com", 1234, 'Supplier Name')))
+                123, "email@email.com", 1234, 'Supplier Name', 'Name')))
 
         self.client.post("/suppliers/login", data={
             'email_address': 'valid@email.com',
