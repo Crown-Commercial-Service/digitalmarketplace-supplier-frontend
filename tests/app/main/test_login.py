@@ -1,4 +1,4 @@
-from dmutils.email import generate_token
+from dmutils.email import generate_token, MandrillException
 from nose.tools import assert_equal, assert_true, assert_is_not_none, assert_in
 from ..helpers import BaseApplicationTest
 from lxml import html
@@ -337,6 +337,31 @@ class TestResetPassword(BaseApplicationTest):
                 "EMAIL NAME",
                 ["password-resets"]
             )
+
+    @mock.patch('app.main.views.login')
+    def test_should_be_an_error_if_send_email_fails(
+            self, send_email
+    ):
+        with self.app.app_context():
+
+            send_email = mock.Mock(
+                side_effect=MandrillException(Exception('API is down'))
+            )
+
+            data_api_client_config = {
+                'get_user.return_value': self.user(
+                    123,
+                    "email@email.com",
+                    1234,
+                    'name'
+                )}
+
+            res = self.client.post(
+                '/suppliers/reset-password',
+                data={'email_address': 'email@email.com'}
+            )
+
+            assert_equal(res.status_code, 503)
 
 
 class TestLoginFormsNotAutofillable(BaseApplicationTest):
