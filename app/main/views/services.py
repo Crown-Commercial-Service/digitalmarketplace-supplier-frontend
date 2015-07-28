@@ -94,13 +94,10 @@ def update_service_status(service_id):
     )
 
 
-@main.route(
-    '/services/<string:service_id>/edit/<string:section>',
-    methods=['GET']
-)
+@main.route('/services/<string:service_id>/edit/<string:section_id>', methods=['GET'])
 @login_required
 @flask_featureflags.is_active_feature('EDIT_SERVICE_PAGE')
-def edit_section(service_id, section):
+def edit_section(service_id, section_id):
     service = data_api_client.get_service(service_id)
     if service is None:
         abort(404)
@@ -110,7 +107,7 @@ def edit_section(service_id, section):
         abort(404)
 
     content = existing_service_content.get_builder().filter(service)
-    section = content.get_section(section)
+    section = content.get_section(section_id)
     if section is None:
         abort(404)
 
@@ -131,13 +128,10 @@ def get_section_questions(section):
     return [question['id'] for question in section['questions']]
 
 
-@main.route(
-    '/services/<string:service_id>/edit/<string:section>',
-    methods=['POST']
-)
+@main.route('/services/<string:service_id>/edit/<string:section_id>', methods=['POST'])
 @login_required
 @flask_featureflags.is_active_feature('EDIT_SERVICE_PAGE')
-def update_section(service_id, section):
+def update_section(service_id, section_id):
     service = data_api_client.get_service(service_id)
     if service is None:
         abort(404)
@@ -147,7 +141,7 @@ def update_section(service_id, section):
         abort(404)
 
     content = existing_service_content.get_builder().filter(service)
-    section = content.get_section(section)
+    section = content.get_section(section_id)
     if section is None:
         abort(404)
 
@@ -340,10 +334,7 @@ def edit_service_submission(service_id, section_id):
     )
 
 
-@main.route(
-    '/submission/services/<string:service_id>/edit/<string:section_id>',
-    methods=['POST']
-)
+@main.route('/submission/services/<string:service_id>/edit/<string:section_id>', methods=['POST'])
 @login_required
 @flask_featureflags.is_active_feature('GCLOUD7_OPEN')
 def update_section_submission(service_id, section_id):
