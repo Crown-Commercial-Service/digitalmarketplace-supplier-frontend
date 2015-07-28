@@ -1,7 +1,4 @@
-{% extends "_base_page.html" %}
-{% import "macros/toolkit_forms.html" as forms %}
-
-{% block page_title %}{{ section.name }} – Digital Marketplace{% endblock %}
+{% extends "services/_base_edit_section_page.html" %}
 
 {% block breadcrumb %}
   {%
@@ -15,12 +12,12 @@
         "label": current_user.supplier_name
       },
       {
-        "link": url_for(dashboard),
-        "label": dash_label
+        "link": url_for(".list_services"),
+        "label": "Services"
       },
       {
-        "link": url_for(return_to, service_id=service_id),
-        "label": service_data["serviceName"] or 'New service'
+        "link": url_for(".edit_service", service_id=service_id),
+        "label": service_data["serviceName"]
       }
     ]
   %}
@@ -28,56 +25,14 @@
   {% endwith %}
 {% endblock %}
 
-{% block main_content %}
-
-  {% if errors %}
-    {% with errors = errors.values() %}
-      {% include 'toolkit/forms/validation.html' %}
-    {% endwith %}
-  {% endif %}
-
-  <div class="grid-row">
-    <div class="column-two-thirds">
-
-      {% with
-        heading = section.name,
-        smaller = true
-      %}
-        {% include 'toolkit/page-heading.html' %}
-      {% endwith %}
-
-    </div>
-  </div>
-  <form method="post" action="">
-
-    {% for question in section.questions %}
-      {% if errors and errors[question.id] %}
-        {{ forms[question.type](question, service_data, errors) }}
-      {% else %}
-        {{ forms[question.type](question, service_data, {}) }}
-      {% endif %}
-    {% endfor %}
-
-    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
-    {% if request.args.get('return_to_summary') or "suppliers/submission/" not in request.url %}
-      {%
-        with
-        label="Save and return to service",
-        type="save"
-      %}
-      {% include "toolkit/button.html" %}
-      {% endwith %}
-    {% else %}
-      {%
-        with
-        label="Save and continue",
-        type="save"
-      %}
-      {% include "toolkit/button.html" %}
-      {% endwith %}
-    {% endif %}
-    
-    <a href="{{ url_for(return_to, service_id=service_id) }}">Return to service</a>
-
-  </form>
+{% block save_button %}
+  {%
+    with
+    label="Save and return to service",
+    type="save"
+  %}
+  {% include "toolkit/button.html" %}
+  {% endwith %}
 {% endblock %}
+
+{% block return_to_service %}{{ url_for(".edit_service", service_id=service_id) }}{% endblock %}

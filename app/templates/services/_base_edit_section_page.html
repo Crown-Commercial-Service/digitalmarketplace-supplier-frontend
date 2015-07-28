@@ -1,0 +1,42 @@
+{% extends "_base_page.html" %}
+{% import "macros/toolkit_forms.html" as forms %}
+
+{% block page_title %}{{ section.name }} – Digital Marketplace{% endblock %}
+
+{% block main_content %}
+
+  {% if errors %}
+    {% with errors = errors.values() %}
+      {% include 'toolkit/forms/validation.html' %}
+    {% endwith %}
+  {% endif %}
+
+  <div class="grid-row">
+    <div class="column-two-thirds">
+
+      {% with
+        heading = section.name,
+        smaller = true
+      %}
+        {% include 'toolkit/page-heading.html' %}
+      {% endwith %}
+
+    </div>
+  </div>
+  <form method="post">
+
+    {% for question in section.questions %}
+      {% if errors and errors[question.id] %}
+        {{ forms[question.type](question, service_data, errors) }}
+      {% else %}
+        {{ forms[question.type](question, service_data, {}) }}
+      {% endif %}
+    {% endfor %}
+
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+    {% block save_button %}{% endblock %}
+    
+    <a href="{% block return_to_service %}{% endblock %}">Return to service</a>
+
+  </form>
+{% endblock %}

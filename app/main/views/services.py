@@ -116,9 +116,6 @@ def edit_section(service_id, section_id):
         section=section,
         service_data=service,
         service_id=service_id,
-        return_to=".edit_service",
-        dashboard=".list_services",
-        dash_label="Services",
         **main.config['BASE_TEMPLATE_DATA']
     )
 
@@ -161,9 +158,6 @@ def update_section(service_id, section_id):
             section=section,
             service_data=posted_data,
             service_id=service_id,
-            return_to=".edit_service",
-            dashboard=".list_services",
-            dash_label="Services",
             errors=errors_map,
             **main.config['BASE_TEMPLATE_DATA']
         )
@@ -319,13 +313,10 @@ def edit_service_submission(service_id, section_id):
         abort(404)
 
     return render_template(
-        "services/edit_section.html",
+        "services/edit_submission_section.html",
         section=section,
         service_data=draft,
         service_id=service_id,
-        dashboard=".framework_dashboard",
-        dash_label="Apply to G-Cloud 7",
-        return_to=".view_service_submission",
         **main.config['BASE_TEMPLATE_DATA']
     )
 
@@ -360,13 +351,10 @@ def update_section_submission(service_id, section_id):
         if not posted_data.get('serviceName', None):
             posted_data['serviceName'] = draft.get('serviceName', '')
         return render_template(
-            "services/edit_section.html",
+            "services/edit_submission_section.html",
             section=section,
             service_data=posted_data,
             service_id=service_id,
-            return_to=".view_service_submission",
-            dashboard=".framework_dashboard",
-            dash_label="Apply to G-Cloud 7",
             errors=errors_map,
             **main.config['BASE_TEMPLATE_DATA']
             )
