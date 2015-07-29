@@ -4,20 +4,13 @@
 
 {% block main_content %}
 
-{% with messages = get_flashed_messages(with_categories=true) %}
-{% if messages %}
-{% for category, message in messages %}
-{% if category == 'error' %}
+{% if not valid_token %}
 <div class="banner-destructive-without-action">
-{% else %}
-    <div class="banner-success-without-action">
-{% endif %}
         <p class="banner-message">
-            {% if message == 'token_invalid' %}
             This invitation link is invalid, please refer to you're invitation email for contact details to get a new one sent out.
-
-            {% else %}
-
+        </p>
+</div>
+{% else %}
 
     <header class="page-heading">
         <h1>Create user</h1>
@@ -32,6 +25,8 @@
     <form autocomplete="off" action="{{ url_for('.submit_create_user') }}" method="POST" id="createUserForm">
 
         {{ form.hidden_tag() }}
+
+        <input type="hidden" name="token" value="{{ token }}"/>
 
         {% if form.name.errors %}
         <div class="validation-wrapper">
@@ -93,11 +88,8 @@
         <button class="button-save">Create user</button>
     </form>
 
-            {% endif %}
         </p>
     </div>
 
-    {% endfor %}
-{% endif %}
-{% endwith %}
+{% endif%}
     {% endblock %}

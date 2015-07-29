@@ -182,15 +182,15 @@ def update_password(token):
 
 
 
-@main.route('/create-user/<string:token>', methods=["GET"])
-def create_user(token):
+@main.route('/create-user/<string:encoded_token>', methods=["GET"])
+def create_user(encoded_token):
 
     form = CreateUserForm()
     template_data = main.config['BASE_TEMPLATE_DATA']
 
     try:
         token, timestamp = decode_token(
-            token,
+            encoded_token,
             current_app.config['SECRET_KEY'],
             current_app.config['RESET_PASSWORD_SALT']
         )
@@ -203,7 +203,9 @@ def create_user(token):
         flash('token_invalid', 'error')
         return render_template(
             "auth/create-user.html",
+            valid_token=False,
             form=form,
+            token=encoded_token,
             email_address=None,
             supplier=None,
             **template_data), 400
@@ -220,13 +222,18 @@ def create_user(token):
 
     return render_template(
         "auth/create-user.html",
+        valid_token=True,
         form=form,
         email_address=token['email_address'],
         supplier=supplier["suppliers"],
+        token=token,
         **template_data), 200
 
 @main.route('/create-user', methods=["POST"])
 def submit_create_user():
+
+    form = CreateUserForm()
+
     return redirect(url_for('.request_password_reset'))
 
 @main.route('/invite-user', methods=["GET"])
