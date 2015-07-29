@@ -6,6 +6,7 @@ from nose.tools import assert_equal, assert_true
 from app import data_api_client
 from requests import ConnectionError
 from .helpers import BaseApplicationTest
+from dmutils.apiclient.errors import HTTPError
 
 
 class TestApplication(BaseApplicationTest):
@@ -45,8 +46,8 @@ class TestApplication(BaseApplicationTest):
         with self.app.test_client():
             self.login()
 
-            data_api_client.find_services = Mock(
-                side_effect=ConnectionError('API is down')
+            data_api_client.get_supplier = Mock(
+                side_effect=HTTPError('API is down')
             )
             self.app.config['DEBUG'] = False
 
