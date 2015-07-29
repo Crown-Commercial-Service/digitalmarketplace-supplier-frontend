@@ -46,7 +46,4 @@ class CreateUserForm(Form):
                message="Passwords must be between 10 and 50 characters"
                )
     ])
-    confirm_password = PasswordField('Confirm password', validators=[
-        DataRequired(message="Please confirm your new password"),
-        EqualTo('password', message="The passwords you entered do not match")
-    ])
+

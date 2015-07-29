@@ -22,11 +22,9 @@
         <h1>{{ email_address }}</h1>
     </p>
 
-    <form autocomplete="off" action="{{ url_for('.submit_create_user') }}" method="POST" id="createUserForm">
+    <form autocomplete="off" action="{{ url_for('.submit_create_user', token=token) }}" method="POST" id="createUserForm">
 
         {{ form.hidden_tag() }}
-
-        <input type="hidden" name="token" value="{{ token }}"/>
 
         {% if form.name.errors %}
         <div class="validation-wrapper">
@@ -63,25 +61,6 @@
             {{ form.password(class="text-box", autocomplete="off") }}
         </div>
     {% if form.password.errors %}
-        </div>
-    {% endif %}
-
-    {% if form.confirm_password.errors %}
-        <div class="validation-wrapper">
-    {% endif %}
-        <div class="question">
-            {{ form.confirm_password.label(class="question-heading-with-hint") }}
-            <p class="hint">
-                Repeat password used above
-            </p>
-            {% if form.confirm_password.errors %}
-            <p class="validation-message" id="error-confirm-password-textbox">
-                {% for error in form.confirm_password.errors %}{{ error }}{% endfor %}
-            </p>
-            {% endif %}
-            {{ form.confirm_password(class="text-box", autocomplete="off") }}
-        </div>
-    {% if form.confirm_password.errors %}
         </div>
     {% endif %}
 

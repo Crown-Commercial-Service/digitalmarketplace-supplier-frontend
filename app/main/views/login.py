@@ -181,10 +181,8 @@ def update_password(token):
                                **template_data), 400
 
 
-
 @main.route('/create-user/<string:encoded_token>', methods=["GET"])
 def create_user(encoded_token):
-
     form = CreateUserForm()
     template_data = main.config['BASE_TEMPLATE_DATA']
 
@@ -229,17 +227,65 @@ def create_user(encoded_token):
         token=token,
         **template_data), 200
 
-@main.route('/create-user', methods=["POST"])
-def submit_create_user():
+
+@main.route('/create-user/<string:encoded_token>', methods=["POST"])
+def submit_create_user(encoded_token):
+    template_data = main.config['BASE_TEMPLATE_DATA']
 
     form = CreateUserForm()
 
-    return redirect(url_for('.request_password_reset'))
+    try:
+        token, timestamp = decode_token(
+            encoded_token,
+            current_app.config['SECRET_KEY'],
+            current_app.config['RESET_PASSWORD_SALT']
+        )
+        if not token.get('email_address', None):
+            raise Exception('Missing email address from token')
+        if not token.get('supplier_id', None):
+            raise Exception('Missing supplier from token')
+    except Exception as e:
+        current_app.logger.error(e.message)
+        flash('token_invalid', 'error')
+        return render_template(
+            "auth/create-user.html",
+            valid_token=False,
+            form=form,
+            token=encoded_token,
+            email_address=None,
+            supplier=None,
+            **template_data), 400
+
+    user = None
+
+    # does user exist
+    try:
+        user = data_api_client.get_user(token.get('email_address'))
+        user = data_api_client.update_user({
+            'role': 'supplier',
+            'supplier_id': token.get('supplier_id')
+        })
+    except HTTPError as e:
+        if e.status_code is 404:
+            # Create user
+            user = data_api_client.create_user({
+                'name': form.name.data,
+                'password': form.name.password,
+                'email_address': token.get('email_address'),
+                'role': 'supplier',
+                'supplier_id': token.get('supplier_id')
+            })
+
+    user = User.from_json(user)
+    login_user(user)
+
+    return redirect(url_for('.dashboard'))
+
 
 @main.route('/invite-user', methods=["GET"])
 @login_required
 def invite_user():
-    form = EmailAddressForm()
+    form = CreateUserForm()
 
     template_data = main.config['BASE_TEMPLATE_DATA']
 
@@ -339,4 +385,4 @@ def decode_password_reset_token(token):
 
 
 def token_created_before_password_last_changed(token_timestamp, user_timestamp):
-        return token_timestamp < user_timestamp
+    return token_timestamp < user_timestamp
