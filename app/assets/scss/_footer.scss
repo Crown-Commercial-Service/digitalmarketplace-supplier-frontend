@@ -107,7 +107,7 @@
 
       @include device-pixel-ratio() {
         background-image: file-url("external-links/external-link-black-24x24.png");
-        background-size: 12px 400px;
+        background-size: 12px 12px;
       }
     }
 
