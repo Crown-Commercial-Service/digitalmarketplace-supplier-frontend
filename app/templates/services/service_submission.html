@@ -1,7 +1,5 @@
-{% extends "_base_page.html" %}
+{% extends "services/_base_service_page.html" %}
 {% import 'macros/answers.html' as answers %}
-
-{% block page_title %}{{service_data['serviceName']}} – Digital Marketplace{% endblock %}
 
 {% block breadcrumb %}
   {%
@@ -24,41 +22,6 @@
   {% endwith %}
 {% endblock %}
 
-{% block main_content %}
-  <div class="grid-row">
-    <div class="column-two-thirds">
-      {% with
-        context = "Edit",
-        heading = service_data['serviceName'],
-        smaller = true
-      %}
-        {% include "toolkit/page-heading.html" %}
-      {% endwith %}
-    </div>
-    <div class="column-one-whole">
-      {% import "toolkit/summary-table.html" as summary %}
-      {% for section in sections %}
-        {{ summary.heading(section.name) }}
-        {% if section.editable %}
-          {{ summary.top_link("Edit", url_for(".edit_service_submission", service_id=service_id, section_id=section.id)) }}
-        {% endif %}
-        {% call(question) summary.list_table(
-          section.questions,
-          caption=section.name,
-          field_headings=[
-            "Service attribute name",
-            "Service attribute"
-          ],
-          field_headings_visible=True
-        ) %}
-          {% call summary.row() %}
-            {{ summary.field_name(question.question) }}
-            {% call summary.field() %}
-              {{ answers[question.type](service_data[question.id]) }}
-            {% endcall %}
-          {% endcall %}
-        {% endcall %}
-      {% endfor %}
-    </div>
-  </div>
+{% block edit_link %}
+  {{ summary.top_link("Edit", url_for(".edit_service_submission", service_id=service_id, section_id=section.id)) }}
 {% endblock %}
