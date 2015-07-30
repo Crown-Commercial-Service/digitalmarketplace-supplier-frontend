@@ -3,8 +3,9 @@ from flask_login import login_required, current_user
 
 from dmutils.apiclient import APIError
 from dmutils import flask_featureflags
+from dmutils.content_loader import ContentBuilder
 
-from ...main import main
+from ...main import main, declaration_content
 from ... import data_api_client
 from ..forms.frameworks import G7SelectionQuestions
 
@@ -63,8 +64,10 @@ def framework_supplier_declaration():
         form = G7SelectionQuestions(formdata=None, data=answers)
 
     return render_template(
-        "frameworks/declaration.html",
+        "services/edit_declaration_section.html",
         form=form,
+        section=declaration_content.get_builder().sections[0],
+        service_data={},
         errors=[
             {'input_name': k,
              'question': v[0]} for k, v in form.errors.items()],
