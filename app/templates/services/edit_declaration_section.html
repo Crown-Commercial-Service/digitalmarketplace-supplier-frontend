@@ -1,0 +1,44 @@
+{% extends "services/_base_edit_section_page.html" %}
+
+{% block breadcrumb %}
+  {%
+    with items = [
+      {
+        "link": "/",
+        "label": "Digital Marketplace"
+      },
+      {
+        "link": url_for(".dashboard"),
+        "label": current_user.supplier_name
+      },
+      {
+        "link": url_for(".framework_dashboard"),
+        "label": "Apply to G-Cloud 7"
+      }
+    ]
+  %}
+    {% include "toolkit/breadcrumb.html" %}
+  {% endwith %}
+{% endblock %}
+
+{% block save_button %}
+  {% if request.args.get('return_to_summary') %}
+    {%
+      with
+      label="Save and return to service",
+      type="save"
+    %}
+    {% include "toolkit/button.html" %}
+    {% endwith %}
+  {% else %}
+    {%
+      with
+      label="Submit",
+      type="save"
+    %}
+    {% include "toolkit/button.html" %}
+    {% endwith %}
+  {% endif %}
+{% endblock %}
+
+{% block return_to_service %} {% endblock %}

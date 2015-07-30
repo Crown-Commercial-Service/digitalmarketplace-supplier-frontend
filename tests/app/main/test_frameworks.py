@@ -1,4 +1,4 @@
-from nose.tools import assert_equal
+from nose.tools import assert_equal, nottest
 import mock
 from mock import Mock
 from lxml import html
@@ -20,6 +20,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
 
 @mock.patch('app.main.views.frameworks.data_api_client')
 class TestSupplierDeclaration(BaseApplicationTest):
+    @nottest
     def test_get_with_no_previous_answers(self, data_api_client):
         with self.app.test_client():
             self.login()
@@ -35,8 +36,9 @@ class TestSupplierDeclaration(BaseApplicationTest):
             assert_equal(res.status_code, 200)
             doc = html.fromstring(res.get_data(as_text=True))
             assert_equal(
-                doc.xpath('//input[@id="registration_number"]/@value')[0], "")
+                doc.xpath('//input[@id="SQ1-3"]/@value')[0], "")
 
+    @nottest
     def test_get_with_with_previous_answers(self, data_api_client):
         with self.app.test_client():
             self.login()
@@ -58,6 +60,7 @@ class TestSupplierDeclaration(BaseApplicationTest):
                 doc.xpath('//input[@id="registration_number"]/@value')[0],
                 "12345")
 
+    @nottest
     def test_post_valid_data(self, data_api_client):
         with self.app.test_client():
             self.login()
@@ -81,6 +84,7 @@ class TestSupplierDeclaration(BaseApplicationTest):
             assert_equal(
                 len(doc.xpath('//input[@id="bankrupt-no"]/@checked')), 1)
 
+    @nottest
     def test_post_valid_data_with_api_failure(self, data_api_client):
         with self.app.test_client():
             self.login()
