@@ -10,6 +10,8 @@ from dmutils.user import User
 
 from config import configs
 
+from jinja2 import evalcontextfilter, Markup, escape
+
 
 data_api_client = apiclient.DataAPIClient()
 login_manager = LoginManager()
@@ -52,6 +54,12 @@ def create_app(config_name):
     def refresh_session():
         session.permanent = True
         session.modified = True
+
+    @application.template_filter()
+    @evalcontextfilter
+    def nl2br(eval_ctx, value):
+        result = value.replace('\n', '<br>\n')
+        return Markup(result)
 
     return application
 

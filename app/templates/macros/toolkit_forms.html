@@ -1,8 +1,8 @@
 {% macro text(question_content, service_data, errors) -%}
   {%
     with
-    question=question_content.question,
-    hint=question_content.hint,
+    question=question_content.question|nl2br,
+    hint=question_content.hint or ''|nl2br,
     name=question_content.id,
     value=service_data[question_content.id],
     error=errors.get(question_content.id)['message']
@@ -14,8 +14,8 @@
 {% macro textbox_large(question_content, service_data, errors) -%}
   {%
     with
-    question=question_content.question,
-    hint=question_content.hint,
+    question=question_content.question|nl2br,
+    hint=question_content.hint or ''|nl2br,
     name=question_content.id,
     value=service_data[question_content.id],
     large=True,
@@ -31,8 +31,8 @@
     with
     name=question_content.id,
     number_of_items=10,
-    question=question_content.question,
-    hint=question_content.hint,
+    question=question_content.question|nl2br,
+    hint=question_content.hint or ''|nl2br,
     values=service_data[question_content.id],
     id=question_content.id,
     hint=question_content.hint,
@@ -46,8 +46,8 @@
   {%
     with
     name=question_content.id,
-    question=question_content.question,
-    hint=question_content.hint,
+    question=question_content.question|nl2br,
+    hint=question_content.hint or ''|nl2br,
     value=service_data[question_content.id],
     id=question_content.id,
     options=question_content.options,
@@ -62,8 +62,8 @@
   {%
     with
     name=question_content.id,
-    question=question_content.question,
-    hint=question_content.hint,
+    question=question_content.question|nl2br,
+    hint=question_content.hint or ''|nl2br,
     value=service_data[question_content.id],
     id=question_content.id,
     options=question_content.options,
@@ -78,8 +78,8 @@
   {%
     with
     name=question_content.id,
-    question=question_content.question,
-    hint=question_content.hint,
+    question=question_content.question|nl2br,
+    hint=question_content.hint or ''|nl2br,
     value=service_data[question_content.id],
     id=question_content.id,
     hint=question_content.hint,
@@ -93,8 +93,8 @@
 {% macro upload(question_content, service_data, errors) -%}
   {%
     with
-    question=question_content.question,
-    hint=question_content.hint,
+    question=question_content.question|nl2br,
+    hint=question_content.hint or ''|nl2br,
     name=question_content.id,
     value=service_data[question_content.id],
     error=errors.get(question_content.id)['message']
@@ -112,8 +112,8 @@
     priceUnit=service_data.priceUnit,
     priceInterval=service_data.priceInterval,
     value=service_data[question_content.id],
-    question=question_content.question,
-    hint=question_content.hint,
+    question=question_content.question|nl2br,
+    hint=question_content.hint or ''|nl2br,
     id=question_content.id,
     error=errors.get(question_content.id)['message']
   %}
@@ -127,8 +127,8 @@
     unit_in_full="percent",
     unit_position="after",
     unit="%",
-    question=question_content.question,
-    hint=question_content.hint,
+    question=question_content.question|nl2br,
+    hint=question_content.hint or ''|nl2br,
     name=question_content.id,
     value=service_data[question_content.id],
     error=errors.get(question_content.id)['message']
