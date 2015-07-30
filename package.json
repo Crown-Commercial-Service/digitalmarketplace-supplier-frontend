@@ -20,6 +20,6 @@
     "frontend-build:development": "./node_modules/gulp/bin/gulp.js build:development",
     "frontend-build:production": "./node_modules/gulp/bin/gulp.js build:production",
     "frontend-build:watch": "./node_modules/gulp/bin/gulp.js watch",
-    "postinstall": "./node_modules/bower/bin/bower install"
+    "postinstall": "./node_modules/bower/bin/bower install && npm run frontend-build:production"
   }
 }
