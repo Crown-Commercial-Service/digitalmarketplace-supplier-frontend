@@ -16,7 +16,6 @@ application.jinja_options = {
 }
 
 manager = Manager(application)
-
 manager.add_command("runserver", Server(host='0.0.0.0', port=port))
 
 if __name__ == '__main__':
