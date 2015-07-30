@@ -1,5 +1,4 @@
 from dmutils.email import generate_token, MandrillException
-from dmutils.apiclient.errors import HTTPError
 from itsdangerous import BadTimeSignature
 from nose.tools import assert_equal, assert_true, assert_is_not_none, assert_in
 from ..helpers import BaseApplicationTest
@@ -620,7 +619,7 @@ class TestInviteUser(BaseApplicationTest):
 
             assert_equal(res.status_code, 400)
             assert_true(
-                "This link is invalid. Check you've entered the correct link or ask the person who invited you to send a new invitation."  # noqa
+                "Check you&#146;ve entered the correct link or ask the person who invited you to send a new invitation."  # noqa
                 in res.get_data(as_text=True)
             )
 
@@ -669,8 +668,8 @@ class TestInviteUser(BaseApplicationTest):
             data_api_client.get_user.return_value = self.user(
                 123,
                 'testme@email.com',
-                1234,
-                'Suppluer Name',
+                None,
+                None,
                 'Users name'
             )
 
@@ -714,11 +713,11 @@ class TestInviteUser(BaseApplicationTest):
 
             assert_equal(res.status_code, 400)
             assert_equal(
-                "This link is invalid. Check you've entered the correct link or ask the person who invited you to send a new invitation." in res.get_data(),  # noqa
+                "Check you&#146;ve entered the correct link or ask the person who invited you to send a new invitation." in res.get_data(),  # noqa
                 True
             )
             assert_equal(
-                '<button class="button-save">Create user</button>' in res.get_data(),  # noqa
+                '<button class="button-save">Create contributor account</button>' in res.get_data(),
                 False
             )
 
@@ -730,7 +729,7 @@ class TestInviteUser(BaseApplicationTest):
 
             assert_equal(res.status_code, 400)
             assert_equal(
-                "This link is invalid. Check you've entered the correct link or ask the person who invited you to send a new invitation." in res.get_data(),  # noqa
+                "Check you&#146;ve entered the correct link or ask the person who invited you to send a new invitation." in res.get_data(),  # noqa
                 True
             )
             assert_equal(
@@ -866,3 +865,150 @@ class TestInviteUser(BaseApplicationTest):
 
             assert_equal(res.status_code, 302)
             assert_equal(res.location, 'http://localhost/suppliers')
+
+    @mock.patch('app.main.views.login.data_api_client')
+    def test_should_update_user_if_user_does_exist(self, data_api_client):
+        with self.app.app_context():
+
+            data_api_client.get_user.return_value = self.user(
+                123,
+                'testme@email.com',
+                1234,
+                'Suppluer Name',
+                'Users name'
+            )
+
+            token = generate_token(
+                {
+                    'supplier_id': 1234,
+                    'supplier_name': 'Supplier Name',
+                    'email_address': 'testme@email.com'
+                },
+                self.app.config['SECRET_KEY'],
+                self.app.config['RESET_PASSWORD_SALT']
+            )
+
+            res = self.client.post(
+                '/suppliers/update-user/{}'.format(token)
+            )
+
+            data_api_client.update_user.assert_called_once_with(
+                user_id=123,
+                supplier_id=1234,
+                role='supplier'
+            )
+
+            assert_equal(res.status_code, 302)
+            assert_equal(res.location, 'http://localhost/suppliers')
+
+    @mock.patch('app.main.views.login.data_api_client')
+    def test_should_render_update_user_page_if_user_is_locked(self, data_api_client):
+        with self.app.app_context():
+
+            data_api_client.get_user.return_value = self.user(
+                123,
+                'testme@email.com',
+                1234,
+                'Supplier Name',
+                'Users name',
+                locked=True
+            )
+
+            token = generate_token(
+                {
+                    'supplier_id': 1234,
+                    'supplier_name': 'Supplier Name',
+                    'email_address': 'testme@email.com'
+                },
+                self.app.config['SECRET_KEY'],
+                self.app.config['RESET_PASSWORD_SALT']
+            )
+
+            res = self.client.get(
+                '/suppliers/create-user/{}'.format(token)
+            )
+
+            assert_equal(res.status_code, 200)
+            assert_true(
+                "This account may be inactive or locked"
+                in res.get_data(as_text=True)
+            )
+            assert_true(
+                'Email <a href="mailto:enquiries@digitalmarketplace.service.gov.uk">enquiries@digitalmarketplace.service.gov.uk</a> if you need help.</p>'  # noqa
+                in res.get_data(as_text=True)
+            )
+
+    @mock.patch('app.main.views.login.data_api_client')
+    def test_should_render_update_user_page_if_user_is_not_active(self, data_api_client):
+        with self.app.app_context():
+
+            data_api_client.get_user.return_value = self.user(
+                123,
+                'testme@email.com',
+                1234,
+                'Supplier Name',
+                'Users name',
+                active=False
+            )
+
+            token = generate_token(
+                {
+                    'supplier_id': 1234,
+                    'supplier_name': 'Supplier Name',
+                    'email_address': 'testme@email.com'
+                },
+                self.app.config['SECRET_KEY'],
+                self.app.config['RESET_PASSWORD_SALT']
+            )
+
+            res = self.client.get(
+                '/suppliers/create-user/{}'.format(token)
+            )
+
+            assert_equal(res.status_code, 200)
+            assert_true(
+                "This account may be inactive or locked"
+                in res.get_data(as_text=True)
+            )
+            assert_true(
+                'Email <a href="mailto:enquiries@digitalmarketplace.service.gov.uk">enquiries@digitalmarketplace.service.gov.uk</a> if you need help.</p>'  # noqa
+                in res.get_data(as_text=True)
+            )
+
+    @mock.patch('app.main.views.login.data_api_client')
+    def test_should_render_update_user_page_if_user_is_already_a_supplier(self, data_api_client):
+        with self.app.app_context():
+
+            data_api_client.get_user.return_value = self.user(
+                123,
+                'testme@email.com',
+                1234,
+                'Supplier Name',
+                'Users name',
+                active=True,
+                locked=False
+            )
+
+            token = generate_token(
+                {
+                    'supplier_id': 1234,
+                    'supplier_name': 'Supplier Name',
+                    'email_address': 'testme@email.com'
+                },
+                self.app.config['SECRET_KEY'],
+                self.app.config['RESET_PASSWORD_SALT']
+            )
+
+            res = self.client.get(
+                '/suppliers/create-user/{}'.format(token)
+            )
+
+            assert_equal(res.status_code, 200)
+            assert_true(
+                "This account may be inactive or locked"
+                in res.get_data(as_text=True)
+            )
+            assert_true(
+                'Email <a href="mailto:enquiries@digitalmarketplace.service.gov.uk">enquiries@digitalmarketplace.service.gov.uk</a> if you need help.</p>'  # noqa
+                in res.get_data(as_text=True)
+            )

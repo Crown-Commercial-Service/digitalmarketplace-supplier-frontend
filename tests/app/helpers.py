@@ -28,19 +28,25 @@ class BaseApplicationTest(object):
         date = datetime.utcnow() + timedelta(hours=hours_offset)
         password_changed_at = date.strftime(DATETIME_FORMAT)
 
+        supplier = None
+        role = 'buyer'
+
+        if supplier_id:
+            supplier = {
+                "supplierId": supplier_id,
+                "name": supplier_name,
+            }
+            role = 'supplier'
         return {
             "users": {
                 "id": id,
                 "emailAddress": email_address,
-                "name": "User Name",
-                "supplier": {
-                    "supplierId": supplier_id,
-                    "name": supplier_name,
-                },
-                "role": "supplier",
+                "name": name,
+                "supplier": supplier,
+                "role": role,
                 "locked": locked,
                 'active': active,
-                "name": name,
+                "active": active,
                 'passwordChangedAt': password_changed_at
             }
         }
