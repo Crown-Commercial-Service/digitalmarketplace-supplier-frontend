@@ -2,7 +2,7 @@
   {%
     with
     question=question_content.question,
-    hint=question_content.hint or None,
+    hint=question_content.hint,
     name=question_content.id,
     value=service_data[question_content.id],
     error=errors.get(question_content.id)['message']
