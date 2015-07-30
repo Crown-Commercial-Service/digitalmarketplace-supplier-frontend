@@ -1,0 +1,34 @@
+{% extends "_base_page.html" %}
+
+{% block page_title %}Create contributor account – Digital Marketplace{% endblock %}
+
+{% block main_content %}
+
+{% if not token %}
+
+<header class="page-heading-smaller">
+  <h1>This link is invalid. Check you've entered the correct link or ask the person who invited you to send a new invitation.</h1>
+</header>
+<p>
+    If you still can’t create a contributor account, email <a href="mailto:enquiries@digitalmarketplace.service.gov.uk">enquiries@digitalmarketplace.service.gov.uk</a>
+</p>
+{% else %}
+
+   {%
+  with
+  smaller = true,
+  heading = "Create contributor account for  " ~ supplier_name,
+  context = email_address
+%}
+  {% include "toolkit/page-heading.html" %}
+{% endwith %}
+
+    <form autocomplete="off" action="{{ url_for('.submit_update_user', encoded_token=token) }}" method="POST" id="updateUserForm">
+        <button class="button-save">Create contributor account</button>
+    </form>
+
+        </p>
+    </div>
+
+{% endif%}
+    {% endblock %}

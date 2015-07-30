@@ -27,11 +27,11 @@ function display_result {
   fi
 }
 
-npm run --silent frontend-build:production
-display_result $? 1 "Build of front end static assets"
-
 pep8 .
 display_result $? 2 "Code style check"
+
+npm run --silent frontend-build:production
+display_result $? 1 "Build of front end static assets"
 
 nosetests -v -s --with-doctest
 display_result $? 3 "Unit tests"

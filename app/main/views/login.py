@@ -1,5 +1,6 @@
 from __future__ import absolute_import
 from flask_login import login_required, current_user
+from flask.ext.wtf import Form
 from itsdangerous import BadSignature, SignatureExpired
 from datetime import datetime
 from flask import current_app, flash, redirect, render_template, url_for, \
@@ -186,106 +187,105 @@ def create_user(encoded_token):
     form = CreateUserForm()
     template_data = main.config['BASE_TEMPLATE_DATA']
 
-    try:
-        token, timestamp = decode_token(
-            encoded_token,
-            current_app.config['SECRET_KEY'],
-            current_app.config['RESET_PASSWORD_SALT']
-        )
-        if not token.get('email_address', None):
-            raise Exception('Missing email address from token')
-        if not token.get('supplier_id', None):
-            raise Exception('Missing supplier from token')
-    except Exception as e:
-        current_app.logger.error(e.message)
+    token = decode_invitation_token(encoded_token)
+
+    if token is None:
         flash('token_invalid', 'error')
         return render_template(
             "auth/create-user.html",
-            valid_token=False,
             form=form,
-            token=encoded_token,
+            token=None,
             email_address=None,
             supplier=None,
             **template_data), 400
+    else:
+        user = data_api_client.get_user(email_address=token.get("email_address"))
 
-    try:
-        data_api_client.get_user(email_address=token['email_address'])
-    except HTTPError as e:
-        current_app.logger.error(e.message)
-    try:
-        supplier = data_api_client.get_supplier(token['supplier_id'])
-    except HTTPError as e:
-        current_app.logger.error(e.message)
-        abort(404, "Failed to find supplier")
+        if user:
+            return render_template(
+                "auth/update-user.html",
+                email_address=token['email_address'],
+                supplier_name=token['supplier_name'],
+                token=encoded_token,
+                **template_data), 200
+        else:
+            return render_template(
+                "auth/create-user.html",
+                form=form,
+                email_address=token['email_address'],
+                supplier_name=token['supplier_name'],
+                token=encoded_token,
+                **template_data), 200
 
-    return render_template(
-        "auth/create-user.html",
-        valid_token=True,
-        form=form,
-        email_address=token['email_address'],
-        supplier=supplier["suppliers"],
-        token=token,
-        **template_data), 200
+
+@main.route('/update-user/<string:encoded_token>', methods=["POST"])
+def submit_update_user(encoded_token):
+    template_data = main.config['BASE_TEMPLATE_DATA']
+
+    token = decode_invitation_token(encoded_token)
+    if token is None:
+        flash('token_invalid', 'error')
+        return render_template(
+            "auth/update-user.html",
+            token=None,
+            email_address=None,
+            supplier=None,
+            **template_data), 400
+    else:
+        user = data_api_client.get_user(email_address=token.get("email_address"))
+        data_api_client.update_user(
+            user_id=user["users"]["id"],
+            supplier_id=token.get("supplier_id"),
+            role='supplier'
+        )
+        user = User.from_json(user)
+        login_user(user)
+        return redirect(url_for('.dashboard'))
 
 
 @main.route('/create-user/<string:encoded_token>', methods=["POST"])
 def submit_create_user(encoded_token):
     template_data = main.config['BASE_TEMPLATE_DATA']
-
     form = CreateUserForm()
 
-    try:
-        token, timestamp = decode_token(
-            encoded_token,
-            current_app.config['SECRET_KEY'],
-            current_app.config['RESET_PASSWORD_SALT']
-        )
-        if not token.get('email_address', None):
-            raise Exception('Missing email address from token')
-        if not token.get('supplier_id', None):
-            raise Exception('Missing supplier from token')
-    except Exception as e:
-        current_app.logger.error(e.message)
+    token = decode_invitation_token(encoded_token)
+    if token is None:
         flash('token_invalid', 'error')
         return render_template(
             "auth/create-user.html",
-            valid_token=False,
             form=form,
-            token=encoded_token,
+            token=None,
             email_address=None,
             supplier=None,
             **template_data), 400
-
-    user = None
-
-    # does user exist
-    try:
-        user = data_api_client.get_user(token.get('email_address'))
-        user = data_api_client.update_user({
-            'role': 'supplier',
-            'supplier_id': token.get('supplier_id')
-        })
-    except HTTPError as e:
-        if e.status_code is 404:
-            # Create user
+    else:
+        if form.validate_on_submit():
             user = data_api_client.create_user({
                 'name': form.name.data,
-                'password': form.name.password,
-                'email_address': token.get('email_address'),
+                'password': form.password.data,
+                'emailAddress': token.get('email_address'),
                 'role': 'supplier',
-                'supplier_id': token.get('supplier_id')
+                'supplierId': token.get('supplier_id')
             })
+            user = User.from_json(user)
+            login_user(user)
 
-    user = User.from_json(user)
-    login_user(user)
-
-    return redirect(url_for('.dashboard'))
+            return redirect(url_for('.dashboard'))
+        else:
+            return render_template(
+                "auth/create-user.html",
+                valid_token=False,
+                form=form,
+                token=encoded_token,
+                email_address=None,
+                supplier=None,
+                **template_data), 400
 
 
 @main.route('/invite-user', methods=["GET"])
 @login_required
 def invite_user():
-    form = CreateUserForm()
+    form = EmailAddressForm()
 
     template_data = main.config['BASE_TEMPLATE_DATA']
 
@@ -305,21 +305,20 @@ def send_invite_user():
         token = generate_token(
             {
                 "supplier_id": current_user.supplier_id,
+                "supplier_name": current_user.supplier_name,
                 "email_address": form.email_address.data
             },
             current_app.config['SECRET_KEY'],
             current_app.config['RESET_PASSWORD_SALT']
         )
 
-        url = url_for('main.create_user', token=token, _external=True)
+        url = url_for('main.create_user', encoded_token=token, _external=True)
 
         email_body = render_template(
             "emails/invite_user_email.html",
             url=url,
             user=current_user.name,
             supplier=current_user.supplier_name)
-
-        print current_app.config['DM_MANDRILL_API_KEY']
 
         try:
             send_email(
@@ -382,6 +381,31 @@ def decode_password_reset_token(token):
         return None
 
     return decoded
+
+
+def decode_invitation_token(encoded_token):
+    try:
+        token, timestamp = decode_token(
+            encoded_token,
+            current_app.config['SECRET_KEY'],
+            current_app.config['RESET_PASSWORD_SALT']
+        )
+        if not token.get('email_address', None):
+            raise ValueError('Missing email address from token')
+        if not token.get('supplier_id', None):
+            raise ValueError('Missing supplier from token')
+        if not token.get('supplier_name', None):
+            raise ValueError('Missing supplier name from token')
+        return token
+    except SignatureExpired as e:
+        current_app.logger.info("Invitation attempt with expired token. {}".format(e.message))
+        return None
+    except BadSignature as e:
+        current_app.logger.info("Invitation reset attempt with expired token. {}".format(e.message))
+        return None
+    except ValueError as e:
+        current_app.logger.info(e.message)
+        return None
 
 
 def token_created_before_password_last_changed(token_timestamp, user_timestamp):

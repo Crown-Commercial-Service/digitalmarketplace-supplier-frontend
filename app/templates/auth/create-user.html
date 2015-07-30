@@ -1,28 +1,29 @@
 {% extends "_base_page.html" %}
 
-{% block page_title %}User invitation – Digital Marketplace{% endblock %}
+{% block page_title %}Create contributor account – Digital Marketplace{% endblock %}
 
 {% block main_content %}
 
-{% if not valid_token %}
-<div class="banner-destructive-without-action">
-        <p class="banner-message">
-            This invitation link is invalid, please refer to you're invitation email for contact details to get a new one sent out.
-        </p>
-</div>
+{% if not token %}
+<header class="page-heading-smaller">
+  <h1>This link is invalid. Check you've entered the correct link or ask the person who invited you to send a new invitation.</h1>
+</header>
+<p>
+    If you still can’t create a contributor account, email <a href="mailto:enquiries@digitalmarketplace.service.gov.uk">enquiries@digitalmarketplace.service.gov.uk</a>
+</p>
 {% else %}
 
-    <header class="page-heading">
-        <h1>Create user</h1>
-    </header>
-    <p class="lede">
-    Create user to work on
-        <h1>{{ supplier.name }}</h1>
-        email address
-        <h1>{{ email_address }}</h1>
-    </p>
+{%
+  with
+  smaller = true,
+  heading = "Create contributor account for  " ~ supplier_name,
+  context = email_address
+%}
+  {% include "toolkit/page-heading.html" %}
+{% endwith %}
 
-    <form autocomplete="off" action="{{ url_for('.submit_create_user', token=token) }}" method="POST" id="createUserForm">
+
+    <form autocomplete="off" action="{{ url_for('.submit_create_user', encoded_token=token) }}" method="POST" id="createUserForm">
 
         {{ form.hidden_tag() }}
 
@@ -64,7 +65,7 @@
         </div>
     {% endif %}
 
-        <button class="button-save">Create user</button>
+        <button class="button-save">Create contributor account</button>
     </form>
 
         </p>

@@ -82,6 +82,7 @@ class Test(Config):
 class Development(Config):
     DEBUG = True
     SESSION_COOKIE_SECURE = False
+    WTF_CSRF_ENABLED = False
 
     # Dates not formatted like YYYY-(0)M-(0)D will fail
     FEATURE_FLAGS_EDIT_SERVICE_PAGE = enabled_since('2015-06-03')

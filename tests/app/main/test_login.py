@@ -340,15 +340,13 @@ class TestResetPassword(BaseApplicationTest):
                 ["password-resets"]
             )
 
-    @mock.patch('app.main.views.login')
+    @mock.patch('app.main.views.login.send_email')
     def test_should_be_an_error_if_send_email_fails(
             self, send_email
     ):
         with self.app.app_context():
 
-            send_email = mock.Mock(
-                side_effect=MandrillException(Exception('API is down'))
-            )
+            send_email.side_effect = MandrillException(Exception('API is down'))
 
             data_api_client_config = {
                 'get_user.return_value': self.user(
@@ -500,6 +498,7 @@ class TestInviteUser(BaseApplicationTest):
             generate_token.assert_called_once_with(
                 {
                     "supplier_id": 1234,
+                    "supplier_name": "Supplier Name",
                     "email_address": "this@isvalid.com"
                 },
                 'KEY',
@@ -521,16 +520,14 @@ class TestInviteUser(BaseApplicationTest):
             assert not send_email.called
             assert not generate_token.called
 
-    @mock.patch('app.main.views.login')
+    @mock.patch('app.main.views.login.send_email')
     def test_should_be_an_error_if_send_invitation_email_fails(
             self, send_email
     ):
         with self.app.app_context():
             self.login()
 
-            send_email = mock.Mock(
-                side_effect=MandrillException(Exception('API is down'))
-            )
+            send_email.side_effect = MandrillException(Exception('API is down'))
 
             res = self.client.post(
                 '/suppliers/invite-user',
@@ -569,8 +566,6 @@ class TestInviteUser(BaseApplicationTest):
                 ["user-invite"]
             )
 
-class TestInviteUser(BaseApplicationTest):
-
     def test_should_be_an_error_for_invalid_token(self):
         with self.app.app_context():
             token = "1234"
@@ -584,7 +579,7 @@ class TestInviteUser(BaseApplicationTest):
             res = self.client.get(
                 '/suppliers/create-user'
             )
-            assert_equal(res.status_code, 405)
+            assert_equal(res.status_code, 404)
 
     def test_should_be_an_error_for_missing_token_trailing_slash(self):
         with self.app.app_context():
@@ -613,58 +608,11 @@ class TestInviteUser(BaseApplicationTest):
             assert_equal(data_api_client.get_user.called, False)
             assert_equal(data_api_client.get_supplier.called, False)
 
-    @mock.patch('app.main.views.login.data_api_client')
-    def test_should_lookup_user_and_supplier_with_info_from_token(self, data_api_client):
-        with self.app.app_context():
-
-            token = generate_token(
-                {
-                    'supplier_id': 1234,
-                    'email_address': 'testme@email.com'
-                },
-                self.app.config['SECRET_KEY'],
-                self.app.config['RESET_PASSWORD_SALT']
-            )
-
-            res = self.client.get(
-                '/suppliers/create-user/{}'.format(token)
-            )
-
-            data_api_client.get_user.assert_called_once_with(email_address='testme@email.com')
-            data_api_client.get_supplier.assert_called_once_with(1234)
-            assert_equal(res.status_code, 200)
-
-    @mock.patch('app.main.views.login.data_api_client')
-    def test_should_be_a_bad_request_if_supplier_does_not_exist_on_invite_token(self, data_api_client):
-        with self.app.app_context():
-
-            token = generate_token(
-                {
-                    'supplier_id': 1234,
-                    'email_address': 'testme@email.com'
-                },
-                self.app.config['SECRET_KEY'],
-                self.app.config['RESET_PASSWORD_SALT']
-            )
-
-            data_api_client.get_supplier = mock.Mock(
-                side_effect=HTTPError("Failed")
-            )
-
-            res = self.client.get(
-                '/suppliers/create-user/{}'.format(token)
-            )
-
-            data_api_client.get_supplier.assert_called_once_with(1234)
-            assert_equal(res.status_code, 404)
-
     @mock.patch('app.main.views.login.generate_token')
-    def test_should_be_a_bad_request_if_supplier_does_not_exist_on_invite_token(self, generate_token):
+    def test_should_be_a_bad_request_if_token_expired(self, generate_token):
         with self.app.app_context():
 
-            generate_token = mock.Mock(
-                side_effect=BadTimeSignature("Too old")
-            )
+            generate_token.side_effect = BadTimeSignature("Too old")
 
             res = self.client.get(
                 '/suppliers/create-user/12345'
@@ -672,6 +620,249 @@ class TestInviteUser(BaseApplicationTest):
 
             assert_equal(res.status_code, 400)
             assert_true(
-                "This invitation link is invalid, please refer to you're invitation email for contact details to get a new one sent out." #  noqa
+                "This link is invalid. Check you've entered the correct link or ask the person who invited you to send a new invitation."  # noqa
                 in res.get_data(as_text=True)
             )
+
+    @mock.patch('app.main.views.login.data_api_client')
+    def test_should_render_create_user_page_if_user_does_not_exist(self, data_api_client):
+        with self.app.app_context():
+
+            data_api_client.get_user.return_value = None
+
+            token = generate_token(
+                {
+                    'supplier_id': 1234,
+                    'supplier_name': 'Supplier Name',
+                    'email_address': 'testme@email.com'
+                },
+                self.app.config['SECRET_KEY'],
+                self.app.config['RESET_PASSWORD_SALT']
+            )
+
+            res = self.client.get(
+                '/suppliers/create-user/{}'.format(token)
+            )
+
+            assert_equal(res.status_code, 200)
+            assert_true(
+                "Supplier Name"
+                in res.get_data(as_text=True)
+            )
+            assert_true(
+                "testme@email.com"
+                in res.get_data(as_text=True)
+            )
+            assert_true(
+                '<button class="button-save">Create contributor account</button>'
+                in res.get_data(as_text=True)
+            )
+            assert_true(
+                '<form autocomplete="off" action="/suppliers/create-user/{}" method="POST" id="createUserForm">'.format(token)  # noqa
+                in res.get_data(as_text=True)
+            )
+
+    @mock.patch('app.main.views.login.data_api_client')
+    def test_should_render_update_user_page_if_user_does_exist(self, data_api_client):
+        with self.app.app_context():
+
+            data_api_client.get_user.return_value = self.user(
+                123,
+                'testme@email.com',
+                1234,
+                'Suppluer Name',
+                'Users name'
+            )
+
+            token = generate_token(
+                {
+                    'supplier_id': 1234,
+                    'supplier_name': 'Supplier Name',
+                    'email_address': 'testme@email.com'
+                },
+                self.app.config['SECRET_KEY'],
+                self.app.config['RESET_PASSWORD_SALT']
+            )
+
+            res = self.client.get(
+                '/suppliers/create-user/{}'.format(token)
+            )
+
+            assert_equal(res.status_code, 200)
+            assert_true(
+                "Supplier Name"
+                in res.get_data(as_text=True)
+            )
+            assert_true(
+                '<button class="button-save">Create contributor account</button>'
+                in res.get_data(as_text=True)
+            )
+            assert_true(
+                '<form autocomplete="off" action="/suppliers/update-user/{}" method="POST" id="updateUserForm">'.format(token)  # noqa
+                in res.get_data(as_text=True)
+            )
+
+    def test_should_be_an_error_if_invalid_token_on_submit(self):
+        with self.app.app_context():
+            res = self.client.post(
+                '/suppliers/create-user/invalidtoken',
+                data={
+                    'password': '123456789',
+                    'name': 'name',
+                    'email_address': 'valid@test.com'}
+            )
+
+            assert_equal(res.status_code, 400)
+            assert_equal(
+                "This link is invalid. Check you've entered the correct link or ask the person who invited you to send a new invitation." in res.get_data(),  # noqa
+                True
+            )
+            assert_equal(
+                '<button class="button-save">Create user</button>' in res.get_data(),  # noqa
+                False
+            )
+
+    def test_should_be_an_error_if_invalid_token_on_update(self):
+        with self.app.app_context():
+            res = self.client.post(
+                '/suppliers/update-user/invalidtoken'
+            )
+
+            assert_equal(res.status_code, 400)
+            assert_equal(
+                "This link is invalid. Check you've entered the correct link or ask the person who invited you to send a new invitation." in res.get_data(),  # noqa
+                True
+            )
+            assert_equal(
+                '<button class="button-save">Update user</button>' in res.get_data(),  # noqa
+                False
+            )
+
+    def test_should_be_an_error_if_missing_name_and_password(self):
+        with self.app.app_context():
+
+            token = generate_token(
+                {
+                    'supplier_id': 1234,
+                    'supplier_name': 'Supplier Name',
+                    'email_address': 'testme@email.com'
+                },
+                self.app.config['SECRET_KEY'],
+                self.app.config['RESET_PASSWORD_SALT']
+            )
+
+            res = self.client.post(
+                '/suppliers/create-user/{}'.format(token),
+                data={
+                    'password': None,
+                    'name': None
+                }
+            )
+
+            assert_equal(res.status_code, 400)
+            assert_equal(
+                "Please enter a password" in res.get_data(),
+                True
+            )
+            assert_equal(
+                "Please enter a name" in res.get_data(),
+                True
+            )
+
+    def test_should_be_an_error_if_too_short_name_and_password(self):
+        with self.app.app_context():
+
+            token = generate_token(
+                {
+                    'supplier_id': 1234,
+                    'supplier_name': 'Supplier Name',
+                    'email_address': 'testme@email.com'
+                },
+                self.app.config['SECRET_KEY'],
+                self.app.config['RESET_PASSWORD_SALT']
+            )
+
+            res = self.client.post(
+                '/suppliers/create-user/{}'.format(token),
+                data={
+                    'password': "123456789",
+                    'name': ""
+                }
+            )
+
+            assert_equal(res.status_code, 400)
+            assert_equal(
+                "Please enter a name" in res.get_data(),
+                True
+            )
+            assert_equal(
+                "Passwords must be between 10 and 50 characters" in res.get_data(),
+                True
+            )
+
+    def test_should_be_an_error_if_too_long_name_and_password(self):
+        with self.app.app_context():
+
+            token = generate_token(
+                {
+                    'supplier_id': 1234,
+                    'supplier_name': 'Supplier Name',
+                    'email_address': 'testme@email.com'
+                },
+                self.app.config['SECRET_KEY'],
+                self.app.config['RESET_PASSWORD_SALT']
+            )
+
+            twofiftysix = "a" * 256
+            fiftyone = "a" * 51
+
+            res = self.client.post(
+                '/suppliers/create-user/{}'.format(token),
+                data={
+                    'password': fiftyone,
+                    'name': twofiftysix
+                }
+            )
+
+            assert_equal(res.status_code, 400)
+            assert_equal(
+                "Names must be between 1 and 255 characters" in res.get_data(),
+                True
+            )
+            assert_equal(
+                "Passwords must be between 10 and 50 characters" in res.get_data(),
+                True
+            )
+
+    @mock.patch('app.main.views.login.data_api_client')
+    def test_should_create_user_if_user_does_not_exist(self, data_api_client):
+        with self.app.app_context():
+
+            token = generate_token(
+                {
+                    'supplier_id': 1234,
+                    'supplier_name': 'Supplier Name',
+                    'email_address': 'testme@email.com'
+                },
+                self.app.config['SECRET_KEY'],
+                self.app.config['RESET_PASSWORD_SALT']
+            )
+
+            res = self.client.post(
+                '/suppliers/create-user/{}'.format(token),
+                data={
+                    'password': 'validpassword',
+                    'name': 'valid name'
+                }
+            )
+
+            data_api_client.create_user.assert_called_once_with({
+                'role': 'supplier',
+                'password': 'validpassword',
+                'emailAddress': 'testme@email.com',
+                'name': 'valid name',
+                'supplierId': 1234
+            })
+
+            assert_equal(res.status_code, 302)
+            assert_equal(res.location, 'http://localhost/suppliers')
