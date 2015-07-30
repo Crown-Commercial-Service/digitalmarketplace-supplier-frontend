@@ -338,8 +338,7 @@ def update_section_submission(service_id, section_id):
     if section is None:
         abort(404)
 
-    posted_data = _get_formatted_section_data(section)
-    posted_data['page_questions'] = get_section_questions(section)
+    posted_data = _get_formatted_section_data(section, with_page_questions=True)
 
     try:
         data_api_client.update_draft_service(
@@ -389,25 +388,52 @@ def _get_error_message(error, message_key, content):
 
 def _is_list_type(key):
     """Return True if a given key is a list type"""
-    if key == 'serviceTypes':
-        return True
-    return new_service_content.get_question(key)['type'] in ['list', 'checkbox', 'pricing']
+    return key == 'serviceTypes' or _is_type(key, ['list', 'checkbox'])
 
 
 def _is_boolean_type(key):
     """Return True if a given key is a boolean type"""
-    return new_service_content.get_question(key)['type'] == 'boolean'
+    return _is_type(key, ['boolean'])
 
 
-def _get_formatted_section_data(section):
+def _is_type(key, types):
+    """Return True if a given key is one of the provided types"""
+    return new_service_content.get_question(key)['type'] in types
+
+
+def _get_formatted_section_data(section, with_page_questions=False):
     section_data = dict(list(request.form.items()))
-    section_data = _filter_keys(section_data, get_section_questions(section))
+    section_questions = get_section_questions(section)
+    section_data = _filter_keys(section_data, section_questions)
     # Turn responses which have multiple parts into lists and booleans into booleans
-    for key in section_data:
+    for key in list(section_data.keys()):
         if _is_list_type(key):
             section_data[key] = request.form.getlist(key)
         elif _is_boolean_type(key):
             section_data[key] = convert_to_boolean(section_data[key])
+        elif _is_type(key, ['pricing']):
+            pricing = request.form.getlist(key)
+            if len(pricing[0]) > 0:
+                try:
+                    section_data['priceMin'] = float(pricing[0])
+                except ValueError:
+                    section_data['priceMin'] = pricing[0]
+            section_questions.append('priceMin')
+            if len(pricing[1]) > 0:
+                try:
+                    section_data['priceMax'] = float(pricing[1])
+                except ValueError:
+                    section_data['priceMax'] = pricing[1]
+            section_questions.append('priceMax')
+            if len(pricing[2]) > 0:
+                section_data['priceUnit'] = pricing[2]
+            section_questions.append('priceUnit')
+            section_data['priceInterval'] = pricing[3]
+            section_questions.append('priceInterval')
+            del section_data[key]
+            section_questions.remove('priceString')
+    if with_page_questions:
+        section_data['page_questions'] = section_questions
     return section_data
 
 
@@ -464,6 +490,9 @@ def _get_section_error_messages(e, lot):
             message_key = e.message[error]
             if error == 'serviceTypes':
                 error = 'serviceTypes{}'.format(lot)
+            elif error in ['priceMin', 'priceMax', 'priceUnit', 'priceInterval']:
+                message_key = _rewrite_pricing_message_key(error, message_key)
+                error = 'priceString'
             validation_message = _get_error_message(error,
                                                     message_key,
                                                     new_service_content)
@@ -474,3 +503,17 @@ def _get_section_error_messages(e, lot):
                 'message': validation_message
             }
     return errors_map
+
+
+def _rewrite_pricing_message_key(error, message_key):
+    if message_key == 'answer_required':
+        if error == 'priceMin':
+            return 'no_min_price_specified'
+        elif error == 'priceUnit':
+            return 'no_unit_specified'
+    elif message_key == 'not_a_number':
+        if error == 'priceMin':
+            return 'min_price_not_a_number'
+        elif error == 'priceMax':
+            return 'max_price_not_a_number'
+    return message_key
