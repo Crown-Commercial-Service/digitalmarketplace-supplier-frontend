@@ -11,6 +11,8 @@ from dmutils.user import User
 from config import configs
 
 from jinja2 import evalcontextfilter, Markup, escape
+from flask import Markup
+from markdown import markdown
 
 
 data_api_client = apiclient.DataAPIClient()
@@ -60,6 +62,10 @@ def create_app(config_name):
     def nl2br(eval_ctx, value):
         result = value.replace('\n', '<br>\n')
         return Markup(result)
+
+    @application.template_filter('markdown')
+    def markdown_filter(data):
+        return Markup(markdown(data))
 
     return application
 
