@@ -2,6 +2,7 @@
   {%
     with
     question=question_content.question,
+    hint=question_content.hint,
     name=question_content.id,
     value=service_data[question_content.id],
     error=errors.get(question_content.id)['message']
@@ -14,6 +15,7 @@
   {%
     with
     question=question_content.question,
+    hint=question_content.hint,
     name=question_content.id,
     value=service_data[question_content.id],
     large=True,
@@ -30,6 +32,7 @@
     name=question_content.id,
     number_of_items=10,
     question=question_content.question,
+    hint=question_content.hint,
     values=service_data[question_content.id],
     id=question_content.id,
     hint=question_content.hint,
@@ -44,9 +47,9 @@
     with
     name=question_content.id,
     question=question_content.question,
+    hint=question_content.hint,
     value=service_data[question_content.id],
     id=question_content.id,
-    hint=question_content.hint,
     options=question_content.options,
     type='checkbox',
     error=errors.get(question_content.id)['message']
@@ -60,9 +63,9 @@
     with
     name=question_content.id,
     question=question_content.question,
+    hint=question_content.hint,
     value=service_data[question_content.id],
     id=question_content.id,
-    hint=question_content.hint,
     options=question_content.options,
     type='radio',
     error=errors.get(question_content.id)['message']
@@ -76,6 +79,7 @@
     with
     name=question_content.id,
     question=question_content.question,
+    hint=question_content.hint,
     value=service_data[question_content.id],
     id=question_content.id,
     hint=question_content.hint,
@@ -105,8 +109,8 @@
     name=question_content.id,
     value=service_data[question_content.id],
     question=question_content.question,
-    id=question_content.id,
     hint=question_content.hint,
+    id=question_content.id,
     error=errors.get(question_content.id)['message']
   %}
     {% include "toolkit/forms/textbox.html" %}
@@ -120,6 +124,7 @@
     unit_position="after",
     unit="%",
     question=question_content.question,
+    hint=question_content.hint,
     name=question_content.id,
     value=service_data[question_content.id],
     error=errors.get(question_content.id)['message']
