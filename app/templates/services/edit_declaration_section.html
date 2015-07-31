@@ -1,4 +1,7 @@
-{% extends "services/_base_edit_section_page.html" %}
+{% extends "_base_page.html" %}
+{% import "macros/toolkit_forms.html" as forms %}
+
+{% block page_title %}G-Cloud 7 supplier declaration – Digital Marketplace{% endblock %}
 
 {% block breadcrumb %}
   {%
@@ -21,24 +24,61 @@
   {% endwith %}
 {% endblock %}
 
-{% block save_button %}
-  {% if request.args.get('return_to_summary') %}
-    {%
-      with
-      label="Save and return to service",
-      type="save"
-    %}
-    {% include "toolkit/button.html" %}
-    {% endwith %}
-  {% else %}
-    {%
-      with
-      label="Submit",
-      type="save"
-    %}
-    {% include "toolkit/button.html" %}
+{% block main_content %}
+
+  {% if errors %}
+    {% with errors = errors.values() %}
+      {% include 'toolkit/forms/validation.html' %}
     {% endwith %}
   {% endif %}
-{% endblock %}
 
-{% block return_to_service %} {% endblock %}
+  <style>
+    .question-heading,
+    .question-heading-with-hint {
+      font-size: 19px;
+      font-weight: normal;
+    }
+    .question-heading li,
+    .question-heading-with-hint li,
+    .hint li {
+      margin: 10px 0;
+      list-style: disc;
+    }
+  </style>
+
+  <div class="grid-row">
+    <div class="column-three-quarters">
+
+      <form method="post">
+
+        {% for section in sections %}
+          {% with
+            heading = section.name,
+            smaller = true
+          %}
+            {% include 'toolkit/page-heading.html' %}
+          {% endwith %}
+          {% for question in section.questions %}
+            {% if errors and errors[question.id] %}
+              {{ forms[question.type](question, service_data, errors) }}
+            {% else %}
+              {{ forms[question.type](question, service_data, {}) }}
+            {% endif %}
+          {% endfor %}
+        {% endfor %}
+
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+        {%
+          with
+          label="Submit",
+          type="save"
+        %}
+          {% include "toolkit/button.html" %}
+        {% endwith %}
+
+        <a href="/suppliers">Return to application</a>
+
+      </form>
+    </div>
+  </div>
+{% endblock %}

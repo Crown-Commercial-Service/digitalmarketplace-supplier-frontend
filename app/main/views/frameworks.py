@@ -66,7 +66,7 @@ def framework_supplier_declaration():
     return render_template(
         "services/edit_declaration_section.html",
         form=form,
-        section=declaration_content.get_builder().sections[0],
+        sections=declaration_content.get_builder(),
         service_data={},
         errors=[
             {'input_name': k,
