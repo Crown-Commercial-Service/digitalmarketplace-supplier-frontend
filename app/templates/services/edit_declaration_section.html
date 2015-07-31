@@ -44,6 +44,16 @@
       margin: 10px 0;
       list-style: disc;
     }
+    .question-number {
+      position: relative;
+      height: 50px;
+      display: block;
+      margin: 20px 0 -70px 0;
+      left: -100px;
+      width: 80px;
+      text-align: right;
+      font-weight: bold;
+    }
   </style>
 
   <div class="grid-row">
@@ -59,6 +69,9 @@
             {% include 'toolkit/page-heading.html' %}
           {% endwith %}
           {% for question in section.questions %}
+            <span class="question-number" title="{{ question.id }}">
+              {{ loop.index }}
+            </span>
             {% if errors and errors[question.id] %}
               {{ forms[question.type](question, service_data, errors) }}
             {% else %}
