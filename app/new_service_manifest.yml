@@ -36,7 +36,15 @@
     - educationPricing
     - trialOption
     - freeOption
+-
+  name: Pricing document
+  editable: true
+  questions:
     - pricingDocumentURL
+-
+  name: SFIA rate card
+  editable: true
+  questions:
     - sfiaRateDocumentURL
 -
   name: Terms and conditions
@@ -44,6 +52,10 @@
   questions:
     - terminationCost
     - minimumContractPeriod
+-
+  name: Terms and conditions document
+  editable: true
+  questions:
     - termsAndConditionsDocumentURL
 -
   name: Support
