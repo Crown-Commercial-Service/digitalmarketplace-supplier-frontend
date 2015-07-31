@@ -1,14 +1,15 @@
 -
   name: Make supplier declaration
   questions:
-    - SQ1-3
     - PR1
     - PR2
     - PR3
     - PR4
     - PR5
+    - SQ1-3
+    - SQ1-2a
+    - SQ1-2b
     - SQ1-1a
-    - SQ1-1b
     - SQ1-1b
     - SQ1-1ci
     - SQ1-1cii
@@ -17,6 +18,7 @@
     - SQ1-1f
     - SQ1-1g
     - SQ1-1h
+    - SQ5-2a
     - SQ1-1i-i
     - SQ1-1i-ii
     - SQ1-1j-i
@@ -34,8 +36,6 @@
     - SQ1-1q-ii
     - SQ1-1q-iii
     - SQ1-1q-iv
-    - SQ1-2a
-    - SQ1-2b
     - SQ2-1abcd
     - SQ2-1e
     - SQ2-1f
@@ -58,7 +58,6 @@
     - SQ4-1b
     - SQ4-1c
     - SQ5-1a
-    - SQ5-2a
     - SQD2b
     - SQD2c
     - SQD2d
