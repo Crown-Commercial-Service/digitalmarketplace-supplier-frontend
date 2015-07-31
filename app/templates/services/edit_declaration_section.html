@@ -59,8 +59,14 @@
   <div class="grid-row">
     <div class="column-three-quarters">
 
+      {% with
+        heading = "Make supplier declaration"
+      %}
+        {% include 'toolkit/page-heading.html' %}
+      {% endwith %}
       <form method="post">
 
+        {% set question_index = [0] %}
         {% for section in sections %}
           {% with
             heading = section.name,
@@ -69,8 +75,9 @@
             {% include 'toolkit/page-heading.html' %}
           {% endwith %}
           {% for question in section.questions %}
+            {% set _ = question_index.append(question_index.pop() + 1) %}
             <span class="question-number" title="{{ question.id }}">
-              {{ loop.index }}
+              {{ question_index[0] }}
             </span>
             {% if errors and errors[question.id] %}
               {{ forms[question.type](question, service_data, errors) }}

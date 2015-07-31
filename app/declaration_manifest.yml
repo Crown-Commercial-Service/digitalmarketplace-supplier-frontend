@@ -1,5 +1,5 @@
 -
-  name: Make supplier declaration
+  name: Terms of participation
   questions:
     - PR1
     - PR2
@@ -7,6 +7,10 @@
     - PR4
     - PR5
     - SQ1-3
+    - SQ5-1a
+-
+  name: Company information
+  questions:
     - SQ1-2a
     - SQ1-2b
     - SQ1-1a
@@ -36,10 +40,16 @@
     - SQ1-1q-ii
     - SQ1-1q-iii
     - SQ1-1q-iv
+-
+  name: Grounds for mandatory exclusion
+  questions:
     - SQ2-1abcd
     - SQ2-1e
     - SQ2-1f
     - SQ2-1ghijklmn
+-
+  name: Grounds for discretionary exclusion
+  questions:
     - SQ2-2a
     - SQ3-1a
     - SQ3-1b
@@ -56,4 +66,3 @@
     - SQ4-1a
     - SQ4-1b
     - SQ4-1c
-    - SQ5-1a
