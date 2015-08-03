@@ -78,7 +78,9 @@ def deactivate_user(user_id):
 
     data_api_client.update_user(user_id=user_to_deactivate['id'], active=False)
 
-    flash('{} ({}) has been removed as a contributor. They can be invited again at any time.'.format(
-        user_to_deactivate['name'], user_to_deactivate['emailAddress']))
+    flash({
+        'deactivate_user_name': user_to_deactivate['name'],
+        'deactivate_user_email_address': user_to_deactivate['emailAddress']
+    })
 
     return redirect(url_for('.list_users'))
