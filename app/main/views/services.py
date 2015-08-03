@@ -353,13 +353,14 @@ def update_section_submission(service_id, section_id):
             **main.config['BASE_TEMPLATE_DATA']
         )
 
-    posted_data.update(uploaded_documents)
-    posted_data['page_questions'] = get_section_questions(section)
+    update_data = posted_data.copy()
+    update_data.update(uploaded_documents)
+    update_data['page_questions'] = get_section_questions(section)
 
     try:
         data_api_client.update_draft_service(
             service_id,
-            posted_data,
+            update_data,
             current_user.email_address)
     except HTTPError as e:
         errors_map = get_section_error_messages(e.message, draft['lot'])
