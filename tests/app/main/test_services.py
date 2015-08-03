@@ -554,6 +554,20 @@ class TestEditDraftService(BaseApplicationTest):
         data_api_client.update_draft_service.assert_called_once_with(
             '1', {'page_questions': ['serviceName', 'serviceSummary']}, 'email@email.com')
 
+    def test_upload_question_not_accepted_as_form_data(self, data_api_client):
+        data_api_client.get_draft_service.return_value = self.empty_draft
+        res = self.client.post(
+            '/suppliers/submission/services/1/edit/service_definition',
+            data={
+                'serviceDefinitionDocumentURL': 'http://example.com/document.pdf',
+            })
+
+        assert_equal(res.status_code, 302)
+        data_api_client.update_draft_service.assert_called_once_with(
+            '1', {}, 'email@email.com',
+            page_questions=['serviceDefinitionDocumentURL']
+        )
+
     def test_edit_non_existent_draft_service_returns_404(self, data_api_client):
         data_api_client.get_draft_service.side_effect = HTTPError(mock.Mock(status_code=404))
         res = self.client.get('/suppliers/submission/services/1/edit/service_description')

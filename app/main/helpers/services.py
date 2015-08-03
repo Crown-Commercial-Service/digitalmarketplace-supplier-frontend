@@ -21,14 +21,28 @@ def is_service_modifiable(service):
 
 
 def get_formatted_section_data(section):
-    section_data = dict(list(request.form.items()))
-    section_data = _filter_keys(section_data, get_section_questions(section))
-    # Turn responses which have multiple parts into lists and booleans into booleans
-    for key in section_data:
+    """Validate, filter and format form data to match the section content.
+
+    Removes any keys from the request that do not match any of the current
+    section questions list.
+
+    Converts list and boolean fields from strings to correct types.
+
+    Removes file upload questions from the request.form: file uploads should
+    only be accepted as files, since accepting URLs directly as form data
+    requires additional validation.
+
+    """
+
+    section_data = {}
+    for key in set(request.form) & set(get_section_questions(section)):
         if _is_list_type(key):
             section_data[key] = request.form.getlist(key)
         elif _is_boolean_type(key):
-            section_data[key] = convert_to_boolean(section_data[key])
+            section_data[key] = convert_to_boolean(request.form[key])
+        elif _is_not_upload(key):
+            section_data[key] = request.form[key]
+
     return section_data
 
 
@@ -94,6 +108,11 @@ def _filter_keys(data, keys):
     """
     key_set = set(keys) & set(data)
     return {key: data[key] for key in key_set}
+
+
+def _is_not_upload(key):
+    """Return True if a given key is not a file upload"""
+    return new_service_content.get_question(key)['type'] != 'upload'
 
 
 def _is_list_type(key):
