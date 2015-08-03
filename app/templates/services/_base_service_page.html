@@ -23,7 +23,7 @@
           {% block edit_link scoped %}{% endblock %}
         {% endif %}
         {% call(question) summary.list_table(
-          section.questions,
+          section.rows,
           caption=section.name,
           field_headings=[
             "Service attribute name",
@@ -31,12 +31,19 @@
           ],
           field_headings_visible=False
         ) %}
-          {% call summary.row() %}
-            {{ summary.field_name(question.question) }}
-            {% call summary.field() %}
-              {{ answers[question.type](service_data[question.id]) }}
+          {% if question.answer_required %}
+            {% call summary.row(complete=False) %}
+              {{ summary.field_name(question.label) }}
+              {% call summary.field() %}
+                <a href="{{ url_for(".edit_service_submission", service_id=service_id, section_id=section.id) }}">Answer required</a>
+              {% endcall %}
             {% endcall %}
-          {% endcall %}
+          {% else %}
+            {% call summary.row() %}
+              {{ summary.field_name(question.label) }}
+              {{ summary[question.type](question.value, question.assurance) }}
+            {% endcall %}
+          {% endif %}
         {% endcall %}
       {% endfor %}
     </div>

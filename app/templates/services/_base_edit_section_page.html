@@ -35,7 +35,7 @@
       {% if question.assuranceApproach %}
         {{ assurance_question(
           name=question.id,
-          value='',
+          service_data=service_data,
           type=question.assuranceApproach,
           errors={}
         ) }}
