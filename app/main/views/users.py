@@ -3,13 +3,12 @@ from flask import render_template, abort, flash, url_for, redirect, current_app
 
 from ...main import main
 from ... import flask_featureflags
-from ..helpers.helpers import call_data_api_client
+from ... import data_api_client
 
 
 def get_current_suppliers_users():
 
-    users = call_data_api_client(
-        'find_users',
+    users = data_api_client.find_users(
         supplier_id=current_user.supplier_id
     ).get('users')
 
@@ -53,7 +52,7 @@ def deactivate_user(user_id):
         abort(404)
 
     # check that user exists
-    user_to_deactivate = call_data_api_client('get_user', user_id=user_id)
+    user_to_deactivate = data_api_client.get_user(user_id=user_id)
 
     if not user_to_deactivate or not user_to_deactivate.get('users'):
         current_app.logger.error(
@@ -77,11 +76,9 @@ def deactivate_user(user_id):
         )
         abort(404)
 
-    call_data_api_client(
-        'update_user',
-        user_id=user_to_deactivate['id'],
-        active=False
-    )
+    data_api_client.update_user(user_id=user_to_deactivate['id'], active=False)
 
-    flash('{}\'s account has been deactivated'.format(user_to_deactivate['name']))
+    flash('{} ({}) has been removed as a contributor. They can be invited again at any time.'.format(
+        user_to_deactivate['name'], user_to_deactivate['emailAddress']))
+
     return redirect(url_for('.list_users'))

@@ -32,6 +32,7 @@ def get_users(additional_users=None, index=None):
                     'supplierId': 1234
                 }
             },
+            # inactive user
             {
                 'id': 2,
                 'name': "Lane Pryce",
@@ -55,7 +56,7 @@ def get_users(additional_users=None, index=None):
 
 class TestListUsers(BaseApplicationTest):
 
-    @mock.patch('app.main.helpers.helpers.data_api_client')
+    @mock.patch('app.main.views.users.data_api_client')
     def test_shows_user_list(self, data_api_client):
         with self.app.test_client():
             self.login()
@@ -118,7 +119,7 @@ class TestPostUsers(BaseApplicationTest):
             res = self.client.post('/suppliers/users/123/deactivate')
             assert_equal(res.status_code, 404)
 
-    @mock.patch('app.main.helpers.helpers.data_api_client')
+    @mock.patch('app.main.views.users.data_api_client')
     def test_cannot_deactivate_nonexistent_id(self, data_api_client):
         with self.app.test_client():
             self.login()
@@ -128,7 +129,7 @@ class TestPostUsers(BaseApplicationTest):
             res = self.client.post('/suppliers/users/1231231231231/deactivate')
             assert_equal(res.status_code, 404)
 
-    @mock.patch('app.main.helpers.helpers.data_api_client')
+    @mock.patch('app.main.views.users.data_api_client')
     def test_cannot_deactivate_a_user_without_supplier_role(self, data_api_client):
         with self.app.test_client():
             self.login()
@@ -150,7 +151,7 @@ class TestPostUsers(BaseApplicationTest):
             res = self.client.post('/suppliers/users/3/deactivate')
             assert_equal(res.status_code, 404)
 
-    @mock.patch('app.main.helpers.helpers.data_api_client')
+    @mock.patch('app.main.views.users.data_api_client')
     def test_cannot_deactivate_another_suppliers_user(self, data_api_client):
         with self.app.test_client():
             self.login()
@@ -176,8 +177,8 @@ class TestPostUsers(BaseApplicationTest):
             res = self.client.post('/suppliers/users/4/deactivate')
             assert_equal(res.status_code, 404)
 
-    @mock.patch('app.main.helpers.helpers.data_api_client')
-    def test_everything_works(self, data_api_client):
+    @mock.patch('app.main.views.users.data_api_client')
+    def can_deactivate_a_user(self, data_api_client):
         with self.app.test_client():
             self.login()
 
@@ -189,6 +190,6 @@ class TestPostUsers(BaseApplicationTest):
                 '/suppliers/users/1/deactivate', follow_redirects=True)
             assert_equal(res.status_code, 200)
             assert_in(
-                self.strip_all_whitespace('Don Draper\'s account has been deactivated'),
+                self.strip_all_whitespace('Don Draper (don@scdp.com) has been removed as a contributor'),
                 self.strip_all_whitespace(res.get_data(as_text=True))
             )

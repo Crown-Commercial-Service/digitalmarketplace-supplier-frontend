@@ -57,7 +57,7 @@
       {{ summary.field_name(item.name) }}
       {{ summary.text(item.emailAddress) }}
       {% if item.id != current_user.id %}
-        {{ summary.button("Deactivate", url_for('main.deactivate_user', user_id=item.id), csrf_token_value=csrf_token()) }}
+        {{ summary.button("Remove", url_for('main.deactivate_user', user_id=item.id), csrf_token_value=csrf_token()) }}
       {% else %}
         {{ summary.text('') }}
       {% endif %}
