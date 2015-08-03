@@ -365,13 +365,14 @@ def update_section_submission(service_id, section_id):
 
     update_data = posted_data.copy()
     update_data.update(uploaded_documents)
-    update_data['page_questions'] = get_section_questions(section)
 
     try:
         data_api_client.update_draft_service(
             service_id,
             update_data,
-            current_user.email_address)
+            current_user.email_address,
+            page_questions=get_section_questions(section)
+        )
     except HTTPError as e:
         errors_map = get_section_error_messages(e.message, draft['lot'])
         if not posted_data.get('serviceName', None):
