@@ -5,7 +5,7 @@ from ...main import main, existing_service_content, new_service_content
 from ..helpers.services import (
     get_formatted_section_data, get_section_questions, get_section_error_messages,
     is_service_modifiable, is_service_associated_with_supplier,
-    upload_documents
+    upload_draft_documents
 )
 from ... import data_api_client, flask_featureflags
 from dmutils.apiclient import APIError, HTTPError
@@ -341,7 +341,7 @@ def update_section_submission(service_id, section_id):
 
     posted_data = get_formatted_section_data(section)
 
-    uploaded_documents, document_errors = upload_documents(draft, request.files, section)
+    uploaded_documents, document_errors = upload_draft_documents(draft, request.files, section)
 
     if document_errors:
         return render_template(

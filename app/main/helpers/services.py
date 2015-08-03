@@ -2,7 +2,7 @@ from flask import request, abort, current_app
 from flask_login import current_user
 
 from dmutils.config import convert_to_boolean
-from dmutils.s3 import S3
+from dmutils import s3
 from dmutils.documents import filter_empty_files, validate_documents, upload_document
 
 from ...main import new_service_content
@@ -46,7 +46,7 @@ def get_formatted_section_data(section):
     return section_data
 
 
-def upload_documents(service, request_files, section):
+def upload_draft_documents(service, request_files, section):
     request_files = request_files.to_dict(flat=True)
     files = _filter_keys(request_files, get_section_questions(section))
     files = filter_empty_files(files)
@@ -55,7 +55,7 @@ def upload_documents(service, request_files, section):
     if errors:
         return None, errors
 
-    uploader = S3(current_app.config['S3_DOCUMENTS_BUCKET'])
+    uploader = s3.S3(current_app.config['DM_G7_DRAFT_DOCUMENTS_BUCKET'])
 
     for field, contents in files.items():
         url = upload_document(
