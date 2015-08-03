@@ -437,7 +437,7 @@ class TestInviteUser(BaseApplicationTest):
             res = self.client.post(
                 '/suppliers/invite-user',
                 data={
-                    'email_address': 'invalid',
+                    'email_address': 'invalid'
                 }
             )
             assert_true("Please enter a valid email address" in res.get_data())
@@ -530,7 +530,7 @@ class TestInviteUser(BaseApplicationTest):
 
             res = self.client.post(
                 '/suppliers/invite-user',
-                data={'email_address': 'email@email.com'}
+                data={'email_address': 'email@email.com', 'name': 'valid'}
             )
 
             assert_equal(res.status_code, 503)
@@ -550,7 +550,7 @@ class TestInviteUser(BaseApplicationTest):
 
             res = self.client.post(
                 '/suppliers/invite-user',
-                data={'email_address': 'email@email.com'}
+                data={'email_address': 'email@email.com', 'name': 'valid'}
             )
 
             assert_equal(res.status_code, 302)

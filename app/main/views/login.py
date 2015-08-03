@@ -1,6 +1,5 @@
 from __future__ import absolute_import
 from flask_login import login_required, current_user
-from flask.ext.wtf import Form
 from itsdangerous import BadSignature, SignatureExpired
 from datetime import datetime
 from flask import current_app, flash, redirect, render_template, url_for, \
@@ -10,7 +9,6 @@ from dmutils.user import user_has_role, User
 from dmutils.formats import DATETIME_FORMAT
 from dmutils.email import send_email, \
     generate_token, decode_token, MandrillException
-from dmutils.apiclient.errors import HTTPError
 from .. import main
 from ..forms.auth_forms import LoginForm, EmailAddressForm, ChangePasswordForm, CreateUserForm
 from ... import data_api_client
@@ -333,7 +331,7 @@ def send_invite_user():
             )
         except MandrillException as e:
             current_app.logger.error(
-                "Invitation email failed to send error {} to {} suppluer {} supplier id {} ".format(
+                "Invitation email failed to send error {} to {} supplier {} supplier id {} ".format(
                     e.message,
                     form.email_address.data,
                     current_user.supplier_name,
