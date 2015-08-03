@@ -5,6 +5,7 @@ from ...main import main, existing_service_content, new_service_content
 from ... import data_api_client, flask_featureflags, convert_to_boolean
 from dmutils.apiclient import APIError, HTTPError
 from dmutils.presenters import Presenters
+from dmutils.formats import format_service_price
 
 presenters = Presenters()
 
@@ -286,11 +287,13 @@ def view_service_submission(service_id):
         abort(404)
 
     content = new_service_content.get_builder().filter(draft)
+    service_data = presenters.present_all(draft, new_service_content)
+    service_data['priceString'] = format_service_price(service_data)
 
     return render_template(
         "services/service_submission.html",
         service_id=service_id,
-        service_data=presenters.present_all(draft, new_service_content),
+        service_data=service_data,
         sections=content,
         **main.config['BASE_TEMPLATE_DATA']), 200
 

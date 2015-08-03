@@ -688,3 +688,41 @@ class TestEditDraftService(BaseApplicationTest):
             '/suppliers/submission/services/1/edit/invalid_section'
         )
         assert_equal(404, res.status_code)
+
+
+@mock.patch('app.main.views.services.data_api_client')
+class TestShowDraftService(BaseApplicationTest):
+
+    draft_service = {
+        'services': {
+            'id': 1,
+            'supplierId': 1234,
+            'supplierName': "supplierName",
+            'lot': "SCS",
+            'status': "not-submitted",
+            'frameworkName': "frameworkName",
+            'priceMin': '12.50',
+            'priceMax': '15',
+            'priceUnit': 'Person',
+            'priceInterval': 'Second',
+            'links': {},
+            'updatedAt': "2015-06-29T15:26:07.650368Z"
+        }
+    }
+
+    def setup(self):
+        super(TestShowDraftService, self).setup()
+        with self.app.test_client():
+            self.login()
+
+    def test_service_price_is_correctly_formatted(self, data_api_client):
+        data_api_client.get_draft_service.return_value = self.draft_service
+        res = self.client.get('/suppliers/submission/services/1')
+        document = html.fromstring(res.get_data(as_text=True))
+
+        assert_equal(res.status_code, 200)
+        service_price_row_xpath = '//tr[contains(.//span/text(), "Service price")]'
+        service_price_xpath = service_price_row_xpath + '/td[@class="summary-item-field"]/span/text()'
+        assert_equal(
+            document.xpath(service_price_xpath)[0].strip(),
+            "£12.50 to £15 per Person per Second")
