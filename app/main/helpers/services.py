@@ -60,7 +60,8 @@ def upload_draft_documents(service, request_files, section):
     for field, contents in files.items():
         url = upload_document(
             uploader, current_app.config['DOCUMENTS_URL'],
-            service, field, contents
+            service, field, contents,
+            public=False
         )
 
         if not url:
