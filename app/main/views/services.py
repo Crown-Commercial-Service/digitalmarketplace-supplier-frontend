@@ -503,7 +503,7 @@ def _rewrite_pricing_message_key(error, message_key):
             return 'no_min_price_specified'
         elif error == 'priceUnit':
             return 'no_unit_specified'
-    elif message_key == 'not_a_number':
+    elif message_key == 'not_money_format':
         if error == 'priceMin':
             return 'min_price_not_a_number'
         elif error == 'priceMax':
