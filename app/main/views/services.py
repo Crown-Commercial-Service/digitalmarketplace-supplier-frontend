@@ -412,25 +412,17 @@ def _get_formatted_section_data(section, with_page_questions=False):
         elif _is_boolean_type(key):
             section_data[key] = convert_to_boolean(section_data[key])
         elif _is_type(key, ['pricing']):
-            pricing = request.form.getlist(key)
-            if len(pricing[0]) > 0:
-                try:
-                    section_data['priceMin'] = float(pricing[0])
-                except ValueError:
-                    section_data['priceMin'] = pricing[0]
-            section_questions.append('priceMin')
-            if len(pricing[1]) > 0:
-                try:
-                    section_data['priceMax'] = float(pricing[1])
-                except ValueError:
-                    section_data['priceMax'] = pricing[1]
-            section_questions.append('priceMax')
-            if len(pricing[2]) > 0:
-                section_data['priceUnit'] = pricing[2]
-            section_questions.append('priceUnit')
-            section_data['priceInterval'] = pricing[3]
-            section_questions.append('priceInterval')
-            del section_data[key]
+            pricing_field = request.form.getlist(key)
+            field_names = ['priceMin', 'priceMax', 'priceUnit', 'priceInterval']
+
+            pricing_data = {
+                field_name: pricing_field[i] for i, field_name in enumerate(field_names)
+                if len(pricing_field[i]) > 0
+            }
+            section_data.update(pricing_data)
+            section_questions += field_names
+
+            del section_data['priceString']
             section_questions.remove('priceString')
     if with_page_questions:
         section_data['page_questions'] = section_questions
