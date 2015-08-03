@@ -23,7 +23,7 @@
 
     </div>
   </div>
-  <form method="post">
+  <form method="post" enctype="multipart/form-data">
 
     {% for question in section.questions %}
       {% if errors and errors[question.id] %}
