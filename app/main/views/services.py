@@ -274,6 +274,16 @@ def copy_draft_service(service_id):
     return redirect(url_for(".framework_dashboard"))
 
 
+@main.route('/submission/documents/<path:document>', methods=['GET'])
+@login_required
+@flask_featureflags.is_active_feature('GCLOUD7_OPEN')
+def service_submission_document(document):
+    return render_template(
+        "services/submission_document.html",
+        document=document,
+        **main.config['BASE_TEMPLATE_DATA']), 200
+
+
 @main.route('/submission/services/<string:service_id>', methods=['GET'])
 @login_required
 @flask_featureflags.is_active_feature('GCLOUD7_OPEN')

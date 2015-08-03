@@ -1,4 +1,4 @@
-from flask import request, abort, current_app
+from flask import request, abort, current_app, url_for
 from flask_login import current_user
 
 from dmutils.config import convert_to_boolean
@@ -59,7 +59,7 @@ def upload_draft_documents(service, request_files, section):
 
     for field, contents in files.items():
         url = upload_document(
-            uploader, current_app.config['DOCUMENTS_URL'],
+            uploader, url_for('.service_submission_document', document='', _external=True),
             service, field, contents,
             public=False
         )
