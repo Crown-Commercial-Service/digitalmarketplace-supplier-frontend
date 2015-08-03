@@ -5,6 +5,7 @@ from ...main import main, existing_service_content, new_service_content
 from ..helpers.services import (
     get_formatted_section_data, get_section_questions, get_section_error_messages,
     is_service_modifiable, is_service_associated_with_supplier,
+    upload_documents
 )
 from ... import data_api_client, flask_featureflags
 from dmutils.apiclient import APIError, HTTPError
@@ -150,7 +151,7 @@ def update_section(service_id, section_id):
             current_user.email_address,
             "supplier app")
     except HTTPError as e:
-        errors_map = get_section_error_messages(e, service['lot'])
+        errors_map = get_section_error_messages(e.message, service['lot'])
         if not posted_data.get('serviceName', None):
             posted_data['serviceName'] = service.get('serviceName', '')
         return render_template(
@@ -339,6 +340,20 @@ def update_section_submission(service_id, section_id):
         abort(404)
 
     posted_data = get_formatted_section_data(section)
+
+    uploaded_documents, document_errors = upload_documents(draft, request.files, section)
+
+    if document_errors:
+        return render_template(
+            "services/edit_submission_section.html",
+            section=section,
+            service_data=posted_data,
+            service_id=service_id,
+            errors=get_section_error_messages(document_errors, draft['lot']),
+            **main.config['BASE_TEMPLATE_DATA']
+        )
+
+    posted_data.update(uploaded_documents)
     posted_data['page_questions'] = get_section_questions(section)
 
     try:
@@ -347,7 +362,7 @@ def update_section_submission(service_id, section_id):
             posted_data,
             current_user.email_address)
     except HTTPError as e:
-        errors_map = get_section_error_messages(e, draft['lot'])
+        errors_map = get_section_error_messages(e.message, draft['lot'])
         if not posted_data.get('serviceName', None):
             posted_data['serviceName'] = draft.get('serviceName', '')
         return render_template(

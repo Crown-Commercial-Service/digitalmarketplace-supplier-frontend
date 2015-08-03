@@ -1,7 +1,9 @@
-from flask import request, abort
+from flask import request, abort, current_app
 from flask_login import current_user
 
 from dmutils.config import convert_to_boolean
+from dmutils.s3 import S3
+from dmutils.documents import filter_empty_files, validate_documents, upload_document
 
 from ...main import new_service_content
 
@@ -30,13 +32,37 @@ def get_formatted_section_data(section):
     return section_data
 
 
-def get_section_error_messages(e, lot):
+def upload_documents(service, request_files, section):
+    request_files = request_files.to_dict(flat=True)
+    files = _filter_keys(request_files, get_section_questions(section))
+    files = filter_empty_files(files)
+    errors = validate_documents(files)
+
+    if errors:
+        return None, errors
+
+    uploader = S3(current_app.config['S3_DOCUMENTS_BUCKET'])
+
+    for field, contents in files.items():
+        url = upload_document(
+            uploader, current_app.config['DOCUMENTS_URL'],
+            service, field, contents
+        )
+
+        if not url:
+            errors[field] = 'file_can_be_saved',
+        else:
+            files[field] = url
+
+    return files, errors
+
+
+def get_section_error_messages(errors, lot):
     errors_map = {}
-    for error in e.message.keys():
+    for error, message_key in errors.items():
         if error == '_form':
             abort(400, "Submitted data was not in a valid format")
         else:
-            message_key = e.message[error]
             if error == 'serviceTypes':
                 error = 'serviceTypes{}'.format(lot)
             validation_message = get_error_message(error, message_key, new_service_content)
@@ -49,9 +75,9 @@ def get_section_error_messages(e, lot):
     return errors_map
 
 
-def get_error_message(error, message_key, content):
+def get_error_message(field, message_key, content):
     validations = [
-        validation for validation in content.get_question(error)['validations']
+        validation for validation in content.get_question(field)['validations']
         if validation['name'] == message_key]
 
     if len(validations):
@@ -66,7 +92,7 @@ def _filter_keys(data, keys):
     >>> _filter_keys({'a': 1, 'b': 2}, ['a'])
     {'a': 1}
     """
-    key_set = set(keys) & set(data.keys())
+    key_set = set(keys) & set(data)
     return {key: data[key] for key in key_set}
 
 
