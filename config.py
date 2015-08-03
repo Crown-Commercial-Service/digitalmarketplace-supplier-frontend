@@ -86,7 +86,13 @@ class Development(Config):
     FEATURE_FLAGS_USER_DASHBOARD = enabled_since('2015-07-09')
 
 
-class Preview(Config):
+class Live(Config):
+    """Base config for deployed environments"""
+    DEBUG = False
+    DM_HTTP_PROTO = 'https'
+
+
+class Preview(Live):
     FEATURE_FLAGS_EDIT_SERVICE_PAGE = enabled_since('2015-06-03')
     FEATURE_FLAGS_SUPPLIER_DASHBOARD = enabled_since('2015-06-10')
     FEATURE_FLAGS_EDIT_SUPPLIER_PAGE = enabled_since('2015-06-18')
@@ -94,14 +100,12 @@ class Preview(Config):
     FEATURE_FLAGS_USER_DASHBOARD = enabled_since('2015-07-09')
 
 
-class Live(Config):
-    DEBUG = False
-
+class Production(Live):
     FEATURE_FLAGS_SUPPLIER_DASHBOARD = enabled_since('2015-06-10')
     FEATURE_FLAGS_EDIT_SUPPLIER_PAGE = enabled_since('2015-06-18')
 
 
-class Staging(Live):
+class Staging(Production):
     pass
 
 
@@ -109,6 +113,6 @@ configs = {
     'development': Development,
     'preview': Preview,
     'staging': Staging,
-    'production': Live,
+    'production': Production,
     'test': Test,
 }
