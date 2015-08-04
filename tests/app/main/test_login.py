@@ -485,7 +485,7 @@ class TestInviteUser(BaseApplicationTest):
         with self.app.app_context():
 
             self.app.config['SECRET_KEY'] = "KEY"
-            self.app.config['RESET_PASSWORD_SALT'] = "SALT"
+            self.app.config['INVITE_EMAIL_SALT'] = "SALT"
 
             self.login()
             res = self.client.post(
@@ -597,7 +597,7 @@ class TestInviteUser(BaseApplicationTest):
                     'this_is_not_expected': 1234
                 },
                 self.app.config['SECRET_KEY'],
-                self.app.config['RESET_PASSWORD_SALT']
+                self.app.config['INVITE_EMAIL_SALT']
             )
 
             res = self.client.get(
@@ -636,7 +636,7 @@ class TestInviteUser(BaseApplicationTest):
                     'email_address': 'testme@email.com'
                 },
                 self.app.config['SECRET_KEY'],
-                self.app.config['RESET_PASSWORD_SALT']
+                self.app.config['INVITE_EMAIL_SALT']
             )
 
             res = self.client.get(
@@ -680,7 +680,7 @@ class TestInviteUser(BaseApplicationTest):
                     'email_address': 'testme@email.com'
                 },
                 self.app.config['SECRET_KEY'],
-                self.app.config['RESET_PASSWORD_SALT']
+                self.app.config['INVITE_EMAIL_SALT']
             )
 
             res = self.client.get(
@@ -747,7 +747,7 @@ class TestInviteUser(BaseApplicationTest):
                     'email_address': 'testme@email.com'
                 },
                 self.app.config['SECRET_KEY'],
-                self.app.config['RESET_PASSWORD_SALT']
+                self.app.config['INVITE_EMAIL_SALT']
             )
 
             res = self.client.post(
@@ -778,7 +778,7 @@ class TestInviteUser(BaseApplicationTest):
                     'email_address': 'testme@email.com'
                 },
                 self.app.config['SECRET_KEY'],
-                self.app.config['RESET_PASSWORD_SALT']
+                self.app.config['INVITE_EMAIL_SALT']
             )
 
             res = self.client.post(
@@ -809,7 +809,7 @@ class TestInviteUser(BaseApplicationTest):
                     'email_address': 'testme@email.com'
                 },
                 self.app.config['SECRET_KEY'],
-                self.app.config['RESET_PASSWORD_SALT']
+                self.app.config['INVITE_EMAIL_SALT']
             )
 
             twofiftysix = "a" * 256
@@ -844,7 +844,7 @@ class TestInviteUser(BaseApplicationTest):
                     'email_address': 'testme@email.com'
                 },
                 self.app.config['SECRET_KEY'],
-                self.app.config['RESET_PASSWORD_SALT']
+                self.app.config['INVITE_EMAIL_SALT']
             )
 
             res = self.client.post(
@@ -885,7 +885,7 @@ class TestInviteUser(BaseApplicationTest):
                     'email_address': 'testme@email.com'
                 },
                 self.app.config['SECRET_KEY'],
-                self.app.config['RESET_PASSWORD_SALT']
+                self.app.config['INVITE_EMAIL_SALT']
             )
 
             res = self.client.post(
@@ -921,7 +921,7 @@ class TestInviteUser(BaseApplicationTest):
                     'email_address': 'testme@email.com'
                 },
                 self.app.config['SECRET_KEY'],
-                self.app.config['RESET_PASSWORD_SALT']
+                self.app.config['INVITE_EMAIL_SALT']
             )
 
             res = self.client.get(
@@ -958,7 +958,7 @@ class TestInviteUser(BaseApplicationTest):
                     'email_address': 'testme@email.com'
                 },
                 self.app.config['SECRET_KEY'],
-                self.app.config['RESET_PASSWORD_SALT']
+                self.app.config['INVITE_EMAIL_SALT']
             )
 
             res = self.client.get(
@@ -996,7 +996,7 @@ class TestInviteUser(BaseApplicationTest):
                     'email_address': 'testme@email.com'
                 },
                 self.app.config['SECRET_KEY'],
-                self.app.config['RESET_PASSWORD_SALT']
+                self.app.config['INVITE_EMAIL_SALT']
             )
 
             res = self.client.get(

@@ -30,6 +30,7 @@ class Config(object):
 
     SECRET_KEY = os.getenv('DM_PASSWORD_SECRET_KEY')
     RESET_PASSWORD_SALT = 'ResetPasswordSalt'
+    INVITE_EMAIL_SALT = 'InviteEmailSalt'
 
     STATIC_URL_PATH = '/suppliers/static'
     ASSET_PATH = STATIC_URL_PATH + '/'

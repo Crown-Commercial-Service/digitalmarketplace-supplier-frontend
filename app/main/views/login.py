@@ -308,7 +308,7 @@ def send_invite_user():
                 "email_address": form.email_address.data
             },
             current_app.config['SECRET_KEY'],
-            current_app.config['RESET_PASSWORD_SALT']
+            current_app.config['INVITE_EMAIL_SALT']
         )
 
         url = url_for('main.create_user', encoded_token=token, _external=True)
@@ -387,7 +387,7 @@ def decode_invitation_token(encoded_token):
         token, timestamp = decode_token(
             encoded_token,
             current_app.config['SECRET_KEY'],
-            current_app.config['RESET_PASSWORD_SALT']
+            current_app.config['INVITE_EMAIL_SALT']
         )
         if not token.get('email_address', None):
             raise ValueError('Missing email address from token')
