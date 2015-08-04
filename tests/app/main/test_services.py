@@ -1,7 +1,14 @@
+try:
+    from StringIO import StringIO
+except ImportError:
+    from io import BytesIO as StringIO
+
 from dmutils.apiclient import HTTPError
 import mock
 from lxml import html
 from mock import Mock
+from freezegun import freeze_time
+
 from nose.tools import assert_equal, assert_true, assert_false, \
     assert_in, assert_not_in
 from tests.app.helpers import BaseApplicationTest
@@ -516,6 +523,7 @@ class TestEditDraftService(BaseApplicationTest):
             'supplierName': "supplierName",
             'lot': "SCS",
             'status': "not-submitted",
+            'frameworkSlug': 'g-slug',
             'frameworkName': "frameworkName",
             'links': {},
             'updatedAt': "2015-06-29T15:26:07.650368Z"
@@ -555,7 +563,49 @@ class TestEditDraftService(BaseApplicationTest):
         data_api_client.update_draft_service.assert_called_once_with(
             '1', {'page_questions': ['serviceName', 'serviceSummary']}, 'email@email.com')
 
-    def test_upload_question_not_accepted_as_form_data(self, data_api_client):
+    def test_file_upload(self, data_api_client, s3):
+        s3.return_value = mock.Mock()
+        data_api_client.get_draft_service.return_value = self.empty_draft
+        with freeze_time('2015-01-02 03:04:05'):
+            res = self.client.post(
+                '/suppliers/submission/services/1/edit/service_definition',
+                data={
+                    'serviceDefinitionDocumentURL': (StringIO(b'doc'), 'document.pdf'),
+                }
+            )
+
+        assert_equal(res.status_code, 302)
+        data_api_client.update_draft_service.assert_called_once_with(
+            '1', {
+                'serviceDefinitionDocumentURL': 'http://localhost/suppliers/submission/documents/g-slug/1234/1-service-definition-document-2015-01-02-0304.pdf'  # noqa
+            }, 'email@email.com',
+            page_questions=['serviceDefinitionDocumentURL']
+        )
+
+        s3.return_value.save.assert_called_once_with(
+            'g-slug/1234/1-service-definition-document-2015-01-02-0304.pdf',
+            mock.ANY, acl='private'
+        )
+
+    def test_file_upload_filters_empty_and_unknown_files(self, data_api_client, s3):
+        data_api_client.get_draft_service.return_value = self.empty_draft
+        res = self.client.post(
+            '/suppliers/submission/services/1/edit/service_definition',
+            data={
+                'serviceDefinitionDocumentURL': (StringIO(b''), 'document.pdf'),
+                'unknownDocumentURL': (StringIO(b'doc'), 'document.pdf'),
+                'pricingDocumentURL': (StringIO(b'doc'), 'document.pdf'),
+            })
+
+        assert_equal(res.status_code, 302)
+        data_api_client.update_draft_service.assert_called_once_with(
+            '1', {}, 'email@email.com',
+            page_questions=['serviceDefinitionDocumentURL']
+        )
+
+        assert_false(s3.return_value.save.called)
+
+    def test_upload_question_not_accepted_as_form_data(self, data_api_client, s3):
         data_api_client.get_draft_service.return_value = self.empty_draft
         res = self.client.post(
             '/suppliers/submission/services/1/edit/service_definition',
