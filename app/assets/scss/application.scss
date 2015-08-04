@@ -57,6 +57,8 @@ $path: "/suppliers/static/images/";
 @import "_supplier-declaration.scss";
 @import "_updates.scss";
 
+@import "_create_supplier.scss";
+
 .filter-field-text {
   @include core-16;
   @include box-sizing(border-box);

@@ -111,11 +111,10 @@ def update_supplier():
 @main.route('/create', methods=['GET'])
 def create_new_supplier():
     template_data = main.config['BASE_TEMPLATE_DATA']
-    return render_template(
+    return  render_template(
         "suppliers/create_new_supplier.html",
         **template_data
     ), 200
-
 
 @main.route('/duns-number', methods=['GET'])
 def duns_number():

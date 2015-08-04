@@ -37,6 +37,7 @@ heading = "Check your company information "
         ) %}
         {% call summary.row() %}
         {{ summary.field_name("DUNS number") }}
+<<<<<<< HEAD
         {{ summary.text(session["duns_number"]) }}
         {{ summary.edit_link("Edit", url_for(".duns_number")) }}
         {% endcall %}
@@ -64,6 +65,35 @@ heading = "Check your company information "
         {{ summary.field_name("Primary contact phone number") }}
         {{ summary.text(session["phone_number"]) }}
         {{ summary.edit_link("Edit", url_for(".company_contact_details")) }}
+=======
+        {{ summary.text("0129438498") }}
+        {{ summary.edit_link("Edit","/suppliers/duns-number") }}
+        {% endcall %}
+        {% call summary.row() %}
+        {{ summary.field_name("Companies House number") }}
+        {{ summary.text("0129438498") }}
+        {{ summary.edit_link("Edit","/suppliers/duns-number") }}
+        {% endcall %}
+        {% call summary.row() %}
+        {{ summary.field_name("Company name") }}
+        {{ summary.text("Big SI") }}
+        {{ summary.edit_link("Edit","/suppliers/duns-number") }}
+        {% endcall %}
+        {% call summary.row() %}
+        {{ summary.field_name("Primary contact name") }}
+        {{ summary.text("Harry Smith") }}
+        {{ summary.edit_link("Edit","/suppliers/company-contact-details") }}
+        {% endcall %}
+        {% call summary.row() %}
+        {{ summary.field_name("Primary contact email") }}
+        {{ summary.text("blah@blah.com") }}
+        {{ summary.edit_link("Edit","/suppliers/company-contact-details") }}
+        {% endcall %}
+        {% call summary.row() %}
+        {{ summary.field_name("Primary contact phone number") }}
+        {{ summary.text("0129438498") }}
+        {{ summary.edit_link("Edit","/suppliers/company-contact-details") }}
+>>>>>>> Added page flows and styling for create new company
         {% endcall %}
         {% endcall %}
 
