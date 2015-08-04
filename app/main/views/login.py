@@ -203,6 +203,7 @@ def create_user(encoded_token):
             return render_template(
                 "auth/update-user.html",
                 user=user["users"],
+                form=form,
                 email_address=token['email_address'],
                 supplier_name=token['supplier_name'],
                 token=encoded_token,
