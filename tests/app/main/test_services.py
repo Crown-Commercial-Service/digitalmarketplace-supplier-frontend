@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from dmutils.apiclient import HTTPError
 import mock
 from lxml import html
@@ -725,4 +726,4 @@ class TestShowDraftService(BaseApplicationTest):
         service_price_xpath = service_price_row_xpath + '/td[@class="summary-item-field"]/span/text()'
         assert_equal(
             document.xpath(service_price_xpath)[0].strip(),
-            "£12.50 to £15 per Person per Second")
+            u"£12.50 to £15 per person per second")
