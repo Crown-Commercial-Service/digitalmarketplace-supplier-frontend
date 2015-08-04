@@ -5,12 +5,11 @@ from ...main import main, existing_service_content, new_service_content
 from ..helpers.services import (
     get_formatted_section_data, get_section_questions, get_section_error_messages,
     is_service_modifiable, is_service_associated_with_supplier,
-    upload_draft_documents
+    upload_draft_documents, get_service_attributes
 )
 from ... import data_api_client, flask_featureflags
 from dmutils.apiclient import APIError, HTTPError
 from dmutils.presenters import Presenters
-from dmutils.service_attribute import Attribute
 
 presenters = Presenters()
 
@@ -304,7 +303,7 @@ def view_service_submission(service_id):
     return render_template(
         "services/service_submission.html",
         service_id=service_id,
-        sections=_get_service_attributes(draft, content),
+        sections=get_service_attributes(draft, content),
         service_data=draft,
         **main.config['BASE_TEMPLATE_DATA']), 200
 
@@ -321,22 +320,15 @@ def edit_service_submission(service_id, section_id):
     if not is_service_associated_with_supplier(draft):
         abort(404)
 
-    serviceName = draft.get('serviceName', '')
     content = new_service_content.get_builder().filter(draft)
     section = content.get_section(section_id)
     if section is None:
         abort(404)
 
-    formatted_service_data = dict(
-        draft,
-        **_section_data_formatted_for_page(section, draft)
-    )
-    formatted_service_data['serviceName'] = serviceName
-
     return render_template(
         "services/edit_submission_section.html",
         section=section,
-        service_data=formatted_service_data,
+        service_data=draft,
         service_id=service_id,
         **main.config['BASE_TEMPLATE_DATA']
     )
