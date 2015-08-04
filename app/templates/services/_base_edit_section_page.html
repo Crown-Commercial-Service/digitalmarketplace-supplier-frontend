@@ -33,12 +33,14 @@
         {{ forms[question.type](question, service_data, {}) }}
       {% endif %}
       {% if question.assuranceApproach %}
-        {{ assurance_question(
-          name=question.id,
-          service_data=service_data,
-          type=question.assuranceApproach,
-          errors={}
-        ) }}
+        <div class='assurance-question'>
+          {{ assurance_question(
+            name=question.id,
+            service_data=service_data,
+            type=question.assuranceApproach,
+            errors={}
+          ) }}
+        </div>
       {% endif %}
     {% endfor %}
 
