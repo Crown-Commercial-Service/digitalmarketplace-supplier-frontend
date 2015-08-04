@@ -10,6 +10,9 @@ fi
 export DM_DATA_API_URL=${DM_DATA_API_URL:=http://localhost:5000}
 export DM_DATA_API_AUTH_TOKEN=${DM_DATA_API_AUTH_TOKEN:=myToken}
 export DM_API_AUTH_TOKEN=${DM_API_AUTH_TOKEN:=myToken}
+
+export DM_G7_DRAFT_DOCUMENTS_BUCKET=${DM_S3_DOCUMENTS_BUCKET:=digitalmarketplace-dev-documents}
+
 export DM_MANDRILL_API_KEY=${DM_MANDRILL_API_KEY:=not_a_real_key}
 export DM_PASSWORD_SECRET_KEY=${DM_PASSWORD_SECRET_KEY:=verySecretKey}
 

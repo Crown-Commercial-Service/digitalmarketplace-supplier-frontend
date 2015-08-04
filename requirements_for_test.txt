@@ -4,3 +4,4 @@ pep8==1.5.7
 requests-mock==0.6.0
 mock==1.0.1
 lxml==3.4.4
+freezegun==0.3.4
