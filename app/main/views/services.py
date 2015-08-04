@@ -426,7 +426,6 @@ def _get_error_message(error, message_key, content):
 
 def _is_list_type(key):
     """Return True if a given key is a list type"""
-    print(new_service_content.get_question(key)['type'])
     if key == 'serviceTypes':
         return True
     return new_service_content.get_question(key)['type'] in [
@@ -437,6 +436,11 @@ def _is_list_type(key):
 def _is_boolean_type(key):
     """Return True if a given key is a boolean type"""
     return new_service_content.get_question(key)['type'] == 'boolean'
+
+
+def _is_numeric_type(key):
+    """Return True if a given key is a boolean type"""
+    return new_service_content.get_question(key)['type'] == 'percentage'
 
 
 def _question_has_assurance(key):
@@ -458,6 +462,8 @@ def _section_data_formatted(section, section_data):
         # Turn booleans into booleans
         elif _is_boolean_type(key):
             filtered_section_data[key] = convert_to_boolean(filtered_section_data[key])
+        elif _is_numeric_type(key):
+            filtered_section_data[key] = convert_to_number(filtered_section_data[key])
         # Format assurance how the API expects it
         if _question_has_assurance(key):
             assurance = ''
