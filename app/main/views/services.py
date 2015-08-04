@@ -327,7 +327,10 @@ def edit_service_submission(service_id, section_id):
     if section is None:
         abort(404)
 
-    formatted_service_data = _section_data_formatted_for_page(section, draft)
+    formatted_service_data = dict(
+        draft,
+        **_section_data_formatted_for_page(section, draft)
+    )
     formatted_service_data['serviceName'] = serviceName
 
     return render_template(
@@ -384,13 +387,11 @@ def update_section_submission(service_id, section_id):
         errors_map = get_section_error_messages(e.message, draft['lot'])
         if not posted_data.get('serviceName', None):
             posted_data['serviceName'] = draft.get('serviceName', '')
-        displayed_data = _section_data_formatted_for_page(section, updated_data)
-        errors_map = _get_section_error_messages(e, draft['lot'])
-        displayed_data['serviceName'] = serviceName
+        errors_map = get_section_error_messages(e.message, draft['lot'])
         return render_template(
             "services/edit_submission_section.html",
             section=section,
-            service_data=displayed_data,
+            service_data=update_data,
             service_id=service_id,
             errors=errors_map,
             **main.config['BASE_TEMPLATE_DATA']
