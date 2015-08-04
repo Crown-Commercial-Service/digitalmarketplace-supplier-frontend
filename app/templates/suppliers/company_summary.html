@@ -1,0 +1,83 @@
+{% extends "_base_page.html" %}
+{% import "toolkit/summary-table.html" as summary %}
+
+{% block page_title %}Company summary - Create new supplier – Digital Marketplace{% endblock %}
+
+{% block breadcrumb %}
+{%
+with items = [
+{
+"link": "/",
+"label": "Digital Marketplace"
+}
+]
+%}
+{% include "toolkit/breadcrumb.html" %}
+{% endwith %}
+{% endblock %}
+
+{% block main_content %}
+
+{%
+with
+heading = "Check your company information "
+%}
+{% include "toolkit/page-heading.html" %}
+{% endwith %}
+
+
+
+        {% call summary.mapping_table(
+        caption="Summary table with content field as list",
+        field_headings=[
+        "Field name",
+        "Field value",
+        ],
+        field_headings_visible=False
+        ) %}
+        {% call summary.row() %}
+        {{ summary.field_name("DUNS number") }}
+        {{ summary.text("0129438498") }}
+        {{ summary.edit_link("Edit","/suppliers/duns-number") }}
+        {% endcall %}
+        {% call summary.row() %}
+        {{ summary.field_name("Companies House number") }}
+        {{ summary.text("0129438498") }}
+        {{ summary.edit_link("Edit","/suppliers/duns-number") }}
+        {% endcall %}
+        {% call summary.row() %}
+        {{ summary.field_name("Company name") }}
+        {{ summary.text("Big SI") }}
+        {{ summary.edit_link("Edit","/suppliers/duns-number") }}
+        {% endcall %}
+        {% call summary.row() %}
+        {{ summary.field_name("Primary contact name") }}
+        {{ summary.text("Harry Smith") }}
+        {{ summary.edit_link("Edit","/suppliers/company-contact-details") }}
+        {% endcall %}
+        {% call summary.row() %}
+        {{ summary.field_name("Primary contact email") }}
+        {{ summary.text("blah@blah.com") }}
+        {{ summary.edit_link("Edit","/suppliers/company-contact-details") }}
+        {% endcall %}
+        {% call summary.row() %}
+        {{ summary.field_name("Primary contact phone number") }}
+        {{ summary.text("0129438498") }}
+        {{ summary.edit_link("Edit","/suppliers/company-contact-details") }}
+        {% endcall %}
+        {% endcall %}
+
+
+        <form action="{{ url_for('.company_summary')}}" method="POST">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+            {%
+            with
+            type = "save",
+            label = "Continue"
+            %}
+            {% include "toolkit/button.html" %}
+            {% endwith %}
+        </form>
+
+
+{% endblock %}

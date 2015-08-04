@@ -1,0 +1,19 @@
+.lead {
+    @include core-24;
+    margin-bottom: $gutter;
+}
+
+.copy-list {
+    list-style: normal;
+}
+
+.browse-list-item-heading {
+
+  display: inline;
+  @include heading-24;
+  font-weight: bold;
+}
+
+a.button-save {
+    @include inline-block;
+}

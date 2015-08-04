@@ -1,0 +1,54 @@
+{% extends "_base_page.html" %}
+{% import "toolkit/summary-table.html" as summary %}
+
+{% block page_title %}Company name - Create new supplier – Digital Marketplace{% endblock %}
+
+{% block breadcrumb %}
+{%
+with items = [
+{
+"link": "/",
+"label": "Digital Marketplace"
+}
+]
+%}
+{% include "toolkit/breadcrumb.html" %}
+{% endwith %}
+{% endblock %}
+
+{% block main_content %}
+
+{%
+with
+heading = "Company name"
+%}
+{% include "toolkit/page-heading.html" %}
+{% endwith %}
+
+<div class="grid-row">
+
+    <div class="column-two-thirds">
+        <p>This is how buyers will see your name on the Digital Marketplace.</p>
+
+        <form method="POST" action="{{ url_for('.company_name') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+            {%
+            with
+            question = "",
+            name = "company-name"
+            %}
+            {% include "toolkit/forms/textbox.html" %}
+            {% endwith %}
+            {%
+            with
+            type = "save",
+            label = "Continue"
+            %}
+            {% include "toolkit/button.html" %}
+            {% endwith %}
+        </form>
+        </a>
+    </div>
+</div>
+
+{% endblock %}

@@ -1,0 +1,56 @@
+{% extends "_base_page.html" %}
+{% import "toolkit/summary-table.html" as summary %}
+
+{% block page_title %}Companies House - Create new supplier – Digital Marketplace{% endblock %}
+
+{% block breadcrumb %}
+{%
+with items = [
+{
+"link": "/",
+"label": "Digital Marketplace"
+}
+]
+%}
+{% include "toolkit/breadcrumb.html" %}
+{% endwith %}
+{% endblock %}
+
+{% block main_content %}
+
+{%
+with
+heading = "Companies House number"
+%}
+{% include "toolkit/page-heading.html" %}
+{% endwith %}
+
+<div class="grid-row">
+
+    <div class="column-two-thirds">
+        <p>This is a unique 8-character number given to you by Companies House.</p>
+
+        <p>Visit <a href="https://beta.companieshouse.gov.uk/" rel="external">https://beta.companieshouse.gov.uk</a> to get your number</p>
+
+        <form method="POST" action="{{ url_for('.companies_house_number') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+            {%
+            with
+            question = "",
+            name = "companies-house-number"
+            %}
+            {% include "toolkit/forms/textbox.html" %}
+            {% endwith %}
+            {%
+            with
+            type = "save",
+            label = "Continue"
+            %}
+            {% include "toolkit/button.html" %}
+            {% endwith %}
+        </form>
+        </a>
+    </div>
+</div>
+
+{% endblock %}

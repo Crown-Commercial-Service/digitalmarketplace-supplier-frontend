@@ -1,0 +1,72 @@
+{% extends "_base_page.html" %}
+{% import "toolkit/summary-table.html" as summary %}
+
+{% block page_title %}Company contact details - Create new supplier – Digital Marketplace{% endblock %}
+
+{% block breadcrumb %}
+{%
+with items = [
+{
+"link": "/",
+"label": "Digital Marketplace"
+}
+]
+%}
+{% include "toolkit/breadcrumb.html" %}
+{% endwith %}
+{% endblock %}
+
+{% block main_content %}
+
+{%
+with
+heading = "Company contact details"
+%}
+{% include "toolkit/page-heading.html" %}
+{% endwith %}
+
+<div class="grid-row">
+
+    <div class="column-two-thirds">
+        <p>This information will be visible on the Digital Marketplace.</p>
+
+        <p>You can change it at any time.</p>
+
+        <form method="POST" action="{{ url_for('.company_contact_details') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+            {%
+            with
+            question = "Contact name",
+            name = "contact-name"
+            %}
+            {% include "toolkit/forms/textbox.html" %}
+            {% endwith %}
+
+            {%
+            with
+            question = "Email address",
+            name = "email-address"
+            %}
+            {% include "toolkit/forms/textbox.html" %}
+            {% endwith %}
+
+            {%
+            with
+            question = "Phone number",
+            name = "phone-number"
+            %}
+            {% include "toolkit/forms/textbox.html" %}
+            {% endwith %}
+            {%
+            with
+            type = "save",
+            label = "Continue"
+            %}
+            {% include "toolkit/button.html" %}
+            {% endwith %}
+        </form>
+        </a>
+    </div>
+</div>
+
+{% endblock %}

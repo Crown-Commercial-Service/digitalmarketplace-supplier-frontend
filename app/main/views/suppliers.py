@@ -105,3 +105,52 @@ def update_supplier():
                              error=e.message)
 
     return redirect(url_for(".dashboard"))
+
+
+@main.route('/create', methods=['GET'])
+def create_new_supplier():
+    template_data = main.config['BASE_TEMPLATE_DATA']
+    return  render_template(
+        "suppliers/create_new_supplier.html",
+        **template_data
+    ), 200
+
+@main.route('/duns-number', methods=['GET'])
+def duns_number():
+    template_data = main.config['BASE_TEMPLATE_DATA']
+    return  render_template(
+        "suppliers/duns_number.html",
+        **template_data
+    ), 200
+
+@main.route('/companies-house-number', methods=['GET'])
+def companies_house_number():
+    template_data = main.config['BASE_TEMPLATE_DATA']
+    return  render_template(
+        "suppliers/companies_house_number.html",
+        **template_data
+    ), 200
+
+@main.route('/company-name', methods=['GET'])
+def company_name():
+    template_data = main.config['BASE_TEMPLATE_DATA']
+    return  render_template(
+        "suppliers/company_name.html",
+        **template_data
+    ), 200
+
+@main.route('/company-contact-details', methods=['GET'])
+def company_contact_details():
+    template_data = main.config['BASE_TEMPLATE_DATA']
+    return  render_template(
+        "suppliers/company_contact_details.html",
+        **template_data
+    ), 200
+
+@main.route('/company-summary', methods=['GET'])
+def company_summary():
+    template_data = main.config['BASE_TEMPLATE_DATA']
+    return  render_template(
+        "suppliers/company_summary.html",
+        **template_data
+    ), 200

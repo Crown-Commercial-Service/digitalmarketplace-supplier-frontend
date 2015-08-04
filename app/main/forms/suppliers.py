@@ -46,3 +46,15 @@ class EditContactInformationForm(Form):
     contactName = StringField('Contact name', validators=[
         DataRequired(message="Contact name can not be empty"),
     ])
+
+class DunsNumberForm(Form):
+    duns_number = IntegerField()
+
+class CompaniesHouseIdForm(Form):
+    duns_number = IntegerField()
+
+class CompanyNameForm(Form):
+    duns_number = StringField()
+
+class CompanyContactDetails(Form):
+    duns_number = StringField()
