@@ -10,7 +10,11 @@
 
 {% macro upload(value) -%}
   {% if 'url' in value and 'filename' in value %}
-    <a href="{{ value.url }}">{{ value.filename }}</a>
+    {% if value.url.startswith(url_for(".service_submission_document", document='', _external=True)) %}
+      A document was uploaded
+    {% else %}
+      <a href="{{ value.url }}">{{ value.filename }}</a>
+    {% endif %}
   {% endif %}
 {%- endmacro %}
 
