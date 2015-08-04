@@ -1,7 +1,7 @@
 from flask import request, abort, current_app, url_for
 from flask_login import current_user
 
-from dmutils.config import convert_to_boolean
+from dmutils.config import convert_to_boolean, convert_to_number
 from dmutils import s3
 from dmutils.documents import filter_empty_files, validate_documents, upload_document
 from dmutils.service_attribute import Attribute
@@ -70,16 +70,29 @@ def get_formatted_section_data(section):
             section_data[key] = request.form.getlist(key)
         elif _is_boolean_type(key):
             section_data[key] = convert_to_boolean(request.form[key])
+        elif _is_numeric_type(key):
+            section_data[key] = convert_to_number(request.form[key])
         elif _is_not_upload(key):
             section_data[key] = request.form[key]
 
         if _has_assurance(key):
             section_data[key] = {
-                "value": section_data.get(key) or request.form[key],
+                "value": section_data[key],
                 "assurance": request.form.get(key + '--assurance')
             }
 
     return section_data
+
+
+def unformat_section_data(section_data):
+    """Unpacks assurance questions
+    """
+    unformatted_section_data = {}
+    for key in section_data:
+        if _has_assurance(key):
+            unformatted_section_data[key + '--assurance'] = section_data[key].get('assurance', '')
+            unformatted_section_data[key] = section_data[key]['value']
+    section_data.update(unformatted_section_data)
 
 
 def upload_draft_documents(service, request_files, section):
@@ -162,6 +175,11 @@ def _is_list_type(key):
 def _is_boolean_type(key):
     """Return True if a given key is a boolean type"""
     return new_service_content.get_question(key)['type'] == 'boolean'
+
+
+def _is_numeric_type(key):
+    """Return True if a given key is a numeric type"""
+    return new_service_content.get_question(key)['type'] == 'percentage'
 
 
 def _has_assurance(key):
