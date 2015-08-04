@@ -58,6 +58,23 @@ class TestListServices(BaseApplicationTest):
             assert_true("SaaS" in res.get_data(as_text=True))
             assert_true("G-Cloud 1" in res.get_data(as_text=True))
 
+    @mock.patch('app.data_api_client')
+    def test_should_not_be_able_to_see_page_if_made_inactive(self, services_data_api_client):
+        with self.app.test_client():
+            self.login()
+
+            services_data_api_client.get_user.return_value = self.user(
+                123,
+                "email@email.com",
+                1234,
+                'Supplier Name',
+                active=False
+            )
+
+            res = self.client.get('/suppliers/services')
+            assert_equal(res.status_code, 302)
+            assert_equal(res.location, 'http://localhost/suppliers/login?next=%2Fsuppliers%2Fservices')
+
     @mock.patch('app.main.views.services.data_api_client')
     def test_shows_services_edit_button_with_id(self, data_api_client):
         with self.app.test_client():
@@ -123,14 +140,12 @@ class TestListServicesLogin(BaseApplicationTest):
 
 @mock.patch('app.main.views.services.data_api_client')
 class TestSupplierUpdateService(BaseApplicationTest):
-
     def _login(
             self,
             data_api_client,
             service_status="published",
             service_belongs_to_user=True
     ):
-
         data_api_client.authenticate_user.return_value = self.user(
             123, "email@email.com", 1234, 'name'
         )
@@ -156,7 +171,6 @@ class TestSupplierUpdateService(BaseApplicationTest):
 
     def _post_status_update(
             self, status, expected_status_code):
-
         res = self.client.post('/suppliers/services/123', data={
             'status': status,
         })
@@ -196,6 +210,7 @@ class TestSupplierUpdateService(BaseApplicationTest):
 
         res = self.client.get('/suppliers/services/123')
         assert_equal(res.status_code, 200)
+
         assert_true(
             'Service name 123' in res.get_data(as_text=True)
         )
@@ -396,7 +411,6 @@ class TestEditService(BaseApplicationTest):
 
 @mock.patch('app.main.views.services.request')
 class TestCreateDraftService(BaseApplicationTest):
-
     def setup(self):
         super(TestCreateDraftService, self).setup()
         self._answer_required = 'Answer is required'

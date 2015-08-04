@@ -58,9 +58,7 @@ def create_app(config_name):
 
 @login_manager.user_loader
 def load_user(user_id):
-    user_json = data_api_client.get_user(user_id=int(user_id))
-    if user_json:
-        return User.from_json(user_json)
+    return User.load_user(data_api_client, user_id)
 
 
 def config_attrs(config):
