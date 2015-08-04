@@ -1,5 +1,5 @@
 from flask_login import login_required, current_user
-from flask import render_template, request, redirect, url_for, abort
+from flask import render_template, request, redirect, url_for, abort, flash
 
 from ...main import main, existing_service_content, new_service_content
 from ..helpers.services import (
@@ -270,6 +270,8 @@ def copy_draft_service(service_id):
 
     except APIError as e:
         abort(e.status_code)
+
+    flash({'service_name': draft.get('serviceName')}, 'service_copied')
 
     return redirect(url_for(".framework_dashboard"))
 
