@@ -47,6 +47,7 @@ class EditContactInformationForm(Form):
         DataRequired(message="Contact name can not be empty"),
     ])
 
+
 class DunsNumberForm(Form):
     duns_number = IntegerField('DUNS Number', validators=[
         DataRequired(message="DUNS Number must be 9 digits"),
