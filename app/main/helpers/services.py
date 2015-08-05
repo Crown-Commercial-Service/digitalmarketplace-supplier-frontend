@@ -169,7 +169,9 @@ def _is_list_type(key):
     """Return True if a given key is a list type"""
     if key == 'serviceTypes':
         return True
-    return new_service_content.get_question(key)['type'] in ['list', 'checkbox', 'pricing']
+    return new_service_content.get_question(key)['type'] in [
+        'list', 'checkboxes', 'pricing'
+    ]
 
 
 def _is_boolean_type(key):
