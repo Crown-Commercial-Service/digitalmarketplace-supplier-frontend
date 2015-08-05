@@ -7,7 +7,6 @@ from dmutils.content_loader import ContentBuilder
 
 from ...main import main, declaration_content
 from ... import data_api_client
-from ..forms.frameworks import G7SelectionQuestions
 
 
 @main.route('/frameworks/g-cloud-7', methods=['GET'])
@@ -40,18 +39,16 @@ def framework_supplier_declaration():
     template_data = main.config['BASE_TEMPLATE_DATA']
 
     if request.method == 'POST':
-        form = G7SelectionQuestions()
-        if form.validate_on_submit():
-            try:
-                data_api_client.answer_selection_questions(
-                    current_user.supplier_id,
-                    'g-cloud-7',
-                    form.data,
-                    current_user.email_address
-                )
-                flash('questions_updated')
-            except APIError as e:
-                abort(e.status_code)
+        try:
+            data_api_client.answer_selection_questions(
+                current_user.supplier_id,
+                'g-cloud-7',
+                form.data,
+                current_user.email_address
+            )
+            flash('questions_updated')
+        except APIError as e:
+            abort(e.status_code)
     else:
         try:
             response = data_api_client.get_selection_answers(
@@ -61,16 +58,11 @@ def framework_supplier_declaration():
             if e.status_code != 404:
                 abort(e.status_code)
             answers = {}
-        form = G7SelectionQuestions(formdata=None, data=answers)
 
     return render_template(
         "services/edit_declaration_section.html",
-        form=form,
         sections=declaration_content.get_builder(),
         service_data={},
-        errors=[
-            {'input_name': k,
-             'question': v[0]} for k, v in form.errors.items()],
         **template_data
     ), 200
 
