@@ -3,9 +3,10 @@ from flask import render_template, request, redirect, url_for, abort, flash
 
 from ...main import main, existing_service_content, new_service_content
 from ..helpers.services import (
-    get_formatted_section_data, get_section_questions, get_section_error_messages,
+    get_formatted_section_data, unformat_section_data,
+    get_section_questions, get_section_error_messages,
     is_service_modifiable, is_service_associated_with_supplier,
-    upload_draft_documents
+    upload_draft_documents, get_service_attributes
 )
 from ... import data_api_client, flask_featureflags
 from dmutils.apiclient import APIError, HTTPError
@@ -303,8 +304,8 @@ def view_service_submission(service_id):
     return render_template(
         "services/service_submission.html",
         service_id=service_id,
-        service_data=presenters.present_all(draft, new_service_content),
-        sections=content,
+        sections=get_service_attributes(draft, content),
+        service_data=draft,
         **main.config['BASE_TEMPLATE_DATA']), 200
 
 
@@ -324,6 +325,8 @@ def edit_service_submission(service_id, section_id):
     section = content.get_section(section_id)
     if section is None:
         abort(404)
+
+    unformat_section_data(draft)
 
     return render_template(
         "services/edit_submission_section.html",
@@ -376,13 +379,15 @@ def update_section_submission(service_id, section_id):
             page_questions=get_section_questions(section)
         )
     except HTTPError as e:
+        unformat_section_data(update_data)
         errors_map = get_section_error_messages(e.message, draft['lot'])
         if not posted_data.get('serviceName', None):
             posted_data['serviceName'] = draft.get('serviceName', '')
+        errors_map = get_section_error_messages(e.message, draft['lot'])
         return render_template(
             "services/edit_submission_section.html",
             section=section,
-            service_data=posted_data,
+            service_data=update_data,
             service_id=service_id,
             errors=errors_map,
             **main.config['BASE_TEMPLATE_DATA']
@@ -395,6 +400,78 @@ def update_section_submission(service_id, section_id):
         return redirect(url_for(".edit_service_submission", service_id=service_id, section_id=next_section))
     else:
         return redirect(url_for(".view_service_submission", service_id=service_id))
+
+
+def _is_service_associated_with_supplier(service):
+    return service.get('supplierId') == current_user.supplier_id
+
+
+def _is_service_modifiable(service):
+    return service.get('status') != 'disabled'
+
+
+def _get_error_message(error, message_key, content):
+    validations = [
+        validation for validation in content.get_question(error)['validations']
+        if validation['name'] == message_key]
+
+    if len(validations):
+        return validations[0]['message']
+    else:
+        return 'There was a problem with the answer to this question'
+
+
+def _is_list_type(key):
+    """Return True if a given key is a list type"""
+    if key == 'serviceTypes':
+        return True
+    return new_service_content.get_question(key)['type'] in [
+        'list', 'checkbox', 'checkboxes', 'pricing'
+    ]
+
+
+def _is_boolean_type(key):
+    """Return True if a given key is a boolean type"""
+    return new_service_content.get_question(key)['type'] == 'boolean'
+
+
+def _is_numeric_type(key):
+    """Return True if a given key is a boolean type"""
+    return new_service_content.get_question(key)['type'] == 'percentage'
+
+
+def _question_has_assurance(key):
+    """Return True if a question has an assurance component"""
+    question = new_service_content.get_question(key)
+    return (
+        'assuranceApproach' in question and
+        question['assuranceApproach']
+    )
+
+
+def _section_data_formatted(section, section_data):
+    filtered_section_data = _filter_keys(section_data, get_section_questions(section))
+    additional_section_data = {}
+    for key in filtered_section_data:
+        # Turn responses which have multiple parts into lists
+        if _is_list_type(key):
+            filtered_section_data[key] = request.form.getlist(key)
+        # Turn booleans into booleans
+        elif _is_boolean_type(key):
+            filtered_section_data[key] = convert_to_boolean(filtered_section_data[key])
+        elif _is_numeric_type(key):
+            filtered_section_data[key] = convert_to_number(filtered_section_data[key])
+        # Format assurance how the API expects it
+        if _question_has_assurance(key):
+            assurance = ''
+            key_with_assurance = key + '--assurance'
+            if key_with_assurance in section_data:
+                assurance = section_data[key_with_assurance]
+            filtered_section_data[key] = {
+                'value': filtered_section_data[key],
+                'assurance': assurance
+            }
+    return filtered_section_data
 
 
 def _update_service_status(service, error_message=None):

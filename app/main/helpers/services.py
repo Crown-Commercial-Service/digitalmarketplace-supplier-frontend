@@ -1,15 +1,42 @@
 from flask import request, abort, current_app, url_for
 from flask_login import current_user
 
-from dmutils.config import convert_to_boolean
+from dmutils.config import convert_to_boolean, convert_to_number
 from dmutils import s3
 from dmutils.documents import filter_empty_files, validate_documents, upload_document
+from dmutils.service_attribute import Attribute
 
 from ...main import new_service_content
 
 
 def get_section_questions(section):
     return [question['id'] for question in section['questions']]
+
+
+def get_service_attributes(service_data, service_questions):
+    return map(
+        lambda section: {
+            'name': section['name'],
+            'rows': _get_rows(section, service_data),
+            'editable': section['editable'],
+            'id': section['id']
+        },
+        service_questions
+    )
+
+
+def _get_rows(section, service_data):
+    return list(
+        map(
+            lambda question: Attribute(
+                value=service_data.get(question['id'], None),
+                question_type=question['type'],
+                label=question['question'],
+                optional=question.get('optional', False)
+            ),
+            section['questions']
+        )
+    )
 
 
 def is_service_associated_with_supplier(service):
@@ -32,18 +59,40 @@ def get_formatted_section_data(section):
     only be accepted as files, since accepting URLs directly as form data
     requires additional validation.
 
+    Packs assurance back into a dict
+
     """
 
     section_data = {}
     for key in set(request.form) & set(get_section_questions(section)):
+
         if _is_list_type(key):
             section_data[key] = request.form.getlist(key)
         elif _is_boolean_type(key):
             section_data[key] = convert_to_boolean(request.form[key])
+        elif _is_numeric_type(key):
+            section_data[key] = convert_to_number(request.form[key])
         elif _is_not_upload(key):
             section_data[key] = request.form[key]
 
+        if _has_assurance(key):
+            section_data[key] = {
+                "value": section_data[key],
+                "assurance": request.form.get(key + '--assurance')
+            }
+
     return section_data
+
+
+def unformat_section_data(section_data):
+    """Unpacks assurance questions
+    """
+    unformatted_section_data = {}
+    for key in section_data:
+        if _has_assurance(key):
+            unformatted_section_data[key + '--assurance'] = section_data[key].get('assurance', '')
+            unformatted_section_data[key] = section_data[key]['value']
+    section_data.update(unformatted_section_data)
 
 
 def upload_draft_documents(service, request_files, section):
@@ -126,3 +175,13 @@ def _is_list_type(key):
 def _is_boolean_type(key):
     """Return True if a given key is a boolean type"""
     return new_service_content.get_question(key)['type'] == 'boolean'
+
+
+def _is_numeric_type(key):
+    """Return True if a given key is a numeric type"""
+    return new_service_content.get_question(key)['type'] == 'percentage'
+
+
+def _has_assurance(key):
+    """Return True if a question has an assurance component"""
+    return new_service_content.get_question(key).get('assuranceApproach', False)
