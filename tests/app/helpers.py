@@ -32,6 +32,7 @@ class BaseApplicationTest(object):
             "users": {
                 "id": id,
                 "emailAddress": email_address,
+                "name": "User Name",
                 "supplier": {
                     "supplierId": supplier_id,
                     "name": supplier_name,

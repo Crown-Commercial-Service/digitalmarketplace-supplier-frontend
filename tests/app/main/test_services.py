@@ -873,3 +873,41 @@ class TestDeleteDraftService(BaseApplicationTest):
             data={'delete_confirmed': 'true'})
 
         assert_equal(res.status_code, 404)
+
+
+@mock.patch('dmutils.s3.S3')
+class TestSubmissionDocuments(BaseApplicationTest):
+    def setup(self):
+        super(TestSubmissionDocuments, self).setup()
+        with self.app.test_client():
+            self.login()
+
+    def test_document_url(self, s3):
+        s3.return_value = mock.Mock()
+        s3.return_value.get_signed_url.return_value = 'http://example.com/document.pdf'
+
+        res = self.client.get(
+            '/suppliers/submission/documents/g-cloud-7/1234/document.pdf'
+        )
+
+        assert_equal(res.status_code, 302)
+        assert_equal(res.headers['Location'], 'http://example.com/document.pdf')
+
+    def test_missing_document_url(self, s3):
+        s3.return_value = mock.Mock()
+        s3.return_value.get_signed_url.return_value = None
+
+        res = self.client.get(
+            '/suppliers/submission/documents/g-cloud-7/1234/document.pdf'
+        )
+
+        assert_equal(res.status_code, 404)
+
+    def test_document_url_not_matching_user_supplier(self, s3):
+        s3.return_value = mock.Mock()
+
+        res = self.client.get(
+            '/suppliers/submission/documents/g-cloud-7/999/document.pdf'
+        )
+
+        assert_equal(res.status_code, 404)

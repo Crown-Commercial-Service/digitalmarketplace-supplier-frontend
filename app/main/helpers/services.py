@@ -125,6 +125,12 @@ def unformat_section_data(section_data):
     section_data.update(unformatted_section_data)
 
 
+def get_draft_document_url(document_path):
+    uploader = s3.S3(current_app.config['DM_G7_DRAFT_DOCUMENTS_BUCKET'])
+
+    return uploader.get_signed_url(document_path)
+
+
 def upload_draft_documents(service, request_files, section):
     request_files = request_files.to_dict(flat=True)
     files = _filter_keys(request_files, get_section_questions(section))
@@ -138,7 +144,7 @@ def upload_draft_documents(service, request_files, section):
 
     for field, contents in files.items():
         url = upload_document(
-            uploader, url_for('.service_submission_document', document='', _external=True),
+            uploader, url_for('.dashboard', _external=True) + '/submission/documents/',
             service, field, contents,
             public=False
         )
