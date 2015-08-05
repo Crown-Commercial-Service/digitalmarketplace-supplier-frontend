@@ -78,7 +78,7 @@ def get_formatted_section_data(section):
         if _has_assurance(key):
             section_data[key] = {
                 "value": section_data[key],
-                "assurance": request.form.get(key + '--assurance')
+                "assurance": request.form.get(key + '--assurance', '')
             }
 
     return section_data
