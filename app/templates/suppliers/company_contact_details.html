@@ -37,7 +37,9 @@ heading = "Company contact details"
             {%
             with
             question = "Contact name",
-            name = "contact-name"
+            name = "contact_name",
+            value = form.contact_name.data,
+            error = form.contact_name.errors[0]
             %}
             {% include "toolkit/forms/textbox.html" %}
             {% endwith %}
@@ -45,7 +47,9 @@ heading = "Company contact details"
             {%
             with
             question = "Email address",
-            name = "email-address"
+            name = "email_address",
+            value = form.email_address.data,
+            error = form.email_address.errors[0]
             %}
             {% include "toolkit/forms/textbox.html" %}
             {% endwith %}
@@ -53,7 +57,9 @@ heading = "Company contact details"
             {%
             with
             question = "Phone number",
-            name = "phone-number"
+            name = "phone_number",
+            value = form.phone_number.data,
+            error = form.phone_number.errors[0]
             %}
             {% include "toolkit/forms/textbox.html" %}
             {% endwith %}

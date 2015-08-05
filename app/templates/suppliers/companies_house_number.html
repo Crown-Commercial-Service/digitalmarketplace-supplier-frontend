@@ -37,7 +37,9 @@ heading = "Companies House number"
             {%
             with
             question = "",
-            name = "companies-house-number"
+            name = "companies_house_number",
+            value = form.companies_house_number.data,
+            error = form.companies_house_number.errors[0]
             %}
             {% include "toolkit/forms/textbox.html" %}
             {% endwith %}

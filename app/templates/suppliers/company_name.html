@@ -35,7 +35,9 @@ heading = "Company name"
             {%
             with
             question = "",
-            name = "company-name"
+            name = "company_name",
+            value = form.company_name.data,
+            error = form.company_name.errors[0]
             %}
             {% include "toolkit/forms/textbox.html" %}
             {% endwith %}

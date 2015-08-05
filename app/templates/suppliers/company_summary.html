@@ -37,33 +37,33 @@ heading = "Check your company information "
         ) %}
         {% call summary.row() %}
         {{ summary.field_name("DUNS number") }}
-        {{ summary.text("0129438498") }}
-        {{ summary.edit_link("Edit","/suppliers/duns-number") }}
+        {{ summary.text(session["duns_number"]) }}
+        {{ summary.edit_link("Edit", url_for(".duns_number")) }}
         {% endcall %}
         {% call summary.row() %}
         {{ summary.field_name("Companies House number") }}
-        {{ summary.text("0129438498") }}
-        {{ summary.edit_link("Edit","/suppliers/duns-number") }}
+        {{ summary.text(session["companies_house_number"]) }}
+        {{ summary.edit_link("Edit", url_for(".companies_house_number")) }}
         {% endcall %}
         {% call summary.row() %}
         {{ summary.field_name("Company name") }}
-        {{ summary.text("Big SI") }}
-        {{ summary.edit_link("Edit","/suppliers/duns-number") }}
+        {{ summary.text(session["company_name"]) }}
+        {{ summary.edit_link("Edit", url_for(".company_name")) }}
         {% endcall %}
         {% call summary.row() %}
         {{ summary.field_name("Primary contact name") }}
-        {{ summary.text("Harry Smith") }}
-        {{ summary.edit_link("Edit","/suppliers/company-contact-details") }}
+        {{ summary.text(session["contact_name"]) }}
+        {{ summary.edit_link("Edit", url_for(".company_contact_details")) }}
         {% endcall %}
         {% call summary.row() %}
         {{ summary.field_name("Primary contact email") }}
-        {{ summary.text("blah@blah.com") }}
-        {{ summary.edit_link("Edit","/suppliers/company-contact-details") }}
+        {{ summary.text(session["email_address"]) }}
+        {{ summary.edit_link("Edit", url_for(".company_contact_details")) }}
         {% endcall %}
         {% call summary.row() %}
         {{ summary.field_name("Primary contact phone number") }}
-        {{ summary.text("0129438498") }}
-        {{ summary.edit_link("Edit","/suppliers/company-contact-details") }}
+        {{ summary.text(session["phone_number"]) }}
+        {{ summary.edit_link("Edit", url_for(".company_contact_details")) }}
         {% endcall %}
         {% endcall %}
 

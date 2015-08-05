@@ -147,14 +147,30 @@ def submit_duns_number():
             **template_data
         ), 400
 
-
 @main.route('/companies-house-number', methods=['GET'])
 def companies_house_number():
+    template_data = main.config['BASE_TEMPLATE_DATA']
+    form = CompaniesHouseNumberForm()
+
+    if form.companies_house_number.name in session:
+        form.companies_house_number.data = session[form.companies_house_number.name]
+
+    return render_template(
+        "suppliers/companies_house_number.html",
+        form=form,
+        **template_data
+    ), 200
+
+
+@main.route('/companies-house-number', methods=['POST'])
+def submit_companies_house_number():
     form = CompaniesHouseNumberForm()
 
     template_data = main.config['BASE_TEMPLATE_DATA']
 
     if form.validate_on_submit():
+        session[form.companies_house_number.name] = form.companies_house_number.data
+        print session
         return redirect(url_for(".company_name"))
     else:
         return render_template(
@@ -164,13 +180,28 @@ def companies_house_number():
         ), 400
 
 
-
 @main.route('/company-name', methods=['GET'])
 def company_name():
+    template_data = main.config['BASE_TEMPLATE_DATA']
+    form = CompanyNameForm()
+
+    if form.company_name.name in session:
+        form.company_name.data = session[form.company_name.name]
+
+    return render_template(
+        "suppliers/company_name.html",
+        form=form,
+        **template_data
+    ), 200
+
+
+@main.route('/company-name', methods=['POST'])
+def submit_company_name():
     form = CompanyNameForm()
     template_data = main.config['BASE_TEMPLATE_DATA']
 
     if form.validate_on_submit():
+        session[form.company_name.name] = form.company_name.data
         return redirect(url_for(".company_contact_details"))
     else:
         return render_template(
@@ -179,13 +210,38 @@ def company_name():
             **template_data
         ), 400
 
+
 @main.route('/company-contact-details', methods=['GET'])
 def company_contact_details():
+    template_data = main.config['BASE_TEMPLATE_DATA']
+    form = CompanyContactDetailsForm()
+
+    if form.email_address.name in session:
+        form.email_address.data = session[form.email_address.name]
+
+    if form.phone_number.name in session:
+        form.phone_number.data = session[form.phone_number.name]
+
+    if form.contact_name.name in session:
+        form.contact_name.data = session[form.contact_name.name]
+
+    return render_template(
+        "suppliers/company_contact_details.html",
+        form=form,
+        **template_data
+    ), 200
+
+
+@main.route('/company-contact-details', methods=['POST'])
+def submit_company_contact_details():
     form = CompanyContactDetailsForm()
 
     template_data = main.config['BASE_TEMPLATE_DATA']
 
     if form.validate_on_submit():
+        session[form.email_address.name] = form.email_address.data
+        session[form.phone_number.name] = form.phone_number.data
+        session[form.contact_name.name] = form.contact_name.data
         return redirect(url_for(".company_summary"))
     else:
         return render_template(
