@@ -767,7 +767,7 @@ class TestDeleteDraftService(BaseApplicationTest):
         )
         res2 = self.client.get('/suppliers/submission/services/1?delete_requested=True')
         assert_in(
-            "Are you sure you want to delete this service?", res2.get_data()
+            b"Are you sure you want to delete this service?", res2.get_data()
         )
 
     def test_confirm_delete_button_deletes_and_redirects_to_dashboard(self, data_api_client):
