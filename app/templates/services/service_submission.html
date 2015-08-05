@@ -24,16 +24,18 @@
 
 {% block before_heading %}
   {% if delete_requested %}
-    <form action="{{ url_for('.delete_draft_service', service_id=service_id ) }}" method="POST">
-      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
-      <input type="hidden" name="delete_confirmed" value="true" />
-      <div class="banner-destructive-with-action">
-        <p class="banner-message">
-          Are you sure you want to delete this service?
-        </p>
-        <button class="button-destructive banner-action">Yes, delete {{ service_data['serviceName'] }}</button>
-      </div>
-    </form>
+    <div class="column-one-whole">
+      <form action="{{ url_for('.delete_draft_service', service_id=service_id ) }}" method="POST">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+        <input type="hidden" name="delete_confirmed" value="true" />
+        <div class="banner-destructive-with-action">
+          <p class="banner-message">
+            Are you sure you want to delete this service?
+          </p>
+          <button class="button-destructive banner-action">Yes, delete {{ service_data['serviceName'] }}</button>
+        </div>
+      </form>
+    </div>
   {% endif %}
 {% endblock %}
 
