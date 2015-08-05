@@ -11,6 +11,7 @@ from ..helpers.services import (
 from ... import data_api_client, flask_featureflags
 from dmutils.apiclient import APIError, HTTPError
 from dmutils.presenters import Presenters
+from dmutils.formats import format_service_price
 
 presenters = Presenters()
 
@@ -326,6 +327,7 @@ def view_service_submission(service_id):
     if not is_service_associated_with_supplier(draft):
         abort(404)
 
+    draft['priceString'] = format_service_price(draft)
     content = new_service_content.get_builder().filter(draft)
 
     delete_requested = True if request.args.get('delete_requested') else False
