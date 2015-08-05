@@ -5,12 +5,12 @@
 
 {% block breadcrumb %}
 {%
-with items = [
-{
-"link": "/",
-"label": "Digital Marketplace"
-}
-]
+  with items = [
+    {
+      "link": "/",
+      "label": "Digital Marketplace"
+    }
+  ]
 %}
 {% include "toolkit/breadcrumb.html" %}
 {% endwith %}
@@ -18,42 +18,42 @@ with items = [
 
 {% block main_content %}
 
-{%
-with
-heading = "DUNS number"
-%}
-{% include "toolkit/page-heading.html" %}
-{% endwith %}
+<div class="single-question-page">
+  {%
+  with
+  heading = "DUNS number"
+  %}
+  {% include "toolkit/page-heading.html" %}
+  {% endwith %}
 
-<div class="grid-row">
-
+  <div class="grid-row">
     <div class="column-two-thirds">
+      <div class="hint">
         <p>The Digital Marketplace uses your 9-digit DUNS number to see if you’re already a supplier on the G-Cloud
             framework.</p>
-
         <p><a href="http://www.dnb.co.uk/dandb-duns-number" rel="external">Find out how to get a DUNS number</a></p>
+      </div>
+      <form method="POST" action="{{ url_for('.duns_number') }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+          {%
+            with
+              question = "DUNS number",
+              name = "duns_number",
+              value = form.duns_number.data,
+              error = form.duns_number.errors[0]
+          %}
+          {% include "toolkit/forms/textbox.html" %}
+          {% endwith %}
 
-        <form method="POST" action="{{ url_for('.duns_number') }}">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-            {%
+          {%
             with
-            question = "",
-            name = "duns_number",
-            value = form.duns_number.data,
-            error = form.duns_number.errors[0]
-            %}
-            {% include "toolkit/forms/textbox.html" %}
-            {% endwith %}
-            {%
-            with
-            type = "save",
-            label = "Continue"
-            %}
-            {% include "toolkit/button.html" %}
-            {% endwith %}
-        </form>
-        </a>
+              type = "save",
+              label = "Continue"
+          %}
+          {% include "toolkit/button.html" %}
+          {% endwith %}
+      </form>
     </div>
+  </div>
 </div>
-
 {% endblock %}

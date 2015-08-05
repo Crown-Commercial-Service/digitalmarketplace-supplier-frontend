@@ -35,3 +35,24 @@ ol {
   margin-bottom: 5px;
 }
 
+// Styles specific to Digital Marketplace
+
+.check-list {
+  padding-bottom: 0;
+
+  @include media(tablet) {
+    padding-bottom: $gutter-half;
+  }
+
+  li {
+    margin-bottom: $gutter;
+
+    p {
+      margin: 0;
+    }
+
+    a {
+      word-wrap: break-word;
+    }
+  }
+}

@@ -5,12 +5,12 @@
 
 {% block breadcrumb %}
 {%
-with items = [
-{
-"link": "/",
-"label": "Digital Marketplace"
-}
-]
+  with items = [
+    {
+    "link": "/",
+    "label": "Digital Marketplace"
+    }
+  ]
 %}
 {% include "toolkit/breadcrumb.html" %}
 {% endwith %}
@@ -18,41 +18,41 @@ with items = [
 
 {% block main_content %}
 
-{%
-with
-heading = "Companies House number"
-%}
-{% include "toolkit/page-heading.html" %}
-{% endwith %}
+<div class="single-question-page">
+  {%
+    with
+      heading = "Companies House number"
+  %}
+  {% include "toolkit/page-heading.html" %}
+  {% endwith %}
 
-<div class="grid-row">
-
+  <div class="grid-row">
     <div class="column-two-thirds">
+      <div class="hint">
         <p>This is a unique 8-character number given to you by Companies House.</p>
-
         <p>Visit <a href="https://beta.companieshouse.gov.uk/" rel="external">https://beta.companieshouse.gov.uk</a> to get your number</p>
-
-        <form method="POST" action="{{ url_for('.companies_house_number') }}">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-            {%
-            with
-            question = "",
+      </div>
+      <form method="POST" action="{{ url_for('.companies_house_number') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+        {%
+          with
+            question = "Companies House number",
             name = "companies_house_number",
             value = form.companies_house_number.data,
             error = form.companies_house_number.errors[0]
-            %}
-            {% include "toolkit/forms/textbox.html" %}
-            {% endwith %}
-            {%
-            with
+        %}
+        {% include "toolkit/forms/textbox.html" %}
+        {% endwith %}
+        {%
+          with
             type = "save",
             label = "Continue"
-            %}
-            {% include "toolkit/button.html" %}
-            {% endwith %}
-        </form>
-        </a>
+        %}
+        {% include "toolkit/button.html" %}
+        {% endwith %}
+      </form>
     </div>
+  </div>
 </div>
 
 {% endblock %}

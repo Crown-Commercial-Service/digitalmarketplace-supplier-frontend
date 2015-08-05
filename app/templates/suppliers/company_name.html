@@ -5,12 +5,12 @@
 
 {% block breadcrumb %}
 {%
-with items = [
-{
-"link": "/",
-"label": "Digital Marketplace"
-}
-]
+  with items = [
+    {
+      "link": "/",
+      "label": "Digital Marketplace"
+    }
+  ]
 %}
 {% include "toolkit/breadcrumb.html" %}
 {% endwith %}
@@ -18,39 +18,40 @@ with items = [
 
 {% block main_content %}
 
-{%
-with
-heading = "Company name"
-%}
-{% include "toolkit/page-heading.html" %}
-{% endwith %}
-
-<div class="grid-row">
-
+<div class="single-question-page">
+  {%
+    with
+      heading = "Company name"
+  %}
+  {% include "toolkit/page-heading.html" %}
+  {% endwith %}
+  <div class="grid-row">
     <div class="column-two-thirds">
+      <div class="hint">
         <p>This is how buyers will see your name on the Digital Marketplace.</p>
-
-        <form method="POST" action="{{ url_for('.company_name') }}">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-            {%
-            with
-            question = "",
+      </div>
+      <form method="POST" action="{{ url_for('.company_name') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+        {%
+          with
+            question = "Company name",
             name = "company_name",
             value = form.company_name.data,
             error = form.company_name.errors[0]
             %}
-            {% include "toolkit/forms/textbox.html" %}
-            {% endwith %}
-            {%
-            with
+        {% include "toolkit/forms/textbox.html" %}
+
+        {% endwith %}
+        {%
+          with
             type = "save",
             label = "Continue"
-            %}
-            {% include "toolkit/button.html" %}
-            {% endwith %}
-        </form>
-        </a>
+        %}
+        {% include "toolkit/button.html" %}
+        {% endwith %}
+      </form>
     </div>
+  </div>
 </div>
 
 {% endblock %}
