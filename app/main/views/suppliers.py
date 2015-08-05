@@ -258,3 +258,12 @@ def company_summary():
         "suppliers/company_summary.html",
         **template_data
     ), 200
+
+
+@main.route('/company-summary', methods=['POST'])
+def submit_company_summary():
+    template_data = main.config['BASE_TEMPLATE_DATA']
+    return render_template(
+        "suppliers/company_summary.html",
+        **template_data
+    ), 200
