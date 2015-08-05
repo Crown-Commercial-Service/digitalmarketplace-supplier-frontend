@@ -10,6 +10,12 @@ from ...main import new_service_content
 
 
 def get_section_questions(section):
+    """Return the section question IDs as they are sent to the API"""
+    return price_question_filter(get_raw_section_questions(section))
+
+
+def get_raw_section_questions(section):
+    """Return the section question IDs as they appear in the question manifest"""
     return [question['id'] for question in section['questions']]
 
 
@@ -64,7 +70,7 @@ def get_formatted_section_data(section):
     """
 
     section_data = {}
-    for key in set(request.form) & set(get_section_questions(section)):
+    for key in set(request.form) & set(get_raw_section_questions(section)):
 
         if _is_list_type(key):
             section_data[key] = request.form.getlist(key)
@@ -72,6 +78,10 @@ def get_formatted_section_data(section):
             section_data[key] = convert_to_boolean(request.form[key])
         elif _is_numeric_type(key):
             section_data[key] = convert_to_number(request.form[key])
+        elif _is_pricing_type(key):
+            section_data.update(
+                expand_pricing_field(request.form.getlist(key))
+            )
         elif _is_not_upload(key):
             section_data[key] = request.form[key]
 
@@ -82,6 +92,26 @@ def get_formatted_section_data(section):
             }
 
     return section_data
+
+
+PRICE_FIELDS = ['priceMin', 'priceMax', 'priceUnit', 'priceInterval']
+
+
+def expand_pricing_field(pricing):
+    """Expand the priceString list into a dictionary"""
+    return {
+        field_name: pricing[i] for i, field_name in enumerate(PRICE_FIELDS)
+        if len(pricing[i]) > 0
+    }
+
+
+def price_question_filter(questions):
+    if any(map(_is_pricing_type, questions)):
+        questions = [
+            q for q in questions if not _is_pricing_type(q)
+        ] + PRICE_FIELDS
+
+    return questions
 
 
 def unformat_section_data(section_data):
@@ -129,6 +159,9 @@ def get_section_error_messages(errors, lot):
         else:
             if error == 'serviceTypes':
                 error = 'serviceTypes{}'.format(lot)
+            elif error in PRICE_FIELDS:
+                message_key = _rewrite_pricing_error_key(error, message_key)
+                error = 'priceString'
             validation_message = get_error_message(error, message_key, new_service_content)
             question_id = new_service_content.get_question(error)['id']
             errors_map[question_id] = {
@@ -137,6 +170,21 @@ def get_section_error_messages(errors, lot):
                 'message': validation_message
             }
     return errors_map
+
+
+def _rewrite_pricing_error_key(error, message_key):
+    """Return a rewritten error message_key for a pricing error"""
+    if message_key == 'answer_required':
+        if error == 'priceMin':
+            return 'no_min_price_specified'
+        elif error == 'priceUnit':
+            return 'no_unit_specified'
+    elif message_key == 'not_money_format':
+        if error == 'priceMin':
+            return 'min_price_not_a_number'
+        elif error == 'priceMax':
+            return 'max_price_not_a_number'
+    return message_key
 
 
 def get_error_message(field, message_key, content):
@@ -167,21 +215,27 @@ def _is_not_upload(key):
 
 def _is_list_type(key):
     """Return True if a given key is a list type"""
-    if key == 'serviceTypes':
-        return True
-    return new_service_content.get_question(key)['type'] in [
-        'list', 'checkboxes', 'pricing'
-    ]
+    return key == 'serviceTypes' or _is_type(key, 'list', 'checkboxes')
 
 
 def _is_boolean_type(key):
     """Return True if a given key is a boolean type"""
-    return new_service_content.get_question(key)['type'] == 'boolean'
+    return _is_type(key, 'boolean')
 
 
 def _is_numeric_type(key):
     """Return True if a given key is a numeric type"""
-    return new_service_content.get_question(key)['type'] == 'percentage'
+    return _is_type(key, 'percentage')
+
+
+def _is_pricing_type(key):
+    """Return True if a given key is a pricing type"""
+    return _is_type(key, 'pricing')
+
+
+def _is_type(key, *types):
+    """Return True if a given key is one of the provided types"""
+    return new_service_content.get_question(key)['type'] in types
 
 
 def _has_assurance(key):

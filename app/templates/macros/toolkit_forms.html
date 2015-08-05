@@ -107,13 +107,17 @@
   {%
     with
     name=question_content.id,
+    priceMin=service_data.priceMin,
+    priceMax=service_data.priceMax,
+    priceUnit=service_data.priceUnit,
+    priceInterval=service_data.priceInterval,
     value=service_data[question_content.id],
     question=question_content.question,
     hint=question_content.hint,
     id=question_content.id,
     error=errors.get(question_content.id)['message']
   %}
-    {% include "toolkit/forms/textbox.html" %}
+    {% include "toolkit/forms/pricing.html" %}
   {% endwith %}
 {%- endmacro %}
 
