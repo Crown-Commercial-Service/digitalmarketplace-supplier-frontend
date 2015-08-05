@@ -638,6 +638,26 @@ class TestEditDraftService(BaseApplicationTest):
             page_questions=['serviceDefinitionDocumentURL']
         )
 
+    def test_pricing_fields_are_added_correctly(self, data_api_client, s3):
+        data_api_client.get_draft_service.return_value = self.empty_draft
+        res = self.client.post(
+            '/suppliers/submission/services/1/edit/pricing',
+            data={
+                'priceString': ["10.10", "11.10", "Person", "Second"],
+            })
+
+        assert_equal(res.status_code, 302)
+        data_api_client.update_draft_service.assert_called_once_with(
+            '1',
+            {
+                'priceMin': "10.10", 'priceMax': "11.10", "priceUnit": "Person", 'priceInterval': 'Second',
+            },
+            'email@email.com',
+            page_questions=[
+                'vatIncluded', 'educationPricing',
+                'priceMin', 'priceMax', 'priceUnit', 'priceInterval'
+            ])
+
     def test_edit_non_existent_draft_service_returns_404(self, data_api_client, s3):
         data_api_client.get_draft_service.side_effect = HTTPError(mock.Mock(status_code=404))
         res = self.client.get('/suppliers/submission/services/1/edit/service_description')
@@ -716,6 +736,29 @@ class TestEditDraftService(BaseApplicationTest):
         assert_equal(
             "Your description must not be more than 50 words.",
             document.xpath('//span[@id="error-serviceSummary"]/text()')[0].strip())
+
+    def test_update_with_pricing_errors(self, data_api_client, s3):
+        cases = [
+            ('priceMin', 'answer_required', 'Minimum price requires an answer.'),
+            ('priceUnit', 'answer_required', "Pricing unit requires an answer. If none of the provided units apply, please choose 'Unit'."),  # noqa
+            ('priceMin', 'not_money_format', 'Prices must be numbers only, without units, eg 99.95'),
+            ('priceMax', 'not_money_format', 'Prices must be numbers only, without units, eg 99.95'),
+            ('priceMax', 'max_less_than_min', 'Minimum price must be less than maximum price'),
+        ]
+
+        for field, error, message in cases:
+            data_api_client.get_draft_service.return_value = self.empty_draft
+            data_api_client.update_draft_service.side_effect = HTTPError(
+                mock.Mock(status_code=400),
+                {field: error})
+            res = self.client.post(
+                '/suppliers/submission/services/1/edit/pricing',
+                data={})
+
+            assert_equal(res.status_code, 200)
+            document = html.fromstring(res.get_data(as_text=True))
+            assert_equal(
+                message, document.xpath('//span[@id="error-priceString"]/text()')[0].strip())
 
     def test_update_non_existent_draft_service_returns_404(self, data_api_client, s3):
         data_api_client.get_draft_service.side_effect = HTTPError(mock.Mock(status_code=404))
