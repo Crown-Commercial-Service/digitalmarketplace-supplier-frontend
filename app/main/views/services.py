@@ -276,6 +276,7 @@ def copy_draft_service(service_id):
 
     return redirect(url_for(".framework_dashboard"))
 
+
 @main.route('/submission/services/<string:service_id>/delete', methods=['POST'])
 @login_required
 @flask_featureflags.is_active_feature('GCLOUD7_OPEN')
@@ -285,18 +286,23 @@ def delete_draft_service(service_id):
     if not is_service_associated_with_supplier(draft):
         abort(404)
 
-    try:
-        data_api_client.delete_draft_service(
-            service_id,
-            current_user.email_address
-        )
+    if request.form.get('delete_confirmed', None) == 'true':
+        try:
+            data_api_client.delete_draft_service(
+                service_id,
+                current_user.email_address
+            )
+        except APIError as e:
+            abort(e.status_code)
 
-    except APIError as e:
-        abort(e.status_code)
+        flash({'service_name': draft.get('serviceName')}, 'service_deleted')
+        return redirect(url_for(".framework_dashboard"))
+    else:
+        return redirect(url_for(".view_service_submission",
+                                service_id=service_id,
+                                delete_requested=True)
+                        )
 
-    flash({'service_name': draft.get('serviceName')}, 'service_deleted')
-
-    return redirect(url_for(".framework_dashboard"))
 
 @main.route('/submission/documents/<path:document>', methods=['GET'])
 @login_required
@@ -322,11 +328,14 @@ def view_service_submission(service_id):
 
     content = new_service_content.get_builder().filter(draft)
 
+    delete_requested = True if request.args.get('delete_requested') else False
+
     return render_template(
         "services/service_submission.html",
         service_id=service_id,
         sections=get_service_attributes(draft, content),
         service_data=draft,
+        delete_requested=delete_requested,
         **main.config['BASE_TEMPLATE_DATA']), 200
 
 
