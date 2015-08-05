@@ -111,3 +111,11 @@ The supplier frontend runs on port 5003. Use the app at [http://127.0.0.1:5003/]
 
 To use feature flags, check out the documentation in (the README of)
 [digitalmarketplace-utils](https://github.com/alphagov/digitalmarketplace-utils#using-featureflags).
+
+### Running on Heroku
+
+- Setup the heroku command https://devcenter.heroku.com/articles/getting-started-with-python#set-up
+- Create the app with `heroku create`
+- Set the app to have a multi-buildpack with `heroku buildpacks:set https://github.com/ddollar/heroku-buildpack-multi.git`
+- Set environment variables with `heroku config:set`
+- Deploy the app with `git push heroku <your-branch>:master`
