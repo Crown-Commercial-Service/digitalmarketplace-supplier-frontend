@@ -276,6 +276,27 @@ def copy_draft_service(service_id):
 
     return redirect(url_for(".framework_dashboard"))
 
+@main.route('/submission/services/<string:service_id>/delete', methods=['POST'])
+@login_required
+@flask_featureflags.is_active_feature('GCLOUD7_OPEN')
+def delete_draft_service(service_id):
+    draft = data_api_client.get_draft_service(service_id).get('services')
+
+    if not is_service_associated_with_supplier(draft):
+        abort(404)
+
+    try:
+        data_api_client.delete_draft_service(
+            service_id,
+            current_user.email_address
+        )
+
+    except APIError as e:
+        abort(e.status_code)
+
+    flash({'service_name': draft.get('serviceName')}, 'service_deleted')
+
+    return redirect(url_for(".framework_dashboard"))
 
 @main.route('/submission/documents/<path:document>', methods=['GET'])
 @login_required
