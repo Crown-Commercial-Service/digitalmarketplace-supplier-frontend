@@ -299,3 +299,54 @@ class TestSupplierUpdate(BaseApplicationTest):
             res.location,
             "http://localhost/suppliers/login?next=%2Fsuppliers%2Fedit"
         )
+
+
+class TestCreateSupplier(BaseApplicationTest):
+
+    def test_should_be_an_error_if_no_duns_number(self):
+        res = self.client.post(
+            "/suppliers/duns-number",
+            data={}
+        )
+        assert_equal(res.status_code, 400)
+        assert_true("DUNS Number must be 9 digits" in res.get_data(as_text=True))
+
+    def test_should_be_an_error_if_no_duns_number_is_letters(self):
+        res = self.client.post(
+            "/suppliers/duns-number",
+            data={
+                'duns_number': "invalid"
+            }
+        )
+        assert_equal(res.status_code, 400)
+        assert_true("DUNS Number must be 9 digits" in res.get_data(as_text=True))
+
+    def test_should_be_an_error_if_no_duns_number_is_less_than_nine_digits(self):
+        res = self.client.post(
+            "/suppliers/duns-number",
+            data={
+                'duns_number': "99999999"
+            }
+        )
+        assert_equal(res.status_code, 400)
+        assert_true("DUNS Number must be 9 digits" in res.get_data(as_text=True))
+
+    def test_should_be_an_error_if_no_duns_number_is_more_than_nine_digits(self):
+        res = self.client.post(
+            "/suppliers/duns-number",
+            data={
+                'duns_number': "9999999999"
+            }
+        )
+        assert_equal(res.status_code, 400)
+        assert_true("DUNS Number must be 9 digits" in res.get_data(as_text=True))
+
+    def test_should_allow_nine_digit_duns_number(self):
+        res = self.client.post(
+            "/suppliers/duns-number",
+            data={
+                'duns_number': "999999999"
+            }
+        )
+        assert_equal(res.status_code, 302)
+        assert_equal(res.location, 'http://localhost/suppliers/companies-house-number')

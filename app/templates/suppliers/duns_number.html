@@ -38,7 +38,9 @@ heading = "DUNS number"
             {%
             with
             question = "",
-            name = "duns-number"
+            name = "duns_number",
+            value = form.duns_number.data,
+            error = form.duns_number.errors[0]
             %}
             {% include "toolkit/forms/textbox.html" %}
             {% endwith %}

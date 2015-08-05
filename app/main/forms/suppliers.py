@@ -1,6 +1,6 @@
 from flask.ext.wtf import Form
 from wtforms import IntegerField, StringField, FieldList
-from wtforms.validators import DataRequired, Email, ValidationError
+from wtforms.validators import DataRequired, Email, ValidationError, NumberRange, Length
 
 
 def word_length(limit=None, message=None):
@@ -47,14 +47,35 @@ class EditContactInformationForm(Form):
         DataRequired(message="Contact name can not be empty"),
     ])
 
-class DunsNumberForm(Form):
-    duns_number = IntegerField()
 
-class CompaniesHouseIdForm(Form):
-    duns_number = IntegerField()
+class DunsNumberForm(Form):
+    duns_number = IntegerField('DUNS Number', validators=[
+        DataRequired(message="DUNS Number must be 9 digits"),
+        NumberRange(min=100000000, max=999999999, message="DUNS Number must be 9 digits")
+    ])
+
+class CompaniesHouseNumberForm(Form):
+    companies_house_number = StringField('Companies house number', validators=[
+        Length(max=10, message="Companies house number must be under 10 characters")
+    ])
+
 
 class CompanyNameForm(Form):
-    duns_number = StringField()
+    company_name = StringField('Company name', validators=[
+        DataRequired(message="Company name is required"),
+        Length(max=255, message="Company name must be under 255 characters")
+    ])
 
-class CompanyContactDetails(Form):
-    duns_number = StringField()
+
+class CompanyContactDetailsForm(Form):
+    contactName = StringField('Contact name', validators=[
+        DataRequired(message="Contact name can not be empty"),
+        Length(max=255, message="Contact name must be under 255 characters")
+    ])
+    email = StringField('Email address', validators=[
+        DataRequired(message="Email can not be empty"),
+        Email(message="Please enter a valid email address")
+    ])
+    phoneNumber = StringField('Phone number', validators=[
+        Length(max=20, message="Contact name must be under 255 characters")
+    ])

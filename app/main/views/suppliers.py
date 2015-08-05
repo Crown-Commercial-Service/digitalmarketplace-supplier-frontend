@@ -1,4 +1,4 @@
-from flask import render_template, request, redirect, url_for, abort
+from flask import render_template, request, redirect, url_for, abort, session
 from flask_login import login_required, current_user
 
 from dmutils.apiclient import APIError
@@ -6,7 +6,8 @@ from dmutils import flask_featureflags
 
 from ...main import main
 from ... import data_api_client
-from ..forms.suppliers import EditSupplierForm, EditContactInformationForm
+from ..forms.suppliers import EditSupplierForm, EditContactInformationForm, \
+    DunsNumberForm, CompaniesHouseNumberForm, CompanyContactDetailsForm, CompanyNameForm
 from .users import get_current_suppliers_users
 
 
@@ -110,47 +111,94 @@ def update_supplier():
 @main.route('/create', methods=['GET'])
 def create_new_supplier():
     template_data = main.config['BASE_TEMPLATE_DATA']
-    return  render_template(
+    return render_template(
         "suppliers/create_new_supplier.html",
         **template_data
     ), 200
 
+
 @main.route('/duns-number', methods=['GET'])
 def duns_number():
     template_data = main.config['BASE_TEMPLATE_DATA']
-    return  render_template(
+    form = DunsNumberForm()
+
+    if form.duns_number.name in session:
+        form.duns_number.data = session[form.duns_number.name]
+
+    return render_template(
         "suppliers/duns_number.html",
+        form=form,
         **template_data
     ), 200
+
+
+@main.route('/duns-number', methods=['POST'])
+def submit_duns_number():
+    form = DunsNumberForm()
+    template_data = main.config['BASE_TEMPLATE_DATA']
+
+    if form.validate_on_submit():
+        session[form.duns_number.name] = form.duns_number.data
+        return redirect(url_for(".companies_house_number"))
+    else:
+        return render_template(
+            "suppliers/duns_number.html",
+            form=form,
+            **template_data
+        ), 400
+
 
 @main.route('/companies-house-number', methods=['GET'])
 def companies_house_number():
+    form = CompaniesHouseNumberForm()
+
     template_data = main.config['BASE_TEMPLATE_DATA']
-    return  render_template(
-        "suppliers/companies_house_number.html",
-        **template_data
-    ), 200
+
+    if form.validate_on_submit():
+        return redirect(url_for(".company_name"))
+    else:
+        return render_template(
+            "suppliers/companies_house_number.html",
+            form=form,
+            **template_data
+        ), 400
+
+
 
 @main.route('/company-name', methods=['GET'])
 def company_name():
+    form = CompanyNameForm()
     template_data = main.config['BASE_TEMPLATE_DATA']
-    return  render_template(
-        "suppliers/company_name.html",
-        **template_data
-    ), 200
+
+    if form.validate_on_submit():
+        return redirect(url_for(".company_contact_details"))
+    else:
+        return render_template(
+            "suppliers/company_name.html",
+            form=form,
+            **template_data
+        ), 400
 
 @main.route('/company-contact-details', methods=['GET'])
 def company_contact_details():
+    form = CompanyContactDetailsForm()
+
     template_data = main.config['BASE_TEMPLATE_DATA']
-    return  render_template(
-        "suppliers/company_contact_details.html",
-        **template_data
-    ), 200
+
+    if form.validate_on_submit():
+        return redirect(url_for(".company_summary"))
+    else:
+        return render_template(
+            "suppliers/company_contact_details.html",
+            form=form,
+            **template_data
+        ), 400
+
 
 @main.route('/company-summary', methods=['GET'])
 def company_summary():
     template_data = main.config['BASE_TEMPLATE_DATA']
-    return  render_template(
+    return render_template(
         "suppliers/company_summary.html",
         **template_data
     ), 200
