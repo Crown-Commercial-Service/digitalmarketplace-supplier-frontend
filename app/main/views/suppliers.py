@@ -8,7 +8,7 @@ from dmutils.email import send_email, generate_token, MandrillException
 from ...main import main
 from ... import data_api_client
 from ..forms.suppliers import EditSupplierForm, EditContactInformationForm, \
-    DunsNumberForm, CompaniesHouseNumberForm, CompanyContactDetailsForm, CompanyNameForm
+    DunsNumberForm, CompaniesHouseNumberForm, CompanyContactDetailsForm, CompanyNameForm, EmailAddressForm
 from .users import get_current_suppliers_users
 
 
@@ -262,6 +262,8 @@ def company_summary():
         **template_data
     ), 200
 
+def has_valid_create_supplier_session():
+    return True
 
 @main.route('/company-summary', methods=['POST'])
 def submit_company_summary():
@@ -313,6 +315,8 @@ def create_your_account():
     form = EmailAddressForm()
 
     template_data = main.config['BASE_TEMPLATE_DATA']
+    if has_valid_create_supplier_session():
+        return redirect(url_for('.create_your_account'), 302)
 
     return render_template(
         "suppliers/create_your_account.html",
@@ -395,5 +399,32 @@ def create_your_account_complete():
     return render_template(
         "suppliers/create_your_account_complete.html",
         email_address=email_address,
+        **template_data
+    ), 400
+
+
+@main.route('/create-your-account', methods=['GET'])
+def create_your_account():
+    form = EmailAddressForm()
+
+    template_data = main.config['BASE_TEMPLATE_DATA']
+
+    return render_template(
+        "suppliers/create_your_account.html",
+        form=form,
+        **template_data
+    ), 200
+
+@main.route('/create-your-account', methods=['POST'])
+def submit_create_your_account():
+    return redirect(url_for('.create_your_account_complete'), 302)
+
+
+@main.route('/create-your-account-complete', methods=['GET'])
+def create_your_account_complete():
+    template_data = main.config['BASE_TEMPLATE_DATA']
+
+    return render_template(
+        "suppliers/create_your_account_complete.html",
         **template_data
     ), 200

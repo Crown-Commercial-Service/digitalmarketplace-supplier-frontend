@@ -502,11 +502,9 @@ class TestCreateSupplier(BaseApplicationTest):
         assert_true("Phone number must be under 20 characters" in res.get_data(as_text=True))
 
     def test_should_show_multiple_errors(self):
-        twentyone = "a" * 21
         res = self.client.post(
             "/suppliers/company-contact-details",
-            data={
-            }
+            data={}
         )
         assert_equal(res.status_code, 400)
         assert_true("Phone number can not be empty" in res.get_data(as_text=True))

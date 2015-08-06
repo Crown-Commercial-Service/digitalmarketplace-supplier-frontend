@@ -1,0 +1,37 @@
+{% extends "_base_page.html" %}
+{% import "toolkit/summary-table.html" as summary %}
+
+{% block page_title %}Companies House - Create new supplier – Digital Marketplace{% endblock %}
+
+{% block breadcrumb %}
+{%
+  with items = [
+    {
+    "link": "/",
+    "label": "Digital Marketplace"
+    }
+  ]
+%}
+{% include "toolkit/breadcrumb.html" %}
+{% endwith %}
+{% endblock %}
+
+{% block main_content %}
+
+<div class="single-question-page">
+  {%
+    with
+      heading = "Check your inbox"
+  %}
+  {% include "toolkit/page-heading.html" %}
+  {% endwith %}
+
+  <div class="grid-row">
+    <div class="column-two-thirds">
+        <p>A validation email has been sent to your.name@company.com</p>
+        <p>Back to the <a href="/">Digital Marketplace</a></p>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

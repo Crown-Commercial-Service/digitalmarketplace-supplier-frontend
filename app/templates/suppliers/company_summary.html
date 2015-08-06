@@ -67,7 +67,7 @@
   {% endcall %}
   {% endcall %}
 </div>
-<form action="{{ url_for('.company_summary')}}" method="POST">
+<form action="{{ url_for('.submit_company_summary')}}" method="POST">
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
   {%
     with
