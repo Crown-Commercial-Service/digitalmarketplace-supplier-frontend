@@ -81,20 +81,8 @@
         field_headings_visible=False
       ) %}
         {% call summary.row() %}
-          {{ summary.field_name('Supplier summary') }}
-          {{ summary.text(supplier.description) }}
-        {% endcall %}
-        {% call summary.row() %}
-          {{ summary.field_name('Clients') }}
-          {{ summary.list(supplier.clients) }}
-        {% endcall %}
-        {% call summary.row() %}
           {{ summary.field_name('Contact name') }}
           {{ summary.text(supplier.contact.contactName) }}
-        {% endcall %}
-        {% call summary.row() %}
-          {{ summary.field_name('Website') }}
-          {{ summary.text(supplier.contact.website) }}
         {% endcall %}
         {% call summary.row() %}
           {{ summary.field_name('Email address') }}
@@ -103,6 +91,10 @@
         {% call summary.row() %}
           {{ summary.field_name('Phone number') }}
           {{ summary.text(supplier.contact.phoneNumber) }}
+        {% endcall %}
+        {% call summary.row() %}
+          {{ summary.field_name('Website') }}
+          {{ summary.text(supplier.contact.website) }}
         {% endcall %}
         {% call summary.row() %}
           {{ summary.field_name('Address') }}
@@ -120,6 +112,14 @@
               {% include "toolkit/contact-details.html" %}
             {% endwith %}
           {% endcall %}
+        {% endcall %}
+        {% call summary.row() %}
+          {{ summary.field_name('Supplier summary') }}
+          {{ summary.text(supplier.description) }}
+        {% endcall %}
+        {% call summary.row() %}
+          {{ summary.field_name('Clients') }}
+          {{ summary.list(supplier.clients) }}
         {% endcall %}
       {% endcall %}
     </div>
