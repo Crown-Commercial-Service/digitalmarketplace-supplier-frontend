@@ -1,3 +1,5 @@
+import copy
+
 try:
     from StringIO import StringIO
 except ImportError:
@@ -727,3 +729,66 @@ class TestEditDraftService(BaseApplicationTest):
             '/suppliers/submission/services/1/edit/invalid_section'
         )
         assert_equal(404, res.status_code)
+
+
+@mock.patch('app.main.views.services.data_api_client')
+class TestDeleteDraftService(BaseApplicationTest):
+
+    draft_to_delete = {
+        'services': {
+            'id': 1,
+            'supplierId': 1234,
+            'supplierName': "supplierName",
+            'lot': "SCS",
+            'status': "not-submitted",
+            'frameworkSlug': 'g-slug',
+            'frameworkName': "frameworkName",
+            'links': {},
+            'serviceName': 'My rubbish draft',
+            'serviceSummary': 'This is the worst service ever',
+            'updatedAt': "2015-06-29T15:26:07.650368Z"
+        }
+    }
+
+    def setup(self):
+        super(TestDeleteDraftService, self).setup()
+        with self.app.test_client():
+            self.login()
+
+    def test_delete_button_redirects_with_are_you_sure(self, data_api_client):
+        data_api_client.get_draft_service.return_value = self.draft_to_delete
+        res = self.client.post(
+            '/suppliers/submission/services/1/delete',
+            data={})
+        assert_equal(res.status_code, 302)
+        assert_equal(
+            res.location,
+            'http://localhost/suppliers/submission/services/1?delete_requested=True'
+        )
+        res2 = self.client.get('/suppliers/submission/services/1?delete_requested=True')
+        assert_in(
+            b"Are you sure you want to delete this service?", res2.get_data()
+        )
+
+    def test_confirm_delete_button_deletes_and_redirects_to_dashboard(self, data_api_client):
+        data_api_client.get_draft_service.return_value = self.draft_to_delete
+        res = self.client.post(
+            '/suppliers/submission/services/1/delete',
+            data={'delete_confirmed': 'true'})
+
+        data_api_client.delete_draft_service.assert_called_with('1', 'email@email.com')
+        assert_equal(res.status_code, 302)
+        assert_equal(
+            res.location,
+            'http://localhost/suppliers/frameworks/g-cloud-7'
+        )
+
+    def test_cannot_delete_other_suppliers_draft(self, data_api_client):
+        other_draft = copy.deepcopy(self.draft_to_delete)
+        other_draft['services']['supplierId'] = 12345
+        data_api_client.get_draft_service.return_value = other_draft
+        res = self.client.post(
+            '/suppliers/submission/services/1/delete',
+            data={'delete_confirmed': 'true'})
+
+        assert_equal(res.status_code, 404)

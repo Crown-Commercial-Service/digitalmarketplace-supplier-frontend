@@ -5,6 +5,7 @@
 
 {% block main_content %}
   <div class="grid-row">
+    {% block before_heading %}{% endblock %}
     <div class="column-two-thirds">
       {% with
         context = "Edit",
@@ -46,6 +47,7 @@
           {% endif %}
         {% endcall %}
       {% endfor %}
+      {% block after_sections %}{% endblock %}
     </div>
   </div>
 {% endblock %}

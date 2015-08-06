@@ -22,6 +22,41 @@
   {% endwith %}
 {% endblock %}
 
+{% block before_heading %}
+  {% if delete_requested %}
+    <div class="column-one-whole">
+      <form action="{{ url_for('.delete_draft_service', service_id=service_id ) }}" method="POST">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+        <input type="hidden" name="delete_confirmed" value="true" />
+        <div class="banner-destructive-with-action">
+          <p class="banner-message">
+            Are you sure you want to delete this service?
+          </p>
+          <button class="button-destructive banner-action">Yes, delete &ldquo;{{ service_data['serviceName'] }}&rdquo;</button>
+        </div>
+      </form>
+    </div>
+  {% endif %}
+{% endblock %}
+
 {% block edit_link %}
   {{ summary.top_link("Edit", url_for(".edit_service_submission", service_id=service_id, section_id=section.id)) }}
+{% endblock %}
+
+{% block after_sections %}
+  {% if not delete_requested %}
+    <div class="grid-row">
+      <div class="column-two-thirds">
+        &nbsp;
+      </div>
+      <div class="column-one-third delete-draft-button">
+        <form action="{{ url_for('.delete_draft_service', service_id=service_id ) }}" method="POST">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+          {% with type = "destructive", label = "Delete this service" %}
+            {% include "toolkit/button.html" %}
+          {% endwith %}
+        </form>
+      </div>
+    </div>
+  {% endif %}
 {% endblock %}
