@@ -6,7 +6,8 @@ from ..helpers.services import (
     get_formatted_section_data, unformat_section_data,
     get_section_questions, get_section_error_messages,
     is_service_modifiable, is_service_associated_with_supplier,
-    upload_draft_documents, get_service_attributes
+    upload_draft_documents, get_service_attributes,
+    get_draft_document_url
 )
 from ... import data_api_client, flask_featureflags
 from dmutils.apiclient import APIError, HTTPError
@@ -305,14 +306,18 @@ def delete_draft_service(service_id):
                         )
 
 
-@main.route('/submission/documents/<path:document>', methods=['GET'])
+@main.route('/submission/documents/<string:framework_slug>/<int:supplier_id>/<string:document_name>', methods=['GET'])
 @login_required
 @flask_featureflags.is_active_feature('GCLOUD7_OPEN')
-def service_submission_document(document):
-    return render_template(
-        "services/submission_document.html",
-        document=document,
-        **main.config['BASE_TEMPLATE_DATA']), 200
+def service_submission_document(framework_slug, supplier_id, document_name):
+    if current_user.supplier_id != supplier_id:
+        abort(404)
+
+    s3_url = get_draft_document_url("{}/{}/{}".format(framework_slug, supplier_id, document_name))
+    if not s3_url:
+        abort(404)
+
+    return redirect(s3_url)
 
 
 @main.route('/submission/services/<string:service_id>', methods=['GET'])
