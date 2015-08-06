@@ -741,8 +741,8 @@ class TestEditDraftService(BaseApplicationTest):
         cases = [
             ('priceMin', 'answer_required', 'Minimum price requires an answer.'),
             ('priceUnit', 'answer_required', "Pricing unit requires an answer. If none of the provided units apply, please choose 'Unit'."),  # noqa
-            ('priceMin', 'not_money_format', 'Prices must be numbers only, without units, eg 99.95'),
-            ('priceMax', 'not_money_format', 'Prices must be numbers only, without units, eg 99.95'),
+            ('priceMin', 'not_money_format', 'Minimum price must be a number, without units, eg 99.95'),
+            ('priceMax', 'not_money_format', 'Maximum price must be a number, without units, eg 99.95'),
             ('priceMax', 'max_less_than_min', 'Minimum price must be less than maximum price'),
         ]
 
