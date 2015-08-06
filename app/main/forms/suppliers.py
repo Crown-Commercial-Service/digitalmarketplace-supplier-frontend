@@ -1,6 +1,6 @@
 from flask.ext.wtf import Form
 from wtforms import IntegerField, StringField, FieldList
-from wtforms.validators import DataRequired, Email, ValidationError, NumberRange, Length
+from wtforms.validators import DataRequired, Email, ValidationError, NumberRange, Length, Optional
 
 
 def word_length(limit=None, message=None):
@@ -54,23 +54,25 @@ class DunsNumberForm(Form):
         NumberRange(min=100000000, max=999999999, message="DUNS Number must be 9 digits")
     ])
 
+
 class CompaniesHouseNumberForm(Form):
     companies_house_number = StringField('Companies house number', validators=[
-        Length(max=10, message="Companies house number must be under 10 characters")
+        Optional(),
+        Length(min=8, max=8, message="Companies house number must be 8 characters")
     ])
 
 
 class CompanyNameForm(Form):
     company_name = StringField('Company name', validators=[
         DataRequired(message="Company name is required"),
-        Length(max=255, message="Company name must be under 255 characters")
+        Length(max=255, message="Company name must be under 256 characters")
     ])
 
 
 class CompanyContactDetailsForm(Form):
     contact_name = StringField('Contact name', validators=[
         DataRequired(message="Contact name can not be empty"),
-        Length(max=255, message="Contact name must be under 255 characters")
+        Length(max=255, message="Contact name must be under 256 characters")
     ])
     email_address = StringField('Email address', validators=[
         DataRequired(message="Email can not be empty"),
@@ -78,5 +80,5 @@ class CompanyContactDetailsForm(Form):
     ])
     phone_number = StringField('Phone number', validators=[
         DataRequired(message="Phone number can not be empty"),
-        Length(max=20, message="Phone number must be under 10 characters")
+        Length(max=20, message="Phone number must be under 20 characters")
     ])

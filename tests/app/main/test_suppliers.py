@@ -350,3 +350,153 @@ class TestCreateSupplier(BaseApplicationTest):
         )
         assert_equal(res.status_code, 302)
         assert_equal(res.location, 'http://localhost/suppliers/companies-house-number')
+
+    def test_should_not_be_an_error_if_no_companies_house_number(self):
+        res = self.client.post(
+            "/suppliers/companies-house-number",
+            data={}
+        )
+        assert_equal(res.status_code, 302)
+        assert_equal(res.location, 'http://localhost/suppliers/company-name')
+
+    def test_should_be_an_error_if_companies_house_number_is_not_8_characters_short(self):
+        res = self.client.post(
+            "/suppliers/companies-house-number",
+            data={
+                'companies_house_number': "short"
+            }
+        )
+        assert_equal(res.status_code, 400)
+        assert_true("Companies house number must be 8 characters" in res.get_data(as_text=True))
+
+    def test_should_be_an_error_if_companies_house_number_is_not_8_characters_long(self):
+        res = self.client.post(
+            "/suppliers/companies-house-number",
+            data={
+                'companies_house_number': "muchtoolongtobecompanieshouse"
+            }
+        )
+        assert_equal(res.status_code, 400)
+        assert_true("Companies house number must be 8 characters" in res.get_data(as_text=True))
+
+    def test_should_allow_valid_companies_house_number(self):
+        res = self.client.post(
+            "/suppliers/companies-house-number",
+            data={
+                'companies_house_number': "SC001122"
+            }
+        )
+        assert_equal(res.status_code, 302)
+        assert_equal(res.location, 'http://localhost/suppliers/company-name')
+
+    def test_should_allow_valid_company_name(self):
+        res = self.client.post(
+            "/suppliers/company-name",
+            data={
+                'company_name': "My Company"
+            }
+        )
+        assert_equal(res.status_code, 302)
+        assert_equal(res.location, 'http://localhost/suppliers/company-contact-details')
+
+    def test_should_not_be_an_error_if_no_company_name(self):
+        res = self.client.post(
+            "/suppliers/company-name",
+            data={}
+        )
+        assert_equal(res.status_code, 400)
+        assert_true("Company name is required" in res.get_data(as_text=True))
+
+    def test_should_not_be_an_error_if_company_name_too_long(self):
+        twofiftysix = "a" * 256
+        res = self.client.post(
+            "/suppliers/company-name",
+            data={
+                'company_name': twofiftysix
+            }
+        )
+        assert_equal(res.status_code, 400)
+        assert_true("Company name must be under 256 characters" in res.get_data(as_text=True))
+
+    def test_should_allow_valid_company_contact_details(self):
+        res = self.client.post(
+            "/suppliers/company-contact-details",
+            data={
+                'contact_name': "Name",
+                'email_address': "name@email.com",
+                'phone_number': "999"
+            }
+        )
+        assert_equal(res.status_code, 302)
+        assert_equal(res.location, 'http://localhost/suppliers/company-summary')
+
+    def test_should_not_allow_contact_details_without_name(self):
+        res = self.client.post(
+            "/suppliers/company-contact-details",
+            data={
+                'email_address': "name@email.com",
+                'phone_number': "999"
+            }
+        )
+        assert_equal(res.status_code, 400)
+        assert_true("Contact name can not be empty" in res.get_data(as_text=True))
+
+    def test_should_not_allow_contact_details_with_too_long_name(self):
+        twofiftysix = "a" * 256
+        res = self.client.post(
+            "/suppliers/company-contact-details",
+            data={
+                'contact_name': twofiftysix,
+                'email_address': "name@email.com",
+                'phone_number': "999"
+            }
+        )
+        assert_equal(res.status_code, 400)
+        assert_true("Contact name must be under 256 characters" in res.get_data(as_text=True))
+
+    def test_should_not_allow_contact_details_without_email(self):
+        res = self.client.post(
+            "/suppliers/company-contact-details",
+            data={
+                'contact_name': "Name",
+                'phone_number': "999"
+            }
+        )
+        assert_equal(res.status_code, 400)
+        assert_true("Email can not be empty" in res.get_data(as_text=True))
+
+    def test_should_not_allow_contact_details_with_invalid_email(self):
+        res = self.client.post(
+            "/suppliers/company-contact-details",
+            data={
+                'contact_name': "Name",
+                'email_address': "notrightatall",
+                'phone_number': "999"
+            }
+        )
+        assert_equal(res.status_code, 400)
+        assert_true("Please enter a valid email address" in res.get_data(as_text=True))
+
+    def test_should_not_allow_contact_details_without_phone_number(self):
+        res = self.client.post(
+            "/suppliers/company-contact-details",
+            data={
+                'contact_name': "Name",
+                'email_address': "name@email.com"
+            }
+        )
+        assert_equal(res.status_code, 400)
+        assert_true("Phone number can not be empty" in res.get_data(as_text=True))
+
+    def test_should_not_allow_contact_details_with_invalid_phone_number(self):
+        twentyone = "a" * 21
+        res = self.client.post(
+            "/suppliers/company-contact-details",
+            data={
+                'contact_name': "Name",
+                'email_address': "name@email.com",
+                'phone_number': twentyone
+            }
+        )
+        assert_equal(res.status_code, 400)
+        assert_true("Phone number must be under 20 characters" in res.get_data(as_text=True))

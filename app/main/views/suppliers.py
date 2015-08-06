@@ -147,6 +147,7 @@ def submit_duns_number():
             **template_data
         ), 400
 
+
 @main.route('/companies-house-number', methods=['GET'])
 def companies_house_number():
     template_data = main.config['BASE_TEMPLATE_DATA']
