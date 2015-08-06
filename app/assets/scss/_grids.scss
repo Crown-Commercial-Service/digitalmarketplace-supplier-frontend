@@ -8,6 +8,10 @@
   @include grid-column( 1 );
 }
 
+.column-one-half {
+  @include grid-column( 1/2 );
+}
+
 .column-one-third {
   @include grid-column( 1/3 );
 }

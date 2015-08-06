@@ -20,12 +20,37 @@ def framework_dashboard():
             current_user.supplier_id,
             framework='g-cloud-7'
         )['services']
-
     except APIError as e:
         abort(e.status_code)
 
     return render_template(
         "frameworks/dashboard.html",
+        counts={
+            "draft": len(drafts),
+            "complete": 1,
+        },
+        declaration_made=False,
+        **template_data
+    ), 200
+
+
+@main.route('/frameworks/g-cloud-7/services', methods=['GET'])
+@login_required
+@flask_featureflags.is_active_feature('GCLOUD7_OPEN')
+def framework_services():
+    template_data = main.config['BASE_TEMPLATE_DATA']
+
+    try:
+        drafts = data_api_client.find_draft_services(
+            current_user.supplier_id,
+            framework='g-cloud-7'
+        )['services']
+
+    except APIError as e:
+        abort(e.status_code)
+
+    return render_template(
+        "frameworks/services.html",
         drafts=drafts,
         **template_data
     ), 200
