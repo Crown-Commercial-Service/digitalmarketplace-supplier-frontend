@@ -17,6 +17,7 @@ class Config(object):
     DM_DATA_API_URL = None
     DM_DATA_API_AUTH_TOKEN = None
     DM_MANDRILL_API_KEY = None
+    DM_CLARIFICATION_QUESTION_EMAIL = 'digitalmarketplace@mailinator.com'
 
     DM_G7_DRAFT_DOCUMENTS_BUCKET = None
     DM_G7_DRAFT_DOCUMENTS_URL = None
@@ -69,6 +70,7 @@ class Test(Config):
     DM_API_URL = 'http://localhost'
     WTF_CSRF_ENABLED = False
     SERVER_NAME = 'localhost'
+    DM_MANDRILL_API_KEY = 'MANDRILL'
 
     FEATURE_FLAGS_EDIT_SERVICE_PAGE = enabled_since('2015-06-03')
     FEATURE_FLAGS_SUPPLIER_DASHBOARD = enabled_since('2015-06-10')
