@@ -10,11 +10,6 @@
     - serviceName
     - serviceSummary
 -
-  name: Service definition
-  editable: true
-  questions:
-    - serviceDefinitionDocumentURL
--
   name: Service type
   editable: true
   questions:
@@ -37,26 +32,11 @@
     - trialOption
     - freeOption
 -
-  name: Pricing document
-  editable: true
-  questions:
-    - pricingDocumentURL
--
-  name: SFIA rate card
-  editable: true
-  questions:
-    - sfiaRateDocumentURL
--
   name: Terms and conditions
   editable: true
   questions:
     - terminationCost
     - minimumContractPeriod
--
-  name: Terms and conditions document
-  editable: true
-  questions:
-    - termsAndConditionsDocumentURL
 -
   name: Support
   editable: True
@@ -266,3 +246,23 @@
     - deviceAccessMethod
     - serviceConfigurationGuidance
     - trainingProvided
+-
+  name: Service definition
+  editable: true
+  questions:
+    - serviceDefinitionDocumentURL
+-
+  name: Terms and conditions document
+  editable: true
+  questions:
+    - termsAndConditionsDocumentURL
+-
+  name: Pricing document
+  editable: true
+  questions:
+    - pricingDocumentURL
+-
+  name: SFIA rate card
+  editable: true
+  questions:
+    - sfiaRateDocumentURL

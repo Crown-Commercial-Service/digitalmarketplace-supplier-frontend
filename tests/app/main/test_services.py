@@ -658,7 +658,7 @@ class TestEditDraftService(BaseApplicationTest):
             data={})
 
         assert_equal(302, res.status_code)
-        assert_equal('http://localhost/suppliers/submission/services/1/edit/service_definition',
+        assert_equal('http://localhost/suppliers/submission/services/1/edit/service_type',
                      res.headers['Location'])
 
     def test_update_redirects_to_edit_submission_if_no_next_editable_section(self, data_api_client, s3):
@@ -666,7 +666,7 @@ class TestEditDraftService(BaseApplicationTest):
         data_api_client.update_draft_service.return_value = None
 
         res = self.client.post(
-            '/suppliers/submission/services/1/edit/certifications',
+            '/suppliers/submission/services/1/edit/sfia_rate_card',
             data={})
 
         assert_equal(302, res.status_code)
