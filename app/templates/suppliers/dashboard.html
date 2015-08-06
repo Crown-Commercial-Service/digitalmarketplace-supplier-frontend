@@ -27,103 +27,94 @@
       {% endwith %}
     </div>
   </div>
-  <div class="grid-row">
-    <div class="column-one-whole">
 
-      {% if 'GCLOUD7_OPEN' is active_feature %}
+  {% if 'GCLOUD7_OPEN' is active_feature %}
+    {%
+      with
+      items = [{
+        "title": "Apply to become a G-Cloud 7 supplier and add services",
+        "link": url_for(".framework_dashboard"),
+        "body": "G-Cloud 7 is open for applications until 1 October 2015"
+      }]
+    %}
+      {% include "toolkit/browse-list.html" %}
+    {% endwith %}
+  {% endif %}
+
+  {{ summary.heading("Current services") }}
+  {% if supplier.service_counts %}
+    {{ summary.top_link('View', url_for('.list_services')) }}
+  {% endif %}
+  {% call(item) summary.list_table(
+    supplier.service_counts|dictsort,
+    caption='Supplier information',
+    field_headings=[
+      'Label',
+      'Value'
+    ],
+    field_headings_visible=False,
+    empty_message="You don't have any services on the Digital Marketplace"
+  ) %}
+    {% call summary.row() %}
+      {{ summary.field_name(item[0]) }}
+      {{ summary.text(item[1]|string + " services") }}
+    {% endcall %}
+  {% endcall %}
+
+  {{ summary.heading("Supplier information") }}
+  {% if 'EDIT_SUPPLIER_PAGE' is active_feature %}
+    {{ summary.top_link('Edit', url_for('.edit_supplier')) }}
+  {% endif %}
+  {% call(item) summary.mapping_table(
+    caption='Supplier information',
+    field_headings=[
+      'Label',
+      'Value'
+    ],
+    field_headings_visible=False
+  ) %}
+    {% call summary.row() %}
+      {{ summary.field_name('Contact name') }}
+      {{ summary.text(supplier.contact.contactName) }}
+    {% endcall %}
+    {% call summary.row() %}
+      {{ summary.field_name('Email address') }}
+      {{ summary.text(supplier.contact.email) }}
+    {% endcall %}
+    {% call summary.row() %}
+      {{ summary.field_name('Phone number') }}
+      {{ summary.text(supplier.contact.phoneNumber) }}
+    {% endcall %}
+    {% call summary.row() %}
+      {{ summary.field_name('Website') }}
+      {{ summary.text(supplier.contact.website) }}
+    {% endcall %}
+    {% call summary.row() %}
+      {{ summary.field_name('Address') }}
+      {% call summary.field() %}
         {%
           with
-          items = [{
-            "title": "Apply to become a G-Cloud 7 supplier and add services",
-            "link": url_for(".framework_dashboard"),
-            "body": "G-Cloud 7 is open for applications until 1 October 2015"
-          }]
+          without_spacing = true,
+          postcode = supplier.contact.get("postcode"),
+          street_address = True,
+          street_address_line_1 = supplier.contact.get("address1"),
+          street_address_line_2 = supplier.contact.get("address2"),
+          locality = supplier.contact.get("city"),
+          country = supplier.contact.get("country")
         %}
-          {% include "toolkit/browse-list.html" %}
+          {% include "toolkit/contact-details.html" %}
         {% endwith %}
-      {% endif %}
-
-      {{ summary.heading("Current services") }}
-      {% if supplier.service_counts %}
-        {{ summary.top_link('View', url_for('.list_services')) }}
-      {% endif %}
-      {% call(item) summary.list_table(
-        supplier.service_counts|dictsort,
-        caption='Supplier information',
-        field_headings=[
-          'Label',
-          'Value'
-        ],
-        field_headings_visible=False,
-        empty_message="You don't have any services on the Digital Marketplace"
-      ) %}
-        {% call summary.row() %}
-          {{ summary.field_name(item[0]) }}
-          {{ summary.text(item[1]|string + " services") }}
-        {% endcall %}
       {% endcall %}
-
-    </div>
-  </div>
-
-  <div class="grid-row">
-    <div class="column-one-whole">
-      {{ summary.heading("Supplier information") }}
-      {% if 'EDIT_SUPPLIER_PAGE' is active_feature %}
-        {{ summary.top_link('Edit', url_for('.edit_supplier')) }}
-      {% endif %}
-      {% call(item) summary.mapping_table(
-        caption='Supplier information',
-        field_headings=[
-          'Label',
-          'Value'
-        ],
-        field_headings_visible=False
-      ) %}
-        {% call summary.row() %}
-          {{ summary.field_name('Contact name') }}
-          {{ summary.text(supplier.contact.contactName) }}
-        {% endcall %}
-        {% call summary.row() %}
-          {{ summary.field_name('Email address') }}
-          {{ summary.text(supplier.contact.email) }}
-        {% endcall %}
-        {% call summary.row() %}
-          {{ summary.field_name('Phone number') }}
-          {{ summary.text(supplier.contact.phoneNumber) }}
-        {% endcall %}
-        {% call summary.row() %}
-          {{ summary.field_name('Website') }}
-          {{ summary.text(supplier.contact.website) }}
-        {% endcall %}
-        {% call summary.row() %}
-          {{ summary.field_name('Address') }}
-          {% call summary.field() %}
-            {%
-              with
-              without_spacing = true,
-              postcode = supplier.contact.get("postcode"),
-              street_address = True,
-              street_address_line_1 = supplier.contact.get("address1"),
-              street_address_line_2 = supplier.contact.get("address2"),
-              locality = supplier.contact.get("city"),
-              country = supplier.contact.get("country")
-            %}
-              {% include "toolkit/contact-details.html" %}
-            {% endwith %}
-          {% endcall %}
-        {% endcall %}
-        {% call summary.row() %}
-          {{ summary.field_name('Supplier summary') }}
-          {{ summary.text(supplier.description) }}
-        {% endcall %}
-        {% call summary.row() %}
-          {{ summary.field_name('Clients') }}
-          {{ summary.list(supplier.clients) }}
-        {% endcall %}
-      {% endcall %}
-    </div>
-  </div>
+    {% endcall %}
+    {% call summary.row() %}
+      {{ summary.field_name('Supplier summary') }}
+      {{ summary.text(supplier.description) }}
+    {% endcall %}
+    {% call summary.row() %}
+      {{ summary.field_name('Clients') }}
+      {{ summary.list(supplier.clients) }}
+    {% endcall %}
+  {% endcall %}
 
   {{ summary.heading("Contributors") }}
   {% if 'USER_DASHBOARD' is active_feature %}
@@ -143,26 +134,23 @@
       {{ summary.text(item.emailAddress) }}
     {% endcall %}
   {% endcall %}
-  <div class="grid-row">
-    <div class="column-one-whole">
-      {{ summary.heading("Account information") }}
-      {% call(item) summary.table(
-        [
-          ("Email address", current_user.email_address)
-        ],
-        caption="Account information",
-        field_headings=[
-          "Label",
-          "Value"
-        ],
-        field_headings_visible=False
-      ) %}
-        {% call summary.row() %}
-          {{ summary.field_name(item[0]) }}
-          {{ summary.text(item[1]) }}
-        {% endcall %}
-      {% endcall %}
-    </div>
-  </div>
+
+  {{ summary.heading("Account information") }}
+  {% call(item) summary.table(
+    [
+      ("Email address", current_user.email_address)
+    ],
+    caption="Account information",
+    field_headings=[
+      "Label",
+      "Value"
+    ],
+    field_headings_visible=False
+  ) %}
+    {% call summary.row() %}
+      {{ summary.field_name(item[0]) }}
+      {{ summary.text(item[1]) }}
+    {% endcall %}
+  {% endcall %}
 
 {% endblock %}
