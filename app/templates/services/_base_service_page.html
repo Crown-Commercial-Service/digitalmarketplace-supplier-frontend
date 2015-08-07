@@ -1,6 +1,6 @@
 {% extends "_base_page.html" %}
 
-{% block page_title %}{{service_data['serviceName']}} – Digital Marketplace{% endblock %}
+{% block page_title %}{{service_data['serviceName'] or 'New service'}} – Digital Marketplace{% endblock %}
 
 {% block main_content %}
   <div class="grid-row">
@@ -8,7 +8,7 @@
     <div class="column-two-thirds">
       {% with
         context = "Edit",
-        heading = service_data['serviceName'],
+        heading = service_data['serviceName'] or 'New service',
         smaller = true
       %}
         {% include "toolkit/page-heading.html" %}
