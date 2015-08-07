@@ -61,7 +61,7 @@ def framework_supplier_declaration():
             answers = {}
 
     return render_template(
-        "services/edit_declaration_section.html",
+        "frameworks/edit_declaration_section.html",
         sections=declaration_content.get_builder(),
         service_data=answers,
         **template_data
