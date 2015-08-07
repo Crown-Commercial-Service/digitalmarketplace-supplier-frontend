@@ -1,4 +1,4 @@
-from flask import render_template, request, abort, flash
+from flask import render_template, request, abort, flash, redirect, url_for
 from flask_login import login_required, current_user
 
 from dmutils.apiclient import APIError
@@ -48,6 +48,7 @@ def framework_supplier_declaration():
                 current_user.email_address
             )
             flash('questions_updated')
+            return redirect(url_for('.framework_dashboard'))
         except APIError as e:
             abort(e.status_code)
     else:
