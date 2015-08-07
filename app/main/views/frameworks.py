@@ -39,12 +39,12 @@ def framework_supplier_declaration():
     template_data = main.config['BASE_TEMPLATE_DATA']
 
     if request.method == 'POST':
-        data = declaration_content.get_builder().get_all_data(request.form)
+        answers = declaration_content.get_builder().get_all_data(request.form)
         try:
             data_api_client.answer_selection_questions(
                 current_user.supplier_id,
                 'g-cloud-7',
-                data,
+                answers,
                 current_user.email_address
             )
             flash('questions_updated')
@@ -63,7 +63,7 @@ def framework_supplier_declaration():
     return render_template(
         "services/edit_declaration_section.html",
         sections=declaration_content.get_builder(),
-        service_data={},
+        service_data=answers,
         **template_data
     ), 200
 
