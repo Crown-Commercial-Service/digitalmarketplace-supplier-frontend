@@ -484,7 +484,7 @@ class TestInviteUser(BaseApplicationTest):
     def test_should_call_generate_token_with_correct_params(self, send_email, generate_token):
         with self.app.app_context():
 
-            self.app.config['SECRET_KEY'] = "KEY"
+            self.app.config['SHARED_EMAIL_KEY'] = "KEY"
             self.app.config['INVITE_EMAIL_SALT'] = "SALT"
 
             self.login()
@@ -596,7 +596,7 @@ class TestInviteUser(BaseApplicationTest):
                 {
                     'this_is_not_expected': 1234
                 },
-                self.app.config['SECRET_KEY'],
+                self.app.config['SHARED_EMAIL_KEY'],
                 self.app.config['INVITE_EMAIL_SALT']
             )
 
@@ -635,7 +635,7 @@ class TestInviteUser(BaseApplicationTest):
                     'supplier_name': 'Supplier Name',
                     'email_address': 'testme@email.com'
                 },
-                self.app.config['SECRET_KEY'],
+                self.app.config['SHARED_EMAIL_KEY'],
                 self.app.config['INVITE_EMAIL_SALT']
             )
 
@@ -679,7 +679,7 @@ class TestInviteUser(BaseApplicationTest):
                     'supplier_name': 'Supplier Name',
                     'email_address': 'testme@email.com'
                 },
-                self.app.config['SECRET_KEY'],
+                self.app.config['SHARED_EMAIL_KEY'],
                 self.app.config['INVITE_EMAIL_SALT']
             )
 
@@ -746,7 +746,7 @@ class TestInviteUser(BaseApplicationTest):
                     'supplier_name': 'Supplier Name',
                     'email_address': 'testme@email.com'
                 },
-                self.app.config['SECRET_KEY'],
+                self.app.config['SHARED_EMAIL_KEY'],
                 self.app.config['INVITE_EMAIL_SALT']
             )
 
@@ -777,7 +777,7 @@ class TestInviteUser(BaseApplicationTest):
                     'supplier_name': 'Supplier Name',
                     'email_address': 'testme@email.com'
                 },
-                self.app.config['SECRET_KEY'],
+                self.app.config['SHARED_EMAIL_KEY'],
                 self.app.config['INVITE_EMAIL_SALT']
             )
 
@@ -808,7 +808,7 @@ class TestInviteUser(BaseApplicationTest):
                     'supplier_name': 'Supplier Name',
                     'email_address': 'testme@email.com'
                 },
-                self.app.config['SECRET_KEY'],
+                self.app.config['SHARED_EMAIL_KEY'],
                 self.app.config['INVITE_EMAIL_SALT']
             )
 
@@ -843,7 +843,7 @@ class TestInviteUser(BaseApplicationTest):
                     'supplier_name': 'Supplier Name',
                     'email_address': 'testme@email.com'
                 },
-                self.app.config['SECRET_KEY'],
+                self.app.config['SHARED_EMAIL_KEY'],
                 self.app.config['INVITE_EMAIL_SALT']
             )
 

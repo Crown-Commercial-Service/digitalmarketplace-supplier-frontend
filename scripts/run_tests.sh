@@ -8,6 +8,7 @@
 # Use default environment vars for localhost if not already set
 export DM_DATA_API_AUTH_TOKEN=${DM_DATA_API_AUTH_TOKEN:=myToken}
 export DM_PASSWORD_SECRET_KEY=${DM_PASSWORD_SECRET_KEY:=not_very_secret}
+export DM_PASSWORD_SHARED_EMAIL_KEY=${DM_PASSWORD_SECRET_KEY:=not_very_secret}
 
 echo "Environment variables in use:"
 env | grep DM_

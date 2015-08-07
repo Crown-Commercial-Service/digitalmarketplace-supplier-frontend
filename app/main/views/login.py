@@ -308,7 +308,7 @@ def send_invite_user():
                 "supplier_name": current_user.supplier_name,
                 "email_address": form.email_address.data
             },
-            current_app.config['SECRET_KEY'],
+            current_app.config['SHARED_EMAIL_KEY'],
             current_app.config['INVITE_EMAIL_SALT']
         )
 
@@ -387,7 +387,7 @@ def decode_invitation_token(encoded_token):
     try:
         token, timestamp = decode_token(
             encoded_token,
-            current_app.config['SECRET_KEY'],
+            current_app.config['SHARED_EMAIL_KEY'],
             current_app.config['INVITE_EMAIL_SALT']
         )
         if not token.get('email_address', None):
