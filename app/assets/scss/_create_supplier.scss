@@ -19,4 +19,9 @@
   .summary-item-field {
     @include core-19;
   }
+
+  .banner-warning-without-action {
+    margin-top: 0;
+    margin-bottom: $gutter;
+  }
 }

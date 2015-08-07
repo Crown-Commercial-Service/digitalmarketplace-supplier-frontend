@@ -27,6 +27,18 @@
 
 
 <div class="company-information-summary">
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      {% for category, message in messages %}
+      <div class="banner-warning-without-action">
+        <p class="banner-message">
+          Please complete all fields
+        </p>
+      </div>
+      {% endfor %}
+    {% endif %}
+  {% endwith %}
+
   {% call summary.mapping_table(
     caption="Summary table with content field as list",
     field_headings=[
@@ -77,4 +89,4 @@
   {% include "toolkit/button.html" %}
   {% endwith %}
 </form>
-{% endblock %}
+{% endblock %
