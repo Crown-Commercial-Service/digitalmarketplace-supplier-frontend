@@ -10,7 +10,7 @@ from dmutils.user import User
 
 from config import configs
 
-from jinja2 import evalcontextfilter, Markup, escape
+from jinja2 import Markup, escape
 from flask import Markup
 from markdown import markdown
 
@@ -56,12 +56,6 @@ def create_app(config_name):
     def refresh_session():
         session.permanent = True
         session.modified = True
-
-    @application.template_filter()
-    @evalcontextfilter
-    def nl2br(eval_ctx, value):
-        result = value.replace('\n', '<br>\n')
-        return Markup(result)
 
     @application.template_filter('markdown')
     def markdown_filter(data):
