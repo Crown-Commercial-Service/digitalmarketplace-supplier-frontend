@@ -9,6 +9,11 @@ from dmutils.content_loader import PRICE_FIELDS
 
 from ...main import new_service_content
 
+try:
+    import urlparse
+except ImportError:
+    import urllib.parse as urlparse
+
 
 def get_service_attributes(service_data, service_questions):
     return map(
@@ -58,7 +63,11 @@ def unformat_section_data(section_data):
 def get_draft_document_url(document_path):
     uploader = s3.S3(current_app.config['DM_G7_DRAFT_DOCUMENTS_BUCKET'])
 
-    return uploader.get_signed_url(document_path)
+    url = uploader.get_signed_url(document_path)
+    if url is not None:
+        url = urlparse.urlparse(url)
+        base_url = urlparse.urlparse(current_app.config['DM_G7_DRAFT_DOCUMENTS_URL'])
+        return url._replace(netloc=base_url.netloc, scheme=base_url.scheme).geturl()
 
 
 def upload_draft_documents(service, request_files, section):

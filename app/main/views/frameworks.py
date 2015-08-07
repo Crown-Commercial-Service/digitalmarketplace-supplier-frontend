@@ -3,10 +3,10 @@ from flask_login import login_required, current_user
 
 from dmutils.apiclient import APIError
 from dmutils import flask_featureflags
-from dmutils.content_loader import ContentBuilder
 
 from ...main import main, declaration_content
 from ... import data_api_client
+from ..helpers.services import get_draft_document_url
 
 
 @main.route('/frameworks/g-cloud-7', methods=['GET'])
@@ -92,6 +92,17 @@ def framework_supplier_declaration():
         service_data=answers,
         **template_data
     ), 200
+
+
+@main.route('/frameworks/g-cloud-7/download-supplier-pack', methods=['GET', 'POST'])
+@login_required
+@flask_featureflags.is_active_feature('GCLOUD7_OPEN')
+def download_supplier_pack():
+    url = get_draft_document_url('g-cloud-7-supplier-pack.zip')
+    if not url:
+        abort(404)
+
+    return redirect(url)
 
 
 @main.route('/frameworks/g-cloud-7/ask-a-question', methods=['GET', 'POST'])

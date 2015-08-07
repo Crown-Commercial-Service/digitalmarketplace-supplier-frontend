@@ -17,7 +17,10 @@ class Config(object):
     DM_DATA_API_URL = None
     DM_DATA_API_AUTH_TOKEN = None
     DM_MANDRILL_API_KEY = None
+
     DM_G7_DRAFT_DOCUMENTS_BUCKET = None
+    DM_G7_DRAFT_DOCUMENTS_URL = None
+
     DEBUG = False
 
     RESET_PASSWORD_EMAIL_NAME = 'Digital Marketplace Admin'
