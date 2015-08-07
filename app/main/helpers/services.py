@@ -5,8 +5,7 @@ from dmutils.config import convert_to_boolean, convert_to_number
 from dmutils import s3
 from dmutils.documents import filter_empty_files, validate_documents, upload_document
 from dmutils.service_attribute import Attribute
-
-from ...main import new_service_content
+from app.main import new_service_content
 
 
 def get_section_questions(section):
