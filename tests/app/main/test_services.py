@@ -70,6 +70,7 @@ class TestListServices(BaseApplicationTest):
                 "email@email.com",
                 1234,
                 'Supplier Name',
+                'User name',
                 active=False
             )
 
