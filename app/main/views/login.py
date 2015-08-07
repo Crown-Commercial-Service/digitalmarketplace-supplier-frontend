@@ -333,7 +333,7 @@ def send_invite_user():
         except MandrillException as e:
             current_app.logger.error(
                 "Invitation email failed to send error {} to {} supplier {} supplier id {} ".format(
-                    e.message,
+                    str(e),
                     form.email_address.data,
                     current_user.supplier_name,
                     current_user.supplier_id)
@@ -398,13 +398,13 @@ def decode_invitation_token(encoded_token):
             raise ValueError('Missing supplier name from token')
         return token
     except SignatureExpired as e:
-        current_app.logger.info("Invitation attempt with expired token. {}".format(e.message))
+        current_app.logger.info("Invitation attempt with expired token. {}".format(str(e)))
         return None
     except BadSignature as e:
-        current_app.logger.info("Invitation reset attempt with expired token. {}".format(e.message))
+        current_app.logger.info("Invitation reset attempt with expired token. {}".format(str(e)))
         return None
     except ValueError as e:
-        current_app.logger.info(e.message)
+        current_app.logger.info(str(e))
         return None
 
 
