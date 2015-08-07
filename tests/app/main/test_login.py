@@ -440,7 +440,7 @@ class TestInviteUser(BaseApplicationTest):
                     'email_address': 'invalid'
                 }
             )
-            assert_true("Please enter a valid email address" in res.get_data())
+            assert_true("Please enter a valid email address" in res.get_data(as_text=True))
             assert_equal(res.status_code, 400)
 
     def test_should_be_an_error_for_missing_email(self):
@@ -450,7 +450,7 @@ class TestInviteUser(BaseApplicationTest):
                 '/suppliers/invite-user',
                 data={}
             )
-            assert_true("Email can not be empty" in res.get_data())
+            assert_true("Email can not be empty" in res.get_data(as_text=True))
             assert_equal(res.status_code, 400)
 
     @mock.patch('app.main.views.login.send_email')
@@ -477,7 +477,7 @@ class TestInviteUser(BaseApplicationTest):
                 },
                 follow_redirects=True)
             assert_equal(res.status_code, 200)
-            assert_true("User invited" in res.get_data())
+            assert_true("User invited" in res.get_data(as_text=True))
 
     @mock.patch('app.main.views.login.generate_token')
     @mock.patch('app.main.views.login.send_email')
@@ -713,11 +713,11 @@ class TestInviteUser(BaseApplicationTest):
 
             assert_equal(res.status_code, 400)
             assert_equal(
-                "Check you&#146;ve entered the correct link or ask the person who invited you to send a new invitation." in res.get_data(),  # noqa
+                "Check you&#146;ve entered the correct link or ask the person who invited you to send a new invitation." in res.get_data(as_text=True),  # noqa
                 True
             )
             assert_equal(
-                '<button class="button-save">Create contributor account</button>' in res.get_data(),
+                '<button class="button-save">Create contributor account</button>' in res.get_data(as_text=True),
                 False
             )
 
@@ -729,11 +729,11 @@ class TestInviteUser(BaseApplicationTest):
 
             assert_equal(res.status_code, 400)
             assert_equal(
-                "Check you&#146;ve entered the correct link or ask the person who invited you to send a new invitation." in res.get_data(),  # noqa
+                "Check you&#146;ve entered the correct link or ask the person who invited you to send a new invitation." in res.get_data(as_text=True),  # noqa
                 True
             )
             assert_equal(
-                '<button class="button-save">Update user</button>' in res.get_data(),  # noqa
+                '<button class="button-save">Update user</button>' in res.get_data(as_text=True),  # noqa
                 False
             )
 
@@ -760,11 +760,11 @@ class TestInviteUser(BaseApplicationTest):
 
             assert_equal(res.status_code, 400)
             assert_equal(
-                "Please enter a password" in res.get_data(),
+                "Please enter a password" in res.get_data(as_text=True),
                 True
             )
             assert_equal(
-                "Please enter a name" in res.get_data(),
+                "Please enter a name" in res.get_data(as_text=True),
                 True
             )
 
@@ -791,11 +791,11 @@ class TestInviteUser(BaseApplicationTest):
 
             assert_equal(res.status_code, 400)
             assert_equal(
-                "Please enter a name" in res.get_data(),
+                "Please enter a name" in res.get_data(as_text=True),
                 True
             )
             assert_equal(
-                "Passwords must be between 10 and 50 characters" in res.get_data(),
+                "Passwords must be between 10 and 50 characters" in res.get_data(as_text=True),
                 True
             )
 
@@ -825,11 +825,11 @@ class TestInviteUser(BaseApplicationTest):
 
             assert_equal(res.status_code, 400)
             assert_equal(
-                "Names must be between 1 and 255 characters" in res.get_data(),
+                "Names must be between 1 and 255 characters" in res.get_data(as_text=True),
                 True
             )
             assert_equal(
-                "Passwords must be between 10 and 50 characters" in res.get_data(),
+                "Passwords must be between 10 and 50 characters" in res.get_data(as_text=True),
                 True
             )
 

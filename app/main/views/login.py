@@ -115,7 +115,7 @@ def send_reset_password_email():
                     ["password-resets"]
                 )
             except MandrillException as e:
-                current_app.logger.error("Email failed to send {}".format(e.message))
+                current_app.logger.error("Email failed to send {}".format(str(e)))
                 abort(503, "Failed to send password reset")
 
             message = "login.reset-email.sent: " \
