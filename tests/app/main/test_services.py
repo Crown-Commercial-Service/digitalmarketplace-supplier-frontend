@@ -861,7 +861,7 @@ class TestDeleteDraftService(BaseApplicationTest):
         assert_equal(res.status_code, 302)
         assert_equal(
             res.location,
-            'http://localhost/suppliers/frameworks/g-cloud-7'
+            'http://localhost/suppliers/frameworks/g-cloud-7/services'
         )
 
     def test_cannot_delete_other_suppliers_draft(self, data_api_client):

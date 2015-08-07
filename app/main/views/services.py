@@ -276,7 +276,7 @@ def copy_draft_service(service_id):
 
     flash({'service_name': draft.get('serviceName')}, 'service_copied')
 
-    return redirect(url_for(".framework_dashboard"))
+    return redirect(url_for(".framework_services"))
 
 
 @main.route('/submission/services/<string:service_id>/delete', methods=['POST'])
@@ -298,7 +298,7 @@ def delete_draft_service(service_id):
             abort(e.status_code)
 
         flash({'service_name': draft.get('serviceName')}, 'service_deleted')
-        return redirect(url_for(".framework_dashboard"))
+        return redirect(url_for(".framework_services"))
     else:
         return redirect(url_for(".view_service_submission",
                                 service_id=service_id,
