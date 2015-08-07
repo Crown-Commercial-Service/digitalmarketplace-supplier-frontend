@@ -103,3 +103,11 @@ table {
 body {
   @include core-19;
 }
+
+@include media(tablet) {
+
+  legend {
+    width: 100%;
+  }
+
+}

@@ -32,73 +32,42 @@
     {% endwith %}
   {% endif %}
 
-  <style>
-    .question-heading,
-    .question-heading-with-hint {
-      font-size: 19px;
-      font-weight: normal;
-    }
-    .question-heading li,
-    .question-heading-with-hint li,
-    .hint li {
-      margin: 10px 0;
-      list-style: disc;
-    }
-    .question-number {
-      position: relative;
-      height: 50px;
-      display: block;
-      margin: 20px 0 -70px 0;
-      left: -100px;
-      width: 80px;
-      text-align: right;
-      font-weight: bold;
-    }
-  </style>
+  {% with
+    heading = "Make supplier declaration"
+  %}
+    {% include 'toolkit/page-heading.html' %}
+  {% endwith %}
+  <form method="post" class="supplier-declaration">
 
-  <div class="grid-row">
-    <div class="column-three-quarters">
-
+    {% set question_index = [0] %}
+    {% for section in sections %}
       {% with
-        heading = "Make supplier declaration"
+        heading = section.name,
+        smaller = true
       %}
         {% include 'toolkit/page-heading.html' %}
       {% endwith %}
-      <form method="post">
+      {% for question in section.questions %}
+        {% set _ = question_index.append(question_index.pop() + 1) %}
+        <span class="question-number" title="{{ question.id }}">{{ question_index[0] }}</span>
+        {% if errors and errors[question.id] %}
+          {{ forms[question.type](question, service_data, errors) }}
+        {% else %}
+          {{ forms[question.type](question, service_data, {}) }}
+        {% endif %}
+      {% endfor %}
+    {% endfor %}
 
-        {% set question_index = [0] %}
-        {% for section in sections %}
-          {% with
-            heading = section.name,
-            smaller = true
-          %}
-            {% include 'toolkit/page-heading.html' %}
-          {% endwith %}
-          {% for question in section.questions %}
-            {% set _ = question_index.append(question_index.pop() + 1) %}
-            <span class="question-number" title="{{ question.id }}">
-              {{ question_index[0] }}
-            </span>
-            {% if errors and errors[question.id] %}
-              {{ forms[question.type](question, service_data, errors) }}
-            {% else %}
-              {{ forms[question.type](question, service_data, {}) }}
-            {% endif %}
-          {% endfor %}
-        {% endfor %}
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+    {%
+      with
+      label="Submit",
+      type="save"
+    %}
+      {% include "toolkit/button.html" %}
+    {% endwith %}
 
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
-        {%
-          with
-          label="Submit",
-          type="save"
-        %}
-          {% include "toolkit/button.html" %}
-        {% endwith %}
+    <a href="/suppliers">Return to application</a>
 
-        <a href="/suppliers">Return to application</a>
-
-      </form>
-    </div>
-  </div>
+  </form>
 {% endblock %}
