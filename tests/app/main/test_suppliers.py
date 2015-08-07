@@ -510,3 +510,10 @@ class TestCreateSupplier(BaseApplicationTest):
         assert_true("Phone number can not be empty" in res.get_data(as_text=True))
         assert_true("Email can not be empty" in res.get_data(as_text=True))
         assert_true("Contact name can not be empty" in res.get_data(as_text=True))
+
+    # def test_should_populate_duns_from_session(self):
+    #     with self.app.test_client() as c:
+    #         with c.session_transaction() as sess:
+    #             sess['duns_number'] = "999"
+    #             res = c.get("/suppliers/duns-number")
+    #             assert_equal(res.status_code, 200)

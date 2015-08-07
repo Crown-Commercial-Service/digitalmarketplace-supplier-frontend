@@ -262,8 +262,10 @@ def company_summary():
         **template_data
     ), 200
 
+
 def has_valid_create_supplier_session():
     return True
+
 
 @main.route('/company-summary', methods=['POST'])
 def submit_company_summary():
@@ -414,6 +416,7 @@ def create_your_account():
         form=form,
         **template_data
     ), 200
+
 
 @main.route('/create-your-account', methods=['POST'])
 def submit_create_your_account():
