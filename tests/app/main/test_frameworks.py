@@ -1,4 +1,4 @@
-from nose.tools import assert_equal, nottest
+from nose.tools import assert_equal
 import mock
 from mock import Mock
 from lxml import html
@@ -20,7 +20,6 @@ class TestFrameworksDashboard(BaseApplicationTest):
 
 @mock.patch('app.main.views.frameworks.data_api_client')
 class TestSupplierDeclaration(BaseApplicationTest):
-    @nottest
     def test_get_with_no_previous_answers(self, data_api_client):
         with self.app.test_client():
             self.login()
@@ -36,9 +35,10 @@ class TestSupplierDeclaration(BaseApplicationTest):
             assert_equal(res.status_code, 200)
             doc = html.fromstring(res.get_data(as_text=True))
             assert_equal(
-                doc.xpath('//input[@id="SQ1-3"]/@value')[0], "")
+                doc.xpath('//input[@id="PR-1-yes"]/@checked'), [])
+            assert_equal(
+                doc.xpath('//input[@id="PR-1-no"]/@checked'), [])
 
-    @nottest
     def test_get_with_with_previous_answers(self, data_api_client):
         with self.app.test_client():
             self.login()
@@ -46,7 +46,7 @@ class TestSupplierDeclaration(BaseApplicationTest):
             data_api_client.get_selection_answers.return_value = {
                 "selectionAnswers": {
                     "questionAnswers": {
-                        "registration_number": "12345",
+                        "PR1": False,
                     }
                 }
             }
@@ -57,34 +57,25 @@ class TestSupplierDeclaration(BaseApplicationTest):
             assert_equal(res.status_code, 200)
             doc = html.fromstring(res.get_data(as_text=True))
             assert_equal(
-                doc.xpath('//input[@id="registration_number"]/@value')[0],
-                "12345")
+                len(doc.xpath('//input[@id="PR1-no"]/@checked')), 1)
 
-    @nottest
     def test_post_valid_data(self, data_api_client):
         with self.app.test_client():
             self.login()
             res = self.client.post(
                 '/suppliers/frameworks/g-cloud-7/declaration',
                 data={
-                    'registration_number': '12345',
-                    'bankrupt': 'val-2',
+                    'PR1': True,
+                    'SQ1-2a': 'Jo Bloggs',
                 })
 
-            assert_equal(res.status_code, 200)
+            assert_equal(res.status_code, 302)
             data_api_client.answer_selection_questions.assert_called_with(
                 1234, 'g-cloud-7',
-                {'registration_number': '12345', 'bankrupt': False},
+                {'PR1': True, 'SQ1-2a': 'Jo Bloggs'},
                 'email@email.com'
             )
-            doc = html.fromstring(res.get_data(as_text=True))
-            assert_equal(
-                doc.xpath('//input[@id="registration_number"]/@value')[0],
-                "12345")
-            assert_equal(
-                len(doc.xpath('//input[@id="bankrupt-no"]/@checked')), 1)
 
-    @nottest
     def test_post_valid_data_with_api_failure(self, data_api_client):
         with self.app.test_client():
             self.login()
@@ -97,8 +88,8 @@ class TestSupplierDeclaration(BaseApplicationTest):
             res = self.client.post(
                 '/suppliers/frameworks/g-cloud-7/declaration',
                 data={
-                    'registration_number': '12345',
-                    'bankrupt': 'val-2',
+                    'PR1': True,
+                    'SQ1-2a': 'Jo Bloggs',
                 })
 
             assert_equal(res.status_code, 400)
