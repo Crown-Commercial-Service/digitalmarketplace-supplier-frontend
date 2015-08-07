@@ -511,9 +511,46 @@ class TestCreateSupplier(BaseApplicationTest):
         assert_true("Email can not be empty" in res.get_data(as_text=True))
         assert_true("Contact name can not be empty" in res.get_data(as_text=True))
 
-    # def test_should_populate_duns_from_session(self):
-    #     with self.app.test_client() as c:
-    #         with c.session_transaction() as sess:
-    #             sess['duns_number'] = "999"
-    #             res = c.get("/suppliers/duns-number")
-    #             assert_equal(res.status_code, 200)
+    def test_should_populate_duns_from_session(self):
+            with self.client.session_transaction() as sess:
+                sess['duns_number'] = "999"
+            res = self.client.get("/suppliers/duns-number")
+            assert_equal(res.status_code, 200)
+            assert_equal(
+                '<input type="text" name="duns_number" id="duns_number" class="text-box" value="999" />' in res.get_data(as_text=True),  # noqa
+                True)
+
+    def test_should_populate_companies_house_from_session(self):
+            with self.client.session_transaction() as sess:
+                sess['companies_house_number'] = "999"
+            res = self.client.get("/suppliers/companies-house-number")
+            assert_equal(res.status_code, 200)
+            assert_equal(
+                '<input type="text" name="companies_house_number" id="companies_house_number" class="text-box" value="999" />' in res.get_data(as_text=True),  # noqa
+                True)
+
+    def test_should_populate_company_name_from_session(self):
+            with self.client.session_transaction() as sess:
+                sess['company_name'] = "Name"
+            res = self.client.get("/suppliers/company-name")
+            assert_equal(res.status_code, 200)
+            assert_equal(
+                '<input type="text" name="company_name" id="company_name" class="text-box" value="Name" />' in res.get_data(as_text=True),  # noqa
+                True)
+
+    def test_should_populate_contact_details_from_session(self):
+            with self.client.session_transaction() as sess:
+                sess['email_address'] = "email_address"
+                sess['contact_name'] = "contact_name"
+                sess['phone_number'] = "phone_number"
+            res = self.client.get("/suppliers/company-contact-details")
+            assert_equal(res.status_code, 200)
+            assert_equal(
+                '<input type="text" name="email_address" id="email_address" class="text-box" value="email_address" />' in res.get_data(as_text=True),  # noqa
+                True)
+            assert_equal(
+                '<input type="text" name="contact_name" id="contact_name" class="text-box" value="contact_name" />' in res.get_data(as_text=True),  # noqa
+                True)
+            assert_equal(
+                '<input type="text" name="phone_number" id="phone_number" class="text-box" value="phone_number" />' in res.get_data(as_text=True),  # noqa
+                True)
