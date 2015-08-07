@@ -147,7 +147,7 @@ class TestSupplierDashboardLogin(BaseApplicationTest):
                      "?next=%2Fsuppliers")
 
 
-@mock.patch("app.main.suppliers.data_api_client")
+@mock.patch("app.main.views.suppliers.data_api_client")
 class TestSupplierUpdate(BaseApplicationTest):
 
     def _login(self, data_api_client):
