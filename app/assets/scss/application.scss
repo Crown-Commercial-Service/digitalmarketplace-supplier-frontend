@@ -49,6 +49,7 @@ $path: "/suppliers/static/images/";
 @import "_return-link.scss";
 @import "_framework-application.scss";
 @import "_assurance-question.scss";
+@import "_supplier-declaration.scss";
 
 .filter-field-text {
   @include core-16;
@@ -67,7 +68,11 @@ $path: "/suppliers/static/images/";
 .question-heading-with-hint,
 .hint,
 .validation-message {
-  width: 66%;
+
+  @include media(desktop) {
+    width: 66%;
+  }
+
 }
 
 .delete-draft-button {

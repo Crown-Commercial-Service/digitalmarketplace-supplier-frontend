@@ -1,0 +1,73 @@
+{% extends "_base_page.html" %}
+{% import "macros/toolkit_forms.html" as forms %}
+
+{% block page_title %}G-Cloud 7 supplier declaration – Digital Marketplace{% endblock %}
+
+{% block breadcrumb %}
+  {%
+    with items = [
+      {
+        "link": "/",
+        "label": "Digital Marketplace"
+      },
+      {
+        "link": url_for(".dashboard"),
+        "label": current_user.supplier_name
+      },
+      {
+        "link": url_for(".framework_dashboard"),
+        "label": "Apply to G-Cloud 7"
+      }
+    ]
+  %}
+    {% include "toolkit/breadcrumb.html" %}
+  {% endwith %}
+{% endblock %}
+
+{% block main_content %}
+
+  {% if errors %}
+    {% with errors = errors.values() %}
+      {% include 'toolkit/forms/validation.html' %}
+    {% endwith %}
+  {% endif %}
+
+  {% with
+    heading = "Make supplier declaration"
+  %}
+    {% include 'toolkit/page-heading.html' %}
+  {% endwith %}
+  <form method="post" class="supplier-declaration">
+
+    {% set question_index = [0] %}
+    {% for section in sections %}
+      {% with
+        heading = section.name,
+        smaller = true
+      %}
+        {% include 'toolkit/page-heading.html' %}
+      {% endwith %}
+      {% for question in section.questions %}
+        {% set _ = question_index.append(question_index.pop() + 1) %}
+        <label class="question-number" for="{{ question.id }}" title="{{ question.id }}">{{ question_index[0] }}</label>
+        {% if errors and errors[question.id] %}
+          {{ forms[question.type](question, service_data, errors) }}
+        {% else %}
+          {{ forms[question.type](question, service_data, {}) }}
+        {% endif %}
+      {% endfor %}
+    {% endfor %}
+
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+    {%
+      with
+      label="Submit",
+      type="save"
+    %}
+      {% include "toolkit/button.html" %}
+    {% endwith %}
+
+    <a href="/suppliers">Return to application</a>
+
+  </form>
+{% endblock %}

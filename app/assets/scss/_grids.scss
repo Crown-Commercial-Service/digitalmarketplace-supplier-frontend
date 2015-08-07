@@ -19,3 +19,7 @@
 .column-two-thirds {
   @include grid-column( 2/3 );
 }
+
+.column-three-quarters {
+  @include grid-column( 3/4 );
+}

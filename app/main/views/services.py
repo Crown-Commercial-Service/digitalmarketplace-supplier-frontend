@@ -3,8 +3,8 @@ from flask import render_template, request, redirect, url_for, abort, flash
 
 from ...main import main, existing_service_content, new_service_content
 from ..helpers.services import (
-    get_formatted_section_data, unformat_section_data,
-    get_section_questions, get_section_error_messages,
+    unformat_section_data,
+    get_section_error_messages,
     is_service_modifiable, is_service_associated_with_supplier,
     upload_draft_documents, get_service_attributes,
     get_draft_document_url
@@ -145,7 +145,7 @@ def update_section(service_id, section_id):
     if section is None:
         abort(404)
 
-    posted_data = get_formatted_section_data(section)
+    posted_data = section.get_data(request.form)
 
     try:
         data_api_client.update_service(
@@ -391,7 +391,7 @@ def update_section_submission(service_id, section_id):
     if section is None:
         abort(404)
 
-    posted_data = get_formatted_section_data(section)
+    posted_data = section.get_data(request.form)
 
     uploaded_documents, document_errors = upload_draft_documents(draft, request.files, section)
 
@@ -413,7 +413,7 @@ def update_section_submission(service_id, section_id):
             service_id,
             update_data,
             current_user.email_address,
-            page_questions=get_section_questions(section)
+            page_questions=section.get_field_names()
         )
     except HTTPError as e:
         unformat_section_data(update_data)
