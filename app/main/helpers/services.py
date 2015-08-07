@@ -241,7 +241,7 @@ def _is_pricing_type(key):
 
 def _is_type(key, *types):
     """Return True if a given key is one of the provided types"""
-    return new_service_content.get_question(key)['type'] in types
+    return new_service_content.get_question(key).get('type') in types
 
 
 def _has_assurance(key):
