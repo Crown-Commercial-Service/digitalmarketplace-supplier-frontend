@@ -1,3 +1,4 @@
+from dmutils.apiclient import HTTPError
 from dmutils.email import generate_token, MandrillException
 from itsdangerous import BadTimeSignature
 from nose.tools import assert_equal, assert_true, assert_is_not_none, assert_in
@@ -837,6 +838,8 @@ class TestInviteUser(BaseApplicationTest):
     def test_should_create_user_if_user_does_not_exist(self, data_api_client):
         with self.app.app_context():
 
+            data_api_client.get_user.return_value = None
+
             token = generate_token(
                 {
                     'supplier_id': 1234,
@@ -873,8 +876,8 @@ class TestInviteUser(BaseApplicationTest):
             data_api_client.get_user.return_value = self.user(
                 123,
                 'testme@email.com',
-                1234,
-                'Suppluer Name',
+                None,
+                None,
                 'Users name'
             )
 
@@ -1012,3 +1015,118 @@ class TestInviteUser(BaseApplicationTest):
                 'Email <a href="mailto:enquiries@digitalmarketplace.service.gov.uk">enquiries@digitalmarketplace.service.gov.uk</a> if you need help.</p>'  # noqa
                 in res.get_data(as_text=True)
             )
+
+    @mock.patch('app.main.views.login.data_api_client')
+    def test_should_not_update_a_supplier_account(self, data_api_client):
+        with self.app.app_context():
+
+            data_api_client.get_user.return_value = self.user(
+                123,
+                'testme@email.com',
+                1234,
+                'Supplier Name',
+                'Users name',
+                active=True
+            )
+
+            token = generate_token(
+                {
+                    'supplier_id': 1234,
+                    'supplier_name': 'Supplier Name',
+                    'email_address': 'testme@email.com'
+                },
+                self.app.config['SECRET_KEY'],
+                self.app.config['INVITE_EMAIL_SALT']
+            )
+
+            res = self.client.post(
+                '/suppliers/create-user/{}'.format(token)
+            )
+
+            assert_equal(res.status_code, 400)
+
+    @mock.patch('app.main.views.login.data_api_client')
+    def test_should_not_update_a_locked_account(self, data_api_client):
+        with self.app.app_context():
+
+            data_api_client.get_user.return_value = self.user(
+                123,
+                'testme@email.com',
+                None,
+                None,
+                'Users name',
+                active=True,
+                locked=True
+            )
+
+            token = generate_token(
+                {
+                    'supplier_id': 1234,
+                    'supplier_name': 'Supplier Name',
+                    'email_address': 'testme@email.com'
+                },
+                self.app.config['SECRET_KEY'],
+                self.app.config['INVITE_EMAIL_SALT']
+            )
+
+            res = self.client.post(
+                '/suppliers/create-user/{}'.format(token)
+            )
+
+            assert_equal(res.status_code, 400)
+
+    @mock.patch('app.main.views.login.data_api_client')
+    def test_should_not_update_an_inactive_account(self, data_api_client):
+        with self.app.app_context():
+
+            data_api_client.get_user.return_value = self.user(
+                123,
+                'testme@email.com',
+                None,
+                None,
+                'Users name',
+                active=False,
+                locked=False
+            )
+
+            token = generate_token(
+                {
+                    'supplier_id': 1234,
+                    'supplier_name': 'Supplier Name',
+                    'email_address': 'testme@email.com'
+                },
+                self.app.config['SECRET_KEY'],
+                self.app.config['INVITE_EMAIL_SALT']
+            )
+
+            res = self.client.post(
+                '/suppliers/create-user/{}'.format(token)
+            )
+
+            assert_equal(res.status_code, 400)
+
+    @mock.patch('app.main.views.login.data_api_client')
+    def test_should_not_create_an_existing_email_address(self, data_api_client):
+        with self.app.app_context():
+
+            data_api_client.create_user.side_effect = HTTPError("bad email")
+
+            token = generate_token(
+                {
+                    'supplier_id': 1234,
+                    'supplier_name': 'Supplier Name',
+                    'email_address': 'testme@email.com'
+                },
+                self.app.config['SECRET_KEY'],
+                self.app.config['INVITE_EMAIL_SALT']
+            )
+
+            res = self.client.post(
+                '/suppliers/create-user/{}'.format(token),
+                data={
+                    'password': 'validpassword',
+                    'name': 'valid name'
+                }
+            )
+
+            assert_equal(res.status_code, 503)

@@ -31,24 +31,26 @@ class BaseApplicationTest(object):
         supplier = None
         role = 'buyer'
 
+        user = {
+            "id": id,
+            "emailAddress": email_address,
+            "name": name,
+            "role": role,
+            "locked": locked,
+            'active': active,
+            "active": active,
+            'passwordChangedAt': password_changed_at
+        }
+
         if supplier_id:
             supplier = {
                 "supplierId": supplier_id,
                 "name": supplier_name,
             }
-            role = 'supplier'
+            user['role'] = 'supplier'
+            user['supplier'] = supplier
         return {
-            "users": {
-                "id": id,
-                "emailAddress": email_address,
-                "name": name,
-                "supplier": supplier,
-                "role": role,
-                "locked": locked,
-                'active': active,
-                "active": active,
-                'passwordChangedAt': password_changed_at
-            }
+            "users": user
         }
 
     @staticmethod

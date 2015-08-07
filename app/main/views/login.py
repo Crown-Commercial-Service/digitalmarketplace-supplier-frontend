@@ -233,12 +233,16 @@ def submit_update_user(encoded_token):
             **template_data), 400
     else:
         user = data_api_client.get_user(email_address=token.get("email_address"))
+
+        user = User.from_json(user)
+        if user.is_locked() or not user.is_active() or user.supplier_id is not None:
+            abort("should not update an existing supplier"),  400
+
         data_api_client.update_user(
-            user_id=user["users"]["id"],
+            user_id=user.id,
             supplier_id=token.get("supplier_id"),
             role='supplier'
         )
-        user = User.from_json(user)
         login_user(user)
         return redirect(url_for('.dashboard'))
 
@@ -260,6 +264,7 @@ def submit_create_user(encoded_token):
             **template_data), 400
     else:
         if form.validate_on_submit():
+
             user = data_api_client.create_user({
                 'name': form.name.data,
                 'password': form.password.data,

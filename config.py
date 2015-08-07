@@ -29,7 +29,7 @@ class Config(object):
     INVITE_EMAIL_SUBJECT = 'Your Digital Marketplace invitation'
 
     SECRET_KEY = os.getenv('DM_PASSWORD_SECRET_KEY')
-    SHARED_EMAIL_KEY = os.getenv('DM_PASSWORD_SHARED_EMAIL_KEY')
+    SHARED_EMAIL_KEY = os.getenv('DM_SHARED_EMAIL_KEY')
     RESET_PASSWORD_SALT = 'ResetPasswordSalt'
     INVITE_EMAIL_SALT = 'InviteEmailSalt'
 
