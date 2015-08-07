@@ -1,7 +1,7 @@
 import re
 
 from datetime import timedelta
-from flask import Flask, request, redirect, session
+from flask import Flask, request, redirect, session, Markup
 from flask_login import LoginManager
 from flask_wtf.csrf import CsrfProtect
 
@@ -10,8 +10,6 @@ from dmutils.user import User
 
 from config import configs
 
-from jinja2 import Markup, escape
-from flask import Markup
 from markdown import markdown
 
 
