@@ -82,7 +82,6 @@
     hint=(question_content.hint or '')|markdown,
     value=service_data[question_content.id],
     id=question_content.id,
-    hint=question_content.hint,
     type='boolean',
     error=errors.get(question_content.id)['message']
   %}
@@ -113,7 +112,6 @@
     priceInterval=service_data.priceInterval,
     value=service_data[question_content.id],
     hint=(question_content.hint or '')|markdown,
-    hint=question_content.hint or ''|markdown,
     id=question_content.id,
     error=errors.get(question_content.id)['message']
   %}
