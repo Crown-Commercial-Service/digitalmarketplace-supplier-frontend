@@ -5,18 +5,9 @@ from dmutils.config import convert_to_boolean, convert_to_number
 from dmutils import s3
 from dmutils.documents import filter_empty_files, validate_documents, upload_document
 from dmutils.service_attribute import Attribute
+from dmutils.content_loader import PRICE_FIELDS
 
 from ...main import new_service_content
-
-
-def get_section_questions(section):
-    """Return the section question IDs as they are sent to the API"""
-    return price_question_filter(get_raw_section_questions(section))
-
-
-def get_raw_section_questions(section):
-    """Return the section question IDs as they appear in the question manifest"""
-    return [question['id'] for question in section['questions']]
 
 
 def get_service_attributes(service_data, service_questions):
@@ -53,18 +44,6 @@ def is_service_modifiable(service):
     return service.get('status') != 'disabled'
 
 
-PRICE_FIELDS = ['priceMin', 'priceMax', 'priceUnit', 'priceInterval']
-
-
-def price_question_filter(questions):
-    if any(map(_is_pricing_type, questions)):
-        questions = [
-            q for q in questions if not _is_pricing_type(q)
-        ] + PRICE_FIELDS
-
-    return questions
-
-
 def unformat_section_data(section_data):
     """Unpacks assurance questions
     """
@@ -84,7 +63,7 @@ def get_draft_document_url(document_path):
 
 def upload_draft_documents(service, request_files, section):
     request_files = request_files.to_dict(flat=True)
-    files = _filter_keys(request_files, get_section_questions(section))
+    files = _filter_keys(request_files, section.get_field_names())
     files = filter_empty_files(files)
     errors = validate_documents(files)
 
