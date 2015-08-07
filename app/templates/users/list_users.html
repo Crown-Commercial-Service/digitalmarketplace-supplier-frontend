@@ -45,6 +45,7 @@
         {% include 'toolkit/page-heading.html' %}
       {% endwith %}
     </div>
+    <a href="{{ url_for('.invite_user') }}">Invite users</a>
   </div>
   {% call(item) summary.table(
     users,
@@ -67,3 +68,5 @@
     {% endcall %}
   {% endcall %}
 {% endblock %}
+
+
