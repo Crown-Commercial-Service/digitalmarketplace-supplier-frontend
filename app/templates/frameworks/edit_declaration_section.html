@@ -49,7 +49,7 @@
       {% endwith %}
       {% for question in section.questions %}
         {% set _ = question_index.append(question_index.pop() + 1) %}
-        <span class="question-number" title="{{ question.id }}">{{ question_index[0] }}</span>
+        <label class="question-number" for="{{ question.id }}" title="{{ question.id }}">{{ question_index[0] }}</label>
         {% if errors and errors[question.id] %}
           {{ forms[question.type](question, service_data, errors) }}
         {% else %}
