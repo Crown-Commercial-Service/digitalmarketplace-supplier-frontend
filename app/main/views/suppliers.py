@@ -108,6 +108,7 @@ def update_supplier():
 
     return redirect(url_for(".dashboard"))
 
+
 @main.route('/create', methods=['GET'])
 def create_new_supplier():
     template_data = main.config['BASE_TEMPLATE_DATA']

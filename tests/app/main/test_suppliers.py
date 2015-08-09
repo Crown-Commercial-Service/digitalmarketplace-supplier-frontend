@@ -587,7 +587,7 @@ class TestCreateSupplier(BaseApplicationTest):
             }],
             "dunsNumber": "duns_number",
             "name": "company_name",
-            "companiesHouseId": "companies_house_number",
+            "companiesHouseNumber": "companies_house_number",
         })
 
     @mock.patch("app.main.suppliers.data_api_client")
@@ -611,7 +611,7 @@ class TestCreateSupplier(BaseApplicationTest):
             }],
             "dunsNumber": "duns_number",
             "name": "company_name",
-            "companiesHouseId": None,
+            "companiesHouseNumber": None,
         })
 
     @mock.patch("app.main.suppliers.data_api_client")
