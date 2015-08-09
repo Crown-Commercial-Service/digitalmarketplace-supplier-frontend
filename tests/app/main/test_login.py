@@ -1,3 +1,5 @@
+# coding: utf-8
+
 from dmutils.apiclient import HTTPError
 from dmutils.email import generate_token, MandrillException
 from itsdangerous import BadTimeSignature
@@ -620,7 +622,7 @@ class TestInviteUser(BaseApplicationTest):
 
             assert_equal(res.status_code, 400)
             assert_true(
-                "Check you&#146;ve entered the correct link or ask the person who invited you to send a new invitation."  # noqa
+                u"Check you’ve entered the correct link or ask the person who invited you to send a new invitation."  # noqa
                 in res.get_data(as_text=True)
             )
 
@@ -714,7 +716,7 @@ class TestInviteUser(BaseApplicationTest):
 
             assert_equal(res.status_code, 400)
             assert_true(
-                "Check you&#146;ve entered the correct link or ask the person who invited you to send a new invitation." in res.get_data(as_text=True)  # noqa
+                u"Check you’ve entered the correct link or ask the person who invited you to send a new invitation." in res.get_data(as_text=True)  # noqa
             )
             assert_false(
                 '<button class="button-save">Create contributor account</button>' in res.get_data(as_text=True)
@@ -728,7 +730,7 @@ class TestInviteUser(BaseApplicationTest):
 
             assert_equal(res.status_code, 400)
             assert_true(
-                "Check you&#146;ve entered the correct link or ask the person who invited you to send a new invitation." in res.get_data(as_text=True)  # noqa
+                u"Check you’ve entered the correct link or ask the person who invited you to send a new invitation." in res.get_data(as_text=True)  # noqa
             )
             assert_false(
                 '<button class="button-save">Update user</button>' in res.get_data(as_text=True)  # noqa
