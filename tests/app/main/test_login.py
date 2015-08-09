@@ -1,7 +1,7 @@
 from dmutils.apiclient import HTTPError
 from dmutils.email import generate_token, MandrillException
 from itsdangerous import BadTimeSignature
-from nose.tools import assert_equal, assert_true, assert_is_not_none, assert_in
+from nose.tools import assert_equal, assert_true, assert_is_not_none, assert_in, assert_false
 from ..helpers import BaseApplicationTest
 from lxml import html
 import mock
@@ -713,13 +713,11 @@ class TestInviteUser(BaseApplicationTest):
             )
 
             assert_equal(res.status_code, 400)
-            assert_equal(
-                "Check you&#146;ve entered the correct link or ask the person who invited you to send a new invitation." in res.get_data(as_text=True),  # noqa
-                True
+            assert_true(
+                "Check you&#146;ve entered the correct link or ask the person who invited you to send a new invitation." in res.get_data(as_text=True)  # noqa
             )
-            assert_equal(
-                '<button class="button-save">Create contributor account</button>' in res.get_data(as_text=True),
-                False
+            assert_false(
+                '<button class="button-save">Create contributor account</button>' in res.get_data(as_text=True)
             )
 
     def test_should_be_an_error_if_invalid_token_on_update(self):
@@ -729,13 +727,11 @@ class TestInviteUser(BaseApplicationTest):
             )
 
             assert_equal(res.status_code, 400)
-            assert_equal(
-                "Check you&#146;ve entered the correct link or ask the person who invited you to send a new invitation." in res.get_data(as_text=True),  # noqa
-                True
+            assert_true(
+                "Check you&#146;ve entered the correct link or ask the person who invited you to send a new invitation." in res.get_data(as_text=True)  # noqa
             )
-            assert_equal(
-                '<button class="button-save">Update user</button>' in res.get_data(as_text=True),  # noqa
-                False
+            assert_false(
+                '<button class="button-save">Update user</button>' in res.get_data(as_text=True)  # noqa
             )
 
     def test_should_be_an_error_if_missing_name_and_password(self):
@@ -753,20 +749,15 @@ class TestInviteUser(BaseApplicationTest):
 
             res = self.client.post(
                 '/suppliers/create-user/{}'.format(token),
-                data={
-                    'password': None,
-                    'name': None
-                }
+                data={}
             )
 
             assert_equal(res.status_code, 400)
-            assert_equal(
-                "Please enter a password" in res.get_data(as_text=True),
-                True
+            assert_true(
+                "Please enter a password" in res.get_data(as_text=True)
             )
-            assert_equal(
-                "Please enter a name" in res.get_data(as_text=True),
-                True
+            assert_true(
+                "Please enter a name" in res.get_data(as_text=True)
             )
 
     def test_should_be_an_error_if_too_short_name_and_password(self):
@@ -791,13 +782,11 @@ class TestInviteUser(BaseApplicationTest):
             )
 
             assert_equal(res.status_code, 400)
-            assert_equal(
-                "Please enter a name" in res.get_data(as_text=True),
-                True
+            assert_true(
+                "Please enter a name" in res.get_data(as_text=True)
             )
-            assert_equal(
-                "Passwords must be between 10 and 50 characters" in res.get_data(as_text=True),
-                True
+            assert_true(
+                "Passwords must be between 10 and 50 characters" in res.get_data(as_text=True)
             )
 
     def test_should_be_an_error_if_too_long_name_and_password(self):
@@ -825,13 +814,11 @@ class TestInviteUser(BaseApplicationTest):
             )
 
             assert_equal(res.status_code, 400)
-            assert_equal(
-                "Names must be between 1 and 255 characters" in res.get_data(as_text=True),
-                True
+            assert_true(
+                "Names must be between 1 and 255 characters" in res.get_data(as_text=True)
             )
-            assert_equal(
-                "Passwords must be between 10 and 50 characters" in res.get_data(as_text=True),
-                True
+            assert_true(
+                "Passwords must be between 10 and 50 characters" in res.get_data(as_text=True)
             )
 
     @mock.patch('app.main.views.login.data_api_client')
