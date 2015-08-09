@@ -554,3 +554,21 @@ class TestCreateSupplier(BaseApplicationTest):
             assert_equal(
                 '<input type="text" name="phone_number" id="phone_number" class="text-box" value="phone_number" />' in res.get_data(as_text=True),  # noqa
                 True)
+
+    def test_should_be_an_error_to_be_submit_company_with_incomplete_session(self):
+        res = self.client.post("/suppliers/company-summary")
+        assert_equal(res.status_code, 400)
+        assert_equal(
+            'Please complete all fields' in res.get_data(as_text=True),
+            True)
+
+    def test_should_redirect_to_create_your_account_if_valid_session(self):
+        with self.client.session_transaction() as sess:
+                sess['email_address'] = "Name"
+                sess['phone_number'] = "Name"
+                sess['contact_name'] = "Name"
+                sess['duns_number'] = "Name"
+                sess['company_name'] = "Name"
+        res = self.client.post("/suppliers/company-summary")
+        assert_equal(res.status_code, 302)
+        assert_equal(res.location, "http://localhost/suppliers/create-your-account")
