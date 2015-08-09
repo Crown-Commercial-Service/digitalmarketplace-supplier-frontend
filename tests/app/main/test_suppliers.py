@@ -1,4 +1,5 @@
 from dmutils.apiclient import HTTPError
+from dmutils.email import MandrillException
 import mock
 from flask import session
 from mock import Mock
@@ -574,7 +575,7 @@ class TestCreateSupplier(BaseApplicationTest):
             sess['company_name'] = "company_name"
             sess['companies_house_number'] = "companies_house_number"
 
-        data_api_client.create_supplier.return_value = True
+        data_api_client.create_supplier.return_value = self.supplier()
         res = self.client.post("/suppliers/company-summary")
         assert_equal(res.status_code, 302)
         assert_equal(res.location, "http://localhost/suppliers/create-your-account")
@@ -598,7 +599,7 @@ class TestCreateSupplier(BaseApplicationTest):
             sess['duns_number'] = "duns_number"
             sess['company_name'] = "company_name"
 
-        data_api_client.create_supplier.return_value = True
+        data_api_client.create_supplier.return_value = self.supplier()
         res = self.client.post("/suppliers/company-summary")
         assert_equal(res.status_code, 302)
         assert_equal(res.location, "http://localhost/suppliers/create-your-account")
@@ -642,4 +643,115 @@ class TestCreateSupplier(BaseApplicationTest):
         res = self.client.post("/suppliers/company-summary")
         assert_equal(res.status_code, 503)
 
+    def test_should_require_an_email_address(self):
+        with self.client.session_transaction() as sess:
+            sess['company_name'] = "company_name"
+            sess['supplier_id'] = 1234
+        res = self.client.post(
+            "/suppliers/create-your-account",
+            data={}
+        )
+        assert_equal(res.status_code, 400)
+        assert_true("Email can not be empty" in res.get_data(as_text=True))
 
+    def test_should_not_allow_incorrect_email_address(self):
+        with self.client.session_transaction() as sess:
+            sess['company_name'] = "company_name"
+            sess['supplier_id'] = 1234
+        res = self.client.post(
+            "/suppliers/create-your-account",
+            data={
+                'email_address': "bademail"
+            }
+        )
+        assert_equal(res.status_code, 400)
+        assert_true("Please enter a valid email address" in res.get_data(as_text=True))
+
+    @mock.patch("app.main.suppliers.send_email")
+    @mock.patch("app.main.suppliers.generate_token")
+    def test_should_allow_correct_email_address(self, generate_token, send_email):
+        with self.client.session_transaction() as sess:
+            sess['company_name'] = "company_name"
+            sess['supplier_id'] = 1234
+
+        res = self.client.post(
+            "/suppliers/create-your-account",
+            data={
+                'email_address': "valid@email.com"
+            }
+        )
+
+        generate_token.assert_called_once_with(
+            {
+                "email_address": "valid@email.com",
+                "supplier_id": 1234,
+                "supplier_name": "company_name"
+            },
+            "KEY",
+            "CreateEmailSalt"
+        )
+
+        send_email.assert_called_once_with(
+            "valid@email.com",
+            mock.ANY,
+            "Mandrill Test",
+            "Create your Digital Marketplace account",
+            "enquiries@digitalmarketplace.service.gov.uk",
+            "Digital Marketplace Admin",
+            ["user-creation"]
+        )
+
+        assert_equal(res.status_code, 302)
+        assert_equal(res.location, 'http://localhost/suppliers/create-your-account-complete')
+
+    @mock.patch("app.main.suppliers.send_email")
+    @mock.patch("app.main.suppliers.generate_token")
+    def test_should_be_an_error_if_incomplete_session_on_account_creation(self, generate_token, send_email):
+        res = self.client.post(
+            "/suppliers/create-your-account",
+            data={
+                'email_address': "valid@email.com"
+            }
+        )
+
+        assert_false(generate_token.called)
+        assert_false(send_email.called)
+        assert_equal(res.status_code, 503)
+
+    @mock.patch("app.main.suppliers.send_email")
+    @mock.patch("app.main.suppliers.generate_token")
+    def test_should_be_a_503_if_mandrill_failure_on_creation_email(self, generate_token, send_email):
+        with self.client.session_transaction() as sess:
+            sess['company_name'] = "company_name"
+            sess['supplier_id'] = 1234
+
+        send_email.side_effect = MandrillException("Failed")
+
+        res = self.client.post(
+            "/suppliers/create-your-account",
+            data={
+                'email_address': "valid@email.com"
+            }
+        )
+
+        generate_token.assert_called_once_with(
+            {
+                "email_address": "valid@email.com",
+                "supplier_id": 1234,
+                "supplier_name": "company_name"
+            },
+            "KEY",
+            "CreateEmailSalt"
+        )
+
+        send_email.assert_called_once_with(
+            "valid@email.com",
+            mock.ANY,
+            "Mandrill Test",
+            "Create your Digital Marketplace account",
+            "enquiries@digitalmarketplace.service.gov.uk",
+            "Digital Marketplace Admin",
+            ["user-creation"]
+        )
+
+        assert_equal(res.status_code, 503)

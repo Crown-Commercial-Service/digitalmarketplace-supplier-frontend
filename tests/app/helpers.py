@@ -21,6 +21,26 @@ class BaseApplicationTest(object):
         return None
 
     @staticmethod
+    def supplier():
+        return {
+            "suppliers": {
+                "id": 12345,
+                "name": "Supplier Name",
+                'description': 'Supplier Description',
+                'dunsNumber': '999999999',
+                'companiesHouseId': 'SC009988',
+                'contactInformation': [{
+                    'id': 1234,
+                    'contactName': 'contact name',
+                    'phoneNumber': '099887',
+                    'email': 'email@email.com',
+                    'website': 'http://myweb.com',
+                }],
+                'clients': ['one client', 'two clients']
+            }
+        }
+
+    @staticmethod
     def user(id, email_address, supplier_id, supplier_name, name,
              is_token_valid=True, locked=False, active=True, role='buyer'):
 
