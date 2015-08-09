@@ -1,4 +1,6 @@
+from dmutils.apiclient import HTTPError
 import mock
+from flask import session
 from mock import Mock
 from nose.tools import assert_equal, assert_true, assert_in, assert_false
 from tests.app.helpers import BaseApplicationTest
@@ -512,48 +514,48 @@ class TestCreateSupplier(BaseApplicationTest):
         assert_true("Contact name can not be empty" in res.get_data(as_text=True))
 
     def test_should_populate_duns_from_session(self):
-            with self.client.session_transaction() as sess:
-                sess['duns_number'] = "999"
-            res = self.client.get("/suppliers/duns-number")
-            assert_equal(res.status_code, 200)
-            assert_equal(
-                '<input type="text" name="duns_number" id="duns_number" class="text-box" value="999" />' in res.get_data(as_text=True),  # noqa
-                True)
+        with self.client.session_transaction() as sess:
+            sess['duns_number'] = "999"
+        res = self.client.get("/suppliers/duns-number")
+        assert_equal(res.status_code, 200)
+        assert_equal(
+            '<input type="text" name="duns_number" id="duns_number" class="text-box" value="999" />' in res.get_data(as_text=True),  # noqa
+            True)
 
     def test_should_populate_companies_house_from_session(self):
-            with self.client.session_transaction() as sess:
-                sess['companies_house_number'] = "999"
-            res = self.client.get("/suppliers/companies-house-number")
-            assert_equal(res.status_code, 200)
-            assert_equal(
-                '<input type="text" name="companies_house_number" id="companies_house_number" class="text-box" value="999" />' in res.get_data(as_text=True),  # noqa
-                True)
+        with self.client.session_transaction() as sess:
+            sess['companies_house_number'] = "999"
+        res = self.client.get("/suppliers/companies-house-number")
+        assert_equal(res.status_code, 200)
+        assert_equal(
+            '<input type="text" name="companies_house_number" id="companies_house_number" class="text-box" value="999" />' in res.get_data(as_text=True),  # noqa
+            True)
 
     def test_should_populate_company_name_from_session(self):
-            with self.client.session_transaction() as sess:
-                sess['company_name'] = "Name"
-            res = self.client.get("/suppliers/company-name")
-            assert_equal(res.status_code, 200)
-            assert_equal(
-                '<input type="text" name="company_name" id="company_name" class="text-box" value="Name" />' in res.get_data(as_text=True),  # noqa
-                True)
+        with self.client.session_transaction() as sess:
+            sess['company_name'] = "Name"
+        res = self.client.get("/suppliers/company-name")
+        assert_equal(res.status_code, 200)
+        assert_equal(
+            '<input type="text" name="company_name" id="company_name" class="text-box" value="Name" />' in res.get_data(as_text=True),  # noqa
+            True)
 
     def test_should_populate_contact_details_from_session(self):
-            with self.client.session_transaction() as sess:
-                sess['email_address'] = "email_address"
-                sess['contact_name'] = "contact_name"
-                sess['phone_number'] = "phone_number"
-            res = self.client.get("/suppliers/company-contact-details")
-            assert_equal(res.status_code, 200)
-            assert_equal(
-                '<input type="text" name="email_address" id="email_address" class="text-box" value="email_address" />' in res.get_data(as_text=True),  # noqa
-                True)
-            assert_equal(
-                '<input type="text" name="contact_name" id="contact_name" class="text-box" value="contact_name" />' in res.get_data(as_text=True),  # noqa
-                True)
-            assert_equal(
-                '<input type="text" name="phone_number" id="phone_number" class="text-box" value="phone_number" />' in res.get_data(as_text=True),  # noqa
-                True)
+        with self.client.session_transaction() as sess:
+            sess['email_address'] = "email_address"
+            sess['contact_name'] = "contact_name"
+            sess['phone_number'] = "phone_number"
+        res = self.client.get("/suppliers/company-contact-details")
+        assert_equal(res.status_code, 200)
+        assert_equal(
+            '<input type="text" name="email_address" id="email_address" class="text-box" value="email_address" />' in res.get_data(as_text=True),  # noqa
+            True)
+        assert_equal(
+            '<input type="text" name="contact_name" id="contact_name" class="text-box" value="contact_name" />' in res.get_data(as_text=True),  # noqa
+            True)
+        assert_equal(
+            '<input type="text" name="phone_number" id="phone_number" class="text-box" value="phone_number" />' in res.get_data(as_text=True),  # noqa
+            True)
 
     def test_should_be_an_error_to_be_submit_company_with_incomplete_session(self):
         res = self.client.post("/suppliers/company-summary")
@@ -562,13 +564,82 @@ class TestCreateSupplier(BaseApplicationTest):
             'Please complete all fields' in res.get_data(as_text=True),
             True)
 
-    def test_should_redirect_to_create_your_account_if_valid_session(self):
+    @mock.patch("app.main.suppliers.data_api_client")
+    def test_should_redirect_to_create_your_account_if_valid_session(self, data_api_client):
         with self.client.session_transaction() as sess:
-                sess['email_address'] = "Name"
-                sess['phone_number'] = "Name"
-                sess['contact_name'] = "Name"
-                sess['duns_number'] = "Name"
-                sess['company_name'] = "Name"
+            sess['email_address'] = "email_address"
+            sess['phone_number'] = "phone_number"
+            sess['contact_name'] = "contact_name"
+            sess['duns_number'] = "duns_number"
+            sess['company_name'] = "company_name"
+            sess['companies_house_number'] = "companies_house_number"
+
+        data_api_client.create_supplier.return_value = True
         res = self.client.post("/suppliers/company-summary")
         assert_equal(res.status_code, 302)
         assert_equal(res.location, "http://localhost/suppliers/create-your-account")
+        data_api_client.create_supplier.assert_called_once_with({
+            "contactInformation": [{
+                "email": "email_address",
+                "phoneNumber": "phone_number",
+                "contactName": "contact_name"
+            }],
+            "dunsNumber": "duns_number",
+            "name": "company_name",
+            "companiesHouseId": "companies_house_number",
+        })
+
+    @mock.patch("app.main.suppliers.data_api_client")
+    def test_should_allow_missing_companies_house_number(self, data_api_client):
+        with self.client.session_transaction() as sess:
+            sess['email_address'] = "email_address"
+            sess['phone_number'] = "phone_number"
+            sess['contact_name'] = "contact_name"
+            sess['duns_number'] = "duns_number"
+            sess['company_name'] = "company_name"
+
+        data_api_client.create_supplier.return_value = True
+        res = self.client.post("/suppliers/company-summary")
+        assert_equal(res.status_code, 302)
+        assert_equal(res.location, "http://localhost/suppliers/create-your-account")
+        data_api_client.create_supplier.assert_called_once_with({
+            "contactInformation": [{
+                "email": "email_address",
+                "phoneNumber": "phone_number",
+                "contactName": "contact_name"
+            }],
+            "dunsNumber": "duns_number",
+            "name": "company_name",
+            "companiesHouseId": None,
+        })
+
+    @mock.patch("app.main.suppliers.data_api_client")
+    def test_should_be_an_error_if_missing_a_field_in_session(self, data_api_client):
+        with self.client.session_transaction() as sess:
+            sess['email_address'] = "email_address"
+            sess['phone_number'] = "phone_number"
+            sess['contact_name'] = "contact_name"
+            sess['duns_number'] = "duns_number"
+
+        data_api_client.create_supplier.return_value = True
+        res = self.client.post("/suppliers/company-summary")
+        assert_equal(res.status_code, 400)
+        assert_equal(data_api_client.create_supplier.called, False)
+        assert_equal(
+            'Please complete all fields' in res.get_data(as_text=True),
+            True)
+
+    @mock.patch("app.main.suppliers.data_api_client")
+    def test_should_return_503_if_api_error(self, data_api_client):
+        with self.client.session_transaction() as sess:
+            sess['email_address'] = "email_address"
+            sess['phone_number'] = "phone_number"
+            sess['contact_name'] = "contact_name"
+            sess['duns_number'] = "duns_number"
+            sess['company_name'] = "company_name"
+
+        data_api_client.create_supplier.side_effect = HTTPError("gone bad")
+        res = self.client.post("/suppliers/company-summary")
+        assert_equal(res.status_code, 503)
+
+
