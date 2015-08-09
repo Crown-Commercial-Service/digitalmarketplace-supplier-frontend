@@ -395,13 +395,10 @@ def decode_invitation_token(encoded_token):
             current_app.config['SHARED_EMAIL_KEY'],
             current_app.config['INVITE_EMAIL_SALT']
         )
-        if not token.get('email_address', None):
-            raise ValueError('Missing email address from token')
-        if not token.get('supplier_id', None):
-            raise ValueError('Missing supplier from token')
-        if not token.get('supplier_name', None):
-            raise ValueError('Missing supplier name from token')
-        return token
+        if all(field in token for field in ("email_address", 'supplier_id', 'supplier_name')):
+            return token
+        else:
+            raise ValueError('Missing invalid invitation token')
     except SignatureExpired as e:
         current_app.logger.info("Invitation attempt with expired token. {}".format(str(e)))
         return None
