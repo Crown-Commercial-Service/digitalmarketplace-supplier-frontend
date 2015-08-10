@@ -1,0 +1,58 @@
+@import "conditionals";
+
+.supplier-declaration {
+
+  .question-heading,
+  .question-heading-with-hint {
+    font-size: 19px;
+    font-weight: normal;
+  }
+  .question-heading li,
+  .question-heading-with-hint li,
+  .hint li {
+
+    margin: 10px 0 10px 10px;
+    list-style: disc;
+
+    @include media(tablet) {
+      margin-left: 0;
+    }
+
+  }
+  .question-number {
+
+    display: block;
+    font-weight: bold;
+    margin-bottom: -20px;
+
+    &:after {
+      content: ".";
+    }
+
+    @include media(1080px) {
+
+      position: relative;
+      height: 50px;
+      display: block;
+      margin: 20px 0 -70px 0;
+      left: -100px;
+      width: 80px;
+      text-align: right;
+
+      &:after {
+        content: "";
+      }
+
+    }
+
+  }
+
+  .selection-button {
+
+    @include media(desktop) {
+      max-width: 66%;
+    }
+
+  }
+
+}

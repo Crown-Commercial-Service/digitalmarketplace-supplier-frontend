@@ -9,6 +9,9 @@ existing_service_content = ContentLoader(
 new_service_content = ContentLoader(
     'app/new_service_manifest.yml', 'app/content/g6/'
 )
+declaration_content = ContentLoader(
+    'app/declaration_manifest.yml', 'app/content/g7_declaration/'
+)
 
 
 @main.after_request

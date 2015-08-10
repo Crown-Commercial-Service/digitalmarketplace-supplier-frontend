@@ -21,100 +21,148 @@
 
 {% block main_content %}
 
-  {% with messages = get_flashed_messages(with_categories=True, category_filter=['service_deleted']) %}
-  {% for category, message in messages %}
-  <div class="banner-success-without-action">
-    <p class="banner-message">
-      &ldquo;{{message.service_name}}&rdquo; was deleted.
-    </p>
-  </div>
-  {% endfor %}
-  {% endwith %}
-  {% with messages = get_flashed_messages(with_categories=True, category_filter=['service_copied']) %}
-    {% for category, message in messages %}
-      <div class="banner-success-without-action">
-        <p class="banner-message">
-          <strong>{{message.service_name}}</strong> was copied.
-        </p>
-      </div>
-    {% endfor %}
-  {% endwith %}
-
-  {% with
-     heading = "Apply to G-Cloud 7",
-     smaller = True,
-     with_breadcrumb = True
-  %}
-    {% include "toolkit/page-heading.html" %}
-  {% endwith %}
-
   <div class="grid-row">
-    <div class="column-two-thirds ">
-      <div class="framework-deadline">
-        <h2 id="framework-deadline">
-          Deadline 2 October 2015
-        </h2>
-        <p>
-          0 services will be submitted
-        </p>
-        <p class="framework-notification">
-          <strong>No services will be submitted if supplier declaration is incomplete</strong>
-        </p>
-      </div>
-      <div class="framework-declaration">
-        {%
-          with items = [
-            {
-                "title": "Make supplier declaration",
-                "body": "Legal declaration required to supply G-Cloud 7 services",
-                "link": url_for('.framework_supplier_declaration')
-            }
-          ]
-        %}
-          {% include "toolkit/browse-list.html" %}
-        {% endwith %}
-      </div>
-    </div>
-    <aside role="complementary" class="column-one-third framework-help">
-      <p>
-        <a href="#" class="clarification-link">Read updates or ask clarification questions</a>
-      </p>
-      {%
-        with
-        items = [
-          {
-            "file_type": "ZIP",
-            "link": "#",
-            "title": "Download supplier pack"
-          }
-        ]
+    <div class="column-two-thirds">
+      {% with
+         heading = "Apply to G-Cloud 7",
+         smaller = True,
+         with_breadcrumb = True
       %}
-        {% include "toolkit/documents.html" %}
+        {% include "toolkit/page-heading.html" %}
       {% endwith %}
+    </div>
+    <aside role="complementary" class="column-one-third framework-application-status">
+      <h2>
+        Deadline 11am, 20 October 2015
+      </h2>
+      {% if not declaration_made and counts.complete %}
+        <div class="submission-status-bad">
+          <p class="big-number">
+            0
+          </p>
+          <p>
+            Eligible services
+          </p>
+        </div>
+      {% else %}
+        <p class="big-number">
+          {{ counts.complete }}
+        </p>
+        <p>
+          Eligible {{ 'service' if counts.complete == 1 else 'services' }}
+        </p>
+      {% endif %}
     </aside>
   </div>
 
-  <div class="grid-row">
-    <div class="column-one-whole">
-      {% import "toolkit/summary-table.html" as summary %}
-      {{ summary.heading("Draft services") }}
-      {{ summary.top_link("Add a service", url_for(".start_new_draft_service")) }}
-      {% call(draft) summary.list_table(
-        drafts,
-        caption="Draft services",
-        empty_message="You haven't added any services yet.",
-        field_headings=["Service name", "Lot", summary.hidden_field_heading("Make a copy")],
-        field_headings_visible=False
-      ) %}
-        {% call summary.row() %}
-          {{ summary.service_link(draft.serviceName,
-                                  url_for(".view_service_submission", service_id=draft.id)) }}
-          {{ summary.text(draft.lot) }}
-          {{ summary.button(text="Make a copy",
-                             action=url_for('.copy_draft_service', service_id=draft.id)) }}
-        {% endcall %}
-      {% endcall %}
-    </div>
-  </div>
+  <nav role="navigation" class="grid-row">
+    <ul class="browse-list">
+      <div class="column-one-whole">
+        <li class="browse-list-item framework-application-section">
+          <div class="grid-row">
+            <div class="column-two-thirds">
+              <a class="browse-list-item-link" href="{{ url_for('.framework_supplier_declaration') }}">
+                {% if declaration_made %}
+                  <span>Edit supplier declaration</span>
+                {% else %}
+                  <span>Make supplier declaration</span>
+                {% endif %}
+              </a>
+              <p class="browse-list-item-body">
+                Agree to the terms of participation, provide company information and confirm eligibility.
+              </p>
+            </div>
+            <div class="column-one-third">
+              {% if not declaration_made and not counts.complete %}
+                <div class="framework-section-status-neutral">
+                  <p>
+                    You haven't made the supplier declaration
+                  </p>
+                </div>
+              {% elif not declaration_made and counts.complete %}
+                <div class="framework-section-status-bad">
+                  <p>
+                    You must make the supplier declaration before any services are eligible for submission
+                  </p>
+                </div>
+              {% elif declaration_made %}
+                <div class="framework-section-status-good">
+                  <p>
+                    You have made the declaration
+                  </p>
+                </div>
+              {% endif %}
+            </div>
+          </div>
+        </li>
+      </div>
+
+      <div class="column-one-whole">
+        <li class="browse-list-item framework-application-section">
+          <div class="grid-row">
+            <div class="column-two-thirds">
+              <a class="browse-list-item-link" href="{{ url_for('.framework_services') }}"><span>Add services</span></a>
+              <p class="browse-list-item-body">
+                Add, edit and delete your services.
+              </p>
+            </div>
+            <div class="column-one-third">
+              {% if counts.draft or counts.complete %}
+                <div class="submission-service-counts-column">
+                  <div class="big-number">
+                    {{ counts.complete }}
+                  </div>
+                  Complete {{ 'service' if counts.complete == 1 else 'services' }}
+                </div>
+                <div class="submission-service-counts-column">
+                  <div class="big-number">
+                    {{ counts.draft }}
+                  </div>
+                  Draft<br>{{ 'service' if counts.draft == 1 else 'services' }}
+                  {% if counts.draft and declaration_made %}
+                    <p class="big-number-hint">
+                      {{ 'This' if counts.draft == 1 else 'These' }}
+                      will not be submitted
+                    </p>
+                  {% endif %}
+                </div>
+              {% else %}
+                <div class="framework-section-status-neutral">
+                  <p>
+                    You haven't added any services
+                  </p>
+                </div>
+              {% endif %}
+            </div>
+          </div>
+        </li>
+      </div>
+
+      <div class="column-one-whole">
+        <li class="browse-list-item framework-application-section">
+          <a class="browse-list-item-link" href="#"><span>Download supplier pack (.zip)</span></a>
+          <p class="browse-list-item-body">
+            Read guidance and legal documentation.
+          </p>
+          <p class="browse-list-item-subtext">
+            Last updated 28 August
+          </p>
+        </li>
+      </div>
+
+      <div class="column-one-whole">
+        <li class="browse-list-item framework-application-section">
+          <a class="browse-list-item-link" href="#"><span>Read framework updates</span></a>
+          <p class="browse-list-item-body">
+            Read updates and ask clarification questions.
+          </p>
+          <p class="browse-list-item-subtext">
+            Last updated 28 August
+          </p>
+        </li>
+      </div>
+
+    </ul>
+  </nav>
 
 {% endblock %}

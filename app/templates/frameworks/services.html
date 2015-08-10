@@ -1,0 +1,74 @@
+{% extends "_base_page.html" %}
+{% import "toolkit/summary-table.html" as summary %}
+
+{% block page_title %}Apply to G-Cloud 7 – Digital Marketplace{% endblock %}
+
+{% block breadcrumb %}
+  {%
+    with items = [
+      {
+        "link": "/",
+        "label": "Digital Marketplace",
+      },
+      {
+        "link": url_for(".dashboard"),
+        "label": "Your account",
+      },
+      {
+        "link": url_for(".framework_dashboard"),
+        "label": "Apply to G-Cloud 7",
+      }
+    ]
+  %}
+    {% include "toolkit/breadcrumb.html" %}
+  {% endwith %}
+{% endblock %}
+
+{% block main_content %}
+
+  {% with messages = get_flashed_messages(with_categories=True, category_filter=['service_deleted']) %}
+    {% for category, message in messages %}
+      <div class="banner-success-without-action">
+        <p class="banner-message">
+          <strong>{{message.service_name}}</strong> was deleted
+        </p>
+      </div>
+    {% endfor %}
+  {% endwith %}
+  {% with messages = get_flashed_messages(with_categories=True, category_filter=['service_copied']) %}
+    {% for category, message in messages %}
+      <div class="banner-success-without-action">
+        <p class="banner-message">
+          <strong>{{message.service_name}}</strong> was copied
+        </p>
+      </div>
+    {% endfor %}
+  {% endwith %}
+
+  {% with
+     heading = "G-Cloud 7 services",
+     smaller = True,
+     with_breadcrumb = True
+  %}
+    {% include "toolkit/page-heading.html" %}
+  {% endwith %}
+
+  {{ summary.heading("Draft services") }}
+  {{ summary.top_link("Add a service", url_for(".start_new_draft_service")) }}
+  {% call(draft) summary.list_table(
+    drafts,
+    caption="Draft services",
+    empty_message="You haven't added any services yet.",
+    field_headings=["Service name", "Lot", summary.hidden_field_heading("Make a copy")],
+    field_headings_visible=False
+  ) %}
+    {% call summary.row() %}
+      {{ summary.service_link(draft.serviceName or 'New service',
+                              url_for(".view_service_submission", service_id=draft.id)) }}
+      {{ summary.text(draft.lot) }}
+      {{ summary.button(text="Make a copy",
+                         action=url_for('.copy_draft_service', service_id=draft.id)) }}
+    {% endcall %}
+  {% endcall %}
+
+{% endblock %}

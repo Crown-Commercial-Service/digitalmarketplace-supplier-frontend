@@ -1,7 +1,7 @@
 import re
 
 from datetime import timedelta
-from flask import Flask, request, redirect, session
+from flask import Flask, request, redirect, session, Markup
 from flask_login import LoginManager
 from flask_wtf.csrf import CsrfProtect
 
@@ -9,6 +9,8 @@ from dmutils import apiclient, init_app, flask_featureflags
 from dmutils.user import User
 
 from config import configs
+
+from markdown import markdown
 
 
 data_api_client = apiclient.DataAPIClient()
@@ -52,6 +54,10 @@ def create_app(config_name):
     def refresh_session():
         session.permanent = True
         session.modified = True
+
+    @application.template_filter('markdown')
+    def markdown_filter(data):
+        return Markup(markdown(data))
 
     return application
 

@@ -1,21 +1,12 @@
-from flask import request, abort, current_app, url_for
+from flask import abort, current_app, url_for
 from flask_login import current_user
 
-from dmutils.config import convert_to_boolean, convert_to_number
 from dmutils import s3
 from dmutils.documents import filter_empty_files, validate_documents, upload_document
 from dmutils.service_attribute import Attribute
-from app.main import new_service_content
+from dmutils.content_loader import PRICE_FIELDS
 
-
-def get_section_questions(section):
-    """Return the section question IDs as they are sent to the API"""
-    return price_question_filter(get_raw_section_questions(section))
-
-
-def get_raw_section_questions(section):
-    """Return the section question IDs as they appear in the question manifest"""
-    return [question['id'] for question in section['questions']]
+from ...main import new_service_content
 
 
 def get_service_attributes(service_data, service_questions):
@@ -52,67 +43,6 @@ def is_service_modifiable(service):
     return service.get('status') != 'disabled'
 
 
-def get_formatted_section_data(section):
-    """Validate, filter and format form data to match the section content.
-
-    Removes any keys from the request that do not match any of the current
-    section questions list.
-
-    Converts list and boolean fields from strings to correct types.
-
-    Removes file upload questions from the request.form: file uploads should
-    only be accepted as files, since accepting URLs directly as form data
-    requires additional validation.
-
-    Packs assurance back into a dict
-
-    """
-
-    section_data = {}
-    for key in set(request.form) & set(get_raw_section_questions(section)):
-
-        if _is_list_type(key):
-            section_data[key] = request.form.getlist(key)
-        elif _is_boolean_type(key):
-            section_data[key] = convert_to_boolean(request.form[key])
-        elif _is_numeric_type(key):
-            section_data[key] = convert_to_number(request.form[key])
-        elif _is_pricing_type(key):
-            section_data.update(
-                expand_pricing_field(request.form.getlist(key))
-            )
-        elif _is_not_upload(key):
-            section_data[key] = request.form[key]
-
-        if _has_assurance(key):
-            section_data[key] = {
-                "value": section_data[key],
-                "assurance": request.form.get(key + '--assurance')
-            }
-
-    return section_data
-
-
-PRICE_FIELDS = ['priceMin', 'priceMax', 'priceUnit', 'priceInterval']
-
-
-def expand_pricing_field(pricing):
-    """Expand the priceString list into a dictionary"""
-    return {
-        field_name: pricing[i] for i, field_name in enumerate(PRICE_FIELDS)
-        if len(pricing[i]) > 0
-    }
-
-
-def price_question_filter(questions):
-    if any(map(_is_pricing_type, questions)):
-        questions = [
-            q for q in questions if not _is_pricing_type(q)
-        ] + PRICE_FIELDS
-
-    return questions
-
-
 def unformat_section_data(section_data):
     """Unpacks assurance questions
     """
@@ -132,7 +62,7 @@ def get_draft_document_url(document_path):
 
 def upload_draft_documents(service, request_files, section):
     request_files = request_files.to_dict(flat=True)
-    files = _filter_keys(request_files, get_section_questions(section))
+    files = _filter_keys(request_files, section.get_field_names())
     files = filter_empty_files(files)
     errors = validate_documents(files)
 
@@ -213,36 +143,19 @@ def _filter_keys(data, keys):
     return {key: data[key] for key in key_set}
 
 
-def _is_not_upload(key):
-    """Return True if a given key is not a file upload"""
-    return new_service_content.get_question(key)['type'] != 'upload'
-
-
-def _is_list_type(key):
-    """Return True if a given key is a list type"""
-    return key == 'serviceTypes' or _is_type(key, 'list', 'checkboxes')
-
-
-def _is_boolean_type(key):
-    """Return True if a given key is a boolean type"""
-    return _is_type(key, 'boolean')
-
-
-def _is_numeric_type(key):
-    """Return True if a given key is a numeric type"""
-    return _is_type(key, 'percentage')
-
-
 def _is_pricing_type(key):
+    # TODO: move into dmutils.content_loader
     """Return True if a given key is a pricing type"""
     return _is_type(key, 'pricing')
 
 
 def _is_type(key, *types):
+    # TODO: move into dmutils.content_loader
     """Return True if a given key is one of the provided types"""
-    return new_service_content.get_question(key)['type'] in types
+    return new_service_content.get_question(key).get('type') in types
 
 
 def _has_assurance(key):
+    # TODO: move into dmutils.content_loader
     """Return True if a question has an assurance component"""
     return new_service_content.get_question(key).get('assuranceApproach', False)
