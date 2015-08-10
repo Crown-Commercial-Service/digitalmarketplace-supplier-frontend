@@ -610,8 +610,7 @@ class TestCreateSupplier(BaseApplicationTest):
                 "contactName": "contact_name"
             }],
             "dunsNumber": "duns_number",
-            "name": "company_name",
-            "companiesHouseNumber": None,
+            "name": "company_name"
         })
 
     @mock.patch("app.main.suppliers.data_api_client")
