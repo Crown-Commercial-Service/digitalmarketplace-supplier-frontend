@@ -2,56 +2,87 @@
 
 {% extends "_base_page.html" %}
 
-{% block page_title %}Invite user – Digital Marketplace{% endblock %}
+{% block page_title %}Their email address - Add or remove contributors – Digital Marketplace{% endblock %}
+
+{% block breadcrumb %}
+  {%
+    with items = [
+      {
+        "link": "/",
+        "label": "Digital Marketplace"
+      },
+      {
+        "link": url_for(".dashboard"),
+        "label": "Your account"
+      },
+      {
+        "link": url_for(".list_users"),
+        "label": "Add or remove contributors"
+      }
+    ]
+  %}
+    {% include "toolkit/breadcrumb.html" %}
+  {% endwith %}
+{% endblock %}
 
 {% block main_content %}
 
-{% with messages = get_flashed_messages(with_categories=true) %}
-{% if messages %}
-{% for category, message in messages %}
-    {% if category == 'error' %}
-      <div class="banner-destructive-without-action">
-    {% elif category == 'success' %}
-      <div class="banner-success-without-action">
-    {% endif %}
-    {% if message == 'user_invited' %}
-    <p class="banner-message">
-        User invited
-    </p>
-    {% elif message == 'user_not_invited' %}
-    <p class="banner-message">
-        Not Invited
-    </p>
-    {% endif %}
-{% endfor %}
-{% endif %}
-{% endwith %}
+<div class="single-question-page">
 
+  {% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+  {% for category, message in messages %}
+      {% if category == 'error' %}
+        <div class="banner-destructive-without-action">
+      {% elif category == 'success' %}
+        <div class="banner-success-without-action">
+      {% endif %}
+      {% if message == 'user_invited' %}
+      <p class="banner-message">
+          User invited
+      </p>
+      {% elif message == 'user_not_invited' %}
+      <p class="banner-message">
+          Not Invited
+      </p>
+      {% endif %}
+  {% endfor %}
+  {% endif %}
+  {% endwith %}
 
-<form autocomplete="off" action="{{ url_for('.send_invite_user') }}" method="POST">
+    {% with
+      context = current_user.email_address,
+      heading = "Their email address",
+      smaller = true
+    %}
+      {% include 'toolkit/page-heading.html' %}
+    {% endwith %}
 
-    {{ form.hidden_tag() }}
+  <form autocomplete="off" action="{{ url_for('.send_invite_user') }}" method="POST">
 
-    {% if form.email_address.errors %}
-        <div class="validation-wrapper">
-    {% endif %}
-        <div class="question">
-            {{ form.email_address.label(class="question-heading-with-hint") }}
-            <p class="hint">
-                Enter the email address you of the contributor you wish to add:
-            </p>
-            {% if form.email_address.errors %}
-            <p class="validation-message" id="error-email-address-textbox">
-                {% for error in form.email_address.errors %}{{ error }}{% endfor %}
-            </p>
-            {% endif %}
-            {{ form.email_address(class="text-box", autocomplete="off") }}
-        </div>
-    {% if form.email_address.errors %}
-        </div>
-    {% endif %}
+      {{ form.hidden_tag() }}
 
-    <button class="button-save">Invite</button>
-</form>
+      {% if form.email_address.errors %}
+          <div class="validation-wrapper">
+      {% endif %}
+          <div class="question">
+              {{ form.email_address.label(class="question-heading-with-hint") }}
+              <p class="hint">
+                  An invite will be sent asking the recipient to register as a contributor.
+              </p>
+              {% if form.email_address.errors %}
+              <p class="validation-message" id="error-email-address-textbox">
+                  {% for error in form.email_address.errors %}{{ error }}{% endfor %}
+              </p>
+              {% endif %}
+              {{ form.email_address(class="text-box", autocomplete="off") }}
+          </div>
+      {% if form.email_address.errors %}
+          </div>
+      {% endif %}
+
+      <button class="button-save">Send invite</button>
+  </form>
+</div>
 
 {% endblock %}
