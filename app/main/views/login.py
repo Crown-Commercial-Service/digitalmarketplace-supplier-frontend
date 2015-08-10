@@ -197,16 +197,20 @@ def create_user(encoded_token):
             supplier=None,
             **template_data), 400
     else:
-        user = data_api_client.get_user(email_address=token.get("email_address"))
+        user_json = data_api_client.get_user(email_address=token.get("email_address"))
 
-        if user:
+        if user_json:
+            user = User.from_json(user_json)
+            invalid_user = user.is_locked() or not user.is_active() or not user_has_role(user_json, 'buyer')
+
             return render_template(
                 "auth/update-user.html",
-                user=user["users"],
+                user=user_json["users"],
                 form=form,
                 email_address=token['email_address'],
                 supplier_name=token['supplier_name'],
                 token=encoded_token,
+                invalid_user=invalid_user,
                 **template_data), 200
         else:
             return render_template(
@@ -306,7 +310,6 @@ def send_invite_user():
     form = EmailAddressForm()
 
     if form.validate_on_submit():
-
         token = generate_token(
             {
                 "supplier_id": current_user.supplier_id,
@@ -316,9 +319,7 @@ def send_invite_user():
             current_app.config['SHARED_EMAIL_KEY'],
             current_app.config['INVITE_EMAIL_SALT']
         )
-
         url = url_for('main.create_user', encoded_token=token, _external=True)
-
         email_body = render_template(
             "emails/invite_user_email.html",
             url=url,
@@ -346,7 +347,7 @@ def send_invite_user():
             abort(503, "Failed to send user invite reset")
 
         flash('user_invited', 'success')
-        return redirect(url_for('.invite_user'))
+        return redirect(url_for('.list_users'))
     else:
         template_data = main.config['BASE_TEMPLATE_DATA']
         return render_template(

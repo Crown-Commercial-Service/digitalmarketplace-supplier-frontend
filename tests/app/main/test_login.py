@@ -457,7 +457,7 @@ class TestInviteUser(BaseApplicationTest):
             assert_equal(res.status_code, 400)
 
     @mock.patch('app.main.views.login.send_email')
-    def test_should_redirect_in_success(self, send_email):
+    def test_should_redirect_to_list_users_on_success_invite(self, send_email):
         with self.app.app_context():
             self.login()
             res = self.client.post(
@@ -467,20 +467,7 @@ class TestInviteUser(BaseApplicationTest):
                 }
             )
             assert_equal(res.status_code, 302)
-            assert_equal(res.location, 'http://localhost/suppliers/invite-user')
-
-    @mock.patch('app.main.views.login.send_email')
-    def test_should_show_success_message(self, send_email):
-        with self.app.app_context():
-            self.login()
-            res = self.client.post(
-                '/suppliers/invite-user',
-                data={
-                    'email_address': 'this@isvalid.com'
-                },
-                follow_redirects=True)
-            assert_equal(res.status_code, 200)
-            assert_true("User invited" in res.get_data(as_text=True))
+            assert_equal(res.location, 'http://localhost/suppliers/users')
 
     @mock.patch('app.main.views.login.generate_token')
     @mock.patch('app.main.views.login.send_email')

@@ -14,7 +14,7 @@
     If you still can’t create a contributor account, email <a href="mailto:enquiries@digitalmarketplace.service.gov.uk">enquiries@digitalmarketplace.service.gov.uk</a>
 </p>
 
-{% elif not user.active or user.locked or user.role == 'supplier' %}
+{% elif invalid_user %}
 
 <header class="page-heading-smaller">
   <h1>This account may be inactive or locked</h1>
@@ -41,5 +41,5 @@
         </p>
     </div>
 
-{% endif%}
-    {% endblock %}
+{% endif %}
+{% endblock %}
