@@ -27,13 +27,22 @@ def framework_dashboard():
     except APIError as e:
         abort(e.status_code)
 
+    try:
+        declaration_made = bool(data_api_client.get_selection_answers(
+            current_user.supplier_id, 'g-cloud-7'))
+    except APIError as e:
+        if e.status_code == 404:
+            declaration_made = False
+        else:
+            abort(e.status_code)
+
     return render_template(
         "frameworks/dashboard.html",
         counts={
             "draft": len(drafts),
             "complete": 1,
         },
-        declaration_made=False,
+        declaration_made=declaration_made,
         **template_data
     ), 200
 
