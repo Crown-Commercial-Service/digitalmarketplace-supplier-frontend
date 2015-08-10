@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from nose.tools import assert_equal
 
 from app.main.helpers.frameworks import get_all_errors
@@ -65,7 +66,7 @@ FULL_G7_SUBMISSION = {
     "SQ1-1l": ["voluntary community social enterprise (VCSE)?"],
     "SQ1-1m": "micro",
     "SQ1-3": ["on-demand self-service. blah blah"],
-    "SQ5-1a": "Yes – your organisation has, blah blah",
+    "SQ5-1a": u"Yes – your organisation has, blah blah",
 }
 
 
