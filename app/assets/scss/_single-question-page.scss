@@ -1,3 +1,8 @@
+%visuallyhidden {
+  position: absolute;
+  left: -9999em;
+}
+
 .single-question-page {
 <<<<<<< HEAD
   .question {
@@ -12,7 +17,16 @@
 
   /* Visual users have the h1 as the label */
   form label {
-    position: absolute;
-    left: -9999em;
+    @extend %visuallyhidden;
+  }
+
+  /* Validation */
+  form .validation-wrapper label {
+    position: static;
+    left: auto;
+
+    .question-heading {
+      @extend %visuallyhidden;
+    }
   }
 }
