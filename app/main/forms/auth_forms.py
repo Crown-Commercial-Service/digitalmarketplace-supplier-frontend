@@ -5,7 +5,7 @@ from wtforms.validators import DataRequired, Email, EqualTo, Length
 
 class LoginForm(Form):
     email_address = StringField('Email address', validators=[
-        DataRequired(message="Email can not be empty"),
+        DataRequired(message="Email address must be provided"),
         Email(message="Please enter a valid email address")
     ])
     password = PasswordField('Password', validators=[
@@ -15,7 +15,7 @@ class LoginForm(Form):
 
 class EmailAddressForm(Form):
     email_address = StringField('Email address', validators=[
-        DataRequired(message="Email can not be empty"),
+        DataRequired(message="Email address must be provided"),
         Email(message="Please enter a valid email address")
     ])
 

@@ -8,7 +8,7 @@ from ..helpers import BaseApplicationTest
 from lxml import html
 import mock
 
-EMAIL_EMPTY_ERROR = "Email can not be empty"
+EMAIL_EMPTY_ERROR = "Email address must be provided"
 EMAIL_INVALID_ERROR = "Please enter a valid email address"
 EMAIL_SENT_MESSAGE = "If that Digital Marketplace supplier account exists, " \
                      "you will be sent an email containing a link to reset " \
@@ -453,7 +453,7 @@ class TestInviteUser(BaseApplicationTest):
                 '/suppliers/invite-user',
                 data={}
             )
-            assert_true("Email can not be empty" in res.get_data(as_text=True))
+            assert_true("Email address must be provided" in res.get_data(as_text=True))
             assert_equal(res.status_code, 400)
 
     @mock.patch('app.main.views.login.send_email')
@@ -610,11 +610,8 @@ class TestInviteUser(BaseApplicationTest):
             assert_equal(data_api_client.get_user.called, False)
             assert_equal(data_api_client.get_supplier.called, False)
 
-    @mock.patch('app.main.views.login.generate_token')
-    def test_should_be_a_bad_request_if_token_expired(self, generate_token):
+    def test_should_be_a_bad_request_if_token_expired(self):
         with self.app.app_context():
-
-            generate_token.side_effect = BadTimeSignature("Too old")
 
             res = self.client.get(
                 '/suppliers/create-user/12345'
@@ -1016,6 +1013,36 @@ class TestInviteUser(BaseApplicationTest):
                 'Supplier Name',
                 'Users name',
                 active=True
+            )
+
+            token = generate_token(
+                {
+                    'supplier_id': 1234,
+                    'supplier_name': 'Supplier Name',
+                    'email_address': 'testme@email.com'
+                },
+                self.app.config['SECRET_KEY'],
+                self.app.config['INVITE_EMAIL_SALT']
+            )
+
+            res = self.client.post(
+                '/suppliers/create-user/{}'.format(token)
+            )
+
+            assert_equal(res.status_code, 400)
+
+    @mock.patch('app.main.views.login.data_api_client')
+    def test_should_not_update_an_admin_account(self, data_api_client):
+        with self.app.app_context():
+
+            data_api_client.get_user.return_value = self.user(
+                123,
+                'testme@email.com',
+                None,
+                None,
+                'Users name',
+                active=True,
+                role='admin'
             )
 
             token = generate_token(

@@ -22,14 +22,11 @@ class BaseApplicationTest(object):
 
     @staticmethod
     def user(id, email_address, supplier_id, supplier_name, name,
-             is_token_valid=True, locked=False, active=True):
+             is_token_valid=True, locked=False, active=True, role='buyer'):
 
         hours_offset = -1 if is_token_valid else 1
         date = datetime.utcnow() + timedelta(hours=hours_offset)
         password_changed_at = date.strftime(DATETIME_FORMAT)
-
-        supplier = None
-        role = 'buyer'
 
         user = {
             "id": id,

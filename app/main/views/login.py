@@ -232,10 +232,10 @@ def submit_update_user(encoded_token):
             supplier=None,
             **template_data), 400
     else:
-        user = data_api_client.get_user(email_address=token.get("email_address"))
+        user_json = data_api_client.get_user(email_address=token.get("email_address"))
 
-        user = User.from_json(user)
-        if user.is_locked() or not user.is_active() or user.supplier_id is not None:
+        user = User.from_json(user_json)
+        if user.is_locked() or not user.is_active() or not user_has_role(user_json, 'buyer'):
             abort("should not update an existing supplier"),  400
 
         data_api_client.update_user(

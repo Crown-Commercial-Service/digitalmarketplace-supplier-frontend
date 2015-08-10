@@ -46,13 +46,13 @@
           Not Invited
       </p>
       {% endif %}
+            </div><div class="/sc"></div>
   {% endfor %}
   {% endif %}
   {% endwith %}
 
     {% with
-      context = current_user.email_address,
-      heading = "Their email address",
+      heading = "Invite a contributor",
       smaller = true
     %}
       {% include 'toolkit/page-heading.html' %}
