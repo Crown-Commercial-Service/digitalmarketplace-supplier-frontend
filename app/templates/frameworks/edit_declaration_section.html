@@ -37,6 +37,9 @@
   %}
     {% include 'toolkit/page-heading.html' %}
   {% endwith %}
+  <p>
+    You must complete this declaration for your services to be eligible for G-Cloud 7 submission.
+  </p>
   <form method="post" class="supplier-declaration">
 
     {% set question_index = [0] %}
@@ -67,7 +70,7 @@
       {% include "toolkit/button.html" %}
     {% endwith %}
 
-    <a href="/suppliers">Return to application</a>
+    <a href="/suppliers">Return to G-Cloud 7 application</a>
 
   </form>
 {% endblock %}
