@@ -891,7 +891,7 @@ class TestSubmissionDocuments(BaseApplicationTest):
         )
 
         assert_equal(res.status_code, 302)
-        assert_equal(res.headers['Location'], 'http://example.com/document.pdf')
+        assert_equal(res.headers['Location'], 'http://localhost/document.pdf')
 
     def test_missing_document_url(self, s3):
         s3.return_value = mock.Mock()
