@@ -19,6 +19,99 @@ class TestFrameworksDashboard(BaseApplicationTest):
 
             assert_equal(res.status_code, 200)
 
+    def test_declaration_status_when_complete(self, data_api_client):
+        with self.app.test_client():
+            self.login()
+
+            data_api_client.get_selection_answers.return_value = True
+
+            res = self.client.get("/suppliers/frameworks/g-cloud-7")
+
+            doc = html.fromstring(res.get_data(as_text=True))
+            assert_equal(
+                len(doc.xpath('//p[contains(text(), "You have made the declaration")]')),
+                1)
+
+    def test_declaration_status_when_not_complete(self, data_api_client):
+        with self.app.test_client():
+            self.login()
+
+            response = Mock()
+            response.status_code = 404
+            data_api_client.get_selection_answers.side_effect = APIError(response)
+
+            res = self.client.get("/suppliers/frameworks/g-cloud-7")
+
+            doc = html.fromstring(res.get_data(as_text=True))
+            assert_equal(
+                len(doc.xpath('//p[contains(text(), "You have made the declaration")]')),
+                0)
+
+
+FULL_G7_SUBMISSION = {
+    "PR1": "true",
+    "PR2": "true",
+    "PR3": "true",
+    "PR4": "true",
+    "PR5": "true",
+    "SQ1-1i-i": "true",
+    "SQ2-1abcd": "true",
+    "SQ2-1e": "true",
+    "SQ2-1f": "true",
+    "SQ2-1ghijklmn": "true",
+    "SQ2-2a": "true",
+    "SQ3-1a": "true",
+    "SQ3-1b": "true",
+    "SQ3-1c": "true",
+    "SQ3-1d": "true",
+    "SQ3-1e": "true",
+    "SQ3-1f": "true",
+    "SQ3-1g": "true",
+    "SQ3-1h-i": "true",
+    "SQ3-1h-ii": "true",
+    "SQ3-1i-i": "true",
+    "SQ3-1i-ii": "true",
+    "SQ3-1j": "true",
+    "SQ4-1a": "true",
+    "SQ4-1b": "true",
+    "SQ5-2a": "true",
+    "SQD2b": "true",
+    "SQD2d": "true",
+    "SQ1-1a": "Blah",
+    "SQ1-1b": "Blah",
+    "SQ1-1cii": "Blah",
+    "SQ1-1d": "Blah",
+    "SQ1-1e": "Blah",
+    "SQ1-1f": "Blah",
+    "SQ1-1g": "999999999",
+    "SQ1-1h": "999999999",
+    "SQ1-1i-ii": "Blah",
+    "SQ1-1j-ii": "Blah",
+    "SQ1-1k": "Blah",
+    "SQ1-1n": "Blah",
+    "SQ1-1o": "Blah",
+    "SQ1-1p-i": "Blah",
+    "SQ1-1p-ii": "Blah",
+    "SQ1-1p-iii": "Blah",
+    "SQ1-1p-iv": "Blah",
+    "SQ1-1q-i": "Blah",
+    "SQ1-1q-ii": "Blah",
+    "SQ1-1q-iii": "Blah",
+    "SQ1-1q-iv": "Blah",
+    "SQ1-2a": "Blah",
+    "SQ1-2b": "Blah",
+    "SQ2-2b": "Blah",
+    "SQ4-1c": "Blah",
+    "SQD2c": "Blah",
+    "SQD2e": "Blah",
+    "SQ1-1ci": "public limited company",
+    "SQ1-1j-i": "licensed?",
+    "SQ1-1l": "voluntary community social enterprise (VCSE)?",
+    "SQ1-1m": "micro",
+    "SQ1-3": "on-demand self-service. blah blah",
+    "SQ5-1a": "Yes – your organisation has, blah blah",
+}
+
 
 @mock.patch('app.main.views.frameworks.data_api_client')
 class TestSupplierDeclaration(BaseApplicationTest):
@@ -66,17 +159,10 @@ class TestSupplierDeclaration(BaseApplicationTest):
             self.login()
             res = self.client.post(
                 '/suppliers/frameworks/g-cloud-7/declaration',
-                data={
-                    'PR1': True,
-                    'SQ1-2a': 'Jo Bloggs',
-                })
+                data=FULL_G7_SUBMISSION)
 
             assert_equal(res.status_code, 302)
-            data_api_client.answer_selection_questions.assert_called_with(
-                1234, 'g-cloud-7',
-                {'PR1': True, 'SQ1-2a': 'Jo Bloggs'},
-                'email@email.com'
-            )
+            data_api_client.answer_selection_questions.assert_called()
 
     def test_post_valid_data_with_api_failure(self, data_api_client):
         with self.app.test_client():
@@ -89,12 +175,27 @@ class TestSupplierDeclaration(BaseApplicationTest):
 
             res = self.client.post(
                 '/suppliers/frameworks/g-cloud-7/declaration',
-                data={
-                    'PR1': True,
-                    'SQ1-2a': 'Jo Bloggs',
-                })
+                data=FULL_G7_SUBMISSION)
 
             assert_equal(res.status_code, 400)
+
+    @mock.patch('app.main.views.frameworks.get_error_messages')
+    def test_post_with_validation_errors(self, get_error_messages, data_api_client):
+        """Test that answers are not saved if there are errors
+
+        For unit tests of the validation see :mod:`tests.app.main.helpers.test_frameworks`
+        """
+        with self.app.test_client():
+            self.login()
+
+            get_error_messages.return_value = {'PR1': {'input_name': 'PR1', 'message': 'this is invalid'}}
+
+            res = self.client.post(
+                '/suppliers/frameworks/g-cloud-7/declaration',
+                data=FULL_G7_SUBMISSION)
+
+            assert_equal(res.status_code, 400)
+            assert not data_api_client.answer_selection_questions.called
 
 
 class TestSendClarificationQuestionEmail(BaseApplicationTest):
