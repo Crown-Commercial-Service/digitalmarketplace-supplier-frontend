@@ -38,21 +38,27 @@ ol {
 // Styles specific to Digital Marketplace
 
 .check-list {
-  padding-bottom: 0;
-
-  @include media(tablet) {
-    padding-bottom: $gutter-half;
+  .lead {
+    margin-bottom: $gutter-half;
   }
 
-  li {
-    margin-bottom: $gutter;
+  ul {
+    padding-bottom: 0;
 
-    p {
-      margin: 0;
+    @include media(tablet) {
+      padding-bottom: $gutter-half;
     }
 
-    a {
-      word-wrap: break-word;
+    li {
+      margin-bottom: $gutter-half;
+
+      p {
+        margin: 0;
+      }
+
+      a {
+        word-wrap: break-word;
+      }
     }
   }
 }
