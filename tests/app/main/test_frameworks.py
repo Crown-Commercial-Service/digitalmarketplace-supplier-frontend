@@ -137,12 +137,10 @@ class TestSendClarificationQuestionEmail(BaseApplicationTest):
             }, {
                 'question': '\t   \n\n\n',  # whitespace-only question
                 'error_message': 'Question cannot be empty'
-            }, {
-                'question': 'word ' * 501,  # 500+ word question
-                'error_message': 'Question cannot be more than 500 words or 5000 characters'
-            }, {
+            },
+            {
                 'question': ('ten__chars' * 500) + '1',  # 5000+ char question
-                'error_message': 'Question cannot be more than 500 words or 5000 characters'
+                'error_message': 'Question cannot be longer than 5000 characters'
             }
         ]:
 

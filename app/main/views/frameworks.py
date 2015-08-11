@@ -126,8 +126,8 @@ def framework_updates_email_clarification_question():
 
     if not clarification_question:
         return _framework_updates_page("Question cannot be empty")
-    elif len(clarification_question.split()) > 500 or len(clarification_question) > 5000:
-        return _framework_updates_page("Question cannot be more than 500 words or 5000 characters")
+    elif len(clarification_question) > 5000:
+        return _framework_updates_page("Question cannot be longer than 5000 characters")
 
     email_body = render_template(
         "emails/clarification_question.html",
