@@ -26,7 +26,7 @@ with items = [
         {% for field_name, field_errors in form.errors|dictsort if field_errors %}
         <ul>
         {% for error in field_errors %}
-        <li><a href="#example-textbox" class="validation-masthead-link">{{ form[field_name].label }}</a></li>
+        <li><a href="#{{ form[field_name].id }}" class="validation-masthead-link">{{ form[field_name].label }}</a></li>
         {% endfor %}
         </ul>
         {% endfor %}
