@@ -166,10 +166,10 @@ def test_invalid_vat_number_causes_error():
 
 def test_character_limit_errors():
     cases = [
-        ("SQ1-1a", 255),
-        ("SQ1-1cii", 255),
-        ("SQ1-1d", 255),
-        ("SQ1-1i-ii", 4096),
+        ("SQ1-1a", 5000),
+        ("SQ1-1cii", 5000),
+        ("SQ1-1d", 5000),
+        ("SQ1-1i-ii", 5000),
     ]
     content = declaration_content.get_builder()
     submission = FULL_G7_SUBMISSION.copy()

@@ -50,10 +50,10 @@ def get_answer_required_errors(content, answers):
 
 def get_character_limit_errors(answers):
     length_limits = {
-        "SQ1-1a": 255,
-        "SQ1-1cii": 255,
-        "SQ1-1d": 255,
-        "SQ1-1i-ii": 4096,
+        "SQ1-1a": 5000,
+        "SQ1-1cii": 5000,
+        "SQ1-1d": 5000,
+        "SQ1-1i-ii": 5000,
     }
     errors_map = {}
     for field, limit in length_limits.items():
