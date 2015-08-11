@@ -33,6 +33,14 @@ def get_all_fields(content):
     return set(reduce(add, (section.get_question_ids() for section in content)))
 
 
+def get_question_numbers(content):
+    numbers = {}
+    for section in content:
+        for question_id in section.get_question_ids():
+            numbers[question_id] = len(numbers) + 1
+    return numbers
+
+
 def get_fields_with_values(answers):
     return set(key for key, value in answers.items() if not isinstance(value, six.string_types) or len(value) > 0)
 
@@ -97,12 +105,13 @@ def get_all_errors(content, answers):
 
 def get_error_messages(content, answers):
     raw_errors_map = get_all_errors(content, answers)
+    question_numbers = get_question_numbers(content)
     errors_map = {}
     for question_id, message_key in raw_errors_map.items():
         validation_message = get_error_message(content, question_id, message_key)
         errors_map[question_id] = {
             'input_name': question_id,
-            'question': content.get_question(question_id)['question'],
+            'question': "Question {}".format(question_numbers[question_id]),
             'message': validation_message,
         }
 
