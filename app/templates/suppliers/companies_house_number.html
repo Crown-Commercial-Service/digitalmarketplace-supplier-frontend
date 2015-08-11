@@ -30,7 +30,7 @@
     <div class="column-two-thirds">
       <div class="hint">
         <p>This is a unique 8-character number given to you by Companies House.</p>
-        <p>Visit <a href="https://beta.companieshouse.gov.uk/" rel="external">beta.companieshouse.gov.uk</a> to get your number</p>
+        <p><a href="https://beta.companieshouse.gov.uk/" rel="external">Visit Companies House to get your number</a></p>
       </div>
       <form method="POST" action="{{ url_for('.companies_house_number') }}">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
