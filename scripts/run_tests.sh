@@ -8,6 +8,7 @@
 # Use default environment vars for localhost if not already set
 export DM_DATA_API_AUTH_TOKEN=${DM_DATA_API_AUTH_TOKEN:=myToken}
 export DM_PASSWORD_SECRET_KEY=${DM_PASSWORD_SECRET_KEY:=not_very_secret}
+export DM_SHARED_EMAIL_KEY=${DM_SHARED_EMAIL_KEY:=not_very_secret}
 
 export DM_G7_DRAFT_DOCUMENTS_URL=${DM_S3_DOCUMENTS_URL:=http://localhost}
 
@@ -29,11 +30,11 @@ function display_result {
   fi
 }
 
-npm run --silent frontend-build:production
-display_result $? 1 "Build of front end static assets"
-
 pep8 .
 display_result $? 2 "Code style check"
+
+npm run --silent frontend-build:production
+display_result $? 1 "Build of front end static assets"
 
 nosetests -v -s --with-doctest
 display_result $? 3 "Unit tests"

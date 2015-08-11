@@ -16,6 +16,7 @@ export DM_G7_DRAFT_DOCUMENTS_URL=${DM_S3_DOCUMENTS_URL:=https://${DM_S3_DOCUMENT
 
 export DM_MANDRILL_API_KEY=${DM_MANDRILL_API_KEY:=not_a_real_key}
 export DM_PASSWORD_SECRET_KEY=${DM_PASSWORD_SECRET_KEY:=verySecretKey}
+export DM_SHARED_EMAIL_KEY=${DM_SHARED_EMAIL_KEY:=very_secret}
 
 echo "Environment variables in use:"
 env | grep DM_

@@ -1,7 +1,7 @@
 {% extends "_base_page.html" %}
 {% import "toolkit/summary-table.html" as summary %}
 
-{% block page_title %}Current users – Digital Marketplace{% endblock %}
+{% block page_title %}Add or remove contributors – Your account - Digital Marketplace{% endblock %}
 
 {% block breadcrumb %}
   {%
@@ -21,49 +21,54 @@
 {% endblock %}
 
 {% block main_content %}
-  {% with messages = get_flashed_messages(with_categories=true) %}
-    {% if messages %}
-      {% for category, message in messages %}
-        {% if message['deactivate_user_name'] and message['deactivate_user_email_address'] %}
-          {% set message = "{} ({}) has been removed as a contributor. They can be invited again at any time.".format(message['deactivate_user_name'], message['deactivate_user_email_address']) %}
-        {% endif %}
-        {%
-          with
-          message = message,
-          type = "destructive" if category == 'error' else "success"
-        %}
-          {% include "toolkit/notification-banner.html" %}
-        {% endwith %}
-      {% endfor %}
-    {% endif %}
-  {% endwith %}
-  <div class="grid-row">
-    <div class="column-two-thirds">
-      {% with
-        heading = "Contributors"
-      %}
-        {% include 'toolkit/page-heading.html' %}
-      {% endwith %}
-    </div>
-  </div>
-  {% call(item) summary.table(
-    users,
-    caption="Contributors for " + current_user.supplier_name,
-    field_headings=[
-      "Name",
-      "Email address",
-      summary.hidden_field_heading("Action")
-    ],
-    field_headings_visible=True
-  ) %}
-    {% call summary.row() %}
-      {{ summary.field_name(item.name) }}
-      {{ summary.text(item.emailAddress) }}
-      {% if item.id != current_user.id %}
-        {{ summary.button("Remove", url_for('main.deactivate_user', user_id=item.id), csrf_token_value=csrf_token()) }}
-      {% else %}
-        {{ summary.text('') }}
+  <div class="single-summary-page">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          {% if message['deactivate_user_name'] and message['deactivate_user_email_address'] %}
+            {% set message = "{} ({}) has been removed as a contributor. They can be invited again at any time.".format(message['deactivate_user_name'], message['deactivate_user_email_address']) %}
+          {% elif message == 'user_invited' %}
+            {% set message = "Contributor invited" %}
+          {% endif %}
+          {%
+            with
+            message = message,
+            type = "destructive" if category == 'error' else "success"
+          %}
+            {% include "toolkit/notification-banner.html" %}
+          {% endwith %}
+        {% endfor %}
       {% endif %}
+    {% endwith %}
+    {% with
+      context = current_user.email_address,
+      heading = "Add or remove contributors",
+      smaller = true
+    %}
+      {% include 'toolkit/page-heading.html' %}
+    {% endwith %}
+    <a class="summary-change-link" href="{{ url_for('.invite_user') }}">Invite a contributor</a>
+    {% call(item) summary.table(
+      users,
+      caption="Contributors for " + current_user.supplier_name,
+      field_headings=[
+        "Name",
+        "Email address",
+        summary.hidden_field_heading("Action")
+      ],
+      field_headings_visible=True
+    ) %}
+      {% call summary.row() %}
+        {{ summary.field_name(item.name) }}
+        {{ summary.text(item.emailAddress) }}
+        {% if item.id != current_user.id %}
+          {{ summary.button("Remove", url_for('main.deactivate_user', user_id=item.id), csrf_token_value=csrf_token()) }}
+        {% else %}
+          {{ summary.text('') }}
+        {% endif %}
+      {% endcall %}
     {% endcall %}
-  {% endcall %}
+  </div>
 {% endblock %}
+
+

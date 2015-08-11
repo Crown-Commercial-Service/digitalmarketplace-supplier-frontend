@@ -21,27 +21,33 @@ class BaseApplicationTest(object):
         return None
 
     @staticmethod
-    def user(id, email_address, supplier_id, supplier_name,
-             is_token_valid=True, locked=False, active=True):
+    def user(id, email_address, supplier_id, supplier_name, name,
+             is_token_valid=True, locked=False, active=True, role='buyer'):
 
         hours_offset = -1 if is_token_valid else 1
         date = datetime.utcnow() + timedelta(hours=hours_offset)
         password_changed_at = date.strftime(DATETIME_FORMAT)
 
-        return {
-            "users": {
-                "id": id,
-                "emailAddress": email_address,
-                "name": "User Name",
-                "supplier": {
-                    "supplierId": supplier_id,
-                    "name": supplier_name,
-                },
-                "role": "supplier",
-                "locked": locked,
-                'active': active,
-                'passwordChangedAt': password_changed_at,
+        user = {
+            "id": id,
+            "emailAddress": email_address,
+            "name": name,
+            "role": role,
+            "locked": locked,
+            'active': active,
+            "active": active,
+            'passwordChangedAt': password_changed_at
+        }
+
+        if supplier_id:
+            supplier = {
+                "supplierId": supplier_id,
+                "name": supplier_name,
             }
+            user['role'] = 'supplier'
+            user['supplier'] = supplier
+        return {
+            "users": user
         }
 
     @staticmethod
@@ -66,11 +72,11 @@ class BaseApplicationTest(object):
     def login(self):
         data_api_client.authenticate_user = Mock(
             return_value=(self.user(
-                123, "email@email.com", 1234, 'Supplier Name')))
+                123, "email@email.com", 1234, 'Supplier Name', 'Name')))
 
         data_api_client.get_user = Mock(
             return_value=(self.user(
-                123, "email@email.com", 1234, 'Supplier Name')))
+                123, "email@email.com", 1234, 'Supplier Name', 'Name')))
 
         self.client.post("/suppliers/login", data={
             'email_address': 'valid@email.com',

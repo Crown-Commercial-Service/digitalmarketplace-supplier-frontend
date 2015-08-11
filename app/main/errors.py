@@ -1,5 +1,5 @@
 from flask import render_template
-from ..main import main
+from app.main import main
 from dmutils.apiclient import APIError
 
 

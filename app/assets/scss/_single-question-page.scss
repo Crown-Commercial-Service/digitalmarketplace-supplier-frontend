@@ -1,0 +1,15 @@
+.single-question-page {
+  .question {
+    margin: 0 0 ($gutter * 1.5);
+  }
+
+  .hint {
+    color: $text-colour;
+  }
+
+  /* Visual users have the h1 as the label */
+  form label {
+    position: absolute;
+    left: -9999em;
+  }
+}

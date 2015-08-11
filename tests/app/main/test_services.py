@@ -70,6 +70,7 @@ class TestListServices(BaseApplicationTest):
                 "email@email.com",
                 1234,
                 'Supplier Name',
+                'User name',
                 active=False
             )
 
@@ -104,11 +105,11 @@ class TestListServicesLogin(BaseApplicationTest):
         with self.app.test_client():
             data_api_client.authenticate_user = Mock(
                 return_value=(self.user(
-                    123, "email@email.com", 1234, 'Supplier Name')))
+                    123, "email@email.com", 1234, 'Supplier Name', "Name")))
 
             data_api_client.get_user = Mock(
                 return_value=(self.user(
-                    123, "email@email.com", 1234, 'Supplier Name')))
+                    123, "email@email.com", 1234, 'Supplier Name', "Name")))
 
             data_api_client.find_services = Mock(
                 return_value={'services': [{
@@ -149,11 +150,11 @@ class TestSupplierUpdateService(BaseApplicationTest):
             service_belongs_to_user=True
     ):
         data_api_client.authenticate_user.return_value = self.user(
-            123, "email@email.com", 1234, 'name'
+            123, "email@email.com", 1234, 'name', "Name"
         )
 
         data_api_client.get_user.return_value = self.user(
-            123, "email@email.com", 1234, 'name'
+            123, "email@email.com", 1234, 'name', "Name"
         )
 
         data_api_client.get_service.return_value = {

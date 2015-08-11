@@ -1,7 +1,6 @@
-from flask import request, abort, current_app, url_for
+from flask import abort, current_app, url_for
 from flask_login import current_user
 
-from dmutils.config import convert_to_boolean, convert_to_number
 from dmutils import s3
 from dmutils.documents import filter_empty_files, validate_documents, upload_document
 from dmutils.service_attribute import Attribute

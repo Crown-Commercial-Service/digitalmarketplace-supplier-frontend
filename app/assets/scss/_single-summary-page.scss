@@ -1,0 +1,13 @@
+.single-summary-page {
+  .summary-change-link {
+    @include copy-19;
+    text-align: left;
+    display: block;
+    margin: 0 0 $gutter-half;
+
+    @include media(tablet) {
+      text-align: right;
+      margin-bottom: 0;
+    }
+  }
+}
