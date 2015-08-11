@@ -66,14 +66,14 @@
   </div>
 
   <div class="grid-row">
-    <div class="column-two-thirds">
+    <div class="column-one-whole updates-document-tables">
       {{ summary.heading("Framework application information") }}
       {% call(item) summary.list_table(
         [
-          {"date_uploaded": "Monday 1 November 2015", "document": "example.pdf"},
-          {"date_uploaded": "Friday 20 October 2015", "document": "example.pdf"},
-          {"date_uploaded": "Wednesday 17 November 2015", "document": "example.pdf"},
-          {"date_uploaded": "Monday 15 November 2015", "document": "example.pdf"},
+          {"date_uploaded": "Monday 1 November 2015", "document": "Example"},
+          {"date_uploaded": "Friday 20 October 2015", "document": "Example"},
+          {"date_uploaded": "Wednesday 17 November 2015", "document": "Example"},
+          {"date_uploaded": "Monday 15 November 2015", "document": "Example"},
         ],
         caption="Framework application information",
         empty_message="No application information exists",
@@ -84,7 +84,7 @@
         field_headings_visible=False
       ) %}
         {% call summary.row() %}
-          {{ summary.field_name(item.date_uploaded, wide=True) }}
+          {{ summary.field_name(item.date_uploaded) }}
           {% call summary.field() %}
              <a href="#" class="document-link-with-icon">
               <span class='document-icon'>pdf<span> document:</span></span>
@@ -93,17 +93,13 @@
           {% endcall %}
         {% endcall %}
       {% endcall %}
-    </div>
-  </div>
 
-  <div class="grid-row">
-    <div class="column-two-thirds">
       {{ summary.heading("Clarification questions") }}
       {% call(item) summary.list_table(
         [
-          {"date_uploaded": "Tuesday 20 September 2015", "document": "Clarification questions and answers.odf"},
-          {"date_uploaded": "Tuesday 13 September 2015", "document": "Clarification questions and answers.odf"},
-          {"date_uploaded": "Tuesday 6 September 2015", "document": "Clarification questions and answers.odf"},
+          {"date_uploaded": "Tuesday 20 September 2015", "document": "Clarification questions and answers"},
+          {"date_uploaded": "Tuesday 13 September 2015", "document": "Clarification questions and answers"},
+          {"date_uploaded": "Tuesday 6 September 2015", "document": "Clarification questions and answers"},
         ],
         caption="Clarification questions",
         empty_message="No clarification questions exist",
@@ -114,7 +110,7 @@
         field_headings_visible=False
       ) %}
         {% call summary.row() %}
-          {{ summary.field_name(item.date_uploaded, wide=True) }}
+          {{ summary.field_name(item.date_uploaded) }}
           {% call summary.field() %}
              <a href="#" class="document-link-with-icon">
               <span class='document-icon'>odf<span> document:</span></span>
