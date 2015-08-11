@@ -1,8 +1,10 @@
-from nose.tools import assert_equal
+from nose.tools import assert_equal, assert_true
 import mock
 from mock import Mock
 from lxml import html
 from dmutils.apiclient import APIError
+from dmutils.email import MandrillException
+from flask import render_template
 
 from ..helpers import BaseApplicationTest
 
@@ -93,3 +95,88 @@ class TestSupplierDeclaration(BaseApplicationTest):
                 })
 
             assert_equal(res.status_code, 400)
+
+
+class TestSendClarificationQuestionEmail(BaseApplicationTest):
+
+    def _send_email(self, clarification_question):
+        with self.app.test_client():
+            self.login()
+
+            return self.client.post(
+                "/suppliers/frameworks/g-cloud-7/updates",
+                data={
+                    'clarification_question': clarification_question,
+                }
+            )
+
+    def _assert_email(self, send_email, is_called=True):
+
+        if is_called:
+            assert_equal(1, send_email.call_count)
+            send_email.assert_called_once_with(
+                "digitalmarketplace@mailinator.com",
+                mock.ANY,
+                "MANDRILL",
+                "Clarification question",
+                "suppliers@digitalmarketplace.service.gov.uk",
+                "G-Cloud 7 Supplier",
+                ["clarification-question"]
+            )
+
+        else:
+            assert_equal(0, send_email.call_count)
+
+    @mock.patch('app.main.views.frameworks.send_email')
+    def test_should_not_send_email_if_invalid_clarification_question(self, send_email):
+
+        for invalid_clarification_question in [
+            {
+                'question': '',  # empty question
+                'error_message': 'Question cannot be empty'
+            }, {
+                'question': '\t   \n\n\n',  # whitespace-only question
+                'error_message': 'Question cannot be empty'
+            },
+            {
+                'question': ('ten__chars' * 500) + '1',  # 5000+ char question
+                'error_message': 'Question cannot be longer than 5000 characters'
+            }
+        ]:
+
+            response = self._send_email(invalid_clarification_question['question'])
+            self._assert_email(send_email, is_called=False)
+
+            assert_equal(response.status_code, 400)
+            assert_true(
+                self.strip_all_whitespace('There was a problem with your submitted question')
+                in self.strip_all_whitespace(response.get_data(as_text=True))
+            )
+            assert_true(
+                self.strip_all_whitespace(invalid_clarification_question['error_message'])
+                in self.strip_all_whitespace(response.get_data(as_text=True))
+            )
+
+    @mock.patch('app.main.views.frameworks.send_email')
+    def test_should_call_send_email_with_correct_params(self, send_email):
+
+        clarification_question = 'This is a clarification question.'
+        response = self._send_email(clarification_question)
+
+        self._assert_email(send_email)
+
+        assert_equal(response.status_code, 200)
+        assert_true(
+            self.strip_all_whitespace('<p class="banner-message">Your clarification message has been sent.</p>')
+            in self.strip_all_whitespace(response.get_data(as_text=True))
+        )
+
+    @mock.patch('app.main.views.frameworks.send_email')
+    def test_should_be_a_503_if_email_fails(self, send_email):
+        send_email.side_effect = MandrillException("Arrrgh")
+
+        clarification_question = 'This is a clarification question.'
+        response = self._send_email(clarification_question)
+        self._assert_email(send_email)
+
+        assert_equal(response.status_code, 503)

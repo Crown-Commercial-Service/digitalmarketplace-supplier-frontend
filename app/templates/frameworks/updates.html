@@ -1,0 +1,148 @@
+{% extends "_base_page.html" %}
+{% import "toolkit/summary-table.html" as summary %}
+
+{% block page_title %}G-Cloud 7 updates – Digital Marketplace{% endblock %}
+
+{% block breadcrumb %}
+  {%
+    with items = [
+      {
+        "link": "/",
+        "label": "Digital Marketplace",
+      },
+      {
+        "link": url_for(".dashboard"),
+        "label": "Your account",
+      },
+      {
+        "link": url_for(".framework_dashboard"),
+        "label": "Apply to G-Cloud 7",
+      }
+    ]
+  %}
+    {% include "toolkit/breadcrumb.html" %}
+  {% endwith %}
+{% endblock %}
+
+{% block main_content %}
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for category, message in messages %}
+      {% if message == 'message_sent' %}
+        {% set message = "Your clarification message has been sent." %}
+      {% endif %}
+      {%
+        with
+        message = message,
+        type = "destructive" if category == 'error' else "success"
+      %}
+        {% include "toolkit/notification-banner.html" %}
+      {% endwith %}
+    {% endfor %}
+  {% endwith %}
+
+  {% if error_message %}
+    {%
+      with
+      errors = [
+        {
+            "input_name": clarification_question_name,
+            "question": "Ask a G-Cloud 7 clarification question"
+        }
+    ],
+      lede = "There was a problem with your submitted question"
+    %}
+      {% include "toolkit/forms/validation.html" %}
+    {% endwith %}
+  {% endif %}
+
+  <div class="grid-row">
+    <div class="column-two-thirds">
+      {% with
+         smaller = true,
+         heading = "G-Cloud 7 updates"
+      %}
+        {% include "toolkit/page-heading.html" %}
+      {% endwith %}
+    </div>
+  </div>
+
+  <div class="grid-row">
+    <div class="column-one-whole updates-document-tables">
+      {{ summary.heading("Framework application information") }}
+      {% call(item) summary.list_table(
+        [
+          {"date_uploaded": "Monday 1 November 2015", "document": "Example"},
+          {"date_uploaded": "Friday 20 October 2015", "document": "Example"},
+          {"date_uploaded": "Wednesday 17 November 2015", "document": "Example"},
+          {"date_uploaded": "Monday 15 November 2015", "document": "Example"},
+        ],
+        caption="Framework application information",
+        empty_message="No application information exists",
+        field_headings=[
+          "Date uploaded",
+          "Document"
+        ],
+        field_headings_visible=False
+      ) %}
+        {% call summary.row() %}
+          {{ summary.field_name(item.date_uploaded) }}
+          {% call summary.field() %}
+             <a href="#" class="document-link-with-icon">
+              <span class='document-icon'>pdf<span> document:</span></span>
+              {{ item.document }}
+            </a>
+          {% endcall %}
+        {% endcall %}
+      {% endcall %}
+
+      {{ summary.heading("Clarification questions") }}
+      {% call(item) summary.list_table(
+        [
+          {"date_uploaded": "Tuesday 20 September 2015", "document": "Clarification questions and answers"},
+          {"date_uploaded": "Tuesday 13 September 2015", "document": "Clarification questions and answers"},
+          {"date_uploaded": "Tuesday 6 September 2015", "document": "Clarification questions and answers"},
+        ],
+        caption="Clarification questions",
+        empty_message="No clarification questions exist",
+        field_headings=[
+          "Date uploaded",
+          "Document"
+        ],
+        field_headings_visible=False
+      ) %}
+        {% call summary.row() %}
+          {{ summary.field_name(item.date_uploaded) }}
+          {% call summary.field() %}
+             <a href="#" class="document-link-with-icon">
+              <span class='document-icon'>odf<span> document:</span></span>
+              {{ item.document }}
+            </a>
+          {% endcall %}
+        {% endcall %}
+      {% endcall %}
+    </div>
+  </div>
+
+  <form method="post">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+      {%
+        with
+        large=true,
+        question = "Ask a G-Cloud 7 clarification question",
+        name = clarification_question_name,
+        hint = "Questions will be collated and answered weekly",
+        error = error_message
+      %}
+        {% include "toolkit/forms/textbox.html" %}
+      {% endwith %}
+      {%
+        with
+        label="Submit question",
+        type="save"
+      %}
+        {% include "toolkit/button.html" %}
+      {% endwith %}
+  </form>
+
+{% endblock %}
