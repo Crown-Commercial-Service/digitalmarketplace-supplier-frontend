@@ -2,6 +2,7 @@ import re
 from operator import add
 from functools import reduce
 import six
+from werkzeug.datastructures import ImmutableOrderedMultiDict
 
 
 def get_required_fields(all_fields, answers):
@@ -38,7 +39,7 @@ def get_required_fields(all_fields, answers):
 
 
 def get_all_fields(content):
-    return set(reduce(add, (section.get_question_ids() for section in content)))
+    return reduce(add, (section.get_question_ids() for section in content))
 
 
 def get_question_numbers(content):
@@ -102,7 +103,7 @@ def get_error_message(content, question_id, message_key):
 
 
 def get_all_errors(content, answers):
-    all_fields = get_all_fields(content)
+    all_fields = set(get_all_fields(content))
     errors_map = {}
 
     errors_map.update(get_answer_required_errors(all_fields, answers))
@@ -115,13 +116,14 @@ def get_all_errors(content, answers):
 def get_error_messages(content, answers):
     raw_errors_map = get_all_errors(content, answers)
     question_numbers = get_question_numbers(content)
-    errors_map = {}
-    for question_id, message_key in raw_errors_map.items():
-        validation_message = get_error_message(content, question_id, message_key)
-        errors_map[question_id] = {
-            'input_name': question_id,
-            'question': "Question {}".format(question_numbers[question_id]),
-            'message': validation_message,
-        }
+    errors_map = list()
+    for question_id in get_all_fields(content):
+        if question_id in raw_errors_map:
+            validation_message = get_error_message(content, question_id, raw_errors_map[question_id])
+            errors_map.append((question_id, {
+                'input_name': question_id,
+                'question': "Question {}".format(question_numbers[question_id]),
+                'message': validation_message,
+            }))
 
-    return errors_map
+    return ImmutableOrderedMultiDict(errors_map)
