@@ -27,24 +27,17 @@ class Config(object):
     RESET_PASSWORD_EMAIL_NAME = 'Digital Marketplace Admin'
     RESET_PASSWORD_EMAIL_FROM = 'enquiries@digitalmarketplace.service.gov.uk'
     RESET_PASSWORD_EMAIL_SUBJECT = 'Reset your Digital Marketplace password'
-<<<<<<< HEAD
 
     INVITE_EMAIL_NAME = 'Digital Marketplace Admin'
     INVITE_EMAIL_FROM = 'enquiries@digitalmarketplace.service.gov.uk'
     INVITE_EMAIL_SUBJECT = 'Your Digital Marketplace invitation'
 
-=======
     CREATE_USER_SUBJECT = 'Create your Digital Marketplace account'
->>>>>>> Added code to send email for account creation
     SECRET_KEY = os.getenv('DM_PASSWORD_SECRET_KEY')
     SHARED_EMAIL_KEY = os.getenv('DM_SHARED_EMAIL_KEY')
     RESET_PASSWORD_SALT = 'ResetPasswordSalt'
-<<<<<<< HEAD
     INVITE_EMAIL_SALT = 'InviteEmailSalt'
-=======
-    SHARED_EMAIL_KEY = os.getenv('DM_PASSWORD_SECRET_KEY')
     CREATE_EMAIL_SALT = "CreateEmailSalt"
->>>>>>> Added code to send email for account creation
 
     STATIC_URL_PATH = '/suppliers/static'
     ASSET_PATH = STATIC_URL_PATH + '/'
