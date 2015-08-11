@@ -152,9 +152,7 @@ class TestSupplierDashboardLogin(BaseApplicationTest):
 
 @mock.patch("app.main.views.suppliers.data_api_client")
 class TestSupplierUpdate(BaseApplicationTest):
-
     def _login(self, data_api_client):
-
         data_api_client.authenticate_user.return_value = self.user(
             123, "email@email.com", 1234, "name", "Name"
         )
@@ -305,7 +303,6 @@ class TestSupplierUpdate(BaseApplicationTest):
 
 
 class TestCreateSupplier(BaseApplicationTest):
-
     def test_should_be_an_error_if_no_duns_number(self):
         res = self.client.post(
             "/suppliers/duns-number",
@@ -533,7 +530,8 @@ class TestCreateSupplier(BaseApplicationTest):
         res = self.client.get("/suppliers/duns-number")
         assert_equal(res.status_code, 200)
         assert_equal(
-            '<input type="text" name="duns_number" id="duns_number" class="text-box" value="999" />' in res.get_data(as_text=True),  # noqa
+            '<input type="text" name="duns_number" id="duns_number" class="text-box" value="999" />' in res.get_data(
+                as_text=True),  # noqa
             True)
 
     def test_should_populate_companies_house_from_session(self):
@@ -542,7 +540,8 @@ class TestCreateSupplier(BaseApplicationTest):
         res = self.client.get("/suppliers/companies-house-number")
         assert_equal(res.status_code, 200)
         assert_equal(
-            '<input type="text" name="companies_house_number" id="companies_house_number" class="text-box" value="999" />' in res.get_data(as_text=True),  # noqa
+            '<input type="text" name="companies_house_number" id="companies_house_number" class="text-box" value="999" />' in res.get_data(
+                as_text=True),  # noqa
             True)
 
     def test_should_populate_company_name_from_session(self):
@@ -551,7 +550,8 @@ class TestCreateSupplier(BaseApplicationTest):
         res = self.client.get("/suppliers/company-name")
         assert_equal(res.status_code, 200)
         assert_equal(
-            '<input type="text" name="company_name" id="company_name" class="text-box" value="Name" />' in res.get_data(as_text=True),  # noqa
+            '<input type="text" name="company_name" id="company_name" class="text-box" value="Name" />' in res.get_data(
+                as_text=True),  # noqa
             True)
 
     def test_should_populate_contact_details_from_session(self):
@@ -562,13 +562,16 @@ class TestCreateSupplier(BaseApplicationTest):
         res = self.client.get("/suppliers/company-contact-details")
         assert_equal(res.status_code, 200)
         assert_equal(
-            '<input type="text" name="email_address" id="email_address" class="text-box" value="email_address" />' in res.get_data(as_text=True),  # noqa
+            '<input type="text" name="email_address" id="email_address" class="text-box" value="email_address" />' in res.get_data(
+                as_text=True),  # noqa
             True)
         assert_equal(
-            '<input type="text" name="contact_name" id="contact_name" class="text-box" value="contact_name" />' in res.get_data(as_text=True),  # noqa
+            '<input type="text" name="contact_name" id="contact_name" class="text-box" value="contact_name" />' in res.get_data(
+                as_text=True),  # noqa
             True)
         assert_equal(
-            '<input type="text" name="phone_number" id="phone_number" class="text-box" value="phone_number" />' in res.get_data(as_text=True),  # noqa
+            '<input type="text" name="phone_number" id="phone_number" class="text-box" value="phone_number" />' in res.get_data(
+                as_text=True),  # noqa
             True)
 
     def test_should_be_an_error_to_be_submit_company_with_incomplete_session(self):
@@ -580,28 +583,37 @@ class TestCreateSupplier(BaseApplicationTest):
 
     @mock.patch("app.main.suppliers.data_api_client")
     def test_should_redirect_to_create_your_account_if_valid_session(self, data_api_client):
-        with self.client.session_transaction() as sess:
-            sess['email_address'] = "email_address"
-            sess['phone_number'] = "phone_number"
-            sess['contact_name'] = "contact_name"
-            sess['duns_number'] = "duns_number"
-            sess['company_name'] = "company_name"
-            sess['companies_house_number'] = "companies_house_number"
+        with self.client as c:
+            with c.session_transaction() as sess:
+                sess['email_address'] = "email_address"
+                sess['phone_number'] = "phone_number"
+                sess['contact_name'] = "contact_name"
+                sess['duns_number'] = "duns_number"
+                sess['company_name'] = "company_name"
+                sess['companies_house_number'] = "companies_house_number"
 
-        data_api_client.create_supplier.return_value = self.supplier()
-        res = self.client.post("/suppliers/company-summary")
-        assert_equal(res.status_code, 302)
-        assert_equal(res.location, "http://localhost/suppliers/create-your-account")
-        data_api_client.create_supplier.assert_called_once_with({
-            "contactInformation": [{
-                "email": "email_address",
-                "phoneNumber": "phone_number",
-                "contactName": "contact_name"
-            }],
-            "dunsNumber": "duns_number",
-            "name": "company_name",
-            "companiesHouseNumber": "companies_house_number",
-        })
+            data_api_client.create_supplier.return_value = self.supplier()
+            res = c.post("/suppliers/company-summary")
+            assert_equal(res.status_code, 302)
+            assert_equal(res.location, "http://localhost/suppliers/create-your-account")
+            data_api_client.create_supplier.assert_called_once_with({
+                "contactInformation": [{
+                    "email": "email_address",
+                    "phoneNumber": "phone_number",
+                    "contactName": "contact_name"
+                }],
+                "dunsNumber": "duns_number",
+                "name": "company_name",
+                "companiesHouseNumber": "companies_house_number",
+            })
+            assert_false('email_address' in session)
+            assert_false('phone_number' in session)
+            assert_false('contact_name' in session)
+            assert_false('duns_number' in session)
+            assert_false('company_name' in session)
+            assert_false('companies_house_number' in session)
+            assert_equal(session['email_supplier_id'], 12345)
+            assert_equal(session['email_company_name'], 'Supplier Name')
 
     @mock.patch("app.main.suppliers.data_api_client")
     def test_should_allow_missing_companies_house_number(self, data_api_client):
@@ -657,8 +669,8 @@ class TestCreateSupplier(BaseApplicationTest):
 
     def test_should_require_an_email_address(self):
         with self.client.session_transaction() as sess:
-            sess['company_name'] = "company_name"
-            sess['supplier_id'] = 1234
+            sess['email_company_name'] = "company_name"
+            sess['email_supplier_id'] = 1234
         res = self.client.post(
             "/suppliers/create-your-account",
             data={}
@@ -668,8 +680,8 @@ class TestCreateSupplier(BaseApplicationTest):
 
     def test_should_not_allow_incorrect_email_address(self):
         with self.client.session_transaction() as sess:
-            sess['company_name'] = "company_name"
-            sess['supplier_id'] = 1234
+            sess['email_company_name'] = "company_name"
+            sess['email_supplier_id'] = 1234
         res = self.client.post(
             "/suppliers/create-your-account",
             data={
@@ -682,39 +694,41 @@ class TestCreateSupplier(BaseApplicationTest):
     @mock.patch("app.main.suppliers.send_email")
     @mock.patch("app.main.suppliers.generate_token")
     def test_should_allow_correct_email_address(self, generate_token, send_email):
-        with self.client.session_transaction() as sess:
-            sess['company_name'] = "company_name"
-            sess['supplier_id'] = 1234
+        with self.client as c:
+            with c.session_transaction() as sess:
+                sess['email_company_name'] = "company_name"
+                sess['email_supplier_id'] = 1234
 
-        res = self.client.post(
-            "/suppliers/create-your-account",
-            data={
-                'email_address': "valid@email.com"
-            }
-        )
+            res = c.post(
+                "/suppliers/create-your-account",
+                data={
+                    'email_address': "valid@email.com"
+                }
+            )
 
-        generate_token.assert_called_once_with(
-            {
-                "email_address": "valid@email.com",
-                "supplier_id": 1234,
-                "supplier_name": "company_name"
-            },
-            "KEY",
-            "CreateEmailSalt"
-        )
+            generate_token.assert_called_once_with(
+                {
+                    "email_address": "valid@email.com",
+                    "supplier_id": 1234,
+                    "supplier_name": "company_name"
+                },
+                "KEY",
+                "CreateEmailSalt"
+            )
 
-        send_email.assert_called_once_with(
-            "valid@email.com",
-            mock.ANY,
-            "Mandrill Test",
-            "Create your Digital Marketplace account",
-            "enquiries@digitalmarketplace.service.gov.uk",
-            "Digital Marketplace Admin",
-            ["user-creation"]
-        )
+            send_email.assert_called_once_with(
+                "valid@email.com",
+                mock.ANY,
+                "Mandrill Test",
+                "Create your Digital Marketplace account",
+                "enquiries@digitalmarketplace.service.gov.uk",
+                "Digital Marketplace Admin",
+                ["user-creation"]
+            )
 
-        assert_equal(res.status_code, 302)
-        assert_equal(res.location, 'http://localhost/suppliers/create-your-account-complete')
+            assert_equal(res.status_code, 302)
+            assert_equal(res.location, 'http://localhost/suppliers/create-your-account-complete')
+            assert_equal(session['email_sent_to'], 'valid@email.com')
 
     @mock.patch("app.main.suppliers.send_email")
     @mock.patch("app.main.suppliers.generate_token")
@@ -734,8 +748,8 @@ class TestCreateSupplier(BaseApplicationTest):
     @mock.patch("app.main.suppliers.generate_token")
     def test_should_be_a_503_if_mandrill_failure_on_creation_email(self, generate_token, send_email):
         with self.client.session_transaction() as sess:
-            sess['company_name'] = "company_name"
-            sess['supplier_id'] = 1234
+            sess['email_company_name'] = "company_name"
+            sess['email_supplier_id'] = 1234
 
         send_email.side_effect = MandrillException("Failed")
 
@@ -767,3 +781,14 @@ class TestCreateSupplier(BaseApplicationTest):
         )
 
         assert_equal(res.status_code, 503)
+
+    def test_should_show_email_address_on_create_account_complete(self):
+        with self.client as c:
+            with c.session_transaction() as sess:
+                sess['email_sent_to'] = "my@email.com"
+
+            res = c.get("/suppliers/create-your-account-complete")
+
+            assert_equal(res.status_code, 200)
+            assert_true('A validation email has been sent to my@email.com' in res.get_data(as_text=True))
+            assert_false('email_sent_to' in session)
