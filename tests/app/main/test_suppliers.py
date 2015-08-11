@@ -383,14 +383,27 @@ class TestCreateSupplier(BaseApplicationTest):
         assert_true("Companies house number must be 8 characters" in res.get_data(as_text=True))
 
     def test_should_allow_valid_companies_house_number(self):
-        res = self.client.post(
-            "/suppliers/companies-house-number",
-            data={
-                'companies_house_number': "SC001122"
-            }
-        )
-        assert_equal(res.status_code, 302)
-        assert_equal(res.location, 'http://localhost/suppliers/company-name')
+        with self.client as c:
+            res = c.post(
+                "/suppliers/companies-house-number",
+                data={
+                    'companies_house_number': "SC001122"
+                }
+            )
+            assert_equal(res.status_code, 302)
+            assert_equal(res.location, 'http://localhost/suppliers/company-name')
+
+    def test_should_wipe_companies_house_number_if_not_supplied(self):
+        with self.client as c:
+            res = c.post(
+                "/suppliers/companies-house-number",
+                data={
+                    'companies_house_number': ""
+                }
+            )
+            assert_equal(res.status_code, 302)
+            assert_equal(res.location, 'http://localhost/suppliers/company-name')
+            assert_false("companies_house_number" in session)
 
     def test_should_allow_valid_company_name(self):
         res = self.client.post(
