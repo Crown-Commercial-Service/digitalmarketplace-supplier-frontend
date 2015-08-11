@@ -73,6 +73,7 @@ FULL_G7_SUBMISSION = {
     "SQ3-1i-i": "true",
     "SQ3-1i-ii": "true",
     "SQ3-1j": "true",
+    "SQ3-1k": "Blah",
     "SQ4-1a": "true",
     "SQ4-1b": "true",
     "SQ5-2a": "true",

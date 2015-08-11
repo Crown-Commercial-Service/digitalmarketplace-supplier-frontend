@@ -26,6 +26,14 @@ def get_required_fields(all_fields, answers):
     if not answers.get('SQ4-1a', False) and not answers.get('SQ4-1b', False):
         required_fields.remove('SQ4-1c')
 
+    # If you answered Yes to questions 41 - 53
+    dependent_fields = [
+        'SQ2-2a', 'SQ3-1a' 'SQ3-1b', 'SQ3-1c', 'SQ3-1d', 'SQ3-1e', 'SQ3-1f', 'SQ3-1g',
+        'SQ3-1h-i', 'SQ3-1h-ii', 'SQ3-1i-i', 'SQ3-1i-ii', 'SQ3-1j'
+    ]
+    if all(not answers.get(field) for field in dependent_fields):
+        required_fields.remove('SQ3-1k')
+
     return required_fields
 
 
@@ -62,6 +70,7 @@ def get_character_limit_errors(answers):
         "SQ1-1cii": 5000,
         "SQ1-1d": 5000,
         "SQ1-1i-ii": 5000,
+        "SQ3-1k": 5000,
     }
     errors_map = {}
     for field, limit in length_limits.items():

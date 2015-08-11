@@ -29,6 +29,7 @@ FULL_G7_SUBMISSION = {
     "SQ3-1i-i": True,
     "SQ3-1i-ii": True,
     "SQ3-1j": True,
+    "SQ3-1k": "Blah",
     "SQ4-1a": True,
     "SQ4-1b": True,
     "SQ5-2a": True,
@@ -148,6 +149,40 @@ def test_error_if_tax_issues_and_no_details():
     assert_equal(get_all_errors(content, submission), {'SQ4-1c': 'answer_required'})
 
 
+def test_error_if_mitigation_factors_not_provided_when_required():
+    content = declaration_content.get_builder()
+    submission = FULL_G7_SUBMISSION.copy()
+
+    del submission['SQ3-1k']
+
+    dependent_fields = [
+        'SQ2-2a', 'SQ3-1a' 'SQ3-1b', 'SQ3-1c', 'SQ3-1d', 'SQ3-1e', 'SQ3-1f', 'SQ3-1g',
+        'SQ3-1h-i', 'SQ3-1h-ii', 'SQ3-1i-i', 'SQ3-1i-ii', 'SQ3-1j'
+    ]
+    for field in dependent_fields:
+        # Set all other fields to false to show that just this field causes the error
+        for other in dependent_fields:
+            submission[other] = False
+        submission[field] = True
+
+        assert_equal(get_all_errors(content, submission), {'SQ3-1k': 'answer_required'})
+
+
+def test_mitigation_factors_not_required():
+    content = declaration_content.get_builder()
+    submission = FULL_G7_SUBMISSION.copy()
+
+    del submission['SQ3-1k']
+
+    dependent_fields = [
+        'SQ2-2a', 'SQ3-1a' 'SQ3-1b', 'SQ3-1c', 'SQ3-1d', 'SQ3-1e', 'SQ3-1f', 'SQ3-1g',
+        'SQ3-1h-i', 'SQ3-1h-ii', 'SQ3-1i-i', 'SQ3-1i-ii', 'SQ3-1j'
+    ]
+    for field in dependent_fields:
+        submission[field] = False
+    assert_equal(get_all_errors(content, submission), {})
+
+
 def test_invalid_duns_number_causes_error():
     content = declaration_content.get_builder()
     submission = FULL_G7_SUBMISSION.copy()
@@ -170,6 +205,7 @@ def test_character_limit_errors():
         ("SQ1-1cii", 5000),
         ("SQ1-1d", 5000),
         ("SQ1-1i-ii", 5000),
+        ("SQ3-1k", 5000),
     ]
     content = declaration_content.get_builder()
     submission = FULL_G7_SUBMISSION.copy()
