@@ -167,7 +167,7 @@ class TestSendClarificationQuestionEmail(BaseApplicationTest):
 
         assert_equal(response.status_code, 200)
         assert_true(
-            self.strip_all_whitespace('<p class="banner-message">Message sent. Cheers.</p>')
+            self.strip_all_whitespace('<p class="banner-message">Your clarification message has been sent.</p>')
             in self.strip_all_whitespace(response.get_data(as_text=True))
         )
 
