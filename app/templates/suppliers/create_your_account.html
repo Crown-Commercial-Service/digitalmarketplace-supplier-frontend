@@ -28,11 +28,12 @@
 
   <div class="grid-row">
     <div class="column-two-thirds">
-
-       <p>This will not be visible on the Digital Marketplace. You can add more accounts later.</p>
-       <p>You’ll receive an email asking you to validate this account.</p>
-       <p>The validation link expires after 24 hours. </p>
-
+       <ul class="list-bullet">
+       <li>This will not be visible on the Digital Marketplace.</li>
+       <li>You can add more accounts later.</li>
+       <li>You’ll receive an email asking you to validate this account.</li>
+       <li>The validation link expires after 24 hours. </li>
+      </ul>
       <form method="POST" action="{{ url_for('.submit_create_your_account') }}">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
         {%

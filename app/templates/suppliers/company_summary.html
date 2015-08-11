@@ -44,9 +44,9 @@
     ],
     field_headings_visible=False
   ) %}
-  {% call summary.row() %}
+  {% call summary.row(complete=session.get("duns_number", None)) %}
   {{ summary.field_name("DUNS number") }}
-  {{ summary.text(session["duns_number"]) }}
+  {{ summary.text(session.get("duns_number", "please answer this question")) }}
   {{ summary.edit_link("Edit", url_for(".duns_number")) }}
   {% endcall %}
   {% call summary.row() %}
@@ -54,24 +54,24 @@
   {{ summary.text(session["companies_house_number"]) }}
   {{ summary.edit_link("Edit", url_for(".companies_house_number")) }}
   {% endcall %}
-  {% call summary.row() %}
+  {% call summary.row(complete=session.get("company_name", None)) %}
   {{ summary.field_name("Company name") }}
-  {{ summary.text(session["company_name"]) }}
+  {{ summary.text(session.get("company_name", "please answer this question")) }}
   {{ summary.edit_link("Edit", url_for(".company_name")) }}
   {% endcall %}
-  {% call summary.row() %}
+  {% call summary.row(complete=session.get("contact_name", None)) %}
   {{ summary.field_name("Primary contact name") }}
-  {{ summary.text(session["contact_name"]) }}
+  {{ summary.text(session.get("contact_name", "please answer this question")) }}
   {{ summary.edit_link("Edit", url_for(".company_contact_details")) }}
   {% endcall %}
-  {% call summary.row() %}
+  {% call summary.row(complete=session.get("phone_number", None)) %}
   {{ summary.field_name("Primary contact email") }}
-  {{ summary.text(session["email_address"]) }}
+  {{ summary.text(session.get("email_address", "please answer this question")) }}
   {{ summary.edit_link("Edit", url_for(".company_contact_details")) }}
   {% endcall %}
-  {% call summary.row() %}
+  {% call summary.row(complete=session.get("phone_number", None)) %}
   {{ summary.field_name("Primary contact phone number") }}
-  {{ summary.text(session["phone_number"]) }}
+  {{ summary.text(session.get("phone_number", "please answer this question")) }}
   {{ summary.edit_link("Edit", url_for(".company_contact_details")) }}
   {% endcall %}
   {% endcall %}
