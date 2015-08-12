@@ -853,6 +853,11 @@ class TestShowDraftService(BaseApplicationTest):
             'priceInterval': 'Second',
             'links': {},
             'updatedAt': "2015-06-29T15:26:07.650368Z"
+        },
+        'auditEvents': {
+            'createdAt': "2015-06-29T15:26:07.650368Z",
+            'userName': "Supplier User",
+
         }
     }
 
@@ -890,6 +895,10 @@ class TestDeleteDraftService(BaseApplicationTest):
             'serviceName': 'My rubbish draft',
             'serviceSummary': 'This is the worst service ever',
             'updatedAt': "2015-06-29T15:26:07.650368Z"
+        },
+        'auditEvents': {
+            'createdAt': "2015-06-29T15:26:07.650368Z",
+            'userName': "Supplier User",
         }
     }
 

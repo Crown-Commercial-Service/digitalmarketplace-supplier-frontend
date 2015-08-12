@@ -4,11 +4,13 @@ from flask_login import login_required, current_user
 from dmutils.apiclient import APIError
 from dmutils import flask_featureflags
 from dmutils.email import send_email, MandrillException
+from dmutils.formats import format_service_price
 
-from ...main import main, declaration_content
+from ...main import main, declaration_content, new_service_content
 from ..helpers.frameworks import get_error_messages
+
 from ... import data_api_client
-from ..helpers.services import get_draft_document_url, get_drafts
+from ..helpers.services import get_draft_document_url, get_service_attributes, get_drafts
 from ..helpers.frameworks import register_interest_in_framework
 
 
@@ -55,6 +57,18 @@ def framework_services():
     template_data = main.config['BASE_TEMPLATE_DATA']
 
     drafts, complete_drafts = get_drafts(data_api_client, current_user.supplier_id, 'g-cloud-7')
+
+    for draft in drafts:
+        draft['priceString'] = format_service_price(draft)
+        content = new_service_content.get_builder().filter(draft)
+        sections = get_service_attributes(draft, content)
+
+        draft['unanswered_questions'] = len([
+            q.label
+            for s in sections
+            for q in s['rows']
+            if q.answer_required
+        ])
 
     return render_template(
         "frameworks/services.html",

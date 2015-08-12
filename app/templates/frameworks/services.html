@@ -59,6 +59,7 @@
     field_headings=[
         "Service name",
         "Lot",
+        summary.hidden_field_heading("Progress"),
         summary.hidden_field_heading("Make a copy")
     ],
     field_headings_visible=True
@@ -67,6 +68,13 @@
       {{ summary.service_link(draft.serviceName,
                               url_for(".view_service_submission", service_id=draft.id)) }}
       {{ summary.text(draft.lot) }}
+      {% if draft.unanswered_questions == 0 %}
+        {{ summary.text("") }}
+      {% elif draft.unanswered_questions == 1 %}
+        {{ summary.text("%s answer required" % draft.unanswered_questions) }}
+      {% else %}
+        {{ summary.text("%s answers required" % draft.unanswered_questions) }}
+      {% endif %}
       {{ summary.button(text="Make a copy",
                          action=url_for('.copy_draft_service', service_id=draft.id)) }}
     {% endcall %}
