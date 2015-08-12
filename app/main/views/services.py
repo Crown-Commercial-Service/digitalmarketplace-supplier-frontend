@@ -358,13 +358,23 @@ def view_service_submission(service_id):
     draft['priceString'] = format_service_price(draft)
     content = new_service_content.get_builder().filter(draft)
 
+    sections = get_service_attributes(draft, content)
+
+    unanswered_questions = len([
+        q.label
+        for s in sections
+        for q in s['rows']
+        if q.answer_required
+    ])
+
     delete_requested = True if request.args.get('delete_requested') else False
 
     return render_template(
         "services/service_submission.html",
         service_id=service_id,
-        sections=get_service_attributes(draft, content),
         service_data=draft,
+        sections=sections,
+        unanswered_questions=unanswered_questions,
         delete_requested=delete_requested,
         **main.config['BASE_TEMPLATE_DATA']), 200
 
