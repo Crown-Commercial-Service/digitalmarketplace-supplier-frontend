@@ -27,6 +27,13 @@
 
 {% block before_sections %}
 <div class="column-one-third align-with-heading">
+  <p class="normal-paragraph">
+    <strong>Last edited</strong>
+  </p>
+  <p class="last-edited">
+    {{ last_edit.createdAt|datetimeformat }}<br />
+    by {{ last_edit.userName }}
+  </p>
   {% if service_data.status == 'not-submitted' and unanswered_questions == 0 %}
     <form action="{{ url_for('.complete_draft_service', service_id=service_id) }}" method="POST">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />

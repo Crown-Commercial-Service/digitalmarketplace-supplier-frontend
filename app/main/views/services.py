@@ -348,7 +348,8 @@ def service_submission_document(framework_slug, supplier_id, document_name):
 @flask_featureflags.is_active_feature('GCLOUD7_OPEN')
 def view_service_submission(service_id):
     try:
-        draft = data_api_client.get_draft_service(service_id)['services']
+        data = data_api_client.get_draft_service(service_id)
+        draft, last_edit = data['services'], data['auditEvents']
     except HTTPError as e:
         abort(e.status_code)
 
@@ -373,6 +374,7 @@ def view_service_submission(service_id):
         "services/service_submission.html",
         service_id=service_id,
         service_data=draft,
+        last_edit=last_edit,
         sections=sections,
         unanswered_questions=unanswered_questions,
         delete_requested=delete_requested,
