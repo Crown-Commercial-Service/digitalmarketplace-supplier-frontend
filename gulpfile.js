@@ -71,7 +71,7 @@ var uglifyOptions = {
 
 var logErrorAndExit = function logErrorAndExit(err) {
   var printError = function (type, message) {
-    console.log('Gulp ' + colours.red('ERR! ') + type + ': ' + message);
+    console.log('gulp ' + colours.red('ERR! ') + type + ': ' + message);
   };
 
   printError('message', err.message);
