@@ -58,8 +58,8 @@ def framework_services():
 
     return render_template(
         "frameworks/services.html",
-        complete_drafts=complete_drafts,
-        drafts=drafts,
+        complete_drafts=reversed(complete_drafts),
+        drafts=reversed(drafts),
         **template_data
     ), 200
 
