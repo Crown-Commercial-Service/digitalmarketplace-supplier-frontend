@@ -50,7 +50,6 @@
       'Name',
       'Framework',
       'Lot',
-      'Status',
       summary.hidden_field_heading("Action")
     ],
     field_headings_visible=True,
@@ -60,33 +59,43 @@
 
       {{ summary.service_link(
           item.serviceName,
-          '/g-cloud/services/' + item.id
+          url_for('.edit_service', service_id=item.id)
       ) }}
 
       {{ summary.text(item.frameworkName) }}
 
       {{ summary.text(item.lot) }}
 
-      {% call summary.field() %}
-        <span class="service-status-{{ item.status }}">
-          {% if item.status == "published" %}
-            Public
-          {% elif item.status == "enabled" %}
-            Private
-          {% elif item.status == "disabled" %}
-            Removed
-          {% else %}
-            {{ item.status|title }}
-          {% endif %}
-        </span>
-      {% endcall %}
-
       {% if 'EDIT_SERVICE_PAGE' is active_feature %}
-        {% if item.status == "disabled" %}
-          {{ summary.edit_link("Details", url_for('.edit_service', service_id=item.id)) }}
-        {% else %}
-          {{ summary.edit_link("Edit", url_for('.edit_service', service_id=item.id)) }}
+        {% if item.status == "published" %}
+          {{ summary.edit_link("View service", '/g-cloud/services/' + item.id) }}
+        {% elif item.status == "disabled" %}
+          {% call summary.field(action=True) %}
+            <span class="service-status-{{ item.status }}">
+              Removed
+            </span>
+          {% endcall %}
+        {% elif item.status == "enabled" %}
+          {% call summary.field(action=True) %}
+            <span class="service-status-{{ item.status }}">
+              Private
+            </span>
+          {% endcall %}
         {% endif %}
+      {% else %}
+        {% call summary.field(action=True) %}
+          <span class="service-status-{{ item.status }}">
+            {% if item.status == "published" %}
+              Public
+            {% elif item.status == "enabled" %}
+              Private
+            {% elif item.status == "disabled" %}
+              Removed
+            {% else %}
+              {{ item.status|title }}
+            {% endif %}
+          </span>
+        {% endcall %}
       {% endif %}
 
     {% endcall %}
