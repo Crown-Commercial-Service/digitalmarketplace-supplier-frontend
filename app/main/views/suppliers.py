@@ -1,4 +1,4 @@
-from flask import render_template, request, redirect, url_for, abort, session
+from flask import render_template, request, redirect, url_for, abort, session, flash
 from flask_login import login_required, current_user, current_app
 
 from dmutils.apiclient import APIError, HTTPError
@@ -139,6 +139,15 @@ def submit_duns_number():
     template_data = main.config['BASE_TEMPLATE_DATA']
 
     if form.validate_on_submit():
+
+        suppliers = data_api_client.find_suppliers(duns_number=form.duns_number.data)
+        if len(suppliers["suppliers"]) > 0:
+            form.duns_number.errors = ["Duns number already used"]
+            return render_template(
+                "suppliers/duns_number.html",
+                form=form,
+                **template_data
+            ), 400
         session[form.duns_number.name] = form.duns_number.data
         return redirect(url_for(".companies_house_number"))
     else:

@@ -341,7 +341,25 @@ class TestCreateSupplier(BaseApplicationTest):
         assert_equal(res.status_code, 400)
         assert_true("DUNS Number must be 9 digits" in res.get_data(as_text=True))
 
-    def test_should_allow_nine_digit_duns_number(self):
+    @mock.patch("app.main.suppliers.data_api_client")
+    def test_should_be_an_error_if_duns_number_in_use(self, data_api_client):
+        data_api_client.find_suppliers.return_value = {
+            "suppliers": [
+                "one supplier", "two suppliers"
+            ]
+        }
+        res = self.client.post(
+            "/suppliers/duns-number",
+            data={
+                'duns_number': "9999999999"
+            }
+        )
+        assert_equal(res.status_code, 400)
+        assert_true("DUNS Number must be 9 digits" in res.get_data(as_text=True))
+
+    @mock.patch("app.main.suppliers.data_api_client")
+    def test_should_allow_nine_digit_duns_number(self, data_api_client):
+        data_api_client.find_suppliers.return_value = {"suppliers": []}
         res = self.client.post(
             "/suppliers/duns-number",
             data={
