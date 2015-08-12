@@ -64,7 +64,7 @@
     field_headings_visible=True
   ) %}
     {% call summary.row() %}
-      {{ summary.service_link(draft.serviceName or 'New service',
+      {{ summary.service_link(draft.serviceName,
                               url_for(".view_service_submission", service_id=draft.id)) }}
       {{ summary.text(draft.lot) }}
       {{ summary.button(text="Make a copy",
@@ -81,7 +81,7 @@
     field_headings_visible=True
   ) %}
     {% call summary.row() %}
-      {{ summary.service_link(draft.serviceName or 'New service',
+      {{ summary.service_link(draft.serviceName,
                               url_for(".view_service_submission", service_id=draft.id)) }}
       {{ summary.text(draft.lot) }}
       {{ summary.button(text="Make a copy",
