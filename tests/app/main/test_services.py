@@ -557,16 +557,15 @@ class TestEditDraftService(BaseApplicationTest):
         res = self.client.post(
             '/suppliers/submission/services/1/edit/service_description',
             data={
-                'serviceName': 'The service',
                 'serviceSummary': 'This is the service',
             })
 
         assert_equal(res.status_code, 302)
         data_api_client.update_draft_service.assert_called_once_with(
             '1',
-            {'serviceName': 'The service', 'serviceSummary': 'This is the service'},
+            {'serviceSummary': 'This is the service'},
             'email@email.com',
-            page_questions=['serviceName', 'serviceSummary']
+            page_questions=['serviceSummary']
         )
 
     def test_only_questions_for_this_section_can_be_changed(self, data_api_client, s3):
@@ -580,7 +579,7 @@ class TestEditDraftService(BaseApplicationTest):
         assert_equal(res.status_code, 302)
         data_api_client.update_draft_service.assert_called_once_with(
             '1', {}, 'email@email.com',
-            page_questions=['serviceName', 'serviceSummary']
+            page_questions=['serviceSummary']
         )
 
     def test_file_upload(self, data_api_client, s3):

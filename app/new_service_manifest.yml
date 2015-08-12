@@ -4,10 +4,14 @@
   questions:
     - lot
 -
-  name: Service description
+  name: Service name
   editable: true
   questions:
     - serviceName
+-
+  name: Service description
+  editable: true
+  questions:
     - serviceSummary
 -
   name: Service type
