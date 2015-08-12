@@ -343,6 +343,20 @@ class TestEditService(BaseApplicationTest):
             '1', {'serviceName': 'The service', 'serviceSummary': 'This is the service'},
             'email@email.com', 'supplier app')
 
+    def test_editing_readonly_section_is_not_allowed(self, data_api_client):
+        data_api_client.get_service.return_value = self.empty_service
+
+        res = self.client.get('/suppliers/services/1/edit/service_attributes')
+        assert_equal(res.status_code, 404)
+
+        data_api_client.get_draft_service.return_value = self.empty_service
+        res = self.client.post(
+            '/suppliers/services/1/edit/service_attributes',
+            data={
+                'lot': 'SCS',
+            })
+        assert_equal(res.status_code, 404)
+
     def test_only_questions_for_this_section_can_be_changed(self, data_api_client):
         data_api_client.get_service.return_value = self.empty_service
         res = self.client.post(
@@ -567,6 +581,20 @@ class TestEditDraftService(BaseApplicationTest):
             'email@email.com',
             page_questions=['serviceSummary']
         )
+
+    def test_editing_readonly_section_is_not_allowed(self, data_api_client, s3):
+        data_api_client.get_draft_service.return_value = self.empty_draft
+
+        res = self.client.get('/suppliers/submission/services/1/edit/service_attributes')
+        assert_equal(res.status_code, 404)
+
+        data_api_client.get_draft_service.return_value = self.empty_draft
+        res = self.client.post(
+            '/suppliers/submission/services/1/edit/service_attributes',
+            data={
+                'lot': 'SCS',
+            })
+        assert_equal(res.status_code, 404)
 
     def test_only_questions_for_this_section_can_be_changed(self, data_api_client, s3):
         data_api_client.get_draft_service.return_value = self.empty_draft

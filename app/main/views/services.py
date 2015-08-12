@@ -116,7 +116,7 @@ def edit_section(service_id, section_id):
 
     content = existing_service_content.get_builder().filter(service)
     section = content.get_section(section_id)
-    if section is None:
+    if section is None or not section.editable:
         abort(404)
 
     return render_template(
@@ -142,7 +142,7 @@ def update_section(service_id, section_id):
 
     content = existing_service_content.get_builder().filter(service)
     section = content.get_section(section_id)
-    if section is None:
+    if section is None or not section.editable:
         abort(404)
 
     posted_data = section.get_data(request.form)
@@ -360,7 +360,7 @@ def edit_service_submission(service_id, section_id):
 
     content = new_service_content.get_builder().filter(draft)
     section = content.get_section(section_id)
-    if section is None:
+    if section is None or not section.editable:
         abort(404)
 
     unformat_section_data(draft)
@@ -388,7 +388,7 @@ def update_section_submission(service_id, section_id):
 
     content = new_service_content.get_builder().filter(draft)
     section = content.get_section(section_id)
-    if section is None:
+    if section is None or not section.editable:
         abort(404)
 
     posted_data = section.get_data(request.form)
