@@ -700,7 +700,7 @@ class TestCreateSupplier(BaseApplicationTest):
                     "supplier_name": "company_name"
                 },
                 "KEY",
-                "CreateEmailSalt"
+                "InviteEmailSalt"
             )
 
             send_email.assert_called_once_with(
@@ -754,7 +754,7 @@ class TestCreateSupplier(BaseApplicationTest):
                 "supplier_name": "company_name"
             },
             "KEY",
-            "CreateEmailSalt"
+            "InviteEmailSalt"
         )
 
         send_email.assert_called_once_with(

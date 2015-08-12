@@ -37,7 +37,6 @@ class Config(object):
     SHARED_EMAIL_KEY = os.getenv('DM_SHARED_EMAIL_KEY')
     RESET_PASSWORD_SALT = 'ResetPasswordSalt'
     INVITE_EMAIL_SALT = 'InviteEmailSalt'
-    CREATE_EMAIL_SALT = "CreateEmailSalt"
 
     STATIC_URL_PATH = '/suppliers/static'
     ASSET_PATH = STATIC_URL_PATH + '/'

@@ -259,7 +259,6 @@ def submit_create_user(encoded_token):
     token = decode_invitation_token(encoded_token)
     if token is None:
         flash('token_invalid', 'error')
-        print "HERE"
         return render_template(
             "auth/create-user.html",
             form=form,

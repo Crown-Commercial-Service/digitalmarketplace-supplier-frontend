@@ -346,11 +346,10 @@ def submit_create_your_account():
                 "supplier_name": session['email_company_name']
             },
             current_app.config['SHARED_EMAIL_KEY'],
-            current_app.config['CREATE_EMAIL_SALT']
+            current_app.config['INVITE_EMAIL_SALT']
         )
 
-        # TODO when invite user is merged change this link
-        url = url_for('main.create_your_account', encoded_token=token, _external=True)
+        url = url_for('main.create_user', encoded_token=token, _external=True)
 
         email_body = render_template(
             "emails/create_user_email.html",
