@@ -8,7 +8,7 @@ from dmutils.email import send_email, MandrillException
 from ...main import main, declaration_content
 from ..helpers.frameworks import get_error_messages
 from ... import data_api_client
-from ..helpers.services import get_draft_document_url
+from ..helpers.services import get_draft_document_url, get_drafts
 from ..helpers.frameworks import register_interest_in_framework
 
 
@@ -23,12 +23,10 @@ def framework_dashboard():
 
     try:
         register_interest_in_framework(data_api_client, 'g-cloud-7')
-        drafts = data_api_client.find_draft_services(
-            current_user.supplier_id,
-            framework='g-cloud-7'
-        )['services']
     except APIError as e:
         abort(e.status_code)
+
+    drafts, complete_drafts = get_drafts(data_api_client, current_user.supplier_id, 'g-cloud-7')
 
     try:
         declaration_made = bool(data_api_client.get_selection_answers(
@@ -43,7 +41,7 @@ def framework_dashboard():
         "frameworks/dashboard.html",
         counts={
             "draft": len(drafts),
-            "complete": 1,
+            "complete": len(complete_drafts),
         },
         declaration_made=declaration_made,
         **template_data
@@ -56,17 +54,11 @@ def framework_dashboard():
 def framework_services():
     template_data = main.config['BASE_TEMPLATE_DATA']
 
-    try:
-        drafts = data_api_client.find_draft_services(
-            current_user.supplier_id,
-            framework='g-cloud-7'
-        )['services']
-
-    except APIError as e:
-        abort(e.status_code)
+    drafts, complete_drafts = get_drafts(data_api_client, current_user.supplier_id, 'g-cloud-7')
 
     return render_template(
         "frameworks/services.html",
+        complete_drafts=complete_drafts,
         drafts=drafts,
         **template_data
     ), 200

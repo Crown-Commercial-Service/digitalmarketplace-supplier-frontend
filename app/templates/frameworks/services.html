@@ -56,8 +56,29 @@
     drafts,
     caption="Draft services",
     empty_message="You haven't added any services yet.",
+    field_headings=[
+        "Service name",
+        "Lot",
+        summary.hidden_field_heading("Make a copy")
+    ],
+    field_headings_visible=True
+  ) %}
+    {% call summary.row() %}
+      {{ summary.service_link(draft.serviceName or 'New service',
+                              url_for(".view_service_submission", service_id=draft.id)) }}
+      {{ summary.text(draft.lot) }}
+      {{ summary.button(text="Make a copy",
+                         action=url_for('.copy_draft_service', service_id=draft.id)) }}
+    {% endcall %}
+  {% endcall %}
+
+  {{ summary.heading("Complete services") }}
+  {% call(draft) summary.list_table(
+    complete_drafts,
+    caption="Complete services",
+    empty_message="You haven't completed any services yet.",
     field_headings=["Service name", "Lot", summary.hidden_field_heading("Make a copy")],
-    field_headings_visible=False
+    field_headings_visible=True
   ) %}
     {% call summary.row() %}
       {{ summary.service_link(draft.serviceName or 'New service',
