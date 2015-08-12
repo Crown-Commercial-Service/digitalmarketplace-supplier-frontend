@@ -1,14 +1,3 @@
-.start-page {
-  .lede {
-    @include core-24;
-    margin-bottom: $gutter;
-  }
-
-  .check-list {
-    @include core-19;  
-  }
-}
-
 .company-information-summary {
   padding-top: $gutter-half;
   margin-bottom: (2 * $gutter);
