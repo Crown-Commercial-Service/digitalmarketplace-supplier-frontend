@@ -35,7 +35,7 @@ def get_drafts(apiclient, supplier_id, framework_slug):
 
 
 def get_service_attributes(service_data, service_questions):
-    return map(
+    return list(map(
         lambda section: {
             'name': section['name'],
             'rows': _get_rows(section, service_data),
@@ -43,7 +43,7 @@ def get_service_attributes(service_data, service_questions):
             'id': section['id']
         },
         service_questions
-    )
+    ))
 
 
 def _get_rows(section, service_data):
