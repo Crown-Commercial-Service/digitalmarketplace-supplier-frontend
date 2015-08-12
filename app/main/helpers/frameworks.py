@@ -8,32 +8,33 @@ from werkzeug.datastructures import ImmutableOrderedMultiDict
 def get_required_fields(all_fields, answers):
     required_fields = set(all_fields)
     #  Remove optional fields
-    optional_fields = [
+    optional_fields = set([
         "SQ1-1e", "SQ1-1f", "SQ1-1p-i", "SQ1-1p-ii", "SQ1-1p-iii", "SQ1-1p-iv",
-        "SQ1-1q-i", "SQ1-1q-ii", "SQ1-1q-iii", "SQ1-1q-iv"
-    ]
-    required_fields -= set(optional_fields)
+        "SQ1-1q-i", "SQ1-1q-ii", "SQ1-1q-iii", "SQ1-1q-iv", "SQ1-1cii", "SQ1-1i-ii",
+        "SQ1-1j-ii", "SQ4-1c", "SQ3-1k"
+    ])
+    required_fields -= optional_fields
     #  If you answered other to question 12
-    if answers.get('SQ1-1ci') != 'other (please specify)':
-        required_fields.remove('SQ1-1cii')
+    if answers.get('SQ1-1ci') == 'other (please specify)':
+        required_fields.add('SQ1-1cii')
     #  If you answered yes to question 20
-    if not answers.get('SQ1-1i-i', False):
-        required_fields.remove('SQ1-1i-ii')
+    if answers.get('SQ1-1i-i', False):
+        required_fields.add('SQ1-1i-ii')
     #  If you answered 'licensed' or 'a member of a relevant organisation' in question 22
-    if len(answers.get('SQ1-1j-i', [])) == 0:
-        required_fields.remove('SQ1-1j-ii')
+    if len(answers.get('SQ1-1j-i', [])) > 0:
+        required_fields.add('SQ1-1j-ii')
 
     # If you answered yes to either question 54 or 55
-    if not answers.get('SQ4-1a', False) and not answers.get('SQ4-1b', False):
-        required_fields.remove('SQ4-1c')
+    if answers.get('SQ4-1a', False) or answers.get('SQ4-1b', False):
+        required_fields.add('SQ4-1c')
 
     # If you answered Yes to questions 41 - 53
     dependent_fields = [
         'SQ2-2a', 'SQ3-1a' 'SQ3-1b', 'SQ3-1c', 'SQ3-1d', 'SQ3-1e', 'SQ3-1f', 'SQ3-1g',
         'SQ3-1h-i', 'SQ3-1h-ii', 'SQ3-1i-i', 'SQ3-1i-ii', 'SQ3-1j'
     ]
-    if all(not answers.get(field) for field in dependent_fields):
-        required_fields.remove('SQ3-1k')
+    if any(answers.get(field) for field in dependent_fields):
+        required_fields.add('SQ3-1k')
 
     return required_fields
 
