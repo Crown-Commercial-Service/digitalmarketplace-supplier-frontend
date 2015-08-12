@@ -58,18 +58,13 @@ def get_answer_required_errors(content, answers):
     return errors_map
 
 
-def get_character_limit_errors(answers):
-    length_limits = {
-        "SQ1-1a": 5000,
-        "SQ1-1cii": 5000,
-        "SQ1-1d": 5000,
-        "SQ1-1i-ii": 5000,
-        "SQ3-1k": 5000,
-    }
+def get_character_limit_errors(content, answers):
+    TEXT_FIELD_CHARACTER_LIMIT = 5000
     errors_map = {}
-    for field, limit in length_limits.items():
-        if len(answers.get(field, "")) > limit:
-            errors_map[field] = "under_character_limit"
+    for question_id in get_all_fields(content):
+        if content.get_question(question_id).get('type') in ['text', 'textbox_large']:
+            if len(answers.get(question_id, "")) > TEXT_FIELD_CHARACTER_LIMIT:
+                errors_map[question_id] = "under_character_limit"
 
     return errors_map
 
@@ -100,7 +95,7 @@ def get_all_errors(content, answers):
     errors_map = {}
 
     errors_map.update(get_answer_required_errors(all_fields, answers))
-    errors_map.update(get_character_limit_errors(answers))
+    errors_map.update(get_character_limit_errors(content, answers))
     errors_map.update(get_formatting_errors(answers))
 
     return errors_map
