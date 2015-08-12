@@ -79,6 +79,14 @@ def test_error_if_required_field_is_missing():
     assert_equal(get_all_errors(content, submission), {'SQ3-1i-i': 'answer_required'})
 
 
+def test_error_if_required_text_field_is_empty():
+    content = declaration_content.get_builder()
+    submission = FULL_G7_SUBMISSION.copy()
+    submission['SQ1-2b'] = ""
+
+    assert_equal(get_all_errors(content, submission), {'SQ1-2b': 'answer_required'})
+
+
 def test_no_error_if_optional_field_is_missing():
     content = declaration_content.get_builder()
     submission = FULL_G7_SUBMISSION.copy()
@@ -116,7 +124,7 @@ def test_licenced_details_error_depends_on_licenced():
     submission = FULL_G7_SUBMISSION.copy()
     del submission['SQ1-1j-ii']
 
-    submission['SQ1-1j-i'] = []
+    del submission['SQ1-1j-i']
     assert_equal(get_all_errors(content, submission), {})
 
     submission['SQ1-1j-i'] = ["something"]
