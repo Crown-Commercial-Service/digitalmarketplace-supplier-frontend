@@ -47,7 +47,9 @@
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
     {% block save_button %}{% endblock %}
 
+    {% block return_to_service_link %}
     <a href="{% block return_to_service %}{% endblock %}">Return to service summary</a>
+    {% endblock %}
 
   </form>
 {% endblock %}
