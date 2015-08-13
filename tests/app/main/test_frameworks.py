@@ -44,7 +44,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
 
             doc = html.fromstring(res.get_data(as_text=True))
             assert_equal(
-                len(doc.xpath('//p[contains(text(), "You have made the declaration")]')),
+                len(doc.xpath('//p[contains(text(), "All services marked as complete will be automatically submitted at 3pm BST, 6 October")]')),  # noqa
                 1)
 
     def test_declaration_status_when_not_complete(self, data_api_client):
