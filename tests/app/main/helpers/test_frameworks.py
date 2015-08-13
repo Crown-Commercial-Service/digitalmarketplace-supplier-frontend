@@ -74,7 +74,8 @@ FULL_G7_SUBMISSION = {
     "SQA3": True,
     "SQA4": True,
     "SQA5": True,
-    "AQA3": True
+    "AQA3": True,
+    "SQE2a": ["as a prime contractor, using third parties (subcontractors) to provide some services"]
 }
 
 
