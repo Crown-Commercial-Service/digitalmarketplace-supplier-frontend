@@ -209,6 +209,16 @@ def test_mitigation_factors_not_required():
     assert_equal(get_all_errors(content, submission), {})
 
 
+def test_fields_only_relevant_to_non_uk():
+    content = declaration_content.get_builder()
+    submission = FULL_G7_SUBMISSION.copy()
+
+    submission['SQ5-2a'] = False
+    del submission['SQ1-1i-i']
+
+    assert_equal(get_all_errors(content, submission), {'SQ1-1i-i': 'answer_required'})
+
+
 def test_invalid_duns_number_causes_error():
     content = declaration_content.get_builder()
     submission = FULL_G7_SUBMISSION.copy()
