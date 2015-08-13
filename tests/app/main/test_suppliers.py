@@ -5,6 +5,7 @@ from flask import session
 from mock import Mock
 from nose.tools import assert_equal, assert_true, assert_in, assert_false
 from tests.app.helpers import BaseApplicationTest
+from lxml import html
 
 
 def get_supplier(*args, **kwargs):
@@ -52,6 +53,9 @@ class TestSuppliersDashboard(BaseApplicationTest):
     @mock.patch("app.main.views.suppliers.get_current_suppliers_users")
     def test_shows_supplier_info(self, get_current_suppliers_users, data_api_client):
         data_api_client.get_supplier.side_effect = get_supplier
+        data_api_client.find_audit_events.return_value = {
+            "auditEvents": []
+        }
         get_current_suppliers_users.side_effect = get_user
         with self.app.test_client():
             self.login()
@@ -95,6 +99,9 @@ class TestSuppliersDashboard(BaseApplicationTest):
     @mock.patch("app.main.views.suppliers.get_current_suppliers_users")
     def test_shows_edit_buttons(self, get_current_suppliers_users, data_api_client):
         data_api_client.get_supplier.side_effect = get_supplier
+        data_api_client.find_audit_events.return_value = {
+            "auditEvents": []
+        }
         get_current_suppliers_users.side_effect = get_user
         with self.app.test_client():
             self.login()
@@ -104,6 +111,47 @@ class TestSuppliersDashboard(BaseApplicationTest):
 
             assert_true("/suppliers/edit" in res.get_data(as_text=True))
             assert_true("/suppliers/services" in res.get_data(as_text=True))
+
+    @mock.patch("app.main.views.suppliers.data_api_client")
+    @mock.patch("app.main.views.suppliers.get_current_suppliers_users")
+    def test_shows_gcloud_7_application_link(self, get_current_suppliers_users, data_api_client):
+        data_api_client.get_supplier.side_effect = get_supplier
+        data_api_client.find_audit_events.return_value = {
+            "auditEvents": []
+        }
+        get_current_suppliers_users.side_effect = get_user
+        with self.app.test_client():
+            self.login()
+
+            res = self.client.get("/suppliers")
+            doc = html.fromstring(res.get_data(as_text=True))
+
+            assert_equal(res.status_code, 200)
+
+            assert_equal(doc.xpath('//a[@href="/suppliers/frameworks/g-cloud-7"]/span/text()')[0],
+                         "Register your interest in becoming a G-Cloud 7 supplier")
+
+    @mock.patch("app.main.views.suppliers.data_api_client")
+    @mock.patch("app.main.views.suppliers.get_current_suppliers_users")
+    def test_shows_gcloud_7_continue_link(self, get_current_suppliers_users, data_api_client):
+        data_api_client.get_supplier.side_effect = get_supplier
+        data_api_client.find_audit_events.return_value = {
+            "auditEvents": [{
+                "data": {
+                    "frameworkSlug": "g-cloud-7"
+                }
+            }]
+        }
+        get_current_suppliers_users.side_effect = get_user
+        with self.app.test_client():
+            self.login()
+
+            res = self.client.get("/suppliers")
+            doc = html.fromstring(res.get_data(as_text=True))
+
+            assert_equal(res.status_code, 200)
+            assert_equal(doc.xpath('//a[@href="/suppliers/frameworks/g-cloud-7"]/span/text()')[0],
+                         "Continue your G-Cloud 7 application")
 
 
 class TestSupplierDashboardLogin(BaseApplicationTest):

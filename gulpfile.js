@@ -4,6 +4,7 @@ var deleteFiles = require('del');
 var sass = require('gulp-sass');
 var filelog = require('gulp-filelog');
 var include = require('gulp-include');
+var colours = require('colors/safe');
 
 // Paths
 var environment;
@@ -69,9 +70,13 @@ var uglifyOptions = {
 };
 
 var logErrorAndExit = function logErrorAndExit(err) {
+  var printError = function (type, message) {
+    console.log('gulp ' + colours.red('ERR! ') + type + ': ' + message);
+  };
 
-  // coloured text: https://coderwall.com/p/yphywg/printing-colorful-text-in-terminal-when-run-node-js-script
-  console.log('\x1b[41m\x1b[37m  Error: ' + err.message + '\x1b[0m');
+  printError('message', err.message);
+  printError('file name', err.fileName);
+  printError('line number', err.lineNumber);
   process.exit(1);
 
 };

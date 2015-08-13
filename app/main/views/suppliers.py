@@ -9,6 +9,7 @@ from ...main import main
 from ... import data_api_client
 from ..forms.suppliers import EditSupplierForm, EditContactInformationForm, \
     DunsNumberForm, CompaniesHouseNumberForm, CompanyContactDetailsForm, CompanyNameForm, EmailAddressForm
+from ..helpers.frameworks import has_registered_interest_in_framework
 from .users import get_current_suppliers_users
 
 
@@ -31,6 +32,7 @@ def dashboard():
         "suppliers/dashboard.html",
         supplier=supplier,
         users=get_current_suppliers_users(),
+        g7_interested=has_registered_interest_in_framework(data_api_client, 'g-cloud-7'),
         **template_data
     ), 200
 

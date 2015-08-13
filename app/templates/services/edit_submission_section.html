@@ -21,7 +21,7 @@
       },
       {
         "link": url_for(".view_service_submission", service_id=service_id),
-        "label": service_data['serviceName'] or 'New service'
+        "label": service_data['serviceName']
       }
     ]
   %}
@@ -49,4 +49,8 @@
   {% endif %}
 {% endblock %}
 
-{% block return_to_service %}{{ url_for(".view_service_submission", service_id=service_id) }}{% endblock %}
+{% block return_to_service_link %}
+  {% if service_data['serviceName'] %}
+  <a href="{{ url_for(".view_service_submission", service_id=service_id) }}">Return to service summary</a>
+  {% endif %}
+{% endblock %}

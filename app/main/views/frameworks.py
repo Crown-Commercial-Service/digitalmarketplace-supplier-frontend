@@ -4,10 +4,17 @@ from flask_login import login_required, current_user
 from dmutils.apiclient import APIError
 from dmutils import flask_featureflags
 from dmutils.email import send_email, MandrillException
+from dmutils.formats import format_service_price
 
-from ...main import main, declaration_content
+from ...main import main, declaration_content, new_service_content
+from ..helpers.frameworks import get_error_messages
+
 from ... import data_api_client
-from ..helpers.services import get_draft_document_url
+from ..helpers.services import (
+    get_draft_document_url, get_service_attributes, get_drafts,
+    count_unanswered_questions
+)
+from ..helpers.frameworks import register_interest_in_framework
 
 
 CLARIFICATION_QUESTION_NAME = 'clarification_question'
@@ -20,20 +27,28 @@ def framework_dashboard():
     template_data = main.config['BASE_TEMPLATE_DATA']
 
     try:
-        drafts = data_api_client.find_draft_services(
-            current_user.supplier_id,
-            framework='g-cloud-7'
-        )['services']
+        register_interest_in_framework(data_api_client, 'g-cloud-7')
     except APIError as e:
         abort(e.status_code)
+
+    drafts, complete_drafts = get_drafts(data_api_client, current_user.supplier_id, 'g-cloud-7')
+
+    try:
+        declaration_made = bool(data_api_client.get_selection_answers(
+            current_user.supplier_id, 'g-cloud-7'))
+    except APIError as e:
+        if e.status_code == 404:
+            declaration_made = False
+        else:
+            abort(e.status_code)
 
     return render_template(
         "frameworks/dashboard.html",
         counts={
             "draft": len(drafts),
-            "complete": 1,
+            "complete": len(complete_drafts),
         },
-        declaration_made=False,
+        declaration_made=declaration_made,
         **template_data
     ), 200
 
@@ -44,18 +59,19 @@ def framework_dashboard():
 def framework_services():
     template_data = main.config['BASE_TEMPLATE_DATA']
 
-    try:
-        drafts = data_api_client.find_draft_services(
-            current_user.supplier_id,
-            framework='g-cloud-7'
-        )['services']
+    drafts, complete_drafts = get_drafts(data_api_client, current_user.supplier_id, 'g-cloud-7')
 
-    except APIError as e:
-        abort(e.status_code)
+    for draft in drafts:
+        draft['priceString'] = format_service_price(draft)
+        content = new_service_content.get_builder().filter(draft)
+        sections = get_service_attributes(draft, content)
+
+        draft['unanswered_questions'] = count_unanswered_questions(sections)
 
     return render_template(
         "frameworks/services.html",
-        drafts=drafts,
+        complete_drafts=reversed(complete_drafts),
+        drafts=reversed(drafts),
         **template_data
     ), 200
 
@@ -66,20 +82,26 @@ def framework_services():
 @flask_featureflags.is_active_feature('GCLOUD7_OPEN')
 def framework_supplier_declaration():
     template_data = main.config['BASE_TEMPLATE_DATA']
+    content = declaration_content.get_builder()
+    status_code = 200
 
     if request.method == 'POST':
-        answers = declaration_content.get_builder().get_all_data(request.form)
-        try:
-            data_api_client.answer_selection_questions(
-                current_user.supplier_id,
-                'g-cloud-7',
-                answers,
-                current_user.email_address
-            )
-            flash('questions_updated')
-            return redirect(url_for('.framework_dashboard'))
-        except APIError as e:
-            abort(e.status_code)
+        answers = content.get_all_data(request.form)
+        errors = get_error_messages(content, answers)
+        if len(errors) > 0:
+            status_code = 400
+        else:
+            try:
+                data_api_client.answer_selection_questions(
+                    current_user.supplier_id,
+                    'g-cloud-7',
+                    answers,
+                    current_user.email_address
+                )
+                flash('supplier_declaration_saved')
+                return redirect(url_for('.framework_dashboard'))
+            except APIError as e:
+                abort(e.status_code)
     else:
         try:
             response = data_api_client.get_selection_answers(
@@ -89,13 +111,15 @@ def framework_supplier_declaration():
             if e.status_code != 404:
                 abort(e.status_code)
             answers = {}
+        errors = {}
 
     return render_template(
         "frameworks/edit_declaration_section.html",
         sections=declaration_content.get_builder(),
         service_data=answers,
+        errors=errors,
         **template_data
-    ), 200
+    ), status_code
 
 
 @main.route('/frameworks/g-cloud-7/download-supplier-pack', methods=['GET', 'POST'])

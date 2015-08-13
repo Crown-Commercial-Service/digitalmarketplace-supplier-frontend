@@ -22,6 +22,13 @@
 {% endblock %}
 
 {% block before_sections %}
+  {% if service_data.status == "published" %}
+    <div class="column-one-third">
+      {% with label="View service", url="/g-cloud/services/" + service_id %}
+        {% include "toolkit/link-button.html" %}
+      {% endwith %}
+    </div>
+  {% endif %}
   {% if error %}
     <div class="column-one-whole">
       {% with
@@ -32,7 +39,7 @@
       {% endwith %}
     </div>
   {% endif %}
-    <div class="column-two-thirds">
+    <div class="column-one-whole">
       {% include "services/_edit-status.html" %}
     </div>
 {% endblock %}

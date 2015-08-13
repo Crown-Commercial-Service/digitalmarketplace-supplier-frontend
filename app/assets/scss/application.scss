@@ -32,6 +32,7 @@ $path: "/suppliers/static/images/";
 @import "toolkit/_service-id.scss";
 @import "toolkit/document";
 @import "toolkit/contact-details";
+@import "toolkit/link-button";
 @import "toolkit/forms/_questions.scss";
 @import "toolkit/forms/_summary.scss";
 @import "toolkit/forms/_hint.scss";
@@ -56,6 +57,7 @@ $path: "/suppliers/static/images/";
 @import "_assurance-question.scss";
 @import "_supplier-declaration.scss";
 @import "_updates.scss";
+@import "_service_submission.scss";
 
 @import "_create_supplier.scss";
 
