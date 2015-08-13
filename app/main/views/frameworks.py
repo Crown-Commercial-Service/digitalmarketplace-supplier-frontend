@@ -10,7 +10,10 @@ from ...main import main, declaration_content, new_service_content
 from ..helpers.frameworks import get_error_messages
 
 from ... import data_api_client
-from ..helpers.services import get_draft_document_url, get_service_attributes, get_drafts
+from ..helpers.services import (
+    get_draft_document_url, get_service_attributes, get_drafts,
+    count_unanswered_questions
+)
 from ..helpers.frameworks import register_interest_in_framework
 
 
@@ -63,12 +66,7 @@ def framework_services():
         content = new_service_content.get_builder().filter(draft)
         sections = get_service_attributes(draft, content)
 
-        draft['unanswered_questions'] = len([
-            q.label
-            for s in sections
-            for q in s['rows']
-            if q.answer_required
-        ])
+        draft['unanswered_questions'] = count_unanswered_questions(sections)
 
     return render_template(
         "frameworks/services.html",

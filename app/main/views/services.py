@@ -7,7 +7,7 @@ from ..helpers.services import (
     get_section_error_messages,
     is_service_modifiable, is_service_associated_with_supplier,
     upload_draft_documents, get_service_attributes,
-    get_draft_document_url
+    get_draft_document_url, count_unanswered_questions
 )
 from ... import data_api_client, flask_featureflags
 from dmutils.apiclient import APIError, HTTPError
@@ -361,13 +361,7 @@ def view_service_submission(service_id):
 
     sections = get_service_attributes(draft, content)
 
-    unanswered_questions = len([
-        q.label
-        for s in sections
-        for q in s['rows']
-        if q.answer_required
-    ])
-
+    unanswered_questions = count_unanswered_questions(sections)
     delete_requested = True if request.args.get('delete_requested') else False
 
     return render_template(

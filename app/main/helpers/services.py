@@ -34,6 +34,15 @@ def get_drafts(apiclient, supplier_id, framework_slug):
     return drafts, complete_drafts
 
 
+def count_unanswered_questions(service_attributes):
+    return len([
+        q.label
+        for s in service_attributes
+        for q in s['rows']
+        if q.answer_required
+    ])
+
+
 def get_service_attributes(service_data, service_questions):
     return list(map(
         lambda section: {
