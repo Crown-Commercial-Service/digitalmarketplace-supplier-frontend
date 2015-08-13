@@ -347,7 +347,7 @@ def submit_create_your_account():
 
     if missing_fields:
         current_app.logger.info("Failed to create user as broken session", session)
-        abort(503)
+        abort(400)
 
     if form.validate_on_submit():
         token = generate_token(

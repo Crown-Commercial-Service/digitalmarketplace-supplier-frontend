@@ -795,7 +795,7 @@ class TestCreateSupplier(BaseApplicationTest):
 
         assert_false(generate_token.called)
         assert_false(send_email.called)
-        assert_equal(res.status_code, 503)
+        assert_equal(res.status_code, 400)
 
     @mock.patch("app.main.suppliers.send_email")
     @mock.patch("app.main.suppliers.generate_token")
