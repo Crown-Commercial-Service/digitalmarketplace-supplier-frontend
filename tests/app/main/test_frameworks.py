@@ -98,8 +98,6 @@ FULL_G7_SUBMISSION = {
     "SQ1-1cii": "Blah",
     "SQ1-1d": "Blah",
     "SQ1-1e": "Blah",
-    "SQ1-1f": "Blah",
-    "SQ1-1g": "999999999",
     "SQ1-1h": "999999999",
     "SQ1-1i-ii": "Blah",
     "SQ1-1j-ii": "Blah",
@@ -114,7 +112,6 @@ FULL_G7_SUBMISSION = {
     "SQD2e": "Blah",
     "SQ1-1ci": "public limited company",
     "SQ1-1j-i": "licensed?",
-    "SQ1-1l": "voluntary community social enterprise (VCSE)?",
     "SQ1-1m": "micro",
     "SQ1-3": "on-demand self-service. blah blah",
     "SQ5-1a": u"Yes – your organisation has, blah blah",
@@ -135,7 +132,8 @@ FULL_G7_SUBMISSION = {
     "SQA3": "true",
     "SQA4": "true",
     "SQA5": "true",
-    "AQA3": "true"
+    "AQA3": "true",
+    "SQE2a": ["as a prime contractor, using third parties (subcontractors) to provide some services"]
 }
 
 
