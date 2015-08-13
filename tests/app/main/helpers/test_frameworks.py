@@ -40,8 +40,6 @@ FULL_G7_SUBMISSION = {
     "SQ1-1cii": "Blah",
     "SQ1-1d": "Blah",
     "SQ1-1e": "Blah",
-    "SQ1-1f": "Blah",
-    "SQ1-1g": "999999999",
     "SQ1-1h": "999999999",
     "SQ1-1i-ii": "Blah",
     "SQ1-1j-ii": "Blah",
@@ -56,7 +54,6 @@ FULL_G7_SUBMISSION = {
     "SQD2e": "Blah",
     "SQ1-1ci": "public limited company",
     "SQ1-1j-i": ["licensed?"],
-    "SQ1-1l": ["voluntary community social enterprise (VCSE)?"],
     "SQ1-1m": "micro",
     "SQ1-3": ["on-demand self-service. blah blah"],
     "SQ5-1a": u"Yes – your organisation has, blah blah",
@@ -211,20 +208,12 @@ def test_fields_only_relevant_to_non_uk():
     assert_equal(get_all_errors(content, submission), {'SQ1-1i-i': 'answer_required'})
 
 
-def test_invalid_duns_number_causes_error():
-    content = declaration_content.get_builder()
-    submission = FULL_G7_SUBMISSION.copy()
-
-    submission['SQ1-1g'] = 'invalid'
-    assert_equal(get_all_errors(content, submission), {'SQ1-1g': 'invalid_format'})
-
-
 def test_invalid_vat_number_causes_error():
     content = declaration_content.get_builder()
     submission = FULL_G7_SUBMISSION.copy()
 
-    submission['SQ1-1g'] = 'invalid'
-    assert_equal(get_all_errors(content, submission), {'SQ1-1g': 'invalid_format'})
+    submission['SQ1-1h'] = 'invalid'
+    assert_equal(get_all_errors(content, submission), {'SQ1-1h': 'invalid_format'})
 
 
 def test_character_limit_errors():

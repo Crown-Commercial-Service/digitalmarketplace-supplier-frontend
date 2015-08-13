@@ -31,7 +31,7 @@ def get_required_fields(all_fields, answers):
     required_fields = set(all_fields)
     #  Remove optional fields
     optional_fields = set([
-        "SQ1-1e", "SQ1-1f", "SQ1-1p-i", "SQ1-1p-ii", "SQ1-1p-iii", "SQ1-1p-iv",
+        "SQ1-1e", "SQ1-1p-i", "SQ1-1p-ii", "SQ1-1p-iii", "SQ1-1p-iv",
         "SQ1-1q-i", "SQ1-1q-ii", "SQ1-1q-iii", "SQ1-1q-iv", "SQ1-1cii", "SQ1-1i-ii",
         "SQ1-1j-i", "SQ1-1j-ii", "SQ1-3", "SQ4-1c", "SQ3-1k", "SQC3", "SQ1-1i-i",
     ])
@@ -100,8 +100,6 @@ def get_character_limit_errors(content, answers):
 
 def get_formatting_errors(answers):
     errors_map = {}
-    if not re.match(r'^\d{9}$', answers.get('SQ1-1g', '')):
-        errors_map['SQ1-1g'] = 'invalid_format'
     if not re.match(r'^(\S{9}|\S{12})$', answers.get('SQ1-1h', '')):
         errors_map['SQ1-1h'] = 'invalid_format'
 
