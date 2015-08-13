@@ -29,16 +29,31 @@
   </div>
 
   {% if 'GCLOUD7_OPEN' is active_feature %}
-    {%
-      with
-      items = [{
-        "title": "Apply to become a G-Cloud 7 supplier and add services",
-        "link": url_for(".framework_dashboard"),
-        "body": "G-Cloud 7 is open for applications until 1 October 2015"
-      }]
-    %}
-      {% include "toolkit/browse-list.html" %}
-    {% endwith %}
+    {% if g7_interested %}
+      {%
+        with
+        items = [{
+          "title": "Continue your G-Cloud 7 application",
+          "link": url_for(".framework_dashboard"),
+          "body": "Make your supplier declaration, add services and view G-Cloud 7 updates and clarification questions.",
+          "subtext": "Deadline for submissions: 3pm BST, 6 October 2015"
+        }]
+      %}
+        {% include "toolkit/browse-list.html" %}
+      {% endwith %}
+    {% else %}
+      {%
+        with
+        items = [{
+          "title": "Register your interest in becoming a G-Cloud 7 supplier",
+          "link": url_for(".framework_dashboard"),
+          "body": "Get G-Cloud 7 update emails and learn about applying to G-Cloud 7",
+          "subtext": "Deadline for submissions: 3pm BST, 6 October 2015"
+        }]
+      %}
+        {% include "toolkit/browse-list.html" %}
+      {% endwith %}
+    {% endif %}
   {% endif %}
 
   {{ summary.heading("Current services") }}

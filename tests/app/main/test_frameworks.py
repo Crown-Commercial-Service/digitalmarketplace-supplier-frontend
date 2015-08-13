@@ -20,6 +20,20 @@ class TestFrameworksDashboard(BaseApplicationTest):
 
             assert_equal(res.status_code, 200)
 
+    def test_interest_registered_in_framework(self, data_api_client):
+        with self.app.test_client():
+            self.login()
+
+            res = self.client.get("/suppliers/frameworks/g-cloud-7")
+
+            assert_equal(res.status_code, 200)
+            data_api_client.create_audit_event.assert_called_once_with(
+                audit_type="register_framework_interest",
+                user="email@email.com",
+                object_type="suppliers",
+                object_id=1234,
+                data={"frameworkSlug": "g-cloud-7"})
+
     def test_declaration_status_when_complete(self, data_api_client):
         with self.app.test_client():
             self.login()
