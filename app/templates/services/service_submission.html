@@ -25,6 +25,33 @@
   {% endwith %}
 {% endblock %}
 
+{% block before_sections %}
+<div class="column-one-third align-with-heading">
+  <p class="normal-paragraph">
+    <strong>Last edited</strong>
+  </p>
+  <p class="last-edited">
+    {{ last_edit.createdAt|datetimeformat }}<br />
+    by {{ last_edit.userName }}
+  </p>
+  {% if service_data.status == 'not-submitted' and unanswered_questions == 0 %}
+    <form action="{{ url_for('.complete_draft_service', service_id=service_id) }}" method="POST">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+      {% with type = "save", label = "Move to complete" %}
+        {% include "toolkit/button.html" %}
+      {% endwith %}
+    </form>
+  {% elif service_data.status == 'submitted' %}
+    <span class="service-status-published">Service is complete</span>
+  {% else %}
+    <p class="last-edited">
+      {{ unanswered_questions }} question{% if unanswered_questions > 1 %}s{% endif %} unanswered
+    </p>
+    <p class="move-to-complete-hint">When you have added all the required information, you can move the service to complete.</p>
+  {% endif %}
+</div>
+{% endblock %}
+
 {% block before_heading %}
   {% if delete_requested %}
     <div class="column-one-whole">

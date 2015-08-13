@@ -343,6 +343,20 @@ class TestEditService(BaseApplicationTest):
             '1', {'serviceName': 'The service', 'serviceSummary': 'This is the service'},
             'email@email.com', 'supplier app')
 
+    def test_editing_readonly_section_is_not_allowed(self, data_api_client):
+        data_api_client.get_service.return_value = self.empty_service
+
+        res = self.client.get('/suppliers/services/1/edit/service_attributes')
+        assert_equal(res.status_code, 404)
+
+        data_api_client.get_draft_service.return_value = self.empty_service
+        res = self.client.post(
+            '/suppliers/services/1/edit/service_attributes',
+            data={
+                'lot': 'SCS',
+            })
+        assert_equal(res.status_code, 404)
+
     def test_only_questions_for_this_section_can_be_changed(self, data_api_client):
         data_api_client.get_service.return_value = self.empty_service
         res = self.client.post(
@@ -529,6 +543,40 @@ class TestCopyDraft(BaseApplicationTest):
         assert_equal(res.status_code, 404)
 
 
+@mock.patch('app.main.views.services.data_api_client')
+class TestCompleteDraft(BaseApplicationTest):
+
+    def setup(self):
+        super(TestCompleteDraft, self).setup()
+
+        with self.app.test_client():
+            self.login()
+
+        self.draft = {
+            'id': 1,
+            'supplierId': 1234,
+            'supplierName': "supplierName",
+            'lot': "SCS",
+            'status': "not-submitted",
+            'frameworkName': "frameworkName",
+            'links': {},
+            'updatedAt': "2015-06-29T15:26:07.650368Z"
+        }
+
+    def test_complete_draft(self, api_client):
+        api_client.get_draft_service.return_value = {'services': self.draft}
+
+        res = self.client.post('/suppliers/submission/services/1/complete')
+        assert_equal(res.status_code, 302)
+
+    def test_complete_draft_checks_supplier_id(self, api_client):
+        self.draft['supplierId'] = 2
+        api_client.get_draft_service.return_value = {'services': self.draft}
+
+        res = self.client.post('/suppliers/submission/services/1/complete')
+        assert_equal(res.status_code, 404)
+
+
 @mock.patch('dmutils.s3.S3')
 @mock.patch('app.main.views.services.data_api_client')
 class TestEditDraftService(BaseApplicationTest):
@@ -557,17 +605,30 @@ class TestEditDraftService(BaseApplicationTest):
         res = self.client.post(
             '/suppliers/submission/services/1/edit/service_description',
             data={
-                'serviceName': 'The service',
                 'serviceSummary': 'This is the service',
             })
 
         assert_equal(res.status_code, 302)
         data_api_client.update_draft_service.assert_called_once_with(
             '1',
-            {'serviceName': 'The service', 'serviceSummary': 'This is the service'},
+            {'serviceSummary': 'This is the service'},
             'email@email.com',
-            page_questions=['serviceName', 'serviceSummary']
+            page_questions=['serviceSummary']
         )
+
+    def test_editing_readonly_section_is_not_allowed(self, data_api_client, s3):
+        data_api_client.get_draft_service.return_value = self.empty_draft
+
+        res = self.client.get('/suppliers/submission/services/1/edit/service_attributes')
+        assert_equal(res.status_code, 404)
+
+        data_api_client.get_draft_service.return_value = self.empty_draft
+        res = self.client.post(
+            '/suppliers/submission/services/1/edit/service_attributes',
+            data={
+                'lot': 'SCS',
+            })
+        assert_equal(res.status_code, 404)
 
     def test_only_questions_for_this_section_can_be_changed(self, data_api_client, s3):
         data_api_client.get_draft_service.return_value = self.empty_draft
@@ -580,7 +641,7 @@ class TestEditDraftService(BaseApplicationTest):
         assert_equal(res.status_code, 302)
         data_api_client.update_draft_service.assert_called_once_with(
             '1', {}, 'email@email.com',
-            page_questions=['serviceName', 'serviceSummary']
+            page_questions=['serviceSummary']
         )
 
     def test_file_upload(self, data_api_client, s3):
@@ -792,6 +853,11 @@ class TestShowDraftService(BaseApplicationTest):
             'priceInterval': 'Second',
             'links': {},
             'updatedAt': "2015-06-29T15:26:07.650368Z"
+        },
+        'auditEvents': {
+            'createdAt': "2015-06-29T15:26:07.650368Z",
+            'userName': "Supplier User",
+
         }
     }
 
@@ -829,6 +895,10 @@ class TestDeleteDraftService(BaseApplicationTest):
             'serviceName': 'My rubbish draft',
             'serviceSummary': 'This is the worst service ever',
             'updatedAt': "2015-06-29T15:26:07.650368Z"
+        },
+        'auditEvents': {
+            'createdAt': "2015-06-29T15:26:07.650368Z",
+            'userName': "Supplier User",
         }
     }
 

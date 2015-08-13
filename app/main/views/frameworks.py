@@ -4,11 +4,16 @@ from flask_login import login_required, current_user
 from dmutils.apiclient import APIError
 from dmutils import flask_featureflags
 from dmutils.email import send_email, MandrillException
+from dmutils.formats import format_service_price
 
-from ...main import main, declaration_content
+from ...main import main, declaration_content, new_service_content
 from ..helpers.frameworks import get_error_messages
+
 from ... import data_api_client
-from ..helpers.services import get_draft_document_url
+from ..helpers.services import (
+    get_draft_document_url, get_service_attributes, get_drafts,
+    count_unanswered_questions
+)
 from ..helpers.frameworks import register_interest_in_framework
 
 
@@ -23,12 +28,10 @@ def framework_dashboard():
 
     try:
         register_interest_in_framework(data_api_client, 'g-cloud-7')
-        drafts = data_api_client.find_draft_services(
-            current_user.supplier_id,
-            framework='g-cloud-7'
-        )['services']
     except APIError as e:
         abort(e.status_code)
+
+    drafts, complete_drafts = get_drafts(data_api_client, current_user.supplier_id, 'g-cloud-7')
 
     try:
         declaration_made = bool(data_api_client.get_selection_answers(
@@ -43,7 +46,7 @@ def framework_dashboard():
         "frameworks/dashboard.html",
         counts={
             "draft": len(drafts),
-            "complete": 1,
+            "complete": len(complete_drafts),
         },
         declaration_made=declaration_made,
         **template_data
@@ -56,18 +59,19 @@ def framework_dashboard():
 def framework_services():
     template_data = main.config['BASE_TEMPLATE_DATA']
 
-    try:
-        drafts = data_api_client.find_draft_services(
-            current_user.supplier_id,
-            framework='g-cloud-7'
-        )['services']
+    drafts, complete_drafts = get_drafts(data_api_client, current_user.supplier_id, 'g-cloud-7')
 
-    except APIError as e:
-        abort(e.status_code)
+    for draft in drafts:
+        draft['priceString'] = format_service_price(draft)
+        content = new_service_content.get_builder().filter(draft)
+        sections = get_service_attributes(draft, content)
+
+        draft['unanswered_questions'] = count_unanswered_questions(sections)
 
     return render_template(
         "frameworks/services.html",
-        drafts=drafts,
+        complete_drafts=reversed(complete_drafts),
+        drafts=reversed(drafts),
         **template_data
     ), 200
 

@@ -7,7 +7,7 @@ from ..helpers.services import (
     get_section_error_messages,
     is_service_modifiable, is_service_associated_with_supplier,
     upload_draft_documents, get_service_attributes,
-    get_draft_document_url
+    get_draft_document_url, count_unanswered_questions
 )
 from ... import data_api_client, flask_featureflags
 from dmutils.apiclient import APIError, HTTPError
@@ -116,7 +116,7 @@ def edit_section(service_id, section_id):
 
     content = existing_service_content.get_builder().filter(service)
     section = content.get_section(section_id)
-    if section is None:
+    if section is None or not section.editable:
         abort(404)
 
     return render_template(
@@ -142,7 +142,7 @@ def update_section(service_id, section_id):
 
     content = existing_service_content.get_builder().filter(service)
     section = content.get_section(section_id)
-    if section is None:
+    if section is None or not section.editable:
         abort(404)
 
     posted_data = section.get_data(request.form)
@@ -279,6 +279,29 @@ def copy_draft_service(service_id):
     return redirect(url_for(".framework_services"))
 
 
+@main.route('/submission/services/<string:service_id>/complete', methods=['POST'])
+@login_required
+@flask_featureflags.is_active_feature('GCLOUD7_OPEN')
+def complete_draft_service(service_id):
+    draft = data_api_client.get_draft_service(service_id).get('services')
+
+    if not is_service_associated_with_supplier(draft):
+        abort(404)
+
+    try:
+        data_api_client.complete_draft_service(
+            service_id,
+            current_user.email_address
+        )
+
+    except APIError as e:
+        abort(e.status_code)
+
+    flash({'service_name': draft.get('serviceName')}, 'service_completed')
+
+    return redirect(url_for(".framework_services"))
+
+
 @main.route('/submission/services/<string:service_id>/delete', methods=['POST'])
 @login_required
 @flask_featureflags.is_active_feature('GCLOUD7_OPEN')
@@ -325,7 +348,8 @@ def service_submission_document(framework_slug, supplier_id, document_name):
 @flask_featureflags.is_active_feature('GCLOUD7_OPEN')
 def view_service_submission(service_id):
     try:
-        draft = data_api_client.get_draft_service(service_id)['services']
+        data = data_api_client.get_draft_service(service_id)
+        draft, last_edit = data['services'], data['auditEvents']
     except HTTPError as e:
         abort(e.status_code)
 
@@ -335,13 +359,18 @@ def view_service_submission(service_id):
     draft['priceString'] = format_service_price(draft)
     content = new_service_content.get_builder().filter(draft)
 
+    sections = get_service_attributes(draft, content)
+
+    unanswered_questions = count_unanswered_questions(sections)
     delete_requested = True if request.args.get('delete_requested') else False
 
     return render_template(
         "services/service_submission.html",
         service_id=service_id,
-        sections=get_service_attributes(draft, content),
         service_data=draft,
+        last_edit=last_edit,
+        sections=sections,
+        unanswered_questions=unanswered_questions,
         delete_requested=delete_requested,
         **main.config['BASE_TEMPLATE_DATA']), 200
 
@@ -360,7 +389,7 @@ def edit_service_submission(service_id, section_id):
 
     content = new_service_content.get_builder().filter(draft)
     section = content.get_section(section_id)
-    if section is None:
+    if section is None or not section.editable:
         abort(404)
 
     unformat_section_data(draft)
@@ -388,7 +417,7 @@ def update_section_submission(service_id, section_id):
 
     content = new_service_content.get_builder().filter(draft)
     section = content.get_section(section_id)
-    if section is None:
+    if section is None or not section.editable:
         abort(404)
 
     posted_data = section.get_data(request.form)

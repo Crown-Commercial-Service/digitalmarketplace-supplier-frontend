@@ -2,6 +2,7 @@ from flask import abort, current_app, url_for
 from flask_login import current_user
 
 from dmutils import s3
+from dmutils.apiclient import APIError
 from dmutils.documents import filter_empty_files, validate_documents, upload_document
 from dmutils.service_attribute import Attribute
 from dmutils.content_loader import PRICE_FIELDS
@@ -14,8 +15,36 @@ except ImportError:
     import urllib.parse as urlparse
 
 
+def get_drafts(apiclient, supplier_id, framework_slug):
+    try:
+        drafts = apiclient.find_draft_services(
+            current_user.supplier_id,
+            framework='g-cloud-7'
+        )['services']
+
+    except APIError as e:
+        abort(e.status_code)
+
+    # Hide drafts without service name
+    drafts = [draft for draft in drafts if draft.get('serviceName')]
+
+    complete_drafts = [draft for draft in drafts if draft['status'] == 'submitted']
+    drafts = [draft for draft in drafts if draft['status'] == 'not-submitted']
+
+    return drafts, complete_drafts
+
+
+def count_unanswered_questions(service_attributes):
+    return len([
+        q.label
+        for s in service_attributes
+        for q in s['rows']
+        if q.answer_required
+    ])
+
+
 def get_service_attributes(service_data, service_questions):
-    return map(
+    return list(map(
         lambda section: {
             'name': section['name'],
             'rows': _get_rows(section, service_data),
@@ -23,7 +52,7 @@ def get_service_attributes(service_data, service_questions):
             'id': section['id']
         },
         service_questions
-    )
+    ))
 
 
 def _get_rows(section, service_data):
