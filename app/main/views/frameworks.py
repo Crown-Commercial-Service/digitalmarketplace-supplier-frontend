@@ -9,6 +9,7 @@ from ...main import main, declaration_content
 from ..helpers.frameworks import get_error_messages
 from ... import data_api_client
 from ..helpers.services import get_draft_document_url
+from ..helpers.frameworks import register_interest_in_framework
 
 
 CLARIFICATION_QUESTION_NAME = 'clarification_question'
@@ -21,6 +22,7 @@ def framework_dashboard():
     template_data = main.config['BASE_TEMPLATE_DATA']
 
     try:
+        register_interest_in_framework(data_api_client, 'g-cloud-7')
         drafts = data_api_client.find_draft_services(
             current_user.supplier_id,
             framework='g-cloud-7'

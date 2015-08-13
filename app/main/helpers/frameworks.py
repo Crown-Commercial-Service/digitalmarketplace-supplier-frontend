@@ -1,8 +1,30 @@
+from flask_login import current_user
+from dmutils.audit import AuditTypes
 import re
 from operator import add
 from functools import reduce
 import six
 from werkzeug.datastructures import ImmutableOrderedMultiDict
+
+
+def has_registered_interest_in_framework(client, framework_slug):
+    audits = client.find_audit_events(
+        audit_type=AuditTypes.register_framework_interest.value,
+        object_type='suppliers',
+        object_id=current_user.supplier_id)
+    for audit in audits['auditEvents']:
+        if audit['data'].get('frameworkSlug') == framework_slug:
+            return True
+    return False
+
+
+def register_interest_in_framework(client, framework_slug):
+    client.create_audit_event(
+        audit_type=AuditTypes.register_framework_interest.value,
+        user=current_user.email_address,
+        object_type='suppliers',
+        object_id=current_user.supplier_id,
+        data={'frameworkSlug': framework_slug})
 
 
 def get_required_fields(all_fields, answers):
