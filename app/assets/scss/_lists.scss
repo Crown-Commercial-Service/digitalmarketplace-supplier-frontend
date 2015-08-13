@@ -1,0 +1,64 @@
+// Lists
+// From: https://github.com/alphagov/govuk_elements/commit/7e60d575939e36b2788d9b8ba8876aae7509d559
+// ==========================================================================
+
+ul,
+ol {
+  list-style-type: none;
+  padding: 0;
+}
+
+// Bulleted lists
+.list-bullet {
+  list-style-type: disc;
+  padding-left: 20px;
+}
+
+// Numbered lists
+.list-number {
+  list-style-type: decimal;
+  padding-left: 20px;
+
+  @include ie-lte(7) {
+    padding-left: 28px;
+  }
+}
+
+.list-bullet,
+.list-number {
+  margin-top: 5px;
+  margin-bottom: 20px;
+}
+
+.list-bullet li,
+.list-number li {
+  margin-bottom: 5px;
+}
+
+// Styles specific to Digital Marketplace
+
+.check-list {
+  .lead {
+    margin-bottom: $gutter-half;
+  }
+
+  ul {
+    padding-bottom: 0;
+
+    @include media(tablet) {
+      padding-bottom: $gutter-half;
+    }
+
+    li {
+      margin-bottom: $gutter-half;
+
+      p {
+        margin: 0;
+      }
+
+      a {
+        word-wrap: break-word;
+      }
+    }
+  }
+}

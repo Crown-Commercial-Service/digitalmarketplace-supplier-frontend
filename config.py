@@ -32,6 +32,7 @@ class Config(object):
     INVITE_EMAIL_FROM = 'enquiries@digitalmarketplace.service.gov.uk'
     INVITE_EMAIL_SUBJECT = 'Your Digital Marketplace invitation'
 
+    CREATE_USER_SUBJECT = 'Create your Digital Marketplace account'
     SECRET_KEY = os.getenv('DM_PASSWORD_SECRET_KEY')
     SHARED_EMAIL_KEY = os.getenv('DM_SHARED_EMAIL_KEY')
     RESET_PASSWORD_SALT = 'ResetPasswordSalt'
@@ -78,6 +79,7 @@ class Test(Config):
     WTF_CSRF_ENABLED = False
     SERVER_NAME = 'localhost'
     DM_MANDRILL_API_KEY = 'MANDRILL'
+    SHARED_EMAIL_KEY = "KEY"
 
     FEATURE_FLAGS_EDIT_SERVICE_PAGE = enabled_since('2015-06-03')
     FEATURE_FLAGS_SUPPLIER_DASHBOARD = enabled_since('2015-06-10')

@@ -1,0 +1,9 @@
+@include media(tablet) {
+  form button.button-save {
+    margin-top: ($gutter * 1.5);
+  }
+}
+
+a.button-save {
+  @include inline-block;
+}

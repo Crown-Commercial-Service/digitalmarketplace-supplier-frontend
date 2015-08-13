@@ -1,0 +1,89 @@
+{% extends "_base_page.html" %}
+{% import "toolkit/summary-table.html" as summary %}
+
+{% block page_title %}Company summary - Create new supplier – Digital Marketplace{% endblock %}
+
+{% block breadcrumb %}
+{%
+  with items = [
+    {
+      "link": "/",
+      "label": "Digital Marketplace"
+    }
+  ]
+%}
+{% include "toolkit/breadcrumb.html" %}
+{% endwith %}
+{% endblock %}
+
+{% block main_content %}
+
+{%
+  with heading = "Check your company information "
+%}
+{% include "toolkit/page-heading.html" %}
+{% endwith %}
+
+
+
+<div class="company-information-summary">
+
+      {% if missing_fields|length > 0%}
+      <div class="banner-warning-without-action">
+        <p class="banner-message">
+          Please complete all fields
+        </p>
+      </div>
+      {% endif %}
+
+  {% call summary.mapping_table(
+    caption="Summary table with content field as list",
+    field_headings=[
+      "Field name",
+      "Field value",
+    ],
+    field_headings_visible=False
+  ) %}
+  {% call summary.row(complete=session.get("duns_number", None)) %}
+  {{ summary.field_name("DUNS number") }}
+  {{ summary.text(session.get("duns_number", "please answer this question")) }}
+  {{ summary.edit_link("Edit", url_for(".duns_number")) }}
+  {% endcall %}
+  {% call summary.row() %}
+  {{ summary.field_name("Companies House number") }}
+  {{ summary.text(session["companies_house_number"]) }}
+  {{ summary.edit_link("Edit", url_for(".companies_house_number")) }}
+  {% endcall %}
+  {% call summary.row(complete=session.get("company_name", None)) %}
+  {{ summary.field_name("Company name") }}
+  {{ summary.text(session.get("company_name", "please answer this question")) }}
+  {{ summary.edit_link("Edit", url_for(".company_name")) }}
+  {% endcall %}
+  {% call summary.row(complete=session.get("contact_name", None)) %}
+  {{ summary.field_name("Primary contact name") }}
+  {{ summary.text(session.get("contact_name", "please answer this question")) }}
+  {{ summary.edit_link("Edit", url_for(".company_contact_details")) }}
+  {% endcall %}
+  {% call summary.row(complete=session.get("phone_number", None)) %}
+  {{ summary.field_name("Primary contact email") }}
+  {{ summary.text(session.get("email_address", "please answer this question")) }}
+  {{ summary.edit_link("Edit", url_for(".company_contact_details")) }}
+  {% endcall %}
+  {% call summary.row(complete=session.get("phone_number", None)) %}
+  {{ summary.field_name("Primary contact phone number") }}
+  {{ summary.text(session.get("phone_number", "please answer this question")) }}
+  {{ summary.edit_link("Edit", url_for(".company_contact_details")) }}
+  {% endcall %}
+  {% endcall %}
+</div>
+<form action="{{ url_for('.submit_company_summary')}}" method="POST">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+  {%
+    with
+      type = "save",
+      label = "Create supplier account"
+  %}
+  {% include "toolkit/button.html" %}
+  {% endwith %}
+</form>
+{% endblock %}

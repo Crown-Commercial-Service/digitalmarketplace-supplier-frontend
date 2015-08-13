@@ -1,4 +1,7 @@
+from dmutils.apiclient import HTTPError
+from dmutils.email import MandrillException
 import mock
+from flask import session
 from mock import Mock
 from nose.tools import assert_equal, assert_true, assert_in, assert_false
 from tests.app.helpers import BaseApplicationTest
@@ -197,9 +200,7 @@ class TestSupplierDashboardLogin(BaseApplicationTest):
 
 @mock.patch("app.main.views.suppliers.data_api_client")
 class TestSupplierUpdate(BaseApplicationTest):
-
     def _login(self, data_api_client):
-
         data_api_client.authenticate_user.return_value = self.user(
             123, "email@email.com", 1234, "name", "Name"
         )
@@ -347,3 +348,500 @@ class TestSupplierUpdate(BaseApplicationTest):
             res.location,
             "http://localhost/suppliers/login?next=%2Fsuppliers%2Fedit"
         )
+
+
+class TestCreateSupplier(BaseApplicationTest):
+    def test_should_be_an_error_if_no_duns_number(self):
+        res = self.client.post(
+            "/suppliers/duns-number",
+            data={}
+        )
+        assert_equal(res.status_code, 400)
+        assert_true("DUNS Number must be 9 digits" in res.get_data(as_text=True))
+
+    def test_should_be_an_error_if_no_duns_number_is_letters(self):
+        res = self.client.post(
+            "/suppliers/duns-number",
+            data={
+                'duns_number': "invalid"
+            }
+        )
+        assert_equal(res.status_code, 400)
+        assert_true("DUNS Number must be 9 digits" in res.get_data(as_text=True))
+
+    def test_should_be_an_error_if_no_duns_number_is_less_than_nine_digits(self):
+        res = self.client.post(
+            "/suppliers/duns-number",
+            data={
+                'duns_number': "99999999"
+            }
+        )
+        assert_equal(res.status_code, 400)
+        assert_true("DUNS Number must be 9 digits" in res.get_data(as_text=True))
+
+    def test_should_be_an_error_if_no_duns_number_is_more_than_nine_digits(self):
+        res = self.client.post(
+            "/suppliers/duns-number",
+            data={
+                'duns_number': "9999999999"
+            }
+        )
+        assert_equal(res.status_code, 400)
+        assert_true("DUNS Number must be 9 digits" in res.get_data(as_text=True))
+
+    @mock.patch("app.main.suppliers.data_api_client")
+    def test_should_be_an_error_if_duns_number_in_use(self, data_api_client):
+        data_api_client.find_suppliers.return_value = {
+            "suppliers": [
+                "one supplier", "two suppliers"
+            ]
+        }
+        res = self.client.post(
+            "/suppliers/duns-number",
+            data={
+                'duns_number': "9999999999"
+            }
+        )
+        assert_equal(res.status_code, 400)
+        assert_true("DUNS Number must be 9 digits" in res.get_data(as_text=True))
+
+    @mock.patch("app.main.suppliers.data_api_client")
+    def test_should_allow_nine_digit_duns_number(self, data_api_client):
+        data_api_client.find_suppliers.return_value = {"suppliers": []}
+        res = self.client.post(
+            "/suppliers/duns-number",
+            data={
+                'duns_number': "999999999"
+            }
+        )
+        assert_equal(res.status_code, 302)
+        assert_equal(res.location, 'http://localhost/suppliers/companies-house-number')
+
+    def test_should_not_be_an_error_if_no_companies_house_number(self):
+        res = self.client.post(
+            "/suppliers/companies-house-number",
+            data={}
+        )
+        assert_equal(res.status_code, 302)
+        assert_equal(res.location, 'http://localhost/suppliers/company-name')
+
+    def test_should_be_an_error_if_companies_house_number_is_not_8_characters_short(self):
+        res = self.client.post(
+            "/suppliers/companies-house-number",
+            data={
+                'companies_house_number': "short"
+            }
+        )
+        assert_equal(res.status_code, 400)
+        assert_true("Companies house number must be 8 characters" in res.get_data(as_text=True))
+
+    def test_should_be_an_error_if_companies_house_number_is_not_8_characters_long(self):
+        res = self.client.post(
+            "/suppliers/companies-house-number",
+            data={
+                'companies_house_number': "muchtoolongtobecompanieshouse"
+            }
+        )
+        assert_equal(res.status_code, 400)
+        assert_true("Companies house number must be 8 characters" in res.get_data(as_text=True))
+
+    def test_should_allow_valid_companies_house_number(self):
+        with self.client as c:
+            res = c.post(
+                "/suppliers/companies-house-number",
+                data={
+                    'companies_house_number': "SC001122"
+                }
+            )
+            assert_equal(res.status_code, 302)
+            assert_equal(res.location, 'http://localhost/suppliers/company-name')
+
+    def test_should_wipe_companies_house_number_if_not_supplied(self):
+        with self.client as c:
+            res = c.post(
+                "/suppliers/companies-house-number",
+                data={
+                    'companies_house_number': ""
+                }
+            )
+            assert_equal(res.status_code, 302)
+            assert_equal(res.location, 'http://localhost/suppliers/company-name')
+            assert_false("companies_house_number" in session)
+
+    def test_should_allow_valid_company_name(self):
+        res = self.client.post(
+            "/suppliers/company-name",
+            data={
+                'company_name': "My Company"
+            }
+        )
+        assert_equal(res.status_code, 302)
+        assert_equal(res.location, 'http://localhost/suppliers/company-contact-details')
+
+    def test_should_not_be_an_error_if_no_company_name(self):
+        res = self.client.post(
+            "/suppliers/company-name",
+            data={}
+        )
+        assert_equal(res.status_code, 400)
+        assert_true("Company name is required" in res.get_data(as_text=True))
+
+    def test_should_not_be_an_error_if_company_name_too_long(self):
+        twofiftysix = "a" * 256
+        res = self.client.post(
+            "/suppliers/company-name",
+            data={
+                'company_name': twofiftysix
+            }
+        )
+        assert_equal(res.status_code, 400)
+        assert_true("Company name must be under 256 characters" in res.get_data(as_text=True))
+
+    def test_should_allow_valid_company_contact_details(self):
+        res = self.client.post(
+            "/suppliers/company-contact-details",
+            data={
+                'contact_name': "Name",
+                'email_address': "name@email.com",
+                'phone_number': "999"
+            }
+        )
+        assert_equal(res.status_code, 302)
+        assert_equal(res.location, 'http://localhost/suppliers/company-summary')
+
+    def test_should_not_allow_contact_details_without_name(self):
+        res = self.client.post(
+            "/suppliers/company-contact-details",
+            data={
+                'email_address': "name@email.com",
+                'phone_number': "999"
+            }
+        )
+        assert_equal(res.status_code, 400)
+        assert_true("Contact name can not be empty" in res.get_data(as_text=True))
+
+    def test_should_not_allow_contact_details_with_too_long_name(self):
+        twofiftysix = "a" * 256
+        res = self.client.post(
+            "/suppliers/company-contact-details",
+            data={
+                'contact_name': twofiftysix,
+                'email_address': "name@email.com",
+                'phone_number': "999"
+            }
+        )
+        assert_equal(res.status_code, 400)
+        assert_true("Contact name must be under 256 characters" in res.get_data(as_text=True))
+
+    def test_should_not_allow_contact_details_without_email(self):
+        res = self.client.post(
+            "/suppliers/company-contact-details",
+            data={
+                'contact_name': "Name",
+                'phone_number': "999"
+            }
+        )
+        assert_equal(res.status_code, 400)
+        assert_true("Email can not be empty" in res.get_data(as_text=True))
+
+    def test_should_not_allow_contact_details_with_invalid_email(self):
+        res = self.client.post(
+            "/suppliers/company-contact-details",
+            data={
+                'contact_name': "Name",
+                'email_address': "notrightatall",
+                'phone_number': "999"
+            }
+        )
+        assert_equal(res.status_code, 400)
+        assert_true("Please enter a valid email address" in res.get_data(as_text=True))
+
+    def test_should_not_allow_contact_details_without_phone_number(self):
+        res = self.client.post(
+            "/suppliers/company-contact-details",
+            data={
+                'contact_name': "Name",
+                'email_address': "name@email.com"
+            }
+        )
+        assert_equal(res.status_code, 400)
+        assert_true("Phone number can not be empty" in res.get_data(as_text=True))
+
+    def test_should_not_allow_contact_details_with_invalid_phone_number(self):
+        twentyone = "a" * 21
+        res = self.client.post(
+            "/suppliers/company-contact-details",
+            data={
+                'contact_name': "Name",
+                'email_address': "name@email.com",
+                'phone_number': twentyone
+            }
+        )
+        assert_equal(res.status_code, 400)
+        assert_true("Phone number must be under 20 characters" in res.get_data(as_text=True))
+
+    def test_should_show_multiple_errors(self):
+        res = self.client.post(
+            "/suppliers/company-contact-details",
+            data={}
+        )
+        assert_equal(res.status_code, 400)
+        assert_true("Phone number can not be empty" in res.get_data(as_text=True))
+        assert_true("Email can not be empty" in res.get_data(as_text=True))
+        assert_true("Contact name can not be empty" in res.get_data(as_text=True))
+
+    def test_should_populate_duns_from_session(self):
+        with self.client.session_transaction() as sess:
+            sess['duns_number'] = "999"
+        res = self.client.get("/suppliers/duns-number")
+        assert_equal(res.status_code, 200)
+        assert_equal(
+            '<input type="text" name="duns_number" id="duns_number" class="text-box" value="999" />' in res.get_data(
+                as_text=True),  # noqa
+            True)
+
+    def test_should_populate_companies_house_from_session(self):
+        with self.client.session_transaction() as sess:
+            sess['companies_house_number'] = "999"
+        res = self.client.get("/suppliers/companies-house-number")
+        assert_equal(res.status_code, 200)
+        assert_true('<input type="text" name="companies_house_number" id="companies_house_number" class="text-box" value="999" />' in res.get_data(as_text=True))  # noqa
+
+    def test_should_populate_company_name_from_session(self):
+        with self.client.session_transaction() as sess:
+            sess['company_name'] = "Name"
+        res = self.client.get("/suppliers/company-name")
+        assert_equal(res.status_code, 200)
+        assert_true('<input type="text" name="company_name" id="company_name" class="text-box" value="Name" />' in res.get_data(as_text=True))  # noqa
+
+    def test_should_populate_contact_details_from_session(self):
+        with self.client.session_transaction() as sess:
+            sess['email_address'] = "email_address"
+            sess['contact_name'] = "contact_name"
+            sess['phone_number'] = "phone_number"
+        res = self.client.get("/suppliers/company-contact-details")
+        assert_equal(res.status_code, 200)
+        assert_true('<input type="text" name="email_address" id="email_address" class="text-box" value="email_address" />' in res.get_data(as_text=True))  # noqa
+
+        assert_true('<input type="text" name="contact_name" id="contact_name" class="text-box" value="contact_name" />' in res.get_data(as_text=True))  # noqa
+
+        assert_true('<input type="text" name="phone_number" id="phone_number" class="text-box" value="phone_number" />' in res.get_data(as_text=True))  # noqa
+
+    def test_should_be_an_error_to_be_submit_company_with_incomplete_session(self):
+        res = self.client.post("/suppliers/company-summary")
+        assert_equal(res.status_code, 400)
+        assert_equal(
+            'Please complete all fields' in res.get_data(as_text=True),
+            True)
+
+    @mock.patch("app.main.suppliers.data_api_client")
+    def test_should_redirect_to_create_your_account_if_valid_session(self, data_api_client):
+        with self.client as c:
+            with c.session_transaction() as sess:
+                sess['email_address'] = "email_address"
+                sess['phone_number'] = "phone_number"
+                sess['contact_name'] = "contact_name"
+                sess['duns_number'] = "duns_number"
+                sess['company_name'] = "company_name"
+                sess['companies_house_number'] = "companies_house_number"
+
+            data_api_client.create_supplier.return_value = self.supplier()
+            res = c.post("/suppliers/company-summary")
+            assert_equal(res.status_code, 302)
+            assert_equal(res.location, "http://localhost/suppliers/create-your-account")
+            data_api_client.create_supplier.assert_called_once_with({
+                "contactInformation": [{
+                    "email": "email_address",
+                    "phoneNumber": "phone_number",
+                    "contactName": "contact_name"
+                }],
+                "dunsNumber": "duns_number",
+                "name": "company_name",
+                "companiesHouseNumber": "companies_house_number",
+            })
+            assert_false('email_address' in session)
+            assert_false('phone_number' in session)
+            assert_false('contact_name' in session)
+            assert_false('duns_number' in session)
+            assert_false('company_name' in session)
+            assert_false('companies_house_number' in session)
+            assert_equal(session['email_supplier_id'], 12345)
+            assert_equal(session['email_company_name'], 'Supplier Name')
+
+    @mock.patch("app.main.suppliers.data_api_client")
+    def test_should_allow_missing_companies_house_number(self, data_api_client):
+        with self.client.session_transaction() as sess:
+            sess['email_address'] = "email_address"
+            sess['phone_number'] = "phone_number"
+            sess['contact_name'] = "contact_name"
+            sess['duns_number'] = "duns_number"
+            sess['company_name'] = "company_name"
+
+        data_api_client.create_supplier.return_value = self.supplier()
+        res = self.client.post("/suppliers/company-summary")
+        assert_equal(res.status_code, 302)
+        assert_equal(res.location, "http://localhost/suppliers/create-your-account")
+        data_api_client.create_supplier.assert_called_once_with({
+            "contactInformation": [{
+                "email": "email_address",
+                "phoneNumber": "phone_number",
+                "contactName": "contact_name"
+            }],
+            "dunsNumber": "duns_number",
+            "name": "company_name"
+        })
+
+    @mock.patch("app.main.suppliers.data_api_client")
+    def test_should_be_an_error_if_missing_a_field_in_session(self, data_api_client):
+        with self.client.session_transaction() as sess:
+            sess['email_address'] = "email_address"
+            sess['phone_number'] = "phone_number"
+            sess['contact_name'] = "contact_name"
+            sess['duns_number'] = "duns_number"
+
+        data_api_client.create_supplier.return_value = True
+        res = self.client.post("/suppliers/company-summary")
+        assert_equal(res.status_code, 400)
+        assert_equal(data_api_client.create_supplier.called, False)
+        assert_equal(
+            'Please complete all fields' in res.get_data(as_text=True),
+            True)
+
+    @mock.patch("app.main.suppliers.data_api_client")
+    def test_should_return_503_if_api_error(self, data_api_client):
+        with self.client.session_transaction() as sess:
+            sess['email_address'] = "email_address"
+            sess['phone_number'] = "phone_number"
+            sess['contact_name'] = "contact_name"
+            sess['duns_number'] = "duns_number"
+            sess['company_name'] = "company_name"
+
+        data_api_client.create_supplier.side_effect = HTTPError("gone bad")
+        res = self.client.post("/suppliers/company-summary")
+        assert_equal(res.status_code, 503)
+
+    def test_should_require_an_email_address(self):
+        with self.client.session_transaction() as sess:
+            sess['email_company_name'] = "company_name"
+            sess['email_supplier_id'] = 1234
+        res = self.client.post(
+            "/suppliers/create-your-account",
+            data={}
+        )
+        assert_equal(res.status_code, 400)
+        assert_true("Email can not be empty" in res.get_data(as_text=True))
+
+    def test_should_not_allow_incorrect_email_address(self):
+        with self.client.session_transaction() as sess:
+            sess['email_company_name'] = "company_name"
+            sess['email_supplier_id'] = 1234
+        res = self.client.post(
+            "/suppliers/create-your-account",
+            data={
+                'email_address': "bademail"
+            }
+        )
+        assert_equal(res.status_code, 400)
+        assert_true("Please enter a valid email address" in res.get_data(as_text=True))
+
+    @mock.patch("app.main.suppliers.send_email")
+    @mock.patch("app.main.suppliers.generate_token")
+    def test_should_allow_correct_email_address(self, generate_token, send_email):
+        with self.client as c:
+            with c.session_transaction() as sess:
+                sess['email_company_name'] = "company_name"
+                sess['email_supplier_id'] = 1234
+
+            res = c.post(
+                "/suppliers/create-your-account",
+                data={
+                    'email_address': "valid@email.com"
+                }
+            )
+
+            generate_token.assert_called_once_with(
+                {
+                    "email_address": "valid@email.com",
+                    "supplier_id": 1234,
+                    "supplier_name": "company_name"
+                },
+                "KEY",
+                "InviteEmailSalt"
+            )
+
+            send_email.assert_called_once_with(
+                "valid@email.com",
+                mock.ANY,
+                "MANDRILL",
+                "Create your Digital Marketplace account",
+                "enquiries@digitalmarketplace.service.gov.uk",
+                "Digital Marketplace Admin",
+                ["user-creation"]
+            )
+
+            assert_equal(res.status_code, 302)
+            assert_equal(res.location, 'http://localhost/suppliers/create-your-account-complete')
+            assert_equal(session['email_sent_to'], 'valid@email.com')
+
+    @mock.patch("app.main.suppliers.send_email")
+    @mock.patch("app.main.suppliers.generate_token")
+    def test_should_be_an_error_if_incomplete_session_on_account_creation(self, generate_token, send_email):
+        res = self.client.post(
+            "/suppliers/create-your-account",
+            data={
+                'email_address': "valid@email.com"
+            }
+        )
+
+        assert_false(generate_token.called)
+        assert_false(send_email.called)
+        assert_equal(res.status_code, 400)
+
+    @mock.patch("app.main.suppliers.send_email")
+    @mock.patch("app.main.suppliers.generate_token")
+    def test_should_be_a_503_if_mandrill_failure_on_creation_email(self, generate_token, send_email):
+        with self.client.session_transaction() as sess:
+            sess['email_company_name'] = "company_name"
+            sess['email_supplier_id'] = 1234
+
+        send_email.side_effect = MandrillException("Failed")
+
+        res = self.client.post(
+            "/suppliers/create-your-account",
+            data={
+                'email_address': "valid@email.com"
+            }
+        )
+
+        generate_token.assert_called_once_with(
+            {
+                "email_address": "valid@email.com",
+                "supplier_id": 1234,
+                "supplier_name": "company_name"
+            },
+            "KEY",
+            "InviteEmailSalt"
+        )
+
+        send_email.assert_called_once_with(
+            "valid@email.com",
+            mock.ANY,
+            "MANDRILL",
+            "Create your Digital Marketplace account",
+            "enquiries@digitalmarketplace.service.gov.uk",
+            "Digital Marketplace Admin",
+            ["user-creation"]
+        )
+
+        assert_equal(res.status_code, 503)
+
+    def test_should_show_email_address_on_create_account_complete(self):
+        with self.client as c:
+            with c.session_transaction() as sess:
+                sess['email_sent_to'] = "my@email.com"
+
+            res = c.get("/suppliers/create-your-account-complete")
+
+            assert_equal(res.status_code, 200)
+            assert_true('A validation email has been sent to my@email.com' in res.get_data(as_text=True))
+            assert_false('email_sent_to' in session)
