@@ -112,6 +112,24 @@ FULL_G7_SUBMISSION = {
     "SQ1-1m": "micro",
     "SQ1-3": "on-demand self-service. blah blah",
     "SQ5-1a": u"Yes – your organisation has, blah blah",
+    "SQC2": [
+        "race?",
+        "sexual orientation?",
+        "disability?",
+        "age equality?",
+        "religion or belief?",
+        "gender (sex)?",
+        "gender reassignment?",
+        "marriage or civil partnership?",
+        "pregnancy or maternity?",
+        "human rights?"
+    ],
+    "SQC3": "true",
+    "SQA2": "true",
+    "SQA3": "true",
+    "SQA4": "true",
+    "SQA5": "true",
+    "AQA3": "true"
 }
 
 

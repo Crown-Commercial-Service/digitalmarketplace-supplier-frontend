@@ -11,7 +11,7 @@ def get_required_fields(all_fields, answers):
     optional_fields = set([
         "SQ1-1e", "SQ1-1f", "SQ1-1p-i", "SQ1-1p-ii", "SQ1-1p-iii", "SQ1-1p-iv",
         "SQ1-1q-i", "SQ1-1q-ii", "SQ1-1q-iii", "SQ1-1q-iv", "SQ1-1cii", "SQ1-1i-ii",
-        "SQ1-1j-i", "SQ1-1j-ii", "SQ4-1c", "SQ3-1k"
+        "SQ1-1j-i", "SQ1-1j-ii", "SQ1-3", "SQ4-1c", "SQ3-1k", "SQC3"
     ])
     required_fields -= optional_fields
     #  If you answered other to question 12

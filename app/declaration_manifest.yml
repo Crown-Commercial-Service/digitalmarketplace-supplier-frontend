@@ -3,10 +3,17 @@
   questions:
     - PR1
     - PR2
+    - SQC2
+    - SQC3
     - PR5
     - PR3
     - PR4
     - SQ1-3
+    - SQA2
+    - SQA3
+    - SQA4
+    - SQA5
+    - AQA3
     - SQ5-1a
 -
   name: About you
