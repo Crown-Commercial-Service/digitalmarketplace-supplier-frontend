@@ -69,7 +69,7 @@
 
   <div class="grid-row">
     <div class="column-one-whole updates-document-tables">
-      {{ summary.heading("Framework application information") }}
+      {{ summary.heading("G-Cloud 7 communications") }}
       {% call(item) summary.list_table(
         [
           {"date_uploaded": "Monday 1 November 2015", "document": "Example"},
@@ -77,7 +77,7 @@
           {"date_uploaded": "Wednesday 17 November 2015", "document": "Example"},
           {"date_uploaded": "Monday 15 November 2015", "document": "Example"},
         ],
-        caption="Framework application information",
+        caption="G-Cloud 7 communications",
         empty_message="No application information exists",
         field_headings=[
           "Date uploaded",
@@ -96,14 +96,14 @@
         {% endcall %}
       {% endcall %}
 
-      {{ summary.heading("Clarification questions") }}
+      {{ summary.heading("G-Cloud 7 clarification questions and answers") }}
       {% call(item) summary.list_table(
         [
           {"date_uploaded": "Tuesday 20 September 2015", "document": "Clarification questions and answers"},
           {"date_uploaded": "Tuesday 13 September 2015", "document": "Clarification questions and answers"},
           {"date_uploaded": "Tuesday 6 September 2015", "document": "Clarification questions and answers"},
         ],
-        caption="Clarification questions",
+        caption="G-Cloud 7 clarification questions and answers",
         empty_message="No clarification questions exist",
         field_headings=[
           "Date uploaded",
@@ -131,7 +131,7 @@
         large=true,
         question = "Ask a G-Cloud 7 clarification question",
         name = clarification_question_name,
-        hint = "Questions will be collated and answered weekly",
+        hint = "You should ask any questions you have about G-Cloud 7 here. The Crown Commercial Service will not respond to you individually. All answers to clarification questions will be published here regularly. (Maximum 5000 characters per question.)",
         error = error_message
       %}
         {% include "toolkit/forms/textbox.html" %}
