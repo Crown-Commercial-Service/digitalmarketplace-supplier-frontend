@@ -52,8 +52,8 @@ def edit_supplier(supplier_form=None, contact_form=None, error=None):
 
     if supplier_form is None:
         supplier_form = EditSupplierForm(
-            description=supplier['description'],
-            clients=supplier['clients']
+            description=supplier.get('description', None),
+            clients=supplier.get('clients', None)
         )
         contact_form = EditContactInformationForm(
             prefix='contact_',

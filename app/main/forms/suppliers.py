@@ -34,9 +34,7 @@ class EditContactInformationForm(Form):
     address2 = StringField('Business address')
     city = StringField('Town or city')
     country = StringField()
-    postcode = StringField(validators=[
-        DataRequired(message="Postcode can not be empty"),
-    ])
+    postcode = StringField()
     website = StringField()
     phoneNumber = StringField('Phone number')
     email = StringField('Email address', validators=[

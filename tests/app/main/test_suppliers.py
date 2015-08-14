@@ -236,6 +236,31 @@ class TestSupplierUpdate(BaseApplicationTest):
         res = self.client.post("/suppliers/edit", data=data)
         return res.status_code, res.get_data(as_text=True)
 
+    def test_should_render_edit_page_with_minimum_data(self, data_api_client):
+        self._login(data_api_client)
+
+        def limited_supplier(self):
+            return {
+                'suppliers': {
+                    'contactInformation': [
+                        {
+                            'phoneNumber': '099887',
+                            'id': 1234,
+                            'contactName': 'contact name',
+                            'email': 'email@email.com'
+                        }
+                    ],
+                    'dunsNumber': '999999999',
+                    'id': 12345,
+                    'name': 'Supplier Name'
+                }
+            }
+
+        data_api_client.get_supplier.side_effect = limited_supplier
+
+        response = self.client.get("/suppliers/edit")
+        assert_equal(response.status_code, 200)
+
     def test_update_all_supplier_fields(self, data_api_client):
         self._login(data_api_client)
 
