@@ -112,7 +112,7 @@ def get_error_message(content, question_id, message_key):
         if validation['name'] == message_key:
             return validation['message']
     default_messages = {
-        'answer_required': 'This question is required'
+        'answer_required': 'Answer required'
     }
     return default_messages.get(
         message_key, 'There was a problem with the answer to this question')
