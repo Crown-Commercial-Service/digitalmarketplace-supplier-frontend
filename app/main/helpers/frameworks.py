@@ -31,6 +31,7 @@ def get_required_fields(all_fields, answers):
     required_fields = set(all_fields)
     #  Remove optional fields
     optional_fields = set([
+        "SQ1-1d-i", "SQ1-1d-ii",
         "SQ1-1e", "SQ1-1p-i", "SQ1-1p-ii", "SQ1-1p-iii", "SQ1-1p-iv",
         "SQ1-1q-i", "SQ1-1q-ii", "SQ1-1q-iii", "SQ1-1q-iv", "SQ1-1cii", "SQ1-1i-ii",
         "SQ1-1j-i", "SQ1-1j-ii", "SQ1-3", "SQ4-1c", "SQ3-1k", "SQC3", "SQ1-1i-i",
