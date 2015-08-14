@@ -176,7 +176,7 @@ class TestSupplierDeclaration(BaseApplicationTest):
             assert_equal(res.status_code, 200)
             doc = html.fromstring(res.get_data(as_text=True))
             assert_equal(
-                len(doc.xpath('//input[@id="PR1-no"]/@checked')), 1)
+                len(doc.xpath('//input[@id="input-PR1-no"]/@checked')), 1)
 
     def test_post_valid_data(self, data_api_client):
         with self.app.test_client():

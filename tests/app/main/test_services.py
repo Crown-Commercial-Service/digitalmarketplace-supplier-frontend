@@ -220,11 +220,11 @@ class TestSupplierUpdateService(BaseApplicationTest):
 
         # check that 'public' is selected.
         assert_true(
-            '<input type="radio" name="status" id="status-1" value="Public" checked="checked"'  # noqa
+            '<input type="radio" name="status" id="input-status-1" value="Public" checked="checked"'  # noqa
             in res.get_data(as_text=True)
         )
         assert_false(
-            '<input type="radio" name="status" id="status-2" value="Private" checked="checked"'  # noqa
+            '<input type="radio" name="status" id="input-status-2" value="Private" checked="checked"'  # noqa
             in res.get_data(as_text=True)
         )
 
@@ -248,11 +248,11 @@ class TestSupplierUpdateService(BaseApplicationTest):
 
         # check that 'public' is not selected.
         assert_false(
-            '<input type="radio" name="status" id="status-1" value="Public" checked="checked"'  # noqa
+            '<input type="radio" name="status" id="input-status-1" value="Public" checked="checked"'  # noqa
             in res.get_data(as_text=True)
         )
         assert_true(
-            '<input type="radio" name="status" id="status-2" value="Private" checked="checked"'  # noqa
+            '<input type="radio" name="status" id="input-status-2" value="Private" checked="checked"'  # noqa
             in res.get_data(as_text=True)
         )
 
