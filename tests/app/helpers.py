@@ -1,5 +1,5 @@
 import re
-from mock import Mock
+from mock import patch, Mock
 from app import create_app
 from werkzeug.http import parse_cookie
 from app import data_api_client
@@ -11,6 +11,10 @@ class BaseApplicationTest(object):
     def setup(self):
         self.app = create_app('test')
         self.client = self.app.test_client()
+        self.get_user_patch = None
+
+    def teardown(self):
+        self.teardown_login()
 
     @staticmethod
     def get_cookie_by_name(response, name):
@@ -89,19 +93,26 @@ class BaseApplicationTest(object):
             ]
         }
 
+    def teardown_login(self):
+        if self.get_user_patch is not None:
+            self.get_user_patch.stop()
+
     def login(self):
-        data_api_client.authenticate_user = Mock(
-            return_value=(self.user(
-                123, "email@email.com", 1234, 'Supplier Name', 'Name')))
+        with patch('app.main.views.login.data_api_client') as login_api_client:
+            login_api_client.authenticate_user.return_value = self.user(
+                123, "email@email.com", 1234, 'Supplier Name', 'Name')
 
-        data_api_client.get_user = Mock(
-            return_value=(self.user(
-                123, "email@email.com", 1234, 'Supplier Name', 'Name')))
+            self.get_user_patch = patch.object(
+                data_api_client,
+                'get_user',
+                return_value=self.user(123, "email@email.com", 1234, 'Supplier Name', 'Name')
+            )
+            self.get_user_patch.start()
 
-        self.client.post("/suppliers/login", data={
-            'email_address': 'valid@email.com',
-            'password': '1234567890'
-        })
+            self.client.post("/suppliers/login", data={
+                'email_address': 'valid@email.com',
+                'password': '1234567890'
+            })
 
-        data_api_client.authenticate_user.assert_called_once_with(
-            "valid@email.com", "1234567890")
+            login_api_client.authenticate_user.assert_called_once_with(
+                "valid@email.com", "1234567890")
