@@ -1,4 +1,5 @@
 import itertools
+from os.path import basename, splitext
 
 from flask import render_template, request, abort, flash, redirect, url_for, escape, current_app
 from flask_login import login_required, current_user
@@ -8,6 +9,7 @@ from dmutils.audit import AuditTypes
 from dmutils import flask_featureflags
 from dmutils.email import send_email, MandrillException
 from dmutils.formats import format_service_price
+from dmutils import s3
 
 from ...main import main, declaration_content, new_service_content
 from ..helpers.frameworks import get_error_messages_for_page, get_first_question_index, \
@@ -158,7 +160,34 @@ def download_supplier_pack():
 def framework_updates():
     current_app.logger.info("g7updates.viewed: user_id:%s supplier_id:%s",
                             current_user.email_address, current_user.supplier_id)
-    return _framework_updates_page()
+
+    def _is_directory(key):
+        return key.size == 0 and key.name[-1] == '/'
+
+    # boto get_key problem: https://github.com/boto/boto/issues/570
+    uploader = s3.S3(current_app.config['DM_G7_DRAFT_DOCUMENTS_BUCKET'])
+    key_list = uploader.list('updates/')
+    # ordered by last_modified
+    key_list = sorted(key_list, key=lambda key: key.last_modified)
+
+    files = {
+        'clarifications': [],
+        'communications': []
+    }
+
+    for key in key_list:
+        if not _is_directory(key):
+            for section in files:
+                if section in key.name:
+                    filename, ext = splitext(basename(key.name))
+
+                    files[section].append({
+                        'filename': filename,
+                        'ext': ext[1:],
+                        'last_modified': key.last_modified
+                    })
+
+    return _framework_updates_page(files=files)
 
 
 @main.route('/frameworks/g-cloud-7/updates', methods=['POST'])
@@ -208,7 +237,7 @@ def framework_updates_email_clarification_question():
     return _framework_updates_page()
 
 
-def _framework_updates_page(error_message=None):
+def _framework_updates_page(error_message=None, files=None):
 
     template_data = main.config['BASE_TEMPLATE_DATA']
     status_code = 200 if not error_message else 400
@@ -217,5 +246,6 @@ def _framework_updates_page(error_message=None):
         "frameworks/updates.html",
         clarification_question_name=CLARIFICATION_QUESTION_NAME,
         error_message=error_message,
+        files=files,
         **template_data
     ), status_code
