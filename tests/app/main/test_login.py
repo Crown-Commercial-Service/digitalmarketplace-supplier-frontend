@@ -1,6 +1,7 @@
 # coding: utf-8
 
 from dmutils.apiclient import HTTPError
+from dmutils.audit import AuditTypes
 from dmutils.email import generate_token, MandrillException
 from nose.tools import assert_equal, assert_true, assert_is_not_none, assert_in, assert_false
 from ..helpers import BaseApplicationTest
@@ -455,8 +456,11 @@ class TestInviteUser(BaseApplicationTest):
             assert_true("Email address must be provided" in res.get_data(as_text=True))
             assert_equal(res.status_code, 400)
 
+    @mock.patch('app.main.views.login.data_api_client')
     @mock.patch('app.main.views.login.send_email')
-    def test_should_redirect_to_list_users_on_success_invite(self, send_email):
+    def test_should_redirect_to_list_users_on_success_invite(self,
+                                                             send_email,
+                                                             data_api_client):
         with self.app.app_context():
             self.login()
             res = self.client.post(
@@ -468,9 +472,13 @@ class TestInviteUser(BaseApplicationTest):
             assert_equal(res.status_code, 302)
             assert_equal(res.location, 'http://localhost/suppliers/users')
 
+    @mock.patch('app.main.views.login.data_api_client')
     @mock.patch('app.main.views.login.generate_token')
     @mock.patch('app.main.views.login.send_email')
-    def test_should_call_generate_token_with_correct_params(self, send_email, generate_token):
+    def test_should_call_generate_token_with_correct_params(self,
+                                                            send_email,
+                                                            generate_token,
+                                                            data_api_client):
         with self.app.app_context():
 
             self.app.config['SHARED_EMAIL_KEY'] = "KEY"
@@ -495,7 +503,9 @@ class TestInviteUser(BaseApplicationTest):
 
     @mock.patch('app.main.views.login.send_email')
     @mock.patch('app.main.views.login.generate_token')
-    def test_should_not_generate_token_or_send_email_if_invalid_email(self, send_email, generate_token):
+    def test_should_not_generate_token_or_send_email_if_invalid_email(self,
+                                                                      send_email,
+                                                                      generate_token):
         with self.app.app_context():
 
             self.login()
@@ -524,10 +534,11 @@ class TestInviteUser(BaseApplicationTest):
 
             assert_equal(res.status_code, 503)
 
+    @mock.patch('app.main.views.login.data_api_client')
     @mock.patch('app.main.views.login.send_email')
-    def test_should_call_send_invitation_email_with_correct_params(
-            self, send_email
-    ):
+    def test_should_call_send_invitation_email_with_correct_params(self,
+                                                                   send_email,
+                                                                   data_api_client):
         with self.app.app_context():
 
             self.login()
@@ -553,6 +564,27 @@ class TestInviteUser(BaseApplicationTest):
                 "EMAIL NAME",
                 ["user-invite"]
             )
+
+    @mock.patch('app.main.views.login.data_api_client')
+    @mock.patch('app.main.views.login.send_email')
+    def test_should_create_audit_event(self,
+                                       send_email,
+                                       data_api_client):
+        with self.app.app_context():
+            self.login()
+
+            res = self.client.post(
+                '/suppliers/invite-user',
+                data={'email_address': 'email@example.com', 'name': 'valid'})
+
+            assert_equal(res.status_code, 302)
+
+            data_api_client.create_audit_event.assert_called_once_with(
+                audit_type=AuditTypes.invite_user,
+                user='email@email.com',
+                object_type='suppliers',
+                object_id=1234,
+                data={'invitedEmail': 'email@example.com'})
 
     def test_should_be_an_error_for_invalid_token(self):
         with self.app.app_context():

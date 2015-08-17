@@ -5,6 +5,7 @@ from datetime import datetime
 from flask import current_app, flash, redirect, render_template, url_for, \
     request, abort
 from flask_login import logout_user, login_user
+from dmutils.audit import AuditTypes
 from dmutils.user import user_has_role, User
 from dmutils.formats import DATETIME_FORMAT
 from dmutils.email import send_email, \
@@ -345,6 +346,14 @@ def send_invite_user():
                     current_user.supplier_id)
             )
             abort(503, "Failed to send user invite reset")
+
+        data_api_client.create_audit_event(
+            audit_type=AuditTypes.invite_user,
+            user=current_user.email_address,
+            object_type='suppliers',
+            object_id=current_user.supplier_id,
+            data={'invitedEmail': form.email_address.data},
+        )
 
         flash('user_invited', 'success')
         return redirect(url_for('.list_users'))
