@@ -142,11 +142,11 @@ def framework_supplier_declaration(section_id):
     ), status_code
 
 
-@main.route('/frameworks/g-cloud-7/download-supplier-pack', methods=['GET', 'POST'])
+@main.route('/frameworks/g-cloud-7/<path:filepath>', methods=['GET'])
 @login_required
 @flask_featureflags.is_active_feature('GCLOUD7_OPEN')
-def download_supplier_pack():
-    url = get_draft_document_url('g-cloud-7-supplier-pack.zip')
+def download_supplier_file(filepath):
+    url = get_draft_document_url(filepath)
     if not url:
         abort(404)
 
@@ -196,7 +196,7 @@ def framework_updates(error_message=None):
 def framework_updates_email_clarification_question():
 
     # Stripped input should not empty
-    clarification_question = escape(request.form.get(CLARIFICATION_QUESTION_NAME, '')).strip()
+    clarification_question = request.form.get(CLARIFICATION_QUESTION_NAME, '').strip()
 
     if not clarification_question:
         return framework_updates("Question cannot be empty")
