@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from nose.tools import assert_equal, assert_true
+from nose.tools import assert_equal, assert_true, assert_in
 import mock
 from mock import Mock
 from lxml import html
@@ -305,3 +305,59 @@ class TestSendClarificationQuestionEmail(BaseApplicationTest):
         self._assert_email(send_email)
 
         assert_equal(response.status_code, 503)
+
+
+@mock.patch('app.main.views.frameworks.data_api_client')
+@mock.patch('app.main.views.frameworks.count_unanswered_questions')
+class TestG7ServicesList(BaseApplicationTest):
+
+    def test_drafts_list_progress_count(self, count_unanswered, apiclient):
+        with self.app.test_client():
+            self.login()
+
+        count_unanswered.return_value = 3, 1
+
+        apiclient.find_draft_services.return_value = {
+            'services': [
+                {'serviceName': 'draft', 'lot': 'SCS', 'status': 'not-submitted'},
+            ]
+        }
+
+        res = self.client.get('/suppliers/frameworks/g-cloud-7/services')
+
+        assert_true(u'Service can be moved to complete' not in res.get_data(as_text=True))
+        assert_in(u'4 questions unanswered', res.get_data(as_text=True))
+
+    def test_drafts_list_can_be_completed(self, count_unanswered, apiclient):
+        with self.app.test_client():
+            self.login()
+
+        count_unanswered.return_value = 0, 1
+
+        apiclient.find_draft_services.return_value = {
+            'services': [
+                {'serviceName': 'draft', 'lot': 'SCS', 'status': 'not-submitted'},
+            ]
+        }
+
+        res = self.client.get('/suppliers/frameworks/g-cloud-7/services')
+
+        assert_in(u'Service can be moved to complete', res.get_data(as_text=True))
+        assert_in(u'1 optional question unanswered', res.get_data(as_text=True))
+
+    def test_drafts_list_completed(self, count_unanswered, apiclient):
+        with self.app.test_client():
+            self.login()
+
+        count_unanswered.return_value = 0, 1
+
+        apiclient.find_draft_services.return_value = {
+            'services': [
+                {'serviceName': 'draft', 'lot': 'SCS', 'status': 'submitted'},
+            ]
+        }
+
+        res = self.client.get('/suppliers/frameworks/g-cloud-7/services')
+
+        assert_true(u'Service can be moved to complete' not in res.get_data(as_text=True))
+        assert_in(u'1 optional question unanswered', res.get_data(as_text=True))

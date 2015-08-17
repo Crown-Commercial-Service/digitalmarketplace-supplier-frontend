@@ -361,7 +361,7 @@ def view_service_submission(service_id):
 
     sections = get_service_attributes(draft, content)
 
-    unanswered_questions = count_unanswered_questions(sections)
+    unanswered_required, unanswered_optional = count_unanswered_questions(sections)
     delete_requested = True if request.args.get('delete_requested') else False
 
     return render_template(
@@ -370,7 +370,8 @@ def view_service_submission(service_id):
         service_data=draft,
         last_edit=last_edit,
         sections=sections,
-        unanswered_questions=unanswered_questions,
+        unanswered_required=unanswered_required,
+        unanswered_optional=unanswered_optional,
         delete_requested=delete_requested,
         **main.config['BASE_TEMPLATE_DATA']), 200
 

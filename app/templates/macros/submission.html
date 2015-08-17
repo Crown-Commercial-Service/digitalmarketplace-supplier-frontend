@@ -1,0 +1,43 @@
+{% macro multiline_string() %}
+  {% for arg in varargs %}
+    {% if arg|trim %}
+      {{ arg }}{% if not loop.last %}<br />{% endif %}
+    {% endif %}
+  {% endfor %}
+{% endmacro %}
+
+
+{% macro unanswered_required_text(unanswered_required, unanswered_optional) %}
+  {% if unanswered_required %}
+    <span class="move-to-complete-hint">
+    {% with unanswered_total = unanswered_required + unanswered_optional %}
+      {% if unanswered_total == 1 %}
+      {{ unanswered_total }} question unanswered
+      {% else %}
+        {{ unanswered_total }} questions unanswered
+      {% endif %}
+    {% endwith %}
+    </span>
+  {% endif %}
+{% endmacro %}
+
+
+{% macro can_be_completed_text(unanswered_required) %}
+  {% if unanswered_required == 0%}
+    Service can be moved to complete
+  {% endif %}
+{% endmacro %}
+
+
+{% macro unanswered_optional_text(unanswered_required, unanswered_optional) %}
+  {% if not unanswered_required and unanswered_optional %}
+    <span class="move-to-complete-hint">
+      {% if unanswered_optional == 1 %}
+        {{ unanswered_optional }} optional question unanswered
+      {% else %}
+        {{ unanswered_optional }} optional questions unanswered
+      {% endif %}
+    </span>
+  {% endif %}
+{% endmacro %}
+
