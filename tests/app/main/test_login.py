@@ -2,7 +2,6 @@
 
 from dmutils.apiclient import HTTPError
 from dmutils.email import generate_token, MandrillException
-from itsdangerous import BadTimeSignature
 from nose.tools import assert_equal, assert_true, assert_is_not_none, assert_in, assert_false
 from ..helpers import BaseApplicationTest
 from lxml import html
