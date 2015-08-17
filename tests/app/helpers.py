@@ -11,6 +11,7 @@ class BaseApplicationTest(object):
     def setup(self):
         self.app = create_app('test')
         self.client = self.app.test_client()
+        self.get_user_patch = None
 
     def teardown(self):
         self.teardown_login()
@@ -93,18 +94,20 @@ class BaseApplicationTest(object):
         }
 
     def teardown_login(self):
-        if getattr(self, 'original_get_user', None) is not None:
-            data_api_client.get_user = self.original_get_user
-            self.original_get_user = None
+        if self.get_user_patch is not None:
+            self.get_user_patch.stop()
 
     def login(self):
         with patch('app.main.views.login.data_api_client') as login_api_client:
             login_api_client.authenticate_user.return_value = self.user(
                 123, "email@email.com", 1234, 'Supplier Name', 'Name')
 
-            self.original_get_user = data_api_client.get_user
-            data_api_client.get_user = Mock(return_value=self.user(
-                123, "email@email.com", 1234, 'Supplier Name', 'Name'))
+            self.get_user_patch = patch.object(
+                data_api_client,
+                'get_user',
+                return_value=self.user(123, "email@email.com", 1234, 'Supplier Name', 'Name')
+            )
+            self.get_user_patch.start()
 
             self.client.post("/suppliers/login", data={
                 'email_address': 'valid@email.com',
