@@ -103,26 +103,12 @@ class TestListServicesLogin(BaseApplicationTest):
     @mock.patch('app.main.views.services.data_api_client')
     def test_should_show_services_list_if_logged_in(self, data_api_client):
         with self.app.test_client():
-            data_api_client.authenticate_user = Mock(
-                return_value=(self.user(
-                    123, "email@email.com", 1234, 'Supplier Name', "Name")))
-
-            data_api_client.get_user = Mock(
-                return_value=(self.user(
-                    123, "email@email.com", 1234, 'Supplier Name', "Name")))
-
-            data_api_client.find_services = Mock(
-                return_value={'services': [{
-                    'serviceName': 'Service name 123',
-                    'status': 'published',
-                    'id': '123'
-                }]}
-            )
-
-            self.client.post("/suppliers/login", data={
-                'email_address': 'valid@email.com',
-                'password': '1234567890'
-            })
+            self.login()
+            data_api_client.find_services.return_value = {'services': [{
+                'serviceName': 'Service name 123',
+                'status': 'published',
+                'id': '123'
+            }]}
 
             res = self.client.get('/suppliers/services')
 
@@ -143,20 +129,10 @@ class TestListServicesLogin(BaseApplicationTest):
 
 @mock.patch('app.main.views.services.data_api_client')
 class TestSupplierUpdateService(BaseApplicationTest):
-    def _login(
-            self,
-            data_api_client,
-            service_status="published",
-            service_belongs_to_user=True
-    ):
-        data_api_client.authenticate_user.return_value = self.user(
-            123, "email@email.com", 1234, 'name', "Name"
-        )
-
-        data_api_client.get_user.return_value = self.user(
-            123, "email@email.com", 1234, 'name', "Name"
-        )
-
+    def _get_service(self,
+                     data_api_client,
+                     service_status="published",
+                     service_belongs_to_user=True):
         data_api_client.get_service.return_value = {
             'services': {
                 'serviceName': 'Service name 123',
@@ -166,11 +142,6 @@ class TestSupplierUpdateService(BaseApplicationTest):
                 'supplierId': 1234 if service_belongs_to_user else 1235
             }
         }
-
-        self.client.post("/suppliers/login", data={
-            'email_address': 'email@email.com',
-            'password': '1234567890'
-        })
 
     def _post_status_update(
             self, status, expected_status_code):
@@ -206,10 +177,8 @@ class TestSupplierUpdateService(BaseApplicationTest):
     def test_should_view_public_service_with_correct_input_checked(
             self, data_api_client
     ):
-        self._login(
-            data_api_client,
-            service_status='published'
-        )
+        self.login()
+        self._get_service(data_api_client, service_status='published')
 
         res = self.client.get('/suppliers/services/123')
         assert_equal(res.status_code, 200)
@@ -235,10 +204,8 @@ class TestSupplierUpdateService(BaseApplicationTest):
     def test_should_view_private_service_with_correct_input_checked(
             self, data_api_client
     ):
-        self._login(
-            data_api_client,
-            service_status='enabled'
-        )
+        self.login()
+        self._get_service(data_api_client, service_status='enabled')
 
         res = self.client.get('/suppliers/services/123')
         assert_equal(res.status_code, 200)
@@ -263,10 +230,8 @@ class TestSupplierUpdateService(BaseApplicationTest):
     def test_should_view_disabled_service_with_removed_message(
             self, data_api_client
     ):
-        self._login(
-            data_api_client,
-            service_status='disabled'
-        )
+        self.login()
+        self._get_service(data_api_client, service_status='disabled')
 
         res = self.client.get('/suppliers/services/123')
         assert_equal(res.status_code, 200)
@@ -286,11 +251,8 @@ class TestSupplierUpdateService(BaseApplicationTest):
     def test_should_not_view_other_suppliers_services(
             self, data_api_client
     ):
-        self._login(
-            data_api_client,
-            service_status='published',
-            service_belongs_to_user=False
-        )
+        self.login()
+        self._get_service(data_api_client, service_status='published', service_belongs_to_user=False)
 
         res = self.client.get('/suppliers/services/123')
         assert_equal(res.status_code, 404)

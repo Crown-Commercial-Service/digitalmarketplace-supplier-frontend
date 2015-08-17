@@ -162,6 +162,7 @@ class TestSupplierDashboardLogin(BaseApplicationTest):
     ):
         get_current_suppliers_users.side_effect = get_user
         with self.app.test_client():
+            self.login()
             data_api_client.authenticate_user = Mock(
                 return_value=(self.user(
                     123, "email@email.com", 1234, "Supplier Name", "Name")))
@@ -200,22 +201,6 @@ class TestSupplierDashboardLogin(BaseApplicationTest):
 
 @mock.patch("app.main.views.suppliers.data_api_client")
 class TestSupplierUpdate(BaseApplicationTest):
-    def _login(self, data_api_client):
-        data_api_client.authenticate_user.return_value = self.user(
-            123, "email@email.com", 1234, "name", "Name"
-        )
-
-        data_api_client.get_user.return_value = self.user(
-            123, "email@email.com", 1234, "name", "Name"
-        )
-
-        data_api_client.get_supplier.side_effect = get_supplier
-
-        self.client.post("/suppliers/login", data={
-            "email_address": "email@email.com",
-            "password": "1234567890"
-        })
-
     def post_supplier_edit(self, data=None, **kwargs):
         if data is None:
             data = {
@@ -237,7 +222,7 @@ class TestSupplierUpdate(BaseApplicationTest):
         return res.status_code, res.get_data(as_text=True)
 
     def test_should_render_edit_page_with_minimum_data(self, data_api_client):
-        self._login(data_api_client)
+        self.login()
 
         def limited_supplier(self):
             return {
@@ -262,9 +247,9 @@ class TestSupplierUpdate(BaseApplicationTest):
         assert_equal(response.status_code, 200)
 
     def test_update_all_supplier_fields(self, data_api_client):
-        self._login(data_api_client)
+        self.login()
 
-        status, resp = self.post_supplier_edit()
+        status, _ = self.post_supplier_edit()
 
         assert_equal(status, 302)
 
@@ -294,7 +279,7 @@ class TestSupplierUpdate(BaseApplicationTest):
         )
 
     def test_missing_required_supplier_fields(self, data_api_client):
-        self._login(data_api_client)
+        self.login()
 
         status, resp = self.post_supplier_edit({
             "description": "New Description",
@@ -332,7 +317,7 @@ class TestSupplierUpdate(BaseApplicationTest):
         assert_in('value="11 AB"', resp)
 
     def test_description_below_word_length(self, data_api_client):
-        self._login(data_api_client)
+        self.login()
 
         status, resp = self.post_supplier_edit(
             description="DESCR " * 49
@@ -344,7 +329,7 @@ class TestSupplierUpdate(BaseApplicationTest):
         assert_true(data_api_client.update_contact_information.called)
 
     def test_description_above_word_length(self, data_api_client):
-        self._login(data_api_client)
+        self.login()
 
         status, resp = self.post_supplier_edit(
             description="DESCR " * 51
@@ -357,7 +342,7 @@ class TestSupplierUpdate(BaseApplicationTest):
         assert_false(data_api_client.update_contact_information.called)
 
     def test_clients_above_limit(self, data_api_client):
-        self._login(data_api_client)
+        self.login()
 
         status, resp = self.post_supplier_edit(
             clients=["", "A Client"] * 11
