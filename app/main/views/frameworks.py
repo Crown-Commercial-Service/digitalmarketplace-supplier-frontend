@@ -1,5 +1,4 @@
 import itertools
-from os.path import basename, splitext
 
 from flask import render_template, request, abort, flash, redirect, url_for, escape, current_app
 from flask_login import login_required, current_user
@@ -157,37 +156,38 @@ def download_supplier_pack():
 @main.route('/frameworks/g-cloud-7/updates', methods=['GET'])
 @login_required
 @flask_featureflags.is_active_feature('GCLOUD7_OPEN')
-def framework_updates():
+def framework_updates(error_message=None):
     current_app.logger.info("g7updates.viewed: user_id:%s supplier_id:%s",
                             current_user.email_address, current_user.supplier_id)
 
-    def _is_directory(key):
-        return key.size == 0 and key.name[-1] == '/'
+    template_data = main.config['BASE_TEMPLATE_DATA']
 
-    # boto get_key problem: https://github.com/boto/boto/issues/570
     uploader = s3.S3(current_app.config['DM_G7_DRAFT_DOCUMENTS_BUCKET'])
-    key_list = uploader.list('updates/')
-    # ordered by last_modified
-    key_list = sorted(key_list, key=lambda key: key.last_modified)
+    file_list = uploader.list('g-cloud-7-updates/')
 
-    files = {
-        'clarifications': [],
-        'communications': []
+    sections = {
+        'clarifications': {
+            'heading': "G-Cloud 7 communications",
+            'empty_message': "No communications have been sent out",
+            'files': []
+        },
+        'communications': {
+            'heading': "G-Cloud 7 clarification questions and answers",
+            'empty_message': "No clarification questions exist",
+            'files': []
+        }
     }
 
-    for key in key_list:
-        if not _is_directory(key):
-            for section in files:
-                if section in key.name:
-                    filename, ext = splitext(basename(key.name))
+    for key in sections:
+        sections[key]['files'] = [file for file in file_list if key == file['path'].split('/')[1]]
 
-                    files[section].append({
-                        'filename': filename,
-                        'ext': ext[1:],
-                        'last_modified': key.last_modified
-                    })
-
-    return _framework_updates_page(files=files)
+    return render_template(
+        "frameworks/updates.html",
+        clarification_question_name=CLARIFICATION_QUESTION_NAME,
+        error_message=error_message,
+        sections=sections,
+        **template_data
+    ), 200 if not error_message else 400
 
 
 @main.route('/frameworks/g-cloud-7/updates', methods=['POST'])
@@ -199,9 +199,9 @@ def framework_updates_email_clarification_question():
     clarification_question = escape(request.form.get(CLARIFICATION_QUESTION_NAME, '')).strip()
 
     if not clarification_question:
-        return _framework_updates_page("Question cannot be empty")
+        return framework_updates("Question cannot be empty")
     elif len(clarification_question) > 5000:
-        return _framework_updates_page("Question cannot be longer than 5000 characters")
+        return framework_updates("Question cannot be longer than 5000 characters")
 
     email_body = render_template(
         "emails/clarification_question.html",
@@ -234,18 +234,4 @@ def framework_updates_email_clarification_question():
         data={"question": clarification_question})
 
     flash('message_sent', 'success')
-    return _framework_updates_page()
-
-
-def _framework_updates_page(error_message=None, files=None):
-
-    template_data = main.config['BASE_TEMPLATE_DATA']
-    status_code = 200 if not error_message else 400
-
-    return render_template(
-        "frameworks/updates.html",
-        clarification_question_name=CLARIFICATION_QUESTION_NAME,
-        error_message=error_message,
-        files=files,
-        **template_data
-    ), status_code
+    return framework_updates()

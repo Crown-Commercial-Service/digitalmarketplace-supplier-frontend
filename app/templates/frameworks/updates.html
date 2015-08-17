@@ -69,49 +69,29 @@
 
   <div class="grid-row">
     <div class="column-one-whole updates-document-tables">
-      {{ summary.heading("G-Cloud 7 communications") }}
-      {% call(item) summary.list_table(
-        files.communications,
-        caption="G-Cloud 7 communications",
-        empty_message="No application information exists",
-        field_headings=[
-          "Last modified",
-          "File"
-        ],
-        field_headings_visible=False
-      ) %}
-        {% call summary.row() %}
-          {{ summary.field_name(item.last_modified|datetimeformat) }}
-          {% call summary.field() %}
-             <a href="#" class="document-link-with-icon">
-              <span class='document-icon'>{{ item.ext }}<span> document:</span></span>
-              {{ item.filename }}
-            </a>
+      {% for section in sections.values() %}
+        {{ summary.heading(section.heading) }}
+        {% call(item) summary.list_table(
+          section.files,
+          caption=section.heading,
+          empty_message=section.empty_message,
+          field_headings=[
+            "Last modified",
+            "File"
+          ],
+          field_headings_visible=False
+        ) %}
+          {% call summary.row() %}
+            {{ summary.field_name(item.last_modified|datetimeformat) }}
+            {% call summary.field() %}
+               <a href="{{ url_for('.download_supplier_file', filepath=item.path) }}" class="document-link-with-icon">
+                <span class='document-icon'>{{ item.ext }}<span> document:</span></span>
+                {{ item.filename }}
+              </a>
+            {% endcall %}
           {% endcall %}
         {% endcall %}
-      {% endcall %}
-
-      {{ summary.heading("G-Cloud 7 clarification questions and answers") }}
-      {% call(item) summary.list_table(
-        files.clarifications,
-        caption="G-Cloud 7 clarification questions and answers",
-        empty_message="No clarification questions exist",
-        field_headings=[
-          "Last modified",
-          "File"
-        ],
-        field_headings_visible=False
-      ) %}
-        {% call summary.row() %}
-          {{ summary.field_name(item.last_modified|datetimeformat) }}
-          {% call summary.field() %}
-             <a href="#" class="document-link-with-icon">
-              <span class='document-icon'>{{ item.ext }}<span> document:</span></span>
-              {{ item.filename }}
-            </a>
-          {% endcall %}
-        {% endcall %}
-      {% endcall %}
+      {% endfor %}
     </div>
   </div>
 
