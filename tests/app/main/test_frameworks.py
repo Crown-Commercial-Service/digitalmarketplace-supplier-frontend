@@ -23,6 +23,9 @@ class TestFrameworksDashboard(BaseApplicationTest):
     def test_interest_registered_in_framework(self, data_api_client):
         with self.app.test_client():
             self.login()
+            data_api_client.find_audit_events.return_value = {
+                "auditEvents": []
+            }
 
             res = self.client.get("/suppliers/frameworks/g-cloud-7")
 
@@ -33,6 +36,18 @@ class TestFrameworksDashboard(BaseApplicationTest):
                 object_type="suppliers",
                 object_id=1234,
                 data={"frameworkSlug": "g-cloud-7"})
+
+    def test_interest_in_framework_only_registered_once(self, data_api_client):
+        with self.app.test_client():
+            self.login()
+            data_api_client.find_audit_events.return_value = {
+                "auditEvents": [{"data": {"frameworkSlug": "g-cloud-7"}}]
+            }
+
+            res = self.client.get("/suppliers/frameworks/g-cloud-7")
+
+            assert_equal(res.status_code, 200)
+            assert not data_api_client.create_audit_event.called
 
     def test_declaration_status_when_complete(self, data_api_client):
         with self.app.test_client():

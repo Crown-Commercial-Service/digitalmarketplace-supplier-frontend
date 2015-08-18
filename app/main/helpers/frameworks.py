@@ -19,12 +19,13 @@ def has_registered_interest_in_framework(client, framework_slug):
 
 
 def register_interest_in_framework(client, framework_slug):
-    client.create_audit_event(
-        audit_type=AuditTypes.register_framework_interest.value,
-        user=current_user.email_address,
-        object_type='suppliers',
-        object_id=current_user.supplier_id,
-        data={'frameworkSlug': framework_slug})
+    if not has_registered_interest_in_framework(client, framework_slug):
+        client.create_audit_event(
+            audit_type=AuditTypes.register_framework_interest.value,
+            user=current_user.email_address,
+            object_type='suppliers',
+            object_id=current_user.supplier_id,
+            data={'frameworkSlug': framework_slug})
 
 
 def get_required_fields(all_fields, answers):
