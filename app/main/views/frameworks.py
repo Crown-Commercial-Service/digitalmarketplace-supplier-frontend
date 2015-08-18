@@ -4,6 +4,7 @@ from flask import render_template, request, abort, flash, redirect, url_for, esc
 from flask_login import login_required, current_user
 
 from dmutils.apiclient import APIError
+from dmutils.audit import AuditTypes
 from dmutils import flask_featureflags
 from dmutils.email import send_email, MandrillException
 from dmutils.formats import format_service_price
@@ -181,6 +182,13 @@ def framework_updates_email_clarification_question():
             "Clarification question email failed to send error {} supplier_id {} user_email_address {}".format(
                 e, current_user.supplier_id, current_user.email_address))
         abort(503, "Clarification question email failed to send")
+
+    data_api_client.create_audit_event(
+        audit_type=AuditTypes.send_clarification_question,
+        user=current_user.email_address,
+        object_type="suppliers",
+        object_id=current_user.supplier_id,
+        data={"question": clarification_question})
 
     flash('message_sent', 'success')
     return _framework_updates_page()
