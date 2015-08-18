@@ -221,7 +221,8 @@ def test_character_limit_errors():
     cases = [
         ("SQ1-1a", 5000),
         ("SQ1-1cii", 5000),
-        ("SQ1-1d", 5000),
+        ("SQ1-1d-i", 5000),
+        ("SQ1-1d-ii", 5000),
         ("SQ1-1i-ii", 5000),
         ("SQ3-1k", 5000),
     ]
