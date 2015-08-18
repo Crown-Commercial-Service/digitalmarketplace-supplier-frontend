@@ -580,7 +580,7 @@ class TestInviteUser(BaseApplicationTest):
             assert_equal(res.status_code, 302)
 
             data_api_client.create_audit_event.assert_called_once_with(
-                audit_type=AuditTypes.invite_user.value,
+                audit_type=AuditTypes.invite_user,
                 user='email@email.com',
                 object_type='suppliers',
                 object_id=1234,

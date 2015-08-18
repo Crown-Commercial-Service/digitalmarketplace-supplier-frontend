@@ -356,7 +356,7 @@ def send_invite_user():
             abort(503, "Failed to send user invite reset")
 
         data_api_client.create_audit_event(
-            audit_type=AuditTypes.invite_user.value,
+            audit_type=AuditTypes.invite_user,
             user=current_user.email_address,
             object_type='suppliers',
             object_id=current_user.supplier_id,

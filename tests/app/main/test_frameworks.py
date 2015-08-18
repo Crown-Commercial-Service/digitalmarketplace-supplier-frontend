@@ -32,7 +32,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
 
             assert_equal(res.status_code, 200)
             data_api_client.create_audit_event.assert_called_once_with(
-                audit_type="register_framework_interest",
+                audit_type=AuditTypes.register_framework_interest,
                 user="email@email.com",
                 object_type="suppliers",
                 object_id=1234,
@@ -298,8 +298,9 @@ class TestSendClarificationQuestionEmail(BaseApplicationTest):
                 in self.strip_all_whitespace(response.get_data(as_text=True))
             )
 
+    @mock.patch('app.main.views.frameworks.data_api_client')
     @mock.patch('app.main.views.frameworks.send_email')
-    def test_should_call_send_email_with_correct_params(self, send_email):
+    def test_should_call_send_email_with_correct_params(self, send_email, data_api_client):
 
         clarification_question = 'This is a clarification question.'
         response = self._send_email(clarification_question)
