@@ -18,6 +18,17 @@
 
 {% block main_content %}
 
+{% if form.duns_number.errors[0] == 'DUNS number already used' %}
+<div class="validation-masthead" role="group" aria-labelledby="validation-masthead-heading">
+    <h1 class="validation-masthead-heading" id="validation-masthead-heading">
+        A supplier account already exists with that DUNS number
+    </h1>
+    <p class="validation-masthead-description">
+        If you no longer have your account details, or if you think this may be an error, please contact <a href="mailto:enquiries@digitalmarketplace.service.gov.uk?subject=DUNS%20number%20question" title="Please contact enquiries@digitalmarketplace.service.gov.uk">enquiries@digitalmarketplace.service.gov.uk</a>
+    </p>
+</div>
+{% endif %}
+
 <div class="single-question-page">
   {%
   with

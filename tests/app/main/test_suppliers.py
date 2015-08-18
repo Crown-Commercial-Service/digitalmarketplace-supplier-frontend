@@ -383,7 +383,7 @@ class TestCreateSupplier(BaseApplicationTest):
         res = self.client.post(
             "/suppliers/duns-number",
             data={
-                'duns_number': "99999999"
+                'duns_number': "12345678"
             }
         )
         assert_equal(res.status_code, 400)
@@ -393,7 +393,7 @@ class TestCreateSupplier(BaseApplicationTest):
         res = self.client.post(
             "/suppliers/duns-number",
             data={
-                'duns_number': "9999999999"
+                'duns_number': "1234567890"
             }
         )
         assert_equal(res.status_code, 400)
@@ -409,11 +409,13 @@ class TestCreateSupplier(BaseApplicationTest):
         res = self.client.post(
             "/suppliers/duns-number",
             data={
-                'duns_number': "9999999999"
+                'duns_number': "123456789"
             }
         )
         assert_equal(res.status_code, 400)
-        assert_true("DUNS Number must be 9 digits" in res.get_data(as_text=True))
+        page = res.get_data(as_text=True)
+        assert_true("A supplier account already exists with that DUNS number" in page)
+        assert_true("DUNS number already used" in page)
 
     @mock.patch("app.main.suppliers.data_api_client")
     def test_should_allow_nine_digit_duns_number(self, data_api_client):
@@ -421,7 +423,7 @@ class TestCreateSupplier(BaseApplicationTest):
         res = self.client.post(
             "/suppliers/duns-number",
             data={
-                'duns_number': "999999999"
+                'duns_number': "123456789"
             }
         )
         assert_equal(res.status_code, 302)
