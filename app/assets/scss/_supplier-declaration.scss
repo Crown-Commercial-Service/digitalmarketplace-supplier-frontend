@@ -19,38 +19,25 @@
     }
 
   }
+
   .question-number {
-
-    display: block;
-    font-weight: bold;
-    margin-bottom: -20px;
-
-    &:after {
-      content: ".";
-    }
-
-    @include media(1080px) {
-
-      position: relative;
-      height: 50px;
-      display: block;
-      margin: 20px 0 -70px 0;
-      left: -100px;
-      width: 80px;
-      text-align: right;
-
-      &:after {
-        content: "";
-      }
-
-    }
-
+    @include bold-19;
   }
 
   .selection-button {
 
     @include media(desktop) {
       max-width: 66%;
+    }
+
+  }
+
+  .validation-wrapper {
+
+    overflow: visible;
+
+    .question-number {
+      margin-left: -20px;
     }
 
   }
