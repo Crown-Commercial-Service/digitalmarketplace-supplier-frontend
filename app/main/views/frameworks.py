@@ -165,21 +165,23 @@ def framework_updates(error_message=None):
     uploader = s3.S3(current_app.config['DM_G7_DRAFT_DOCUMENTS_BUCKET'])
     file_list = uploader.list('g-cloud-7-updates/')
 
-    sections = {
-        'clarifications': {
+    sections = [
+        {
+            'section': 'communications',
             'heading': "G-Cloud 7 communications",
             'empty_message': "No communications have been sent out",
             'files': []
         },
-        'communications': {
+        {
+            'section': 'clarifications',
             'heading': "G-Cloud 7 clarification questions and answers",
             'empty_message': "No clarification questions exist",
             'files': []
         }
-    }
+    ]
 
-    for key in sections:
-        sections[key]['files'] = [file for file in file_list if key == file['path'].split('/')[1]]
+    for section in sections:
+        section['files'] = [file for file in file_list if section['section'] == file['path'].split('/')[1]]
 
     return render_template(
         "frameworks/updates.html",

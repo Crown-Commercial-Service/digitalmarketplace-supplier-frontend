@@ -69,7 +69,7 @@
 
   <div class="grid-row">
     <div class="column-one-whole updates-document-tables">
-      {% for section in sections.values() %}
+      {% for section in sections %}
         {{ summary.heading(section.heading) }}
         {% call(item) summary.list_table(
           section.files,
