@@ -109,8 +109,8 @@ class TestSuppliersDashboard(BaseApplicationTest):
             res = self.client.get("/suppliers")
             assert_equal(res.status_code, 200)
 
-            assert_true("/suppliers/edit" in res.get_data(as_text=True))
-            assert_true("/suppliers/services" in res.get_data(as_text=True))
+            assert_in('<a href="/suppliers/edit" class="summary-change-link">Edit</a>', res.get_data(as_text=True))
+            assert_in('<a href="/suppliers/services" class="summary-change-link">View</a>', res.get_data(as_text=True))
 
     @mock.patch("app.main.views.suppliers.data_api_client")
     @mock.patch("app.main.views.suppliers.get_current_suppliers_users")
@@ -182,13 +182,13 @@ class TestSupplierDashboardLogin(BaseApplicationTest):
 
             assert_equal(res.status_code, 200)
 
-            assert_true(
-                self.strip_all_whitespace("<h1>Supplier Name</h1>")
-                in self.strip_all_whitespace(res.get_data(as_text=True))
+            assert_in(
+                self.strip_all_whitespace("<h1>Supplier Name</h1>"),
+                self.strip_all_whitespace(res.get_data(as_text=True))
             )
-            assert_true(
-                self.strip_all_whitespace("email@email.com")
-                in self.strip_all_whitespace(res.get_data(as_text=True))
+            assert_in(
+                self.strip_all_whitespace("email@email.com"),
+                self.strip_all_whitespace(res.get_data(as_text=True))
             )
 
     def test_should_redirect_to_login_if_not_logged_in(self):
@@ -367,7 +367,7 @@ class TestCreateSupplier(BaseApplicationTest):
             data={}
         )
         assert_equal(res.status_code, 400)
-        assert_true("DUNS Number must be 9 digits" in res.get_data(as_text=True))
+        assert_in("DUNS Number must be 9 digits", res.get_data(as_text=True))
 
     def test_should_be_an_error_if_no_duns_number_is_letters(self):
         res = self.client.post(
@@ -377,7 +377,7 @@ class TestCreateSupplier(BaseApplicationTest):
             }
         )
         assert_equal(res.status_code, 400)
-        assert_true("DUNS Number must be 9 digits" in res.get_data(as_text=True))
+        assert_in("DUNS Number must be 9 digits", res.get_data(as_text=True))
 
     def test_should_be_an_error_if_no_duns_number_is_less_than_nine_digits(self):
         res = self.client.post(
@@ -387,7 +387,7 @@ class TestCreateSupplier(BaseApplicationTest):
             }
         )
         assert_equal(res.status_code, 400)
-        assert_true("DUNS Number must be 9 digits" in res.get_data(as_text=True))
+        assert_in("DUNS Number must be 9 digits", res.get_data(as_text=True))
 
     def test_should_be_an_error_if_no_duns_number_is_more_than_nine_digits(self):
         res = self.client.post(
@@ -397,7 +397,7 @@ class TestCreateSupplier(BaseApplicationTest):
             }
         )
         assert_equal(res.status_code, 400)
-        assert_true("DUNS Number must be 9 digits" in res.get_data(as_text=True))
+        assert_in("DUNS Number must be 9 digits", res.get_data(as_text=True))
 
     @mock.patch("app.main.suppliers.data_api_client")
     def test_should_be_an_error_if_duns_number_in_use(self, data_api_client):
@@ -414,8 +414,8 @@ class TestCreateSupplier(BaseApplicationTest):
         )
         assert_equal(res.status_code, 400)
         page = res.get_data(as_text=True)
-        assert_true("A supplier account already exists with that DUNS number" in page)
-        assert_true("DUNS number already used" in page)
+        assert_in("A supplier account already exists with that DUNS number", page)
+        assert_in("DUNS number already used", page)
 
     @mock.patch("app.main.suppliers.data_api_client")
     def test_should_allow_nine_digit_duns_number(self, data_api_client):
@@ -445,7 +445,7 @@ class TestCreateSupplier(BaseApplicationTest):
             }
         )
         assert_equal(res.status_code, 400)
-        assert_true("Companies house number must be 8 characters" in res.get_data(as_text=True))
+        assert_in("Companies house number must be 8 characters", res.get_data(as_text=True))
 
     def test_should_be_an_error_if_companies_house_number_is_not_8_characters_long(self):
         res = self.client.post(
@@ -455,7 +455,7 @@ class TestCreateSupplier(BaseApplicationTest):
             }
         )
         assert_equal(res.status_code, 400)
-        assert_true("Companies house number must be 8 characters" in res.get_data(as_text=True))
+        assert_in("Companies house number must be 8 characters", res.get_data(as_text=True))
 
     def test_should_allow_valid_companies_house_number(self):
         with self.client as c:
@@ -496,7 +496,7 @@ class TestCreateSupplier(BaseApplicationTest):
             data={}
         )
         assert_equal(res.status_code, 400)
-        assert_true("Company name is required" in res.get_data(as_text=True))
+        assert_in("Company name is required", res.get_data(as_text=True))
 
     def test_should_not_be_an_error_if_company_name_too_long(self):
         twofiftysix = "a" * 256
@@ -507,7 +507,7 @@ class TestCreateSupplier(BaseApplicationTest):
             }
         )
         assert_equal(res.status_code, 400)
-        assert_true("Company name must be under 256 characters" in res.get_data(as_text=True))
+        assert_in("Company name must be under 256 characters", res.get_data(as_text=True))
 
     def test_should_allow_valid_company_contact_details(self):
         res = self.client.post(
