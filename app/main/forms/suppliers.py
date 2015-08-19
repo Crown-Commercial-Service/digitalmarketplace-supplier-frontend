@@ -84,6 +84,6 @@ class CompanyContactDetailsForm(Form):
 
 class EmailAddressForm(Form):
     email_address = StringField('Email address', validators=[
-        DataRequired(message="Email can not be empty"),
-        Email(message="Please enter a valid email address")
+        DataRequired(message="You must provide a email address."),
+        Email(message="You must provide a valid email address.")
     ])
