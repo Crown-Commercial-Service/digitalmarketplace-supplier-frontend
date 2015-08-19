@@ -56,14 +56,14 @@ class DunsNumberForm(Form):
 class CompaniesHouseNumberForm(Form):
     companies_house_number = StringField('Companies house number', validators=[
         Optional(),
-        Length(min=8, max=8, message="You must enter a Companies House number with 8 characters")
+        Length(min=8, max=8, message="You must enter a Companies House number with 8 characters.")
     ])
 
 
 class CompanyNameForm(Form):
     company_name = StringField('Company name', validators=[
-        DataRequired(message="Company name is required"),
-        Length(max=255, message="Company name must be under 256 characters")
+        DataRequired(message="You must provide a company name."),
+        Length(max=255, message="You must provide a company name under 256 characters.")
     ])
 
 
