@@ -48,8 +48,8 @@ class EditContactInformationForm(Form):
 
 class DunsNumberForm(Form):
     duns_number = IntegerField('DUNS Number', validators=[
-        DataRequired(message="DUNS Number must be 9 digits"),
-        NumberRange(min=100000000, max=999999999, message="DUNS Number must be 9 digits")
+        DataRequired(message="You must enter a DUNS number with 9 digits."),
+        NumberRange(min=100000000, max=999999999, message="You must enter a DUNS number with 9 digits.")
     ])
 
 
