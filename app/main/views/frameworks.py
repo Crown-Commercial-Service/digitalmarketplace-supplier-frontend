@@ -144,6 +144,8 @@ def download_supplier_pack():
 @login_required
 @flask_featureflags.is_active_feature('GCLOUD7_OPEN')
 def framework_updates():
+    current_app.logger.info("g7updates.viewed: user_id:%s supplier_id:%s",
+                            current_user.email_address, current_user.supplier_id)
     return _framework_updates_page()
 
 
