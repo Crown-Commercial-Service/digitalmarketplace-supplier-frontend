@@ -144,7 +144,7 @@ def submit_duns_number():
 
         suppliers = data_api_client.find_suppliers(duns_number=form.duns_number.data)
         if len(suppliers["suppliers"]) > 0:
-            form.duns_number.errors = ["Duns number already used"]
+            form.duns_number.errors = ["DUNS number already used"]
             return render_template(
                 "suppliers/duns_number.html",
                 form=form,
