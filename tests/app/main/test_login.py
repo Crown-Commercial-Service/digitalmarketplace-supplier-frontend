@@ -936,13 +936,15 @@ class TestInviteUser(BaseApplicationTest):
             )
 
             assert_equal(res.status_code, 200)
-            assert_true(
-                "This account may be inactive or locked"
-                in res.get_data(as_text=True)
+            assert_in(
+                "The account associated with this email address is inactive, "
+                "locked, or already registered with a different supplier",
+                res.get_data(as_text=True)
             )
-            assert_true(
-                'Email <a href="mailto:enquiries@digitalmarketplace.service.gov.uk">enquiries@digitalmarketplace.service.gov.uk</a> if you need help.</p>'  # noqa
-                in res.get_data(as_text=True)
+            assert_in(
+                'Please email <a href="mailto:enquiries@digitalmarketplace.service.gov.uk">'
+                'enquiries@digitalmarketplace.service.gov.uk</a> for help with setting up a new contributor account.',
+                res.get_data(as_text=True)
             )
 
     @mock.patch('app.main.views.login.data_api_client')
@@ -973,13 +975,15 @@ class TestInviteUser(BaseApplicationTest):
             )
 
             assert_equal(res.status_code, 200)
-            assert_true(
-                "This account may be inactive or locked"
-                in res.get_data(as_text=True)
+            assert_in(
+                "The account associated with this email address is inactive, "
+                "locked, or already registered with a different supplier",
+                res.get_data(as_text=True)
             )
-            assert_true(
-                'Email <a href="mailto:enquiries@digitalmarketplace.service.gov.uk">enquiries@digitalmarketplace.service.gov.uk</a> if you need help.</p>'  # noqa
-                in res.get_data(as_text=True)
+            assert_in(
+                'Please email <a href="mailto:enquiries@digitalmarketplace.service.gov.uk">'
+                'enquiries@digitalmarketplace.service.gov.uk</a> for help with setting up a new contributor account.',
+                res.get_data(as_text=True)
             )
 
     @mock.patch('app.main.views.login.data_api_client')
@@ -1009,15 +1013,16 @@ class TestInviteUser(BaseApplicationTest):
             res = self.client.get(
                 '/suppliers/create-user/{}'.format(token)
             )
-
             assert_equal(res.status_code, 200)
-            assert_true(
-                "This account may be inactive or locked"
-                in res.get_data(as_text=True)
+            assert_in(
+                "The account associated with this email address is inactive, "
+                "locked, or already registered with a different supplier",
+                res.get_data(as_text=True)
             )
-            assert_true(
-                'Email <a href="mailto:enquiries@digitalmarketplace.service.gov.uk">enquiries@digitalmarketplace.service.gov.uk</a> if you need help.</p>'  # noqa
-                in res.get_data(as_text=True)
+            assert_in(
+                'Please email <a href="mailto:enquiries@digitalmarketplace.service.gov.uk">'
+                'enquiries@digitalmarketplace.service.gov.uk</a> for help with setting up a new contributor account.',
+                res.get_data(as_text=True)
             )
 
     @mock.patch('app.main.views.login.data_api_client')
