@@ -120,7 +120,7 @@ class Production(Live):
 
 
 class Staging(Production):
-    pass
+    FEATURE_FLAGS_USER_DASHBOARD = enabled_since('2015-08-19')
 
 
 configs = {
