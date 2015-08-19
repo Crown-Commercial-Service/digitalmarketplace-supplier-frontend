@@ -69,16 +69,16 @@ class CompanyNameForm(Form):
 
 class CompanyContactDetailsForm(Form):
     contact_name = StringField('Contact name', validators=[
-        DataRequired(message="Contact name can not be empty"),
-        Length(max=255, message="Contact name must be under 256 characters")
+        DataRequired(message="You must provide a contact name."),
+        Length(max=255, message="You must provide a contact name under 256 characters.")
     ])
     email_address = StringField('Email address', validators=[
-        DataRequired(message="Email can not be empty"),
-        Email(message="Please enter a valid email address")
+        DataRequired(message="You must provide a email address."),
+        Email(message="You must provide a valid email address.")
     ])
     phone_number = StringField('Phone number', validators=[
-        DataRequired(message="Phone number can not be empty"),
-        Length(max=20, message="Phone number must be under 20 characters")
+        DataRequired(message="You must provide a phone number."),
+        Length(max=20, message="You must provide a phone number under 20 characters.")
     ])
 
 
