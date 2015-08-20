@@ -37,21 +37,23 @@ def get_required_fields(all_fields, answers):
         "SQ1-1j-i", "SQ1-1j-ii", "SQ1-3", "SQ4-1c", "SQ3-1k", "SQC3", "SQ1-1i-i",
     ])
     required_fields -= optional_fields
-    #  If you answered other to question 12
+    #  If you answered other to question 19 (trading status)
     if answers.get('SQ1-1ci') == 'other (please specify)':
         required_fields.add('SQ1-1cii')
-    #  If you answered yes to question 20
+
+    #  If you answered yes to question 27 (non-UK business registered in EU)
     if answers.get('SQ1-1i-i', False):
         required_fields.add('SQ1-1i-ii')
-    #  If you answered 'licensed' or 'a member of a relevant organisation' in question 22
+
+    #  If you answered 'licensed' or 'a member of a relevant organisation' in question 29
     if len(answers.get('SQ1-1j-i', [])) > 0:
         required_fields.add('SQ1-1j-ii')
 
-    # If you answered yes to either question 54 or 55
+    # If you answered yes to either question 53 or 54 (tax returns)
     if answers.get('SQ4-1a', False) or answers.get('SQ4-1b', False):
         required_fields.add('SQ4-1c')
 
-    # If you answered Yes to questions 41 - 53
+    # If you answered Yes to questions 39 - 51 (discretionary exclusion)
     dependent_fields = [
         'SQ2-2a', 'SQ3-1a' 'SQ3-1b', 'SQ3-1c', 'SQ3-1d', 'SQ3-1e', 'SQ3-1f', 'SQ3-1g',
         'SQ3-1h-i', 'SQ3-1h-ii', 'SQ3-1i-i', 'SQ3-1i-ii', 'SQ3-1j'
@@ -59,7 +61,7 @@ def get_required_fields(all_fields, answers):
     if any(answers.get(field) for field in dependent_fields):
         required_fields.add('SQ3-1k')
 
-    # If you answered No to 'established in the UK'
+    # If you answered No to question 26 (established in the UK)
     if not answers.get('SQ5-2a'):
         required_fields.add('SQ1-1i-i')
         required_fields.add('SQ1-1j-i')
