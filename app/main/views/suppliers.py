@@ -1,7 +1,10 @@
+from itertools import chain
+
 from flask import render_template, request, redirect, url_for, abort, session, flash
 from flask_login import login_required, current_user, current_app
 
 from dmutils.apiclient import APIError, HTTPError
+from dmutils.audit import AuditTypes
 from dmutils import flask_featureflags
 from dmutils.email import send_email, generate_token, MandrillException
 
@@ -145,6 +148,9 @@ def submit_duns_number():
         suppliers = data_api_client.find_suppliers(duns_number=form.duns_number.data)
         if len(suppliers["suppliers"]) > 0:
             form.duns_number.errors = ["DUNS number already used"]
+            current_app.logger.warning(
+                "suppliercreate.fail: duns:%s %s",
+                form.duns_number.data, ",".join(form.duns_number.errors))
             return render_template(
                 "suppliers/duns_number.html",
                 form=form,
@@ -153,6 +159,9 @@ def submit_duns_number():
         session[form.duns_number.name] = form.duns_number.data
         return redirect(url_for(".companies_house_number"))
     else:
+        current_app.logger.warning(
+            "suppliercreate.fail: duns:%s %s",
+            form.duns_number.data, ",".join(form.duns_number.errors))
         return render_template(
             "suppliers/duns_number.html",
             form=form,
@@ -188,6 +197,9 @@ def submit_companies_house_number():
             session.pop(form.companies_house_number.name, None)
         return redirect(url_for(".company_name"))
     else:
+        current_app.logger.warning(
+            "suppliercreate.fail: duns:%s %s",
+            session.get('duns_number'), ",".join(chain.from_iterable(form.errors.values())))
         return render_template(
             "suppliers/companies_house_number.html",
             form=form,
@@ -219,6 +231,10 @@ def submit_company_name():
         session[form.company_name.name] = form.company_name.data
         return redirect(url_for(".company_contact_details"))
     else:
+        current_app.logger.warning(
+            "suppliercreate.fail: duns:%s company_name:%s %s",
+            session.get('duns_number'), session.get('company_name'),
+            ",".join(chain.from_iterable(form.errors.values())))
         return render_template(
             "suppliers/company_name.html",
             form=form,
@@ -259,6 +275,10 @@ def submit_company_contact_details():
         session[form.contact_name.name] = form.contact_name.data
         return redirect(url_for(".company_summary"))
     else:
+        current_app.logger.warning(
+            "suppliercreate.fail: duns:%s company_name:%s %s",
+            session.get('duns_number'), session.get('company_name'),
+            ",".join(chain.from_iterable(form.errors.values())))
         return render_template(
             "suppliers/company_contact_details.html",
             form=form,
@@ -389,6 +409,12 @@ def submit_create_your_account():
                     session['email_supplier_id'])
             )
             abort(503, "Failed to send user creation email")
+
+        data_api_client.create_audit_event(
+            audit_type=AuditTypes.invite_user,
+            object_type='suppliers',
+            object_id=session['email_supplier_id'],
+            data={'invitedEmail': form.email_address.data})
     else:
         return render_template(
             "suppliers/create_your_account.html",

@@ -190,6 +190,7 @@ def create_user(encoded_token):
 
     if token is None:
         flash('token_invalid', 'error')
+        current_app.logger.warning("createuser.token_invalid: %s", encoded_token)
         return render_template(
             "auth/create-user.html",
             form=form,
@@ -230,6 +231,7 @@ def submit_update_user(encoded_token):
     token = decode_invitation_token(encoded_token)
     if token is None:
         flash('token_invalid', 'error')
+        current_app.logger.warning("createuser.token_invalid: %s", encoded_token)
         return render_template(
             "auth/update-user.html",
             token=None,
@@ -241,7 +243,11 @@ def submit_update_user(encoded_token):
 
         user = User.from_json(user_json)
         if user.is_locked() or not user.is_active() or not user_has_role(user_json, 'buyer'):
-            abort("should not update an existing supplier"),  400
+            current_app.logger.warning(
+                "createuser.user_invalid: user_id:%s supplier_id:%s user_locked:%s user_active:%s user_role:%s",
+                user.id, token.get("supplier_id"), user.is_locked(), user.is_active(), user_json['users']['role']
+            )
+            abort(400, "should not update an existing supplier")
 
         data_api_client.update_user(
             user_id=user.id,
@@ -260,6 +266,7 @@ def submit_create_user(encoded_token):
     token = decode_invitation_token(encoded_token)
     if token is None:
         flash('token_invalid', 'error')
+        current_app.logger.warning("createuser.token_invalid: %s", encoded_token)
         return render_template(
             "auth/create-user.html",
             form=form,
@@ -282,6 +289,7 @@ def submit_create_user(encoded_token):
 
             return redirect(url_for('.dashboard'))
         else:
+            current_app.logger.warning("createuser.invalid: %s", ", ".join(form.errors))
             return render_template(
                 "auth/create-user.html",
                 valid_token=False,
@@ -348,7 +356,7 @@ def send_invite_user():
             abort(503, "Failed to send user invite reset")
 
         data_api_client.create_audit_event(
-            audit_type=AuditTypes.invite_user.value,
+            audit_type=AuditTypes.invite_user,
             user=current_user.email_address,
             object_type='suppliers',
             object_id=current_user.supplier_id,

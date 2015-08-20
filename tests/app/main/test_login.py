@@ -580,7 +580,7 @@ class TestInviteUser(BaseApplicationTest):
             assert_equal(res.status_code, 302)
 
             data_api_client.create_audit_event.assert_called_once_with(
-                audit_type=AuditTypes.invite_user.value,
+                audit_type=AuditTypes.invite_user,
                 user='email@email.com',
                 object_type='suppliers',
                 object_id=1234,
@@ -1044,9 +1044,11 @@ class TestInviteUser(BaseApplicationTest):
             )
 
             res = self.client.post(
-                '/suppliers/create-user/{}'.format(token)
+                '/suppliers/update-user/{}'.format(token),
+                data={"password": "password1234", "name": "Joe Bloggs"}
             )
 
+            assert data_api_client.get_user.called
             assert_equal(res.status_code, 400)
 
     @mock.patch('app.main.views.login.data_api_client')
@@ -1074,9 +1076,11 @@ class TestInviteUser(BaseApplicationTest):
             )
 
             res = self.client.post(
-                '/suppliers/create-user/{}'.format(token)
+                '/suppliers/update-user/{}'.format(token),
+                data={"password": "password1234", "name": "Joe Bloggs"}
             )
 
+            assert data_api_client.get_user.called
             assert_equal(res.status_code, 400)
 
     @mock.patch('app.main.views.login.data_api_client')
@@ -1104,9 +1108,11 @@ class TestInviteUser(BaseApplicationTest):
             )
 
             res = self.client.post(
-                '/suppliers/create-user/{}'.format(token)
+                '/suppliers/update-user/{}'.format(token),
+                data={"password": "password1234", "name": "Joe Bloggs"}
             )
 
+            assert data_api_client.get_user.called
             assert_equal(res.status_code, 400)
 
     @mock.patch('app.main.views.login.data_api_client')
@@ -1134,9 +1140,11 @@ class TestInviteUser(BaseApplicationTest):
             )
 
             res = self.client.post(
-                '/suppliers/create-user/{}'.format(token)
+                '/suppliers/update-user/{}'.format(token),
+                data={"password": "password1234", "name": "Joe Bloggs"}
             )
 
+            assert data_api_client.get_user.called
             assert_equal(res.status_code, 400)
 
     @mock.patch('app.main.views.login.data_api_client')

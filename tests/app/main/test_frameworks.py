@@ -4,6 +4,7 @@ import mock
 from mock import Mock
 from lxml import html
 from dmutils.apiclient import APIError
+from dmutils.audit import AuditTypes
 from dmutils.email import MandrillException
 from flask import render_template
 
@@ -23,16 +24,31 @@ class TestFrameworksDashboard(BaseApplicationTest):
     def test_interest_registered_in_framework(self, data_api_client):
         with self.app.test_client():
             self.login()
+            data_api_client.find_audit_events.return_value = {
+                "auditEvents": []
+            }
 
             res = self.client.get("/suppliers/frameworks/g-cloud-7")
 
             assert_equal(res.status_code, 200)
             data_api_client.create_audit_event.assert_called_once_with(
-                audit_type="register_framework_interest",
+                audit_type=AuditTypes.register_framework_interest,
                 user="email@email.com",
                 object_type="suppliers",
                 object_id=1234,
                 data={"frameworkSlug": "g-cloud-7"})
+
+    def test_interest_in_framework_only_registered_once(self, data_api_client):
+        with self.app.test_client():
+            self.login()
+            data_api_client.find_audit_events.return_value = {
+                "auditEvents": [{"data": {"frameworkSlug": "g-cloud-7"}}]
+            }
+
+            res = self.client.get("/suppliers/frameworks/g-cloud-7")
+
+            assert_equal(res.status_code, 200)
+            assert not data_api_client.create_audit_event.called
 
     def test_declaration_status_when_complete(self, data_api_client):
         with self.app.test_client():
@@ -282,8 +298,9 @@ class TestSendClarificationQuestionEmail(BaseApplicationTest):
                 in self.strip_all_whitespace(response.get_data(as_text=True))
             )
 
+    @mock.patch('app.main.views.frameworks.data_api_client')
     @mock.patch('app.main.views.frameworks.send_email')
-    def test_should_call_send_email_with_correct_params(self, send_email):
+    def test_should_call_send_email_with_correct_params(self, send_email, data_api_client):
 
         clarification_question = 'This is a clarification question.'
         response = self._send_email(clarification_question)
@@ -295,6 +312,22 @@ class TestSendClarificationQuestionEmail(BaseApplicationTest):
             self.strip_all_whitespace('<p class="banner-message">Your clarification message has been sent.</p>')
             in self.strip_all_whitespace(response.get_data(as_text=True))
         )
+
+    @mock.patch('app.main.views.frameworks.data_api_client')
+    @mock.patch('app.main.views.frameworks.send_email')
+    def test_should_create_audit_event(self, send_email, data_api_client):
+        clarification_question = 'This is a clarification question'
+        response = self._send_email(clarification_question)
+
+        self._assert_email(send_email)
+
+        assert_equal(response.status_code, 200)
+        data_api_client.create_audit_event.assert_called_with(
+            audit_type=AuditTypes.send_clarification_question,
+            user="email@email.com",
+            object_type="suppliers",
+            object_id=1234,
+            data={"question": clarification_question})
 
     @mock.patch('app.main.views.frameworks.send_email')
     def test_should_be_a_503_if_email_fails(self, send_email):
