@@ -429,6 +429,18 @@ class TestCreateSupplier(BaseApplicationTest):
         assert_equal(res.status_code, 302)
         assert_equal(res.location, 'http://localhost/suppliers/companies-house-number')
 
+    @mock.patch("app.main.suppliers.data_api_client")
+    def test_should_allow_duns_numbers_that_start_with_zero(self, data_api_client):
+        data_api_client.find_suppliers.return_value = {"suppliers": []}
+        res = self.client.post(
+            "/suppliers/duns-number",
+            data={
+                'duns_number': "012345678"
+            }
+        )
+        assert_equal(res.status_code, 302)
+        assert_equal(res.location, 'http://localhost/suppliers/companies-house-number')
+
     def test_should_not_be_an_error_if_no_companies_house_number(self):
         res = self.client.post(
             "/suppliers/companies-house-number",
