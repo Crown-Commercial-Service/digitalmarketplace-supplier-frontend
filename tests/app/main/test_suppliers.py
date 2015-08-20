@@ -367,7 +367,7 @@ class TestCreateSupplier(BaseApplicationTest):
             data={}
         )
         assert_equal(res.status_code, 400)
-        assert_in("DUNS Number must be 9 digits", res.get_data(as_text=True))
+        assert_in("You must enter a DUNS number with 9 digits.", res.get_data(as_text=True))
 
     def test_should_be_an_error_if_no_duns_number_is_letters(self):
         res = self.client.post(
@@ -377,7 +377,7 @@ class TestCreateSupplier(BaseApplicationTest):
             }
         )
         assert_equal(res.status_code, 400)
-        assert_in("DUNS Number must be 9 digits", res.get_data(as_text=True))
+        assert_in("You must enter a DUNS number with 9 digits.", res.get_data(as_text=True))
 
     def test_should_be_an_error_if_no_duns_number_is_less_than_nine_digits(self):
         res = self.client.post(
@@ -387,7 +387,7 @@ class TestCreateSupplier(BaseApplicationTest):
             }
         )
         assert_equal(res.status_code, 400)
-        assert_in("DUNS Number must be 9 digits", res.get_data(as_text=True))
+        assert_in("You must enter a DUNS number with 9 digits.", res.get_data(as_text=True))
 
     def test_should_be_an_error_if_no_duns_number_is_more_than_nine_digits(self):
         res = self.client.post(
@@ -397,7 +397,7 @@ class TestCreateSupplier(BaseApplicationTest):
             }
         )
         assert_equal(res.status_code, 400)
-        assert_in("DUNS Number must be 9 digits", res.get_data(as_text=True))
+        assert_in("You must enter a DUNS number with 9 digits.", res.get_data(as_text=True))
 
     @mock.patch("app.main.suppliers.data_api_client")
     def test_should_be_an_error_if_duns_number_in_use(self, data_api_client):
@@ -445,7 +445,7 @@ class TestCreateSupplier(BaseApplicationTest):
             }
         )
         assert_equal(res.status_code, 400)
-        assert_in("Companies house number must be 8 characters", res.get_data(as_text=True))
+        assert_in("You must enter a Companies House number with 8 characters.", res.get_data(as_text=True))
 
     def test_should_be_an_error_if_companies_house_number_is_not_8_characters_long(self):
         res = self.client.post(
@@ -455,7 +455,7 @@ class TestCreateSupplier(BaseApplicationTest):
             }
         )
         assert_equal(res.status_code, 400)
-        assert_in("Companies house number must be 8 characters", res.get_data(as_text=True))
+        assert_in("You must enter a Companies House number with 8 characters", res.get_data(as_text=True))
 
     def test_should_allow_valid_companies_house_number(self):
         with self.client as c:
@@ -496,7 +496,7 @@ class TestCreateSupplier(BaseApplicationTest):
             data={}
         )
         assert_equal(res.status_code, 400)
-        assert_in("Company name is required", res.get_data(as_text=True))
+        assert_in("You must provide a company name.", res.get_data(as_text=True))
 
     def test_should_not_be_an_error_if_company_name_too_long(self):
         twofiftysix = "a" * 256
@@ -507,7 +507,7 @@ class TestCreateSupplier(BaseApplicationTest):
             }
         )
         assert_equal(res.status_code, 400)
-        assert_in("Company name must be under 256 characters", res.get_data(as_text=True))
+        assert_in("You must provide a company name under 256 characters.", res.get_data(as_text=True))
 
     def test_should_allow_valid_company_contact_details(self):
         res = self.client.post(
@@ -530,7 +530,7 @@ class TestCreateSupplier(BaseApplicationTest):
             }
         )
         assert_equal(res.status_code, 400)
-        assert_true("Contact name can not be empty" in res.get_data(as_text=True))
+        assert_true("You must provide a contact name." in res.get_data(as_text=True))
 
     def test_should_not_allow_contact_details_with_too_long_name(self):
         twofiftysix = "a" * 256
@@ -543,7 +543,7 @@ class TestCreateSupplier(BaseApplicationTest):
             }
         )
         assert_equal(res.status_code, 400)
-        assert_true("Contact name must be under 256 characters" in res.get_data(as_text=True))
+        assert_true("You must provide a contact name under 256 characters." in res.get_data(as_text=True))
 
     def test_should_not_allow_contact_details_without_email(self):
         res = self.client.post(
@@ -554,7 +554,7 @@ class TestCreateSupplier(BaseApplicationTest):
             }
         )
         assert_equal(res.status_code, 400)
-        assert_true("Email can not be empty" in res.get_data(as_text=True))
+        assert_true("You must provide a email address." in res.get_data(as_text=True))
 
     def test_should_not_allow_contact_details_with_invalid_email(self):
         res = self.client.post(
@@ -566,7 +566,7 @@ class TestCreateSupplier(BaseApplicationTest):
             }
         )
         assert_equal(res.status_code, 400)
-        assert_true("Please enter a valid email address" in res.get_data(as_text=True))
+        assert_true("You must provide a valid email address." in res.get_data(as_text=True))
 
     def test_should_not_allow_contact_details_without_phone_number(self):
         res = self.client.post(
@@ -577,7 +577,7 @@ class TestCreateSupplier(BaseApplicationTest):
             }
         )
         assert_equal(res.status_code, 400)
-        assert_true("Phone number can not be empty" in res.get_data(as_text=True))
+        assert_true("You must provide a phone number." in res.get_data(as_text=True))
 
     def test_should_not_allow_contact_details_with_invalid_phone_number(self):
         twentyone = "a" * 21
@@ -590,7 +590,7 @@ class TestCreateSupplier(BaseApplicationTest):
             }
         )
         assert_equal(res.status_code, 400)
-        assert_true("Phone number must be under 20 characters" in res.get_data(as_text=True))
+        assert_true("You must provide a phone number under 20 characters." in res.get_data(as_text=True))
 
     def test_should_show_multiple_errors(self):
         res = self.client.post(
@@ -598,9 +598,9 @@ class TestCreateSupplier(BaseApplicationTest):
             data={}
         )
         assert_equal(res.status_code, 400)
-        assert_true("Phone number can not be empty" in res.get_data(as_text=True))
-        assert_true("Email can not be empty" in res.get_data(as_text=True))
-        assert_true("Contact name can not be empty" in res.get_data(as_text=True))
+        assert_true("You must provide a phone number." in res.get_data(as_text=True))
+        assert_true("You must provide a email address." in res.get_data(as_text=True))
+        assert_true("You must provide a contact name." in res.get_data(as_text=True))
 
     def test_should_populate_duns_from_session(self):
         with self.client.session_transaction() as sess:
@@ -741,7 +741,7 @@ class TestCreateSupplier(BaseApplicationTest):
             data={}
         )
         assert_equal(res.status_code, 400)
-        assert_true("Email can not be empty" in res.get_data(as_text=True))
+        assert_true("You must provide a email address." in res.get_data(as_text=True))
 
     def test_should_not_allow_incorrect_email_address(self):
         with self.client.session_transaction() as sess:
@@ -754,7 +754,7 @@ class TestCreateSupplier(BaseApplicationTest):
             }
         )
         assert_equal(res.status_code, 400)
-        assert_true("Please enter a valid email address" in res.get_data(as_text=True))
+        assert_true("You must provide a valid email address." in res.get_data(as_text=True))
 
     @mock.patch("app.main.suppliers.send_email")
     @mock.patch("app.main.suppliers.generate_token")
