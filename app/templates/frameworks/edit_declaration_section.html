@@ -26,6 +26,20 @@
 
 {% block main_content %}
 
+{% with messages = get_flashed_messages() %}
+  {% if messages %}
+    {% for message in messages %}
+      {% if message == 'supplier_declaration_saved' %}
+      <div class="banner-success-without-action">
+        <p class="banner-message">
+          Updates to your supplier declaration so far have been saved
+        </p>
+      </div>
+      {% endif %}
+    {% endfor %}
+  {% endif %}
+{% endwith %}
+
   {% if errors %}
     {% with errors = errors.values() %}
       {% include 'toolkit/forms/validation.html' %}
@@ -42,8 +56,7 @@
   </p>
   <form method="post" class="supplier-declaration">
 
-    {% set question_index = [0] %}
-    {% for section in sections %}
+    {% set question_index = [first_question_index] %}
       {% with
         heading = section.name,
         smaller = true
@@ -58,16 +71,25 @@
           {{ forms[question.type](question, service_data, {}, question_number=question_index[0]) }}
         {% endif %}
       {% endfor %}
-    {% endfor %}
 
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
-    {%
-      with
-      label="Submit",
-      type="save"
-    %}
-      {% include "toolkit/button.html" %}
-    {% endwith %}
+    {% if is_last_page %}
+      {%
+        with
+        label="Submit",
+        type="save"
+      %}
+        {% include "toolkit/button.html" %}
+      {% endwith %}
+    {% else %}
+      {%
+        with
+        label="Save and continue",
+        type="save"
+      %}
+        {% include "toolkit/button.html" %}
+      {% endwith %}
+    {% endif %}
 
     <a href="{{ url_for('.framework_dashboard') }}">Return to G-Cloud 7 application</a>
 

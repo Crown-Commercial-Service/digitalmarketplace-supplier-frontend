@@ -10,7 +10,7 @@ from dmutils.email import send_email, MandrillException
 from dmutils.formats import format_service_price
 
 from ...main import main, declaration_content, new_service_content
-from ..helpers.frameworks import get_error_messages
+from ..helpers.frameworks import get_error_messages, get_first_question_index
 
 from ... import data_api_client
 from ..helpers.services import (
@@ -92,9 +92,17 @@ def framework_supplier_declaration():
     content = declaration_content.get_builder()
     status_code = 200
 
+    try:
+        page = int(request.args.get('page', 1))
+    except ValueError:
+        abort(404)
+    if page > len(content.sections):
+        abort(404)
+    is_last_page = page == len(content.sections)
+
     if request.method == 'POST':
         answers = content.get_all_data(request.form)
-        errors = get_error_messages(content, answers)
+        errors = get_error_messages(content, answers, page)
         if len(errors) > 0:
             status_code = 400
         else:
@@ -106,7 +114,10 @@ def framework_supplier_declaration():
                     current_user.email_address
                 )
                 flash('supplier_declaration_saved')
-                return redirect(url_for('.framework_dashboard'))
+                if is_last_page:
+                    return redirect(url_for('.framework_dashboard'))
+                else:
+                    return redirect(url_for('.framework_supplier_declaration', page=page+1))
             except APIError as e:
                 abort(e.status_code)
     else:
@@ -122,8 +133,10 @@ def framework_supplier_declaration():
 
     return render_template(
         "frameworks/edit_declaration_section.html",
-        sections=declaration_content.get_builder(),
+        section=declaration_content.get_builder().sections[page-1],
         service_data=answers,
+        is_last_page=is_last_page,
+        first_question_index=get_first_question_index(content, page),
         errors=errors,
         **template_data
     ), status_code
