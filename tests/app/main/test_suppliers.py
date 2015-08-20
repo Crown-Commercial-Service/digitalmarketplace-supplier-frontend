@@ -445,7 +445,7 @@ class TestCreateSupplier(BaseApplicationTest):
             }
         )
         assert_equal(res.status_code, 400)
-        assert_in("You must enter a Companies House number with 8 characters.", res.get_data(as_text=True))
+        assert_in("Companies House numbers must have 8 characters.", res.get_data(as_text=True))
 
     def test_should_be_an_error_if_companies_house_number_is_not_8_characters_long(self):
         res = self.client.post(
@@ -455,7 +455,7 @@ class TestCreateSupplier(BaseApplicationTest):
             }
         )
         assert_equal(res.status_code, 400)
-        assert_in("You must enter a Companies House number with 8 characters", res.get_data(as_text=True))
+        assert_in("Companies House numbers must have 8 characters.", res.get_data(as_text=True))
 
     def test_should_allow_valid_companies_house_number(self):
         with self.client as c:
