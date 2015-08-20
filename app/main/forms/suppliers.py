@@ -48,42 +48,42 @@ class EditContactInformationForm(Form):
 
 class DunsNumberForm(Form):
     duns_number = IntegerField('DUNS Number', validators=[
-        DataRequired(message="DUNS Number must be 9 digits"),
-        NumberRange(min=100000000, max=999999999, message="DUNS Number must be 9 digits")
+        DataRequired(message="You must enter a DUNS number with 9 digits."),
+        NumberRange(min=100000000, max=999999999, message="You must enter a DUNS number with 9 digits.")
     ])
 
 
 class CompaniesHouseNumberForm(Form):
     companies_house_number = StringField('Companies house number', validators=[
         Optional(),
-        Length(min=8, max=8, message="Companies house number must be 8 characters")
+        Length(min=8, max=8, message="Companies House numbers must have 8 characters.")
     ])
 
 
 class CompanyNameForm(Form):
     company_name = StringField('Company name', validators=[
-        DataRequired(message="Company name is required"),
-        Length(max=255, message="Company name must be under 256 characters")
+        DataRequired(message="You must provide a company name."),
+        Length(max=255, message="You must provide a company name under 256 characters.")
     ])
 
 
 class CompanyContactDetailsForm(Form):
     contact_name = StringField('Contact name', validators=[
-        DataRequired(message="Contact name can not be empty"),
-        Length(max=255, message="Contact name must be under 256 characters")
+        DataRequired(message="You must provide a contact name."),
+        Length(max=255, message="You must provide a contact name under 256 characters.")
     ])
     email_address = StringField('Email address', validators=[
-        DataRequired(message="Email can not be empty"),
-        Email(message="Please enter a valid email address")
+        DataRequired(message="You must provide a email address."),
+        Email(message="You must provide a valid email address.")
     ])
     phone_number = StringField('Phone number', validators=[
-        DataRequired(message="Phone number can not be empty"),
-        Length(max=20, message="Phone number must be under 20 characters")
+        DataRequired(message="You must provide a phone number."),
+        Length(max=20, message="You must provide a phone number under 20 characters.")
     ])
 
 
 class EmailAddressForm(Form):
     email_address = StringField('Email address', validators=[
-        DataRequired(message="Email can not be empty"),
-        Email(message="Please enter a valid email address")
+        DataRequired(message="You must provide a email address."),
+        Email(message="You must provide a valid email address.")
     ])

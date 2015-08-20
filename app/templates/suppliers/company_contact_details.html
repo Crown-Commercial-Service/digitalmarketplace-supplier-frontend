@@ -21,15 +21,15 @@ with items = [
 {% if form.errors|length > 1 %}
     <div class="validation-masthead" role="group" aria-labelledby="validation-masthead-heading">
         <h1 class="validation-masthead-heading" id="validation-masthead-heading">
-            There was a problem with your answer to the following questions
+            There was a problem with the details you gave for:
         </h1>
-        {% for field_name, field_errors in form.errors|dictsort if field_errors %}
         <ul>
+        {% for field_name, field_errors in form.errors|dictsort if field_errors %}
         {% for error in field_errors %}
-        <li><a href="#{{ form[field_name].id }}" class="validation-masthead-link">{{ form[field_name].label }}</a></li>
+          <li><a href="#{{ form[field_name].id }}" class="validation-masthead-link">{{ form[field_name].label.text|lower }}</a></li>
+        {% endfor %}
         {% endfor %}
         </ul>
-        {% endfor %}
     </div>
 {% endif %}
 
