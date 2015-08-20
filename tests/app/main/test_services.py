@@ -840,6 +840,24 @@ class TestShowDraftService(BaseApplicationTest):
             document.xpath(service_price_xpath)[0].strip(),
             u"£12.50 to £15 per person per second")
 
+    @mock.patch('app.main.views.services.count_unanswered_questions')
+    def test_unanswered_questions_count(self, count_unanswered, data_api_client):
+        data_api_client.get_draft_service.return_value = self.draft_service
+        count_unanswered.return_value = 1, 2
+        res = self.client.get('/suppliers/submission/services/1')
+
+        assert_in(u'3 questions unanswered', res.get_data(as_text=True))
+
+    @mock.patch('app.main.views.services.count_unanswered_questions')
+    def test_move_to_complete_button(self, count_unanswered, data_api_client):
+        data_api_client.get_draft_service.return_value = self.draft_service
+        count_unanswered.return_value = 0, 1
+        res = self.client.get('/suppliers/submission/services/1')
+
+        assert_in(u'1 optional question unanswered', res.get_data(as_text=True))
+        assert_in(u'<button class="button-save">Move to complete</button>',
+                  res.get_data(as_text=True))
+
 
 @mock.patch('app.main.views.services.data_api_client')
 class TestDeleteDraftService(BaseApplicationTest):

@@ -1,5 +1,6 @@
 {% extends "_base_page.html" %}
 {% import "toolkit/summary-table.html" as summary %}
+{% import "macros/submission.html" as submission %}
 
 {% block page_title %}Apply to G-Cloud 7 – Digital Marketplace{% endblock %}
 
@@ -68,13 +69,11 @@
       {{ summary.service_link(draft.serviceName,
                               url_for(".view_service_submission", service_id=draft.id)) }}
       {{ summary.text(draft.lot) }}
-      {% if draft.unanswered_questions == 0 %}
-        {{ summary.text("Service can be moved to complete") }}
-      {% elif draft.unanswered_questions == 1 %}
-        {{ summary.text("%s question unanswered" % draft.unanswered_questions) }}
-      {% else %}
-        {{ summary.text("%s questions unanswered" % draft.unanswered_questions) }}
-      {% endif %}
+      {{ summary.text(submission.multiline_string(
+        submission.can_be_completed_text(draft.unanswered_required),
+        submission.unanswered_required_text(draft.unanswered_required, draft.unanswered_optional),
+        submission.unanswered_optional_text(draft.unanswered_required, draft.unanswered_optional)
+      )) }}
       {{ summary.button(text="Make a copy",
                          action=url_for('.copy_draft_service', service_id=draft.id)) }}
     {% endcall %}
@@ -85,13 +84,21 @@
     complete_drafts,
     caption="Complete services",
     empty_message="You haven't completed any services yet.",
-    field_headings=["Service name", "Lot", summary.hidden_field_heading("Make a copy")],
+    field_headings=[
+        "Service name",
+        "Lot",
+        summary.hidden_field_heading("Progress"),
+        summary.hidden_field_heading("Make a copy")
+    ],
     field_headings_visible=True
   ) %}
     {% call summary.row() %}
       {{ summary.service_link(draft.serviceName,
                               url_for(".view_service_submission", service_id=draft.id)) }}
       {{ summary.text(draft.lot) }}
+      {{ summary.text(
+        submission.unanswered_optional_text(draft.unanswered_required, draft.unanswered_optional)
+      ) }}
       {{ summary.button(text="Make a copy",
                          action=url_for('.copy_draft_service', service_id=draft.id)) }}
     {% endcall %}

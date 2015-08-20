@@ -1,3 +1,5 @@
+import itertools
+
 from flask import render_template, request, abort, flash, redirect, url_for, escape, current_app
 from flask_login import login_required, current_user
 
@@ -61,12 +63,16 @@ def framework_services():
 
     drafts, complete_drafts = get_drafts(data_api_client, current_user.supplier_id, 'g-cloud-7')
 
-    for draft in drafts:
+    for draft in itertools.chain(drafts, complete_drafts):
         draft['priceString'] = format_service_price(draft)
         content = new_service_content.get_builder().filter(draft)
         sections = get_service_attributes(draft, content)
 
-        draft['unanswered_questions'] = count_unanswered_questions(sections)
+        unanswered_required, unanswered_optional = count_unanswered_questions(sections)
+        draft.update({
+            'unanswered_required': unanswered_required,
+            'unanswered_optional': unanswered_optional,
+        })
 
     return render_template(
         "frameworks/services.html",

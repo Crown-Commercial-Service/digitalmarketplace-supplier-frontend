@@ -35,12 +35,15 @@ def get_drafts(apiclient, supplier_id, framework_slug):
 
 
 def count_unanswered_questions(service_attributes):
-    return len([
-        q.label
-        for s in service_attributes
-        for q in s['rows']
-        if q.answer_required
-    ])
+    unanswered_required, unanswered_optional = (0, 0)
+    for section in service_attributes:
+        for question in section['rows']:
+            if question.answer_required:
+                unanswered_required += 1
+            elif question.value in ['', [], None]:
+                unanswered_optional += 1
+
+    return unanswered_required, unanswered_optional
 
 
 def get_service_attributes(service_data, service_questions):

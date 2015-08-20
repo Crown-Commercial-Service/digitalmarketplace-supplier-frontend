@@ -1,5 +1,7 @@
 {% extends "services/_base_service_page.html" %}
 
+{% import "macros/submission.html" as submission %}
+
 {% block breadcrumb %}
   {%
     with items = [
@@ -34,7 +36,17 @@
     {{ last_edit.createdAt|datetimeformat }}<br />
     by {{ last_edit.userName }}
   </p>
-  {% if service_data.status == 'not-submitted' and unanswered_questions == 0 %}
+  {% if unanswered_required or unanswered_optional %}
+    <p class="last-edited">
+      {{ submission.multiline_string(
+        submission.unanswered_required_text(unanswered_required, unanswered_optional),
+        submission.unanswered_optional_text(unanswered_required, unanswered_optional)
+      ) }}
+    </p>
+  {% endif %}
+  {% if service_data.status == 'submitted' %}
+    <span class="service-status-published">This service is complete and will be automatically submitted at 3pm&nbsp;BST, 6 October</span>
+  {% elif unanswered_required == 0 %}
     <form action="{{ url_for('.complete_draft_service', service_id=service_id) }}" method="POST">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
       {% with type = "save", label = "Move to complete" %}
@@ -44,12 +56,7 @@
     <p class="last-edited move-to-complete-hint">
       You can still edit services once they're complete.
     </p>
-  {% elif service_data.status == 'submitted' %}
-    <span class="service-status-published">Service is complete</span>
   {% else %}
-    <p class="last-edited">
-      {{ unanswered_questions }} question{% if unanswered_questions > 1 %}s{% endif %} unanswered
-    </p>
     <p class="move-to-complete-hint">When you have added all the required information, you can move the service to complete.</p>
   {% endif %}
 </div>
