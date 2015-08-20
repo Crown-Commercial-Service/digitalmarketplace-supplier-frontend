@@ -117,6 +117,7 @@ class Preview(Live):
 class Production(Live):
     FEATURE_FLAGS_SUPPLIER_DASHBOARD = enabled_since('2015-06-10')
     FEATURE_FLAGS_EDIT_SUPPLIER_PAGE = enabled_since('2015-06-18')
+    FEATURE_FLAGS_USER_DASHBOARD = enabled_since('2015-08-20')
 
 
 class Staging(Production):
