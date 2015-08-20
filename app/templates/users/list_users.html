@@ -42,7 +42,7 @@
     {% endwith %}
     {% with
       context = current_user.email_address,
-      heading = "Add or remove contributors",
+      heading = "Invite or remove contributors",
       smaller = true
     %}
       {% include 'toolkit/page-heading.html' %}
@@ -70,5 +70,3 @@
     {% endcall %}
   </div>
 {% endblock %}
-
-

@@ -133,7 +133,7 @@
 
   {{ summary.heading("Contributors") }}
   {% if 'USER_DASHBOARD' is active_feature %}
-    {{ summary.top_link("Add or remove", '/suppliers/users') }}
+    {{ summary.top_link("Invite or remove", '/suppliers/users') }}
   {% endif %}
   {% call(item) summary.table(
     users,
