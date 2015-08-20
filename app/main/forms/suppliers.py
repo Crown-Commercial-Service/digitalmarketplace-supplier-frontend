@@ -1,6 +1,6 @@
 from flask.ext.wtf import Form
 from wtforms import IntegerField, StringField, FieldList
-from wtforms.validators import DataRequired, Email, ValidationError, NumberRange, Length, Optional
+from wtforms.validators import DataRequired, Email, ValidationError, NumberRange, Length, Optional, Regexp
 
 
 def word_length(limit=None, message=None):
@@ -47,9 +47,9 @@ class EditContactInformationForm(Form):
 
 
 class DunsNumberForm(Form):
-    duns_number = IntegerField('DUNS Number', validators=[
+    duns_number = StringField('DUNS Number', validators=[
         DataRequired(message="You must enter a DUNS number with 9 digits."),
-        NumberRange(min=100000000, max=999999999, message="You must enter a DUNS number with 9 digits.")
+        Regexp(r'^\d{9}$', message="You must enter a DUNS number with 9 digits."),
     ])
 
 
