@@ -34,7 +34,7 @@
           {% if category == 'service_deleted' %}
             <strong>{{message.service_name}}</strong> was deleted
           {% elif category == 'service_copied' %}
-            <strong>{{message.service_name}}</strong> was copied
+            <strong>{{message.service_name}}</strong> was cloned
           {% elif category == 'service_completed' %}
             <strong>{{message.service_name}}</strong> was completed
           {% endif %}
@@ -71,7 +71,7 @@
         "Service name",
         "Lot",
         summary.hidden_field_heading("Progress"),
-        summary.hidden_field_heading("Make a copy")
+        summary.hidden_field_heading("Clone service")
     ],
     field_headings_visible=True
   ) %}
@@ -84,7 +84,7 @@
         submission.unanswered_required_text(draft.unanswered_required, draft.unanswered_optional),
         submission.unanswered_optional_text(draft.unanswered_required, draft.unanswered_optional)
       )) }}
-      {{ summary.button(text="Make a copy",
+      {{ summary.button(text="Clone service",
                          action=url_for('.copy_draft_service', service_id=draft.id)) }}
     {% endcall %}
   {% endcall %}
@@ -98,7 +98,7 @@
         "Service name",
         "Lot",
         summary.hidden_field_heading("Progress"),
-        summary.hidden_field_heading("Make a copy")
+        summary.hidden_field_heading("Clone service")
     ],
     field_headings_visible=True
   ) %}
@@ -109,7 +109,7 @@
       {{ summary.text(
         submission.unanswered_optional_text(draft.unanswered_required, draft.unanswered_optional)
       ) }}
-      {{ summary.button(text="Make a copy",
+      {{ summary.button(text="Clone service",
                          action=url_for('.copy_draft_service', service_id=draft.id)) }}
     {% endcall %}
   {% endcall %}
