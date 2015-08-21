@@ -49,6 +49,16 @@
     {% include "toolkit/page-heading.html" %}
   {% endwith %}
 
+  {% if not declaration_made and complete_drafts %}
+    {%
+      with
+      message = "No services will be submitted at the deadline because the <a href=\"" + url_for('.framework_supplier_declaration') + "\">supplier&nbsp;declaration</a> hasn’t been made.",
+      type = "warning"
+    %}
+      {% include "toolkit/notification-banner.html" %}
+    {% endwith %}
+  {% endif %}
+
   {{ summary.heading("Draft services") }}
   {{ summary.top_link("Add a service", url_for(".start_new_draft_service")) }}
   {% call(draft) summary.list_table(
