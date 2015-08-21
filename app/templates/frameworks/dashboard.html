@@ -33,24 +33,16 @@
     </div>
     <aside role="complementary" class="column-one-third framework-application-status">
       <h2>
-        Deadline for submissions<br />
-        3pm <abbr title="British Standard Time">BST</abbr>, 6 October 2015
+        Deadline <strong>3pm <abbr title="British Standard Time">BST</abbr>, 6 October 2015</strong>
       </h2>
       {% if not declaration_status == 'complete' and counts.complete %}
-        <div class="submission-status-bad">
-          <p class="big-number">
-            0
-          </p>
-          <p>
-            Eligible services
-          </p>
-        </div>
+
       {% else %}
         <p class="big-number">
           {{ counts.complete }}
         </p>
         <p>
-          Eligible {{ 'service' if counts.complete == 1 else 'services' }}
+          {{ 'service' if counts.complete == 1 else 'services' }} will be submitted
         </p>
       {% endif %}
     </aside>
@@ -62,6 +54,9 @@
         <li class="browse-list-item framework-application-section">
           <div class="grid-row">
             <div class="column-two-thirds">
+              {% if not declaration_made and counts.complete %}
+                <div class="framework-section-validation-bar">
+              {% endif %}
               <a class="browse-list-item-link" href="{{ url_for('.framework_supplier_declaration', section_id='g_cloud_7_essentials') }}">
                 {% if declaration_status == 'unstarted' %}
                   <span>Make supplier declaration</span>
@@ -73,6 +68,9 @@
                 Agree to the terms of the bid, provide supplier information and
                 confirm eligibility.
               </p>
+              {% if not declaration_made and counts.complete %}
+                </div>
+              {% endif %}
             </div>
             <div class="column-one-third">
               {% if declaration_status == 'unstarted' and not counts.complete %}
@@ -90,7 +88,8 @@
               {% elif declaration_status == 'unstarted' and counts.complete %}
                 <div class="framework-section-status-bad">
                   <p>
-                    You must make the supplier declaration before any services are eligible for submission
+                    <strong>No services will be submitted because you haven’t made the
+                    supplier declaration</strong>
                   </p>
                 </div>
               {% elif declaration_status == 'started' and counts.complete %}
@@ -102,7 +101,7 @@
               {% elif declaration_status == 'complete' %}
                 <div class="framework-section-status-good">
                   <p>
-                    All services marked as complete will be automatically submitted at 3pm BST, 6 October
+                    <strong>You have made the declaration</strong>
                   </p>
                 </div>
               {% endif %}
@@ -115,10 +114,7 @@
         <li class="browse-list-item framework-application-section">
           <div class="grid-row">
             <div class="column-two-thirds">
-              <a class="browse-list-item-link" href="{{ url_for('.framework_services') }}"><span>Add services</span></a>
-              <p class="browse-list-item-body">
-                Add, edit and delete your services.
-              </p>
+              <a class="browse-list-item-link" href="{{ url_for('.framework_services') }}"><span>Add, edit and delete services</span></a>
             </div>
             <div class="column-one-third">
               {% if counts.draft or counts.complete %}
@@ -126,14 +122,14 @@
                   <div class="big-number">
                     {{ counts.complete }}
                   </div>
-                  Complete {{ 'service' if counts.complete == 1 else 'services' }}
+                  complete {{ 'service' if counts.complete == 1 else 'services' }}
                 </div>
                 <div class="submission-service-counts-column">
                   <div class="big-number">
                     {{ counts.draft }}
                   </div>
-                  Draft<br>{{ 'service' if counts.draft == 1 else 'services' }}
-                  {% if counts.draft and declaration_status == 'complete' %}
+                  draft<br>{{ 'service' if counts.draft == 1 else 'services' }}
+                  {% if counts.draft and declaration_made %}
                     <p class="big-number-hint">
                       {{ 'This' if counts.draft == 1 else 'These' }}
                       will not be submitted
