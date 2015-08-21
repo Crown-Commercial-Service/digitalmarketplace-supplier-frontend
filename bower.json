@@ -7,6 +7,6 @@
     "jquery-details": "https://github.com/mathiasbynens/jquery-details/archive/v0.1.0.tar.gz",
     "digitalmarketplace-frontend-toolkit": "git://github.com/alphagov/digitalmarketplace-frontend-toolkit#v8.4.1",
     "govuk_template": "https://github.com/alphagov/govuk_template/releases/download/v0.14.1/jinja_govuk_template-0.14.1.tgz",
-    "digital-marketplace-ssp-content": "git://github.com/alphagov/digitalmarketplace-ssp-content#81479e20475ce607946c3710b154ce94106971a6"
+    "digital-marketplace-ssp-content": "git://github.com/alphagov/digitalmarketplace-ssp-content#ef0b3c8d396f31d36dfdd01c970619d0972f727b"
   }
 }
