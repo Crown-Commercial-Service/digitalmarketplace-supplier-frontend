@@ -578,6 +578,17 @@ class TestEditDraftService(BaseApplicationTest):
             page_questions=['serviceSummary']
         )
 
+    def test_S3_should_not_be_instantiated_if_there_are_no_files(self, data_api_client, s3):
+        data_api_client.get_draft_service.return_value = self.empty_draft
+        res = self.client.post(
+            '/suppliers/submission/services/1/edit/service_description',
+            data={
+                'serviceSummary': 'This is the service',
+            })
+
+        assert_equal(res.status_code, 302)
+        assert not s3.called
+
     def test_editing_readonly_section_is_not_allowed(self, data_api_client, s3):
         data_api_client.get_draft_service.return_value = self.empty_draft
 
