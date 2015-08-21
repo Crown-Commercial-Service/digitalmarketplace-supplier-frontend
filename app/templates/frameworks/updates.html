@@ -82,7 +82,7 @@
           field_headings_visible=False
         ) %}
           {% call summary.row() %}
-            {{ summary.field_name(item.last_modified|datetimeformat) }}
+            {{ summary.field_name(item.last_modified|dateformat) }}
             {% call summary.field() %}
                <a href="{{ url_for('.download_supplier_file', filepath=item.path) }}" class="document-link-with-icon">
                 <span class='document-icon'>{{ item.ext }}<span> document:</span></span>
