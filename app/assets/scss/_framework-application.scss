@@ -34,7 +34,6 @@
 %framework-section-status,
 .framework-section-status {
 
-  @include bold-19;
   margin-top: $gutter / 3;
 
   @include media(tablet) {
@@ -57,6 +56,11 @@
 .framework-section-status-good {
   @extend %framework-section-status;
   color: $grass-green;
+}
+
+.framework-section-validation-bar {
+  border-left: 7px solid $mellow-red;
+  padding-left: 15px;
 }
 
 .submission-status-bad {
