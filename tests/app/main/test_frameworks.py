@@ -54,7 +54,10 @@ class TestFrameworksDashboard(BaseApplicationTest):
         with self.app.test_client():
             self.login()
 
-            data_api_client.get_selection_answers.return_value = True
+            data_api_client.get_selection_answers.return_value = \
+                {"selectionAnswers":
+                    {"questionAnswers": FULL_G7_SUBMISSION}
+                 }
 
             res = self.client.get("/suppliers/frameworks/g-cloud-7")
 
