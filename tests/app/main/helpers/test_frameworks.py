@@ -191,7 +191,7 @@ def test_mitigation_factors_not_required():
     del submission['SQ3-1k']
 
     dependent_fields = [
-        'SQ2-2a', 'SQ3-1a' 'SQ3-1b', 'SQ3-1c', 'SQ3-1d', 'SQ3-1e', 'SQ3-1f', 'SQ3-1g',
+        'SQ2-2a', 'SQ3-1a', 'SQ3-1b', 'SQ3-1c', 'SQ3-1d', 'SQ3-1e', 'SQ3-1f', 'SQ3-1g',
         'SQ3-1h-i', 'SQ3-1h-ii', 'SQ3-1i-i', 'SQ3-1i-ii', 'SQ3-1j'
     ]
     for field in dependent_fields:
