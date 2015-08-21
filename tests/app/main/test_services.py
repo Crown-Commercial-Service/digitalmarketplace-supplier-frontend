@@ -886,7 +886,7 @@ class TestShowDraftService(BaseApplicationTest):
         res = self.client.get('/suppliers/submission/services/1')
 
         assert_in(u'1 optional question unanswered', res.get_data(as_text=True))
-        assert_in(u'<button class="button-save">Move to complete</button>',
+        assert_in(u'<button class="button-save">Mark as complete</button>',
                   res.get_data(as_text=True))
 
 
