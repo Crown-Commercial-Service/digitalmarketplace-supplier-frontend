@@ -525,9 +525,10 @@ class TestSendClarificationQuestionEmail(BaseApplicationTest):
             in self.strip_all_whitespace(response.get_data(as_text=True))
         )
 
+    @mock.patch('dmutils.s3.S3')
     @mock.patch('app.main.views.frameworks.data_api_client')
     @mock.patch('app.main.views.frameworks.send_email')
-    def test_should_create_audit_event(self, send_email, data_api_client):
+    def test_should_create_audit_event(self, send_email, data_api_client, s3):
         clarification_question = 'This is a clarification question'
         response = self._send_email(clarification_question)
 
