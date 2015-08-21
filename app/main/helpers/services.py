@@ -110,6 +110,9 @@ def upload_draft_documents(service, request_files, section):
     if errors:
         return None, errors
 
+    if len(files) == 0:
+        return {}, {}
+
     uploader = s3.S3(current_app.config['DM_G7_DRAFT_DOCUMENTS_BUCKET'])
 
     for field, contents in files.items():
