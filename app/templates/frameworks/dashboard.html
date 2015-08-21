@@ -50,7 +50,7 @@
         Deadline for submissions<br />
         3pm <abbr title="British Standard Time">BST</abbr>, 6 October 2015
       </h2>
-      {% if not declaration_made and counts.complete %}
+      {% if not declaration_status == 'complete' and counts.complete %}
         <div class="submission-status-bad">
           <p class="big-number">
             0
@@ -77,10 +77,10 @@
           <div class="grid-row">
             <div class="column-two-thirds">
               <a class="browse-list-item-link" href="{{ url_for('.framework_supplier_declaration') }}">
-                {% if declaration_made %}
-                  <span>Edit supplier declaration</span>
-                {% else %}
+                {% if declaration_status == 'unstarted' %}
                   <span>Make supplier declaration</span>
+                {% else %}
+                  <span>Edit supplier declaration</span>
                 {% endif %}
               </a>
               <p class="browse-list-item-body">
@@ -89,19 +89,31 @@
               </p>
             </div>
             <div class="column-one-third">
-              {% if not declaration_made and not counts.complete %}
+              {% if declaration_status == 'unstarted' and not counts.complete %}
                 <div class="framework-section-status-neutral">
                   <p>
                     You haven't made the supplier declaration
                   </p>
                 </div>
-              {% elif not declaration_made and counts.complete %}
+              {% elif declaration_status == 'started' and not counts.complete %}
+                <div class="framework-section-status-neutral">
+                  <p>
+                    You have started making the supplier declaration, but it is not yet finished
+                  </p>
+                </div>
+              {% elif declaration_status == 'unstarted' and counts.complete %}
                 <div class="framework-section-status-bad">
                   <p>
                     You must make the supplier declaration before any services are eligible for submission
                   </p>
                 </div>
-              {% elif declaration_made %}
+              {% elif declaration_status == 'started' and counts.complete %}
+                <div class="framework-section-status-bad">
+                  <p>
+                    You must finish making the supplier declaration before any services are eligible for submission
+                  </p>
+                </div>
+              {% elif declaration_status == 'complete' %}
                 <div class="framework-section-status-good">
                   <p>
                     All services marked as complete will be automatically submitted at 3pm BST, 6 October
@@ -135,7 +147,7 @@
                     {{ counts.draft }}
                   </div>
                   Draft<br>{{ 'service' if counts.draft == 1 else 'services' }}
-                  {% if counts.draft and declaration_made %}
+                  {% if counts.draft and declaration_status == 'complete' %}
                     <p class="big-number-hint">
                       {{ 'This' if counts.draft == 1 else 'These' }}
                       will not be submitted

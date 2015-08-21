@@ -144,6 +144,7 @@ def get_error_messages(content, answers, page):
 
     return ImmutableOrderedMultiDict(errors_map)
 
+
 def get_first_question_index(content, page):
     questions_so_far = 0
     for i in range(0, page-1):

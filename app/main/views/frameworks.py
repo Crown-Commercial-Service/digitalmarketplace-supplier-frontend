@@ -21,6 +21,7 @@ from ..helpers.frameworks import register_interest_in_framework
 
 
 CLARIFICATION_QUESTION_NAME = 'clarification_question'
+ONE_REQUIRED_QUESTION_FROM_EACH_PAGE = ['PR1', 'SQ1-2a', 'SQ2-1abcd', 'SQ2-2a']
 
 
 @main.route('/frameworks/g-cloud-7', methods=['GET'])
@@ -35,15 +36,7 @@ def framework_dashboard():
         abort(e.status_code)
 
     drafts, complete_drafts = get_drafts(data_api_client, current_user.supplier_id, 'g-cloud-7')
-
-    try:
-        declaration_made = bool(data_api_client.get_selection_answers(
-            current_user.supplier_id, 'g-cloud-7'))
-    except APIError as e:
-        if e.status_code == 404:
-            declaration_made = False
-        else:
-            abort(e.status_code)
+    declaration_status = _get_declaration_status()
 
     return render_template(
         "frameworks/dashboard.html",
@@ -51,7 +44,7 @@ def framework_dashboard():
             "draft": len(drafts),
             "complete": len(complete_drafts),
         },
-        declaration_made=declaration_made,
+        declaration_status=declaration_status,
         **template_data
     ), 200
 
@@ -100,17 +93,27 @@ def framework_supplier_declaration():
         abort(404)
     is_last_page = page == len(content.sections)
 
+    try:
+        response = data_api_client.get_selection_answers(
+            current_user.supplier_id, 'g-cloud-7')
+        latest_answers = response['selectionAnswers']['questionAnswers']
+    except APIError as e:
+        if e.status_code != 404:
+            abort(e.status_code)
+        latest_answers = {}
+
     if request.method == 'POST':
         answers = content.get_all_data(request.form)
         errors = get_error_messages(content, answers, page)
         if len(errors) > 0:
             status_code = 400
         else:
+            latest_answers.update(answers)
             try:
                 data_api_client.answer_selection_questions(
                     current_user.supplier_id,
                     'g-cloud-7',
-                    answers,
+                    latest_answers,
                     current_user.email_address
                 )
                 flash('supplier_declaration_saved')
@@ -121,14 +124,7 @@ def framework_supplier_declaration():
             except APIError as e:
                 abort(e.status_code)
     else:
-        try:
-            response = data_api_client.get_selection_answers(
-                current_user.supplier_id, 'g-cloud-7')
-            answers = response['selectionAnswers']['questionAnswers']
-        except APIError as e:
-            if e.status_code != 404:
-                abort(e.status_code)
-            answers = {}
+        answers = latest_answers
         errors = {}
 
     return render_template(
@@ -220,3 +216,22 @@ def _framework_updates_page(error_message=None):
         error_message=error_message,
         **template_data
     ), status_code
+
+
+def _get_declaration_status():
+    try:
+        answers = data_api_client.get_selection_answers(
+            current_user.supplier_id, 'g-cloud-7'
+        )['selectionAnswers']['questionAnswers']
+    except APIError as e:
+        if e.status_code == 404:
+            return 'unstarted'
+        else:
+            abort(e.status_code)
+
+    if not answers:
+        return 'unstarted'
+    elif all(keys in answers for keys in ONE_REQUIRED_QUESTION_FROM_EACH_PAGE):
+        return 'complete'
+    else:
+        return 'started'
