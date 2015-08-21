@@ -44,20 +44,24 @@
       ) }}
     </p>
   {% endif %}
-  {% if service_data.status == 'submitted' %}
+  {% if service_data.status == 'submitted' and declaration_made %}
     <span class="service-status-published">This service is complete and will be automatically submitted at 3pm&nbsp;BST, 6 October</span>
-  {% elif unanswered_required == 0 %}
-    <form action="{{ url_for('.complete_draft_service', service_id=service_id) }}" method="POST">
-      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
-      {% with type = "save", label = "Move to complete" %}
-        {% include "toolkit/button.html" %}
-      {% endwith %}
-    </form>
-    <p class="last-edited move-to-complete-hint">
-      You can still edit services once they're complete.
-    </p>
-  {% else %}
-    <p class="move-to-complete-hint">When you have added all the required information, you can move the service to complete.</p>
+  {% endif %}
+  {% if service_data.status == 'not-submitted' and unanswered_required == 0 %}
+    {% include "partials/complete_service.html" %}
+  {% elif unanswered_required > 0 %}
+    <p class="move-to-complete-hint">When you have added all the required information, you can mark the service as complete.</p>
+  {% endif %}
+</div>
+<div class="column-one-whole">
+  {% if service_data.status == 'submitted' and not declaration_made %}
+    {%
+      with
+      message = "This service will not be submitted at the deadline because the <a href=\"" + url_for('.framework_supplier_declaration') + "\">supplier&nbsp;declaration</a> hasn’t been made.",
+      type = "warning"
+    %}
+      {% include "toolkit/notification-banner.html" %}
+    {% endwith %}
   {% endif %}
 </div>
 {% endblock %}
@@ -90,6 +94,11 @@
         &nbsp;
       </div>
       <div class="column-one-third delete-draft-button">
+        {% if service_data.status == 'not-submitted' and unanswered_required == 0 %}
+          <div class="space-underneath">
+            {% include "partials/complete_service.html" %}
+          </div>
+        {% endif %}
         <form action="{{ url_for('.delete_draft_service', service_id=service_id ) }}" method="POST">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
           {% with type = "destructive", label = "Delete this service" %}
