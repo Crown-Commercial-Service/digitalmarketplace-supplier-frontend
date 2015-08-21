@@ -63,7 +63,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
 
             doc = html.fromstring(res.get_data(as_text=True))
             assert_equal(
-                len(doc.xpath('//p/strong[contains(text(), "You have made the declaration")]')),  # noqa
+                len(doc.xpath('//p[contains(text(), "You have made the declaration")]')),  # noqa
                 1)
 
     def test_declaration_status_when_started(self, data_api_client):
@@ -563,7 +563,7 @@ class TestG7ServicesList(BaseApplicationTest):
         res = self.client.get('/suppliers/frameworks/g-cloud-7/services')
 
         assert_true(u'Service can be moved to complete' not in res.get_data(as_text=True))
-        assert_in(u'4 questions unanswered', res.get_data(as_text=True))
+        assert_in(u'4 unanswered questions', res.get_data(as_text=True))
 
     def test_drafts_list_can_be_completed(self, count_unanswered, apiclient):
         with self.app.test_client():

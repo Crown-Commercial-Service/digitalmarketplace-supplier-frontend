@@ -18,7 +18,10 @@
 }
 
 .big-number {
-  @include bold-48;
+  @include bold-27;
+  @include inline-block;
+  padding-right: 1px;
+  padding-bottom: 10px;
 }
 
 .big-number-hint {
@@ -91,4 +94,9 @@
     @include core-19;
   }
 
+}
+
+.draft-service-count {
+  margin-top: $gutter/3;
+  color: $secondary-text-colour;
 }

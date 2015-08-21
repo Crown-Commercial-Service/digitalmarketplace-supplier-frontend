@@ -93,7 +93,7 @@
   {% call(draft) summary.list_table(
     complete_drafts,
     caption="Complete services",
-    empty_message="You haven’t completed any services yet.",
+    empty_message="You haven’t marked any services as complete yet.",
     field_headings=[
         "Service name",
         "Lot",
@@ -113,5 +113,7 @@
                          action=url_for('.copy_draft_service', service_id=draft.id)) }}
     {% endcall %}
   {% endcall %}
+
+  <a href="{{ url_for('.framework_dashboard') }}">Return to G-Cloud 7 application</a>
 
 {% endblock %}

@@ -35,16 +35,6 @@
       <h2>
         Deadline <strong>3pm <abbr title="British Standard Time">BST</abbr>, 6 October 2015</strong>
       </h2>
-      {% if not declaration_status == 'complete' and counts.complete %}
-
-      {% else %}
-        <p class="big-number">
-          {{ counts.complete }}
-        </p>
-        <p>
-          {{ 'service' if counts.complete == 1 else 'services' }} will be submitted
-        </p>
-      {% endif %}
     </aside>
   </div>
 
@@ -95,13 +85,14 @@
               {% elif declaration_status == 'started' and counts.complete %}
                 <div class="framework-section-status-bad">
                   <p>
-                    You must finish making the supplier declaration before any services are eligible for submission
+                    <strong>No services will be submitted because you haven’t finished making the
+                    supplier declaration</strong>
                   </p>
                 </div>
               {% elif declaration_status == 'complete' %}
-                <div class="framework-section-status-good">
+                <div class="framework-section-status-neutral">
                   <p>
-                    <strong>You have made the declaration</strong>
+                    You have made the declaration
                   </p>
                 </div>
               {% endif %}
@@ -117,31 +108,39 @@
               <a class="browse-list-item-link" href="{{ url_for('.framework_services') }}"><span>Add, edit and delete services</span></a>
             </div>
             <div class="column-one-third">
-              {% if counts.draft or counts.complete %}
-                <div class="submission-service-counts-column">
-                  <div class="big-number">
-                    {{ counts.complete }}
-                  </div>
-                  complete {{ 'service' if counts.complete == 1 else 'services' }}
-                </div>
-                <div class="submission-service-counts-column">
-                  <div class="big-number">
-                    {{ counts.draft }}
-                  </div>
-                  draft<br>{{ 'service' if counts.draft == 1 else 'services' }}
-                  {% if counts.draft and declaration_made %}
-                    <p class="big-number-hint">
-                      {{ 'This' if counts.draft == 1 else 'These' }}
-                      will not be submitted
-                    </p>
-                  {% endif %}
-                </div>
-              {% else %}
+
+              {% if not counts.complete and not counts.draft %}
                 <div class="framework-section-status-neutral">
                   <p>
-                    You haven't added any services
+                    You haven’t added any services
                   </p>
                 </div>
+              {% endif %}
+
+              {% if counts.draft and not counts.complete %}
+                <div class="framework-section-status-neutral">
+                  You have
+                  {{ counts.draft }} draft
+                  {{ 'service' if counts.draft == 1 else 'services' }}
+                  that won’t be submitted
+                </div>
+              {% endif %}
+
+              {% if counts.complete and not declaration_made %}
+                <div class="framework-section-status-neutral">
+                  You have added {{ counts.complete + counts.draft }} {{ 'service' if (counts.draft + counts.complete) == 1 else 'services' }}
+                </div>
+              {% endif %}
+
+              {% if counts.complete and declaration_made %}
+                <p>
+                  <strong><span class="big-number">{{ counts.complete }}</span> {{ 'service' if counts.complete == 1 else 'services' }} will be submitted</strong>
+                </p>
+                {% if counts.draft %}
+                  <p class="framework-section-status-neutral">
+                    {{ counts.draft }} draft {{ 'service' if counts.draft == 1 else 'services' }} won’t be submitted
+                  </p>
+                {% endif %}
               {% endif %}
             </div>
           </div>
