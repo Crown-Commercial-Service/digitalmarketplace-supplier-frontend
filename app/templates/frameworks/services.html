@@ -34,7 +34,7 @@
           {% if category == 'service_deleted' %}
             <strong>{{message.service_name}}</strong> was deleted
           {% elif category == 'service_copied' %}
-            <strong>{{message.service_name}}</strong> was cloned
+            <strong>{{message.service_name}}</strong> was copied
           {% elif category == 'service_completed' %}
             <strong>{{message.service_name}}</strong> was completed
           {% endif %}
@@ -84,7 +84,7 @@
         submission.unanswered_required_text(draft.unanswered_required, draft.unanswered_optional),
         submission.unanswered_optional_text(draft.unanswered_required, draft.unanswered_optional)
       )) }}
-      {{ summary.button(text="Clone service",
+      {{ summary.button(text="Make a copy",
                          action=url_for('.copy_draft_service', service_id=draft.id)) }}
     {% endcall %}
   {% endcall %}
@@ -93,7 +93,7 @@
   {% call(draft) summary.list_table(
     complete_drafts,
     caption="Complete services",
-    empty_message="You haven't completed any services yet.",
+    empty_message="You haven’t completed any services yet.",
     field_headings=[
         "Service name",
         "Lot",
@@ -109,7 +109,7 @@
       {{ summary.text(
         submission.unanswered_optional_text(draft.unanswered_required, draft.unanswered_optional)
       ) }}
-      {{ summary.button(text="Clone service",
+      {{ summary.button(text="Make a copy",
                          action=url_for('.copy_draft_service', service_id=draft.id)) }}
     {% endcall %}
   {% endcall %}
