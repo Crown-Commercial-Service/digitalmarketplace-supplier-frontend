@@ -356,6 +356,15 @@ def view_service_submission(service_id):
     if not is_service_associated_with_supplier(draft):
         abort(404)
 
+    try:
+        declaration_made = bool(data_api_client.get_selection_answers(
+            current_user.supplier_id, 'g-cloud-7'))
+    except APIError as e:
+        if e.status_code == 404:
+            declaration_made = False
+        else:
+            abort(e.status_code)
+
     draft['priceString'] = format_service_price(draft)
     content = new_service_content.get_builder().filter(draft)
 
@@ -373,6 +382,7 @@ def view_service_submission(service_id):
         unanswered_required=unanswered_required,
         unanswered_optional=unanswered_optional,
         delete_requested=delete_requested,
+        declaration_made=declaration_made,
         **main.config['BASE_TEMPLATE_DATA']), 200
 
 
