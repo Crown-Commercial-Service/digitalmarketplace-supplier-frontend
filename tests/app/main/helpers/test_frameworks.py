@@ -84,7 +84,7 @@ def test_error_if_required_field_is_missing():
     submission = FULL_G7_SUBMISSION.copy()
     del submission['SQ3-1i-i']
 
-    assert_equal(get_all_errors(content, submission, 4), {'SQ3-1i-i': 'answer_required'})
+    assert_equal(get_all_errors(content, submission), {'SQ3-1i-i': 'answer_required'})
 
 
 def test_error_if_required_text_field_is_empty():
@@ -92,7 +92,7 @@ def test_error_if_required_text_field_is_empty():
     submission = FULL_G7_SUBMISSION.copy()
     submission['SQ1-2b'] = ""
 
-    assert_equal(get_all_errors(content, submission, 2), {'SQ1-2b': 'answer_required'})
+    assert_equal(get_all_errors(content, submission), {'SQ1-2b': 'answer_required'})
 
 
 def test_no_error_if_optional_field_is_missing():
@@ -100,7 +100,7 @@ def test_no_error_if_optional_field_is_missing():
     submission = FULL_G7_SUBMISSION.copy()
     del submission['SQ1-1e']
 
-    assert_equal(get_all_errors(content, submission, 2), {})
+    assert_equal(get_all_errors(content, submission), {})
 
 
 def test_trading_status_details_error_depends_on_trading_status():
@@ -109,10 +109,10 @@ def test_trading_status_details_error_depends_on_trading_status():
     del submission['SQ1-1cii']
 
     submission['SQ1-1ci'] = "something"
-    assert_equal(get_all_errors(content, submission, 2), {})
+    assert_equal(get_all_errors(content, submission), {})
 
     submission['SQ1-1ci'] = "other (please specify)"
-    assert_equal(get_all_errors(content, submission, 2), {'SQ1-1cii': 'answer_required'})
+    assert_equal(get_all_errors(content, submission), {'SQ1-1cii': 'answer_required'})
 
 
 def test_trade_registers_details_error_depends_on_trade_registers():
@@ -121,10 +121,10 @@ def test_trade_registers_details_error_depends_on_trade_registers():
     del submission['SQ1-1i-ii']
 
     submission['SQ1-1i-i'] = False
-    assert_equal(get_all_errors(content, submission, 2), {})
+    assert_equal(get_all_errors(content, submission), {})
 
     submission['SQ1-1i-i'] = True
-    assert_equal(get_all_errors(content, submission, 2), {'SQ1-1i-ii': 'answer_required'})
+    assert_equal(get_all_errors(content, submission), {'SQ1-1i-ii': 'answer_required'})
 
 
 def test_licenced_details_error_depends_on_licenced():
@@ -133,10 +133,10 @@ def test_licenced_details_error_depends_on_licenced():
     del submission['SQ1-1j-ii']
 
     del submission['SQ1-1j-i']
-    assert_equal(get_all_errors(content, submission, 2), {})
+    assert_equal(get_all_errors(content, submission), {})
 
     submission['SQ1-1j-i'] = ["something"]
-    assert_equal(get_all_errors(content, submission, 2), {'SQ1-1j-ii': 'answer_required'})
+    assert_equal(get_all_errors(content, submission), {'SQ1-1j-ii': 'answer_required'})
 
 
 def test_no_error_if_no_tax_issues_and_no_details():
@@ -147,7 +147,7 @@ def test_no_error_if_no_tax_issues_and_no_details():
     submission['SQ4-1b'] = False
     del submission['SQ4-1c']
 
-    assert_equal(get_all_errors(content, submission, 4), {})
+    assert_equal(get_all_errors(content, submission), {})
 
 
 def test_error_if_tax_issues_and_no_details():
@@ -158,11 +158,11 @@ def test_error_if_tax_issues_and_no_details():
 
     submission['SQ4-1a'] = True
     submission['SQ4-1b'] = False
-    assert_equal(get_all_errors(content, submission, 4), {'SQ4-1c': 'answer_required'})
+    assert_equal(get_all_errors(content, submission), {'SQ4-1c': 'answer_required'})
 
     submission['SQ4-1a'] = False
     submission['SQ4-1b'] = True
-    assert_equal(get_all_errors(content, submission, 4), {'SQ4-1c': 'answer_required'})
+    assert_equal(get_all_errors(content, submission), {'SQ4-1c': 'answer_required'})
 
 
 def test_error_if_mitigation_factors_not_provided_when_required():
@@ -181,7 +181,7 @@ def test_error_if_mitigation_factors_not_provided_when_required():
             submission[other] = False
         submission[field] = True
 
-        assert_equal(get_all_errors(content, submission, 4), {'SQ3-1k': 'answer_required'})
+        assert_equal(get_all_errors(content, submission), {'SQ3-1k': 'answer_required'})
 
 
 def test_mitigation_factors_not_required():
@@ -196,7 +196,7 @@ def test_mitigation_factors_not_required():
     ]
     for field in dependent_fields:
         submission[field] = False
-    assert_equal(get_all_errors(content, submission, 4), {})
+    assert_equal(get_all_errors(content, submission), {})
 
 
 def test_fields_only_relevant_to_non_uk():
@@ -206,7 +206,7 @@ def test_fields_only_relevant_to_non_uk():
     submission['SQ5-2a'] = False
     del submission['SQ1-1i-i']
 
-    assert_equal(get_all_errors(content, submission, 2), {'SQ1-1i-i': 'answer_required'})
+    assert_equal(get_all_errors(content, submission), {'SQ1-1i-i': 'answer_required'})
 
 
 def test_invalid_vat_number_causes_error():
@@ -214,24 +214,24 @@ def test_invalid_vat_number_causes_error():
     submission = FULL_G7_SUBMISSION.copy()
 
     submission['SQ1-1h'] = 'invalid'
-    assert_equal(get_all_errors(content, submission, 2), {'SQ1-1h': 'invalid_format'})
+    assert_equal(get_all_errors(content, submission), {'SQ1-1h': 'invalid_format'})
 
 
 def test_character_limit_errors():
     cases = [
-        ("SQ1-1a", 5000, 2),
-        ("SQ1-1cii", 5000, 2),
-        ("SQ1-1d-i", 5000, 2),
-        ("SQ1-1d-ii", 5000, 2),
-        ("SQ1-1i-ii", 5000, 2),
-        ("SQ3-1k", 5000, 4),
+        ("SQ1-1a", 5000),
+        ("SQ1-1cii", 5000),
+        ("SQ1-1d-i", 5000),
+        ("SQ1-1d-ii", 5000),
+        ("SQ1-1i-ii", 5000),
+        ("SQ3-1k", 5000),
     ]
     content = declaration_content.get_builder()
     submission = FULL_G7_SUBMISSION.copy()
 
-    for field, limit, page in cases:
+    for field, limit in cases:
         submission[field] = "a" * (limit + 1)
-        assert_equal(get_all_errors(content, submission, page), {field: 'under_character_limit'})
+        assert_equal(get_all_errors(content, submission), {field: 'under_character_limit'})
 
         submission[field] = "a" * limit
-        assert_equal(get_all_errors(content, submission, page), {})
+        assert_equal(get_all_errors(content, submission), {})

@@ -6,7 +6,6 @@ from lxml import html
 from dmutils.apiclient import APIError
 from dmutils.audit import AuditTypes
 from dmutils.email import MandrillException
-from flask import render_template
 
 from ..helpers import BaseApplicationTest
 
@@ -245,8 +244,8 @@ class TestSupplierDeclaration(BaseApplicationTest):
 
             assert_equal(res.status_code, 400)
 
-    @mock.patch('app.main.views.frameworks.get_error_messages')
-    def test_post_with_validation_errors(self, get_error_messages, data_api_client):
+    @mock.patch('app.main.views.frameworks.get_error_messages_for_page')
+    def test_post_with_validation_errors(self, get_error_messages_for_page, data_api_client):
         """Test that answers are not saved if there are errors
 
         For unit tests of the validation see :mod:`tests.app.main.helpers.test_frameworks`
@@ -254,7 +253,7 @@ class TestSupplierDeclaration(BaseApplicationTest):
         with self.app.test_client():
             self.login()
 
-            get_error_messages.return_value = {'PR1': {'input_name': 'PR1', 'message': 'this is invalid'}}
+            get_error_messages_for_page.return_value = {'PR1': {'input_name': 'PR1', 'message': 'this is invalid'}}
 
             res = self.client.post(
                 '/suppliers/frameworks/g-cloud-7/declaration',

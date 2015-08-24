@@ -10,7 +10,7 @@ from dmutils.email import send_email, MandrillException
 from dmutils.formats import format_service_price
 
 from ...main import main, declaration_content, new_service_content
-from ..helpers.frameworks import get_error_messages, get_first_question_index
+from ..helpers.frameworks import get_error_messages_for_page, get_first_question_index
 
 from ... import data_api_client
 from ..helpers.services import (
@@ -104,7 +104,7 @@ def framework_supplier_declaration():
 
     if request.method == 'POST':
         answers = content.get_all_data(request.form)
-        errors = get_error_messages(content, answers, page)
+        errors = get_error_messages_for_page(content, answers, page)
         if len(errors) > 0:
             status_code = 400
         else:

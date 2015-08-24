@@ -28,8 +28,8 @@ def register_interest_in_framework(client, framework_slug):
             data={'frameworkSlug': framework_slug})
 
 
-def get_required_fields(page_fields, answers):
-    required_fields = set(page_fields)
+def get_required_fields(all_fields, answers):
+    required_fields = set(all_fields)
     #  Remove optional fields
     optional_fields = set([
         "SQ1-1d-i", "SQ1-1d-ii",
@@ -39,17 +39,19 @@ def get_required_fields(page_fields, answers):
     ])
     required_fields -= optional_fields
     #  If you answered other to question 19 (trading status)
-    if 'SQ1-1ci' in page_fields and answers.get('SQ1-1ci') == 'other (please specify)':
+    if answers.get('SQ1-1ci') == 'other (please specify)':
         required_fields.add('SQ1-1cii')
+
     #  If you answered yes to question 27 (non-UK business registered in EU)
-    if 'SQ1-1i-i' in page_fields and answers.get('SQ1-1i-i', False):
+    if answers.get('SQ1-1i-i', False):
         required_fields.add('SQ1-1i-ii')
+
     #  If you answered 'licensed' or 'a member of a relevant organisation' in question 29
-    if 'SQ1-1j-i' in page_fields and len(answers.get('SQ1-1j-i', [])) > 0:
+    if len(answers.get('SQ1-1j-i', [])) > 0:
         required_fields.add('SQ1-1j-ii')
 
     # If you answered yes to either question 53 or 54 (tax returns)
-    if 'SQ4-1a' in page_fields and answers.get('SQ4-1a', False) or answers.get('SQ4-1b', False):
+    if answers.get('SQ4-1a', False) or answers.get('SQ4-1b', False):
         required_fields.add('SQ4-1c')
 
     # If you answered Yes to questions 39 - 51 (discretionary exclusion)
@@ -57,11 +59,11 @@ def get_required_fields(page_fields, answers):
         'SQ2-2a', 'SQ3-1a', 'SQ3-1b', 'SQ3-1c', 'SQ3-1d', 'SQ3-1e', 'SQ3-1f', 'SQ3-1g',
         'SQ3-1h-i', 'SQ3-1h-ii', 'SQ3-1i-i', 'SQ3-1i-ii', 'SQ3-1j'
     ]
-    if 'SQ3-1k' in page_fields and any(answers.get(field) for field in dependent_fields):
+    if any(answers.get(field) for field in dependent_fields):
         required_fields.add('SQ3-1k')
 
     # If you answered No to question 26 (established in the UK)
-    if 'SQ5-2a' in page_fields and not answers.get('SQ5-2a'):
+    if not answers.get('SQ5-2a'):
         required_fields.add('SQ1-1i-i')
         required_fields.add('SQ1-1j-i')
 
@@ -78,8 +80,8 @@ def get_fields_with_values(answers):
                if not isinstance(value, six.string_types) or len(value) > 0)
 
 
-def get_answer_required_errors(page_ids, answers):
-    required_fields = get_required_fields(page_ids, answers)
+def get_answer_required_errors(content, answers):
+    required_fields = get_required_fields(content, answers)
     fields_with_values = get_fields_with_values(answers)
     errors_map = {}
 
@@ -89,20 +91,20 @@ def get_answer_required_errors(page_ids, answers):
     return errors_map
 
 
-def get_character_limit_errors(section, answers):
+def get_character_limit_errors(content, answers):
     TEXT_FIELD_CHARACTER_LIMIT = 5000
     errors_map = {}
-    for question_id in section.get_question_ids():
-        if section.get_question(question_id).get('type') in ['text', 'textbox_large']:
+    for question_id in get_all_fields(content):
+        if content.get_question(question_id).get('type') in ['text', 'textbox_large']:
             if len(answers.get(question_id, "")) > TEXT_FIELD_CHARACTER_LIMIT:
                 errors_map[question_id] = "under_character_limit"
 
     return errors_map
 
 
-def get_formatting_errors(page_ids, answers):
+def get_formatting_errors(answers):
     errors_map = {}
-    if 'SQ1-1h' in page_ids and not re.match(r'^(\S{9}|\S{12})$', answers.get('SQ1-1h', '')):
+    if not re.match(r'^(\S{9}|\S{12})$', answers.get('SQ1-1h', '')):
         errors_map['SQ1-1h'] = 'invalid_format'
 
     return errors_map
@@ -119,19 +121,19 @@ def get_error_message(content, question_id, message_key):
         message_key, 'There was a problem with the answer to this question')
 
 
-def get_all_errors(content, answers, page):
-    page_ids = content.sections[page-1].get_question_ids()
+def get_all_errors(content, answers):
+    all_fields = set(get_all_fields(content))
     errors_map = {}
 
-    errors_map.update(get_answer_required_errors(page_ids, answers))
-    errors_map.update(get_character_limit_errors(content.sections[page-1], answers))
-    errors_map.update(get_formatting_errors(page_ids, answers))
+    errors_map.update(get_answer_required_errors(all_fields, answers))
+    errors_map.update(get_character_limit_errors(content, answers))
+    errors_map.update(get_formatting_errors(answers))
 
     return errors_map
 
 
-def get_error_messages(content, answers, page):
-    raw_errors_map = get_all_errors(content, answers, page)
+def get_error_messages(content, answers):
+    raw_errors_map = get_all_errors(content, answers)
     errors_map = list()
     for question_number, question_id in enumerate(get_all_fields(content)):
         if question_id in raw_errors_map:
@@ -142,7 +144,14 @@ def get_error_messages(content, answers, page):
                 'message': validation_message,
             }))
 
-    return ImmutableOrderedMultiDict(errors_map)
+    return errors_map
+
+
+def get_error_messages_for_page(content, answers, page):
+    all_errors = get_error_messages(content, answers)
+    page_ids = content.sections[page-1].get_question_ids()
+    page_errors = ImmutableOrderedMultiDict(filter(lambda err: err[0] in page_ids, all_errors))
+    return page_errors
 
 
 def get_first_question_index(content, page):
