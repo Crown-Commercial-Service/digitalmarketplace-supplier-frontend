@@ -26,20 +26,6 @@
 
 {% block main_content %}
 
-{% with messages = get_flashed_messages() %}
-  {% if messages %}
-    {% for message in messages %}
-      {% if message == 'supplier_declaration_saved' %}
-      <div class="banner-success-without-action">
-        <p class="banner-message">
-          Updates to your supplier declaration so far have been saved
-        </p>
-      </div>
-      {% endif %}
-    {% endfor %}
-  {% endif %}
-{% endwith %}
-
   {% if errors %}
     {% with errors = errors.values() %}
       {% include 'toolkit/forms/validation.html' %}

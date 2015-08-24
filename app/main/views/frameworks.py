@@ -116,7 +116,6 @@ def framework_supplier_declaration():
                     latest_answers,
                     current_user.email_address
                 )
-                flash('supplier_declaration_saved')
                 if is_last_page:
                     return redirect(url_for('.framework_dashboard'))
                 else:
@@ -231,7 +230,7 @@ def _get_declaration_status():
 
     if not answers:
         return 'unstarted'
-    elif all(key in answers for key in ONE_REQUIRED_QUESTION_FROM_EACH_PAGE):
+    elif all(keys in answers for keys in ONE_REQUIRED_QUESTION_FROM_EACH_PAGE):
         return 'complete'
     else:
         return 'started'
