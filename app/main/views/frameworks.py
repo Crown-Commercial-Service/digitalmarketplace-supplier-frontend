@@ -10,7 +10,8 @@ from dmutils.email import send_email, MandrillException
 from dmutils.formats import format_service_price
 
 from ...main import main, declaration_content, new_service_content
-from ..helpers.frameworks import get_error_messages_for_page, get_first_question_index
+from ..helpers.frameworks import get_error_messages_for_page, get_first_question_index, \
+    get_error_messages
 
 from ... import data_api_client
 from ..helpers.services import (
@@ -21,7 +22,6 @@ from ..helpers.frameworks import register_interest_in_framework
 
 
 CLARIFICATION_QUESTION_NAME = 'clarification_question'
-ONE_REQUIRED_QUESTION_FROM_EACH_PAGE = ['PR1', 'SQ1-2a', 'SQ2-1abcd', 'SQ2-2a']
 
 
 @main.route('/frameworks/g-cloud-7', methods=['GET'])
@@ -109,6 +109,10 @@ def framework_supplier_declaration():
             status_code = 400
         else:
             latest_answers.update(answers)
+            if get_error_messages(content, latest_answers):
+                latest_answers.update({"status":"started"})
+            else:
+                latest_answers.update({"status":"complete"})
             try:
                 data_api_client.answer_selection_questions(
                     current_user.supplier_id,
@@ -230,7 +234,5 @@ def _get_declaration_status():
 
     if not answers:
         return 'unstarted'
-    elif all(keys in answers for keys in ONE_REQUIRED_QUESTION_FROM_EACH_PAGE):
-        return 'complete'
     else:
-        return 'started'
+        return answers.get('status', 'unstarted')
