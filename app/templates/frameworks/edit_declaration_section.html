@@ -76,11 +76,15 @@
     {% if is_last_page %}
       {%
         with
-        label="Submit",
+        label="Make declaration",
         type="save"
       %}
         {% include "toolkit/button.html" %}
       {% endwith %}
+      <p class="last-edited move-to-complete-hint">
+        You can edit the declaration until the application deadline.
+      </p>
+    
     {% else %}
       {%
         with

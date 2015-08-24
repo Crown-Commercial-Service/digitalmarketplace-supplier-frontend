@@ -231,7 +231,7 @@ def _get_declaration_status():
 
     if not answers:
         return 'unstarted'
-    elif all(keys in answers for keys in ONE_REQUIRED_QUESTION_FROM_EACH_PAGE):
+    elif all(key in answers for key in ONE_REQUIRED_QUESTION_FROM_EACH_PAGE):
         return 'complete'
     else:
         return 'started'
