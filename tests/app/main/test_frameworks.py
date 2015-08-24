@@ -75,6 +75,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
             del submission['SQ2-1e']
             del submission['SQ2-1f']
             del submission['SQ2-1ghijklmn']
+            submission.update({"status": "started"})
 
             data_api_client.get_selection_answers.return_value = \
                 {"selectionAnswers":
@@ -105,6 +106,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
 
 
 FULL_G7_SUBMISSION = {
+    "status": "complete",
     "PR1": "true",
     "PR2": "true",
     "PR3": "true",
@@ -190,7 +192,7 @@ class TestSupplierDeclaration(BaseApplicationTest):
                 APIError(response)
 
             res = self.client.get(
-                '/suppliers/frameworks/g-cloud-7/declaration')
+                '/suppliers/frameworks/g-cloud-7/declaration/g_cloud_7_essentials')
 
             assert_equal(res.status_code, 200)
             doc = html.fromstring(res.get_data(as_text=True))
@@ -206,13 +208,14 @@ class TestSupplierDeclaration(BaseApplicationTest):
             data_api_client.get_selection_answers.return_value = {
                 "selectionAnswers": {
                     "questionAnswers": {
+                        "status": "started",
                         "PR1": False,
                     }
                 }
             }
 
             res = self.client.get(
-                '/suppliers/frameworks/g-cloud-7/declaration')
+                '/suppliers/frameworks/g-cloud-7/declaration/g_cloud_7_essentials')
 
             assert_equal(res.status_code, 200)
             doc = html.fromstring(res.get_data(as_text=True))
@@ -222,8 +225,13 @@ class TestSupplierDeclaration(BaseApplicationTest):
     def test_post_valid_data(self, data_api_client):
         with self.app.test_client():
             self.login()
+            data_api_client.get_selection_answers.return_value = {
+                "selectionAnswers": {
+                    "questionAnswers": {"status": "started"}
+                }
+            }
             res = self.client.post(
-                '/suppliers/frameworks/g-cloud-7/declaration',
+                '/suppliers/frameworks/g-cloud-7/declaration/g_cloud_7_essentials',
                 data=FULL_G7_SUBMISSION)
 
             assert_equal(res.status_code, 302)
@@ -232,14 +240,18 @@ class TestSupplierDeclaration(BaseApplicationTest):
     def test_post_valid_data_with_api_failure(self, data_api_client):
         with self.app.test_client():
             self.login()
-
             response = Mock()
             response.status_code = 400
+            data_api_client.get_selection_answers.return_value = {
+                "selectionAnswers": {
+                    "questionAnswers": {"status": "started"}
+                }
+            }
             data_api_client.answer_selection_questions.side_effect = \
                 APIError(response)
 
             res = self.client.post(
-                '/suppliers/frameworks/g-cloud-7/declaration',
+                '/suppliers/frameworks/g-cloud-7/declaration/g_cloud_7_essentials',
                 data=FULL_G7_SUBMISSION)
 
             assert_equal(res.status_code, 400)
@@ -256,7 +268,7 @@ class TestSupplierDeclaration(BaseApplicationTest):
             get_error_messages_for_page.return_value = {'PR1': {'input_name': 'PR1', 'message': 'this is invalid'}}
 
             res = self.client.post(
-                '/suppliers/frameworks/g-cloud-7/declaration',
+                '/suppliers/frameworks/g-cloud-7/declaration/g_cloud_7_essentials',
                 data=FULL_G7_SUBMISSION)
 
             assert_equal(res.status_code, 400)

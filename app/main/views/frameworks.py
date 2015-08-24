@@ -76,22 +76,20 @@ def framework_services():
     ), 200
 
 
-@main.route('/frameworks/g-cloud-7/declaration',
+@main.route('/frameworks/g-cloud-7/declaration/<string:section_id>',
             methods=['GET', 'POST'])
 @login_required
 @flask_featureflags.is_active_feature('GCLOUD7_OPEN')
-def framework_supplier_declaration():
+def framework_supplier_declaration(section_id):
     template_data = main.config['BASE_TEMPLATE_DATA']
     content = declaration_content.get_builder()
     status_code = 200
 
-    try:
-        page = int(request.args.get('page', 1))
-    except ValueError:
+    section = content.get_section(section_id)
+    if section is None or not section.editable:
         abort(404)
-    if page > len(content.sections):
-        abort(404)
-    is_last_page = page == len(content.sections)
+
+    is_last_page = section_id == content.sections[-1]['id']
 
     try:
         response = data_api_client.get_selection_answers(
@@ -104,15 +102,15 @@ def framework_supplier_declaration():
 
     if request.method == 'POST':
         answers = content.get_all_data(request.form)
-        errors = get_error_messages_for_page(content, answers, page)
+        errors = get_error_messages_for_page(content, answers, section)
         if len(errors) > 0:
             status_code = 400
         else:
             latest_answers.update(answers)
             if get_error_messages(content, latest_answers):
-                latest_answers.update({"status":"started"})
+                latest_answers.update({"status": "started"})
             else:
-                latest_answers.update({"status":"complete"})
+                latest_answers.update({"status": "complete"})
             try:
                 data_api_client.answer_selection_questions(
                     current_user.supplier_id,
@@ -120,10 +118,12 @@ def framework_supplier_declaration():
                     latest_answers,
                     current_user.email_address
                 )
-                if is_last_page:
-                    return redirect(url_for('.framework_dashboard'))
+
+                next_section = content.get_next_editable_section_id(section_id)
+                if next_section:
+                    return redirect(url_for('.framework_supplier_declaration', section_id=next_section))
                 else:
-                    return redirect(url_for('.framework_supplier_declaration', page=page+1))
+                    return redirect(url_for('.framework_dashboard'))
             except APIError as e:
                 abort(e.status_code)
     else:
@@ -132,10 +132,10 @@ def framework_supplier_declaration():
 
     return render_template(
         "frameworks/edit_declaration_section.html",
-        section=declaration_content.get_builder().sections[page-1],
+        section=section,
         service_data=answers,
         is_last_page=is_last_page,
-        first_question_index=get_first_question_index(content, page),
+        first_question_index=get_first_question_index(content, section),
         errors=errors,
         **template_data
     ), status_code
