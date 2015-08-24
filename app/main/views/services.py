@@ -419,42 +419,35 @@ def update_section_submission(service_id, section_id):
     if section is None or not section.editable:
         abort(404)
 
-    posted_data = section.get_data(request.form)
-
+    errors = None
+    update_data = section.get_data(request.form)
     uploaded_documents, document_errors = upload_draft_documents(draft, request.files, section)
 
     if document_errors:
-        return render_template(
-            "services/edit_submission_section.html",
-            section=section,
-            service_data=posted_data,
-            service_id=service_id,
-            errors=get_section_error_messages(document_errors, draft['lot']),
-            **main.config['BASE_TEMPLATE_DATA']
-        )
+        errors = get_section_error_messages(document_errors, draft['lot'])
+    else:
+        update_data.update(uploaded_documents)
 
-    update_data = posted_data.copy()
-    update_data.update(uploaded_documents)
+        try:
+            data_api_client.update_draft_service(
+                service_id,
+                update_data,
+                current_user.email_address,
+                page_questions=section.get_field_names()
+            )
+        except HTTPError as e:
+            unformat_section_data(update_data)
+            errors = get_section_error_messages(e.message, draft['lot'])
 
-    try:
-        data_api_client.update_draft_service(
-            service_id,
-            update_data,
-            current_user.email_address,
-            page_questions=section.get_field_names()
-        )
-    except HTTPError as e:
-        unformat_section_data(update_data)
-        errors_map = get_section_error_messages(e.message, draft['lot'])
-        if not posted_data.get('serviceName', None):
-            posted_data['serviceName'] = draft.get('serviceName', '')
-        errors_map = get_section_error_messages(e.message, draft['lot'])
+    if errors:
+        if not update_data.get('serviceName', None):
+            update_data['serviceName'] = draft.get('serviceName', '')
         return render_template(
             "services/edit_submission_section.html",
             section=section,
             service_data=update_data,
             service_id=service_id,
-            errors=errors_map,
+            errors=errors,
             **main.config['BASE_TEMPLATE_DATA']
             )
 
