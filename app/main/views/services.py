@@ -266,17 +266,15 @@ def copy_draft_service(service_id):
         abort(404)
 
     try:
-        data_api_client.copy_draft_service(
+        draft_copy = data_api_client.copy_draft_service(
             service_id,
             current_user.email_address
-        )
+        )['services']
 
     except APIError as e:
         abort(e.status_code)
 
-    flash({'service_name': draft.get('serviceName')}, 'service_copied')
-
-    return redirect(url_for(".framework_services"))
+    return redirect(url_for(".edit_service_submission", service_id=draft_copy['id'], section_id='service_name'))
 
 
 @main.route('/submission/services/<string:service_id>/complete', methods=['POST'])
