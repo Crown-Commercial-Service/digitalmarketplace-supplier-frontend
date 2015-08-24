@@ -8,6 +8,7 @@ from ..helpers.services import (
     upload_draft_documents, get_service_attributes,
     get_draft_document_url, count_unanswered_questions
 )
+from ..helpers.frameworks import get_declaration_status
 from ... import data_api_client, flask_featureflags
 from dmutils.apiclient import APIError, HTTPError
 from dmutils.presenters import Presenters
@@ -356,15 +357,6 @@ def view_service_submission(service_id):
     if not is_service_associated_with_supplier(draft):
         abort(404)
 
-    try:
-        declaration_made = bool(data_api_client.get_selection_answers(
-            current_user.supplier_id, 'g-cloud-7'))
-    except APIError as e:
-        if e.status_code == 404:
-            declaration_made = False
-        else:
-            abort(e.status_code)
-
     draft['priceString'] = format_service_price(draft)
     content = new_service_content.get_builder().filter(draft)
 
@@ -382,7 +374,7 @@ def view_service_submission(service_id):
         unanswered_required=unanswered_required,
         unanswered_optional=unanswered_optional,
         delete_requested=delete_requested,
-        declaration_made=declaration_made,
+        declaration_status=get_declaration_status(),
         **main.config['BASE_TEMPLATE_DATA']), 200
 
 

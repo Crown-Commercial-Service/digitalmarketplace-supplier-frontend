@@ -25,15 +25,27 @@
   %}
     {% include "toolkit/breadcrumb.html" %}
   {% endwith %}
+  {% if service_data.status == 'submitted' and declaration_status != 'complete' %}
+    <div class="wrapper">
+      {%
+        with
+        message = 'You need to <a href="' + url_for('.framework_supplier_declaration', section_id='g_cloud_7_essentials') + '">make the supplier&nbsp;declaration</a> before this service can be submitted',
+        type = 'warning'
+      %}
+        {% include 'toolkit/notification-banner.html' %}
+      {% endwith %}
+    </div>
+  {% endif %}
 {% endblock %}
 
 {% block before_sections %}
+
 <div class="column-one-third align-with-heading">
   <p>
     <strong>Last edited</strong>
   </p>
   <p class="last-edited">
-    {{ last_edit.createdAt|datetimeformat }}<br />
+    {{ last_edit.createdAt|datetimeformat }}
     by {{ last_edit.userName }}
   </p>
   {% if unanswered_required or unanswered_optional %}
@@ -51,17 +63,6 @@
     {% include "partials/complete_service.html" %}
   {% elif unanswered_required > 0 %}
     <p class="move-to-complete-hint">When you have added all the required information, you can mark the service as complete.</p>
-  {% endif %}
-</div>
-<div class="column-one-whole">
-  {% if service_data.status == 'submitted' and not declaration_made %}
-    {%
-      with
-      message = "This service will not be submitted at the deadline because the <a href=\"" + url_for('.framework_supplier_declaration') + "\">supplier&nbsp;declaration</a> hasn’t been made.",
-      type = "warning"
-    %}
-      {% include "toolkit/notification-banner.html" %}
-    {% endwith %}
   {% endif %}
 </div>
 {% endblock %}

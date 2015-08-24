@@ -87,7 +87,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
 
             doc = html.fromstring(res.get_data(as_text=True))
             assert_equal(
-                len(doc.xpath('//p[contains(text(), "You have started making the supplier declaration, but it is not yet finished")]')),  # noqa
+                len(doc.xpath('//p[contains(text(), "You haven’t finished making the supplier declaration")]')),  # noqa
                 1)
 
     def test_declaration_status_when_not_complete(self, data_api_client):
@@ -100,7 +100,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
 
             doc = html.fromstring(res.get_data(as_text=True))
             assert_equal(
-                len(doc.xpath('//p[contains(text(), "You haven\'t made the supplier declaration")]')),
+                len(doc.xpath('//p[contains(text(), "You haven’t made the supplier declaration")]')),
                 1)
 
 

@@ -42,6 +42,18 @@ def framework_dashboard():
     return render_template(
         "frameworks/dashboard.html",
         counts={
+            "draft": 0,
+            "complete": 13,
+        },
+        declaration_status='complete',
+        **template_data
+    ), 200
+
+    #/#
+
+    return render_template(
+        "frameworks/dashboard.html",
+        counts={
             "draft": len(drafts),
             "complete": len(complete_drafts),
         },
@@ -69,20 +81,11 @@ def framework_services():
             'unanswered_optional': unanswered_optional,
         })
 
-    try:
-        declaration_made = bool(data_api_client.get_selection_answers(
-            current_user.supplier_id, 'g-cloud-7'))
-    except APIError as e:
-        if e.status_code == 404:
-            declaration_made = False
-        else:
-            abort(e.status_code)
-
     return render_template(
         "frameworks/services.html",
         complete_drafts=list(reversed(complete_drafts)),
         drafts=list(reversed(drafts)),
-        declaration_made=declaration_made,
+        declaration_status=get_declaration_status(),
         **template_data
     ), 200
 

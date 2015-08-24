@@ -20,151 +20,150 @@
 {% endblock %}
 
 {% block main_content %}
-  
-  <div class="grid-row">
-    <div class="column-two-thirds">
-      {% with
-         heading = "Apply to G-Cloud 7",
-         smaller = True,
-         with_breadcrumb = True
-      %}
-        {% include "toolkit/page-heading.html" %}
-      {% endwith %}
-    </div>
-    <aside role="complementary" class="column-one-third framework-application-status">
-      <h2>
-        Deadline <strong>3pm <abbr title="British Standard Time">BST</abbr>, 6 October 2015</strong>
-      </h2>
-    </aside>
-  </div>
 
-  <nav role="navigation" class="grid-row">
+  {% with
+     heading = "Apply to G-Cloud 7",
+     smaller = True,
+     with_breadcrumb = True
+  %}
+    {% include "toolkit/page-heading.html" %}
+  {% endwith %}
+
+  <aside role="complementary" class="framework-application-status">
+    Deadline <strong>3pm <abbr title="British Standard Time">BST</abbr>, 6 October 2015</strong>
+  </aside>
+
+  <nav role="navigation">
     <ul class="browse-list">
-      <div class="column-one-whole">
-        <li class="browse-list-item framework-application-section">
-          <div class="grid-row">
-            <div class="column-two-thirds">
-              {% if not declaration_made and counts.complete %}
-                <div class="framework-section-validation-bar">
-              {% endif %}
-              <a class="browse-list-item-link" href="{{ url_for('.framework_supplier_declaration', section_id='g_cloud_7_essentials') }}">
-                {% if declaration_status == 'unstarted' %}
-                  <span>Make supplier declaration</span>
-                {% else %}
-                  <span>Edit supplier declaration</span>
-                {% endif %}
-              </a>
-              <p class="browse-list-item-body">
-                Agree to the terms of the bid, provide supplier information and
-                confirm eligibility.
-              </p>
-              {% if not declaration_made and counts.complete %}
-                </div>
-              {% endif %}
-            </div>
-            <div class="column-one-third">
-              {% if declaration_status == 'unstarted' and not counts.complete %}
-                <div class="framework-section-status-neutral">
-                  <p>
-                    You haven't made the supplier declaration
-                  </p>
-                </div>
-              {% elif declaration_status == 'started' and not counts.complete %}
-                <div class="framework-section-status-neutral">
-                  <p>
-                    You have started making the supplier declaration, but it is not yet finished
-                  </p>
-                </div>
-              {% elif declaration_status == 'unstarted' and counts.complete %}
-                <div class="framework-section-status-bad">
-                  <p>
-                    <strong>No services will be submitted because you haven’t made the
-                    supplier declaration</strong>
-                  </p>
-                </div>
-              {% elif declaration_status == 'started' and counts.complete %}
-                <div class="framework-section-status-bad">
-                  <p>
-                    <strong>No services will be submitted because you haven’t finished making the
-                    supplier declaration</strong>
-                  </p>
-                </div>
-              {% elif declaration_status == 'complete' %}
-                <div class="framework-section-status-neutral">
-                  <p>
-                    You have made the declaration
-                  </p>
-                </div>
-              {% endif %}
-            </div>
-          </div>
-        </li>
-      </div>
-
-      <div class="column-one-whole">
-        <li class="browse-list-item framework-application-section">
-          <div class="grid-row">
-            <div class="column-two-thirds">
+      <li class="browse-list-item framework-application-section">
+        <div class="grid-row">
+          <div class="column-two-thirds">
+            {% if not counts.draft %}
+              <div class="framework-section-validation-bar-good">
+            {% endif %}
               <a class="browse-list-item-link" href="{{ url_for('.framework_services') }}"><span>Add, edit and delete services</span></a>
-            </div>
-            <div class="column-one-third">
-
-              {% if not counts.complete and not counts.draft %}
-                <div class="framework-section-status-neutral">
-                  <p>
-                    You haven’t added any services
-                  </p>
-                </div>
-              {% endif %}
-
-              {% if counts.draft and not counts.complete %}
-                <div class="framework-section-status-neutral">
-                  You have
-                  {{ counts.draft }} draft
-                  {{ 'service' if counts.draft == 1 else 'services' }}
-                  that won’t be submitted
-                </div>
-              {% endif %}
-
-              {% if counts.complete and not declaration_made %}
-                <div class="framework-section-status-neutral">
-                  You have added {{ counts.complete + counts.draft }} {{ 'service' if (counts.draft + counts.complete) == 1 else 'services' }}
-                </div>
-              {% endif %}
-
-              {% if counts.complete and declaration_made %}
-                <p>
-                  <strong><span class="big-number">{{ counts.complete }}</span> {{ 'service' if counts.complete == 1 else 'services' }} will be submitted</strong>
-                </p>
-                {% if counts.draft %}
-                  <p class="framework-section-status-neutral">
-                    {{ counts.draft }} draft {{ 'service' if counts.draft == 1 else 'services' }} won’t be submitted
-                  </p>
-                {% endif %}
-              {% endif %}
-            </div>
+            {% if not counts.draft %}
+              </div>
+            {% endif %}
           </div>
-        </li>
-      </div>
+          <div class="column-two-thirds">
 
-      <div class="column-one-whole">
-        <li class="browse-list-item framework-application-section">
-          <a class="browse-list-item-link" href="{{ url_for('.download_supplier_file', filepath='g-cloud-7-supplier-pack.zip') }}"><span>Download supplier pack (.zip)</span></a>
-          <p class="browse-list-item-body">
-            Read guidance and legal documentation.
-          </p>
-        </li>
-      </div>
+            {% if not counts.complete and not counts.draft %}
+              <div class="framework-section-status-neutral">
+                <p>
+                  You need to add and complete services
+                </p>
+              </div>
+            {% endif %}
 
-      <div class="column-one-whole">
-        <li class="browse-list-item framework-application-section">
-          <a class="browse-list-item-link" href="{{ url_for('.framework_updates') }}"><span>Read G-Cloud 7 updates and ask clarification questions</span></a>
-          <p class="browse-list-item-body">
-            View all published G-Cloud 7 communications.
-          </p>
-        </li>
-      </div>
+            {% if counts.draft and not counts.complete %}
+              <div class="framework-section-status-neutral">
+                You have
+                {{ counts.draft }} draft
+                {{ 'service' if counts.draft == 1 else 'services' }}
+                that won’t be submitted
+              </div>
+            {% endif %}
 
+            {% if counts.complete and declaration_status != 'complete' %}
+              <div class="framework-section-status-neutral">
+                You have {{ counts.complete }} complete and {{ counts.draft }} draft services
+              </div>
+            {% endif %}
+
+            {% if counts.complete and declaration_status == 'complete' %}
+              {% if not counts.draft %}
+                <div class="framework-section-status-good">
+              {% endif %}
+              <p>
+                <strong><span class="big-number">{{ counts.complete }}</span> complete
+                 {{ 'service' if counts.complete == 1 else 'services' }} will be submitted at the deadline</strong>
+              </p>
+              {% if not counts.draft %}
+                </div>
+              {% endif %}
+              {% if counts.draft %}
+                <p class="framework-section-status-neutral">
+                  {{ counts.draft }} draft {{ 'service' if counts.draft == 1 else 'services' }} won’t be submitted
+                </p>
+              {% endif %}
+            {% endif %}
+          </div>
+        </div>
+      </li>
+
+      <li class="browse-list-item framework-application-section">
+        {% if declaration_status != 'complete' and counts.complete %}
+          <div class="framework-section-validation-bar">
+        {% endif %}
+        <div class="grid-row">
+          <div class="column-two-thirds">
+            <a class="browse-list-item-link" href="{{ url_for('.framework_supplier_declaration', section_id='g_cloud_7_essentials') }}">
+              {% if declaration_status == 'unstarted' %}
+                <span>Make supplier declaration</span>
+              {% else %}
+                <span>Edit supplier declaration</span>
+              {% endif %}
+            </a>
+            <p class="browse-list-item-body">
+              Agree to the terms of the bid, provide supplier information and
+              confirm&nbsp;eligibility.
+            </p>
+            {% if declaration_status == 'unstarted' and not counts.complete %}
+              <div class="framework-section-status-neutral">
+                <p>
+                  You need to make the supplier declaration
+                </p>
+              </div>
+            {% elif declaration_status == 'started' and not counts.complete %}
+              <div class="framework-section-status-neutral">
+                <p>
+                  You need to complete the supplier declaration
+                </p>
+              </div>
+            {% elif declaration_status == 'unstarted' and counts.complete %}
+              <div class="framework-section-status-bad">
+                <p>
+                  <strong>No services will be submitted because you haven’t made the
+                  supplier declaration</strong>
+                </p>
+              </div>
+            {% elif declaration_status == 'started' and counts.complete %}
+              <div class="framework-section-status-bad">
+                <p>
+                  <strong>No services will be submitted because you haven’t finished making the
+                  supplier declaration</strong>
+                </p>
+              </div>
+            {% elif declaration_status == 'complete' %}
+              <div class="framework-section-status-good">
+                <p>
+                  <strong>You’ve made the declaration</strong>
+                </p>
+              </div>
+            {% endif %}
+          </div>
+        </div>
+        {% if declaration_status != 'complete' and counts.complete %}
+          </div>
+        {% endif %}
+      </li>
+
+      <li class="browse-list-item framework-application-section-last">
+        <div class="grid-row">
+          <div class="column-two-thirds">
+            <h2>About G-Cloud 7</h2>
+            <ul>
+              <li>
+                <a href="{{ url_for('.download_supplier_file', filepath='g-cloud-7-supplier-pack.zip') }}"><span>Download guidance and legal documentation (.zip)</span></a>
+              </li>
+              <li>
+                <a href="{{ url_for('.framework_updates') }}"><span>Read updates and ask clarification questions</span></a>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </li>
     </ul>
   </nav>
 

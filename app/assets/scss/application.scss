@@ -12,7 +12,7 @@ $path: "/suppliers/static/images/";
 
 @import "_reset.scss";
 
-#wrapper {
+#wrapper, .wrapper {
   @extend %site-width-container;
 }
 
