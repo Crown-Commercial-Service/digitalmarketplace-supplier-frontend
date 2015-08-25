@@ -1,11 +1,17 @@
 from flask import render_template
 from app.main import main
 from dmutils.apiclient import APIError
+from dmutils.s3 import S3ResponseError
 
 
 @main.app_errorhandler(APIError)
 def api_error_handler(e):
     return _render_error_page(e.status_code)
+
+
+@main.app_errorhandler(S3ResponseError)
+def s3_response_error_handler(e):
+    return _render_error_page(503)
 
 
 @main.app_errorhandler(404)

@@ -1,6 +1,6 @@
 import itertools
 
-from flask import render_template, request, abort, flash, redirect, url_for, escape, current_app
+from flask import render_template, request, abort, flash, redirect, url_for, current_app
 from flask_login import login_required, current_user
 
 from dmutils.apiclient import APIError
@@ -8,6 +8,7 @@ from dmutils.audit import AuditTypes
 from dmutils import flask_featureflags
 from dmutils.email import send_email, MandrillException
 from dmutils.formats import format_service_price
+from dmutils import s3
 
 from ...main import main, declaration_content, new_service_content
 from ..helpers.frameworks import get_error_messages_for_page, get_first_question_index, \
@@ -141,11 +142,11 @@ def framework_supplier_declaration(section_id):
     ), status_code
 
 
-@main.route('/frameworks/g-cloud-7/download-supplier-pack', methods=['GET', 'POST'])
+@main.route('/frameworks/g-cloud-7/<path:filepath>', methods=['GET'])
 @login_required
 @flask_featureflags.is_active_feature('GCLOUD7_OPEN')
-def download_supplier_pack():
-    url = get_draft_document_url('g-cloud-7-supplier-pack.zip')
+def download_supplier_file(filepath):
+    url = get_draft_document_url(filepath)
     if not url:
         abort(404)
 
@@ -155,10 +156,42 @@ def download_supplier_pack():
 @main.route('/frameworks/g-cloud-7/updates', methods=['GET'])
 @login_required
 @flask_featureflags.is_active_feature('GCLOUD7_OPEN')
-def framework_updates():
+def framework_updates(error_message=None, default_textbox_value=None):
+
     current_app.logger.info("g7updates.viewed: user_id:%s supplier_id:%s",
                             current_user.email_address, current_user.supplier_id)
-    return _framework_updates_page()
+
+    template_data = main.config['BASE_TEMPLATE_DATA']
+
+    uploader = s3.S3(current_app.config['DM_G7_DRAFT_DOCUMENTS_BUCKET'])
+    file_list = uploader.list('g-cloud-7-updates/')
+
+    sections = [
+        {
+            'section': 'communications',
+            'heading': "G-Cloud 7 communications",
+            'empty_message': "No communications have been sent out",
+            'files': []
+        },
+        {
+            'section': 'clarifications',
+            'heading': "G-Cloud 7 clarification questions and answers",
+            'empty_message': "No clarification answers exist",
+            'files': []
+        }
+    ]
+
+    for section in sections:
+        section['files'] = [file for file in file_list if section['section'] == file['path'].split('/')[1]]
+
+    return render_template(
+        "frameworks/updates.html",
+        clarification_question_name=CLARIFICATION_QUESTION_NAME,
+        clarification_question_value=default_textbox_value,
+        error_message=error_message,
+        sections=sections,
+        **template_data
+    ), 200 if not error_message else 400
 
 
 @main.route('/frameworks/g-cloud-7/updates', methods=['POST'])
@@ -167,12 +200,15 @@ def framework_updates():
 def framework_updates_email_clarification_question():
 
     # Stripped input should not empty
-    clarification_question = escape(request.form.get(CLARIFICATION_QUESTION_NAME, '')).strip()
+    clarification_question = request.form.get(CLARIFICATION_QUESTION_NAME, '').strip()
 
     if not clarification_question:
-        return _framework_updates_page("Question cannot be empty")
+        return framework_updates("Question cannot be empty")
     elif len(clarification_question) > 5000:
-        return _framework_updates_page("Question cannot be longer than 5000 characters")
+        return framework_updates(
+            error_message="Question cannot be longer than 5000 characters",
+            default_textbox_value=clarification_question
+        )
 
     email_body = render_template(
         "emails/clarification_question.html",
@@ -205,17 +241,4 @@ def framework_updates_email_clarification_question():
         data={"question": clarification_question})
 
     flash('message_sent', 'success')
-    return _framework_updates_page()
-
-
-def _framework_updates_page(error_message=None):
-
-    template_data = main.config['BASE_TEMPLATE_DATA']
-    status_code = 200 if not error_message else 400
-
-    return render_template(
-        "frameworks/updates.html",
-        clarification_question_name=CLARIFICATION_QUESTION_NAME,
-        error_message=error_message,
-        **template_data
-    ), status_code
+    return framework_updates()

@@ -69,58 +69,29 @@
 
   <div class="grid-row">
     <div class="column-one-whole updates-document-tables">
-      {{ summary.heading("G-Cloud 7 communications") }}
-      {% call(item) summary.list_table(
-        [
-          {"date_uploaded": "Monday 1 November 2015", "document": "Example"},
-          {"date_uploaded": "Friday 20 October 2015", "document": "Example"},
-          {"date_uploaded": "Wednesday 17 November 2015", "document": "Example"},
-          {"date_uploaded": "Monday 15 November 2015", "document": "Example"},
-        ],
-        caption="G-Cloud 7 communications",
-        empty_message="No application information exists",
-        field_headings=[
-          "Date uploaded",
-          "Document"
-        ],
-        field_headings_visible=False
-      ) %}
-        {% call summary.row() %}
-          {{ summary.field_name(item.date_uploaded) }}
-          {% call summary.field() %}
-             <a href="#" class="document-link-with-icon">
-              <span class='document-icon'>pdf<span> document:</span></span>
-              {{ item.document }}
-            </a>
+      {% for section in sections %}
+        {{ summary.heading(section.heading) }}
+        {% call(item) summary.list_table(
+          section.files,
+          caption=section.heading,
+          empty_message=section.empty_message,
+          field_headings=[
+            "Last modified",
+            "File"
+          ],
+          field_headings_visible=False
+        ) %}
+          {% call summary.row() %}
+            {{ summary.field_name(item.last_modified|dateformat) }}
+            {% call summary.field() %}
+               <a href="{{ url_for('.download_supplier_file', filepath=item.path) }}" class="document-link-with-icon">
+                <span class='document-icon'>{{ item.ext }}<span> document:</span></span>
+                {{ item.filename }}
+              </a>
+            {% endcall %}
           {% endcall %}
         {% endcall %}
-      {% endcall %}
-
-      {{ summary.heading("G-Cloud 7 clarification questions and answers") }}
-      {% call(item) summary.list_table(
-        [
-          {"date_uploaded": "Tuesday 20 September 2015", "document": "Clarification questions and answers"},
-          {"date_uploaded": "Tuesday 13 September 2015", "document": "Clarification questions and answers"},
-          {"date_uploaded": "Tuesday 6 September 2015", "document": "Clarification questions and answers"},
-        ],
-        caption="G-Cloud 7 clarification questions and answers",
-        empty_message="No clarification questions exist",
-        field_headings=[
-          "Date uploaded",
-          "Document"
-        ],
-        field_headings_visible=False
-      ) %}
-        {% call summary.row() %}
-          {{ summary.field_name(item.date_uploaded) }}
-          {% call summary.field() %}
-             <a href="#" class="document-link-with-icon">
-              <span class='document-icon'>odf<span> document:</span></span>
-              {{ item.document }}
-            </a>
-          {% endcall %}
-        {% endcall %}
-      {% endcall %}
+      {% endfor %}
     </div>
   </div>
 
@@ -132,7 +103,8 @@
         question = "Ask a G-Cloud 7 clarification question",
         name = clarification_question_name,
         hint = "You should ask any questions you have about G-Cloud 7 here. The Crown Commercial Service will not respond to you individually. All answers to clarification questions will be published here regularly. (Maximum 5000 characters per question.)",
-        error = error_message
+        error = error_message,
+        value = clarification_question_value
       %}
         {% include "toolkit/forms/textbox.html" %}
       {% endwith %}
@@ -143,6 +115,9 @@
       %}
         {% include "toolkit/button.html" %}
       {% endwith %}
+
+      <a href="{{ url_for('.framework_dashboard') }}">Return to G-Cloud 7 application</a>
+
   </form>
 
 {% endblock %}
