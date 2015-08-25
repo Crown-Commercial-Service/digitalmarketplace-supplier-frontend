@@ -68,10 +68,20 @@ def framework_services():
             'unanswered_optional': unanswered_optional,
         })
 
+    try:
+        declaration_made = bool(data_api_client.get_selection_answers(
+            current_user.supplier_id, 'g-cloud-7'))
+    except APIError as e:
+        if e.status_code == 404:
+            declaration_made = False
+        else:
+            abort(e.status_code)
+
     return render_template(
         "frameworks/services.html",
         complete_drafts=list(reversed(complete_drafts)),
         drafts=list(reversed(drafts)),
+        declaration_made=declaration_made,
         **template_data
     ), 200
 

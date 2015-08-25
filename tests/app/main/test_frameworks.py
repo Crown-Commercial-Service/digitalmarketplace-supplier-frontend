@@ -61,6 +61,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
             res = self.client.get("/suppliers/frameworks/g-cloud-7")
 
             doc = html.fromstring(res.get_data(as_text=True))
+            print(res.get_data(as_text=True))
             assert_equal(
                 len(doc.xpath('//p[contains(text(), "All services marked as complete will be automatically submitted at 3pm BST, 6 October")]')),  # noqa
                 1)
@@ -346,7 +347,7 @@ class TestSendClarificationQuestionEmail(BaseApplicationTest):
 
         assert_equal(response.status_code, 200)
         assert_true(
-            self.strip_all_whitespace('<p class="banner-message">Your clarification message has been sent.</p>')
+            self.strip_all_whitespace('<p class="banner-message">Your clarification question has been sent. Answers to all clarification questions will be published on this page.</p>')  # noqa
             in self.strip_all_whitespace(response.get_data(as_text=True))
         )
 
@@ -412,7 +413,7 @@ class TestG7ServicesList(BaseApplicationTest):
 
         res = self.client.get('/suppliers/frameworks/g-cloud-7/services')
 
-        assert_in(u'Service can be moved to complete', res.get_data(as_text=True))
+        assert_in(u'Service can be marked as complete', res.get_data(as_text=True))
         assert_in(u'1 optional question unanswered', res.get_data(as_text=True))
 
     def test_drafts_list_completed(self, count_unanswered, apiclient):
