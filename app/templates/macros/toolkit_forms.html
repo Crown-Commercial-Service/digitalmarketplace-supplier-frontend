@@ -35,7 +35,6 @@
     hint=(question_content.hint or '')|markdown,
     values=service_data[question_content.id],
     id=question_content.id,
-    hint=question_content.hint,
     error=errors.get(question_content.id)['message']
   %}
     {% include "toolkit/forms/list-entry.html" %}
