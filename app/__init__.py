@@ -1,6 +1,6 @@
 import re
 
-from datetime import timedelta
+from datetime import timedelta, datetime
 from flask import Flask, request, redirect, session, Markup
 from flask_login import LoginManager
 from flask_wtf.csrf import CsrfProtect
@@ -17,6 +17,12 @@ data_api_client = apiclient.DataAPIClient()
 login_manager = LoginManager()
 feature_flags = flask_featureflags.FeatureFlag()
 csrf = CsrfProtect()
+
+
+def parse_document_upload_time(data):
+    match = re.search("(\d{4}-\d{2}-\d{2}-\d{2}\d{2})\..{2,3}$", data)
+    if match:
+        return datetime.strptime(match.group(1), "%Y-%m-%d-%H%M")
 
 
 def create_app(config_name):
@@ -58,6 +64,8 @@ def create_app(config_name):
     @application.template_filter('markdown')
     def markdown_filter(data):
         return Markup(markdown(data))
+
+    application.add_template_filter(parse_document_upload_time)
 
     return application
 
