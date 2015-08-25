@@ -3,7 +3,6 @@ from flask import render_template, request, redirect, url_for, abort, flash
 
 from ...main import main, existing_service_content, new_service_content
 from ..helpers.services import (
-    unformat_section_data,
     get_section_error_messages,
     is_service_modifiable, is_service_associated_with_supplier,
     upload_draft_documents, get_service_attributes,
@@ -154,7 +153,7 @@ def update_section(service_id, section_id):
             current_user.email_address,
             "supplier app")
     except HTTPError as e:
-        errors_map = get_section_error_messages(e.message, service['lot'])
+        errors_map = get_section_error_messages(new_service_content, e.message, service['lot'])
         if not posted_data.get('serviceName', None):
             posted_data['serviceName'] = service.get('serviceName', '')
         return render_template(
@@ -394,7 +393,7 @@ def edit_service_submission(service_id, section_id):
     if section is None or not section.editable:
         abort(404)
 
-    unformat_section_data(draft)
+    draft = section.unformat_data(draft)
 
     return render_template(
         "services/edit_submission_section.html",
@@ -427,7 +426,7 @@ def update_section_submission(service_id, section_id):
     uploaded_documents, document_errors = upload_draft_documents(draft, request.files, section)
 
     if document_errors:
-        errors = get_section_error_messages(document_errors, draft['lot'])
+        errors = get_section_error_messages(new_service_content, document_errors, draft['lot'])
     else:
         update_data.update(uploaded_documents)
 
@@ -439,8 +438,8 @@ def update_section_submission(service_id, section_id):
                 page_questions=section.get_field_names()
             )
         except HTTPError as e:
-            unformat_section_data(update_data)
-            errors = get_section_error_messages(e.message, draft['lot'])
+            update_data = section.unformat_data(update_data)
+            errors = get_section_error_messages(new_service_content, e.message, draft['lot'])
 
     if errors:
         if not update_data.get('serviceName', None):

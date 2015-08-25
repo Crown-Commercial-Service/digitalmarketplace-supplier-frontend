@@ -1,3 +1,5 @@
+import re
+from datetime import datetime
 from flask import abort, current_app, url_for
 from flask_login import current_user
 
@@ -6,8 +8,6 @@ from dmutils.apiclient import APIError
 from dmutils.documents import filter_empty_files, validate_documents, upload_document
 from dmutils.service_attribute import Attribute
 from dmutils.content_loader import PRICE_FIELDS
-
-from ...main import new_service_content
 
 try:
     import urlparse
@@ -80,17 +80,6 @@ def is_service_modifiable(service):
     return service.get('status') != 'disabled'
 
 
-def unformat_section_data(section_data):
-    """Unpacks assurance questions
-    """
-    unformatted_section_data = {}
-    for key in section_data:
-        if _has_assurance(key):
-            unformatted_section_data[key + '--assurance'] = section_data[key].get('assurance', '')
-            unformatted_section_data[key] = section_data[key]['value']
-    section_data.update(unformatted_section_data)
-
-
 def get_draft_document_url(document_path):
     uploader = s3.S3(current_app.config['DM_G7_DRAFT_DOCUMENTS_BUCKET'])
 
@@ -130,7 +119,7 @@ def upload_draft_documents(service, request_files, section):
     return files, errors
 
 
-def get_section_error_messages(errors, lot):
+def get_section_error_messages(service_content, errors, lot):
     errors_map = {}
     for error, message_key in errors.items():
         if error == '_form':
@@ -141,11 +130,11 @@ def get_section_error_messages(errors, lot):
             elif error in PRICE_FIELDS:
                 message_key = _rewrite_pricing_error_key(error, message_key)
                 error = 'priceString'
-            validation_message = get_error_message(error, message_key, new_service_content)
-            question_id = new_service_content.get_question(error)['id']
+            validation_message = get_error_message(error, message_key, service_content)
+            question_id = service_content.get_question(error)['id']
             errors_map[question_id] = {
                 'input_name': error,
-                'question': new_service_content.get_question(error)['question'],
+                'question': service_content.get_question(error)['question'],
                 'message': validation_message
             }
     return errors_map
@@ -187,19 +176,7 @@ def _filter_keys(data, keys):
     return {key: data[key] for key in key_set}
 
 
-def _is_pricing_type(key):
-    # TODO: move into dmutils.content_loader
-    """Return True if a given key is a pricing type"""
-    return _is_type(key, 'pricing')
-
-
-def _is_type(key, *types):
-    # TODO: move into dmutils.content_loader
-    """Return True if a given key is one of the provided types"""
-    return new_service_content.get_question(key).get('type') in types
-
-
-def _has_assurance(key):
-    # TODO: move into dmutils.content_loader
-    """Return True if a question has an assurance component"""
-    return new_service_content.get_question(key).get('assuranceApproach', False)
+def parse_document_upload_time(data):
+    match = re.search("(\d{4}-\d{2}-\d{2}-\d{2}\d{2})\..{2,3}$", data)
+    if match:
+        return datetime.strptime(match.group(1), "%Y-%m-%d-%H%M")
