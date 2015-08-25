@@ -1,5 +1,6 @@
 -
   name: G-Cloud 7 essentials
+  editable: True
   questions:
     - PR1
     - PR2
@@ -17,6 +18,7 @@
     - SQC3
 -
   name: About you
+  editable: True
   questions:
     - SQ1-2a
     - SQ1-2b
@@ -40,6 +42,7 @@
     - SQ1-1o
 -
   name: Grounds for mandatory exclusion
+  editable: True
   questions:
     - SQ2-1abcd
     - SQ2-1e
@@ -47,6 +50,7 @@
     - SQ2-1ghijklmn
 -
   name: Grounds for discretionary exclusion
+  editable: True
   questions:
     - SQ2-2a
     - SQ3-1a

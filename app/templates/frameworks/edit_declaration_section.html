@@ -42,8 +42,7 @@
   </p>
   <form method="post" class="supplier-declaration">
 
-    {% set question_index = [0] %}
-    {% for section in sections %}
+    {% set question_index = [first_question_index] %}
       {% with
         heading = section.name,
         smaller = true
@@ -58,16 +57,29 @@
           {{ forms[question.type](question, service_data, {}, question_number=question_index[0]) }}
         {% endif %}
       {% endfor %}
-    {% endfor %}
 
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
-    {%
-      with
-      label="Submit",
-      type="save"
-    %}
-      {% include "toolkit/button.html" %}
-    {% endwith %}
+    {% if is_last_page %}
+      {%
+        with
+        label="Make declaration",
+        type="save"
+      %}
+        {% include "toolkit/button.html" %}
+      {% endwith %}
+      <p class="last-edited move-to-complete-hint">
+        You can edit the declaration until the application deadline.
+      </p>
+    
+    {% else %}
+      {%
+        with
+        label="Save and continue",
+        type="save"
+      %}
+        {% include "toolkit/button.html" %}
+      {% endwith %}
+    {% endif %}
 
     <a href="{{ url_for('.framework_dashboard') }}">Return to G-Cloud 7 application</a>
 

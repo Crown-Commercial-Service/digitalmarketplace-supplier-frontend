@@ -6,7 +6,6 @@ from lxml import html
 from dmutils.apiclient import APIError
 from dmutils.audit import AuditTypes
 from dmutils.email import MandrillException
-from flask import render_template
 
 from ..helpers import BaseApplicationTest
 
@@ -54,13 +53,40 @@ class TestFrameworksDashboard(BaseApplicationTest):
         with self.app.test_client():
             self.login()
 
-            data_api_client.get_selection_answers.return_value = True
+            data_api_client.get_selection_answers.return_value = \
+                {"selectionAnswers":
+                    {"questionAnswers": FULL_G7_SUBMISSION}
+                 }
 
             res = self.client.get("/suppliers/frameworks/g-cloud-7")
 
             doc = html.fromstring(res.get_data(as_text=True))
             assert_equal(
                 len(doc.xpath('//p[contains(text(), "All services marked as complete will be automatically submitted at 3pm BST, 6 October")]')),  # noqa
+                1)
+
+    def test_declaration_status_when_started(self, data_api_client):
+        with self.app.test_client():
+            self.login()
+
+            submission = FULL_G7_SUBMISSION.copy()
+            # User has not yet submitted page 3 of the declaration
+            del submission['SQ2-1abcd']
+            del submission['SQ2-1e']
+            del submission['SQ2-1f']
+            del submission['SQ2-1ghijklmn']
+            submission.update({"status": "started"})
+
+            data_api_client.get_selection_answers.return_value = \
+                {"selectionAnswers":
+                    {"questionAnswers": submission}
+                 }
+
+            res = self.client.get("/suppliers/frameworks/g-cloud-7")
+
+            doc = html.fromstring(res.get_data(as_text=True))
+            assert_equal(
+                len(doc.xpath('//p[contains(text(), "You have started making the supplier declaration, but it is not yet finished")]')),  # noqa
                 1)
 
     def test_declaration_status_when_not_complete(self, data_api_client):
@@ -75,11 +101,12 @@ class TestFrameworksDashboard(BaseApplicationTest):
 
             doc = html.fromstring(res.get_data(as_text=True))
             assert_equal(
-                len(doc.xpath('//p[contains(text(), "You have made the declaration")]')),
-                0)
+                len(doc.xpath('//p[contains(text(), "You haven\'t made the supplier declaration")]')),
+                1)
 
 
 FULL_G7_SUBMISSION = {
+    "status": "complete",
     "PR1": "true",
     "PR2": "true",
     "PR3": "true",
@@ -165,7 +192,7 @@ class TestSupplierDeclaration(BaseApplicationTest):
                 APIError(response)
 
             res = self.client.get(
-                '/suppliers/frameworks/g-cloud-7/declaration')
+                '/suppliers/frameworks/g-cloud-7/declaration/g_cloud_7_essentials')
 
             assert_equal(res.status_code, 200)
             doc = html.fromstring(res.get_data(as_text=True))
@@ -181,13 +208,14 @@ class TestSupplierDeclaration(BaseApplicationTest):
             data_api_client.get_selection_answers.return_value = {
                 "selectionAnswers": {
                     "questionAnswers": {
+                        "status": "started",
                         "PR1": False,
                     }
                 }
             }
 
             res = self.client.get(
-                '/suppliers/frameworks/g-cloud-7/declaration')
+                '/suppliers/frameworks/g-cloud-7/declaration/g_cloud_7_essentials')
 
             assert_equal(res.status_code, 200)
             doc = html.fromstring(res.get_data(as_text=True))
@@ -197,8 +225,13 @@ class TestSupplierDeclaration(BaseApplicationTest):
     def test_post_valid_data(self, data_api_client):
         with self.app.test_client():
             self.login()
+            data_api_client.get_selection_answers.return_value = {
+                "selectionAnswers": {
+                    "questionAnswers": {"status": "started"}
+                }
+            }
             res = self.client.post(
-                '/suppliers/frameworks/g-cloud-7/declaration',
+                '/suppliers/frameworks/g-cloud-7/declaration/g_cloud_7_essentials',
                 data=FULL_G7_SUBMISSION)
 
             assert_equal(res.status_code, 302)
@@ -207,20 +240,24 @@ class TestSupplierDeclaration(BaseApplicationTest):
     def test_post_valid_data_with_api_failure(self, data_api_client):
         with self.app.test_client():
             self.login()
-
             response = Mock()
             response.status_code = 400
+            data_api_client.get_selection_answers.return_value = {
+                "selectionAnswers": {
+                    "questionAnswers": {"status": "started"}
+                }
+            }
             data_api_client.answer_selection_questions.side_effect = \
                 APIError(response)
 
             res = self.client.post(
-                '/suppliers/frameworks/g-cloud-7/declaration',
+                '/suppliers/frameworks/g-cloud-7/declaration/g_cloud_7_essentials',
                 data=FULL_G7_SUBMISSION)
 
             assert_equal(res.status_code, 400)
 
-    @mock.patch('app.main.views.frameworks.get_error_messages')
-    def test_post_with_validation_errors(self, get_error_messages, data_api_client):
+    @mock.patch('app.main.views.frameworks.get_error_messages_for_page')
+    def test_post_with_validation_errors(self, get_error_messages_for_page, data_api_client):
         """Test that answers are not saved if there are errors
 
         For unit tests of the validation see :mod:`tests.app.main.helpers.test_frameworks`
@@ -228,10 +265,10 @@ class TestSupplierDeclaration(BaseApplicationTest):
         with self.app.test_client():
             self.login()
 
-            get_error_messages.return_value = {'PR1': {'input_name': 'PR1', 'message': 'this is invalid'}}
+            get_error_messages_for_page.return_value = {'PR1': {'input_name': 'PR1', 'message': 'this is invalid'}}
 
             res = self.client.post(
-                '/suppliers/frameworks/g-cloud-7/declaration',
+                '/suppliers/frameworks/g-cloud-7/declaration/g_cloud_7_essentials',
                 data=FULL_G7_SUBMISSION)
 
             assert_equal(res.status_code, 400)

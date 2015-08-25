@@ -144,4 +144,19 @@ def get_error_messages(content, answers):
                 'message': validation_message,
             }))
 
-    return ImmutableOrderedMultiDict(errors_map)
+    return errors_map
+
+
+def get_error_messages_for_page(content, answers, section):
+    all_errors = get_error_messages(content, answers)
+    page_ids = section.get_question_ids()
+    page_errors = ImmutableOrderedMultiDict(filter(lambda err: err[0] in page_ids, all_errors))
+    return page_errors
+
+
+def get_first_question_index(content, section):
+    questions_so_far = 0
+    ind = content.sections.index(section)
+    for i in range(0, ind):
+        questions_so_far += len(content.sections[i].get_question_ids())
+    return questions_so_far
