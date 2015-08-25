@@ -274,7 +274,10 @@ def copy_draft_service(service_id):
     except APIError as e:
         abort(e.status_code)
 
-    return redirect(url_for(".edit_service_submission", service_id=draft_copy['id'], section_id='service_name'))
+    return redirect(url_for(".edit_service_submission",
+                            service_id=draft_copy['id'],
+                            section_id='service_name',
+                            return_to_summary=1))
 
 
 @main.route('/submission/services/<string:service_id>/complete', methods=['POST'])
