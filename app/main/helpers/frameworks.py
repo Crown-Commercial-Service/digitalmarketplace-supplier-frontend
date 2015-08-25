@@ -1,3 +1,5 @@
+from dmutils.apiclient import APIError
+from flask import abort
 from flask_login import current_user
 from dmutils.audit import AuditTypes
 import re
@@ -160,3 +162,20 @@ def get_first_question_index(content, section):
     for i in range(0, ind):
         questions_so_far += len(content.sections[i].get_question_ids())
     return questions_so_far
+
+
+def get_declaration_status(data_api_client):
+    try:
+        answers = data_api_client.get_selection_answers(
+            current_user.supplier_id, 'g-cloud-7'
+        )['selectionAnswers']['questionAnswers']
+    except APIError as e:
+        if e.status_code == 404:
+            return 'unstarted'
+        else:
+            abort(e.status_code)
+
+    if not answers:
+        return 'unstarted'
+    else:
+        return answers.get('status', 'unstarted')

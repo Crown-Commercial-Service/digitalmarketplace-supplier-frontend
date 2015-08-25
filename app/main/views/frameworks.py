@@ -11,7 +11,7 @@ from dmutils.formats import format_service_price
 
 from ...main import main, declaration_content, new_service_content
 from ..helpers.frameworks import get_error_messages_for_page, get_first_question_index, \
-    get_error_messages
+    get_error_messages, get_declaration_status
 
 from ... import data_api_client
 from ..helpers.services import (
@@ -36,7 +36,7 @@ def framework_dashboard():
         abort(e.status_code)
 
     drafts, complete_drafts = get_drafts(data_api_client, current_user.supplier_id, 'g-cloud-7')
-    declaration_status = _get_declaration_status()
+    declaration_status = get_declaration_status(data_api_client)
 
     return render_template(
         "frameworks/dashboard.html",
@@ -219,20 +219,3 @@ def _framework_updates_page(error_message=None):
         error_message=error_message,
         **template_data
     ), status_code
-
-
-def _get_declaration_status():
-    try:
-        answers = data_api_client.get_selection_answers(
-            current_user.supplier_id, 'g-cloud-7'
-        )['selectionAnswers']['questionAnswers']
-    except APIError as e:
-        if e.status_code == 404:
-            return 'unstarted'
-        else:
-            abort(e.status_code)
-
-    if not answers:
-        return 'unstarted'
-    else:
-        return answers.get('status', 'unstarted')
