@@ -1,6 +1,6 @@
 import itertools
 
-from flask import render_template, request, abort, flash, redirect, url_for, escape, current_app
+from flask import render_template, request, abort, flash, redirect, url_for, current_app
 from flask_login import login_required, current_user
 
 from dmutils.apiclient import APIError
@@ -156,7 +156,8 @@ def download_supplier_file(filepath):
 @main.route('/frameworks/g-cloud-7/updates', methods=['GET'])
 @login_required
 @flask_featureflags.is_active_feature('GCLOUD7_OPEN')
-def framework_updates(error_message=None):
+def framework_updates(error_message=None, default_textbox_value=None):
+
     current_app.logger.info("g7updates.viewed: user_id:%s supplier_id:%s",
                             current_user.email_address, current_user.supplier_id)
 
@@ -175,7 +176,7 @@ def framework_updates(error_message=None):
         {
             'section': 'clarifications',
             'heading': "G-Cloud 7 clarification questions and answers",
-            'empty_message': "No clarification questions exist",
+            'empty_message': "No clarification answers exist",
             'files': []
         }
     ]
@@ -186,6 +187,7 @@ def framework_updates(error_message=None):
     return render_template(
         "frameworks/updates.html",
         clarification_question_name=CLARIFICATION_QUESTION_NAME,
+        clarification_question_value=default_textbox_value,
         error_message=error_message,
         sections=sections,
         **template_data
@@ -203,7 +205,10 @@ def framework_updates_email_clarification_question():
     if not clarification_question:
         return framework_updates("Question cannot be empty")
     elif len(clarification_question) > 5000:
-        return framework_updates("Question cannot be longer than 5000 characters")
+        return framework_updates(
+            error_message="Question cannot be longer than 5000 characters",
+            default_textbox_value=clarification_question
+        )
 
     email_body = render_template(
         "emails/clarification_question.html",

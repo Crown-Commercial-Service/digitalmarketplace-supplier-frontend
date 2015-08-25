@@ -354,7 +354,7 @@ class TestFrameworkUpdatesPage(BaseApplicationTest):
 
             for empty_message in [
                 '<p class="summary-item-no-content">No communications have been sent out</p>',
-                '<p class="summary-item-no-content">No clarification questions exist</p>',
+                '<p class="summary-item-no-content">No clarification answers exist</p>',
             ]:
                 assert_true(
                     self.strip_all_whitespace(empty_message)
