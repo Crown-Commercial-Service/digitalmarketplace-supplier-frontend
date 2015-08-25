@@ -1,10 +1,7 @@
 # coding=utf-8
 
 import mock
-from mock import Mock
 from nose.tools import assert_equal, assert_true
-from app import data_api_client
-from requests import ConnectionError
 from .helpers import BaseApplicationTest
 from dmutils.apiclient.errors import HTTPError
 
@@ -42,13 +39,12 @@ class TestApplication(BaseApplicationTest):
             "enquiries@digitalmarketplace.service.gov.uk</a>"
             in res.get_data(as_text=True))
 
-    def test_503(self):
+    @mock.patch('app.main.views.services.data_api_client')
+    def test_503(self, data_api_client):
         with self.app.test_client():
             self.login()
 
-            data_api_client.get_supplier = Mock(
-                side_effect=HTTPError('API is down')
-            )
+            data_api_client.get_supplier.side_effect = HTTPError('API is down')
             self.app.config['DEBUG'] = False
 
             res = self.client.get('/suppliers')

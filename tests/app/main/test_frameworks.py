@@ -2,7 +2,6 @@
 from nose.tools import assert_equal, assert_true, assert_in
 import os
 import mock
-from mock import Mock
 from lxml import html
 from dmutils.apiclient import APIError
 from dmutils.audit import AuditTypes
@@ -95,9 +94,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
         with self.app.test_client():
             self.login()
 
-            response = Mock()
-            response.status_code = 404
-            data_api_client.get_selection_answers.side_effect = APIError(response)
+            data_api_client.get_selection_answers.side_effect = APIError(mock.Mock(status_code=404))
 
             res = self.client.get("/suppliers/frameworks/g-cloud-7")
 
@@ -188,10 +185,7 @@ class TestSupplierDeclaration(BaseApplicationTest):
         with self.app.test_client():
             self.login()
 
-            response = Mock()
-            response.status_code = 404
-            data_api_client.get_selection_answers.side_effect = \
-                APIError(response)
+            data_api_client.get_selection_answers.side_effect = APIError(mock.Mock(status_code=404))
 
             res = self.client.get(
                 '/suppliers/frameworks/g-cloud-7/declaration/g_cloud_7_essentials')
@@ -242,15 +236,12 @@ class TestSupplierDeclaration(BaseApplicationTest):
     def test_post_valid_data_with_api_failure(self, data_api_client):
         with self.app.test_client():
             self.login()
-            response = Mock()
-            response.status_code = 400
             data_api_client.get_selection_answers.return_value = {
                 "selectionAnswers": {
                     "questionAnswers": {"status": "started"}
                 }
             }
-            data_api_client.answer_selection_questions.side_effect = \
-                APIError(response)
+            data_api_client.answer_selection_questions.side_effect = APIError(mock.Mock(status_code=400))
 
             res = self.client.post(
                 '/suppliers/frameworks/g-cloud-7/declaration/g_cloud_7_essentials',
