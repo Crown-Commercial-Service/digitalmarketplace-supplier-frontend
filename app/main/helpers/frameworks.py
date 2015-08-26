@@ -47,6 +47,7 @@ def get_required_fields(all_fields, answers):
     required_fields = set(all_fields)
     #  Remove optional fields
     required_fields -= OPTIONAL_FIELDS
+
     #  If you answered other to question 19 (trading status)
     if answers.get('SQ1-1ci') == 'other (please specify)':
         required_fields.add('SQ1-1cii')
@@ -72,7 +73,7 @@ def get_required_fields(all_fields, answers):
         required_fields.add('SQ3-1k')
 
     # If you answered No to question 26 (established in the UK)
-    if not answers.get('SQ5-2a'):
+    if answers.get('SQ5-2a') is False:
         required_fields.add('SQ1-1i-i')
         required_fields.add('SQ1-1j-i')
 
