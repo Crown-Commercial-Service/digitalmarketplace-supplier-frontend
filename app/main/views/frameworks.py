@@ -12,7 +12,7 @@ from dmutils import s3
 
 from ...main import main, declaration_content, new_service_content
 from ..helpers.frameworks import get_error_messages_for_page, get_first_question_index, \
-    get_error_messages, get_declaration_status
+    get_error_messages, get_declaration_status, get_last_modified_from_first_matching_file
 
 from ... import data_api_client
 from ..helpers.services import (
@@ -39,6 +39,10 @@ def framework_dashboard():
     drafts, complete_drafts = get_drafts(data_api_client, current_user.supplier_id, 'g-cloud-7')
     declaration_status = get_declaration_status(data_api_client)
 
+    key_list = s3.S3(current_app.config['DM_G7_DRAFT_DOCUMENTS_BUCKET']).list('g-cloud-7-')
+    # last_modified files will be first
+    key_list.reverse()
+
     return render_template(
         "frameworks/dashboard.html",
         counts={
@@ -46,6 +50,10 @@ def framework_dashboard():
             "complete": len(complete_drafts),
         },
         declaration_status=declaration_status,
+        last_modified={
+            'supplier_pack': get_last_modified_from_first_matching_file(key_list, 'g-cloud-7-supplier-pack.zip'),
+            'supplier_updates': get_last_modified_from_first_matching_file(key_list, 'g-cloud-7-updates/')
+        },
         **template_data
     ), 200
 

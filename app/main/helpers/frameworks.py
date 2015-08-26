@@ -30,6 +30,19 @@ def register_interest_in_framework(client, framework_slug):
             data={'frameworkSlug': framework_slug})
 
 
+def get_last_modified_from_first_matching_file(key_list, path_starts_with):
+    """
+    Takes a list of file keys and a string.
+    Returns the 'last_modified' timestamp for first file whose path starts with the passed-in string,
+    or None if no matching file is found.
+
+    :param key_list: list of file keys (from an s3 bucket)
+    :param path_starts_with: check for file paths which start with this string
+    :return: the timestamp of the first matching file key or None
+    """
+    return next((key for key in key_list if key.get('path').startswith(path_starts_with)), {}).get('last_modified')
+
+
 def get_required_fields(all_fields, answers):
     required_fields = set(all_fields)
     #  Remove optional fields

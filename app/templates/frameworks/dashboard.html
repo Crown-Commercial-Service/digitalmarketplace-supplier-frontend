@@ -155,6 +155,11 @@
       <div class="column-one-whole">
         <li class="browse-list-item framework-application-section">
           <a class="browse-list-item-link" href="{{ url_for('.download_supplier_file', filepath='g-cloud-7-supplier-pack.zip') }}"><span>Download supplier pack (.zip)</span></a>
+          {% if last_modified.supplier_pack %}
+            <p class="framework-section-status-neutral">
+              Last updated {{ last_modified.supplier_pack|dateformat }}
+            </p>
+          {% endif %}
           <p class="browse-list-item-body">
             Read guidance and legal documentation.
           </p>
@@ -164,6 +169,11 @@
       <div class="column-one-whole">
         <li class="browse-list-item framework-application-section">
           <a class="browse-list-item-link" href="{{ url_for('.framework_updates') }}"><span>Read G-Cloud 7 updates and ask clarification questions</span></a>
+          {% if last_modified.supplier_updates %}
+            <p class="framework-section-status-neutral">
+              Last updated {{ last_modified.supplier_updates|dateformat }}
+            </p>
+          {% endif %}
           <p class="browse-list-item-body">
             View all published G-Cloud 7 communications.
           </p>
