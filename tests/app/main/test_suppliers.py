@@ -502,7 +502,7 @@ class TestCreateSupplier(BaseApplicationTest):
         assert_equal(res.status_code, 302)
         assert_equal(res.location, 'http://localhost/suppliers/company-contact-details')
 
-    def test_should_not_be_an_error_if_no_company_name(self):
+    def test_should_be_an_error_if_no_company_name(self):
         res = self.client.post(
             "/suppliers/company-name",
             data={}
@@ -510,7 +510,7 @@ class TestCreateSupplier(BaseApplicationTest):
         assert_equal(res.status_code, 400)
         assert_in("You must provide a company name.", res.get_data(as_text=True))
 
-    def test_should_not_be_an_error_if_company_name_too_long(self):
+    def test_should_be_an_error_if_company_name_too_long(self):
         twofiftysix = "a" * 256
         res = self.client.post(
             "/suppliers/company-name",
