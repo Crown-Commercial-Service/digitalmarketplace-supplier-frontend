@@ -209,7 +209,7 @@ def test_fields_only_relevant_to_non_uk():
     assert_equal(get_all_errors(content, submission), {'SQ1-1i-i': 'answer_required'})
 
 
-def test_invalid_vat_number_causes_error():
+def test_invalid_email_addresses_cause_errors():
     content = declaration_content.get_builder()
     submission = FULL_G7_SUBMISSION.copy()
 
@@ -221,7 +221,7 @@ def test_invalid_vat_number_causes_error():
                  )
 
 
-def test_invalid_email_addresses_cause_errors():
+def test_invalid_vat_number_causes_error():
     content = declaration_content.get_builder()
     submission = FULL_G7_SUBMISSION.copy()
 
