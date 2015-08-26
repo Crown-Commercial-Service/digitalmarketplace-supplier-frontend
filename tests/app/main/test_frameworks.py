@@ -11,9 +11,10 @@ from dmutils.s3 import S3ResponseError
 from ..helpers import BaseApplicationTest
 
 
+@mock.patch('dmutils.s3.S3')
 @mock.patch('app.main.views.frameworks.data_api_client')
 class TestFrameworksDashboard(BaseApplicationTest):
-    def test_shows(self, data_api_client):
+    def test_shows(self, data_api_client, s3):
         with self.app.test_client():
             self.login()
 
@@ -21,7 +22,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
 
             assert_equal(res.status_code, 200)
 
-    def test_interest_registered_in_framework(self, data_api_client):
+    def test_interest_registered_in_framework(self, data_api_client, s3):
         with self.app.test_client():
             self.login()
             data_api_client.find_audit_events.return_value = {
@@ -38,7 +39,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
                 object_id=1234,
                 data={"frameworkSlug": "g-cloud-7"})
 
-    def test_interest_in_framework_only_registered_once(self, data_api_client):
+    def test_interest_in_framework_only_registered_once(self, data_api_client, s3):
         with self.app.test_client():
             self.login()
             data_api_client.find_audit_events.return_value = {
@@ -50,7 +51,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
             assert_equal(res.status_code, 200)
             assert not data_api_client.create_audit_event.called
 
-    def test_declaration_status_when_complete(self, data_api_client):
+    def test_declaration_status_when_complete(self, data_api_client, s3):
         with self.app.test_client():
             self.login()
 
@@ -66,7 +67,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
                 len(doc.xpath(u'//p/strong[contains(text(), "You’ve made the supplier declaration")]')),
                 1)
 
-    def test_declaration_status_when_started(self, data_api_client):
+    def test_declaration_status_when_started(self, data_api_client, s3):
         with self.app.test_client():
             self.login()
 
@@ -90,7 +91,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
                 len(doc.xpath('//p[contains(text(), "You need to finish making the supplier declaration")]')),  # noqa
                 1)
 
-    def test_declaration_status_when_not_complete(self, data_api_client):
+    def test_declaration_status_when_not_complete(self, data_api_client, s3):
         with self.app.test_client():
             self.login()
 

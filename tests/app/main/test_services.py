@@ -652,7 +652,6 @@ class TestEditDraftService(BaseApplicationTest):
         assert_equal(len(document.cssselect('p.file-upload-existing-value')), 0)
 
     def test_file_upload(self, data_api_client, s3):
-        s3.return_value = mock.Mock()
         data_api_client.get_draft_service.return_value = self.empty_draft
         with freeze_time('2015-01-02 03:04:05'):
             res = self.client.post(
@@ -993,7 +992,6 @@ class TestSubmissionDocuments(BaseApplicationTest):
             self.login()
 
     def test_document_url(self, s3):
-        s3.return_value = mock.Mock()
         s3.return_value.get_signed_url.return_value = 'http://example.com/document.pdf'
 
         res = self.client.get(
@@ -1004,7 +1002,6 @@ class TestSubmissionDocuments(BaseApplicationTest):
         assert_equal(res.headers['Location'], 'http://localhost/document.pdf')
 
     def test_missing_document_url(self, s3):
-        s3.return_value = mock.Mock()
         s3.return_value.get_signed_url.return_value = None
 
         res = self.client.get(
@@ -1014,8 +1011,6 @@ class TestSubmissionDocuments(BaseApplicationTest):
         assert_equal(res.status_code, 404)
 
     def test_document_url_not_matching_user_supplier(self, s3):
-        s3.return_value = mock.Mock()
-
         res = self.client.get(
             '/suppliers/submission/documents/g-cloud-7/999/document.pdf'
         )
