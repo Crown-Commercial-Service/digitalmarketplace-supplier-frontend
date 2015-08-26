@@ -42,18 +42,6 @@ def framework_dashboard():
     return render_template(
         "frameworks/dashboard.html",
         counts={
-            "draft": 0,
-            "complete": 13,
-        },
-        declaration_status='complete',
-        **template_data
-    ), 200
-
-    #/#
-
-    return render_template(
-        "frameworks/dashboard.html",
-        counts={
             "draft": len(drafts),
             "complete": len(complete_drafts),
         },
@@ -85,7 +73,7 @@ def framework_services():
         "frameworks/services.html",
         complete_drafts=list(reversed(complete_drafts)),
         drafts=list(reversed(drafts)),
-        declaration_status=get_declaration_status(),
+        declaration_status=get_declaration_status(data_api_client),
         **template_data
     ), 200
 

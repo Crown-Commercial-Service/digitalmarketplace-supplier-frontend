@@ -374,7 +374,7 @@ def view_service_submission(service_id):
         unanswered_required=unanswered_required,
         unanswered_optional=unanswered_optional,
         delete_requested=delete_requested,
-        declaration_status=get_declaration_status(),
+        declaration_status=get_declaration_status(data_api_client),
         **main.config['BASE_TEMPLATE_DATA']), 200
 
 
