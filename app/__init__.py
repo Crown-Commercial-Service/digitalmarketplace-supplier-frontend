@@ -19,6 +19,9 @@ feature_flags = flask_featureflags.FeatureFlag()
 csrf = CsrfProtect()
 
 
+from app.main.helpers.services import parse_document_upload_time
+
+
 def create_app(config_name):
     application = Flask(__name__,
                         static_folder='static/',
@@ -58,6 +61,8 @@ def create_app(config_name):
     @application.template_filter('markdown')
     def markdown_filter(data):
         return Markup(markdown(data))
+
+    application.add_template_filter(parse_document_upload_time)
 
     return application
 

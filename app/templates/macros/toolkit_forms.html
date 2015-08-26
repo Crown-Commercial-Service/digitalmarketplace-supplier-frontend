@@ -97,7 +97,9 @@
     question=question_content.question|markdown,
     hint=(question_content.hint or '')|markdown,
     name=question_content.id,
-    value=service_data[question_content.id],
+    value="Document uploaded {}".format(
+      service_data[question_content.id]|parse_document_upload_time|datetimeformat
+    ),
     error=errors.get(question_content.id)['message'],
     question_number=question_number
   %}
