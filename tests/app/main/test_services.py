@@ -615,6 +615,28 @@ class TestEditDraftService(BaseApplicationTest):
             page_questions=['serviceSummary']
         )
 
+    def test_display_file_upload_with_existing_file(self, data_api_client, s3):
+        draft = copy.deepcopy(self.empty_draft)
+        draft['services']['serviceDefinitionDocumentURL'] = 'http://localhost/fooo-2012-12-12-1212.pdf'
+        data_api_client.get_draft_service.return_value = draft
+        response = self.client.get(
+            '/suppliers/submission/services/1/edit/service_definition'
+        )
+        document = html.fromstring(response.get_data(as_text=True))
+
+        assert_equal(response.status_code, 200)
+        assert_equal(len(document.cssselect('p.file-upload-existing-value')), 1)
+
+    def test_display_file_upload_with_no_existing_file(self, data_api_client, s3):
+        data_api_client.get_draft_service.return_value = self.empty_draft
+        response = self.client.get(
+            '/suppliers/submission/services/1/edit/service_definition'
+        )
+        document = html.fromstring(response.get_data(as_text=True))
+
+        assert_equal(response.status_code, 200)
+        assert_equal(len(document.cssselect('p.file-upload-existing-value')), 0)
+
     def test_file_upload(self, data_api_client, s3):
         s3.return_value = mock.Mock()
         data_api_client.get_draft_service.return_value = self.empty_draft

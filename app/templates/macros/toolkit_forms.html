@@ -99,7 +99,7 @@
     name=question_content.id,
     value="Document uploaded {}".format(
       service_data[question_content.id]|parse_document_upload_time|datetimeformat
-    ),
+    ) if service_data[question_content.id] else service_data[question_content.id],
     error=errors.get(question_content.id)['message'],
     question_number=question_number
   %}
