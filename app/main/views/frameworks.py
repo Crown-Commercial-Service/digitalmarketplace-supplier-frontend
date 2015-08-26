@@ -171,8 +171,7 @@ def framework_updates(error_message=None, default_textbox_value=None):
 
     template_data = main.config['BASE_TEMPLATE_DATA']
 
-    uploader = s3.S3(current_app.config['DM_G7_DRAFT_DOCUMENTS_BUCKET'])
-    file_list = uploader.list('g-cloud-7-updates/')
+    file_list = s3.S3(current_app.config['DM_G7_DRAFT_DOCUMENTS_BUCKET']).list('g-cloud-7-updates/')
 
     sections = [
         {
