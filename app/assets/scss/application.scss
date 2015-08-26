@@ -87,7 +87,7 @@ $path: "/suppliers/static/images/";
 
 .delete-draft-button {
 
-  padding: 0 0 $gutter * 2 0;
+  padding: $gutter 0 $gutter * 2 0;
 
   button {
     width: 100%;
