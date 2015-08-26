@@ -67,7 +67,10 @@
 
             {% if counts.complete and declaration_status != 'complete' %}
               <div class="framework-section-status-neutral">
-                You have {{ counts.complete }} complete and {{ counts.draft }} draft services
+                You have {{ counts.complete }} complete
+                {{ 'service' if counts.complete == 1 else 'services' }}
+                and {{ counts.draft }} draft
+                {{ 'service' if counts.draft == 1 else 'services' }}
               </div>
             {% endif %}
 
@@ -138,7 +141,7 @@
             {% elif declaration_status == 'complete' %}
               <div class="framework-section-status-good">
                 <p>
-                  <strong>You’ve made the declaration</strong>
+                  <strong>You’ve made the supplier declaration</strong>
                 </p>
               </div>
             {% endif %}

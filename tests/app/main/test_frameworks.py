@@ -63,7 +63,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
 
             doc = html.fromstring(res.get_data(as_text=True))
             assert_equal(
-                len(doc.xpath('//p/strong[contains(text(), "You’ve made the declaration")]')),
+                len(doc.xpath('//p/strong[contains(text(), "You’ve made the supplier declaration")]')),
                 1)
 
     def test_declaration_status_when_started(self, data_api_client):
