@@ -210,13 +210,14 @@ def framework_updates_email_clarification_question():
             default_textbox_value=clarification_question
         )
 
+    # Submit email to Zendesk so the question can be answered
+    # Fail if this email does not send
     email_body = render_template(
         "emails/clarification_question.html",
         supplier_name=current_user.supplier_name,
         user_name=current_user.name,
         message=clarification_question
     )
-
     try:
         send_email(
             current_app.config['DM_CLARIFICATION_QUESTION_EMAIL'],
@@ -232,6 +233,29 @@ def framework_updates_email_clarification_question():
             "Clarification question email failed to send error {} supplier_id {} user_email_address {}".format(
                 e, current_user.supplier_id, current_user.email_address))
         abort(503, "Clarification question email failed to send")
+
+    # Send confirmation email to the user who submitted the question
+    # No need to fail if this email does not send
+    email_body = render_template(
+        "emails/clarification_question_submitted.html",
+        user_name=current_user.name,
+        message=clarification_question
+    )
+    try:
+        send_email(
+            current_user.email_address,
+            email_body,
+            current_app.config['DM_MANDRILL_API_KEY'],
+            current_app.config['CLARIFICATION_EMAIL_SUBJECT'],
+            current_app.config['CLARIFICATION_EMAIL_FROM'],
+            current_app.config['CLARIFICATION_EMAIL_NAME'],
+            ["clarification-question-confirm"]
+        )
+    except MandrillException as e:
+        current_app.logger.error(
+            "Clarification question confirmation email failed to send "
+            "error {} supplier_id {} user_email_address {}".format(
+                e, current_user.supplier_id, current_user.email_address))
 
     data_api_client.create_audit_event(
         audit_type=AuditTypes.send_clarification_question,

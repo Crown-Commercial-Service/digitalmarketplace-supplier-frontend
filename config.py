@@ -32,6 +32,10 @@ class Config(object):
     INVITE_EMAIL_FROM = 'enquiries@digitalmarketplace.service.gov.uk'
     INVITE_EMAIL_SUBJECT = 'Your Digital Marketplace invitation'
 
+    CLARIFICATION_EMAIL_NAME = 'Digital Marketplace Admin'
+    CLARIFICATION_EMAIL_FROM = 'do-not-reply@digitalmarketplace.service.gov.uk'
+    CLARIFICATION_EMAIL_SUBJECT = 'Thanks for your clarification question'
+
     CREATE_USER_SUBJECT = 'Create your Digital Marketplace account'
     SECRET_KEY = os.getenv('DM_PASSWORD_SECRET_KEY')
     SHARED_EMAIL_KEY = os.getenv('DM_SHARED_EMAIL_KEY')
@@ -80,6 +84,7 @@ class Test(Config):
     SERVER_NAME = 'localhost'
     DM_MANDRILL_API_KEY = 'MANDRILL'
     SHARED_EMAIL_KEY = "KEY"
+    DM_CLARIFICATION_QUESTION_EMAIL = 'digitalmarketplace@mailinator.com'
 
     FEATURE_FLAGS_EDIT_SERVICE_PAGE = enabled_since('2015-06-03')
     FEATURE_FLAGS_SUPPLIER_DASHBOARD = enabled_since('2015-06-10')
