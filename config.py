@@ -122,7 +122,7 @@ class Production(Live):
 
 class Staging(Production):
     FEATURE_FLAGS_USER_DASHBOARD = enabled_since('2015-08-19')
-
+    FEATURE_FLAGS_GCLOUD7_OPEN = enabled_since('2015-08-26')
 
 configs = {
     'development': Development,
