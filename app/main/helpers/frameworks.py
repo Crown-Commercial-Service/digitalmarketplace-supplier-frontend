@@ -108,7 +108,10 @@ def get_formatting_errors(answers):
     errors_map = {}
     if not re.match(r'^(\S{9}|\S{12})$', answers.get('SQ1-1h', '')):
         errors_map['SQ1-1h'] = 'invalid_format'
-
+    if not re.match(r'^[^@^\s]+@[^@^\.^\s]+(\.[^@^\.^\s]+)+$', answers.get('SQ1-1o', '')):
+        errors_map['SQ1-1o'] = 'invalid_format'
+    if not re.match(r'^[^@^\s]+@[^@^\.^\s]+(\.[^@^\.^\s]+)+$', answers.get('SQ1-2b', '')):
+        errors_map['SQ1-2b'] = 'invalid_format'
     return errors_map
 
 
@@ -127,9 +130,9 @@ def get_all_errors(content, answers):
     all_fields = set(get_all_fields(content))
     errors_map = {}
 
-    errors_map.update(get_answer_required_errors(all_fields, answers))
     errors_map.update(get_character_limit_errors(content, answers))
     errors_map.update(get_formatting_errors(answers))
+    errors_map.update(get_answer_required_errors(all_fields, answers))
 
     return errors_map
 

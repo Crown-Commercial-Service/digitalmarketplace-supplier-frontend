@@ -45,9 +45,9 @@ FULL_G7_SUBMISSION = {
     "SQ1-1j-ii": "Blah",
     "SQ1-1k": "Blah",
     "SQ1-1n": "Blah",
-    "SQ1-1o": "Blah",
+    "SQ1-1o": "valid@email.com",
     "SQ1-2a": "Blah",
-    "SQ1-2b": "Blah",
+    "SQ1-2b": "valid@email.com",
     "SQ2-2b": "Blah",
     "SQ4-1c": "Blah",
     "SQD2c": "Blah",
@@ -210,6 +210,18 @@ def test_fields_only_relevant_to_non_uk():
 
 
 def test_invalid_vat_number_causes_error():
+    content = declaration_content.get_builder()
+    submission = FULL_G7_SUBMISSION.copy()
+
+    submission['SQ1-1o'] = '@invalid.com'
+    submission['SQ1-2b'] = 'some.user.missed.their.at.com'
+    assert_equal(get_all_errors(content, submission),
+                 {'SQ1-1o': 'invalid_format',
+                  'SQ1-2b': 'invalid_format'}
+                 )
+
+
+def test_invalid_email_addresses_cause_errors():
     content = declaration_content.get_builder()
     submission = FULL_G7_SUBMISSION.copy()
 
