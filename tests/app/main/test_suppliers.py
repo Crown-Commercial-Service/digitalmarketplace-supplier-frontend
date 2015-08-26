@@ -2,7 +2,6 @@ from dmutils.apiclient import HTTPError
 from dmutils.email import MandrillException
 import mock
 from flask import session
-from mock import Mock
 from nose.tools import assert_equal, assert_true, assert_in, assert_false
 from tests.app.helpers import BaseApplicationTest
 from lxml import html
@@ -163,15 +162,13 @@ class TestSupplierDashboardLogin(BaseApplicationTest):
         get_current_suppliers_users.side_effect = get_user
         with self.app.test_client():
             self.login()
-            data_api_client.authenticate_user = Mock(
-                return_value=(self.user(
-                    123, "email@email.com", 1234, "Supplier Name", "Name")))
+            data_api_client.authenticate_user.return_value = self.user(
+                123, "email@email.com", 1234, "Supplier Name", "Name")
 
-            data_api_client.get_user = Mock(
-                return_value=(self.user(
-                    123, "email@email.com", 1234, "Supplier Name", "Name")))
+            data_api_client.get_user.return_value = self.user(
+                123, "email@email.com", 1234, "Supplier Name", "Name")
 
-            data_api_client.get_supplier = Mock(side_effect=get_supplier)
+            data_api_client.get_supplier.side_effect = get_supplier
 
             self.client.post("/suppliers/login", data={
                 "email_address": "valid@email.com",

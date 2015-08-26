@@ -8,7 +8,6 @@ from dmutils.apiclient import HTTPError
 import copy
 import mock
 from lxml import html
-from mock import Mock
 from freezegun import freeze_time
 
 from nose.tools import assert_equal, assert_true, assert_false, \
@@ -23,10 +22,9 @@ class TestListServices(BaseApplicationTest):
         with self.app.test_client():
             self.login()
 
-            data_api_client.find_services = Mock(
-                return_value={
-                    "services": []
-                })
+            data_api_client.find_services.return_value = {
+                "services": []
+                }
 
             res = self.client.get('/suppliers/services')
             assert_equal(res.status_code, 200)
@@ -42,15 +40,15 @@ class TestListServices(BaseApplicationTest):
         with self.app.test_client():
             self.login()
 
-            data_api_client.find_services = Mock(
-                return_value={'services': [{
+            data_api_client.find_services.return_value = {
+                'services': [{
                     'serviceName': 'Service name 123',
                     'status': 'published',
                     'id': '123',
                     'lot': 'SaaS',
                     'frameworkName': 'G-Cloud 1'
-                }]}
-            )
+                }]
+            }
 
             res = self.client.get('/suppliers/services')
             assert_equal(res.status_code, 200)
@@ -83,13 +81,13 @@ class TestListServices(BaseApplicationTest):
         with self.app.test_client():
             self.login()
 
-            data_api_client.find_services = Mock(
-                return_value={'services': [{
+            data_api_client.find_services.return_value = {
+                'services': [{
                     'serviceName': 'Service name 123',
                     'status': 'published',
                     'id': '123'
-                }]}
-            )
+                }]
+            }
 
             res = self.client.get('/suppliers/services')
             assert_equal(res.status_code, 200)

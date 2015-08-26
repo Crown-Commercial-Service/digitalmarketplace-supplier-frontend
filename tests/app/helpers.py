@@ -1,5 +1,5 @@
 import re
-from mock import patch, Mock
+from mock import patch
 from app import create_app
 from werkzeug.http import parse_cookie
 from app import data_api_client
