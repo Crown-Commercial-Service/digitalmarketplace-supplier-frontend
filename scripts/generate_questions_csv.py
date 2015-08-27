@@ -34,9 +34,10 @@ def generate_csvs(target_directory):
         )
         with open('{}/g7-{}-questions.csv'.format(target_directory, lot), 'wb') as csvfile:
             writer = unicodecsv.writer(csvfile, delimiter=',', quotechar='"')
+            max_opts = max_options(content)+1
             header = ["Page title", "Question", "Hint"]
             header.extend(
-                ["Answer {}".format(i) for i in range(1, max_options(content)+1)]
+                ["Answer {}".format(i) for i in range(1, max_opts)]
             )
             writer.writerow(header)
             for section in content.sections:
@@ -47,6 +48,11 @@ def generate_csvs(target_directory):
                         question.get('hint')
                     ]
                     options = [option['label'] for option in question.get('options', []) if 'label' in option]
+                    if question.get('type') == 'boolean':
+                        options.append('Yes')
+                        options.append('No')
+                    while len(options) < max_opts-1:
+                        options.append("")
                     row.extend(options)
 
                     writer.writerow(row)
