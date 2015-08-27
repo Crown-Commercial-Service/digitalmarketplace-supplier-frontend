@@ -9,6 +9,17 @@ import six
 from werkzeug.datastructures import ImmutableOrderedMultiDict
 
 
+EMAIL_REGEX = r'^[^@^\s]+@[^@^\.^\s]+(\.[^@^\.^\s]+)+$'
+VAT_NUMBER_REGEX = r'^(\S{9}|\S{12})$'
+TEXT_FIELD_CHARACTER_LIMIT = 5000
+OPTIONAL_FIELDS = set([
+    "SQ1-1d-i", "SQ1-1d-ii",
+    "SQ1-1e", "SQ1-1p-i", "SQ1-1p-ii", "SQ1-1p-iii", "SQ1-1p-iv",
+    "SQ1-1q-i", "SQ1-1q-ii", "SQ1-1q-iii", "SQ1-1q-iv", "SQ1-1cii", "SQ1-1i-ii",
+    "SQ1-1j-i", "SQ1-1j-ii", "SQ1-3", "SQ4-1c", "SQ3-1k", "SQC3", "SQ1-1i-i",
+])
+
+
 def has_registered_interest_in_framework(client, framework_slug):
     audits = client.find_audit_events(
         audit_type=AuditTypes.register_framework_interest,
@@ -33,13 +44,7 @@ def register_interest_in_framework(client, framework_slug):
 def get_required_fields(all_fields, answers):
     required_fields = set(all_fields)
     #  Remove optional fields
-    optional_fields = set([
-        "SQ1-1d-i", "SQ1-1d-ii",
-        "SQ1-1e", "SQ1-1p-i", "SQ1-1p-ii", "SQ1-1p-iii", "SQ1-1p-iv",
-        "SQ1-1q-i", "SQ1-1q-ii", "SQ1-1q-iii", "SQ1-1q-iv", "SQ1-1cii", "SQ1-1i-ii",
-        "SQ1-1j-i", "SQ1-1j-ii", "SQ1-3", "SQ4-1c", "SQ3-1k", "SQC3", "SQ1-1i-i",
-    ])
-    required_fields -= optional_fields
+    required_fields -= OPTIONAL_FIELDS
     #  If you answered other to question 19 (trading status)
     if answers.get('SQ1-1ci') == 'other (please specify)':
         required_fields.add('SQ1-1cii')
@@ -94,7 +99,6 @@ def get_answer_required_errors(content, answers):
 
 
 def get_character_limit_errors(content, answers):
-    TEXT_FIELD_CHARACTER_LIMIT = 5000
     errors_map = {}
     for question_id in get_all_fields(content):
         if content.get_question(question_id).get('type') in ['text', 'textbox_large']:
@@ -106,11 +110,11 @@ def get_character_limit_errors(content, answers):
 
 def get_formatting_errors(answers):
     errors_map = {}
-    if not re.match(r'^(\S{9}|\S{12})$', answers.get('SQ1-1h', '')):
+    if not re.match(VAT_NUMBER_REGEX, answers.get('SQ1-1h', '')):
         errors_map['SQ1-1h'] = 'invalid_format'
-    if not re.match(r'^[^@^\s]+@[^@^\.^\s]+(\.[^@^\.^\s]+)+$', answers.get('SQ1-1o', '')):
+    if not re.match(EMAIL_REGEX, answers.get('SQ1-1o', '')):
         errors_map['SQ1-1o'] = 'invalid_format'
-    if not re.match(r'^[^@^\s]+@[^@^\.^\s]+(\.[^@^\.^\s]+)+$', answers.get('SQ1-2b', '')):
+    if not re.match(EMAIL_REGEX, answers.get('SQ1-2b', '')):
         errors_map['SQ1-2b'] = 'invalid_format'
     return errors_map
 
