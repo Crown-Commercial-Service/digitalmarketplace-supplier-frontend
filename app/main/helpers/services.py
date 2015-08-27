@@ -180,3 +180,10 @@ def parse_document_upload_time(data):
     match = re.search("(\d{4}-\d{2}-\d{2}-\d{2}\d{2})\..{2,3}$", data)
     if match:
         return datetime.strptime(match.group(1), "%Y-%m-%d-%H%M")
+
+
+def has_changes_to_save(section, draft, update_data):
+    return (
+        any(draft.get(key) != update_data[key] for key in update_data) or
+        any(question['id'] not in draft for question in section.questions)
+    )
