@@ -1,5 +1,6 @@
 from flask_login import login_required, current_user
-from flask import render_template, request, redirect, url_for, abort, flash
+from flask import render_template, request, redirect, url_for, abort, flash, \
+    current_app
 
 from ...main import main, existing_service_content, new_service_content
 from ..helpers.services import (
@@ -375,6 +376,7 @@ def view_service_submission(service_id):
         unanswered_optional=unanswered_optional,
         delete_requested=delete_requested,
         declaration_status=get_declaration_status(data_api_client),
+        deadline=current_app.config['G7_CLOSING_DATE'],
         **main.config['BASE_TEMPLATE_DATA']), 200
 
 
