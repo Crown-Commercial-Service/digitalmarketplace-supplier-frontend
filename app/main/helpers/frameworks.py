@@ -73,7 +73,7 @@ def get_required_fields(all_fields, answers):
         required_fields.add('SQ3-1k')
 
     # If you answered No to question 26 (established in the UK)
-    if answers.get('SQ5-2a') is False:
+    if 'SQ5-2a' in answers and not answers['SQ5-2a']:
         required_fields.add('SQ1-1i-i')
         required_fields.add('SQ1-1j-i')
 
