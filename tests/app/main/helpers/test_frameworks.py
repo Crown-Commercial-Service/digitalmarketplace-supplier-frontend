@@ -39,10 +39,13 @@ FULL_G7_SUBMISSION = {
     "SQ1-1b": "Blah",
     "SQ1-1cii": "Blah",
     "SQ1-1d": "Blah",
+    "SQ1-1d-i": "Blah",
+    "SQ1-1d-ii": "Blah",
     "SQ1-1e": "Blah",
     "SQ1-1h": "999999999",
     "SQ1-1i-ii": "Blah",
     "SQ1-1j-ii": "Blah",
+    "SQ1-1p-i": "Blah",
     "SQ1-1k": "Blah",
     "SQ1-1n": "Blah",
     "SQ1-1o": "valid@email.com",
@@ -98,7 +101,7 @@ def test_error_if_required_text_field_is_empty():
 def test_no_error_if_optional_field_is_missing():
     content = declaration_content.get_builder()
     submission = FULL_G7_SUBMISSION.copy()
-    del submission['SQ1-1e']
+    del submission['SQ1-1p-i']
 
     assert_equal(get_all_errors(content, submission), {})
 
