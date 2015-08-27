@@ -12,9 +12,9 @@
     <span class="move-to-complete-hint">
     {% with unanswered_total = unanswered_required + unanswered_optional %}
       {% if unanswered_total == 1 %}
-      {{ unanswered_total }} question unanswered
+      {{ unanswered_total }} unanswered question
       {% else %}
-        {{ unanswered_total }} questions unanswered
+        {{ unanswered_total }} unanswered questions
       {% endif %}
     {% endwith %}
     </span>
@@ -24,7 +24,7 @@
 
 {% macro can_be_completed_text(unanswered_required) %}
   {% if unanswered_required == 0%}
-    Service can be moved to complete
+    Service can be marked as complete
   {% endif %}
 {% endmacro %}
 
@@ -40,4 +40,3 @@
     </span>
   {% endif %}
 {% endmacro %}
-

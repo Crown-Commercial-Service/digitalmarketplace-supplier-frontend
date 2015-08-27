@@ -1,0 +1,9 @@
+{% if true %}
+  {%
+    with
+    message = 'This service will not be submitted at the deadline because the <a href="' + url_for('.framework_supplier_declaration', section_id='g_cloud_7_essentials') + '">supplier&nbsp;declaration</a> hasn’t been made.',
+    type = 'warning'
+  %}
+    {% include 'toolkit/notification-banner.html' %}
+  {% endwith %}
+{% endif %}

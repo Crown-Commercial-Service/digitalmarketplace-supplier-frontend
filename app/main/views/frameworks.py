@@ -73,6 +73,7 @@ def framework_services():
         "frameworks/services.html",
         complete_drafts=list(reversed(complete_drafts)),
         drafts=list(reversed(drafts)),
+        declaration_status=get_declaration_status(data_api_client),
         **template_data
     ), 200
 

@@ -25,15 +25,27 @@
   %}
     {% include "toolkit/breadcrumb.html" %}
   {% endwith %}
+  {% if service_data.status == 'submitted' and declaration_status != 'complete' %}
+    <div class="wrapper">
+      {%
+        with
+        message = 'You need to <a href="' + url_for('.framework_supplier_declaration', section_id='g_cloud_7_essentials') + '">make the supplier&nbsp;declaration</a> before this service can be submitted',
+        type = 'warning'
+      %}
+        {% include 'toolkit/notification-banner.html' %}
+      {% endwith %}
+    </div>
+  {% endif %}
 {% endblock %}
 
 {% block before_sections %}
+
 <div class="column-one-third align-with-heading">
   <p>
     <strong>Last edited</strong>
   </p>
   <p class="last-edited">
-    {{ last_edit.createdAt|datetimeformat }}<br />
+    {{ last_edit.createdAt|datetimeformat }}
     by {{ last_edit.userName }}
   </p>
   {% if unanswered_required or unanswered_optional %}
@@ -44,20 +56,13 @@
       ) }}
     </p>
   {% endif %}
-  {% if service_data.status == 'submitted' %}
-    <span class="service-status-published">This service is complete and will be automatically submitted at 3pm&nbsp;BST, 6 October</span>
-  {% elif unanswered_required == 0 %}
-    <form action="{{ url_for('.complete_draft_service', service_id=service_id) }}" method="POST">
-      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
-      {% with type = "save", label = "Move to complete" %}
-        {% include "toolkit/button.html" %}
-      {% endwith %}
-    </form>
-    <p class="last-edited move-to-complete-hint">
-      You can still edit services once they're complete.
-    </p>
-  {% else %}
-    <p class="move-to-complete-hint">When you have added all the required information, you can move the service to complete.</p>
+  {% if service_data.status == 'submitted' and declaration_status == 'complete' %}
+    <span class="service-status-published">This service is marked as complete and will be submitted at 3pm&nbsp;BST, 6 October</span>
+  {% endif %}
+  {% if service_data.status == 'not-submitted' and unanswered_required == 0 %}
+    {% include "partials/complete_service.html" %}
+  {% elif unanswered_required > 0 %}
+    <p class="move-to-complete-hint">When you have added all the required information, you can mark the service as complete.</p>
   {% endif %}
 </div>
 {% endblock %}
@@ -90,6 +95,11 @@
         &nbsp;
       </div>
       <div class="column-one-third delete-draft-button">
+        {% if service_data.status == 'not-submitted' and unanswered_required == 0 %}
+          <div class="space-underneath">
+            {% include "partials/complete_service.html" %}
+          </div>
+        {% endif %}
         <form action="{{ url_for('.delete_draft_service', service_id=service_id ) }}" method="POST">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
           {% with type = "destructive", label = "Delete this service" %}

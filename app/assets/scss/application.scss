@@ -12,7 +12,7 @@ $path: "/suppliers/static/images/";
 
 @import "_reset.scss";
 
-#wrapper {
+#wrapper, .wrapper {
   @extend %site-width-container;
 }
 
@@ -87,7 +87,7 @@ $path: "/suppliers/static/images/";
 
 .delete-draft-button {
 
-  padding: $gutter * 2 0;
+  padding: $gutter 0 $gutter * 2 0;
 
   button {
     width: 100%;

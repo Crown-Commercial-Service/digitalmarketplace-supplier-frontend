@@ -29,7 +29,7 @@
   {% with messages = get_flashed_messages(with_categories=true) %}
     {% for category, message in messages %}
       {% if message == 'message_sent' %}
-        {% set message = "Your clarification message has been sent." %}
+        {% set message = "Your clarification question has been sent. Answers to all clarification questions will be published on this page." %}
       {% endif %}
       {%
         with
@@ -87,11 +87,13 @@
                <a href="{{ url_for('.download_supplier_file', filepath=item.path) }}" class="document-link-with-icon">
                 <span class='document-icon'>{{ item.ext }}<span> document:</span></span>
                 {{ item.filename }}
-              </a>
             {% endcall %}
           {% endcall %}
         {% endcall %}
       {% endfor %}
+      <p class="hint">
+        All clarification questions and answers will be published here regularly. You will receive an email when new answers are posted.
+      </p>
     </div>
   </div>
 
@@ -108,9 +110,12 @@
       %}
         {% include "toolkit/forms/textbox.html" %}
       {% endwith %}
+      <p>
+        The deadline for clarification questions is x
+      </p>
       {%
         with
-        label="Submit question",
+        label="Ask question",
         type="save"
       %}
         {% include "toolkit/button.html" %}

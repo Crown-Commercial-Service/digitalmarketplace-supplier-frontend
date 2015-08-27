@@ -877,7 +877,7 @@ class TestShowDraftService(BaseApplicationTest):
         count_unanswered.return_value = 1, 2
         res = self.client.get('/suppliers/submission/services/1')
 
-        assert_in(u'3 questions unanswered', res.get_data(as_text=True))
+        assert_in(u'3 unanswered questions', res.get_data(as_text=True))
 
     @mock.patch('app.main.views.services.count_unanswered_questions')
     def test_move_to_complete_button(self, count_unanswered, data_api_client):
@@ -886,7 +886,7 @@ class TestShowDraftService(BaseApplicationTest):
         res = self.client.get('/suppliers/submission/services/1')
 
         assert_in(u'1 optional question unanswered', res.get_data(as_text=True))
-        assert_in(u'<button class="button-save">Move to complete</button>',
+        assert_in(u'<button class="button-save">Mark as complete</button>',
                   res.get_data(as_text=True))
 
 

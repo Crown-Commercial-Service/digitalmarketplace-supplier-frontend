@@ -33,13 +33,25 @@
         <p class="banner-message">
           {% if category == 'service_deleted' %}
             <strong>{{message.service_name}}</strong> was deleted
+          {% elif category == 'service_copied' %}
+            <strong>{{message.service_name}}</strong> was copied
           {% elif category == 'service_completed' %}
-            <strong>{{message.service_name}}</strong> was completed
+            <strong>{{message.service_name}}</strong> was marked as complete
           {% endif %}
         </p>
       </div>
     {% endfor %}
   {% endwith %}
+
+  {% if complete_drafts and declaration_status != 'complete' %}
+    {%
+      with
+      message = 'You need to <a href="' + url_for('.framework_supplier_declaration', section_id='g_cloud_7_essentials') + '">make the supplier&nbsp;declaration</a> before any services can be submitted',
+      type = 'warning'
+    %}
+      {% include 'toolkit/notification-banner.html' %}
+    {% endwith %}
+  {% endif %}
 
   {% with
      heading = "G-Cloud 7 services",
@@ -59,7 +71,7 @@
         "Service name",
         "Lot",
         summary.hidden_field_heading("Progress"),
-        summary.hidden_field_heading("Make a copy")
+        summary.hidden_field_heading("Clone service")
     ],
     field_headings_visible=True
   ) %}
@@ -81,7 +93,7 @@
   {% call(draft) summary.list_table(
     complete_drafts,
     caption="Complete services",
-    empty_message="You haven't completed any services yet.",
+    empty_message="You haven’t marked any services as complete yet.",
     field_headings=[
         "Service name",
         "Lot",
@@ -101,5 +113,7 @@
                          action=url_for('.copy_draft_service', service_id=draft.id)) }}
     {% endcall %}
   {% endcall %}
+
+  <a href="{{ url_for('.framework_dashboard') }}">Return to G-Cloud 7 application</a>
 
 {% endblock %}

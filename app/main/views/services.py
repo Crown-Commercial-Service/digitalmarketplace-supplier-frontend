@@ -8,6 +8,7 @@ from ..helpers.services import (
     upload_draft_documents, get_service_attributes,
     get_draft_document_url, count_unanswered_questions
 )
+from ..helpers.frameworks import get_declaration_status
 from ... import data_api_client, flask_featureflags
 from dmutils.apiclient import APIError, HTTPError
 from dmutils.presenters import Presenters
@@ -373,6 +374,7 @@ def view_service_submission(service_id):
         unanswered_required=unanswered_required,
         unanswered_optional=unanswered_optional,
         delete_requested=delete_requested,
+        declaration_status=get_declaration_status(data_api_client),
         **main.config['BASE_TEMPLATE_DATA']), 200
 
 
