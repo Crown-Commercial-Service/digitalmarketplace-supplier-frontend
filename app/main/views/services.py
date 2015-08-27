@@ -395,13 +395,22 @@ def edit_service_submission(service_id, section_id):
     if section is None or not section.editable:
         abort(404)
 
+    next_section_name = None
+
+    if content.get_next_editable_section_id(section_id):
+        next_section_name = content.get_section(
+            content.get_next_editable_section_id(section_id)
+        ).name
+
     draft = section.unformat_data(draft)
 
     return render_template(
         "services/edit_submission_section.html",
         section=section,
+        next_section_name=next_section_name,
         service_data=draft,
         service_id=service_id,
+        return_to_summary=bool(request.args.get('return_to_summary')),
         **main.config['BASE_TEMPLATE_DATA']
     )
 
@@ -458,7 +467,7 @@ def update_section_submission(service_id, section_id):
     return_to_summary = bool(request.args.get('return_to_summary'))
     next_section = content.get_next_editable_section_id(section_id)
 
-    if next_section and not return_to_summary:
+    if next_section and not return_to_summary and request.form.get('continue_to_next_section'):
         return redirect(url_for(".edit_service_submission", service_id=service_id, section_id=next_section))
     else:
         return redirect(url_for(".view_service_submission", service_id=service_id))

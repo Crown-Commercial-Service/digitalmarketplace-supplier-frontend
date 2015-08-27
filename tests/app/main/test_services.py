@@ -732,7 +732,9 @@ class TestEditDraftService(BaseApplicationTest):
 
         res = self.client.post(
             '/suppliers/submission/services/1/edit/service_description',
-            data={})
+            data={
+                'continue_to_next_section': 'Save and continue'
+            })
 
         assert_equal(302, res.status_code)
         assert_equal('http://localhost/suppliers/submission/services/1/edit/service_type',
@@ -756,6 +758,18 @@ class TestEditDraftService(BaseApplicationTest):
 
         res = self.client.post(
             '/suppliers/submission/services/1/edit/service_description?return_to_summary=1',
+            data={})
+
+        assert_equal(302, res.status_code)
+        assert_equal('http://localhost/suppliers/submission/services/1',
+                     res.headers['Location'])
+
+    def test_update_redirects_to_edit_submission_if_grey_button_clicked(self, data_api_client, s3):
+        data_api_client.get_draft_service.return_value = self.empty_draft
+        data_api_client.update_draft_service.return_value = None
+
+        res = self.client.post(
+            '/suppliers/submission/services/1/edit/service_description',
             data={})
 
         assert_equal(302, res.status_code)
@@ -886,7 +900,7 @@ class TestShowDraftService(BaseApplicationTest):
         res = self.client.get('/suppliers/submission/services/1')
 
         assert_in(u'1 optional question unanswered', res.get_data(as_text=True))
-        assert_in(u'<button class="button-save">Mark as complete</button>',
+        assert_in(u'<input type="submit" class="button-save"  value="Mark as complete" />',
                   res.get_data(as_text=True))
 
 

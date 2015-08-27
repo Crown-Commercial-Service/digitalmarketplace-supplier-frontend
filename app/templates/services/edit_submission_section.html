@@ -30,27 +30,37 @@
 {% endblock %}
 
 {% block save_button %}
-  {% if request.args.get('return_to_summary') %}
+
+  {% if next_section_name and not return_to_summary %}
     {%
       with
-      label="Save and return to service",
+      label="Save and continue",
+      name = "continue_to_next_section",
       type="save"
     %}
-    {% include "toolkit/button.html" %}
+      {% include "toolkit/button.html" %}
+    {% endwith %}
+    <p class="next-page-message">
+      Next: {{ next_section_name }}
+    </p>
+    {%
+      with
+      type = "secondary",
+      label = "Save and return to service overview",
+      name = "return_to_overview"
+    %}
+      {% include "toolkit/button.html" %}
     {% endwith %}
   {% else %}
     {%
       with
       label="Save and continue",
-      type="save"
+      type="save",
+      name = "return_to_overview"
     %}
-    {% include "toolkit/button.html" %}
+      {% include "toolkit/button.html" %}
     {% endwith %}
   {% endif %}
-{% endblock %}
 
-{% block return_to_service_link %}
-  {% if service_data['serviceName'] %}
-  <a href="{{ url_for(".view_service_submission", service_id=service_id) }}">Return to service summary</a>
-  {% endif %}
 {% endblock %}
+{% block return_to_service_link %} {% endblock %}
