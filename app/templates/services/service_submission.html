@@ -57,7 +57,7 @@
     </p>
   {% endif %}
   {% if service_data.status == 'submitted' and declaration_status == 'complete' %}
-    <span class="service-status-published">This service is marked as complete and will be submitted at 3pm&nbsp;BST, 6 October</span>
+    <span class="service-status-published">This service is marked as complete and will be submitted at {{ deadline|safe }}</span>
   {% endif %}
   {% if service_data.status == 'not-submitted' and unanswered_required == 0 %}
     {% include "partials/complete_service.html" %}

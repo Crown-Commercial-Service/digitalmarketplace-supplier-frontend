@@ -46,6 +46,7 @@ def framework_dashboard():
             "complete": len(complete_drafts),
         },
         declaration_status=declaration_status,
+        deadline=current_app.config['G7_CLOSING_DATE'],
         **template_data
     ), 200
 

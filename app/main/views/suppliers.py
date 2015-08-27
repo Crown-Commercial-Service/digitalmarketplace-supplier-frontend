@@ -36,6 +36,7 @@ def dashboard():
         supplier=supplier,
         users=get_current_suppliers_users(),
         g7_interested=has_registered_interest_in_framework(data_api_client, 'g-cloud-7'),
+        deadline=current_app.config['G7_CLOSING_DATE'],
         **template_data
     ), 200
 
