@@ -6,5 +6,4 @@
     this.virtualPageViews.init();
     this.events.init();
   };
-  GOVUK.GDM.analytics.init();
 })(window);
