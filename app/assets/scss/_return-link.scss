@@ -2,3 +2,8 @@
   @include heading-27;
   margin-bottom: 25px;
 }
+
+.next-page-message {
+  color: $secondary-text-colour;
+  margin: -10px 0 $gutter 0;
+}
