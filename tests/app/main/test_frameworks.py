@@ -452,11 +452,17 @@ class TestSendClarificationQuestionEmail(BaseApplicationTest):
                 }
             )
 
-    def _assert_email(self, send_email, is_called=True):
+    def _assert_email(self, send_email, is_called=True, succeeds=True):
+
+        if succeeds:
+            assert_equal(2, send_email.call_count)
+        elif is_called:
+            assert_equal(1, send_email.call_count)
+        else:
+            assert_equal(0, send_email.call_count)
 
         if is_called:
-            assert_equal(1, send_email.call_count)
-            send_email.assert_called_once_with(
+            send_email.assert_any_call(
                 "digitalmarketplace@mailinator.com",
                 mock.ANY,
                 "MANDRILL",
@@ -465,9 +471,16 @@ class TestSendClarificationQuestionEmail(BaseApplicationTest):
                 "G-Cloud 7 Supplier",
                 ["clarification-question"]
             )
-
-        else:
-            assert_equal(0, send_email.call_count)
+        if succeeds:
+            send_email.assert_any_call(
+                "email@email.com",
+                mock.ANY,
+                "MANDRILL",
+                "Thanks for your clarification question",
+                "do-not-reply@digitalmarketplace.service.gov.uk",
+                "Digital Marketplace Admin",
+                ["clarification-question-confirm"]
+            )
 
     @mock.patch('dmutils.s3.S3')
     @mock.patch('app.main.views.frameworks.send_email')
@@ -488,7 +501,7 @@ class TestSendClarificationQuestionEmail(BaseApplicationTest):
         ]:
 
             response = self._send_email(invalid_clarification_question['question'])
-            self._assert_email(send_email, is_called=False)
+            self._assert_email(send_email, is_called=False, succeeds=False)
 
             assert_equal(response.status_code, 400)
             assert_true(
@@ -539,7 +552,7 @@ class TestSendClarificationQuestionEmail(BaseApplicationTest):
 
         clarification_question = 'This is a clarification question.'
         response = self._send_email(clarification_question)
-        self._assert_email(send_email)
+        self._assert_email(send_email, succeeds=False)
 
         assert_equal(response.status_code, 503)
 
