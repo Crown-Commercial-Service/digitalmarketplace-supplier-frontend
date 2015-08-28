@@ -7,7 +7,8 @@ from ..helpers.services import (
     get_section_error_messages,
     is_service_modifiable, is_service_associated_with_supplier,
     upload_draft_documents, get_service_attributes,
-    get_draft_document_url, count_unanswered_questions
+    get_draft_document_url, count_unanswered_questions,
+    has_changes_to_save
 )
 from ..helpers.frameworks import get_declaration_status
 from ... import data_api_client, flask_featureflags
@@ -443,6 +444,7 @@ def update_section_submission(service_id, section_id):
     else:
         update_data.update(uploaded_documents)
 
+    if not errors and has_changes_to_save(section, draft, update_data):
         try:
             data_api_client.update_draft_service(
                 service_id,

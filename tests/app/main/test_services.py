@@ -576,6 +576,20 @@ class TestEditDraftService(BaseApplicationTest):
             page_questions=['serviceSummary']
         )
 
+    def test_update_without_changes_is_not_sent_to_the_api(self, data_api_client, s3):
+        draft = self.empty_draft['services'].copy()
+        draft.update({'serviceSummary': u"summary"})
+        data_api_client.get_draft_service.return_value = {'services': draft}
+
+        res = self.client.post(
+            '/suppliers/submission/services/1/edit/service_description',
+            data={
+                'serviceSummary': u"summary",
+            })
+
+        assert_equal(res.status_code, 302)
+        assert_false(data_api_client.update_draft_service.called)
+
     def test_S3_should_not_be_instantiated_if_there_are_no_files(self, data_api_client, s3):
         data_api_client.get_draft_service.return_value = self.empty_draft
         res = self.client.post(
