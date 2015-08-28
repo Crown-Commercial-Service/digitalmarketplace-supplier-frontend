@@ -55,7 +55,7 @@
         var action = this.trackedNodes[i].eventData.action,
             label = this.trackedNodes[i].eventData.label;
 
-        GOVUK.analytics.trackEvent('ScrollTo', action, {label: label, nonInteraction: true});
+        GOVUK.analytics.trackEvent('ScrollOnSupplierDeclaration', action, {label: label, nonInteraction: true});
       }
     }
   };
