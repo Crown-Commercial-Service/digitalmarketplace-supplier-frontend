@@ -11,9 +11,41 @@ from dmutils.s3 import S3ResponseError
 from ..helpers import BaseApplicationTest
 
 
+def _return_fake_s3_file_dict(directory, filename, ext, last_modified=None, size=None):
+
+    return {
+        'path': '{}{}.{}'.format(directory, filename, ext),
+        'filename': filename,
+        'ext': ext,
+        'last_modified': last_modified or '2015-08-17T14:00:00.000Z',
+        'size': size if size is not None else 1
+    }
+
+
+@mock.patch('dmutils.s3.S3')
 @mock.patch('app.main.views.frameworks.data_api_client')
 class TestFrameworksDashboard(BaseApplicationTest):
-    def test_shows(self, data_api_client):
+
+    @staticmethod
+    def _assert_last_updated_times(doc, last_updateds):
+
+        for last_updated in last_updateds:
+            hint = doc.xpath(
+                '//li[contains(@class, "framework-application-section-last")]'
+                '//span[contains(text(), "{}")]'
+                '/../..'
+                '/div[@class="hint"]'.format(last_updated['text'])
+            )
+
+            if last_updated.get('time'):
+                time = hint[0].find('./time')
+                assert_equal(last_updated['time']['text'], time.text)
+                assert_equal(last_updated['time']['datetime'], time.get('datetime'))
+
+            else:
+                assert_equal(len(hint), 0)
+
+    def test_shows(self, data_api_client, s3):
         with self.app.test_client():
             self.login()
 
@@ -21,7 +53,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
 
             assert_equal(res.status_code, 200)
 
-    def test_interest_registered_in_framework(self, data_api_client):
+    def test_interest_registered_in_framework(self, data_api_client, s3):
         with self.app.test_client():
             self.login()
             data_api_client.find_audit_events.return_value = {
@@ -38,7 +70,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
                 object_id=1234,
                 data={"frameworkSlug": "g-cloud-7"})
 
-    def test_interest_in_framework_only_registered_once(self, data_api_client):
+    def test_interest_in_framework_only_registered_once(self, data_api_client, s3):
         with self.app.test_client():
             self.login()
             data_api_client.find_audit_events.return_value = {
@@ -50,7 +82,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
             assert_equal(res.status_code, 200)
             assert not data_api_client.create_audit_event.called
 
-    def test_declaration_status_when_complete(self, data_api_client):
+    def test_declaration_status_when_complete(self, data_api_client, s3):
         with self.app.test_client():
             self.login()
 
@@ -66,7 +98,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
                 len(doc.xpath(u'//p/strong[contains(text(), "You’ve made the supplier declaration")]')),
                 1)
 
-    def test_declaration_status_when_started(self, data_api_client):
+    def test_declaration_status_when_started(self, data_api_client, s3):
         with self.app.test_client():
             self.login()
 
@@ -90,7 +122,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
                 len(doc.xpath('//p[contains(text(), "You need to finish making the supplier declaration")]')),  # noqa
                 1)
 
-    def test_declaration_status_when_not_complete(self, data_api_client):
+    def test_declaration_status_when_not_complete(self, data_api_client, s3):
         with self.app.test_client():
             self.login()
 
@@ -102,6 +134,87 @@ class TestFrameworksDashboard(BaseApplicationTest):
             assert_equal(
                 len(doc.xpath('//p[contains(text(), "You need to make the supplier declaration")]')),
                 1)
+
+    def test_last_updated_exists_for_both_sections(self, data_api_client, s3):
+        files = [
+            ('g-cloud-7-updates/communications/', 'file 1', 'odt', '2015-01-01T14:00:00.000Z'),
+            ('g-cloud-7-updates/clarifications/', 'file 2', 'odt', '2015-02-02T14:00:00.000Z'),
+            ('', 'g-cloud-7-supplier-pack', 'zip', '2015-01-01T14:00:00.000Z'),
+        ]
+
+        s3.return_value.list.return_value = [
+            _return_fake_s3_file_dict(section, filename, ext, last_modified=last_modified)
+            for section, filename, ext, last_modified in files
+        ]
+
+        with self.app.test_client():
+            self.login()
+
+            res = self.client.get("/suppliers/frameworks/g-cloud-7")
+            doc = html.fromstring(res.get_data(as_text=True))
+            last_updateds = [
+                {
+                    'text': "Download guidance and legal documentation (.zip)",
+                    'time': {
+                        'text': 'Thursday 01 January 2015',
+                        'datetime': '2015-01-01T14:00:00.000Z'
+                    }
+                },
+                {
+                    'text': "Read updates and ask clarification questions",
+                    'time': {
+                        'text': 'Monday 02 February 2015',
+                        'datetime': '2015-02-02T14:00:00.000Z'
+                    }
+                }
+            ]
+
+            self._assert_last_updated_times(doc, last_updateds)
+
+    def test_last_updated_exists_for_one_section(self, data_api_client, s3):
+        files = [
+            ('', 'g-cloud-7-supplier-pack', 'zip', '2015-01-01T14:00:00.000Z'),
+        ]
+
+        s3.return_value.list.return_value = [
+            _return_fake_s3_file_dict(section, filename, ext, last_modified=last_modified)
+            for section, filename, ext, last_modified in files
+        ]
+
+        with self.app.test_client():
+            self.login()
+
+            res = self.client.get("/suppliers/frameworks/g-cloud-7")
+            doc = html.fromstring(res.get_data(as_text=True))
+            last_updateds = [
+                {
+                    'text': "Download guidance and legal documentation (.zip)",
+                    'time': {
+                        'text': 'Thursday 01 January 2015',
+                        'datetime': '2015-01-01T14:00:00.000Z'
+                    }
+                },
+                {
+                    'text': "Read updates and ask clarification questions"
+                }
+            ]
+
+            self._assert_last_updated_times(doc, last_updateds)
+
+    def test_last_updated_does_not_exist(self, data_api_client, s3):
+        s3.return_value.list.return_value = []
+
+        with self.app.test_client():
+            self.login()
+
+            res = self.client.get("/suppliers/frameworks/g-cloud-7")
+            doc = html.fromstring(res.get_data(as_text=True))
+            last_updateds = [
+                {'text': "Download guidance and legal documentation (.zip)"},
+                {'text': "Read updates and ask clarification questions"}
+            ]
+
+            self._assert_last_updated_times(doc, last_updateds)
 
 
 FULL_G7_SUBMISSION = {
@@ -300,19 +413,6 @@ class TestFrameworkUpdatesPage(BaseApplicationTest):
                     in self.strip_all_whitespace(table_captions[index].text)
                 )
 
-    @staticmethod
-    def _return_fake_s3_file_dict(directory, file, last_modified=None, size=None):
-
-        filename, ext = os.path.splitext(file)
-
-        return {
-            'path': 'g-cloud-7-updates/{}/{}'.format(directory, file),
-            'filename': filename,
-            'ext': ext[:1],
-            'last_modified': last_modified or '2015-08-17T14:00:00.000Z',
-            'size': size if size is not None else 1
-        }
-
     def test_should_be_a_503_if_connecting_to_amazon_fails(self, s3):
         # if s3 throws a 500-level error
         s3.side_effect = S3ResponseError(500, 'Amazon has collapsed. The internet is over.')
@@ -354,17 +454,16 @@ class TestFrameworkUpdatesPage(BaseApplicationTest):
 
     def test_the_tables_should_be_displayed_correctly(self, s3):
 
-        filenames = [
-            ('communications', 'file 1', 'odt'),
-            ('communications', 'file 2', 'odt'),
-            ('clarifications', 'file 3', 'odt'),
-            ('clarifications', 'file 4', 'odt'),
+        files = [
+            ('g-cloud-7-updates/communications/', 'file 1', 'odt'),
+            ('g-cloud-7-updates/communications/', 'file 2', 'odt'),
+            ('g-cloud-7-updates/clarifications/', 'file 3', 'odt'),
+            ('g-cloud-7-updates/clarifications/', 'file 4', 'odt'),
         ]
 
         # the communications table is always before the clarifications table
         s3.return_value.list.return_value = [
-            self._return_fake_s3_file_dict(section, "{}.{}".format(filename, ext))
-            for section, filename, ext in filenames
+            _return_fake_s3_file_dict(section, filename, ext) for section, filename, ext in files
         ]
 
         with self.app.test_client():
@@ -385,28 +484,27 @@ class TestFrameworkUpdatesPage(BaseApplicationTest):
 
                 # test that the file names and urls are right
                 for row in item_rows:
-                    section, filename, ext = filenames.pop(0)
+                    section, filename, ext = files.pop(0)
                     filename_link = row.find('.//a[@class="document-link-with-icon"]')
 
                     assert_true(filename in filename_link.text_content())
                     assert_equal(
                         filename_link.get('href'),
-                        '/suppliers/frameworks/g-cloud-7/g-cloud-7-updates/{}/{}.{}'.format(
+                        '/suppliers/frameworks/g-cloud-7/{}{}.{}'.format(
                             section, filename.replace(' ', '%20'), ext
                         )
                     )
 
     def test_names_with_the_section_name_in_them_will_display_correctly(self, s3):
 
-        # for example: 'g-cloud-7-updates/clarifications/communications.odf'
-        filenames = [
-            ('communications', 'clarifications file', 'odt'),
-            ('clarifications', 'communications file', 'odt')
+        # for example: 'g-cloud-7-updates/clarifications/communications%20file.odf'
+        files = [
+            ('g-cloud-7-updates/communications/', 'clarifications file', 'odt'),
+            ('g-cloud-7-updates/clarifications/', 'communications file', 'odt')
         ]
 
         s3.return_value.list.return_value = [
-            self._return_fake_s3_file_dict(section, "{}.{}".format(filename, ext))
-            for section, filename, ext in filenames
+            _return_fake_s3_file_dict(section, filename, ext) for section, filename, ext in files
         ]
 
         with self.app.test_client():
@@ -427,13 +525,13 @@ class TestFrameworkUpdatesPage(BaseApplicationTest):
 
                 # test that the file names and urls are right
                 for row in item_rows:
-                    section, filename, ext = filenames.pop(0)
+                    section, filename, ext = files.pop(0)
                     filename_link = row.find('.//a[@class="document-link-with-icon"]')
 
                     assert_true(filename in filename_link.text_content())
                     assert_equal(
                         filename_link.get('href'),
-                        '/suppliers/frameworks/g-cloud-7/g-cloud-7-updates/{}/{}.{}'.format(
+                        '/suppliers/frameworks/g-cloud-7/{}{}.{}'.format(
                             section, filename.replace(' ', '%20'), ext
                         )
                     )
