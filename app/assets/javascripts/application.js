@@ -6,7 +6,6 @@
 */
 //= include ../../../node_modules/govuk_frontend_toolkit/javascripts/govuk/analytics/tracker.js
 //= include ../../../node_modules/govuk_frontend_toolkit/javascripts/govuk/analytics/google-analytics-universal-tracker.js
-//= include ../../../node_modules/govuk_frontend_toolkit/javascripts/govuk/analytics/google-analytics-classic-tracker.js
 //= include ../../../node_modules/govuk_frontend_toolkit/javascripts/vendor/polyfills/bind.js
 //= include ../../../bower_components/jquery/dist/jquery.js
 //= include ../../../bower_components/hogan/web/builds/3.0.2/hogan-3.0.2.js
