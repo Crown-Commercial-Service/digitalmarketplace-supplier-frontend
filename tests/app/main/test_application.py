@@ -11,5 +11,5 @@ class TestApplication(BaseApplicationTest):
         res = self.client.get('/suppliers/static/javascripts/application.js')
         assert_equal(200, res.status_code)
         assert_true(
-            'GOVUK.analytics.trackPageview'
+            'analytics.trackPageview'
             in res.get_data(as_text=True))
