@@ -2,6 +2,19 @@
   "use strict";
 
   var pathName = root.location.pathname;
+  var queryParams = (function () {
+    var search = root.location.search,
+        queryParams = {};
+
+    // taken from https://developer.mozilla.org/en-US/docs/Web/API/URLUtils/search
+    if (search.length > 1) {
+      for (var aItKey, nKeyId = 0, aCouples = search.substr(1).split("&"); nKeyId < aCouples.length; nKeyId++) {
+        aItKey = aCouples[nKeyId].split("=");
+        queryParams[decodeURIComponent(aItKey[0])] = aItKey.length > 1 ? decodeURIComponent(aItKey[1]) : "";
+      }
+    }
+    return queryParams;
+  })();
 
   var virtualPageViews = {
     'viewsTracked': [],
@@ -17,7 +30,7 @@
     'declaration': {
       'pages': {
         'firstPage': '/suppliers/frameworks/g-cloud-7/declaration/g_cloud_7_essentials',
-        'lastPage': '/suppliers/frameworks/g-cloud-7/declaration/grounds_for_discretionary_exclusion'
+        'dashboard': '/suppliers/frameworks/g-cloud-7'
       },
       'registerFirstQuestionInteraction': function (e) {
         var $target,
@@ -34,9 +47,7 @@
         virtualPageViews.trackPageview(virtualPageViews.getViewFor('declaration', 'firstPage', 'accept-terms-of-participation') + '/' + option);
       },
       'registerDeclarationMade': function (e) {
-        if (pathName === this.pages.lastPage) {
-          virtualPageViews.trackPageview(virtualPageViews.getPageviewsFor('declaration', 'lastPage', 'make-declaration'));
-        }
+        virtualPageViews.trackPageview(virtualPageViews.getViewFor('declaration', 'dashboard', 'declaration-made'));
       }
     },
     'createANewService': {
@@ -61,8 +72,8 @@
       if (pathName === this.declaration.pages.firstPage) {
         $('body').on('click', 'form.supplier-declaration fieldset:eq(0) label.selection-button', this.declaration.registerFirstQuestionInteraction);
       }
-      if (pathName === this.declaration.pages.lastPage) {
-        $('body').on('click', 'form.supplier-declaration .button-save', this.declaration.registerDeclarationMade);
+      if ((pathName === this.declaration.pages.dashboard) && (typeof queryParams['declaration_completed'] !== 'undefined')) {
+        this.declaration.registerDeclarationMade();
       }
       if (pathName === this.createANewService.pages.firstPage) {
         $('body').on('click', 'form fieldset label.selection-button', this.createANewService.registerLotSelection);

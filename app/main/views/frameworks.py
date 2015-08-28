@@ -135,7 +135,7 @@ def framework_supplier_declaration(section_id):
                 if next_section:
                     return redirect(url_for('.framework_supplier_declaration', section_id=next_section))
                 else:
-                    return redirect(url_for('.framework_dashboard'))
+                    return redirect(url_for('.framework_dashboard', declaration_completed='true'))
             except APIError as e:
                 abort(e.status_code)
     else:
