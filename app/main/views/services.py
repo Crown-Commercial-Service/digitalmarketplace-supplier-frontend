@@ -251,7 +251,8 @@ def create_new_draft_service():
         url_for(
             ".edit_service_submission",
             service_id=draft_service.get('id'),
-            section_id=content.get_next_editable_section_id()
+            section_id=content.get_next_editable_section_id(),
+            return_to_summary=1
         )
     )
 
