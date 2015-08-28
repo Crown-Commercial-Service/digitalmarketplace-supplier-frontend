@@ -105,7 +105,8 @@
           category = 'internal-link',
           action = $target.text(),
           fileTypesRegExp = /\.(pdf|pda|odt|ods|odp|zip)$/,
-          currentHost = new RegExp(root.location.hostname);
+          currentHost = root.location.hostname,
+          currentHostRegExp = (currentHost !== '') ? new RegExp(currentHost) : /^$/g; // this ccode can run in an environment without a host, ie. a html file
 
       /* 
          File type matching based on those in:
@@ -120,7 +121,7 @@
       if (href.match(fileTypesRegExp) !== null) { // download link
         category = 'download';
       }
-      else if ((href.match(/^(https|http){1}/) !== null) && (href.match(currentHost) === null)) {
+      else if ((href.match(/^(https|http){1}/) !== null) && (href.match(currentHostRegExp) === null)) {
         category = 'external-link';
       }
       GOVUK.analytics.trackEvent(category, action);

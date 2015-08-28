@@ -67,10 +67,7 @@
         option = $target.children('input').val().toLowerCase();
         virtualPageViews.trackPageview(virtualPageViews.getViewFor('createANewService', 'firstPage', 'lot') + '/'     + option);
       },
-      'registerServiceCreated': function () {
-        var serviceId = queryParams['service_completed'],
-            lot = queryParams['lot'];
-
+      'registerServiceCreated': function (serviceId, lot) {
         virtualPageViews.trackPageview(virtualPageViews.getViewFor('createANewService', 'services', 'service-' + serviceId + '-created-lot-' + lot));
       }
     },
@@ -85,7 +82,10 @@
         $('body').on('click', 'form fieldset label.selection-button', this.createANewService.registerLotSelection);
       }
       if ((pathName === this.createANewService.pages.services) && (typeof queryParams['service_completed'] !== 'undefined')) {
-        this.createANewService.registerServiceCreated();
+        var serviceId = queryParams['service_completed'],
+            lot = queryParams['lot'];
+
+        this.createANewService.registerServiceCreated(serviceId, lot);
       }
     }
   };
