@@ -346,6 +346,22 @@ class TestSupplierDeclaration(BaseApplicationTest):
             assert_equal(res.status_code, 302)
             data_api_client.answer_selection_questions.assert_called()
 
+    def test_post_valid_data_to_complete_declaration(self, data_api_client):
+        with self.app.test_client():
+            self.login()
+            data_api_client.get_selection_answers.return_value = {
+                "selectionAnswers": {
+                    "questionAnswers": {"status": "started"}
+                }
+            }
+            res = self.client.post(
+                '/suppliers/frameworks/g-cloud-7/declaration/grounds_for_discretionary_exclusion',
+                data=FULL_G7_SUBMISSION)
+
+            assert_equal(res.status_code, 302)
+            assert_equal(res.location, 'http://localhost/suppliers/frameworks/g-cloud-7?declaration_completed=true')
+            data_api_client.answer_selection_questions.assert_called()
+
     def test_post_valid_data_with_api_failure(self, data_api_client):
         with self.app.test_client():
             self.login()

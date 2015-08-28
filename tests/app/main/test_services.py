@@ -528,6 +528,9 @@ class TestCompleteDraft(BaseApplicationTest):
 
         res = self.client.post('/suppliers/submission/services/1/complete')
         assert_equal(res.status_code, 302)
+        assert_true('lot=scs' in res.location)
+        assert_true('service_completed=1' in res.location)
+        assert_true('/suppliers/frameworks/g-cloud-7/services' in res.location)
 
     def test_complete_draft_checks_supplier_id(self, api_client):
         self.draft['supplierId'] = 2
