@@ -6,12 +6,6 @@
 
 {% block main_content %}
 
-  {% if errors %}
-    {% with errors = errors.values() %}
-      {% include 'toolkit/forms/validation.html' %}
-    {% endwith %}
-  {% endif %}
-
   <div class="grid-row">
     <div class="column-two-thirds">
 
@@ -24,6 +18,13 @@
 
     </div>
   </div>
+
+  {% if errors %}
+    {% with errors = errors.values() %}
+      {% include 'toolkit/forms/validation.html' %}
+    {% endwith %}
+  {% endif %}
+
   <form method="post" enctype="multipart/form-data">
 
     {% for question in section.questions %}
