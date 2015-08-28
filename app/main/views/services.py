@@ -8,7 +8,7 @@ from ..helpers.services import (
     is_service_modifiable, is_service_associated_with_supplier,
     upload_draft_documents, get_service_attributes,
     get_draft_document_url, count_unanswered_questions,
-    has_changes_to_save
+    has_changes_to_save, get_next_section_name
 )
 from ..helpers.frameworks import get_declaration_status
 from ... import data_api_client, flask_featureflags
@@ -398,19 +398,12 @@ def edit_service_submission(service_id, section_id):
     if section is None or not section.editable:
         abort(404)
 
-    next_section_name = None
-
-    if content.get_next_editable_section_id(section_id):
-        next_section_name = content.get_section(
-            content.get_next_editable_section_id(section_id)
-        ).name
-
     draft = section.unformat_data(draft)
 
     return render_template(
         "services/edit_submission_section.html",
         section=section,
-        next_section_name=next_section_name,
+        next_section_name=get_next_section_name(content, section_id),
         service_data=draft,
         service_id=service_id,
         return_to_summary=bool(request.args.get('return_to_summary')),
@@ -462,8 +455,10 @@ def update_section_submission(service_id, section_id):
         return render_template(
             "services/edit_submission_section.html",
             section=section,
+            next_section_name=get_next_section_name(content, section_id),
             service_data=update_data,
             service_id=service_id,
+            return_to_summary=bool(request.args.get('return_to_summary')),
             errors=errors,
             **main.config['BASE_TEMPLATE_DATA']
             )
