@@ -182,41 +182,20 @@ def start_new_draft_service():
     Page to kick off creation of a new (G7) service.
     """
     template_data = main.config['BASE_TEMPLATE_DATA']
-    breadcrumbs = [
-        {
-            "link": "/",
-            "label": "Digital Marketplace"
-        },
-        {
-            "link": url_for(".dashboard"),
-            "label": "Your account"
-        },
-        {
-            "link": url_for(".framework_dashboard"),
-            "label": "Apply to G-Cloud 7"
-        }
-    ]
 
-    lots = new_service_content.get_question('lot')
-    lots['type'] = 'radio'
-    lots['name'] = 'lot'
-    lots.pop('error', None)
-
-    # errors if they exist
-    error, errors = request.args.get('error', None), []
-    if error:
-        lots['error'] = error
-        errors.append({
-            "input_name": lots['name'],
-            "question": lots['question']
-        })
+    question = new_service_content.get_question('lot')
+    section = {
+        "name": 'Create new service',
+        "questions": [question]
+    }
 
     return render_template(
-        "services/create_new_draft_service.html",
-        errors=errors,
-        breadcrumbs=breadcrumbs,
-        **dict(template_data, **lots)
-    ), 200 if not errors else 400
+        "services/edit_submission_section.html",
+        question=question,
+        service_data={},
+        section=section,
+        **dict(template_data)
+    ), 200
 
 
 @main.route('/submission/g-cloud-7/create', methods=['POST'])
@@ -229,9 +208,28 @@ def create_new_draft_service():
     lot = request.form.get('lot', None)
 
     if not lot:
-        return redirect(
-            url_for(".start_new_draft_service", error="Answer is required")
-        )
+        question = new_service_content.get_question('lot')
+        section = {
+            "name": 'Create new service',
+            "questions": [question]
+        }
+
+        errors = {
+            question['id']: {
+                "input_name": question['id'],
+                "question": question['question'],
+                "message": "Answer is required"
+            }
+        }
+
+        return render_template(
+            "services/edit_submission_section.html",
+            question=question,
+            service_data={},
+            section=section,
+            errors=errors,
+            **main.config['BASE_TEMPLATE_DATA']
+        ), 400
 
     supplier_id = current_user.supplier_id
     user = current_user.email_address
