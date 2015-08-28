@@ -302,7 +302,9 @@ def complete_draft_service(service_id):
 
     flash({'service_name': draft.get('serviceName')}, 'service_completed')
 
-    return redirect(url_for(".framework_services"))
+    return redirect(url_for(".framework_services",
+                    service_completed=service_id,
+                    lot=draft['lot'].lower()))
 
 
 @main.route('/submission/services/<string:service_id>/delete', methods=['POST'])

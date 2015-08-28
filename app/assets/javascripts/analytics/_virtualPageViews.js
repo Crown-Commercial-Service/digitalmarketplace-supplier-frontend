@@ -46,14 +46,14 @@
         option = $target.text().trim().toLowerCase();
         virtualPageViews.trackPageview(virtualPageViews.getViewFor('declaration', 'firstPage', 'accept-terms-of-participation') + '/' + option);
       },
-      'registerDeclarationMade': function (e) {
+      'registerDeclarationMade': function () {
         virtualPageViews.trackPageview(virtualPageViews.getViewFor('declaration', 'dashboard', 'declaration-made'));
       }
     },
     'createANewService': {
       'pages': {
         'firstPage': '/suppliers/submission/g-cloud-7/create',
-        'lastPage': ''
+        'services': '/suppliers/frameworks/g-cloud-7/services'
       },
       'registerLotSelection': function (e) {
         var $target = $(e.target),
@@ -66,6 +66,12 @@
 
         option = $target.children('input').val().toLowerCase();
         virtualPageViews.trackPageview(virtualPageViews.getViewFor('createANewService', 'firstPage', 'lot') + '/'     + option);
+      },
+      'registerServiceCreated': function () {
+        var serviceId = queryParams['service_completed'],
+            lot = queryParams['lot'];
+
+        virtualPageViews.trackPageview(virtualPageViews.getViewFor('createANewService', 'services', 'service-' + serviceId + '-created-lot-' + lot));
       }
     },
     'init': function () {
@@ -77,6 +83,9 @@
       }
       if (pathName === this.createANewService.pages.firstPage) {
         $('body').on('click', 'form fieldset label.selection-button', this.createANewService.registerLotSelection);
+      }
+      if ((pathName === this.createANewService.pages.services) && (typeof queryParams['service_completed'] !== 'undefined')) {
+        this.createANewService.registerServiceCreated();
       }
     }
   };
