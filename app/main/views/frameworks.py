@@ -50,14 +50,12 @@ def framework_dashboard():
             "complete": len(complete_drafts),
         },
         declaration_status=declaration_status,
-<<<<<<< HEAD
         deadline=current_app.config['G7_CLOSING_DATE'],
-=======
         last_modified={
             'supplier_pack': get_last_modified_from_first_matching_file(key_list, 'g-cloud-7-supplier-pack.zip'),
             'supplier_updates': get_last_modified_from_first_matching_file(key_list, 'g-cloud-7-updates/')
         },
->>>>>>> Display last_modified times on g-cloud 7 dashboard
+
         **template_data
     ), 200
 
