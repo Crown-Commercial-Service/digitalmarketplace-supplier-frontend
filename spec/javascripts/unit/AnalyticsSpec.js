@@ -6,21 +6,19 @@ describe("GOVUK.Analytics", function () {
     spyOn(window, 'ga');
   });
 
-  describe('when created', function() {
+  describe('when registered', function() {
     var universalSetupArguments;
 
     beforeEach(function() {
-      analytics = new window.GOVUK.Analytics({
-        universalId: 'universal-id',
-        cookieDomain: 'www.digitalmarketplace.service.gov.uk'
-      });
+      GOVUK.GDM.analytics.init();
       universalSetupArguments = window.ga.calls.allArgs();
     });
 
     it('configures a universal tracker', function() {
-      expect(universalSetupArguments[0]).toEqual(['create', 'universal-id', {
-        'cookieDomain': 'www.digitalmarketplace.service.gov.uk'
+      var trackerId = (document.domain === 'www.digitalmarketplace.service.gov.uk') ? 'UA-49258698-1' : 'UA-49258698-3';
+      expect(universalSetupArguments[0]).toEqual(['create', trackerId, {
+        'cookieDomain': document.domain
       }]);
     });
-  })
+  });
 });
