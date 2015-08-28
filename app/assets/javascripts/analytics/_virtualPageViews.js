@@ -45,9 +45,6 @@
 
         option = $target.text().trim().toLowerCase();
         virtualPageViews.trackPageview(virtualPageViews.getViewFor('declaration', 'firstPage', 'accept-terms-of-participation') + '/' + option);
-      },
-      'registerDeclarationMade': function () {
-        virtualPageViews.trackPageview(virtualPageViews.getViewFor('declaration', 'dashboard', 'declaration-made'));
       }
     },
     'createANewService': {
@@ -66,26 +63,14 @@
 
         option = $target.children('input').val().toLowerCase();
         virtualPageViews.trackPageview(virtualPageViews.getViewFor('createANewService', 'firstPage', 'lot') + '/'     + option);
-      },
-      'registerServiceCreated': function (serviceId, lot) {
-        virtualPageViews.trackPageview(virtualPageViews.getViewFor('createANewService', 'services', 'service-' + serviceId + '-created-lot-' + lot));
       }
     },
     'init': function () {
       if (pathName === this.declaration.pages.firstPage) {
         $('body').on('click', 'form.supplier-declaration fieldset:eq(0) label.selection-button', this.declaration.registerFirstQuestionInteraction);
       }
-      if ((pathName === this.declaration.pages.dashboard) && (typeof queryParams['declaration_completed'] !== 'undefined')) {
-        this.declaration.registerDeclarationMade();
-      }
       if (pathName === this.createANewService.pages.firstPage) {
         $('body').on('click', 'form fieldset label.selection-button', this.createANewService.registerLotSelection);
-      }
-      if ((pathName === this.createANewService.pages.services) && (typeof queryParams['service_completed'] !== 'undefined')) {
-        var serviceId = queryParams['service_completed'],
-            lot = queryParams['lot'];
-
-        this.createANewService.registerServiceCreated(serviceId, lot);
       }
     }
   };

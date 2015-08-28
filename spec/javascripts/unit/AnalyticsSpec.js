@@ -83,12 +83,6 @@ describe("GOVUK.Analytics", function () {
         'page': '/suppliers/frameworks/g-cloud-7/declaration/g_cloud_7_essentials/interactions/accept-terms-of-participation/yes'
       }]);
     });
-    it('tracks completed supplier declarations', function () {
-      GOVUK.GDM.analytics.virtualPageViews.declaration.registerDeclarationMade();
-      expect(window.ga.calls.first().args).toEqual(['send', 'pageview', {
-        'page': '/suppliers/frameworks/g-cloud-7/interactions/declaration-made'
-      }]);
-    });
     it('tracks the lot selection of a new service', function () {
       var radio = document.createElement('input'),
           mockControl = document.createElement('label');
@@ -102,12 +96,6 @@ describe("GOVUK.Analytics", function () {
       });
       expect(window.ga.calls.first().args).toEqual(['send', 'pageview', {
         'page': '/suppliers/submission/g-cloud-7/create/interactions/lot/iaas'
-      }]);
-    });
-    it('tracks the completed services', function () {
-      GOVUK.GDM.analytics.virtualPageViews.createANewService.registerServiceCreated(1, 'iaas');
-      expect(window.ga.calls.first().args).toEqual(['send', 'pageview', {
-        'page': '/suppliers/frameworks/g-cloud-7/services/interactions/service-1-created-lot-iaas'
       }]);
     });
   });
