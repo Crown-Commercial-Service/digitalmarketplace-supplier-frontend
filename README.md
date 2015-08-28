@@ -112,6 +112,29 @@ The supplier frontend runs on port 5003. Use the app at [http://127.0.0.1:5003/]
 To use feature flags, check out the documentation in (the README of)
 [digitalmarketplace-utils](https://github.com/alphagov/digitalmarketplace-utils#using-featureflags).
 
+### Configuring boto
+
+[boto](https://github.com/boto/boto) provides a Python interface to Amazon Web Services; it's what we're using to download from and upload to our s3 buckets.
+
+If you don't [configure your AWS credentials correctly](http://boto.readthedocs.org/en/latest/boto_config_tut.html?highlight=~/.aws/credentials#credentials)
+on your local machine, you'll probably run into a nasty-looking `boto.exception.NoAuthHandlerFound` page at some point.
+
+The short version is that you should create an `~/.aws/credentials` file formatted like so:
+```bash
+[default]
+aws_access_key_id = ...
+aws_secret_access_key = ...
+```
+
+AWS access keys can be found/configured in the Identity and Access Management (IAM) section of the
+[digitalmarketplace-development AWS console](https://digitalmarketplace-development.signin.aws.amazon.com/console).
+
+
+#### Troubleshooting
+
+If you're experiencing problems connecting, make sure to `unset` any `env` variables used by boto (e.g. `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`,
+`AWS_SECURITY_TOKEN` and `AWS_PROFILE`) as they may be overriding the values in your credentials file.
+
 ### Running on Heroku
 
 - Setup the heroku command https://devcenter.heroku.com/articles/getting-started-with-python#set-up
