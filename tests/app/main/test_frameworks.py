@@ -31,10 +31,10 @@ class TestFrameworksDashboard(BaseApplicationTest):
 
         for last_updated in last_updateds:
             hint = doc.xpath(
-                '//li[contains(@class, "framework-application-section")]'
+                '//li[contains(@class, "framework-application-section-last")]'
                 '//span[contains(text(), "{}")]'
                 '/../..'
-                '/p[@class="hint"]'.format(last_updated['text'])
+                '/div[@class="hint"]'.format(last_updated['text'])
             )
 
             if last_updated.get('time'):
@@ -154,14 +154,14 @@ class TestFrameworksDashboard(BaseApplicationTest):
             doc = html.fromstring(res.get_data(as_text=True))
             last_updateds = [
                 {
-                    'text': "Download supplier pack (.zip)",
+                    'text': "Download guidance and legal documentation (.zip)",
                     'time': {
                         'text': 'Thursday 01 January 2015',
                         'datetime': '2015-01-01T14:00:00.000Z'
                     }
                 },
                 {
-                    'text': "Read G-Cloud 7 updates and ask clarification questions",
+                    'text': "Read updates and ask clarification questions",
                     'time': {
                         'text': 'Monday 02 February 2015',
                         'datetime': '2015-02-02T14:00:00.000Z'
@@ -188,14 +188,14 @@ class TestFrameworksDashboard(BaseApplicationTest):
             doc = html.fromstring(res.get_data(as_text=True))
             last_updateds = [
                 {
-                    'text': "Download supplier pack (.zip)",
+                    'text': "Download guidance and legal documentation (.zip)",
                     'time': {
                         'text': 'Thursday 01 January 2015',
                         'datetime': '2015-01-01T14:00:00.000Z'
                     }
                 },
                 {
-                    'text': "Read G-Cloud 7 updates and ask clarification questions"
+                    'text': "Read updates and ask clarification questions"
                 }
             ]
 
@@ -210,8 +210,8 @@ class TestFrameworksDashboard(BaseApplicationTest):
             res = self.client.get("/suppliers/frameworks/g-cloud-7")
             doc = html.fromstring(res.get_data(as_text=True))
             last_updateds = [
-                {'text': "Download supplier pack (.zip)"},
-                {'text': "Read G-Cloud 7 updates and ask clarification questions"}
+                {'text': "Download guidance and legal documentation (.zip)"},
+                {'text': "Read updates and ask clarification questions"}
             ]
 
             self._assert_last_updated_times(doc, last_updateds)
