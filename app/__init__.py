@@ -34,7 +34,7 @@ def create_app(config_name):
         feature_flags=feature_flags,
         login_manager=login_manager,
     )
-    application.permanent_session_lifetime = timedelta(hours=1)
+
     from .main import main as main_blueprint
     from .status import status as status_blueprint
 
