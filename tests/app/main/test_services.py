@@ -354,7 +354,7 @@ class TestEditService(BaseApplicationTest):
         assert_equal(res.status_code, 200)
         document = html.fromstring(res.get_data(as_text=True))
         assert_equal(
-            "This question requires an answer.",
+            "You need to answer this question.",
             document.xpath('//span[@id="error-serviceSummary"]/text()')[0].strip())
 
     def test_update_with_under_50_words_error(self, data_api_client):
@@ -398,24 +398,20 @@ class TestCreateDraftService(BaseApplicationTest):
     def _format_for_request(phrase):
         return phrase.replace(' ', '+')
 
-    def _test_get_create_draft_service_page(self, if_error_expected):
+    def test_get_create_draft_service_page(self, request):
         with self.app.test_client():
             self.login()
 
         res = self.client.get('/suppliers/submission/g-cloud-7/create')
-        assert_equal(res.status_code, 200 if not if_error_expected else 400)
-        assert_true("Create new service"
-                    in res.get_data(as_text=True))
+        assert_equal(res.status_code, 200)
+        assert_in("Create new service", res.get_data(as_text=True))
 
         lots = new_service_content.get_question('lot')
 
         for lot in lots['options']:
-            assert_true(lot['label'] in res.get_data(as_text=True))
+            assert_in(lot['label'], res.get_data(as_text=True))
 
-        if if_error_expected:
-            assert_in(self._validation_error, res.get_data(as_text=True))
-        else:
-            assert_not_in(self._validation_error, res.get_data(as_text=True))
+        assert_not_in(self._validation_error, res.get_data(as_text=True))
 
     def _test_post_create_draft_service(self, if_error_expected):
         with self.app.test_client():
@@ -441,24 +437,11 @@ class TestCreateDraftService(BaseApplicationTest):
                 '/suppliers/submission/g-cloud-7/create'
             )
 
-            assert_equal(res.status_code, 302)
-
-            error_message = '?error={}'.format(
-                self._format_for_request(self._answer_required)
-            )
-
             if if_error_expected:
-                assert_in(error_message, res.location)
+                assert_equal(res.status_code, 400)
+                assert_in(self._validation_error, res.get_data(as_text=True))
             else:
-                assert_not_in(error_message, res.location)
-
-    def test_get_create_draft_service_page_succeeds(self, request):
-        request.args.get.return_value = None
-        self._test_get_create_draft_service_page(if_error_expected=False)
-
-    def test_get_create_draft_service_page_fails(self, request):
-        request.args.get.return_value = self._answer_required
-        self._test_get_create_draft_service_page(if_error_expected=True)
+                assert_equal(res.status_code, 302)
 
     def test_post_create_draft_service_with_lot_selected_succeeds(self, request):
         request.form.get.return_value = "SCS"
@@ -804,7 +787,7 @@ class TestEditDraftService(BaseApplicationTest):
         assert_equal(res.status_code, 200)
         document = html.fromstring(res.get_data(as_text=True))
         assert_equal(
-            "This question requires an answer.",
+            "You need to answer this question.",
             document.xpath('//span[@id="error-serviceSummary"]/text()')[0].strip())
 
     def test_update_with_under_50_words_error(self, data_api_client, s3):

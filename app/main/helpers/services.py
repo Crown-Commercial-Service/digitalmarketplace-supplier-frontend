@@ -187,3 +187,10 @@ def has_changes_to_save(section, draft, update_data):
         any(draft.get(key) != update_data[key] for key in update_data) or
         any(question['id'] not in draft for question in section.questions)
     )
+
+
+def get_next_section_name(content, current_section_id):
+    if content.get_next_editable_section_id(current_section_id):
+        return content.get_section(
+            content.get_next_editable_section_id(current_section_id)
+        ).name
