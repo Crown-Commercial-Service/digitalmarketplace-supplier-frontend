@@ -837,6 +837,12 @@ class TestInviteUser(BaseApplicationTest):
             assert_true(
                 "Passwords must be between 10 and 50 characters" in res.get_data(as_text=True)
             )
+            assert_true(
+                "Create contributor account for Supplier Name" in res.get_data(as_text=True)
+            )
+            assert_true(
+                "testme@email.com" in res.get_data(as_text=True)
+            )
 
     @mock.patch('app.main.views.login.data_api_client')
     def test_should_create_user_if_user_does_not_exist(self, data_api_client):

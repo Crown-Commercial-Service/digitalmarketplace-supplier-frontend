@@ -272,7 +272,7 @@ def submit_create_user(encoded_token):
             form=form,
             token=None,
             email_address=None,
-            supplier=None,
+            supplier_name=None,
             **template_data), 400
     else:
         if form.validate_on_submit():
@@ -295,8 +295,8 @@ def submit_create_user(encoded_token):
                 valid_token=False,
                 form=form,
                 token=encoded_token,
-                email_address=None,
-                supplier=None,
+                email_address=token.get('email_address'),
+                supplier_name=token.get('supplier_name'),
                 **template_data), 400
 
 
