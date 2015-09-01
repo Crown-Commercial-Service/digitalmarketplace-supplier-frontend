@@ -186,7 +186,7 @@ def framework_updates(error_message=None, default_textbox_value=None):
         {
             'section': 'clarifications',
             'heading': "G-Cloud 7 clarification questions and answers",
-            'empty_message': "No clarification answers exist",
+            'empty_message': "No clarification questions have been posted yet",
             'files': []
         }
     ]
