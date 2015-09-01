@@ -1,8 +1,6 @@
-from dmutils.apiclient import APIError
 from flask import abort
 from flask_login import current_user
 from dmutils.audit import AuditTypes
-from ... import data_api_client
 from dmutils.apiclient import APIError
 import re
 from operator import add
@@ -15,10 +13,9 @@ EMAIL_REGEX = r'^[^@^\s]+@[^@^\.^\s]+(\.[^@^\.^\s]+)+$'
 VAT_NUMBER_REGEX = r'^(\S{9}|\S{12})$'
 TEXT_FIELD_CHARACTER_LIMIT = 5000
 OPTIONAL_FIELDS = set([
-    "SQ1-1d-i", "SQ1-1d-ii",
-    "SQ1-1e", "SQ1-1p-i", "SQ1-1p-ii", "SQ1-1p-iii", "SQ1-1p-iv",
+    "SQ1-1p-i", "SQ1-1p-ii", "SQ1-1p-iii", "SQ1-1p-iv",
     "SQ1-1q-i", "SQ1-1q-ii", "SQ1-1q-iii", "SQ1-1q-iv", "SQ1-1cii", "SQ1-1i-ii",
-    "SQ1-1j-i", "SQ1-1j-ii", "SQ1-3", "SQ4-1c", "SQ3-1k", "SQC3", "SQ1-1i-i",
+    "SQ1-1j-i", "SQ1-1j-ii", "SQ4-1c", "SQ3-1k", "SQ1-1i-i"
 ])
 
 
