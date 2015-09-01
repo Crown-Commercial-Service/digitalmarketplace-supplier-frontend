@@ -18,7 +18,7 @@ class Config(object):
     DM_DATA_API_AUTH_TOKEN = None
     DM_MANDRILL_API_KEY = None
     DM_CLARIFICATION_QUESTION_EMAIL = 'digitalmarketplace@mailinator.com'
-    G7_CLOSING_DATE = '3pm&nbsp;BST, 6 October 2015'
+    G7_CLOSING_DATE = '3pm&nbsp;<abbr title="British Summer Time">BST</abbr>, 6 October 2015'
 
     DM_G7_DRAFT_DOCUMENTS_BUCKET = None
     DM_G7_DRAFT_DOCUMENTS_URL = None
