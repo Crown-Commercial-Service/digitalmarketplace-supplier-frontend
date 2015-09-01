@@ -64,6 +64,7 @@
     name=question_content.id,
     question=question_content.question|markdown,
     hint=(question_content.hint or '')|markdown,
+    hint_underneath=(question_content.hint_underneath or False),
     value=service_data[question_content.id],
     id=question_content.id,
     options=question_content.options,
