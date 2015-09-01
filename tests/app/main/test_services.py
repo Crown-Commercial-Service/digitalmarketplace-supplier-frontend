@@ -354,7 +354,7 @@ class TestEditService(BaseApplicationTest):
         assert_equal(res.status_code, 200)
         document = html.fromstring(res.get_data(as_text=True))
         assert_equal(
-            "This question requires an answer.",
+            "You need to answer this question.",
             document.xpath('//span[@id="error-serviceSummary"]/text()')[0].strip())
 
     def test_update_with_under_50_words_error(self, data_api_client):
@@ -804,7 +804,7 @@ class TestEditDraftService(BaseApplicationTest):
         assert_equal(res.status_code, 200)
         document = html.fromstring(res.get_data(as_text=True))
         assert_equal(
-            "This question requires an answer.",
+            "You need to answer this question.",
             document.xpath('//span[@id="error-serviceSummary"]/text()')[0].strip())
 
     def test_update_with_under_50_words_error(self, data_api_client, s3):
