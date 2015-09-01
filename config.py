@@ -14,6 +14,8 @@ class Config(object):
     SESSION_COOKIE_HTTPONLY = True
     SESSION_COOKIE_SECURE = True
     WTF_CSRF_ENABLED = True
+    WTF_CSRF_TIME_LIMIT = None
+
     DM_DATA_API_URL = None
     DM_DATA_API_AUTH_TOKEN = None
     DM_MANDRILL_API_KEY = None
