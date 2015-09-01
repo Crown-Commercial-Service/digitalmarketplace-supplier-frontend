@@ -15,6 +15,10 @@ from ..forms.auth_forms import LoginForm, EmailAddressForm, ChangePasswordForm, 
 from ... import data_api_client
 
 
+ONE_DAY_IN_SECONDS = 86400
+SEVEN_DAYS_IN_SECONDS = 604800
+
+
 @main.route('/login', methods=["GET"])
 def render_login():
     next_url = request.args.get('next')
@@ -375,8 +379,12 @@ def send_invite_user():
 
 def decode_password_reset_token(token):
     try:
-        decoded, timestamp = decode_token(token, main.config["SECRET_KEY"], main.config["RESET_PASSWORD_SALT"])
-
+        decoded, timestamp = decode_token(
+            token,
+            main.config["SECRET_KEY"],
+            main.config["RESET_PASSWORD_SALT"],
+            ONE_DAY_IN_SECONDS
+        )
     except SignatureExpired:
         current_app.logger.info("Password reset attempt with expired token.")
         flash('token_expired', 'error')
@@ -411,7 +419,8 @@ def decode_invitation_token(encoded_token):
         token, timestamp = decode_token(
             encoded_token,
             current_app.config['SHARED_EMAIL_KEY'],
-            current_app.config['INVITE_EMAIL_SALT']
+            current_app.config['INVITE_EMAIL_SALT'],
+            SEVEN_DAYS_IN_SECONDS
         )
         if all(field in token for field in ("email_address", 'supplier_id', 'supplier_name')):
             return token
