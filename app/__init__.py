@@ -1,7 +1,7 @@
 import re
 
 from datetime import timedelta
-from flask import Flask, request, redirect, session, Markup
+from flask import Flask, request, redirect, session, Markup, abort
 from flask_login import LoginManager
 from flask_wtf.csrf import CsrfProtect
 
@@ -34,7 +34,7 @@ def create_app(config_name):
         feature_flags=feature_flags,
         login_manager=login_manager,
     )
-    application.permanent_session_lifetime = timedelta(hours=1)
+
     from .main import main as main_blueprint
     from .status import status as status_blueprint
 
@@ -47,6 +47,21 @@ def create_app(config_name):
     main_blueprint.config = application.config.copy()
 
     csrf.init_app(application)
+
+    @csrf.error_handler
+    def csrf_handler(reason):
+        if 'user_id' not in session:
+            application.logger.info(
+                u'csrf.session_expired: Redirecting user to log in page'
+            )
+
+            return application.login_manager.unauthorized()
+
+        application.logger.info(
+            u'csrf.invalid_token: Aborting request, user_id: %s', session['user_id']
+        )
+
+        abort(400, reason)
 
     @application.before_request
     def remove_trailing_slash():
