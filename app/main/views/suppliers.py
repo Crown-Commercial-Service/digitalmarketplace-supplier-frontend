@@ -343,6 +343,9 @@ def submit_company_summary():
 
 @main.route('/create-your-account', methods=['GET'])
 def create_your_account():
+    current_app.logger.info(
+        "suppliercreate: get create-your-account supplier_id:{}".format(
+            session.get('email_supplier_id', 'unknown')))
     form = EmailAddressForm()
 
     template_data = main.config['BASE_TEMPLATE_DATA']
@@ -356,6 +359,9 @@ def create_your_account():
 
 @main.route('/create-your-account', methods=['POST'])
 def submit_create_your_account():
+    current_app.logger.info(
+        "suppliercreate: post create-your-account supplier_id:{}".format(
+            session.get('email_supplier_id', 'unknown')))
     template_data = main.config['BASE_TEMPLATE_DATA']
     form = EmailAddressForm()
 
@@ -403,7 +409,8 @@ def submit_create_your_account():
             return redirect(url_for('.create_your_account_complete'), 302)
         except MandrillException as e:
             current_app.logger.error(
-                "Create user email failed to send error {} to {} supplier {} supplier id {} ".format(
+                "suppliercreate.fail: Create user email failed to " +
+                "send error {} to {} supplier {} supplier id {} ".format(
                     str(e),
                     form.email_address.data,
                     session['email_company_name'],
