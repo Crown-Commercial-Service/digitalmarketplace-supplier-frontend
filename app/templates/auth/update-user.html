@@ -15,13 +15,34 @@
     If you still can’t create a contributor account, email <a href="mailto:enquiries@digitalmarketplace.service.gov.uk">enquiries@digitalmarketplace.service.gov.uk</a>.
 </p>
 
-{% elif invalid_user %}
+{% elif is_locked_or_inactive %}
 
 <header class="page-heading-smaller">
-  <h1>The account associated with this email address is inactive, locked, or already registered with a different supplier.</h1>
+  <h1>The account associated with this email address is inactive or locked.</h1>
 </header>
 <p>
     Please email <a href="mailto:enquiries@digitalmarketplace.service.gov.uk">enquiries@digitalmarketplace.service.gov.uk</a> for help with setting up a new contributor account.
+</p>
+
+{% elif is_registered_to_another_supplier %}
+
+<header class="page-heading-smaller">
+  <h1>The account is already exists, but it is registered with a different supplier than the one who invited you.</h1>
+</header>
+<p>You were invited by "{{ is_registered_to_another_supplier.supplier_who_sent_the_invitation }}"</p>
+<p>Your account is registered with "{{ is_registered_to_another_supplier.supplier_registered_with_account }}"</p>
+<br>
+<p>
+    Login <a href="{{ url_for('.render_login') }}">here</a>, or, if this is not what you expected, email <a href="mailto:enquiries@digitalmarketplace.service.gov.uk">enquiries@digitalmarketplace.service.gov.uk</a> for help with switching over your account.
+</p>
+
+{% elif not is_buyer %}
+
+<header class="page-heading-smaller">
+  <h1>This account already exists.</h1>
+</header>
+<p>
+    Login <a href="{{ url_for('.render_login') }}">here</a>.
 </p>
 
 {% else %}

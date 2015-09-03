@@ -194,32 +194,15 @@ def create_user(encoded_token):
     token = decode_invitation_token(encoded_token)
 
     if token is None:
-        flash('token_invalid', 'error')
         current_app.logger.warning("createuser.token_invalid: %s", encoded_token)
-        return render_template(
-            "auth/create-user.html",
-            form=form,
-            token=None,
-            email_address=None,
-            supplier=None,
-            **template_data), 400
+        _token_error("auth/create-user.html", form=form, template_data=template_data)
+
     else:
         user_json = data_api_client.get_user(email_address=token.get("email_address"))
 
-        if user_json:
-            user = User.from_json(user_json)
-            invalid_user = user.is_locked() or not user.is_active() or not user_has_role(user_json, 'buyer')
+        if not user_json:
 
-            return render_template(
-                "auth/update-user.html",
-                user=user_json["users"],
-                form=form,
-                email_address=token['email_address'],
-                supplier_name=token['supplier_name'],
-                token=encoded_token,
-                invalid_user=invalid_user,
-                **template_data), 200
-        else:
+            # i. account does not exist -> create account
             return render_template(
                 "auth/create-user.html",
                 form=form,
@@ -228,6 +211,42 @@ def create_user(encoded_token):
                 token=encoded_token,
                 **template_data), 200
 
+        # at this point, we know the user account exists
+        user = User.from_json(user_json)
+
+        # ii. buyer account exists -> create account
+        # iii. supplier account exists -> message + login
+        is_buyer = user.role == 'buyer'
+
+        # iv. supplier account exists (wrong supplier) -> message + login
+        is_registered_to_another_supplier = False
+        if not is_buyer and token.get("supplier_name") != user.supplier_name:
+            is_registered_to_another_supplier = {
+                'supplier_who_sent_the_invitation': token.get("supplier_name"),
+                'supplier_registered_with_account': user.supplier_name,
+            }
+
+        # v. supplier account exists (and is logged in) -> supplier dashboard
+        if not current_user.is_anonymous() and current_user.email_address == user.email_address \
+                and not is_registered_to_another_supplier:
+
+            return redirect(url_for('.dashboard'))
+
+        # vi. locked or inactive -> message
+        is_locked_or_inactive = user.is_locked() or not user.is_active()
+
+        return render_template(
+            "auth/update-user.html",
+            user=user_json["users"],
+            form=form,
+            email_address=token['email_address'],
+            supplier_name=token['supplier_name'],
+            token=encoded_token,
+            is_locked_or_inactive=is_locked_or_inactive,
+            is_registered_to_another_supplier=is_registered_to_another_supplier,
+            is_buyer=is_buyer,
+            **template_data), 200
+
 
 @main.route('/update-user/<string:encoded_token>', methods=["POST"])
 def submit_update_user(encoded_token):
@@ -235,14 +254,9 @@ def submit_update_user(encoded_token):
 
     token = decode_invitation_token(encoded_token)
     if token is None:
-        flash('token_invalid', 'error')
         current_app.logger.warning("createuser.token_invalid: %s", encoded_token)
-        return render_template(
-            "auth/update-user.html",
-            token=None,
-            email_address=None,
-            supplier=None,
-            **template_data), 400
+        _token_error("auth/update-user.html", template_data=template_data)
+
     else:
         user_json = data_api_client.get_user(email_address=token.get("email_address"))
 
@@ -270,30 +284,12 @@ def submit_create_user(encoded_token):
 
     token = decode_invitation_token(encoded_token)
     if token is None:
-        flash('token_invalid', 'error')
         current_app.logger.warning("createuser.token_invalid: %s", encoded_token)
-        return render_template(
-            "auth/create-user.html",
-            form=form,
-            token=None,
-            email_address=None,
-            supplier_name=None,
-            **template_data), 400
+        _token_error("auth/create-user.html", form=form, template_data=template_data)
+
     else:
-        if form.validate_on_submit():
+        if not form.validate_on_submit():
 
-            user = data_api_client.create_user({
-                'name': form.name.data,
-                'password': form.password.data,
-                'emailAddress': token.get('email_address'),
-                'role': 'supplier',
-                'supplierId': token.get('supplier_id')
-            })
-            user = User.from_json(user)
-            login_user(user)
-
-            return redirect(url_for('.dashboard'))
-        else:
             current_app.logger.warning("createuser.invalid: %s", ", ".join(form.errors))
             return render_template(
                 "auth/create-user.html",
@@ -303,6 +299,18 @@ def submit_create_user(encoded_token):
                 email_address=token.get('email_address'),
                 supplier_name=token.get('supplier_name'),
                 **template_data), 400
+
+        user = data_api_client.create_user({
+            'name': form.name.data,
+            'password': form.password.data,
+            'emailAddress': token.get('email_address'),
+            'role': 'supplier',
+            'supplierId': token.get('supplier_id')
+        })
+        user = User.from_json(user)
+        login_user(user)
+
+        return redirect(url_for('.dashboard'))
 
 
 @main.route('/invite-user', methods=["GET"])
@@ -440,3 +448,14 @@ def decode_invitation_token(encoded_token):
 
 def token_created_before_password_last_changed(token_timestamp, user_timestamp):
     return token_timestamp < user_timestamp
+
+
+def _token_error(template_name=None, form=None, template_data=None):
+    flash('token_invalid', 'error')
+    return render_template(
+        template_name,
+        form=form,
+        token=None,
+        email_address=None,
+        supplier_name=None,
+        **template_data), 400
