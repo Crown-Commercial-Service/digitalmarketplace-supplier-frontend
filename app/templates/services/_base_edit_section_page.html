@@ -39,7 +39,7 @@
             name=question.id,
             service_data=service_data,
             type=question.assuranceApproach,
-            errors={}
+            errors=errors if errors else {}
           ) }}
         </div>
       {% endif %}

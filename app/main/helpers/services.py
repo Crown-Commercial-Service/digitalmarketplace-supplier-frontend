@@ -121,22 +121,27 @@ def upload_draft_documents(service, request_files, section):
 
 def get_section_error_messages(service_content, errors, lot):
     errors_map = {}
-    for error, message_key in errors.items():
-        if error == '_form':
+    for error_field, message_key in errors.items():
+        question_key = error_field
+        if error_field == '_form':
             abort(400, "Submitted data was not in a valid format")
-        else:
-            if error == 'serviceTypes':
-                error = 'serviceTypes{}'.format(lot)
-            elif error in PRICE_FIELDS:
-                message_key = _rewrite_pricing_error_key(error, message_key)
-                error = 'priceString'
-            validation_message = get_error_message(error, message_key, service_content)
-            question_id = service_content.get_question(error)['id']
-            errors_map[question_id] = {
-                'input_name': error,
-                'question': service_content.get_question(error)['question'],
-                'message': validation_message
-            }
+        elif error_field == 'serviceTypes':
+            error_field = 'serviceTypes{}'.format(lot)
+            question_key = error_field
+        elif error_field in PRICE_FIELDS:
+            message_key = _rewrite_pricing_error_key(error_field, message_key)
+            error_field = 'priceString'
+            question_key = error_field
+        elif message_key == 'assurance_required':
+            question_key = error_field + '--assurance'
+
+        validation_message = get_error_message(error_field, message_key, service_content)
+
+        errors_map[question_key] = {
+            'input_name': question_key,
+            'question': service_content.get_question(error_field)['question'],
+            'message': validation_message
+        }
     return errors_map
 
 
