@@ -5,6 +5,7 @@ var sass = require('gulp-sass');
 var filelog = require('gulp-filelog');
 var include = require('gulp-include');
 var colours = require('colors/safe');
+var jasmine = require('gulp-jasmine-phantom');
 
 // Paths
 var environment;
@@ -237,6 +238,25 @@ gulp.task(
     sspContentRoot, 'app/content'
   )
 );
+
+gulp.task('test', function () {
+  var manifest = require(repoRoot + 'spec/javascripts/manifest.js').manifest;
+
+  manifest.support = manifest.support.map(function (val) {
+    return val.replace(/^(\.\.\/){3}/, '');
+  });
+  manifest.test = manifest.test.map(function (val) {
+    return val.replace(/^\.\.\//, 'spec/javascripts/');
+  });
+
+  return gulp.src(manifest.test)
+    .pipe(jasmine({
+      'jasmine': '2.0',
+      'integration': true,
+      'abortOnFail': true,
+      'vendor': manifest.support
+    }));
+});
 
 gulp.task('watch', ['build:development'], function () {
   var jsWatcher = gulp.watch([ assetsFolder + '/**/*.js' ], ['js']);
