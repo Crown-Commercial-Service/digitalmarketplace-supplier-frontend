@@ -287,60 +287,6 @@ def submit_company_contact_details():
         ), 400
 
 
-@main.route('/company-summary', methods=['GET'])
-def company_summary():
-    template_data = main.config['BASE_TEMPLATE_DATA']
-    return render_template(
-        "suppliers/company_summary.html",
-        **template_data
-    ), 200
-
-
-@main.route('/company-summary', methods=['POST'])
-def submit_company_summary():
-    template_data = main.config['BASE_TEMPLATE_DATA']
-
-    required_fields = [
-        "email_address",
-        "phone_number",
-        "contact_name",
-        "duns_number",
-        "company_name"
-    ]
-
-    missing_fields = [field for field in required_fields if field not in session]
-
-    if not missing_fields:
-        try:
-            supplier = {
-                "name": session["company_name"],
-                "dunsNumber": str(session["duns_number"]),
-                "contactInformation": [{
-                    "email": session["email_address"],
-                    "phoneNumber": session["phone_number"],
-                    "contactName": session["contact_name"]
-                }]
-            }
-
-            if session.get("companies_house_number", None):
-                supplier["companiesHouseNumber"] = session.get("companies_house_number")
-
-            supplier = data_api_client.create_supplier(supplier)
-            session.clear()
-            session['email_company_name'] = supplier['suppliers']['name']
-            session['email_supplier_id'] = supplier['suppliers']['id']
-            return redirect(url_for('.create_your_account'), 302)
-        except HTTPError as e:
-            current_app.logger.error(str(e))
-            abort(503)
-    else:
-        return render_template(
-            "suppliers/company_summary.html",
-            missing_fields=missing_fields,
-            **template_data
-        ), 400
-
-
 @main.route('/create-your-account', methods=['GET'])
 def create_your_account():
     current_app.logger.info(
@@ -427,6 +373,60 @@ def submit_create_your_account():
         return render_template(
             "suppliers/create_your_account.html",
             form=form,
+            **template_data
+        ), 400
+
+
+@main.route('/company-summary', methods=['GET'])
+def company_summary():
+    template_data = main.config['BASE_TEMPLATE_DATA']
+    return render_template(
+        "suppliers/company_summary.html",
+        **template_data
+    ), 200
+
+
+@main.route('/company-summary', methods=['POST'])
+def submit_company_summary():
+    template_data = main.config['BASE_TEMPLATE_DATA']
+
+    required_fields = [
+        "email_address",
+        "phone_number",
+        "contact_name",
+        "duns_number",
+        "company_name"
+    ]
+
+    missing_fields = [field for field in required_fields if field not in session]
+
+    if not missing_fields:
+        try:
+            supplier = {
+                "name": session["company_name"],
+                "dunsNumber": str(session["duns_number"]),
+                "contactInformation": [{
+                    "email": session["email_address"],
+                    "phoneNumber": session["phone_number"],
+                    "contactName": session["contact_name"]
+                }]
+            }
+
+            if session.get("companies_house_number", None):
+                supplier["companiesHouseNumber"] = session.get("companies_house_number")
+
+            supplier = data_api_client.create_supplier(supplier)
+            session.clear()
+            session['email_company_name'] = supplier['suppliers']['name']
+            session['email_supplier_id'] = supplier['suppliers']['id']
+            return redirect(url_for('.create_your_account'), 302)
+        except HTTPError as e:
+            current_app.logger.error(str(e))
+            abort(503)
+    else:
+        return render_template(
+            "suppliers/company_summary.html",
+            missing_fields=missing_fields,
             **template_data
         ), 400
 
