@@ -46,7 +46,7 @@
   ) %}
   {% call summary.row(complete=session.get("duns_number", None)) %}
   {{ summary.field_name("DUNS number") }}
-  {{ summary.text(session.get("duns_number", "please answer this question")) }}
+  {{ summary.text(session.get("duns_number", "You must answer this question.")) }}
   {{ summary.edit_link("Edit", url_for(".duns_number")) }}
   {% endcall %}
   {% call summary.row() %}
@@ -56,22 +56,22 @@
   {% endcall %}
   {% call summary.row(complete=session.get("company_name", None)) %}
   {{ summary.field_name("Company name") }}
-  {{ summary.text(session.get("company_name", "please answer this question")) }}
+  {{ summary.text(session.get("company_name", "You must answer this question.")) }}
   {{ summary.edit_link("Edit", url_for(".company_name")) }}
   {% endcall %}
   {% call summary.row(complete=session.get("contact_name", None)) %}
   {{ summary.field_name("Primary contact name") }}
-  {{ summary.text(session.get("contact_name", "please answer this question")) }}
+  {{ summary.text(session.get("contact_name", "You must answer this question.")) }}
   {{ summary.edit_link("Edit", url_for(".company_contact_details")) }}
   {% endcall %}
   {% call summary.row(complete=session.get("phone_number", None)) %}
   {{ summary.field_name("Primary contact email") }}
-  {{ summary.text(session.get("email_address", "please answer this question")) }}
+  {{ summary.text(session.get("email_address", "You must answer this question.")) }}
   {{ summary.edit_link("Edit", url_for(".company_contact_details")) }}
   {% endcall %}
   {% call summary.row(complete=session.get("phone_number", None)) %}
   {{ summary.field_name("Primary contact phone number") }}
-  {{ summary.text(session.get("phone_number", "please answer this question")) }}
+  {{ summary.text(session.get("phone_number", "You must answer this question.")) }}
   {{ summary.edit_link("Edit", url_for(".company_contact_details")) }}
   {% endcall %}
   {% endcall %}

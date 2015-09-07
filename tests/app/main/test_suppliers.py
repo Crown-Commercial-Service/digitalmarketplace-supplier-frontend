@@ -864,5 +864,5 @@ class TestCreateSupplier(BaseApplicationTest):
             res = c.get("/suppliers/create-your-account-complete")
 
             assert_equal(res.status_code, 200)
-            assert_true('A validation email has been sent to my@email.com' in res.get_data(as_text=True))
+            assert_true('An email has been sent to my@email.com' in res.get_data(as_text=True))
             assert_false('email_sent_to' in session)
