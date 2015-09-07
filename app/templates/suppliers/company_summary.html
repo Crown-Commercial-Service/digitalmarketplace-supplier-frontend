@@ -28,14 +28,15 @@
 
 <div class="company-information-summary">
 
-      {% if missing_fields|length > 0%}
-      <div class="banner-warning-without-action">
-        <p class="banner-message">
-          Please complete all fields
-        </p>
-      </div>
-      {% endif %}
+  {% if missing_fields|length > 0%}
+  <div class="banner-warning-without-action">
+    <p class="banner-message">
+      Please complete all fields
+    </p>
+  </div>
+  {% endif %}
 
+  {{ summary.heading('Your company') }}
   {% call summary.mapping_table(
     caption="Summary table with content field as list",
     field_headings=[
@@ -74,6 +75,22 @@
   {{ summary.text(session.get("phone_number", "You must answer this question.")) }}
   {{ summary.edit_link("Edit", url_for(".company_contact_details")) }}
   {% endcall %}
+  {% endcall %}
+
+  {{ summary.heading('Your personal account') }}
+  {% call summary.mapping_table(
+    caption="Summary table with content field as list",
+    field_headings=[
+      "Field name",
+      "Field value",
+    ],
+    field_headings_visible=False
+  ) %}
+    {% call summary.row(complete=session.get("account_email_address", None)) %}
+    {{ summary.field_name("Email address") }}
+    {{ summary.text(session.get("account_email_address", "You must answer this question.")) }}
+    {{ summary.edit_link("Edit", url_for(".create_your_account")) }}
+    {% endcall %}
   {% endcall %}
 </div>
 <form action="{{ url_for('.submit_company_summary')}}" method="POST">

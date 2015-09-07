@@ -10,6 +10,7 @@ from lxml import html
 def get_supplier(*args, **kwargs):
     return {"suppliers": {
         "id": 1234,
+        "name": "Supplier Name",
         "description": "Supplier Description",
         "clients": ["Client One", "Client Two"],
         "contactInformation": [{
@@ -528,7 +529,7 @@ class TestCreateSupplier(BaseApplicationTest):
             }
         )
         assert_equal(res.status_code, 302)
-        assert_equal(res.location, 'http://localhost/suppliers/company-summary')
+        assert_equal(res.location, 'http://localhost/suppliers/create-your-account')
 
     def test_should_not_allow_contact_details_without_name(self):
         res = self.client.post(
@@ -656,7 +657,9 @@ class TestCreateSupplier(BaseApplicationTest):
             True)
 
     @mock.patch("app.main.suppliers.data_api_client")
-    def test_should_redirect_to_create_your_account_if_valid_session(self, data_api_client):
+    @mock.patch("app.main.suppliers.send_email")
+    @mock.patch("app.main.suppliers.generate_token")
+    def test_should_redirect_to_create_your_account_if_valid_session(self, generate_token, send_email, data_api_client):
         with self.client as c:
             with c.session_transaction() as sess:
                 sess['email_address'] = "email_address"
@@ -665,11 +668,12 @@ class TestCreateSupplier(BaseApplicationTest):
                 sess['duns_number'] = "duns_number"
                 sess['company_name'] = "company_name"
                 sess['companies_house_number'] = "companies_house_number"
+                sess['account_email_address'] = "valid@email.com"
 
             data_api_client.create_supplier.return_value = self.supplier()
             res = c.post("/suppliers/company-summary")
             assert_equal(res.status_code, 302)
-            assert_equal(res.location, "http://localhost/suppliers/create-your-account")
+            assert_equal(res.location, "http://localhost/suppliers/create-your-account-complete")
             data_api_client.create_supplier.assert_called_once_with({
                 "contactInformation": [{
                     "email": "email_address",
@@ -690,18 +694,26 @@ class TestCreateSupplier(BaseApplicationTest):
             assert_equal(session['email_company_name'], 'Supplier Name')
 
     @mock.patch("app.main.suppliers.data_api_client")
-    def test_should_allow_missing_companies_house_number(self, data_api_client):
+    @mock.patch("app.main.suppliers.send_email")
+    @mock.patch("app.main.suppliers.generate_token")
+    def test_should_allow_missing_companies_house_number(self, generate_token, send_email, data_api_client):
         with self.client.session_transaction() as sess:
             sess['email_address'] = "email_address"
             sess['phone_number'] = "phone_number"
             sess['contact_name'] = "contact_name"
             sess['duns_number'] = "duns_number"
             sess['company_name'] = "company_name"
+            sess['account_email_address'] = "account_email_address"
 
         data_api_client.create_supplier.return_value = self.supplier()
-        res = self.client.post("/suppliers/company-summary")
+        res = self.client.post(
+            "/suppliers/company-summary",
+            data={
+                'email_address': 'valid@email.com'
+            }
+        )
         assert_equal(res.status_code, 302)
-        assert_equal(res.location, "http://localhost/suppliers/create-your-account")
+        assert_equal(res.location, "http://localhost/suppliers/create-your-account-complete")
         data_api_client.create_supplier.assert_called_once_with({
             "contactInformation": [{
                 "email": "email_address",
@@ -736,6 +748,7 @@ class TestCreateSupplier(BaseApplicationTest):
             sess['contact_name'] = "contact_name"
             sess['duns_number'] = "duns_number"
             sess['company_name'] = "company_name"
+            sess['account_email_address'] = "account_email_address"
 
         data_api_client.create_supplier.side_effect = HTTPError("gone bad")
         res = self.client.post("/suppliers/company-summary")
@@ -765,26 +778,28 @@ class TestCreateSupplier(BaseApplicationTest):
         assert_equal(res.status_code, 400)
         assert_true("You must provide a valid email address." in res.get_data(as_text=True))
 
+    @mock.patch("app.main.suppliers.data_api_client")
     @mock.patch("app.main.suppliers.send_email")
     @mock.patch("app.main.suppliers.generate_token")
-    def test_should_allow_correct_email_address(self, generate_token, send_email):
+    def test_should_allow_correct_email_address(self, generate_token, send_email, data_api_client):
         with self.client as c:
             with c.session_transaction() as sess:
-                sess['email_company_name'] = "company_name"
-                sess['email_supplier_id'] = 1234
+                sess['email_address'] = "email_address"
+                sess['phone_number'] = "phone_number"
+                sess['contact_name'] = "contact_name"
+                sess['duns_number'] = "duns_number"
+                sess['company_name'] = "company_name"
+                sess['account_email_address'] = "valid@email.com"
 
-            res = c.post(
-                "/suppliers/create-your-account",
-                data={
-                    'email_address': "valid@email.com"
-                }
-            )
+            data_api_client.create_supplier.return_value = self.supplier()
+
+            res = c.post("/suppliers/company-summary")
 
             generate_token.assert_called_once_with(
                 {
                     "email_address": "valid@email.com",
-                    "supplier_id": 1234,
-                    "supplier_name": "company_name"
+                    "supplier_id": 12345,
+                    "supplier_name": "Supplier Name"
                 },
                 "KEY",
                 "InviteEmailSalt"
@@ -818,27 +833,30 @@ class TestCreateSupplier(BaseApplicationTest):
         assert_false(send_email.called)
         assert_equal(res.status_code, 400)
 
+    @mock.patch("app.main.suppliers.data_api_client")
     @mock.patch("app.main.suppliers.send_email")
     @mock.patch("app.main.suppliers.generate_token")
-    def test_should_be_a_503_if_mandrill_failure_on_creation_email(self, generate_token, send_email):
+    def test_should_be_a_503_if_mandrill_failure_on_creation_email(self, generate_token, send_email, data_api_client):
         with self.client.session_transaction() as sess:
-            sess['email_company_name'] = "company_name"
-            sess['email_supplier_id'] = 1234
+            sess['email_address'] = "email_address"
+            sess['phone_number'] = "phone_number"
+            sess['contact_name'] = "contact_name"
+            sess['duns_number'] = "duns_number"
+            sess['company_name'] = "company_name"
+            sess['account_email_address'] = "valid@email.com"
 
         send_email.side_effect = MandrillException("Failed")
+        data_api_client.create_supplier.return_value = self.supplier()
 
         res = self.client.post(
-            "/suppliers/create-your-account",
-            data={
-                'email_address': "valid@email.com"
-            }
+            "/suppliers/company-summary"
         )
 
         generate_token.assert_called_once_with(
             {
                 "email_address": "valid@email.com",
-                "supplier_id": 1234,
-                "supplier_name": "company_name"
+                "supplier_id": 12345,
+                "supplier_name": "Supplier Name"
             },
             "KEY",
             "InviteEmailSalt"
