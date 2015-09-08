@@ -867,8 +867,8 @@ class TestInviteUser(BaseApplicationTest):
 
             assert_equal(res.status_code, 200)
             for message in [
-                "You were invited by ‘Different Supplier Name’",
-                "Your account is registered with ‘Supplier Name’"
+                u"You were invited by ‘Different Supplier Name’",
+                u"Your account is registered with ‘Supplier Name’"
             ]:
                 assert_in(message, res.get_data(as_text=True))
 
