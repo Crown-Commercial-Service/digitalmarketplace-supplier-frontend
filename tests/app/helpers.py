@@ -59,7 +59,6 @@ class BaseApplicationTest(object):
             "role": role,
             "locked": locked,
             'active': active,
-            "active": active,
             'passwordChangedAt': password_changed_at
         }
 

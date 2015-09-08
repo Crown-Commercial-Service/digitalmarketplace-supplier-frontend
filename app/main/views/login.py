@@ -195,7 +195,14 @@ def create_user(encoded_token):
 
     if token is None:
         current_app.logger.warning("createuser.token_invalid: %s", encoded_token)
-        _token_error("auth/create-user.html", form=form, template_data=template_data)
+        flash('token_invalid', 'error')
+        return render_template(
+            "auth/create-user.html",
+            form=form,
+            token=None,
+            email_address=None,
+            supplier_name=None,
+            **template_data), 400
 
     else:
         user_json = data_api_client.get_user(email_address=token.get("email_address"))
@@ -255,7 +262,13 @@ def submit_update_user(encoded_token):
     token = decode_invitation_token(encoded_token)
     if token is None:
         current_app.logger.warning("createuser.token_invalid: %s", encoded_token)
-        _token_error("auth/update-user.html", template_data=template_data)
+        flash('token_invalid', 'error')
+        return render_template(
+            "auth/update-user.html",
+            token=None,
+            email_address=None,
+            supplier_name=None,
+            **template_data), 400
 
     else:
         user_json = data_api_client.get_user(email_address=token.get("email_address"))
@@ -285,7 +298,14 @@ def submit_create_user(encoded_token):
     token = decode_invitation_token(encoded_token)
     if token is None:
         current_app.logger.warning("createuser.token_invalid: %s", encoded_token)
-        _token_error("auth/create-user.html", form=form, template_data=template_data)
+        flash('token_invalid', 'error')
+        return render_template(
+            "auth/create-user.html",
+            form=form,
+            token=None,
+            email_address=None,
+            supplier_name=None,
+            **template_data), 400
 
     else:
         if not form.validate_on_submit():
@@ -448,14 +468,3 @@ def decode_invitation_token(encoded_token):
 
 def token_created_before_password_last_changed(token_timestamp, user_timestamp):
     return token_timestamp < user_timestamp
-
-
-def _token_error(template_name=None, form=None, template_data=None):
-    flash('token_invalid', 'error')
-    return render_template(
-        template_name,
-        form=form,
-        token=None,
-        email_address=None,
-        supplier_name=None,
-        **template_data), 400
