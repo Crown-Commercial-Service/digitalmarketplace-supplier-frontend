@@ -19,7 +19,7 @@
 {% block main_content %}
 
 {%
-  with heading = "Check your company information "
+  with heading = "Check your information "
 %}
 {% include "toolkit/page-heading.html" %}
 {% endwith %}
@@ -31,12 +31,12 @@
   {% if missing_fields|length > 0%}
   <div class="banner-warning-without-action">
     <p class="banner-message">
-      Please complete all fields
+      You must answer all the questions
     </p>
   </div>
   {% endif %}
 
-  {{ summary.heading('Your company') }}
+  {{ summary.heading('Your company details') }}
   {% call summary.mapping_table(
     caption="Summary table with content field as list",
     field_headings=[
@@ -77,7 +77,7 @@
   {% endcall %}
   {% endcall %}
 
-  {{ summary.heading('Your personal account') }}
+  {{ summary.heading('Your login details') }}
   {% call summary.mapping_table(
     caption="Summary table with content field as list",
     field_headings=[
@@ -98,7 +98,7 @@
   {%
     with
       type = "save",
-      label = "Create supplier account"
+      label = "Create account"
   %}
   {% include "toolkit/button.html" %}
   {% endwith %}

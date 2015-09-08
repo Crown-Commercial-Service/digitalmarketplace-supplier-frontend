@@ -653,7 +653,7 @@ class TestCreateSupplier(BaseApplicationTest):
         res = self.client.post("/suppliers/company-summary")
         assert_equal(res.status_code, 400)
         assert_equal(
-            'Please complete all fields' in res.get_data(as_text=True),
+            'You must answer all the questions' in res.get_data(as_text=True),
             True)
 
     @mock.patch("app.main.suppliers.data_api_client")
@@ -737,7 +737,7 @@ class TestCreateSupplier(BaseApplicationTest):
         assert_equal(res.status_code, 400)
         assert_equal(data_api_client.create_supplier.called, False)
         assert_equal(
-            'Please complete all fields' in res.get_data(as_text=True),
+            'You must answer all the questions' in res.get_data(as_text=True),
             True)
 
     @mock.patch("app.main.suppliers.data_api_client")
@@ -823,10 +823,7 @@ class TestCreateSupplier(BaseApplicationTest):
     @mock.patch("app.main.suppliers.generate_token")
     def test_should_be_an_error_if_incomplete_session_on_account_creation(self, generate_token, send_email):
         res = self.client.post(
-            "/suppliers/create-your-account",
-            data={
-                'email_address': "valid@email.com"
-            }
+            "/suppliers/company-summary"
         )
 
         assert_false(generate_token.called)
