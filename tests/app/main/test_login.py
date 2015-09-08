@@ -99,7 +99,7 @@ class TestLogin(BaseApplicationTest):
             'password': '1234567890'
         })
         assert_in(
-            self.strip_all_whitespace("Sorry, we couldn't log you in"),
+            self.strip_all_whitespace("There was a problem with the account details you provided"),
             self.strip_all_whitespace(res.get_data(as_text=True)))
         assert_equal(res.status_code, 403)
 
@@ -943,13 +943,12 @@ class TestInviteUser(BaseApplicationTest):
 
             assert_equal(res.status_code, 200)
             assert_in(
-                "The account associated with this email address is inactive, "
-                "locked, or already registered with a different supplier",
+                "Your account has been locked",
                 res.get_data(as_text=True)
             )
             assert_in(
-                'Please email <a href="mailto:enquiries@digitalmarketplace.service.gov.uk">'
-                'enquiries@digitalmarketplace.service.gov.uk</a> for help with setting up a new contributor account.',
+                'Email <a href="mailto:enquiries@digitalmarketplace.service.gov.uk">'
+                'enquiries@digitalmarketplace.service.gov.uk</a> to unlock your account.',
                 res.get_data(as_text=True)
             )
 
@@ -982,13 +981,12 @@ class TestInviteUser(BaseApplicationTest):
 
             assert_equal(res.status_code, 200)
             assert_in(
-                "The account associated with this email address is inactive, "
-                "locked, or already registered with a different supplier",
+                "Your account has been deactivated",
                 res.get_data(as_text=True)
             )
             assert_in(
-                'Please email <a href="mailto:enquiries@digitalmarketplace.service.gov.uk">'
-                'enquiries@digitalmarketplace.service.gov.uk</a> for help with setting up a new contributor account.',
+                'Email <a href="mailto:enquiries@digitalmarketplace.service.gov.uk">'
+                'enquiries@digitalmarketplace.service.gov.uk</a> to reactivate your account',
                 res.get_data(as_text=True)
             )
 
@@ -1019,17 +1017,8 @@ class TestInviteUser(BaseApplicationTest):
             res = self.client.get(
                 '/suppliers/create-user/{}'.format(token)
             )
-            assert_equal(res.status_code, 200)
-            assert_in(
-                "The account associated with this email address is inactive, "
-                "locked, or already registered with a different supplier",
-                res.get_data(as_text=True)
-            )
-            assert_in(
-                'Please email <a href="mailto:enquiries@digitalmarketplace.service.gov.uk">'
-                'enquiries@digitalmarketplace.service.gov.uk</a> for help with setting up a new contributor account.',
-                res.get_data(as_text=True)
-            )
+            assert_equal(res.status_code, 302)
+            assert_equal(res.location, 'http://localhost/suppliers/login')
 
     @mock.patch('app.main.views.login.data_api_client')
     def test_should_not_update_a_supplier_account(self, data_api_client):

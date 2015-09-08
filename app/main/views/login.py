@@ -209,7 +209,7 @@ def create_user(encoded_token):
 
         if not user_json:
 
-            # i. account does not exist -> create account
+            # account does not exist
             return render_template(
                 "auth/create-user.html",
                 form=form,
@@ -218,14 +218,13 @@ def create_user(encoded_token):
                 token=encoded_token,
                 **template_data), 200
 
-        # at this point, we know the user account exists
         user = User.from_json(user_json)
-
-        # ii. buyer account exists -> create account
-        # iii. supplier account exists -> message + login
         is_buyer = user.role == 'buyer'
 
-        # iv. supplier account exists (wrong supplier) -> message + login
+        # locked or inactive
+        is_inactive_or_locked = 'inactive' if not user.active else 'locked' if user.is_locked() else False
+
+        # supplier account exists (wrong supplier)
         is_registered_to_another_supplier = False
         if not is_buyer and token.get("supplier_name") != user.supplier_name:
             is_registered_to_another_supplier = {
@@ -233,14 +232,14 @@ def create_user(encoded_token):
                 'supplier_registered_with_account': user.supplier_name,
             }
 
-        # v. supplier account exists (and is logged in) -> supplier dashboard
-        if not current_user.is_anonymous() and current_user.email_address == user.email_address \
-                and not is_registered_to_another_supplier:
+        # valid supplier account exists
+        if not is_buyer and not is_registered_to_another_supplier and not is_inactive_or_locked:
 
-            return redirect(url_for('.dashboard'))
+            # valid supplier account exists and is logged in
+            if not current_user.is_anonymous() and current_user.email_address == user.email_address:
+                return redirect(url_for('.dashboard'))
 
-        # vi. locked or inactive -> message
-        is_locked_or_inactive = user.is_locked() or not user.is_active()
+            return redirect(url_for('.render_login'))
 
         return render_template(
             "auth/update-user.html",
@@ -249,9 +248,8 @@ def create_user(encoded_token):
             email_address=token['email_address'],
             supplier_name=token['supplier_name'],
             token=encoded_token,
-            is_locked_or_inactive=is_locked_or_inactive,
+            is_inactive_or_locked=is_inactive_or_locked,
             is_registered_to_another_supplier=is_registered_to_another_supplier,
-            is_buyer=is_buyer,
             **template_data), 200
 
 
