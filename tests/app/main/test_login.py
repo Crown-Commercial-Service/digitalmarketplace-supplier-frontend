@@ -845,6 +845,187 @@ class TestInviteUser(BaseApplicationTest):
             )
 
     @mock.patch('app.main.views.login.data_api_client')
+    def test_should_render_update_user_page_with_locked_message_if_user_is_locked(self, data_api_client):
+        with self.app.app_context():
+
+            data_api_client.get_user.return_value = self.user(
+                123,
+                'testme@email.com',
+                1234,
+                'Supplier Name',
+                'Users name',
+                locked=True
+            )
+
+            token = generate_token(
+                {
+                    'supplier_id': 1234,
+                    'supplier_name': 'Supplier Name',
+                    'email_address': 'testme@email.com'
+                },
+                self.app.config['SHARED_EMAIL_KEY'],
+                self.app.config['INVITE_EMAIL_SALT']
+            )
+
+            res = self.client.get(
+                '/suppliers/create-user/{}'.format(token)
+            )
+
+            assert_equal(res.status_code, 200)
+            assert_in(
+                "Your account has been locked",
+                res.get_data(as_text=True)
+            )
+            assert_in(
+                'Email <a href="mailto:enquiries@digitalmarketplace.service.gov.uk">'
+                'enquiries@digitalmarketplace.service.gov.uk</a> to unlock your account.',
+                res.get_data(as_text=True)
+            )
+
+    @mock.patch('app.main.views.login.data_api_client')
+    def test_should_render_update_user_page_with_inactive_message_if_user_is_not_active(self, data_api_client):
+        with self.app.app_context():
+
+            data_api_client.get_user.return_value = self.user(
+                123,
+                'testme@email.com',
+                1234,
+                'Supplier Name',
+                'Users name',
+                active=False
+            )
+
+            token = generate_token(
+                {
+                    'supplier_id': 1234,
+                    'supplier_name': 'Supplier Name',
+                    'email_address': 'testme@email.com'
+                },
+                self.app.config['SHARED_EMAIL_KEY'],
+                self.app.config['INVITE_EMAIL_SALT']
+            )
+
+            res = self.client.get(
+                '/suppliers/create-user/{}'.format(token)
+            )
+
+            assert_equal(res.status_code, 200)
+            assert_in(
+                "Your account has been deactivated",
+                res.get_data(as_text=True)
+            )
+            assert_in(
+                'Email <a href="mailto:enquiries@digitalmarketplace.service.gov.uk">'
+                'enquiries@digitalmarketplace.service.gov.uk</a> to reactivate your account',
+                res.get_data(as_text=True)
+            )
+
+    @mock.patch('app.main.views.login.data_api_client')
+    def test_should_render_update_user_page_with_wrong_supplier_message_if_invited_by_wrong_supplier(self, data_api_client):  # noqa
+        with self.app.app_context():
+
+            data_api_client.get_user.return_value = self.user(
+                123,
+                'testme@email.com',
+                1234,
+                'Supplier Name',
+                'Users name'
+            )
+
+            token = generate_token(
+                {
+                    'supplier_id': 9999,
+                    'supplier_name': 'Different Supplier Name',
+                    'email_address': 'different_supplier@email.com'
+                },
+                self.app.config['SHARED_EMAIL_KEY'],
+                self.app.config['INVITE_EMAIL_SALT']
+            )
+
+            res = self.client.get(
+                '/suppliers/create-user/{}'.format(token)
+            )
+
+            assert_equal(res.status_code, 200)
+            assert_in(
+                "You were invited by ‘Different Supplier Name’",
+                res.get_data(as_text=True)
+            )
+            assert_in(
+                "Your account is registered with ‘Supplier Name’",
+                res.get_data(as_text=True)
+            )
+
+    @mock.patch('app.main.views.login.data_api_client')
+    def test_should_redirect_to_login_page_if_user_is_already_a_supplier(self, data_api_client):
+        with self.app.app_context():
+
+            data_api_client.get_user.return_value = self.user(
+                123,
+                'test@email.com',
+                1234,
+                'Supplier Name',
+                'Users name',
+                active=True,
+                locked=False
+            )
+
+            token = generate_token(
+                {
+                    'supplier_id': 1234,
+                    'supplier_name': 'Supplier Name',
+                    'email_address': 'test@email.com'
+                },
+                self.app.config['SHARED_EMAIL_KEY'],
+                self.app.config['INVITE_EMAIL_SALT']
+            )
+
+            res = self.client.get(
+                '/suppliers/create-user/{}'.format(token),
+                follow_redirects=True
+            )
+            assert_equal(res.status_code, 200)
+            assert_in(
+                "Log in to the Digital Marketplace",
+                res.get_data(as_text=True)
+            )
+
+    @mock.patch('app.main.views.login.data_api_client')
+    def test_should_redirect_to_dashboard_page_if_user_is_already_logged_in(self, data_api_client):
+        with self.app.app_context():
+
+            self.login()
+            data_api_client.get_user.return_value = self.user(
+                123,
+                'test@email.com',
+                1234,
+                'Supplier Name',
+                'Users name',
+                active=True,
+                locked=False
+            )
+
+            token = generate_token(
+                {
+                    'supplier_id': 1234,
+                    'supplier_name': 'Supplier Name',
+                    'email_address': 'test@email.com'
+                },
+                self.app.config['SHARED_EMAIL_KEY'],
+                self.app.config['INVITE_EMAIL_SALT']
+            )
+
+            res = self.client.get(
+                '/suppliers/create-user/{}'.format(token),
+                follow_redirects=True
+            )
+            assert_equal(res.status_code, 200)
+            assert_in(
+                "Log in to the Digital Marketplace",
+                res.get_data(as_text=True)
+            )
+
+    @mock.patch('app.main.views.login.data_api_client')
     def test_should_create_user_if_user_does_not_exist(self, data_api_client):
         with self.app.app_context():
 
@@ -913,112 +1094,6 @@ class TestInviteUser(BaseApplicationTest):
 
             assert_equal(res.status_code, 302)
             assert_equal(res.location, 'http://localhost/suppliers')
-
-    @mock.patch('app.main.views.login.data_api_client')
-    def test_should_render_update_user_page_if_user_is_locked(self, data_api_client):
-        with self.app.app_context():
-
-            data_api_client.get_user.return_value = self.user(
-                123,
-                'testme@email.com',
-                1234,
-                'Supplier Name',
-                'Users name',
-                locked=True
-            )
-
-            token = generate_token(
-                {
-                    'supplier_id': 1234,
-                    'supplier_name': 'Supplier Name',
-                    'email_address': 'testme@email.com'
-                },
-                self.app.config['SHARED_EMAIL_KEY'],
-                self.app.config['INVITE_EMAIL_SALT']
-            )
-
-            res = self.client.get(
-                '/suppliers/create-user/{}'.format(token)
-            )
-
-            assert_equal(res.status_code, 200)
-            assert_in(
-                "Your account has been locked",
-                res.get_data(as_text=True)
-            )
-            assert_in(
-                'Email <a href="mailto:enquiries@digitalmarketplace.service.gov.uk">'
-                'enquiries@digitalmarketplace.service.gov.uk</a> to unlock your account.',
-                res.get_data(as_text=True)
-            )
-
-    @mock.patch('app.main.views.login.data_api_client')
-    def test_should_render_update_user_page_if_user_is_not_active(self, data_api_client):
-        with self.app.app_context():
-
-            data_api_client.get_user.return_value = self.user(
-                123,
-                'testme@email.com',
-                1234,
-                'Supplier Name',
-                'Users name',
-                active=False
-            )
-
-            token = generate_token(
-                {
-                    'supplier_id': 1234,
-                    'supplier_name': 'Supplier Name',
-                    'email_address': 'testme@email.com'
-                },
-                self.app.config['SHARED_EMAIL_KEY'],
-                self.app.config['INVITE_EMAIL_SALT']
-            )
-
-            res = self.client.get(
-                '/suppliers/create-user/{}'.format(token)
-            )
-
-            assert_equal(res.status_code, 200)
-            assert_in(
-                "Your account has been deactivated",
-                res.get_data(as_text=True)
-            )
-            assert_in(
-                'Email <a href="mailto:enquiries@digitalmarketplace.service.gov.uk">'
-                'enquiries@digitalmarketplace.service.gov.uk</a> to reactivate your account',
-                res.get_data(as_text=True)
-            )
-
-    @mock.patch('app.main.views.login.data_api_client')
-    def test_should_render_update_user_page_if_user_is_already_a_supplier(self, data_api_client):
-        with self.app.app_context():
-
-            data_api_client.get_user.return_value = self.user(
-                123,
-                'testme@email.com',
-                1234,
-                'Supplier Name',
-                'Users name',
-                active=True,
-                locked=False
-            )
-
-            token = generate_token(
-                {
-                    'supplier_id': 1234,
-                    'supplier_name': 'Supplier Name',
-                    'email_address': 'testme@email.com'
-                },
-                self.app.config['SHARED_EMAIL_KEY'],
-                self.app.config['INVITE_EMAIL_SALT']
-            )
-
-            res = self.client.get(
-                '/suppliers/create-user/{}'.format(token)
-            )
-            assert_equal(res.status_code, 302)
-            assert_equal(res.location, 'http://localhost/suppliers/login')
 
     @mock.patch('app.main.views.login.data_api_client')
     def test_should_not_update_a_supplier_account(self, data_api_client):
