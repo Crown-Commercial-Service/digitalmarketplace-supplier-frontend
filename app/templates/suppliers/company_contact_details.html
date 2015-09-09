@@ -1,7 +1,7 @@
 {% extends "_base_page.html" %}
 {% import "toolkit/summary-table.html" as summary %}
 
-{% block page_title %}Company contact details - Create new supplier – Digital Marketplace{% endblock %}
+{% block page_title %}Company contact details – Create new supplier – Digital Marketplace{% endblock %}
 
 {% block breadcrumb %}
 {%
@@ -61,10 +61,9 @@ with
 
             {%
                 with
-                    question = "Email address",
+                    question = "Contact email address",
                     name = "email_address",
                     value = form.email_address.data,
-                    hint = "This is the address that buyers will send their enquires to",
                     error = form.email_address.errors[0]
             %}
             {% include "toolkit/forms/textbox.html" %}
@@ -72,7 +71,7 @@ with
 
             {%
                 with
-                    question = "Phone number",
+                    question = "Contact phone number",
                     name = "phone_number",
                     value = form.phone_number.data,
                     error = form.phone_number.errors[0]

@@ -1,7 +1,7 @@
 {% extends "_base_page.html" %}
 {% import "toolkit/summary-table.html" as summary %}
 
-{% block page_title %}Company name - Create new supplier – Digital Marketplace{% endblock %}
+{% block page_title %}Company name – Create new supplier – Digital Marketplace{% endblock %}
 
 {% block breadcrumb %}
 {%
@@ -27,9 +27,9 @@
   {% endwith %}
   <div class="grid-row">
     <div class="column-two-thirds">
-      <div class="hint">
-        <p>This is how buyers will see your company’s name on the Digital&nbsp;Marketplace.</p>
-      </div>
+      <p class="hint">
+        This is how buyers will see your company’s name on the Digital&nbsp;Marketplace.
+      </p>
       <form method="POST" action="{{ url_for('.company_name') }}">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
         {%

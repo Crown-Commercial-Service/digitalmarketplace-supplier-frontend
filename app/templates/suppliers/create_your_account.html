@@ -1,7 +1,7 @@
 {% extends "_base_page.html" %}
 {% import "toolkit/summary-table.html" as summary %}
 
-{% block page_title %}Companies House - Create new supplier – Digital Marketplace{% endblock %}
+{% block page_title %}Create login — Create new supplier – Digital Marketplace{% endblock %}
 
 {% block breadcrumb %}
 {%
@@ -20,40 +20,30 @@
 
 {%
   with
-    heading = "Create your personal account"
+    heading = "Create login"
 %}
-{% include "toolkit/page-heading.html" %}
+  {% include "toolkit/page-heading.html" %}
 {% endwith %}
 
 <div class="grid-row">
   <div class="column-one-whole">
-    <p class="lede">
-      You’ve successfully created a supplier account. You need to create a
-      personal account so you can log in.
-    </p>
-    <p>Before you start, you should know that:</p>
-    <ul class="list-bullet">
-      <li>your personal account details will not be visible on the Digital Marketplace</li>
-      <li>you can add more accounts later</li>
-      <li>you’ll receive an email asking you to activate this account</li>
-      <li>the activation link expires after 7 days</li>
-    </ul>
+
     <form method="POST" action="{{ url_for('.submit_create_your_account') }}">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
       {%
         with
           question = "Your email address",
           name = "email_address",
-          value = form.email_address.data,
-          hint = "This is the address you will use to log in to the Digital Marketplace",
+          value = email_address,
           error = form.email_address.errors[0]
       %}
-      {% include "toolkit/forms/textbox.html" %}
+        {% include "toolkit/forms/textbox.html" %}
       {% endwith %}
+      <p>You'll use this address to log in. It won’t be publicly visible.</p>
       {%
         with
           type = "save",
-          label = "Create account"
+          label = "Continue"
       %}
       {% include "toolkit/button.html" %}
       {% endwith %}

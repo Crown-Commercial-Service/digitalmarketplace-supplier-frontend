@@ -1,7 +1,7 @@
 {% extends "_base_page.html" %}
 {% import "toolkit/summary-table.html" as summary %}
 
-{% block page_title %}Company summary - Create new supplier – Digital Marketplace{% endblock %}
+{% block page_title %}Check your information – Create new supplier – Digital Marketplace{% endblock %}
 
 {% block breadcrumb %}
 {%
@@ -19,7 +19,7 @@
 {% block main_content %}
 
 {%
-  with heading = "Check your company information "
+  with heading = "Check your information "
 %}
 {% include "toolkit/page-heading.html" %}
 {% endwith %}
@@ -28,14 +28,15 @@
 
 <div class="company-information-summary">
 
-      {% if missing_fields|length > 0%}
-      <div class="banner-warning-without-action">
-        <p class="banner-message">
-          Please complete all fields
-        </p>
-      </div>
-      {% endif %}
+  {% if missing_fields|length > 0%}
+  <div class="banner-warning-without-action">
+    <p class="banner-message">
+      You must answer all the questions
+    </p>
+  </div>
+  {% endif %}
 
+  {{ summary.heading('Your company details') }}
   {% call summary.mapping_table(
     caption="Summary table with content field as list",
     field_headings=[
@@ -75,13 +76,29 @@
   {{ summary.edit_link("Edit", url_for(".company_contact_details")) }}
   {% endcall %}
   {% endcall %}
+
+  {{ summary.heading('Your login details') }}
+  {% call summary.mapping_table(
+    caption="Summary table with content field as list",
+    field_headings=[
+      "Field name",
+      "Field value",
+    ],
+    field_headings_visible=False
+  ) %}
+    {% call summary.row(complete=session.get("account_email_address", None)) %}
+    {{ summary.field_name("Email address") }}
+    {{ summary.text(session.get("account_email_address", "You must answer this question.")) }}
+    {{ summary.edit_link("Edit", url_for(".create_your_account")) }}
+    {% endcall %}
+  {% endcall %}
 </div>
 <form action="{{ url_for('.submit_company_summary')}}" method="POST">
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
   {%
     with
       type = "save",
-      label = "Create supplier account"
+      label = "Create account"
   %}
   {% include "toolkit/button.html" %}
   {% endwith %}
