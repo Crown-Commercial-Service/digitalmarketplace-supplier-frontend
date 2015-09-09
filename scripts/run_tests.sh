@@ -33,4 +33,7 @@ npm run --silent frontend-build:production
 display_result $? 1 "Build of front end static assets"
 
 nosetests -v -s --with-doctest
-display_result $? 3 "Unit tests"
+display_result $? 3 "Python Unit tests"
+
+npm test
+display_result $? 3 "JavaScript Unit tests"

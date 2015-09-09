@@ -77,10 +77,17 @@ Note: `npm run frontend-install` is run automatically as a post-install task whe
 
 ### Run the tests
 
+To run the Python tests:
+
 ```
 ./scripts/run_tests.sh
 ```
 
+To run the JavaScript tests:
+
+```
+npm test
+```
 
 ### Run the server
 
