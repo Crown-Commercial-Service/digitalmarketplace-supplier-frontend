@@ -361,75 +361,71 @@ def submit_company_summary():
     missing_fields = [field for field in required_fields if field not in session]
 
     if not missing_fields:
+        supplier = {
+            "name": session["company_name"],
+            "dunsNumber": str(session["duns_number"]),
+            "contactInformation": [{
+                "email": session["email_address"],
+                "phoneNumber": session["phone_number"],
+                "contactName": session["contact_name"]
+            }]
+        }
+
+        if session.get("companies_house_number", None):
+            supplier["companiesHouseNumber"] = session.get("companies_house_number")
+
+        account_email_address = session.get("account_email_address", None)
+
+        supplier = data_api_client.create_supplier(supplier)
+        session.clear()
+        session['email_company_name'] = supplier['suppliers']['name']
+        session['email_supplier_id'] = supplier['suppliers']['id']
+
+        token = generate_token(
+            {
+                "email_address":  account_email_address,
+                "supplier_id": session['email_supplier_id'],
+                "supplier_name": session['email_company_name']
+            },
+            current_app.config['SHARED_EMAIL_KEY'],
+            current_app.config['INVITE_EMAIL_SALT']
+        )
+
+        url = url_for('main.create_user', encoded_token=token, _external=True)
+
+        email_body = render_template(
+            "emails/create_user_email.html",
+            company_name=session['email_company_name'],
+            url=url
+        )
         try:
-            supplier = {
-                "name": session["company_name"],
-                "dunsNumber": str(session["duns_number"]),
-                "contactInformation": [{
-                    "email": session["email_address"],
-                    "phoneNumber": session["phone_number"],
-                    "contactName": session["contact_name"]
-                }]
-            }
-
-            if session.get("companies_house_number", None):
-                supplier["companiesHouseNumber"] = session.get("companies_house_number")
-
-            account_email_address = session.get("account_email_address", None)
-
-            supplier = data_api_client.create_supplier(supplier)
-            session.clear()
-            session['email_company_name'] = supplier['suppliers']['name']
-            session['email_supplier_id'] = supplier['suppliers']['id']
-
-            token = generate_token(
-                {
-                    "email_address":  account_email_address,
-                    "supplier_id": session['email_supplier_id'],
-                    "supplier_name": session['email_company_name']
-                },
-                current_app.config['SHARED_EMAIL_KEY'],
-                current_app.config['INVITE_EMAIL_SALT']
+            send_email(
+                account_email_address,
+                email_body,
+                current_app.config['DM_MANDRILL_API_KEY'],
+                current_app.config['CREATE_USER_SUBJECT'],
+                current_app.config['RESET_PASSWORD_EMAIL_FROM'],
+                current_app.config['RESET_PASSWORD_EMAIL_NAME'],
+                ["user-creation"]
             )
+            session['email_sent_to'] = account_email_address
+        except MandrillException as e:
+            current_app.logger.error(
+                "suppliercreate.fail: Create user email failed to send. "
+                "error {error} supplier_id {supplier_id} email_hash {email_hash}",
+                extra={
+                    'error': six.text_type(e),
+                    'supplier_id': session['email_supplier_id'],
+                    'email_hash': hash_email(account_email_address)})
+            abort(503, "Failed to send user creation email")
 
-            url = url_for('main.create_user', encoded_token=token, _external=True)
+        data_api_client.create_audit_event(
+            audit_type=AuditTypes.invite_user,
+            object_type='suppliers',
+            object_id=session['email_supplier_id'],
+            data={'invitedEmail': account_email_address})
 
-            email_body = render_template(
-                "emails/create_user_email.html",
-                company_name=session['email_company_name'],
-                url=url
-            )
-            try:
-                send_email(
-                    account_email_address,
-                    email_body,
-                    current_app.config['DM_MANDRILL_API_KEY'],
-                    current_app.config['CREATE_USER_SUBJECT'],
-                    current_app.config['RESET_PASSWORD_EMAIL_FROM'],
-                    current_app.config['RESET_PASSWORD_EMAIL_NAME'],
-                    ["user-creation"]
-                )
-                session['email_sent_to'] = account_email_address
-            except MandrillException as e:
-                current_app.logger.error(
-                    "suppliercreate.fail: Create user email failed to send. "
-                    "error {error} supplier_id {supplier_id} email_hash {email_hash}",
-                    extra={
-                        'error': six.text_type(e),
-                        'supplier_id': session['email_supplier_id'],
-                        'email_hash': hash_email(form.email_address.data)})
-                abort(503, "Failed to send user creation email")
-
-            data_api_client.create_audit_event(
-                audit_type=AuditTypes.invite_user,
-                object_type='suppliers',
-                object_id=session['email_supplier_id'],
-                data={'invitedEmail': account_email_address})
-
-            return redirect(url_for('.create_your_account_complete'), 302)
-        except HTTPError as e:
-            current_app.logger.error(e)
-            abort(503)
+        return redirect(url_for('.create_your_account_complete'), 302)
     else:
         return render_template(
             "suppliers/company_summary.html",
