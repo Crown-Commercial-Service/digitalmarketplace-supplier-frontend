@@ -1,5 +1,5 @@
 var gulp = require('gulp');
-var uglify = require('gulp-uglifyjs');
+var uglify = require('gulp-uglify');
 var deleteFiles = require('del');
 var sass = require('gulp-sass');
 var filelog = require('gulp-filelog');
@@ -123,7 +123,6 @@ gulp.task('js', function () {
     .pipe(filelog('Compressing JavaScript files'))
     .pipe(include())
     .pipe(uglify(
-      jsDistributionFile,
       uglifyOptions[environment]
     ))
     .pipe(gulp.dest(jsDistributionFolder));
