@@ -138,7 +138,7 @@ def test_licenced_details_error_depends_on_licenced():
     del submission['SQ1-1j-i']
     assert_equal(get_all_errors(content, submission), {})
 
-    submission['SQ1-1j-i'] = ["something"]
+    submission['SQ1-1j-i'] = ["licensed"]
     assert_equal(get_all_errors(content, submission), {'SQ1-1j-ii': 'answer_required'})
 
 

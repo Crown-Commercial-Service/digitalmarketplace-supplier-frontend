@@ -66,8 +66,10 @@ def get_required_fields(all_fields, answers):
         required_fields.add('SQ1-1i-ii')
 
     #  If you answered 'licensed' or 'a member of a relevant organisation' in question 29
-    if len(answers.get('SQ1-1j-i', [])) > 0:
-        required_fields.add('SQ1-1j-ii')
+    answer_29 = answers.get('SQ1-1j-i', [])
+    if len(answer_29) > 0 and \
+            ('licensed' in answer_29 or 'a member of a relevant organisation' in answer_29):
+            required_fields.add('SQ1-1j-ii')
 
     # If you answered yes to either question 53 or 54 (tax returns)
     if answers.get('SQ4-1a', False) or answers.get('SQ4-1b', False):
