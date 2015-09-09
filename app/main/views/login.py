@@ -1,4 +1,5 @@
 from __future__ import absolute_import
+import six
 from flask_login import login_required, current_user
 from itsdangerous import BadSignature, SignatureExpired
 from datetime import datetime
@@ -12,6 +13,7 @@ from dmutils.email import send_email, \
     generate_token, decode_token, MandrillException
 from .. import main
 from ..forms.auth_forms import LoginForm, EmailAddressForm, ChangePasswordForm, CreateUserForm
+from ..helpers import hash_email
 from ... import data_api_client
 
 
@@ -42,9 +44,9 @@ def process_login():
             form.password.data)
 
         if not user_has_role(user_json, 'supplier'):
-            message = "login.fail: " \
-                      "Failed to log in: %s"
-            current_app.logger.info(message, form.email_address.data)
+            current_app.logger.info(
+                "login.fail: failed to log in {email_hash}",
+                extra={'email_hash': hash_email(form.email_address.data)})
             flash("no_account", "error")
             return render_template(
                 "auth/login.html",
@@ -121,17 +123,29 @@ def send_reset_password_email():
                     ["password-resets"]
                 )
             except MandrillException as e:
-                current_app.logger.error("Email failed to send {}".format(str(e)))
+                current_app.logger.error(
+                    "Password reset email failed to send. "
+                    "error {error} email_hash {email_hash}",
+                    extra={'error': six.text_type(e),
+                           'email_hash': hash_email(user.email_address)})
                 abort(503, "Failed to send password reset")
 
             message = "login.reset-email.sent: " \
                       "Sending password reset email for supplier %d (%s)"
 
-            current_app.logger.info(message, user.id, user.email_address)
+            params = dict(
+                supplier_id=user.supplier_id,
+                email_hash=hash_email(user.email_address))
+            current_app.logger.info(
+                "login.reset-email.sent: Sending password reset email for "
+                "supplier_id {supplier_id} email_hash {email_hash}",
+                extra={'supplier_id': user.supplier_id,
+                       'email_hash': hash_email(user.email_address)})
         else:
-            message = "login.reset-email.invalid-email: " \
-                      "Password reset request for invalid supplier email %s"
-            current_app.logger.info(message, email_address)
+            current_app.logger.info(
+                "login.reset-email.invalid-email: "
+                "Password reset request for invalid supplier email {email_hash}",
+                extra={'email_hash': hash_email(email_address)})
 
         flash('email_sent')
         return redirect(url_for('.request_password_reset'))
@@ -172,7 +186,8 @@ def update_password(token):
     if form.validate_on_submit():
         if data_api_client.update_user_password(user_id, password):
             current_app.logger.info(
-                "User %s successfully changed their password", user_id)
+                "User {user_id} successfully changed their password",
+                extra={'user_id': user_id})
             flash('password_updated')
         else:
             flash('password_not_updated', 'error')
@@ -194,7 +209,9 @@ def create_user(encoded_token):
     token = decode_invitation_token(encoded_token)
 
     if token is None:
-        current_app.logger.warning("createuser.token_invalid: %s", encoded_token)
+        current_app.logger.warning(
+            "createuser.token_invalid: {encoded_token}",
+            extra={'encoded_token': encoded_token})
         flash('token_invalid', 'error')
         return render_template(
             "auth/create-user.html",
@@ -257,7 +274,9 @@ def submit_update_user(encoded_token):
 
     token = decode_invitation_token(encoded_token)
     if token is None:
-        current_app.logger.warning("createuser.token_invalid: %s", encoded_token)
+        current_app.logger.warning(
+            "createuser.token_invalid: {encoded_token}",
+            extra={'encoded_token': encoded_token})
         flash('token_invalid', 'error')
         return render_template(
             "auth/update-user.html",
@@ -272,9 +291,10 @@ def submit_update_user(encoded_token):
         user = User.from_json(user_json)
         if user.is_locked() or not user.is_active() or not user_has_role(user_json, 'buyer'):
             current_app.logger.warning(
-                "createuser.user_invalid: user_id:%s supplier_id:%s user_locked:%s user_active:%s user_role:%s",
-                user.id, token.get("supplier_id"), user.is_locked(), user.is_active(), user_json['users']['role']
-            )
+                "createuser.user_invalid: "
+                "user_id: {user_id} supplier_id: {supplier_id}",
+                extra={'user_id': user.id,
+                       'supplier_id': token.get('supplier_id')})
             abort(400, "should not update an existing supplier")
 
         data_api_client.update_user(
@@ -293,7 +313,8 @@ def submit_create_user(encoded_token):
 
     token = decode_invitation_token(encoded_token)
     if token is None:
-        current_app.logger.warning("createuser.token_invalid: %s", encoded_token)
+        current_app.logger.warning("createuser.token_invalid: {encoded_token}",
+                                   extra={'encoded_token': encoded_token})
         flash('token_invalid', 'error')
         return render_template(
             "auth/create-user.html",
@@ -305,8 +326,9 @@ def submit_create_user(encoded_token):
 
     else:
         if not form.validate_on_submit():
-
-            current_app.logger.warning("createuser.invalid: %s", ", ".join(form.errors))
+            current_app.logger.warning(
+                "createuser.invalid: {form_errors}",
+                extra={'form_errors': ", ".join(form.errors)})
             return render_template(
                 "auth/create-user.html",
                 valid_token=False,
@@ -376,12 +398,11 @@ def send_invite_user():
             )
         except MandrillException as e:
             current_app.logger.error(
-                "Invitation email failed to send error {} to {} supplier {} supplier id {} ".format(
-                    str(e),
-                    form.email_address.data,
-                    current_user.supplier_name,
-                    current_user.supplier_id)
-            )
+                "Invitation email failed to send. "
+                "error {error} supplier_id {supplier_id} email_hash {email_hash}",
+                extra={'error': six.text_type(e),
+                       'supplier_id': current_user.supplier_id,
+                       'email_hash': hash_email(current_user.email_address)})
             abort(503, "Failed to send user invite reset")
 
         data_api_client.create_audit_event(
@@ -415,7 +436,7 @@ def decode_password_reset_token(token):
         flash('token_expired', 'error')
         return None
     except BadSignature as e:
-        current_app.logger.info("Error changing password: %s", e)
+        current_app.logger.info("Error changing password: {error}", extra={'error': six.text_type(e)})
         flash('token_invalid', 'error')
         return None
 
@@ -429,10 +450,7 @@ def decode_password_reset_token(token):
             timestamp,
             user_last_changed_password_at
     ):
-        current_app.logger.info(
-            "Error changing password: "
-            + "Token generated earlier than password was last changed."
-        )
+        current_app.logger.info("Error changing password: Token generated earlier than password was last changed.")
         flash('token_invalid', 'error')
         return None
 
@@ -452,13 +470,16 @@ def decode_invitation_token(encoded_token):
         else:
             raise ValueError('Missing invalid invitation token')
     except SignatureExpired as e:
-        current_app.logger.info("Invitation attempt with expired token. {}".format(str(e)))
+        current_app.logger.info("Invitation attempt with expired token. error {error}",
+                                extra={'error': six.text_type(e)})
         return None
     except BadSignature as e:
-        current_app.logger.info("Invitation reset attempt with expired token. {}".format(str(e)))
+        current_app.logger.info("Invitation reset attempt with expired token. error {error}",
+                                extra={'error': six.text_type(e)})
         return None
     except ValueError as e:
-        current_app.logger.info(str(e))
+        current_app.logger.info("error {error}",
+                                extra={'error': six.text_type(e)})
         return None
 
 
