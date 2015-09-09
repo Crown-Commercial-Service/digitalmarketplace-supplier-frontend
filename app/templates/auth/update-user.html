@@ -14,6 +14,14 @@
     Check you’ve entered the correct link or ask the person who invited you to send a new invitation.<br/>
     If you still can’t create a contributor account, email <a href="mailto:enquiries@digitalmarketplace.service.gov.uk">enquiries@digitalmarketplace.service.gov.uk</a>.
 </p>
+{% elif user.role == 'admin' %}
+
+<header class="page-heading-smaller">
+  <h1>You have an administrator account.</h1>
+</header>
+<p>
+  Your account cannot be converted to a supplier account.
+</p>
 
 {% elif is_inactive_or_locked == 'inactive' %}
 

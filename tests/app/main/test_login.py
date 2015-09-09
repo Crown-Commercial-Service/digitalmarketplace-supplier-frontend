@@ -99,7 +99,7 @@ class TestLogin(BaseApplicationTest):
             'password': '1234567890'
         })
         assert_in(
-            self.strip_all_whitespace("There was a problem with the account details you provided"),
+            self.strip_all_whitespace("Make sure you've entered the right email address and password"),
             self.strip_all_whitespace(res.get_data(as_text=True)))
         assert_equal(res.status_code, 403)
 
@@ -790,6 +790,30 @@ class TestInviteUser(BaseApplicationTest):
                 "Passwords must be between 10 and 50 characters",
                 "Create contributor account for Supplier Name",
                 "test@email.com"
+            ]:
+                assert_in(message, res.get_data(as_text=True))
+
+    @mock.patch('app.main.views.login.data_api_client')
+    def test_should_render_update_user_page_with_admin_message_if_user_is_an_admin(self, data_api_client):
+        with self.app.app_context():
+
+            data_api_client.get_user.return_value = self.user(
+                123,
+                'test@email.com',
+                None,
+                None,
+                'Users name',
+                role='admin'
+            )
+
+            token = self._generate_token()
+            res = self.client.get(
+                '/suppliers/create-user/{}'.format(token)
+            )
+
+            assert_equal(res.status_code, 200)
+            for message in [
+                "You have an administrator account",
             ]:
                 assert_in(message, res.get_data(as_text=True))
 
