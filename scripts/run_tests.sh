@@ -34,3 +34,5 @@ display_result $? 1 "Build of front end static assets"
 
 nosetests -v -s --with-doctest
 display_result $? 3 "Unit tests"
+
+npm test
