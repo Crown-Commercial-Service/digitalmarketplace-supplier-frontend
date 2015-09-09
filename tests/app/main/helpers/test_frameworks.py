@@ -224,14 +224,6 @@ def test_invalid_email_addresses_cause_errors():
                  )
 
 
-def test_invalid_vat_number_causes_error():
-    content = declaration_content.get_builder()
-    submission = FULL_G7_SUBMISSION.copy()
-
-    submission['SQ1-1h'] = 'invalid'
-    assert_equal(get_all_errors(content, submission), {'SQ1-1h': 'invalid_format'})
-
-
 def test_character_limit_errors():
     cases = [
         ("SQ1-1a", 5000),

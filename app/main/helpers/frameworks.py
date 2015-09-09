@@ -10,7 +10,6 @@ from werkzeug.datastructures import ImmutableOrderedMultiDict
 
 
 EMAIL_REGEX = r'^[^@^\s]+@[^@^\.^\s]+(\.[^@^\.^\s]+)+$'
-VAT_NUMBER_REGEX = r'^(\S{9}|\S{12})$'
 TEXT_FIELD_CHARACTER_LIMIT = 5000
 OPTIONAL_FIELDS = set([
     "SQ1-1p-i", "SQ1-1p-ii", "SQ1-1p-iii", "SQ1-1p-iv",
@@ -123,8 +122,6 @@ def get_character_limit_errors(content, answers):
 
 def get_formatting_errors(answers):
     errors_map = {}
-    if not re.match(VAT_NUMBER_REGEX, answers.get('SQ1-1h', '')):
-        errors_map['SQ1-1h'] = 'invalid_format'
     if not re.match(EMAIL_REGEX, answers.get('SQ1-1o', '')):
         errors_map['SQ1-1o'] = 'invalid_format'
     if not re.match(EMAIL_REGEX, answers.get('SQ1-2b', '')):
