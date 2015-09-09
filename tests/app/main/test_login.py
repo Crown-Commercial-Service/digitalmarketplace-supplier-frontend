@@ -99,7 +99,7 @@ class TestLogin(BaseApplicationTest):
             'password': '1234567890'
         })
         assert_in(
-            self.strip_all_whitespace("Sorry, we couldn't log you in"),
+            self.strip_all_whitespace("Make sure you've entered the right email address and password"),
             self.strip_all_whitespace(res.get_data(as_text=True)))
         assert_equal(res.status_code, 403)
 
@@ -434,6 +434,22 @@ class TestLoginFormsNotAutofillable(BaseApplicationTest):
 
 class TestInviteUser(BaseApplicationTest):
 
+    def _generate_token(
+            self,
+            supplier_id=1234,
+            supplier_name='Supplier Name',
+            email_address='test@email.com',
+    ):
+        return generate_token(
+            {
+                'supplier_id': supplier_id,
+                'supplier_name': supplier_name,
+                'email_address': email_address
+            },
+            self.app.config['SHARED_EMAIL_KEY'],
+            self.app.config['INVITE_EMAIL_SALT']
+        )
+
     def test_should_be_an_error_for_invalid_email(self):
         with self.app.app_context():
             self.login()
@@ -647,37 +663,19 @@ class TestInviteUser(BaseApplicationTest):
 
             data_api_client.get_user.return_value = None
 
-            token = generate_token(
-                {
-                    'supplier_id': 1234,
-                    'supplier_name': 'Supplier Name',
-                    'email_address': 'testme@email.com'
-                },
-                self.app.config['SHARED_EMAIL_KEY'],
-                self.app.config['INVITE_EMAIL_SALT']
-            )
-
+            token = self._generate_token()
             res = self.client.get(
                 '/suppliers/create-user/{}'.format(token)
             )
 
             assert_equal(res.status_code, 200)
-            assert_true(
-                "Supplier Name"
-                in res.get_data(as_text=True)
-            )
-            assert_true(
-                "testme@email.com"
-                in res.get_data(as_text=True)
-            )
-            assert_true(
-                '<button class="button-save">Create contributor account</button>'
-                in res.get_data(as_text=True)
-            )
-            assert_true(
+            for message in [
+                "Supplier Name",
+                "test@email.com",
+                '<button class="button-save">Create contributor account</button>',
                 '<form autocomplete="off" action="/suppliers/create-user/{}" method="POST" id="createUserForm">'.format(token)  # noqa
-                in res.get_data(as_text=True)
-            )
+            ]:
+                assert_in(message, res.get_data(as_text=True))
 
     @mock.patch('app.main.views.login.data_api_client')
     def test_should_render_update_user_page_if_user_does_exist(self, data_api_client):
@@ -685,39 +683,24 @@ class TestInviteUser(BaseApplicationTest):
 
             data_api_client.get_user.return_value = self.user(
                 123,
-                'testme@email.com',
+                'test@email.com',
                 None,
                 None,
                 'Users name'
             )
 
-            token = generate_token(
-                {
-                    'supplier_id': 1234,
-                    'supplier_name': 'Supplier Name',
-                    'email_address': 'testme@email.com'
-                },
-                self.app.config['SHARED_EMAIL_KEY'],
-                self.app.config['INVITE_EMAIL_SALT']
-            )
-
+            token = self._generate_token()
             res = self.client.get(
                 '/suppliers/create-user/{}'.format(token)
             )
 
             assert_equal(res.status_code, 200)
-            assert_true(
-                "Supplier Name"
-                in res.get_data(as_text=True)
-            )
-            assert_true(
-                '<button class="button-save">Create contributor account</button>'
-                in res.get_data(as_text=True)
-            )
-            assert_true(
+            for message in [
+                "Supplier Name",
+                '<button class="button-save">Create contributor account</button>',
                 '<form autocomplete="off" action="/suppliers/update-user/{}" method="POST" id="updateUserForm">'.format(token)  # noqa
-                in res.get_data(as_text=True)
-            )
+            ]:
+                assert_in(message, res.get_data(as_text=True))
 
     def test_should_be_an_error_if_invalid_token_on_submit(self):
         with self.app.app_context():
@@ -754,42 +737,23 @@ class TestInviteUser(BaseApplicationTest):
     def test_should_be_an_error_if_missing_name_and_password(self):
         with self.app.app_context():
 
-            token = generate_token(
-                {
-                    'supplier_id': 1234,
-                    'supplier_name': 'Supplier Name',
-                    'email_address': 'testme@email.com'
-                },
-                self.app.config['SHARED_EMAIL_KEY'],
-                self.app.config['INVITE_EMAIL_SALT']
-            )
-
+            token = self._generate_token()
             res = self.client.post(
                 '/suppliers/create-user/{}'.format(token),
                 data={}
             )
 
             assert_equal(res.status_code, 400)
-            assert_true(
-                "Please enter a password" in res.get_data(as_text=True)
-            )
-            assert_true(
-                "Please enter a name" in res.get_data(as_text=True)
-            )
+            for message in [
+                "Please enter a name",
+                "Please enter a password"
+            ]:
+                assert_in(message, res.get_data(as_text=True))
 
     def test_should_be_an_error_if_too_short_name_and_password(self):
         with self.app.app_context():
 
-            token = generate_token(
-                {
-                    'supplier_id': 1234,
-                    'supplier_name': 'Supplier Name',
-                    'email_address': 'testme@email.com'
-                },
-                self.app.config['SHARED_EMAIL_KEY'],
-                self.app.config['INVITE_EMAIL_SALT']
-            )
-
+            token = self._generate_token()
             res = self.client.post(
                 '/suppliers/create-user/{}'.format(token),
                 data={
@@ -799,26 +763,16 @@ class TestInviteUser(BaseApplicationTest):
             )
 
             assert_equal(res.status_code, 400)
-            assert_true(
-                "Please enter a name" in res.get_data(as_text=True)
-            )
-            assert_true(
-                "Passwords must be between 10 and 50 characters" in res.get_data(as_text=True)
-            )
+            for message in [
+                "Please enter a name",
+                "Passwords must be between 10 and 50 characters"
+            ]:
+                assert_in(message, res.get_data(as_text=True))
 
     def test_should_be_an_error_if_too_long_name_and_password(self):
         with self.app.app_context():
 
-            token = generate_token(
-                {
-                    'supplier_id': 1234,
-                    'supplier_name': 'Supplier Name',
-                    'email_address': 'testme@email.com'
-                },
-                self.app.config['SHARED_EMAIL_KEY'],
-                self.app.config['INVITE_EMAIL_SALT']
-            )
-
+            token = self._generate_token()
             twofiftysix = "a" * 256
             fiftyone = "a" * 51
 
@@ -831,17 +785,186 @@ class TestInviteUser(BaseApplicationTest):
             )
 
             assert_equal(res.status_code, 400)
-            assert_true(
-                "Names must be between 1 and 255 characters" in res.get_data(as_text=True)
+            for message in [
+                "Names must be between 1 and 255 characters",
+                "Passwords must be between 10 and 50 characters",
+                "Create contributor account for Supplier Name",
+                "test@email.com"
+            ]:
+                assert_in(message, res.get_data(as_text=True))
+
+    @mock.patch('app.main.views.login.data_api_client')
+    def test_should_render_update_user_page_with_admin_message_if_user_is_an_admin(self, data_api_client):
+        with self.app.app_context():
+
+            data_api_client.get_user.return_value = self.user(
+                123,
+                'test@email.com',
+                None,
+                None,
+                'Users name',
+                role='admin'
             )
-            assert_true(
-                "Passwords must be between 10 and 50 characters" in res.get_data(as_text=True)
+
+            token = self._generate_token()
+            res = self.client.get(
+                '/suppliers/create-user/{}'.format(token)
             )
-            assert_true(
-                "Create contributor account for Supplier Name" in res.get_data(as_text=True)
+
+            assert_equal(res.status_code, 200)
+            for message in [
+                "You have an administrator account",
+            ]:
+                assert_in(message, res.get_data(as_text=True))
+
+    @mock.patch('app.main.views.login.data_api_client')
+    def test_should_render_update_user_page_with_locked_message_if_user_is_locked(self, data_api_client):
+        with self.app.app_context():
+
+            data_api_client.get_user.return_value = self.user(
+                123,
+                'test@email.com',
+                1234,
+                'Supplier Name',
+                'Users name',
+                locked=True
             )
-            assert_true(
-                "testme@email.com" in res.get_data(as_text=True)
+
+            token = self._generate_token()
+            res = self.client.get(
+                '/suppliers/create-user/{}'.format(token)
+            )
+
+            assert_equal(res.status_code, 200)
+            for message in [
+                "Your account has been locked",
+                'Email <a href="mailto:enquiries@digitalmarketplace.service.gov.uk">enquiries@digitalmarketplace.service.gov.uk</a> to unlock your account'  # noqa
+            ]:
+                assert_in(message, res.get_data(as_text=True))
+
+    @mock.patch('app.main.views.login.data_api_client')
+    def test_should_render_update_user_page_with_inactive_message_if_user_is_not_active(self, data_api_client):
+        with self.app.app_context():
+
+            data_api_client.get_user.return_value = self.user(
+                123,
+                'test@email.com',
+                1234,
+                'Supplier Name',
+                'Users name',
+                active=False
+            )
+
+            token = self._generate_token()
+            res = self.client.get(
+                '/suppliers/create-user/{}'.format(token)
+            )
+
+            assert_equal(res.status_code, 200)
+            for message in [
+                "Your account has been deactivated",
+                'Email <a href="mailto:enquiries@digitalmarketplace.service.gov.uk">enquiries@digitalmarketplace.service.gov.uk</a> to reactivate your account'  # noqa
+            ]:
+                assert_in(message, res.get_data(as_text=True))
+
+    @mock.patch('app.main.views.login.data_api_client')
+    def test_should_render_update_user_page_with_wrong_supplier_message_if_invited_by_wrong_supplier(self, data_api_client):  # noqa
+        with self.app.app_context():
+
+            data_api_client.get_user.return_value = self.user(
+                123,
+                'test@email.com',
+                1234,
+                'Supplier Name',
+                'Users name'
+            )
+
+            token = self._generate_token(
+                supplier_id=9999,
+                supplier_name='Different Supplier Name',
+                email_address='different_supplier@email.com'
+            )
+
+            res = self.client.get(
+                '/suppliers/create-user/{}'.format(token)
+            )
+
+            assert_equal(res.status_code, 200)
+            for message in [
+                u"You were invited by ‘Different Supplier Name’",
+                u"Your account is registered with ‘Supplier Name’"
+            ]:
+                assert_in(message, res.get_data(as_text=True))
+
+    @mock.patch('app.main.views.login.data_api_client')
+    def test_should_redirect_to_login_page_if_user_is_already_a_supplier(self, data_api_client):
+        with self.app.app_context():
+
+            data_api_client.get_user.return_value = self.user(
+                123,
+                'test@email.com',
+                1234,
+                'Supplier Name',
+                'Users name'
+            )
+
+            token = self._generate_token()
+            res = self.client.get(
+                '/suppliers/create-user/{}'.format(token),
+                follow_redirects=True
+            )
+            assert_equal(res.status_code, 200)
+            assert_in(
+                "Log in to the Digital Marketplace",
+                res.get_data(as_text=True)
+            )
+
+    @mock.patch('app.main.views.login.data_api_client')
+    def test_should_redirect_to_login_page_if_logged_in_user_is_not_invited_user(self, data_api_client):
+        with self.app.app_context():
+
+            self.login()
+            data_api_client.get_user.return_value = self.user(
+                999,
+                'different_email@email.com',
+                1234,
+                'Supplier Name',
+                'Different users name'
+            )
+
+            token = self._generate_token()
+            res = self.client.get(
+                '/suppliers/create-user/{}'.format(token),
+                follow_redirects=True
+            )
+            assert_equal(res.status_code, 200)
+            assert_in(
+                "Log in to the Digital Marketplace",
+                res.get_data(as_text=True)
+            )
+
+    @mock.patch('app.main.views.login.data_api_client')
+    def test_should_redirect_to_dashboard_page_if_user_is_already_logged_in(self, data_api_client):
+        with self.app.app_context():
+
+            self.login()
+            data_api_client.get_user.return_value = self.user(
+                123,
+                'test@email.com',
+                1234,
+                'Supplier Name',
+                'Users name'
+            )
+
+            token = self._generate_token()
+            res = self.client.get(
+                '/suppliers/create-user/{}'.format(token),
+                follow_redirects=True
+            )
+            assert_equal(res.status_code, 200)
+            assert_in(
+                "Log in to the Digital Marketplace",
+                res.get_data(as_text=True)
             )
 
     @mock.patch('app.main.views.login.data_api_client')
@@ -850,16 +973,7 @@ class TestInviteUser(BaseApplicationTest):
 
             data_api_client.get_user.return_value = None
 
-            token = generate_token(
-                {
-                    'supplier_id': 1234,
-                    'supplier_name': 'Supplier Name',
-                    'email_address': 'testme@email.com'
-                },
-                self.app.config['SHARED_EMAIL_KEY'],
-                self.app.config['INVITE_EMAIL_SALT']
-            )
-
+            token = self._generate_token()
             res = self.client.post(
                 '/suppliers/create-user/{}'.format(token),
                 data={
@@ -871,7 +985,7 @@ class TestInviteUser(BaseApplicationTest):
             data_api_client.create_user.assert_called_once_with({
                 'role': 'supplier',
                 'password': 'validpassword',
-                'emailAddress': 'testme@email.com',
+                'emailAddress': 'test@email.com',
                 'name': 'valid name',
                 'supplierId': 1234
             })
@@ -885,22 +999,13 @@ class TestInviteUser(BaseApplicationTest):
 
             data_api_client.get_user.return_value = self.user(
                 123,
-                'testme@email.com',
+                'test@email.com',
                 None,
                 None,
                 'Users name'
             )
 
-            token = generate_token(
-                {
-                    'supplier_id': 1234,
-                    'supplier_name': 'Supplier Name',
-                    'email_address': 'testme@email.com'
-                },
-                self.app.config['SHARED_EMAIL_KEY'],
-                self.app.config['INVITE_EMAIL_SALT']
-            )
-
+            token = self._generate_token()
             res = self.client.post(
                 '/suppliers/update-user/{}'.format(token)
             )
@@ -915,145 +1020,19 @@ class TestInviteUser(BaseApplicationTest):
             assert_equal(res.location, 'http://localhost/suppliers')
 
     @mock.patch('app.main.views.login.data_api_client')
-    def test_should_render_update_user_page_if_user_is_locked(self, data_api_client):
-        with self.app.app_context():
-
-            data_api_client.get_user.return_value = self.user(
-                123,
-                'testme@email.com',
-                1234,
-                'Supplier Name',
-                'Users name',
-                locked=True
-            )
-
-            token = generate_token(
-                {
-                    'supplier_id': 1234,
-                    'supplier_name': 'Supplier Name',
-                    'email_address': 'testme@email.com'
-                },
-                self.app.config['SHARED_EMAIL_KEY'],
-                self.app.config['INVITE_EMAIL_SALT']
-            )
-
-            res = self.client.get(
-                '/suppliers/create-user/{}'.format(token)
-            )
-
-            assert_equal(res.status_code, 200)
-            assert_in(
-                "The account associated with this email address is inactive, "
-                "locked, or already registered with a different supplier",
-                res.get_data(as_text=True)
-            )
-            assert_in(
-                'Please email <a href="mailto:enquiries@digitalmarketplace.service.gov.uk">'
-                'enquiries@digitalmarketplace.service.gov.uk</a> for help with setting up a new contributor account.',
-                res.get_data(as_text=True)
-            )
-
-    @mock.patch('app.main.views.login.data_api_client')
-    def test_should_render_update_user_page_if_user_is_not_active(self, data_api_client):
-        with self.app.app_context():
-
-            data_api_client.get_user.return_value = self.user(
-                123,
-                'testme@email.com',
-                1234,
-                'Supplier Name',
-                'Users name',
-                active=False
-            )
-
-            token = generate_token(
-                {
-                    'supplier_id': 1234,
-                    'supplier_name': 'Supplier Name',
-                    'email_address': 'testme@email.com'
-                },
-                self.app.config['SHARED_EMAIL_KEY'],
-                self.app.config['INVITE_EMAIL_SALT']
-            )
-
-            res = self.client.get(
-                '/suppliers/create-user/{}'.format(token)
-            )
-
-            assert_equal(res.status_code, 200)
-            assert_in(
-                "The account associated with this email address is inactive, "
-                "locked, or already registered with a different supplier",
-                res.get_data(as_text=True)
-            )
-            assert_in(
-                'Please email <a href="mailto:enquiries@digitalmarketplace.service.gov.uk">'
-                'enquiries@digitalmarketplace.service.gov.uk</a> for help with setting up a new contributor account.',
-                res.get_data(as_text=True)
-            )
-
-    @mock.patch('app.main.views.login.data_api_client')
-    def test_should_render_update_user_page_if_user_is_already_a_supplier(self, data_api_client):
-        with self.app.app_context():
-
-            data_api_client.get_user.return_value = self.user(
-                123,
-                'testme@email.com',
-                1234,
-                'Supplier Name',
-                'Users name',
-                active=True,
-                locked=False
-            )
-
-            token = generate_token(
-                {
-                    'supplier_id': 1234,
-                    'supplier_name': 'Supplier Name',
-                    'email_address': 'testme@email.com'
-                },
-                self.app.config['SHARED_EMAIL_KEY'],
-                self.app.config['INVITE_EMAIL_SALT']
-            )
-
-            res = self.client.get(
-                '/suppliers/create-user/{}'.format(token)
-            )
-            assert_equal(res.status_code, 200)
-            assert_in(
-                "The account associated with this email address is inactive, "
-                "locked, or already registered with a different supplier",
-                res.get_data(as_text=True)
-            )
-            assert_in(
-                'Please email <a href="mailto:enquiries@digitalmarketplace.service.gov.uk">'
-                'enquiries@digitalmarketplace.service.gov.uk</a> for help with setting up a new contributor account.',
-                res.get_data(as_text=True)
-            )
-
-    @mock.patch('app.main.views.login.data_api_client')
     def test_should_not_update_a_supplier_account(self, data_api_client):
         with self.app.app_context():
 
             data_api_client.get_user.return_value = self.user(
                 123,
-                'testme@email.com',
+                'test@email.com',
                 1234,
                 'Supplier Name',
                 'Users name',
                 active=True
             )
 
-            token = generate_token(
-                {
-                    'supplier_id': 1234,
-                    'supplier_name': 'Supplier Name',
-                    'email_address': 'testme@email.com'
-                },
-                self.app.config['SHARED_EMAIL_KEY'],
-                self.app.config['INVITE_EMAIL_SALT']
-            )
-
+            token = self._generate_token()
             res = self.client.post(
                 '/suppliers/update-user/{}'.format(token),
                 data={"password": "password1234", "name": "Joe Bloggs"}
@@ -1068,7 +1047,7 @@ class TestInviteUser(BaseApplicationTest):
 
             data_api_client.get_user.return_value = self.user(
                 123,
-                'testme@email.com',
+                'test@email.com',
                 None,
                 None,
                 'Users name',
@@ -1076,16 +1055,7 @@ class TestInviteUser(BaseApplicationTest):
                 role='admin'
             )
 
-            token = generate_token(
-                {
-                    'supplier_id': 1234,
-                    'supplier_name': 'Supplier Name',
-                    'email_address': 'testme@email.com'
-                },
-                self.app.config['SHARED_EMAIL_KEY'],
-                self.app.config['INVITE_EMAIL_SALT']
-            )
-
+            token = self._generate_token()
             res = self.client.post(
                 '/suppliers/update-user/{}'.format(token),
                 data={"password": "password1234", "name": "Joe Bloggs"}
@@ -1100,7 +1070,7 @@ class TestInviteUser(BaseApplicationTest):
 
             data_api_client.get_user.return_value = self.user(
                 123,
-                'testme@email.com',
+                'test@email.com',
                 None,
                 None,
                 'Users name',
@@ -1108,16 +1078,7 @@ class TestInviteUser(BaseApplicationTest):
                 locked=True
             )
 
-            token = generate_token(
-                {
-                    'supplier_id': 1234,
-                    'supplier_name': 'Supplier Name',
-                    'email_address': 'testme@email.com'
-                },
-                self.app.config['SHARED_EMAIL_KEY'],
-                self.app.config['INVITE_EMAIL_SALT']
-            )
-
+            token = self._generate_token()
             res = self.client.post(
                 '/suppliers/update-user/{}'.format(token),
                 data={"password": "password1234", "name": "Joe Bloggs"}
@@ -1132,7 +1093,7 @@ class TestInviteUser(BaseApplicationTest):
 
             data_api_client.get_user.return_value = self.user(
                 123,
-                'testme@email.com',
+                'test@email.com',
                 None,
                 None,
                 'Users name',
@@ -1140,16 +1101,7 @@ class TestInviteUser(BaseApplicationTest):
                 locked=False
             )
 
-            token = generate_token(
-                {
-                    'supplier_id': 1234,
-                    'supplier_name': 'Supplier Name',
-                    'email_address': 'testme@email.com'
-                },
-                self.app.config['SHARED_EMAIL_KEY'],
-                self.app.config['INVITE_EMAIL_SALT']
-            )
-
+            token = self._generate_token()
             res = self.client.post(
                 '/suppliers/update-user/{}'.format(token),
                 data={"password": "password1234", "name": "Joe Bloggs"}
@@ -1164,16 +1116,7 @@ class TestInviteUser(BaseApplicationTest):
 
             data_api_client.create_user.side_effect = HTTPError("bad email")
 
-            token = generate_token(
-                {
-                    'supplier_id': 1234,
-                    'supplier_name': 'Supplier Name',
-                    'email_address': 'testme@email.com'
-                },
-                self.app.config['SHARED_EMAIL_KEY'],
-                self.app.config['INVITE_EMAIL_SALT']
-            )
-
+            token = self._generate_token()
             res = self.client.post(
                 '/suppliers/create-user/{}'.format(token),
                 data={

@@ -14,14 +14,44 @@
     Check you’ve entered the correct link or ask the person who invited you to send a new invitation.<br/>
     If you still can’t create a contributor account, email <a href="mailto:enquiries@digitalmarketplace.service.gov.uk">enquiries@digitalmarketplace.service.gov.uk</a>.
 </p>
-
-{% elif invalid_user %}
+{% elif user.role == 'admin' %}
 
 <header class="page-heading-smaller">
-  <h1>The account associated with this email address is inactive, locked, or already registered with a different supplier.</h1>
+  <h1>You have an administrator account.</h1>
 </header>
 <p>
-    Please email <a href="mailto:enquiries@digitalmarketplace.service.gov.uk">enquiries@digitalmarketplace.service.gov.uk</a> for help with setting up a new contributor account.
+  Your account cannot be converted to a supplier account.
+</p>
+
+{% elif is_inactive_or_locked == 'inactive' %}
+
+<header class="page-heading-smaller">
+  <h1>Your account has been deactivated.</h1>
+</header>
+<p>
+    Email <a href="mailto:enquiries@digitalmarketplace.service.gov.uk">enquiries@digitalmarketplace.service.gov.uk</a> to reactivate your account.
+</p>
+
+{% elif is_inactive_or_locked == 'locked' %}
+
+<header class="page-heading-smaller">
+  <h1>Your account has been locked.</h1>
+</header>
+<p>
+    Email <a href="mailto:enquiries@digitalmarketplace.service.gov.uk">enquiries@digitalmarketplace.service.gov.uk</a> to unlock your account.
+</p>
+
+{% elif is_registered_to_another_supplier %}
+
+<header class="page-heading-smaller">
+  <h1>The details you provided are registered with another supplier.</h1>
+</header>
+<p>You were invited by ‘{{ is_registered_to_another_supplier.supplier_who_sent_the_invitation }}’</p>
+<p>Your account is registered with ‘{{ is_registered_to_another_supplier.supplier_registered_with_account }}’</p>
+<br>
+<p>
+  <a href="{{ url_for('.render_login') }}">Log in</a> to your {{ is_registered_to_another_supplier.supplier_registered_with_account }} account or email
+  <a href="mailto:enquiries@digitalmarketplace.service.gov.uk">enquiries@digitalmarketplace.service.gov.uk</a> to register your account with a different organisation.
 </p>
 
 {% else %}
