@@ -168,7 +168,7 @@
     - configurationTracking
     - changeImpactAssessment
 -
-  name: Vulnerabilility management
+  name: Vulnerability management
   editable: True
   questions:
     - vulnerabilityAssessment
