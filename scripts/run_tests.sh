@@ -36,4 +36,4 @@ nosetests -v -s --with-doctest
 display_result $? 3 "Python Unit tests"
 
 npm test
-display_result $? 3 "JavaScript Unit tests"
+display_result $? 4 "JavaScript Unit tests"
