@@ -20,6 +20,10 @@
 
   }
 
+  .validation-wrapper li {
+     margin-left: 20px;
+   }
+      
   .question-number {
     @include bold-19;
   }
