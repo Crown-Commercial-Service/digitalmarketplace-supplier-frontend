@@ -27,30 +27,36 @@
 
   <form method="post" enctype="multipart/form-data">
 
-    {% for question in section.questions %}
-      {% if errors and errors[question.id] %}
-        {{ forms[question.type](question, service_data, errors) }}
-      {% else %}
-        {{ forms[question.type](question, service_data, {}) }}
-      {% endif %}
-      {% if question.assuranceApproach %}
-        <div class='assurance-question'>
-          {{ assurance_question(
-            name=question.id,
-            service_data=service_data,
-            type=question.assuranceApproach,
-            errors=errors if errors else {}
-          ) }}
-        </div>
-      {% endif %}
-    {% endfor %}
+    <div class="grid-row">
+      <div class="column-two-thirds">
 
-    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
-    {% block save_button %}{% endblock %}
+          {% for question in section.questions %}
+            {% if errors and errors[question.id] %}
+              {{ forms[question.type](question, service_data, errors) }}
+            {% else %}
+              {{ forms[question.type](question, service_data, {}) }}
+            {% endif %}
+            {% if question.assuranceApproach %}
+              <div class='assurance-question'>
+                {{ assurance_question(
+                  name=question.id,
+                  service_data=service_data,
+                  type=question.assuranceApproach,
+                  errors=errors if errors else {}
+                ) }}
+              </div>
+            {% endif %}
+          {% endfor %}
 
-    {% block return_to_service_link %}
-    <a href="{% block return_to_service %}{% endblock %}">Return to service summary</a>
-    {% endblock %}
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+          {% block save_button %}{% endblock %}
+
+          {% block return_to_service_link %}
+          <a href="{% block return_to_service %}{% endblock %}">Return to service summary</a>
+          {% endblock %}
+
+      </div>
+    </div>
 
   </form>
 {% endblock %}
