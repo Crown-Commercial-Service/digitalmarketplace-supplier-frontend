@@ -672,7 +672,7 @@ class TestInviteUser(BaseApplicationTest):
             for message in [
                 "Supplier Name",
                 "test@email.com",
-                '<button class="button-save">Create contributor account</button>',
+                '<button type="submit" class="button-save">Create contributor account</button>',
                 '<form autocomplete="off" action="/suppliers/create-user/{}" method="POST" id="createUserForm">'.format(token)  # noqa
             ]:
                 assert_in(message, res.get_data(as_text=True))
@@ -697,7 +697,7 @@ class TestInviteUser(BaseApplicationTest):
             assert_equal(res.status_code, 200)
             for message in [
                 "Supplier Name",
-                '<button class="button-save">Create contributor account</button>',
+                '<button type="submit" class="button-save">Create contributor account</button>',
                 '<form autocomplete="off" action="/suppliers/update-user/{}" method="POST" id="updateUserForm">'.format(token)  # noqa
             ]:
                 assert_in(message, res.get_data(as_text=True))
