@@ -67,7 +67,7 @@
 
     <form autocomplete="off" action="{{ url_for('.submit_update_user', encoded_token=token) }}" method="POST" id="updateUserForm">
         {{ form.hidden_tag() }}
-        <button class="button-save">Create contributor account</button>
+        <button type="submit" class="button-save">Create contributor account</button>
     </form>
 
         </p>
