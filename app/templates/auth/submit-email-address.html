@@ -81,7 +81,13 @@
           </div>
       {% endif %}
 
-      <button type="submit" class="button-save">Send invite</button>
+      {%
+        with
+        type = "save",
+        label = "Send invite"
+      %}
+        {% include "toolkit/button.html" %}
+      {% endwith %}
   </form>
 </div>
 
