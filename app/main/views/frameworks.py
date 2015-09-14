@@ -2,6 +2,7 @@ import itertools
 
 from flask import render_template, request, abort, flash, redirect, url_for, current_app
 from flask_login import login_required, current_user
+import six
 
 from dmutils.apiclient import APIError
 from dmutils.audit import AuditTypes
@@ -20,6 +21,7 @@ from ..helpers.services import (
     count_unanswered_questions
 )
 from ..helpers.frameworks import register_interest_in_framework
+from ..helpers import hash_email
 
 
 CLARIFICATION_QUESTION_NAME = 'clarification_question'
@@ -169,8 +171,9 @@ def download_supplier_file(filepath):
 @flask_featureflags.is_active_feature('GCLOUD7_OPEN')
 def framework_updates(error_message=None, default_textbox_value=None):
 
-    current_app.logger.info("g7updates.viewed: user_id:%s supplier_id:%s",
-                            current_user.email_address, current_user.supplier_id)
+    current_app.logger.info("g7updates.viewed: user_id {user_id} supplier_id {supplier_id}",
+                            extra={'user_id': current_user.id,
+                                   'supplier_id': current_user.supplier_id})
 
     template_data = main.config['BASE_TEMPLATE_DATA']
 
@@ -240,8 +243,11 @@ def framework_updates_email_clarification_question():
         )
     except MandrillException as e:
         current_app.logger.error(
-            "Clarification question email failed to send error {} supplier_id {} user_email_address {}".format(
-                e, current_user.supplier_id, current_user.email_address))
+            "Clarification question email failed to send. "
+            "error {error} supplier_id {supplier_id} email_hash {email_hash}",
+            extra={'error': six.text_type(e),
+                   'supplier_id': current_user.supplier_id,
+                   'email_hash': hash_email(current_user.email_address)})
         abort(503, "Clarification question email failed to send")
 
     # Send confirmation email to the user who submitted the question
@@ -263,9 +269,11 @@ def framework_updates_email_clarification_question():
         )
     except MandrillException as e:
         current_app.logger.error(
-            "Clarification question confirmation email failed to send "
-            "error {} supplier_id {} user_email_address {}".format(
-                e, current_user.supplier_id, current_user.email_address))
+            "Clarification question confirmation email failed to send. "
+            "error {error} supplier_id {supplier_id} email_hash {email_hash}",
+            extra={'error': six.text_type(e),
+                   'supplier_id': current_user.supplier_id,
+                   'email_hash': hash_email(current_user.email_address)})
 
     data_api_client.create_audit_event(
         audit_type=AuditTypes.send_clarification_question,

@@ -58,8 +58,8 @@ def create_app(config_name):
             return application.login_manager.unauthorized()
 
         application.logger.info(
-            u'csrf.invalid_token: Aborting request, user_id: %s', session['user_id']
-        )
+            u'csrf.invalid_token: Aborting request, user_id: {user_id}',
+            extra={'user_id': session['user_id']})
 
         abort(400, reason)
 

@@ -2,6 +2,7 @@ from itertools import chain
 
 from flask import render_template, request, redirect, url_for, abort, session, flash
 from flask_login import login_required, current_user, current_app
+import six
 
 from dmutils.apiclient import APIError, HTTPError
 from dmutils.audit import AuditTypes
@@ -13,6 +14,7 @@ from ... import data_api_client
 from ..forms.suppliers import EditSupplierForm, EditContactInformationForm, \
     DunsNumberForm, CompaniesHouseNumberForm, CompanyContactDetailsForm, CompanyNameForm, EmailAddressForm
 from ..helpers.frameworks import has_registered_interest_in_framework
+from ..helpers import hash_email
 from .users import get_current_suppliers_users
 
 
@@ -150,8 +152,10 @@ def submit_duns_number():
         if len(suppliers["suppliers"]) > 0:
             form.duns_number.errors = ["DUNS number already used"]
             current_app.logger.warning(
-                "suppliercreate.fail: duns:%s %s",
-                form.duns_number.data, ",".join(form.duns_number.errors))
+                "suppliercreate.fail: duns:{duns} {duns_errors}",
+                extra={
+                    'duns': form.duns_number.data,
+                    'duns_errors': ",".join(form.duns_number.errors)})
             return render_template(
                 "suppliers/duns_number.html",
                 form=form,
@@ -161,8 +165,10 @@ def submit_duns_number():
         return redirect(url_for(".companies_house_number"))
     else:
         current_app.logger.warning(
-            "suppliercreate.fail: duns:%s %s",
-            form.duns_number.data, ",".join(form.duns_number.errors))
+            "suppliercreate.fail: duns:{duns} {duns_errors}",
+            extra={
+                'duns': form.duns_number.data,
+                'duns_errors': ",".join(form.duns_number.errors)})
         return render_template(
             "suppliers/duns_number.html",
             form=form,
@@ -199,8 +205,10 @@ def submit_companies_house_number():
         return redirect(url_for(".company_name"))
     else:
         current_app.logger.warning(
-            "suppliercreate.fail: duns:%s %s",
-            session.get('duns_number'), ",".join(chain.from_iterable(form.errors.values())))
+            "suppliercreate.fail: duns:{duns} {duns_errors}",
+            extra={
+                'duns': session.get('duns_number'),
+                'duns_errors': ",".join(chain.from_iterable(form.errors.values()))})
         return render_template(
             "suppliers/companies_house_number.html",
             form=form,
@@ -233,9 +241,11 @@ def submit_company_name():
         return redirect(url_for(".company_contact_details"))
     else:
         current_app.logger.warning(
-            "suppliercreate.fail: duns:%s company_name:%s %s",
-            session.get('duns_number'), session.get('company_name'),
-            ",".join(chain.from_iterable(form.errors.values())))
+            "suppliercreate.fail: duns:{duns} company_name:{company_name} {duns_errors}",
+            extra={
+                'duns': session.get('duns_number'),
+                'company_name': session.get('company_name'),
+                'duns_errors': ",".join(chain.from_iterable(form.errors.values()))})
         return render_template(
             "suppliers/company_name.html",
             form=form,
@@ -277,9 +287,11 @@ def submit_company_contact_details():
         return redirect(url_for(".create_your_account"))
     else:
         current_app.logger.warning(
-            "suppliercreate.fail: duns:%s company_name:%s %s",
-            session.get('duns_number'), session.get('company_name'),
-            ",".join(chain.from_iterable(form.errors.values())))
+            "suppliercreate.fail: duns:{duns} company_name:{company_name} {duns_errors}",
+            extra={
+                'duns': session.get('duns_number'),
+                'company_name': session.get('company_name'),
+                'duns_errors': ",".join(chain.from_iterable(form.errors.values()))})
         return render_template(
             "suppliers/company_contact_details.html",
             form=form,
@@ -349,76 +361,71 @@ def submit_company_summary():
     missing_fields = [field for field in required_fields if field not in session]
 
     if not missing_fields:
+        supplier = {
+            "name": session["company_name"],
+            "dunsNumber": str(session["duns_number"]),
+            "contactInformation": [{
+                "email": session["email_address"],
+                "phoneNumber": session["phone_number"],
+                "contactName": session["contact_name"]
+            }]
+        }
+
+        if session.get("companies_house_number", None):
+            supplier["companiesHouseNumber"] = session.get("companies_house_number")
+
+        account_email_address = session.get("account_email_address", None)
+
+        supplier = data_api_client.create_supplier(supplier)
+        session.clear()
+        session['email_company_name'] = supplier['suppliers']['name']
+        session['email_supplier_id'] = supplier['suppliers']['id']
+
+        token = generate_token(
+            {
+                "email_address":  account_email_address,
+                "supplier_id": session['email_supplier_id'],
+                "supplier_name": session['email_company_name']
+            },
+            current_app.config['SHARED_EMAIL_KEY'],
+            current_app.config['INVITE_EMAIL_SALT']
+        )
+
+        url = url_for('main.create_user', encoded_token=token, _external=True)
+
+        email_body = render_template(
+            "emails/create_user_email.html",
+            company_name=session['email_company_name'],
+            url=url
+        )
         try:
-            supplier = {
-                "name": session["company_name"],
-                "dunsNumber": str(session["duns_number"]),
-                "contactInformation": [{
-                    "email": session["email_address"],
-                    "phoneNumber": session["phone_number"],
-                    "contactName": session["contact_name"]
-                }]
-            }
-
-            if session.get("companies_house_number", None):
-                supplier["companiesHouseNumber"] = session.get("companies_house_number")
-
-            account_email_address = session.get("account_email_address", None)
-
-            supplier = data_api_client.create_supplier(supplier)
-            session.clear()
-            session['email_company_name'] = supplier['suppliers']['name']
-            session['email_supplier_id'] = supplier['suppliers']['id']
-
-            token = generate_token(
-                {
-                    "email_address":  account_email_address,
-                    "supplier_id": session['email_supplier_id'],
-                    "supplier_name": session['email_company_name']
-                },
-                current_app.config['SHARED_EMAIL_KEY'],
-                current_app.config['INVITE_EMAIL_SALT']
+            send_email(
+                account_email_address,
+                email_body,
+                current_app.config['DM_MANDRILL_API_KEY'],
+                current_app.config['CREATE_USER_SUBJECT'],
+                current_app.config['RESET_PASSWORD_EMAIL_FROM'],
+                current_app.config['RESET_PASSWORD_EMAIL_NAME'],
+                ["user-creation"]
             )
+            session['email_sent_to'] = account_email_address
+        except MandrillException as e:
+            current_app.logger.error(
+                "suppliercreate.fail: Create user email failed to send. "
+                "error {error} supplier_id {supplier_id} email_hash {email_hash}",
+                extra={
+                    'error': six.text_type(e),
+                    'supplier_id': session['email_supplier_id'],
+                    'email_hash': hash_email(account_email_address)})
+            abort(503, "Failed to send user creation email")
 
-            url = url_for('main.create_user', encoded_token=token, _external=True)
+        data_api_client.create_audit_event(
+            audit_type=AuditTypes.invite_user,
+            object_type='suppliers',
+            object_id=session['email_supplier_id'],
+            data={'invitedEmail': account_email_address})
 
-            email_body = render_template(
-                "emails/create_user_email.html",
-                company_name=session['email_company_name'],
-                url=url
-            )
-            try:
-                send_email(
-                    account_email_address,
-                    email_body,
-                    current_app.config['DM_MANDRILL_API_KEY'],
-                    current_app.config['CREATE_USER_SUBJECT'],
-                    current_app.config['RESET_PASSWORD_EMAIL_FROM'],
-                    current_app.config['RESET_PASSWORD_EMAIL_NAME'],
-                    ["user-creation"]
-                )
-                session['email_sent_to'] = account_email_address
-            except MandrillException as e:
-                current_app.logger.error(
-                    "suppliercreate.fail: Create user email failed to " +
-                    "send error {} to {} supplier {} supplier id {} ".format(
-                        str(e),
-                        account_email_address,
-                        session['email_company_name'],
-                        session['email_supplier_id'])
-                )
-                abort(503, "Failed to send user creation email")
-
-            data_api_client.create_audit_event(
-                audit_type=AuditTypes.invite_user,
-                object_type='suppliers',
-                object_id=session['email_supplier_id'],
-                data={'invitedEmail': account_email_address})
-
-            return redirect(url_for('.create_your_account_complete'), 302)
-        except HTTPError as e:
-            current_app.logger.error(str(e))
-            abort(503)
+        return redirect(url_for('.create_your_account_complete'), 302)
     else:
         return render_template(
             "suppliers/company_summary.html",
