@@ -92,7 +92,13 @@
     </div>
   </div>
 
-  <button class="button-save" type="submit">Save and return</button>
+  {%
+    with
+    type = "save",
+    label = "Save and return"
+  %}
+    {% include "toolkit/button.html" %}
+  {% endwith %}
   <p>
     <a href="{{ url_for('.dashboard') }}">Return without saving</a>
   </p>

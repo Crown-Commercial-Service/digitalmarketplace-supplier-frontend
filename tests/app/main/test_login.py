@@ -392,7 +392,8 @@ class TestLoginFormsNotAutofillable(BaseApplicationTest):
             non_hidden_inputs = form.xpath('//input[@type!="hidden"]')
 
             for input in non_hidden_inputs:
-                assert_equal("off", input.get('autocomplete'))
+                if input.get('type') != 'submit':
+                    assert_equal("off", input.get('autocomplete'))
 
     def test_login_form_and_inputs_not_autofillable(self):
         self._forms_and_inputs_not_autofillable(
@@ -672,7 +673,7 @@ class TestInviteUser(BaseApplicationTest):
             for message in [
                 "Supplier Name",
                 "test@email.com",
-                '<button class="button-save">Create contributor account</button>',
+                '<input type="submit" class="button-save"  value="Create contributor account" />',
                 '<form autocomplete="off" action="/suppliers/create-user/{}" method="POST" id="createUserForm">'.format(token)  # noqa
             ]:
                 assert_in(message, res.get_data(as_text=True))
@@ -697,7 +698,7 @@ class TestInviteUser(BaseApplicationTest):
             assert_equal(res.status_code, 200)
             for message in [
                 "Supplier Name",
-                '<button class="button-save">Create contributor account</button>',
+                '<input type="submit" class="button-save"  value="Create contributor account" />',
                 '<form autocomplete="off" action="/suppliers/update-user/{}" method="POST" id="updateUserForm">'.format(token)  # noqa
             ]:
                 assert_in(message, res.get_data(as_text=True))
@@ -717,7 +718,7 @@ class TestInviteUser(BaseApplicationTest):
                 u"Check you’ve entered the correct link or ask the person who invited you to send a new invitation." in res.get_data(as_text=True)  # noqa
             )
             assert_false(
-                '<button class="button-save">Create contributor account</button>' in res.get_data(as_text=True)
+                '<input type="submit" class="button-save"  value="Create contributor account" />' in res.get_data(as_text=True)  # noqa
             )
 
     def test_should_be_an_error_if_invalid_token_on_update(self):
@@ -731,7 +732,7 @@ class TestInviteUser(BaseApplicationTest):
                 u"Check you’ve entered the correct link or ask the person who invited you to send a new invitation." in res.get_data(as_text=True)  # noqa
             )
             assert_false(
-                '<button class="button-save">Update user</button>' in res.get_data(as_text=True)  # noqa
+                '<input type="submit" class="button-save"  value="Update user" />' in res.get_data(as_text=True)  # noqa
             )
 
     def test_should_be_an_error_if_missing_name_and_password(self):

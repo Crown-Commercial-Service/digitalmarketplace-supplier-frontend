@@ -67,7 +67,13 @@
         </div>
     {% endif %}
 
-        <button class="button-save">Create contributor account</button>
+        {%
+          with
+          type = "save",
+          label = "Create contributor account"
+        %}
+          {% include "toolkit/button.html" %}
+        {% endwith %}
     </form>
 
         </p>
