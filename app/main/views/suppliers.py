@@ -20,8 +20,6 @@ from .users import get_current_suppliers_users
 
 @main.route('')
 @login_required
-@flask_featureflags.is_active_feature('SUPPLIER_DASHBOARD',
-                                      redirect='.list_services')
 def dashboard():
     template_data = main.config['BASE_TEMPLATE_DATA']
 
@@ -45,7 +43,6 @@ def dashboard():
 
 @main.route('/edit', methods=['GET'])
 @login_required
-@flask_featureflags.is_active_feature('EDIT_SUPPLIER_PAGE')
 def edit_supplier(supplier_form=None, contact_form=None, error=None):
     template_data = main.config['BASE_TEMPLATE_DATA']
 
@@ -77,7 +74,6 @@ def edit_supplier(supplier_form=None, contact_form=None, error=None):
 
 @main.route('/edit', methods=['POST'])
 @login_required
-@flask_featureflags.is_active_feature('EDIT_SUPPLIER_PAGE')
 def update_supplier():
     # FieldList expects post parameter keys to have number suffixes
     # (eg client-0, client-1 ...), which is incompatible with how
