@@ -875,9 +875,25 @@ class TestCreateSupplier(BaseApplicationTest):
         with self.client as c:
             with c.session_transaction() as sess:
                 sess['email_sent_to'] = "my@email.com"
+                sess['other_stuff'] = True
 
             res = c.get("/suppliers/create-your-account-complete")
 
             assert_equal(res.status_code, 200)
             assert_true('An email has been sent to my@email.com' in res.get_data(as_text=True))
-            assert_false('email_sent_to' in session)
+            assert_false('other_stuff' in session)
+
+    def test_should_show_email_address_even_when_refreshed(self):
+        with self.client as c:
+            with c.session_transaction() as sess:
+                sess['email_sent_to'] = 'my-email@example.com'
+
+            res = c.get('/suppliers/create-your-account-complete')
+
+            assert_equal(res.status_code, 200)
+            assert_true('An email has been sent to my-email@example.com' in res.get_data(as_text=True))
+
+            res = c.get('/suppliers/create-your-account-complete')
+
+            assert_equal(res.status_code, 200)
+            assert_true('An email has been sent to my-email@example.com' in res.get_data(as_text=True))

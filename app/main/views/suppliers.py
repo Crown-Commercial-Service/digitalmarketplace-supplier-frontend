@@ -440,6 +440,7 @@ def create_your_account_complete():
 
     email_address = session['email_sent_to']
     session.clear()
+    session['email_sent_to'] = email_address
     return render_template(
         "suppliers/create_your_account_complete.html",
         email_address=email_address,
