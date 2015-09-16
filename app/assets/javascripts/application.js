@@ -22,6 +22,14 @@
 
   var module;
 
+  if(typeof console === 'undefined') {
+    console = {
+      log: function () {},
+      time: function () {},
+      timeEnd: function () {}
+    };
+  }
+
   if (
     (GDM.debug = !window.location.href.match(/gov.uk/) && !window.jasmine)
   ) {
