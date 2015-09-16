@@ -41,6 +41,7 @@ class Config(object):
     CLARIFICATION_EMAIL_NAME = 'Digital Marketplace Admin'
     CLARIFICATION_EMAIL_FROM = 'do-not-reply@digitalmarketplace.service.gov.uk'
     CLARIFICATION_EMAIL_SUBJECT = 'Thanks for your clarification question'
+    G7_FOLLOW_UP_EMAIL_SUBJECT = 'Thanks for your G-Cloud 7 question'
 
     CREATE_USER_SUBJECT = 'Create your Digital Marketplace account'
     SECRET_KEY = os.getenv('DM_PASSWORD_SECRET_KEY')
@@ -61,6 +62,7 @@ class Config(object):
 
     FEATURE_FLAGS_EDIT_SERVICE_PAGE = False
     FEATURE_FLAGS_GCLOUD7_OPEN = False
+    FEATURE_FLAGS_G7_CLARIFICATIONS_CLOSED = False
 
     # Logging
     DM_LOG_LEVEL = 'DEBUG'
@@ -100,6 +102,7 @@ class Development(Config):
     # Dates not formatted like YYYY-(0)M-(0)D will fail
     FEATURE_FLAGS_EDIT_SERVICE_PAGE = enabled_since('2015-06-03')
     FEATURE_FLAGS_GCLOUD7_OPEN = enabled_since('2015-06-18')
+    FEATURE_FLAGS_G7_CLARIFICATIONS_CLOSED = enabled_since('2015-09-15')
 
 
 class Live(Config):
