@@ -21,7 +21,7 @@
 
     $(root).scroll($.proxy(this.onScroll, this));
     this.trackVisibleNodes();
-  };
+  }
 
   ScrollTracker.prototype.getConfigForCurrentPath = function getConfigForCurrentPath(sitewideConfig) {
     for (var path in sitewideConfig) {
@@ -31,12 +31,12 @@
 
   ScrollTracker.prototype.buildNodes = function buildNodes(config) {
     var nodes = [];
-    var nodeConstructor, nodeData;
+    var NodeConstructor, nodeData;
 
     for (var i=0; i<config.length; i++) {
-      nodeConstructor = ScrollTracker[config[i][0] + "Node"];
+      NodeConstructor = ScrollTracker[config[i][0] + "Node"];
       nodeData = config[i][1];
-      nodes.push(new nodeConstructor(nodeData));
+      nodes.push(new NodeConstructor(nodeData));
     }
 
     return nodes;
@@ -90,7 +90,7 @@
   ScrollTracker.HeadingNode.prototype.isVisible = function isVisible() {
     if ( !this.$element ) return false;
     return this.elementIsVisible(this.$element);
-  }
+  };
 
   ScrollTracker.HeadingNode.prototype.elementIsVisible = function elementIsVisible($element) {
     var $root = $(root);
@@ -108,7 +108,7 @@
           currentHost = root.location.hostname,
           currentHostRegExp = (currentHost !== '') ? new RegExp(currentHost) : /^$/g; // this ccode can run in an environment without a host, ie. a html file
 
-      /* 
+      /*
          File type matching based on those in:
          https://github.com/alphagov/digitalmarketplace-utils/blob/8251d45f47593bd73c5e3b993e1734b5ee505b4b/dmutils/documents.py#L105
       */
