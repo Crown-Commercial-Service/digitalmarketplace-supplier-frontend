@@ -60,10 +60,7 @@ class Config(object):
     RAISE_ERROR_ON_MISSING_FEATURES = True
 
     FEATURE_FLAGS_EDIT_SERVICE_PAGE = False
-    FEATURE_FLAGS_SUPPLIER_DASHBOARD = False
-    FEATURE_FLAGS_EDIT_SUPPLIER_PAGE = False
     FEATURE_FLAGS_GCLOUD7_OPEN = False
-    FEATURE_FLAGS_USER_DASHBOARD = False
 
     # Logging
     DM_LOG_LEVEL = 'DEBUG'
@@ -93,10 +90,7 @@ class Test(Config):
     DM_CLARIFICATION_QUESTION_EMAIL = 'digitalmarketplace@mailinator.com'
 
     FEATURE_FLAGS_EDIT_SERVICE_PAGE = enabled_since('2015-06-03')
-    FEATURE_FLAGS_SUPPLIER_DASHBOARD = enabled_since('2015-06-10')
-    FEATURE_FLAGS_EDIT_SUPPLIER_PAGE = enabled_since('2015-06-18')
     FEATURE_FLAGS_GCLOUD7_OPEN = enabled_since('2015-06-18')
-    FEATURE_FLAGS_USER_DASHBOARD = enabled_since('2015-07-09')
 
 
 class Development(Config):
@@ -105,10 +99,7 @@ class Development(Config):
 
     # Dates not formatted like YYYY-(0)M-(0)D will fail
     FEATURE_FLAGS_EDIT_SERVICE_PAGE = enabled_since('2015-06-03')
-    FEATURE_FLAGS_SUPPLIER_DASHBOARD = enabled_since('2015-06-10')
-    FEATURE_FLAGS_EDIT_SUPPLIER_PAGE = enabled_since('2015-06-18')
     FEATURE_FLAGS_GCLOUD7_OPEN = enabled_since('2015-06-18')
-    FEATURE_FLAGS_USER_DASHBOARD = enabled_since('2015-07-09')
 
 
 class Live(Config):
@@ -119,21 +110,14 @@ class Live(Config):
 
 class Preview(Live):
     FEATURE_FLAGS_EDIT_SERVICE_PAGE = enabled_since('2015-06-03')
-    FEATURE_FLAGS_SUPPLIER_DASHBOARD = enabled_since('2015-06-10')
-    FEATURE_FLAGS_EDIT_SUPPLIER_PAGE = enabled_since('2015-06-18')
     FEATURE_FLAGS_GCLOUD7_OPEN = enabled_since('2015-06-18')
-    FEATURE_FLAGS_USER_DASHBOARD = enabled_since('2015-07-09')
 
 
 class Production(Live):
-    FEATURE_FLAGS_SUPPLIER_DASHBOARD = enabled_since('2015-06-10')
-    FEATURE_FLAGS_EDIT_SUPPLIER_PAGE = enabled_since('2015-06-18')
-    FEATURE_FLAGS_USER_DASHBOARD = enabled_since('2015-08-20')
     FEATURE_FLAGS_GCLOUD7_OPEN = enabled_since('2015-09-01')
 
 
 class Staging(Production):
-    FEATURE_FLAGS_USER_DASHBOARD = enabled_since('2015-08-19')
     FEATURE_FLAGS_GCLOUD7_OPEN = enabled_since('2015-08-26')
 
 configs = {

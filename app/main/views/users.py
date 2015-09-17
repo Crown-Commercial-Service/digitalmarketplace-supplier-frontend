@@ -25,7 +25,6 @@ def get_current_suppliers_users():
 
 @main.route('/users')
 @login_required
-@flask_featureflags.is_active_feature('USER_DASHBOARD')
 def list_users():
 
     template_data = main.config['BASE_TEMPLATE_DATA']
@@ -39,7 +38,6 @@ def list_users():
 
 @main.route('/users/<int:user_id>/deactivate', methods=['POST'])
 @login_required
-@flask_featureflags.is_active_feature('USER_DASHBOARD')
 def deactivate_user(user_id):
 
     # check that id is not current user
