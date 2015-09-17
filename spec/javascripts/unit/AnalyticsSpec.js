@@ -93,9 +93,32 @@ describe("GOVUK.Analytics", function () {
     });
   });
 
+  describe('button tracking', function () {
+    var mockButton;
+
+    beforeEach(function () {
+      mockButton = document.createElement('input');
+      mockButton.setAttribute('type', 'submit');
+      window.ga.calls.reset();
+    });
+
+    it('sends the right event when a submit button is clicked', function() {
+      mockButton.setAttribute('value', 'Save and continue');
+      console.info(mockButton.value);
+      GOVUK.GDM.analytics.events.registerSubmitButtonClick.call(mockButton);
+      expect(window.ga.calls.first().args).toEqual(['send', {
+          'hitType': 'event',
+          'eventCategory': 'button',
+          'eventAction': 'Save and continue',
+          'eventLabel': 'http://example.com'
+        }
+      ]);
+    });
+  });
+
   describe('virtual page views', function () {
     beforeEach(function () {
-      
+
       window.ga.calls.reset();
     });
 

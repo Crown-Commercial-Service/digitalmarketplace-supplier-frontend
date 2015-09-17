@@ -126,10 +126,26 @@
       }
       GOVUK.analytics.trackEvent(category, action);
     },
+    'registerSubmitButtonClick': function () {
+
+      var label = window.location.href;
+
+      if (label.match(/^(https|http){1}/) === null) {
+        label = 'http://example.com';
+      }
+
+      GOVUK.analytics.trackEvent(
+        'button', this.value, {'label': label}
+      );
+    },
     'ScrollTracker': ScrollTracker,
     'init': function () {
-      $('body').on('click', 'a', this.registerLinkClick);
+
+      $('body')
+        .on('click', 'a', this.registerLinkClick)
+        .on('click', 'input[type=submit]', this.registerSubmitButtonClick);
       var scrollTracker = new this.ScrollTracker(CONFIG);
+
     }
   };
 })(window, window.GOVUK);
