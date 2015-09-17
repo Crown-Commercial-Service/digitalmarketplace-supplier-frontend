@@ -42,6 +42,7 @@ class Config(object):
     CLARIFICATION_EMAIL_FROM = 'do-not-reply@digitalmarketplace.service.gov.uk'
     CLARIFICATION_EMAIL_SUBJECT = 'Thanks for your clarification question'
     G7_FOLLOW_UP_EMAIL_SUBJECT = 'Thanks for your G-Cloud 7 question'
+    DM_G7_FOLLOW_UP_EMAIL_TO = 'digitalmarketplace@mailinator.com'
 
     CREATE_USER_SUBJECT = 'Create your Digital Marketplace account'
     SECRET_KEY = os.getenv('DM_PASSWORD_SECRET_KEY')
