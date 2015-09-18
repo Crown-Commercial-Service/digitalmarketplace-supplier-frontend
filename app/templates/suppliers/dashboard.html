@@ -29,7 +29,7 @@
   </div>
 
   {% if 'GCLOUD7_OPEN' is active_feature %}
-    {% if g7_interested %}
+    {% if g7_interested and g7_status == 'open' %}
       {%
         with
         items = [{
@@ -41,7 +41,7 @@
       %}
         {% include "toolkit/browse-list.html" %}
       {% endwith %}
-    {% else %}
+    {% elif g7_status == 'open' %}
       {%
         with
         items = [{
@@ -49,6 +49,16 @@
           "link": url_for(".framework_dashboard"),
           "body": "Read about G-Cloud 7, receive email updates and start the application process.",
           "subtext": "Deadline for submissions: {}".format(deadline)
+        }]
+      %}
+        {% include "toolkit/browse-list.html" %}
+      {% endwith %}
+    {% elif g7_status == 'pending' %}
+      {%
+        with
+        items = [{
+        "title": "View your G-Cloud 7 application",
+        "link": url_for(".framework_dashboard")
         }]
       %}
         {% include "toolkit/browse-list.html" %}
