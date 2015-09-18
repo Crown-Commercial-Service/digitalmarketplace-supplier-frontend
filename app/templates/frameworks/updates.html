@@ -29,7 +29,11 @@
   {% with messages = get_flashed_messages(with_categories=true) %}
     {% for category, message in messages %}
       {% if message == 'message_sent' %}
-        {% set message = "Your clarification question has been sent. Answers to all clarification questions will be published on this page." %}
+        {% if 'G7_CLARIFICATIONS_CLOSED' is active_feature %}
+          {% set message = "Your question has been sent. You'll get a reply from the Crown Commercial Service soon." %}
+        {% else %}
+          {% set message = "Your clarification question has been sent. Answers to all clarification questions will be published on this page." %}
+        {% endif %}
       {% endif %}
       {%
         with
@@ -92,37 +96,67 @@
         {% endcall %}
       {% endfor %}
       <p class="hint">
-        All clarification questions and answers will be published here regularly. You will receive an email when new answers are posted.
+        {% if 'G7_CLARIFICATIONS_CLOSED' is active_feature %}
+          The deadline for asking clarification questions has now passed. All clarification questions and answers will be published by 5pm <abbr title="British Summer Time">BST</abbr>, 29 September 2015. You'll receive an email when new answers are posted.
+        {% else %}
+          All clarification questions and answers will be published here regularly. You will receive an email when new answers are posted.
+        {% endif %}
       </p>
     </div>
   </div>
 
-  <form method="post">
-    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+  {% if 'G7_CLARIFICATIONS_CLOSED' is active_feature %}
+    <form method="post">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
       {%
         with
         large=true,
-        question = "Ask a G-Cloud 7 clarification question",
+        question = "Ask a question about your G-Cloud 7 application",
         name = clarification_question_name,
-        hint = "You should ask any questions you have about G-Cloud 7 here. The Crown Commercial Service will not respond to you individually. All answers to clarification questions will be published here regularly. (Maximum 5000 characters per question.)",
+        hint = "If you have any questions about your G-Cloud 7 application, you can ask them here. You'll receive a private response from the Crown Commercial Service. (Maximum 5000 characters per question.)",
         error = error_message,
         value = clarification_question_value
       %}
-        {% include "toolkit/forms/textbox.html" %}
+      {% include "toolkit/forms/textbox.html" %}
       {% endwith %}
-      <p>
-        The deadline for clarification questions is 5pm <abbr title="British Summer Time">BST</abbr>, 22 September 2015. All responses will be published by 5pm <abbr title="British Summer Time">BST</abbr>, 29 September 2015.
-      </p>
       {%
         with
         label="Ask question",
         type="save"
       %}
-        {% include "toolkit/button.html" %}
+      {% include "toolkit/button.html" %}
       {% endwith %}
-
+    
       <a href="{{ url_for('.framework_dashboard') }}">Return to G-Cloud 7 application</a>
-
-  </form>
-
+    
+    </form>
+  {% else %}
+    <form method="post">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+        {%
+          with
+          large=true,
+          question = "Ask a G-Cloud 7 clarification question",
+          name = clarification_question_name,
+          hint = "You should ask any questions you have about G-Cloud 7 here. The Crown Commercial Service will not respond to you individually. All answers to clarification questions will be published here regularly. (Maximum 5000 characters per question.)",
+          error = error_message,
+          value = clarification_question_value
+        %}
+          {% include "toolkit/forms/textbox.html" %}
+        {% endwith %}
+        <p>
+          The deadline for clarification questions is 5pm <abbr title="British Summer Time">BST</abbr>, 22 September 2015. All responses will be published by 5pm <abbr title="British Summer Time">BST</abbr>, 29 September 2015.
+        </p>
+        {%
+          with
+          label="Ask question",
+          type="save"
+        %}
+          {% include "toolkit/button.html" %}
+        {% endwith %}
+  
+        <a href="{{ url_for('.framework_dashboard') }}">Return to G-Cloud 7 application</a>
+  
+    </form>
+  {% endif %}
 {% endblock %}

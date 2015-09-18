@@ -164,7 +164,14 @@
                 {% endif %}
               </li>
               <li>
-                <a href="{{ url_for('.framework_updates') }}"><span>Read updates and ask clarification questions</span></a>
+                <a href="{{ url_for('.framework_updates') }}">
+                  <span>
+                  {% if 'G7_CLARIFICATIONS_CLOSED' is active_feature %}
+                    Read updates and clarification question responses
+                  {% else %}
+                    Read updates and ask clarification questions
+                  {% endif %}
+                  </span></a>
                 {% if last_modified.supplier_updates %}
                   <div class="hint">Last updated <time datetime="{{ last_modified.supplier_updates }}">{{ last_modified.supplier_updates|dateformat }}</time></div>
                 {% endif %}

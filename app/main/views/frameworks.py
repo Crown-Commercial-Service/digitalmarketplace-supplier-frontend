@@ -225,21 +225,37 @@ def framework_updates_email_clarification_question():
 
     # Submit email to Zendesk so the question can be answered
     # Fail if this email does not send
-    email_body = render_template(
-        "emails/clarification_question.html",
-        supplier_name=current_user.supplier_name,
-        user_name=current_user.name,
-        message=clarification_question
-    )
+    if flask_featureflags.is_active('G7_CLARIFICATIONS_CLOSED'):
+        subject = "G-Cloud 7 application question"
+        to_address = current_app.config['DM_G7_FOLLOW_UP_EMAIL_TO']
+        from_address = current_user.email_address
+        email_body = render_template(
+            "emails/g7_follow_up_question.html",
+            supplier_name=current_user.supplier_name,
+            user_name=current_user.name,
+            message=clarification_question
+        )
+        tags = ["g7-application-question"]
+    else:
+        subject = "Clarification question"
+        to_address = current_app.config['DM_CLARIFICATION_QUESTION_EMAIL']
+        from_address = "suppliers@digitalmarketplace.service.gov.uk"
+        email_body = render_template(
+            "emails/clarification_question.html",
+            supplier_name=current_user.supplier_name,
+            user_name=current_user.name,
+            message=clarification_question
+        )
+        tags = ["clarification-question"]
     try:
         send_email(
-            current_app.config['DM_CLARIFICATION_QUESTION_EMAIL'],
+            to_address,
             email_body,
             current_app.config['DM_MANDRILL_API_KEY'],
-            "Clarification question",
-            "suppliers@digitalmarketplace.service.gov.uk",
+            subject,
+            from_address,
             "G-Cloud 7 Supplier",
-            ["clarification-question"]
+            tags
         )
     except MandrillException as e:
         current_app.logger.error(
@@ -250,33 +266,41 @@ def framework_updates_email_clarification_question():
                    'email_hash': hash_email(current_user.email_address)})
         abort(503, "Clarification question email failed to send")
 
-    # Send confirmation email to the user who submitted the question
-    # No need to fail if this email does not send
-    email_body = render_template(
-        "emails/clarification_question_submitted.html",
-        user_name=current_user.name,
-        message=clarification_question
-    )
-    try:
-        send_email(
-            current_user.email_address,
-            email_body,
-            current_app.config['DM_MANDRILL_API_KEY'],
-            current_app.config['CLARIFICATION_EMAIL_SUBJECT'],
-            current_app.config['CLARIFICATION_EMAIL_FROM'],
-            current_app.config['CLARIFICATION_EMAIL_NAME'],
-            ["clarification-question-confirm"]
+    if flask_featureflags.is_active('G7_CLARIFICATIONS_CLOSED'):
+        # Do not send confirmation email to the user who submitted the question
+        # Zendesk will handle this instead
+        audit_type = AuditTypes.send_g7_application_question
+    else:
+        # Send confirmation email to the user who submitted the question
+        # No need to fail if this email does not send
+        subject = current_app.config['CLARIFICATION_EMAIL_SUBJECT']
+        tags = ["clarification-question-confirm"]
+        audit_type = AuditTypes.send_clarification_question
+        email_body = render_template(
+            "emails/clarification_question_submitted.html",
+            user_name=current_user.name,
+            message=clarification_question
         )
-    except MandrillException as e:
-        current_app.logger.error(
-            "Clarification question confirmation email failed to send. "
-            "error {error} supplier_id {supplier_id} email_hash {email_hash}",
-            extra={'error': six.text_type(e),
-                   'supplier_id': current_user.supplier_id,
-                   'email_hash': hash_email(current_user.email_address)})
+        try:
+            send_email(
+                current_user.email_address,
+                email_body,
+                current_app.config['DM_MANDRILL_API_KEY'],
+                subject,
+                current_app.config['CLARIFICATION_EMAIL_FROM'],
+                current_app.config['CLARIFICATION_EMAIL_NAME'],
+                tags
+            )
+        except MandrillException as e:
+            current_app.logger.error(
+                "Clarification question confirmation email failed to send. "
+                "error {error} supplier_id {supplier_id} email_hash {email_hash}",
+                extra={'error': six.text_type(e),
+                       'supplier_id': current_user.supplier_id,
+                       'email_hash': hash_email(current_user.email_address)})
 
     data_api_client.create_audit_event(
-        audit_type=AuditTypes.send_clarification_question,
+        audit_type=audit_type,
         user=current_user.email_address,
         object_type="suppliers",
         object_id=current_user.supplier_id,
