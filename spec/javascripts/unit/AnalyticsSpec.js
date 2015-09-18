@@ -63,7 +63,7 @@ describe("GOVUK.Analytics", function () {
 
     it('sends the right event when an internal link is clicked', function() {
       mockLink.appendChild(document.createTextNode('Suppliers guide'));
-      mockLink.href = window.location.hostname + '/suppliers/frameworks/g-cloud-7/download-supplier-pack'
+      mockLink.href = window.location.hostname + '/suppliers/frameworks/g-cloud-7/download-supplier-pack';
       GOVUK.GDM.analytics.events.registerLinkClick({ 'target': mockLink });
       expect(window.ga.calls.first().args).toEqual(['send', {
         'hitType': 'event',
@@ -104,16 +104,37 @@ describe("GOVUK.Analytics", function () {
 
     it('sends the right event when a submit button is clicked', function() {
       mockButton.setAttribute('value', 'Save and continue');
-      console.info(mockButton.value);
+      document.title = 'Features and benefits';
       GOVUK.GDM.analytics.events.registerSubmitButtonClick.call(mockButton);
       expect(window.ga.calls.first().args).toEqual(['send', {
           'hitType': 'event',
           'eventCategory': 'button',
           'eventAction': 'Save and continue',
-          'eventLabel': 'http://example.com'
+          'eventLabel': 'Features and benefits'
         }
       ]);
     });
+
+    it('knows if the user is on a service page', function () {
+
+      expect(
+        GOVUK.GDM.analytics.isQuestionPage("http://example.com/suppliers/submission/services/7478/edit/service_name")
+      ).toEqual(true);
+
+      expect(
+        GOVUK.GDM.analytics.isQuestionPage("http://example.com/suppliers/submission/services/7478")
+      ).toEqual(false);
+
+      expect(
+        GOVUK.GDM.analytics.isQuestionPage("http://example.com/suppliers/frameworks/g-cloud-7/services")
+      ).toEqual(false);
+
+      expect(
+        GOVUK.GDM.analytics.isQuestionPage("file:///Users/Jo/gds/suppliers/spec.html")
+      ).toEqual(false);
+
+    });
+
   });
 
   describe('virtual page views', function () {
@@ -142,7 +163,7 @@ describe("GOVUK.Analytics", function () {
           mockControl = document.createElement('label');
 
       radio.type = 'radio';
-      radio.value = 'iaas'
+      radio.value = 'iaas';
       mockControl.appendChild(radio);
 
       GOVUK.GDM.analytics.virtualPageViews.createANewService.registerLotSelection({

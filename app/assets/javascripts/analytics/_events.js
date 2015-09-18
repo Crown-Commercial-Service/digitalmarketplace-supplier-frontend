@@ -98,6 +98,10 @@
     return ( positionTop > $root.scrollTop() && positionTop < ($root.scrollTop() + $root.height()) );
   };
 
+  GOVUK.GDM.analytics.isQuestionPage = function(url) {
+    return !!url.match(/suppliers\/submission\/services\/([\d]+)\/edit\/([^/]+)$/);
+  };
+
   GOVUK.GDM.analytics.events = {
     'registerLinkClick': function (e) {
       var $target = $(e.target),
@@ -128,14 +132,15 @@
     },
     'registerSubmitButtonClick': function () {
 
-      var label = window.location.href;
+      var currentURL = root.location.href;
 
-      if (label.match(/^(https|http){1}/) === null) {
-        label = 'http://example.com';
-      }
+      if (
+        currentURL.match(/^(https|http){1}/) &&
+        !GOVUK.GDM.analytics.isQuestionPage(currentURL)
+      ) return;
 
       GOVUK.analytics.trackEvent(
-        'button', this.value, {'label': label}
+        'button', this.value, {'label': document.title}
       );
     },
     'ScrollTracker': ScrollTracker,
