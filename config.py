@@ -115,6 +115,7 @@ class Live(Config):
 class Preview(Live):
     FEATURE_FLAGS_EDIT_SERVICE_PAGE = enabled_since('2015-06-03')
     FEATURE_FLAGS_GCLOUD7_OPEN = enabled_since('2015-06-18')
+    FEATURE_FLAGS_G7_CLARIFICATIONS_CLOSED = enabled_since('2015-09-18')
 
 
 class Production(Live):
@@ -123,6 +124,7 @@ class Production(Live):
 
 class Staging(Production):
     FEATURE_FLAGS_GCLOUD7_OPEN = enabled_since('2015-08-26')
+    FEATURE_FLAGS_G7_CLARIFICATIONS_CLOSED = enabled_since('2015-09-18')
 
 configs = {
     'development': Development,
