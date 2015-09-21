@@ -87,6 +87,7 @@ def framework_services():
         complete_drafts=list(reversed(complete_drafts)),
         drafts=list(reversed(drafts)),
         declaration_status=get_declaration_status(data_api_client),
+        g7_status=data_api_client.get_framework_status('g-cloud-7').get('status', None),
         **template_data
     ), 200
 
