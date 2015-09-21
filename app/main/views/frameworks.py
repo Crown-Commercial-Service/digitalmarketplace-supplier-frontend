@@ -96,6 +96,9 @@ def framework_services():
 @login_required
 @flask_featureflags.is_active_feature('GCLOUD7_OPEN')
 def framework_supplier_declaration(section_id):
+    if data_api_client.get_framework_status('g-cloud-7').get('status', None) != 'open':
+        abort(404)
+
     template_data = main.config['BASE_TEMPLATE_DATA']
     content = declaration_content.get_builder()
     status_code = 200
