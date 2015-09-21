@@ -63,7 +63,7 @@
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
 
   <div class="grid-row">
-    <div class="column-one-whole">
+    <div class="column-two-thirds">
       {{ forms.question_textarea('description', 'Supplier summary', supplier_form.description.data, '50 words max', errors=supplier_form.description.errors, max_length_in_words=50) }}
 
       {{ forms.question_list_entry('clients', 'Clients', supplier_form.clients.data, '1 client per box, max 10 clients', errors=supplier_form.clients.errors, item_name='client', number_of_items=10) }}
