@@ -30,6 +30,7 @@ def dashboard():
         supplier['contact'] = supplier['contactInformation'][0]
     except APIError as e:
         abort(e.status_code)
+
     return render_template(
         "suppliers/dashboard.html",
         supplier=supplier,

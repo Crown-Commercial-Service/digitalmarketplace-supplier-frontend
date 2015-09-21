@@ -379,6 +379,7 @@ def view_service_submission(service_id):
         unanswered_optional=unanswered_optional,
         delete_requested=delete_requested,
         declaration_status=get_declaration_status(data_api_client),
+        g7_status=data_api_client.get_framework_status('g-cloud-7').get('status', None),
         deadline=current_app.config['G7_CLOSING_DATE'],
         **main.config['BASE_TEMPLATE_DATA']), 200
 
