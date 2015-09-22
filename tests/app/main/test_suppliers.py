@@ -115,6 +115,7 @@ class TestSuppliersDashboard(BaseApplicationTest):
     @mock.patch("app.main.views.suppliers.data_api_client")
     @mock.patch("app.main.views.suppliers.get_current_suppliers_users")
     def test_shows_gcloud_7_application_link(self, get_current_suppliers_users, data_api_client):
+        data_api_client.get_framework_status.return_value = {'status': 'open'}
         data_api_client.get_supplier.side_effect = get_supplier
         data_api_client.find_audit_events.return_value = {
             "auditEvents": []
@@ -134,6 +135,7 @@ class TestSuppliersDashboard(BaseApplicationTest):
     @mock.patch("app.main.views.suppliers.data_api_client")
     @mock.patch("app.main.views.suppliers.get_current_suppliers_users")
     def test_shows_gcloud_7_continue_link(self, get_current_suppliers_users, data_api_client):
+        data_api_client.get_framework_status.return_value = {'status': 'open'}
         data_api_client.get_supplier.side_effect = get_supplier
         data_api_client.find_audit_events.return_value = {
             "auditEvents": [{
