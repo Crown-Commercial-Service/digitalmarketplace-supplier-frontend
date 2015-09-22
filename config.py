@@ -120,6 +120,7 @@ class Preview(Live):
 
 class Production(Live):
     FEATURE_FLAGS_GCLOUD7_OPEN = enabled_since('2015-09-01')
+    FEATURE_FLAGS_G7_CLARIFICATIONS_CLOSED = enabled_since('2015-09-22')
 
 
 class Staging(Production):
