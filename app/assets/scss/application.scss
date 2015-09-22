@@ -74,17 +74,6 @@ $path: "/suppliers/static/images/";
   margin: (1.5 * $gutter) 0 (2 * $gutter);
 }
 
-.question-heading,
-.question-heading-with-hint,
-.hint,
-.validation-message {
-
-  @include media(desktop) {
-    width: 66%;
-  }
-
-}
-
 .delete-draft-button {
 
   padding: $gutter 0 $gutter * 2 0;

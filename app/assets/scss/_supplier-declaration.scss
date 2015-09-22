@@ -28,14 +28,6 @@
     @include bold-19;
   }
 
-  .selection-button {
-
-    @include media(desktop) {
-      max-width: 66%;
-    }
-
-  }
-
   .validation-wrapper {
 
     overflow: visible;
