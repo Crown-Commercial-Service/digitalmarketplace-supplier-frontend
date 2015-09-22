@@ -107,56 +107,64 @@
 
   {% if 'G7_CLARIFICATIONS_CLOSED' is active_feature %}
     <form method="post">
-      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
-      {%
-        with
-        large=true,
-        question = "Ask a question about your G-Cloud 7 application",
-        name = clarification_question_name,
-        hint = "If you have any questions about your G-Cloud 7 application, you can ask them here. You'll get a private reply from the Crown Commercial Service. (Maximum 5000 characters per question.)",
-        error = error_message,
-        value = clarification_question_value
-      %}
-      {% include "toolkit/forms/textbox.html" %}
-      {% endwith %}
-      {%
-        with
-        label="Ask question",
-        type="save"
-      %}
-      {% include "toolkit/button.html" %}
-      {% endwith %}
-    
-      <a href="{{ url_for('.framework_dashboard') }}">Return to G-Cloud 7 application</a>
-    
+      <div class="grid-row">
+        <div class="column-two-thirds">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+          {%
+            with
+            large=true,
+            question = "Ask a question about your G-Cloud 7 application",
+            name = clarification_question_name,
+            hint = "If you have any questions about your G-Cloud 7 application, you can ask them here. You'll get a private reply from the Crown Commercial Service. (Maximum 5000 characters per question.)",
+            error = error_message,
+            value = clarification_question_value
+          %}
+          {% include "toolkit/forms/textbox.html" %}
+          {% endwith %}
+          {%
+            with
+            label="Ask question",
+            type="save"
+          %}
+          {% include "toolkit/button.html" %}
+          {% endwith %}
+        
+          <a href="{{ url_for('.framework_dashboard') }}">Return to G-Cloud 7 application</a>
+
+        </div>
+      </div>
     </form>
   {% else %}
     <form method="post">
-      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
-        {%
-          with
-          large=true,
-          question = "Ask a G-Cloud 7 clarification question",
-          name = clarification_question_name,
-          hint = "You should ask any questions you have about G-Cloud 7 here. The Crown Commercial Service will not respond to you individually. All answers to clarification questions will be published here regularly. (Maximum 5000 characters per question.)",
-          error = error_message,
-          value = clarification_question_value
-        %}
-          {% include "toolkit/forms/textbox.html" %}
-        {% endwith %}
-        <p>
-          The deadline for clarification questions is 5pm <abbr title="British Summer Time">BST</abbr>, 22 September 2015. All responses will be published by 5pm <abbr title="British Summer Time">BST</abbr>, 29 September 2015.
-        </p>
-        {%
-          with
-          label="Ask question",
-          type="save"
-        %}
-          {% include "toolkit/button.html" %}
-        {% endwith %}
-  
-        <a href="{{ url_for('.framework_dashboard') }}">Return to G-Cloud 7 application</a>
-  
-    </form>
+      <div class="grid-row">
+        <div class="column-two-thirds">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+            {%
+              with
+              large=true,
+              question = "Ask a G-Cloud 7 clarification question",
+              name = clarification_question_name,
+              hint = "You should ask any questions you have about G-Cloud 7 here. The Crown Commercial Service will not respond to you individually. All answers to clarification questions will be published here regularly. (Maximum 5000 characters per question.)",
+              error = error_message,
+              value = clarification_question_value
+            %}
+              {% include "toolkit/forms/textbox.html" %}
+            {% endwith %}
+            <p>
+              The deadline for clarification questions is 5pm <abbr title="British Summer Time">BST</abbr>, 22 September 2015. All responses will be published by 5pm <abbr title="British Summer Time">BST</abbr>, 29 September 2015.
+            </p>
+            {%
+              with
+              label="Ask question",
+              type="save"
+            %}
+              {% include "toolkit/button.html" %}
+            {% endwith %}
+      
+            <a href="{{ url_for('.framework_dashboard') }}">Return to G-Cloud 7 application</a>
+
+          </div>
+        </div>
+      </form>
   {% endif %}
 {% endblock %}
