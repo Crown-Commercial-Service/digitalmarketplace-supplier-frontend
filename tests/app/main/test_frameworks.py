@@ -739,13 +739,13 @@ class TestSendClarificationQuestionEmail(BaseApplicationTest):
 @mock.patch('app.main.views.frameworks.count_unanswered_questions')
 class TestG7ServicesList(BaseApplicationTest):
 
-    def test_drafts_list_progress_count(self, count_unanswered, apiclient):
+    def test_drafts_list_progress_count(self, count_unanswered, data_api_client):
         with self.app.test_client():
             self.login()
 
         count_unanswered.return_value = 3, 1
 
-        apiclient.find_draft_services.return_value = {
+        data_api_client.find_draft_services.return_value = {
             'services': [
                 {'serviceName': 'draft', 'lot': 'SCS', 'status': 'not-submitted'},
             ]
@@ -756,14 +756,14 @@ class TestG7ServicesList(BaseApplicationTest):
         assert_true(u'Service can be moved to complete' not in res.get_data(as_text=True))
         assert_in(u'4 unanswered questions', res.get_data(as_text=True))
 
-    def test_drafts_list_can_be_completed(self, count_unanswered, apiclient):
+    def test_drafts_list_can_be_completed(self, count_unanswered, data_api_client):
         with self.app.test_client():
             self.login()
 
         count_unanswered.return_value = 0, 1
 
-        apiclient.get_framework_status.return_value = {'status': 'open'}
-        apiclient.find_draft_services.return_value = {
+        data_api_client.get_framework_status.return_value = {'status': 'open'}
+        data_api_client.find_draft_services.return_value = {
             'services': [
                 {'serviceName': 'draft', 'lot': 'SCS', 'status': 'not-submitted'},
             ]
@@ -774,13 +774,13 @@ class TestG7ServicesList(BaseApplicationTest):
         assert_in(u'Service can be marked as complete', res.get_data(as_text=True))
         assert_in(u'1 optional question unanswered', res.get_data(as_text=True))
 
-    def test_drafts_list_completed(self, count_unanswered, apiclient):
+    def test_drafts_list_completed(self, count_unanswered, data_api_client):
         with self.app.test_client():
             self.login()
 
         count_unanswered.return_value = 0, 1
 
-        apiclient.find_draft_services.return_value = {
+        data_api_client.find_draft_services.return_value = {
             'services': [
                 {'serviceName': 'draft', 'lot': 'SCS', 'status': 'submitted'},
             ]

@@ -401,10 +401,10 @@ class TestCreateDraftService(BaseApplicationTest):
     def _format_for_request(phrase):
         return phrase.replace(' ', '+')
 
-    def test_get_create_draft_service_page(self, request, api_client):
+    def test_get_create_draft_service_page(self, request, data_api_client):
         with self.app.test_client():
             self.login()
-        api_client.get_framework_status.return_value = {'status': 'open'}
+        data_api_client.get_framework_status.return_value = {'status': 'open'}
 
         res = self.client.get('/suppliers/submission/g-cloud-7/create')
         assert_equal(res.status_code, 200)
@@ -417,12 +417,12 @@ class TestCreateDraftService(BaseApplicationTest):
 
         assert_not_in(self._validation_error, res.get_data(as_text=True))
 
-    def _test_post_create_draft_service(self, if_error_expected, api_client):
+    def _test_post_create_draft_service(self, if_error_expected, data_api_client):
         with self.app.test_client():
             self.login()
 
-        api_client.get_framework_status.return_value = {'status': 'open'}
-        api_client.create_new_draft_service.return_value = {
+        data_api_client.get_framework_status.return_value = {'status': 'open'}
+        data_api_client.create_new_draft_service.return_value = {
             'services': {
                 'id': 1,
                 'supplierId': 1234,
@@ -445,13 +445,13 @@ class TestCreateDraftService(BaseApplicationTest):
         else:
             assert_equal(res.status_code, 302)
 
-    def test_post_create_draft_service_with_lot_selected_succeeds(self, request, api_client):
+    def test_post_create_draft_service_with_lot_selected_succeeds(self, request, data_api_client):
         request.form.get.return_value = "SCS"
-        self._test_post_create_draft_service(if_error_expected=False, api_client=api_client)
+        self._test_post_create_draft_service(if_error_expected=False, api_client=data_api_client)
 
-    def test_post_create_draft_service_without_lot_selected_fails(self, request, api_client):
+    def test_post_create_draft_service_without_lot_selected_fails(self, request, data_api_client):
         request.form.get.return_value = None
-        self._test_post_create_draft_service(if_error_expected=True, api_client=api_client)
+        self._test_post_create_draft_service(if_error_expected=True, api_client=data_api_client)
 
 
 @mock.patch('app.main.views.services.data_api_client')
@@ -474,16 +474,16 @@ class TestCopyDraft(BaseApplicationTest):
             'updatedAt': "2015-06-29T15:26:07.650368Z"
         }
 
-    def test_copy_draft(self, api_client):
-        api_client.get_framework_status.return_value = {'status': 'open'}
-        api_client.get_draft_service.return_value = {'services': self.draft}
+    def test_copy_draft(self, data_api_client):
+        data_api_client.get_framework_status.return_value = {'status': 'open'}
+        data_api_client.get_draft_service.return_value = {'services': self.draft}
 
         res = self.client.post('/suppliers/submission/services/1/copy')
         assert_equal(res.status_code, 302)
 
-    def test_copy_draft_checks_supplier_id(self, api_client):
+    def test_copy_draft_checks_supplier_id(self, data_api_client):
         self.draft['supplierId'] = 2
-        api_client.get_draft_service.return_value = {'services': self.draft}
+        data_api_client.get_draft_service.return_value = {'services': self.draft}
 
         res = self.client.post('/suppliers/submission/services/1/copy')
         assert_equal(res.status_code, 404)
@@ -509,9 +509,9 @@ class TestCompleteDraft(BaseApplicationTest):
             'updatedAt': "2015-06-29T15:26:07.650368Z"
         }
 
-    def test_complete_draft(self, api_client):
-        api_client.get_framework_status.return_value = {'status': 'open'}
-        api_client.get_draft_service.return_value = {'services': self.draft}
+    def test_complete_draft(self, data_api_client):
+        data_api_client.get_framework_status.return_value = {'status': 'open'}
+        data_api_client.get_draft_service.return_value = {'services': self.draft}
 
         res = self.client.post('/suppliers/submission/services/1/complete')
         assert_equal(res.status_code, 302)
@@ -519,9 +519,9 @@ class TestCompleteDraft(BaseApplicationTest):
         assert_true('service_completed=1' in res.location)
         assert_true('/suppliers/frameworks/g-cloud-7/services' in res.location)
 
-    def test_complete_draft_checks_supplier_id(self, api_client):
+    def test_complete_draft_checks_supplier_id(self, data_api_client):
         self.draft['supplierId'] = 2
-        api_client.get_draft_service.return_value = {'services': self.draft}
+        data_api_client.get_draft_service.return_value = {'services': self.draft}
 
         res = self.client.post('/suppliers/submission/services/1/complete')
         assert_equal(res.status_code, 404)
