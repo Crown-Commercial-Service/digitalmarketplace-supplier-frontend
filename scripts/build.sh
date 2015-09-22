@@ -1,5 +1,7 @@
 #!/bin/sh
 
+set -e
+
 npm install 1>&2
 npm run frontend-build:production 1>&2
 
