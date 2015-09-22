@@ -408,6 +408,23 @@ class TestSupplierDeclaration(BaseApplicationTest):
             assert_equal(res.status_code, 400)
             assert not data_api_client.answer_selection_questions.called
 
+    def test_cannot_post_data_if_not_open(self, data_api_client):
+        with self.app.test_client():
+            self.login()
+
+            data_api_client.get_framework_status.return_value = {'status': 'other'}
+            data_api_client.get_selection_answers.return_value = {
+                "selectionAnswers": {
+                    "questionAnswers": {"status": "started"}
+                }
+            }
+            res = self.client.post(
+                '/suppliers/frameworks/g-cloud-7/declaration/g_cloud_7_essentials',
+                data=FULL_G7_SUBMISSION)
+
+            assert_equal(res.status_code, 404)
+            data_api_client.answer_selection_questions.assert_not_called()
+
 
 @mock.patch('dmutils.s3.S3')
 class TestFrameworkUpdatesPage(BaseApplicationTest):
