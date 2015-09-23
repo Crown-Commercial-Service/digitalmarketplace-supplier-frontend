@@ -34,7 +34,11 @@
             {% call summary.row(complete=False) %}
               {{ summary.field_name(question.label) }}
               {% call summary.field() %}
-                <a href="{{ url_for(".edit_service_submission", service_id=service_id, section_id=section.id) }}">Answer required</a>
+                {% if g7_status == 'open' %}
+                  <a href="{{ url_for(".edit_service_submission", service_id=service_id, section_id=section.id) }}">Answer required</a>
+                {% else %}
+                  Not answered
+                {% endif %}
               {% endcall %}
             {% endcall %}
           {% else %}
