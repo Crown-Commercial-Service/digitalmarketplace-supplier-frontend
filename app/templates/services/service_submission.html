@@ -25,7 +25,7 @@
   %}
     {% include "toolkit/breadcrumb.html" %}
   {% endwith %}
-  {% if service_data.status == 'submitted' and declaration_status != 'complete' %}
+  {% if service_data.status == 'submitted' and declaration_status != 'complete' and g7_status == 'open' %}
     <div class="wrapper">
       {%
         with
