@@ -4,7 +4,7 @@ Flask-Script==2.0.5
 Flask-WTF==0.12
 
 git+https://github.com/madzak/python-json-logger.git@v0.1.3#egg=python-json-logger==v0.1.3
-git+https://github.com/alphagov/digitalmarketplace-utils.git@6.9.2#egg=digitalmarketplace-utils==6.9.2
+git+https://github.com/alphagov/digitalmarketplace-utils.git@7.0.0#egg=digitalmarketplace-utils==7.0.0
 markdown==2.6.2
 
 # Required for SNI to work in requests
