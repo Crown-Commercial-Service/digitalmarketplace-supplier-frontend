@@ -475,7 +475,10 @@ class TestInviteUser(BaseApplicationTest):
 
     @mock.patch('app.main.views.login.data_api_client')
     def test_should_be_an_error_for_existing_account(self, data_api_client):
-        data_api_client.get_user.return_value = {'users': {'emailAddress': 'test@example.com'}}
+        data_api_client.get_user.return_value = {'users': {
+            'emailAddress': 'test@example.com',
+            'role': 'supplier'
+        }}
         with self.app.app_context():
             self.login()
             res = self.client.post(

@@ -13,7 +13,7 @@ from dmutils.email import send_email, \
     generate_token, decode_token, MandrillException
 from .. import main
 from ..forms.auth_forms import LoginForm, EmailAddressForm, ChangePasswordForm, CreateUserForm
-from ..helpers import hash_email
+from ..helpers import hash_email, is_existing_supplier_user
 from ... import data_api_client
 
 
@@ -369,11 +369,11 @@ def invite_user():
 def send_invite_user():
     form = EmailAddressForm()
 
-    existing_user = data_api_client.get_user(
+    user = data_api_client.get_user(
         email_address=form.email_address.data
     )
 
-    if form.validate_on_submit() and not existing_user:
+    if form.validate_on_submit() and not is_existing_supplier_user(user):
         token = generate_token(
             {
                 "supplier_id": current_user.supplier_id,
@@ -420,7 +420,7 @@ def send_invite_user():
         flash('user_invited', 'success')
         return redirect(url_for('.list_users'))
     else:
-        if existing_user:
+        if is_existing_supplier_user(user):
             form.email_address.errors.append('An account already exists with this email address.')
         template_data = main.config['BASE_TEMPLATE_DATA']
         return render_template(
