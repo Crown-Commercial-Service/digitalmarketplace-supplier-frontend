@@ -369,7 +369,11 @@ def invite_user():
 def send_invite_user():
     form = EmailAddressForm()
 
-    if form.validate_on_submit():
+    existing_user = data_api_client.get_user(
+        email_address=form.email_address.data
+    )
+
+    if form.validate_on_submit() and not existing_user:
         token = generate_token(
             {
                 "supplier_id": current_user.supplier_id,
@@ -416,6 +420,8 @@ def send_invite_user():
         flash('user_invited', 'success')
         return redirect(url_for('.list_users'))
     else:
+        if existing_user:
+            form.email_address.errors.append('An account already exists with this email address.')
         template_data = main.config['BASE_TEMPLATE_DATA']
         return render_template(
             "auth/submit-email-address.html",

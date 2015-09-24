@@ -320,10 +320,16 @@ def submit_create_your_account():
     template_data = main.config['BASE_TEMPLATE_DATA']
     form = EmailAddressForm()
 
-    if form.validate_on_submit():
+    existing_user = data_api_client.get_user(
+        email_address=form.email_address.data
+    )
+
+    if form.validate_on_submit() and not existing_user:
         session['account_email_address'] = form.email_address.data
         return redirect(url_for(".company_summary"))
     else:
+        if existing_user:
+            form.email_address.errors.append('An account already exists with this email address.')
         return render_template(
             "suppliers/create_your_account.html",
             form=form,
