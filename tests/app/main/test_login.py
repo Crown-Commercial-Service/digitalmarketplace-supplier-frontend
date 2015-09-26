@@ -997,7 +997,7 @@ class TestInviteUser(BaseApplicationTest):
     @mock.patch('app.main.views.login.data_api_client')
     def test_should_update_user_if_user_does_exist(self, data_api_client):
         with self.app.app_context():
-
+            self.login()
             data_api_client.get_user.return_value = self.user(
                 123,
                 'test@email.com',
@@ -1014,7 +1014,8 @@ class TestInviteUser(BaseApplicationTest):
             data_api_client.update_user.assert_called_once_with(
                 user_id=123,
                 supplier_id=1234,
-                role='supplier'
+                role='supplier',
+                updater="email@email.com"
             )
 
             assert_equal(res.status_code, 302)

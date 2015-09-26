@@ -74,7 +74,7 @@ def deactivate_user(user_id):
                 'to_deactivate': user_id})
         abort(404)
 
-    data_api_client.update_user(user_id=user_to_deactivate['id'], active=False)
+    data_api_client.update_user(user_id=user_to_deactivate['id'], active=False, updater=current_user.email_address)
 
     flash({
         'deactivate_user_name': user_to_deactivate['name'],
