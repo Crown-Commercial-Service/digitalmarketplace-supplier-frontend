@@ -85,8 +85,7 @@ def update_service_status(service_id):
     try:
         updated_service = data_api_client.update_service_status(
             service.get('id'), status,
-            current_user.email_address, "Status changed to '{0}'".format(
-                status))
+            current_user.email_address)
 
     except APIError:
 
@@ -153,8 +152,7 @@ def update_section(service_id, section_id):
         data_api_client.update_service(
             service_id,
             posted_data,
-            current_user.email_address,
-            "supplier app")
+            current_user.email_address)
     except HTTPError as e:
         errors_map = get_section_error_messages(new_service_content, e.message, service['lot'])
         if not posted_data.get('serviceName', None):

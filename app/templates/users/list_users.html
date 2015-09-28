@@ -26,7 +26,7 @@
       {% if messages %}
         {% for category, message in messages %}
           {% if message['deactivate_user_name'] and message['deactivate_user_email_address'] %}
-            {% set message = "{} ({}) has been removed as a contributor. They can be invited again at any time.".format(message['deactivate_user_name'], message['deactivate_user_email_address']) %}
+            {% set message = "{} ({}) has been removed as a contributor.".format(message['deactivate_user_name'], message['deactivate_user_email_address']) %}
           {% elif message == 'user_invited' %}
             {% set message = "Contributor invited" %}
           {% endif %}

@@ -301,7 +301,7 @@ class TestEditService(BaseApplicationTest):
         assert_equal(res.status_code, 302)
         data_api_client.update_service.assert_called_once_with(
             '1', {'serviceName': 'The service', 'serviceSummary': 'This is the service'},
-            'email@email.com', 'supplier app')
+            'email@email.com')
 
     def test_editing_readonly_section_is_not_allowed(self, data_api_client):
         data_api_client.get_service.return_value = self.empty_service
@@ -327,7 +327,7 @@ class TestEditService(BaseApplicationTest):
 
         assert_equal(res.status_code, 302)
         data_api_client.update_service.assert_called_one_with(
-            '1', dict(), 'email@email.com', 'supplier app')
+            '1', dict(), 'email@email.com')
 
     def test_edit_non_existent_service_returns_404(self, data_api_client):
         data_api_client.get_service.return_value = None

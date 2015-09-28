@@ -300,7 +300,8 @@ def submit_update_user(encoded_token):
         data_api_client.update_user(
             user_id=user.id,
             supplier_id=token.get("supplier_id"),
-            role='supplier'
+            role='supplier',
+            updater=current_user.email_address
         )
         login_user(user)
         return redirect(url_for('.dashboard'))
