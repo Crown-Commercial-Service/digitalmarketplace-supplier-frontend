@@ -1,6 +1,7 @@
-from flask.ext.wtf import Form
 from wtforms import IntegerField, StringField, FieldList
-from wtforms.validators import DataRequired, Email, ValidationError, NumberRange, Length, Optional, Regexp
+from wtforms.validators import DataRequired, ValidationError, Length, Optional, Regexp, Email
+
+from . import StripWhitespaceForm, strip_whitespace
 
 
 def word_length(limit=None, message=None):
@@ -17,18 +18,18 @@ def word_length(limit=None, message=None):
     return _length
 
 
-class EditSupplierForm(Form):
+class EditSupplierForm(StripWhitespaceForm):
     description = StringField('Supplier summary', validators=[
         word_length(50, 'Your summary must not be more than %d words')
     ])
-    clients = FieldList(StringField())
+    clients = FieldList(StringField(filters=[strip_whitespace]))
 
     def validate_clients(form, field):
         if len(field.data) > 10:
             raise ValidationError('You must have 10 or fewer clients')
 
 
-class EditContactInformationForm(Form):
+class EditContactInformationForm(StripWhitespaceForm):
     id = IntegerField()
     address1 = StringField('Business address')
     address2 = StringField('Business address')
@@ -46,28 +47,28 @@ class EditContactInformationForm(Form):
     ])
 
 
-class DunsNumberForm(Form):
+class DunsNumberForm(StripWhitespaceForm):
     duns_number = StringField('DUNS Number', validators=[
         DataRequired(message="You must enter a DUNS number with 9 digits."),
         Regexp(r'^\d{9}$', message="You must enter a DUNS number with 9 digits."),
     ])
 
 
-class CompaniesHouseNumberForm(Form):
+class CompaniesHouseNumberForm(StripWhitespaceForm):
     companies_house_number = StringField('Companies house number', validators=[
         Optional(),
         Length(min=8, max=8, message="Companies House numbers must have 8 characters.")
     ])
 
 
-class CompanyNameForm(Form):
+class CompanyNameForm(StripWhitespaceForm):
     company_name = StringField('Company name', validators=[
         DataRequired(message="You must provide a company name."),
         Length(max=255, message="You must provide a company name under 256 characters.")
     ])
 
 
-class CompanyContactDetailsForm(Form):
+class CompanyContactDetailsForm(StripWhitespaceForm):
     contact_name = StringField('Contact name', validators=[
         DataRequired(message="You must provide a contact name."),
         Length(max=255, message="You must provide a contact name under 256 characters.")
@@ -82,7 +83,7 @@ class CompanyContactDetailsForm(Form):
     ])
 
 
-class EmailAddressForm(Form):
+class EmailAddressForm(StripWhitespaceForm):
     email_address = StringField('Email address', validators=[
         DataRequired(message="You must provide a email address."),
         Email(message="You must provide a valid email address.")
