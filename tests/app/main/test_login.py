@@ -1022,6 +1022,32 @@ class TestInviteUser(BaseApplicationTest):
             assert_equal(res.location, 'http://localhost/suppliers')
 
     @mock.patch('app.main.views.login.data_api_client')
+    def test_should_update_user_if_not_logged_in(self, data_api_client):
+        with self.app.app_context():
+            data_api_client.get_user.return_value = self.user(
+                123,
+                'test@email.com',
+                None,
+                None,
+                'Users name'
+            )
+
+            token = self._generate_token()
+            res = self.client.post(
+                '/suppliers/update-user/{}'.format(token)
+            )
+
+            data_api_client.update_user.assert_called_once_with(
+                user_id=123,
+                supplier_id=1234,
+                role='supplier',
+                updater="test@email.com"
+            )
+
+            assert_equal(res.status_code, 302)
+            assert_equal(res.location, 'http://localhost/suppliers')
+
+    @mock.patch('app.main.views.login.data_api_client')
     def test_should_not_update_a_supplier_account(self, data_api_client):
         with self.app.app_context():
 

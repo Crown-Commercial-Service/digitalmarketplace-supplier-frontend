@@ -297,11 +297,16 @@ def submit_update_user(encoded_token):
                        'supplier_id': token.get('supplier_id')})
             abort(400, "should not update an existing supplier")
 
+        if current_user.is_anonymous():
+            updater = token.get("email_address")
+        else:
+            updater = current_user.email_address
+
         data_api_client.update_user(
             user_id=user.id,
             supplier_id=token.get("supplier_id"),
             role='supplier',
-            updater=current_user.email_address
+            updater=updater
         )
         login_user(user)
         return redirect(url_for('.dashboard'))
