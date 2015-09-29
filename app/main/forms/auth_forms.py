@@ -1,4 +1,4 @@
-from wtforms import StringField, PasswordField, HiddenField
+from wtforms import StringField, PasswordField
 from wtforms.validators import DataRequired, Email, EqualTo, Length
 
 from . import StripWhitespaceForm
