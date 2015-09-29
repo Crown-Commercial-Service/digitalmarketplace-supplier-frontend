@@ -184,7 +184,7 @@ def update_password(token):
     password = form.password.data
 
     if form.validate_on_submit():
-        if data_api_client.update_user_password(user_id, password):
+        if data_api_client.update_user_password(user_id, password, email_address):
             current_app.logger.info(
                 "User {user_id} successfully changed their password",
                 extra={'user_id': user_id})
