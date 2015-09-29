@@ -1,6 +1,5 @@
 import re
 
-from datetime import timedelta
 from flask import Flask, request, redirect, session, Markup, abort
 from flask_login import LoginManager
 from flask_wtf.csrf import CsrfProtect
