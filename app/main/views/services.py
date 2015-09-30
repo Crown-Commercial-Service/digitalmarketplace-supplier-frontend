@@ -13,10 +13,7 @@ from ..helpers.services import (
 from ..helpers.frameworks import get_declaration_status
 from ... import data_api_client, flask_featureflags
 from dmutils.apiclient import APIError, HTTPError
-from dmutils.presenters import Presenters
 from dmutils.formats import format_service_price
-
-presenters = Presenters()
 
 
 @main.route('/services')
