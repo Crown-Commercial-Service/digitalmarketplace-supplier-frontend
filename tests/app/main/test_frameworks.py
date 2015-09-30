@@ -86,6 +86,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
         with self.app.test_client():
             self.login()
 
+            data_api_client.get_framework_status.return_value = {'status': 'open'}
             data_api_client.get_selection_answers.return_value = \
                 {"selectionAnswers":
                     {"questionAnswers": FULL_G7_SUBMISSION}
@@ -110,6 +111,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
             del submission['SQ2-1ghijklmn']
             submission.update({"status": "started"})
 
+            data_api_client.get_framework_status.return_value = {'status': 'open'}
             data_api_client.get_selection_answers.return_value = \
                 {"selectionAnswers":
                     {"questionAnswers": submission}
@@ -126,6 +128,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
         with self.app.test_client():
             self.login()
 
+            data_api_client.get_framework_status.return_value = {'status': 'open'}
             data_api_client.get_selection_answers.side_effect = APIError(mock.Mock(status_code=404))
 
             res = self.client.get("/suppliers/frameworks/g-cloud-7")
@@ -298,6 +301,7 @@ class TestSupplierDeclaration(BaseApplicationTest):
         with self.app.test_client():
             self.login()
 
+            data_api_client.get_framework_status.return_value = {'status': 'open'}
             data_api_client.get_selection_answers.side_effect = APIError(mock.Mock(status_code=404))
 
             res = self.client.get(
@@ -314,6 +318,7 @@ class TestSupplierDeclaration(BaseApplicationTest):
         with self.app.test_client():
             self.login()
 
+            data_api_client.get_framework_status.return_value = {'status': 'open'}
             data_api_client.get_selection_answers.return_value = {
                 "selectionAnswers": {
                     "questionAnswers": {
@@ -334,6 +339,8 @@ class TestSupplierDeclaration(BaseApplicationTest):
     def test_post_valid_data(self, data_api_client):
         with self.app.test_client():
             self.login()
+
+            data_api_client.get_framework_status.return_value = {'status': 'open'}
             data_api_client.get_selection_answers.return_value = {
                 "selectionAnswers": {
                     "questionAnswers": {"status": "started"}
@@ -349,6 +356,8 @@ class TestSupplierDeclaration(BaseApplicationTest):
     def test_post_valid_data_to_complete_declaration(self, data_api_client):
         with self.app.test_client():
             self.login()
+
+            data_api_client.get_framework_status.return_value = {'status': 'open'}
             data_api_client.get_selection_answers.return_value = {
                 "selectionAnswers": {
                     "questionAnswers": {"status": "started"}
@@ -365,6 +374,8 @@ class TestSupplierDeclaration(BaseApplicationTest):
     def test_post_valid_data_with_api_failure(self, data_api_client):
         with self.app.test_client():
             self.login()
+
+            data_api_client.get_framework_status.return_value = {'status': 'open'}
             data_api_client.get_selection_answers.return_value = {
                 "selectionAnswers": {
                     "questionAnswers": {"status": "started"}
@@ -387,6 +398,7 @@ class TestSupplierDeclaration(BaseApplicationTest):
         with self.app.test_client():
             self.login()
 
+            data_api_client.get_framework_status.return_value = {'status': 'open'}
             get_error_messages_for_page.return_value = {'PR1': {'input_name': 'PR1', 'message': 'this is invalid'}}
 
             res = self.client.post(
@@ -395,6 +407,23 @@ class TestSupplierDeclaration(BaseApplicationTest):
 
             assert_equal(res.status_code, 400)
             assert not data_api_client.answer_selection_questions.called
+
+    def test_cannot_post_data_if_not_open(self, data_api_client):
+        with self.app.test_client():
+            self.login()
+
+            data_api_client.get_framework_status.return_value = {'status': 'other'}
+            data_api_client.get_selection_answers.return_value = {
+                "selectionAnswers": {
+                    "questionAnswers": {"status": "started"}
+                }
+            }
+            res = self.client.post(
+                '/suppliers/frameworks/g-cloud-7/declaration/g_cloud_7_essentials',
+                data=FULL_G7_SUBMISSION)
+
+            assert_equal(res.status_code, 404)
+            data_api_client.answer_selection_questions.assert_not_called()
 
 
 @mock.patch('dmutils.s3.S3')
@@ -727,13 +756,13 @@ class TestSendClarificationQuestionEmail(BaseApplicationTest):
 @mock.patch('app.main.views.frameworks.count_unanswered_questions')
 class TestG7ServicesList(BaseApplicationTest):
 
-    def test_drafts_list_progress_count(self, count_unanswered, apiclient):
+    def test_drafts_list_progress_count(self, count_unanswered, data_api_client):
         with self.app.test_client():
             self.login()
 
         count_unanswered.return_value = 3, 1
 
-        apiclient.find_draft_services.return_value = {
+        data_api_client.find_draft_services.return_value = {
             'services': [
                 {'serviceName': 'draft', 'lot': 'SCS', 'status': 'not-submitted'},
             ]
@@ -744,13 +773,14 @@ class TestG7ServicesList(BaseApplicationTest):
         assert_true(u'Service can be moved to complete' not in res.get_data(as_text=True))
         assert_in(u'4 unanswered questions', res.get_data(as_text=True))
 
-    def test_drafts_list_can_be_completed(self, count_unanswered, apiclient):
+    def test_drafts_list_can_be_completed(self, count_unanswered, data_api_client):
         with self.app.test_client():
             self.login()
 
         count_unanswered.return_value = 0, 1
 
-        apiclient.find_draft_services.return_value = {
+        data_api_client.get_framework_status.return_value = {'status': 'open'}
+        data_api_client.find_draft_services.return_value = {
             'services': [
                 {'serviceName': 'draft', 'lot': 'SCS', 'status': 'not-submitted'},
             ]
@@ -761,13 +791,13 @@ class TestG7ServicesList(BaseApplicationTest):
         assert_in(u'Service can be marked as complete', res.get_data(as_text=True))
         assert_in(u'1 optional question unanswered', res.get_data(as_text=True))
 
-    def test_drafts_list_completed(self, count_unanswered, apiclient):
+    def test_drafts_list_completed(self, count_unanswered, data_api_client):
         with self.app.test_client():
             self.login()
 
         count_unanswered.return_value = 0, 1
 
-        apiclient.find_draft_services.return_value = {
+        data_api_client.find_draft_services.return_value = {
             'services': [
                 {'serviceName': 'draft', 'lot': 'SCS', 'status': 'submitted'},
             ]

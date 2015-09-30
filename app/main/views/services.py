@@ -2,6 +2,7 @@ from flask_login import login_required, current_user
 from flask import render_template, request, redirect, url_for, abort, flash, \
     current_app
 
+from ... import data_api_client, flask_featureflags
 from ...main import main, existing_service_content, new_service_content
 from ..helpers.services import (
     get_section_error_messages,
@@ -10,8 +11,8 @@ from ..helpers.services import (
     get_draft_document_url, count_unanswered_questions,
     has_changes_to_save, get_next_section_name
 )
-from ..helpers.frameworks import get_declaration_status
-from ... import data_api_client, flask_featureflags
+from ..helpers.frameworks import get_declaration_status, g_cloud_7_is_open_or_404
+
 from dmutils.apiclient import APIError, HTTPError
 from dmutils.formats import format_service_price
 
@@ -176,6 +177,7 @@ def start_new_draft_service():
     """
     Page to kick off creation of a new (G7) service.
     """
+    g_cloud_7_is_open_or_404(data_api_client)
     template_data = main.config['BASE_TEMPLATE_DATA']
 
     question = new_service_content.get_question('lot')
@@ -200,6 +202,7 @@ def create_new_draft_service():
     """
     Hits up the data API to create a new draft (G7) service.
     """
+    g_cloud_7_is_open_or_404(data_api_client)
     lot = request.form.get('lot', None)
 
     if not lot:
@@ -256,6 +259,7 @@ def create_new_draft_service():
 @login_required
 @flask_featureflags.is_active_feature('GCLOUD7_OPEN')
 def copy_draft_service(service_id):
+    g_cloud_7_is_open_or_404(data_api_client)
     draft = data_api_client.get_draft_service(service_id).get('services')
 
     if not is_service_associated_with_supplier(draft):
@@ -280,6 +284,7 @@ def copy_draft_service(service_id):
 @login_required
 @flask_featureflags.is_active_feature('GCLOUD7_OPEN')
 def complete_draft_service(service_id):
+    g_cloud_7_is_open_or_404(data_api_client)
     draft = data_api_client.get_draft_service(service_id).get('services')
 
     if not is_service_associated_with_supplier(draft):
@@ -305,6 +310,7 @@ def complete_draft_service(service_id):
 @login_required
 @flask_featureflags.is_active_feature('GCLOUD7_OPEN')
 def delete_draft_service(service_id):
+    g_cloud_7_is_open_or_404(data_api_client)
     draft = data_api_client.get_draft_service(service_id).get('services')
 
     if not is_service_associated_with_supplier(draft):
@@ -373,6 +379,7 @@ def view_service_submission(service_id):
         unanswered_optional=unanswered_optional,
         delete_requested=delete_requested,
         declaration_status=get_declaration_status(data_api_client),
+        g7_status=data_api_client.get_framework_status('g-cloud-7').get('status', None),
         deadline=current_app.config['G7_CLOSING_DATE'],
         **main.config['BASE_TEMPLATE_DATA']), 200
 
@@ -381,6 +388,7 @@ def view_service_submission(service_id):
 @login_required
 @flask_featureflags.is_active_feature('GCLOUD7_OPEN')
 def edit_service_submission(service_id, section_id):
+    g_cloud_7_is_open_or_404(data_api_client)
     try:
         draft = data_api_client.get_draft_service(service_id)['services']
     except HTTPError as e:
@@ -411,6 +419,7 @@ def edit_service_submission(service_id, section_id):
 @login_required
 @flask_featureflags.is_active_feature('GCLOUD7_OPEN')
 def update_section_submission(service_id, section_id):
+    g_cloud_7_is_open_or_404(data_api_client)
     try:
         draft = data_api_client.get_draft_service(service_id)['services']
     except HTTPError as e:

@@ -22,8 +22,8 @@
 {% endmacro %}
 
 
-{% macro can_be_completed_text(unanswered_required) %}
-  {% if unanswered_required == 0%}
+{% macro can_be_completed_text(unanswered_required, g7_status) %}
+  {% if unanswered_required == 0 and g7_status == 'open' %}
     Service can be marked as complete
   {% endif %}
 {% endmacro %}

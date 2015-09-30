@@ -11,17 +11,16 @@ from dmutils.email import send_email, MandrillException
 from dmutils.formats import format_service_price
 from dmutils import s3
 
-from ...main import main, declaration_content, new_service_content
-from ..helpers.frameworks import get_error_messages_for_page, get_first_question_index, \
-    get_error_messages, get_declaration_status, get_last_modified_from_first_matching_file
-
 from ... import data_api_client
+from ...main import main, declaration_content, new_service_content
+from ..helpers import hash_email
+from ..helpers.frameworks import get_error_messages_for_page, get_first_question_index, \
+    get_error_messages, get_declaration_status, get_last_modified_from_first_matching_file, \
+    g_cloud_7_is_open_or_404, register_interest_in_framework
 from ..helpers.services import (
     get_draft_document_url, get_service_attributes, get_drafts,
     count_unanswered_questions
 )
-from ..helpers.frameworks import register_interest_in_framework
-from ..helpers import hash_email
 
 
 CLARIFICATION_QUESTION_NAME = 'clarification_question'
@@ -53,6 +52,7 @@ def framework_dashboard():
         },
         declaration_status=declaration_status,
         deadline=current_app.config['G7_CLOSING_DATE'],
+        g7_status=data_api_client.get_framework_status('g-cloud-7').get('status', None),
         last_modified={
             'supplier_pack': get_last_modified_from_first_matching_file(key_list, 'g-cloud-7-supplier-pack.zip'),
             'supplier_updates': get_last_modified_from_first_matching_file(key_list, 'g-cloud-7-updates/')
@@ -86,6 +86,7 @@ def framework_services():
         complete_drafts=list(reversed(complete_drafts)),
         drafts=list(reversed(drafts)),
         declaration_status=get_declaration_status(data_api_client),
+        g7_status=data_api_client.get_framework_status('g-cloud-7').get('status', None),
         **template_data
     ), 200
 
@@ -95,6 +96,8 @@ def framework_services():
 @login_required
 @flask_featureflags.is_active_feature('GCLOUD7_OPEN')
 def framework_supplier_declaration(section_id):
+    g_cloud_7_is_open_or_404(data_api_client)
+
     template_data = main.config['BASE_TEMPLATE_DATA']
     content = declaration_content.get_builder()
     status_code = 200

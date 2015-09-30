@@ -198,3 +198,8 @@ def get_declaration_status(data_api_client):
         return 'unstarted'
     else:
         return answers.get('status', 'unstarted')
+
+
+def g_cloud_7_is_open_or_404(data_api_client):
+    if data_api_client.get_framework_status('g-cloud-7').get('status', None) != 'open':
+        abort(404)

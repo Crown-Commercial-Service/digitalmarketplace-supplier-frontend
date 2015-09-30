@@ -25,7 +25,7 @@
   %}
     {% include "toolkit/breadcrumb.html" %}
   {% endwith %}
-  {% if service_data.status == 'submitted' and declaration_status != 'complete' %}
+  {% if service_data.status == 'submitted' and declaration_status != 'complete' and g7_status == 'open' %}
     <div class="wrapper">
       {%
         with
@@ -59,7 +59,7 @@
   {% if service_data.status == 'submitted' and declaration_status == 'complete' %}
     <span class="service-status-published">This service is marked as complete and will be submitted at {{ deadline|safe }}</span>
   {% endif %}
-  {% if service_data.status == 'not-submitted' and unanswered_required == 0 %}
+  {% if service_data.status == 'not-submitted' and unanswered_required == 0 and g7_status == 'open' %}
     {% include "partials/complete_service.html" %}
   {% elif unanswered_required > 0 %}
     <p class="move-to-complete-hint">When you have added all the required information, you can mark the service as complete.</p>
@@ -84,9 +84,13 @@
   {% endif %}
 {% endblock %}
 
+
 {% block edit_link %}
-  {{ summary.top_link("Edit", url_for(".edit_service_submission", service_id=service_id, section_id=section.id)) }}
+  {% if g7_status == 'open' %}
+    {{ summary.top_link("Edit", url_for(".edit_service_submission", service_id=service_id, section_id=section.id)) }}
+  {% endif %}
 {% endblock %}
+
 
 {% block after_sections %}
   {% if not delete_requested %}
@@ -95,17 +99,19 @@
         &nbsp;
       </div>
       <div class="column-one-third delete-draft-button">
-        {% if service_data.status == 'not-submitted' and unanswered_required == 0 %}
+        {% if service_data.status == 'not-submitted' and unanswered_required == 0 and g7_status == 'open' %}
           <div class="space-underneath">
             {% include "partials/complete_service.html" %}
           </div>
         {% endif %}
+        {% if g7_status == 'open' %}
         <form action="{{ url_for('.delete_draft_service', service_id=service_id ) }}" method="POST">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
           {% with type = "destructive", label = "Delete this service" %}
             {% include "toolkit/button.html" %}
           {% endwith %}
         </form>
+        {% endif %}
       </div>
     </div>
   {% endif %}

@@ -43,7 +43,7 @@
     {% endfor %}
   {% endwith %}
 
-  {% if complete_drafts and declaration_status != 'complete' %}
+  {% if complete_drafts and declaration_status != 'complete' and g7_status == 'open' %}
     {%
       with
       message = 'You need to <a href="' + url_for('.framework_supplier_declaration', section_id='g_cloud_7_essentials') + '">make the supplier&nbsp;declaration</a> before any services can be submitted',
@@ -62,7 +62,9 @@
   {% endwith %}
 
   {{ summary.heading("Draft services") }}
-  {{ summary.top_link("Add a service", url_for(".start_new_draft_service")) }}
+  {% if g7_status == 'open' %}
+    {{ summary.top_link("Add a service", url_for(".start_new_draft_service")) }}
+  {% endif %}
   {% call(draft) summary.list_table(
     drafts,
     caption="Draft services",
@@ -71,7 +73,7 @@
         "Service name",
         "Lot",
         summary.hidden_field_heading("Progress"),
-        summary.hidden_field_heading("Clone service")
+        summary.hidden_field_heading("Make a copy")
     ],
     field_headings_visible=True
   ) %}
@@ -80,12 +82,14 @@
                               url_for(".view_service_submission", service_id=draft.id)) }}
       {{ summary.text(draft.lot) }}
       {{ summary.text(submission.multiline_string(
-        submission.can_be_completed_text(draft.unanswered_required),
+        submission.can_be_completed_text(draft.unanswered_required, g7_status),
         submission.unanswered_required_text(draft.unanswered_required, draft.unanswered_optional),
         submission.unanswered_optional_text(draft.unanswered_required, draft.unanswered_optional)
       )) }}
-      {{ summary.button(text="Make a copy",
-                         action=url_for('.copy_draft_service', service_id=draft.id)) }}
+      {% if g7_status == 'open' %}
+        {{ summary.button(text="Make a copy",
+                           action=url_for('.copy_draft_service', service_id=draft.id)) }}
+      {% endif %}
     {% endcall %}
   {% endcall %}
 
@@ -109,8 +113,10 @@
       {{ summary.text(
         submission.unanswered_optional_text(draft.unanswered_required, draft.unanswered_optional)
       ) }}
-      {{ summary.button(text="Make a copy",
-                         action=url_for('.copy_draft_service', service_id=draft.id)) }}
+      {% if g7_status == 'open' %}
+        {{ summary.button(text="Make a copy",
+                           action=url_for('.copy_draft_service', service_id=draft.id)) }}
+      {% endif %}
     {% endcall %}
   {% endcall %}
 
