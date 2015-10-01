@@ -1,11 +1,12 @@
-from wtforms import StringField, PasswordField
+from flask.ext.wtf import Form
+from wtforms import PasswordField
 from wtforms.validators import DataRequired, Email, EqualTo, Length
 
-from . import StripWhitespaceForm
+from . import StripWhitespaceStringField
 
 
-class LoginForm(StripWhitespaceForm):
-    email_address = StringField('Email address', validators=[
+class LoginForm(Form):
+    email_address = StripWhitespaceStringField('Email address', validators=[
         DataRequired(message="Email address must be provided"),
         Email(message="Please enter a valid email address")
     ])
@@ -14,14 +15,14 @@ class LoginForm(StripWhitespaceForm):
     ])
 
 
-class EmailAddressForm(StripWhitespaceForm):
-    email_address = StringField('Email address', validators=[
+class EmailAddressForm(Form):
+    email_address = StripWhitespaceStringField('Email address', validators=[
         DataRequired(message="Email address must be provided"),
         Email(message="Please enter a valid email address")
     ])
 
 
-class ChangePasswordForm(StripWhitespaceForm):
+class ChangePasswordForm(Form):
     password = PasswordField('Password', validators=[
         DataRequired(message="Please enter a new password"),
         Length(min=10,
@@ -35,8 +36,8 @@ class ChangePasswordForm(StripWhitespaceForm):
     ])
 
 
-class CreateUserForm(StripWhitespaceForm):
-    name = StringField('Your name', validators=[
+class CreateUserForm(Form):
+    name = StripWhitespaceStringField('Your name', validators=[
         DataRequired(message="Please enter a name"),
         Length(min=1,
                max=255,
