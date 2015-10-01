@@ -434,8 +434,10 @@ def submit_company_summary():
 @main.route('/create-your-account-complete', methods=['GET'])
 def create_your_account_complete():
     template_data = main.config['BASE_TEMPLATE_DATA']
-
-    email_address = session['email_sent_to']
+    if 'email_sent_to' in session:
+        email_address = session['email_sent_to']
+    else:
+        email_address = "the email address you supplied"
     session.clear()
     session['email_sent_to'] = email_address
     return render_template(
