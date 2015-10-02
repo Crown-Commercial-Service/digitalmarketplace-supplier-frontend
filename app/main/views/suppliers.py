@@ -13,8 +13,10 @@ from ...main import main
 from ... import data_api_client
 from ..forms.suppliers import EditSupplierForm, EditContactInformationForm, \
     DunsNumberForm, CompaniesHouseNumberForm, CompanyContactDetailsForm, CompanyNameForm, EmailAddressForm
-from ..helpers.frameworks import has_registered_interest_in_framework
+from ..helpers.frameworks import has_registered_interest_in_framework, \
+    get_declaration_status
 from ..helpers import hash_email
+from ..helpers.services import get_drafts
 from .users import get_current_suppliers_users
 
 
@@ -31,12 +33,17 @@ def dashboard():
     except APIError as e:
         abort(e.status_code)
 
+    drafts, complete_drafts = get_drafts(data_api_client, current_user.supplier_id, 'g-cloud-7')
+    declaration_status = get_declaration_status(data_api_client)
+    application_made = len(complete_drafts) > 0 and declaration_status == 'complete'
     return render_template(
         "suppliers/dashboard.html",
         supplier=supplier,
         users=get_current_suppliers_users(),
         g7_interested=has_registered_interest_in_framework(data_api_client, 'g-cloud-7'),
         g7_status=data_api_client.get_framework_status('g-cloud-7').get('status', None),
+        g7_application_made=application_made,
+        g7_complete=len(complete_drafts),
         deadline=current_app.config['G7_CLOSING_DATE'],
         **template_data
     ), 200

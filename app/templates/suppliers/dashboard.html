@@ -53,16 +53,39 @@
       %}
         {% include "toolkit/browse-list.html" %}
       {% endwith %}
+    {% elif g7_interested and g7_application_made and g7_status == 'pending' %}
+      <aside role="complementary" class="temporary-message">
+        <h2 class="temporary-message-heading">
+          G‑Cloud 7 is closed for applications
+        </h2>
+        <p class="temporary-message-message">
+          You submitted {{ g7_complete }} services for consideration.
+        </p>
+        <p class="temporary-message-message">
+          <a href="{{ url_for(".framework_dashboard") }}">View your submitted application</a>
+        </p>
+      </aside>
+    {% elif g7_interested and g7_status == 'pending' %}
+      <aside role="complementary" class="temporary-message">
+        <h2 class="temporary-message-heading">
+          G‑Cloud 7 is closed for applications
+        </h2>
+        <p class="temporary-message-message">
+          You didn’t submit an application.
+        </p>
+        <p class="temporary-message-message">
+          Follow the <a href=\"https://digitalmarketplace.blog.gov.uk/\">Digital Marketplace blog</a> for further G-Cloud updates.
+        </p>
+      </aside>
     {% elif g7_status == 'pending' %}
-      {%
-        with
-        items = [{
-        "title": "View your G-Cloud 7 application",
-        "link": url_for(".framework_dashboard")
-        }]
-      %}
-        {% include "toolkit/browse-list.html" %}
-      {% endwith %}
+      <aside role="complementary" class="temporary-message">
+        <h2 class="temporary-message-heading">
+          G‑Cloud 7 is closed for applications
+        </h2>
+        <p class="temporary-message-message">
+          Follow the <a href=\"https://digitalmarketplace.blog.gov.uk/\">Digital Marketplace blog</a> for further G-Cloud updates.
+        </p>
+      </aside>
     {% endif %}
   {% endif %}
 
