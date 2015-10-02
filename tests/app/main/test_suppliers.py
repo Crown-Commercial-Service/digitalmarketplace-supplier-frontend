@@ -801,6 +801,37 @@ class TestCreateSupplier(BaseApplicationTest):
         assert_true("You must provide a valid email address." in res.get_data(as_text=True))
 
     @mock.patch("app.main.suppliers.data_api_client")
+    def test_should_not_allow_existing_email_address(self, data_api_client):
+
+        data_api_client.get_user.return_value = {'users': {
+            'emailAddress': 'test@example.com',
+            'role': 'supplier'
+        }}
+        res = self.client.post(
+            "/suppliers/create-your-account",
+            data={
+                'email_address': 'test@example.com'
+            }
+        )
+        assert_equal(res.status_code, 400)
+        assert_in("An account already exists with this email address.", res.get_data(as_text=True))
+
+    @mock.patch("app.main.suppliers.data_api_client")
+    def test_should_invite_existing_buyer(self, data_api_client):
+
+        data_api_client.get_user.return_value = {'users': {
+            'emailAddress': 'test@example.com',
+            'role': 'buyer'
+        }}
+        res = self.client.post(
+            "/suppliers/create-your-account",
+            data={
+                'email_address': 'test@example.com'
+            }
+        )
+        assert_equal(res.status_code, 302)
+
+    @mock.patch("app.main.suppliers.data_api_client")
     @mock.patch("app.main.suppliers.send_email")
     @mock.patch("app.main.suppliers.generate_token")
     def test_should_allow_correct_email_address(self, generate_token, send_email, data_api_client):

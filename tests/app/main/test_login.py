@@ -474,10 +474,28 @@ class TestInviteUser(BaseApplicationTest):
             assert_equal(res.status_code, 400)
 
     @mock.patch('app.main.views.login.data_api_client')
+    def test_should_be_an_error_for_existing_account(self, data_api_client):
+        data_api_client.get_user.return_value = {'users': {
+            'emailAddress': 'test@example.com',
+            'role': 'supplier'
+        }}
+        with self.app.app_context():
+            self.login()
+            res = self.client.post(
+                '/suppliers/invite-user',
+                data={
+                    'email_address': 'test@example.com'
+                }
+            )
+            assert_in("An account already exists with this email address.", res.get_data(as_text=True))
+            assert_equal(res.status_code, 400)
+
+    @mock.patch('app.main.views.login.data_api_client')
     @mock.patch('app.main.views.login.send_email')
     def test_should_redirect_to_list_users_on_success_invite(self,
                                                              send_email,
                                                              data_api_client):
+        data_api_client.get_user.return_value = None
         with self.app.app_context():
             self.login()
             res = self.client.post(
@@ -496,6 +514,7 @@ class TestInviteUser(BaseApplicationTest):
                                                             send_email,
                                                             generate_token,
                                                             data_api_client):
+        data_api_client.get_user.return_value = None
         with self.app.app_context():
 
             self.app.config['SHARED_EMAIL_KEY'] = "KEY"
@@ -535,10 +554,12 @@ class TestInviteUser(BaseApplicationTest):
             assert not send_email.called
             assert not generate_token.called
 
+    @mock.patch('app.main.views.login.data_api_client')
     @mock.patch('app.main.views.login.send_email')
     def test_should_be_an_error_if_send_invitation_email_fails(
-            self, send_email
+            self, send_email, data_api_client
     ):
+        data_api_client.get_user.return_value = None
         with self.app.app_context():
             self.login()
 
@@ -556,6 +577,7 @@ class TestInviteUser(BaseApplicationTest):
     def test_should_call_send_invitation_email_with_correct_params(self,
                                                                    send_email,
                                                                    data_api_client):
+        data_api_client.get_user.return_value = None
         with self.app.app_context():
 
             self.login()
@@ -587,6 +609,7 @@ class TestInviteUser(BaseApplicationTest):
     def test_should_create_audit_event(self,
                                        send_email,
                                        data_api_client):
+        data_api_client.get_user.return_value = None
         with self.app.app_context():
             self.login()
 
