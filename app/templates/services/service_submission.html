@@ -36,6 +36,29 @@
       {% endwith %}
     </div>
   {% endif %}
+
+  {% if g7_status == 'pending' %}
+    <div class="wrapper">
+      <aside role="complementary" class="temporary-message" aria-labelledby="temporary-message-heading">
+        {% if service_data.status == 'submitted' %}
+          <h2 class="temporary-message-heading" id="temporary-message-heading">
+            This service was submitted
+          </h2>
+          <p class="temporary-message-message">
+            If your application is successful, it will be available on the Digital Marketplace when G-Cloud 7 goes live.
+          </p>
+        {% else %}
+          <h2 class="temporary-message-heading" id="temporary-message-heading">
+            This service was not submitted
+          </h2>
+          <p class="temporary-message-message">
+            It wasn't marked as complete at the deadline.
+          </p>
+        {% endif %}
+      </aside>
+    </div>
+
+  {% endif %}
 {% endblock %}
 
 {% block before_sections %}
@@ -48,21 +71,32 @@
     {{ last_edit.createdAt|datetimeformat }}
     by {{ last_edit.userName }}
   </p>
-  {% if unanswered_required or unanswered_optional %}
-    <p class="last-edited">
-      {{ submission.multiline_string(
-        submission.unanswered_required_text(unanswered_required, unanswered_optional),
-        submission.unanswered_optional_text(unanswered_required, unanswered_optional)
-      ) }}
-    </p>
-  {% endif %}
-  {% if service_data.status == 'submitted' and declaration_status == 'complete' %}
-    <span class="service-status-published">This service is marked as complete and will be submitted at {{ deadline|safe }}</span>
-  {% endif %}
-  {% if service_data.status == 'not-submitted' and unanswered_required == 0 and g7_status == 'open' %}
-    {% include "partials/complete_service.html" %}
-  {% elif unanswered_required > 0 %}
-    <p class="move-to-complete-hint">When you have added all the required information, you can mark the service as complete.</p>
+  {% if g7_status == 'open' %}
+    {% if unanswered_required or unanswered_optional %}
+      <p class="last-edited">
+        {{ submission.multiline_string(
+          submission.unanswered_required_text(unanswered_required, unanswered_optional),
+          submission.unanswered_optional_text(unanswered_required, unanswered_optional)
+        ) }}
+      </p>
+    {% endif %}
+    {% if service_data.status == 'submitted' and declaration_status == 'complete' %}
+      <span class="service-status-published">This service is marked as complete and will be submitted at {{ deadline|safe }}</span>
+    {% endif %}
+    {% if service_data.status == 'not-submitted' and unanswered_required == 0 and g7_status == 'open' %}
+      {% include "partials/complete_service.html" %}
+    {% elif unanswered_required > 0 %}
+      <p class="move-to-complete-hint">When you have added all the required information, you can mark the service as complete.</p>
+    {% endif %}
+  {% elif g7_status == 'pending' %}
+    {% if unanswered_required or unanswered_optional %}
+      <p class="last-edited">
+        {{ submission.multiline_string(
+          submission.unanswered_required_text(unanswered_required, unanswered_optional),
+          submission.unanswered_optional_text(unanswered_required, unanswered_optional)
+        ) }}
+      </p>
+    {% endif %}
   {% endif %}
 </div>
 {% endblock %}
