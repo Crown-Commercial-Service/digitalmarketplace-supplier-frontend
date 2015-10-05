@@ -39,6 +39,7 @@ def framework_dashboard():
 
     drafts, complete_drafts = get_drafts(data_api_client, current_user.supplier_id, 'g-cloud-7')
     declaration_status = get_declaration_status(data_api_client)
+    application_made = len(complete_drafts) > 0 and declaration_status == 'complete'
 
     key_list = s3.S3(current_app.config['DM_G7_DRAFT_DOCUMENTS_BUCKET']).list('g-cloud-7-')
     # last_modified files will be first
@@ -53,6 +54,7 @@ def framework_dashboard():
         declaration_status=declaration_status,
         deadline=current_app.config['G7_CLOSING_DATE'],
         g7_status=data_api_client.get_framework_status('g-cloud-7').get('status', None),
+        g7_application_made=application_made,
         last_modified={
             'supplier_pack': get_last_modified_from_first_matching_file(key_list, 'g-cloud-7-supplier-pack.zip'),
             'supplier_updates': get_last_modified_from_first_matching_file(key_list, 'g-cloud-7-updates/')

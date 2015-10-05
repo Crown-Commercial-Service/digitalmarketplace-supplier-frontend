@@ -111,3 +111,43 @@
   margin-top: $gutter/3;
   color: $secondary-text-colour;
 }
+
+/* Temporary styles, to be added to toolkit */
+.summary-item-lede {
+  margin-bottom: $gutter-half - 5px;
+
+  .summary-item-heading {
+    padding-top: 0;
+  }
+
+  p {
+    margin-bottom: 5px;
+
+    a {
+      display: block;
+    }
+  }
+}
+
+.framework-application-reference {
+
+  margin-top: $gutter + 5px;
+
+  .framework-application-section {
+    p,
+    a,
+    .hint,
+    .browse-list-item-link {
+      @include core-16;
+    }
+
+    p {
+      margin-bottom: 0;
+    }
+
+    .browse-list-item-link {
+      border-bottom: none;
+      text-decoration: underline;
+    }
+  }
+}

@@ -37,79 +37,112 @@
       {% include "toolkit/page-heading.html" %}
     {% endwith %}
   {% endif %}
-  <aside role="complementary" class="framework-application-status">
-    Deadline {% if g7_status == 'pending' %} for submissions passed at {% endif %} <strong>{{ deadline|safe }}</strong>
+  {% if g7_status == 'open' %}
+  <aside role="complementary" class="framework-application-status" aria-label="G-Cloud status">
+    Deadline <strong>{{ deadline|safe }}</strong>
   </aside>
-
   <nav role="navigation">
+  {% elif g7_status == 'pending' %}
+    <div class="summary-item-lede">
+      <div class="grid-row">
+        <div class="column-two-thirds">
+          <h2 class="summary-item-heading">G-Cloud is closed for applications</h2>
+          {% if g7_application_made %}
+            <p>You made your supplier declaration and submitted {{ g7_complete }} {{ 'service' if g7_complete == 1 else 'services' }}.</p>
+            <p>A letter informing you whether your application was successful or not will be posted on your G-Cloud 7 updates page by Tuesday, 9 November 2015.</p>
+          {% else %}
+            <p>You didn't submit an application.</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  <nav role="navigation" class="framework-application-reference">
+  {% endif %}
     <ul class="browse-list">
-      <li class="browse-list-item framework-application-section">
-        <div class="grid-row">
-          <div class="column-two-thirds">
-            {% if not counts.draft %}
-              <div class="framework-section-validation-bar-good">
-            {% endif %}
-              <a class="browse-list-item-link" href="{{ url_for('.framework_services') }}">
-                <span>
-                {% if g7_status == 'open' %}
-                  Add, edit and delete services
-                {% else %}
-                  View services
-                {% endif %}
-                </span>
-              </a>
-            {% if not counts.draft %}
-              </div>
-            {% endif %}
-          </div>
-          <div class="column-two-thirds">
-
-            {% if not counts.complete and not counts.draft %}
-              <div class="framework-section-status-neutral">
-                <p>
-                  You need to add and complete services
-                </p>
-              </div>
-            {% endif %}
-
-            {% if counts.draft and not counts.complete %}
-              <div class="framework-section-status-neutral">
-                You have
-                {{ counts.draft }} draft
-                {{ 'service' if counts.draft == 1 else 'services' }}
-                that won’t be submitted
-              </div>
-            {% endif %}
-
-            {% if counts.complete and declaration_status != 'complete' %}
-              <div class="framework-section-status-neutral">
-                You have {{ counts.complete }} complete
-                {{ 'service' if counts.complete == 1 else 'services' }}
-                and {{ counts.draft }} draft
-                {{ 'service' if counts.draft == 1 else 'services' }}
-              </div>
-            {% endif %}
-
-            {% if counts.complete and declaration_status == 'complete' %}
+      {% if g7_status == 'open' %}
+        <li class="browse-list-item framework-application-section">
+          <div class="grid-row">
+            <div class="column-two-thirds">
               {% if not counts.draft %}
-                <div class="framework-section-status-good">
+                <div class="framework-section-validation-bar-good">
               {% endif %}
-              <p>
-                <strong><span class="big-number">{{ counts.complete }}</span> complete
-                 {{ 'service' if counts.complete == 1 else 'services' }} will be submitted at the deadline</strong>
-              </p>
+                <a class="browse-list-item-link" href="{{ url_for('.framework_services') }}">
+                  <span>
+                    Add, edit and delete services
+                  </span>
+                </a>
               {% if not counts.draft %}
                 </div>
               {% endif %}
-              {% if counts.draft %}
-                <p class="framework-section-status-neutral">
-                  {{ counts.draft }} draft {{ 'service' if counts.draft == 1 else 'services' }} won’t be submitted
-                </p>
+            </div>
+            <div class="column-two-thirds">
+              {% if not counts.complete and not counts.draft %}
+                <div class="framework-section-status-neutral">
+                  <p>
+                    You need to add and complete services
+                  </p>
+                </div>
               {% endif %}
-            {% endif %}
+
+              {% if counts.draft and not counts.complete %}
+                <div class="framework-section-status-neutral">
+                  You have
+                  {{ counts.draft }} draft
+                  {{ 'service' if counts.draft == 1 else 'services' }}
+                  that won’t be submitted
+                </div>
+              {% endif %}
+
+              {% if counts.complete and declaration_status != 'complete' %}
+                <div class="framework-section-status-neutral">
+                  You have {{ counts.complete }} complete
+                  {{ 'service' if counts.complete == 1 else 'services' }}
+                  and {{ counts.draft }} draft
+                  {{ 'service' if counts.draft == 1 else 'services' }}
+                </div>
+              {% endif %}
+
+              {% if counts.complete and declaration_status == 'complete' %}
+                {% if not counts.draft %}
+                  <div class="framework-section-status-good">
+                {% endif %}
+                <p>
+                  <strong><span class="big-number">{{ counts.complete }}</span> complete
+                   {{ 'service' if counts.complete == 1 else 'services' }} will be submitted at the deadline</strong>
+                </p>
+                {% if not counts.draft %}
+                  </div>
+                {% endif %}
+                {% if counts.draft %}
+                  <p class="framework-section-status-neutral">
+                    {{ counts.draft }} draft {{ 'service' if counts.draft == 1 else 'services' }} won’t be submitted
+                  </p>
+                {% endif %}
+              {% endif %}
+            </div>
           </div>
-        </div>
-      </li>
+        </li>
+      {% elif g7_status == 'pending' and g7_application_made %}
+        <li class="browse-list-item framework-application-section">
+          <div class="grid-row">
+            <div class="column-two-thirds">
+              <a class="browse-list-item-link" href="{{ url_for('.framework_services') }}">
+                <span>
+                  View services
+                </span>
+              </a>
+            </div>
+            <div class="column-two-thirds">
+              <div class="framework-section-status-neutral">
+                <p>{{ counts.draft }} draft
+                {{ 'service' if counts.draft == 1 else 'services' }} {{ 'was' if counts.draft == 1 else 'were' }} not submitted</p>
+                <p>{{ counts.complete }} complete
+                {{ 'service' if counts.complete == 1 else 'services' }} {{ 'was' if counts.draft == 1 else 'were' }} submitted</p>
+              </div>
+            </div>
+          </div>
+        </li>
+      {% endif %}
 
       {% if g7_status == 'open' %}
         <li class="browse-list-item framework-application-section">
@@ -170,34 +203,65 @@
         </li>
       {% endif %}
       
-      <li class="browse-list-item framework-application-section-last">
-        <div class="grid-row">
-          <div class="column-two-thirds">
-            <h2>About G-Cloud 7</h2>
-            <ul>
-              <li>
-                <a href="{{ url_for('.download_supplier_file', filepath='g-cloud-7-supplier-pack.zip') }}"><span>Download guidance and legal documentation (.zip)</span></a>
-                {% if last_modified.supplier_pack %}
-                  <div class="hint">Last updated <time datetime="{{ last_modified.supplier_pack }}">{{ last_modified.supplier_pack|dateformat }}</time></div>
-                {% endif %}
-              </li>
-              <li>
-                <a href="{{ url_for('.framework_updates') }}">
-                  <span>
-                  {% if 'G7_CLARIFICATIONS_CLOSED' is active_feature %}
-                    Read updates and clarification question responses
-                  {% else %}
-                    Read updates and ask clarification questions
+      {% if g7_status == 'open' %}
+        <li class="browse-list-item framework-application-section">
+          <div class="grid-row">
+            <div class="column-two-thirds">
+              <h2>About G-Cloud 7</h2>
+              <ul>
+                <li>
+                  <a href="{{ url_for('.download_supplier_file', filepath='g-cloud-7-supplier-pack.zip') }}"><span>Download guidance and legal documentation (.zip)</span></a>
+                  {% if last_modified.supplier_pack %}
+                    <div class="hint">Last updated <time datetime="{{ last_modified.supplier_pack }}">{{ last_modified.supplier_pack|dateformat }}</time></div>
                   {% endif %}
-                  </span></a>
-                {% if last_modified.supplier_updates %}
-                  <div class="hint">Last updated <time datetime="{{ last_modified.supplier_updates }}">{{ last_modified.supplier_updates|dateformat }}</time></div>
-                {% endif %}
-              </li>
-            </ul>
+                </li>
+                <li>
+                  <a href="{{ url_for('.framework_updates') }}">
+                    <span>
+                    {% if 'G7_CLARIFICATIONS_CLOSED' is active_feature %}
+                      Read updates and clarification question responses
+                    {% else %}
+                      Read updates and ask clarification questions
+                    {% endif %}
+                    </span></a>
+                  {% if last_modified.supplier_updates %}
+                    <div class="hint">Last updated <time datetime="{{ last_modified.supplier_updates }}">{{ last_modified.supplier_updates|dateformat }}</time></div>
+                  {% endif %}
+                </li>
+              </ul>
+            </div>
           </div>
-        </div>
+        </li>
+      {% else %}
+        <li class="browse-list-item framework-application-section">
+          <div class="grid-row">
+            <div class="column-two-thirds">
+              <a href="{{ url_for('.download_supplier_file', filepath='g-cloud-7-supplier-pack.zip') }}"><span>Download guidance and legal documentation (.zip)</span></a>
+              {% if last_modified.supplier_pack %}
+                <div class="hint">Last updated <time datetime="{{ last_modified.supplier_pack }}">{{ last_modified.supplier_pack|dateformat }}</time></div>
+              {% endif %}
+            </div>
+          </div>
+        </li>
+        <li class="browse-list-item framework-application-section">
+          <div class="grid-row">
+            <div class="column-two-thirds">
+              <a href="{{ url_for('.framework_updates') }}">
+                <span>
+                {% if 'G7_CLARIFICATIONS_CLOSED' is active_feature %}
+                  Read updates and clarification question responses
+                {% else %}
+                  Read updates and ask clarification questions
+                {% endif %}
+                </span></a>
+              {% if last_modified.supplier_updates %}
+                <div class="hint">Last updated <time datetime="{{ last_modified.supplier_updates }}">{{ last_modified.supplier_updates|dateformat }}</time></div>
+              {% endif %}
+                </li>
+            </div>
+          </div>
       </li>
+      {% endif %}
     </ul>
   </nav>
 
