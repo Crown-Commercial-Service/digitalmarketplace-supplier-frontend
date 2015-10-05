@@ -61,9 +61,24 @@
     {% include "toolkit/page-heading.html" %}
   {% endwith %}
 
+  {% if g7_status == 'pending' %}
+    <div class="summary-item-lede">
+      <div class="grid-row">
+        <div class="column-two-thirds">
+          <h2 class="summary-item-heading">G-Cloud 7 is closed for applications</h2>
+          <p>
+            You made your supplier declaration and submitted {{ complete_drafts|length }} complete {{ 'services' if complete_drafts|length == 1 else 'services' }}.
+          </p>
+        </div>
+      </div>
+    </div>
+  {% endif %}
+
   {{ summary.heading("Draft services") }}
   {% if g7_status == 'open' %}
     {{ summary.top_link("Add a service", url_for(".start_new_draft_service")) }}
+  {% elif g7_status == 'pending' %}
+    <p class="hint">These services were not submitted</p>
   {% endif %}
   {% call(draft) summary.list_table(
     drafts,
@@ -81,11 +96,14 @@
       {{ summary.service_link(draft.serviceName,
                               url_for(".view_service_submission", service_id=draft.id)) }}
       {{ summary.text(draft.lot) }}
+      
+      {% if g7_status == 'open' %}
       {{ summary.text(submission.multiline_string(
         submission.can_be_completed_text(draft.unanswered_required, g7_status),
         submission.unanswered_required_text(draft.unanswered_required, draft.unanswered_optional),
         submission.unanswered_optional_text(draft.unanswered_required, draft.unanswered_optional)
       )) }}
+      {% endif %}
       {% if g7_status == 'open' %}
         {{ summary.button(text="Make a copy",
                            action=url_for('.copy_draft_service', service_id=draft.id)) }}
@@ -93,7 +111,11 @@
     {% endcall %}
   {% endcall %}
 
+  {% if g7_status == 'open' %}
   {{ summary.heading("Complete services") }}
+  {% elif g7_status == 'pending' %}
+  {{ summary.heading("Submitted services") }}
+  {% endif %}
   {% call(draft) summary.list_table(
     complete_drafts,
     caption="Complete services",
