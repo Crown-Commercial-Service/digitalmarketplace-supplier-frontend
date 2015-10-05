@@ -1,8 +1,7 @@
 from flask.ext.wtf import Form
 from wtforms import IntegerField, FieldList
 from wtforms.validators import DataRequired, ValidationError, Length, Optional, Regexp, Email
-
-from . import StripWhitespaceStringField
+from dmutils.forms import StripWhitespaceStringField
 
 
 def word_length(limit=None, message=None):
