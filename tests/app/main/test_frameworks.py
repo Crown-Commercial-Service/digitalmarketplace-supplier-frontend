@@ -31,7 +31,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
 
         for last_updated in last_updateds:
             hint = doc.xpath(
-                '//li[contains(@class, "framework-application-section-last")]'
+                '//li[contains(@class, "framework-application-section")]'
                 '//span[contains(text(), "{}")]'
                 '/../..'
                 '/div[@class="hint"]'.format(last_updated['text'])
@@ -761,7 +761,7 @@ class TestG7ServicesList(BaseApplicationTest):
             self.login()
 
         count_unanswered.return_value = 3, 1
-
+        data_api_client.get_framework_status.return_value = {'status': 'open'}
         data_api_client.find_draft_services.return_value = {
             'services': [
                 {'serviceName': 'draft', 'lot': 'SCS', 'status': 'not-submitted'},

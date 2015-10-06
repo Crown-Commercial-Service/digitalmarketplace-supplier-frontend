@@ -945,6 +945,7 @@ class TestShowDraftService(BaseApplicationTest):
 
     @mock.patch('app.main.views.services.count_unanswered_questions')
     def test_unanswered_questions_count(self, count_unanswered, data_api_client):
+        data_api_client.get_framework_status.return_value = {'status': 'open'}
         data_api_client.get_draft_service.return_value = self.draft_service
         count_unanswered.return_value = 1, 2
         res = self.client.get('/suppliers/submission/services/1')
@@ -969,7 +970,6 @@ class TestShowDraftService(BaseApplicationTest):
         count_unanswered.return_value = 0, 1
         res = self.client.get('/suppliers/submission/services/1')
 
-        assert_in(u'1 optional question unanswered', res.get_data(as_text=True))
         assert_not_in(u'<input type="submit" class="button-save"  value="Mark as complete" />',
                       res.get_data(as_text=True))
 
