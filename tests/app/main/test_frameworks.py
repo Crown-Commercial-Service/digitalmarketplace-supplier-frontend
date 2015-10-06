@@ -756,6 +756,40 @@ class TestSendClarificationQuestionEmail(BaseApplicationTest):
 @mock.patch('app.main.views.frameworks.count_unanswered_questions')
 class TestG7ServicesList(BaseApplicationTest):
 
+    def test_404_when_g7_pending_and_no_complete_services(self, count_unanswered, data_api_client):
+        with self.app.test_client():
+            self.login()
+        data_api_client.get_framework_status.return_value = {'status': 'pending'}
+        data_api_client.find_draft_services.return_value = {'services': []}
+        count_unanswered.return_value = 0
+        response = self.client.get('/suppliers/frameworks/g-cloud-7/services')
+        assert_equal(response.status_code, 404)
+
+    def test_404_when_g7_pending_and_no_declaration(self, count_unanswered, data_api_client):
+        with self.app.test_client():
+            self.login()
+        data_api_client.get_framework_status.return_value = {'status': 'pending'}
+        data_api_client.get_selection_answers.return_value = {'selectionAnswers': {'questionAnswers': {'status': 'started'}}}  # noqa
+        response = self.client.get('/suppliers/frameworks/g-cloud-7/services')
+        assert_equal(response.status_code, 404)
+
+    def test_no_404_when_g7_open_and_no_complete_services(self, count_unanswered, data_api_client):
+        with self.app.test_client():
+            self.login()
+        data_api_client.get_framework_status.return_value = {'status': 'open'}
+        data_api_client.find_draft_services.return_value = {'services': []}
+        count_unanswered.return_value = 0
+        response = self.client.get('/suppliers/frameworks/g-cloud-7/services')
+        assert_equal(response.status_code, 200)
+
+    def test_no_404_when_g7_open_and_no_declaration(self, count_unanswered, data_api_client):
+        with self.app.test_client():
+            self.login()
+        data_api_client.get_framework_status.return_value = {'status': 'open'}
+        data_api_client.get_selection_answers.return_value = {'selectionAnswers': {'questionAnswers': {'status': 'started'}}}  # noqa
+        response = self.client.get('/suppliers/frameworks/g-cloud-7/services')
+        assert_equal(response.status_code, 200)
+
     def test_drafts_list_progress_count(self, count_unanswered, data_api_client):
         with self.app.test_client():
             self.login()

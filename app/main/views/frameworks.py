@@ -71,6 +71,11 @@ def framework_services():
     template_data = main.config['BASE_TEMPLATE_DATA']
 
     drafts, complete_drafts = get_drafts(data_api_client, current_user.supplier_id, 'g-cloud-7')
+    g7_status = data_api_client.get_framework_status('g-cloud-7').get('status', None)
+    declaration_status = get_declaration_status(data_api_client)
+    application_made = len(complete_drafts) > 0 and declaration_status == 'complete'
+    if g7_status == 'pending' and not application_made:
+        abort(404)
 
     for draft in itertools.chain(drafts, complete_drafts):
         draft['priceString'] = format_service_price(draft)
@@ -87,8 +92,8 @@ def framework_services():
         "frameworks/services.html",
         complete_drafts=list(reversed(complete_drafts)),
         drafts=list(reversed(drafts)),
-        declaration_status=get_declaration_status(data_api_client),
-        g7_status=data_api_client.get_framework_status('g-cloud-7').get('status', None),
+        declaration_status=declaration_status,
+        g7_status=g7_status,
         **template_data
     ), 200
 
