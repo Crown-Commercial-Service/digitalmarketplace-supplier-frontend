@@ -116,9 +116,8 @@ def framework_supplier_declaration(section_id):
     is_last_page = section_id == content.sections[-1]['id']
 
     try:
-        response = data_api_client.get_selection_answers(
-            current_user.supplier_id, 'g-cloud-7')
-        latest_answers = response['selectionAnswers']['questionAnswers']
+        response = data_api_client.get_supplier_declaration(current_user.supplier_id, 'g-cloud-7')
+        latest_answers = response['declaration']
     except APIError as e:
         if e.status_code != 404:
             abort(e.status_code)
@@ -136,7 +135,7 @@ def framework_supplier_declaration(section_id):
             else:
                 latest_answers.update({"status": "complete"})
             try:
-                data_api_client.answer_selection_questions(
+                data_api_client.set_supplier_declaration(
                     current_user.supplier_id,
                     'g-cloud-7',
                     latest_answers,

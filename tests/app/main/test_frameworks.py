@@ -23,7 +23,7 @@ def _return_fake_s3_file_dict(directory, filename, ext, last_modified=None, size
 
 
 @mock.patch('dmutils.s3.S3')
-@mock.patch('app.main.views.frameworks.data_api_client')
+@mock.patch('app.main.views.frameworks.data_api_client', autospec=True)
 class TestFrameworksDashboard(BaseApplicationTest):
 
     @staticmethod
@@ -87,10 +87,9 @@ class TestFrameworksDashboard(BaseApplicationTest):
             self.login()
 
             data_api_client.get_framework_status.return_value = {'status': 'open'}
-            data_api_client.get_selection_answers.return_value = \
-                {"selectionAnswers":
-                    {"questionAnswers": FULL_G7_SUBMISSION}
-                 }
+            data_api_client.get_supplier_declaration.return_value = {
+                "declaration": FULL_G7_SUBMISSION
+            }
 
             res = self.client.get("/suppliers/frameworks/g-cloud-7")
 
@@ -112,10 +111,9 @@ class TestFrameworksDashboard(BaseApplicationTest):
             submission.update({"status": "started"})
 
             data_api_client.get_framework_status.return_value = {'status': 'open'}
-            data_api_client.get_selection_answers.return_value = \
-                {"selectionAnswers":
-                    {"questionAnswers": submission}
-                 }
+            data_api_client.get_supplier_declaration.return_value = {
+                "declaration": submission
+            }
 
             res = self.client.get("/suppliers/frameworks/g-cloud-7")
 
@@ -129,7 +127,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
             self.login()
 
             data_api_client.get_framework_status.return_value = {'status': 'open'}
-            data_api_client.get_selection_answers.side_effect = APIError(mock.Mock(status_code=404))
+            data_api_client.get_supplier_declaration.side_effect = APIError(mock.Mock(status_code=404))
 
             res = self.client.get("/suppliers/frameworks/g-cloud-7")
 
@@ -295,14 +293,14 @@ FULL_G7_SUBMISSION = {
 }
 
 
-@mock.patch('app.main.views.frameworks.data_api_client')
+@mock.patch('app.main.views.frameworks.data_api_client', autospec=True)
 class TestSupplierDeclaration(BaseApplicationTest):
     def test_get_with_no_previous_answers(self, data_api_client):
         with self.app.test_client():
             self.login()
 
             data_api_client.get_framework_status.return_value = {'status': 'open'}
-            data_api_client.get_selection_answers.side_effect = APIError(mock.Mock(status_code=404))
+            data_api_client.get_supplier_declaration.side_effect = APIError(mock.Mock(status_code=404))
 
             res = self.client.get(
                 '/suppliers/frameworks/g-cloud-7/declaration/g_cloud_7_essentials')
@@ -319,13 +317,8 @@ class TestSupplierDeclaration(BaseApplicationTest):
             self.login()
 
             data_api_client.get_framework_status.return_value = {'status': 'open'}
-            data_api_client.get_selection_answers.return_value = {
-                "selectionAnswers": {
-                    "questionAnswers": {
-                        "status": "started",
-                        "PR1": False,
-                    }
-                }
+            data_api_client.get_supplier_declaration.return_value = {
+                "declaration": {"status": "started", "PR1": False}
             }
 
             res = self.client.get(
@@ -341,27 +334,23 @@ class TestSupplierDeclaration(BaseApplicationTest):
             self.login()
 
             data_api_client.get_framework_status.return_value = {'status': 'open'}
-            data_api_client.get_selection_answers.return_value = {
-                "selectionAnswers": {
-                    "questionAnswers": {"status": "started"}
-                }
+            data_api_client.get_supplier_declaration.return_value = {
+                "declaration": {"status": "started"}
             }
             res = self.client.post(
                 '/suppliers/frameworks/g-cloud-7/declaration/g_cloud_7_essentials',
                 data=FULL_G7_SUBMISSION)
 
             assert_equal(res.status_code, 302)
-            data_api_client.answer_selection_questions.assert_called()
+            assert data_api_client.set_supplier_declaration.called
 
     def test_post_valid_data_to_complete_declaration(self, data_api_client):
         with self.app.test_client():
             self.login()
 
             data_api_client.get_framework_status.return_value = {'status': 'open'}
-            data_api_client.get_selection_answers.return_value = {
-                "selectionAnswers": {
-                    "questionAnswers": {"status": "started"}
-                }
+            data_api_client.get_supplier_declaration.return_value = {
+                "declaration": {"status": "started"}
             }
             res = self.client.post(
                 '/suppliers/frameworks/g-cloud-7/declaration/grounds_for_discretionary_exclusion',
@@ -369,19 +358,17 @@ class TestSupplierDeclaration(BaseApplicationTest):
 
             assert_equal(res.status_code, 302)
             assert_equal(res.location, 'http://localhost/suppliers/frameworks/g-cloud-7?declaration_completed=true')
-            data_api_client.answer_selection_questions.assert_called()
+            assert data_api_client.set_supplier_declaration.called
 
     def test_post_valid_data_with_api_failure(self, data_api_client):
         with self.app.test_client():
             self.login()
 
             data_api_client.get_framework_status.return_value = {'status': 'open'}
-            data_api_client.get_selection_answers.return_value = {
-                "selectionAnswers": {
-                    "questionAnswers": {"status": "started"}
-                }
+            data_api_client.get_supplier_declaration.return_value = {
+                "declaration": {"status": "started"}
             }
-            data_api_client.answer_selection_questions.side_effect = APIError(mock.Mock(status_code=400))
+            data_api_client.set_supplier_declaration.side_effect = APIError(mock.Mock(status_code=400))
 
             res = self.client.post(
                 '/suppliers/frameworks/g-cloud-7/declaration/g_cloud_7_essentials',
@@ -406,24 +393,22 @@ class TestSupplierDeclaration(BaseApplicationTest):
                 data=FULL_G7_SUBMISSION)
 
             assert_equal(res.status_code, 400)
-            assert not data_api_client.answer_selection_questions.called
+            assert not data_api_client.set_supplier_declaration.called
 
     def test_cannot_post_data_if_not_open(self, data_api_client):
         with self.app.test_client():
             self.login()
 
             data_api_client.get_framework_status.return_value = {'status': 'other'}
-            data_api_client.get_selection_answers.return_value = {
-                "selectionAnswers": {
-                    "questionAnswers": {"status": "started"}
-                }
+            data_api_client.get_supplier_declaration.return_value = {
+                "declaration": {"status": "started"}
             }
             res = self.client.post(
                 '/suppliers/frameworks/g-cloud-7/declaration/g_cloud_7_essentials',
                 data=FULL_G7_SUBMISSION)
 
             assert_equal(res.status_code, 404)
-            data_api_client.answer_selection_questions.assert_not_called()
+            assert not data_api_client.set_supplier_declaration.called
 
 
 @mock.patch('dmutils.s3.S3')
@@ -752,7 +737,7 @@ class TestSendClarificationQuestionEmail(BaseApplicationTest):
         assert_equal(response.status_code, 503)
 
 
-@mock.patch('app.main.views.frameworks.data_api_client')
+@mock.patch('app.main.views.frameworks.data_api_client', autospec=True)
 @mock.patch('app.main.views.frameworks.count_unanswered_questions')
 class TestG7ServicesList(BaseApplicationTest):
 
@@ -769,7 +754,9 @@ class TestG7ServicesList(BaseApplicationTest):
         with self.app.test_client():
             self.login()
         data_api_client.get_framework_status.return_value = {'status': 'pending'}
-        data_api_client.get_selection_answers.return_value = {'selectionAnswers': {'questionAnswers': {'status': 'started'}}}  # noqa
+        data_api_client.get_supplier_declaration.return_value = {
+            "declaration": {"status": "started"}
+        }
         response = self.client.get('/suppliers/frameworks/g-cloud-7/services')
         assert_equal(response.status_code, 404)
 
@@ -786,7 +773,9 @@ class TestG7ServicesList(BaseApplicationTest):
         with self.app.test_client():
             self.login()
         data_api_client.get_framework_status.return_value = {'status': 'open'}
-        data_api_client.get_selection_answers.return_value = {'selectionAnswers': {'questionAnswers': {'status': 'started'}}}  # noqa
+        data_api_client.get_supplier_declaration.return_value = {
+            "declaration": {"status": "started"}
+        }
         response = self.client.get('/suppliers/frameworks/g-cloud-7/services')
         assert_equal(response.status_code, 200)
 
