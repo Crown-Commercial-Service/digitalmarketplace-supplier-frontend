@@ -278,6 +278,53 @@ class TestSupplierUpdate(BaseApplicationTest):
             'email@email.com'
         )
 
+    def test_should_strip_whitespace_surrounding_supplier_update_all_fields(self, data_api_client):
+        self.login()
+
+        data = {
+            "description": "  New Description  ",
+            "clients": ["  ClientA  ", "  ClientB  "],
+            "contact_id": 2,
+            "contact_email": "  supplier@user.dmdev  ",
+            "contact_website": "  supplier.dmdev  ",
+            "contact_contactName": "  Supplier Person  ",
+            "contact_phoneNumber": "  0800123123  ",
+            "contact_address1": "  1 Street  ",
+            "contact_address2": "  2 Building  ",
+            "contact_city": "  Supplierville  ",
+            "contact_country": "  Supplierland  ",
+            "contact_postcode": "  11 AB  "
+        }
+
+        status, _ = self.post_supplier_edit(data=data)
+
+        assert_equal(status, 302)
+
+        data_api_client.update_supplier.assert_called_once_with(
+            1234,
+            {
+                'clients': [u'ClientA', u'ClientB'],
+                'description': u'New Description'
+            },
+            'email@email.com'
+        )
+        data_api_client.update_contact_information.assert_called_once_with(
+            1234, 2,
+            {
+                'website': u'supplier.dmdev',
+                'city': u'Supplierville',
+                'country': u'Supplierland',
+                'address1': u'1 Street',
+                'address2': u'2 Building',
+                'email': u'supplier@user.dmdev',
+                'phoneNumber': u'0800123123',
+                'postcode': u'11 AB',
+                'contactName': u'Supplier Person',
+                'id': 2
+            },
+            'email@email.com'
+        )
+
     def test_missing_required_supplier_fields(self, data_api_client):
         self.login()
 
@@ -441,6 +488,19 @@ class TestCreateSupplier(BaseApplicationTest):
         assert_equal(res.status_code, 302)
         assert_equal(res.location, 'http://localhost/suppliers/companies-house-number')
 
+    @mock.patch("app.main.suppliers.data_api_client")
+    def test_should_strip_whitespace_surrounding_duns_number_field(self, data_api_client):
+        data_api_client.find_suppliers.return_value = {"suppliers": []}
+        with self.client as c:
+            c.post(
+                "/suppliers/duns-number",
+                data={
+                    'duns_number': "  012345678  "
+                }
+            )
+            assert_true("duns_number" in session)
+            assert_equal(session.get("duns_number"), "012345678")
+
     def test_should_not_be_an_error_if_no_companies_house_number(self):
         res = self.client.post(
             "/suppliers/companies-house-number",
@@ -480,6 +540,17 @@ class TestCreateSupplier(BaseApplicationTest):
             assert_equal(res.status_code, 302)
             assert_equal(res.location, 'http://localhost/suppliers/company-name')
 
+    def test_should_strip_whitespace_surrounding_companies_house_number_field(self):
+        with self.client as c:
+            c.post(
+                "/suppliers/companies-house-number",
+                data={
+                    'companies_house_number': "  SC001122  "
+                }
+            )
+            assert_true("companies_house_number" in session)
+            assert_equal(session.get("companies_house_number"), "SC001122")
+
     def test_should_wipe_companies_house_number_if_not_supplied(self):
         with self.client as c:
             res = c.post(
@@ -501,6 +572,17 @@ class TestCreateSupplier(BaseApplicationTest):
         )
         assert_equal(res.status_code, 302)
         assert_equal(res.location, 'http://localhost/suppliers/company-contact-details')
+
+    def test_should_strip_whitespace_surrounding_company_name_field(self):
+        with self.client as c:
+            c.post(
+                "/suppliers/company-name",
+                data={
+                    'company_name': "  My Company  "
+                }
+            )
+            assert_true("company_name" in session)
+            assert_equal(session.get("company_name"), "My Company")
 
     def test_should_be_an_error_if_no_company_name(self):
         res = self.client.post(
@@ -532,6 +614,23 @@ class TestCreateSupplier(BaseApplicationTest):
         )
         assert_equal(res.status_code, 302)
         assert_equal(res.location, 'http://localhost/suppliers/create-your-account')
+
+    def test_should_strip_whitespace_surrounding_contact_details_fields(self):
+        contact_details = {
+            'contact_name': "  Name  ",
+            'email_address': "  name@email.com  ",
+            'phone_number': "  999  "
+        }
+
+        with self.client as c:
+            c.post(
+                "/suppliers/company-contact-details",
+                data=contact_details
+            )
+
+            for key, value in contact_details.items():
+                assert_true(key in session)
+                assert_equal(session.get(key), value.strip())
 
     def test_should_not_allow_contact_details_without_name(self):
         res = self.client.post(

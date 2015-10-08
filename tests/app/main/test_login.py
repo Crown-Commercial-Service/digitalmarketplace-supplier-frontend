@@ -35,7 +35,7 @@ class TestLogin(BaseApplicationTest):
         self._data_api_client = mock.patch(
             'app.main.views.login.data_api_client', **data_api_client_config
         )
-        self._data_api_client.start()
+        self.data_api_client_mock = self._data_api_client.start()
 
     def teardown(self):
         self._data_api_client.stop()
@@ -53,6 +53,20 @@ class TestLogin(BaseApplicationTest):
         assert_equal(res.status_code, 302)
         assert_equal(res.location, 'http://localhost/suppliers')
         assert_in('Secure;', res.headers['Set-Cookie'])
+
+    def test_should_strip_whitespace_surrounding_login_email_address_field(self):
+        self.client.post("/suppliers/login", data={
+            'email_address': '  valid@email.com  ',
+            'password': '1234567890'
+        })
+        self.data_api_client_mock.authenticate_user.assert_called_with('valid@email.com', '1234567890')
+
+    def test_should_not_strip_whitespace_surrounding_login_password_field(self):
+        self.client.post("/suppliers/login", data={
+            'email_address': 'valid@email.com',
+            'password': '  1234567890  '
+        })
+        self.data_api_client_mock.authenticate_user.assert_called_with('valid@email.com', '  1234567890  ')
 
     def test_ok_next_url_redirects_on_login(self):
         res = self.client.post("/suppliers/login?next=/suppliers/services/123",
@@ -145,7 +159,7 @@ class TestResetPassword(BaseApplicationTest):
         self._data_api_client = mock.patch(
             'app.main.views.login.data_api_client', **data_api_client_config
         )
-        self._data_api_client.start()
+        self.data_api_client_mock = self._data_api_client.start()
 
     def teardown(self):
         self._data_api_client.stop()
@@ -176,6 +190,13 @@ class TestResetPassword(BaseApplicationTest):
         assert_equal(res.status_code, 302)
         assert_equal(res.location,
                      'http://localhost/suppliers/reset-password')
+
+    @mock.patch('app.main.views.login.send_email')
+    def test_should_strip_whitespace_surrounding_reset_password_email_address_field(self, send_email):
+        self.client.post("/suppliers/reset-password", data={
+            'email_address': ' email@email.com'
+        })
+        self.data_api_client_mock.get_user.assert_called_with(email_address='email@email.com')
 
     def test_email_should_be_decoded_from_token(self):
         with self.app.app_context():
@@ -279,6 +300,21 @@ class TestResetPassword(BaseApplicationTest):
             assert_equal(res.status_code, 302)
             assert_equal(res.location,
                          'http://localhost/suppliers/login')
+
+    def test_should_not_strip_whitespace_surrounding_reset_password_password_field(self):
+        with self.app.app_context():
+            token = generate_token(
+                self._user,
+                self.app.config['SECRET_KEY'],
+                self.app.config['RESET_PASSWORD_SALT'])
+            url = '/suppliers/reset-password/{}'.format(token)
+
+            self.client.post(url, data={
+                'password': '  1234567890',
+                'confirm_password': '  1234567890'
+            })
+            self.data_api_client_mock.update_user_password.assert_called_with(
+                self._user.get('user'), '  1234567890', self._user.get('email'))
 
     @mock.patch('app.main.views.login.data_api_client')
     def test_token_created_before_last_updated_password_cannot_be_used(
@@ -488,6 +524,29 @@ class TestInviteUser(BaseApplicationTest):
             )
             assert_equal(res.status_code, 302)
             assert_equal(res.location, 'http://localhost/suppliers/users')
+
+    @mock.patch('app.main.views.login.data_api_client')
+    @mock.patch('app.main.views.login.send_email')
+    def test_should_strip_whitespace_surrounding_invite_user_email_address_field(
+            self, send_email, data_api_client
+    ):
+        with self.app.app_context():
+            self.login()
+            self.client.post(
+                '/suppliers/invite-user',
+                data={
+                    'email_address': '  this@isvalid.com  '
+                }
+            )
+            send_email.assert_called_once_with(
+                'this@isvalid.com',
+                mock.ANY,
+                mock.ANY,
+                mock.ANY,
+                mock.ANY,
+                mock.ANY,
+                mock.ANY,
+            )
 
     @mock.patch('app.main.views.login.data_api_client')
     @mock.patch('app.main.views.login.generate_token')
@@ -993,6 +1052,50 @@ class TestInviteUser(BaseApplicationTest):
 
             assert_equal(res.status_code, 302)
             assert_equal(res.location, 'http://localhost/suppliers')
+
+    @mock.patch('app.main.views.login.data_api_client')
+    def test_should_strip_whitespace_surrounding_create_user_name_field(self, data_api_client):
+        with self.app.app_context():
+
+            data_api_client.get_user.return_value = None
+            token = self._generate_token()
+            self.client.post(
+                '/suppliers/create-user/{}'.format(token),
+                data={
+                    'password': 'validpassword',
+                    'name': '  valid name  '
+                }
+            )
+
+            data_api_client.create_user.assert_called_once_with({
+                'role': mock.ANY,
+                'password': 'validpassword',
+                'emailAddress': mock.ANY,
+                'name': 'valid name',
+                'supplierId': mock.ANY
+            })
+
+    @mock.patch('app.main.views.login.data_api_client')
+    def test_should_not_strip_whitespace_surrounding_create_user_password_field(self, data_api_client):
+        with self.app.app_context():
+
+            data_api_client.get_user.return_value = None
+            token = self._generate_token()
+            self.client.post(
+                '/suppliers/create-user/{}'.format(token),
+                data={
+                    'password': '  validpassword  ',
+                    'name': 'valid name  '
+                }
+            )
+
+            data_api_client.create_user.assert_called_once_with({
+                'role': mock.ANY,
+                'password': '  validpassword  ',
+                'emailAddress': mock.ANY,
+                'name': 'valid name',
+                'supplierId': mock.ANY
+            })
 
     @mock.patch('app.main.views.login.data_api_client')
     def test_should_update_user_if_user_does_exist(self, data_api_client):
