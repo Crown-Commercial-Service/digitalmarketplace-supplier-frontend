@@ -82,6 +82,62 @@ class TestFrameworksDashboard(BaseApplicationTest):
             assert_equal(res.status_code, 200)
             assert not data_api_client.create_audit_event.called
 
+    def test_shows_gcloud_7_closed_message_if_pending_and_no_application_done(self, data_api_client, s3):
+        with self.app.test_client():
+            self.login()
+
+            data_api_client.get_framework_status.return_value = {'status': 'pending'}
+            data_api_client.find_audit_events.return_value = {
+                "auditEvents": [{"data": {"frameworkSlug": "g-cloud-7"}}]
+            }
+            data_api_client.find_draft_services.return_value = {
+                "services": [
+                    {'serviceName': 'A service', 'status': 'not-submitted'}
+                ]
+            }
+
+            res = self.client.get("/suppliers/frameworks/g-cloud-7")
+
+            doc = html.fromstring(res.get_data(as_text=True))
+
+            heading = doc.xpath('//div[@class="summary-item-lede"]//h2[@class="summary-item-heading"]')
+            assert_true(len(heading) > 0)
+            assert_in(u"G-Cloud 7 is closed for applications",
+                      heading[0].xpath('text()')[0])
+            assert_in(u"You didn't submit an application.",
+                      heading[0].xpath('../p[1]/text()')[0])
+
+    def test_shows_gcloud_7_closed_message_if_pending_and_application(self, data_api_client, s3):
+        with self.app.test_client():
+            self.login()
+
+            data_api_client.get_framework_status.return_value = {'status': 'pending'}
+            data_api_client.find_audit_events.return_value = {
+                "auditEvents": [{"data": {"frameworkSlug": "g-cloud-7"}}]
+            }
+            data_api_client.find_draft_services.return_value = {
+                "services": [
+                    {'serviceName': 'A service', 'status': 'submitted'}
+                ]
+            }
+            data_api_client.get_selection_answers.return_value = \
+                {"selectionAnswers":
+                    {"questionAnswers": FULL_G7_SUBMISSION}
+                 }
+
+            res = self.client.get("/suppliers/frameworks/g-cloud-7")
+
+            doc = html.fromstring(res.get_data(as_text=True))
+
+            heading = doc.xpath('//div[@class="summary-item-lede"]//h2[@class="summary-item-heading"]')
+            assert_true(len(heading) > 0)
+            assert_in(u"G-Cloud 7 is closed for applications",
+                      heading[0].xpath('text()')[0])
+            assert_in(u"You made your supplier declaration and submitted 1 service for consideration.",
+                      heading[0].xpath('../p[1]/text()')[0])
+            assert_in(u"A letter informing you whether your application was successful or not will be posted on your G-Cloud 7 updates page by Monday, 9 November 2015.",  # noqa
+                      heading[0].xpath('../p[2]/text()')[0])  # noqa
+
     def test_declaration_status_when_complete(self, data_api_client, s3):
         with self.app.test_client():
             self.login()
