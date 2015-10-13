@@ -835,6 +835,29 @@ class TestG7ServicesList(BaseApplicationTest):
         response = self.client.get('/suppliers/frameworks/g-cloud-7/services')
         assert_equal(response.status_code, 200)
 
+    def test_shows_g7_message_if_pending_and_application_made(self, count_unanswered, data_api_client):
+        with self.app.test_client():
+            self.login()
+        data_api_client.get_framework_status.return_value = {'status': 'pending'}
+        data_api_client.get_selection_answers.return_value = {'selectionAnswers': {'questionAnswers': FULL_G7_SUBMISSION}}  # noqa
+        data_api_client.find_draft_services.return_value = {
+            'services': [
+                {'serviceName': 'draft', 'lot': 'SCS', 'status': 'submitted'},
+            ]
+        }
+        count_unanswered.return_value = 0, 1
+
+        response = self.client.get('/suppliers/frameworks/g-cloud-7/services')
+        doc = html.fromstring(response.get_data(as_text=True))
+
+        assert_equal(response.status_code, 200)
+        heading = doc.xpath('//div[@class="summary-item-lede"]//h2[@class="summary-item-heading"]')
+        assert_true(len(heading) > 0)
+        assert_in(u"G-Cloud 7 is closed for applications",
+                  heading[0].xpath('text()')[0])
+        assert_in(u"You made your supplier declaration and submitted 1 complete service.",
+                  heading[0].xpath('../p[1]/text()')[0])
+
     def test_drafts_list_progress_count(self, count_unanswered, data_api_client):
         with self.app.test_client():
             self.login()
