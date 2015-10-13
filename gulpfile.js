@@ -234,9 +234,9 @@ gulp.task(
 );
 
 gulp.task(
-  'copy:ssp_content',
+  'copy:frameworks',
   copyFactory(
-    "content YAML into app folder",
+    "frameworks YAML into app folder",
     sspContentRoot, 'app/content'
   )
 );
@@ -284,7 +284,7 @@ gulp.task('set_environment_to_production', function (cb) {
 gulp.task(
   'copy',
   [
-    'copy:ssp_content',
+    'copy:frameworks',
     'copy:template_assets:images',
     'copy:template_assets:stylesheets',
     'copy:template_assets:javascripts',
