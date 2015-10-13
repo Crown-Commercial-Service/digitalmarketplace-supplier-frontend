@@ -228,10 +228,8 @@ class TestSuppliersDashboard(BaseApplicationTest):
                 {'serviceName': 'A service', 'status': 'submitted'}
             ]
         }
-        data_api_client.get_selection_answers.return_value = {
-            "selectionAnswers": {
-                "questionAnswers": {'status': 'complete'}
-            }
+        data_api_client.get_supplier_declaration.return_value = {
+            "declaration": {'status': 'complete'}
         }
         with self.app.test_client():
             self.login()

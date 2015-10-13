@@ -120,10 +120,8 @@ class TestFrameworksDashboard(BaseApplicationTest):
                     {'serviceName': 'A service', 'status': 'submitted'}
                 ]
             }
-            data_api_client.get_selection_answers.return_value = \
-                {"selectionAnswers":
-                    {"questionAnswers": FULL_G7_SUBMISSION}
-                 }
+            data_api_client.get_supplier_declaration.return_value = \
+                {"declaration": FULL_G7_SUBMISSION}
 
             res = self.client.get("/suppliers/frameworks/g-cloud-7")
 
@@ -839,7 +837,7 @@ class TestG7ServicesList(BaseApplicationTest):
         with self.app.test_client():
             self.login()
         data_api_client.get_framework_status.return_value = {'status': 'pending'}
-        data_api_client.get_selection_answers.return_value = {'selectionAnswers': {'questionAnswers': FULL_G7_SUBMISSION}}  # noqa
+        data_api_client.get_supplier_declaration.return_value = {'declaration': FULL_G7_SUBMISSION}  # noqa
         data_api_client.find_draft_services.return_value = {
             'services': [
                 {'serviceName': 'draft', 'lot': 'SCS', 'status': 'submitted'},
