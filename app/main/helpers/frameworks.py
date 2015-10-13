@@ -185,19 +185,19 @@ def get_first_question_index(content, section):
 
 def get_declaration_status(data_api_client):
     try:
-        answers = data_api_client.get_selection_answers(
+        declaration = data_api_client.get_supplier_declaration(
             current_user.supplier_id, 'g-cloud-7'
-        )['selectionAnswers']['questionAnswers']
+        )['declaration']
     except APIError as e:
         if e.status_code == 404:
             return 'unstarted'
         else:
             abort(e.status_code)
 
-    if not answers:
+    if not declaration:
         return 'unstarted'
     else:
-        return answers.get('status', 'unstarted')
+        return declaration.get('status', 'unstarted')
 
 
 def g_cloud_7_is_open_or_404(data_api_client):
