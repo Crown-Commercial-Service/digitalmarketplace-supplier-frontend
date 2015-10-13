@@ -23,7 +23,7 @@
   .validation-wrapper li {
      margin-left: 20px;
    }
-      
+
   .question-number {
     @include bold-19;
   }
@@ -34,6 +34,14 @@
 
     .question-number {
       margin-left: -20px;
+    }
+
+  }
+
+  .section-description {
+
+    p {
+      margin-bottom: $gutter/2;
     }
 
   }

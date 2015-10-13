@@ -183,7 +183,7 @@ def framework_supplier_declaration(framework_slug, section_id=None):
         section=section,
         service_data=answers,
         is_last_page=is_last_page,
-        first_question_index=get_first_question_index(content, section),
+        get_question=content.get_question,
         errors=errors,
         **template_data
     ), status_code
