@@ -103,6 +103,41 @@ def framework_services(framework_slug):
     ), 200
 
 
+@main.route('/frameworks/digital-outcomes-and-specialists/declaration/<string:section_id>',
+            methods=['GET', 'POST'])
+@flask_featureflags.is_active_feature('SHOW_DOS_DECLARATION')
+def declaration(section_id):
+    """
+    For prototyping
+    """
+    framework_slug = 'digital-outcomes-and-specialists'
+    framework = {
+        'frameworks': {
+            'name': 'Digital Outcomes and Specialists'
+        }
+    }
+    content = content_loader.get_builder(framework_slug, 'declaration')
+    section = content.get_section(section_id) or abort(404)
+
+    if request.method == 'POST':
+        return redirect(
+            url_for(
+                '.declaration',
+                section_id=content.get_next_editable_section_id(section_id)
+            )
+        )
+
+    return render_template(
+        "frameworks/edit_declaration_section.html",
+        framework=framework['frameworks'],
+        section=section,
+        service_data={},
+        is_last_page=False,
+        errors={},
+        get_question=content.get_question,
+        **main.config['BASE_TEMPLATE_DATA']
+    ), 200
+
 @main.route('/frameworks/<framework_slug>/declaration', methods=['GET'])
 @main.route('/frameworks/<framework_slug>/declaration/<string:section_id>', methods=['GET', 'POST'])
 @login_required
