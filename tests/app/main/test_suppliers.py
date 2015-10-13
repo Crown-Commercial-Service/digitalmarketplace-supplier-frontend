@@ -1,3 +1,5 @@
+# coding=utf-8
+
 from dmutils.apiclient import HTTPError
 from dmutils.email import MandrillException
 import mock
@@ -154,6 +156,96 @@ class TestSuppliersDashboard(BaseApplicationTest):
             assert_equal(res.status_code, 200)
             assert_equal(doc.xpath('//a[@href="/suppliers/frameworks/g-cloud-7"]/span/text()')[0],
                          "Continue your G-Cloud 7 application")
+
+    @mock.patch("app.main.views.suppliers.data_api_client")
+    @mock.patch("app.main.views.suppliers.get_current_suppliers_users")
+    def test_shows_gcloud_7_closed_message_if_pending_and_no_interest(self, get_current_suppliers_users, data_api_client):  # noqa
+        data_api_client.get_framework_status.return_value = {'status': 'pending'}
+        data_api_client.get_supplier.side_effect = get_supplier
+        data_api_client.find_audit_events.return_value = {
+            "auditEvents": []
+        }
+        get_current_suppliers_users.side_effect = get_user
+        with self.app.test_client():
+            self.login()
+
+            res = self.client.get("/suppliers")
+            doc = html.fromstring(res.get_data(as_text=True))
+
+            message = doc.xpath('//aside[@class="temporary-message"]')
+            assert_true(len(message) > 0)
+            assert_in(u"G‑Cloud 7 is closed for applications",
+                      message[0].xpath('h2/text()')[0])
+            assert_true(len(message[0].xpath('p[1]/a[@href="https://digitalmarketplace.blog.gov.uk/"]')) > 0)
+
+    @mock.patch("app.main.views.suppliers.data_api_client")
+    @mock.patch("app.main.views.suppliers.get_current_suppliers_users")
+    def test_shows_gcloud_7_closed_message_if_pending_and_no_application(self, get_current_suppliers_users, data_api_client):  # noqa
+        data_api_client.get_framework_status.return_value = {'status': 'pending'}
+        data_api_client.get_supplier.side_effect = get_supplier
+        data_api_client.find_audit_events.return_value = {
+            "auditEvents": [{
+                "data": {
+                    "frameworkSlug": "g-cloud-7"
+                }
+            }]
+        }
+        data_api_client.find_draft_services.return_value = {
+            "services": [
+                {'serviceName': 'A service', 'status': 'not-submitted'}
+            ]
+        }
+        get_current_suppliers_users.side_effect = get_user
+        with self.app.test_client():
+            self.login()
+
+            res = self.client.get("/suppliers")
+            doc = html.fromstring(res.get_data(as_text=True))
+
+            message = doc.xpath('//aside[@class="temporary-message"]')
+            assert_true(len(message) > 0)
+            assert_in(u"G‑Cloud 7 is closed for applications",
+                      message[0].xpath('h2/text()')[0])
+            assert_in(u"You didn’t submit an application",
+                      message[0].xpath('p[1]/text()')[0])
+            assert_true(len(message[0].xpath('p[2]/a[contains(@href, "suppliers/frameworks/g-cloud-7")]')) > 0)
+
+    @mock.patch("app.main.views.suppliers.data_api_client")
+    @mock.patch("app.main.views.suppliers.get_current_suppliers_users")
+    def test_shows_gcloud_7_closed_message_if_pending_and_application_done(self, get_current_suppliers_users, data_api_client):  # noqa
+        data_api_client.get_framework_status.return_value = {'status': 'pending'}
+        data_api_client.get_supplier.side_effect = get_supplier
+        data_api_client.find_audit_events.return_value = {
+            "auditEvents": [{
+                "data": {
+                    "frameworkSlug": "g-cloud-7"
+                }
+            }]
+        }
+        # an application is made if at least one draft is complete and the declaration is complete
+        data_api_client.find_draft_services.return_value = {
+            "services": [
+                {'serviceName': 'A service', 'status': 'submitted'}
+            ]
+        }
+        data_api_client.get_supplier_declaration.return_value = {
+            "declaration": {'status': 'complete'}
+        }
+        with self.app.test_client():
+            self.login()
+
+            res = self.client.get("/suppliers")
+            doc = html.fromstring(res.get_data(as_text=True))
+
+            heading = doc.xpath('//div[@class="summary-item-lede"]//h2[@class="summary-item-heading"]')
+            assert_true(len(heading) > 0)
+            assert_in(u"G-Cloud 7 is closed for applications",
+                      heading[0].xpath('text()')[0])
+            assert_in(u"You submitted 1 service for consideration",
+                      heading[0].xpath('../p[1]/text()')[0])
+            assert_true(len(heading[0].xpath('../p[1]/a[contains(@href, "suppliers/frameworks/g-cloud-7")]')) > 0)
+            assert_in(u"View your submitted application",
+                      heading[0].xpath('../p[1]/a/text()')[0])
 
 
 class TestSupplierDashboardLogin(BaseApplicationTest):

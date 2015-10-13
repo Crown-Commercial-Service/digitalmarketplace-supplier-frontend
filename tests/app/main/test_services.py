@@ -928,6 +928,10 @@ class TestShowDraftService(BaseApplicationTest):
         }
     }
 
+    complete_service = copy.deepcopy(draft_service)
+    complete_service['services']['status'] = 'submitted'
+    complete_service['services']['id'] = 2
+
     def setup(self):
         super(TestShowDraftService, self).setup()
         with self.app.test_client():
@@ -974,6 +978,38 @@ class TestShowDraftService(BaseApplicationTest):
 
         assert_not_in(u'<input type="submit" class="button-save"  value="Mark as complete" />',
                       res.get_data(as_text=True))
+
+    @mock.patch('app.main.views.services.count_unanswered_questions')
+    def test_shows_g7_message_if_pending_and_service_is_in_draft(self, count_unanswered, data_api_client):
+        data_api_client.get_framework_status.return_value = {'status': 'pending'}
+        data_api_client.get_draft_service.return_value = self.draft_service
+        count_unanswered.return_value = 3, 1
+        res = self.client.get('/suppliers/submission/services/1')
+
+        doc = html.fromstring(res.get_data(as_text=True))
+        message = doc.xpath('//aside[@class="temporary-message"]')
+
+        assert_true(len(message) > 0)
+        assert_in(u"This service was not submitted",
+                  message[0].xpath('h2[@class="temporary-message-heading"]/text()')[0])
+        assert_in(u"It wasn't marked as complete at the deadline.",
+                  message[0].xpath('p[@class="temporary-message-message"]/text()')[0])
+
+    @mock.patch('app.main.views.services.count_unanswered_questions')
+    def test_shows_g7_message_if_pending_and_service_is_complete(self, count_unanswered, data_api_client):
+        data_api_client.get_framework_status.return_value = {'status': 'pending'}
+        data_api_client.get_draft_service.return_value = self.complete_service
+        count_unanswered.return_value = 0, 1
+        res = self.client.get('/suppliers/submission/services/2')
+
+        doc = html.fromstring(res.get_data(as_text=True))
+        message = doc.xpath('//aside[@class="temporary-message"]')
+
+        assert_true(len(message) > 0)
+        assert_in(u"This service was submitted",
+                  message[0].xpath('h2[@class="temporary-message-heading"]/text()')[0])
+        assert_in(u"If your application is successful, it will be available on the Digital Marketplace when G-Cloud 7 goes live.",  # noqa
+                  message[0].xpath('p[@class="temporary-message-message"]/text()')[0])
 
 
 @mock.patch('app.main.views.services.data_api_client')
