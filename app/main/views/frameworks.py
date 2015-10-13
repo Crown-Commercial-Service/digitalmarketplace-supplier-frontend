@@ -138,6 +138,7 @@ def declaration(section_id):
         **main.config['BASE_TEMPLATE_DATA']
     ), 200
 
+
 @main.route('/frameworks/<framework_slug>/declaration', methods=['GET'])
 @main.route('/frameworks/<framework_slug>/declaration/<string:section_id>', methods=['GET', 'POST'])
 @login_required
