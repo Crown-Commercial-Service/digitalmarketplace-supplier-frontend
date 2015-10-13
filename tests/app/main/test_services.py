@@ -610,7 +610,9 @@ class TestEditDraftService(BaseApplicationTest):
         assert_equal(res.status_code, 302)
         assert_false(data_api_client.update_draft_service.called)
 
-    def test_S3_should_not_be_instantiated_if_there_are_no_files(self, data_api_client, s3):
+    def test_S3_should_not_be_called_if_there_are_no_files(self, data_api_client, s3):
+        uploader = mock.Mock()
+        s3.return_value = uploader
         data_api_client.get_framework_status.return_value = {'status': 'open'}
         data_api_client.get_draft_service.return_value = self.empty_draft
         res = self.client.post(
@@ -620,7 +622,7 @@ class TestEditDraftService(BaseApplicationTest):
             })
 
         assert_equal(res.status_code, 302)
-        assert not s3.called
+        assert not uploader.save.called
 
     def test_editing_readonly_section_is_not_allowed(self, data_api_client, s3):
         data_api_client.get_draft_service.return_value = self.empty_draft

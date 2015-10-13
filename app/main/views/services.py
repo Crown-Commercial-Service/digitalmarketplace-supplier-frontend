@@ -5,16 +5,17 @@ from flask import render_template, request, redirect, url_for, abort, flash, \
 from ... import data_api_client, flask_featureflags
 from ...main import main, existing_service_content, new_service_content
 from ..helpers.services import (
-    get_section_error_messages,
     is_service_modifiable, is_service_associated_with_supplier,
-    upload_draft_documents, get_service_attributes,
+    get_service_attributes,
     get_draft_document_url, count_unanswered_questions,
-    has_changes_to_save, get_next_section_name
+    get_next_section_name
 )
 from ..helpers.frameworks import get_declaration_status, g_cloud_7_is_open_or_404
 
 from dmutils.apiclient import APIError, HTTPError
 from dmutils.formats import format_service_price
+from dmutils import s3
+from dmutils.documents import upload_service_documents
 
 
 @main.route('/services')
@@ -152,7 +153,7 @@ def update_section(service_id, section_id):
             posted_data,
             current_user.email_address)
     except HTTPError as e:
-        errors_map = get_section_error_messages(new_service_content, e.message, service['lot'])
+        errors = section.get_error_messages(e.message, service['lot'])
         if not posted_data.get('serviceName', None):
             posted_data['serviceName'] = service.get('serviceName', '')
         return render_template(
@@ -160,7 +161,7 @@ def update_section(service_id, section_id):
             section=section,
             service_data=posted_data,
             service_id=service_id,
-            errors=errors_map,
+            errors=errors,
             **main.config['BASE_TEMPLATE_DATA']
         )
 
@@ -341,7 +342,9 @@ def service_submission_document(framework_slug, supplier_id, document_name):
     if current_user.supplier_id != supplier_id:
         abort(404)
 
-    s3_url = get_draft_document_url("{}/{}/{}".format(framework_slug, supplier_id, document_name))
+    uploader = s3.S3(current_app.config['DM_G7_DRAFT_DOCUMENTS_BUCKET'])
+    s3_url = get_draft_document_url(uploader,
+                                    "{}/{}/{}".format(framework_slug, supplier_id, document_name))
     if not s3_url:
         abort(404)
 
@@ -435,14 +438,19 @@ def update_section_submission(service_id, section_id):
 
     errors = None
     update_data = section.get_data(request.form)
-    uploaded_documents, document_errors = upload_draft_documents(draft, request.files, section)
+
+    uploader = s3.S3(current_app.config['DM_G7_DRAFT_DOCUMENTS_BUCKET'])
+    documents_url = url_for('.dashboard', _external=True) + '/submission/documents/'
+    uploaded_documents, document_errors = upload_service_documents(
+        uploader, documents_url, draft, request.files, section,
+        public=False)
 
     if document_errors:
-        errors = get_section_error_messages(new_service_content, document_errors, draft['lot'])
+        errors = section.get_error_messages(document_errors, draft['lot'])
     else:
         update_data.update(uploaded_documents)
 
-    if not errors and has_changes_to_save(section, draft, update_data):
+    if not errors and section.has_changes_to_save(draft, update_data):
         try:
             data_api_client.update_draft_service(
                 service_id,
@@ -452,7 +460,7 @@ def update_section_submission(service_id, section_id):
             )
         except HTTPError as e:
             update_data = section.unformat_data(update_data)
-            errors = get_section_error_messages(new_service_content, e.message, draft['lot'])
+            errors = section.get_error_messages(e.message, draft['lot'])
 
     if errors:
         if not update_data.get('serviceName', None):
