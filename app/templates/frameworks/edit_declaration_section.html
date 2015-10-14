@@ -47,21 +47,19 @@
 
     <div class="grid-row">
         <div class="column-two-thirds">
-            {% set question_index = [first_question_index] %}
-              {% with
-                heading = section.name,
-                smaller = true
-              %}
-                {% include 'toolkit/page-heading.html' %}
-              {% endwith %}
-              {% for question in section.questions %}
-                {% set _ = question_index.append(question_index.pop() + 1) %}
-                {% if errors and errors[question.id] %}
-                  {{ forms[question.type](question, service_data, errors, question_number=question_index[0]) }}
-                {% else %}
-                  {{ forms[question.type](question, service_data, {}, question_number=question_index[0]) }}
-                {% endif %}
-              {% endfor %}
+            {% with
+              heading = section.name,
+              smaller = true
+            %}
+              {% include 'toolkit/page-heading.html' %}
+            {% endwith %}
+            {% for question in section.questions %}
+              {% if errors and errors[question.id] %}
+                {{ forms[question.type](question, service_data, errors, question_number=question.number) }}
+              {% else %}
+                {{ forms[question.type](question, service_data, {}, question_number=question.number) }}
+              {% endif %}
+            {% endfor %}
 
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
             {% if is_last_page %}
