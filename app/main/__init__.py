@@ -3,18 +3,10 @@ from dmutils.content_loader import ContentLoader
 
 main = Blueprint('main', __name__)
 
-existing_service_content = ContentLoader(
-    'app/content/frameworks/g-cloud-6/manifests/edit_service.yml',
-    'app/content/frameworks/g-cloud-6/questions/services/'
-)
-new_service_content = ContentLoader(
-    'app/content/frameworks/g-cloud-7/manifests/edit_submission.yml',
-    'app/content/frameworks/g-cloud-7/questions/services/'
-)
-declaration_content = ContentLoader(
-    'app/content/frameworks/g-cloud-7/manifests/declaration.yml',
-    'app/content/frameworks/g-cloud-7/questions/declaration/'
-)
+content_loader = ContentLoader('app/content')
+content_loader.load_manifest('g-cloud-6', 'services', 'edit_service')
+content_loader.load_manifest('g-cloud-7', 'services', 'edit_submission')
+content_loader.load_manifest('g-cloud-7', 'declaration', 'declaration')
 
 
 @main.after_request

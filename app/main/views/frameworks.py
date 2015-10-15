@@ -12,7 +12,7 @@ from dmutils.formats import format_service_price
 from dmutils import s3
 
 from ... import data_api_client
-from ...main import main, declaration_content, new_service_content
+from ...main import main, content_loader
 from ..helpers import hash_email
 from ..helpers.frameworks import get_error_messages_for_page, get_first_question_index, \
     get_error_messages, get_declaration_status, get_last_modified_from_first_matching_file, \
@@ -79,7 +79,7 @@ def framework_services():
 
     for draft in itertools.chain(drafts, complete_drafts):
         draft['priceString'] = format_service_price(draft)
-        content = new_service_content.get_builder().filter(draft)
+        content = content_loader.get_builder('g-cloud-7', 'edit_submission').filter(draft)
         sections = get_service_attributes(draft, content)
 
         unanswered_required, unanswered_optional = count_unanswered_questions(sections)
@@ -106,7 +106,7 @@ def framework_supplier_declaration(section_id):
     g_cloud_7_is_open_or_404(data_api_client)
 
     template_data = main.config['BASE_TEMPLATE_DATA']
-    content = declaration_content.get_builder()
+    content = content_loader.get_builder('g-cloud-7', 'declaration')
     status_code = 200
 
     section = content.get_section(section_id)

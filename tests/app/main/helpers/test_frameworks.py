@@ -2,7 +2,7 @@
 from nose.tools import assert_equal
 
 from app.main.helpers.frameworks import get_all_errors
-from app.main import declaration_content
+from app.main import content_loader
 
 
 FULL_G7_SUBMISSION = {
@@ -83,7 +83,7 @@ FULL_G7_SUBMISSION = {
 
 
 def test_error_if_required_field_is_missing():
-    content = declaration_content.get_builder()
+    content = content_loader.get_builder('g-cloud-7', 'declaration')
     submission = FULL_G7_SUBMISSION.copy()
     del submission['SQ3-1i-i']
 
@@ -91,7 +91,7 @@ def test_error_if_required_field_is_missing():
 
 
 def test_error_if_required_text_field_is_empty():
-    content = declaration_content.get_builder()
+    content = content_loader.get_builder('g-cloud-7', 'declaration')
     submission = FULL_G7_SUBMISSION.copy()
     submission['SQ1-2b'] = ""
 
@@ -99,7 +99,7 @@ def test_error_if_required_text_field_is_empty():
 
 
 def test_no_error_if_optional_field_is_missing():
-    content = declaration_content.get_builder()
+    content = content_loader.get_builder('g-cloud-7', 'declaration')
     submission = FULL_G7_SUBMISSION.copy()
     del submission['SQ1-1p-i']
 
@@ -107,7 +107,7 @@ def test_no_error_if_optional_field_is_missing():
 
 
 def test_trading_status_details_error_depends_on_trading_status():
-    content = declaration_content.get_builder()
+    content = content_loader.get_builder('g-cloud-7', 'declaration')
     submission = FULL_G7_SUBMISSION.copy()
     del submission['SQ1-1cii']
 
@@ -119,7 +119,7 @@ def test_trading_status_details_error_depends_on_trading_status():
 
 
 def test_trade_registers_details_error_depends_on_trade_registers():
-    content = declaration_content.get_builder()
+    content = content_loader.get_builder('g-cloud-7', 'declaration')
     submission = FULL_G7_SUBMISSION.copy()
     del submission['SQ1-1i-ii']
 
@@ -131,7 +131,7 @@ def test_trade_registers_details_error_depends_on_trade_registers():
 
 
 def test_licenced_details_error_depends_on_licenced():
-    content = declaration_content.get_builder()
+    content = content_loader.get_builder('g-cloud-7', 'declaration')
     submission = FULL_G7_SUBMISSION.copy()
     del submission['SQ1-1j-ii']
 
@@ -143,7 +143,7 @@ def test_licenced_details_error_depends_on_licenced():
 
 
 def test_no_error_if_no_tax_issues_and_no_details():
-    content = declaration_content.get_builder()
+    content = content_loader.get_builder('g-cloud-7', 'declaration')
     submission = FULL_G7_SUBMISSION.copy()
 
     submission['SQ4-1a'] = False
@@ -154,7 +154,7 @@ def test_no_error_if_no_tax_issues_and_no_details():
 
 
 def test_error_if_tax_issues_and_no_details():
-    content = declaration_content.get_builder()
+    content = content_loader.get_builder('g-cloud-7', 'declaration')
     submission = FULL_G7_SUBMISSION.copy()
 
     del submission['SQ4-1c']
@@ -169,7 +169,7 @@ def test_error_if_tax_issues_and_no_details():
 
 
 def test_error_if_mitigation_factors_not_provided_when_required():
-    content = declaration_content.get_builder()
+    content = content_loader.get_builder('g-cloud-7', 'declaration')
     submission = FULL_G7_SUBMISSION.copy()
 
     del submission['SQ3-1k']
@@ -188,7 +188,7 @@ def test_error_if_mitigation_factors_not_provided_when_required():
 
 
 def test_mitigation_factors_not_required():
-    content = declaration_content.get_builder()
+    content = content_loader.get_builder('g-cloud-7', 'declaration')
     submission = FULL_G7_SUBMISSION.copy()
 
     del submission['SQ3-1k']
@@ -203,7 +203,7 @@ def test_mitigation_factors_not_required():
 
 
 def test_fields_only_relevant_to_non_uk():
-    content = declaration_content.get_builder()
+    content = content_loader.get_builder('g-cloud-7', 'declaration')
     submission = FULL_G7_SUBMISSION.copy()
 
     submission['SQ5-2a'] = False
@@ -213,7 +213,7 @@ def test_fields_only_relevant_to_non_uk():
 
 
 def test_invalid_email_addresses_cause_errors():
-    content = declaration_content.get_builder()
+    content = content_loader.get_builder('g-cloud-7', 'declaration')
     submission = FULL_G7_SUBMISSION.copy()
 
     submission['SQ1-1o'] = '@invalid.com'
@@ -233,7 +233,7 @@ def test_character_limit_errors():
         ("SQ1-1i-ii", 5000),
         ("SQ3-1k", 5000),
     ]
-    content = declaration_content.get_builder()
+    content = content_loader.get_builder('g-cloud-7', 'declaration')
     submission = FULL_G7_SUBMISSION.copy()
 
     for field, limit in cases:
