@@ -3,7 +3,7 @@ from flask import render_template, request, redirect, url_for, abort, flash, \
     current_app
 
 from ... import data_api_client, flask_featureflags
-from ...main import main, existing_service_content, new_service_content
+from ...main import main, content_loader
 from ..helpers.services import (
     is_service_modifiable, is_service_associated_with_supplier,
     get_service_attributes,
@@ -114,7 +114,7 @@ def edit_section(service_id, section_id):
     if not is_service_associated_with_supplier(service):
         abort(404)
 
-    content = existing_service_content.get_builder().filter(service)
+    content = content_loader.get_builder('g-cloud-6', 'edit_service').filter(service)
     section = content.get_section(section_id)
     if section is None or not section.editable:
         abort(404)
@@ -140,7 +140,7 @@ def update_section(service_id, section_id):
     if not is_service_associated_with_supplier(service):
         abort(404)
 
-    content = existing_service_content.get_builder().filter(service)
+    content = content_loader.get_builder('g-cloud-6', 'edit_service').filter(service)
     section = content.get_section(section_id)
     if section is None or not section.editable:
         abort(404)
@@ -181,7 +181,7 @@ def start_new_draft_service():
     g_cloud_7_is_open_or_404(data_api_client)
     template_data = main.config['BASE_TEMPLATE_DATA']
 
-    question = new_service_content.get_question('lot')
+    question = content_loader.get_builder('g-cloud-7', 'edit_submission').get_question('lot')
     section = {
         "name": 'Create new service',
         "questions": [question]
@@ -207,7 +207,7 @@ def create_new_draft_service():
     lot = request.form.get('lot', None)
 
     if not lot:
-        question = new_service_content.get_question('lot')
+        question = content_loader.get_builder('g-cloud-7', 'edit_submission').get_question('lot')
         section = {
             "name": 'Create new service',
             "questions": [question]
@@ -242,9 +242,9 @@ def create_new_draft_service():
         abort(e.status_code)
 
     draft_service = draft_service.get('services')
-    content = new_service_content.get_builder().filter(
-        {'lot': draft_service.get('lot')}
-    )
+    content = content_loader.get_builder('g-cloud-7', 'edit_submission').filter({
+        'lot': draft_service.get('lot')
+    })
 
     return redirect(
         url_for(
@@ -365,7 +365,7 @@ def view_service_submission(service_id):
         abort(404)
 
     draft['priceString'] = format_service_price(draft)
-    content = new_service_content.get_builder().filter(draft)
+    content = content_loader.get_builder('g-cloud-7', 'edit_submission').filter(draft)
 
     sections = get_service_attributes(draft, content)
 
@@ -400,7 +400,7 @@ def edit_service_submission(service_id, section_id):
     if not is_service_associated_with_supplier(draft):
         abort(404)
 
-    content = new_service_content.get_builder().filter(draft)
+    content = content_loader.get_builder('g-cloud-7', 'edit_submission').filter(draft)
     section = content.get_section(section_id)
     if section is None or not section.editable:
         abort(404)
@@ -431,7 +431,7 @@ def update_section_submission(service_id, section_id):
     if not is_service_associated_with_supplier(draft):
         abort(404)
 
-    content = new_service_content.get_builder().filter(draft)
+    content = content_loader.get_builder('g-cloud-7', 'edit_submission').filter(draft)
     section = content.get_section(section_id)
     if section is None or not section.editable:
         abort(404)
@@ -490,7 +490,7 @@ def _update_service_status(service, error_message=None):
     template_data = main.config['BASE_TEMPLATE_DATA']
     status_code = 400 if error_message else 200
 
-    content = existing_service_content.get_builder().filter(service)
+    content = content_loader.get_builder('g-cloud-6', 'edit_service').filter(service)
 
     question = {
         'question': 'Choose service status',

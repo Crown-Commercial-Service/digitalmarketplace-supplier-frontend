@@ -13,7 +13,7 @@ from freezegun import freeze_time
 from nose.tools import assert_equal, assert_true, assert_false, \
     assert_in, assert_not_in
 from tests.app.helpers import BaseApplicationTest
-from app.main import new_service_content
+from app.main import content_loader
 
 
 class TestListServices(BaseApplicationTest):
@@ -408,7 +408,7 @@ class TestCreateDraftService(BaseApplicationTest):
         assert_equal(res.status_code, 200)
         assert_in("Create new service", res.get_data(as_text=True))
 
-        lots = new_service_content.get_question('lot')
+        lots = content_loader.get_builder('g-cloud-7', 'edit_submission').get_question('lot')
 
         for lot in lots['options']:
             assert_in(lot['label'], res.get_data(as_text=True))
