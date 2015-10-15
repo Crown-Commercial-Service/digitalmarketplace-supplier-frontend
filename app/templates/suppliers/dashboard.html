@@ -34,7 +34,7 @@
         with
         items = [{
           "title": "Continue your G-Cloud 7 application",
-          "link": url_for(".framework_dashboard"),
+          "link": url_for(".framework_dashboard", framework_slug='g-cloud-7'),
           "body": "Make your supplier declaration, add services and view G-Cloud 7 updates and clarification questions.",
           "subtext": "Deadline for submissions: {}".format(deadline)
         }]
@@ -46,7 +46,7 @@
         with
         items = [{
           "title": "Register your interest in becoming a G-Cloud 7 supplier",
-          "link": url_for(".framework_dashboard"),
+          "link": url_for(".framework_dashboard", framework_slug='g-cloud-7'),
           "body": "Read about G-Cloud 7, receive email updates and start the application process.",
           "subtext": "Deadline for submissions: {}".format(deadline)
         }]
@@ -60,7 +60,7 @@
             <h2 class="summary-item-heading">G-Cloud 7 is closed for applications</h2>
             <p>
               You submitted {{ g7_complete }} {{ 'service' if g7_complete == 1 else 'services' }} for consideration.
-              <a href="{{ url_for('.framework_dashboard') }}">View your submitted application</a>
+              <a href="{{ url_for('.framework_dashboard', framework_slug='g-cloud-7') }}">View your submitted application</a>
             </p>
           </div>
         </div>
@@ -74,7 +74,7 @@
           You didn’t submit an application.
         </p>
         <p class="temporary-message-message">
-          <a href="{{ url_for('.framework_dashboard') }}">View G-Cloud 7 information</a> 
+          <a href="{{ url_for('.framework_dashboard', framework_slug='g-cloud-7') }}">View G-Cloud 7 information</a> 
         </p>
       </aside>
     {% elif g7_status == 'pending' %}

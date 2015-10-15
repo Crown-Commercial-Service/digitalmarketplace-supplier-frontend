@@ -92,6 +92,16 @@ class BaseApplicationTest(object):
             ]
         }
 
+    @staticmethod
+    def framework(status='open', name='G-Cloud 7', slug='g-cloud-7'):
+        return {
+            'frameworks': {
+                'status': status,
+                'name': name,
+                'slug': slug
+            }
+        }
+
     def teardown_login(self):
         if self.get_user_patch is not None:
             self.get_user_patch.stop()

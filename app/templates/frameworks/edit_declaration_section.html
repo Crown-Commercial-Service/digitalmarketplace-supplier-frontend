@@ -15,8 +15,8 @@
         "label": current_user.supplier_name
       },
       {
-        "link": url_for(".framework_dashboard"),
-        "label": "Apply to G-Cloud 7"
+        "link": url_for(".framework_dashboard", framework_slug=framework.slug),
+        "label": "Apply to " + framework.name
       }
     ]
   %}
@@ -83,7 +83,7 @@
               {% endwith %}
             {% endif %}
 
-            <a href="{{ url_for('.framework_dashboard') }}">Return to G-Cloud 7 application</a>
+            <a href="{{ url_for('.framework_dashboard', framework_slug=framework.slug) }}">Return to G-Cloud 7 application</a>
           </div>
       </div>
   </form>

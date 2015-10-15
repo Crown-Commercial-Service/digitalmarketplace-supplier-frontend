@@ -26,21 +26,24 @@ from ..helpers.services import (
 CLARIFICATION_QUESTION_NAME = 'clarification_question'
 
 
-@main.route('/frameworks/g-cloud-7', methods=['GET'])
+@main.route('/frameworks/<framework_slug>', methods=['GET'])
 @login_required
 @flask_featureflags.is_active_feature('GCLOUD7_OPEN')
-def framework_dashboard():
+def framework_dashboard(framework_slug):
     template_data = main.config['BASE_TEMPLATE_DATA']
+    # TODO add a test for 404 if framework doesn't exist
+    framework = data_api_client.get_framework(framework_slug)['frameworks']
 
     try:
-        register_interest_in_framework(data_api_client, 'g-cloud-7')
+        register_interest_in_framework(data_api_client, framework_slug)
     except APIError as e:
         abort(e.status_code)
 
-    drafts, complete_drafts = get_drafts(data_api_client, current_user.supplier_id, 'g-cloud-7')
-    declaration_status = get_declaration_status(data_api_client)
+    drafts, complete_drafts = get_drafts(data_api_client, current_user.supplier_id, framework_slug)
+    declaration_status = get_declaration_status(data_api_client, framework_slug)
     application_made = len(complete_drafts) > 0 and declaration_status == 'complete'
 
+    # TODO: change to new format
     key_list = s3.S3(current_app.config['DM_G7_DRAFT_DOCUMENTS_BUCKET']).list('g-cloud-7-')
     # last_modified files will be first
     key_list.reverse()
@@ -53,9 +56,10 @@ def framework_dashboard():
         },
         declaration_status=declaration_status,
         deadline=current_app.config['G7_CLOSING_DATE'],
-        g7_status=data_api_client.get_framework_status('g-cloud-7').get('status', None),
-        g7_application_made=application_made,
+        framework=framework,
+        application_made=application_made,
         last_modified={
+            # TODO: s3 stuff above
             'supplier_pack': get_last_modified_from_first_matching_file(key_list, 'g-cloud-7-supplier-pack.zip'),
             'supplier_updates': get_last_modified_from_first_matching_file(key_list, 'g-cloud-7-updates/')
         },
@@ -64,22 +68,23 @@ def framework_dashboard():
     ), 200
 
 
-@main.route('/frameworks/g-cloud-7/services', methods=['GET'])
+@main.route('/frameworks/<framework_slug>/services', methods=['GET'])
 @login_required
 @flask_featureflags.is_active_feature('GCLOUD7_OPEN')
-def framework_services():
+def framework_services(framework_slug):
     template_data = main.config['BASE_TEMPLATE_DATA']
+    # TODO add a test for 404 if framework doesn't exist
+    framework = data_api_client.get_framework(framework_slug)['frameworks']
 
-    drafts, complete_drafts = get_drafts(data_api_client, current_user.supplier_id, 'g-cloud-7')
-    g7_status = data_api_client.get_framework_status('g-cloud-7').get('status', None)
-    declaration_status = get_declaration_status(data_api_client)
+    drafts, complete_drafts = get_drafts(data_api_client, current_user.supplier_id, framework_slug)
+    declaration_status = get_declaration_status(data_api_client, framework_slug)
     application_made = len(complete_drafts) > 0 and declaration_status == 'complete'
-    if g7_status == 'pending' and not application_made:
+    if framework['status'] == 'pending' and not application_made:
         abort(404)
 
     for draft in itertools.chain(drafts, complete_drafts):
         draft['priceString'] = format_service_price(draft)
-        content = content_loader.get_builder('g-cloud-7', 'edit_submission').filter(draft)
+        content = content_loader.get_builder(framework_slug, 'edit_submission').filter(draft)
         sections = get_service_attributes(draft, content)
 
         unanswered_required, unanswered_optional = count_unanswered_questions(sections)
@@ -93,21 +98,30 @@ def framework_services():
         complete_drafts=list(reversed(complete_drafts)),
         drafts=list(reversed(drafts)),
         declaration_status=declaration_status,
-        g7_status=g7_status,
+        framework=framework,
         **template_data
     ), 200
 
 
-@main.route('/frameworks/g-cloud-7/declaration/<string:section_id>',
-            methods=['GET', 'POST'])
+@main.route('/frameworks/<framework_slug>/declaration', methods=['GET'])
+@main.route('/frameworks/<framework_slug>/declaration/<string:section_id>', methods=['GET', 'POST'])
 @login_required
 @flask_featureflags.is_active_feature('GCLOUD7_OPEN')
-def framework_supplier_declaration(section_id):
-    g_cloud_7_is_open_or_404(data_api_client)
+def framework_supplier_declaration(framework_slug, section_id=None):
+    # TODO add a test for 404 if framework doesn't exist
+    framework = data_api_client.get_framework(framework_slug)['frameworks']
+    if framework['status'] != 'open':
+        abort(404)
 
     template_data = main.config['BASE_TEMPLATE_DATA']
-    content = content_loader.get_builder('g-cloud-7', 'declaration')
+    content = content_loader.get_builder(framework_slug, 'declaration')
     status_code = 200
+
+    if section_id is None:
+        return redirect(
+            url_for('.framework_supplier_declaration',
+                    framework_slug=framework_slug,
+                    section_id=content.get_next_editable_section_id()))
 
     section = content.get_section(section_id)
     if section is None or not section.editable:
@@ -116,7 +130,7 @@ def framework_supplier_declaration(section_id):
     is_last_page = section_id == content.sections[-1]['id']
 
     try:
-        response = data_api_client.get_supplier_declaration(current_user.supplier_id, 'g-cloud-7')
+        response = data_api_client.get_supplier_declaration(current_user.supplier_id, framework_slug)
         latest_answers = response['declaration']
     except APIError as e:
         if e.status_code != 404:
@@ -137,16 +151,22 @@ def framework_supplier_declaration(section_id):
             try:
                 data_api_client.set_supplier_declaration(
                     current_user.supplier_id,
-                    'g-cloud-7',
+                    framework_slug,
                     latest_answers,
                     current_user.email_address
                 )
 
                 next_section = content.get_next_editable_section_id(section_id)
                 if next_section:
-                    return redirect(url_for('.framework_supplier_declaration', section_id=next_section))
+                    return redirect(
+                        url_for('.framework_supplier_declaration',
+                                framework_slug=framework['slug'],
+                                section_id=next_section))
                 else:
-                    return redirect(url_for('.framework_dashboard', declaration_completed='true'))
+                    return redirect(
+                        url_for('.framework_dashboard',
+                                framework_slug=framework['slug'],
+                                declaration_completed='true'))
             except APIError as e:
                 abort(e.status_code)
     else:
@@ -155,6 +175,7 @@ def framework_supplier_declaration(section_id):
 
     return render_template(
         "frameworks/edit_declaration_section.html",
+        framework=framework,
         section=section,
         service_data=answers,
         is_last_page=is_last_page,
@@ -164,10 +185,10 @@ def framework_supplier_declaration(section_id):
     ), status_code
 
 
-@main.route('/frameworks/g-cloud-7/<path:filepath>', methods=['GET'])
+@main.route('/frameworks/<framework_slug>/<path:filepath>', methods=['GET'])
 @login_required
 @flask_featureflags.is_active_feature('GCLOUD7_OPEN')
-def download_supplier_file(filepath):
+def download_supplier_file(framework_slug, filepath):
     uploader = s3.S3(current_app.config['DM_G7_DRAFT_DOCUMENTS_BUCKET'])
     url = get_draft_document_url(uploader, filepath)
     if not url:
@@ -189,6 +210,7 @@ def framework_updates(error_message=None, default_textbox_value=None):
 
     file_list = s3.S3(current_app.config['DM_G7_DRAFT_DOCUMENTS_BUCKET']).list('g-cloud-7-updates/')
 
+    # TODO: move this into the template
     sections = [
         {
             'section': 'communications',
@@ -221,7 +243,6 @@ def framework_updates(error_message=None, default_textbox_value=None):
 @login_required
 @flask_featureflags.is_active_feature('GCLOUD7_OPEN')
 def framework_updates_email_clarification_question():
-
     # Stripped input should not empty
     clarification_question = request.form.get(CLARIFICATION_QUESTION_NAME, '').strip()
 

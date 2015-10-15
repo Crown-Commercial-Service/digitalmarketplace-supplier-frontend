@@ -34,7 +34,7 @@ def dashboard():
         abort(e.status_code)
 
     drafts, complete_drafts = get_drafts(data_api_client, current_user.supplier_id, 'g-cloud-7')
-    declaration_status = get_declaration_status(data_api_client)
+    declaration_status = get_declaration_status(data_api_client, 'g-cloud-7')
     application_made = len(complete_drafts) > 0 and declaration_status == 'complete'
     return render_template(
         "suppliers/dashboard.html",

@@ -171,17 +171,20 @@ def update_section(service_id, section_id):
 #  ####################  CREATING NEW DRAFT SERVICES ##########################
 
 
-@main.route('/submission/g-cloud-7/create', methods=['GET'])
+@main.route('/submission/<framework_slug>/create', methods=['GET'])
 @login_required
 @flask_featureflags.is_active_feature('GCLOUD7_OPEN')
-def start_new_draft_service():
+def start_new_draft_service(framework_slug):
     """
     Page to kick off creation of a new (G7) service.
     """
-    g_cloud_7_is_open_or_404(data_api_client)
+    # TODO add a test for 404 if framework doesn't exist
+    framework = data_api_client.get_framework(framework_slug)['frameworks']
+    if framework['status'] != 'open':
+        abort(404)
     template_data = main.config['BASE_TEMPLATE_DATA']
 
-    question = content_loader.get_builder('g-cloud-7', 'edit_submission').get_question('lot')
+    question = content_loader.get_builder(framework_slug, 'edit_submission').get_question('lot')
     section = {
         "name": 'Create new service',
         "questions": [question]
@@ -189,6 +192,7 @@ def start_new_draft_service():
 
     return render_template(
         "services/edit_submission_section.html",
+        framework=framework,
         question=question,
         service_data={},
         section=section,
@@ -196,18 +200,21 @@ def start_new_draft_service():
     ), 200
 
 
-@main.route('/submission/g-cloud-7/create', methods=['POST'])
+@main.route('/submission/<framework_slug>/create', methods=['POST'])
 @login_required
 @flask_featureflags.is_active_feature('GCLOUD7_OPEN')
-def create_new_draft_service():
+def create_new_draft_service(framework_slug):
     """
     Hits up the data API to create a new draft (G7) service.
     """
-    g_cloud_7_is_open_or_404(data_api_client)
+    # TODO add a test for 404 if framework doesn't exist
+    framework = data_api_client.get_framework(framework_slug)['frameworks']
+    if framework['status'] != 'open':
+        abort(404)
     lot = request.form.get('lot', None)
 
     if not lot:
-        question = content_loader.get_builder('g-cloud-7', 'edit_submission').get_question('lot')
+        question = content_loader.get_builder(framework_slug, 'edit_submission').get_question('lot')
         section = {
             "name": 'Create new service',
             "questions": [question]
@@ -223,6 +230,7 @@ def create_new_draft_service():
 
         return render_template(
             "services/edit_submission_section.html",
+            framework=framework,
             question=question,
             service_data={},
             section=section,
@@ -235,14 +243,14 @@ def create_new_draft_service():
 
     try:
         draft_service = data_api_client.create_new_draft_service(
-            'g-cloud-7', supplier_id, user, lot
+            framework_slug, supplier_id, user, lot
         )
 
     except APIError as e:
         abort(e.status_code)
 
     draft_service = draft_service.get('services')
-    content = content_loader.get_builder('g-cloud-7', 'edit_submission').filter({
+    content = content_loader.get_builder(framework_slug, 'edit_submission').filter({
         'lot': draft_service.get('lot')
     })
 
@@ -260,7 +268,9 @@ def create_new_draft_service():
 @login_required
 @flask_featureflags.is_active_feature('GCLOUD7_OPEN')
 def copy_draft_service(service_id):
-    g_cloud_7_is_open_or_404(data_api_client)
+    framework = data_api_client.get_framework('g-cloud-7')['frameworks']
+    if framework['status'] != 'open':
+        abort(404)
     draft = data_api_client.get_draft_service(service_id).get('services')
 
     if not is_service_associated_with_supplier(draft):
@@ -285,7 +295,9 @@ def copy_draft_service(service_id):
 @login_required
 @flask_featureflags.is_active_feature('GCLOUD7_OPEN')
 def complete_draft_service(service_id):
-    g_cloud_7_is_open_or_404(data_api_client)
+    framework = data_api_client.get_framework('g-cloud-7')['frameworks']
+    if framework['status'] != 'open':
+        abort(404)
     draft = data_api_client.get_draft_service(service_id).get('services')
 
     if not is_service_associated_with_supplier(draft):
@@ -303,6 +315,7 @@ def complete_draft_service(service_id):
     flash({'service_name': draft.get('serviceName')}, 'service_completed')
 
     return redirect(url_for(".framework_services",
+                    framework_slug=framework['slug'],
                     service_completed=service_id,
                     lot=draft['lot'].lower()))
 
@@ -311,7 +324,9 @@ def complete_draft_service(service_id):
 @login_required
 @flask_featureflags.is_active_feature('GCLOUD7_OPEN')
 def delete_draft_service(service_id):
-    g_cloud_7_is_open_or_404(data_api_client)
+    framework = data_api_client.get_framework('g-cloud-7')['frameworks']
+    if framework['status'] != 'open':
+        abort(404)
     draft = data_api_client.get_draft_service(service_id).get('services')
 
     if not is_service_associated_with_supplier(draft):
@@ -327,7 +342,7 @@ def delete_draft_service(service_id):
             abort(e.status_code)
 
         flash({'service_name': draft.get('serviceName')}, 'service_deleted')
-        return redirect(url_for(".framework_services"))
+        return redirect(url_for(".framework_services", framework_slug=framework['slug']))
     else:
         return redirect(url_for(".view_service_submission",
                                 service_id=service_id,
@@ -355,6 +370,7 @@ def service_submission_document(framework_slug, supplier_id, document_name):
 @login_required
 @flask_featureflags.is_active_feature('GCLOUD7_OPEN')
 def view_service_submission(service_id):
+    framework = data_api_client.get_framework('g-cloud-7')['frameworks']
     try:
         data = data_api_client.get_draft_service(service_id)
         draft, last_edit = data['services'], data['auditEvents']
@@ -381,8 +397,8 @@ def view_service_submission(service_id):
         unanswered_required=unanswered_required,
         unanswered_optional=unanswered_optional,
         delete_requested=delete_requested,
-        declaration_status=get_declaration_status(data_api_client),
-        g7_status=data_api_client.get_framework_status('g-cloud-7').get('status', None),
+        declaration_status=get_declaration_status(data_api_client, 'g-cloud-7'),
+        g7_status=framework.get('status'),
         deadline=current_app.config['G7_CLOSING_DATE'],
         **main.config['BASE_TEMPLATE_DATA']), 200
 
@@ -391,7 +407,9 @@ def view_service_submission(service_id):
 @login_required
 @flask_featureflags.is_active_feature('GCLOUD7_OPEN')
 def edit_service_submission(service_id, section_id):
-    g_cloud_7_is_open_or_404(data_api_client)
+    framework = data_api_client.get_framework('g-cloud-7')['frameworks']
+    if framework['status'] != 'open':
+        abort(404)
     try:
         draft = data_api_client.get_draft_service(service_id)['services']
     except HTTPError as e:
@@ -410,6 +428,7 @@ def edit_service_submission(service_id, section_id):
     return render_template(
         "services/edit_submission_section.html",
         section=section,
+        framework=framework,
         next_section_name=get_next_section_name(content, section_id),
         service_data=draft,
         service_id=service_id,
@@ -422,7 +441,9 @@ def edit_service_submission(service_id, section_id):
 @login_required
 @flask_featureflags.is_active_feature('GCLOUD7_OPEN')
 def update_section_submission(service_id, section_id):
-    g_cloud_7_is_open_or_404(data_api_client)
+    framework = data_api_client.get_framework('g-cloud-7')['frameworks']
+    if framework['status'] != 'open':
+        abort(404)
     try:
         draft = data_api_client.get_draft_service(service_id)['services']
     except HTTPError as e:
@@ -467,6 +488,7 @@ def update_section_submission(service_id, section_id):
             update_data['serviceName'] = draft.get('serviceName', '')
         return render_template(
             "services/edit_submission_section.html",
+            framework=framework,
             section=section,
             next_section_name=get_next_section_name(content, section_id),
             service_data=update_data,

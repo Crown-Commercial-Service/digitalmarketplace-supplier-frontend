@@ -1,6 +1,6 @@
 {% extends "_base_page.html" %}
 
-{% block page_title %}Apply to G-Cloud 7 – Digital Marketplace{% endblock %}
+{% block page_title %}Apply to {{ framework.name }} – Digital Marketplace{% endblock %}
 
 {% block breadcrumb %}
   {%
@@ -20,9 +20,9 @@
 {% endblock %}
 
 {% block main_content %}
-  {% if g7_status == 'open' %}
+  {% if framework.status == 'open' %}
     {% with
-       heading = "Apply to G-Cloud 7",
+       heading = "Apply to " + framework.name,
        smaller = True,
        with_breadcrumb = True
     %}
@@ -30,24 +30,24 @@
     {% endwith %}
   {% else %}
     {% with
-      heading = "Your G-Cloud 7 application",
+      heading = "Your " + framework.name + " application",
       smaller = True,
       with_breadcrumb = True
     %}
       {% include "toolkit/page-heading.html" %}
     {% endwith %}
   {% endif %}
-  {% if g7_status == 'open' %}
+  {% if framework.status == 'open' %}
   <aside role="complementary" class="framework-application-status" aria-label="G-Cloud status">
     Deadline <strong>{{ deadline|safe }}</strong>
   </aside>
   <nav role="navigation">
-  {% elif g7_status == 'pending' %}
+  {% elif framework.status == 'pending' %}
     <div class="summary-item-lede">
       <div class="grid-row">
         <div class="column-two-thirds">
-          <h2 class="summary-item-heading">G-Cloud 7 is closed for applications</h2>
-          {% if g7_application_made %}
+          <h2 class="summary-item-heading">{{ framework.name }} is closed for applications</h2>
+          {% if application_made %}
             <p>You made your supplier declaration and submitted {{ counts.complete }} {{ 'service' if counts.complete == 1 else 'services' }} for consideration.</p>
             <p>A letter informing you whether your application was successful or not will be posted on your G-Cloud 7 updates page by Monday, 9 November 2015.</p>
           {% else %}
@@ -59,14 +59,14 @@
   <nav role="navigation" class="framework-application-reference">
   {% endif %}
     <ul class="browse-list">
-      {% if g7_status == 'open' %}
+      {% if framework.status == 'open' %}
         <li class="browse-list-item framework-application-section">
           <div class="grid-row">
             <div class="column-two-thirds">
               {% if not counts.draft %}
                 <div class="framework-section-validation-bar-good">
               {% endif %}
-                <a class="browse-list-item-link" href="{{ url_for('.framework_services') }}">
+                <a class="browse-list-item-link" href="{{ url_for('.framework_services', framework_slug=framework.slug) }}">
                   <span>
                     Add, edit and delete services
                   </span>
@@ -122,11 +122,11 @@
             </div>
           </div>
         </li>
-      {% elif g7_status == 'pending' and g7_application_made %}
+      {% elif framework.status == 'pending' and application_made %}
         <li class="browse-list-item framework-application-section">
           <div class="grid-row">
             <div class="column-two-thirds">
-              <a class="browse-list-item-link" href="{{ url_for('.framework_services') }}">
+              <a class="browse-list-item-link" href="{{ url_for('.framework_services', framework_slug=framework.slug) }}">
                 <span>
                   View services
                 </span>
@@ -144,14 +144,14 @@
         </li>
       {% endif %}
 
-      {% if g7_status == 'open' %}
+      {% if framework.status == 'open' %}
         <li class="browse-list-item framework-application-section">
           {% if declaration_status != 'complete' and counts.complete %}
             <div class="framework-section-validation-bar">
           {% endif %}
           <div class="grid-row">
             <div class="column-two-thirds">
-              <a class="browse-list-item-link" href="{{ url_for('.framework_supplier_declaration', section_id='g_cloud_7_essentials') }}">
+              <a class="browse-list-item-link" href="{{ url_for('.framework_supplier_declaration', framework_slug=framework.slug, section_id='g_cloud_7_essentials') }}">
                 {% if declaration_status == 'unstarted' %}
                   <span>Make supplier declaration</span>
                 {% else %}
@@ -203,14 +203,14 @@
         </li>
       {% endif %}
       
-      {% if g7_status == 'open' %}
+      {% if framework.status == 'open' %}
         <li class="browse-list-item framework-application-section">
           <div class="grid-row">
             <div class="column-two-thirds">
-              <h2>About G-Cloud 7</h2>
+              <h2>About {{ framework.name }}</h2>
               <ul>
                 <li>
-                  <a href="{{ url_for('.download_supplier_file', filepath='g-cloud-7-supplier-pack.zip') }}"><span>Download guidance and legal documentation (.zip)</span></a>
+                  <a href="{{ url_for('.download_supplier_file', framework_slug=framework.slug, filepath='g-cloud-7-supplier-pack.zip') }}"><span>Download guidance and legal documentation (.zip)</span></a>
                   {% if last_modified.supplier_pack %}
                     <div class="hint">Last updated <time datetime="{{ last_modified.supplier_pack }}">{{ last_modified.supplier_pack|dateformat }}</time></div>
                   {% endif %}
@@ -236,7 +236,7 @@
         <li class="browse-list-item framework-application-section">
           <div class="grid-row">
             <div class="column-two-thirds">
-              <a href="{{ url_for('.download_supplier_file', filepath='g-cloud-7-supplier-pack.zip') }}"><span>Download guidance and legal documentation (.zip)</span></a>
+              <a href="{{ url_for('.download_supplier_file', filepath='g-cloud-7-supplier-pack.zip', framework_slug=framework.slug) }}"><span>Download guidance and legal documentation (.zip)</span></a>
               {% if last_modified.supplier_pack %}
                 <div class="hint">Last updated <time datetime="{{ last_modified.supplier_pack }}">{{ last_modified.supplier_pack|dateformat }}</time></div>
               {% endif %}
