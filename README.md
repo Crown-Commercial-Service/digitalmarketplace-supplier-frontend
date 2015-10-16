@@ -35,7 +35,7 @@ source ./venv/bin/activate
 
 Install new Python dependencies with pip
 
-```pip install -r requirements.txt```
+```pip install -r requirements_for_test.txt```
 
 
 ## Front-end
