@@ -494,20 +494,20 @@ class TestCopyDraft(BaseApplicationTest):
         data_api_client.get_framework.return_value = self.framework(status='open')
         data_api_client.get_draft_service.return_value = {'services': self.draft}
 
-        res = self.client.post('/suppliers/submission/services/1/copy')
+        res = self.client.post('/suppliers/frameworks/g-cloud-7/submissions/1/copy')
         assert_equal(res.status_code, 302)
 
     def test_copy_draft_checks_supplier_id(self, data_api_client):
         self.draft['supplierId'] = 2
         data_api_client.get_draft_service.return_value = {'services': self.draft}
 
-        res = self.client.post('/suppliers/submission/services/1/copy')
+        res = self.client.post('/suppliers/frameworks/g-cloud-7/submissions/1/copy')
         assert_equal(res.status_code, 404)
 
     def test_cannot_copy_draft_if_not_open(self, data_api_client):
         data_api_client.get_framework.return_value = self.framework(status='other')
 
-        res = self.client.post('/suppliers/submission/services/1/copy')
+        res = self.client.post('/suppliers/frameworks/g-cloud-7/submissions/1/copy')
         assert_equal(res.status_code, 404)
 
 

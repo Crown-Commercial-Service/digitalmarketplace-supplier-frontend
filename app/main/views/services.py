@@ -264,11 +264,11 @@ def create_new_draft_service(framework_slug):
     )
 
 
-@main.route('/submission/services/<string:service_id>/copy', methods=['POST'])
+@main.route('/frameworks/<framework_slug>/submissions/<service_id>/copy', methods=['POST'])
 @login_required
 @flask_featureflags.is_active_feature('GCLOUD7_OPEN')
-def copy_draft_service(service_id):
-    framework = data_api_client.get_framework('g-cloud-7')['frameworks']
+def copy_draft_service(framework_slug, service_id):
+    framework = data_api_client.get_framework(framework_slug)['frameworks']
     if framework['status'] != 'open':
         abort(404)
     draft = data_api_client.get_draft_service(service_id).get('services')
