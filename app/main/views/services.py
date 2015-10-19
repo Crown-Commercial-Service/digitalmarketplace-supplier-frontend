@@ -350,7 +350,7 @@ def delete_draft_service(service_id):
                         )
 
 
-@main.route('/submission/documents/<string:framework_slug>/<int:supplier_id>/<string:document_name>', methods=['GET'])
+@main.route('/frameworks/<framework_slug>/submissions/documents/<int:supplier_id>/<document_name>', methods=['GET'])
 @login_required
 @flask_featureflags.is_active_feature('GCLOUD7_OPEN')
 def service_submission_document(framework_slug, supplier_id, document_name):

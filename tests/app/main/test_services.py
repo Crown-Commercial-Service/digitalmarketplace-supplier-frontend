@@ -1101,7 +1101,7 @@ class TestSubmissionDocuments(BaseApplicationTest):
         s3.return_value.get_signed_url.return_value = 'http://example.com/document.pdf'
 
         res = self.client.get(
-            '/suppliers/submission/documents/g-cloud-7/1234/document.pdf'
+            '/suppliers/frameworks/g-cloud-7/submissions/documents/1234/document.pdf'
         )
 
         assert_equal(res.status_code, 302)
@@ -1111,14 +1111,14 @@ class TestSubmissionDocuments(BaseApplicationTest):
         s3.return_value.get_signed_url.return_value = None
 
         res = self.client.get(
-            '/suppliers/submission/documents/g-cloud-7/1234/document.pdf'
+            '/suppliers/frameworks/g-cloud-7/submissions/documents/1234/document.pdf'
         )
 
         assert_equal(res.status_code, 404)
 
     def test_document_url_not_matching_user_supplier(self, s3):
         res = self.client.get(
-            '/suppliers/submission/documents/g-cloud-7/999/document.pdf'
+            '/suppliers/frameworks/g-cloud-7/submissions/documents/999/document.pdf'
         )
 
         assert_equal(res.status_code, 404)
