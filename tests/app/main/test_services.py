@@ -404,7 +404,7 @@ class TestCreateDraftService(BaseApplicationTest):
             self.login()
         data_api_client.get_framework.return_value = self.framework(status='open')
 
-        res = self.client.get('/suppliers/submission/g-cloud-7/create')
+        res = self.client.get('/suppliers/frameworks/g-cloud-7/submissions/create')
         assert_equal(res.status_code, 200)
         assert_in("Create new service", res.get_data(as_text=True))
 
@@ -420,7 +420,7 @@ class TestCreateDraftService(BaseApplicationTest):
             self.login()
         data_api_client.get_framework.return_value = self.framework(status='other')
 
-        res = self.client.get('/suppliers/submission/g-cloud-7/create')
+        res = self.client.get('/suppliers/frameworks/g-cloud-7/submissions/create')
         assert_equal(res.status_code, 404)
 
     def _test_post_create_draft_service(self, if_error_expected, data_api_client):
@@ -442,7 +442,7 @@ class TestCreateDraftService(BaseApplicationTest):
         }
 
         res = self.client.post(
-            '/suppliers/submission/g-cloud-7/create'
+            '/suppliers/frameworks/g-cloud-7/submissions/create'
         )
 
         if if_error_expected:

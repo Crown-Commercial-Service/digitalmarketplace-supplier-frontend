@@ -171,7 +171,7 @@ def update_section(service_id, section_id):
 #  ####################  CREATING NEW DRAFT SERVICES ##########################
 
 
-@main.route('/submission/<framework_slug>/create', methods=['GET'])
+@main.route('/frameworks/<framework_slug>/submissions/create', methods=['GET'])
 @login_required
 @flask_featureflags.is_active_feature('GCLOUD7_OPEN')
 def start_new_draft_service(framework_slug):
@@ -200,7 +200,7 @@ def start_new_draft_service(framework_slug):
     ), 200
 
 
-@main.route('/submission/<framework_slug>/create', methods=['POST'])
+@main.route('/frameworks/<framework_slug>/submissions/create', methods=['POST'])
 @login_required
 @flask_featureflags.is_active_feature('GCLOUD7_OPEN')
 def create_new_draft_service(framework_slug):
