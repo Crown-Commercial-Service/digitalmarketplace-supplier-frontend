@@ -804,7 +804,7 @@ class TestEditDraftService(BaseApplicationTest):
             data={})
 
         assert_equal(302, res.status_code)
-        assert_equal('http://localhost/suppliers/submission/services/1',
+        assert_equal('http://localhost/suppliers/frameworks/g-cloud-7/submissions/1',
                      res.headers['Location'])
 
     def test_update_redirects_to_edit_submission_if_return_to_summary(self, data_api_client, s3):
@@ -817,7 +817,7 @@ class TestEditDraftService(BaseApplicationTest):
             data={})
 
         assert_equal(302, res.status_code)
-        assert_equal('http://localhost/suppliers/submission/services/1',
+        assert_equal('http://localhost/suppliers/frameworks/g-cloud-7/submissions/1',
                      res.headers['Location'])
 
     def test_update_redirects_to_edit_submission_if_grey_button_clicked(self, data_api_client, s3):
@@ -830,7 +830,7 @@ class TestEditDraftService(BaseApplicationTest):
             data={})
 
         assert_equal(302, res.status_code)
-        assert_equal('http://localhost/suppliers/submission/services/1',
+        assert_equal('http://localhost/suppliers/frameworks/g-cloud-7/submissions/1',
                      res.headers['Location'])
 
     def test_update_with_answer_required_error(self, data_api_client, s3):
@@ -939,7 +939,7 @@ class TestShowDraftService(BaseApplicationTest):
 
     def test_service_price_is_correctly_formatted(self, data_api_client):
         data_api_client.get_draft_service.return_value = self.draft_service
-        res = self.client.get('/suppliers/submission/services/1')
+        res = self.client.get('/suppliers/frameworks/g-cloud-7/submissions/1')
         document = html.fromstring(res.get_data(as_text=True))
 
         assert_equal(res.status_code, 200)
@@ -954,7 +954,7 @@ class TestShowDraftService(BaseApplicationTest):
         data_api_client.get_framework.return_value = self.framework(status='open')
         data_api_client.get_draft_service.return_value = self.draft_service
         count_unanswered.return_value = 1, 2
-        res = self.client.get('/suppliers/submission/services/1')
+        res = self.client.get('/suppliers/frameworks/g-cloud-7/submissions/1')
 
         assert_true(u'3 unanswered questions' in res.get_data(as_text=True),
                     "'3 unanswered questions' not found in html")
@@ -964,7 +964,7 @@ class TestShowDraftService(BaseApplicationTest):
         data_api_client.get_framework.return_value = self.framework(status='open')
         data_api_client.get_draft_service.return_value = self.draft_service
         count_unanswered.return_value = 0, 1
-        res = self.client.get('/suppliers/submission/services/1')
+        res = self.client.get('/suppliers/frameworks/g-cloud-7/submissions/1')
 
         assert_in(u'1 optional question unanswered', res.get_data(as_text=True))
         assert_in(u'<input type="submit" class="button-save"  value="Mark as complete" />',
@@ -975,7 +975,7 @@ class TestShowDraftService(BaseApplicationTest):
         data_api_client.get_framework.return_value = self.framework(status='other')
         data_api_client.get_draft_service.return_value = self.draft_service
         count_unanswered.return_value = 0, 1
-        res = self.client.get('/suppliers/submission/services/1')
+        res = self.client.get('/suppliers/frameworks/g-cloud-7/submissions/1')
 
         assert_not_in(u'<input type="submit" class="button-save"  value="Mark as complete" />',
                       res.get_data(as_text=True))
@@ -985,7 +985,7 @@ class TestShowDraftService(BaseApplicationTest):
         data_api_client.get_framework.return_value = self.framework(status='pending')
         data_api_client.get_draft_service.return_value = self.draft_service
         count_unanswered.return_value = 3, 1
-        res = self.client.get('/suppliers/submission/services/1')
+        res = self.client.get('/suppliers/frameworks/g-cloud-7/submissions/1')
 
         doc = html.fromstring(res.get_data(as_text=True))
         message = doc.xpath('//aside[@class="temporary-message"]')
@@ -1001,7 +1001,7 @@ class TestShowDraftService(BaseApplicationTest):
         data_api_client.get_framework.return_value = self.framework(status='pending')
         data_api_client.get_draft_service.return_value = self.complete_service
         count_unanswered.return_value = 0, 1
-        res = self.client.get('/suppliers/submission/services/2')
+        res = self.client.get('/suppliers/frameworks/g-cloud-7/submissions/2')
 
         doc = html.fromstring(res.get_data(as_text=True))
         message = doc.xpath('//aside[@class="temporary-message"]')
@@ -1050,9 +1050,9 @@ class TestDeleteDraftService(BaseApplicationTest):
         assert_equal(res.status_code, 302)
         assert_equal(
             res.location,
-            'http://localhost/suppliers/submission/services/1?delete_requested=True'
+            'http://localhost/suppliers/frameworks/g-cloud-7/submissions/1?delete_requested=True'
         )
-        res2 = self.client.get('/suppliers/submission/services/1?delete_requested=True')
+        res2 = self.client.get('/suppliers/frameworks/g-cloud-7/submissions/1?delete_requested=True')
         assert_in(
             b"Are you sure you want to delete this service?", res2.get_data()
         )

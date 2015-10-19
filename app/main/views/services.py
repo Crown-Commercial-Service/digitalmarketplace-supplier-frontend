@@ -345,6 +345,7 @@ def delete_draft_service(service_id):
         return redirect(url_for(".framework_services", framework_slug=framework['slug']))
     else:
         return redirect(url_for(".view_service_submission",
+                                framework_slug=framework['slug'],
                                 service_id=service_id,
                                 delete_requested=True)
                         )
@@ -366,11 +367,11 @@ def service_submission_document(framework_slug, supplier_id, document_name):
     return redirect(s3_url)
 
 
-@main.route('/submission/services/<string:service_id>', methods=['GET'])
+@main.route('/frameworks/<framework_slug>/submissions/<service_id>', methods=['GET'])
 @login_required
 @flask_featureflags.is_active_feature('GCLOUD7_OPEN')
-def view_service_submission(service_id):
-    framework = data_api_client.get_framework('g-cloud-7')['frameworks']
+def view_service_submission(framework_slug, service_id):
+    framework = data_api_client.get_framework(framework_slug)['frameworks']
     try:
         data = data_api_client.get_draft_service(service_id)
         draft, last_edit = data['services'], data['auditEvents']
@@ -381,7 +382,7 @@ def view_service_submission(service_id):
         abort(404)
 
     draft['priceString'] = format_service_price(draft)
-    content = content_loader.get_builder('g-cloud-7', 'edit_submission').filter(draft)
+    content = content_loader.get_builder(framework['slug'], 'edit_submission').filter(draft)
 
     sections = get_service_attributes(draft, content)
 
@@ -504,7 +505,7 @@ def update_section_submission(service_id, section_id):
     if next_section and not return_to_summary and request.form.get('continue_to_next_section'):
         return redirect(url_for(".edit_service_submission", service_id=service_id, section_id=next_section))
     else:
-        return redirect(url_for(".view_service_submission", service_id=service_id))
+        return redirect(url_for(".view_service_submission", framework_slug=framework['slug'], service_id=service_id))
 
 
 def _update_service_status(service, error_message=None):
