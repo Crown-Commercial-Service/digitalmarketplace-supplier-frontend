@@ -293,11 +293,11 @@ def copy_draft_service(framework_slug, service_id):
                             return_to_summary=1))
 
 
-@main.route('/submission/services/<string:service_id>/complete', methods=['POST'])
+@main.route('/frameworks/<framework_slug>/submissions/<service_id>/complete', methods=['POST'])
 @login_required
 @flask_featureflags.is_active_feature('GCLOUD7_OPEN')
-def complete_draft_service(service_id):
-    framework = data_api_client.get_framework('g-cloud-7')['frameworks']
+def complete_draft_service(framework_slug, service_id):
+    framework = data_api_client.get_framework(framework_slug)['frameworks']
     if framework['status'] != 'open':
         abort(404)
     draft = data_api_client.get_draft_service(service_id).get('services')
@@ -322,11 +322,11 @@ def complete_draft_service(service_id):
                     lot=draft['lot'].lower()))
 
 
-@main.route('/submission/services/<string:service_id>/delete', methods=['POST'])
+@main.route('/frameworks/<framework_slug>/submissions/<service_id>/delete', methods=['POST'])
 @login_required
 @flask_featureflags.is_active_feature('GCLOUD7_OPEN')
-def delete_draft_service(service_id):
-    framework = data_api_client.get_framework('g-cloud-7')['frameworks']
+def delete_draft_service(framework_slug, service_id):
+    framework = data_api_client.get_framework(framework_slug)['frameworks']
     if framework['status'] != 'open':
         abort(404)
     draft = data_api_client.get_draft_service(service_id).get('services')

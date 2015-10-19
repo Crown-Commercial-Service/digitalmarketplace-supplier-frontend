@@ -535,7 +535,7 @@ class TestCompleteDraft(BaseApplicationTest):
         data_api_client.get_framework.return_value = self.framework(status='open')
         data_api_client.get_draft_service.return_value = {'services': self.draft}
 
-        res = self.client.post('/suppliers/submission/services/1/complete')
+        res = self.client.post('/suppliers/frameworks/g-cloud-7/submissions/1/complete')
         assert_equal(res.status_code, 302)
         assert_true('lot=scs' in res.location)
         assert_true('service_completed=1' in res.location)
@@ -545,13 +545,13 @@ class TestCompleteDraft(BaseApplicationTest):
         self.draft['supplierId'] = 2
         data_api_client.get_draft_service.return_value = {'services': self.draft}
 
-        res = self.client.post('/suppliers/submission/services/1/complete')
+        res = self.client.post('/suppliers/frameworks/g-cloud-7/submissions/1/complete')
         assert_equal(res.status_code, 404)
 
     def test_cannot_complete_draft_if_not_open(self, data_api_client):
         data_api_client.get_framework.return_value = self.framework(status='other')
 
-        res = self.client.post('/suppliers/submission/services/1/complete')
+        res = self.client.post('/suppliers/frameworks/g-cloud-7/submissions/1/complete')
         assert_equal(res.status_code, 404)
 
 
@@ -1045,7 +1045,7 @@ class TestDeleteDraftService(BaseApplicationTest):
         data_api_client.get_framework.return_value = self.framework(status='open')
         data_api_client.get_draft_service.return_value = self.draft_to_delete
         res = self.client.post(
-            '/suppliers/submission/services/1/delete',
+            '/suppliers/frameworks/g-cloud-7/submissions/1/delete',
             data={})
         assert_equal(res.status_code, 302)
         assert_equal(
@@ -1061,7 +1061,7 @@ class TestDeleteDraftService(BaseApplicationTest):
         data_api_client.get_framework.return_value = self.framework(status='other')
         data_api_client.get_draft_service.return_value = self.draft_to_delete
         res = self.client.post(
-            '/suppliers/submission/services/1/delete',
+            '/suppliers/frameworks/g-cloud-7/submissions/1/delete',
             data={})
         assert_equal(res.status_code, 404)
 
@@ -1069,7 +1069,7 @@ class TestDeleteDraftService(BaseApplicationTest):
         data_api_client.get_framework.return_value = self.framework(status='open')
         data_api_client.get_draft_service.return_value = self.draft_to_delete
         res = self.client.post(
-            '/suppliers/submission/services/1/delete',
+            '/suppliers/frameworks/g-cloud-7/submissions/1/delete',
             data={'delete_confirmed': 'true'})
 
         data_api_client.delete_draft_service.assert_called_with('1', 'email@email.com')
@@ -1084,7 +1084,7 @@ class TestDeleteDraftService(BaseApplicationTest):
         other_draft['services']['supplierId'] = 12345
         data_api_client.get_draft_service.return_value = other_draft
         res = self.client.post(
-            '/suppliers/submission/services/1/delete',
+            '/suppliers/frameworks/g-cloud-7/submissions/1/delete',
             data={'delete_confirmed': 'true'})
 
         assert_equal(res.status_code, 404)

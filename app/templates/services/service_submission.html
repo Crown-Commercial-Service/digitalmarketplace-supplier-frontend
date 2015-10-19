@@ -104,7 +104,7 @@
 {% block before_heading %}
   {% if delete_requested %}
     <div class="column-one-whole">
-      <form action="{{ url_for('.delete_draft_service', service_id=service_id ) }}" method="POST">
+      <form action="{{ url_for('.delete_draft_service', framework_slug=framework.slug, service_id=service_id ) }}" method="POST">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
         <input type="hidden" name="delete_confirmed" value="true" />
         <div class="banner-destructive-with-action">
@@ -139,7 +139,7 @@
           </div>
         {% endif %}
         {% if framework.status == 'open' %}
-        <form action="{{ url_for('.delete_draft_service', service_id=service_id ) }}" method="POST">
+        <form action="{{ url_for('.delete_draft_service', framework_slug=framework.slug, service_id=service_id ) }}" method="POST">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
           {% with type = "destructive", label = "Delete this service" %}
             {% include "toolkit/button.html" %}
