@@ -185,7 +185,7 @@ def framework_supplier_declaration(framework_slug, section_id=None):
     ), status_code
 
 
-@main.route('/frameworks/<framework_slug>/<path:filepath>', methods=['GET'])
+@main.route('/frameworks/<framework_slug>/files/<path:filepath>', methods=['GET'])
 @login_required
 @flask_featureflags.is_active_feature('GCLOUD7_OPEN')
 def download_supplier_file(framework_slug, filepath):

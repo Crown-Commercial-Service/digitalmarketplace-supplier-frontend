@@ -282,7 +282,7 @@ class TestFrameworkDocumentDownload(BaseApplicationTest):
         with self.app.test_client():
             self.login()
 
-            res = self.client.get('/suppliers/frameworks/g-cloud-7/example.pdf')
+            res = self.client.get('/suppliers/frameworks/g-cloud-7/files/example.pdf')
 
             assert_equal(res.status_code, 302)
             assert_equal(res.location, 'http://localhost/path?param=value')
@@ -296,7 +296,7 @@ class TestFrameworkDocumentDownload(BaseApplicationTest):
         with self.app.test_client():
             self.login()
 
-            res = self.client.get('/suppliers/frameworks/g-cloud-7/example.pdf')
+            res = self.client.get('/suppliers/frameworks/g-cloud-7/files/example.pdf')
 
             assert_equal(res.status_code, 404)
 
@@ -603,7 +603,7 @@ class TestFrameworkUpdatesPage(BaseApplicationTest):
                     assert_true(filename in filename_link.text_content())
                     assert_equal(
                         filename_link.get('href'),
-                        '/suppliers/frameworks/g-cloud-7/{}{}.{}'.format(
+                        '/suppliers/frameworks/g-cloud-7/files/{}{}.{}'.format(
                             section, filename.replace(' ', '%20'), ext
                         )
                     )
@@ -644,7 +644,7 @@ class TestFrameworkUpdatesPage(BaseApplicationTest):
                     assert_true(filename in filename_link.text_content())
                     assert_equal(
                         filename_link.get('href'),
-                        '/suppliers/frameworks/g-cloud-7/{}{}.{}'.format(
+                        '/suppliers/frameworks/g-cloud-7/files/{}{}.{}'.format(
                             section, filename.replace(' ', '%20'), ext
                         )
                     )
