@@ -216,7 +216,7 @@
                   {% endif %}
                 </li>
                 <li>
-                  <a href="{{ url_for('.framework_updates') }}">
+                  <a href="{{ url_for('.framework_updates', framework_slug=framework.slug) }}">
                     <span>
                     {% if 'G7_CLARIFICATIONS_CLOSED' is active_feature %}
                       Read updates and clarification question responses
@@ -246,7 +246,7 @@
         <li class="browse-list-item framework-application-section">
           <div class="grid-row">
             <div class="column-two-thirds">
-              <a href="{{ url_for('.framework_updates') }}">
+              <a href="{{ url_for('.framework_updates', framework_slug=framework.slug) }}">
                 <span>
                 {% if 'G7_CLARIFICATIONS_CLOSED' is active_feature %}
                   Read updates and clarification question responses

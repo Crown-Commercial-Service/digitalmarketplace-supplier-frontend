@@ -938,6 +938,7 @@ class TestShowDraftService(BaseApplicationTest):
             self.login()
 
     def test_service_price_is_correctly_formatted(self, data_api_client):
+        data_api_client.get_framework.return_value = self.framework('open')
         data_api_client.get_draft_service.return_value = self.draft_service
         res = self.client.get('/suppliers/frameworks/g-cloud-7/submissions/1')
         document = html.fromstring(res.get_data(as_text=True))
