@@ -272,6 +272,35 @@ class TestFrameworksDashboard(BaseApplicationTest):
             self._assert_last_updated_times(doc, last_updateds)
 
 
+@mock.patch('dmutils.s3.S3')
+class TestFrameworkDocumentDownload(BaseApplicationTest):
+    def test_download_document(self, S3):
+        uploader = mock.Mock()
+        S3.return_value = uploader
+        uploader.get_signed_url.return_value = 'http://url/path?param=value'
+
+        with self.app.test_client():
+            self.login()
+
+            res = self.client.get('/suppliers/frameworks/g-cloud-7/example.pdf')
+
+            assert_equal(res.status_code, 302)
+            assert_equal(res.location, 'http://localhost/path?param=value')
+            uploader.get_signed_url.assert_called_with('example.pdf')
+
+    def test_download_document_returns_404_if_url_is_None(self, S3):
+        uploader = mock.Mock()
+        S3.return_value = uploader
+        uploader.get_signed_url.return_value = None
+
+        with self.app.test_client():
+            self.login()
+
+            res = self.client.get('/suppliers/frameworks/g-cloud-7/example.pdf')
+
+            assert_equal(res.status_code, 404)
+
+
 FULL_G7_SUBMISSION = {
     "status": "complete",
     "PR1": "true",
