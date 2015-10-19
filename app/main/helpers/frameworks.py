@@ -19,24 +19,14 @@ OPTIONAL_FIELDS = set([
 
 
 def has_registered_interest_in_framework(client, framework_slug):
-    audits = client.find_audit_events(
-        audit_type=AuditTypes.register_framework_interest,
-        object_type='suppliers',
-        object_id=current_user.supplier_id)
-    for audit in audits['auditEvents']:
-        if audit['data'].get('frameworkSlug') == framework_slug:
+    frameworks = client.get_framework_interest(current_user.supplier_id)
+    if framework_slug in frameworks.get('frameworks', []):
             return True
     return False
 
 
 def register_interest_in_framework(client, framework_slug):
-    if not has_registered_interest_in_framework(client, framework_slug):
-        client.create_audit_event(
-            audit_type=AuditTypes.register_framework_interest,
-            user=current_user.email_address,
-            object_type='suppliers',
-            object_id=current_user.supplier_id,
-            data={'frameworkSlug': framework_slug})
+    client.register_framework_interest(current_user.supplier_id, framework_slug, current_user.email_address)
 
 
 def get_last_modified_from_first_matching_file(key_list, path_starts_with):

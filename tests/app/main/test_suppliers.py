@@ -140,13 +140,7 @@ class TestSuppliersDashboard(BaseApplicationTest):
     def test_shows_gcloud_7_continue_link(self, get_current_suppliers_users, data_api_client):
         data_api_client.get_framework.return_value = self.framework('open')
         data_api_client.get_supplier.side_effect = get_supplier
-        data_api_client.find_audit_events.return_value = {
-            "auditEvents": [{
-                "data": {
-                    "frameworkSlug": "g-cloud-7"
-                }
-            }]
-        }
+        data_api_client.get_framework_interest.return_value = {'frameworks': ['g-cloud-7']}
         get_current_suppliers_users.side_effect = get_user
         with self.app.test_client():
             self.login()
@@ -184,13 +178,7 @@ class TestSuppliersDashboard(BaseApplicationTest):
     def test_shows_gcloud_7_closed_message_if_pending_and_no_application(self, get_current_suppliers_users, data_api_client):  # noqa
         data_api_client.get_framework.return_value = self.framework('pending')
         data_api_client.get_supplier.side_effect = get_supplier
-        data_api_client.find_audit_events.return_value = {
-            "auditEvents": [{
-                "data": {
-                    "frameworkSlug": "g-cloud-7"
-                }
-            }]
-        }
+        data_api_client.get_framework_interest.return_value = {'frameworks': ['g-cloud-7']}
         data_api_client.find_draft_services.return_value = {
             "services": [
                 {'serviceName': 'A service', 'status': 'not-submitted'}
@@ -216,13 +204,8 @@ class TestSuppliersDashboard(BaseApplicationTest):
     def test_shows_gcloud_7_closed_message_if_pending_and_application_done(self, get_current_suppliers_users, data_api_client):  # noqa
         data_api_client.get_framework.return_value = self.framework('pending')
         data_api_client.get_supplier.side_effect = get_supplier
-        data_api_client.find_audit_events.return_value = {
-            "auditEvents": [{
-                "data": {
-                    "frameworkSlug": "g-cloud-7"
-                }
-            }]
-        }
+        data_api_client.get_framework_interest.return_value = {'frameworks': ['g-cloud-7']}
+
         # an application is made if at least one draft is complete and the declaration is complete
         data_api_client.find_draft_services.return_value = {
             "services": [
