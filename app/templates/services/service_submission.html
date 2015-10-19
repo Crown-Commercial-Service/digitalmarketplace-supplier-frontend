@@ -14,18 +14,18 @@
         "label": "Your account"
       },
       {
-        "link": url_for(".framework_dashboard", framework_slug="g-cloud-7"),
-        "label": "Apply to G-Cloud 7"
+        "link": url_for(".framework_dashboard", framework_slug=framework.slug),
+        "label": "Apply to " + framework.name
       },
       {
-        "link": url_for(".framework_services", framework_slug="g-cloud-7"),
+        "link": url_for(".framework_services", framework_slug=framework.slug),
         "label": "Services"
       }
     ]
   %}
     {% include "toolkit/breadcrumb.html" %}
   {% endwith %}
-  {% if service_data.status == 'submitted' and declaration_status != 'complete' and g7_status == 'open' %}
+  {% if service_data.status == 'submitted' and declaration_status != 'complete' and framework.status == 'open' %}
     <div class="wrapper">
       {%
         with
@@ -37,7 +37,7 @@
     </div>
   {% endif %}
 
-  {% if g7_status == 'pending' %}
+  {% if framework.status == 'pending' %}
     <div class="wrapper">
       <aside role="complementary" class="temporary-message" aria-labelledby="temporary-message-heading">
         {% if service_data.status == 'submitted' %}
@@ -71,7 +71,7 @@
     {{ last_edit.createdAt|datetimeformat }}
     by {{ last_edit.userName }}
   </p>
-  {% if g7_status == 'open' %}
+  {% if framework.status == 'open' %}
     {% if unanswered_required or unanswered_optional %}
       <p class="last-edited">
         {{ submission.multiline_string(
@@ -83,12 +83,12 @@
     {% if service_data.status == 'submitted' and declaration_status == 'complete' %}
       <span class="service-status-published">This service is marked as complete and will be submitted at {{ deadline|safe }}</span>
     {% endif %}
-    {% if service_data.status == 'not-submitted' and unanswered_required == 0 and g7_status == 'open' %}
+    {% if service_data.status == 'not-submitted' and unanswered_required == 0 and framework.status == 'open' %}
       {% include "partials/complete_service.html" %}
     {% elif unanswered_required > 0 %}
       <p class="move-to-complete-hint">When you have added all the required information, you can mark the service as complete.</p>
     {% endif %}
-  {% elif g7_status == 'pending' %}
+  {% elif framework.status == 'pending' %}
     {% if unanswered_required or unanswered_optional %}
       <p class="last-edited">
         {{ submission.multiline_string(
@@ -120,8 +120,8 @@
 
 
 {% block edit_link %}
-  {% if g7_status == 'open' %}
-    {{ summary.top_link("Edit", url_for(".edit_service_submission", service_id=service_id, section_id=section.id)) }}
+  {% if framework.status == 'open' %}
+    {{ summary.top_link("Edit", url_for(".edit_service_submission", framework_slug=framework.slug, service_id=service_id, section_id=section.id)) }}
   {% endif %}
 {% endblock %}
 
@@ -133,12 +133,12 @@
         &nbsp;
       </div>
       <div class="column-one-third delete-draft-button">
-        {% if service_data.status == 'not-submitted' and unanswered_required == 0 and g7_status == 'open' %}
+        {% if service_data.status == 'not-submitted' and unanswered_required == 0 and framework.status == 'open' %}
           <div class="space-underneath">
             {% include "partials/complete_service.html" %}
           </div>
         {% endif %}
-        {% if g7_status == 'open' %}
+        {% if framework.status == 'open' %}
         <form action="{{ url_for('.delete_draft_service', service_id=service_id ) }}" method="POST">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
           {% with type = "destructive", label = "Delete this service" %}

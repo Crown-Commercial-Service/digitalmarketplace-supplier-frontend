@@ -582,7 +582,7 @@ class TestEditDraftService(BaseApplicationTest):
         data_api_client.get_framework.return_value = self.framework(status='open')
         data_api_client.get_draft_service.return_value = self.empty_draft
         res = self.client.post(
-            '/suppliers/submission/services/1/edit/service_description',
+            '/suppliers/frameworks/g-cloud-7/submissions/1/edit/service_description',
             data={
                 'serviceSummary': 'This is the service',
             })
@@ -602,7 +602,7 @@ class TestEditDraftService(BaseApplicationTest):
         data_api_client.get_draft_service.return_value = {'services': draft}
 
         res = self.client.post(
-            '/suppliers/submission/services/1/edit/service_description',
+            '/suppliers/frameworks/g-cloud-7/submissions/1/edit/service_description',
             data={
                 'serviceSummary': u"summary",
             })
@@ -616,7 +616,7 @@ class TestEditDraftService(BaseApplicationTest):
         data_api_client.get_framework.return_value = self.framework(status='open')
         data_api_client.get_draft_service.return_value = self.empty_draft
         res = self.client.post(
-            '/suppliers/submission/services/1/edit/service_description',
+            '/suppliers/frameworks/g-cloud-7/submissions/1/edit/service_description',
             data={
                 'serviceSummary': 'This is the service',
             })
@@ -627,12 +627,12 @@ class TestEditDraftService(BaseApplicationTest):
     def test_editing_readonly_section_is_not_allowed(self, data_api_client, s3):
         data_api_client.get_draft_service.return_value = self.empty_draft
 
-        res = self.client.get('/suppliers/submission/services/1/edit/service_attributes')
+        res = self.client.get('/suppliers/frameworks/g-cloud-7/submissions/1/edit/service_attributes')
         assert_equal(res.status_code, 404)
 
         data_api_client.get_draft_service.return_value = self.empty_draft
         res = self.client.post(
-            '/suppliers/submission/services/1/edit/service_attributes',
+            '/suppliers/frameworks/g-cloud-7/submissions/1/edit/service_attributes',
             data={
                 'lot': 'SCS',
             })
@@ -642,7 +642,7 @@ class TestEditDraftService(BaseApplicationTest):
         data_api_client.get_framework.return_value = self.framework(status='other')
         data_api_client.get_draft_service.return_value = self.empty_draft
         res = self.client.post(
-            '/suppliers/submission/services/1/edit/service_description',
+            '/suppliers/frameworks/g-cloud-7/submissions/1/edit/service_description',
             data={
                 'serviceSummary': 'This is the service',
             })
@@ -652,7 +652,7 @@ class TestEditDraftService(BaseApplicationTest):
         data_api_client.get_framework.return_value = self.framework(status='open')
         data_api_client.get_draft_service.return_value = self.empty_draft
         res = self.client.post(
-            '/suppliers/submission/services/1/edit/service_description',
+            '/suppliers/frameworks/g-cloud-7/submissions/1/edit/service_description',
             data={
                 'serviceFeatures': '',
             })
@@ -669,7 +669,7 @@ class TestEditDraftService(BaseApplicationTest):
         data_api_client.get_framework.return_value = self.framework(status='open')
         data_api_client.get_draft_service.return_value = draft
         response = self.client.get(
-            '/suppliers/submission/services/1/edit/service_definition'
+            '/suppliers/frameworks/g-cloud-7/submissions/1/edit/service_definition'
         )
         document = html.fromstring(response.get_data(as_text=True))
 
@@ -680,7 +680,7 @@ class TestEditDraftService(BaseApplicationTest):
         data_api_client.get_framework.return_value = self.framework(status='open')
         data_api_client.get_draft_service.return_value = self.empty_draft
         response = self.client.get(
-            '/suppliers/submission/services/1/edit/service_definition'
+            '/suppliers/frameworks/g-cloud-7/submissions/1/edit/service_definition'
         )
         document = html.fromstring(response.get_data(as_text=True))
 
@@ -692,7 +692,7 @@ class TestEditDraftService(BaseApplicationTest):
         data_api_client.get_draft_service.return_value = self.empty_draft
         with freeze_time('2015-01-02 03:04:05'):
             res = self.client.post(
-                '/suppliers/submission/services/1/edit/service_definition',
+                '/suppliers/frameworks/g-cloud-7/submissions/1/edit/service_definition',
                 data={
                     'serviceDefinitionDocumentURL': (StringIO(b'doc'), 'document.pdf'),
                 }
@@ -715,7 +715,7 @@ class TestEditDraftService(BaseApplicationTest):
         data_api_client.get_framework.return_value = self.framework(status='open')
         data_api_client.get_draft_service.return_value = self.empty_draft
         res = self.client.post(
-            '/suppliers/submission/services/1/edit/service_definition',
+            '/suppliers/frameworks/g-cloud-7/submissions/1/edit/service_definition',
             data={
                 'serviceDefinitionDocumentURL': (StringIO(b''), 'document.pdf'),
                 'unknownDocumentURL': (StringIO(b'doc'), 'document.pdf'),
@@ -734,7 +734,7 @@ class TestEditDraftService(BaseApplicationTest):
         data_api_client.get_framework.return_value = self.framework(status='open')
         data_api_client.get_draft_service.return_value = self.empty_draft
         res = self.client.post(
-            '/suppliers/submission/services/1/edit/service_definition',
+            '/suppliers/frameworks/g-cloud-7/submissions/1/edit/service_definition',
             data={
                 'serviceDefinitionDocumentURL': 'http://example.com/document.pdf',
             })
@@ -749,7 +749,7 @@ class TestEditDraftService(BaseApplicationTest):
         data_api_client.get_framework.return_value = self.framework(status='open')
         data_api_client.get_draft_service.return_value = self.empty_draft
         res = self.client.post(
-            '/suppliers/submission/services/1/edit/pricing',
+            '/suppliers/frameworks/g-cloud-7/submissions/1/edit/pricing',
             data={
                 'priceString': ["10.10", "11.10", "Person", "Second"],
             })
@@ -768,14 +768,14 @@ class TestEditDraftService(BaseApplicationTest):
 
     def test_edit_non_existent_draft_service_returns_404(self, data_api_client, s3):
         data_api_client.get_draft_service.side_effect = HTTPError(mock.Mock(status_code=404))
-        res = self.client.get('/suppliers/submission/services/1/edit/service_description')
+        res = self.client.get('/suppliers/frameworks/g-cloud-7/submissions/1/edit/service_description')
 
         assert_equal(res.status_code, 404)
 
     def test_edit_non_existent_draft_section_returns_404(self, data_api_client, s3):
         data_api_client.get_draft_service.return_value = self.empty_draft
         res = self.client.get(
-            '/suppliers/submission/services/1/edit/invalid_section'
+            '/suppliers/frameworks/g-cloud-7/submissions/1/edit/invalid_section'
         )
         assert_equal(404, res.status_code)
 
@@ -785,13 +785,13 @@ class TestEditDraftService(BaseApplicationTest):
         data_api_client.update_draft_service.return_value = None
 
         res = self.client.post(
-            '/suppliers/submission/services/1/edit/service_description',
+            '/suppliers/frameworks/g-cloud-7/submissions/1/edit/service_description',
             data={
                 'continue_to_next_section': 'Save and continue'
             })
 
         assert_equal(302, res.status_code)
-        assert_equal('http://localhost/suppliers/submission/services/1/edit/service_type',
+        assert_equal('http://localhost/suppliers/frameworks/g-cloud-7/submissions/1/edit/service_type',
                      res.headers['Location'])
 
     def test_update_redirects_to_edit_submission_if_no_next_editable_section(self, data_api_client, s3):
@@ -800,7 +800,7 @@ class TestEditDraftService(BaseApplicationTest):
         data_api_client.update_draft_service.return_value = None
 
         res = self.client.post(
-            '/suppliers/submission/services/1/edit/sfia_rate_card',
+            '/suppliers/frameworks/g-cloud-7/submissions/1/edit/sfia_rate_card',
             data={})
 
         assert_equal(302, res.status_code)
@@ -813,7 +813,7 @@ class TestEditDraftService(BaseApplicationTest):
         data_api_client.update_draft_service.return_value = None
 
         res = self.client.post(
-            '/suppliers/submission/services/1/edit/service_description?return_to_summary=1',
+            '/suppliers/frameworks/g-cloud-7/submissions/1/edit/service_description?return_to_summary=1',
             data={})
 
         assert_equal(302, res.status_code)
@@ -826,7 +826,7 @@ class TestEditDraftService(BaseApplicationTest):
         data_api_client.update_draft_service.return_value = None
 
         res = self.client.post(
-            '/suppliers/submission/services/1/edit/service_description',
+            '/suppliers/frameworks/g-cloud-7/submissions/1/edit/service_description',
             data={})
 
         assert_equal(302, res.status_code)
@@ -840,7 +840,7 @@ class TestEditDraftService(BaseApplicationTest):
             mock.Mock(status_code=400),
             {'serviceSummary': 'answer_required'})
         res = self.client.post(
-            '/suppliers/submission/services/1/edit/service_description',
+            '/suppliers/frameworks/g-cloud-7/submissions/1/edit/service_description',
             data={})
 
         assert_equal(res.status_code, 200)
@@ -856,7 +856,7 @@ class TestEditDraftService(BaseApplicationTest):
             mock.Mock(status_code=400),
             {'serviceSummary': 'under_50_words'})
         res = self.client.post(
-            '/suppliers/submission/services/1/edit/service_description',
+            '/suppliers/frameworks/g-cloud-7/submissions/1/edit/service_description',
             data={})
 
         assert_equal(res.status_code, 200)
@@ -881,7 +881,7 @@ class TestEditDraftService(BaseApplicationTest):
                 mock.Mock(status_code=400),
                 {field: error})
             res = self.client.post(
-                '/suppliers/submission/services/1/edit/pricing',
+                '/suppliers/frameworks/g-cloud-7/submissions/1/edit/pricing',
                 data={})
 
             assert_equal(res.status_code, 200)
@@ -891,14 +891,14 @@ class TestEditDraftService(BaseApplicationTest):
 
     def test_update_non_existent_draft_service_returns_404(self, data_api_client, s3):
         data_api_client.get_draft_service.side_effect = HTTPError(mock.Mock(status_code=404))
-        res = self.client.post('/suppliers/submission/services/1/edit/service_description')
+        res = self.client.post('/suppliers/frameworks/g-cloud-7/submissions/1/edit/service_description')
 
         assert_equal(res.status_code, 404)
 
     def test_update_non_existent_draft_section_returns_404(self, data_api_client, s3):
         data_api_client.get_draft_service.return_value = self.empty_draft
         res = self.client.post(
-            '/suppliers/submission/services/1/edit/invalid_section'
+            '/suppliers/frameworks/g-cloud-7/submissions/1/edit/invalid_section'
         )
         assert_equal(404, res.status_code)
 
