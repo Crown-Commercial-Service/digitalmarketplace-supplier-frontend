@@ -402,7 +402,7 @@ class TestCreateDraftService(BaseApplicationTest):
     def test_get_create_draft_service_page_if_open(self, request, data_api_client):
         with self.app.test_client():
             self.login()
-        data_api_client.get_framework_status.return_value = {'status': 'open'}
+        data_api_client.get_framework.return_value = self.framework(status='open')
 
         res = self.client.get('/suppliers/submission/g-cloud-7/create')
         assert_equal(res.status_code, 200)
@@ -418,7 +418,7 @@ class TestCreateDraftService(BaseApplicationTest):
     def test_can_not_get_create_draft_service_page_if_not_open(self, request, data_api_client):
         with self.app.test_client():
             self.login()
-        data_api_client.get_framework_status.return_value = {'status': 'other'}
+        data_api_client.get_framework.return_value = self.framework(status='other')
 
         res = self.client.get('/suppliers/submission/g-cloud-7/create')
         assert_equal(res.status_code, 404)
@@ -427,7 +427,7 @@ class TestCreateDraftService(BaseApplicationTest):
         with self.app.test_client():
             self.login()
 
-        data_api_client.get_framework_status.return_value = {'status': 'open'}
+        data_api_client.get_framework.return_value = self.framework(status='open')
         data_api_client.create_new_draft_service.return_value = {
             'services': {
                 'id': 1,
@@ -463,7 +463,7 @@ class TestCreateDraftService(BaseApplicationTest):
         with self.app.test_client():
             self.login()
 
-        data_api_client.get_framework_status.return_value = {'status': 'other'}
+        data_api_client.get_framework.return_value = self.framework(status='other')
         res = self.client.post(
             '/suppliers/submission/g-cloud-7/create'
         )
@@ -491,7 +491,7 @@ class TestCopyDraft(BaseApplicationTest):
         }
 
     def test_copy_draft(self, data_api_client):
-        data_api_client.get_framework_status.return_value = {'status': 'open'}
+        data_api_client.get_framework.return_value = self.framework(status='open')
         data_api_client.get_draft_service.return_value = {'services': self.draft}
 
         res = self.client.post('/suppliers/submission/services/1/copy')
@@ -505,7 +505,7 @@ class TestCopyDraft(BaseApplicationTest):
         assert_equal(res.status_code, 404)
 
     def test_cannot_copy_draft_if_not_open(self, data_api_client):
-        data_api_client.get_framework_status.return_value = {'status': 'other'}
+        data_api_client.get_framework.return_value = self.framework(status='other')
 
         res = self.client.post('/suppliers/submission/services/1/copy')
         assert_equal(res.status_code, 404)
@@ -532,7 +532,7 @@ class TestCompleteDraft(BaseApplicationTest):
         }
 
     def test_complete_draft(self, data_api_client):
-        data_api_client.get_framework_status.return_value = {'status': 'open'}
+        data_api_client.get_framework.return_value = self.framework(status='open')
         data_api_client.get_draft_service.return_value = {'services': self.draft}
 
         res = self.client.post('/suppliers/submission/services/1/complete')
@@ -549,7 +549,7 @@ class TestCompleteDraft(BaseApplicationTest):
         assert_equal(res.status_code, 404)
 
     def test_cannot_complete_draft_if_not_open(self, data_api_client):
-        data_api_client.get_framework_status.return_value = {'status': 'other'}
+        data_api_client.get_framework.return_value = self.framework(status='other')
 
         res = self.client.post('/suppliers/submission/services/1/complete')
         assert_equal(res.status_code, 404)
@@ -579,7 +579,7 @@ class TestEditDraftService(BaseApplicationTest):
             self.login()
 
     def test_questions_for_this_draft_section_can_be_changed(self, data_api_client, s3):
-        data_api_client.get_framework_status.return_value = {'status': 'open'}
+        data_api_client.get_framework.return_value = self.framework(status='open')
         data_api_client.get_draft_service.return_value = self.empty_draft
         res = self.client.post(
             '/suppliers/submission/services/1/edit/service_description',
@@ -598,7 +598,7 @@ class TestEditDraftService(BaseApplicationTest):
     def test_update_without_changes_is_not_sent_to_the_api(self, data_api_client, s3):
         draft = self.empty_draft['services'].copy()
         draft.update({'serviceSummary': u"summary"})
-        data_api_client.get_framework_status.return_value = {'status': 'open'}
+        data_api_client.get_framework.return_value = self.framework(status='open')
         data_api_client.get_draft_service.return_value = {'services': draft}
 
         res = self.client.post(
@@ -613,7 +613,7 @@ class TestEditDraftService(BaseApplicationTest):
     def test_S3_should_not_be_called_if_there_are_no_files(self, data_api_client, s3):
         uploader = mock.Mock()
         s3.return_value = uploader
-        data_api_client.get_framework_status.return_value = {'status': 'open'}
+        data_api_client.get_framework.return_value = self.framework(status='open')
         data_api_client.get_draft_service.return_value = self.empty_draft
         res = self.client.post(
             '/suppliers/submission/services/1/edit/service_description',
@@ -639,7 +639,7 @@ class TestEditDraftService(BaseApplicationTest):
         assert_equal(res.status_code, 404)
 
     def test_draft_section_cannot_be_edited_if_not_open(self, data_api_client, s3):
-        data_api_client.get_framework_status.return_value = {'status': 'other'}
+        data_api_client.get_framework.return_value = self.framework(status='other')
         data_api_client.get_draft_service.return_value = self.empty_draft
         res = self.client.post(
             '/suppliers/submission/services/1/edit/service_description',
@@ -649,7 +649,7 @@ class TestEditDraftService(BaseApplicationTest):
         assert_equal(res.status_code, 404)
 
     def test_only_questions_for_this_draft_section_can_be_changed(self, data_api_client, s3):
-        data_api_client.get_framework_status.return_value = {'status': 'open'}
+        data_api_client.get_framework.return_value = self.framework(status='open')
         data_api_client.get_draft_service.return_value = self.empty_draft
         res = self.client.post(
             '/suppliers/submission/services/1/edit/service_description',
@@ -666,7 +666,7 @@ class TestEditDraftService(BaseApplicationTest):
     def test_display_file_upload_with_existing_file(self, data_api_client, s3):
         draft = copy.deepcopy(self.empty_draft)
         draft['services']['serviceDefinitionDocumentURL'] = 'http://localhost/fooo-2012-12-12-1212.pdf'
-        data_api_client.get_framework_status.return_value = {'status': 'open'}
+        data_api_client.get_framework.return_value = self.framework(status='open')
         data_api_client.get_draft_service.return_value = draft
         response = self.client.get(
             '/suppliers/submission/services/1/edit/service_definition'
@@ -677,7 +677,7 @@ class TestEditDraftService(BaseApplicationTest):
         assert_equal(len(document.cssselect('p.file-upload-existing-value')), 1)
 
     def test_display_file_upload_with_no_existing_file(self, data_api_client, s3):
-        data_api_client.get_framework_status.return_value = {'status': 'open'}
+        data_api_client.get_framework.return_value = self.framework(status='open')
         data_api_client.get_draft_service.return_value = self.empty_draft
         response = self.client.get(
             '/suppliers/submission/services/1/edit/service_definition'
@@ -688,7 +688,7 @@ class TestEditDraftService(BaseApplicationTest):
         assert_equal(len(document.cssselect('p.file-upload-existing-value')), 0)
 
     def test_file_upload(self, data_api_client, s3):
-        data_api_client.get_framework_status.return_value = {'status': 'open'}
+        data_api_client.get_framework.return_value = self.framework(status='open')
         data_api_client.get_draft_service.return_value = self.empty_draft
         with freeze_time('2015-01-02 03:04:05'):
             res = self.client.post(
@@ -712,7 +712,7 @@ class TestEditDraftService(BaseApplicationTest):
         )
 
     def test_file_upload_filters_empty_and_unknown_files(self, data_api_client, s3):
-        data_api_client.get_framework_status.return_value = {'status': 'open'}
+        data_api_client.get_framework.return_value = self.framework(status='open')
         data_api_client.get_draft_service.return_value = self.empty_draft
         res = self.client.post(
             '/suppliers/submission/services/1/edit/service_definition',
@@ -731,7 +731,7 @@ class TestEditDraftService(BaseApplicationTest):
         assert_false(s3.return_value.save.called)
 
     def test_upload_question_not_accepted_as_form_data(self, data_api_client, s3):
-        data_api_client.get_framework_status.return_value = {'status': 'open'}
+        data_api_client.get_framework.return_value = self.framework(status='open')
         data_api_client.get_draft_service.return_value = self.empty_draft
         res = self.client.post(
             '/suppliers/submission/services/1/edit/service_definition',
@@ -746,7 +746,7 @@ class TestEditDraftService(BaseApplicationTest):
         )
 
     def test_pricing_fields_are_added_correctly(self, data_api_client, s3):
-        data_api_client.get_framework_status.return_value = {'status': 'open'}
+        data_api_client.get_framework.return_value = self.framework(status='open')
         data_api_client.get_draft_service.return_value = self.empty_draft
         res = self.client.post(
             '/suppliers/submission/services/1/edit/pricing',
@@ -780,7 +780,7 @@ class TestEditDraftService(BaseApplicationTest):
         assert_equal(404, res.status_code)
 
     def test_update_redirects_to_next_editable_section(self, data_api_client, s3):
-        data_api_client.get_framework_status.return_value = {'status': 'open'}
+        data_api_client.get_framework.return_value = self.framework(status='open')
         data_api_client.get_draft_service.return_value = self.empty_draft
         data_api_client.update_draft_service.return_value = None
 
@@ -795,7 +795,7 @@ class TestEditDraftService(BaseApplicationTest):
                      res.headers['Location'])
 
     def test_update_redirects_to_edit_submission_if_no_next_editable_section(self, data_api_client, s3):
-        data_api_client.get_framework_status.return_value = {'status': 'open'}
+        data_api_client.get_framework.return_value = self.framework(status='open')
         data_api_client.get_draft_service.return_value = self.empty_draft
         data_api_client.update_draft_service.return_value = None
 
@@ -808,7 +808,7 @@ class TestEditDraftService(BaseApplicationTest):
                      res.headers['Location'])
 
     def test_update_redirects_to_edit_submission_if_return_to_summary(self, data_api_client, s3):
-        data_api_client.get_framework_status.return_value = {'status': 'open'}
+        data_api_client.get_framework.return_value = self.framework(status='open')
         data_api_client.get_draft_service.return_value = self.empty_draft
         data_api_client.update_draft_service.return_value = None
 
@@ -821,7 +821,7 @@ class TestEditDraftService(BaseApplicationTest):
                      res.headers['Location'])
 
     def test_update_redirects_to_edit_submission_if_grey_button_clicked(self, data_api_client, s3):
-        data_api_client.get_framework_status.return_value = {'status': 'open'}
+        data_api_client.get_framework.return_value = self.framework(status='open')
         data_api_client.get_draft_service.return_value = self.empty_draft
         data_api_client.update_draft_service.return_value = None
 
@@ -834,7 +834,7 @@ class TestEditDraftService(BaseApplicationTest):
                      res.headers['Location'])
 
     def test_update_with_answer_required_error(self, data_api_client, s3):
-        data_api_client.get_framework_status.return_value = {'status': 'open'}
+        data_api_client.get_framework.return_value = self.framework(status='open')
         data_api_client.get_draft_service.return_value = self.empty_draft
         data_api_client.update_draft_service.side_effect = HTTPError(
             mock.Mock(status_code=400),
@@ -850,7 +850,7 @@ class TestEditDraftService(BaseApplicationTest):
             document.xpath('//span[@id="error-serviceSummary"]/text()')[0].strip())
 
     def test_update_with_under_50_words_error(self, data_api_client, s3):
-        data_api_client.get_framework_status.return_value = {'status': 'open'}
+        data_api_client.get_framework.return_value = self.framework(status='open')
         data_api_client.get_draft_service.return_value = self.empty_draft
         data_api_client.update_draft_service.side_effect = HTTPError(
             mock.Mock(status_code=400),
@@ -875,7 +875,7 @@ class TestEditDraftService(BaseApplicationTest):
         ]
 
         for field, error, message in cases:
-            data_api_client.get_framework_status.return_value = {'status': 'open'}
+            data_api_client.get_framework.return_value = self.framework(status='open')
             data_api_client.get_draft_service.return_value = self.empty_draft
             data_api_client.update_draft_service.side_effect = HTTPError(
                 mock.Mock(status_code=400),
@@ -951,16 +951,17 @@ class TestShowDraftService(BaseApplicationTest):
 
     @mock.patch('app.main.views.services.count_unanswered_questions')
     def test_unanswered_questions_count(self, count_unanswered, data_api_client):
-        data_api_client.get_framework_status.return_value = {'status': 'open'}
+        data_api_client.get_framework.return_value = self.framework(status='open')
         data_api_client.get_draft_service.return_value = self.draft_service
         count_unanswered.return_value = 1, 2
         res = self.client.get('/suppliers/submission/services/1')
 
-        assert_in(u'3 unanswered questions', res.get_data(as_text=True))
+        assert_true(u'3 unanswered questions' in res.get_data(as_text=True),
+                    "'3 unanswered questions' not found in html")
 
     @mock.patch('app.main.views.services.count_unanswered_questions')
     def test_move_to_complete_button(self, count_unanswered, data_api_client):
-        data_api_client.get_framework_status.return_value = {'status': 'open'}
+        data_api_client.get_framework.return_value = self.framework(status='open')
         data_api_client.get_draft_service.return_value = self.draft_service
         count_unanswered.return_value = 0, 1
         res = self.client.get('/suppliers/submission/services/1')
@@ -971,7 +972,7 @@ class TestShowDraftService(BaseApplicationTest):
 
     @mock.patch('app.main.views.services.count_unanswered_questions')
     def test_no_move_to_complete_button_if_not_open(self, count_unanswered, data_api_client):
-        data_api_client.get_framework_status.return_value = {'status': 'other'}
+        data_api_client.get_framework.return_value = self.framework(status='other')
         data_api_client.get_draft_service.return_value = self.draft_service
         count_unanswered.return_value = 0, 1
         res = self.client.get('/suppliers/submission/services/1')
@@ -981,7 +982,7 @@ class TestShowDraftService(BaseApplicationTest):
 
     @mock.patch('app.main.views.services.count_unanswered_questions')
     def test_shows_g7_message_if_pending_and_service_is_in_draft(self, count_unanswered, data_api_client):
-        data_api_client.get_framework_status.return_value = {'status': 'pending'}
+        data_api_client.get_framework.return_value = self.framework(status='pending')
         data_api_client.get_draft_service.return_value = self.draft_service
         count_unanswered.return_value = 3, 1
         res = self.client.get('/suppliers/submission/services/1')
@@ -997,7 +998,7 @@ class TestShowDraftService(BaseApplicationTest):
 
     @mock.patch('app.main.views.services.count_unanswered_questions')
     def test_shows_g7_message_if_pending_and_service_is_complete(self, count_unanswered, data_api_client):
-        data_api_client.get_framework_status.return_value = {'status': 'pending'}
+        data_api_client.get_framework.return_value = self.framework(status='pending')
         data_api_client.get_draft_service.return_value = self.complete_service
         count_unanswered.return_value = 0, 1
         res = self.client.get('/suppliers/submission/services/2')
@@ -1041,7 +1042,7 @@ class TestDeleteDraftService(BaseApplicationTest):
             self.login()
 
     def test_delete_button_redirects_with_are_you_sure(self, data_api_client):
-        data_api_client.get_framework_status.return_value = {'status': 'open'}
+        data_api_client.get_framework.return_value = self.framework(status='open')
         data_api_client.get_draft_service.return_value = self.draft_to_delete
         res = self.client.post(
             '/suppliers/submission/services/1/delete',
@@ -1057,7 +1058,7 @@ class TestDeleteDraftService(BaseApplicationTest):
         )
 
     def test_cannot_delete_if_not_open(self, data_api_client):
-        data_api_client.get_framework_status.return_value = {'status': 'other'}
+        data_api_client.get_framework.return_value = self.framework(status='other')
         data_api_client.get_draft_service.return_value = self.draft_to_delete
         res = self.client.post(
             '/suppliers/submission/services/1/delete',
@@ -1065,7 +1066,7 @@ class TestDeleteDraftService(BaseApplicationTest):
         assert_equal(res.status_code, 404)
 
     def test_confirm_delete_button_deletes_and_redirects_to_dashboard(self, data_api_client):
-        data_api_client.get_framework_status.return_value = {'status': 'open'}
+        data_api_client.get_framework.return_value = self.framework(status='open')
         data_api_client.get_draft_service.return_value = self.draft_to_delete
         res = self.client.post(
             '/suppliers/submission/services/1/delete',

@@ -12,11 +12,11 @@
         "label": "Your account"
       },
       {
-        "link": url_for(".framework_dashboard"),
-        "label": "Apply to G-Cloud 7"
+        "link": url_for(".framework_dashboard", framework_slug=framework.slug),
+        "label": "Apply to " + framework.name
       },
       {
-        "link": url_for(".framework_services"),
+        "link": url_for(".framework_services", framework_slug=framework.slug),
         "label": "Services"
       },
       {

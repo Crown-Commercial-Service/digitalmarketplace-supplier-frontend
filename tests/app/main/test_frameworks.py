@@ -86,7 +86,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
         with self.app.test_client():
             self.login()
 
-            data_api_client.get_framework_status.return_value = {'status': 'pending'}
+            data_api_client.get_framework.return_value = self.framework(status='pending')
             data_api_client.find_audit_events.return_value = {
                 "auditEvents": [{"data": {"frameworkSlug": "g-cloud-7"}}]
             }
@@ -111,7 +111,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
         with self.app.test_client():
             self.login()
 
-            data_api_client.get_framework_status.return_value = {'status': 'pending'}
+            data_api_client.get_framework.return_value = self.framework(status='pending')
             data_api_client.find_audit_events.return_value = {
                 "auditEvents": [{"data": {"frameworkSlug": "g-cloud-7"}}]
             }
@@ -140,7 +140,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
         with self.app.test_client():
             self.login()
 
-            data_api_client.get_framework_status.return_value = {'status': 'open'}
+            data_api_client.get_framework.return_value = self.framework(status='open')
             data_api_client.get_supplier_declaration.return_value = {
                 "declaration": FULL_G7_SUBMISSION
             }
@@ -164,7 +164,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
             del submission['SQ2-1ghijklmn']
             submission.update({"status": "started"})
 
-            data_api_client.get_framework_status.return_value = {'status': 'open'}
+            data_api_client.get_framework.return_value = self.framework(status='open')
             data_api_client.get_supplier_declaration.return_value = {
                 "declaration": submission
             }
@@ -180,7 +180,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
         with self.app.test_client():
             self.login()
 
-            data_api_client.get_framework_status.return_value = {'status': 'open'}
+            data_api_client.get_framework.return_value = self.framework(status='open')
             data_api_client.get_supplier_declaration.side_effect = APIError(mock.Mock(status_code=404))
 
             res = self.client.get("/suppliers/frameworks/g-cloud-7")
@@ -382,7 +382,7 @@ class TestSupplierDeclaration(BaseApplicationTest):
         with self.app.test_client():
             self.login()
 
-            data_api_client.get_framework_status.return_value = {'status': 'open'}
+            data_api_client.get_framework.return_value = self.framework(status='open')
             data_api_client.get_supplier_declaration.side_effect = APIError(mock.Mock(status_code=404))
 
             res = self.client.get(
@@ -399,7 +399,7 @@ class TestSupplierDeclaration(BaseApplicationTest):
         with self.app.test_client():
             self.login()
 
-            data_api_client.get_framework_status.return_value = {'status': 'open'}
+            data_api_client.get_framework.return_value = self.framework(status='open')
             data_api_client.get_supplier_declaration.return_value = {
                 "declaration": {"status": "started", "PR1": False}
             }
@@ -416,7 +416,7 @@ class TestSupplierDeclaration(BaseApplicationTest):
         with self.app.test_client():
             self.login()
 
-            data_api_client.get_framework_status.return_value = {'status': 'open'}
+            data_api_client.get_framework.return_value = self.framework(status='open')
             data_api_client.get_supplier_declaration.return_value = {
                 "declaration": {"status": "started"}
             }
@@ -431,7 +431,7 @@ class TestSupplierDeclaration(BaseApplicationTest):
         with self.app.test_client():
             self.login()
 
-            data_api_client.get_framework_status.return_value = {'status': 'open'}
+            data_api_client.get_framework.return_value = self.framework(status='open')
             data_api_client.get_supplier_declaration.return_value = {
                 "declaration": {"status": "started"}
             }
@@ -447,7 +447,7 @@ class TestSupplierDeclaration(BaseApplicationTest):
         with self.app.test_client():
             self.login()
 
-            data_api_client.get_framework_status.return_value = {'status': 'open'}
+            data_api_client.get_framework.return_value = self.framework(status='open')
             data_api_client.get_supplier_declaration.return_value = {
                 "declaration": {"status": "started"}
             }
@@ -468,7 +468,7 @@ class TestSupplierDeclaration(BaseApplicationTest):
         with self.app.test_client():
             self.login()
 
-            data_api_client.get_framework_status.return_value = {'status': 'open'}
+            data_api_client.get_framework.return_value = self.framework(status='open')
             get_error_messages_for_page.return_value = {'PR1': {'input_name': 'PR1', 'message': 'this is invalid'}}
 
             res = self.client.post(
@@ -827,7 +827,7 @@ class TestG7ServicesList(BaseApplicationTest):
     def test_404_when_g7_pending_and_no_complete_services(self, count_unanswered, data_api_client):
         with self.app.test_client():
             self.login()
-        data_api_client.get_framework_status.return_value = {'status': 'pending'}
+        data_api_client.get_framework.return_value = self.framework(status='pending')
         data_api_client.find_draft_services.return_value = {'services': []}
         count_unanswered.return_value = 0
         response = self.client.get('/suppliers/frameworks/g-cloud-7/services')
@@ -836,7 +836,7 @@ class TestG7ServicesList(BaseApplicationTest):
     def test_404_when_g7_pending_and_no_declaration(self, count_unanswered, data_api_client):
         with self.app.test_client():
             self.login()
-        data_api_client.get_framework_status.return_value = {'status': 'pending'}
+        data_api_client.get_framework.return_value = self.framework(status='pending')
         data_api_client.get_supplier_declaration.return_value = {
             "declaration": {"status": "started"}
         }
@@ -865,7 +865,7 @@ class TestG7ServicesList(BaseApplicationTest):
     def test_shows_g7_message_if_pending_and_application_made(self, count_unanswered, data_api_client):
         with self.app.test_client():
             self.login()
-        data_api_client.get_framework_status.return_value = {'status': 'pending'}
+        data_api_client.get_framework.return_value = self.framework(status='pending')
         data_api_client.get_supplier_declaration.return_value = {'declaration': FULL_G7_SUBMISSION}  # noqa
         data_api_client.find_draft_services.return_value = {
             'services': [
@@ -890,7 +890,7 @@ class TestG7ServicesList(BaseApplicationTest):
             self.login()
 
         count_unanswered.return_value = 3, 1
-        data_api_client.get_framework_status.return_value = {'status': 'open'}
+        data_api_client.get_framework.return_value = self.framework(status='open')
         data_api_client.find_draft_services.return_value = {
             'services': [
                 {'serviceName': 'draft', 'lot': 'SCS', 'status': 'not-submitted'},
@@ -908,7 +908,7 @@ class TestG7ServicesList(BaseApplicationTest):
 
         count_unanswered.return_value = 0, 1
 
-        data_api_client.get_framework_status.return_value = {'status': 'open'}
+        data_api_client.get_framework.return_value = self.framework(status='open')
         data_api_client.find_draft_services.return_value = {
             'services': [
                 {'serviceName': 'draft', 'lot': 'SCS', 'status': 'not-submitted'},

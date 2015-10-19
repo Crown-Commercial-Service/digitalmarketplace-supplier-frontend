@@ -183,10 +183,10 @@ def get_first_question_index(content, section):
     return questions_so_far
 
 
-def get_declaration_status(data_api_client):
+def get_declaration_status(data_api_client, framework_slug):
     try:
         declaration = data_api_client.get_supplier_declaration(
-            current_user.supplier_id, 'g-cloud-7'
+            current_user.supplier_id, framework_slug
         )['declaration']
     except APIError as e:
         if e.status_code == 404:

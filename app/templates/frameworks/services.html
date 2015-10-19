@@ -2,7 +2,7 @@
 {% import "toolkit/summary-table.html" as summary %}
 {% import "macros/submission.html" as submission %}
 
-{% block page_title %}Apply to G-Cloud 7 – Digital Marketplace{% endblock %}
+{% block page_title %}Apply to {{ framework.name }} – Digital Marketplace{% endblock %}
 
 {% block breadcrumb %}
   {%
@@ -16,8 +16,8 @@
         "label": "Your account",
       },
       {
-        "link": url_for(".framework_dashboard"),
-        "label": "Apply to G-Cloud 7",
+        "link": url_for(".framework_dashboard", framework_slug=framework.slug),
+        "label": "Apply to " + framework.name,
       }
     ]
   %}
@@ -43,10 +43,10 @@
     {% endfor %}
   {% endwith %}
 
-  {% if complete_drafts and declaration_status != 'complete' and g7_status == 'open' %}
+  {% if complete_drafts and declaration_status != 'complete' and framework.status == 'open' %}
     {%
       with
-      message = 'You need to <a href="' + url_for('.framework_supplier_declaration', section_id='g_cloud_7_essentials') + '">make the supplier&nbsp;declaration</a> before any services can be submitted',
+      message = 'You need to <a href="' + url_for('.framework_supplier_declaration', framework_slug=framework.slug) + '">make the supplier&nbsp;declaration</a> before any services can be submitted',
       type = 'warning'
     %}
       {% include 'toolkit/notification-banner.html' %}
@@ -54,18 +54,18 @@
   {% endif %}
 
   {% with
-     heading = "G-Cloud 7 services",
+     heading = framework.name + " services",
      smaller = True,
      with_breadcrumb = True
   %}
     {% include "toolkit/page-heading.html" %}
   {% endwith %}
 
-  {% if g7_status == 'pending' %}
+  {% if framework.status == 'pending' %}
     <div class="summary-item-lede">
       <div class="grid-row">
         <div class="column-two-thirds">
-          <h2 class="summary-item-heading">G-Cloud 7 is closed for applications</h2>
+          <h2 class="summary-item-heading">{{ framework.name }} is closed for applications</h2>
           <p>
             You made your supplier declaration and submitted {{ complete_drafts|length }} complete {{ 'service' if complete_drafts|length == 1 else 'services' }}.
           </p>
@@ -75,9 +75,9 @@
   {% endif %}
 
   {{ summary.heading("Draft services") }}
-  {% if g7_status == 'open' %}
-    {{ summary.top_link("Add a service", url_for(".start_new_draft_service")) }}
-  {% elif g7_status == 'pending' %}
+  {% if framework.status == 'open' %}
+    {{ summary.top_link("Add a service", url_for(".start_new_draft_service", framework_slug=framework.slug)) }}
+  {% elif framework.status == 'pending' %}
     <p class="hint">These services were not submitted</p>
   {% endif %}
   {% call(draft) summary.list_table(
@@ -97,23 +97,23 @@
                               url_for(".view_service_submission", service_id=draft.id)) }}
       {{ summary.text(draft.lot) }}
       
-      {% if g7_status == 'open' %}
+      {% if framework.status == 'open' %}
       {{ summary.text(submission.multiline_string(
-        submission.can_be_completed_text(draft.unanswered_required, g7_status),
+        submission.can_be_completed_text(draft.unanswered_required, framework.status),
         submission.unanswered_required_text(draft.unanswered_required, draft.unanswered_optional),
         submission.unanswered_optional_text(draft.unanswered_required, draft.unanswered_optional)
       )) }}
       {% endif %}
-      {% if g7_status == 'open' %}
+      {% if framework.status == 'open' %}
         {{ summary.button(text="Make a copy",
                            action=url_for('.copy_draft_service', service_id=draft.id)) }}
       {% endif %}
     {% endcall %}
   {% endcall %}
 
-  {% if g7_status == 'open' %}
+  {% if framework.status == 'open' %}
   {{ summary.heading("Complete services") }}
-  {% elif g7_status == 'pending' %}
+  {% elif framework.status == 'pending' %}
   {{ summary.heading("Submitted services") }}
   {% endif %}
   {% call(draft) summary.list_table(
@@ -135,13 +135,13 @@
       {{ summary.text(
         submission.unanswered_optional_text(draft.unanswered_required, draft.unanswered_optional)
       ) }}
-      {% if g7_status == 'open' %}
+      {% if framework.status == 'open' %}
         {{ summary.button(text="Make a copy",
                            action=url_for('.copy_draft_service', service_id=draft.id)) }}
       {% endif %}
     {% endcall %}
   {% endcall %}
 
-  <a href="{{ url_for('.framework_dashboard') }}">Return to G-Cloud 7 application</a>
+  <a href="{{ url_for('.framework_dashboard', framework_slug=framework.slug) }}">Return to {{ framework.name }} application</a>
 
 {% endblock %}
