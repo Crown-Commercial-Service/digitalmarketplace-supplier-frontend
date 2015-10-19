@@ -168,7 +168,8 @@ def framework_supplier_declaration(section_id):
 @login_required
 @flask_featureflags.is_active_feature('GCLOUD7_OPEN')
 def download_supplier_file(filepath):
-    url = get_draft_document_url(filepath)
+    uploader = s3.S3(current_app.config['DM_G7_DRAFT_DOCUMENTS_BUCKET'])
+    url = get_draft_document_url(uploader, filepath)
     if not url:
         abort(404)
 
