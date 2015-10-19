@@ -1,7 +1,7 @@
 {% extends "_base_page.html" %}
 {% import "macros/toolkit_forms.html" as forms %}
 
-{% block page_title %}G-Cloud 7 supplier declaration – Digital Marketplace{% endblock %}
+{% block page_title %}{{ framework.name }} supplier declaration – Digital Marketplace{% endblock %}
 
 {% block breadcrumb %}
   {%
@@ -83,7 +83,7 @@
               {% endwith %}
             {% endif %}
 
-            <a href="{{ url_for('.framework_dashboard', framework_slug=framework.slug) }}">Return to G-Cloud 7 application</a>
+            <a href="{{ url_for('.framework_dashboard', framework_slug=framework.slug) }}">Return to {{ framework.name }} application</a>
           </div>
       </div>
   </form>
