@@ -51,6 +51,9 @@
               </div>
             {% endif %}
             {% for question in section.questions %}
+              <a style="position: absolute; right: 10px; margin-top: 25px; text-decoration: none"
+                href="https://github.com/alphagov/digitalmarketplace-frameworks/blob/master/frameworks/{{framework.slug}}/questions/declaration/{{question.id}}.yml"
+              >✎</a>
               {% if errors and errors[question.id] %}
                 {{ forms[question.type](question, service_data, errors, question_number=question.number, get_question=get_question) }}
               {% else %}

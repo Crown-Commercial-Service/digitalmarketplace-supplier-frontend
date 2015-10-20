@@ -113,7 +113,8 @@ def declaration(section_id):
     framework_slug = 'digital-outcomes-and-specialists'
     framework = {
         'frameworks': {
-            'name': 'Digital Outcomes and Specialists'
+            'name': 'Digital Outcomes and Specialists',
+            'slug': framework_slug
         }
     }
     content = content_loader.get_builder(framework_slug, 'declaration')
