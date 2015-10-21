@@ -53,14 +53,27 @@ class TestFrameworksDashboard(BaseApplicationTest):
 
             assert_equal(res.status_code, 200)
 
-    def test_interest_registered_in_framework(self, data_api_client, s3):
+    def test_interest_registered_in_framework_on_post(self, data_api_client, s3):
         with self.app.test_client():
             self.login()
 
-            res = self.client.get("/suppliers/frameworks/g-cloud-7")
+            res = self.client.post("/suppliers/frameworks/digital-outcomes-and-specialists")
 
             assert_equal(res.status_code, 200)
-            data_api_client.register_framework_interest.assert_called_once_with(1234, "g-cloud-7", "email@email.com")
+            data_api_client.register_framework_interest.assert_called_once_with(
+                1234,
+                "digital-outcomes-and-specialists",
+                "email@email.com"
+            )
+
+    def test_interest_not_registered_in_framework_on_get(self, data_api_client, s3):
+        with self.app.test_client():
+            self.login()
+
+            res = self.client.get("/suppliers/frameworks/digital-outcomes-and-specialists")
+
+            assert_equal(res.status_code, 200)
+            assert not data_api_client.register_framework_interest.called
 
     def test_shows_gcloud_7_closed_message_if_pending_and_no_application_done(self, data_api_client, s3):
         with self.app.test_client():
