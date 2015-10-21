@@ -1,4 +1,5 @@
 import itertools
+from datetime import datetime
 
 from flask import render_template, request, abort, flash, redirect, url_for, current_app
 from flask_login import login_required, current_user
@@ -10,6 +11,7 @@ from dmutils import flask_featureflags
 from dmutils.email import send_email, MandrillException
 from dmutils.formats import format_service_price
 from dmutils import s3
+from dmutils.deprecation import deprecated
 
 from ... import data_api_client
 from ...main import main, content_loader
@@ -195,6 +197,22 @@ def download_supplier_file(framework_slug, filepath):
         abort(404)
 
     return redirect(url)
+
+
+@main.route('/frameworks/<any("g-cloud-7"):framework_slug>/<path:filepath>.zip', methods=['GET'])
+@deprecated(dies_at=datetime(2015, 11, 9))
+def g7_download_zip_redirect_zip(framework_slug, filepath):
+    return redirect(url_for('.download_supplier_file',
+                            framework_slug='g-cloud-7',
+                            filepath='{}.zip'.format(filepath)), 301)
+
+
+@main.route('/frameworks/<any("g-cloud-7"):framework_slug>/<path:filepath>.pdf', methods=['GET'])
+@deprecated(dies_at=datetime(2015, 11, 9))
+def g7_download_zip_redirect_pdf(framework_slug, filepath):
+    return redirect(url_for('.download_supplier_file',
+                            framework_slug='g-cloud-7',
+                            filepath='{}.pdf'.format(filepath)), 301)
 
 
 @main.route('/frameworks/<framework_slug>/updates', methods=['GET'])
