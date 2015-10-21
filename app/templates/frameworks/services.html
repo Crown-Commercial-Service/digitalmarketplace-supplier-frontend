@@ -94,7 +94,7 @@
   ) %}
     {% call summary.row() %}
       {{ summary.service_link(draft.serviceName,
-                              url_for(".view_service_submission", service_id=draft.id)) }}
+                              url_for(".view_service_submission", framework_slug=framework.slug, service_id=draft.id)) }}
       {{ summary.text(draft.lot) }}
       
       {% if framework.status == 'open' %}
@@ -106,7 +106,7 @@
       {% endif %}
       {% if framework.status == 'open' %}
         {{ summary.button(text="Make a copy",
-                           action=url_for('.copy_draft_service', service_id=draft.id)) }}
+                           action=url_for('.copy_draft_service', framework_slug=framework.slug, service_id=draft.id)) }}
       {% endif %}
     {% endcall %}
   {% endcall %}
@@ -130,7 +130,7 @@
   ) %}
     {% call summary.row() %}
       {{ summary.service_link(draft.serviceName,
-                              url_for(".view_service_submission", service_id=draft.id)) }}
+                              url_for(".view_service_submission", framework_slug=framework.slug, service_id=draft.id)) }}
       {{ summary.text(draft.lot) }}
       {{ summary.text(
         submission.unanswered_optional_text(draft.unanswered_required, draft.unanswered_optional)

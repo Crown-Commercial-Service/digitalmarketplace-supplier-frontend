@@ -35,13 +35,14 @@ def dashboard():
 
     drafts, complete_drafts = get_drafts(data_api_client, current_user.supplier_id, 'g-cloud-7')
     declaration_status = get_declaration_status(data_api_client, 'g-cloud-7')
+    framework = data_api_client.get_framework('g-cloud-7')['frameworks']
     application_made = len(complete_drafts) > 0 and declaration_status == 'complete'
     return render_template(
         "suppliers/dashboard.html",
         supplier=supplier,
         users=get_current_suppliers_users(),
         g7_interested=has_registered_interest_in_framework(data_api_client, 'g-cloud-7'),
-        g7_status=data_api_client.get_framework_status('g-cloud-7').get('status', None),
+        g7_status=framework['status'],
         g7_application_made=application_made,
         g7_complete=len(complete_drafts),
         deadline=current_app.config['G7_CLOSING_DATE'],

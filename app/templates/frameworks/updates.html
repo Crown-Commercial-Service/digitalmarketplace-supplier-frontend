@@ -15,8 +15,8 @@
         "label": "Your account",
       },
       {
-        "link": url_for(".framework_dashboard", framework_slug='g-cloud-7'),
-        "label": "Apply to G-Cloud 7",
+        "link": url_for(".framework_dashboard", framework_slug=framework.slug),
+        "label": "Apply to " + framework.name,
       }
     ]
   %}
@@ -88,7 +88,7 @@
           {% call summary.row() %}
             {{ summary.field_name(item.last_modified|dateformat) }}
             {% call summary.field() %}
-               <a href="{{ url_for('.download_supplier_file', filepath=item.path, framework_slug='g-cloud-7') }}" class="document-link-with-icon">
+               <a href="{{ url_for('.download_supplier_file', filepath=item.path, framework_slug=framework.slug) }}" class="document-link-with-icon">
                 <span class='document-icon'>{{ item.ext }}<span> document:</span></span>
                 {{ item.filename }}
             {% endcall %}
@@ -129,7 +129,7 @@
           {% include "toolkit/button.html" %}
           {% endwith %}
         
-          <a href="{{ url_for('.framework_dashboard', framework_slug='g-cloud-7') }}">Return to G-Cloud 7 application</a>
+          <a href="{{ url_for('.framework_dashboard', framework_slug=framework.slug) }}">Return to {{ framework.name }} application</a>
 
         </div>
       </div>
@@ -161,7 +161,7 @@
               {% include "toolkit/button.html" %}
             {% endwith %}
       
-            <a href="{{ url_for('.framework_dashboard', framework_slug='g-cloud-7') }}">Return to G-Cloud 7 application</a>
+            <a href="{{ url_for('.framework_dashboard', framework_slug=framework.slug) }}">Return to {{ framework.name }} application</a>
 
           </div>
         </div>

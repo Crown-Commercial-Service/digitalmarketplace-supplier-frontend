@@ -20,7 +20,7 @@
         "label": "Services"
       },
       {
-        "link": url_for(".view_service_submission", service_id=service_id),
+        "link": url_for(".view_service_submission", framework_slug=framework.slug, service_id=service_id),
         "label": service_data['serviceName']
       }
     ]

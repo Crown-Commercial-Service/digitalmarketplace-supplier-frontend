@@ -282,7 +282,7 @@ class TestFrameworkDocumentDownload(BaseApplicationTest):
         with self.app.test_client():
             self.login()
 
-            res = self.client.get('/suppliers/frameworks/g-cloud-7/example.pdf')
+            res = self.client.get('/suppliers/frameworks/g-cloud-7/files/example.pdf')
 
             assert_equal(res.status_code, 302)
             assert_equal(res.location, 'http://localhost/path?param=value')
@@ -296,9 +296,21 @@ class TestFrameworkDocumentDownload(BaseApplicationTest):
         with self.app.test_client():
             self.login()
 
-            res = self.client.get('/suppliers/frameworks/g-cloud-7/example.pdf')
+            res = self.client.get('/suppliers/frameworks/g-cloud-7/files/example.pdf')
 
             assert_equal(res.status_code, 404)
+
+    def test_redirect_g7_document_downloads(self, s3):
+
+        for filename in ['foo.pdf', 'foo.zip', 'foo/bar.pdf']:
+            with self.app.test_client():
+                self.login()
+
+                res = self.client.get('/suppliers/frameworks/g-cloud-7/{}'.format(filename))
+
+                assert_equal(res.status_code, 301)
+                assert_equal(res.location,
+                             'http://localhost/suppliers/frameworks/g-cloud-7/files/{}'.format(filename))
 
 
 FULL_G7_SUBMISSION = {
@@ -494,6 +506,7 @@ class TestSupplierDeclaration(BaseApplicationTest):
             assert not data_api_client.set_supplier_declaration.called
 
 
+@mock.patch('app.main.views.frameworks.data_api_client')
 @mock.patch('dmutils.s3.S3')
 class TestFrameworkUpdatesPage(BaseApplicationTest):
 
@@ -526,7 +539,8 @@ class TestFrameworkUpdatesPage(BaseApplicationTest):
                     in self.strip_all_whitespace(table_captions[index].text)
                 )
 
-    def test_should_be_a_503_if_connecting_to_amazon_fails(self, s3):
+    def test_should_be_a_503_if_connecting_to_amazon_fails(self, s3, data_api_client):
+        data_api_client.get_framework.return_value = self.framework('open')
         # if s3 throws a 500-level error
         s3.side_effect = S3ResponseError(500, 'Amazon has collapsed. The internet is over.')
 
@@ -543,7 +557,8 @@ class TestFrameworkUpdatesPage(BaseApplicationTest):
                 in self.strip_all_whitespace(response.get_data(as_text=True))
             )
 
-    def test_empty_messages_exist_if_no_files_returned(self, s3):
+    def test_empty_messages_exist_if_no_files_returned(self, s3, data_api_client):
+        data_api_client.get_framework.return_value = self.framework('open')
 
         with self.app.test_client():
             self.login()
@@ -565,7 +580,8 @@ class TestFrameworkUpdatesPage(BaseApplicationTest):
                     in self.strip_all_whitespace(response.get_data(as_text=True))
                 )
 
-    def test_the_tables_should_be_displayed_correctly(self, s3):
+    def test_the_tables_should_be_displayed_correctly(self, s3, data_api_client):
+        data_api_client.get_framework.return_value = self.framework('open')
 
         files = [
             ('g-cloud-7-updates/communications/', 'file 1', 'odt'),
@@ -603,12 +619,13 @@ class TestFrameworkUpdatesPage(BaseApplicationTest):
                     assert_true(filename in filename_link.text_content())
                     assert_equal(
                         filename_link.get('href'),
-                        '/suppliers/frameworks/g-cloud-7/{}{}.{}'.format(
+                        '/suppliers/frameworks/g-cloud-7/files/{}{}.{}'.format(
                             section, filename.replace(' ', '%20'), ext
                         )
                     )
 
-    def test_names_with_the_section_name_in_them_will_display_correctly(self, s3):
+    def test_names_with_the_section_name_in_them_will_display_correctly(self, s3, data_api_client):
+        data_api_client.get_framework.return_value = self.framework('open')
 
         # for example: 'g-cloud-7-updates/clarifications/communications%20file.odf'
         files = [
@@ -644,7 +661,7 @@ class TestFrameworkUpdatesPage(BaseApplicationTest):
                     assert_true(filename in filename_link.text_content())
                     assert_equal(
                         filename_link.get('href'),
-                        '/suppliers/frameworks/g-cloud-7/{}{}.{}'.format(
+                        '/suppliers/frameworks/g-cloud-7/files/{}{}.{}'.format(
                             section, filename.replace(' ', '%20'), ext
                         )
                     )
@@ -711,9 +728,11 @@ class TestSendClarificationQuestionEmail(BaseApplicationTest):
                 ["g7-application-question"]
             )
 
+    @mock.patch('app.main.views.frameworks.data_api_client')
     @mock.patch('dmutils.s3.S3')
     @mock.patch('app.main.views.frameworks.send_email')
-    def test_should_not_send_email_if_invalid_clarification_question(self, send_email, s3):
+    def test_should_not_send_email_if_invalid_clarification_question(self, send_email, s3, data_api_client):
+        data_api_client.get_framework.return_value = self.framework('open')
 
         for invalid_clarification_question in [
             {
@@ -809,8 +828,10 @@ class TestSendClarificationQuestionEmail(BaseApplicationTest):
             object_id=1234,
             data={"question": clarification_question})
 
+    @mock.patch('app.main.views.frameworks.data_api_client')
     @mock.patch('app.main.views.frameworks.send_email')
-    def test_should_be_a_503_if_email_fails(self, send_email):
+    def test_should_be_a_503_if_email_fails(self, send_email, data_api_client):
+        data_api_client.get_framework.return_value = self.framework('open')
         send_email.side_effect = MandrillException("Arrrgh")
 
         clarification_question = 'This is a clarification question.'

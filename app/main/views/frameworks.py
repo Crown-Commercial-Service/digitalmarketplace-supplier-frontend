@@ -1,4 +1,5 @@
 import itertools
+from datetime import datetime
 
 from flask import render_template, request, abort, flash, redirect, url_for, current_app
 from flask_login import login_required, current_user
@@ -10,6 +11,7 @@ from dmutils import flask_featureflags
 from dmutils.email import send_email, MandrillException
 from dmutils.formats import format_service_price
 from dmutils import s3
+from dmutils.deprecation import deprecated
 
 from ... import data_api_client
 from ...main import main, content_loader
@@ -185,7 +187,7 @@ def framework_supplier_declaration(framework_slug, section_id=None):
     ), status_code
 
 
-@main.route('/frameworks/<framework_slug>/<path:filepath>', methods=['GET'])
+@main.route('/frameworks/<framework_slug>/files/<path:filepath>', methods=['GET'])
 @login_required
 @flask_featureflags.is_active_feature('GCLOUD7_OPEN')
 def download_supplier_file(framework_slug, filepath):
@@ -197,10 +199,27 @@ def download_supplier_file(framework_slug, filepath):
     return redirect(url)
 
 
-@main.route('/frameworks/g-cloud-7/updates', methods=['GET'])
+@main.route('/frameworks/<any("g-cloud-7"):framework_slug>/<path:filepath>.zip', methods=['GET'])
+@deprecated(dies_at=datetime(2015, 11, 9))
+def g7_download_zip_redirect_zip(framework_slug, filepath):
+    return redirect(url_for('.download_supplier_file',
+                            framework_slug='g-cloud-7',
+                            filepath='{}.zip'.format(filepath)), 301)
+
+
+@main.route('/frameworks/<any("g-cloud-7"):framework_slug>/<path:filepath>.pdf', methods=['GET'])
+@deprecated(dies_at=datetime(2015, 11, 9))
+def g7_download_zip_redirect_pdf(framework_slug, filepath):
+    return redirect(url_for('.download_supplier_file',
+                            framework_slug='g-cloud-7',
+                            filepath='{}.pdf'.format(filepath)), 301)
+
+
+@main.route('/frameworks/<framework_slug>/updates', methods=['GET'])
 @login_required
 @flask_featureflags.is_active_feature('GCLOUD7_OPEN')
-def framework_updates(error_message=None, default_textbox_value=None):
+def framework_updates(framework_slug, error_message=None, default_textbox_value=None):
+    framework = data_api_client.get_framework(framework_slug)['frameworks']
 
     current_app.logger.info("g7updates.viewed: user_id {user_id} supplier_id {supplier_id}",
                             extra={'user_id': current_user.id,
@@ -231,6 +250,7 @@ def framework_updates(error_message=None, default_textbox_value=None):
 
     return render_template(
         "frameworks/updates.html",
+        framework=framework,
         clarification_question_name=CLARIFICATION_QUESTION_NAME,
         clarification_question_value=default_textbox_value,
         error_message=error_message,
@@ -239,17 +259,19 @@ def framework_updates(error_message=None, default_textbox_value=None):
     ), 200 if not error_message else 400
 
 
-@main.route('/frameworks/g-cloud-7/updates', methods=['POST'])
+@main.route('/frameworks/<framework_slug>/updates', methods=['POST'])
 @login_required
 @flask_featureflags.is_active_feature('GCLOUD7_OPEN')
-def framework_updates_email_clarification_question():
+def framework_updates_email_clarification_question(framework_slug):
+    framework = data_api_client.get_framework(framework_slug)['frameworks']
     # Stripped input should not empty
     clarification_question = request.form.get(CLARIFICATION_QUESTION_NAME, '').strip()
 
     if not clarification_question:
-        return framework_updates("Question cannot be empty")
+        return framework_updates(framework_slug, "Question cannot be empty")
     elif len(clarification_question) > 5000:
         return framework_updates(
+            framework_slug,
             error_message="Question cannot be longer than 5000 characters",
             default_textbox_value=clarification_question
         )
@@ -338,4 +360,4 @@ def framework_updates_email_clarification_question():
         data={"question": clarification_question})
 
     flash('message_sent', 'success')
-    return framework_updates()
+    return framework_updates(framework['slug'])
