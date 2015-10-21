@@ -1,6 +1,5 @@
 from flask import abort
 from flask_login import current_user
-from dmutils.audit import AuditTypes
 from dmutils.apiclient import APIError
 import re
 from operator import add
@@ -18,11 +17,12 @@ OPTIONAL_FIELDS = set([
 ])
 
 
-def has_registered_interest_in_framework(client, framework_slug):
-    frameworks = client.get_framework_interest(current_user.supplier_id)
-    if framework_slug in frameworks.get('frameworks', []):
-            return True
-    return False
+def frameworks_by_slug(client):
+    framework_list = client.find_frameworks().get("frameworks")
+    frameworks = {}
+    for framework in framework_list:
+        frameworks[framework['slug']] = framework
+    return frameworks
 
 
 def register_interest_in_framework(client, framework_slug):

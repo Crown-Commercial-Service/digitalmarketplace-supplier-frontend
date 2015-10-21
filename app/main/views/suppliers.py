@@ -1,20 +1,18 @@
 from itertools import chain
 
-from flask import render_template, request, redirect, url_for, abort, session, flash
+from flask import render_template, request, redirect, url_for, abort, session
 from flask_login import login_required, current_user, current_app
 import six
 
-from dmutils.apiclient import APIError, HTTPError
+from dmutils.apiclient import APIError
 from dmutils.audit import AuditTypes
-from dmutils import flask_featureflags
 from dmutils.email import send_email, generate_token, MandrillException
 
 from ...main import main
 from ... import data_api_client
-from ..forms.suppliers import EditSupplierForm, EditContactInformationForm, \
-    DunsNumberForm, CompaniesHouseNumberForm, CompanyContactDetailsForm, CompanyNameForm, EmailAddressForm
-from ..helpers.frameworks import has_registered_interest_in_framework, \
-    get_declaration_status
+from ..forms.suppliers import EditSupplierForm, EditContactInformationForm, DunsNumberForm, CompaniesHouseNumberForm,\
+    CompanyContactDetailsForm, CompanyNameForm, EmailAddressForm
+from ..helpers.frameworks import get_declaration_status, frameworks_by_slug
 from ..helpers import hash_email
 from ..helpers.services import get_drafts
 from .users import get_current_suppliers_users
@@ -33,19 +31,18 @@ def dashboard():
     except APIError as e:
         abort(e.status_code)
 
-    drafts, complete_drafts = get_drafts(data_api_client, current_user.supplier_id, 'g-cloud-7')
-    declaration_status = get_declaration_status(data_api_client, 'g-cloud-7')
-    framework = data_api_client.get_framework('g-cloud-7')['frameworks']
-    application_made = len(complete_drafts) > 0 and declaration_status == 'complete'
+    g7_drafts, g7_complete_drafts = get_drafts(data_api_client, current_user.supplier_id, 'g-cloud-7')
+    g7_declaration_status = get_declaration_status(data_api_client, 'g-cloud-7')
+    application_made = len(g7_complete_drafts) > 0 and g7_declaration_status == 'complete'
     return render_template(
         "suppliers/dashboard.html",
         supplier=supplier,
         users=get_current_suppliers_users(),
-        g7_interested=has_registered_interest_in_framework(data_api_client, 'g-cloud-7'),
-        g7_status=framework['status'],
+        registered_frameworks=data_api_client.get_framework_interest(current_user.supplier_id)['frameworks'],
+        frameworks=frameworks_by_slug(data_api_client),
         g7_application_made=application_made,
-        g7_complete=len(complete_drafts),
-        deadline=current_app.config['G7_CLOSING_DATE'],
+        g7_complete=len(g7_complete_drafts),
+        deadline=current_app.config['DOS_CLOSING_DATE'],
         **template_data
     ), 200
 

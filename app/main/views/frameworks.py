@@ -131,16 +131,15 @@ def framework_supplier_declaration(framework_slug, section_id=None):
         abort(404)
 
     is_last_page = section_id == content.sections[-1]['id']
+    latest_answers = {}
 
     try:
         response = data_api_client.get_supplier_declaration(current_user.supplier_id, framework_slug)
-        latest_answers = response['declaration']
+        if response['declaration']:
+            latest_answers = response['declaration']
     except APIError as e:
         if e.status_code != 404:
             abort(e.status_code)
-
-    if latest_answers is None:
-        latest_answers = {}
 
     if request.method == 'POST':
         answers = content.get_all_data(request.form)

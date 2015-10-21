@@ -1,4 +1,4 @@
-{% if 'g-cloud-7' in registered_frameworks and frameworks['g-cloud-7'].get('status', None) == 'open' %}
+{% if 'g-cloud-7' in registered_frameworks and frameworks.get('g-cloud-7', {}).get('status', None) == 'open' %}
     {%
     with
         items = [{
@@ -11,7 +11,7 @@
         {% include "toolkit/browse-list.html" %}
     {% endwith %}
 
-{% elif frameworks['g-cloud-7'].get('status', None) == 'open' %}
+{% elif frameworks.get('g-cloud-7', {}).get('status', None) == 'open' %}
     {%
     with
         items = [{
@@ -24,7 +24,7 @@
         {% include "toolkit/browse-list.html" %}
     {% endwith %}
 
-{% elif 'g-cloud-7' in registered_frameworks and g7_application_made and frameworks['g-cloud-7'].get('status', None) == 'pending' %}
+{% elif 'g-cloud-7' in registered_frameworks and g7_application_made and frameworks.get('g-cloud-7', {}).get('status', None) == 'pending' %}
 <div class="summary-item-lede">
     <div class="grid-row">
         <div class="column-two-thirds">
@@ -37,7 +37,7 @@
     </div>
 </div>
 
-{% elif 'g-cloud-7' in registered_frameworks and frameworks['g-cloud-7'].get('status', None) == 'pending' %}
+{% elif 'g-cloud-7' in registered_frameworks and frameworks.get('g-cloud-7', {}).get('status', None) == 'pending' %}
 <aside role="complementary" class="temporary-message" aria-labelledby="temporary-message-heading">
     <h2 class="temporary-message-heading" id="temporary-message-heading">
         G‑Cloud 7 is closed for applications
@@ -50,7 +50,7 @@
     </p>
 </aside>
 
-{% elif frameworks['g-cloud-7'].get('status', None) == 'pending' %}
+{% elif frameworks.get('g-cloud-7', {}).get('status', None) == 'pending' %}
 <aside role="complementary" class="temporary-message" aria-labelledby="temporary-message-heading">
     <h2 class="temporary-message-heading" id="temporary-message-heading">
         G‑Cloud 7 is closed for applications
