@@ -263,12 +263,14 @@ gulp.task('test', function () {
 gulp.task('watch', ['build:development'], function () {
   var jsWatcher = gulp.watch([ assetsFolder + '/**/*.js' ], ['js']);
   var cssWatcher = gulp.watch([ assetsFolder + '/**/*.scss' ], ['sass']);
+  var frameworkWatcher = gulp.watch([ bowerRoot + '/digitalmarketplace-frameworks' + '/**/*.yml' ], ['copy:frameworks']);
   var notice = function (event) {
     console.log('File ' + event.path + ' was ' + event.type + ' running tasks...');
   };
 
   cssWatcher.on('change', notice);
   jsWatcher.on('change', notice);
+  frameworkWatcher.on('change', notice);
 });
 
 gulp.task('set_environment_to_development', function (cb) {
