@@ -409,7 +409,7 @@ class TestCreateDraftService(BaseApplicationTest):
         assert_equal(res.status_code, 200)
         assert_in("Create new service", res.get_data(as_text=True))
 
-        lots = content_loader.get_builder('g-cloud-7', 'edit_submission').get_question('lot')
+        lots = content_loader.get_question('g-cloud-7', 'services', 'lot')
 
         for lot in lots['options']:
             assert_in(lot['label'], res.get_data(as_text=True))
