@@ -45,7 +45,8 @@ class TestListServices(BaseApplicationTest):
                     'serviceName': 'Service name 123',
                     'status': 'published',
                     'id': '123',
-                    'lot': 'SaaS',
+                    'lot': 'saas',
+                    'lotName': 'Software as a Service',
                     'frameworkName': 'G-Cloud 1'
                 }]
             }
@@ -55,7 +56,7 @@ class TestListServices(BaseApplicationTest):
             data_api_client.find_services.assert_called_once_with(
                 supplier_id=1234)
             assert_true("Service name 123" in res.get_data(as_text=True))
-            assert_true("SaaS" in res.get_data(as_text=True))
+            assert_true("Software as a Service" in res.get_data(as_text=True))
             assert_true("G-Cloud 1" in res.get_data(as_text=True))
 
     @mock.patch('app.data_api_client')
@@ -433,7 +434,8 @@ class TestCreateDraftService(BaseApplicationTest):
                 'id': 1,
                 'supplierId': 1234,
                 'supplierName': "supplierName",
-                'lot': "SCS",
+                'lot': "scs",
+                'lotName': "Specialist Cloud Services",
                 'status': "not-submitted",
                 'frameworkName': "frameworkName",
                 'links': {},

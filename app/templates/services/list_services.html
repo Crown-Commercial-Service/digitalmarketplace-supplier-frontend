@@ -68,7 +68,7 @@
 
       {{ summary.text(item.frameworkName) }}
 
-      {{ summary.text(item.lot) }}
+      {{ summary.text(item.lotName) }}
 
       {% if item.status == "published" %}
         {{ summary.edit_link("View service", '/g-cloud/services/' + item.id) }}
