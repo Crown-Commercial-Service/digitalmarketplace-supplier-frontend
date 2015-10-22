@@ -3,7 +3,8 @@
 import os
 import re
 from app import create_app
-from flask.ext.script import Manager, Server
+from flask.ext.script import Manager
+from dmutils import init_manager
 
 application = create_app(
     os.getenv('DM_ENVIRONMENT') or 'development'
@@ -15,7 +16,7 @@ application.jinja_options = {
 }
 
 manager = Manager(application)
-manager.add_command("runserver", Server(port=5003))
+init_manager(manager, 5003, ['./app/content/frameworks'])
 
 if __name__ == '__main__':
     manager.run()
