@@ -64,6 +64,7 @@ class Config(object):
     FEATURE_FLAGS_EDIT_SERVICE_PAGE = False
     FEATURE_FLAGS_GCLOUD7_OPEN = False
     FEATURE_FLAGS_G7_CLARIFICATIONS_CLOSED = False
+    FEATURE_FLAGS_SHOW_DOS_DECLARATION = False
 
     # Logging
     DM_LOG_LEVEL = 'DEBUG'
@@ -104,6 +105,7 @@ class Development(Config):
     FEATURE_FLAGS_EDIT_SERVICE_PAGE = enabled_since('2015-06-03')
     FEATURE_FLAGS_GCLOUD7_OPEN = enabled_since('2015-06-18')
     FEATURE_FLAGS_G7_CLARIFICATIONS_CLOSED = enabled_since('2015-09-15')
+    FEATURE_FLAGS_SHOW_DOS_DECLARATION = True
 
 
 class Live(Config):
