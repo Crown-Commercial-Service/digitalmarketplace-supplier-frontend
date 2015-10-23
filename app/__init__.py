@@ -79,7 +79,7 @@ def create_app(config_name):
     @application.template_filter('question_references')
     def question_references_filter(data, get_question):
         return re.sub(
-            r"\[\[([^\]]+)\]\]",
+            r"\[\[([^\]]+)\]\]",  # anything that looks like [[nameOfQuestion]]
             lambda question_id: str(get_question(question_id.group(1))['number']),
             data
         )
