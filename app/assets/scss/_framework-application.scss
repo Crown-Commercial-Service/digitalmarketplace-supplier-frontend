@@ -126,7 +126,7 @@
     padding-right: 0;
   }
 
-  input.button-save { 
+  input.button-save {
     margin-top: 0px;
     margin-bottom: 8px;
   }
@@ -134,7 +134,7 @@
   a {
     @include bold-24;
   }
- 
+
   p {
     margin-bottom: 5px;
 
@@ -166,4 +166,20 @@
       text-decoration: underline;
     }
   }
+}
+
+.pending-services-table {
+
+  .second-line {
+    margin-top: 5px;
+  }
+
+  .summary-item-field-first {
+
+    .second-line {
+      color: $secondary-text-colour;
+    }
+
+  }
+
 }

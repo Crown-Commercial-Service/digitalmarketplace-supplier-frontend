@@ -25,6 +25,7 @@ class Config(object):
     DM_CLARIFICATION_QUESTION_EMAIL = 'digitalmarketplace@mailinator.com'
     G7_CLOSING_DATE = '3pm&nbsp;<abbr title="British Summer Time">BST</abbr>, 6 October 2015'
     DOS_CLOSING_DATE = '14&nbsp;February&nbsp;2016'
+    G7_LIVE_DATE = '23&nbsp;November&nbsp;2015'
 
     DM_G7_DRAFT_DOCUMENTS_BUCKET = None
     DM_G7_DRAFT_DOCUMENTS_URL = None

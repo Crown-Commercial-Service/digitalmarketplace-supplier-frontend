@@ -243,3 +243,11 @@ def question_references(data, get_question):
         lambda question_id: str(get_question(question_id.group(1))['number']),
         data
     )
+
+
+def get_frameworks_by_status(frameworks, status, extra_condition=False):
+    return [
+        framework for framework in frameworks
+        if framework['status'] == status and
+        (framework.get(extra_condition) if extra_condition else True)
+    ]
