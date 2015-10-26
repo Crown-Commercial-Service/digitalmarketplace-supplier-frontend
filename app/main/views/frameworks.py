@@ -18,7 +18,7 @@ from ...main import main, content_loader
 from ..helpers import hash_email
 from ..helpers.frameworks import get_error_messages_for_page, get_first_question_index, \
     get_error_messages, get_declaration_status, get_last_modified_from_first_matching_file, \
-    g_cloud_7_is_open_or_404, register_interest_in_framework
+    register_interest_in_framework
 from ..helpers.services import (
     get_draft_document_url, get_service_attributes, get_drafts,
     count_unanswered_questions
@@ -28,7 +28,7 @@ from ..helpers.services import (
 CLARIFICATION_QUESTION_NAME = 'clarification_question'
 
 
-@main.route('/frameworks/<framework_slug>', methods=['GET'])
+@main.route('/frameworks/<framework_slug>', methods=['GET', 'POST'])
 @login_required
 @flask_featureflags.is_active_feature('GCLOUD7_OPEN')
 def framework_dashboard(framework_slug):
@@ -36,10 +36,11 @@ def framework_dashboard(framework_slug):
     # TODO add a test for 404 if framework doesn't exist
     framework = data_api_client.get_framework(framework_slug)['frameworks']
 
-    try:
-        register_interest_in_framework(data_api_client, framework_slug)
-    except APIError as e:
-        abort(e.status_code)
+    if request.method == 'POST':
+        try:
+            register_interest_in_framework(data_api_client, framework_slug)
+        except APIError as e:
+            abort(e.status_code)
 
     drafts, complete_drafts = get_drafts(data_api_client, current_user.supplier_id, framework_slug)
     declaration_status = get_declaration_status(data_api_client, framework_slug)
@@ -130,14 +131,15 @@ def framework_supplier_declaration(framework_slug, section_id=None):
         abort(404)
 
     is_last_page = section_id == content.sections[-1]['id']
+    latest_answers = {}
 
     try:
         response = data_api_client.get_supplier_declaration(current_user.supplier_id, framework_slug)
-        latest_answers = response['declaration']
+        if response['declaration']:
+            latest_answers = response['declaration']
     except APIError as e:
         if e.status_code != 404:
             abort(e.status_code)
-        latest_answers = {}
 
     if request.method == 'POST':
         answers = content.get_all_data(request.form)

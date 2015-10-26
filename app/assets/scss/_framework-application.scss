@@ -118,13 +118,24 @@
 
   .summary-item-heading {
     padding-top: 0;
+    padding-right: 0;
   }
 
+  input.button-save { 
+    margin-top: 0px;
+    margin-bottom: 8px;
+  }
+
+  a {
+    @include bold-24;
+  }
+ 
   p {
     margin-bottom: 5px;
 
     a {
       display: block;
+      @include core-19;
     }
   }
 }

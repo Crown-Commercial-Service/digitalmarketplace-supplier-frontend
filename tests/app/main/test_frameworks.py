@@ -53,43 +53,34 @@ class TestFrameworksDashboard(BaseApplicationTest):
 
             assert_equal(res.status_code, 200)
 
-    def test_interest_registered_in_framework(self, data_api_client, s3):
+    def test_interest_registered_in_framework_on_post(self, data_api_client, s3):
         with self.app.test_client():
             self.login()
-            data_api_client.find_audit_events.return_value = {
-                "auditEvents": []
-            }
 
-            res = self.client.get("/suppliers/frameworks/g-cloud-7")
+            res = self.client.post("/suppliers/frameworks/digital-outcomes-and-specialists")
 
             assert_equal(res.status_code, 200)
-            data_api_client.create_audit_event.assert_called_once_with(
-                audit_type=AuditTypes.register_framework_interest,
-                user="email@email.com",
-                object_type="suppliers",
-                object_id=1234,
-                data={"frameworkSlug": "g-cloud-7"})
+            data_api_client.register_framework_interest.assert_called_once_with(
+                1234,
+                "digital-outcomes-and-specialists",
+                "email@email.com"
+            )
 
-    def test_interest_in_framework_only_registered_once(self, data_api_client, s3):
+    def test_interest_not_registered_in_framework_on_get(self, data_api_client, s3):
         with self.app.test_client():
             self.login()
-            data_api_client.find_audit_events.return_value = {
-                "auditEvents": [{"data": {"frameworkSlug": "g-cloud-7"}}]
-            }
 
-            res = self.client.get("/suppliers/frameworks/g-cloud-7")
+            res = self.client.get("/suppliers/frameworks/digital-outcomes-and-specialists")
 
             assert_equal(res.status_code, 200)
-            assert not data_api_client.create_audit_event.called
+            assert not data_api_client.register_framework_interest.called
 
     def test_shows_gcloud_7_closed_message_if_pending_and_no_application_done(self, data_api_client, s3):
         with self.app.test_client():
             self.login()
 
             data_api_client.get_framework.return_value = self.framework(status='pending')
-            data_api_client.find_audit_events.return_value = {
-                "auditEvents": [{"data": {"frameworkSlug": "g-cloud-7"}}]
-            }
+            data_api_client.get_framework_interest.return_value = {'frameworks': ['g-cloud-7']}
             data_api_client.find_draft_services.return_value = {
                 "services": [
                     {'serviceName': 'A service', 'status': 'not-submitted'}
@@ -112,9 +103,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
             self.login()
 
             data_api_client.get_framework.return_value = self.framework(status='pending')
-            data_api_client.find_audit_events.return_value = {
-                "auditEvents": [{"data": {"frameworkSlug": "g-cloud-7"}}]
-            }
+            data_api_client.get_framework_interest.return_value = {'frameworks': ['g-cloud-7']}
             data_api_client.find_draft_services.return_value = {
                 "services": [
                     {'serviceName': 'A service', 'status': 'submitted'}

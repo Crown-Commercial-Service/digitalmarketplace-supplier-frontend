@@ -1,0 +1,63 @@
+{% if 'g-cloud-7' in registered_frameworks and frameworks.get('g-cloud-7', {}).get('status', None) == 'open' %}
+    {%
+    with
+        items = [{
+            "title": "Continue your G-Cloud 7 application",
+            "link": url_for(".framework_dashboard", framework_slug='g-cloud-7'),
+            "body": "Make your supplier declaration, add services and view G-Cloud 7 updates and clarification questions.",
+            "subtext": "Deadline for submissions: {}".format(deadline)
+        }]
+    %}
+        {% include "toolkit/browse-list.html" %}
+    {% endwith %}
+
+{% elif frameworks.get('g-cloud-7', {}).get('status', None) == 'open' %}
+    {%
+    with
+        items = [{
+        "title": "Register your interest in becoming a G-Cloud 7 supplier",
+        "link": url_for(".framework_dashboard", framework_slug='g-cloud-7'),
+        "body": "Read about G-Cloud 7, receive email updates and start the application process.",
+        "subtext": "Deadline for submissions: {}".format(deadline)
+        }]
+    %}
+        {% include "toolkit/browse-list.html" %}
+    {% endwith %}
+
+{% elif 'g-cloud-7' in registered_frameworks and g7_application_made and frameworks.get('g-cloud-7', {}).get('status', None) == 'pending' %}
+<div class="summary-item-lede">
+    <div class="grid-row">
+        <div class="column-two-thirds">
+            <h2 class="summary-item-heading">G-Cloud 7 is closed for applications</h2>
+            <p>
+                You submitted {{ g7_complete }} {{ 'service' if g7_complete == 1 else 'services' }} for consideration.
+                <a href="{{ url_for('.framework_dashboard', framework_slug='g-cloud-7') }}">View your submitted application</a>
+            </p>
+        </div>
+    </div>
+</div>
+
+{% elif 'g-cloud-7' in registered_frameworks and frameworks.get('g-cloud-7', {}).get('status', None) == 'pending' %}
+<aside role="complementary" class="temporary-message" aria-labelledby="temporary-message-heading">
+    <h2 class="temporary-message-heading" id="temporary-message-heading">
+        G‑Cloud 7 is closed for applications
+    </h2>
+    <p class="temporary-message-message">
+        You didn’t submit an application.
+    </p>
+    <p class="temporary-message-message">
+        <a href="{{ url_for('.framework_dashboard', framework_slug='g-cloud-7') }}">View G-Cloud 7 information</a>
+    </p>
+</aside>
+
+{% elif frameworks.get('g-cloud-7', {}).get('status', None) == 'pending' %}
+<aside role="complementary" class="temporary-message" aria-labelledby="temporary-message-heading">
+    <h2 class="temporary-message-heading" id="temporary-message-heading">
+        G‑Cloud 7 is closed for applications
+    </h2>
+    <p class="temporary-message-message">
+        Follow the <a href="https://digitalmarketplace.blog.gov.uk/">Digital Marketplace blog</a> for further G-Cloud updates.
+    </p>
+</aside>
+
+{% endif %}
