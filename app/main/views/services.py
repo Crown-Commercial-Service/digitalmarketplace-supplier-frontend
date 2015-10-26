@@ -184,7 +184,7 @@ def start_new_draft_service(framework_slug):
         abort(404)
     template_data = main.config['BASE_TEMPLATE_DATA']
 
-    question = content_loader.get_builder(framework_slug, 'edit_submission').get_question('lot')
+    question = content_loader.get_question(framework_slug, 'services', 'lot')
     section = {
         "name": 'Create new service',
         "questions": [question]
@@ -214,7 +214,7 @@ def create_new_draft_service(framework_slug):
     lot = request.form.get('lot', None)
 
     if not lot:
-        question = content_loader.get_builder(framework_slug, 'edit_submission').get_question('lot')
+        question = content_loader.get_question(framework_slug, 'services', 'lot')
         section = {
             "name": 'Create new service',
             "questions": [question]
