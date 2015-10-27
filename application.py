@@ -3,7 +3,6 @@
 import os
 import re
 from app import create_app
-from flask.ext.script import Manager
 from dmutils import init_manager
 
 application = create_app(
@@ -15,8 +14,7 @@ application.jinja_options = {
     ]
 }
 
-manager = Manager(application)
-init_manager(manager, 5003, ['./app/content/frameworks'])
+init_manager(application, 5003, ['./app/content/frameworks'])
 
 if __name__ == '__main__':
     manager.run()
