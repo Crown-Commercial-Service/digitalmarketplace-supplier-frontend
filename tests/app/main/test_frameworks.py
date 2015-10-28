@@ -47,6 +47,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
 
     def test_shows(self, data_api_client, s3):
         with self.app.test_client():
+            data_api_client.get_framework.return_value = self.framework(status='open')
             self.login()
 
             res = self.client.get("/suppliers/frameworks/g-cloud-7")
@@ -259,6 +260,15 @@ class TestFrameworksDashboard(BaseApplicationTest):
             ]
 
             self._assert_last_updated_times(doc, last_updateds)
+
+    def test_returns_404_if_framework_does_not_exist(self, data_api_client, s3):
+        with self.app.test_client():
+            self.login()
+            data_api_client.get_framework.return_value = {'frameworks': {}}
+
+            res = self.client.get('/suppliers/frameworks/does-not-exist')
+
+            assert_equal(res.status_code, 404)
 
 
 @mock.patch('dmutils.s3.S3')

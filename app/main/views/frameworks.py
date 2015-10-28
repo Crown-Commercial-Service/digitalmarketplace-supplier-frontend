@@ -33,8 +33,9 @@ CLARIFICATION_QUESTION_NAME = 'clarification_question'
 @flask_featureflags.is_active_feature('GCLOUD7_OPEN')
 def framework_dashboard(framework_slug):
     template_data = main.config['BASE_TEMPLATE_DATA']
-    # TODO add a test for 404 if framework doesn't exist
     framework = data_api_client.get_framework(framework_slug)['frameworks']
+    if not framework:
+        abort(404)
 
     if request.method == 'POST':
         try:
