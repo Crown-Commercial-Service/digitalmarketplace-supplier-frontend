@@ -1,0 +1,134 @@
+{% extends "_base_page.html" %}
+
+{% block page_title %}{{ framework.name }} Framework Agreement– Digital Marketplace{% endblock %}
+
+{% block breadcrumb %}
+{%
+with items = [
+    {
+        "link": "/",
+        "label": "Digital Marketplace",
+    },
+    {
+        "link": url_for(".dashboard"),
+        "label": "Your account",
+    },
+    {
+        "link": url_for(".framework_dashboard", framework_slug=framework.slug),
+        "label": "Your {} application".format(framework.name),
+    }
+]
+%}
+{% include "toolkit/breadcrumb.html" %}
+{% endwith %}
+{% endblock %}
+
+{% block main_content %}
+    <div class='column-two-thirds large-paragraph'>
+        {% with
+            heading = "Sign your " + framework.name + " framework agreement",
+            smaller = True,
+            with_breadcrumb = True
+        %}
+            {% include "toolkit/page-heading.html" %}
+        {% endwith %}
+    </div>
+
+    <div class='column-two-thirds large-paragraph'>
+        <div class="padding-bottom-small">
+            <p>Your agreement will need to be signed by both you and the Crown Commercial Service (CCS) 
+                before you can sell {{ framework.name }} services.</p>
+        </div>
+
+        <div class="padding-bottom framework-section">
+            <h3>1. Download your framework agreement</h3>
+            {%
+            with
+                items = [
+                    {
+                    "file_type": "PDF",
+                    "link": "#",
+                    "title": "Download framework agreement (PDF, 216KB)"
+                    },
+                ]
+            %}
+            {% include "toolkit/documents.html" %}
+            {% endwith %}
+        </div>
+        
+        <div class="padding-bottom framework-section">
+            <h3>2. Read your framework agreement</h3>
+            <p>If you have a question about your framework agreement, <a href="#">contact CCS</a>.</p>
+        </div>
+
+        <div class="padding-bottom framework-section">
+            <h3>3. Sign your framework agreement</h3>
+            <p class='padding-bottom-small'>To digitally sign your framework agreement, you need to:</p>
+            <ol class='number-list indent-list-large loose-list padding-bottom-small'>
+                <li>Use <strong>Adobe Reader</strong> to open your G-Cloud 7 framework agreement. 
+                    You can download it for free from the <a href="https://get.adobe.com/uk/reader/">Adobe Acrobat Reader</a> website.</li>
+
+                <li>Go to page 15 and click the signature box under the title ‘Signed duly authorised for and on behalf of the supplier’.</li>
+
+                <li>Use an existing digital ID or create a new one.</li>
+
+                <li>Enter your name, email and organisation details.</li>
+
+                <li>Enter and confirm your new password. </li>
+
+                <li>Enter your password and click ‘Sign’.</li>
+
+                <li>Save your document to add your digital ID to the signature box.</li>
+
+                <li>Upload and return your signed framework agreement via the Digital Marketplace.</li>
+
+            </ol>
+            <p class='padding-bottom-small'>
+                If you can’t digitally sign your framework agreement:
+            </p>
+            <ol class='number-list indent-list-large loose-list padding-bottom-small'>
+                <li>Print and sign page 15.</li>
+                <li>Scan the page and save as PDF, JPG or PNG.</li>
+                <li>Upload and return your signed framework agreement via the Digital&nbsp;Marketplace.</li>
+            </ol>
+            <p>
+                Please don’t send paper copies to the CCS.
+            </p>
+        </div>
+        
+        <div class="padding-bottom framework-section">
+            <form method="post">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+                <h3>4. Upload your signed framework agreement</h3>
+                {% if agreement_returned %}
+                    {%
+                    with
+                    question = "Please replace the file you previously uploaded",
+                    name = "question-2",
+                    value = "1234123412341234-pricing-document.pdf",
+                    hint = "Hint comprising further information about the question"
+                    %}
+                    {% include "toolkit/forms/upload.html" %}
+                    {% endwith %}
+                {% else %}
+                    {%
+                    with
+                    name = "question-1"
+                    %}
+                    {% include "toolkit/forms/upload.html" %}
+                    {% endwith %}
+                {% endif %}
+    
+                {%
+                with
+                type = "save",
+                label = "Send document to CCS"
+                %}
+                {% include "toolkit/button.html" %}
+                {% endwith %}
+            </form>
+        </div>
+        
+        <a href="{{url_for('.framework_dashboard', framework_slug=framework.slug)}}">Return to your G-Cloud application</a>
+    </div>
+{% endblock %}

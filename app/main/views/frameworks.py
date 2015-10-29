@@ -366,3 +366,21 @@ def framework_updates_email_clarification_question(framework_slug):
 
     flash('message_sent', 'success')
     return framework_updates(framework['slug'])
+
+
+@main.route('/frameworks/<framework_slug>/agreement', methods=['GET'])
+@login_required
+def framework_agreement(framework_slug):
+    framework = data_api_client.get_framework(framework_slug)['frameworks']
+    if not (framework['status'] == 'pending' or framework['status'] == 'live'):
+        abort(404)
+
+    template_data = main.config['BASE_TEMPLATE_DATA']
+
+    supplier_framework = data_api_client.get_supplier_framework_info(current_user.supplier_id, framework_slug)
+    return render_template(
+        "frameworks/agreement.html",
+        framework=framework,
+        agreement_returned=False,
+        **template_data
+    ), 200

@@ -112,6 +112,11 @@
   color: $secondary-text-colour;
 }
 
+.framework-section {
+    padding: 20px 0 15px 0;
+    border-bottom: 1px solid #dee0e2;
+}
+
 /* Temporary styles, to be added to toolkit */
 .summary-item-lede {
   margin-bottom: $gutter-half - 5px;
