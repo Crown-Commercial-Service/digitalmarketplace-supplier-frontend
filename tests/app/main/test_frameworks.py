@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from nose.tools import assert_equal, assert_true, assert_in
+from nose.tools import assert_equal, assert_true, assert_in, assert_not_in
 import os
 import mock
 from lxml import html
@@ -269,6 +269,98 @@ class TestFrameworksDashboard(BaseApplicationTest):
             res = self.client.get('/suppliers/frameworks/does-not-exist')
 
             assert_equal(res.status_code, 404)
+
+    def test_result_letter_is_shown_when_is_in_standstill(self, data_api_client, s3):
+        with self.app.test_client():
+            self.login()
+
+            data_api_client.get_framework.return_value = self.framework(status='standstill')
+            data_api_client.get_framework_interest.return_value = {'frameworks': ['g-cloud-7']}
+            data_api_client.find_draft_services.return_value = {
+                "services": [
+                    {'serviceName': 'A service', 'status': 'submitted'}
+                ]
+            }
+            data_api_client.get_supplier_declaration.return_value = \
+                {"declaration": FULL_G7_SUBMISSION}
+
+            res = self.client.get("/suppliers/frameworks/g-cloud-7")
+
+            data = res.get_data(as_text=True)
+
+            assert_in(u'Download your application result letter', data)
+
+    def test_result_letter_is_not_shown_when_not_in_standstill(self, data_api_client, s3):
+        with self.app.test_client():
+            self.login()
+
+            data_api_client.get_framework.return_value = self.framework(status='pending')
+            data_api_client.get_framework_interest.return_value = {'frameworks': ['g-cloud-7']}
+            data_api_client.find_draft_services.return_value = {
+                "services": [
+                    {'serviceName': 'A service', 'status': 'submitted'}
+                ]
+            }
+            data_api_client.get_supplier_declaration.return_value = \
+                {"declaration": FULL_G7_SUBMISSION}
+
+            res = self.client.get("/suppliers/frameworks/g-cloud-7")
+
+            data = res.get_data(as_text=True)
+
+            assert_not_in(u'Download your application result letter', data)
+
+    def test_result_letter_is_not_shown_when_no_application(self, data_api_client, s3):
+        with self.app.test_client():
+            self.login()
+
+            data_api_client.get_framework.return_value = self.framework(status='standstill')
+            data_api_client.get_framework_interest.return_value = {'frameworks': ['g-cloud-7']}
+            data_api_client.find_draft_services.return_value = {
+                "services": [
+                    {'serviceName': 'A service', 'status': 'not-submitted'}
+                ]
+            }
+            data_api_client.get_supplier_declaration.return_value = \
+                {"declaration": FULL_G7_SUBMISSION}
+
+            res = self.client.get("/suppliers/frameworks/g-cloud-7")
+
+            data = res.get_data(as_text=True)
+
+            assert_not_in(u'Download your application result letter', data)
+
+
+@mock.patch('dmutils.s3.S3')
+class TestFrameworkAgreementDocumentDownload(BaseApplicationTest):
+    def test_download_document(self, S3):
+        uploader = mock.Mock()
+        S3.return_value = uploader
+        uploader.get_signed_url.return_value = 'http://url/path?param=value'
+
+        with self.app.test_client():
+            self.login()
+
+            res = self.client.get('/suppliers/frameworks/g-cloud-7/agreements/example.pdf')
+
+            assert_equal(res.status_code, 302)
+            assert_equal(res.location, 'http://url/path?param=value')
+            uploader.get_signed_url.assert_called_with('g-cloud-7/agreements/1234/1234-example.pdf')
+
+    def test_download_document_with_asset_url(self, S3):
+        uploader = mock.Mock()
+        S3.return_value = uploader
+        uploader.get_signed_url.return_value = 'http://url/path?param=value'
+
+        with self.app.test_client():
+            self.app.config['DM_ASSETS_URL'] = 'https://example'
+            self.login()
+
+            res = self.client.get('/suppliers/frameworks/g-cloud-7/agreements/example.pdf')
+
+            assert_equal(res.status_code, 302)
+            assert_equal(res.location, 'https://example/path?param=value')
+            uploader.get_signed_url.assert_called_with('g-cloud-7/agreements/1234/1234-example.pdf')
 
 
 @mock.patch('dmutils.s3.S3')

@@ -17,6 +17,10 @@ OPTIONAL_FIELDS = set([
 ])
 
 
+def get_agreement_document_path(framework_slug, supplier_id, document_name):
+    return '{0}/agreements/{1}/{1}-{2}'.format(framework_slug, supplier_id, document_name)
+
+
 def frameworks_by_slug(client):
     framework_list = client.find_frameworks().get("frameworks")
     frameworks = {}

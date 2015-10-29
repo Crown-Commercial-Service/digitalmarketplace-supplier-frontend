@@ -59,6 +59,18 @@
   <nav role="navigation" class="framework-application-reference">
   {% endif %}
     <ul class="browse-list">
+
+      {% if framework.status == 'standstill' and application_made %}
+        <li class="browse-list-item framework-application-section">
+          <div class="grid-row">
+            <div class="column-two-thirds">
+              <a href="{{ url_for('.download_agreement_file', framework_slug=framework.slug, document_name='result-letter.pdf') }}">Download your application result letter</a>
+              <p>This letter informs you if your {{ framework.name }} has been successful.</p>
+            </div>
+          </div>
+        </li>
+      {% endif %}
+
       {% if framework.status == 'open' %}
         <li class="browse-list-item framework-application-section">
           <div class="grid-row">

@@ -18,10 +18,10 @@ from ...main import main, content_loader
 from ..helpers import hash_email
 from ..helpers.frameworks import get_error_messages_for_page, get_first_question_index, \
     get_error_messages, get_declaration_status, get_last_modified_from_first_matching_file, \
-    register_interest_in_framework
+    register_interest_in_framework, get_agreement_document_path
 from ..helpers.services import (
     get_draft_document_url, get_service_attributes, get_drafts,
-    count_unanswered_questions
+    count_unanswered_questions, get_document_url
 )
 
 
@@ -70,7 +70,6 @@ def framework_dashboard(framework_slug):
             'supplier_pack': get_last_modified_from_first_matching_file(key_list, 'g-cloud-7-supplier-pack.zip'),
             'supplier_updates': get_last_modified_from_first_matching_file(key_list, 'g-cloud-7-updates/')
         },
-
         **template_data
     ), 200
 
@@ -199,6 +198,19 @@ def framework_supplier_declaration(framework_slug, section_id=None):
 def download_supplier_file(framework_slug, filepath):
     uploader = s3.S3(current_app.config['DM_G7_DRAFT_DOCUMENTS_BUCKET'])
     url = get_draft_document_url(uploader, filepath)
+    if not url:
+        abort(404)
+
+    return redirect(url)
+
+
+@main.route('/frameworks/<framework_slug>/agreements/<document_name>',
+            methods=['GET'])
+@login_required
+def download_agreement_file(framework_slug, document_name):
+    agreements_bucket = s3.S3(current_app.config['DM_AGREEMENTS_BUCKET'])
+    path = get_agreement_document_path(framework_slug, current_user.supplier_id, document_name)
+    url = get_document_url(agreements_bucket, path)
     if not url:
         abort(404)
 
