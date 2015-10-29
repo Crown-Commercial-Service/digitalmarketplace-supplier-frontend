@@ -44,7 +44,7 @@ Front-end code (both development and production) is compiled using [Node](http:/
 
 ### Requirements
 
-You need Node, minimum version of 0.10.0, which will also get you [NPM](npmjs.org), Node's package management tool.
+You need Node (minimum version of 0.10.0, maximum version 0.12.x) which will also get you [NPM](npmjs.org), Node's package management tool.
 
 To check the version you're running, type:
 
