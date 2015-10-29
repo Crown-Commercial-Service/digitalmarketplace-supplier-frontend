@@ -112,7 +112,7 @@ More generally, the command to start the server is:
 python application.py runserver
 ```
 
-The supplier frontend runs on port 5003. Use the app at [http://127.0.0.1:5003/](http://127.0.0.1:5003/)
+The supplier frontend runs on port 5003. Use the app at [http://127.0.0.1:5003/suppliers](http://127.0.0.1:5003/suppliers)
 
 ### Using FeatureFlags
 
