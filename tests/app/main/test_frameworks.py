@@ -50,14 +50,16 @@ class TestFrameworksDashboard(BaseApplicationTest):
             data_api_client.get_framework.return_value = self.framework(status='open')
             self.login()
 
-            res = self.client.get("/suppliers/frameworks/g-cloud-7")
+        data_api_client.get_framework.return_value = self.framework(status='pending')
+        res = self.client.get("/suppliers/frameworks/g-cloud-7")
 
-            assert_equal(res.status_code, 200)
+        assert_equal(res.status_code, 200)
 
     def test_interest_registered_in_framework_on_post(self, data_api_client, s3):
         with self.app.test_client():
             self.login()
 
+            data_api_client.get_framework.return_value = self.framework(status='open')
             res = self.client.post("/suppliers/frameworks/digital-outcomes-and-specialists")
 
             assert_equal(res.status_code, 200)
@@ -71,6 +73,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
         with self.app.test_client():
             self.login()
 
+            data_api_client.get_framework.return_value = self.framework(status='pending')
             res = self.client.get("/suppliers/frameworks/digital-outcomes-and-specialists")
 
             assert_equal(res.status_code, 200)
@@ -189,6 +192,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
         with self.app.test_client():
             self.login()
 
+            data_api_client.get_framework.return_value = self.framework(status='open')
             res = self.client.get("/suppliers/frameworks/g-cloud-7")
             doc = html.fromstring(res.get_data(as_text=True))
             last_updateds = [
@@ -223,6 +227,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
         with self.app.test_client():
             self.login()
 
+            data_api_client.get_framework.return_value = self.framework(status='open')
             res = self.client.get("/suppliers/frameworks/g-cloud-7")
             doc = html.fromstring(res.get_data(as_text=True))
             last_updateds = [
@@ -246,6 +251,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
         with self.app.test_client():
             self.login()
 
+            data_api_client.get_framework.return_value = self.framework(status='open')
             res = self.client.get("/suppliers/frameworks/g-cloud-7")
             doc = html.fromstring(res.get_data(as_text=True))
             last_updateds = [
@@ -890,6 +896,7 @@ class TestSendClarificationQuestionEmail(BaseApplicationTest):
     @mock.patch('app.main.views.frameworks.data_api_client')
     @mock.patch('app.main.views.frameworks.send_email')
     def test_should_call_send_email_with_correct_params(self, send_email, data_api_client, s3):
+        data_api_client.get_framework.return_value = self.framework('open')
 
         clarification_question = 'This is a clarification question.'
         response = self._send_email(clarification_question)
@@ -906,6 +913,7 @@ class TestSendClarificationQuestionEmail(BaseApplicationTest):
     @mock.patch('app.main.views.frameworks.data_api_client')
     @mock.patch('app.main.views.frameworks.send_email')
     def test_should_call_send_g7_email_with_correct_params(self, send_email, data_api_client, s3):
+        data_api_client.get_framework.return_value = self.framework('open')
         self.app.config['FEATURE_FLAGS_G7_CLARIFICATIONS_CLOSED'] = 1
         clarification_question = 'This is a G7 question.'
         response = self._send_email(clarification_question)
@@ -922,6 +930,7 @@ class TestSendClarificationQuestionEmail(BaseApplicationTest):
     @mock.patch('app.main.views.frameworks.data_api_client')
     @mock.patch('app.main.views.frameworks.send_email')
     def test_should_create_audit_event(self, send_email, data_api_client, s3):
+        data_api_client.get_framework.return_value = self.framework('open')
         clarification_question = 'This is a clarification question'
         response = self._send_email(clarification_question)
 
@@ -939,6 +948,7 @@ class TestSendClarificationQuestionEmail(BaseApplicationTest):
     @mock.patch('app.main.views.frameworks.data_api_client')
     @mock.patch('app.main.views.frameworks.send_email')
     def test_should_create_g7_question_audit_event(self, send_email, data_api_client, s3):
+        data_api_client.get_framework.return_value = self.framework('open')
         self.app.config['FEATURE_FLAGS_G7_CLARIFICATIONS_CLOSED'] = 1
         clarification_question = 'This is a G7 question'
         response = self._send_email(clarification_question)

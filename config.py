@@ -67,7 +67,6 @@ class Config(object):
     RAISE_ERROR_ON_MISSING_FEATURES = True
 
     FEATURE_FLAGS_EDIT_SERVICE_PAGE = False
-    FEATURE_FLAGS_GCLOUD7_OPEN = False
     FEATURE_FLAGS_G7_CLARIFICATIONS_CLOSED = False
 
     # Logging
@@ -98,7 +97,6 @@ class Test(Config):
     DM_CLARIFICATION_QUESTION_EMAIL = 'digitalmarketplace@mailinator.com'
 
     FEATURE_FLAGS_EDIT_SERVICE_PAGE = enabled_since('2015-06-03')
-    FEATURE_FLAGS_GCLOUD7_OPEN = enabled_since('2015-06-18')
 
 
 class Development(Config):
@@ -107,7 +105,6 @@ class Development(Config):
 
     # Dates not formatted like YYYY-(0)M-(0)D will fail
     FEATURE_FLAGS_EDIT_SERVICE_PAGE = enabled_since('2015-06-03')
-    FEATURE_FLAGS_GCLOUD7_OPEN = enabled_since('2015-06-18')
     FEATURE_FLAGS_G7_CLARIFICATIONS_CLOSED = enabled_since('2015-09-15')
 
 
@@ -119,17 +116,14 @@ class Live(Config):
 
 class Preview(Live):
     FEATURE_FLAGS_EDIT_SERVICE_PAGE = enabled_since('2015-06-03')
-    FEATURE_FLAGS_GCLOUD7_OPEN = enabled_since('2015-06-18')
     FEATURE_FLAGS_G7_CLARIFICATIONS_CLOSED = enabled_since('2015-09-18')
 
 
 class Production(Live):
-    FEATURE_FLAGS_GCLOUD7_OPEN = enabled_since('2015-09-01')
     FEATURE_FLAGS_G7_CLARIFICATIONS_CLOSED = enabled_since('2015-09-22')
 
 
 class Staging(Production):
-    FEATURE_FLAGS_GCLOUD7_OPEN = enabled_since('2015-08-26')
     FEATURE_FLAGS_G7_CLARIFICATIONS_CLOSED = enabled_since('2015-09-18')
 
 configs = {

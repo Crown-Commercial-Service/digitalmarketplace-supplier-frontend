@@ -19,8 +19,9 @@ from ...main import main, content_loader
 from ..helpers import hash_email
 from ..helpers.frameworks import get_error_messages_for_page, get_first_question_index, \
     get_error_messages, get_declaration_status, get_last_modified_from_first_matching_file, \
-    register_interest_in_framework, get_framework_lot, get_supplier_framework_info, \
-    get_supplier_on_framework_from_info, get_declaration_status_from_info
+    register_interest_in_framework, get_supplier_framework_info, \
+    get_supplier_on_framework_from_info, get_declaration_status_from_info, \
+    get_framework, get_framework_and_lot
 from ..helpers.services import (
     get_draft_document_url, get_service_attributes, get_drafts, get_lot_drafts,
     count_unanswered_questions
@@ -32,10 +33,8 @@ CLARIFICATION_QUESTION_NAME = 'clarification_question'
 
 @main.route('/frameworks/<framework_slug>', methods=['GET', 'POST'])
 @login_required
-@flask_featureflags.is_active_feature('GCLOUD7_OPEN')
 def framework_dashboard(framework_slug):
-    template_data = main.config['BASE_TEMPLATE_DATA']
-    framework = data_api_client.get_framework(framework_slug)['frameworks']
+    framework = get_framework(data_api_client, framework_slug, open_only=False)
 
     if request.method == 'POST':
         try:
@@ -75,17 +74,14 @@ def framework_dashboard(framework_slug):
             'supplier_pack': get_last_modified_from_first_matching_file(key_list, 'g-cloud-7-supplier-pack.zip'),
             'supplier_updates': get_last_modified_from_first_matching_file(key_list, 'g-cloud-7-updates/')
         },
-        **template_data
+        **main.config['BASE_TEMPLATE_DATA']
     ), 200
 
 
 @main.route('/frameworks/<framework_slug>/submissions', methods=['GET'])
 @login_required
 def framework_submission_lots(framework_slug):
-    framework = data_api_client.get_framework(framework_slug)['frameworks']
-
-    if framework['status'] not in ['open', 'pending']:
-        abort(404)
+    framework = get_framework(data_api_client, framework_slug, open_only=False)
 
     drafts, complete_drafts = get_drafts(data_api_client, current_user.supplier_id, framework_slug)
     declaration_status = get_declaration_status(data_api_client, framework_slug)
@@ -113,14 +109,7 @@ def framework_submission_lots(framework_slug):
 @main.route('/frameworks/<framework_slug>/submissions/<lot_slug>', methods=['GET'])
 @login_required
 def framework_submission_services(framework_slug, lot_slug):
-    framework = data_api_client.get_framework(framework_slug)['frameworks']
-
-    if framework['status'] not in ['open', 'pending']:
-        abort(404)
-
-    lot = get_framework_lot(framework, lot_slug)
-    if lot is None:
-        abort(404)
+    framework, lot = get_framework_and_lot(data_api_client, framework_slug, lot_slug, open_only=False)
 
     drafts, complete_drafts = get_lot_drafts(data_api_client, current_user.supplier_id, framework_slug, lot_slug)
     declaration_status = get_declaration_status(data_api_client, framework_slug)
@@ -163,14 +152,9 @@ def framework_submission_services(framework_slug, lot_slug):
 @main.route('/frameworks/<framework_slug>/declaration', methods=['GET'])
 @main.route('/frameworks/<framework_slug>/declaration/<string:section_id>', methods=['GET', 'POST'])
 @login_required
-@flask_featureflags.is_active_feature('GCLOUD7_OPEN')
 def framework_supplier_declaration(framework_slug, section_id=None):
-    # TODO add a test for 404 if framework doesn't exist
-    framework = data_api_client.get_framework(framework_slug)['frameworks']
-    if framework['status'] != 'open':
-        abort(404)
+    framework = get_framework(data_api_client, framework_slug, open_only=True)
 
-    template_data = main.config['BASE_TEMPLATE_DATA']
     content = content_loader.get_builder(framework_slug, 'declaration')
     status_code = 200
 
@@ -239,13 +223,12 @@ def framework_supplier_declaration(framework_slug, section_id=None):
         is_last_page=is_last_page,
         get_question=content.get_question,
         errors=errors,
-        **template_data
+        **main.config['BASE_TEMPLATE_DATA']
     ), status_code
 
 
 @main.route('/frameworks/<framework_slug>/files/<path:filepath>', methods=['GET'])
 @login_required
-@flask_featureflags.is_active_feature('GCLOUD7_OPEN')
 def download_supplier_file(framework_slug, filepath):
     uploader = s3.S3(current_app.config['DM_G7_DRAFT_DOCUMENTS_BUCKET'])
     url = get_draft_document_url(uploader, filepath)
@@ -285,15 +268,12 @@ def g7_download_zip_redirect_pdf(framework_slug, filepath):
 
 @main.route('/frameworks/<framework_slug>/updates', methods=['GET'])
 @login_required
-@flask_featureflags.is_active_feature('GCLOUD7_OPEN')
 def framework_updates(framework_slug, error_message=None, default_textbox_value=None):
-    framework = data_api_client.get_framework(framework_slug)['frameworks']
+    framework = get_framework(data_api_client, framework_slug, open_only=False)
 
     current_app.logger.info("g7updates.viewed: user_id {user_id} supplier_id {supplier_id}",
                             extra={'user_id': current_user.id,
                                    'supplier_id': current_user.supplier_id})
-
-    template_data = main.config['BASE_TEMPLATE_DATA']
 
     file_list = s3.S3(current_app.config['DM_G7_DRAFT_DOCUMENTS_BUCKET']).list('g-cloud-7-updates/')
 
@@ -323,15 +303,15 @@ def framework_updates(framework_slug, error_message=None, default_textbox_value=
         clarification_question_value=default_textbox_value,
         error_message=error_message,
         sections=sections,
-        **template_data
+        **main.config['BASE_TEMPLATE_DATA']
     ), 200 if not error_message else 400
 
 
 @main.route('/frameworks/<framework_slug>/updates', methods=['POST'])
 @login_required
-@flask_featureflags.is_active_feature('GCLOUD7_OPEN')
 def framework_updates_email_clarification_question(framework_slug):
-    framework = data_api_client.get_framework(framework_slug)['frameworks']
+    framework = get_framework(data_api_client, framework_slug, open_only=False)
+
     # Stripped input should not empty
     clarification_question = request.form.get(CLARIFICATION_QUESTION_NAME, '').strip()
 

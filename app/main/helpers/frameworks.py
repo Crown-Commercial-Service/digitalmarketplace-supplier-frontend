@@ -17,6 +17,20 @@ OPTIONAL_FIELDS = set([
 ])
 
 
+def get_framework(client, framework_slug, open_only=True):
+    framework = client.get_framework(framework_slug)['frameworks']
+    allowed_statuses = ['open'] if open_only else ['open', 'pending']
+    if framework['status'] not in allowed_statuses:
+        abort(404)
+
+    return framework
+
+
+def get_framework_and_lot(client, framework_slug, lot_slug, open_only=True):
+    framework = get_framework(client, framework_slug, open_only)
+    return framework, get_framework_lot(framework, lot_slug)
+
+
 def frameworks_by_slug(client):
     framework_list = client.find_frameworks().get("frameworks")
     frameworks = {}
@@ -26,10 +40,10 @@ def frameworks_by_slug(client):
 
 
 def get_framework_lot(framework, lot_slug):
-    return next(
-        (lot for lot in framework['lots'] if lot['slug'] == lot_slug),
-        None
-    )
+    try:
+        return next(lot for lot in framework['lots'] if lot['slug'] == lot_slug)
+    except StopIteration:
+        abort(404)
 
 
 def register_interest_in_framework(client, framework_slug):
