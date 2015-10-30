@@ -22,9 +22,6 @@ def get_drafts(apiclient, supplier_id, framework_slug):
     except APIError as e:
         abort(e.status_code)
 
-    # Hide drafts without service name
-    drafts = [draft for draft in drafts if draft.get('serviceName')]
-
     complete_drafts = [draft for draft in drafts if draft['status'] == 'submitted']
     drafts = [draft for draft in drafts if draft['status'] == 'not-submitted']
 
