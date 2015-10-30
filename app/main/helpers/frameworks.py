@@ -25,6 +25,13 @@ def frameworks_by_slug(client):
     return frameworks
 
 
+def get_framework_lot(framework, lot_slug):
+    return next(
+        (lot for lot in framework['lots'] if lot['slug'] == lot_slug),
+        None
+    )
+
+
 def register_interest_in_framework(client, framework_slug):
     client.register_framework_interest(current_user.supplier_id, framework_slug, current_user.email_address)
 

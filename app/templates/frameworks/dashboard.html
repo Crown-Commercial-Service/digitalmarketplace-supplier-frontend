@@ -103,7 +103,7 @@
               {% if not counts.draft %}
                 <div class="framework-section-validation-bar-good">
               {% endif %}
-                <a class="browse-list-item-link" href="{{ url_for('.framework_services', framework_slug=framework.slug) }}">
+                <a class="browse-list-item-link" href="{{ url_for('.framework_submission_lots', framework_slug=framework.slug) }}">
                   <span>
                     Add, edit and delete services
                   </span>
@@ -163,7 +163,7 @@
         <li class="browse-list-item framework-application-section">
           <div class="grid-row">
             <div class="column-two-thirds">
-              <a href="{{ url_for('.framework_services', framework_slug=framework.slug) }}">View services</a>
+              <a href="{{ url_for('.framework_submission_lots', framework_slug=framework.slug) }}">View services</a>
             </div>
             <div class="column-two-thirds">
               <div class="framework-section-status-neutral">

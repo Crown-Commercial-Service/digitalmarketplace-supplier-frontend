@@ -976,7 +976,7 @@ class TestG7ServicesList(BaseApplicationTest):
         data_api_client.get_framework.return_value = self.framework(status='pending')
         data_api_client.find_draft_services.return_value = {'services': []}
         count_unanswered.return_value = 0
-        response = self.client.get('/suppliers/frameworks/g-cloud-7/services')
+        response = self.client.get('/suppliers/frameworks/g-cloud-7/submissions/iaas')
         assert_equal(response.status_code, 404)
 
     def test_404_when_g7_pending_and_no_declaration(self, count_unanswered, data_api_client):
@@ -986,7 +986,7 @@ class TestG7ServicesList(BaseApplicationTest):
         data_api_client.get_supplier_declaration.return_value = {
             "declaration": {"status": "started"}
         }
-        response = self.client.get('/suppliers/frameworks/g-cloud-7/services')
+        response = self.client.get('/suppliers/frameworks/g-cloud-7/submissions/iaas')
         assert_equal(response.status_code, 404)
 
     def test_no_404_when_g7_open_and_no_complete_services(self, count_unanswered, data_api_client):
@@ -995,7 +995,7 @@ class TestG7ServicesList(BaseApplicationTest):
         data_api_client.get_framework.return_value = self.framework(status='open')
         data_api_client.find_draft_services.return_value = {'services': []}
         count_unanswered.return_value = 0
-        response = self.client.get('/suppliers/frameworks/g-cloud-7/services')
+        response = self.client.get('/suppliers/frameworks/g-cloud-7/submissions/iaas')
         assert_equal(response.status_code, 200)
 
     def test_no_404_when_g7_open_and_no_declaration(self, count_unanswered, data_api_client):
@@ -1006,7 +1006,7 @@ class TestG7ServicesList(BaseApplicationTest):
         data_api_client.get_supplier_declaration.return_value = {
             "declaration": {"status": "started"}
         }
-        response = self.client.get('/suppliers/frameworks/g-cloud-7/services')
+        response = self.client.get('/suppliers/frameworks/g-cloud-7/submissions/iaas')
         assert_equal(response.status_code, 200)
 
     def test_shows_g7_message_if_pending_and_application_made(self, count_unanswered, data_api_client):
@@ -1016,12 +1016,12 @@ class TestG7ServicesList(BaseApplicationTest):
         data_api_client.get_supplier_declaration.return_value = {'declaration': FULL_G7_SUBMISSION}  # noqa
         data_api_client.find_draft_services.return_value = {
             'services': [
-                {'serviceName': 'draft', 'lot': 'SCS', 'status': 'submitted'},
+                {'serviceName': 'draft', 'lot': 'scs', 'status': 'submitted'},
             ]
         }
         count_unanswered.return_value = 0, 1
 
-        response = self.client.get('/suppliers/frameworks/g-cloud-7/services')
+        response = self.client.get('/suppliers/frameworks/g-cloud-7/submissions/scs')
         doc = html.fromstring(response.get_data(as_text=True))
 
         assert_equal(response.status_code, 200)
@@ -1040,11 +1040,11 @@ class TestG7ServicesList(BaseApplicationTest):
         data_api_client.get_framework.return_value = self.framework(status='open')
         data_api_client.find_draft_services.return_value = {
             'services': [
-                {'serviceName': 'draft', 'lot': 'SCS', 'status': 'not-submitted'},
+                {'serviceName': 'draft', 'lot': 'scs', 'status': 'not-submitted'},
             ]
         }
 
-        res = self.client.get('/suppliers/frameworks/g-cloud-7/services')
+        res = self.client.get('/suppliers/frameworks/g-cloud-7/submissions/scs')
 
         assert_true(u'Service can be moved to complete' not in res.get_data(as_text=True))
         assert_in(u'4 unanswered questions', res.get_data(as_text=True))
@@ -1058,11 +1058,11 @@ class TestG7ServicesList(BaseApplicationTest):
         data_api_client.get_framework.return_value = self.framework(status='open')
         data_api_client.find_draft_services.return_value = {
             'services': [
-                {'serviceName': 'draft', 'lot': 'SCS', 'status': 'not-submitted'},
+                {'serviceName': 'draft', 'lot': 'scs', 'status': 'not-submitted'},
             ]
         }
 
-        res = self.client.get('/suppliers/frameworks/g-cloud-7/services')
+        res = self.client.get('/suppliers/frameworks/g-cloud-7/submissions/scs')
 
         assert_in(u'Service can be marked as complete', res.get_data(as_text=True))
         assert_in(u'1 optional question unanswered', res.get_data(as_text=True))
@@ -1076,11 +1076,11 @@ class TestG7ServicesList(BaseApplicationTest):
         data_api_client.get_framework.return_value = self.framework(status='open')
         data_api_client.find_draft_services.return_value = {
             'services': [
-                {'serviceName': 'draft', 'lot': 'SCS', 'status': 'submitted'},
+                {'serviceName': 'draft', 'lot': 'scs', 'status': 'submitted'},
             ]
         }
 
-        res = self.client.get('/suppliers/frameworks/g-cloud-7/services')
+        res = self.client.get('/suppliers/frameworks/g-cloud-7/submissions/scs')
 
         assert_true(u'Service can be moved to complete' not in res.get_data(as_text=True))
         assert_in(u'1 optional question unanswered', res.get_data(as_text=True))

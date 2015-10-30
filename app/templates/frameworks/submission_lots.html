@@ -1,0 +1,51 @@
+{% extends "_base_page.html" %}
+{% import "toolkit/summary-table.html" as summary %}
+{% import "macros/submission.html" as submission %}
+
+{% block page_title %}Apply to {{ framework.name }} – Digital Marketplace{% endblock %}
+
+{% block breadcrumb %}
+  {%
+    with items = [
+      {
+        "link": "/",
+        "label": "Digital Marketplace",
+      },
+      {
+        "link": url_for(".dashboard"),
+        "label": "Your account",
+      },
+      {
+        "link": url_for(".framework_dashboard", framework_slug=framework.slug),
+        "label": "Apply to " + framework.name,
+      }
+    ]
+  %}
+    {% include "toolkit/breadcrumb.html" %}
+  {% endwith %}
+{% endblock %}
+
+{% block main_content %}
+
+  <div class="grid-row">
+    <div class="column-two-thirds">
+      {% with
+        heading = "Your " + framework.name + " services"
+      %}
+        {% include 'toolkit/page-heading.html' %}
+      {% endwith %}
+    </div>
+  </div>
+
+  <div class="grid-row">
+    <div class="column-two-thirds">
+      {% with items = lots %}
+        {% include "toolkit/browse-list.html" %}
+      {% endwith %}
+
+    <a href="{{ url_for('.framework_dashboard', framework_slug=framework.slug) }}">Return to {{ framework.name }} application</a>
+
+    </div>
+  </div>
+
+{% endblock %}

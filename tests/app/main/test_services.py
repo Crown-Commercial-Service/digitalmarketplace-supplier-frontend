@@ -542,7 +542,7 @@ class TestCompleteDraft(BaseApplicationTest):
         assert_equal(res.status_code, 302)
         assert_true('lot=scs' in res.location)
         assert_true('service_completed=1' in res.location)
-        assert_true('/suppliers/frameworks/g-cloud-7/services' in res.location)
+        assert_in('/suppliers/frameworks/g-cloud-7/submissions', res.location)
 
     def test_complete_draft_checks_supplier_id(self, data_api_client):
         self.draft['supplierId'] = 2
@@ -1073,10 +1073,7 @@ class TestDeleteDraftService(BaseApplicationTest):
 
         data_api_client.delete_draft_service.assert_called_with('1', 'email@email.com')
         assert_equal(res.status_code, 302)
-        assert_equal(
-            res.location,
-            'http://localhost/suppliers/frameworks/g-cloud-7/services'
-        )
+        assert_equal(res.location, 'http://localhost/suppliers/frameworks/g-cloud-7/submissions')
 
     def test_cannot_delete_other_suppliers_draft(self, data_api_client):
         other_draft = copy.deepcopy(self.draft_to_delete)

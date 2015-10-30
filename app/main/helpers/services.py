@@ -31,6 +31,14 @@ def get_drafts(apiclient, supplier_id, framework_slug):
     return drafts, complete_drafts
 
 
+def get_lot_drafts(apiclient, supplier_id, framework_slug, lot_slug):
+    drafts, complete_drafts = get_drafts(apiclient, supplier_id, framework_slug)
+    return (
+        [draft for draft in drafts if draft['lot'] == lot_slug],
+        [draft for draft in complete_drafts if draft['lot'] == lot_slug]
+    )
+
+
 def count_unanswered_questions(service_attributes):
     unanswered_required, unanswered_optional = (0, 0)
     for section in service_attributes:

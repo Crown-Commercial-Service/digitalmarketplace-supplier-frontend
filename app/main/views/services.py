@@ -318,8 +318,9 @@ def complete_draft_service(framework_slug, lot_slug, service_id):
 
     flash({'service_name': draft.get('serviceName')}, 'service_completed')
 
-    return redirect(url_for(".framework_services",
+    return redirect(url_for(".framework_submission_services",
                     framework_slug=framework['slug'],
+                    lot_slug=lot_slug,
                     service_completed=service_id,
                     lot=draft['lot'].lower()))
 
@@ -345,8 +346,8 @@ def delete_draft_service(framework_slug, lot_slug, service_id):
         except APIError as e:
             abort(e.status_code)
 
-        flash({'service_name': draft.get('serviceName')}, 'service_deleted')
-        return redirect(url_for(".framework_services", framework_slug=framework['slug']))
+        flash({'service_name': draft.get('serviceName', draft['lotName'])}, 'service_deleted')
+        return redirect(url_for(".framework_submission_lots", framework_slug=framework['slug']))
     else:
         return redirect(url_for(".view_service_submission",
                                 framework_slug=framework['slug'],

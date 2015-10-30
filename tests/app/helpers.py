@@ -174,7 +174,11 @@ class BaseApplicationTest(object):
             'frameworks': {
                 'status': status,
                 'name': name,
-                'slug': slug
+                'slug': slug,
+                'lots': [
+                    {'id': 1, 'slug': 'iaas', 'name': 'Infrastructure as a Service', 'one_service_limit': False},
+                    {'id': 2, 'slug': 'scs', 'name': 'Specialist Cloud Services', 'one_service_limit': False},
+                ]
             }
         }
 
