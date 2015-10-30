@@ -69,6 +69,16 @@
             </div>
           </div>
         </li>
+        {% if supplier_is_on_framework %}
+        <li class="browse-list-item framework-application-section">
+          <div class="grid-row">
+            <div class="column-two-thirds">
+              <a href="{{ url_for('.framework_agreement', framework_slug=framework.slug) }}">Sign and return your framework agreement</a>
+              <p>Your agreement will need to be signed by both you and the Crown Commercial Service before you can sell {{framework.name}} services.</p>
+            </div>
+          </div>
+        </li>
+        {% endif %}
       {% endif %}
 
       {% if framework.status == 'open' %}

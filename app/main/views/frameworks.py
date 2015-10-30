@@ -18,7 +18,8 @@ from ...main import main, content_loader
 from ..helpers import hash_email
 from ..helpers.frameworks import get_error_messages_for_page, get_first_question_index, \
     get_error_messages, get_declaration_status, get_last_modified_from_first_matching_file, \
-    register_interest_in_framework, get_agreement_document_path
+    register_interest_in_framework, get_agreement_document_path, get_supplier_framework_info, \
+    get_supplier_on_framework_from_info, get_declaration_status_from_info
 from ..helpers.services import (
     get_draft_document_url, get_service_attributes, get_drafts,
     count_unanswered_questions, get_document_url
@@ -44,7 +45,11 @@ def framework_dashboard(framework_slug):
             abort(e.status_code)
 
     drafts, complete_drafts = get_drafts(data_api_client, current_user.supplier_id, framework_slug)
-    declaration_status = get_declaration_status(data_api_client, framework_slug)
+
+    supplier_framework_info = get_supplier_framework_info(data_api_client, framework_slug)
+    declaration_status = get_declaration_status_from_info(supplier_framework_info)
+    supplier_is_on_framework = get_supplier_on_framework_from_info(supplier_framework_info)
+
     application_made = len(complete_drafts) > 0 and declaration_status == 'complete'
 
     # TODO: change to new format
@@ -65,6 +70,7 @@ def framework_dashboard(framework_slug):
         deadline=current_app.config['G7_CLOSING_DATE'],
         framework=framework,
         application_made=application_made,
+        supplier_is_on_framework=supplier_is_on_framework,
         last_modified={
             # TODO: s3 stuff above
             'supplier_pack': get_last_modified_from_first_matching_file(key_list, 'g-cloud-7-supplier-pack.zip'),

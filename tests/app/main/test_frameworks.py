@@ -110,8 +110,9 @@ class TestFrameworksDashboard(BaseApplicationTest):
                     {'serviceName': 'A service', 'status': 'submitted'}
                 ]
             }
-            data_api_client.get_supplier_declaration.return_value = \
-                {"declaration": FULL_G7_SUBMISSION}
+            data_api_client.get_supplier_framework_info.return_value = {
+                "frameworkInterest": {
+                    "declaration": FULL_G7_SUBMISSION}}
 
             res = self.client.get("/suppliers/frameworks/g-cloud-7")
 
@@ -131,9 +132,9 @@ class TestFrameworksDashboard(BaseApplicationTest):
             self.login()
 
             data_api_client.get_framework.return_value = self.framework(status='open')
-            data_api_client.get_supplier_declaration.return_value = {
-                "declaration": FULL_G7_SUBMISSION
-            }
+            data_api_client.get_supplier_framework_info.return_value = {
+                "frameworkInterest": {
+                    "declaration": FULL_G7_SUBMISSION}}
 
             res = self.client.get("/suppliers/frameworks/g-cloud-7")
 
@@ -155,9 +156,9 @@ class TestFrameworksDashboard(BaseApplicationTest):
             submission.update({"status": "started"})
 
             data_api_client.get_framework.return_value = self.framework(status='open')
-            data_api_client.get_supplier_declaration.return_value = {
-                "declaration": submission
-            }
+            data_api_client.get_supplier_framework_info.return_value = {
+                "frameworkInterest": {
+                    "declaration": submission}}
 
             res = self.client.get("/suppliers/frameworks/g-cloud-7")
 
@@ -171,7 +172,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
             self.login()
 
             data_api_client.get_framework.return_value = self.framework(status='open')
-            data_api_client.get_supplier_declaration.side_effect = APIError(mock.Mock(status_code=404))
+            data_api_client.get_supplier_framework_info.side_effect = APIError(mock.Mock(status_code=404))
 
             res = self.client.get("/suppliers/frameworks/g-cloud-7")
 
@@ -281,8 +282,9 @@ class TestFrameworksDashboard(BaseApplicationTest):
                     {'serviceName': 'A service', 'status': 'submitted'}
                 ]
             }
-            data_api_client.get_supplier_declaration.return_value = \
-                {"declaration": FULL_G7_SUBMISSION}
+            data_api_client.get_supplier_framework_info.return_value = {
+                "frameworkInterest": {
+                    "declaration": FULL_G7_SUBMISSION}}
 
             res = self.client.get("/suppliers/frameworks/g-cloud-7")
 
@@ -301,8 +303,9 @@ class TestFrameworksDashboard(BaseApplicationTest):
                     {'serviceName': 'A service', 'status': 'submitted'}
                 ]
             }
-            data_api_client.get_supplier_declaration.return_value = \
-                {"declaration": FULL_G7_SUBMISSION}
+            data_api_client.get_supplier_framework_info.return_value = {
+                "frameworkInterest": {
+                    "declaration": FULL_G7_SUBMISSION}}
 
             res = self.client.get("/suppliers/frameworks/g-cloud-7")
 
@@ -321,14 +324,57 @@ class TestFrameworksDashboard(BaseApplicationTest):
                     {'serviceName': 'A service', 'status': 'not-submitted'}
                 ]
             }
-            data_api_client.get_supplier_declaration.return_value = \
-                {"declaration": FULL_G7_SUBMISSION}
+            data_api_client.get_supplier_framework_info.return_value = {
+                "frameworkInterest": {
+                    "declaration": FULL_G7_SUBMISSION}}
 
             res = self.client.get("/suppliers/frameworks/g-cloud-7")
 
             data = res.get_data(as_text=True)
 
             assert_not_in(u'Download your application result letter', data)
+
+    def test_link_to_framework_agreement_is_shown_if_supplier_is_on_framework(self, data_api_client, s3):
+        with self.app.test_client():
+            self.login()
+
+            data_api_client.get_framework.return_value = self.framework(status='standstill')
+            data_api_client.get_framework_interest.return_value = {'frameworks': ['g-cloud-7']}
+            data_api_client.find_draft_services.return_value = {
+                "services": [
+                    {'serviceName': 'A service', 'status': 'submitted'}
+                ]
+            }
+            data_api_client.get_supplier_framework_info.return_value = {
+                "frameworkInterest": {
+                    "declaration": FULL_G7_SUBMISSION, "onFramework": True}}
+
+            res = self.client.get("/suppliers/frameworks/g-cloud-7")
+
+            data = res.get_data(as_text=True)
+
+            assert_in(u'Sign and return your framework agreement', data)
+
+    def test_link_to_framework_agreement_is_shown_if_supplier_is_not_on_framework(self, data_api_client, s3):
+        with self.app.test_client():
+            self.login()
+
+            data_api_client.get_framework.return_value = self.framework(status='standstill')
+            data_api_client.get_framework_interest.return_value = {'frameworks': ['g-cloud-7']}
+            data_api_client.find_draft_services.return_value = {
+                "services": [
+                    {'serviceName': 'A service', 'status': 'submitted'}
+                ]
+            }
+            data_api_client.get_supplier_framework_info.return_value = {
+                "frameworkInterest": {
+                    "declaration": FULL_G7_SUBMISSION, "onFramework": False}}
+
+            res = self.client.get("/suppliers/frameworks/g-cloud-7")
+
+            data = res.get_data(as_text=True)
+
+            assert_not_in(u'Sign and return your framework agreement', data)
 
 
 @mock.patch('dmutils.s3.S3')
