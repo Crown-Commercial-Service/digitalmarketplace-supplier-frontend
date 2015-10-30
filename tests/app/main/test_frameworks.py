@@ -377,6 +377,48 @@ class TestFrameworksDashboard(BaseApplicationTest):
             assert_not_in(u'Sign and return your framework agreement', data)
 
 
+@mock.patch('app.main.views.frameworks.data_api_client', autospec=True)
+class TestFrameworkAgreement(BaseApplicationTest):
+    def test_page_renders_if_all_ok(self, data_api_client):
+        with self.app.test_client():
+            self.login()
+
+            data_api_client.get_framework.return_value = self.framework(status='standstill')
+            data_api_client.get_supplier_framework_info.return_value = {
+                "frameworkInterest": {
+                    "declaration": FULL_G7_SUBMISSION, "onFramework": True}}
+
+            res = self.client.get("/suppliers/frameworks/g-cloud-7/agreement")
+
+            assert_equal(res.status_code, 200)
+
+    def test_page_returns_404_if_framework_in_wrong_state(self, data_api_client):
+        with self.app.test_client():
+            self.login()
+
+            data_api_client.get_framework.return_value = self.framework(status='open')
+            data_api_client.get_supplier_framework_info.return_value = {
+                "frameworkInterest": {
+                    "declaration": FULL_G7_SUBMISSION, "onFramework": True}}
+
+            res = self.client.get("/suppliers/frameworks/g-cloud-7/agreement")
+
+            assert_equal(res.status_code, 404)
+
+    def test_page_returns_404_if_supplier_not_on_framework(self, data_api_client):
+        with self.app.test_client():
+            self.login()
+
+            data_api_client.get_framework.return_value = self.framework(status='standstill')
+            data_api_client.get_supplier_framework_info.return_value = {
+                "frameworkInterest": {
+                    "declaration": FULL_G7_SUBMISSION, "onFramework": False}}
+
+            res = self.client.get("/suppliers/frameworks/g-cloud-7/agreement")
+
+            assert_equal(res.status_code, 404)
+
+
 @mock.patch('dmutils.s3.S3')
 class TestFrameworkAgreementDocumentDownload(BaseApplicationTest):
     def test_download_document(self, S3):
