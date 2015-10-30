@@ -216,11 +216,6 @@ def get_supplier_on_framework_from_info(supplier_framework_info):
         return bool(supplier_framework_info.get('onFramework'))
 
 
-def g_cloud_7_is_open_or_404(data_api_client):
-    if data_api_client.get_framework_status('g-cloud-7').get('status', None) != 'open':
-        abort(404)
-
-
 def question_references(data, get_question):
     return re.sub(
         r"\[\[([^\]]+)\]\]",  # anything that looks like [[nameOfQuestion]]

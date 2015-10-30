@@ -10,7 +10,7 @@ from ..helpers.services import (
     get_draft_document_url, count_unanswered_questions,
     get_next_section_name
 )
-from ..helpers.frameworks import get_declaration_status, g_cloud_7_is_open_or_404
+from ..helpers.frameworks import get_declaration_status
 
 from dmutils.apiclient import APIError, HTTPError
 from dmutils.formats import format_service_price

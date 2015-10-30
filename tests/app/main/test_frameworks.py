@@ -1073,6 +1073,7 @@ class TestG7ServicesList(BaseApplicationTest):
 
         count_unanswered.return_value = 0, 1
 
+        data_api_client.get_framework.return_value = self.framework(status='open')
         data_api_client.find_draft_services.return_value = {
             'services': [
                 {'serviceName': 'draft', 'lot': 'SCS', 'status': 'submitted'},
