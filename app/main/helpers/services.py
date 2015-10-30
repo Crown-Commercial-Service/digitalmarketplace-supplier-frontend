@@ -16,7 +16,7 @@ def get_drafts(apiclient, supplier_id, framework_slug):
     try:
         drafts = apiclient.find_draft_services(
             current_user.supplier_id,
-            framework='g-cloud-7'
+            framework=framework_slug
         )['services']
 
     except APIError as e:
