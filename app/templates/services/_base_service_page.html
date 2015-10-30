@@ -1,13 +1,13 @@
 {% extends "_base_page.html" %}
 
-{% block page_title %}{{service_data['serviceName'] or 'New service'}} – Digital Marketplace{% endblock %}
+{% block page_title %}{{ service_data.serviceName or service_data.lotName }} – Digital Marketplace{% endblock %}
 
 {% block main_content %}
   <div class="grid-row">
     {% block before_heading %}{% endblock %}
     <div class="column-two-thirds">
       {% with
-        heading = service_data['serviceName'] or 'New service',
+        heading = service_data.get('serviceName', service_data['lotName']),
         smaller = true
       %}
         {% include "toolkit/page-heading.html" %}
