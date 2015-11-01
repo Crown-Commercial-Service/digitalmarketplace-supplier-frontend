@@ -8,7 +8,7 @@ from dmutils.audit import AuditTypes
 from dmutils.email import MandrillException
 from dmutils.s3 import S3ResponseError
 
-from ..helpers import BaseApplicationTest
+from ..helpers import BaseApplicationTest, FULL_G7_SUBMISSION
 
 
 def _return_fake_s3_file_dict(directory, filename, ext, last_modified=None, size=None):
@@ -110,14 +110,11 @@ class TestFrameworksDashboard(BaseApplicationTest):
                     {'serviceName': 'A service', 'status': 'submitted'}
                 ]
             }
-            data_api_client.get_supplier_framework_info.return_value = {
-                "frameworkInterest": {
-                    "declaration": FULL_G7_SUBMISSION}}
+            data_api_client.get_supplier_framework_info.return_value = self.supplier_framework()
 
             res = self.client.get("/suppliers/frameworks/g-cloud-7")
 
             doc = html.fromstring(res.get_data(as_text=True))
-
             heading = doc.xpath('//div[@class="summary-item-lede"]//h2[@class="summary-item-heading"]')
             assert_true(len(heading) > 0)
             assert_in(u"G-Cloud 7 is closed for applications",
@@ -132,9 +129,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
             self.login()
 
             data_api_client.get_framework.return_value = self.framework(status='open')
-            data_api_client.get_supplier_framework_info.return_value = {
-                "frameworkInterest": {
-                    "declaration": FULL_G7_SUBMISSION}}
+            data_api_client.get_supplier_framework_info.return_value = self.supplier_framework()
 
             res = self.client.get("/suppliers/frameworks/g-cloud-7")
 
@@ -153,12 +148,10 @@ class TestFrameworksDashboard(BaseApplicationTest):
             del submission['SQ2-1e']
             del submission['SQ2-1f']
             del submission['SQ2-1ghijklmn']
-            submission.update({"status": "started"})
 
             data_api_client.get_framework.return_value = self.framework(status='open')
-            data_api_client.get_supplier_framework_info.return_value = {
-                "frameworkInterest": {
-                    "declaration": submission}}
+            data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
+                declaration=submission, status='started')
 
             res = self.client.get("/suppliers/frameworks/g-cloud-7")
 
@@ -282,9 +275,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
                     {'serviceName': 'A service', 'status': 'submitted'}
                 ]
             }
-            data_api_client.get_supplier_framework_info.return_value = {
-                "frameworkInterest": {
-                    "declaration": FULL_G7_SUBMISSION}}
+            data_api_client.get_supplier_framework_info.return_value = self.supplier_framework()
 
             res = self.client.get("/suppliers/frameworks/g-cloud-7")
 
@@ -303,9 +294,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
                     {'serviceName': 'A service', 'status': 'submitted'}
                 ]
             }
-            data_api_client.get_supplier_framework_info.return_value = {
-                "frameworkInterest": {
-                    "declaration": FULL_G7_SUBMISSION}}
+            data_api_client.get_supplier_framework_info.return_value = self.supplier_framework()
 
             res = self.client.get("/suppliers/frameworks/g-cloud-7")
 
@@ -324,9 +313,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
                     {'serviceName': 'A service', 'status': 'not-submitted'}
                 ]
             }
-            data_api_client.get_supplier_framework_info.return_value = {
-                "frameworkInterest": {
-                    "declaration": FULL_G7_SUBMISSION}}
+            data_api_client.get_supplier_framework_info.return_value = self.supplier_framework()
 
             res = self.client.get("/suppliers/frameworks/g-cloud-7")
 
@@ -345,9 +332,8 @@ class TestFrameworksDashboard(BaseApplicationTest):
                     {'serviceName': 'A service', 'status': 'submitted'}
                 ]
             }
-            data_api_client.get_supplier_framework_info.return_value = {
-                "frameworkInterest": {
-                    "declaration": FULL_G7_SUBMISSION, "onFramework": True}}
+            data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
+                on_framework=True)
 
             res = self.client.get("/suppliers/frameworks/g-cloud-7")
 
@@ -366,9 +352,8 @@ class TestFrameworksDashboard(BaseApplicationTest):
                     {'serviceName': 'A service', 'status': 'submitted'}
                 ]
             }
-            data_api_client.get_supplier_framework_info.return_value = {
-                "frameworkInterest": {
-                    "declaration": FULL_G7_SUBMISSION, "onFramework": False}}
+            data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
+                on_framework=False)
 
             res = self.client.get("/suppliers/frameworks/g-cloud-7")
 
@@ -384,9 +369,8 @@ class TestFrameworkAgreement(BaseApplicationTest):
             self.login()
 
             data_api_client.get_framework.return_value = self.framework(status='standstill')
-            data_api_client.get_supplier_framework_info.return_value = {
-                "frameworkInterest": {
-                    "declaration": FULL_G7_SUBMISSION, "onFramework": True}}
+            data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
+                on_framework=True)
 
             res = self.client.get("/suppliers/frameworks/g-cloud-7/agreement")
 
@@ -397,9 +381,8 @@ class TestFrameworkAgreement(BaseApplicationTest):
             self.login()
 
             data_api_client.get_framework.return_value = self.framework(status='open')
-            data_api_client.get_supplier_framework_info.return_value = {
-                "frameworkInterest": {
-                    "declaration": FULL_G7_SUBMISSION, "onFramework": True}}
+            data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
+                on_framework=True)
 
             res = self.client.get("/suppliers/frameworks/g-cloud-7/agreement")
 
@@ -410,9 +393,8 @@ class TestFrameworkAgreement(BaseApplicationTest):
             self.login()
 
             data_api_client.get_framework.return_value = self.framework(status='standstill')
-            data_api_client.get_supplier_framework_info.return_value = {
-                "frameworkInterest": {
-                    "declaration": FULL_G7_SUBMISSION, "onFramework": False}}
+            data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
+                on_framework=False)
 
             res = self.client.get("/suppliers/frameworks/g-cloud-7/agreement")
 
@@ -423,10 +405,9 @@ class TestFrameworkAgreement(BaseApplicationTest):
             self.login()
 
             data_api_client.get_framework.return_value = self.framework(status='standstill')
-            data_api_client.get_supplier_framework_info.return_value = {
-                'frameworkInterest': {
-                    'declaration': FULL_G7_SUBMISSION, 'onFramework': True, 'agreementReturned': True
-                }}
+            data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
+                on_framework=True, agreement_returned=True
+            )
 
             res = self.client.get('/suppliers/frameworks/g-cloud-7/agreement')
             data = res.get_data(as_text=True)
@@ -444,10 +425,8 @@ class TestFrameworkAgreement(BaseApplicationTest):
             self.login()
 
             data_api_client.get_framework.return_value = self.framework(status='standstill')
-            data_api_client.get_supplier_framework_info.return_value = {
-                'frameworkInterest': {
-                    'declaration': FULL_G7_SUBMISSION, 'onFramework': True, 'agreementReturned': False
-                }}
+            data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
+                on_framework=True)
 
             res = self.client.get('/suppliers/frameworks/g-cloud-7/agreement')
             data = res.get_data(as_text=True)
@@ -532,81 +511,6 @@ class TestFrameworkDocumentDownload(BaseApplicationTest):
                 assert_equal(res.status_code, 301)
                 assert_equal(res.location,
                              'http://localhost/suppliers/frameworks/g-cloud-7/files/{}'.format(filename))
-
-
-FULL_G7_SUBMISSION = {
-    "status": "complete",
-    "PR1": "true",
-    "PR2": "true",
-    "PR3": "true",
-    "PR4": "true",
-    "PR5": "true",
-    "SQ1-1i-i": "true",
-    "SQ2-1abcd": "true",
-    "SQ2-1e": "true",
-    "SQ2-1f": "true",
-    "SQ2-1ghijklmn": "true",
-    "SQ2-2a": "true",
-    "SQ3-1a": "true",
-    "SQ3-1b": "true",
-    "SQ3-1c": "true",
-    "SQ3-1d": "true",
-    "SQ3-1e": "true",
-    "SQ3-1f": "true",
-    "SQ3-1g": "true",
-    "SQ3-1h-i": "true",
-    "SQ3-1h-ii": "true",
-    "SQ3-1i-i": "true",
-    "SQ3-1i-ii": "true",
-    "SQ3-1j": "true",
-    "SQ3-1k": "Blah",
-    "SQ4-1a": "true",
-    "SQ4-1b": "true",
-    "SQ5-2a": "true",
-    "SQD2b": "true",
-    "SQD2d": "true",
-    "SQ1-1a": "Blah",
-    "SQ1-1b": "Blah",
-    "SQ1-1cii": "Blah",
-    "SQ1-1d": "Blah",
-    "SQ1-1e": "Blah",
-    "SQ1-1h": "999999999",
-    "SQ1-1i-ii": "Blah",
-    "SQ1-1j-ii": "Blah",
-    "SQ1-1k": "Blah",
-    "SQ1-1n": "Blah",
-    "SQ1-1o": "Blah",
-    "SQ1-2a": "Blah",
-    "SQ1-2b": "Blah",
-    "SQ2-2b": "Blah",
-    "SQ4-1c": "Blah",
-    "SQD2c": "Blah",
-    "SQD2e": "Blah",
-    "SQ1-1ci": "public limited company",
-    "SQ1-1j-i": "licensed?",
-    "SQ1-1m": "micro",
-    "SQ1-3": "on-demand self-service. blah blah",
-    "SQ5-1a": u"Yes – your organisation has, blah blah",
-    "SQC2": [
-        "race?",
-        "sexual orientation?",
-        "disability?",
-        "age equality?",
-        "religion or belief?",
-        "gender (sex)?",
-        "gender reassignment?",
-        "marriage or civil partnership?",
-        "pregnancy or maternity?",
-        "human rights?"
-    ],
-    "SQC3": "true",
-    "SQA2": "true",
-    "SQA3": "true",
-    "SQA4": "true",
-    "SQA5": "true",
-    "AQA3": "true",
-    "SQE2a": ["as a prime contractor, using third parties (subcontractors) to provide some services"]
-}
 
 
 @mock.patch('app.main.views.frameworks.data_api_client', autospec=True)
