@@ -97,23 +97,21 @@ with items = [
         </div>
         
         <div class="padding-bottom framework-section">
-            <form method="post">
+            <form method="post" action="{{ url_for(".upload_framework_agreement", framework_slug=framework.slug) }}">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
                 <h3>4. Upload your signed framework agreement</h3>
-                {% if agreement_returned %}
+                {% if supplier_framework.agreementReturned %}
                     {%
                     with
                     question = "Please replace the file you previously uploaded",
-                    name = "question-2",
-                    value = "1234123412341234-pricing-document.pdf",
-                    hint = "Hint comprising further information about the question"
+                    name = "agreement"
                     %}
                     {% include "toolkit/forms/upload.html" %}
                     {% endwith %}
                 {% else %}
                     {%
                     with
-                    name = "question-1"
+                    name = "agreement"
                     %}
                     {% include "toolkit/forms/upload.html" %}
                     {% endwith %}

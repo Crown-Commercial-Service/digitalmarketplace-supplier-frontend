@@ -395,13 +395,21 @@ def framework_agreement(framework_slug):
 
     template_data = main.config['BASE_TEMPLATE_DATA']
 
-    supplier_framework = data_api_client.get_supplier_framework_info(current_user.supplier_id, framework_slug)
-    if not supplier_framework['frameworkInterest']['onFramework']:
+    supplier_framework = data_api_client.get_supplier_framework_info(
+        current_user.supplier_id, framework_slug
+    )['frameworkInterest']
+    if not supplier_framework['onFramework']:
         abort(404)
 
     return render_template(
         "frameworks/agreement.html",
         framework=framework,
-        agreement_returned=False,
+        supplier_framework=supplier_framework,
         **template_data
     ), 200
+
+
+@main.route('/frameworks/<framework_slug>/agreement', methods=['POST'])
+@login_required
+def upload_framework_agreement(framework_slug):
+    pass

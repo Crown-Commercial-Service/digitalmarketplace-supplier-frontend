@@ -355,7 +355,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
 
             assert_in(u'Sign and return your framework agreement', data)
 
-    def test_link_to_framework_agreement_is_shown_if_supplier_is_not_on_framework(self, data_api_client, s3):
+    def test_link_to_framework_agreement_is_not_shown_if_supplier_is_not_on_framework(self, data_api_client, s3):
         with self.app.test_client():
             self.login()
 
@@ -417,6 +417,48 @@ class TestFrameworkAgreement(BaseApplicationTest):
             res = self.client.get("/suppliers/frameworks/g-cloud-7/agreement")
 
             assert_equal(res.status_code, 404)
+
+    def test_upload_message_if_agreement_is_returned(self, data_api_client):
+        with self.app.test_client():
+            self.login()
+
+            data_api_client.get_framework.return_value = self.framework(status='standstill')
+            data_api_client.get_supplier_framework_info.return_value = {
+                'frameworkInterest': {
+                    'declaration': FULL_G7_SUBMISSION, 'onFramework': True, 'agreementReturned': True
+                }}
+
+            res = self.client.get('/suppliers/frameworks/g-cloud-7/agreement')
+            data = res.get_data(as_text=True)
+            doc = html.fromstring(data)
+
+            assert_equal(res.status_code, 200)
+            assert_equal(
+                u'/suppliers/frameworks/g-cloud-7/agreement',
+                doc.xpath('//form')[0].action
+            )
+            assert_in(u'Please replace the file you previously uploaded', data)
+
+    def test_upload_message_if_agreement_is_not_returned(self, data_api_client):
+        with self.app.test_client():
+            self.login()
+
+            data_api_client.get_framework.return_value = self.framework(status='standstill')
+            data_api_client.get_supplier_framework_info.return_value = {
+                'frameworkInterest': {
+                    'declaration': FULL_G7_SUBMISSION, 'onFramework': True, 'agreementReturned': False
+                }}
+
+            res = self.client.get('/suppliers/frameworks/g-cloud-7/agreement')
+            data = res.get_data(as_text=True)
+            doc = html.fromstring(data)
+
+            assert_equal(res.status_code, 200)
+            assert_equal(
+                u'/suppliers/frameworks/g-cloud-7/agreement',
+                doc.xpath('//form')[0].action
+            )
+            assert_not_in(u'Please replace the file you previously uploaded', data)
 
 
 @mock.patch('dmutils.s3.S3')
