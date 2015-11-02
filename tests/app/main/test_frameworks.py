@@ -1,4 +1,8 @@
 # -*- coding: utf-8 -*-
+try:
+    from StringIO import StringIO
+except ImportError:
+    from io import BytesIO as StringIO
 from nose.tools import assert_equal, assert_true, assert_in, assert_not_in
 import os
 import mock
@@ -460,6 +464,181 @@ class TestFrameworkAgreement(BaseApplicationTest):
                 doc.xpath('//form')[0].action
             )
             assert_not_in(u'Please replace the file you previously uploaded', data)
+
+
+@mock.patch('dmutils.s3.S3')
+@mock.patch('app.main.frameworks.send_email')
+@mock.patch('app.main.views.frameworks.data_api_client', autospec=True)
+class TestFrameworkAgreementUpload(BaseApplicationTest):
+    def test_page_returns_404_if_framework_in_wrong_state(self, data_api_client, send_email, s3):
+        with self.app.test_client():
+            self.login()
+
+            data_api_client.get_framework.return_value = self.framework(status='open')
+
+            res = self.client.post(
+                '/suppliers/frameworks/g-cloud-7/agreement',
+                data={
+                    'agreement': (StringIO(b'doc'), 'test.pdf'),
+                }
+            )
+
+            assert_equal(res.status_code, 404)
+
+    def test_page_returns_404_if_supplier_not_on_framework(self, data_api_client, send_email, s3):
+        with self.app.test_client():
+            self.login()
+
+            data_api_client.get_framework.return_value = self.framework(status='standstill')
+            data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
+                on_framework=False)
+
+            res = self.client.post(
+                '/suppliers/frameworks/g-cloud-7/agreement',
+                data={
+                    'agreement': (StringIO(b'doc'), 'test.pdf'),
+                }
+            )
+
+            assert_equal(res.status_code, 404)
+
+    @mock.patch('app.main.views.frameworks.file_is_less_than_5mb')
+    def test_page_returns_400_if_file_is_too_large(self, file_is_less_than_5mb, data_api_client, send_email, s3):
+        with self.app.test_client():
+            self.login()
+
+            data_api_client.get_framework.return_value = self.framework(status='standstill')
+            data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
+                on_framework=True)
+            file_is_less_than_5mb.return_value = False
+
+            res = self.client.post(
+                '/suppliers/frameworks/g-cloud-7/agreement',
+                data={
+                    'agreement': (StringIO(b'doc'), 'test.pdf'),
+                }
+            )
+
+            assert_equal(res.status_code, 400)
+            assert_in(u'Document must be less than 5Mb', res.get_data(as_text=True))
+
+    def test_page_returns_400_if_file_is_not_pdf(self, data_api_client, send_email, s3):
+        with self.app.test_client():
+            self.login()
+
+            data_api_client.get_framework.return_value = self.framework(status='standstill')
+            data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
+                on_framework=True)
+
+            res = self.client.post(
+                '/suppliers/frameworks/g-cloud-7/agreement',
+                data={
+                    'agreement': (StringIO(b'doc'), 'test.txt'),
+                }
+            )
+
+            assert_equal(res.status_code, 400)
+            assert_in(u'Document must be a PDF', res.get_data(as_text=True))
+
+    def test_api_is_not_updated_and_email_not_sent_if_upload_fails(self, data_api_client, send_email, s3):
+        with self.app.test_client():
+            self.login()
+
+            data_api_client.get_framework.return_value = self.framework(status='standstill')
+            data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
+                on_framework=True)
+            s3.return_value.save.side_effect = S3ResponseError(500, 'All fail')
+
+            res = self.client.post(
+                '/suppliers/frameworks/g-cloud-7/agreement',
+                data={
+                    'agreement': (StringIO(b'doc'), 'test.pdf'),
+                }
+            )
+
+            assert_equal(res.status_code, 503)
+            s3.return_value.save.assert_called_with(
+                'g-cloud-7/agreements/1234/1234-signed-framework-agreement.pdf',
+                mock.ANY,
+                acl='private')
+            assert not data_api_client.register_framework_agreement_returned.called
+            assert not send_email.called
+
+    def test_email_is_not_sent_if_api_update_fails(self, data_api_client, send_email, s3):
+        with self.app.test_client():
+            self.login()
+
+            data_api_client.get_framework.return_value = self.framework(status='standstill')
+            data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
+                on_framework=True)
+            data_api_client.register_framework_agreement_returned.side_effect = APIError(mock.Mock(status_code=500))
+
+            res = self.client.post(
+                '/suppliers/frameworks/g-cloud-7/agreement',
+                data={
+                    'agreement': (StringIO(b'doc'), 'test.pdf'),
+                }
+            )
+
+            assert_equal(res.status_code, 500)
+            s3.return_value.save.assert_called_with(
+                'g-cloud-7/agreements/1234/1234-signed-framework-agreement.pdf',
+                mock.ANY,
+                acl='private')
+            data_api_client.register_framework_agreement_returned.assert_called_with(
+                1234, 'g-cloud-7', 'email@email.com')
+            assert not send_email.called
+
+    def test_email_failure(self, data_api_client, send_email, s3):
+        with self.app.test_client():
+            self.login()
+
+            data_api_client.get_framework.return_value = self.framework(status='standstill')
+            data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
+                on_framework=True)
+            send_email.side_effect = MandrillException()
+
+            res = self.client.post(
+                '/suppliers/frameworks/g-cloud-7/agreement',
+                data={
+                    'agreement': (StringIO(b'doc'), 'test.pdf'),
+                }
+            )
+
+            assert_equal(res.status_code, 503)
+            s3.return_value.save.assert_called_with(
+                'g-cloud-7/agreements/1234/1234-signed-framework-agreement.pdf',
+                mock.ANY,
+                acl='private')
+            data_api_client.register_framework_agreement_returned.assert_called_with(
+                1234, 'g-cloud-7', 'email@email.com')
+            send_email.assert_called()
+
+    def test_upload_agreement_document(self, data_api_client, send_email, s3):
+        with self.app.test_client():
+            self.login()
+
+            data_api_client.get_framework.return_value = self.framework(status='standstill')
+            data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
+                on_framework=True)
+
+            res = self.client.post(
+                '/suppliers/frameworks/g-cloud-7/agreement',
+                data={
+                    'agreement': (StringIO(b'doc'), 'test.pdf'),
+                }
+            )
+
+            assert_equal(res.status_code, 200)
+            s3.return_value.save.assert_called_with(
+                'g-cloud-7/agreements/1234/1234-signed-framework-agreement.pdf',
+                mock.ANY,
+                acl='private')
+            data_api_client.register_framework_agreement_returned.assert_called_with(
+                1234, 'g-cloud-7', 'email@email.com')
+            send_email.assert_called()
+
+            assert_in(u'Your framework agreement has been uploaded', res.get_data(as_text=True))
 
 
 @mock.patch('dmutils.s3.S3')

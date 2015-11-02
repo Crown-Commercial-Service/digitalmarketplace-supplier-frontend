@@ -12,7 +12,7 @@ from dmutils.email import send_email, MandrillException
 from dmutils.formats import format_service_price
 from dmutils import s3
 from dmutils.deprecation import deprecated
-from dmutils.documents import get_agreement_document_path, get_signed_url
+from dmutils.documents import get_agreement_document_path, get_signed_url, file_is_less_than_5mb
 
 from ... import data_api_client
 from ...main import main, content_loader
@@ -420,13 +420,13 @@ def framework_agreement(framework_slug):
     if framework['status'] not in ['standstill', 'live']:
         abort(404)
 
-    template_data = main.config['BASE_TEMPLATE_DATA']
-
     supplier_framework = data_api_client.get_supplier_framework_info(
         current_user.supplier_id, framework_slug
     )['frameworkInterest']
     if not supplier_framework['onFramework']:
         abort(404)
+
+    template_data = main.config['BASE_TEMPLATE_DATA']
 
     return render_template(
         "frameworks/agreement.html",
@@ -439,4 +439,70 @@ def framework_agreement(framework_slug):
 @main.route('/frameworks/<framework_slug>/agreement', methods=['POST'])
 @login_required
 def upload_framework_agreement(framework_slug):
-    pass
+    framework = data_api_client.get_framework(framework_slug)['frameworks']
+    if framework['status'] not in ['standstill', 'live']:
+        abort(404)
+
+    supplier_framework = data_api_client.get_supplier_framework_info(
+        current_user.supplier_id, framework_slug
+    )['frameworkInterest']
+    if not supplier_framework['onFramework']:
+        abort(404)
+
+    template_data = main.config['BASE_TEMPLATE_DATA']
+
+    upload_error = None
+    if not file_is_less_than_5mb(request.files['agreement']):
+        upload_error = "Document must be less than 5Mb"
+    elif not request.files['agreement'].filename.endswith('.pdf'):
+        upload_error = "Document must be a PDF"
+
+    if upload_error is not None:
+        return render_template(
+            "frameworks/agreement.html",
+            framework=framework,
+            supplier_framework=supplier_framework,
+            upload_error=upload_error,
+            **template_data
+        ), 400
+
+    agreements_bucket = s3.S3(current_app.config['DM_AGREEMENTS_BUCKET'])
+    path = get_agreement_document_path(framework_slug, current_user.supplier_id, 'signed-framework-agreement.pdf')
+    agreements_bucket.save(path, request.files['agreement'], acl='private')
+
+    data_api_client.register_framework_agreement_returned(
+        current_user.supplier_id, framework_slug, current_user.email_address)
+
+    try:
+        email_body = render_template(
+            'emails/framework_agreement_uploaded.html',
+            framework=framework,
+            supplier_name=current_user.supplier_name,
+            supplier_id=current_user.supplier_id,
+            user_name=current_user.name
+        )
+        send_email(
+            current_app.config['DM_FRAMEWORK_AGREEMENTS_EMAIL'],
+            email_body,
+            current_app.config['DM_MANDRILL_API_KEY'],
+            '{} framework agreement uploaded for {}'.format(framework['name'], current_user.supplier_id),
+            current_user.email_address,
+            '{} Supplier'.format(framework['name']),
+            ['{}-framework-agreement'.format(framework_slug)]
+        )
+    except MandrillException as e:
+        current_app.logger.error(
+            "Framework agreement email failed to send. "
+            "error {error} supplier_id {supplier_id} email_hash {email_hash}",
+            extra={'error': six.text_type(e),
+                   'supplier_id': current_user.supplier_id,
+                   'email_hash': hash_email(current_user.email_address)})
+        abort(503, "Framework agreement email failed to send")
+
+    return render_template(
+        "frameworks/agreement.html",
+        framework=framework,
+        supplier_framework=supplier_framework,
+        agreement_uploaded=True,
+        **template_data
+    ), 200

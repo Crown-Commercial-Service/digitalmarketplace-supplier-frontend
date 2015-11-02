@@ -24,6 +24,15 @@ with items = [
 {% endblock %}
 
 {% block main_content %}
+  {% if agreement_uploaded %}
+    {% with
+        message = "Your framework agreement has been uploaded. You'll be notified once your framework has been countersigned by Crown Commercial Service.",
+        type = "success"
+    %}
+      {% include "toolkit/notification-banner.html" %}
+    {% endwith %}
+  {% endif %}
+
     <div class='column-two-thirds large-paragraph'>
         {% with
             heading = "Sign your " + framework.name + " framework agreement",
@@ -104,14 +113,16 @@ with items = [
                     {%
                     with
                     question = "Please replace the file you previously uploaded",
-                    name = "agreement"
+                    name = "agreement",
+                    error = upload_error
                     %}
                     {% include "toolkit/forms/upload.html" %}
                     {% endwith %}
                 {% else %}
                     {%
                     with
-                    name = "agreement"
+                    name = "agreement",
+                    error = upload_error
                     %}
                     {% include "toolkit/forms/upload.html" %}
                     {% endwith %}
