@@ -56,7 +56,18 @@
         </div>
       </div>
     </div>
-  <nav role="navigation" class="framework-application-reference">
+  {% elif framework.status == 'standstill' %}
+    <div class="summary-item-lede">
+      <div class="grid-row">
+        <div class="column-two-thirds">
+          {% if application_made %}
+            <p>You made your supplier declaration and submitted {{ counts.complete }} {{ 'service' if counts.complete == 1 else 'services' }}.</p>
+          {% else %}
+            <p>You didn't submit an application.</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
   {% endif %}
     <ul class="browse-list">
 
@@ -64,7 +75,9 @@
         <li class="browse-list-item framework-application-section">
           <div class="grid-row">
             <div class="column-two-thirds">
-              <a href="{{ url_for('.download_agreement_file', framework_slug=framework.slug, document_name='result-letter.pdf') }}">Download your application result letter</a>
+              <a class="browse-list-item-link" href="{{ url_for('.download_agreement_file', framework_slug=framework.slug, document_name='result-letter.pdf') }}">
+                <span>Download your application result letter</span>
+              </a>
               <p>This letter informs you if your {{ framework.name }} has been successful.</p>
             </div>
           </div>
@@ -73,7 +86,9 @@
         <li class="browse-list-item framework-application-section">
           <div class="grid-row">
             <div class="column-two-thirds">
-              <a href="{{ url_for('.framework_agreement', framework_slug=framework.slug) }}">Sign and return your framework agreement</a>
+              <a class="browse-list-item-link" href="{{ url_for('.framework_agreement', framework_slug=framework.slug) }}">
+                <span>Sign and return your framework agreement</span>
+              </a>
               <p>Your agreement will need to be signed by both you and the Crown Commercial Service before you can sell {{framework.name}} services.</p>
             </div>
           </div>
@@ -144,15 +159,11 @@
             </div>
           </div>
         </li>
-      {% elif framework.status == 'pending' and application_made %}
+      {% elif framework.status in ['pending', 'standstill'] and application_made %}
         <li class="browse-list-item framework-application-section">
           <div class="grid-row">
             <div class="column-two-thirds">
-              <a class="browse-list-item-link" href="{{ url_for('.framework_services', framework_slug=framework.slug) }}">
-                <span>
-                  View services
-                </span>
-              </a>
+              <a href="{{ url_for('.framework_services', framework_slug=framework.slug) }}">View services</a>
             </div>
             <div class="column-two-thirds">
               <div class="framework-section-status-neutral">
