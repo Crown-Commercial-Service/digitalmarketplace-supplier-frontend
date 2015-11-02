@@ -151,7 +151,7 @@
           {% endif %}
           <div class="grid-row">
             <div class="column-two-thirds">
-              <a class="browse-list-item-link" href="{{ url_for('.framework_supplier_declaration', framework_slug=framework.slug, section_id='g_cloud_7_essentials') }}">
+              <a class="browse-list-item-link" href="{{ url_for('.framework_supplier_declaration', framework_slug=framework.slug, section_id=first_page_of_declaration) }}">
                 {% if declaration_status == 'unstarted' %}
                   <span>Make supplier declaration</span>
                 {% else %}
@@ -202,7 +202,7 @@
           {% endif %}
         </li>
       {% endif %}
-      
+
       {% if framework.status == 'open' %}
         <li class="browse-list-item framework-application-section">
           <div class="grid-row">
