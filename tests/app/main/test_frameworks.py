@@ -634,7 +634,7 @@ class TestFrameworkAgreementUpload(BaseApplicationTest):
             )
 
             assert_equal(res.status_code, 302)
-            assert_equal(res.location, '/suppliers/frameworks/g-cloud-7/agreement')
+            assert_equal(res.location, 'http://localhost/suppliers/frameworks/g-cloud-7/agreement')
 
 
 @mock.patch('dmutils.s3.S3')
