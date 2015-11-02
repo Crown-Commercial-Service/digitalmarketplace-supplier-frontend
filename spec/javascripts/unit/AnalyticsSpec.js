@@ -32,7 +32,7 @@ describe("GOVUK.Analytics", function () {
     });
 
     it('configures a universal tracker', function() {
-      var trackerId = (document.domain === 'www.digitalmarketplace.service.gov.uk') ? 'UA-49258698-1' : 'UA-49258698-3';
+      var trackerId = 'UA-49258698-1';
       expect(universalSetupArguments[0]).toEqual(['create', trackerId, {
         'cookieDomain': document.domain
       }]);
