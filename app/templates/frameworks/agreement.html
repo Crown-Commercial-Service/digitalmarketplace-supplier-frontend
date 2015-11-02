@@ -24,12 +24,14 @@ with items = [
 {% endblock %}
 
 {% block main_content %}
-  {% if agreement_uploaded %}
-    {% with
-        message = "Your framework agreement has been uploaded. You'll be notified once your framework has been countersigned by Crown Commercial Service.",
-        type = "success"
+  {% if supplier_framework.agreementReturned %}
+  {% with
+     heading = "Your document has been uploaded",
+     messages = [
+      "You’ll be notified once your framework agreement has been countersigned by the Crown Commercial Service."
+     ]
     %}
-      {% include "toolkit/notification-banner.html" %}
+      {% include "toolkit/temporary-message.html" %}
     {% endwith %}
   {% endif %}
 
@@ -106,13 +108,14 @@ with items = [
         </div>
         
         <div class="padding-bottom framework-section">
-            <form method="post" action="{{ url_for(".upload_framework_agreement", framework_slug=framework.slug) }}">
+            <form method="post" enctype="multipart/form-data" action="{{ url_for(".upload_framework_agreement", framework_slug=framework.slug) }}">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
                 <h3>4. Upload your signed framework agreement</h3>
                 {% if supplier_framework.agreementReturned %}
                     {%
                     with
-                    question = "Please replace the file you previously uploaded",
+                    value = "Document uploaded {}".format(last_modified),
+                    file_type = "PDF",
                     name = "agreement",
                     error = upload_error
                     %}
@@ -121,6 +124,8 @@ with items = [
                 {% else %}
                     {%
                     with
+                    file_type = "PDF",
+                    name = "agreement",
                     name = "agreement",
                     error = upload_error
                     %}

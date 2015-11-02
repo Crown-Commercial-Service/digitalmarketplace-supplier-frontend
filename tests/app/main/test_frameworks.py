@@ -426,7 +426,8 @@ class TestFrameworkAgreement(BaseApplicationTest):
 
             assert_equal(res.status_code, 404)
 
-    def test_upload_message_if_agreement_is_returned(self, data_api_client):
+    @mock.patch('dmutils.s3.S3')
+    def test_upload_message_if_agreement_is_returned(self, s3, data_api_client):
         with self.app.test_client():
             self.login()
 
@@ -434,6 +435,7 @@ class TestFrameworkAgreement(BaseApplicationTest):
             data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
                 on_framework=True, agreement_returned=True
             )
+            s3.return_value.bucket.get_key.return_value = mock.Mock(last_modified='Mon, 02 Nov 2015 15:25:56 GMT')
 
             res = self.client.get('/suppliers/frameworks/g-cloud-7/agreement')
             data = res.get_data(as_text=True)
@@ -444,7 +446,8 @@ class TestFrameworkAgreement(BaseApplicationTest):
                 u'/suppliers/frameworks/g-cloud-7/agreement',
                 doc.xpath('//form')[0].action
             )
-            assert_in(u'Please replace the file you previously uploaded', data)
+            assert_in(u'Document uploaded Monday 02 November 2015 at 15:25', data)
+            assert_in(u'Your document has been uploaded', data)
 
     def test_upload_message_if_agreement_is_not_returned(self, data_api_client):
         with self.app.test_client():
@@ -463,7 +466,8 @@ class TestFrameworkAgreement(BaseApplicationTest):
                 u'/suppliers/frameworks/g-cloud-7/agreement',
                 doc.xpath('//form')[0].action
             )
-            assert_not_in(u'Please replace the file you previously uploaded', data)
+            assert_not_in(u'Document uploaded', data)
+            assert_not_in(u'Your document has been uploaded', data)
 
 
 @mock.patch('dmutils.s3.S3')
@@ -629,16 +633,8 @@ class TestFrameworkAgreementUpload(BaseApplicationTest):
                 }
             )
 
-            assert_equal(res.status_code, 200)
-            s3.return_value.save.assert_called_with(
-                'g-cloud-7/agreements/1234/1234-signed-framework-agreement.pdf',
-                mock.ANY,
-                acl='private')
-            data_api_client.register_framework_agreement_returned.assert_called_with(
-                1234, 'g-cloud-7', 'email@email.com')
-            send_email.assert_called()
-
-            assert_in(u'Your framework agreement has been uploaded', res.get_data(as_text=True))
+            assert_equal(res.status_code, 302)
+            assert_equal(res.location, '/suppliers/frameworks/g-cloud-7/agreement')
 
 
 @mock.patch('dmutils.s3.S3')

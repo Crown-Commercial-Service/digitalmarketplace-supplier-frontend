@@ -1,6 +1,7 @@
 import itertools
 from datetime import datetime
 
+from dateutil.parser import parse as date_parse
 from flask import render_template, request, abort, flash, redirect, url_for, current_app
 from flask_login import login_required, current_user
 import six
@@ -9,7 +10,7 @@ from dmutils.apiclient import APIError
 from dmutils.audit import AuditTypes
 from dmutils import flask_featureflags
 from dmutils.email import send_email, MandrillException
-from dmutils.formats import format_service_price
+from dmutils.formats import format_service_price, datetimeformat
 from dmutils import s3
 from dmutils.deprecation import deprecated
 from dmutils.documents import get_agreement_document_path, get_signed_url, file_is_less_than_5mb
@@ -426,12 +427,21 @@ def framework_agreement(framework_slug):
     if not supplier_framework['onFramework']:
         abort(404)
 
+    if supplier_framework['agreementReturned']:
+        agreements_bucket = s3.S3(current_app.config['DM_AGREEMENTS_BUCKET'])
+        path = get_agreement_document_path(framework_slug, current_user.supplier_id, 'signed-framework-agreement.pdf')
+        last_modified = agreements_bucket.bucket.get_key(path).last_modified
+        last_modified = datetimeformat(date_parse(last_modified))
+    else:
+        last_modified = None
+
     template_data = main.config['BASE_TEMPLATE_DATA']
 
     return render_template(
         "frameworks/agreement.html",
         framework=framework,
         supplier_framework=supplier_framework,
+        last_modified=last_modified,
         **template_data
     ), 200
 
@@ -485,7 +495,7 @@ def upload_framework_agreement(framework_slug):
             current_app.config['DM_FRAMEWORK_AGREEMENTS_EMAIL'],
             email_body,
             current_app.config['DM_MANDRILL_API_KEY'],
-            '{} framework agreement uploaded for {}'.format(framework['name'], current_user.supplier_id),
+            '{} framework agreement'.format(framework['name']),
             current_user.email_address,
             '{} Supplier'.format(framework['name']),
             ['{}-framework-agreement'.format(framework_slug)]
@@ -499,10 +509,4 @@ def upload_framework_agreement(framework_slug):
                    'email_hash': hash_email(current_user.email_address)})
         abort(503, "Framework agreement email failed to send")
 
-    return render_template(
-        "frameworks/agreement.html",
-        framework=framework,
-        supplier_framework=supplier_framework,
-        agreement_uploaded=True,
-        **template_data
-    ), 200
+    return redirect(url_for('.framework_agreement', framework_slug=framework_slug))
