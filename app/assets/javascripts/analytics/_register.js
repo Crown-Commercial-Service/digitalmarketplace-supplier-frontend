@@ -6,9 +6,9 @@
     'register': function () {
       GOVUK.Analytics.load();
       var cookieDomain = (root.document.domain === 'www.digitalmarketplace.service.gov.uk') ? '.digitalmarketplace.service.gov.uk' : root.document.domain;
-      var property = (root.document.domain === 'www.digitalmarketplace.service.gov.uk') ? 'UA-49258698-1' : 'UA-49258698-3';
+      var universalId = 'UA-49258698-1';
       GOVUK.analytics = new GOVUK.Analytics({
-        universalId: property,
+        universalId: universalId,
         cookieDomain: cookieDomain
       });
     }
