@@ -12,17 +12,18 @@ from dmutils.email import send_email, MandrillException
 from dmutils.formats import format_service_price
 from dmutils import s3
 from dmutils.deprecation import deprecated
+from dmutils.documents import get_agreement_document_path, get_signed_url
 
 from ... import data_api_client
 from ...main import main, content_loader
 from ..helpers import hash_email
 from ..helpers.frameworks import get_error_messages_for_page, get_first_question_index, \
     get_error_messages, get_declaration_status, get_last_modified_from_first_matching_file, \
-    register_interest_in_framework, get_agreement_document_path, get_supplier_framework_info, \
+    register_interest_in_framework, get_supplier_framework_info, \
     get_supplier_on_framework_from_info, get_declaration_status_from_info
 from ..helpers.services import (
     get_draft_document_url, get_service_attributes, get_drafts,
-    count_unanswered_questions, get_document_url
+    count_unanswered_questions
 )
 
 
@@ -215,7 +216,7 @@ def download_supplier_file(framework_slug, filepath):
 def download_agreement_file(framework_slug, document_name):
     agreements_bucket = s3.S3(current_app.config['DM_AGREEMENTS_BUCKET'])
     path = get_agreement_document_path(framework_slug, current_user.supplier_id, document_name)
-    url = get_document_url(agreements_bucket, path)
+    url = get_signed_url(agreements_bucket, path, current_app.config['DM_ASSETS_URL'])
     if not url:
         abort(404)
 

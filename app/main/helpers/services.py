@@ -85,16 +85,6 @@ def get_draft_document_url(uploader, document_path):
         return url._replace(netloc=base_url.netloc, scheme=base_url.scheme).geturl()
 
 
-def get_document_url(uploader, document_path):
-    url = uploader.get_signed_url(document_path)
-    if url is not None:
-        if current_app.config['DM_ASSETS_URL'] is not None:
-            url = urlparse.urlparse(url)
-            base_url = urlparse.urlparse(current_app.config['DM_ASSETS_URL'])
-            url = url._replace(netloc=base_url.netloc, scheme=base_url.scheme).geturl()
-        return url
-
-
 def parse_document_upload_time(data):
     match = re.search("(\d{4}-\d{2}-\d{2}-\d{2}\d{2})\..{2,3}$", data)
     if match:
