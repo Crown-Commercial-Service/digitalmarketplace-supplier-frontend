@@ -120,7 +120,7 @@ def framework_submission_services(framework_slug, lot_slug):
         draft = next(iter(drafts + complete_drafts), None)
         if not draft:
             draft = data_api_client.create_new_draft_service(
-                framework_slug, current_user.supplier_id, current_user.email_address, lot_slug
+                framework_slug, lot_slug, current_user.supplier_id, {}, current_user.email_address,
             )['services']
 
         return redirect(
@@ -145,6 +145,7 @@ def framework_submission_services(framework_slug, lot_slug):
         drafts=list(reversed(drafts)),
         declaration_status=declaration_status,
         framework=framework,
+        lot=lot,
         **main.config['BASE_TEMPLATE_DATA']
     ), 200
 

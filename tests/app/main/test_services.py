@@ -388,47 +388,32 @@ class TestEditService(BaseApplicationTest):
         assert_equal(404, res.status_code)
 
 
-@mock.patch('app.main.views.services.data_api_client')
-@mock.patch('app.main.views.services.request')
+@mock.patch('app.main.views.services.data_api_client', autospec=True)
 class TestCreateDraftService(BaseApplicationTest):
     def setup(self):
         super(TestCreateDraftService, self).setup()
         self._answer_required = 'Answer is required'
-        self._validation_error = \
-            'There was a problem with your answer to the following questions'
+        self._validation_error = 'There was a problem with your answer to the following questions'
 
-    @staticmethod
-    def _format_for_request(phrase):
-        return phrase.replace(' ', '+')
-
-    def test_get_create_draft_service_page_if_open(self, request, data_api_client):
         with self.app.test_client():
             self.login()
+
+    def test_get_create_draft_service_page_if_open(self, data_api_client):
         data_api_client.get_framework.return_value = self.framework(status='open')
 
-        res = self.client.get('/suppliers/frameworks/g-cloud-7/submissions/create')
+        res = self.client.get('/suppliers/frameworks/g-cloud-7/submissions/scs/create')
         assert_equal(res.status_code, 200)
-        assert_in("Create new service", res.get_data(as_text=True))
-
-        lots = content_loader.get_question('g-cloud-7', 'services', 'lot')
-
-        for lot in lots['options']:
-            assert_in(lot['label'], res.get_data(as_text=True))
+        assert_in(u'Service name', res.get_data(as_text=True))
 
         assert_not_in(self._validation_error, res.get_data(as_text=True))
 
-    def test_can_not_get_create_draft_service_page_if_not_open(self, request, data_api_client):
-        with self.app.test_client():
-            self.login()
+    def test_can_not_get_create_draft_service_page_if_not_open(self, data_api_client):
         data_api_client.get_framework.return_value = self.framework(status='other')
 
-        res = self.client.get('/suppliers/frameworks/g-cloud-7/submissions/create')
+        res = self.client.get('/suppliers/frameworks/g-cloud-7/submissions/scs/create')
         assert_equal(res.status_code, 404)
 
-    def _test_post_create_draft_service(self, if_error_expected, data_api_client):
-        with self.app.test_client():
-            self.login()
-
+    def _test_post_create_draft_service(self, data, if_error_expected, data_api_client):
         data_api_client.get_framework.return_value = self.framework(status='open')
         data_api_client.create_new_draft_service.return_value = {
             'services': {
@@ -445,7 +430,8 @@ class TestCreateDraftService(BaseApplicationTest):
         }
 
         res = self.client.post(
-            '/suppliers/frameworks/g-cloud-7/submissions/create'
+            '/suppliers/frameworks/g-cloud-7/submissions/scs/create',
+            data=data
         )
 
         if if_error_expected:
@@ -454,21 +440,35 @@ class TestCreateDraftService(BaseApplicationTest):
         else:
             assert_equal(res.status_code, 302)
 
-    def test_post_create_draft_service_with_lot_selected_succeeds(self, request, data_api_client):
-        request.form.get.return_value = "scs"
-        self._test_post_create_draft_service(if_error_expected=False, data_api_client=data_api_client)
+    def test_post_create_draft_service_succeeds(self, data_api_client):
+        self._test_post_create_draft_service(
+            {'serviceName': "Service Name"},
+            if_error_expected=False, data_api_client=data_api_client
+        )
 
-    def test_post_create_draft_service_without_lot_selected_fails(self, request, data_api_client):
-        request.form.get.return_value = None
-        self._test_post_create_draft_service(if_error_expected=True, data_api_client=data_api_client)
+    def test_post_create_draft_service_with_api_error_fails(self, data_api_client):
+        data_api_client.create_new_draft_service.side_effect = HTTPError(
+            mock.Mock(status_code=400),
+            {'serviceName': 'answer_required'}
+        )
 
-    def test_cannot_post_if_not_open(self, request, data_api_client):
-        with self.app.test_client():
-            self.login()
+        self._test_post_create_draft_service(
+            {},
+            if_error_expected=True, data_api_client=data_api_client
+        )
 
+        res = self.client.post(
+            '/suppliers/frameworks/g-cloud-7/submissions/scs/create',
+            data={}
+        )
+
+        assert_equal(res.status_code, 400)
+        assert_in(self._validation_error, res.get_data(as_text=True))
+
+    def test_cannot_post_if_not_open(self, data_api_client):
         data_api_client.get_framework.return_value = self.framework(status='other')
         res = self.client.post(
-            '/suppliers/submission/g-cloud-7/create'
+            '/suppliers/submission/g-cloud-7/submissions/scs/create'
         )
         assert_equal(res.status_code, 404)
 

@@ -10,7 +10,7 @@ from ..helpers.services import (
     get_draft_document_url, count_unanswered_questions,
     get_next_section_name
 )
-from ..helpers.frameworks import get_framework, get_framework_and_lot, get_declaration_status
+from ..helpers.frameworks import get_framework_and_lot, get_declaration_status
 
 from dmutils.apiclient import APIError, HTTPError
 from dmutils.formats import format_service_price
@@ -170,89 +170,67 @@ def update_section(service_id, section_id):
 #  ####################  CREATING NEW DRAFT SERVICES ##########################
 
 
-@main.route('/frameworks/<framework_slug>/submissions/create', methods=['GET'])
+@main.route('/frameworks/<framework_slug>/submissions/<lot_slug>/create', methods=['GET'])
 @login_required
-def start_new_draft_service(framework_slug):
-    """
-    Page to kick off creation of a new (G7) service.
-    """
+def start_new_draft_service(framework_slug, lot_slug):
+    """Page to kick off creation of a new service."""
 
-    framework = get_framework(data_api_client, framework_slug, open_only=True)
+    framework, lot = get_framework_and_lot(data_api_client, framework_slug, lot_slug, open_only=True)
 
-    question = content_loader.get_question(framework_slug, 'services', 'lot')
-    section = {
-        "name": 'Create new service',
-        "questions": [question]
-    }
+    content = content_loader.get_builder(framework_slug, 'edit_submission').filter(
+        {'lot': lot['slug']}
+    )
+
+    section = content.get_section(content.get_next_editable_section_id())
 
     return render_template(
         "services/edit_submission_section.html",
         framework=framework,
-        question=question,
         service_data={},
         section=section,
         **dict(main.config['BASE_TEMPLATE_DATA'])
     ), 200
 
 
-@main.route('/frameworks/<framework_slug>/submissions/create', methods=['POST'])
+@main.route('/frameworks/<framework_slug>/submissions/<lot_slug>/create', methods=['POST'])
 @login_required
-def create_new_draft_service(framework_slug):
-    """
-    Hits up the data API to create a new draft (G7) service.
-    """
-    framework = get_framework(data_api_client, framework_slug, open_only=True)
-    lot = request.form.get('lot', None)
+def create_new_draft_service(framework_slug, lot_slug):
+    """Hits up the data API to create a new draft service."""
 
-    if not lot:
-        question = content_loader.get_question(framework_slug, 'services', 'lot')
-        section = {
-            "name": 'Create new service',
-            "questions": [question]
-        }
+    framework, lot = get_framework_and_lot(data_api_client, framework_slug, lot_slug, open_only=True)
 
-        errors = {
-            question['id']: {
-                "input_name": question['id'],
-                "question": question['question'],
-                "message": "Answer is required"
-            }
-        }
+    content = content_loader.get_builder(framework_slug, 'edit_submission').filter(
+        {'lot': lot['slug']}
+    )
+
+    section = content.get_section(content.get_next_editable_section_id())
+
+    update_data = section.get_data(request.form)
+
+    try:
+        draft_service = data_api_client.create_new_draft_service(
+            framework_slug, lot['slug'], current_user.supplier_id, update_data,
+            current_user.email_address, page_questions=section.get_field_names()
+        )['services']
+    except HTTPError as e:
+        update_data = section.unformat_data(update_data)
+        errors = section.get_error_messages(e.message, lot_slug)
 
         return render_template(
             "services/edit_submission_section.html",
             framework=framework,
-            question=question,
-            service_data={},
             section=section,
+            service_data=update_data,
             errors=errors,
             **main.config['BASE_TEMPLATE_DATA']
         ), 400
 
-    supplier_id = current_user.supplier_id
-    user = current_user.email_address
-
-    try:
-        draft_service = data_api_client.create_new_draft_service(
-            framework_slug, supplier_id, user, lot
-        )
-
-    except APIError as e:
-        abort(e.status_code)
-
-    draft_service = draft_service.get('services')
-    content = content_loader.get_builder(framework_slug, 'edit_submission').filter({
-        'lot': draft_service.get('lot')
-    })
-
     return redirect(
         url_for(
-            ".edit_service_submission",
+            ".view_service_submission",
             framework_slug=framework['slug'],
             lot_slug=draft_service['lot'],
-            service_id=draft_service.get('id'),
-            section_id=content.get_next_editable_section_id(),
-            return_to_summary=1
+            service_id=draft_service['id'],
         )
     )
 
