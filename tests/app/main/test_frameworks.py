@@ -258,7 +258,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
     def test_returns_404_if_framework_does_not_exist(self, data_api_client, s3):
         with self.app.test_client():
             self.login()
-            data_api_client.get_framework.return_value = {'frameworks': {}}
+            data_api_client.get_framework.side_effect = APIError(mock.Mock(status_code=404))
 
             res = self.client.get('/suppliers/frameworks/does-not-exist')
 

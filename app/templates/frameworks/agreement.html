@@ -1,6 +1,6 @@
 {% extends "_base_page.html" %}
 
-{% block page_title %}{{ framework.name }} Framework Agreement– Digital Marketplace{% endblock %}
+{% block page_title %}{{ framework.name }} Framework Agreement – Digital Marketplace{% endblock %}
 
 {% block breadcrumb %}
 {%
@@ -65,7 +65,7 @@ with items = [
             <h3>3. Sign your framework agreement</h3>
             <p class='padding-bottom-small'>To digitally sign your framework agreement, you need to:</p>
             <ol class='number-list indent-list-large loose-list padding-bottom-small'>
-                <li>Use <strong>Adobe Reader</strong> to open your G-Cloud 7 framework agreement. 
+              <li>Use <strong>Adobe Reader</strong> to open your {{ framework.name }} framework agreement. 
                     You can download it for free from the <a href="https://get.adobe.com/uk/reader/">Adobe Acrobat Reader</a> website.</li>
 
                 <li>Go to page 15 and click the signature box under the title ‘Signed duly authorised for and on behalf of the supplier’.</li>
@@ -127,6 +127,6 @@ with items = [
             </form>
         </div>
         
-        <a href="{{url_for('.framework_dashboard', framework_slug=framework.slug)}}">Return to your G-Cloud application</a>
+        <a href="{{url_for('.framework_dashboard', framework_slug=framework.slug)}}">Return to your {{ framework.name }} application</a>
     </div>
 {% endblock %}

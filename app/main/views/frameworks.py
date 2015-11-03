@@ -36,8 +36,6 @@ CLARIFICATION_QUESTION_NAME = 'clarification_question'
 def framework_dashboard(framework_slug):
     template_data = main.config['BASE_TEMPLATE_DATA']
     framework = data_api_client.get_framework(framework_slug)['frameworks']
-    if not framework:
-        abort(404)
 
     if request.method == 'POST':
         try:
