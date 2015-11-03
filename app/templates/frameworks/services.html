@@ -98,17 +98,18 @@
     {% call summary.row() %}
       {{ summary.service_link(draft.serviceName,
                               url_for(".view_service_submission", framework_slug=framework.slug, lot_slug=draft.lot, service_id=draft.id)) }}
-      
+
       {% if framework.status == 'open' %}
       {{ summary.text(submission.multiline_string(
         submission.can_be_completed_text(draft.unanswered_required, framework.status),
         submission.unanswered_required_text(draft.unanswered_required, draft.unanswered_optional),
         submission.unanswered_optional_text(draft.unanswered_required, draft.unanswered_optional)
       )) }}
-      {% endif %}
-      {% if framework.status == 'open' %}
         {{ summary.button(text="Make a copy",
                            action=url_for('.copy_draft_service', framework_slug=framework.slug, lot_slug=draft.lot, service_id=draft.id)) }}
+      {% else %}
+        {{ summary.text() }}
+        {{ summary.text() }}
       {% endif %}
     {% endcall %}
   {% endcall %}
@@ -138,6 +139,8 @@
       {% if framework.status == 'open' %}
         {{ summary.button(text="Make a copy",
                            action=url_for('.copy_draft_service', framework_slug=framework.slug, lot_slug=draft.lot, service_id=draft.id)) }}
+      {% else %}
+        {{ summary.text() }}
       {% endif %}
     {% endcall %}
   {% endcall %}
