@@ -1,3 +1,5 @@
+# coding=utf-8
+
 from itertools import chain
 
 from flask import render_template, request, redirect, url_for, abort, session

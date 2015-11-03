@@ -15,18 +15,17 @@
       {% call summary.row(complete=not framework.needs_to_complete_declaration) %}
         {% call summary.field(first=True) %}
           <p>
-            {{framework.name}}
+            {{ framework.name }}
           </p>
           {% if framework.onFramework %}
             <p class='second-line'>
-              Live from {{ framework.dates.go_live|safe }}
+              Live from {{ framework.dates.go_live }}
             </p>
           {% endif %}
         {% endcall %}
         {% call summary.field() %}
           <p>
-            {{ framework.complete_drafts_count }} service{{ 's' if framework.complete_drafts_count != 1 }}
-            {{ 'submitted' if not framework.onFramework }}
+            {{ framework.complete_drafts_count }} service{{ 's' if framework.complete_drafts_count != 1 }} {{ 'submitted' if not framework.onFramework }}
           </p>
           {% if framework.needs_to_complete_declaration %}
             <p class="second-line">
