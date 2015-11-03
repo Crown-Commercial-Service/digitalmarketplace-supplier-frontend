@@ -9,8 +9,6 @@ from dmutils.user import User
 
 from config import configs
 
-from markdown import markdown
-
 
 data_api_client = apiclient.DataAPIClient()
 login_manager = LoginManager()
@@ -19,6 +17,7 @@ csrf = CsrfProtect()
 
 
 from app.main.helpers.services import parse_document_upload_time
+from app.main.helpers.frameworks import question_references
 
 
 def create_app(config_name):
@@ -72,18 +71,7 @@ def create_app(config_name):
         session.permanent = True
         session.modified = True
 
-    @application.template_filter('markdown')
-    def markdown_filter(data):
-        return Markup(markdown(data))
-
-    @application.template_filter('question_references')
-    def question_references_filter(data, get_question):
-        return re.sub(
-            r"\[\[([^\]]+)\]\]",  # anything that looks like [[nameOfQuestion]]
-            lambda question_id: str(get_question(question_id.group(1))['number']),
-            data
-        )
-
+    application.add_template_filter(question_references)
     application.add_template_filter(parse_document_upload_time)
 
     return application
