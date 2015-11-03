@@ -1,8 +1,8 @@
-{% macro text(question_content, service_data, errors, question_number=None) -%}
+{% macro text(question_content, service_data, errors, question_number=None, get_question=None) -%}
   {%
     with
-    question=question_content.question|markdown,
-    hint=(question_content.hint or '')|markdown,
+    question=question_content.question|question_references(get_question)|markdown,
+    hint=(question_content.hint or '')|question_references(get_question)|markdown,
     name=question_content.id,
     value=service_data[question_content.id],
     error=errors.get(question_content.id)['message']
@@ -11,11 +11,11 @@
   {% endwith %}
 {%- endmacro %}
 
-{% macro textbox_large(question_content, service_data, errors, question_number=None) -%}
+{% macro textbox_large(question_content, service_data, errors, question_number=None, get_question=None) -%}
   {%
     with
-    question=question_content.question|markdown,
-    hint=(question_content.hint or '')|markdown,
+    question=question_content.question|question_references(get_question)|markdown,
+    hint=(question_content.hint or '')|question_references(get_question)|markdown,
     name=question_content.id,
     value=service_data[question_content.id],
     large=True,
@@ -26,13 +26,13 @@
   {% endwith %}
 {%- endmacro %}
 
-{% macro list(question_content, service_data, errors, question_number=None) -%}
+{% macro list(question_content, service_data, errors, question_number=None, get_question=None) -%}
   {%
     with
     name=question_content.id,
     number_of_items=10,
-    question=question_content.question|markdown,
-    hint=(question_content.hint or '')|markdown,
+    question=question_content.question|question_references(get_question)|markdown,
+    hint=(question_content.hint or '')|question_references(get_question)|markdown,
     values=service_data[question_content.id],
     id=question_content.id,
     error=errors.get(question_content.id)['message']
@@ -41,12 +41,12 @@
   {% endwith %}
 {%- endmacro %}
 
-{% macro checkboxes(question_content, service_data, errors, question_number=None) -%}
+{% macro checkboxes(question_content, service_data, errors, question_number=None, get_question=None) -%}
   {%
     with
     name=question_content.id,
-    question=question_content.question|markdown,
-    hint=(question_content.hint or '')|markdown,
+    question=question_content.question|question_references(get_question)|markdown,
+    hint=(question_content.hint or '')|question_references(get_question)|markdown,
     value=service_data[question_content.id],
     id=question_content.id,
     options=question_content.options,
@@ -58,12 +58,12 @@
   {% endwith %}
 {%- endmacro %}
 
-{% macro radios(question_content, service_data, errors, question_number=None) -%}
+{% macro radios(question_content, service_data, errors, question_number=None, get_question=None) -%}
   {%
     with
     name=question_content.id,
-    question=question_content.question|markdown,
-    hint=(question_content.hint or '')|markdown,
+    question=question_content.question|question_references(get_question)|markdown,
+    hint=(question_content.hint or '')|question_references(get_question)|markdown,
     hint_underneath=(question_content.hint_underneath or False),
     value=service_data[question_content.id],
     id=question_content.id,
@@ -76,12 +76,12 @@
   {% endwith %}
 {%- endmacro %}
 
-{% macro boolean(question_content, service_data, errors, question_number=None) -%}
+{% macro boolean(question_content, service_data, errors, question_number=None, get_question=None) -%}
   {%
     with
     name=question_content.id,
-    question=question_content.question|markdown,
-    hint=(question_content.hint or '')|markdown,
+    question=question_content.question|question_references(get_question)|markdown,
+    hint=(question_content.hint or '')|question_references(get_question)|markdown,
     value=service_data[question_content.id],
     id=question_content.id,
     type='boolean',
@@ -92,11 +92,11 @@
   {% endwith %}
 {%- endmacro %}
 
-{% macro upload(question_content, service_data, errors, question_number=None) -%}
+{% macro upload(question_content, service_data, errors, question_number=None, get_question=None) -%}
   {%
     with
-    question=question_content.question|markdown,
-    hint=(question_content.hint or '')|markdown,
+    question=question_content.question|question_references(get_question)|markdown,
+    hint=(question_content.hint or '')|question_references(get_question)|markdown,
     name=question_content.id,
     value="Document uploaded {}".format(
       service_data[question_content.id]|parse_document_upload_time|datetimeformat
@@ -108,7 +108,7 @@
   {% endwith %}
 {%- endmacro %}
 
-{% macro pricing(question_content, service_data, errors, question_number=None) -%}
+{% macro pricing(question_content, service_data, errors, question_number=None, get_question=None) -%}
   {%
     with
     name=question_content.id,
@@ -126,14 +126,14 @@
   {% endwith %}
 {%- endmacro %}
 
-{% macro percentage(question_content, service_data, errors, question_number=None) -%}
+{% macro percentage(question_content, service_data, errors, question_number=None, get_question=None) -%}
   {%
     with
     unit_in_full="percent",
     unit_position="after",
     unit="%",
-    question=question_content.question|markdown,
-    hint=(question_content.hint or '')|markdown,
+    question=question_content.question|question_references(get_question)|markdown,
+    hint=(question_content.hint or '')|question_references(get_question)|markdown,
     name=question_content.id,
     value=service_data[question_content.id],
     error=errors.get(question_content.id)['message'],

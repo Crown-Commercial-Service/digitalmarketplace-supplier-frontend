@@ -193,3 +193,11 @@ def get_declaration_status(data_api_client, framework_slug):
 def g_cloud_7_is_open_or_404(data_api_client):
     if data_api_client.get_framework_status('g-cloud-7').get('status', None) != 'open':
         abort(404)
+
+
+def question_references(data, get_question):
+    return re.sub(
+        r"\[\[([^\]]+)\]\]",  # anything that looks like [[nameOfQuestion]]
+        lambda question_id: str(get_question(question_id.group(1))['number']),
+        data
+    )

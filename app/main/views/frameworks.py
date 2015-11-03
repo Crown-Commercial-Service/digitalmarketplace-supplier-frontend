@@ -58,6 +58,9 @@ def framework_dashboard(framework_slug):
             "complete": len(complete_drafts),
         },
         declaration_status=declaration_status,
+        first_page_of_declaration=content_loader.get_builder(
+            framework_slug, 'declaration'
+        ).get_next_editable_section_id(),
         deadline=current_app.config['G7_CLOSING_DATE'],
         framework=framework,
         application_made=application_made,
@@ -183,7 +186,7 @@ def framework_supplier_declaration(framework_slug, section_id=None):
         section=section,
         service_data=answers,
         is_last_page=is_last_page,
-        first_question_index=get_first_question_index(content, section),
+        get_question=content.get_question,
         errors=errors,
         **template_data
     ), status_code

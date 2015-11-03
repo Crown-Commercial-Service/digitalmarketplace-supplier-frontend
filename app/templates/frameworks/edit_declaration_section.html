@@ -17,6 +17,9 @@
       {
         "link": url_for(".framework_dashboard", framework_slug=framework.slug),
         "label": "Apply to " + framework.name
+      },
+      {
+        "label": "Supplier declaration"
       }
     ]
   %}
@@ -32,33 +35,28 @@
     {% endwith %}
   {% endif %}
 
-  {% with
-    heading = "Make supplier declaration"
-  %}
-    {% include 'toolkit/page-heading.html' %}
-  {% endwith %}
-  <p>
-    You must make this declaration before your services can be submitted.
-  </p>
   <form method="post" class="supplier-declaration">
 
     <div class="grid-row">
         <div class="column-two-thirds">
-            {% set question_index = [first_question_index] %}
-              {% with
-                heading = section.name,
-                smaller = true
-              %}
-                {% include 'toolkit/page-heading.html' %}
-              {% endwith %}
-              {% for question in section.questions %}
-                {% set _ = question_index.append(question_index.pop() + 1) %}
-                {% if errors and errors[question.id] %}
-                  {{ forms[question.type](question, service_data, errors, question_number=question_index[0]) }}
-                {% else %}
-                  {{ forms[question.type](question, service_data, {}, question_number=question_index[0]) }}
-                {% endif %}
-              {% endfor %}
+            {% with
+              heading = section.name,
+              smaller = True
+            %}
+              {% include 'toolkit/page-heading.html' %}
+            {% endwith %}
+            {% if section.description %}
+              <div class="section-description">
+                {{ section.description|question_references(get_question)|markdown }}
+              </div>
+            {% endif %}
+            {% for question in section.questions %}
+              {% if errors and errors[question.id] %}
+                {{ forms[question.type](question, service_data, errors, question_number=question.number, get_question=get_question) }}
+              {% else %}
+                {{ forms[question.type](question, service_data, {}, question_number=question.number, get_question=get_question) }}
+              {% endif %}
+            {% endfor %}
 
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
             {% if is_last_page %}
