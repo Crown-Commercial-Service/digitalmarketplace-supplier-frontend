@@ -19,11 +19,11 @@ from dmutils.documents import get_agreement_document_path, get_signed_url, file_
 from ... import data_api_client
 from ...main import main, content_loader
 from ..helpers import hash_email
-from ..helpers.frameworks import get_error_messages_for_page, get_first_question_index, \
-    get_error_messages, get_declaration_status, get_last_modified_from_first_matching_file, \
-    register_interest_in_framework, get_supplier_framework_info, \
+from ..helpers.frameworks import get_declaration_status, \
+    get_last_modified_from_first_matching_file, register_interest_in_framework, \
     get_supplier_on_framework_from_info, get_declaration_status_from_info, \
-    get_framework, get_framework_and_lot, count_drafts_by_lot
+    get_supplier_framework_info, get_framework, get_framework_and_lot, count_drafts_by_lot
+from ..helpers.validation import get_validator
 from ..helpers.services import (
     get_draft_document_url, get_service_attributes, get_drafts, get_lot_drafts,
     count_unanswered_questions
@@ -201,12 +201,15 @@ def framework_supplier_declaration(framework_slug, section_id=None):
 
     if request.method == 'POST':
         answers = content.get_all_data(request.form)
-        errors = get_error_messages_for_page(content, answers, section)
+
+        validator = get_validator(framework, content, answers)
+        errors = validator.get_error_messages_for_page(section)
+
         if len(errors) > 0:
             status_code = 400
         else:
             latest_answers.update(answers)
-            if get_error_messages(content, latest_answers):
+            if validator.get_error_messages():
                 latest_answers.update({"status": "started"})
             else:
                 latest_answers.update({"status": "complete"})
