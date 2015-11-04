@@ -58,7 +58,7 @@ with items = [
         
         <div class="padding-bottom framework-section">
             <h3>2. Read your framework agreement</h3>
-            <p>If you have a question about your framework agreement, <a href="#">contact CCS</a>.</p>
+            <p>If you have a question about your framework agreement, <a href="{{ url_for('.framework_updates', framework_slug=framework.slug) }}">contact CCS</a>.</p>
         </div>
 
         <div class="padding-bottom framework-section">
@@ -66,7 +66,7 @@ with items = [
             <p class='padding-bottom-small'>To digitally sign your framework agreement, you need to:</p>
             <ol class='number-list indent-list-large loose-list padding-bottom-small'>
               <li>Use <strong>Adobe Reader</strong> to open your {{ framework.name }} framework agreement. 
-                    You can download it for free from the <a href="https://get.adobe.com/uk/reader/">Adobe Acrobat Reader</a> website.</li>
+                    You can download it for free from the <a rel="external" href="https://get.adobe.com/uk/reader/">Adobe Acrobat Reader</a> website.</li>
 
                 <li>Go to page 15 and click the signature box under the title ‘Signed duly authorised for and on behalf of the supplier’.</li>
 
