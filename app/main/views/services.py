@@ -285,11 +285,14 @@ def complete_draft_service(framework_slug, lot_slug, service_id):
 
     flash({'service_name': draft.get('serviceName')}, 'service_completed')
 
-    return redirect(url_for(".framework_submission_services",
-                    framework_slug=framework['slug'],
-                    lot_slug=lot_slug,
-                    service_completed=service_id,
-                    lot=draft['lot'].lower()))
+    if lot['one_service_limit']:
+        return redirect(url_for(".framework_submission_lots", framework_slug=framework['slug']))
+    else:
+        return redirect(url_for(".framework_submission_services",
+                                framework_slug=framework['slug'],
+                                lot_slug=lot_slug,
+                                lot=lot_slug,
+                                service_completed=service_id))
 
 
 @main.route('/frameworks/<framework_slug>/submissions/<lot_slug>/<service_id>/delete', methods=['POST'])
@@ -301,7 +304,7 @@ def delete_draft_service(framework_slug, lot_slug, service_id):
     if not is_service_associated_with_supplier(draft):
         abort(404)
 
-    if request.form.get('delete_confirmed', None) == 'true':
+    if request.form.get('delete_confirmed') == 'true':
         try:
             data_api_client.delete_draft_service(
                 service_id,
@@ -311,14 +314,18 @@ def delete_draft_service(framework_slug, lot_slug, service_id):
             abort(e.status_code)
 
         flash({'service_name': draft.get('serviceName', draft['lotName'])}, 'service_deleted')
-        return redirect(url_for(".framework_submission_lots", framework_slug=framework['slug']))
+        if lot['one_service_limit']:
+            return redirect(url_for(".framework_submission_lots", framework_slug=framework['slug']))
+        else:
+            return redirect(url_for(".framework_submission_services",
+                                    framework_slug=framework['slug'],
+                                    lot_slug=lot_slug))
     else:
         return redirect(url_for(".view_service_submission",
                                 framework_slug=framework['slug'],
                                 lot_slug=draft['lot'],
                                 service_id=service_id,
-                                delete_requested=True)
-                        )
+                                delete_requested=True))
 
 
 @main.route('/frameworks/<framework_slug>/submissions/documents/<int:supplier_id>/<document_name>', methods=['GET'])

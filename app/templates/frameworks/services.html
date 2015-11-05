@@ -37,8 +37,6 @@
         <p class="banner-message">
           {% if category == 'service_deleted' %}
             <strong>{{message.service_name}}</strong> was deleted
-          {% elif category == 'service_copied' %}
-            <strong>{{message.service_name}}</strong> was copied
           {% elif category == 'service_completed' %}
             <strong>{{message.service_name}}</strong> was marked as complete
           {% endif %}

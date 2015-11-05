@@ -1073,7 +1073,7 @@ class TestDeleteDraftService(BaseApplicationTest):
 
         data_api_client.delete_draft_service.assert_called_with('1', 'email@email.com')
         assert_equal(res.status_code, 302)
-        assert_equal(res.location, 'http://localhost/suppliers/frameworks/g-cloud-7/submissions')
+        assert_equal(res.location, 'http://localhost/suppliers/frameworks/g-cloud-7/submissions/scs')
 
     def test_cannot_delete_other_suppliers_draft(self, data_api_client):
         other_draft = copy.deepcopy(self.draft_to_delete)
