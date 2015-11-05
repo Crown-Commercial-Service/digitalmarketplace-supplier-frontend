@@ -179,8 +179,8 @@ class BaseApplicationTest(object):
         }
 
     @staticmethod
-    def supplier_framework(declaration=None, status=None, on_framework=False, agreement_returned=False):
-        if declaration is None:
+    def supplier_framework(declaration='default', status=None, on_framework=False, agreement_returned=False):
+        if declaration == 'default':
             declaration = FULL_G7_SUBMISSION.copy()
         if status is not None:
             declaration['status'] = status

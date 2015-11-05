@@ -203,7 +203,7 @@ def get_supplier_framework_info(data_api_client, framework_slug):
 
 
 def get_declaration_status_from_info(supplier_framework_info):
-    if supplier_framework_info is None:
+    if not (supplier_framework_info or {}).get('declaration'):
         return 'unstarted'
     else:
         return supplier_framework_info['declaration'].get('status', 'unstarted')

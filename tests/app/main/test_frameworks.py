@@ -25,7 +25,6 @@ def _return_fake_s3_file_dict(directory, filename, ext, last_modified=None, size
 @mock.patch('dmutils.s3.S3')
 @mock.patch('app.main.views.frameworks.data_api_client', autospec=True)
 class TestFrameworksDashboard(BaseApplicationTest):
-
     @staticmethod
     def _assert_last_updated_times(doc, last_updateds):
 
@@ -75,6 +74,23 @@ class TestFrameworksDashboard(BaseApplicationTest):
 
             assert_equal(res.status_code, 200)
             assert not data_api_client.register_framework_interest.called
+
+    def test_interest_set_but_no_declaration(self, data_api_client, s3):
+        with self.app.test_client():
+            self.login()
+
+            data_api_client.get_framework.return_value = self.framework(status='pending')
+            data_api_client.get_framework_interest.return_value = {'frameworks': ['g-cloud-7']}
+            data_api_client.find_draft_services.return_value = {
+                "services": [
+                    {'serviceName': 'A service', 'status': 'submitted'}
+                ]
+            }
+            data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(declaration=None)
+
+            res = self.client.get("/suppliers/frameworks/g-cloud-7")
+
+            assert_equal(res.status_code, 200)
 
     def test_shows_gcloud_7_closed_message_if_pending_and_no_application_done(self, data_api_client, s3):
         with self.app.test_client():
