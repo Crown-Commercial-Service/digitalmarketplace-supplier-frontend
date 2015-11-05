@@ -619,7 +619,7 @@ class TestSupplierDeclaration(BaseApplicationTest):
         with self.app.test_client():
             self.login()
 
-            data_api_client.get_framework_status.return_value = {'status': 'other'}
+            data_api_client.get_framework.return_value = self.framework(status='other')
             data_api_client.get_supplier_declaration.return_value = {
                 "declaration": {"status": "started"}
             }
@@ -992,7 +992,7 @@ class TestG7ServicesList(BaseApplicationTest):
     def test_no_404_when_g7_open_and_no_complete_services(self, count_unanswered, data_api_client):
         with self.app.test_client():
             self.login()
-        data_api_client.get_framework_status.return_value = {'status': 'open'}
+        data_api_client.get_framework.return_value = self.framework(status='open')
         data_api_client.find_draft_services.return_value = {'services': []}
         count_unanswered.return_value = 0
         response = self.client.get('/suppliers/frameworks/g-cloud-7/services')
@@ -1001,7 +1001,8 @@ class TestG7ServicesList(BaseApplicationTest):
     def test_no_404_when_g7_open_and_no_declaration(self, count_unanswered, data_api_client):
         with self.app.test_client():
             self.login()
-        data_api_client.get_framework_status.return_value = {'status': 'open'}
+
+        data_api_client.get_framework.return_value = self.framework(status='open')
         data_api_client.get_supplier_declaration.return_value = {
             "declaration": {"status": "started"}
         }
