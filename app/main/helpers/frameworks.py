@@ -19,7 +19,7 @@ OPTIONAL_FIELDS = set([
 
 def get_framework(client, framework_slug, open_only=True):
     framework = client.get_framework(framework_slug)['frameworks']
-    allowed_statuses = ['open'] if open_only else ['open', 'pending']
+    allowed_statuses = ['open'] if open_only else ['open', 'pending', 'standstill']
     if framework['status'] not in allowed_statuses:
         abort(404)
 
