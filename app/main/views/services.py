@@ -244,6 +244,10 @@ def copy_draft_service(framework_slug, lot_slug, service_id):
     if not is_service_associated_with_supplier(draft):
         abort(404)
 
+    content = content_loader.get_builder(framework_slug, 'edit_submission').filter(
+        {'lot': lot['slug']}
+    )
+
     try:
         draft_copy = data_api_client.copy_draft_service(
             service_id,
@@ -257,7 +261,7 @@ def copy_draft_service(framework_slug, lot_slug, service_id):
                             framework_slug=framework['slug'],
                             lot_slug=draft['lot'],
                             service_id=draft_copy['id'],
-                            section_id='service_name',
+                            section_id=content.get_next_editable_section_id(),
                             return_to_summary=1))
 
 
