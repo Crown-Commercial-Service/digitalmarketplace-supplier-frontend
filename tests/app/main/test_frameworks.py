@@ -460,7 +460,8 @@ class TestFrameworkAgreementDocumentDownload(BaseApplicationTest):
 
             assert_equal(res.status_code, 302)
             assert_equal(res.location, 'http://url/path?param=value')
-            uploader.get_signed_url.assert_called_with('g-cloud-7/agreements/1234/1234-example.pdf')
+            uploader.get_signed_url.assert_called_with(
+                'g-cloud-7/agreements/1234/Supplier_Name-1234-example.pdf')
 
     def test_download_document_with_asset_url(self, S3):
         uploader = mock.Mock()
@@ -475,7 +476,8 @@ class TestFrameworkAgreementDocumentDownload(BaseApplicationTest):
 
             assert_equal(res.status_code, 302)
             assert_equal(res.location, 'https://example/path?param=value')
-            uploader.get_signed_url.assert_called_with('g-cloud-7/agreements/1234/1234-example.pdf')
+            uploader.get_signed_url.assert_called_with(
+                'g-cloud-7/agreements/1234/Supplier_Name-1234-example.pdf')
 
 
 @mock.patch('dmutils.s3.S3')
