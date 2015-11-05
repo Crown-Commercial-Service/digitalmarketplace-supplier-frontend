@@ -16,12 +16,12 @@
         "label": "Apply to " + framework.name
       },
       {
-        "link": url_for(".framework_services", framework_slug=framework.slug),
+        "link": url_for(".framework_submission_lots", framework_slug=framework.slug),
         "label": "Services"
       },
       {
-        "link": url_for(".view_service_submission", framework_slug=framework.slug, service_id=service_id),
-        "label": service_data['serviceName']
+        "link": url_for(".view_service_submission", framework_slug=framework.slug, lot_slug=service_data.lot, service_id=service_id),
+        "label": service_data.get('serviceName', service_data['lotName'])
       }
     ]
   %}

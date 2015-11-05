@@ -16,19 +16,24 @@ def get_drafts(apiclient, supplier_id, framework_slug):
     try:
         drafts = apiclient.find_draft_services(
             current_user.supplier_id,
-            framework='g-cloud-7'
+            framework=framework_slug
         )['services']
 
     except APIError as e:
         abort(e.status_code)
 
-    # Hide drafts without service name
-    drafts = [draft for draft in drafts if draft.get('serviceName')]
-
     complete_drafts = [draft for draft in drafts if draft['status'] == 'submitted']
     drafts = [draft for draft in drafts if draft['status'] == 'not-submitted']
 
     return drafts, complete_drafts
+
+
+def get_lot_drafts(apiclient, supplier_id, framework_slug, lot_slug):
+    drafts, complete_drafts = get_drafts(apiclient, supplier_id, framework_slug)
+    return (
+        [draft for draft in drafts if draft['lot'] == lot_slug],
+        [draft for draft in complete_drafts if draft['lot'] == lot_slug]
+    )
 
 
 def count_unanswered_questions(service_attributes):

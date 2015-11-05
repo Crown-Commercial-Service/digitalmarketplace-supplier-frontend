@@ -10,7 +10,7 @@ from ..helpers.services import (
     get_draft_document_url, count_unanswered_questions,
     get_next_section_name
 )
-from ..helpers.frameworks import get_declaration_status, g_cloud_7_is_open_or_404
+from ..helpers.frameworks import get_framework_and_lot, get_declaration_status
 
 from dmutils.apiclient import APIError, HTTPError
 from dmutils.formats import format_service_price
@@ -21,7 +21,6 @@ from dmutils.documents import upload_service_documents
 @main.route('/services')
 @login_required
 def list_services():
-    template_data = main.config['BASE_TEMPLATE_DATA']
     suppliers_services = data_api_client.find_services(
         supplier_id=current_user.supplier_id
     )
@@ -32,7 +31,7 @@ def list_services():
         updated_service_id=request.args.get('updated_service_id'),
         updated_service_name=request.args.get('updated_service_name'),
         updated_service_status=request.args.get('updated_service_status'),
-        **template_data), 200
+        **main.config['BASE_TEMPLATE_DATA']), 200
 
 
 #  #######################  EDITING LIVE SERVICES #############################
@@ -171,111 +170,83 @@ def update_section(service_id, section_id):
 #  ####################  CREATING NEW DRAFT SERVICES ##########################
 
 
-@main.route('/frameworks/<framework_slug>/submissions/create', methods=['GET'])
+@main.route('/frameworks/<framework_slug>/submissions/<lot_slug>/create', methods=['GET'])
 @login_required
-@flask_featureflags.is_active_feature('GCLOUD7_OPEN')
-def start_new_draft_service(framework_slug):
-    """
-    Page to kick off creation of a new (G7) service.
-    """
-    # TODO add a test for 404 if framework doesn't exist
-    framework = data_api_client.get_framework(framework_slug)['frameworks']
-    if framework['status'] != 'open':
-        abort(404)
-    template_data = main.config['BASE_TEMPLATE_DATA']
+def start_new_draft_service(framework_slug, lot_slug):
+    """Page to kick off creation of a new service."""
 
-    question = content_loader.get_question(framework_slug, 'services', 'lot')
-    section = {
-        "name": 'Create new service',
-        "questions": [question]
-    }
+    framework, lot = get_framework_and_lot(data_api_client, framework_slug, lot_slug, open_only=True)
+
+    content = content_loader.get_builder(framework_slug, 'edit_submission').filter(
+        {'lot': lot['slug']}
+    )
+
+    section = content.get_section(content.get_next_editable_section_id())
 
     return render_template(
         "services/edit_submission_section.html",
         framework=framework,
-        question=question,
         service_data={},
         section=section,
-        **dict(template_data)
+        **dict(main.config['BASE_TEMPLATE_DATA'])
     ), 200
 
 
-@main.route('/frameworks/<framework_slug>/submissions/create', methods=['POST'])
+@main.route('/frameworks/<framework_slug>/submissions/<lot_slug>/create', methods=['POST'])
 @login_required
-@flask_featureflags.is_active_feature('GCLOUD7_OPEN')
-def create_new_draft_service(framework_slug):
-    """
-    Hits up the data API to create a new draft (G7) service.
-    """
-    # TODO add a test for 404 if framework doesn't exist
-    framework = data_api_client.get_framework(framework_slug)['frameworks']
-    if framework['status'] != 'open':
-        abort(404)
-    lot = request.form.get('lot', None)
+def create_new_draft_service(framework_slug, lot_slug):
+    """Hits up the data API to create a new draft service."""
 
-    if not lot:
-        question = content_loader.get_question(framework_slug, 'services', 'lot')
-        section = {
-            "name": 'Create new service',
-            "questions": [question]
-        }
+    framework, lot = get_framework_and_lot(data_api_client, framework_slug, lot_slug, open_only=True)
 
-        errors = {
-            question['id']: {
-                "input_name": question['id'],
-                "question": question['question'],
-                "message": "Answer is required"
-            }
-        }
+    content = content_loader.get_builder(framework_slug, 'edit_submission').filter(
+        {'lot': lot['slug']}
+    )
+
+    section = content.get_section(content.get_next_editable_section_id())
+
+    update_data = section.get_data(request.form)
+
+    try:
+        draft_service = data_api_client.create_new_draft_service(
+            framework_slug, lot['slug'], current_user.supplier_id, update_data,
+            current_user.email_address, page_questions=section.get_field_names()
+        )['services']
+    except HTTPError as e:
+        update_data = section.unformat_data(update_data)
+        errors = section.get_error_messages(e.message, lot_slug)
 
         return render_template(
             "services/edit_submission_section.html",
             framework=framework,
-            question=question,
-            service_data={},
             section=section,
+            service_data=update_data,
             errors=errors,
             **main.config['BASE_TEMPLATE_DATA']
         ), 400
 
-    supplier_id = current_user.supplier_id
-    user = current_user.email_address
-
-    try:
-        draft_service = data_api_client.create_new_draft_service(
-            framework_slug, supplier_id, user, lot
-        )
-
-    except APIError as e:
-        abort(e.status_code)
-
-    draft_service = draft_service.get('services')
-    content = content_loader.get_builder(framework_slug, 'edit_submission').filter({
-        'lot': draft_service.get('lot')
-    })
-
     return redirect(
         url_for(
-            ".edit_service_submission",
+            ".view_service_submission",
             framework_slug=framework['slug'],
-            service_id=draft_service.get('id'),
-            section_id=content.get_next_editable_section_id(),
-            return_to_summary=1
+            lot_slug=draft_service['lot'],
+            service_id=draft_service['id'],
         )
     )
 
 
-@main.route('/frameworks/<framework_slug>/submissions/<service_id>/copy', methods=['POST'])
+@main.route('/frameworks/<framework_slug>/submissions/<lot_slug>/<service_id>/copy', methods=['POST'])
 @login_required
-@flask_featureflags.is_active_feature('GCLOUD7_OPEN')
-def copy_draft_service(framework_slug, service_id):
-    framework = data_api_client.get_framework(framework_slug)['frameworks']
-    if framework['status'] != 'open':
-        abort(404)
+def copy_draft_service(framework_slug, lot_slug, service_id):
+    framework, lot = get_framework_and_lot(data_api_client, framework_slug, lot_slug, open_only=True)
     draft = data_api_client.get_draft_service(service_id).get('services')
 
     if not is_service_associated_with_supplier(draft):
         abort(404)
+
+    content = content_loader.get_builder(framework_slug, 'edit_submission').filter(
+        {'lot': lot['slug']}
+    )
 
     try:
         draft_copy = data_api_client.copy_draft_service(
@@ -288,18 +259,16 @@ def copy_draft_service(framework_slug, service_id):
 
     return redirect(url_for(".edit_service_submission",
                             framework_slug=framework['slug'],
+                            lot_slug=draft['lot'],
                             service_id=draft_copy['id'],
-                            section_id='service_name',
+                            section_id=content.get_next_editable_section_id(),
                             return_to_summary=1))
 
 
-@main.route('/frameworks/<framework_slug>/submissions/<service_id>/complete', methods=['POST'])
+@main.route('/frameworks/<framework_slug>/submissions/<lot_slug>/<service_id>/complete', methods=['POST'])
 @login_required
-@flask_featureflags.is_active_feature('GCLOUD7_OPEN')
-def complete_draft_service(framework_slug, service_id):
-    framework = data_api_client.get_framework(framework_slug)['frameworks']
-    if framework['status'] != 'open':
-        abort(404)
+def complete_draft_service(framework_slug, lot_slug, service_id):
+    framework, lot = get_framework_and_lot(data_api_client, framework_slug, lot_slug, open_only=True)
     draft = data_api_client.get_draft_service(service_id).get('services')
 
     if not is_service_associated_with_supplier(draft):
@@ -316,25 +285,26 @@ def complete_draft_service(framework_slug, service_id):
 
     flash({'service_name': draft.get('serviceName')}, 'service_completed')
 
-    return redirect(url_for(".framework_services",
-                    framework_slug=framework['slug'],
-                    service_completed=service_id,
-                    lot=draft['lot'].lower()))
+    if lot['one_service_limit']:
+        return redirect(url_for(".framework_submission_lots", framework_slug=framework['slug']))
+    else:
+        return redirect(url_for(".framework_submission_services",
+                                framework_slug=framework['slug'],
+                                lot_slug=lot_slug,
+                                lot=lot_slug,
+                                service_completed=service_id))
 
 
-@main.route('/frameworks/<framework_slug>/submissions/<service_id>/delete', methods=['POST'])
+@main.route('/frameworks/<framework_slug>/submissions/<lot_slug>/<service_id>/delete', methods=['POST'])
 @login_required
-@flask_featureflags.is_active_feature('GCLOUD7_OPEN')
-def delete_draft_service(framework_slug, service_id):
-    framework = data_api_client.get_framework(framework_slug)['frameworks']
-    if framework['status'] != 'open':
-        abort(404)
+def delete_draft_service(framework_slug, lot_slug, service_id):
+    framework, lot = get_framework_and_lot(data_api_client, framework_slug, lot_slug, open_only=True)
     draft = data_api_client.get_draft_service(service_id).get('services')
 
     if not is_service_associated_with_supplier(draft):
         abort(404)
 
-    if request.form.get('delete_confirmed', None) == 'true':
+    if request.form.get('delete_confirmed') == 'true':
         try:
             data_api_client.delete_draft_service(
                 service_id,
@@ -343,19 +313,23 @@ def delete_draft_service(framework_slug, service_id):
         except APIError as e:
             abort(e.status_code)
 
-        flash({'service_name': draft.get('serviceName')}, 'service_deleted')
-        return redirect(url_for(".framework_services", framework_slug=framework['slug']))
+        flash({'service_name': draft.get('serviceName', draft['lotName'])}, 'service_deleted')
+        if lot['one_service_limit']:
+            return redirect(url_for(".framework_submission_lots", framework_slug=framework['slug']))
+        else:
+            return redirect(url_for(".framework_submission_services",
+                                    framework_slug=framework['slug'],
+                                    lot_slug=lot_slug))
     else:
         return redirect(url_for(".view_service_submission",
                                 framework_slug=framework['slug'],
+                                lot_slug=draft['lot'],
                                 service_id=service_id,
-                                delete_requested=True)
-                        )
+                                delete_requested=True))
 
 
 @main.route('/frameworks/<framework_slug>/submissions/documents/<int:supplier_id>/<document_name>', methods=['GET'])
 @login_required
-@flask_featureflags.is_active_feature('GCLOUD7_OPEN')
 def service_submission_document(framework_slug, supplier_id, document_name):
     if current_user.supplier_id != supplier_id:
         abort(404)
@@ -369,11 +343,11 @@ def service_submission_document(framework_slug, supplier_id, document_name):
     return redirect(s3_url)
 
 
-@main.route('/frameworks/<framework_slug>/submissions/<service_id>', methods=['GET'])
+@main.route('/frameworks/<framework_slug>/submissions/<lot_slug>/<service_id>', methods=['GET'])
 @login_required
-@flask_featureflags.is_active_feature('GCLOUD7_OPEN')
-def view_service_submission(framework_slug, service_id):
-    framework = data_api_client.get_framework(framework_slug)['frameworks']
+def view_service_submission(framework_slug, lot_slug, service_id):
+    framework, lot = get_framework_and_lot(data_api_client, framework_slug, lot_slug, open_only=False)
+
     try:
         data = data_api_client.get_draft_service(service_id)
         draft, last_edit = data['services'], data['auditEvents']
@@ -406,13 +380,11 @@ def view_service_submission(framework_slug, service_id):
         **main.config['BASE_TEMPLATE_DATA']), 200
 
 
-@main.route('/frameworks/<framework_slug>/submissions/<service_id>/edit/<section_id>', methods=['GET'])
+@main.route('/frameworks/<framework_slug>/submissions/<lot_slug>/<service_id>/edit/<section_id>', methods=['GET'])
 @login_required
-@flask_featureflags.is_active_feature('GCLOUD7_OPEN')
-def edit_service_submission(framework_slug, service_id, section_id):
-    framework = data_api_client.get_framework(framework_slug)['frameworks']
-    if framework['status'] != 'open':
-        abort(404)
+def edit_service_submission(framework_slug, lot_slug, service_id, section_id):
+    framework, lot = get_framework_and_lot(data_api_client, framework_slug, lot_slug, open_only=True)
+
     try:
         draft = data_api_client.get_draft_service(service_id)['services']
     except HTTPError as e:
@@ -440,13 +412,11 @@ def edit_service_submission(framework_slug, service_id, section_id):
     )
 
 
-@main.route('/frameworks/<framework_slug>/submissions/<service_id>/edit/<section_id>', methods=['POST'])
+@main.route('/frameworks/<framework_slug>/submissions/<lot_slug>/<service_id>/edit/<section_id>', methods=['POST'])
 @login_required
-@flask_featureflags.is_active_feature('GCLOUD7_OPEN')
-def update_section_submission(framework_slug, service_id, section_id):
-    framework = data_api_client.get_framework(framework_slug)['frameworks']
-    if framework['status'] != 'open':
-        abort(404)
+def update_section_submission(framework_slug, lot_slug, service_id, section_id):
+    framework, lot = get_framework_and_lot(data_api_client, framework_slug, lot_slug, open_only=True)
+
     try:
         draft = data_api_client.get_draft_service(service_id)['services']
     except HTTPError as e:
@@ -507,11 +477,13 @@ def update_section_submission(framework_slug, service_id, section_id):
     if next_section and not return_to_summary and request.form.get('continue_to_next_section'):
         return redirect(url_for(".edit_service_submission",
                                 framework_slug=framework['slug'],
+                                lot_slug=draft['lot'],
                                 service_id=service_id,
                                 section_id=next_section))
     else:
         return redirect(url_for(".view_service_submission",
                                 framework_slug=framework['slug'],
+                                lot_slug=draft['lot'],
                                 service_id=service_id))
 
 

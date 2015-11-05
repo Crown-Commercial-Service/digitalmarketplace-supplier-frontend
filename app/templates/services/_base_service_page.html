@@ -1,13 +1,13 @@
 {% extends "_base_page.html" %}
 
-{% block page_title %}{{service_data['serviceName'] or 'New service'}} – Digital Marketplace{% endblock %}
+{% block page_title %}{{ service_data.serviceName or service_data.lotName }} – Digital Marketplace{% endblock %}
 
 {% block main_content %}
   <div class="grid-row">
     {% block before_heading %}{% endblock %}
     <div class="column-two-thirds">
       {% with
-        heading = service_data['serviceName'] or 'New service',
+        heading = service_data.get('serviceName', service_data['lotName']),
         smaller = true
       %}
         {% include "toolkit/page-heading.html" %}
@@ -35,7 +35,7 @@
               {{ summary.field_name(question.label) }}
               {% call summary.field() %}
                 {% if framework and framework.status == 'open' %}
-                  <a href="{{ url_for(".edit_service_submission", framework_slug=framework.slug, service_id=service_id, section_id=section.id) }}">Answer required</a>
+                  <a href="{{ url_for(".edit_service_submission", framework_slug=framework.slug, lot_slug=service_data.lot, service_id=service_id, section_id=section.id) }}">Answer required</a>
                 {% else %}
                   Not answered
                 {% endif %}

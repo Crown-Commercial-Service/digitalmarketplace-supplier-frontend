@@ -18,6 +18,10 @@
       {
         "link": url_for(".framework_dashboard", framework_slug=framework.slug),
         "label": "Apply to " + framework.name,
+      },
+      {
+        "link": url_for(".framework_submission_lots", framework_slug=framework.slug),
+        "label": "Services",
       }
     ]
   %}
@@ -33,8 +37,6 @@
         <p class="banner-message">
           {% if category == 'service_deleted' %}
             <strong>{{message.service_name}}</strong> was deleted
-          {% elif category == 'service_copied' %}
-            <strong>{{message.service_name}}</strong> was copied
           {% elif category == 'service_completed' %}
             <strong>{{message.service_name}}</strong> was marked as complete
           {% endif %}
@@ -54,7 +56,7 @@
   {% endif %}
 
   {% with
-     heading = framework.name + " services",
+     heading = lot.name + " services",
      smaller = True,
      with_breadcrumb = True
   %}
@@ -76,7 +78,7 @@
 
   {{ summary.heading("Draft services") }}
   {% if framework.status == 'open' %}
-    {{ summary.top_link("Add a service", url_for(".start_new_draft_service", framework_slug=framework.slug)) }}
+    {{ summary.top_link("Add a service", url_for(".start_new_draft_service", framework_slug=framework.slug, lot_slug=lot.slug)) }}
   {% elif framework.status == 'pending' %}
     <p class="hint">These services were not submitted</p>
   {% endif %}
@@ -86,7 +88,6 @@
     empty_message="You haven't added any services yet.",
     field_headings=[
         "Service name",
-        "Lot",
         summary.hidden_field_heading("Progress"),
         summary.hidden_field_heading("Make a copy")
     ],
@@ -94,19 +95,19 @@
   ) %}
     {% call summary.row() %}
       {{ summary.service_link(draft.serviceName,
-                              url_for(".view_service_submission", framework_slug=framework.slug, service_id=draft.id)) }}
-      {{ summary.text(draft.lot) }}
-      
+                              url_for(".view_service_submission", framework_slug=framework.slug, lot_slug=draft.lot, service_id=draft.id)) }}
+
       {% if framework.status == 'open' %}
       {{ summary.text(submission.multiline_string(
         submission.can_be_completed_text(draft.unanswered_required, framework.status),
         submission.unanswered_required_text(draft.unanswered_required, draft.unanswered_optional),
         submission.unanswered_optional_text(draft.unanswered_required, draft.unanswered_optional)
       )) }}
-      {% endif %}
-      {% if framework.status == 'open' %}
         {{ summary.button(text="Make a copy",
-                           action=url_for('.copy_draft_service', framework_slug=framework.slug, service_id=draft.id)) }}
+                           action=url_for('.copy_draft_service', framework_slug=framework.slug, lot_slug=draft.lot, service_id=draft.id)) }}
+      {% else %}
+        {{ summary.text() }}
+        {{ summary.text() }}
       {% endif %}
     {% endcall %}
   {% endcall %}
@@ -122,7 +123,6 @@
     empty_message="You haven’t marked any services as complete yet.",
     field_headings=[
         "Service name",
-        "Lot",
         summary.hidden_field_heading("Progress"),
         summary.hidden_field_heading("Make a copy")
     ],
@@ -130,14 +130,15 @@
   ) %}
     {% call summary.row() %}
       {{ summary.service_link(draft.serviceName,
-                              url_for(".view_service_submission", framework_slug=framework.slug, service_id=draft.id)) }}
-      {{ summary.text(draft.lot) }}
+                              url_for(".view_service_submission", framework_slug=framework.slug, lot_slug=draft.lot, service_id=draft.id)) }}
       {{ summary.text(
         submission.unanswered_optional_text(draft.unanswered_required, draft.unanswered_optional)
       ) }}
       {% if framework.status == 'open' %}
         {{ summary.button(text="Make a copy",
-                           action=url_for('.copy_draft_service', framework_slug=framework.slug, service_id=draft.id)) }}
+                           action=url_for('.copy_draft_service', framework_slug=framework.slug, lot_slug=draft.lot, service_id=draft.id)) }}
+      {% else %}
+        {{ summary.text() }}
       {% endif %}
     {% endcall %}
   {% endcall %}

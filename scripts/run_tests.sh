@@ -32,7 +32,7 @@ display_result $? 2 "Code style check"
 npm run --silent frontend-build:production
 display_result $? 1 "Build of front end static assets"
 
-nosetests -v -s --with-doctest
+py.test $@
 display_result $? 3 "Python Unit tests"
 
 npm test

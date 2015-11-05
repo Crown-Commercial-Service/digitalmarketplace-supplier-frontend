@@ -17,12 +17,33 @@ OPTIONAL_FIELDS = set([
 ])
 
 
+def get_framework(client, framework_slug, open_only=True):
+    framework = client.get_framework(framework_slug)['frameworks']
+    allowed_statuses = ['open'] if open_only else ['open', 'pending', 'standstill']
+    if framework['status'] not in allowed_statuses:
+        abort(404)
+
+    return framework
+
+
+def get_framework_and_lot(client, framework_slug, lot_slug, open_only=True):
+    framework = get_framework(client, framework_slug, open_only)
+    return framework, get_framework_lot(framework, lot_slug)
+
+
 def frameworks_by_slug(client):
     framework_list = client.find_frameworks().get("frameworks")
     frameworks = {}
     for framework in framework_list:
         frameworks[framework['slug']] = framework
     return frameworks
+
+
+def get_framework_lot(framework, lot_slug):
+    try:
+        return next(lot for lot in framework['lots'] if lot['slug'] == lot_slug)
+    except StopIteration:
+        abort(404)
 
 
 def register_interest_in_framework(client, framework_slug):
@@ -214,11 +235,6 @@ def get_supplier_on_framework_from_info(supplier_framework_info):
         return False
     else:
         return bool(supplier_framework_info.get('onFramework'))
-
-
-def g_cloud_7_is_open_or_404(data_api_client):
-    if data_api_client.get_framework_status('g-cloud-7').get('status', None) != 'open':
-        abort(404)
 
 
 def question_references(data, get_question):
