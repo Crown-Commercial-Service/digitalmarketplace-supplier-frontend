@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import re
 from mock import patch
 from app import create_app
@@ -5,6 +6,81 @@ from werkzeug.http import parse_cookie
 from app import data_api_client
 from datetime import datetime, timedelta
 from dmutils.formats import DATETIME_FORMAT
+
+
+FULL_G7_SUBMISSION = {
+    "status": "complete",
+    "PR1": "true",
+    "PR2": "true",
+    "PR3": "true",
+    "PR4": "true",
+    "PR5": "true",
+    "SQ1-1i-i": "true",
+    "SQ2-1abcd": "true",
+    "SQ2-1e": "true",
+    "SQ2-1f": "true",
+    "SQ2-1ghijklmn": "true",
+    "SQ2-2a": "true",
+    "SQ3-1a": "true",
+    "SQ3-1b": "true",
+    "SQ3-1c": "true",
+    "SQ3-1d": "true",
+    "SQ3-1e": "true",
+    "SQ3-1f": "true",
+    "SQ3-1g": "true",
+    "SQ3-1h-i": "true",
+    "SQ3-1h-ii": "true",
+    "SQ3-1i-i": "true",
+    "SQ3-1i-ii": "true",
+    "SQ3-1j": "true",
+    "SQ3-1k": "Blah",
+    "SQ4-1a": "true",
+    "SQ4-1b": "true",
+    "SQ5-2a": "true",
+    "SQD2b": "true",
+    "SQD2d": "true",
+    "SQ1-1a": "Blah",
+    "SQ1-1b": "Blah",
+    "SQ1-1cii": "Blah",
+    "SQ1-1d": "Blah",
+    "SQ1-1e": "Blah",
+    "SQ1-1h": "999999999",
+    "SQ1-1i-ii": "Blah",
+    "SQ1-1j-ii": "Blah",
+    "SQ1-1k": "Blah",
+    "SQ1-1n": "Blah",
+    "SQ1-1o": "Blah",
+    "SQ1-2a": "Blah",
+    "SQ1-2b": "Blah",
+    "SQ2-2b": "Blah",
+    "SQ4-1c": "Blah",
+    "SQD2c": "Blah",
+    "SQD2e": "Blah",
+    "SQ1-1ci": "public limited company",
+    "SQ1-1j-i": "licensed?",
+    "SQ1-1m": "micro",
+    "SQ1-3": "on-demand self-service. blah blah",
+    "SQ5-1a": u"Yes – your organisation has, blah blah",
+    "SQC2": [
+        "race?",
+        "sexual orientation?",
+        "disability?",
+        "age equality?",
+        "religion or belief?",
+        "gender (sex)?",
+        "gender reassignment?",
+        "marriage or civil partnership?",
+        "pregnancy or maternity?",
+        "human rights?"
+    ],
+    "SQC3": "true",
+    "SQA2": "true",
+    "SQA3": "true",
+    "SQA4": "true",
+    "SQA5": "true",
+    "AQA3": "true",
+    "SQE2a": ["as a prime contractor, using third parties (subcontractors) to provide some services"]
+}
 
 
 class BaseApplicationTest(object):
@@ -99,6 +175,20 @@ class BaseApplicationTest(object):
                 'status': status,
                 'name': name,
                 'slug': slug
+            }
+        }
+
+    @staticmethod
+    def supplier_framework(declaration=None, status=None, on_framework=False, agreement_returned=False):
+        if declaration is None:
+            declaration = FULL_G7_SUBMISSION.copy()
+        if status is not None:
+            declaration['status'] = status
+        return {
+            'frameworkInterest': {
+                'declaration': declaration,
+                'onFramework': on_framework,
+                'agreementReturned': agreement_returned,
             }
         }
 

@@ -29,6 +29,10 @@ class Config(object):
     DM_G7_DRAFT_DOCUMENTS_BUCKET = None
     DM_G7_DRAFT_DOCUMENTS_URL = None
 
+    DM_AGREEMENTS_BUCKET = None
+    DM_COMMUNICATIONS_BUCKET = None
+    DM_ASSETS_URL = None
+
     DEBUG = False
 
     RESET_PASSWORD_EMAIL_NAME = 'Digital Marketplace Admin'

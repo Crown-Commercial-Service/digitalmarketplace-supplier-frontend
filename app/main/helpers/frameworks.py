@@ -190,6 +190,32 @@ def get_declaration_status(data_api_client, framework_slug):
         return declaration.get('status', 'unstarted')
 
 
+def get_supplier_framework_info(data_api_client, framework_slug):
+    try:
+        return data_api_client.get_supplier_framework_info(
+            current_user.supplier_id, framework_slug
+        )['frameworkInterest']
+    except APIError as e:
+        if e.status_code == 404:
+            return None
+        else:
+            abort(e.status_code)
+
+
+def get_declaration_status_from_info(supplier_framework_info):
+    if supplier_framework_info is None:
+        return 'unstarted'
+    else:
+        return supplier_framework_info['declaration'].get('status', 'unstarted')
+
+
+def get_supplier_on_framework_from_info(supplier_framework_info):
+    if supplier_framework_info is None:
+        return False
+    else:
+        return bool(supplier_framework_info.get('onFramework'))
+
+
 def g_cloud_7_is_open_or_404(data_api_client):
     if data_api_client.get_framework_status('g-cloud-7').get('status', None) != 'open':
         abort(404)
