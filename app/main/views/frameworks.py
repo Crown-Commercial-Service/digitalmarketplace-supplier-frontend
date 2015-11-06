@@ -429,7 +429,8 @@ def framework_agreement(framework_slug):
 
     if supplier_framework['agreementReturned']:
         agreements_bucket = s3.S3(current_app.config['DM_AGREEMENTS_BUCKET'])
-        path = get_agreement_document_path(framework_slug, current_user.supplier_id, 'signed-framework-agreement.pdf')
+        path = get_agreement_document_path(
+            framework_slug, current_user.supplier_id, current_user.supplier_name, 'signed-framework-agreement.pdf')
         last_modified = agreements_bucket.bucket.get_key(path).last_modified
         last_modified = datetimeformat(date_parse(last_modified))
     else:
@@ -477,7 +478,8 @@ def upload_framework_agreement(framework_slug):
         ), 400
 
     agreements_bucket = s3.S3(current_app.config['DM_AGREEMENTS_BUCKET'])
-    path = get_agreement_document_path(framework_slug, current_user.supplier_id, 'signed-framework-agreement.pdf')
+    path = get_agreement_document_path(
+        framework_slug, current_user.supplier_id, current_user.supplier_name, 'signed-framework-agreement.pdf')
     agreements_bucket.save(path, request.files['agreement'], acl='private')
 
     data_api_client.register_framework_agreement_returned(

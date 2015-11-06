@@ -562,7 +562,7 @@ class TestFrameworkAgreementUpload(BaseApplicationTest):
 
             assert_equal(res.status_code, 503)
             s3.return_value.save.assert_called_with(
-                'g-cloud-7/agreements/1234/1234-signed-framework-agreement.pdf',
+                'g-cloud-7/agreements/1234/Supplier_Name-1234-signed-framework-agreement.pdf',
                 mock.ANY,
                 acl='private')
             assert not data_api_client.register_framework_agreement_returned.called
@@ -586,7 +586,7 @@ class TestFrameworkAgreementUpload(BaseApplicationTest):
 
             assert_equal(res.status_code, 500)
             s3.return_value.save.assert_called_with(
-                'g-cloud-7/agreements/1234/1234-signed-framework-agreement.pdf',
+                'g-cloud-7/agreements/1234/Supplier_Name-1234-signed-framework-agreement.pdf',
                 mock.ANY,
                 acl='private')
             data_api_client.register_framework_agreement_returned.assert_called_with(
@@ -611,7 +611,7 @@ class TestFrameworkAgreementUpload(BaseApplicationTest):
 
             assert_equal(res.status_code, 503)
             s3.return_value.save.assert_called_with(
-                'g-cloud-7/agreements/1234/1234-signed-framework-agreement.pdf',
+                'g-cloud-7/agreements/1234/Supplier_Name-1234-signed-framework-agreement.pdf',
                 mock.ANY,
                 acl='private')
             data_api_client.register_framework_agreement_returned.assert_called_with(
