@@ -52,7 +52,7 @@ with items = [
         </div>
 
         <div class="padding-bottom framework-agreement-section-first">
-            <h3>1. Download your framework agreement</h3>
+            <h2>1. Download your framework agreement</h2>
             {% with
                 items = [
                     {
@@ -67,12 +67,12 @@ with items = [
         </div>
         
         <div class="padding-bottom framework-agreement-section">
-            <h3>2. Read your framework agreement</h3>
+            <h2>2. Read your framework agreement</h2>
             <p>If you have a question about your framework agreement, <a href="{{ url_for('.framework_updates', framework_slug=framework.slug) }}">contact CCS</a>.</p>
         </div>
 
         <div class="padding-bottom framework-agreement-section">
-            <h3>3. Sign your framework agreement</h3>
+            <h2>3. Sign your framework agreement</h2>
             <p class="lead-in">To digitally sign your framework agreement, you need to:</p>
             <ol>
               <li>Use <strong>Adobe Reader</strong> to open your {{ framework.name }} framework agreement. 
@@ -90,16 +90,13 @@ with items = [
 
                 <li>Save your document to add your digital ID to the signature box.</li>
 
-                <li>Upload and return your signed framework agreement via the Digital Marketplace.</li>
-
             </ol>
             <p class="lead-in">
                 If you can’t digitally sign your framework agreement:
             </p>
             <ol>
-                <li>Print and sign page 15.</li>
+                <li>Print and sign page 16.</li>
                 <li>Scan the page and save as PDF, JPG or PNG.</li>
-                <li>Upload and return your signed framework agreement via the Digital&nbsp;Marketplace.</li>
             </ol>
             <p>
                 Please don’t send paper copies to the CCS.
@@ -109,7 +106,7 @@ with items = [
         <div class="padding-bottom framework-agreement-section">
             <form method="post" enctype="multipart/form-data" action="{{ url_for(".upload_framework_agreement", framework_slug=framework.slug) }}">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
-                <h3>4. Upload your signed framework agreement</h3>
+                <h2>4. Upload your signed framework agreement</h2>
                 {% if supplier_framework.agreementReturned %}
                     {%
                     with
