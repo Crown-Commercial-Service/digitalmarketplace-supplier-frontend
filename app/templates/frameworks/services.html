@@ -85,7 +85,7 @@
   {% call(draft) summary.list_table(
     drafts,
     caption="Draft services",
-    empty_message="You haven't added any services yet.",
+    empty_message="You haven’t added any services yet." if framework.status == 'open' else "You didn’t add any services.",
     field_headings=[
         "Service name",
         summary.hidden_field_heading("Progress"),
@@ -113,14 +113,14 @@
   {% endcall %}
 
   {% if framework.status == 'open' %}
-  {{ summary.heading("Complete services") }}
-  {% elif framework.status == 'pending' %}
-  {{ summary.heading("Submitted services") }}
+    {{ summary.heading("Complete services") }}
+  {% elif framework.status == 'pending' or 'standstill' %}
+    {{ summary.heading("Submitted services") }}
   {% endif %}
   {% call(draft) summary.list_table(
     complete_drafts,
     caption="Complete services",
-    empty_message="You haven’t marked any services as complete yet.",
+    empty_message="You haven’t marked any services as complete yet." if framework.status == 'open' else "You didn’t mark any services as complete.",
     field_headings=[
         "Service name",
         summary.hidden_field_heading("Progress"),
