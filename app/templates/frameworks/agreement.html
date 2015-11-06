@@ -111,7 +111,7 @@ with items = [
                     {%
                     with
                     question = "Upload your signed framework agreement",
-                    value = "Document uploaded {}".format(last_modified),
+                    value = "Document uploaded {}".format(supplier_framework.agreementReturnedAt),
                     file_type = "PDF",
                     name = "agreement",
                     error = upload_error

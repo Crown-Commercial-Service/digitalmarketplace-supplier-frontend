@@ -433,9 +433,8 @@ class TestFrameworkAgreement(BaseApplicationTest):
 
             data_api_client.get_framework.return_value = self.framework(status='standstill')
             data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
-                on_framework=True, agreement_returned=True
+                on_framework=True, agreement_returned=True, agreement_returned_at='2015-11-02T15:25:56.000000Z'
             )
-            s3.return_value.bucket.get_key.return_value = mock.Mock(last_modified='Mon, 02 Nov 2015 15:25:56 GMT')
 
             res = self.client.get('/suppliers/frameworks/g-cloud-7/agreement')
             data = res.get_data(as_text=True)

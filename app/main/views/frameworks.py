@@ -428,13 +428,9 @@ def framework_agreement(framework_slug):
         abort(404)
 
     if supplier_framework['agreementReturned']:
-        agreements_bucket = s3.S3(current_app.config['DM_AGREEMENTS_BUCKET'])
-        path = get_agreement_document_path(
-            framework_slug, current_user.supplier_id, current_user.supplier_name, 'signed-framework-agreement.pdf')
-        last_modified = agreements_bucket.bucket.get_key(path).last_modified
-        last_modified = datetimeformat(date_parse(last_modified))
-    else:
-        last_modified = None
+        supplier_framework['agreementReturnedAt'] = datetimeformat(
+            date_parse(supplier_framework['agreementReturnedAt'])
+        )
 
     template_data = main.config['BASE_TEMPLATE_DATA']
 
@@ -442,7 +438,6 @@ def framework_agreement(framework_slug):
         "frameworks/agreement.html",
         framework=framework,
         supplier_framework=supplier_framework,
-        last_modified=last_modified,
         **template_data
     ), 200
 
