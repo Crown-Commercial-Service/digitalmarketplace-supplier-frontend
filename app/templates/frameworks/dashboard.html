@@ -75,8 +75,8 @@
         <li class="browse-list-item framework-application-section">
           <div class="grid-row">
             <div class="column-two-thirds">
-              <a class="browse-list-item-link" href="{{ url_for('.download_agreement_file', framework_slug=framework.slug, document_name='result-letter.pdf') }}">
-                <span>Download your application result letter</span>
+              <a class="browse-list-item-link" href="{{ url_for('.download_agreement_file', framework_slug=framework.slug, document_name='result-letter.pdf') }}" download>
+                <span>Download your application result letter (.pdf)</span>
               </a>
               <p>This letter informs you if your {{ framework.name }} application has been successful.</p>
             </div>

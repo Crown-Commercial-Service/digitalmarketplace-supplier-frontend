@@ -183,7 +183,8 @@ class BaseApplicationTest(object):
         }
 
     @staticmethod
-    def supplier_framework(declaration='default', status=None, on_framework=False, agreement_returned=False):
+    def supplier_framework(declaration='default', status=None, on_framework=False,
+                           agreement_returned=False, agreement_returned_at=None):
         if declaration == 'default':
             declaration = FULL_G7_SUBMISSION.copy()
         if status is not None:
@@ -193,6 +194,7 @@ class BaseApplicationTest(object):
                 'declaration': declaration,
                 'onFramework': on_framework,
                 'agreementReturned': agreement_returned,
+                'agreementReturnedAt': agreement_returned_at,
             }
         }
 
