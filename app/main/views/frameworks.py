@@ -243,7 +243,8 @@ def download_supplier_file(framework_slug, filepath):
 @login_required
 def download_agreement_file(framework_slug, document_name):
     agreements_bucket = s3.S3(current_app.config['DM_AGREEMENTS_BUCKET'])
-    path = get_agreement_document_path(framework_slug, current_user.supplier_id, document_name)
+    path = get_agreement_document_path(
+        framework_slug, current_user.supplier_id, current_user.supplier_name, document_name)
     url = get_signed_url(agreements_bucket, path, current_app.config['DM_ASSETS_URL'])
     if not url:
         abort(404)
