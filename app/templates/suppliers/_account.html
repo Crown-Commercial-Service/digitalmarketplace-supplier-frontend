@@ -1,0 +1,19 @@
+{% import "toolkit/summary-table.html" as summary %}
+
+{{ summary.heading("Account information") }}
+{% call(item) summary.table(
+  [
+    ("Email address", current_user.email_address)
+  ],
+  caption="Account information",
+  field_headings=[
+    "Label",
+    "Value"
+  ],
+  field_headings_visible=False
+) %}
+  {% call summary.row() %}
+    {{ summary.field_name(item[0]) }}
+    {{ summary.text(item[1]) }}
+  {% endcall %}
+{% endcall %}

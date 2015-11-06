@@ -643,7 +643,9 @@ class TestSupplierDeclaration(BaseApplicationTest):
         with self.app.test_client():
             self.login()
 
-            data_api_client.get_framework.return_value = self.framework(status='other')
+            data_api_client.get_framework.return_value = {
+                'frameworks': {'status': 'pending'}
+            }
             data_api_client.get_supplier_declaration.return_value = {
                 "declaration": {"status": "started"}
             }

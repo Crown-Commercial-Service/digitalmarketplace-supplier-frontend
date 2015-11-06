@@ -1,6 +1,4 @@
 {% extends "_base_page.html" %}
-{% import "toolkit/summary-table.html" as summary %}
-
 {% block page_title %}{{ current_user.supplier_name }} – Digital Marketplace{% endblock %}
 
 {% block breadcrumb %}
@@ -17,6 +15,7 @@
 {% endblock %}
 
 {% block main_content %}
+
   <div class="grid-row">
     <div class="column-two-thirds">
       {% with
@@ -28,115 +27,13 @@
     </div>
   </div>
 
-  {% include 'suppliers/_dos_messaging.html' %}
-  {% include 'suppliers/_g7_messaging.html' %}
+  {% include 'suppliers/_frameworks_open.html' %}
+  {% include 'suppliers/_frameworks_pending.html' %}
+  {% include 'suppliers/_frameworks_standstill.html' %}
+  {% include 'suppliers/_frameworks_live.html' %}
 
-  {{ summary.heading("Current services") }}
-  {% if supplier.service_counts %}
-    {{ summary.top_link('View', url_for('.list_services')) }}
-  {% endif %}
-  {% call(item) summary.list_table(
-    supplier.service_counts|dictsort,
-    caption='Current services',
-    field_headings=[
-      'Label',
-      'Value'
-    ],
-    field_headings_visible=False,
-    empty_message="You don't have any services on the Digital Marketplace"
-  ) %}
-    {% call summary.row() %}
-      {{ summary.field_name(item[0]) }}
-      {{ summary.text(item[1]|string + " services") }}
-    {% endcall %}
-  {% endcall %}
-
-  {{ summary.heading("Supplier information") }}
-  {{ summary.top_link('Edit', url_for('.edit_supplier')) }}
-  {% call(item) summary.mapping_table(
-    caption='Supplier information',
-    field_headings=[
-      'Label',
-      'Value'
-    ],
-    field_headings_visible=False
-  ) %}
-    {% call summary.row() %}
-      {{ summary.field_name('Contact name') }}
-      {{ summary.text(supplier.contact.contactName) }}
-    {% endcall %}
-    {% call summary.row() %}
-      {{ summary.field_name('Email address') }}
-      {{ summary.text(supplier.contact.email) }}
-    {% endcall %}
-    {% call summary.row() %}
-      {{ summary.field_name('Phone number') }}
-      {{ summary.text(supplier.contact.phoneNumber) }}
-    {% endcall %}
-    {% call summary.row() %}
-      {{ summary.field_name('Website') }}
-      {{ summary.text(supplier.contact.website) }}
-    {% endcall %}
-    {% call summary.row() %}
-      {{ summary.field_name('Address') }}
-      {% call summary.field() %}
-        {%
-          with
-          without_spacing = true,
-          postcode = supplier.contact.get("postcode"),
-          street_address = True,
-          street_address_line_1 = supplier.contact.get("address1"),
-          street_address_line_2 = supplier.contact.get("address2"),
-          locality = supplier.contact.get("city"),
-          country = supplier.contact.get("country")
-        %}
-          {% include "toolkit/contact-details.html" %}
-        {% endwith %}
-      {% endcall %}
-    {% endcall %}
-    {% call summary.row() %}
-      {{ summary.field_name('Supplier summary') }}
-      {{ summary.text(supplier.description) }}
-    {% endcall %}
-    {% call summary.row() %}
-      {{ summary.field_name('Clients') }}
-      {{ summary.list(supplier.clients) }}
-    {% endcall %}
-  {% endcall %}
-
-  {{ summary.heading("Contributors") }}
-  {{ summary.top_link("Invite or remove", '/suppliers/users') }}
-  {% call(item) summary.table(
-    users,
-    caption="Contributors",
-    field_headings=[
-      "Name",
-      "Email address"
-    ],
-    field_headings_visible=False
-  ) %}
-    {% call summary.row() %}
-      {{ summary.field_name(item.name) }}
-      {{ summary.text(item.emailAddress) }}
-    {% endcall %}
-  {% endcall %}
-
-  {{ summary.heading("Account information") }}
-  {% call(item) summary.table(
-    [
-      ("Email address", current_user.email_address)
-    ],
-    caption="Account information",
-    field_headings=[
-      "Label",
-      "Value"
-    ],
-    field_headings_visible=False
-  ) %}
-    {% call summary.row() %}
-      {{ summary.field_name(item[0]) }}
-      {{ summary.text(item[1]) }}
-    {% endcall %}
-  {% endcall %}
+  {% include 'suppliers/_information.html' %}
+  {% include 'suppliers/_contributors.html' %}
+  {% include 'suppliers/_account.html' %}
 
 {% endblock %}

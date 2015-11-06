@@ -4,16 +4,16 @@ from dmutils.apiclient import HTTPError
 from dmutils.email import MandrillException
 import mock
 from flask import session
-from nose.tools import assert_equal, assert_true, assert_in, assert_false
+from nose.tools import assert_equal, assert_true, assert_in, assert_false, assert_not_in
 from tests.app.helpers import BaseApplicationTest
 from lxml import html
 
 
 find_frameworks_return_value = {
     "frameworks": [
-        {'status': 'live', 'slug': 'g-cloud-6'},
-        {'status': 'open', 'slug': 'digital-outcomes-and-specialists'},
-        {'status': 'open', 'slug': 'g-cloud-7'}
+        {'status': 'live', 'slug': 'g-cloud-6', 'name': 'G-Cloud 6'},
+        {'status': 'open', 'slug': 'digital-outcomes-and-specialists', 'name': 'Digital Outcomes and Specialists'},
+        {'status': 'open', 'slug': 'g-cloud-7', 'name': 'G-Cloud 7'}
     ]
 }
 
@@ -124,10 +124,23 @@ class TestSuppliersDashboard(BaseApplicationTest):
 
     @mock.patch("app.main.views.suppliers.data_api_client")
     @mock.patch("app.main.views.suppliers.get_current_suppliers_users")
-    def test_shows_gcloud_7_application_link(self, get_current_suppliers_users, data_api_client):
-        data_api_client.get_framework.return_value = self.framework('open')
+    def test_shows_gcloud_7_application_button(self, get_current_suppliers_users, data_api_client):
+        data_api_client.get_framework_interest.return_value = {'frameworks': []}
         data_api_client.get_supplier.side_effect = get_supplier
-        data_api_client.find_frameworks.return_value = find_frameworks_return_value
+        data_api_client.find_frameworks.return_value = {
+            "frameworks": [
+                {
+                    'status': 'expired',
+                    'slug': 'digital-outcomes-and-specialists',
+                    'name': 'Digital Outcomes and Specialists'
+                },
+                {
+                    'status': 'open',
+                    'slug': 'g-cloud-7',
+                    'name': 'G-Cloud 7'
+                }
+            ]
+        }
         get_current_suppliers_users.side_effect = get_user
         with self.app.test_client():
             self.login()
@@ -137,15 +150,25 @@ class TestSuppliersDashboard(BaseApplicationTest):
 
             assert_equal(res.status_code, 200)
 
-            assert_equal(doc.xpath('//a[@href="/suppliers/frameworks/g-cloud-7"]/span/text()')[0],
-                         "Register your interest in becoming a G-Cloud 7 supplier")
+            assert_in(
+                'G-Cloud 7 is open for applications',
+                doc.xpath('//h2[@class="summary-item-heading"]/text()')[0]
+            )
+
+            assert_equal(
+                'Start application',
+                doc.xpath('//input[@class="button-save"]/@value')[0]
+            )
 
     @mock.patch("app.main.views.suppliers.data_api_client")
     @mock.patch("app.main.views.suppliers.get_current_suppliers_users")
     def test_shows_gcloud_7_continue_link(self, get_current_suppliers_users, data_api_client):
-        data_api_client.get_framework.return_value = self.framework('open')
         data_api_client.get_supplier.side_effect = get_supplier
-        data_api_client.get_framework_interest.return_value = {'frameworks': ['g-cloud-7']}
+        data_api_client.get_supplier_frameworks.return_value = {
+            'frameworkInterest': [
+                {'frameworkSlug': 'g-cloud-7'}
+            ]
+        }
         data_api_client.find_frameworks.return_value = find_frameworks_return_value
         get_current_suppliers_users.side_effect = get_user
         with self.app.test_client():
@@ -163,10 +186,19 @@ class TestSuppliersDashboard(BaseApplicationTest):
     def test_shows_gcloud_7_closed_message_if_pending_and_no_interest(self, get_current_suppliers_users, data_api_client):  # noqa
         data_api_client.get_framework.return_value = self.framework('pending')
         data_api_client.get_supplier.side_effect = get_supplier
+        data_api_client.get_supplier_frameworks.return_value = {'frameworkInterest': []}
         data_api_client.find_frameworks.return_value = {
             "frameworks": [
-                {'status': 'coming', 'slug': 'digital-outcomes-and-specialists'},
-                {'status': 'pending', 'slug': 'g-cloud-7'}
+                {
+                    'status': 'coming',
+                    'slug': 'digital-outcomes-and-specialists',
+                    'name': 'Digital Outcomes and Specialists'
+                },
+                {
+                    'status': 'pending',
+                    'slug': 'g-cloud-7',
+                    'name': 'G-Cloud 7'
+                }
             ]
         }
         get_current_suppliers_users.side_effect = get_user
@@ -178,7 +210,7 @@ class TestSuppliersDashboard(BaseApplicationTest):
 
             message = doc.xpath('//aside[@class="temporary-message"]')
             assert_true(len(message) > 0)
-            assert_in(u"G‑Cloud 7 is closed for applications",
+            assert_in(u"G-Cloud 7 is closed for applications",
                       message[0].xpath('h2/text()')[0])
             assert_true(len(message[0].xpath('p[1]/a[@href="https://digitalmarketplace.blog.gov.uk/"]')) > 0)
 
@@ -187,16 +219,28 @@ class TestSuppliersDashboard(BaseApplicationTest):
     def test_shows_gcloud_7_closed_message_if_pending_and_no_application(self, get_current_suppliers_users, data_api_client):  # noqa
         data_api_client.get_framework.return_value = self.framework('pending')
         data_api_client.get_supplier.side_effect = get_supplier
-        data_api_client.get_framework_interest.return_value = {'frameworks': ['g-cloud-7']}
-        data_api_client.find_frameworks.return_value = {
-            "frameworks": [
-                {'status': 'coming', 'slug': 'digital-outcomes-and-specialists'},
-                {'status': 'pending', 'slug': 'g-cloud-7'}
+        data_api_client.get_supplier_frameworks.return_value = {
+            'frameworkInterest': [
+                {
+                    'frameworkSlug': 'g-cloud-7',
+                    'declaration': {'status': 'started'},
+                    'drafts_count': 1,
+                    'complete_drafts_count': 0
+                }
             ]
         }
-        data_api_client.find_draft_services.return_value = {
-            "services": [
-                {'serviceName': 'A service', 'status': 'not-submitted'}
+        data_api_client.find_frameworks.return_value = {
+            "frameworks": [
+                {
+                    'status': 'coming',
+                    'slug': 'digital-outcomes-and-specialists',
+                    'name': 'Digital Outcomes and Specialists'
+                },
+                {
+                    'status': 'pending',
+                    'slug': 'g-cloud-7',
+                    'name': 'G-Cloud 7'
+                }
             ]
         }
         get_current_suppliers_users.side_effect = get_user
@@ -208,7 +252,7 @@ class TestSuppliersDashboard(BaseApplicationTest):
 
             message = doc.xpath('//aside[@class="temporary-message"]')
             assert_true(len(message) > 0)
-            assert_in(u"G‑Cloud 7 is closed for applications",
+            assert_in(u"G-Cloud 7 is closed for applications",
                       message[0].xpath('h2/text()')[0])
             assert_in(u"You didn’t submit an application",
                       message[0].xpath('p[1]/text()')[0])
@@ -216,41 +260,298 @@ class TestSuppliersDashboard(BaseApplicationTest):
 
     @mock.patch("app.main.views.suppliers.data_api_client")
     @mock.patch("app.main.views.suppliers.get_current_suppliers_users")
-    def test_shows_gcloud_7_closed_message_if_pending_and_application_done(self, get_current_suppliers_users, data_api_client):  # noqa
-        data_api_client.get_framework.return_value = self.framework('pending')
+    def test_shows_gcloud_7_closed_message_if_pending_and_application_done(
+        self, get_current_suppliers_users, data_api_client
+    ):
         data_api_client.get_supplier.side_effect = get_supplier
-        data_api_client.get_framework_interest.return_value = {'frameworks': ['g-cloud-7']}
+        data_api_client.get_supplier_frameworks.return_value = {
+            'frameworkInterest': [
+                {
+                    'frameworkSlug': 'g-cloud-7',
+                    'declaration': {'status': 'complete'},
+                    'drafts_count': 0,
+                    'complete_drafts_count': 99
+                }
+            ]
+        }
         data_api_client.find_frameworks.return_value = {
             "frameworks": [
-                {'status': 'coming', 'slug': 'digital-outcomes-and-specialists'},
-                {'status': 'pending', 'slug': 'g-cloud-7'}
+                {
+                    'status': 'coming',
+                    'slug': 'digital-outcomes-and-specialists',
+                    'name': 'Digital Outcomes and Specialists'
+                },
+                {
+                    'status': 'pending',
+                    'slug': 'g-cloud-7',
+                    'name': 'G-Cloud 7'
+                }
             ]
         }
 
-        # an application is made if at least one draft is complete and the declaration is complete
-        data_api_client.find_draft_services.return_value = {
-            "services": [
-                {'serviceName': 'A service', 'status': 'submitted'}
-            ]
-        }
-        data_api_client.get_supplier_declaration.return_value = {
-            "declaration": {'status': 'complete'}
-        }
         with self.app.test_client():
             self.login()
-
             res = self.client.get("/suppliers")
             doc = html.fromstring(res.get_data(as_text=True))
-
-            heading = doc.xpath('//div[@class="summary-item-lede"]//h2[@class="summary-item-heading"]')
-            assert_true(len(heading) > 0)
+            headings = doc.xpath('//h2[@class="summary-item-heading"]')
+            assert_true(len(headings) > 0)
             assert_in(u"G-Cloud 7 is closed for applications",
-                      heading[0].xpath('text()')[0])
-            assert_in(u"You submitted 1 service for consideration",
-                      heading[0].xpath('../p[1]/text()')[0])
-            assert_true(len(heading[0].xpath('../p[1]/a[contains(@href, "suppliers/frameworks/g-cloud-7")]')) > 0)
+                      headings[0].xpath('text()')[0])
+            assert_in(u"You submitted 99 services for consideration",
+                      headings[0].xpath('../p[1]/text()')[0])
+            assert_true(len(headings[0].xpath('../p[1]/a[contains(@href, "suppliers/frameworks/g-cloud-7")]')) > 0)
             assert_in(u"View your submitted application",
-                      heading[0].xpath('../p[1]/a/text()')[0])
+                      headings[0].xpath('../p[1]/a/text()')[0])
+
+    @mock.patch("app.main.views.suppliers.data_api_client")
+    @mock.patch("app.main.views.suppliers.get_current_suppliers_users")
+    def test_shows_gcloud_7_in_standstill_application_passed(
+        self, get_current_suppliers_users, data_api_client
+    ):
+        data_api_client.get_supplier.side_effect = get_supplier
+        data_api_client.get_supplier_frameworks.return_value = {
+            'frameworkInterest': [
+                {
+                    'frameworkSlug': 'g-cloud-7',
+                    'declaration': {'status': 'complete'},
+                    'drafts_count': 0,
+                    'complete_drafts_count': 99,
+                    'onFramework': True,
+                    'agreementReturned': False
+                }
+            ]
+        }
+        data_api_client.find_frameworks.return_value = {
+            "frameworks": [
+                {
+                    'status': 'standstill',
+                    'slug': 'g-cloud-7',
+                    'name': 'G-Cloud 7'
+                }
+            ]
+        }
+
+        with self.app.test_client():
+            self.login()
+            res = self.client.get("/suppliers")
+            doc = html.fromstring(res.get_data(as_text=True))
+            headings = doc.xpath('//h2[@class="summary-item-heading"]')
+
+            assert_in(u"Pending services",
+                      headings[0].xpath('text()')[0])
+
+            first_table = doc.xpath(
+                '//table[@class="summary-item-body"]'
+            )
+
+            assert_in(u"Pending services",
+                      first_table[0].xpath('caption/text()')[0])
+
+            first_row = "".join(first_table[0].xpath('tbody/descendant::*/text()'))
+            assert_in(u"G-Cloud 7",
+                      first_row)
+            assert_in(u"Live from 23 November 2015",
+                      first_row)
+            assert_in(u"99 services",
+                      first_row)
+            assert_in(u"99 services",
+                      first_row)
+            assert_in(u"You must sign the framework agreement to sell these services",
+                      first_row)
+
+    @mock.patch("app.main.views.suppliers.data_api_client")
+    @mock.patch("app.main.views.suppliers.get_current_suppliers_users")
+    def test_shows_gcloud_7_in_standstill_fw_agreement_returned(
+        self, get_current_suppliers_users, data_api_client
+    ):
+        data_api_client.get_supplier.side_effect = get_supplier
+        data_api_client.get_supplier_frameworks.return_value = {
+            'frameworkInterest': [
+                {
+                    'frameworkSlug': 'g-cloud-7',
+                    'declaration': {'status': 'complete'},
+                    'drafts_count': 0,
+                    'complete_drafts_count': 99,
+                    'onFramework': True,
+                    'agreementReturned': True
+                }
+            ]
+        }
+        data_api_client.find_frameworks.return_value = {
+            "frameworks": [
+                {
+                    'status': 'standstill',
+                    'slug': 'g-cloud-7',
+                    'name': 'G-Cloud 7'
+                }
+            ]
+        }
+
+        with self.app.test_client():
+            self.login()
+            res = self.client.get("/suppliers")
+            doc = html.fromstring(res.get_data(as_text=True))
+            headings = doc.xpath('//h2[@class="summary-item-heading"]')
+
+            assert_in(u"Pending services",
+                      headings[0].xpath('text()')[0])
+
+            first_table = doc.xpath(
+                '//table[@class="summary-item-body"]'
+            )
+
+            assert_in(u"Pending services",
+                      first_table[0].xpath('caption/text()')[0])
+
+            first_row = "".join(first_table[0].xpath('tbody/descendant::*/text()'))
+            assert_in(u"G-Cloud 7",
+                      first_row)
+            assert_in(u"Live from 23 November 2015",
+                      first_row)
+            assert_in(u"99 services",
+                      first_row)
+            assert_not_in(u"You must sign the framework agreement to sell these services",
+                          first_row)
+
+    @mock.patch("app.main.views.suppliers.data_api_client")
+    @mock.patch("app.main.views.suppliers.get_current_suppliers_users")
+    def test_shows_gcloud_7_in_standstill_no_application(
+        self, get_current_suppliers_users, data_api_client
+    ):
+        data_api_client.get_supplier.side_effect = get_supplier
+        data_api_client.get_supplier_frameworks.return_value = {
+            'frameworkInterest': []
+        }
+        data_api_client.find_frameworks.return_value = {
+            "frameworks": [
+                {
+                    'status': 'standstill',
+                    'slug': 'g-cloud-7',
+                    'name': 'G-Cloud 7'
+                }
+            ]
+        }
+
+        with self.app.test_client():
+            self.login()
+            res = self.client.get("/suppliers")
+            doc = html.fromstring(res.get_data(as_text=True))
+            headings = doc.xpath('//h2[@class="summary-item-heading"]')
+
+            assert_not_in(u"Pending services",
+                          headings[0].xpath('text()')[0])
+
+    @mock.patch("app.main.views.suppliers.data_api_client")
+    @mock.patch("app.main.views.suppliers.get_current_suppliers_users")
+    def test_shows_gcloud_7_in_standstill_application_failed(
+        self, get_current_suppliers_users, data_api_client
+    ):
+        data_api_client.get_supplier.side_effect = get_supplier
+        data_api_client.get_supplier_frameworks.return_value = {
+            'frameworkInterest': [
+                {
+                    'frameworkSlug': 'g-cloud-7',
+                    'declaration': {'status': 'complete'},
+                    'drafts_count': 0,
+                    'complete_drafts_count': 99,
+                    'onFramework': False,
+                    'agreementReturned': False
+                }
+            ]
+        }
+        data_api_client.find_frameworks.return_value = {
+            "frameworks": [
+                {
+                    'status': 'standstill',
+                    'slug': 'g-cloud-7',
+                    'name': 'G-Cloud 7'
+                }
+            ]
+        }
+
+        with self.app.test_client():
+            self.login()
+            res = self.client.get("/suppliers")
+            doc = html.fromstring(res.get_data(as_text=True))
+            headings = doc.xpath('//h2[@class="summary-item-heading"]')
+
+            assert_in(u"Pending services",
+                      headings[0].xpath('text()')[0])
+
+            first_table = doc.xpath(
+                '//table[@class="summary-item-body"]'
+            )
+
+            assert_in(u"Pending services",
+                      first_table[0].xpath('caption/text()')[0])
+
+            first_row = "".join(first_table[0].xpath('tbody/descendant::*/text()'))
+            assert_in(u"G-Cloud 7",
+                      first_row)
+            assert_not_in(u"Live from 23 November 2015",
+                          first_row)
+            assert_in(u"99 services submitted",
+                      first_row)
+            assert_not_in(u"You must sign the framework agreement to sell these services",
+                          first_row)
+            assert_in(u"View your application",
+                      first_row)
+
+    @mock.patch("app.main.views.suppliers.data_api_client")
+    @mock.patch("app.main.views.suppliers.get_current_suppliers_users")
+    def test_shows_gcloud_7_in_standstill_application_passed(
+        self, get_current_suppliers_users, data_api_client
+    ):
+        data_api_client.get_supplier.side_effect = get_supplier
+        data_api_client.get_supplier_frameworks.return_value = {
+            'frameworkInterest': [
+                {
+                    'frameworkSlug': 'g-cloud-7',
+                    'declaration': {'status': 'complete'},
+                    'drafts_count': 0,
+                    'complete_drafts_count': 99,
+                    'onFramework': True,
+                    'agreementReturned': True
+                }
+            ]
+        }
+        data_api_client.find_frameworks.return_value = {
+            "frameworks": [
+                {
+                    'status': 'standstill',
+                    'slug': 'g-cloud-7',
+                    'name': 'G-Cloud 7'
+                }
+            ]
+        }
+
+        with self.app.test_client():
+            self.login()
+            res = self.client.get("/suppliers")
+            doc = html.fromstring(res.get_data(as_text=True))
+            headings = doc.xpath('//h2[@class="summary-item-heading"]')
+
+            assert_in(u"Pending services",
+                      headings[0].xpath('text()')[0])
+
+            first_table = doc.xpath(
+                '//table[@class="summary-item-body"]'
+            )
+
+            assert_in(u"Pending services",
+                      first_table[0].xpath('caption/text()')[0])
+
+            first_row = "".join(first_table[0].xpath('tbody/descendant::*/text()'))
+            assert_in(u"G-Cloud 7",
+                      first_row)
+            assert_in(u"Live from 23 November 2015",
+                      first_row)
+            assert_in(u"99 services",
+                      first_row)
+            assert_in(u"99 services",
+                      first_row)
+            assert_not_in(u"You must sign the framework agreement to sell these services",
+                          first_row)
 
     @mock.patch("app.main.views.suppliers.data_api_client")
     @mock.patch("app.main.views.suppliers.get_current_suppliers_users")
@@ -259,8 +560,16 @@ class TestSuppliersDashboard(BaseApplicationTest):
         data_api_client.get_supplier.side_effect = get_supplier
         data_api_client.find_frameworks.return_value = {
             "frameworks": [
-                {'status': 'open', 'slug': 'digital-outcomes-and-specialists'},
-                {'status': 'live', 'slug': 'g-cloud-7'}
+                {
+                    'status': 'open',
+                    'slug': 'digital-outcomes-and-specialists',
+                    'name': 'Digital Outcomes and Specialists'
+                },
+                {
+                    'status': 'live',
+                    'slug': 'g-cloud-7',
+                    'name': 'G-Cloud 7'
+                }
             ]
         }
         get_current_suppliers_users.side_effect = get_user
@@ -279,13 +588,24 @@ class TestSuppliersDashboard(BaseApplicationTest):
     @mock.patch("app.main.views.suppliers.data_api_client")
     @mock.patch("app.main.views.suppliers.get_current_suppliers_users")
     def test_shows_continue_with_dos_link(self, get_current_suppliers_users, data_api_client):
-        data_api_client.get_framework.return_value = self.framework(status='other')
         data_api_client.get_supplier.side_effect = get_supplier
-        data_api_client.get_framework_interest.return_value = {'frameworks': ['digital-outcomes-and-specialists']}
+        data_api_client.get_supplier_frameworks.return_value = {
+            'frameworkInterest': [
+                {'frameworkSlug': 'digital-outcomes-and-specialists'}
+            ]
+        }
         data_api_client.find_frameworks.return_value = {
             "frameworks": [
-                {'status': 'open', 'slug': 'digital-outcomes-and-specialists'},
-                {'status': 'live', 'slug': 'g-cloud-7'}
+                {
+                    'status': 'open',
+                    'slug': 'digital-outcomes-and-specialists',
+                    'name': 'Digital Outcomes and Specialists'
+                },
+                {
+                    'status': 'live',
+                    'slug': 'g-cloud-7',
+                    'name': 'G-Cloud 7'
+                }
             ]
         }
         get_current_suppliers_users.side_effect = get_user
@@ -296,10 +616,8 @@ class TestSuppliersDashboard(BaseApplicationTest):
             doc = html.fromstring(res.get_data(as_text=True))
 
             assert_equal(res.status_code, 200)
-            assert_in("Digital Outcomes and Specialists is open for applications",
-                      doc.xpath('//div[@class="summary-item-lede"]//h2[@class="summary-item-heading"]/text()')[0])
-            assert_equal("Continue your application",
-                         doc.xpath('//div[@class="summary-item-lede"]//a/text()')[0])
+            assert_in("Continue your Digital Outcomes and Specialists application",
+                      doc.xpath('//a[@class="browse-list-item-link"]/span/text()')[0])
 
 
 class TestSupplierDashboardLogin(BaseApplicationTest):

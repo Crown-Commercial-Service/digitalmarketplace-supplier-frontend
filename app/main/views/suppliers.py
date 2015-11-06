@@ -1,3 +1,5 @@
+# coding=utf-8
+
 from itertools import chain
 
 from flask import render_template, request, redirect, url_for, abort, session
@@ -12,7 +14,7 @@ from ...main import main
 from ... import data_api_client
 from ..forms.suppliers import EditSupplierForm, EditContactInformationForm, DunsNumberForm, CompaniesHouseNumberForm,\
     CompanyContactDetailsForm, CompanyNameForm, EmailAddressForm
-from ..helpers.frameworks import get_declaration_status, frameworks_by_slug
+from ..helpers.frameworks import get_declaration_status, frameworks_by_slug, get_frameworks_by_status
 from ..helpers import hash_email
 from ..helpers.services import get_drafts
 from .users import get_current_suppliers_users
@@ -31,18 +33,52 @@ def dashboard():
     except APIError as e:
         abort(e.status_code)
 
-    g7_drafts, g7_complete_drafts = get_drafts(data_api_client, current_user.supplier_id, 'g-cloud-7')
-    g7_declaration_status = get_declaration_status(data_api_client, 'g-cloud-7')
-    application_made = len(g7_complete_drafts) > 0 and g7_declaration_status == 'complete'
+    all_frameworks = sorted(
+        data_api_client.find_frameworks()['frameworks'],
+        key=lambda framework: framework['slug'],
+        reverse=True
+    )
+    supplier_frameworks = {
+        framework['frameworkSlug']: framework
+        for framework in data_api_client.get_supplier_frameworks(current_user.supplier_id)['frameworkInterest']
+    }
+    framework_dates = {
+        'digital-outcomes-and-specialists': {
+            'deadline': current_app.config['DOS_CLOSING_DATE']  # TODO: un-hard-code
+        },
+        'g-cloud-7': {
+            'go_live': current_app.config['G7_LIVE_DATE']
+        }
+    }
+
+    for framework in all_frameworks:
+        framework.update(
+            supplier_frameworks.get(framework['slug'], {})
+        )
+        framework.update({
+            'dates': framework_dates.get(framework['slug'], {}),
+            'registered_interest': (framework['slug'] in supplier_frameworks),
+            'made_application': (
+                framework.get('declaration') and
+                framework['declaration'].get('status') == 'complete' and
+                framework.get('complete_drafts_count') > 0
+            ),
+            'needs_to_complete_declaration': (
+                framework.get('onFramework') and
+                framework.get('agreementReturned') is False
+            )
+        })
+
     return render_template(
         "suppliers/dashboard.html",
         supplier=supplier,
         users=get_current_suppliers_users(),
-        registered_frameworks=data_api_client.get_framework_interest(current_user.supplier_id)['frameworks'],
-        frameworks=frameworks_by_slug(data_api_client),
-        g7_application_made=application_made,
-        g7_complete=len(g7_complete_drafts),
-        deadline=current_app.config['DOS_CLOSING_DATE'],
+        frameworks={
+            'open': get_frameworks_by_status(all_frameworks, 'open'),
+            'pending': get_frameworks_by_status(all_frameworks, 'pending'),
+            'standstill': get_frameworks_by_status(all_frameworks, 'standstill', 'made_application'),
+            'live': get_frameworks_by_status(all_frameworks, 'live', 'services_count')
+        },
         **template_data
     ), 200
 
