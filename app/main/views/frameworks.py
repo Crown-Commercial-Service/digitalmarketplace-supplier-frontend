@@ -460,8 +460,6 @@ def upload_framework_agreement(framework_slug):
     upload_error = None
     if not file_is_less_than_5mb(request.files['agreement']):
         upload_error = "Document must be less than 5Mb"
-    elif not request.files['agreement'].filename.endswith('.pdf'):
-        upload_error = "Document must be a PDF"
 
     if upload_error is not None:
         return render_template(
