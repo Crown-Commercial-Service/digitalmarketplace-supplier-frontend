@@ -53,17 +53,14 @@ with items = [
 
         <div class="padding-bottom framework-agreement-section-first">
             <h2>1. Download your framework agreement</h2>
-            {% with
-                items = [
-                    {
-                    "file_type": "PDF",
-                    "link": url_for('.download_agreement_file', framework_slug=framework.slug, document_name='framework-agreement.pdf'),
-                    "title": "Download framework agreement (PDF, 216KB)"
-                    },
-                ]
-            %}
-            {% include "toolkit/documents.html" %}
-            {% endwith %}
+            <ul class='document-list'>
+                <li class='document-list-item'>
+                    <a href="{{ url_for('.download_agreement_file', framework_slug=framework.slug, document_name='framework-agreement.pdf') }}" class='document-link-with-icon' download>
+                      <span class='document-icon'>PDF<span> document:</span></span>
+                      Download framework agreement (PDF, 216KB)
+                    </a>
+                </li>
+            </ul>
         </div>
         
         <div class="padding-bottom framework-agreement-section">
