@@ -543,7 +543,7 @@ class TestFrameworkAgreementUpload(BaseApplicationTest):
 
             assert_equal(res.status_code, 503)
             s3.return_value.save.assert_called_with(
-                'g-cloud-7/agreements/1234/Supplier_Name-1234-signed-framework-agreement.pdf',
+                'g-cloud-7/agreements/1234/Legal_Supplier_Name-1234-signed-framework-agreement.pdf',
                 mock.ANY,
                 acl='private')
             assert not data_api_client.register_framework_agreement_returned.called
@@ -567,7 +567,7 @@ class TestFrameworkAgreementUpload(BaseApplicationTest):
 
             assert_equal(res.status_code, 500)
             s3.return_value.save.assert_called_with(
-                'g-cloud-7/agreements/1234/Supplier_Name-1234-signed-framework-agreement.pdf',
+                'g-cloud-7/agreements/1234/Legal_Supplier_Name-1234-signed-framework-agreement.pdf',
                 mock.ANY,
                 acl='private')
             data_api_client.register_framework_agreement_returned.assert_called_with(
@@ -592,7 +592,7 @@ class TestFrameworkAgreementUpload(BaseApplicationTest):
 
             assert_equal(res.status_code, 503)
             s3.return_value.save.assert_called_with(
-                'g-cloud-7/agreements/1234/Supplier_Name-1234-signed-framework-agreement.pdf',
+                'g-cloud-7/agreements/1234/Legal_Supplier_Name-1234-signed-framework-agreement.pdf',
                 mock.ANY,
                 acl='private')
             data_api_client.register_framework_agreement_returned.assert_called_with(
@@ -618,9 +618,32 @@ class TestFrameworkAgreementUpload(BaseApplicationTest):
             assert_equal(res.location, 'http://localhost/suppliers/frameworks/g-cloud-7/agreement')
 
 
+@mock.patch('app.main.views.frameworks.data_api_client', autospec=True)
 @mock.patch('dmutils.s3.S3')
 class TestFrameworkAgreementDocumentDownload(BaseApplicationTest):
-    def test_download_document(self, S3):
+    def test_download_document_fails_if_no_supplier_framework(self, S3, data_api_client):
+        data_api_client.get_supplier_framework_info.side_effect = APIError(mock.Mock(status_code=404))
+
+        with self.app.test_client():
+            self.login()
+
+            res = self.client.get('/suppliers/frameworks/g-cloud-7/agreements/example.pdf')
+
+            assert_equal(res.status_code, 404)
+
+    def test_download_document_fails_if_no_supplier_declaration(self, S3, data_api_client):
+        data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(declaration=None)
+
+        with self.app.test_client():
+            self.login()
+
+            res = self.client.get('/suppliers/frameworks/g-cloud-7/agreements/example.pdf')
+
+            assert_equal(res.status_code, 404)
+
+    def test_download_document(self, S3, data_api_client):
+        data_api_client.get_supplier_framework_info.return_value = self.supplier_framework()
+
         uploader = mock.Mock()
         S3.return_value = uploader
         uploader.get_signed_url.return_value = 'http://url/path?param=value'
@@ -633,9 +656,11 @@ class TestFrameworkAgreementDocumentDownload(BaseApplicationTest):
             assert_equal(res.status_code, 302)
             assert_equal(res.location, 'http://url/path?param=value')
             uploader.get_signed_url.assert_called_with(
-                'g-cloud-7/agreements/1234/Supplier_Name-1234-example.pdf')
+                'g-cloud-7/agreements/1234/Legal_Supplier_Name-1234-example.pdf')
 
-    def test_download_document_with_asset_url(self, S3):
+    def test_download_document_with_asset_url(self, S3, data_api_client):
+        data_api_client.get_supplier_framework_info.return_value = self.supplier_framework()
+
         uploader = mock.Mock()
         S3.return_value = uploader
         uploader.get_signed_url.return_value = 'http://url/path?param=value'
@@ -649,7 +674,7 @@ class TestFrameworkAgreementDocumentDownload(BaseApplicationTest):
             assert_equal(res.status_code, 302)
             assert_equal(res.location, 'https://example/path?param=value')
             uploader.get_signed_url.assert_called_with(
-                'g-cloud-7/agreements/1234/Supplier_Name-1234-example.pdf')
+                'g-cloud-7/agreements/1234/Legal_Supplier_Name-1234-example.pdf')
 
 
 @mock.patch('dmutils.s3.S3')

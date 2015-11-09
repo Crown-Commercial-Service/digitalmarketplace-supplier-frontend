@@ -243,9 +243,14 @@ def download_supplier_file(framework_slug, filepath):
 @main.route('/frameworks/<framework_slug>/agreements/<document_name>', methods=['GET'])
 @login_required
 def download_agreement_file(framework_slug, document_name):
+    supplier_framework_info = get_supplier_framework_info(data_api_client, framework_slug)
+    if supplier_framework_info is None or not supplier_framework_info.get("declaration"):
+        abort(404)
+    legal_supplier_name = supplier_framework_info['declaration']['SQ1-1a']
+
     agreements_bucket = s3.S3(current_app.config['DM_AGREEMENTS_BUCKET'])
     path = get_agreement_document_path(
-        framework_slug, current_user.supplier_id, current_user.supplier_name, document_name)
+        framework_slug, current_user.supplier_id, legal_supplier_name, document_name)
     url = get_signed_url(agreements_bucket, path, current_app.config['DM_ASSETS_URL'])
     if not url:
         abort(404)
@@ -471,8 +476,9 @@ def upload_framework_agreement(framework_slug):
         ), 400
 
     agreements_bucket = s3.S3(current_app.config['DM_AGREEMENTS_BUCKET'])
+    legal_supplier_name = supplier_framework['declaration']['SQ1-1a']
     path = get_agreement_document_path(
-        framework_slug, current_user.supplier_id, current_user.supplier_name, 'signed-framework-agreement.pdf')
+        framework_slug, current_user.supplier_id, legal_supplier_name, 'signed-framework-agreement.pdf')
     agreements_bucket.save(path, request.files['agreement'], acl='private')
 
     data_api_client.register_framework_agreement_returned(

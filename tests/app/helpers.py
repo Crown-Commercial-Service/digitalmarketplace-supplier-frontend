@@ -39,7 +39,7 @@ FULL_G7_SUBMISSION = {
     "SQ5-2a": "true",
     "SQD2b": "true",
     "SQD2d": "true",
-    "SQ1-1a": "Blah",
+    "SQ1-1a": "Legal Supplier Name",
     "SQ1-1b": "Blah",
     "SQ1-1cii": "Blah",
     "SQ1-1d": "Blah",
