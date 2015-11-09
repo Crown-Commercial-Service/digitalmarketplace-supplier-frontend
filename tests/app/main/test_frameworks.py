@@ -1236,7 +1236,7 @@ class TestG7ServicesList(BaseApplicationTest):
         assert_true(u'Service can be moved to complete' not in lot_page.get_data(as_text=True))
         assert_in(u'4 unanswered questions', lot_page.get_data(as_text=True))
 
-        assert_in(u'1 draft service', submissions.get_data(as_text=True))
+        assert_in(u'1 draft service wasn’t submitted', submissions.get_data(as_text=True))
         assert_true(u'complete service' not in submissions.get_data(as_text=True))
 
     def test_drafts_list_can_be_completed(self, count_unanswered, data_api_client):
@@ -1276,5 +1276,5 @@ class TestG7ServicesList(BaseApplicationTest):
         assert_true(u'Service can be moved to complete' not in lot_page.get_data(as_text=True))
         assert_in(u'1 optional question unanswered', lot_page.get_data(as_text=True))
 
-        assert_in(u'1 complete service', submissions.get_data(as_text=True))
+        assert_in(u'1 complete service was submitted', submissions.get_data(as_text=True))
         assert_true(u'draft service' not in submissions.get_data(as_text=True))
