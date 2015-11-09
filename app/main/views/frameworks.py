@@ -481,7 +481,7 @@ def upload_framework_agreement(framework_slug):
     try:
         email_body = render_template(
             'emails/framework_agreement_uploaded.html',
-            framework=framework,
+            framework_name=framework.get('name', 'Unknown framework'),
             supplier_name=current_user.supplier_name,
             supplier_id=current_user.supplier_id,
             user_name=current_user.name
