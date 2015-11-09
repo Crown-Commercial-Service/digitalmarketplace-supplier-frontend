@@ -22,7 +22,7 @@ from ..helpers.frameworks import get_error_messages_for_page, get_first_question
     get_error_messages, get_declaration_status, get_last_modified_from_first_matching_file, \
     register_interest_in_framework, get_supplier_framework_info, \
     get_supplier_on_framework_from_info, get_declaration_status_from_info, \
-    get_framework, get_framework_and_lot
+    get_framework, get_framework_and_lot, count_drafts_by_lot
 from ..helpers.services import (
     get_draft_document_url, get_service_attributes, get_drafts, get_lot_drafts,
     count_unanswered_questions
@@ -102,6 +102,19 @@ def framework_submission_lots(framework_slug):
             'link': url_for('.framework_submission_services', framework_slug=framework_slug, lot_slug=lot['value']),
             'title': lot['label'],
             'body': lot['description'],
+            'statuses': [
+                {
+                    'message': '{} complete services'.format(
+                        count_drafts_by_lot(complete_drafts, lot['value'])
+                    ),
+                    'important': True
+                } if count_drafts_by_lot(complete_drafts, lot['value']) else {},
+                {
+                    'message': '{} draft services'.format(
+                        count_drafts_by_lot(drafts, lot['value'])
+                    )
+                } if count_drafts_by_lot(drafts, lot['value']) else {}
+            ]
         } for lot in lot_question['options']],
         **main.config['BASE_TEMPLATE_DATA']
     ), 200

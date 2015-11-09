@@ -1230,10 +1230,14 @@ class TestG7ServicesList(BaseApplicationTest):
             ]
         }
 
-        res = self.client.get('/suppliers/frameworks/g-cloud-7/submissions/scs')
+        submissions = self.client.get('/suppliers/frameworks/g-cloud-7/submissions')
+        lot_page = self.client.get('/suppliers/frameworks/g-cloud-7/submissions/scs')
 
-        assert_true(u'Service can be moved to complete' not in res.get_data(as_text=True))
-        assert_in(u'4 unanswered questions', res.get_data(as_text=True))
+        assert_true(u'Service can be moved to complete' not in lot_page.get_data(as_text=True))
+        assert_in(u'4 unanswered questions', lot_page.get_data(as_text=True))
+
+        assert_in(u'1 draft service', submissions.get_data(as_text=True))
+        assert_true(u'complete service' not in submissions.get_data(as_text=True))
 
     def test_drafts_list_can_be_completed(self, count_unanswered, data_api_client):
         with self.app.test_client():
@@ -1266,7 +1270,11 @@ class TestG7ServicesList(BaseApplicationTest):
             ]
         }
 
-        res = self.client.get('/suppliers/frameworks/g-cloud-7/submissions/scs')
+        submissions = self.client.get('/suppliers/frameworks/g-cloud-7/submissions')
+        lot_page = self.client.get('/suppliers/frameworks/g-cloud-7/submissions/scs')
 
-        assert_true(u'Service can be moved to complete' not in res.get_data(as_text=True))
-        assert_in(u'1 optional question unanswered', res.get_data(as_text=True))
+        assert_true(u'Service can be moved to complete' not in lot_page.get_data(as_text=True))
+        assert_in(u'1 optional question unanswered', lot_page.get_data(as_text=True))
+
+        assert_in(u'1 complete service', submissions.get_data(as_text=True))
+        assert_true(u'draft service' not in submissions.get_data(as_text=True))
