@@ -801,7 +801,7 @@ class TestSupplierDeclaration(BaseApplicationTest):
 
             assert_equal(res.status_code, 400)
 
-    @mock.patch('app.main.views.frameworks.get_error_messages_for_page')
+    @mock.patch('app.main.helpers.validation.G7Validator.get_error_messages_for_page')
     def test_post_with_validation_errors(self, get_error_messages_for_page, data_api_client):
         """Test that answers are not saved if there are errors
 
