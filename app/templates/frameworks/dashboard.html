@@ -167,12 +167,12 @@
             </div>
             <div class="column-two-thirds">
               <div class="framework-section-status-neutral">
+                <p>{{ counts.complete }} complete
+                {{ 'service' if counts.complete == 1 else 'services' }} {{ 'was' if counts.complete == 1 else 'were' }} submitted</p>
                 {% if counts.draft > 0 %}
                   <p>{{ counts.draft }} draft
                   {{ 'service' if counts.draft == 1 else 'services' }} {{ 'was' if counts.draft == 1 else 'were' }} not submitted</p>
                 {% endif %}
-                <p>{{ counts.complete }} complete
-                {{ 'service' if counts.complete == 1 else 'services' }} {{ 'was' if counts.complete == 1 else 'were' }} submitted</p>
               </div>
             </div>
           </div>

@@ -251,3 +251,9 @@ def get_frameworks_by_status(frameworks, status, extra_condition=False):
         if framework['status'] == status and
         (framework.get(extra_condition) if extra_condition else True)
     ]
+
+
+def count_drafts_by_lot(drafts, lot):
+    return len([
+        draft for draft in drafts if draft['lot'] == lot
+    ])
