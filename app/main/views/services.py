@@ -21,13 +21,15 @@ from dmutils.documents import upload_service_documents
 @main.route('/services')
 @login_required
 def list_services():
-    suppliers_services = data_api_client.find_services(
-        supplier_id=current_user.supplier_id
+    suppliers_services = sorted(
+        data_api_client.find_services(supplier_id=current_user.supplier_id)["services"],
+        key=lambda service: service['frameworkSlug'],
+        reverse=True
     )
 
     return render_template(
         "services/list_services.html",
-        services=suppliers_services["services"],
+        services=suppliers_services,
         updated_service_id=request.args.get('updated_service_id'),
         updated_service_name=request.args.get('updated_service_name'),
         updated_service_status=request.args.get('updated_service_status'),

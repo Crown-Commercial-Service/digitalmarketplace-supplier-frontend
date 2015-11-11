@@ -48,21 +48,66 @@ class TestFrameworksDashboard(BaseApplicationTest):
             else:
                 assert_equal(len(hint), 0)
 
-    def test_shows(self, data_api_client, s3):
+    def test_shows_for_pending(self, data_api_client, s3):
         with self.app.test_client():
-            data_api_client.get_framework.return_value = self.framework(status='open')
             self.login()
 
         data_api_client.get_framework.return_value = self.framework(status='pending')
+        data_api_client.get_supplier_framework_info.return_value = self.supplier_framework()
         res = self.client.get("/suppliers/frameworks/g-cloud-7")
 
         assert_equal(res.status_code, 200)
+
+    def test_title_for_pending(self, data_api_client, s3):
+        with self.app.test_client():
+            self.login()
+
+        data_api_client.get_framework.return_value = self.framework(status='pending')
+        data_api_client.get_supplier_framework_info.return_value = self.supplier_framework()
+        res = self.client.get("/suppliers/frameworks/g-cloud-7")
+
+        doc = html.fromstring(res.get_data(as_text=True))
+        assert_equal(
+            len(doc.xpath('//h1[contains(text(), "Your G-Cloud 7 application")]')), 1)
+
+    def test_shows_for_live_if_declaration_exists(self, data_api_client, s3):
+        with self.app.test_client():
+            self.login()
+
+        data_api_client.get_framework.return_value = self.framework(status='live')
+        data_api_client.get_supplier_framework_info.return_value = self.supplier_framework()
+        res = self.client.get("/suppliers/frameworks/g-cloud-7")
+
+        assert_equal(res.status_code, 200)
+
+    def test_title_for_live(self, data_api_client, s3):
+        with self.app.test_client():
+            self.login()
+
+        data_api_client.get_framework.return_value = self.framework(status='live')
+        data_api_client.get_supplier_framework_info.return_value = self.supplier_framework()
+        res = self.client.get("/suppliers/frameworks/g-cloud-7")
+
+        doc = html.fromstring(res.get_data(as_text=True))
+        assert_equal(
+            len(doc.xpath('//h1[contains(text(), "Your G-Cloud 7 documents")]')), 1)
+
+    def test_does_not_show_for_live_if_no_declaration(self, data_api_client, s3):
+        with self.app.test_client():
+            self.login()
+
+        data_api_client.get_framework.return_value = self.framework(status='live')
+        data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(declaration=None)
+        res = self.client.get("/suppliers/frameworks/g-cloud-7")
+
+        assert_equal(res.status_code, 404)
 
     def test_interest_registered_in_framework_on_post(self, data_api_client, s3):
         with self.app.test_client():
             self.login()
 
             data_api_client.get_framework.return_value = self.framework(status='open')
+            data_api_client.get_supplier_framework_info.return_value = self.supplier_framework()
             res = self.client.post("/suppliers/frameworks/digital-outcomes-and-specialists")
 
             assert_equal(res.status_code, 200)
@@ -77,6 +122,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
             self.login()
 
             data_api_client.get_framework.return_value = self.framework(status='pending')
+            data_api_client.get_supplier_framework_info.return_value = self.supplier_framework()
             res = self.client.get("/suppliers/frameworks/digital-outcomes-and-specialists")
 
             assert_equal(res.status_code, 200)
@@ -110,6 +156,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
                     {'serviceName': 'A service', 'status': 'not-submitted'}
                 ]
             }
+            data_api_client.get_supplier_framework_info.return_value = self.supplier_framework()
 
             res = self.client.get("/suppliers/frameworks/g-cloud-7")
 
@@ -213,6 +260,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
             self.login()
 
             data_api_client.get_framework.return_value = self.framework(status='open')
+            data_api_client.get_supplier_framework_info.return_value = self.supplier_framework()
             res = self.client.get("/suppliers/frameworks/g-cloud-7")
             doc = html.fromstring(res.get_data(as_text=True))
             last_updateds = [
@@ -248,6 +296,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
             self.login()
 
             data_api_client.get_framework.return_value = self.framework(status='open')
+            data_api_client.get_supplier_framework_info.return_value = self.supplier_framework()
             res = self.client.get("/suppliers/frameworks/g-cloud-7")
             doc = html.fromstring(res.get_data(as_text=True))
             last_updateds = [
@@ -272,6 +321,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
             self.login()
 
             data_api_client.get_framework.return_value = self.framework(status='open')
+            data_api_client.get_supplier_framework_info.return_value = self.supplier_framework()
             res = self.client.get("/suppliers/frameworks/g-cloud-7")
             doc = html.fromstring(res.get_data(as_text=True))
             last_updateds = [

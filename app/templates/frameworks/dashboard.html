@@ -28,6 +28,14 @@
     %}
       {% include "toolkit/page-heading.html" %}
     {% endwith %}
+  {% elif framework.status == 'live' %}
+    {% with
+      heading = "Your " + framework.name + " documents",
+      smaller = True,
+      with_breadcrumb = True
+    %}
+      {% include "toolkit/page-heading.html" %}
+    {% endwith %}
   {% else %}
     {% with
       heading = "Your " + framework.name + " application",
@@ -71,7 +79,7 @@
   {% endif %}
     <ul class="browse-list">
 
-      {% if framework.status == 'standstill' and application_made %}
+      {% if framework.status in ['standstill', 'live'] and application_made %}
         <li class="browse-list-item framework-application-section">
           <div class="grid-row">
             <div class="column-two-thirds">
