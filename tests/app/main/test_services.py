@@ -47,7 +47,8 @@ class TestListServices(BaseApplicationTest):
                     'id': '123',
                     'lot': 'saas',
                     'lotName': 'Software as a Service',
-                    'frameworkName': 'G-Cloud 1'
+                    'frameworkName': 'G-Cloud 1',
+                    'frameworkSlug': 'g-cloud-1'
                 }]
             }
 
@@ -86,7 +87,8 @@ class TestListServices(BaseApplicationTest):
                 'services': [{
                     'serviceName': 'Service name 123',
                     'status': 'published',
-                    'id': '123'
+                    'id': '123',
+                    'frameworkSlug': 'g-cloud-1'
                 }]
             }
 
@@ -106,7 +108,8 @@ class TestListServicesLogin(BaseApplicationTest):
             data_api_client.find_services.return_value = {'services': [{
                 'serviceName': 'Service name 123',
                 'status': 'published',
-                'id': '123'
+                'id': '123',
+                'frameworkSlug': 'g-cloud-1'
             }]}
 
             res = self.client.get('/suppliers/services')
