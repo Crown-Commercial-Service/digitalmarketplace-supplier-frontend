@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import itertools
 from datetime import datetime
+from dmutils.content_loader import ContentNotFoundError
 
 from dateutil.parser import parse as date_parse
 from flask import render_template, request, abort, flash, redirect, url_for, current_app
@@ -50,12 +51,23 @@ def framework_dashboard(framework_slug):
     declaration_status = get_declaration_status_from_info(supplier_framework_info)
     supplier_is_on_framework = get_supplier_on_framework_from_info(supplier_framework_info)
 
+    # Do not show a framework dashboard for earlier G-Cloud iterations
+    if declaration_status == 'unstarted' and framework['status'] == 'live':
+        abort(404)
+
     application_made = len(complete_drafts) > 0 and declaration_status == 'complete'
 
     # TODO: change to new format
     key_list = s3.S3(current_app.config['DM_G7_DRAFT_DOCUMENTS_BUCKET']).list('g-cloud-7-')
     # last_modified files will be first
     key_list.reverse()
+
+    try:
+        first_page = content_loader.get_builder(
+            framework_slug, 'declaration'
+        ).get_next_editable_section_id()
+    except ContentNotFoundError:
+        first_page = None
 
     return render_template(
         "frameworks/dashboard.html",
@@ -64,9 +76,7 @@ def framework_dashboard(framework_slug):
             "complete": len(complete_drafts),
         },
         declaration_status=declaration_status,
-        first_page_of_declaration=content_loader.get_builder(
-            framework_slug, 'declaration'
-        ).get_next_editable_section_id(),
+        first_page_of_declaration=first_page,
         deadline=current_app.config['G7_CLOSING_DATE'],
         framework=framework,
         application_made=application_made,
