@@ -7,7 +7,7 @@ from dmutils.apiclient import APIError
 
 def get_framework(client, framework_slug, open_only=True):
     framework = client.get_framework(framework_slug)['frameworks']
-    allowed_statuses = ['open'] if open_only else ['open', 'pending', 'standstill']
+    allowed_statuses = ['open'] if open_only else ['open', 'pending', 'standstill', 'live']
     if framework['status'] not in allowed_statuses:
         abort(404)
 
