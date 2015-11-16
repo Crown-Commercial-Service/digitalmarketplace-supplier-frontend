@@ -822,7 +822,7 @@ class TestSupplierDeclaration(BaseApplicationTest):
             data_api_client.get_supplier_declaration.side_effect = APIError(mock.Mock(status_code=404))
 
             res = self.client.get(
-                '/suppliers/frameworks/g-cloud-7/declaration/g_cloud_7_essentials')
+                '/suppliers/frameworks/g-cloud-7/declaration/g-cloud-7-essentials')
 
             assert_equal(res.status_code, 200)
             doc = html.fromstring(res.get_data(as_text=True))
@@ -841,7 +841,7 @@ class TestSupplierDeclaration(BaseApplicationTest):
             }
 
             res = self.client.get(
-                '/suppliers/frameworks/g-cloud-7/declaration/g_cloud_7_essentials')
+                '/suppliers/frameworks/g-cloud-7/declaration/g-cloud-7-essentials')
 
             assert_equal(res.status_code, 200)
             doc = html.fromstring(res.get_data(as_text=True))
@@ -857,7 +857,7 @@ class TestSupplierDeclaration(BaseApplicationTest):
                 "declaration": {"status": "started"}
             }
             res = self.client.post(
-                '/suppliers/frameworks/g-cloud-7/declaration/g_cloud_7_essentials',
+                '/suppliers/frameworks/g-cloud-7/declaration/g-cloud-7-essentials',
                 data=FULL_G7_SUBMISSION)
 
             assert_equal(res.status_code, 302)
@@ -872,7 +872,7 @@ class TestSupplierDeclaration(BaseApplicationTest):
                 "declaration": FULL_G7_SUBMISSION
             }
             res = self.client.post(
-                '/suppliers/frameworks/g-cloud-7/declaration/grounds_for_discretionary_exclusion',
+                '/suppliers/frameworks/g-cloud-7/declaration/grounds-for-discretionary-exclusion',
                 data=FULL_G7_SUBMISSION)
 
             assert_equal(res.status_code, 302)
@@ -891,7 +891,7 @@ class TestSupplierDeclaration(BaseApplicationTest):
             data_api_client.set_supplier_declaration.side_effect = APIError(mock.Mock(status_code=400))
 
             res = self.client.post(
-                '/suppliers/frameworks/g-cloud-7/declaration/g_cloud_7_essentials',
+                '/suppliers/frameworks/g-cloud-7/declaration/g-cloud-7-essentials',
                 data=FULL_G7_SUBMISSION)
 
             assert_equal(res.status_code, 400)
@@ -909,7 +909,7 @@ class TestSupplierDeclaration(BaseApplicationTest):
             get_error_messages_for_page.return_value = {'PR1': {'input_name': 'PR1', 'message': 'this is invalid'}}
 
             res = self.client.post(
-                '/suppliers/frameworks/g-cloud-7/declaration/g_cloud_7_essentials',
+                '/suppliers/frameworks/g-cloud-7/declaration/g-cloud-7-essentials',
                 data=FULL_G7_SUBMISSION)
 
             assert_equal(res.status_code, 400)
@@ -926,7 +926,7 @@ class TestSupplierDeclaration(BaseApplicationTest):
                 "declaration": {"status": "started"}
             }
             res = self.client.post(
-                '/suppliers/frameworks/g-cloud-7/declaration/g_cloud_7_essentials',
+                '/suppliers/frameworks/g-cloud-7/declaration/g-cloud-7-essentials',
                 data=FULL_G7_SUBMISSION)
 
             assert_equal(res.status_code, 404)
