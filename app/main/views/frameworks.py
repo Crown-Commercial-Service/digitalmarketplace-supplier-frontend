@@ -115,19 +115,19 @@ def framework_submission_lots(framework_slug):
             'body': lot['description'],
             'statuses': [
                 {
-                    'message': '{} complete service{} {} submitted'.format(
+                    'title': '{} complete service{} {} submitted'.format(
                         count_drafts_by_lot(complete_drafts, lot['value']),
                         '' if 1 == count_drafts_by_lot(complete_drafts, lot['value']) else 's',
                         'was' if 1 == count_drafts_by_lot(complete_drafts, lot['value']) else 'were'
-                    ),
-                    'important': True
+                    )
                 } if count_drafts_by_lot(complete_drafts, lot['value']) else {},
                 {
-                    'message': u'{} draft service{} {} submitted'.format(
+                    'title': u'{} draft service{} {} submitted'.format(
                         count_drafts_by_lot(drafts, lot['value']),
                         '' if 1 == count_drafts_by_lot(drafts, lot['value']) else 's',
                         u'wasn’t' if 1 == count_drafts_by_lot(drafts, lot['value']) else u'weren’t',
-                    )
+                    ),
+                    'type': 'quiet'
                 } if count_drafts_by_lot(drafts, lot['value']) else {}
             ]
         } for lot in lot_question['options']],
