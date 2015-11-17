@@ -294,6 +294,15 @@ class TestEditService(BaseApplicationTest):
         with self.app.test_client():
             self.login()
 
+    def test_return_to_service_summary_link_present(self, data_api_client):
+        data_api_client.get_service.return_value = self.empty_service
+        res = self.client.get('/suppliers/services/1/edit/description')
+        assert_equal(res.status_code, 200)
+        assert_in(
+            self.strip_all_whitespace('<a href="/suppliers/services/1">Return to service summary</a>'),
+            self.strip_all_whitespace(res.get_data(as_text=True))
+        )
+
     def test_questions_for_this_service_section_can_be_changed(self, data_api_client):
         data_api_client.get_service.return_value = self.empty_service
         res = self.client.post(
