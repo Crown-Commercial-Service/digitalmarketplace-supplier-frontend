@@ -22,16 +22,20 @@
           {% block edit_link scoped %}{% endblock %}
         {% endif %}
         {% call(question) summary.list_table(
-          section.rows,
+          section.questions,
           caption=section.name,
           field_headings=[
             "Service attribute name",
-            "Service attribute"
+            "Service attribute",
+            "Add or Edit"
+          ] if section.edit_questions else [
+            "Service attribute name",
+            "Service attribute",
           ],
           field_headings_visible=False
         ) %}
-          {% if question.answer_required %}
-            {% call summary.row(complete=False) %}
+          {% call summary.row(complete=not question.answer_required) %}
+            {% if question.answer_required %}
               {{ summary.field_name(question.label) }}
               {% call summary.field() %}
                 {% if framework and framework.status == 'open' %}
@@ -40,13 +44,17 @@
                   Not answered
                 {% endif %}
               {% endcall %}
-            {% endcall %}
-          {% else %}
-            {% call summary.row() %}
+              {% if section.edit_questions %}
+                {{ summary.edit_link('Edit', '#') }}
+              {% endif %}
+            {% else %}
               {{ summary.field_name(question.label) }}
               {{ summary[question.type](question.value, question.assurance) }}
-            {% endcall %}
-          {% endif %}
+              {% if section.edit_questions %}
+                {{ summary.edit_link('Add', '#') }}
+              {% endif %}
+            {% endif %}
+          {% endcall %}
         {% endcall %}
       {% endfor %}
       {% block after_sections %}{% endblock %}
