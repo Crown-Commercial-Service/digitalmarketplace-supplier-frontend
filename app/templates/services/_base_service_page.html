@@ -35,11 +35,11 @@
           field_headings_visible=False
         ) %}
           {% call summary.row(complete=not question.answer_required) %}
+            {{ summary.field_name(question.label) }}
             {% if question.answer_required %}
-              {{ summary.field_name(question.label) }}
               {% call summary.field() %}
                 {% if framework and framework.status == 'open' %}
-                  <a href="{{ url_for(".edit_service_submission", framework_slug=framework.slug, lot_slug=service_data.lot, service_id=service_id, section_id=section.id) }}">Answer required</a>
+                    <a href="{{ url_for(".edit_service_submission", framework_slug=framework.slug, lot_slug=service_data.lot, service_id=service_id, section_id=section.id) }}">Answer required</a>
                 {% else %}
                   Not answered
                 {% endif %}
@@ -47,8 +47,11 @@
               {% if section.edit_questions %}
                 {{ summary.edit_link('Edit', '#') }}
               {% endif %}
+            {% elif question.is_empty %}
+              {% call summary.field() %}
+                <span class="summary-item-field-answer-required">{{ question.empty_message }}</span>
+              {% endcall %}
             {% else %}
-              {{ summary.field_name(question.label) }}
               {{ summary[question.type](question.value, question.assurance) }}
               {% if section.edit_questions %}
                 {{ summary.edit_link('Add', '#') }}
