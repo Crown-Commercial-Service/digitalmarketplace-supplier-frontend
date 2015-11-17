@@ -6,7 +6,6 @@ from ... import data_api_client, flask_featureflags
 from ...main import main, content_loader
 from ..helpers.services import (
     is_service_modifiable, is_service_associated_with_supplier,
-    get_service_attributes,
     get_draft_document_url, count_unanswered_questions,
     get_next_section_name
 )
@@ -368,7 +367,7 @@ def view_service_submission(framework_slug, lot_slug, service_id):
     draft['priceString'] = format_service_price(draft)
     content = content_loader.get_builder(framework['slug'], 'edit_submission').filter(draft)
 
-    sections = get_service_attributes(draft, content)
+    sections = content.summary(draft)
 
     unanswered_required, unanswered_optional = count_unanswered_questions(sections)
     delete_requested = True if request.args.get('delete_requested') else False
@@ -525,6 +524,6 @@ def _update_service_status(service, error_message=None):
         "services/service.html",
         service_id=service.get('id'),
         service_data=service,
-        sections=get_service_attributes(service, content),
+        sections=content.summary(service),
         error=error_message,
         **dict(question, **template_data)), status_code

@@ -4,7 +4,6 @@ from flask import abort, current_app
 from flask_login import current_user
 
 from dmutils.apiclient import APIError
-from dmutils.service_attribute import Attribute
 
 try:
     import urlparse
@@ -39,39 +38,13 @@ def get_lot_drafts(apiclient, supplier_id, framework_slug, lot_slug):
 def count_unanswered_questions(service_attributes):
     unanswered_required, unanswered_optional = (0, 0)
     for section in service_attributes:
-        for question in section['rows']:
+        for question in section.questions:
             if question.answer_required:
                 unanswered_required += 1
             elif question.value in ['', [], None]:
                 unanswered_optional += 1
 
     return unanswered_required, unanswered_optional
-
-
-def get_service_attributes(service_data, service_questions):
-    return list(map(
-        lambda section: {
-            'name': section['name'],
-            'rows': _get_rows(section, service_data),
-            'editable': section['editable'],
-            'id': section['id']
-        },
-        service_questions
-    ))
-
-
-def _get_rows(section, service_data):
-    return list(
-        map(
-            lambda question: Attribute(
-                value=service_data.get(question['id'], None),
-                question_type=question['type'],
-                label=question['question'],
-                optional=question.get('optional', False)
-            ),
-            section['questions']
-        )
-    )
 
 
 def is_service_associated_with_supplier(service):

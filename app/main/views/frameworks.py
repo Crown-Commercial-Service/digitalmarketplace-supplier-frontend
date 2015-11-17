@@ -29,7 +29,7 @@ from ..helpers.frameworks import get_declaration_status, \
     get_supplier_framework_info, get_framework, get_framework_and_lot, count_drafts_by_lot
 from ..helpers.validation import get_validator
 from ..helpers.services import (
-    get_draft_document_url, get_service_attributes, get_drafts, get_lot_drafts,
+    get_draft_document_url, get_drafts, get_lot_drafts,
     count_unanswered_questions
 )
 
@@ -163,7 +163,7 @@ def framework_submission_services(framework_slug, lot_slug):
     for draft in itertools.chain(drafts, complete_drafts):
         draft['priceString'] = format_service_price(draft)
         content = content_loader.get_builder(framework_slug, 'edit_submission').filter(draft)
-        sections = get_service_attributes(draft, content)
+        sections = content.summary(draft)
 
         unanswered_required, unanswered_optional = count_unanswered_questions(sections)
         draft.update({
