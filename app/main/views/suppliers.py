@@ -74,6 +74,7 @@ def dashboard():
         supplier=supplier,
         users=get_current_suppliers_users(),
         frameworks={
+            'coming': get_frameworks_by_status(all_frameworks, 'coming'),
             'open': get_frameworks_by_status(all_frameworks, 'open'),
             'pending': get_frameworks_by_status(all_frameworks, 'pending'),
             'standstill': get_frameworks_by_status(all_frameworks, 'standstill', 'made_application'),
