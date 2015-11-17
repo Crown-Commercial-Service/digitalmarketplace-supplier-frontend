@@ -44,18 +44,15 @@
                   Not answered
                 {% endif %}
               {% endcall %}
-              {% if section.edit_questions %}
-                {{ summary.edit_link('Edit', '#') }}
-              {% endif %}
             {% elif question.is_empty%}
               {% call summary.field() %}
                 <span class="summary-item-field-answer-required">{{ question.empty_message }}</span>
               {% endcall %}
             {% else %}
               {{ summary[question.type](question.value, question.assurance) }}
-              {% if section.edit_questions %}
-                {{ summary.edit_link('Add', '#') }}
-              {% endif %}
+            {% endif %}
+            {% if section.edit_questions %}
+              {{ summary.edit_link('Add' if question.is_empty else 'Edit', url_for(".edit_service_submission", framework_slug=framework.slug, lot_slug=service_data.lot, service_id=service_id, section_id=section.id, question_slug=question.slug)) }}
             {% endif %}
           {% endcall %}
         {% endcall %}

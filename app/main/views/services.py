@@ -389,8 +389,10 @@ def view_service_submission(framework_slug, lot_slug, service_id):
 
 
 @main.route('/frameworks/<framework_slug>/submissions/<lot_slug>/<service_id>/edit/<section_id>', methods=['GET'])
+@main.route('/frameworks/<framework_slug>/submissions/<lot_slug>/<service_id>/edit/<section_id>/<question_slug>',
+            methods=['GET'])
 @login_required
-def edit_service_submission(framework_slug, lot_slug, service_id, section_id):
+def edit_service_submission(framework_slug, lot_slug, service_id, section_id, question_slug=None):
     framework, lot = get_framework_and_lot(data_api_client, framework_slug, lot_slug, open_only=True)
 
     try:
@@ -403,6 +405,9 @@ def edit_service_submission(framework_slug, lot_slug, service_id, section_id):
 
     content = content_loader.get_builder(framework_slug, 'edit_submission').filter(draft)
     section = content.get_section(section_id)
+    if section and (question_slug is not None):
+        section = section.get_question_as_section(question_slug)
+
     if section is None or not section.editable:
         abort(404)
 
@@ -421,8 +426,10 @@ def edit_service_submission(framework_slug, lot_slug, service_id, section_id):
 
 
 @main.route('/frameworks/<framework_slug>/submissions/<lot_slug>/<service_id>/edit/<section_id>', methods=['POST'])
+@main.route('/frameworks/<framework_slug>/submissions/<lot_slug>/<service_id>/edit/<section_id>/<question_slug>',
+            methods=['POST'])
 @login_required
-def update_section_submission(framework_slug, lot_slug, service_id, section_id):
+def update_section_submission(framework_slug, lot_slug, service_id, section_id, question_slug=None):
     framework, lot = get_framework_and_lot(data_api_client, framework_slug, lot_slug, open_only=True)
 
     try:
@@ -435,6 +442,9 @@ def update_section_submission(framework_slug, lot_slug, service_id, section_id):
 
     content = content_loader.get_builder(framework_slug, 'edit_submission').filter(draft)
     section = content.get_section(section_id)
+    if section and (question_slug is not None):
+        section = section.get_question_as_section(question_slug)
+
     if section is None or not section.editable:
         abort(404)
 
