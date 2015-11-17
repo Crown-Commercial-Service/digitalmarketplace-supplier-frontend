@@ -222,6 +222,7 @@ def framework_supplier_declaration(framework_slug, section_id=None):
             status_code = 400
         else:
             latest_answers.update(answers)
+            validator = get_validator(framework, content, latest_answers)
             if validator.get_error_messages():
                 latest_answers.update({"status": "started"})
             else:
