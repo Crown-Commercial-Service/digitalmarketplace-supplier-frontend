@@ -1,7 +1,7 @@
 {% import "toolkit/summary-table.html" as summary %}
 
 {{ summary.heading("Current services") }}
-{% if supplier.service_counts %}
+{% if frameworks.live %}
   {{ summary.top_link('View', url_for('.list_services')) }}
 {% endif %}
 {% call(framework) summary.list_table(
