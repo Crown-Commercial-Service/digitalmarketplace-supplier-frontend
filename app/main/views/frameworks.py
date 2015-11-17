@@ -15,7 +15,10 @@ from dmutils.email import send_email, MandrillException
 from dmutils.formats import format_service_price, datetimeformat
 from dmutils import s3
 from dmutils.deprecation import deprecated
-from dmutils.documents import get_agreement_document_path, get_signed_url, file_is_less_than_5mb, get_extension
+from dmutils.documents import (
+    get_agreement_document_path, get_signed_url, get_extension,
+    file_is_less_than_5mb, file_is_empty
+)
 
 from ... import data_api_client
 from ...main import main, content_loader
@@ -496,6 +499,8 @@ def upload_framework_agreement(framework_slug):
     upload_error = None
     if not file_is_less_than_5mb(request.files['agreement']):
         upload_error = "Document must be less than 5Mb"
+    elif file_is_empty(request.files['agreement']):
+        upload_error = "Document must not be empty"
 
     if upload_error is not None:
         return render_template(
