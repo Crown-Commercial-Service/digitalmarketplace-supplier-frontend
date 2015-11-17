@@ -664,6 +664,30 @@ class TestFrameworkAgreementUpload(BaseApplicationTest):
                 }
             )
 
+            s3.return_value.save.assert_called_with(
+                'g-cloud-7/agreements/1234/Legal_Supplier_Name-1234-signed-framework-agreement.pdf',
+                mock.ANY, acl='private')
+            assert_equal(res.status_code, 302)
+            assert_equal(res.location, 'http://localhost/suppliers/frameworks/g-cloud-7/agreement')
+
+    def test_upload_jpeg_agreement_document(self, data_api_client, send_email, s3):
+        with self.app.test_client():
+            self.login()
+
+            data_api_client.get_framework.return_value = self.framework(status='standstill')
+            data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
+                on_framework=True)
+
+            res = self.client.post(
+                '/suppliers/frameworks/g-cloud-7/agreement',
+                data={
+                    'agreement': (StringIO(b'doc'), 'test.jpg'),
+                }
+            )
+
+            s3.return_value.save.assert_called_with(
+                'g-cloud-7/agreements/1234/Legal_Supplier_Name-1234-signed-framework-agreement.jpg',
+                mock.ANY, acl='private')
             assert_equal(res.status_code, 302)
             assert_equal(res.location, 'http://localhost/suppliers/frameworks/g-cloud-7/agreement')
 

@@ -15,7 +15,7 @@ from dmutils.email import send_email, MandrillException
 from dmutils.formats import format_service_price, datetimeformat
 from dmutils import s3
 from dmutils.deprecation import deprecated
-from dmutils.documents import get_agreement_document_path, get_signed_url, file_is_less_than_5mb
+from dmutils.documents import get_agreement_document_path, get_signed_url, file_is_less_than_5mb, get_extension
 
 from ... import data_api_client
 from ...main import main, content_loader
@@ -508,8 +508,10 @@ def upload_framework_agreement(framework_slug):
 
     agreements_bucket = s3.S3(current_app.config['DM_AGREEMENTS_BUCKET'])
     legal_supplier_name = supplier_framework['declaration']['SQ1-1a']
+    extension = get_extension(request.files['agreement'].filename)
     path = get_agreement_document_path(
-        framework_slug, current_user.supplier_id, legal_supplier_name, 'signed-framework-agreement.pdf')
+        framework_slug, current_user.supplier_id, legal_supplier_name,
+        'signed-framework-agreement{}'.format(extension))
     agreements_bucket.save(path, request.files['agreement'], acl='private')
 
     data_api_client.register_framework_agreement_returned(
