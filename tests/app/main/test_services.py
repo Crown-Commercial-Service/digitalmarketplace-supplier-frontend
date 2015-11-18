@@ -716,13 +716,13 @@ class TestEditDraftService(BaseApplicationTest):
         assert_equal(res.status_code, 302)
         data_api_client.update_draft_service.assert_called_once_with(
             '1', {
-                'serviceDefinitionDocumentURL': 'http://localhost/suppliers/submission/documents/g-slug/1234/1-service-definition-document-2015-01-02-0304.pdf'  # noqa
+                'serviceDefinitionDocumentURL': 'http://localhost/suppliers/submission/documents/g-slug/documents/1234/1-service-definition-document-2015-01-02-0304.pdf'  # noqa
             }, 'email@email.com',
             page_questions=['serviceDefinitionDocumentURL']
         )
 
         s3.return_value.save.assert_called_once_with(
-            'g-slug/1234/1-service-definition-document-2015-01-02-0304.pdf',
+            'g-slug/documents/1234/1-service-definition-document-2015-01-02-0304.pdf',
             mock.ANY, acl='private'
         )
 

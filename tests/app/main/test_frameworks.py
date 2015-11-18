@@ -575,6 +575,26 @@ class TestFrameworkAgreementUpload(BaseApplicationTest):
             assert_equal(res.status_code, 400)
             assert_in(u'Document must be less than 5Mb', res.get_data(as_text=True))
 
+    @mock.patch('app.main.views.frameworks.file_is_empty')
+    def test_page_returns_400_if_file_is_too_large(self, file_is_empty, data_api_client, send_email, s3):
+        with self.app.test_client():
+            self.login()
+
+            data_api_client.get_framework.return_value = self.framework(status='standstill')
+            data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
+                on_framework=True)
+            file_is_empty.return_value = True
+
+            res = self.client.post(
+                '/suppliers/frameworks/g-cloud-7/agreement',
+                data={
+                    'agreement': (StringIO(b'doc'), 'test.pdf'),
+                }
+            )
+
+            assert_equal(res.status_code, 400)
+            assert_in(u'Document must not be empty', res.get_data(as_text=True))
+
     def test_api_is_not_updated_and_email_not_sent_if_upload_fails(self, data_api_client, send_email, s3):
         with self.app.test_client():
             self.login()
@@ -664,6 +684,30 @@ class TestFrameworkAgreementUpload(BaseApplicationTest):
                 }
             )
 
+            s3.return_value.save.assert_called_with(
+                'g-cloud-7/agreements/1234/Legal_Supplier_Name-1234-signed-framework-agreement.pdf',
+                mock.ANY, acl='private')
+            assert_equal(res.status_code, 302)
+            assert_equal(res.location, 'http://localhost/suppliers/frameworks/g-cloud-7/agreement')
+
+    def test_upload_jpeg_agreement_document(self, data_api_client, send_email, s3):
+        with self.app.test_client():
+            self.login()
+
+            data_api_client.get_framework.return_value = self.framework(status='standstill')
+            data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
+                on_framework=True)
+
+            res = self.client.post(
+                '/suppliers/frameworks/g-cloud-7/agreement',
+                data={
+                    'agreement': (StringIO(b'doc'), 'test.jpg'),
+                }
+            )
+
+            s3.return_value.save.assert_called_with(
+                'g-cloud-7/agreements/1234/Legal_Supplier_Name-1234-signed-framework-agreement.jpg',
+                mock.ANY, acl='private')
             assert_equal(res.status_code, 302)
             assert_equal(res.location, 'http://localhost/suppliers/frameworks/g-cloud-7/agreement')
 
