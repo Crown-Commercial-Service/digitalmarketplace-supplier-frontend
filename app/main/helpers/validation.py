@@ -164,6 +164,13 @@ class G7Validator(DeclarationValidator):
 
         return req_fields
 
+
+class DOSValidator(DeclarationValidator):
+    #placeholder setting all fields to optional until actual validation added in
+    def get_required_fields(self):
+        return set([])
+
 VALIDATORS = {
-    "g-cloud-7": G7Validator
+    "g-cloud-7": G7Validator,
+    "digital-outcomes-and-specialists": DOSValidator
 }
