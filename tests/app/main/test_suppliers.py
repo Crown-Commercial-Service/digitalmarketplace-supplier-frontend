@@ -112,6 +112,11 @@ class TestSuppliersDashboard(BaseApplicationTest):
     def test_shows_edit_buttons(self, get_current_suppliers_users, data_api_client):
         data_api_client.get_supplier.side_effect = get_supplier
         data_api_client.find_frameworks.return_value = find_frameworks_return_value
+        data_api_client.get_supplier_frameworks.return_value = {
+            'frameworkInterest': [
+                {'frameworkSlug': 'g-cloud-6', 'services_count': 99}
+            ]
+        }
         get_current_suppliers_users.side_effect = get_user
         with self.app.test_client():
             self.login()
