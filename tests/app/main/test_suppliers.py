@@ -129,6 +129,45 @@ class TestSuppliersDashboard(BaseApplicationTest):
 
     @mock.patch("app.main.views.suppliers.data_api_client")
     @mock.patch("app.main.views.suppliers.get_current_suppliers_users")
+    def test_shows_dos_is_coming(
+        self, get_current_suppliers_users, data_api_client
+    ):
+        data_api_client.get_supplier.side_effect = get_supplier
+        data_api_client.get_supplier_frameworks.return_value = {
+            'frameworkInterest': []
+        }
+        data_api_client.find_frameworks.return_value = {
+            "frameworks": [
+                {
+                    'status': 'coming',
+                    'slug': 'bad-framework',
+                    'name': 'Framework that should’t have coming message'
+                },
+                {
+                    'status': 'coming',
+                    'slug': 'digital-outcomes-and-specialists',
+                    'name': 'Digital Outcomes and Specialists'
+                }
+            ]
+        }
+
+        with self.app.test_client():
+            self.login()
+            res = self.client.get("/suppliers")
+            doc = html.fromstring(res.get_data(as_text=True))
+            temp_message = doc.xpath('//aside[@class="temporary-message"]/descendant::*/text()')
+
+            message = doc.xpath('//aside[@class="temporary-message"]')
+            assert_equal(len(message), 1)
+            assert_in(u"Digital Outcomes and Specialists will be open for applications soon",
+                      message[0].xpath('h2/text()')[0])
+            assert_in(u"We’ll email you when you can apply to Digital Outcomes and Specialists",
+                      message[0].xpath('p/text()')[0])
+            assert_in(u"Find out if your services are suitable",
+                      message[0].xpath('p/a/text()')[0])
+
+    @mock.patch("app.main.views.suppliers.data_api_client")
+    @mock.patch("app.main.views.suppliers.get_current_suppliers_users")
     def test_shows_gcloud_7_application_button(self, get_current_suppliers_users, data_api_client):
         data_api_client.get_framework_interest.return_value = {'frameworks': []}
         data_api_client.get_supplier.side_effect = get_supplier
@@ -195,11 +234,6 @@ class TestSuppliersDashboard(BaseApplicationTest):
         data_api_client.find_frameworks.return_value = {
             "frameworks": [
                 {
-                    'status': 'coming',
-                    'slug': 'digital-outcomes-and-specialists',
-                    'name': 'Digital Outcomes and Specialists'
-                },
-                {
                     'status': 'pending',
                     'slug': 'g-cloud-7',
                     'name': 'G-Cloud 7'
@@ -236,11 +270,6 @@ class TestSuppliersDashboard(BaseApplicationTest):
         }
         data_api_client.find_frameworks.return_value = {
             "frameworks": [
-                {
-                    'status': 'coming',
-                    'slug': 'digital-outcomes-and-specialists',
-                    'name': 'Digital Outcomes and Specialists'
-                },
                 {
                     'status': 'pending',
                     'slug': 'g-cloud-7',
@@ -281,11 +310,6 @@ class TestSuppliersDashboard(BaseApplicationTest):
         }
         data_api_client.find_frameworks.return_value = {
             "frameworks": [
-                {
-                    'status': 'coming',
-                    'slug': 'digital-outcomes-and-specialists',
-                    'name': 'Digital Outcomes and Specialists'
-                },
                 {
                     'status': 'pending',
                     'slug': 'g-cloud-7',
