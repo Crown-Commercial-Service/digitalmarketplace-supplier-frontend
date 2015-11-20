@@ -300,8 +300,7 @@ def complete_draft_service(framework_slug, lot_slug, service_id):
         return redirect(url_for(".framework_submission_services",
                                 framework_slug=framework['slug'],
                                 lot_slug=lot_slug,
-                                lot=lot_slug,
-                                service_completed=service_id))
+                                lot=lot_slug))
 
 
 @main.route('/frameworks/<framework_slug>/submissions/<lot_slug>/<service_id>/delete', methods=['POST'])
