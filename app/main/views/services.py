@@ -114,7 +114,7 @@ def edit_section(service_id, section_id):
     if not is_service_associated_with_supplier(service):
         abort(404)
 
-    content = content_loader.get_builder('g-cloud-6', 'edit_service').filter(service)
+    content = content_loader.get_manifest('g-cloud-6', 'edit_service').filter(service)
     section = content.get_section(section_id)
     if section is None or not section.editable:
         abort(404)
@@ -140,7 +140,7 @@ def update_section(service_id, section_id):
     if not is_service_associated_with_supplier(service):
         abort(404)
 
-    content = content_loader.get_builder('g-cloud-6', 'edit_service').filter(service)
+    content = content_loader.get_manifest('g-cloud-6', 'edit_service').filter(service)
     section = content.get_section(section_id)
     if section is None or not section.editable:
         abort(404)
@@ -178,7 +178,7 @@ def start_new_draft_service(framework_slug, lot_slug):
 
     framework, lot = get_framework_and_lot(data_api_client, framework_slug, lot_slug, open_only=True)
 
-    content = content_loader.get_builder(framework_slug, 'edit_submission').filter(
+    content = content_loader.get_manifest(framework_slug, 'edit_submission').filter(
         {'lot': lot['slug']}
     )
 
@@ -200,7 +200,7 @@ def create_new_draft_service(framework_slug, lot_slug):
 
     framework, lot = get_framework_and_lot(data_api_client, framework_slug, lot_slug, open_only=True)
 
-    content = content_loader.get_builder(framework_slug, 'edit_submission').filter(
+    content = content_loader.get_manifest(framework_slug, 'edit_submission').filter(
         {'lot': lot['slug']}
     )
 
@@ -245,7 +245,7 @@ def copy_draft_service(framework_slug, lot_slug, service_id):
     if not is_service_associated_with_supplier(draft):
         abort(404)
 
-    content = content_loader.get_builder(framework_slug, 'edit_submission').filter(
+    content = content_loader.get_manifest(framework_slug, 'edit_submission').filter(
         {'lot': lot['slug']}
     )
 
@@ -365,7 +365,7 @@ def view_service_submission(framework_slug, lot_slug, service_id):
         abort(404)
 
     draft['priceString'] = format_service_price(draft)
-    content = content_loader.get_builder(framework['slug'], 'edit_submission').filter(draft)
+    content = content_loader.get_manifest(framework['slug'], 'edit_submission').filter(draft)
 
     sections = content.summary(draft)
 
@@ -403,7 +403,7 @@ def edit_service_submission(framework_slug, lot_slug, service_id, section_id, qu
     if not is_service_associated_with_supplier(draft):
         abort(404)
 
-    content = content_loader.get_builder(framework_slug, 'edit_submission').filter(draft)
+    content = content_loader.get_manifest(framework_slug, 'edit_submission').filter(draft)
     section = content.get_section(section_id)
     if section and (question_slug is not None):
         section = section.get_question_as_section(question_slug)
@@ -440,7 +440,7 @@ def update_section_submission(framework_slug, lot_slug, service_id, section_id, 
     if not is_service_associated_with_supplier(draft):
         abort(404)
 
-    content = content_loader.get_builder(framework_slug, 'edit_submission').filter(draft)
+    content = content_loader.get_manifest(framework_slug, 'edit_submission').filter(draft)
     section = content.get_section(section_id)
     if section and (question_slug is not None):
         section = section.get_question_as_section(question_slug)
@@ -510,7 +510,7 @@ def _update_service_status(service, error_message=None):
     template_data = main.config['BASE_TEMPLATE_DATA']
     status_code = 400 if error_message else 200
 
-    content = content_loader.get_builder('g-cloud-6', 'edit_service').filter(service)
+    content = content_loader.get_manifest('g-cloud-6', 'edit_service').filter(service)
 
     question = {
         'question': 'Choose service status',
