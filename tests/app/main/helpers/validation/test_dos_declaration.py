@@ -78,7 +78,6 @@ FULL_DOS_SUBMISSION = {
     "GAAR": False,
     "contactEmailContractNotice": "Blah@example.com",
     "status": "complete",
-    "sufficientInformation": True,
     "contactNameContractNotice": "Blah",
     "employersInsurance": "Yes \u2013 your organisation has, or will have in place, employer\u2019s liability insurance of at least \u00a35 million and you will provide certification prior to framework award.",  # noqa
     "civilServiceValues": True,
