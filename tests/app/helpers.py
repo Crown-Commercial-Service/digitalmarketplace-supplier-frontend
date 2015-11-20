@@ -172,15 +172,22 @@ class BaseApplicationTest(object):
 
     @staticmethod
     def framework(status='open', name='G-Cloud 7', slug='g-cloud-7'):
+        if slug == 'g-cloud-7':
+            lots = [
+                {'id': 1, 'slug': 'iaas', 'name': 'Infrastructure as a Service', 'one_service_limit': False},
+                {'id': 2, 'slug': 'scs', 'name': 'Specialist Cloud Services', 'one_service_limit': False},
+            ]
+        elif slug == 'digital-outcomes-and-specialists':
+            lots = [
+                {'id': 1, 'slug': 'digital-specialists', 'name': 'Digital specialists', 'one_service_limit': True},
+            ]
+
         return {
             'frameworks': {
                 'status': status,
                 'name': name,
                 'slug': slug,
-                'lots': [
-                    {'id': 1, 'slug': 'iaas', 'name': 'Infrastructure as a Service', 'one_service_limit': False},
-                    {'id': 2, 'slug': 'scs', 'name': 'Specialist Cloud Services', 'one_service_limit': False},
-                ]
+                'lots': lots,
             }
         }
 
