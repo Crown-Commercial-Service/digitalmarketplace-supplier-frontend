@@ -29,7 +29,7 @@ def generate_csvs(target_directory):
         os.makedirs(target_directory)
 
     for lot in lots:
-        content = new_service_content.get_builder().filter(
+        content = new_service_content.get_manifest().filter(
             {'lot': lot}
         )
         with open('{}/g7-{}-questions.csv'.format(target_directory, lot), 'wb') as csvfile:
