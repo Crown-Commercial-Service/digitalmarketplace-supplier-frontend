@@ -573,24 +573,24 @@ class TestCompleteDraft(BaseApplicationTest):
 @mock.patch('app.main.views.services.data_api_client')
 class TestEditDraftService(BaseApplicationTest):
 
-    empty_draft = {
-        'services': {
-            'id': 1,
-            'supplierId': 1234,
-            'supplierName': "supplierName",
-            'lot': "scs",
-            'status': "not-submitted",
-            'frameworkSlug': 'g-slug',
-            'frameworkName': "frameworkName",
-            'links': {},
-            'updatedAt': "2015-06-29T15:26:07.650368Z"
-        }
-    }
-
     def setup(self):
         super(TestEditDraftService, self).setup()
         with self.app.test_client():
             self.login()
+
+        self.empty_draft = {
+            'services': {
+                'id': 1,
+                'supplierId': 1234,
+                'supplierName': "supplierName",
+                'lot': "scs",
+                'status': "not-submitted",
+                'frameworkSlug': 'g-slug',
+                'frameworkName': "frameworkName",
+                'links': {},
+                'updatedAt': "2015-06-29T15:26:07.650368Z"
+            }
+        }
 
     def test_questions_for_this_draft_section_can_be_changed(self, data_api_client, s3):
         data_api_client.get_framework.return_value = self.framework(status='open')
@@ -912,6 +912,36 @@ class TestEditDraftService(BaseApplicationTest):
             '/suppliers/frameworks/g-cloud-7/submissions/scs/1/edit/invalid-section'
         )
         assert_equal(404, res.status_code)
+
+    def test_update_multiquestion(self, data_api_client, s3):
+        data_api_client.get_framework.return_value = self.framework(
+            status='open', slug='digital-outcomes-and-specialists'
+        )
+
+        self.empty_draft['services']['lot'] = 'digital-specialists'
+        data_api_client.get_draft_service.return_value = self.empty_draft
+
+        res = self.client.get(
+            '/suppliers/frameworks/digital-outcomes-and-specialists/submissions/' +
+            'digital-specialists/1/edit/individual-specialist-roles/agile-coach'
+        )
+
+        assert_equal(res.status_code, 200)
+
+        res = self.client.post(
+            '/suppliers/frameworks/digital-outcomes-and-specialists/submissions/' +
+            'digital-specialists/1/edit/individual-specialist-roles/agile-coach',
+            data={
+                'agileCoachLocations': ['Scotland'],
+            })
+
+        assert_equal(res.status_code, 302)
+        data_api_client.update_draft_service.assert_called_once_with(
+            '1',
+            {'agileCoachLocations': ['Scotland']},
+            'email@email.com',
+            page_questions=['agileCoachLocations', 'priceMin', 'priceMax', 'priceUnit', 'priceInterval']
+        )
 
 
 @mock.patch('app.main.views.services.data_api_client')
