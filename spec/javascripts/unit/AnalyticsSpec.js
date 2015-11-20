@@ -11,14 +11,14 @@ describe("GOVUK.Analytics", function () {
     it('should initialise pageviews, events and virtual pageviews', function () {
       spyOn(window.GOVUK.GDM.analytics, 'register');
       spyOn(window.GOVUK.GDM.analytics.pageViews, 'init');
-      spyOn(window.GOVUK.GDM.analytics.virtualPageViews, 'init');
+      spyOn(window.GOVUK.GDM.analytics, 'virtualPageViews');
       spyOn(window.GOVUK.GDM.analytics.events, 'init');
 
       window.GOVUK.GDM.analytics.init();
 
       expect(window.GOVUK.GDM.analytics.register).toHaveBeenCalled();
       expect(window.GOVUK.GDM.analytics.pageViews.init).toHaveBeenCalled();
-      expect(window.GOVUK.GDM.analytics.virtualPageViews.init).toHaveBeenCalled();
+      expect(window.GOVUK.GDM.analytics.virtualPageViews).toHaveBeenCalled();
       expect(window.GOVUK.GDM.analytics.events.init).toHaveBeenCalled();
     });
   });
@@ -137,41 +137,33 @@ describe("GOVUK.Analytics", function () {
 
   });
 
-  describe('virtual page views', function () {
+  describe("Virtual Page Views", function () {
+    var $analyticsString;
     beforeEach(function () {
-
-      window.ga.calls.reset();
+       window.ga.calls.reset();
     });
 
-    it('tracks clicks on the first question of the supplier declaration', function () {
-      var radio = document.createElement('input'),
-          mockControl = document.createElement('label');
+    afterEach(function () {
+      $analyticsString.remove();
 
-      radio.type = 'radio';
-      mockControl.appendChild(document.createTextNode('Yes'));
-      mockControl.appendChild(radio);
+    });
+    describe("When called", function () {
 
-      GOVUK.GDM.analytics.virtualPageViews.declaration.registerFirstQuestionInteraction({
-        'target': mockControl
+      it("Should not call google analytics without a url", function () {
+        $analyticsString = $("<div data-analytics='trackPageView'/>");
+        $(document.body).append($analyticsString);
+        window.GOVUK.GDM.analytics.virtualPageViews();
+        expect(window.ga.calls.any()).toEqual(false);
       });
-      expect(window.ga.calls.first().args).toEqual(['send', 'pageview', {
-        'page': '/suppliers/frameworks/g-cloud-7/declaration/g_cloud_7_essentials/interactions/accept-terms-of-participation/yes'
-      }]);
-    });
-    it('tracks the lot selection of a new service', function () {
-      var radio = document.createElement('input'),
-          mockControl = document.createElement('label');
 
-      radio.type = 'radio';
-      radio.value = 'iaas';
-      mockControl.appendChild(radio);
-
-      GOVUK.GDM.analytics.virtualPageViews.createANewService.registerLotSelection({
-        'target': mockControl
+      it("Should call google analytics if url exists", function () {
+        $analyticsString = $("<div data-analytics='trackPageView' data-url='http://example.com'/>");
+        $(document.body).append($analyticsString);
+        window.GOVUK.GDM.analytics.virtualPageViews();
+        expect(window.ga.calls.first().args).toEqual([ 'send', 'pageview', { page: 'http://example.com' } ]);
+        expect(window.ga.calls.count()).toEqual(1);
       });
-      expect(window.ga.calls.first().args).toEqual(['send', 'pageview', {
-        'page': '/suppliers/submission/g-cloud-7/create/interactions/lot/iaas'
-      }]);
     });
+
   });
 });

@@ -166,7 +166,7 @@ class G7Validator(DeclarationValidator):
 
 
 class DOSValidator(DeclarationValidator):
-    #placeholder setting all fields to optional until actual validation added in
+    # Placeholder setting all fields to optional until actual validation added in
     def get_required_fields(self):
         return set([])
 

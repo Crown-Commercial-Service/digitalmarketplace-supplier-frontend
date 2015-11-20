@@ -876,7 +876,7 @@ class TestSupplierDeclaration(BaseApplicationTest):
                 data=FULL_G7_SUBMISSION)
 
             assert_equal(res.status_code, 302)
-            assert_equal(res.location, 'http://localhost/suppliers/frameworks/g-cloud-7?declaration_completed=true')
+            assert_equal(res.location, 'http://localhost/suppliers/frameworks/g-cloud-7')
             assert data_api_client.set_supplier_declaration.called
 
     def test_post_valid_data_with_api_failure(self, data_api_client):
