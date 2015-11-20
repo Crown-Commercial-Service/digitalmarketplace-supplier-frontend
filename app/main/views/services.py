@@ -286,7 +286,7 @@ def complete_draft_service(framework_slug, lot_slug, service_id):
         abort(e.status_code)
 
     flash({
-        'service_name': draft.get('serviceName'),
+        'service_name': draft.get('serviceName') or draft.get('lotName'),
         'virtual_pageview_url': "{}/{}/{}".format(
             url_for(".framework_submission_lots", framework_slug=framework['slug']),
             lot_slug,
