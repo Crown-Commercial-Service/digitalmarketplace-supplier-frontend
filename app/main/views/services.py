@@ -285,7 +285,14 @@ def complete_draft_service(framework_slug, lot_slug, service_id):
     except APIError as e:
         abort(e.status_code)
 
-    flash({'service_name': draft.get('serviceName')}, 'service_completed')
+    flash({
+        'service_name': draft.get('serviceName'),
+        'virtual_pageview_url': "{}/{}/{}".format(
+            url_for(".framework_submission_lots", framework_slug=framework['slug']),
+            lot_slug,
+            "complete"
+        )
+    }, 'service_completed')
 
     if lot['one_service_limit']:
         return redirect(url_for(".framework_submission_lots", framework_slug=framework['slug']))
