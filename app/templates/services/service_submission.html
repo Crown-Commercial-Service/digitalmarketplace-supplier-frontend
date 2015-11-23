@@ -87,7 +87,7 @@
     {% if service_data.status == 'submitted' and declaration_status == 'complete' %}
       <span class="service-status-published">This service is marked as complete and will be submitted at {{ deadline|safe }}</span>
     {% endif %}
-    {% if service_data.status == 'not-submitted' and unanswered_required == 0 and framework.status == 'open' %}
+    {% if service_data.status == 'not-submitted' and can_mark_complete and framework.status == 'open' %}
       {% include "partials/complete_service.html" %}
     {% elif unanswered_required > 0 %}
       <p class="move-to-complete-hint">When you have added all the required information, you can mark the service as complete.</p>
@@ -137,7 +137,7 @@
         &nbsp;
       </div>
       <div class="column-one-third delete-draft-button">
-        {% if service_data.status == 'not-submitted' and unanswered_required == 0 and framework.status == 'open' %}
+        {% if service_data.status == 'not-submitted' and can_mark_complete and framework.status == 'open' %}
           <div class="space-underneath">
             {% include "partials/complete_service.html" %}
           </div>

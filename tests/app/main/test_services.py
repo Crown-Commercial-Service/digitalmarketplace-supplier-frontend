@@ -936,7 +936,8 @@ class TestShowDraftService(BaseApplicationTest):
             'createdAt': "2015-06-29T15:26:07.650368Z",
             'userName': "Supplier User",
 
-        }
+        },
+        'validationErrors': {}
     }
 
     complete_service = copy.deepcopy(draft_service)
@@ -987,6 +988,20 @@ class TestShowDraftService(BaseApplicationTest):
         data_api_client.get_framework.return_value = self.framework(status='other')
         data_api_client.get_draft_service.return_value = self.draft_service
         count_unanswered.return_value = 0, 1
+        res = self.client.get('/suppliers/frameworks/g-cloud-7/submissions/scs/1')
+
+        assert_not_in(u'<input type="submit" class="button-save"  value="Mark as complete" />',
+                      res.get_data(as_text=True))
+
+    @mock.patch('app.main.views.services.count_unanswered_questions')
+    def test_no_move_to_complete_button_if_validation_errors(self, count_unanswered, data_api_client):
+        draft_service = copy.deepcopy(self.draft_service)
+        draft_service['validationErrors'] = {'_errors': "Everything's busted"}
+
+        data_api_client.get_framework.return_value = self.framework(status='open')
+        data_api_client.get_draft_service.return_value = draft_service
+        count_unanswered.return_value = 0, 1
+
         res = self.client.get('/suppliers/frameworks/g-cloud-7/submissions/scs/1')
 
         assert_not_in(u'<input type="submit" class="button-save"  value="Mark as complete" />',
@@ -1046,7 +1061,8 @@ class TestDeleteDraftService(BaseApplicationTest):
         'auditEvents': {
             'createdAt': "2015-06-29T15:26:07.650368Z",
             'userName': "Supplier User",
-        }
+        },
+        'validationErrors': {}
     }
 
     def setup(self):
