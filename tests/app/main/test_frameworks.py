@@ -34,7 +34,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
 
         for last_updated in last_updateds:
             hint = doc.xpath(
-                '//li[contains(@class, "framework-application-section")]'
+                '//li[contains(@class, "browse-list-item")]'
                 '//span[contains(text(), "{}")]'
                 '/../..'
                 '/div[@class="hint"]'.format(last_updated['text'])

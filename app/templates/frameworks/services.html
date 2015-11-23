@@ -89,10 +89,10 @@
     empty_message="You haven’t added any services yet." if framework.status == 'open' else "You didn’t add any services.",
     field_headings=[
         "Service name",
-        summary.hidden_field_heading("Progress"),
-        summary.hidden_field_heading("Make a copy")
+        "Progress",
+        "Make a copy"
     ],
-    field_headings_visible=True
+    field_headings_visible=False
   ) %}
     {% call summary.row() %}
       {{ summary.service_link(draft.serviceName,
@@ -124,10 +124,10 @@
     empty_message="You haven’t marked any services as complete yet." if framework.status == 'open' else "You didn’t mark any services as complete.",
     field_headings=[
         "Service name",
-        summary.hidden_field_heading("Progress"),
-        summary.hidden_field_heading("Make a copy")
+        "Progress",
+        "Make a copy"
     ],
-    field_headings_visible=True
+    field_headings_visible=False
   ) %}
     {% call summary.row() %}
       {{ summary.service_link(draft.serviceName,

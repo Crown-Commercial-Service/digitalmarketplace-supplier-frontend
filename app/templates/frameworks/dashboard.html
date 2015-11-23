@@ -23,11 +23,11 @@
 
   {% with messages = get_flashed_messages(with_categories=True) %}
     {% for category, message in messages %}
-          {% if category == 'declaration_complete' %}
-            <div data-analytics="trackPageView"
-              data-url="{{message}}">
-            </div>
-          {% endif %}
+      {% if category == 'declaration_complete' %}
+        <div data-analytics="trackPageView"
+          data-url="{{message}}">
+        </div>
+      {% endif %}
     {% endfor %}
   {% endwith %}
 
@@ -39,8 +39,7 @@
            "Your " + framework.name + " documents" if framework.status == 'live' else
            "Your " + framework.name + " application"
          ),
-         smaller = True,
-         with_breadcrumb = True
+         smaller = True
       %}
         {% include "toolkit/page-heading.html" %}
       {% endwith %}
@@ -92,59 +91,58 @@
 
           {% if framework.status == 'open' %}
             <li class="browse-list-item">
-              {% if not counts.draft %}
-                <div class="framework-section-validation-bar-good">
-              {% endif %}
-                <a class="browse-list-item-link" href="{{ url_for('.framework_submission_lots', framework_slug=framework.slug) }}">
-                  <span>
-                    Add, edit and delete services
-                  </span>
-                </a>
-              {% if not counts.draft %}
-                </div>
-              {% endif %}
+              <a class="browse-list-item-link" href="{{ url_for('.framework_submission_lots', framework_slug=framework.slug) }}">
+                <span>
+                  Add, edit and delete services
+                </span>
+              </a>
               {% if not counts.complete and not counts.draft %}
-                <div class="framework-section-status-neutral">
-                  <p>
+                <div class="browse-list-item-status-quiet">
+                  <p class="browse-list-item-status-title">
                     You need to add and complete services
                   </p>
                 </div>
               {% endif %}
 
               {% if counts.draft and not counts.complete %}
-                <div class="framework-section-status-neutral">
-                  You have
-                  {{ counts.draft }} draft
-                  {{ 'service' if counts.draft == 1 else 'services' }}
-                  that won’t be submitted
+                <div class="browse-list-item-status-quiet">
+                  <p class="browse-list-item-status-title">
+                    You have
+                    {{ counts.draft }} draft
+                    {{ 'service' if counts.draft == 1 else 'services' }}
+                    that won’t be submitted
+                  </p>
                 </div>
               {% endif %}
 
               {% if counts.complete and declaration_status != 'complete' %}
-                <div class="framework-section-status-neutral">
-                  You have {{ counts.complete }} complete
-                  {{ 'service' if counts.complete == 1 else 'services' }}
-                  and {{ counts.draft }} draft
-                  {{ 'service' if counts.draft == 1 else 'services' }}
+                <div class="browse-list-item-status-quiet">
+                  <p class="browse-list-item-status-title">
+                    You have {{ counts.complete }} complete
+                    {{ 'service' if counts.complete == 1 else 'services' }}
+                    and {{ counts.draft }} draft
+                    {{ 'service' if counts.draft == 1 else 'services' }}
+                  </p>
                 </div>
               {% endif %}
 
               {% if counts.complete and declaration_status == 'complete' %}
-                {% if not counts.draft %}
-                  <div class="framework-section-status-good">
-                {% endif %}
-                <p>
-                  <strong><span class="big-number">{{ counts.complete }}</span> complete
-                   {{ 'service' if counts.complete == 1 else 'services' }} will be submitted at the deadline</strong>
-                </p>
-                {% if not counts.draft %}
-                  </div>
-                {% endif %}
-                {% if counts.draft %}
-                  <p class="framework-section-status-neutral">
-                    {{ counts.draft }} draft {{ 'service' if counts.draft == 1 else 'services' }} won’t be submitted
+                <div class="browse-list-item-status-happy">
+                  <p class="browse-list-item-status-title">
+                    <strong>
+                      {{ counts.complete }} complete
+                      {{ 'service' if counts.complete == 1 else 'services' }}
+                      will be submitted at the deadline
+                    </strong>
                   </p>
-                {% endif %}
+                  {% if counts.draft %}
+                    <p class="browse-list-item-status-hint">
+                      {{ counts.draft }} draft
+                      {{ 'service' if counts.draft == 1 else 'services' }}
+                      won’t be submitted
+                    </p>
+                  {% endif %}
+                </div>
               {% endif %}
             </li>
           {% elif framework.status in ['pending', 'standstill'] and application_made %}
@@ -163,109 +161,80 @@
 
           {% if framework.status == 'open' %}
             <li class="browse-list-item">
-              {% if declaration_status != 'complete' and counts.complete %}
-                <div class="framework-section-validation-bar">
-              {% endif %}
-                  <a class="browse-list-item-link" href="{{ url_for('.framework_supplier_declaration', framework_slug=framework.slug, section_id=first_page_of_declaration) }}">
-                    {% if declaration_status == 'unstarted' %}
-                      <span>Make supplier declaration</span>
-                    {% else %}
-                      <span>Edit supplier declaration</span>
-                    {% endif %}
-                  </a>
-                  <p class="browse-list-item-body">
-                    Agree to the terms of the bid, provide supplier information and
-                    confirm&nbsp;eligibility.
+              <a class="browse-list-item-link" href="{{ url_for('.framework_supplier_declaration', framework_slug=framework.slug, section_id=first_page_of_declaration) }}">
+                {% if declaration_status == 'unstarted' %}
+                  <span>Make supplier declaration</span>
+                {% else %}
+                  <span>Edit supplier declaration</span>
+                {% endif %}
+              </a>
+              <p class="browse-list-item-body">
+                Agree to the terms of the bid, provide supplier information and
+                confirm&nbsp;eligibility.
+              </p>
+              {% if declaration_status == 'unstarted' and not counts.complete %}
+                <div class="browse-list-item-status-quiet">
+                  <p class="browse-list-item-status-title">
+                    You need to make the supplier declaration
                   </p>
-                  {% if declaration_status == 'unstarted' and not counts.complete %}
-                    <div class="framework-section-status-neutral">
-                      <p>
-                        You need to make the supplier declaration
-                      </p>
-                    </div>
-                  {% elif declaration_status == 'started' and not counts.complete %}
-                    <div class="framework-section-status-neutral">
-                      <p>
-                        You need to finish making the supplier declaration
-                      </p>
-                    </div>
-                  {% elif declaration_status == 'unstarted' and counts.complete %}
-                    <div class="framework-section-status-bad">
-                      <p>
-                        <strong>No services will be submitted because you haven’t made the
-                        supplier declaration</strong>
-                      </p>
-                    </div>
-                  {% elif declaration_status == 'started' and counts.complete %}
-                    <div class="framework-section-status-bad">
-                      <p>
-                        <strong>No services will be submitted because you haven’t finished making the
-                        supplier declaration</strong>
-                      </p>
-                    </div>
-                  {% elif declaration_status == 'complete' %}
-                    <div class="framework-section-status-good">
-                      <p>
-                        <strong>You’ve made the supplier declaration</strong>
-                      </p>
-                    </div>
-                  {% endif %}
-              {% if declaration_status != 'complete' and counts.complete %}
+                </div>
+              {% elif declaration_status == 'started' and not counts.complete %}
+                <div class="browse-list-item-status-quiet">
+                  <p class="browse-list-item-status-title">
+                    You need to finish making the supplier declaration
+                  </p>
+                </div>
+              {% elif declaration_status == 'unstarted' and counts.complete %}
+                <div class="browse-list-item-status-angry">
+                  <p class="browse-list-item-status-title">
+                    <strong>No services will be submitted because you haven’t made the
+                    supplier declaration</strong>
+                  </p>
+                </div>
+              {% elif declaration_status == 'started' and counts.complete %}
+                <div class="browse-list-item-status-angry">
+                  <p class="browse-list-item-status-title">
+                    <strong>No services will be submitted because you haven’t finished making the
+                    supplier declaration</strong>
+                  </p>
+                </div>
+              {% elif declaration_status == 'complete' %}
+                <div class="browse-list-item-status-happy">
+                  <p class="browse-list-item-status-title">
+                    <strong>You’ve made the supplier declaration</strong>
+                  </p>
                 </div>
               {% endif %}
             </li>
           {% endif %}
 
-          {% if framework.status == 'open' %}
-            <li class="browse-list-item">
-              <h2>
-                Guidance, updates and questions
-              </h2>
-              <ul>
-                <li>
-                  <a href="{{ url_for('.download_supplier_file', framework_slug=framework.slug, filepath='g-cloud-7-supplier-pack.zip') }}"><span>Download guidance and legal documentation (.zip)</span></a>
-                  {% if last_modified.supplier_pack %}
-                    <div class="hint">Last updated <time datetime="{{ last_modified.supplier_pack }}">{{ last_modified.supplier_pack|dateformat }}</time></div>
-                  {% endif %}
-                </li>
-                <li>
-                  <a href="{{ url_for('.framework_updates', framework_slug=framework.slug) }}">
-                    <span>
-                    {% if 'G7_CLARIFICATIONS_CLOSED' is active_feature %}
-                      Read updates and clarification question responses
-                    {% else %}
-                      Read updates and ask clarification questions
-                    {% endif %}
-                    </span>
-                  </a>
-                  {% if last_modified.supplier_updates %}
-                    <div class="hint">Last updated <time datetime="{{ last_modified.supplier_updates }}">{{ last_modified.supplier_updates|dateformat }}</time></div>
-                  {% endif %}
-                </li>
-              </ul>
-            </li>
-          {% else %}
-            <li class="browse-list-item">
-              <a href="{{ url_for('.download_supplier_file', filepath='g-cloud-7-supplier-pack.zip', framework_slug=framework.slug) }}"><span>Download guidance and legal documentation (.zip)</span></a>
-              {% if last_modified.supplier_pack %}
-                <div class="hint">Last updated <time datetime="{{ last_modified.supplier_pack }}">{{ last_modified.supplier_pack|dateformat }}</time></div>
-              {% endif %}
-            </li>
-            <li class="browse-list-item">
-              <a href="{{ url_for('.framework_updates', framework_slug=framework.slug) }}">
-                <span>
-                {% if 'G7_CLARIFICATIONS_CLOSED' is active_feature %}
-                  Read updates and clarification question responses
-                {% else %}
-                  Read updates and ask clarification questions
+          <li class="browse-list-item">
+            <h2>
+              Guidance, updates and questions
+            </h2>
+            <ul>
+              <li>
+                <a href="{{ url_for('.download_supplier_file', filepath='g-cloud-7-supplier-pack.zip', framework_slug=framework.slug) }}"><span>Download guidance and legal documentation (.zip)</span></a>
+                {% if last_modified.supplier_pack %}
+                  <div class="hint">Last updated <time datetime="{{ last_modified.supplier_pack }}">{{ last_modified.supplier_pack|dateformat }}</time></div>
                 {% endif %}
-                </span>
-              </a>
-              {% if last_modified.supplier_updates %}
-                <div class="hint">Last updated <time datetime="{{ last_modified.supplier_updates }}">{{ last_modified.supplier_updates|dateformat }}</time></div>
-              {% endif %}
-            </li>
-          {% endif %}
+              </li>
+              <li>
+                <a href="{{ url_for('.framework_updates', framework_slug=framework.slug) }}">
+                  <span>
+                    {% if framework.status == 'open' %}
+                      Read updates and ask clarification questions
+                    {% else %}
+                      Read updates and clarification question responses
+                    {% endif %}
+                  </span>
+                </a>
+                {% if last_modified.supplier_updates %}
+                  <div class="hint">Last updated <time datetime="{{ last_modified.supplier_updates }}">{{ last_modified.supplier_updates|dateformat }}</time></div>
+                {% endif %}
+              </li>
+            </ul>
+          </li>
         </ul>
       </nav>
     </div>
