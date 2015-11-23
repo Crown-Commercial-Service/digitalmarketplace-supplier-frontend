@@ -52,9 +52,9 @@
             {% endif %}
             {% for question in section.questions %}
               {% if errors and errors[question.id] %}
-                {{ forms[question.type](question, service_data, errors, question_number=question.number, get_question=get_question) }}
+                {{ forms[question.type](question, declaration_answers, errors, question_number=question.number, get_question=get_question) }}
               {% else %}
-                {{ forms[question.type](question, service_data, {}, question_number=question.number, get_question=get_question) }}
+                {{ forms[question.type](question, declaration_answers, {}, question_number=question.number, get_question=get_question) }}
               {% endif %}
             {% endfor %}
 

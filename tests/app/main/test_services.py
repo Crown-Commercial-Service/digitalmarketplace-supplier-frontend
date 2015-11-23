@@ -383,7 +383,7 @@ class TestEditService(BaseApplicationTest):
         assert_equal(res.status_code, 200)
         document = html.fromstring(res.get_data(as_text=True))
         assert_equal(
-            "Your description must not be more than 50 words.",
+            "Your description must be no more than 50 words.",
             document.xpath('//span[@id="error-serviceSummary"]/text()')[0].strip())
 
     def test_update_non_existent_service_returns_404(self, data_api_client):
@@ -873,7 +873,7 @@ class TestEditDraftService(BaseApplicationTest):
         assert_equal(res.status_code, 200)
         document = html.fromstring(res.get_data(as_text=True))
         assert_equal(
-            "Your description must not be more than 50 words.",
+            "Your description must be no more than 50 words.",
             document.xpath('//span[@id="error-serviceSummary"]/text()')[0].strip())
 
     def test_update_with_pricing_errors(self, data_api_client, s3):

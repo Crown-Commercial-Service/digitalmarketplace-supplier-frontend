@@ -202,37 +202,41 @@ def framework_supplier_declaration(framework_slug, section_id=None):
         abort(404)
 
     is_last_page = section_id == content.sections[-1]['id']
-    latest_answers = {}
+    saved_answers = {}
 
     try:
         response = data_api_client.get_supplier_declaration(current_user.supplier_id, framework_slug)
         if response['declaration']:
-            latest_answers = response['declaration']
+            saved_answers = response['declaration']
     except APIError as e:
         if e.status_code != 404:
             abort(e.status_code)
 
-    if request.method == 'POST':
-        answers = content.get_all_data(request.form)
+    if request.method == 'GET':
+        errors = {}
+    else:
+        submitted_answers = content.get_all_data(request.form)
 
-        validator = get_validator(framework, content, answers)
+        validator = get_validator(framework, content, submitted_answers)
         errors = validator.get_error_messages_for_page(section)
 
         if len(errors) > 0:
             status_code = 400
         else:
-            latest_answers.update(answers)
+            all_answers = dict(saved_answers, **submitted_answers)
+            validator = get_validator(framework, content, all_answers)
             if validator.get_error_messages():
-                latest_answers.update({"status": "started"})
+                all_answers.update({"status": "started"})
             else:
-                latest_answers.update({"status": "complete"})
+                all_answers.update({"status": "complete"})
             try:
                 data_api_client.set_supplier_declaration(
                     current_user.supplier_id,
                     framework_slug,
-                    latest_answers,
+                    all_answers,
                     current_user.email_address
                 )
+                saved_answers = all_answers
 
                 next_section = content.get_next_editable_section_id(section_id)
                 if next_section:
@@ -250,15 +254,12 @@ def framework_supplier_declaration(framework_slug, section_id=None):
                                 framework_slug=framework['slug']))
             except APIError as e:
                 abort(e.status_code)
-    else:
-        answers = latest_answers
-        errors = {}
 
     return render_template(
         "frameworks/edit_declaration_section.html",
         framework=framework,
         section=section,
-        service_data=answers,
+        declaration_answers=saved_answers,
         is_last_page=is_last_page,
         get_question=content.get_question,
         errors=errors,

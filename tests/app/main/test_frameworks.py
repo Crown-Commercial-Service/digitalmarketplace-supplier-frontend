@@ -869,7 +869,7 @@ class TestSupplierDeclaration(BaseApplicationTest):
 
             data_api_client.get_framework.return_value = self.framework(status='open')
             data_api_client.get_supplier_declaration.return_value = {
-                "declaration": {"status": "started"}
+                "declaration": FULL_G7_SUBMISSION
             }
             res = self.client.post(
                 '/suppliers/frameworks/g-cloud-7/declaration/grounds_for_discretionary_exclusion',
@@ -878,6 +878,7 @@ class TestSupplierDeclaration(BaseApplicationTest):
             assert_equal(res.status_code, 302)
             assert_equal(res.location, 'http://localhost/suppliers/frameworks/g-cloud-7')
             assert data_api_client.set_supplier_declaration.called
+            assert data_api_client.set_supplier_declaration.call_args[0][2]['status'] == 'complete'
 
     def test_post_valid_data_with_api_failure(self, data_api_client):
         with self.app.test_client():
