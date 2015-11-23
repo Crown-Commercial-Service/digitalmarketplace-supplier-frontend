@@ -593,6 +593,7 @@ class TestEditDraftService(BaseApplicationTest):
         }
 
     def test_questions_for_this_draft_section_can_be_changed(self, data_api_client, s3):
+        s3.return_value.bucket_short_name = 'submissions'
         data_api_client.get_framework.return_value = self.framework(status='open')
         data_api_client.get_draft_service.return_value = self.empty_draft
         res = self.client.post(
@@ -610,6 +611,7 @@ class TestEditDraftService(BaseApplicationTest):
         )
 
     def test_update_without_changes_is_not_sent_to_the_api(self, data_api_client, s3):
+        s3.return_value.bucket_short_name = 'submissions'
         draft = self.empty_draft['services'].copy()
         draft.update({'serviceSummary': u"summary"})
         data_api_client.get_framework.return_value = self.framework(status='open')
@@ -627,6 +629,7 @@ class TestEditDraftService(BaseApplicationTest):
     def test_S3_should_not_be_called_if_there_are_no_files(self, data_api_client, s3):
         uploader = mock.Mock()
         s3.return_value = uploader
+        s3.return_value.bucket_short_name = 'submissions'
         data_api_client.get_framework.return_value = self.framework(status='open')
         data_api_client.get_draft_service.return_value = self.empty_draft
         res = self.client.post(
@@ -663,6 +666,7 @@ class TestEditDraftService(BaseApplicationTest):
         assert_equal(res.status_code, 404)
 
     def test_only_questions_for_this_draft_section_can_be_changed(self, data_api_client, s3):
+        s3.return_value.bucket_short_name = 'submissions'
         data_api_client.get_framework.return_value = self.framework(status='open')
         data_api_client.get_draft_service.return_value = self.empty_draft
         res = self.client.post(
@@ -702,6 +706,7 @@ class TestEditDraftService(BaseApplicationTest):
         assert_equal(len(document.cssselect('p.file-upload-existing-value')), 0)
 
     def test_file_upload(self, data_api_client, s3):
+        s3.return_value.bucket_short_name = 'submissions'
         data_api_client.get_framework.return_value = self.framework(status='open')
         data_api_client.get_draft_service.return_value = self.empty_draft
         with freeze_time('2015-01-02 03:04:05'):
@@ -715,17 +720,18 @@ class TestEditDraftService(BaseApplicationTest):
         assert_equal(res.status_code, 302)
         data_api_client.update_draft_service.assert_called_once_with(
             '1', {
-                'serviceDefinitionDocumentURL': 'http://localhost/suppliers/submission/documents/g-slug/documents/1234/1-service-definition-document-2015-01-02-0304.pdf'  # noqa
+                'serviceDefinitionDocumentURL': 'http://localhost/suppliers/submission/documents/g-slug/submissions/1234/1-service-definition-document-2015-01-02-0304.pdf'  # noqa
             }, 'email@email.com',
             page_questions=['serviceDefinitionDocumentURL']
         )
 
         s3.return_value.save.assert_called_once_with(
-            'g-slug/documents/1234/1-service-definition-document-2015-01-02-0304.pdf',
+            'g-slug/submissions/1234/1-service-definition-document-2015-01-02-0304.pdf',
             mock.ANY, acl='private'
         )
 
     def test_file_upload_filters_empty_and_unknown_files(self, data_api_client, s3):
+        s3.return_value.bucket_short_name = 'submissions'
         data_api_client.get_framework.return_value = self.framework(status='open')
         data_api_client.get_draft_service.return_value = self.empty_draft
         res = self.client.post(
@@ -745,6 +751,7 @@ class TestEditDraftService(BaseApplicationTest):
         assert_false(s3.return_value.save.called)
 
     def test_upload_question_not_accepted_as_form_data(self, data_api_client, s3):
+        s3.return_value.bucket_short_name = 'submissions'
         data_api_client.get_framework.return_value = self.framework(status='open')
         data_api_client.get_draft_service.return_value = self.empty_draft
         res = self.client.post(
@@ -760,6 +767,7 @@ class TestEditDraftService(BaseApplicationTest):
         )
 
     def test_pricing_fields_are_added_correctly(self, data_api_client, s3):
+        s3.return_value.bucket_short_name = 'submissions'
         data_api_client.get_framework.return_value = self.framework(status='open')
         data_api_client.get_draft_service.return_value = self.empty_draft
         res = self.client.post(
@@ -794,6 +802,7 @@ class TestEditDraftService(BaseApplicationTest):
         assert_equal(404, res.status_code)
 
     def test_update_redirects_to_next_editable_section(self, data_api_client, s3):
+        s3.return_value.bucket_short_name = 'submissions'
         data_api_client.get_framework.return_value = self.framework(status='open')
         data_api_client.get_draft_service.return_value = self.empty_draft
         data_api_client.update_draft_service.return_value = None
@@ -809,6 +818,7 @@ class TestEditDraftService(BaseApplicationTest):
                      res.headers['Location'])
 
     def test_update_redirects_to_edit_submission_if_no_next_editable_section(self, data_api_client, s3):
+        s3.return_value.bucket_short_name = 'submissions'
         data_api_client.get_framework.return_value = self.framework(status='open')
         data_api_client.get_draft_service.return_value = self.empty_draft
         data_api_client.update_draft_service.return_value = None
@@ -821,6 +831,7 @@ class TestEditDraftService(BaseApplicationTest):
         assert_equal('http://localhost/suppliers/frameworks/g-cloud-7/submissions/scs/1', res.headers['Location'])
 
     def test_update_redirects_to_edit_submission_if_return_to_summary(self, data_api_client, s3):
+        s3.return_value.bucket_short_name = 'submissions'
         data_api_client.get_framework.return_value = self.framework(status='open')
         data_api_client.get_draft_service.return_value = self.empty_draft
         data_api_client.update_draft_service.return_value = None
@@ -833,6 +844,7 @@ class TestEditDraftService(BaseApplicationTest):
         assert_equal('http://localhost/suppliers/frameworks/g-cloud-7/submissions/scs/1', res.headers['Location'])
 
     def test_update_redirects_to_edit_submission_if_grey_button_clicked(self, data_api_client, s3):
+        s3.return_value.bucket_short_name = 'submissions'
         data_api_client.get_framework.return_value = self.framework(status='open')
         data_api_client.get_draft_service.return_value = self.empty_draft
         data_api_client.update_draft_service.return_value = None
@@ -845,6 +857,7 @@ class TestEditDraftService(BaseApplicationTest):
         assert_equal('http://localhost/suppliers/frameworks/g-cloud-7/submissions/scs/1', res.headers['Location'])
 
     def test_update_with_answer_required_error(self, data_api_client, s3):
+        s3.return_value.bucket_short_name = 'submissions'
         data_api_client.get_framework.return_value = self.framework(status='open')
         data_api_client.get_draft_service.return_value = self.empty_draft
         data_api_client.update_draft_service.side_effect = HTTPError(
@@ -861,6 +874,7 @@ class TestEditDraftService(BaseApplicationTest):
             document.xpath('//span[@id="error-serviceSummary"]/text()')[0].strip())
 
     def test_update_with_under_50_words_error(self, data_api_client, s3):
+        s3.return_value.bucket_short_name = 'submissions'
         data_api_client.get_framework.return_value = self.framework(status='open')
         data_api_client.get_draft_service.return_value = self.empty_draft
         data_api_client.update_draft_service.side_effect = HTTPError(
@@ -877,6 +891,7 @@ class TestEditDraftService(BaseApplicationTest):
             document.xpath('//span[@id="error-serviceSummary"]/text()')[0].strip())
 
     def test_update_with_pricing_errors(self, data_api_client, s3):
+        s3.return_value.bucket_short_name = 'submissions'
         cases = [
             ('priceMin', 'answer_required', 'Minimum price requires an answer.'),
             ('priceUnit', 'answer_required', "Pricing unit requires an answer. If none of the provided units apply, please choose 'Unit'."),  # noqa
@@ -914,6 +929,7 @@ class TestEditDraftService(BaseApplicationTest):
         assert_equal(404, res.status_code)
 
     def test_update_multiquestion(self, data_api_client, s3):
+        s3.return_value.bucket_short_name = 'submissions'
         data_api_client.get_framework.return_value = self.framework(
             status='open', slug='digital-outcomes-and-specialists'
         )
@@ -1130,7 +1146,10 @@ class TestDeleteDraftService(BaseApplicationTest):
 
         data_api_client.delete_draft_service.assert_called_with('1', 'email@email.com')
         assert_equal(res.status_code, 302)
-        assert_equal(res.location, 'http://localhost/suppliers/frameworks/g-cloud-7/submissions/scs')
+        assert_equal(
+            res.location,
+            'http://localhost/suppliers/frameworks/g-cloud-7/submissions/scs'
+        )
 
     def test_cannot_delete_other_suppliers_draft(self, data_api_client):
         other_draft = copy.deepcopy(self.draft_to_delete)
@@ -1151,6 +1170,7 @@ class TestSubmissionDocuments(BaseApplicationTest):
             self.login()
 
     def test_document_url(self, s3):
+        s3.return_value.bucket_short_name = 'submissions'
         s3.return_value.get_signed_url.return_value = 'http://example.com/document.pdf'
 
         res = self.client.get(
@@ -1158,9 +1178,13 @@ class TestSubmissionDocuments(BaseApplicationTest):
         )
 
         assert_equal(res.status_code, 302)
-        assert_equal(res.headers['Location'], 'http://localhost/document.pdf')
+        assert_equal(
+            res.headers['Location'],
+            'http://digitalmarketplace-documents-dev-dev.local/document.pdf'
+        )
 
     def test_missing_document_url(self, s3):
+        s3.return_value.bucket_short_name = 'submissions'
         s3.return_value.get_signed_url.return_value = None
 
         res = self.client.get(
