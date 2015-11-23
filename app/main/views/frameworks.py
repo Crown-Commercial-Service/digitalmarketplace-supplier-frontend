@@ -245,10 +245,13 @@ def framework_supplier_declaration(framework_slug, section_id=None):
                                 framework_slug=framework['slug'],
                                 section_id=next_section))
                 else:
+                    url = "{}/declaration_complete".format(
+                        url_for('.framework_dashboard',
+                                framework_slug=framework['slug']))
+                    flash(url, 'declaration_complete')
                     return redirect(
                         url_for('.framework_dashboard',
-                                framework_slug=framework['slug'],
-                                declaration_completed='true'))
+                                framework_slug=framework['slug']))
             except APIError as e:
                 abort(e.status_code)
 

@@ -39,6 +39,7 @@
             <strong>{{message.service_name}}</strong> was deleted
           {% elif category == 'service_completed' %}
             <strong>{{message.service_name}}</strong> was marked as complete
+            <span data-analytics="trackPageView" data-url="{{message.virtual_pageview_url}}"></span>
           {% endif %}
         </p>
       </div>

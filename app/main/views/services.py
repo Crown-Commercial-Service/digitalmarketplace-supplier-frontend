@@ -285,7 +285,14 @@ def complete_draft_service(framework_slug, lot_slug, service_id):
     except APIError as e:
         abort(e.status_code)
 
-    flash({'service_name': draft.get('serviceName')}, 'service_completed')
+    flash({
+        'service_name': draft.get('serviceName') or draft.get('lotName'),
+        'virtual_pageview_url': "{}/{}/{}".format(
+            url_for(".framework_submission_lots", framework_slug=framework['slug']),
+            lot_slug,
+            "complete"
+        )
+    }, 'service_completed')
 
     if lot['one_service_limit']:
         return redirect(url_for(".framework_submission_lots", framework_slug=framework['slug']))
@@ -293,8 +300,7 @@ def complete_draft_service(framework_slug, lot_slug, service_id):
         return redirect(url_for(".framework_submission_services",
                                 framework_slug=framework['slug'],
                                 lot_slug=lot_slug,
-                                lot=lot_slug,
-                                service_completed=service_id))
+                                lot=lot_slug))
 
 
 @main.route('/frameworks/<framework_slug>/submissions/<lot_slug>/<service_id>/delete', methods=['POST'])
