@@ -358,7 +358,7 @@ def view_service_submission(framework_slug, lot_slug, service_id):
 
     try:
         data = data_api_client.get_draft_service(service_id)
-        draft, last_edit = data['services'], data['auditEvents']
+        draft, last_edit, validation_errors = data['services'], data['auditEvents'], data['validationErrors']
     except HTTPError as e:
         abort(e.status_code)
 
@@ -382,6 +382,7 @@ def view_service_submission(framework_slug, lot_slug, service_id):
         sections=sections,
         unanswered_required=unanswered_required,
         unanswered_optional=unanswered_optional,
+        can_mark_complete=not validation_errors,
         delete_requested=delete_requested,
         declaration_status=get_declaration_status(data_api_client, framework['slug']),
         deadline=current_app.config['G7_CLOSING_DATE'],
