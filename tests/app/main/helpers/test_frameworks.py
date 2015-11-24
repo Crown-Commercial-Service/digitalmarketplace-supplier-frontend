@@ -10,29 +10,26 @@ def get_lot_status_examples():
         # Lots with limit of one service
         (
             [True, 0, 0, None, 'open'],
-            [{
-                'title': u'You haven’t applied to provide digital shoutcomes',
-                'type': u'quiet'
-            }]
+            []
         ),
         (
             [True, 1, 0, None, 'open'],
             [{
-                'title': u'You’ve started your application',
+                'title': u'Started but not complete',
                 'type': u'quiet'
             }]
         ),
         (
             [True, 0, 1, None, 'open'],
             [{
-                'title': u'You’ve completed this service',
+                'title': u'Marked as complete',
                 'hint': u'You can edit it until the deadline'
             }]
         ),
         (
             [True, 0, 1, 'complete', 'open'],
             [{
-                'title': u'You’re submitting this service',
+                'title': u'This will be submitted',
                 'hint': u'You can edit it until the deadline',
                 'type': u'happy'
             }]
@@ -41,28 +38,25 @@ def get_lot_status_examples():
         # Lots with limit of one, framework in standstill
         (
             [True, 0, 0, None, 'standstill'],
-            [{
-                'title': u'You didn’t apply to provide digital shoutcomes',
-                'type': u'quiet'
-            }]
+            []
         ),
         (
             [True, 1, 0, None, 'standstill'],
             [{
-                'title': u'You started your application',
+                'title': u'Not completed',
                 'type': u'quiet'
             }]
         ),
         (
             [True, 0, 1, None, 'standstill'],
             [{
-                'title': 'You marked this service as complete'
+                'title': 'Marked as complete'
             }]
         ),
         (
             [True, 0, 1, 'complete', 'standstill'],
             [{
-                'title': u'You submitted this service',
+                'title': u'Submitted',
                 'type': u'happy'
             }]
         ),
@@ -70,36 +64,33 @@ def get_lot_status_examples():
         # Multi-service lots, no declaration, framework open
         (
             [False, 0, 0, None, 'open'],
-            [{
-                'title': u'You haven’t applied to provide digital shoutcomes',
-                'type': u'quiet'
-            }]
+            []
         ),
         (
             [False, 1, 0, None, 'open'],
             [{
-                'title': u'1 draft service',
+                'title': u'1 draft lab',
+                'hint': u'Answer all the questions and mark as complete',
                 'type': u'quiet'
             }]
         ),
         (
             [False, 0, 1, None, 'open'],
             [{
-                'title': u'1 complete service',
-                'hint': u'You can edit it until the deadline',
-                'type': None
+                'title': u'1 lab marked as complete',
+                'hint': u'You can edit it until the deadline'
             }]
         ),
         (
             [False, 1, 1, None, 'open'],
             [
                 {
-                    'title': u'1 complete service',
-                    'hint': u'You can edit it until the deadline',
-                    'type': None
+                    'title': u'1 lab marked as complete',
+                    'hint': u'You can edit it until the deadline'
                 },
                 {
-                    'title': u'1 draft service',
+                    'title': u'1 draft lab',
+                    'hint': u'Answer all the questions and mark as complete',
                     'type': u'quiet'
                 }
             ]
@@ -108,12 +99,12 @@ def get_lot_status_examples():
             [False, 3, 3, None, 'open'],
             [
                 {
-                    'title': u'3 complete services',
-                    'hint': u'You can edit them until the deadline',
-                    'type': None
+                    'title': u'3 labs marked as complete',
+                    'hint': u'You can edit them until the deadline'
                 },
                 {
-                    'title': u'3 draft services',
+                    'title': u'3 draft labs',
+                    'hint': u'Answer all the questions and mark as complete',
                     'type': u'quiet'
                 }
             ]
@@ -122,22 +113,20 @@ def get_lot_status_examples():
         # Multi-service lots, declaration_complete, framework open
         (
             [False, 0, 0, 'complete', 'open'],
-            [{
-                'title': u'You haven’t applied to provide digital shoutcomes',
-                'type': u'quiet'
-            }]
+            []
         ),
         (
             [False, 1, 0, 'complete', 'open'],
             [{
-                'title': u'1 draft service won’t be submitted',
+                'title': u'1 draft lab',
+                'hint': u'Answer all the questions and mark as complete',
                 'type': u'quiet'
             }]
         ),
         (
             [False, 0, 1, 'complete', 'open'],
             [{
-                'title': u'1 complete service will be submitted',
+                'title': u'1 lab will be submitted',
                 'hint': u'You can edit it until the deadline',
                 'type': u'happy'
             }]
@@ -146,12 +135,13 @@ def get_lot_status_examples():
             [False, 1, 1, 'complete', 'open'],
             [
                 {
-                    'title': u'1 complete service will be submitted',
+                    'title': u'1 lab will be submitted',
                     'hint': u'You can edit it until the deadline',
                     'type': u'happy'
                 },
                 {
-                    'title': u'1 draft service won’t be submitted',
+                    'title': u'1 draft lab',
+                    'hint': u'Answer all the questions and mark as complete',
                     'type': u'quiet'
                 }
             ]
@@ -160,12 +150,13 @@ def get_lot_status_examples():
             [False, 3, 3, 'complete', 'open'],
             [
                 {
-                    'title': u'3 complete services will be submitted',
+                    'title': u'3 labs will be submitted',
                     'hint': u'You can edit them until the deadline',
                     'type': u'happy'
                 },
                 {
-                    'title': u'3 draft services won’t be submitted',
+                    'title': u'3 draft labs',
+                    'hint': u'Answer all the questions and mark as complete',
                     'type': u'quiet'
                 }
             ]
@@ -174,12 +165,13 @@ def get_lot_status_examples():
             [False, 3, 1, 'complete', 'open'],
             [
                 {
-                    'title': u'1 complete service will be submitted',
+                    'title': u'1 lab will be submitted',
                     'hint': u'You can edit it until the deadline',
                     'type': u'happy'
                 },
                 {
-                    'title': u'3 draft services won’t be submitted',
+                    'title': u'3 draft labs',
+                    'hint': u'Answer all the questions and mark as complete',
                     'type': u'quiet'
                 }
             ]
@@ -188,12 +180,13 @@ def get_lot_status_examples():
             [False, 1, 3, 'complete', 'open'],
             [
                 {
-                    'title': u'3 complete services will be submitted',
+                    'title': u'3 labs will be submitted',
                     'hint': u'You can edit them until the deadline',
                     'type': u'happy'
                 },
                 {
-                    'title': u'1 draft service won’t be submitted',
+                    'title': u'1 draft lab',
+                    'hint': u'Answer all the questions and mark as complete',
                     'type': u'quiet'
                 }
             ]
@@ -202,97 +195,69 @@ def get_lot_status_examples():
         # Multi-service lots, no declaration, framework closed
         (
             [False, 0, 0, None, 'standstill'],
-            [{
-                'title': u'You didn’t apply to provide digital shoutcomes',
-                'type': u'quiet'
-            }]
+            []
         ),
         (
             [False, 1, 0, None, 'standstill'],
             [{
-                'title': u'1 draft service wasn’t submitted',
+                'title': u'No labs were marked as complete',
                 'type': u'quiet'
             }]
         ),
         (
             [False, 0, 1, None, 'standstill'],
             [{
-                'title': u'1 complete service wasn’t submitted',
+                'title': u'1 complete lab wasn’t submitted',
                 'type': u'quiet'
             }]
         ),
         (
             [False, 1, 1, None, 'standstill'],
-            [
-                {
-                    'title': u'1 complete service wasn’t submitted',
-                    'type': u'quiet'
-                },
-                {
-                    'title': u'1 draft service wasn’t submitted',
-                    'type': u'quiet'
-                }
-            ]
+            [{
+                'title': u'1 complete lab wasn’t submitted',
+                'type': u'quiet'
+            }]
         ),
         (
             [False, 3, 3, None, 'standstill'],
-            [
-                {
-                    'title': u'3 complete services weren’t submitted',
-                    'type': u'quiet'
-                },
-                {
-                    'title': u'3 draft services weren’t submitted',
-                    'type': u'quiet'
-                }
-            ]
+            [{
+                'title': u'3 complete labs weren’t submitted',
+                'type': u'quiet'
+            }]
         ),
 
         # Multi-service lots, declaration complete, framework closed
         (
             [False, 0, 0, 'complete', 'standstill'],
-            [{
-                'title': u'You didn’t apply to provide digital shoutcomes',
-                'type': u'quiet'
-            }]
+            []
         ),
         (
             [False, 1, 0, 'complete', 'standstill'],
             [{
-                'title': u'1 draft service wasn’t submitted',
+                'title': u'No labs were marked as complete',
                 'type': u'quiet'
             }]
         ),
         (
             [False, 0, 1, 'complete', 'standstill'],
             [{
-                'title': u'1 complete service was submitted',
+                'title': u'1 complete lab was submitted',
                 'type': u'happy'
             }]
         ),
         (
             [False, 1, 1, 'complete', 'standstill'],
-            [
-                {
-                    'title': u'1 complete service was submitted',
-                    'type': u'happy'
-                },
-                {
-                    'title': u'1 draft service wasn’t submitted',
-                    'type': u'quiet'
-                }
-            ]
+            [{
+                'title': u'1 complete lab was submitted',
+                'type': u'happy'
+            }]
         ),
         (
             [False, 3, 3, 'complete', 'standstill'],
             [
                 {
-                    'title': u'3 complete services were submitted',
+                    'title': u'3 complete labs were submitted',
                     'type': u'happy'
-                },
-                {
-                    'title': u'3 draft services weren’t submitted',
-                    'type': u'quiet'
                 }
             ]
         )
@@ -320,5 +285,10 @@ def test_get_status_for_lot(parameters, expected_result):
 
     assert_equal(
         expected_result,
-        get_statuses_for_lot(*parameters, lot_name='digital shoutcomes')
+        get_statuses_for_lot(
+            *parameters,
+            lot_name='user research studios',
+            unit='lab',
+            unit_plural='labs'
+        )
     )

@@ -126,7 +126,10 @@ def framework_submission_lots(framework_slug):
                 count_drafts_by_lot(complete_drafts, lot['value']),
                 declaration_status,
                 framework['status'],
-                lot['label']
+                lot['label'],
+                'lab' if framework['slug'] == 'digital-outcomes-and-specialists' else 'service',
+                'labs' if framework['slug'] == 'digital-outcomes-and-specialists' else 'service'
+                # TODO: ^ make this dynamic, eg, lab, service, unit
             )
         } for lot in lot_question['options']],
         **main.config['BASE_TEMPLATE_DATA']

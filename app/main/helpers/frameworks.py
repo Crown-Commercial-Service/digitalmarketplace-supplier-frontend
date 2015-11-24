@@ -126,138 +126,124 @@ def count_drafts_by_lot(drafts, lot):
 
 
 def get_statuses_for_lot(
-    has_one_service_limit, drafts_count, complete_drafts_count, declaration_status, framework_status, lot_name
+    has_one_service_limit,
+    drafts_count,
+    complete_drafts_count,
+    declaration_status,
+    framework_status,
+    lot_name,
+    unit,
+    unit_plural
 ):
+
+    if not drafts_count and not complete_drafts_count:
+        return []
 
     framework_is_open = 'open' == framework_status
     declaration_complete = 'complete' == declaration_status
 
-    if not drafts_count and not complete_drafts_count:
-        if framework_is_open:
-            return [{
-                'title': u'You haven’t applied to provide {}'.format(lot_name),
-                'type': u'quiet'
-            }]
-        else:
-            return [{
-                'title': u'You didn’t apply to provide {}'.format(lot_name),
-                'type': u'quiet'
-            }]
-
     if has_one_service_limit:
-        one_service_lot_status = get_status_for_one_service_lot(
-            drafts_count, complete_drafts_count, declaration_complete, framework_is_open, lot_name
-        )
-        if one_service_lot_status:
-            return [one_service_lot_status]
+        return [get_status_for_one_service_lot(
+            drafts_count, complete_drafts_count, declaration_complete, framework_is_open, lot_name, unit, unit_plural
+        )]
 
     if not complete_drafts_count:
-        return [
-            get_status_for_multi_service_lot_and_service_type(
-                drafts_count, 'draft', framework_is_open, declaration_complete
-            ) or None
-        ]
+        return [get_status_for_multi_service_lot_and_service_type(
+            drafts_count, 'draft', framework_is_open, declaration_complete, unit, unit_plural
+        )] if framework_is_open else [{
+            'title': 'No {} were marked as complete'.format(unit_plural),
+            'type': 'quiet'
+        }]
 
     if not drafts_count:
-        return [
-            get_status_for_multi_service_lot_and_service_type(
-                complete_drafts_count, 'complete', framework_is_open, declaration_complete
-            )
-        ]
+        return [get_status_for_multi_service_lot_and_service_type(
+            complete_drafts_count, 'complete', framework_is_open, declaration_complete, unit, unit_plural
+        )]
 
     return [
         get_status_for_multi_service_lot_and_service_type(
-            complete_drafts_count, 'complete', framework_is_open, declaration_complete
+            complete_drafts_count, 'complete', framework_is_open, declaration_complete, unit, unit_plural
         ),
         get_status_for_multi_service_lot_and_service_type(
-            drafts_count, 'draft', framework_is_open, declaration_complete
+            drafts_count, 'draft', framework_is_open, declaration_complete, unit, unit_plural
         )
-    ]
+    ] if framework_is_open else [get_status_for_multi_service_lot_and_service_type(
+        complete_drafts_count, 'complete', framework_is_open, declaration_complete, unit, unit_plural
+    )]
 
 
 def get_status_for_one_service_lot(
-    drafts_count, complete_drafts_count, declaration_complete, framework_is_open, lot_name
+    drafts_count, complete_drafts_count, declaration_complete, framework_is_open, lot_name, unit, unit_plural
 ):
 
     if drafts_count:
-        if framework_is_open:
-            return {
-                'title': u'You’ve started your application',
-                'type': u'quiet'
-            }
-        else:
-            return {
-                'title': u'You started your application',
-                'type': u'quiet'
-            }
+        return {
+            'title': u'Started but not complete' if framework_is_open else u'Not completed',
+            'type': u'quiet'
+        }
+
     if complete_drafts_count:
         if framework_is_open:
-            if declaration_complete:
-                return {
-                    'title': u'You’re submitting this service',
-                    'hint': u'You can edit it until the deadline',
-                    'type': u'happy'
-                }
-            else:
-                return {
-                    'title': u'You’ve completed this service',
-                    'hint': u'You can edit it until the deadline'
-                }
+            return {
+                'title': u'This will be submitted',
+                'hint': u'You can edit it until the deadline',
+                'type': u'happy'
+            } if declaration_complete else {
+                'title': u'Marked as complete',
+                'hint': u'You can edit it until the deadline'
+            }
         else:
-            if declaration_complete:
-                return {
-                    'title': u'You submitted this service',
-                    'type': u'happy'
-                }
-            else:
-                return {
-                    'title': u'You marked this service as complete'
-                }
+            return {
+                'title': u'Submitted',
+                'type': u'happy'
+            } if declaration_complete else {
+                'title': u'Marked as complete'
+            }
 
 
-def get_status_for_multi_service_lot_and_service_type(count, services_status, framework_is_open, declaration_complete):
+def get_status_for_multi_service_lot_and_service_type(
+    count, services_status, framework_is_open, declaration_complete, unit, unit_plural
+):
 
     singular = 1 == count
-    description_of_services = u'{} {} service{}'.format(
-        count, services_status, u'' if singular else u's'
+    description_of_services = u'{} {} {}'.format(
+        count, services_status, unit if singular else unit_plural
     )
 
+    if services_status == 'draft':
+        return {
+            'title': description_of_services,
+            'hint': u'Answer all the questions and mark as complete',
+            'type': u'quiet'
+        } if framework_is_open else {
+            'title': u'{} {} submitted'.format(
+                description_of_services, u'wasn’t' if singular else u'weren’t'
+            ),
+            'type': u'quiet'
+        }
+
     if framework_is_open:
-        if services_status == 'complete':
-            return {
-                'title': u'{}{}'.format(
-                    description_of_services, u' will be submitted' if declaration_complete else u''
-                ),
-                'hint': u'You can edit {} until the deadline'.format(u'it' if singular else u'them'),
-                'type': u'happy' if declaration_complete else None
-            }
-        else:
-            return {
-                'title': u'{}{}'.format(
-                    description_of_services, u' won’t be submitted' if declaration_complete else ''
-                ),
-                'type': u'quiet'
-            }
+        return {
+            'title': u'{} {} will be submitted'.format(
+                count, unit if singular else unit_plural
+            ),
+            'hint': u'You can edit {} until the deadline'.format(u'it' if singular else u'them'),
+            'type': u'happy'
+        } if declaration_complete else {
+            'title': u'{} {} marked as complete'.format(
+                count, unit if singular else unit_plural
+            ),
+            'hint': u'You can edit {} until the deadline'.format(u'it' if singular else u'them')
+        }
     else:
-        if services_status == 'complete':
-            if declaration_complete:
-                return {
-                    'title': u'{} {} submitted'.format(
-                        description_of_services, u'was' if singular else u'were'
-                    ),
-                    'type': u'happy' if declaration_complete else None
-                }
-            else:
-                return {
-                    'title': u'{} {} submitted'.format(
-                        description_of_services, u'wasn’t' if singular else u'weren’t'
-                    ),
-                    'type': u'quiet'
-                }
-        else:
-            return {
-                'title': u'{} {} submitted'.format(
-                    description_of_services, u'wasn’t' if singular else u'weren’t'
-                ),
-                'type': u'quiet'
-            }
+        return {
+            'title': u'{} {} submitted'.format(
+                description_of_services, u'was' if singular else u'were'
+            ),
+            'type': u'happy'
+        } if declaration_complete else {
+            'title': u'{} {} submitted'.format(
+                description_of_services, u'wasn’t' if singular else u'weren’t'
+            ),
+            'type': u'quiet'
+        }

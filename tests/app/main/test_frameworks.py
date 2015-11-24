@@ -1361,7 +1361,6 @@ class TestG7ServicesList(BaseApplicationTest):
         assert_in(u'4 unanswered questions', lot_page.get_data(as_text=True))
 
         assert_in(u'1 draft service', submissions.get_data(as_text=True))
-        assert_not_in(u'1 draft service wasn’t submitted', submissions.get_data(as_text=True))
         assert_true(u'complete service' not in submissions.get_data(as_text=True))
 
     def test_drafts_list_can_be_completed(self, count_unanswered, data_api_client):
@@ -1401,7 +1400,7 @@ class TestG7ServicesList(BaseApplicationTest):
         assert_true(u'Service can be moved to complete' not in lot_page.get_data(as_text=True))
         assert_in(u'1 optional question unanswered', lot_page.get_data(as_text=True))
 
-        assert_in(u'1 complete service', submissions.get_data(as_text=True))
+        assert_in(u'1 service marked as complete', submissions.get_data(as_text=True))
         assert_true(u'draft service' not in submissions.get_data(as_text=True))
 
     def test_drafts_list_completed_with_declaration_status(self, count_unanswered, data_api_client):
@@ -1422,7 +1421,7 @@ class TestG7ServicesList(BaseApplicationTest):
 
         submissions = self.client.get('/suppliers/frameworks/g-cloud-7/submissions')
 
-        assert_in(u'1 complete service', submissions.get_data(as_text=True))
+        assert_in(u'1 service will be submitted', submissions.get_data(as_text=True))
         assert_not_in(u'1 complete service was submitted', submissions.get_data(as_text=True))
         assert_in(u'browse-list-item-status-happy', submissions.get_data(as_text=True))
 
@@ -1445,5 +1444,4 @@ class TestG7ServicesList(BaseApplicationTest):
 
         submissions = self.client.get('/suppliers/frameworks/g-cloud-7/submissions')
 
-        assert_in(u'1 draft service wasn’t submitted', submissions.get_data(as_text=True))
         assert_in(u'1 complete service was submitted', submissions.get_data(as_text=True))
