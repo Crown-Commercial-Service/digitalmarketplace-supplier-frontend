@@ -74,3 +74,9 @@ def get_next_section_name(content, current_section_id):
         return content.get_section(
             content.get_next_editable_section_id(current_section_id)
         ).name
+
+
+def get_containing_section(content, question):
+    for section in content:
+        if question in section.questions:
+            return section
