@@ -29,7 +29,7 @@ from ..helpers.frameworks import get_declaration_status, \
     get_supplier_framework_info, get_framework, get_framework_and_lot, count_drafts_by_lot
 from ..helpers.validation import get_validator
 from ..helpers.services import (
-    get_draft_document_url, get_service_attributes, get_drafts, get_lot_drafts,
+    get_draft_document_url, get_drafts, get_lot_drafts,
     count_unanswered_questions
 )
 
@@ -66,7 +66,7 @@ def framework_dashboard(framework_slug):
     key_list.reverse()
 
     try:
-        first_page = content_loader.get_builder(
+        first_page = content_loader.get_manifest(
             framework_slug, 'declaration'
         ).get_next_editable_section_id()
     except ContentNotFoundError:
@@ -162,8 +162,8 @@ def framework_submission_services(framework_slug, lot_slug):
 
     for draft in itertools.chain(drafts, complete_drafts):
         draft['priceString'] = format_service_price(draft)
-        content = content_loader.get_builder(framework_slug, 'edit_submission').filter(draft)
-        sections = get_service_attributes(draft, content)
+        content = content_loader.get_manifest(framework_slug, 'edit_submission').filter(draft)
+        sections = content.summary(draft)
 
         unanswered_required, unanswered_optional = count_unanswered_questions(sections)
         draft.update({
@@ -188,7 +188,7 @@ def framework_submission_services(framework_slug, lot_slug):
 def framework_supplier_declaration(framework_slug, section_id=None):
     framework = get_framework(data_api_client, framework_slug, open_only=True)
 
-    content = content_loader.get_builder(framework_slug, 'declaration')
+    content = content_loader.get_manifest(framework_slug, 'declaration')
     status_code = 200
 
     if section_id is None:

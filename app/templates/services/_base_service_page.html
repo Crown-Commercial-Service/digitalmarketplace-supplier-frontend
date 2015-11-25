@@ -22,31 +22,39 @@
           {% block edit_link scoped %}{% endblock %}
         {% endif %}
         {% call(question) summary.list_table(
-          section.rows,
+          section.questions,
           caption=section.name,
           field_headings=[
             "Service attribute name",
-            "Service attribute"
+            "Service attribute",
+            "Add or Edit"
+          ] if section.edit_questions else [
+            "Service attribute name",
+            "Service attribute",
           ],
           field_headings_visible=False
         ) %}
-          {% if question.answer_required %}
-            {% call summary.row(complete=False) %}
-              {{ summary.field_name(question.label) }}
+          {% call summary.row(complete=not question.answer_required) %}
+            {{ summary.field_name(question.label) }}
+            {% if question.answer_required %}
               {% call summary.field() %}
                 {% if framework and framework.status == 'open' %}
-                  <a href="{{ url_for(".edit_service_submission", framework_slug=framework.slug, lot_slug=service_data.lot, service_id=service_id, section_id=section.id) }}">Answer required</a>
+                    <a href="{{ url_for(".edit_service_submission", framework_slug=framework.slug, lot_slug=service_data.lot, service_id=service_id, section_id=section.id) }}">Answer required</a>
                 {% else %}
                   Not answered
                 {% endif %}
               {% endcall %}
-            {% endcall %}
-          {% else %}
-            {% call summary.row() %}
-              {{ summary.field_name(question.label) }}
+            {% elif question.is_empty%}
+              {% call summary.field() %}
+                <span class="summary-item-field-answer-required">{{ question.empty_message }}</span>
+              {% endcall %}
+            {% else %}
               {{ summary[question.type](question.value, question.assurance) }}
-            {% endcall %}
-          {% endif %}
+            {% endif %}
+            {% if section.edit_questions %}
+              {{ summary.edit_link('Add' if question.is_empty else 'Edit', url_for(".edit_service_submission", framework_slug=framework.slug, lot_slug=service_data.lot, service_id=service_id, section_id=section.id, question_slug=question.slug)) }}
+            {% endif %}
+          {% endcall %}
         {% endcall %}
       {% endfor %}
       {% block after_sections %}{% endblock %}
