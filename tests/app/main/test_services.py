@@ -773,7 +773,10 @@ class TestEditDraftService(BaseApplicationTest):
         res = self.client.post(
             '/suppliers/frameworks/g-cloud-7/submissions/scs/1/edit/pricing',
             data={
-                'priceString': ["10.10", "11.10", "Person", "Second"],
+                'priceMin': "10.10",
+                'priceMax': "11.10",
+                'priceUnit': "Person",
+                'priceInterval': "Second",
             })
 
         assert_equal(res.status_code, 302)
@@ -784,8 +787,8 @@ class TestEditDraftService(BaseApplicationTest):
             },
             'email@email.com',
             page_questions=[
-                'priceMin', 'priceMax', 'priceUnit', 'priceInterval',
-                'vatIncluded', 'educationPricing',
+                'educationPricing', 'priceInterval', 'priceMax', 'priceMin', 'priceUnit',
+                'vatIncluded',
             ])
 
     def test_edit_non_existent_draft_service_returns_404(self, data_api_client, s3):
@@ -956,7 +959,7 @@ class TestEditDraftService(BaseApplicationTest):
             '1',
             {'agileCoachLocations': ['Scotland']},
             'email@email.com',
-            page_questions=['agileCoachLocations', 'priceMin', 'priceMax', 'priceUnit', 'priceInterval']
+            page_questions=['agileCoachLocations', 'agileCoachPriceMax', 'agileCoachPriceMin']
         )
 
 
