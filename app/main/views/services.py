@@ -6,14 +6,12 @@ from ... import data_api_client, flask_featureflags
 from ...main import main, content_loader
 from ..helpers.services import (
     is_service_modifiable, is_service_associated_with_supplier,
-    get_service_attributes,
     get_draft_document_url, count_unanswered_questions,
     get_next_section_name
 )
 from ..helpers.frameworks import get_framework_and_lot, get_declaration_status
 
 from dmutils.apiclient import APIError, HTTPError
-from dmutils.formats import format_service_price
 from dmutils import s3
 from dmutils.documents import upload_service_documents
 
@@ -115,7 +113,7 @@ def edit_section(service_id, section_id):
     if not is_service_associated_with_supplier(service):
         abort(404)
 
-    content = content_loader.get_builder('g-cloud-6', 'edit_service').filter(service)
+    content = content_loader.get_manifest('g-cloud-6', 'edit_service').filter(service)
     section = content.get_section(section_id)
     if section is None or not section.editable:
         abort(404)
@@ -141,7 +139,7 @@ def update_section(service_id, section_id):
     if not is_service_associated_with_supplier(service):
         abort(404)
 
-    content = content_loader.get_builder('g-cloud-6', 'edit_service').filter(service)
+    content = content_loader.get_manifest('g-cloud-6', 'edit_service').filter(service)
     section = content.get_section(section_id)
     if section is None or not section.editable:
         abort(404)
@@ -179,7 +177,7 @@ def start_new_draft_service(framework_slug, lot_slug):
 
     framework, lot = get_framework_and_lot(data_api_client, framework_slug, lot_slug, open_only=True)
 
-    content = content_loader.get_builder(framework_slug, 'edit_submission').filter(
+    content = content_loader.get_manifest(framework_slug, 'edit_submission').filter(
         {'lot': lot['slug']}
     )
 
@@ -201,7 +199,7 @@ def create_new_draft_service(framework_slug, lot_slug):
 
     framework, lot = get_framework_and_lot(data_api_client, framework_slug, lot_slug, open_only=True)
 
-    content = content_loader.get_builder(framework_slug, 'edit_submission').filter(
+    content = content_loader.get_manifest(framework_slug, 'edit_submission').filter(
         {'lot': lot['slug']}
     )
 
@@ -246,7 +244,7 @@ def copy_draft_service(framework_slug, lot_slug, service_id):
     if not is_service_associated_with_supplier(draft):
         abort(404)
 
-    content = content_loader.get_builder(framework_slug, 'edit_submission').filter(
+    content = content_loader.get_manifest(framework_slug, 'edit_submission').filter(
         {'lot': lot['slug']}
     )
 
@@ -365,10 +363,9 @@ def view_service_submission(framework_slug, lot_slug, service_id):
     if not is_service_associated_with_supplier(draft):
         abort(404)
 
-    draft['priceString'] = format_service_price(draft)
-    content = content_loader.get_builder(framework['slug'], 'edit_submission').filter(draft)
+    content = content_loader.get_manifest(framework['slug'], 'edit_submission').filter(draft)
 
-    sections = get_service_attributes(draft, content)
+    sections = content.summary(draft)
 
     unanswered_required, unanswered_optional = count_unanswered_questions(sections)
     delete_requested = True if request.args.get('delete_requested') else False
@@ -390,8 +387,10 @@ def view_service_submission(framework_slug, lot_slug, service_id):
 
 
 @main.route('/frameworks/<framework_slug>/submissions/<lot_slug>/<service_id>/edit/<section_id>', methods=['GET'])
+@main.route('/frameworks/<framework_slug>/submissions/<lot_slug>/<service_id>/edit/<section_id>/<question_slug>',
+            methods=['GET'])
 @login_required
-def edit_service_submission(framework_slug, lot_slug, service_id, section_id):
+def edit_service_submission(framework_slug, lot_slug, service_id, section_id, question_slug=None):
     framework, lot = get_framework_and_lot(data_api_client, framework_slug, lot_slug, open_only=True)
 
     try:
@@ -402,8 +401,11 @@ def edit_service_submission(framework_slug, lot_slug, service_id, section_id):
     if not is_service_associated_with_supplier(draft):
         abort(404)
 
-    content = content_loader.get_builder(framework_slug, 'edit_submission').filter(draft)
+    content = content_loader.get_manifest(framework_slug, 'edit_submission').filter(draft)
     section = content.get_section(section_id)
+    if section and (question_slug is not None):
+        section = section.get_question_as_section(question_slug)
+
     if section is None or not section.editable:
         abort(404)
 
@@ -413,7 +415,7 @@ def edit_service_submission(framework_slug, lot_slug, service_id, section_id):
         "services/edit_submission_section.html",
         section=section,
         framework=framework,
-        next_section_name=get_next_section_name(content, section_id),
+        next_section_name=get_next_section_name(content, section.id),
         service_data=draft,
         service_id=service_id,
         return_to_summary=bool(request.args.get('return_to_summary')),
@@ -422,8 +424,10 @@ def edit_service_submission(framework_slug, lot_slug, service_id, section_id):
 
 
 @main.route('/frameworks/<framework_slug>/submissions/<lot_slug>/<service_id>/edit/<section_id>', methods=['POST'])
+@main.route('/frameworks/<framework_slug>/submissions/<lot_slug>/<service_id>/edit/<section_id>/<question_slug>',
+            methods=['POST'])
 @login_required
-def update_section_submission(framework_slug, lot_slug, service_id, section_id):
+def update_section_submission(framework_slug, lot_slug, service_id, section_id, question_slug=None):
     framework, lot = get_framework_and_lot(data_api_client, framework_slug, lot_slug, open_only=True)
 
     try:
@@ -434,8 +438,11 @@ def update_section_submission(framework_slug, lot_slug, service_id, section_id):
     if not is_service_associated_with_supplier(draft):
         abort(404)
 
-    content = content_loader.get_builder(framework_slug, 'edit_submission').filter(draft)
+    content = content_loader.get_manifest(framework_slug, 'edit_submission').filter(draft)
     section = content.get_section(section_id)
+    if section and (question_slug is not None):
+        section = section.get_question_as_section(question_slug)
+
     if section is None or not section.editable:
         abort(404)
 
@@ -472,7 +479,7 @@ def update_section_submission(framework_slug, lot_slug, service_id, section_id):
             "services/edit_submission_section.html",
             framework=framework,
             section=section,
-            next_section_name=get_next_section_name(content, section_id),
+            next_section_name=get_next_section_name(content, section.id),
             service_data=update_data,
             service_id=service_id,
             return_to_summary=bool(request.args.get('return_to_summary')),
@@ -501,7 +508,7 @@ def _update_service_status(service, error_message=None):
     template_data = main.config['BASE_TEMPLATE_DATA']
     status_code = 400 if error_message else 200
 
-    content = content_loader.get_builder('g-cloud-6', 'edit_service').filter(service)
+    content = content_loader.get_manifest('g-cloud-6', 'edit_service').filter(service)
 
     question = {
         'question': 'Choose service status',
@@ -525,6 +532,6 @@ def _update_service_status(service, error_message=None):
         "services/service.html",
         service_id=service.get('id'),
         service_data=service,
-        sections=get_service_attributes(service, content),
+        sections=content.summary(service),
         error=error_message,
         **dict(question, **template_data)), status_code
