@@ -260,7 +260,16 @@ def get_lot_status_examples():
                     'type': u'happy'
                 }
             ]
-        )
+        ),
+
+        # Test that declaration started is treated the same way as no declaration
+        (
+            [True, 0, 1, 'started', 'open'],
+            [{
+                'title': u'Marked as complete',
+                'hint': u'You can edit it until the deadline'
+            }]
+        ),
     ]
 
     def get_example():
