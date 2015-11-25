@@ -915,6 +915,10 @@ class TestSupplierDeclaration(BaseApplicationTest):
             assert_equal(res.status_code, 400)
             assert not data_api_client.set_supplier_declaration.called
 
+            doc = html.fromstring(res.get_data(as_text=True))
+            elems = doc.cssselect('#input-PR1-yes')
+            assert elems[0].value == 'true'
+
     def test_cannot_post_data_if_not_open(self, data_api_client):
         with self.app.test_client():
             self.login()
