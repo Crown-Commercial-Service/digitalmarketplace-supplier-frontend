@@ -115,6 +115,7 @@ def framework_submission_lots(framework_slug):
         "frameworks/submission_lots.html",
         complete_drafts=list(reversed(complete_drafts)),
         drafts=list(reversed(drafts)),
+        declaration_status=declaration_status,
         framework=framework,
         lots=[{
             'link': url_for('.framework_submission_services', framework_slug=framework_slug, lot_slug=lot['value']),
@@ -130,7 +131,7 @@ def framework_submission_lots(framework_slug):
                 'lab' if framework['slug'] == 'digital-outcomes-and-specialists' else 'service',
                 'labs' if framework['slug'] == 'digital-outcomes-and-specialists' else 'service'
                 # TODO: ^ make this dynamic, eg, lab, service, unit
-            )
+            ),
         } for lot in lot_question['options']],
         **main.config['BASE_TEMPLATE_DATA']
     ), 200

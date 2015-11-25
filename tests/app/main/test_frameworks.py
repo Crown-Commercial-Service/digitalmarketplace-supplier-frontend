@@ -1399,6 +1399,7 @@ class TestG7ServicesList(BaseApplicationTest):
 
         assert_true(u'Service can be moved to complete' not in lot_page.get_data(as_text=True))
         assert_in(u'1 optional question unanswered', lot_page.get_data(as_text=True))
+        assert_in(u'make the supplier&nbsp;declaration', lot_page.get_data(as_text=True))
 
         assert_in(u'1 service marked as complete', submissions.get_data(as_text=True))
         assert_true(u'draft service' not in submissions.get_data(as_text=True))
