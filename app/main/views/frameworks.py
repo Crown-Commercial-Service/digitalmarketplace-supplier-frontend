@@ -214,8 +214,10 @@ def framework_supplier_declaration(framework_slug, section_id=None):
 
     if request.method == 'GET':
         errors = {}
+        all_answers = saved_answers
     else:
         submitted_answers = content.get_all_data(request.form)
+        all_answers = dict(saved_answers, **submitted_answers)
 
         validator = get_validator(framework, content, submitted_answers)
         errors = validator.get_error_messages_for_page(section)
@@ -223,7 +225,6 @@ def framework_supplier_declaration(framework_slug, section_id=None):
         if len(errors) > 0:
             status_code = 400
         else:
-            all_answers = dict(saved_answers, **submitted_answers)
             validator = get_validator(framework, content, all_answers)
             if validator.get_error_messages():
                 all_answers.update({"status": "started"})
@@ -259,7 +260,7 @@ def framework_supplier_declaration(framework_slug, section_id=None):
         "frameworks/edit_declaration_section.html",
         framework=framework,
         section=section,
-        declaration_answers=saved_answers,
+        declaration_answers=all_answers,
         is_last_page=is_last_page,
         get_question=content.get_question,
         errors=errors,
