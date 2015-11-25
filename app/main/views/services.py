@@ -12,7 +12,6 @@ from ..helpers.services import (
 from ..helpers.frameworks import get_framework_and_lot, get_declaration_status
 
 from dmutils.apiclient import APIError, HTTPError
-from dmutils.formats import format_service_price
 from dmutils import s3
 from dmutils.documents import upload_service_documents
 
@@ -364,7 +363,6 @@ def view_service_submission(framework_slug, lot_slug, service_id):
     if not is_service_associated_with_supplier(draft):
         abort(404)
 
-    draft['priceString'] = format_service_price(draft)
     content = content_loader.get_manifest(framework['slug'], 'edit_submission').filter(draft)
 
     sections = content.summary(draft)
