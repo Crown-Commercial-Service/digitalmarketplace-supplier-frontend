@@ -2,6 +2,7 @@ from flask import render_template
 from app.main import main
 from dmutils.apiclient import APIError
 from dmutils.s3 import S3ResponseError
+from dmutils.content_loader import QuestionNotFoundError
 
 
 @main.app_errorhandler(APIError)
@@ -12,6 +13,11 @@ def api_error_handler(e):
 @main.app_errorhandler(S3ResponseError)
 def s3_response_error_handler(e):
     return _render_error_page(503)
+
+
+@main.app_errorhandler(QuestionNotFoundError)
+def content_loader_error_handler(e):
+    return _render_error_page(400)
 
 
 @main.app_errorhandler(404)
@@ -31,6 +37,7 @@ def service_unavailable(e):
 
 def _render_error_page(status_code):
     template_map = {
+        400: "errors/500.html",
         404: "errors/404.html",
         500: "errors/500.html",
         503: "errors/500.html",
