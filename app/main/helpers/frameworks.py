@@ -139,8 +139,8 @@ def get_statuses_for_lot(
     if not drafts_count and not complete_drafts_count:
         return []
 
-    framework_is_open = 'open' == framework_status
-    declaration_complete = 'complete' == declaration_status
+    framework_is_open = ('open' == framework_status)
+    declaration_complete = ('complete' == declaration_status)
 
     if has_one_service_limit:
         return [get_status_for_one_service_lot(
@@ -205,7 +205,7 @@ def get_status_for_multi_service_lot_and_service_type(
     count, services_status, framework_is_open, declaration_complete, unit, unit_plural
 ):
 
-    singular = 1 == count
+    singular = (1 == count)
     description_of_services = u'{} {} {}'.format(
         count, services_status, unit if singular else unit_plural
     )
