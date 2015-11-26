@@ -522,22 +522,16 @@ def remove_subsection(framework_slug, lot_slug, service_id, question_slug):
             abort(404)
 
         content = content_loader.get_manifest(framework_slug, 'edit_submission').filter(draft)
-
         question_to_remove = content.get_question_by_slug(question_slug)
-        fields_to_remove = [subquestion.id for subquestion in question_to_remove.questions]
         containing_section = get_containing_section(content, question_to_remove)
+        fields_to_remove = question_to_remove.form_fields
+        section_responses = [field for field in containing_section.get_field_names() if field in draft]
+        fields_remaining_after_removal = [field for field in section_responses if field not in fields_to_remove]
 
-        all_section_fields = []
-        for question in containing_section.questions:
-            for subquestion in question.questions:
-                all_section_fields.append(subquestion.id)
-        all_section_responses = [id for id in all_section_fields if id in draft]
-
-        remaining_fields = [field for field in all_section_responses if field != fields_to_remove]
-        if len(remaining_fields) > 0:
+        if len(fields_remaining_after_removal) > 0:
             # It isn't the last one so remove it
             for field in fields_to_remove:
-                draft.pop(field, None)
+                draft[field] = None
             try:
                 data_api_client.update_draft_service(
                     service_id,
@@ -565,7 +559,8 @@ def remove_subsection(framework_slug, lot_slug, service_id, question_slug):
                     lot_slug=lot_slug,
                     service_id=service_id,
                     confirm_remove=question_slug
-        ))
+                    )
+        )
 
 
 def _update_service_status(service, error_message=None):
