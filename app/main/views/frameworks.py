@@ -26,7 +26,7 @@ from ..helpers import hash_email
 from ..helpers.frameworks import get_declaration_status, \
     get_last_modified_from_first_matching_file, register_interest_in_framework, \
     get_supplier_on_framework_from_info, get_declaration_status_from_info, \
-    get_supplier_framework_info, get_framework, get_framework_and_lot, count_drafts_by_lot
+    get_supplier_framework_info, get_framework, get_framework_and_lot, count_drafts_by_lot, get_statuses_for_lot
 from ..helpers.validation import get_validator
 from ..helpers.services import (
     get_draft_document_url, get_drafts, get_lot_drafts,
@@ -106,6 +106,11 @@ def framework_submission_lots(framework_slug):
 
     lot_question = content_loader.get_question(framework_slug, 'services', 'lot')
 
+    def has_one_service_limit(lot_slug):
+        for lot in framework['lots']:
+            if lot['slug'] == lot_slug:
+                return lot['one_service_limit']
+
     return render_template(
         "frameworks/submission_lots.html",
         complete_drafts=list(reversed(complete_drafts)),
@@ -116,23 +121,17 @@ def framework_submission_lots(framework_slug):
             'link': url_for('.framework_submission_services', framework_slug=framework_slug, lot_slug=lot['value']),
             'title': lot['label'],
             'body': lot['description'],
-            'statuses': [
-                {
-                    'title': '{} complete service{} {} submitted'.format(
-                        count_drafts_by_lot(complete_drafts, lot['value']),
-                        '' if 1 == count_drafts_by_lot(complete_drafts, lot['value']) else 's',
-                        'was' if 1 == count_drafts_by_lot(complete_drafts, lot['value']) else 'were'
-                    )
-                } if count_drafts_by_lot(complete_drafts, lot['value']) else {},
-                {
-                    'title': u'{} draft service{} {} submitted'.format(
-                        count_drafts_by_lot(drafts, lot['value']),
-                        '' if 1 == count_drafts_by_lot(drafts, lot['value']) else 's',
-                        u'wasn’t' if 1 == count_drafts_by_lot(drafts, lot['value']) else u'weren’t',
-                    ),
-                    'type': 'quiet'
-                } if count_drafts_by_lot(drafts, lot['value']) else {}
-            ]
+            'statuses': get_statuses_for_lot(
+                has_one_service_limit(lot['value']),
+                count_drafts_by_lot(drafts, lot['value']),
+                count_drafts_by_lot(complete_drafts, lot['value']),
+                declaration_status,
+                framework['status'],
+                lot['label'],
+                'lab' if framework['slug'] == 'digital-outcomes-and-specialists' else 'service',
+                'labs' if framework['slug'] == 'digital-outcomes-and-specialists' else 'service'
+                # TODO: ^ make this dynamic, eg, lab, service, unit
+            ),
         } for lot in lot_question['options']],
         **main.config['BASE_TEMPLATE_DATA']
     ), 200

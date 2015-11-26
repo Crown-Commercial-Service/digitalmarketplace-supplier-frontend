@@ -1360,7 +1360,7 @@ class TestG7ServicesList(BaseApplicationTest):
         assert_true(u'Service can be moved to complete' not in lot_page.get_data(as_text=True))
         assert_in(u'4 unanswered questions', lot_page.get_data(as_text=True))
 
-        assert_in(u'1 draft service wasn’t submitted', submissions.get_data(as_text=True))
+        assert_in(u'1 draft service', submissions.get_data(as_text=True))
         assert_true(u'complete service' not in submissions.get_data(as_text=True))
 
     def test_drafts_list_can_be_completed(self, count_unanswered, data_api_client):
@@ -1399,6 +1399,50 @@ class TestG7ServicesList(BaseApplicationTest):
 
         assert_true(u'Service can be moved to complete' not in lot_page.get_data(as_text=True))
         assert_in(u'1 optional question unanswered', lot_page.get_data(as_text=True))
+        assert_in(u'make the supplier&nbsp;declaration', lot_page.get_data(as_text=True))
+
+        assert_in(u'1 service marked as complete', submissions.get_data(as_text=True))
+        assert_true(u'draft service' not in submissions.get_data(as_text=True))
+
+    def test_drafts_list_completed_with_declaration_status(self, count_unanswered, data_api_client):
+        with self.app.test_client():
+            self.login()
+
+        data_api_client.get_framework.return_value = self.framework(status='open')
+        data_api_client.get_supplier_declaration.return_value = {
+            'declaration': {
+                'status': 'complete'
+            }
+        }
+        data_api_client.find_draft_services.return_value = {
+            'services': [
+                {'serviceName': 'draft', 'lot': 'scs', 'status': 'submitted'},
+            ]
+        }
+
+        submissions = self.client.get('/suppliers/frameworks/g-cloud-7/submissions')
+
+        assert_in(u'1 service will be submitted', submissions.get_data(as_text=True))
+        assert_not_in(u'1 complete service was submitted', submissions.get_data(as_text=True))
+        assert_in(u'browse-list-item-status-happy', submissions.get_data(as_text=True))
+
+    def test_drafts_list_services_were_submitted(self, count_unanswered, data_api_client):
+        with self.app.test_client():
+            self.login()
+
+        data_api_client.get_framework.return_value = self.framework(status='standstill')
+        data_api_client.get_supplier_declaration.return_value = {
+            'declaration': {
+                'status': 'complete'
+            }
+        }
+        data_api_client.find_draft_services.return_value = {
+            'services': [
+                {'serviceName': 'draft', 'lot': 'scs', 'status': 'not-submitted'},
+                {'serviceName': 'draft', 'lot': 'scs', 'status': 'submitted'},
+            ]
+        }
+
+        submissions = self.client.get('/suppliers/frameworks/g-cloud-7/submissions')
 
         assert_in(u'1 complete service was submitted', submissions.get_data(as_text=True))
-        assert_true(u'draft service' not in submissions.get_data(as_text=True))
