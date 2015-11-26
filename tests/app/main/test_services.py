@@ -971,6 +971,141 @@ class TestEditDraftService(BaseApplicationTest):
             page_questions=['agileCoachLocations', 'agileCoachPriceMax', 'agileCoachPriceMin']
         )
 
+    def test_remove_subsection(self, data_api_client, s3):
+        s3.return_value.bucket_short_name = 'submissions'
+        data_api_client.get_framework.return_value = self.framework(
+            status='open', slug='digital-outcomes-and-specialists'
+        )
+
+        draft_service = {
+            'services': {
+                'id': 1,
+                'supplierId': 1234,
+                'supplierName': "supplierName",
+                'lot': 'digital-specialists',
+                'agileCoachLocations': ['Wales'],
+                'agileCoachPriceMax': '200',
+                'agileCoachPriceMin': '100',
+                'developerLocations': ['Wales'],
+                'developerPriceMax': '250',
+                'developerPriceMin': '150',
+                'status': "not-submitted",
+            },
+            'auditEvents': {
+                'createdAt': "2015-06-29T15:26:07.650368Z",
+                'userName': "Supplier User",
+            },
+            'validationErrors': {}
+        }
+
+        data_api_client.get_draft_service.return_value = draft_service
+
+        res = self.client.get(
+            '/suppliers/frameworks/digital-outcomes-and-specialists/submissions/' +
+            'digital-specialists/1/remove/agile-coach'
+        )
+
+        assert_equal(res.status_code, 302)
+        assert(res.location.endswith(
+            '/suppliers/frameworks/digital-outcomes-and-specialists/submissions/' +
+            'digital-specialists/1?confirm_remove=agile-coach')
+        )
+
+        res2 = self.client.get(
+            '/suppliers/frameworks/digital-outcomes-and-specialists/submissions/' +
+            'digital-specialists/1?confirm_remove=agile-coach'
+        )
+        assert_equal(res2.status_code, 200)
+        assert_in(u'Are you sure you want to remove &ldquo;Agile coach&rdquo;?', res2.get_data(as_text=True))
+
+        res3 = self.client.post(
+            '/suppliers/frameworks/digital-outcomes-and-specialists/submissions/' +
+            'digital-specialists/1/remove/agile-coach?confirm=True')
+
+        assert_equal(res3.status_code, 302)
+        assert(res3.location.endswith(
+            '/suppliers/frameworks/digital-outcomes-and-specialists/submissions/digital-specialists/1')
+        )
+        data_api_client.update_draft_service.assert_called_once_with(
+            '1',
+            {
+                'id': 1,
+                'supplierId': 1234,
+                'supplierName': "supplierName",
+                'lot': 'digital-specialists',
+                'agileCoachLocations': None,
+                'agileCoachPriceMax': None,
+                'agileCoachPriceMin': None,
+                'developerLocations': ['Wales'],
+                'developerPriceMax': '250',
+                'developerPriceMin': '150',
+                'status': "not-submitted",
+            },
+            'email@email.com'
+        )
+
+    def test_can_not_remove_last_subsection(self, data_api_client, s3):
+        s3.return_value.bucket_short_name = 'submissions'
+        data_api_client.get_framework.return_value = self.framework(
+            status='open', slug='digital-outcomes-and-specialists'
+        )
+
+        draft_service = {
+            'services': {
+                'id': 1,
+                'supplierId': 1234,
+                'supplierName': "supplierName",
+                'lot': 'digital-specialists',
+                'agileCoachLocations': ['Wales'],
+                'agileCoachPriceMax': '200',
+                'agileCoachPriceMin': '100',
+                'status': "not-submitted",
+            },
+            'auditEvents': {
+                'createdAt': "2015-06-29T15:26:07.650368Z",
+                'userName': "Supplier User",
+            },
+            'validationErrors': {}
+        }
+
+        data_api_client.get_draft_service.return_value = draft_service
+
+        res = self.client.get(
+            '/suppliers/frameworks/digital-outcomes-and-specialists/submissions/' +
+            'digital-specialists/1/remove/agile-coach'
+        )
+
+        assert_equal(res.status_code, 302)
+        assert(res.location.endswith(
+            '/suppliers/frameworks/digital-outcomes-and-specialists/submissions/' +
+            'digital-specialists/1?confirm_remove=agile-coach')
+        )
+
+        res2 = self.client.get(
+            '/suppliers/frameworks/digital-outcomes-and-specialists/submissions/' +
+            'digital-specialists/1?confirm_remove=agile-coach'
+        )
+        assert_equal(res2.status_code, 200)
+        assert_in(u'Are you sure you want to remove &ldquo;Agile coach&rdquo;?', res2.get_data(as_text=True))
+
+        res3 = self.client.post(
+            '/suppliers/frameworks/digital-outcomes-and-specialists/submissions/' +
+            'digital-specialists/1/remove/agile-coach?confirm=True')
+
+        assert_equal(res3.status_code, 302)
+        assert(res3.location.endswith(
+            '/suppliers/frameworks/digital-outcomes-and-specialists/submissions/digital-specialists/1')
+        )
+
+        res4 = self.client.get(
+            '/suppliers/frameworks/digital-outcomes-and-specialists/submissions/' +
+            'digital-specialists/1?confirm_remove=agile-coach'
+        )
+        assert_equal(res4.status_code, 200)
+        assert_in(u"You can't remove all items from this service", res4.get_data(as_text=True))
+
+        data_api_client.update_draft_service.assert_not_called()
+
 
 @mock.patch('app.main.views.services.data_api_client')
 class TestShowDraftService(BaseApplicationTest):
