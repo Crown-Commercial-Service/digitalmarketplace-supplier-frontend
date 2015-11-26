@@ -80,7 +80,7 @@ def framework_dashboard(framework_slug):
         },
         declaration_status=declaration_status,
         first_page_of_declaration=first_page,
-        deadline=current_app.config['G7_CLOSING_DATE'],
+        deadline=current_app.config['DOS_CLOSING_DATE'],
         framework=framework,
         application_made=application_made,
         supplier_is_on_framework=supplier_is_on_framework,
