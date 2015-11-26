@@ -91,76 +91,6 @@
 
           {% if framework.status == 'open' %}
             <li class="browse-list-item">
-              <a class="browse-list-item-link" href="{{ url_for('.framework_submission_lots', framework_slug=framework.slug) }}">
-                <span>
-                  Add, edit and delete services
-                </span>
-              </a>
-              {% if not counts.complete and not counts.draft %}
-                <div class="browse-list-item-status-quiet">
-                  <p class="browse-list-item-status-title">
-                    You need to add and complete services
-                  </p>
-                </div>
-              {% endif %}
-
-              {% if counts.draft and not counts.complete %}
-                <div class="browse-list-item-status-quiet">
-                  <p class="browse-list-item-status-title">
-                    You have
-                    {{ counts.draft }} draft
-                    {{ 'service' if counts.draft == 1 else 'services' }}
-                    that won’t be submitted
-                  </p>
-                </div>
-              {% endif %}
-
-              {% if counts.complete and declaration_status != 'complete' %}
-                <div class="browse-list-item-status-quiet">
-                  <p class="browse-list-item-status-title">
-                    You have {{ counts.complete }} complete
-                    {{ 'service' if counts.complete == 1 else 'services' }}
-                    and {{ counts.draft }} draft
-                    {{ 'service' if counts.draft == 1 else 'services' }}
-                  </p>
-                </div>
-              {% endif %}
-
-              {% if counts.complete and declaration_status == 'complete' %}
-                <div class="browse-list-item-status-happy">
-                  <p class="browse-list-item-status-title">
-                    <strong>
-                      {{ counts.complete }} complete
-                      {{ 'service' if counts.complete == 1 else 'services' }}
-                      will be submitted at the deadline
-                    </strong>
-                  </p>
-                  {% if counts.draft %}
-                    <p class="browse-list-item-status-hint">
-                      {{ counts.draft }} draft
-                      {{ 'service' if counts.draft == 1 else 'services' }}
-                      won’t be submitted
-                    </p>
-                  {% endif %}
-                </div>
-              {% endif %}
-            </li>
-          {% elif framework.status in ['pending', 'standstill'] and application_made %}
-            <li class="browse-list-item">
-              <a href="{{ url_for('.framework_submission_lots', framework_slug=framework.slug) }}">View services</a>
-              <div class="framework-section-status-neutral">
-                <p>{{ counts.complete }} complete
-                {{ 'service' if counts.complete == 1 else 'services' }} {{ 'was' if counts.complete == 1 else 'were' }} submitted</p>
-                {% if counts.draft > 0 %}
-                  <p>{{ counts.draft }} draft
-                  {{ 'service' if counts.draft == 1 else 'services' }} {{ 'was' if counts.draft == 1 else 'were' }} not submitted</p>
-                {% endif %}
-              </div>
-            </li>
-          {% endif %}
-
-          {% if framework.status == 'open' %}
-            <li class="browse-list-item">
               <a class="browse-list-item-link" href="{{ url_for('.framework_supplier_declaration', framework_slug=framework.slug, section_id=first_page_of_declaration) }}">
                 {% if declaration_status == 'unstarted' %}
                   <span>Make supplier declaration</span>
@@ -205,6 +135,76 @@
                   </p>
                 </div>
               {% endif %}
+            </li>
+          {% endif %}
+
+          {% if framework.status == 'open' %}
+            <li class="browse-list-item">
+              <a class="browse-list-item-link" href="{{ url_for('.framework_submission_lots', framework_slug=framework.slug) }}">
+                <span>
+                  Add, edit and delete services
+                </span>
+              </a>
+              {% if not counts.complete and not counts.draft %}
+                <div class="browse-list-item-status-quiet">
+                  <p class="browse-list-item-status-title">
+                    You need to add and complete services
+                  </p>
+                </div>
+              {% endif %}
+
+              {% if counts.draft and not counts.complete %}
+                <div class="browse-list-item-status-quiet">
+                  <p class="browse-list-item-status-title">
+                    You have
+                    {{ counts.draft }} draft
+                    {{ 'service' if counts.draft == 1 else 'services' }}
+                    that won’t be submitted
+                  </p>
+                </div>
+              {% endif %}
+
+              {% if counts.complete and declaration_status != 'complete' %}
+                <div class="browse-list-item-status-quiet">
+                  <p class="browse-list-item-status-title">
+                    {{ counts.complete }} complete
+                    {{ 'service' if counts.complete == 1 else 'services' }}
+                    and {{ counts.draft }} draft
+                    {{ 'service' if counts.draft == 1 else 'services' }}
+                  </p>
+                </div>
+              {% endif %}
+
+              {% if counts.complete and declaration_status == 'complete' %}
+                <div class="browse-list-item-status-happy">
+                  <p class="browse-list-item-status-title">
+                    <strong>
+                      {{ counts.complete }} complete
+                      {{ 'service' if counts.complete == 1 else 'services' }}
+                      will be submitted at the deadline
+                    </strong>
+                  </p>
+                  {% if counts.draft %}
+                    <p class="browse-list-item-status-hint">
+                      {{ counts.draft }} draft
+                      {{ 'service' if counts.draft == 1 else 'services' }}
+                      won’t be submitted
+                    </p>
+                  {% endif %}
+                </div>
+              {% endif %}
+            </li>
+          {% elif framework.status in ['pending', 'standstill'] and application_made %}
+            <li class="browse-list-item">
+              <a href="{{ url_for('.framework_submission_lots', framework_slug=framework.slug) }}">View services</a>
+              <div class="framework-section-status-neutral">
+                <p>{{ counts.complete }} complete
+                {{ 'service' if counts.complete == 1 else 'services' }} {{ 'was' if counts.complete == 1 else 'were' }} submitted</p>
+                {% if counts.draft > 0 %}
+                  <p>{{ counts.draft }} draft
+                  {{ 'service' if counts.draft == 1 else 'services' }} {{ 'was' if counts.draft == 1 else 'were' }} not submitted</p>
+                {% endif %}
+              </div>
             </li>
           {% endif %}
 
