@@ -136,7 +136,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
             data_api_client.get_framework_interest.return_value = {'frameworks': ['g-cloud-7']}
             data_api_client.find_draft_services.return_value = {
                 "services": [
-                    {'serviceName': 'A service', 'status': 'submitted'}
+                    {'serviceName': 'A service', 'status': 'submitted', 'lot': 'iaas'}
                 ]
             }
             data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(declaration=None)
@@ -177,7 +177,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
             data_api_client.get_framework_interest.return_value = {'frameworks': ['g-cloud-7']}
             data_api_client.find_draft_services.return_value = {
                 "services": [
-                    {'serviceName': 'A service', 'status': 'submitted'}
+                    {'serviceName': 'A service', 'status': 'submitted', 'lot': 'iaas'}
                 ]
             }
             data_api_client.get_supplier_framework_info.return_value = self.supplier_framework()
@@ -348,7 +348,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
             data_api_client.get_framework_interest.return_value = {'frameworks': ['g-cloud-7']}
             data_api_client.find_draft_services.return_value = {
                 "services": [
-                    {'serviceName': 'A service', 'status': 'submitted'}
+                    {'serviceName': 'A service', 'status': 'submitted', 'lot': 'iaas'}
                 ]
             }
             data_api_client.get_supplier_framework_info.return_value = self.supplier_framework()
@@ -367,7 +367,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
             data_api_client.get_framework_interest.return_value = {'frameworks': ['g-cloud-7']}
             data_api_client.find_draft_services.return_value = {
                 "services": [
-                    {'serviceName': 'A service', 'status': 'submitted'}
+                    {'serviceName': 'A service', 'status': 'submitted', 'lot': 'iaas'}
                 ]
             }
             data_api_client.get_supplier_framework_info.return_value = self.supplier_framework()
@@ -405,7 +405,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
             data_api_client.get_framework_interest.return_value = {'frameworks': ['g-cloud-7']}
             data_api_client.find_draft_services.return_value = {
                 "services": [
-                    {'serviceName': 'A service', 'status': 'submitted'}
+                    {'serviceName': 'A service', 'status': 'submitted', 'lot': 'iaas'}
                 ]
             }
             data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
@@ -425,7 +425,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
             data_api_client.get_framework_interest.return_value = {'frameworks': ['g-cloud-7']}
             data_api_client.find_draft_services.return_value = {
                 "services": [
-                    {'serviceName': 'A service', 'status': 'submitted'}
+                    {'serviceName': 'A service', 'status': 'submitted', 'lot': 'iaas'}
                 ]
             }
             data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(

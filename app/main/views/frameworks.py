@@ -26,7 +26,8 @@ from ..helpers import hash_email
 from ..helpers.frameworks import get_declaration_status, \
     get_last_modified_from_first_matching_file, register_interest_in_framework, \
     get_supplier_on_framework_from_info, get_declaration_status_from_info, \
-    get_supplier_framework_info, get_framework, get_framework_and_lot, count_drafts_by_lot, get_statuses_for_lot
+    get_supplier_framework_info, get_framework, get_framework_and_lot, \
+    count_drafts_by_lot, get_statuses_for_lot, has_one_service_limit
 from ..helpers.validation import get_validator
 from ..helpers.services import (
     get_draft_document_url, get_drafts, get_lot_drafts,
@@ -54,11 +55,11 @@ def framework_dashboard(framework_slug):
     declaration_status = get_declaration_status_from_info(supplier_framework_info)
     supplier_is_on_framework = get_supplier_on_framework_from_info(supplier_framework_info)
 
+    lot_question = content_loader.get_question(framework_slug, 'services', 'lot')
+
     # Do not show a framework dashboard for earlier G-Cloud iterations
     if declaration_status == 'unstarted' and framework['status'] == 'live':
         abort(404)
-
-    application_made = len(complete_drafts) > 0 and declaration_status == 'complete'
 
     # TODO: change to new format
     key_list = s3.S3(current_app.config['DM_G7_DRAFT_DOCUMENTS_BUCKET']).list('g-cloud-7-')
@@ -76,13 +77,21 @@ def framework_dashboard(framework_slug):
         "frameworks/dashboard.html",
         counts={
             "draft": len(drafts),
-            "complete": len(complete_drafts),
+            "complete": len(complete_drafts)
         },
+        completed_lots=[{
+            'name': lot['label'],
+            'complete_count': count_drafts_by_lot(complete_drafts, lot['value']),
+            'one_service_limit': has_one_service_limit(lot['value'], framework['lots']),
+            'unit': 'lab' if framework['slug'] == 'digital-outcomes-and-specialists' else 'service',
+            'unit_plural': 'labs' if framework['slug'] == 'digital-outcomes-and-specialists' else 'service'
+            # TODO: ^ make this dynamic, eg, lab, service, unit
+        } for lot in lot_question['options'] if count_drafts_by_lot(complete_drafts, lot['value'])],
         declaration_status=declaration_status,
         first_page_of_declaration=first_page,
         deadline=current_app.config['DOS_CLOSING_DATE'],
         framework=framework,
-        application_made=application_made,
+        application_made=(len(complete_drafts) > 0 and declaration_status == 'complete'),
         supplier_is_on_framework=supplier_is_on_framework,
         last_modified={
             # TODO: s3 stuff above
@@ -106,11 +115,6 @@ def framework_submission_lots(framework_slug):
 
     lot_question = content_loader.get_question(framework_slug, 'services', 'lot')
 
-    def has_one_service_limit(lot_slug):
-        for lot in framework['lots']:
-            if lot['slug'] == lot_slug:
-                return lot['one_service_limit']
-
     return render_template(
         "frameworks/submission_lots.html",
         complete_drafts=list(reversed(complete_drafts)),
@@ -122,7 +126,7 @@ def framework_submission_lots(framework_slug):
             'title': lot['label'],
             'body': lot['description'],
             'statuses': get_statuses_for_lot(
-                has_one_service_limit(lot['value']),
+                has_one_service_limit(lot['value'], framework['lots']),
                 count_drafts_by_lot(drafts, lot['value']),
                 count_drafts_by_lot(complete_drafts, lot['value']),
                 declaration_status,

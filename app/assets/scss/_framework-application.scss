@@ -4,11 +4,14 @@
 .framework-application-status {
 
   @include core-19;
-  font-weight: bold;
-  padding-bottom: $gutter;
+  padding-bottom: $gutter * 2/3;
 
   @include media(tablet) {
     padding-top: 0;
+  }
+
+  strong {
+    font-weight: normal;
   }
 
 }
@@ -25,7 +28,7 @@
       margin-bottom: 5px;
     }
 
-    li {
+    .guidance-link {
       margin-bottom: 10px
     }
 

@@ -142,7 +142,7 @@
             <li class="browse-list-item">
               <a class="browse-list-item-link" href="{{ url_for('.framework_submission_lots', framework_slug=framework.slug) }}">
                 <span>
-                  Add, edit and delete services
+                  Add, edit and complete services
                 </span>
               </a>
               {% if not counts.complete and not counts.draft %}
@@ -156,55 +156,60 @@
               {% if counts.draft and not counts.complete %}
                 <div class="browse-list-item-status-quiet">
                   <p class="browse-list-item-status-title">
-                    You have
-                    {{ counts.draft }} draft
-                    {{ 'service' if counts.draft == 1 else 'services' }}
-                    that won’t be submitted
+                    No services marked as complete
                   </p>
                 </div>
               {% endif %}
 
-              {% if counts.complete and declaration_status != 'complete' %}
-                <div class="browse-list-item-status-quiet">
-                  <p class="browse-list-item-status-title">
-                    {{ counts.complete }} complete
-                    {{ 'service' if counts.complete == 1 else 'services' }}
-                    and {{ counts.draft }} draft
-                    {{ 'service' if counts.draft == 1 else 'services' }}
-                  </p>
-                </div>
-              {% endif %}
-
-              {% if counts.complete and declaration_status == 'complete' %}
-                <div class="browse-list-item-status-happy">
-                  <p class="browse-list-item-status-title">
-                    <strong>
-                      {{ counts.complete }} complete
-                      {{ 'service' if counts.complete == 1 else 'services' }}
-                      will be submitted at the deadline
-                    </strong>
-                  </p>
-                  {% if counts.draft %}
-                    <p class="browse-list-item-status-hint">
-                      {{ counts.draft }} draft
-                      {{ 'service' if counts.draft == 1 else 'services' }}
-                      won’t be submitted
+              {% if counts.complete %}
+                {% if declaration_status == 'complete' %}
+                  <div class="browse-list-item-status-happy">
+                    <p class="browse-list-item-status-title">
+                      You’re submitting
                     </p>
-                  {% endif %}
+                {% else %}
+                  <div class="browse-list-item-status-default">
+                    <p class="browse-list-item-status-title">
+                      You’ve completed
+                    </p>
+                {% endif %}
+                  <ul class="browse-list-item-status-list">
+                    {% for lot in completed_lots %}
+                      {% if lot.one_service_limit %}
+                        <li>{{lot.name}}</li>
+                      {% else %}
+                        <li>
+                          {{ lot.complete_count }} {{ lot.name }}
+                          {{ lot.unit if (1 == lot.complete_count) else lot.unit_plural }}
+                        </li>
+                      {% endif %}
+                    {% endfor %}
+                  </ul>
                 </div>
               {% endif %}
             </li>
           {% elif framework.status in ['pending', 'standstill'] and application_made %}
             <li class="browse-list-item">
-              <a href="{{ url_for('.framework_submission_lots', framework_slug=framework.slug) }}">View services</a>
-              <div class="framework-section-status-neutral">
-                <p>{{ counts.complete }} complete
-                {{ 'service' if counts.complete == 1 else 'services' }} {{ 'was' if counts.complete == 1 else 'were' }} submitted</p>
-                {% if counts.draft > 0 %}
-                  <p>{{ counts.draft }} draft
-                  {{ 'service' if counts.draft == 1 else 'services' }} {{ 'was' if counts.draft == 1 else 'were' }} not submitted</p>
-                {% endif %}
+              <a class="browse-list-item-link" href="{{ url_for('.framework_submission_lots', framework_slug=framework.slug) }}">
+                View services
+              </a>
+              <div class="browse-list-item-status-happy">
+                <p class="browse-list-item-status-title">
+                  You submitted
+                </p>
               </div>
+              <ul class="browse-list-item-status-list">
+                {% for lot in completed_lots %}
+                  {% if lot.one_service_limit %}
+                    <li>{{ lot.name }}</li>
+                  {% else %}
+                    <li>
+                      {{ lot.complete_count }} {{ lot.name }}
+                      {{ lot.unit if (1 == lot.complete_count) else lot.unit_plural }}
+                    </li>
+                  {% endif %}
+                {% endfor %}
+              </ul>
             </li>
           {% endif %}
 
@@ -213,13 +218,13 @@
               Guidance, updates and questions
             </h2>
             <ul>
-              <li>
+              <li class="guidance-link">
                 <a href="{{ url_for('.download_supplier_file', filepath='g-cloud-7-supplier-pack.zip', framework_slug=framework.slug) }}"><span>Download guidance and legal documentation (.zip)</span></a>
                 {% if last_modified.supplier_pack %}
                   <div class="hint">Last updated <time datetime="{{ last_modified.supplier_pack }}">{{ last_modified.supplier_pack|dateformat }}</time></div>
                 {% endif %}
               </li>
-              <li>
+              <li class="guidance-link">
                 <a href="{{ url_for('.framework_updates', framework_slug=framework.slug) }}">
                   <span>
                     {% if framework.status == 'open' %}
