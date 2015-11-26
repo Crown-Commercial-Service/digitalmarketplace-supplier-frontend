@@ -14,9 +14,9 @@
           {% endif %}
           {% if message == 'remove_last_attempted' %}
             <p class="banner-message">
-              You can't remove the last item from this service.<br>
-              You can either add another item before removing this one, or delete this service altogether using 
-              the button at the bottom of the page.
+              You can't remove all items from this service &ndash; it must have at least one.<br>
+              To remove it, add another item first.<br>
+              If you don't want to submit this service, delete it.
             </p>
             {% else %}
               {{ message }}
