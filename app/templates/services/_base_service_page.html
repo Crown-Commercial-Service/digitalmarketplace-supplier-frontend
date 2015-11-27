@@ -18,7 +18,7 @@
                 To remove &ldquo;{{ message.service_name or 'it' }}&rdquo;, add another one first.<br>
                 If you don't want to submit in this lot, delete it.
             {% elif category == 'service_deleted' %}
-                <strong>{{message.service_name}}</strong> was deleted
+                <strong>&ldquo;{{message.service_name}}&rdquo;</strong> was deleted
             {% else %}
                 {{ message }}
             {% endif %}
@@ -29,7 +29,7 @@
     {% endwith %}
       
     {% if confirm_remove %}
-      <form method="post" action='{{ url_for(".remove_subsection", framework_slug=framework.slug, lot_slug=service_data.lot, service_id=service_id, question_slug=confirm_remove, confirm=True) }}'>
+      <form method="post" action='{{ url_for(".remove_subsection", framework_slug=framework.slug, lot_slug=service_data.lot, service_id=service_id, section_id=request.args.get("section_id"), question_slug=confirm_remove, confirm=True) }}'>
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
         {%
           with

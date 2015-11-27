@@ -507,10 +507,10 @@ def update_section_submission(framework_slug, lot_slug, service_id, section_id, 
                                 _anchor=section_id))
 
 
-@main.route('/frameworks/<framework_slug>/submissions/<lot_slug>/<service_id>/remove/<question_slug>',
+@main.route('/frameworks/<framework_slug>/submissions/<lot_slug>/<service_id>/remove/<section_id>/<question_slug>',
             methods=['GET', 'POST'])
 @login_required
-def remove_subsection(framework_slug, lot_slug, service_id, question_slug):
+def remove_subsection(framework_slug, lot_slug, service_id, section_id, question_slug):
     if request.args.get("confirm") and request.method == "POST":
         # Remove the section
         try:
@@ -560,7 +560,8 @@ def remove_subsection(framework_slug, lot_slug, service_id, question_slug):
                     framework_slug=framework_slug,
                     lot_slug=lot_slug,
                     service_id=service_id,
-                    confirm_remove=question_slug
+                    confirm_remove=question_slug,
+                    section_id=section_id
                     )
         )
 
