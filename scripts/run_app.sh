@@ -11,7 +11,7 @@ export DM_DATA_API_URL=${DM_DATA_API_URL:=http://localhost:5000}
 export DM_DATA_API_AUTH_TOKEN=${DM_DATA_API_AUTH_TOKEN:=myToken}
 export DM_API_AUTH_TOKEN=${DM_API_AUTH_TOKEN:=myToken}
 
-export DM_SUBMISSIONS_BUCKET=${DM_SUBMISSIONS_BUCKET:=digitalmarketplace-submissions-dev-dev}
+export DM_SUBMISSIONS_BUCKET=${DM_SUBMISSIONS_BUCKET:=digitalmarketplace-documents-dev-dev}
 export DM_COMMUNICATIONS_BUCKET=${DM_COMMUNICATIONS_BUCKET:=digitalmarketplace-communications-dev-dev}
 export DM_ASSETS_URL=${DM_ASSETS_URL:=http://asset-host}
 
