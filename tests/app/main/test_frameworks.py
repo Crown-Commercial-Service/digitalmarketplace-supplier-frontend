@@ -750,7 +750,7 @@ class TestFrameworkAgreementDocumentDownload(BaseApplicationTest):
             res = self.client.get('/suppliers/frameworks/g-cloud-7/agreements/example.pdf')
 
             assert_equal(res.status_code, 302)
-            assert_equal(res.location, 'http://digitalmarketplace-documents-dev-dev.local/path?param=value')
+            assert_equal(res.location, 'http://asset-host/path?param=value')
             uploader.get_signed_url.assert_called_with(
                 'g-cloud-7/agreements/1234/Legal_Supplier_Name-1234-example.pdf')
 
@@ -786,7 +786,7 @@ class TestFrameworkDocumentDownload(BaseApplicationTest):
             res = self.client.get('/suppliers/frameworks/g-cloud-7/files/example.pdf')
 
             assert_equal(res.status_code, 302)
-            assert_equal(res.location, 'http://digitalmarketplace-documents-dev-dev.local/path?param=value')
+            assert_equal(res.location, 'http://asset-host/path?param=value')
             uploader.get_signed_url.assert_called_with('g-cloud-7/communications/example.pdf')
 
     def test_download_document_returns_404_if_url_is_None(self, S3):
