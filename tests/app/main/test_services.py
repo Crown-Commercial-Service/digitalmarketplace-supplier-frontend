@@ -598,6 +598,7 @@ class TestEditDraftService(BaseApplicationTest):
                 'supplierId': 1234,
                 'supplierName': "supplierName",
                 'lot': 'digital-specialists',
+                'lotName': 'Digital specialists',
                 'agileCoachLocations': ['Wales'],
                 'agileCoachPriceMax': '200',
                 'agileCoachPriceMin': '100',
@@ -1002,25 +1003,25 @@ class TestEditDraftService(BaseApplicationTest):
 
         res = self.client.get(
             '/suppliers/frameworks/digital-outcomes-and-specialists/submissions/' +
-            'digital-specialists/1/remove/agile-coach'
+            'digital-specialists/1/remove/specialists/agile-coach'
         )
 
         assert_equal(res.status_code, 302)
         assert(res.location.endswith(
             '/suppliers/frameworks/digital-outcomes-and-specialists/submissions/' +
-            'digital-specialists/1?confirm_remove=agile-coach')
+            'digital-specialists/1?section_id=specialists&confirm_remove=agile-coach')
         )
 
         res2 = self.client.get(
             '/suppliers/frameworks/digital-outcomes-and-specialists/submissions/' +
-            'digital-specialists/1?confirm_remove=agile-coach'
+            'digital-specialists/1?section_id=specialists&confirm_remove=agile-coach'
         )
         assert_equal(res2.status_code, 200)
         assert_in(u'Are you sure you want to remove &ldquo;Agile coach&rdquo;?', res2.get_data(as_text=True))
 
         res3 = self.client.post(
             '/suppliers/frameworks/digital-outcomes-and-specialists/submissions/' +
-            'digital-specialists/1/remove/agile-coach?confirm=True')
+            'digital-specialists/1/remove/specialists/agile-coach?confirm=True')
 
         assert_equal(res3.status_code, 302)
         assert(res3.location.endswith(
@@ -1033,6 +1034,7 @@ class TestEditDraftService(BaseApplicationTest):
                 'supplierId': 1234,
                 'supplierName': "supplierName",
                 'lot': 'digital-specialists',
+                'lotName': 'Digital specialists',
                 'agileCoachLocations': None,
                 'agileCoachPriceMax': None,
                 'agileCoachPriceMin': None,
@@ -1059,37 +1061,20 @@ class TestEditDraftService(BaseApplicationTest):
 
         res = self.client.get(
             '/suppliers/frameworks/digital-outcomes-and-specialists/submissions/' +
-            'digital-specialists/1/remove/agile-coach'
+            'digital-specialists/1/remove/specialists/agile-coach'
         )
 
         assert_equal(res.status_code, 302)
         assert(res.location.endswith(
-            '/suppliers/frameworks/digital-outcomes-and-specialists/submissions/' +
-            'digital-specialists/1?confirm_remove=agile-coach')
-        )
-
-        res2 = self.client.get(
-            '/suppliers/frameworks/digital-outcomes-and-specialists/submissions/' +
-            'digital-specialists/1?confirm_remove=agile-coach'
-        )
-        assert_equal(res2.status_code, 200)
-        assert_in(u'Are you sure you want to remove &ldquo;Agile coach&rdquo;?', res2.get_data(as_text=True))
-
-        res3 = self.client.post(
-            '/suppliers/frameworks/digital-outcomes-and-specialists/submissions/' +
-            'digital-specialists/1/remove/agile-coach?confirm=True')
-
-        assert_equal(res3.status_code, 302)
-        assert(res3.location.endswith(
             '/suppliers/frameworks/digital-outcomes-and-specialists/submissions/digital-specialists/1')
         )
 
-        res4 = self.client.get(
-            '/suppliers/frameworks/digital-outcomes-and-specialists/submissions/' +
-            'digital-specialists/1?confirm_remove=agile-coach'
+        res2 = self.client.get(
+            '/suppliers/frameworks/digital-outcomes-and-specialists/submissions/digital-specialists/1'
         )
-        assert_equal(res4.status_code, 200)
-        assert_in(u"You can't remove all items from this service", res4.get_data(as_text=True))
+        assert_equal(res2.status_code, 200)
+        assert_in("You must offer one of the individual specialist roles to be eligible for digital specialists.",
+                  res2.get_data(as_text=True))
 
         data_api_client.update_draft_service.assert_not_called()
 
@@ -1099,7 +1084,7 @@ class TestEditDraftService(BaseApplicationTest):
         data_api_client.get_draft_service.return_value = draft_service
         res = self.client.post(
             '/suppliers/frameworks/digital-outcomes-and-specialists/submissions/' +
-            'digital-specialists/1/remove/agile-coach?confirm=True')
+            'digital-specialists/1/remove/specialists/agile-coach?confirm=True')
 
         assert_equal(res.status_code, 404)
         data_api_client.update_draft_service.assert_not_called()
@@ -1108,7 +1093,7 @@ class TestEditDraftService(BaseApplicationTest):
         data_api_client.get_draft_service.side_effect = HTTPError(mock.Mock(status_code=504))
         res = self.client.post(
             '/suppliers/frameworks/digital-outcomes-and-specialists/submissions/' +
-            'digital-specialists/1/remove/agile-coach?confirm=True')
+            'digital-specialists/1/remove/specialists/agile-coach?confirm=True')
         assert_equal(res.status_code, 504)
 
     def test_fails_if_api_update_fails(self, data_api_client, s3):
@@ -1116,7 +1101,7 @@ class TestEditDraftService(BaseApplicationTest):
         data_api_client.update_draft_service.side_effect = HTTPError(mock.Mock(status_code=504))
         res = self.client.post(
             '/suppliers/frameworks/digital-outcomes-and-specialists/submissions/' +
-            'digital-specialists/1/remove/agile-coach?confirm=True')
+            'digital-specialists/1/remove/specialists/agile-coach?confirm=True')
         assert_equal(res.status_code, 504)
 
 
