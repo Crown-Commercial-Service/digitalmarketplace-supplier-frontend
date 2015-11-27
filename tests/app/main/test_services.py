@@ -1074,7 +1074,7 @@ class TestEditDraftService(BaseApplicationTest):
             '/suppliers/frameworks/digital-outcomes-and-specialists/submissions/digital-specialists/1'
         )
         assert_equal(res2.status_code, 200)
-        assert_in("You must offer one of the individual specialist roles to be eligible for digital specialists.",
+        assert_in("You must offer one of the individual specialist roles to be eligible.",
                   res2.get_data(as_text=True))
 
         data_api_client.update_draft_service.assert_not_called()

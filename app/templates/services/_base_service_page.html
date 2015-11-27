@@ -14,7 +14,7 @@
           {% endif %}
               <p class="banner-message">
           {% if 'remove_last_attempted' in message %}
-                You must offer one of the {{ message.remove_last_attempted.lower() }} to be eligible for {{ (service_data.get('serviceName', service_data['lotName'])).lower() }}.<br>
+                You must offer one of the {{ message.remove_last_attempted.lower() }} to be eligible.<br>
                 If you don&rsquo;t want to offer {{ (service_data.get('serviceName', service_data['lotName'])).lower() }}, 
                 delete this service.
             {% elif category == 'service_deleted' %}
