@@ -4,6 +4,7 @@
 
 .align-with-heading .button-save {
     margin-top: 0px;
+    width: 100%;
 }
 
 .space-underneath {
@@ -20,4 +21,15 @@
 
 .summary-item-field-answer-required {
     color: $secondary-text-colour;
+}
+
+.delete-draft-button {
+
+  margin-top: $gutter;
+
+  .button-destructive,
+  .button-save {
+    width: 100%;
+  }
+
 }
