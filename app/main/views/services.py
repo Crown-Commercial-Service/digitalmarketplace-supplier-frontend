@@ -525,28 +525,26 @@ def remove_subsection(framework_slug, lot_slug, service_id, question_slug):
         question_to_remove = content.get_question_by_slug(question_slug)
         containing_section = get_containing_section(content, question_to_remove)
         fields_to_remove = question_to_remove.form_fields
-        section_responses = [field for field in containing_section.get_field_names() if field in draft]
-        fields_remaining_after_removal = [field for field in section_responses if field not in fields_to_remove]
 
-        if len(fields_remaining_after_removal) > 0:
-            # It isn't the last one so remove it
-            for field in fields_to_remove:
-                draft[field] = None
-            try:
-                data_api_client.update_draft_service(
-                    service_id,
-                    draft,
-                    current_user.email_address
-                )
-                flash({'service_name': question_to_remove.label}, 'service_deleted')
-            except HTTPError as e:
+        for field in fields_to_remove:
+            draft[field] = None
+
+        try:
+            data_api_client.update_draft_service(
+                service_id,
+                draft,
+                current_user.email_address
+            )
+            flash({'service_name': question_to_remove.label}, 'service_deleted')
+        except HTTPError as e:
+            if e.status_code == 400:
+                # You can't remove the last one
+                flash({
+                    'remove_last_attempted': containing_section.name,
+                    'service_name': question_to_remove.label
+                }, 'error')
+            else:
                 abort(e.status_code)
-        else:
-            # You can't remove the last one
-            flash({
-                'remove_last_attempted': containing_section.name,
-                'service_name': question_to_remove.label
-            }, 'error')
 
         return redirect(
             url_for('.view_service_submission',
