@@ -29,10 +29,10 @@
   {% with messages = get_flashed_messages(with_categories=true) %}
     {% for category, message in messages %}
       {% if message == 'message_sent' %}
-        {% if 'G7_CLARIFICATIONS_CLOSED' is active_feature %}
-          {% set message = "Your question has been sent. You'll get a reply from the Crown Commercial Service soon." %}
-        {% else %}
+        {% if framework.clarificationQuestionsOpen %}
           {% set message = "Your clarification question has been sent. Answers to all clarification questions will be published on this page." %}
+        {% else %}
+          {% set message = "Your question has been sent. You'll get a reply from the Crown Commercial Service soon." %}
         {% endif %}
       {% endif %}
       {%
@@ -96,45 +96,16 @@
         {% endcall %}
       {% endfor %}
       <p class="hint">
-        {% if 'G7_CLARIFICATIONS_CLOSED' is active_feature %}
-          The deadline for asking clarification questions has now passed. All clarification questions and answers will be published by 5pm <abbr title="British Summer Time">BST</abbr>, 29 September 2015. You'll receive an email when new answers are posted.
-        {% else %}
+        {% if framework.clarificationQuestionsOpen %}
           All clarification questions and answers will be published here regularly. You will receive an email when new answers are posted.
+        {% else %}
+          The deadline for asking clarification questions has now passed. All clarification questions and answers will be published by 5pm <abbr title="British Summer Time">BST</abbr>, 29 September 2015. You'll receive an email when new answers are posted.
         {% endif %}
       </p>
     </div>
   </div>
 
-  {% if 'G7_CLARIFICATIONS_CLOSED' is active_feature %}
-    <form method="post">
-      <div class="grid-row">
-        <div class="column-two-thirds">
-          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
-          {%
-            with
-            large=true,
-            question = "Ask a question about your G-Cloud 7 application",
-            name = clarification_question_name,
-            hint = "If you have any questions about your G-Cloud 7 application, you can ask them here. You'll get a private reply from the Crown Commercial Service. (Maximum 5000 characters per question.)",
-            error = error_message,
-            value = clarification_question_value
-          %}
-          {% include "toolkit/forms/textbox.html" %}
-          {% endwith %}
-          {%
-            with
-            label="Ask question",
-            type="save"
-          %}
-          {% include "toolkit/button.html" %}
-          {% endwith %}
-        
-          <a href="{{ url_for('.framework_dashboard', framework_slug=framework.slug) }}">Return to {{ framework.name }} application</a>
-
-        </div>
-      </div>
-    </form>
-  {% else %}
+  {% if framework.clarificationQuestionsOpen %}
     <form method="post">
       <div class="grid-row">
         <div class="column-two-thirds">
@@ -160,11 +131,40 @@
             %}
               {% include "toolkit/button.html" %}
             {% endwith %}
-      
+
             <a href="{{ url_for('.framework_dashboard', framework_slug=framework.slug) }}">Return to {{ framework.name }} application</a>
 
           </div>
         </div>
       </form>
+  {% else %}
+    <form method="post">
+      <div class="grid-row">
+        <div class="column-two-thirds">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+          {%
+            with
+            large=true,
+            question = "Ask a question about your {} application".format(framework.name),
+            name = clarification_question_name,
+            hint = "If you have any questions about your {} application, you can ask them here. You'll get a private reply from the Crown Commercial Service. (Maximum 5000 characters per question.)".format(framework.name),
+            error = error_message,
+            value = clarification_question_value
+          %}
+          {% include "toolkit/forms/textbox.html" %}
+          {% endwith %}
+          {%
+            with
+            label="Ask question",
+            type="save"
+          %}
+          {% include "toolkit/button.html" %}
+          {% endwith %}
+
+          <a href="{{ url_for('.framework_dashboard', framework_slug=framework.slug) }}">Return to {{ framework.name }} application</a>
+
+        </div>
+      </div>
+    </form>
   {% endif %}
 {% endblock %}

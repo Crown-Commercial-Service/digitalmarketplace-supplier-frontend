@@ -227,7 +227,7 @@
               <li class="guidance-link">
                 <a href="{{ url_for('.framework_updates', framework_slug=framework.slug) }}">
                   <span>
-                    {% if framework.status == 'open' %}
+                    {% if framework.clarificationQuestionsOpen %}
                       Read updates and ask clarification questions
                     {% else %}
                       Read updates and clarification question responses
