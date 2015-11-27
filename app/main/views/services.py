@@ -292,7 +292,7 @@ def complete_draft_service(framework_slug, lot_slug, service_id):
         )
     }, 'service_completed')
 
-    if lot['one_service_limit']:
+    if lot['oneServiceLimit']:
         return redirect(url_for(".framework_submission_lots", framework_slug=framework['slug']))
     else:
         return redirect(url_for(".framework_submission_services",
@@ -320,7 +320,7 @@ def delete_draft_service(framework_slug, lot_slug, service_id):
             abort(e.status_code)
 
         flash({'service_name': draft.get('serviceName', draft['lotName'])}, 'service_deleted')
-        if lot['one_service_limit']:
+        if lot['oneServiceLimit']:
             return redirect(url_for(".framework_submission_lots", framework_slug=framework['slug']))
         else:
             return redirect(url_for(".framework_submission_services",

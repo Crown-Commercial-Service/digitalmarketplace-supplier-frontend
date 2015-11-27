@@ -151,7 +151,7 @@ def framework_submission_services(framework_slug, lot_slug):
     if framework['status'] == 'pending' and declaration_status != 'complete':
         abort(404)
 
-    if lot['one_service_limit']:
+    if lot['oneServiceLimit']:
         draft = next(iter(drafts + complete_drafts), None)
         if not draft:
             draft = data_api_client.create_new_draft_service(
