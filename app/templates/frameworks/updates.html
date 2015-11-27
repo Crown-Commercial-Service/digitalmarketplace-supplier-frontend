@@ -1,7 +1,7 @@
 {% extends "_base_page.html" %}
 {% import "toolkit/summary-table.html" as summary %}
 
-{% block page_title %}G-Cloud 7 updates – Digital Marketplace{% endblock %}
+{% block page_title %}{{ framework.name }} updates – Digital Marketplace{% endblock %}
 
 {% block breadcrumb %}
   {%
@@ -51,7 +51,7 @@
       errors = [
         {
             "input_name": clarification_question_name,
-            "question": "Ask a G-Cloud 7 clarification question"
+            "question": "Ask a {} clarification question".format(framework.name)
         }
     ],
       lede = "There was a problem with your submitted question"
@@ -64,7 +64,7 @@
     <div class="column-two-thirds">
       {% with
          smaller = true,
-         heading = "G-Cloud 7 updates"
+         heading = "{} updates".format(framework.name)
       %}
         {% include "toolkit/page-heading.html" %}
       {% endwith %}
@@ -113,9 +113,9 @@
             {%
               with
               large=true,
-              question = "Ask a G-Cloud 7 clarification question",
+              question = "Ask a {} clarification question".format(framework.name),
               name = clarification_question_name,
-              hint = "You should ask any questions you have about G-Cloud 7 here. The Crown Commercial Service will not respond to you individually. All answers to clarification questions will be published here regularly. (Maximum 5000 characters per question.)",
+              hint = "You should ask any questions you have about {} here. The Crown Commercial Service will not respond to you individually. All answers to clarification questions will be published here regularly. (Maximum 5000 characters per question.)".format(framework.name),
               error = error_message,
               value = clarification_question_value
             %}
