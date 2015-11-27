@@ -373,6 +373,9 @@ def view_service_submission(framework_slug, lot_slug, service_id):
     return render_template(
         "services/service_submission.html",
         framework=framework,
+        one_service_limit=[
+            lot['one_service_limit'] for lot in framework['lots'] if lot['slug'] == draft['lot']
+        ][0],
         service_id=service_id,
         service_data=draft,
         last_edit=last_edit,

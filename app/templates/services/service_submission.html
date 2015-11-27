@@ -33,7 +33,7 @@
     <div class="wrapper">
       {%
         with
-        message = 'You need to <a href="' + url_for('.framework_supplier_declaration', framework_slug=framework.slug, section_id='g_cloud_7_essentials') + '">make the supplier&nbsp;declaration</a> before this service can be submitted',
+        message = 'You need to <a href="' + url_for('.framework_supplier_declaration', framework_slug=framework.slug, section_id='g_cloud_7_essentials') + '">make the supplier&nbsp;declaration</a> before ' + service_data.get('serviceName', service_data['lotName'])|lower + ' can be submitted',
         type = 'warning'
       %}
         {% include 'toolkit/notification-banner.html' %}
@@ -145,7 +145,10 @@
         {% if framework.status == 'open' %}
         <form action="{{ url_for('.delete_draft_service', framework_slug=framework.slug, lot_slug=service_data.lot, service_id=service_id ) }}" method="POST">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
-          {% with type = "destructive", label = "Delete this service" %}
+          {% with
+            type = "destructive",
+            label = "Delete ‘" + service_data.get('serviceName', service_data['lotName'])|lower + "’" if one_service_limit else "Delete this service"
+          %}
             {% include "toolkit/button.html" %}
           {% endwith %}
         </form>
