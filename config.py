@@ -35,6 +35,8 @@ class Config(object):
 
     DM_AGREEMENTS_BUCKET = None
     DM_COMMUNICATIONS_BUCKET = None
+    DM_DOCUMENTS_BUCKET = None
+    DM_SUBMISSIONS_BUCKET = None
     DM_ASSETS_URL = None
 
     DEBUG = False

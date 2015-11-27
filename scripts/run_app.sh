@@ -13,6 +13,7 @@ export DM_API_AUTH_TOKEN=${DM_API_AUTH_TOKEN:=myToken}
 
 export DM_G7_DRAFT_DOCUMENTS_BUCKET=${DM_G7_DRAFT_DOCUMENTS_BUCKET:=digitalmarketplace-documents-dev-dev}
 export DM_G7_DRAFT_DOCUMENTS_URL=${DM_G7_DRAFT_DOCUMENTS_URL:=https://${DM_G7_DRAFT_DOCUMENTS_BUCKET}.s3-eu-west-1.amazonaws.com}
+export DM_SUBMISSIONS_BUCKET=${DM_SUBMISSIONS_BUCKET:=digitalmarketplace-submissions-dev-dev}
 
 export DM_MANDRILL_API_KEY=${DM_MANDRILL_API_KEY:=not_a_real_key}
 export DM_PASSWORD_SECRET_KEY=${DM_PASSWORD_SECRET_KEY:=verySecretKey}
