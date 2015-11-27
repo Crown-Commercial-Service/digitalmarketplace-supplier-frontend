@@ -1007,10 +1007,11 @@ class TestEditDraftService(BaseApplicationTest):
         )
 
         assert_equal(res.status_code, 302)
-        assert(res.location.endswith(
-            '/suppliers/frameworks/digital-outcomes-and-specialists/submissions/' +
-            'digital-specialists/1?section_id=specialists&confirm_remove=agile-coach')
+        assert(
+            '/suppliers/frameworks/digital-outcomes-and-specialists/submissions/digital-specialists/1?' in res.location
         )
+        assert('section_id=specialists' in res.location)
+        assert('confirm_remove=agile-coach' in res.location)
 
         res2 = self.client.get(
             '/suppliers/frameworks/digital-outcomes-and-specialists/submissions/' +
