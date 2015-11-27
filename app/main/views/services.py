@@ -511,21 +511,21 @@ def update_section_submission(framework_slug, lot_slug, service_id, section_id, 
             methods=['GET', 'POST'])
 @login_required
 def remove_subsection(framework_slug, lot_slug, service_id, section_id, question_slug):
+    try:
+        draft = data_api_client.get_draft_service(service_id)['services']
+    except HTTPError as e:
+        abort(e.status_code)
+
+    if not is_service_associated_with_supplier(draft):
+        abort(404)
+
+    content = content_loader.get_manifest(framework_slug, 'edit_submission').filter(draft)
+    question_to_remove = content.get_question_by_slug(question_slug)
+    containing_section = get_containing_section(content, question_to_remove)
+    fields_to_remove = question_to_remove.form_fields
+
     if request.args.get("confirm") and request.method == "POST":
         # Remove the section
-        try:
-            draft = data_api_client.get_draft_service(service_id)['services']
-        except HTTPError as e:
-            abort(e.status_code)
-
-        if not is_service_associated_with_supplier(draft):
-            abort(404)
-
-        content = content_loader.get_manifest(framework_slug, 'edit_submission').filter(draft)
-        question_to_remove = content.get_question_by_slug(question_slug)
-        containing_section = get_containing_section(content, question_to_remove)
-        fields_to_remove = question_to_remove.form_fields
-
         for field in fields_to_remove:
             draft[field] = None
 
@@ -546,24 +546,35 @@ def remove_subsection(framework_slug, lot_slug, service_id, section_id, question
             else:
                 abort(e.status_code)
 
-        return redirect(
-            url_for('.view_service_submission',
-                    framework_slug=framework_slug,
-                    lot_slug=lot_slug,
-                    service_id=service_id,
-                    confirm_remove=None
-                    ))
     else:
-        # Show page with "Are you sure?" message and button
-        return redirect(
-            url_for('.view_service_submission',
-                    framework_slug=framework_slug,
-                    lot_slug=lot_slug,
-                    service_id=service_id,
-                    confirm_remove=question_slug,
-                    section_id=section_id
-                    )
-        )
+        section_responses = [field for field in containing_section.get_field_names() if field in draft]
+        fields_remaining_after_removal = [field for field in section_responses if field not in fields_to_remove]
+
+        if len(fields_remaining_after_removal) > 0:
+            # Show page with "Are you sure?" message and button
+            return redirect(
+                url_for('.view_service_submission',
+                        framework_slug=framework_slug,
+                        lot_slug=lot_slug,
+                        service_id=service_id,
+                        confirm_remove=question_slug,
+                        section_id=section_id
+                        )
+            )
+        else:
+            # You can't remove the last one
+            flash({
+                'remove_last_attempted': containing_section.name,
+                'service_name': question_to_remove.label
+            }, 'error')
+
+    return redirect(
+        url_for('.view_service_submission',
+                framework_slug=framework_slug,
+                lot_slug=lot_slug,
+                service_id=service_id,
+                confirm_remove=None
+                ))
 
 
 def _update_service_status(service, error_message=None):
