@@ -246,14 +246,15 @@ class TestFrameworksDashboard(BaseApplicationTest):
 
     def test_last_updated_exists_for_both_sections(self, data_api_client, s3):
         files = [
-            ('g-cloud-7-updates/communications/', 'file 1', 'odt', '2015-01-01T14:00:00.000Z'),
-            ('g-cloud-7-updates/clarifications/', 'file 2', 'odt', '2015-02-02T14:00:00.000Z'),
+            ('updates/communications/', 'file 1', 'odt', '2015-01-01T14:00:00.000Z'),
+            ('updates/clarifications/', 'file 2', 'odt', '2015-02-02T14:00:00.000Z'),
             ('', 'g-cloud-7-supplier-pack', 'zip', '2015-01-01T14:00:00.000Z'),
         ]
 
         s3.return_value.list.return_value = [
-            _return_fake_s3_file_dict(section, filename, ext, last_modified=last_modified)
-            for section, filename, ext, last_modified in files
+            _return_fake_s3_file_dict(
+                'g-cloud-7/communications/{}'.format(section), filename, ext, last_modified=last_modified
+            ) for section, filename, ext, last_modified in files
         ]
 
         with self.app.test_client():
@@ -288,8 +289,9 @@ class TestFrameworksDashboard(BaseApplicationTest):
         ]
 
         s3.return_value.list.return_value = [
-            _return_fake_s3_file_dict(section, filename, ext, last_modified=last_modified)
-            for section, filename, ext, last_modified in files
+            _return_fake_s3_file_dict(
+                'g-cloud-7/communications/{}'.format(section), filename, ext, last_modified=last_modified
+            ) for section, filename, ext, last_modified in files
         ]
 
         with self.app.test_client():
@@ -748,7 +750,7 @@ class TestFrameworkAgreementDocumentDownload(BaseApplicationTest):
             res = self.client.get('/suppliers/frameworks/g-cloud-7/agreements/example.pdf')
 
             assert_equal(res.status_code, 302)
-            assert_equal(res.location, 'http://url/path?param=value')
+            assert_equal(res.location, 'http://digitalmarketplace-documents-dev-dev.local/path?param=value')
             uploader.get_signed_url.assert_called_with(
                 'g-cloud-7/agreements/1234/Legal_Supplier_Name-1234-example.pdf')
 
@@ -785,7 +787,7 @@ class TestFrameworkDocumentDownload(BaseApplicationTest):
 
             assert_equal(res.status_code, 302)
             assert_equal(res.location, 'http://digitalmarketplace-documents-dev-dev.local/path?param=value')
-            uploader.get_signed_url.assert_called_with('example.pdf')
+            uploader.get_signed_url.assert_called_with('g-cloud-7/communications/example.pdf')
 
     def test_download_document_returns_404_if_url_is_None(self, S3):
         uploader = mock.Mock()
@@ -1015,15 +1017,17 @@ class TestFrameworkUpdatesPage(BaseApplicationTest):
         data_api_client.get_framework.return_value = self.framework('open')
 
         files = [
-            ('g-cloud-7-updates/communications/', 'file 1', 'odt'),
-            ('g-cloud-7-updates/communications/', 'file 2', 'odt'),
-            ('g-cloud-7-updates/clarifications/', 'file 3', 'odt'),
-            ('g-cloud-7-updates/clarifications/', 'file 4', 'odt'),
+            ('updates/communications/', 'file 1', 'odt'),
+            ('updates/communications/', 'file 2', 'odt'),
+            ('updates/clarifications/', 'file 3', 'odt'),
+            ('updates/clarifications/', 'file 4', 'odt'),
         ]
 
         # the communications table is always before the clarifications table
         s3.return_value.list.return_value = [
-            _return_fake_s3_file_dict(section, filename, ext) for section, filename, ext in files
+            _return_fake_s3_file_dict(
+                "g-cloud-7/communications/{}".format(section), filename, ext
+            ) for section, filename, ext in files
         ]
 
         with self.app.test_client():
@@ -1060,12 +1064,14 @@ class TestFrameworkUpdatesPage(BaseApplicationTest):
 
         # for example: 'g-cloud-7-updates/clarifications/communications%20file.odf'
         files = [
-            ('g-cloud-7-updates/communications/', 'clarifications file', 'odt'),
-            ('g-cloud-7-updates/clarifications/', 'communications file', 'odt')
+            ('updates/communications/', 'clarifications file', 'odt'),
+            ('updates/clarifications/', 'communications file', 'odt')
         ]
 
         s3.return_value.list.return_value = [
-            _return_fake_s3_file_dict(section, filename, ext) for section, filename, ext in files
+            _return_fake_s3_file_dict(
+                "g-cloud-7/communications/{}".format(section), filename, ext
+            ) for section, filename, ext in files
         ]
 
         with self.app.test_client():

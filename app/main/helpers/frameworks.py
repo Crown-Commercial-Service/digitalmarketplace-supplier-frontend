@@ -39,7 +39,7 @@ def register_interest_in_framework(client, framework_slug):
     client.register_framework_interest(current_user.supplier_id, framework_slug, current_user.email_address)
 
 
-def get_last_modified_from_first_matching_file(key_list, path_starts_with):
+def get_last_modified_from_first_matching_file(key_list, framework_slug, prefix):
     """
     Takes a list of file keys and a string.
     Returns the 'last_modified' timestamp for first file whose path starts with the passed-in string,
@@ -49,6 +49,7 @@ def get_last_modified_from_first_matching_file(key_list, path_starts_with):
     :param path_starts_with: check for file paths which start with this string
     :return: the timestamp of the first matching file key or None
     """
+    path_starts_with = '{}/{}'.format(framework_slug, prefix)
     return next((key for key in key_list if key.get('path').startswith(path_starts_with)), {}).get('last_modified')
 
 

@@ -73,6 +73,19 @@
 
   <div class="grid-row">
     <div class="column-one-whole updates-document-tables">
+      {% set sections = [
+        {
+          "heading": framework.name + " communications",
+          "empty_message": "No communications have been sent out",
+          "files": files.communications
+        },
+        {
+          "heading": framework.name + " clarification questions and answers",
+          "empty_message": "No clarification questions and answers have been posted yet",
+          "files": files.clarifications
+        }
+      ] %}
+
       {% for section in sections %}
         {{ summary.heading(section.heading) }}
         {% call(item) summary.list_table(
