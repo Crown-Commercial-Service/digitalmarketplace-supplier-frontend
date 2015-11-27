@@ -14,11 +14,11 @@
           {% endif %}
               <p class="banner-message">
           {% if 'remove_last_attempted' in message %}
-                You can't remove the last item from &ldquo;{{ message.remove_last_attempted }}&rdquo;.<br>
-                To remove &ldquo;{{ message.service_name or 'it' }}&rdquo;, add another one first.<br>
-                If you don't want to submit in this lot, delete it.
+                You must offer one of the {{ message.remove_last_attempted.lower() }} to be eligible for {{ (service_data.get('serviceName', service_data['lotName'])).lower() }}.<br>
+                If you don&rsquo;t want to offer {{ (service_data.get('serviceName', service_data['lotName'])).lower() }}, 
+                delete this service.
             {% elif category == 'service_deleted' %}
-                <strong>&ldquo;{{message.service_name}}&rdquo;</strong> was deleted
+                <strong>&lsquo;{{message.service_name}}&rsquo;</strong> was deleted
             {% else %}
                 {{ message }}
             {% endif %}
