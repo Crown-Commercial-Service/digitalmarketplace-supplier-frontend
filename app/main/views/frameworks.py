@@ -411,9 +411,10 @@ def framework_updates_email_clarification_question(framework_slug):
         )
     except MandrillException as e:
         current_app.logger.error(
-            "Clarification question email failed to send. "
+            "{framework} clarification question email failed to send. "
             "error {error} supplier_id {supplier_id} email_hash {email_hash}",
             extra={'error': six.text_type(e),
+                   'framework': framework['slug'],
                    'supplier_id': current_user.supplier_id,
                    'email_hash': hash_email(current_user.email_address)})
         abort(503, "Clarification question email failed to send")
@@ -442,22 +443,23 @@ def framework_updates_email_clarification_question(framework_slug):
             )
         except MandrillException as e:
             current_app.logger.error(
-                "Clarification question confirmation email failed to send. "
+                "{} clarification question confirmation email failed to send. "
                 "error {error} supplier_id {supplier_id} email_hash {email_hash}",
                 extra={'error': six.text_type(e),
+                       'framework': framework['slug'],
                        'supplier_id': current_user.supplier_id,
                        'email_hash': hash_email(current_user.email_address)})
     else:
         # Do not send confirmation email to the user who submitted the question
         # Zendesk will handle this instead
-        audit_type = AuditTypes.send_g7_application_question
+        audit_type = AuditTypes.send_application_question
 
     data_api_client.create_audit_event(
         audit_type=audit_type,
         user=current_user.email_address,
         object_type="suppliers",
         object_id=current_user.supplier_id,
-        data={"question": clarification_question})
+        data={"question": clarification_question, 'framework': framework['slug']})
 
     flash('message_sent', 'success')
     return framework_updates(framework['slug'])

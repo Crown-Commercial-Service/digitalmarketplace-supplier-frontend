@@ -1255,7 +1255,7 @@ class TestSendClarificationQuestionEmail(BaseApplicationTest):
             user="email@email.com",
             object_type="suppliers",
             object_id=1234,
-            data={"question": clarification_question})
+            data={"question": clarification_question, 'framework': 'g-cloud-7'})
 
     @mock.patch('dmutils.s3.S3')
     @mock.patch('app.main.views.frameworks.data_api_client')
@@ -1270,11 +1270,11 @@ class TestSendClarificationQuestionEmail(BaseApplicationTest):
 
         assert_equal(response.status_code, 200)
         data_api_client.create_audit_event.assert_called_with(
-            audit_type=AuditTypes.send_g7_application_question,
+            audit_type=AuditTypes.send_application_question,
             user="email@email.com",
             object_type="suppliers",
             object_id=1234,
-            data={"question": clarification_question})
+            data={"question": clarification_question, 'framework': 'g-cloud-7'})
 
     @mock.patch('app.main.views.frameworks.data_api_client')
     @mock.patch('app.main.views.frameworks.send_email')
