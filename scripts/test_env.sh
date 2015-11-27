@@ -5,4 +5,5 @@ export DM_PASSWORD_SECRET_KEY=${DM_PASSWORD_SECRET_KEY:=not_very_secret}
 export DM_SHARED_EMAIL_KEY=${DM_SHARED_EMAIL_KEY:=not_very_secret}
 export DM_G7_DRAFT_DOCUMENTS_BUCKET=${DM_G7_DRAFT_DOCUMENTS_BUCKET:=digitalmarketplace-documents-dev-dev}
 export DM_G7_DRAFT_DOCUMENTS_URL=${DM_G7_DRAFT_DOCUMENTS_URL:=http://${DM_G7_DRAFT_DOCUMENTS_BUCKET}.local}
+export DM_SUBMISSIONS_BUCKET=${DM_SUBMISSIONS_BUCKET:=digitalmarketplace-submissions-dev-dev}
 

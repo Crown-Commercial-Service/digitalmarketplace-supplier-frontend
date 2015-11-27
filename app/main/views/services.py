@@ -340,7 +340,7 @@ def service_submission_document(framework_slug, supplier_id, document_name):
     if current_user.supplier_id != supplier_id:
         abort(404)
 
-    uploader = s3.S3(current_app.config['DM_G7_DRAFT_DOCUMENTS_BUCKET'])
+    uploader = s3.S3(current_app.config['DM_SUBMISSIONS_BUCKET'])
     s3_url = get_draft_document_url(uploader,
                                     "{}/{}/{}".format(framework_slug, supplier_id, document_name))
     if not s3_url:
@@ -449,7 +449,7 @@ def update_section_submission(framework_slug, lot_slug, service_id, section_id, 
     errors = None
     update_data = section.get_data(request.form)
 
-    uploader = s3.S3(current_app.config['DM_G7_DRAFT_DOCUMENTS_BUCKET'])
+    uploader = s3.S3(current_app.config['DM_SUBMISSIONS_BUCKET'])
     documents_url = url_for('.dashboard', _external=True) + '/submission/documents/'
     uploaded_documents, document_errors = upload_service_documents(
         uploader, documents_url, draft, request.files, section,
