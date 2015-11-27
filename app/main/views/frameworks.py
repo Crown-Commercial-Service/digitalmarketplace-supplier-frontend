@@ -151,7 +151,7 @@ def framework_submission_services(framework_slug, lot_slug):
     if framework['status'] == 'pending' and declaration_status != 'complete':
         abort(404)
 
-    if lot['one_service_limit']:
+    if lot['oneServiceLimit']:
         draft = next(iter(drafts + complete_drafts), None)
         if not draft:
             draft = data_api_client.create_new_draft_service(
@@ -376,21 +376,10 @@ def framework_updates_email_clarification_question(framework_slug):
 
     # Submit email to Zendesk so the question can be answered
     # Fail if this email does not send
-    if flask_featureflags.is_active('G7_CLARIFICATIONS_CLOSED'):
-        subject = "G-Cloud 7 application question"
-        to_address = current_app.config['DM_G7_FOLLOW_UP_EMAIL_TO']
-        from_address = current_user.email_address
-        email_body = render_template(
-            "emails/g7_follow_up_question.html",
-            supplier_name=current_user.supplier_name,
-            user_name=current_user.name,
-            message=clarification_question
-        )
-        tags = ["g7-application-question"]
-    else:
-        subject = "Clarification question"
+    if framework['clarificationQuestionsOpen']:
+        subject = "{} clarification question".format(framework['name'])
         to_address = current_app.config['DM_CLARIFICATION_QUESTION_EMAIL']
-        from_address = "suppliers@digitalmarketplace.service.gov.uk"
+        from_address = "suppliers+{}@digitalmarketplace.service.gov.uk".format(framework['slug'])
         email_body = render_template(
             "emails/clarification_question.html",
             supplier_name=current_user.supplier_name,
@@ -398,6 +387,18 @@ def framework_updates_email_clarification_question(framework_slug):
             message=clarification_question
         )
         tags = ["clarification-question"]
+    else:
+        subject = "{} application question".format(framework['name'])
+        to_address = current_app.config['DM_FOLLOW_UP_EMAIL_TO']
+        from_address = current_user.email_address
+        email_body = render_template(
+            "emails/follow_up_question.html",
+            supplier_name=current_user.supplier_name,
+            user_name=current_user.name,
+            framework_name=framework['name'],
+            message=clarification_question
+        )
+        tags = ["application-question"]
     try:
         send_email(
             to_address,
@@ -410,18 +411,15 @@ def framework_updates_email_clarification_question(framework_slug):
         )
     except MandrillException as e:
         current_app.logger.error(
-            "Clarification question email failed to send. "
+            "{framework} clarification question email failed to send. "
             "error {error} supplier_id {supplier_id} email_hash {email_hash}",
             extra={'error': six.text_type(e),
+                   'framework': framework['slug'],
                    'supplier_id': current_user.supplier_id,
                    'email_hash': hash_email(current_user.email_address)})
         abort(503, "Clarification question email failed to send")
 
-    if flask_featureflags.is_active('G7_CLARIFICATIONS_CLOSED'):
-        # Do not send confirmation email to the user who submitted the question
-        # Zendesk will handle this instead
-        audit_type = AuditTypes.send_g7_application_question
-    else:
+    if framework['clarificationQuestionsOpen']:
         # Send confirmation email to the user who submitted the question
         # No need to fail if this email does not send
         subject = current_app.config['CLARIFICATION_EMAIL_SUBJECT']
@@ -430,6 +428,7 @@ def framework_updates_email_clarification_question(framework_slug):
         email_body = render_template(
             "emails/clarification_question_submitted.html",
             user_name=current_user.name,
+            framework_name=framework['name'],
             message=clarification_question
         )
         try:
@@ -444,18 +443,23 @@ def framework_updates_email_clarification_question(framework_slug):
             )
         except MandrillException as e:
             current_app.logger.error(
-                "Clarification question confirmation email failed to send. "
+                "{} clarification question confirmation email failed to send. "
                 "error {error} supplier_id {supplier_id} email_hash {email_hash}",
                 extra={'error': six.text_type(e),
+                       'framework': framework['slug'],
                        'supplier_id': current_user.supplier_id,
                        'email_hash': hash_email(current_user.email_address)})
+    else:
+        # Do not send confirmation email to the user who submitted the question
+        # Zendesk will handle this instead
+        audit_type = AuditTypes.send_application_question
 
     data_api_client.create_audit_event(
         audit_type=audit_type,
         user=current_user.email_address,
         object_type="suppliers",
         object_id=current_user.supplier_id,
-        data={"question": clarification_question})
+        data={"question": clarification_question, 'framework': framework['slug']})
 
     flash('message_sent', 'success')
     return framework_updates(framework['slug'])

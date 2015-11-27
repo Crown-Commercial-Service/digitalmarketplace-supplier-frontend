@@ -52,8 +52,7 @@ class Config(object):
     CLARIFICATION_EMAIL_NAME = 'Digital Marketplace Admin'
     CLARIFICATION_EMAIL_FROM = 'do-not-reply@digitalmarketplace.service.gov.uk'
     CLARIFICATION_EMAIL_SUBJECT = 'Thanks for your clarification question'
-    G7_FOLLOW_UP_EMAIL_SUBJECT = 'Thanks for your G-Cloud 7 question'
-    DM_G7_FOLLOW_UP_EMAIL_TO = 'digitalmarketplace@mailinator.com'
+    DM_FOLLOW_UP_EMAIL_TO = 'digitalmarketplace@mailinator.com'
 
     CREATE_USER_SUBJECT = 'Create your Digital Marketplace account'
     SECRET_KEY = os.getenv('DM_PASSWORD_SECRET_KEY')
@@ -73,7 +72,6 @@ class Config(object):
     RAISE_ERROR_ON_MISSING_FEATURES = True
 
     FEATURE_FLAGS_EDIT_SERVICE_PAGE = False
-    FEATURE_FLAGS_G7_CLARIFICATIONS_CLOSED = False
 
     # Logging
     DM_LOG_LEVEL = 'DEBUG'
@@ -111,7 +109,6 @@ class Development(Config):
 
     # Dates not formatted like YYYY-(0)M-(0)D will fail
     FEATURE_FLAGS_EDIT_SERVICE_PAGE = enabled_since('2015-06-03')
-    FEATURE_FLAGS_G7_CLARIFICATIONS_CLOSED = enabled_since('2015-09-15')
 
 
 class Live(Config):
@@ -124,15 +121,14 @@ class Live(Config):
 
 class Preview(Live):
     FEATURE_FLAGS_EDIT_SERVICE_PAGE = enabled_since('2015-06-03')
-    FEATURE_FLAGS_G7_CLARIFICATIONS_CLOSED = enabled_since('2015-09-18')
 
 
 class Production(Live):
-    FEATURE_FLAGS_G7_CLARIFICATIONS_CLOSED = enabled_since('2015-09-22')
+    pass
 
 
 class Staging(Production):
-    FEATURE_FLAGS_G7_CLARIFICATIONS_CLOSED = enabled_since('2015-09-18')
+    pass
 
 configs = {
     'development': Development,
