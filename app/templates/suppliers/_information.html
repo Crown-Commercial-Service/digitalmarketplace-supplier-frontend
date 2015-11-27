@@ -24,7 +24,7 @@
   {% endcall %}
   {% call summary.row() %}
     {{ summary.field_name('Website') }}
-    {{ summary.text(supplier.contact.website) }}
+    {{ summary.external_link(supplier.contact.website, supplier.contact.website)}}
   {% endcall %}
   {% call summary.row() %}
     {{ summary.field_name('Address') }}
