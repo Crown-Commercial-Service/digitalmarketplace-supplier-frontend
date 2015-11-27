@@ -392,9 +392,10 @@ def framework_updates_email_clarification_question(framework_slug):
         to_address = current_app.config['DM_FOLLOW_UP_EMAIL_TO']
         from_address = current_user.email_address
         email_body = render_template(
-            "emails/g7_follow_up_question.html",
+            "emails/follow_up_question.html",
             supplier_name=current_user.supplier_name,
             user_name=current_user.name,
+            framework_name=framework['name'],
             message=clarification_question
         )
         tags = ["application-question"]
@@ -426,6 +427,7 @@ def framework_updates_email_clarification_question(framework_slug):
         email_body = render_template(
             "emails/clarification_question_submitted.html",
             user_name=current_user.name,
+            framework_name=framework['name'],
             message=clarification_question
         )
         try:
