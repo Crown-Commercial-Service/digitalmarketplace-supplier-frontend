@@ -45,7 +45,7 @@
       {% endwith %}
 
       {% if framework.status == 'open' %}
-        <aside role="complementary" class="framework-application-status" aria-label="G-Cloud status">
+        <aside role="complementary" class="framework-application-status" aria-label="{{ framework.name }} status">
           Deadline <strong>{{ deadline|safe }}</strong>
         </aside>
       {% elif framework.status == 'pending' %}
@@ -53,7 +53,7 @@
           <h2 class="summary-item-heading">{{ framework.name }} is closed for applications</h2>
           {% if application_made %}
             <p>You made your supplier declaration and submitted {{ counts.complete }} {{ 'service' if counts.complete == 1 else 'services' }} for consideration.</p>
-            <p>A letter informing you whether your application was successful or not will be posted on your G-Cloud 7 updates page by Monday, 9 November 2015.</p>
+            <p>A letter informing you whether your application was successful or not will be posted on your {{ framework.name }} updates page by Monday, 9 November 2015.</p>
           {% else %}
             <p>You didn't submit an application.</p>
           {% endif %}
@@ -219,7 +219,7 @@
             </h2>
             <ul>
               <li class="guidance-link">
-                <a href="{{ url_for('.download_supplier_file', filepath='g-cloud-7-supplier-pack.zip', framework_slug=framework.slug) }}"><span>Download guidance and legal documentation (.zip)</span></a>
+                <a href="{{ url_for('.download_supplier_file', filepath=supplier_pack_filename, framework_slug=framework.slug) }}"><span>Download guidance and legal documentation (.zip)</span></a>
                 {% if last_modified.supplier_pack %}
                   <div class="hint">Last updated <time datetime="{{ last_modified.supplier_pack }}">{{ last_modified.supplier_pack|dateformat }}</time></div>
                 {% endif %}

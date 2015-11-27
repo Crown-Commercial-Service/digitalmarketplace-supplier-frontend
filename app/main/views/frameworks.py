@@ -30,8 +30,8 @@ from ..helpers.frameworks import get_declaration_status, \
     count_drafts_by_lot, get_statuses_for_lot, has_one_service_limit
 from ..helpers.validation import get_validator
 from ..helpers.services import (
-    get_draft_document_url, get_drafts, get_lot_drafts,
-    count_unanswered_questions
+    get_signed_document_url,
+    get_drafts, get_lot_drafts, count_unanswered_questions
 )
 
 
@@ -61,9 +61,7 @@ def framework_dashboard(framework_slug):
     if declaration_status == 'unstarted' and framework['status'] == 'live':
         abort(404)
 
-    # TODO: change to new format
-    key_list = s3.S3(current_app.config['DM_G7_DRAFT_DOCUMENTS_BUCKET']).list('g-cloud-7-')
-    # last_modified files will be first
+    key_list = s3.S3(current_app.config['DM_COMMUNICATIONS_BUCKET']).list(framework_slug)
     key_list.reverse()
 
     try:
@@ -72,6 +70,8 @@ def framework_dashboard(framework_slug):
         ).get_next_editable_section_id()
     except ContentNotFoundError:
         first_page = None
+
+    supplier_pack_filename = '{}-supplier-pack.zip'.format(framework_slug)
 
     return render_template(
         "frameworks/dashboard.html",
@@ -93,10 +93,14 @@ def framework_dashboard(framework_slug):
         framework=framework,
         application_made=(len(complete_drafts) > 0 and declaration_status == 'complete'),
         supplier_is_on_framework=supplier_is_on_framework,
+        supplier_pack_filename=supplier_pack_filename,
         last_modified={
-            # TODO: s3 stuff above
-            'supplier_pack': get_last_modified_from_first_matching_file(key_list, 'g-cloud-7-supplier-pack.zip'),
-            'supplier_updates': get_last_modified_from_first_matching_file(key_list, 'g-cloud-7-updates/')
+            'supplier_pack': get_last_modified_from_first_matching_file(
+                key_list, framework_slug, "communications/{}".format(supplier_pack_filename)
+            ),
+            'supplier_updates': get_last_modified_from_first_matching_file(
+                key_list, framework_slug, "communications/updates/"
+            )
         },
         **main.config['BASE_TEMPLATE_DATA']
     ), 200
@@ -274,8 +278,8 @@ def framework_supplier_declaration(framework_slug, section_id=None):
 @main.route('/frameworks/<framework_slug>/files/<path:filepath>', methods=['GET'])
 @login_required
 def download_supplier_file(framework_slug, filepath):
-    uploader = s3.S3(current_app.config['DM_G7_DRAFT_DOCUMENTS_BUCKET'])
-    url = get_draft_document_url(uploader, filepath)
+    uploader = s3.S3(current_app.config['DM_COMMUNICATIONS_BUCKET'])
+    url = get_signed_document_url(uploader, "{}/communications/{}".format(framework_slug, filepath))
     if not url:
         abort(404)
 
@@ -321,30 +325,21 @@ def g7_download_zip_redirect_pdf(framework_slug, filepath):
 def framework_updates(framework_slug, error_message=None, default_textbox_value=None):
     framework = get_framework(data_api_client, framework_slug, open_only=False)
 
-    current_app.logger.info("g7updates.viewed: user_id {user_id} supplier_id {supplier_id}",
-                            extra={'user_id': current_user.id,
+    current_app.logger.info("{framework_slug}-updates.viewed: user_id {user_id} supplier_id {supplier_id}",
+                            extra={'framework_slug': framework_slug,
+                                   'user_id': current_user.id,
                                    'supplier_id': current_user.supplier_id})
 
-    file_list = s3.S3(current_app.config['DM_G7_DRAFT_DOCUMENTS_BUCKET']).list('g-cloud-7-updates/')
-
-    # TODO: move this into the template
-    sections = [
-        {
-            'section': 'communications',
-            'heading': "G-Cloud 7 communications",
-            'empty_message': "No communications have been sent out",
-            'files': []
-        },
-        {
-            'section': 'clarifications',
-            'heading': "G-Cloud 7 clarification questions and answers",
-            'empty_message': "No clarification questions and answers have been posted yet",
-            'files': []
-        }
-    ]
-
-    for section in sections:
-        section['files'] = [file for file in file_list if section['section'] == file['path'].split('/')[1]]
+    communications_bucket = s3.S3(current_app.config['DM_COMMUNICATIONS_BUCKET'])
+    file_list = communications_bucket.list('{}/communications/updates/'.format(framework_slug))
+    files = {
+        'communications': [],
+        'clarifications': [],
+    }
+    for file in file_list:
+        path_parts = file['path'].split('/')
+        file['path'] = '/'.join(path_parts[2:])
+        files[path_parts[3]].append(file)
 
     return render_template(
         "frameworks/updates.html",
@@ -352,7 +347,7 @@ def framework_updates(framework_slug, error_message=None, default_textbox_value=
         clarification_question_name=CLARIFICATION_QUESTION_NAME,
         clarification_question_value=default_textbox_value,
         error_message=error_message,
-        sections=sections,
+        files=files,
         **main.config['BASE_TEMPLATE_DATA']
     ), 200 if not error_message else 400
 

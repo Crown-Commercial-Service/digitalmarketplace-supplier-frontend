@@ -30,9 +30,6 @@ class Config(object):
     DOS_CLOSING_DATE = '19 January 2016'
     G7_LIVE_DATE = '23 November 2015'
 
-    DM_G7_DRAFT_DOCUMENTS_BUCKET = None
-    DM_G7_DRAFT_DOCUMENTS_URL = None
-
     DM_AGREEMENTS_BUCKET = None
     DM_COMMUNICATIONS_BUCKET = None
     DM_DOCUMENTS_BUCKET = None

@@ -1183,7 +1183,7 @@ class TestSubmissionDocuments(BaseApplicationTest):
         assert_equal(res.status_code, 302)
         assert_equal(
             res.headers['Location'],
-            'http://digitalmarketplace-documents-dev-dev.local/document.pdf'
+            'http://asset-host/document.pdf'
         )
 
     def test_missing_document_url(self, s3):

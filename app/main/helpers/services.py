@@ -55,11 +55,11 @@ def is_service_modifiable(service):
     return service.get('status') != 'disabled'
 
 
-def get_draft_document_url(uploader, document_path):
+def get_signed_document_url(uploader, document_path):
     url = uploader.get_signed_url(document_path)
     if url is not None:
         url = urlparse.urlparse(url)
-        base_url = urlparse.urlparse(current_app.config['DM_G7_DRAFT_DOCUMENTS_URL'])
+        base_url = urlparse.urlparse(current_app.config['DM_ASSETS_URL'])
         return url._replace(netloc=base_url.netloc, scheme=base_url.scheme).geturl()
 
 

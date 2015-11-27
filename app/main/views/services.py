@@ -6,7 +6,7 @@ from ... import data_api_client, flask_featureflags
 from ...main import main, content_loader
 from ..helpers.services import (
     is_service_modifiable, is_service_associated_with_supplier,
-    get_draft_document_url, count_unanswered_questions,
+    get_signed_document_url, count_unanswered_questions,
     get_next_section_name
 )
 from ..helpers.frameworks import get_framework_and_lot, get_declaration_status
@@ -341,8 +341,8 @@ def service_submission_document(framework_slug, supplier_id, document_name):
         abort(404)
 
     uploader = s3.S3(current_app.config['DM_SUBMISSIONS_BUCKET'])
-    s3_url = get_draft_document_url(uploader,
-                                    "{}/{}/{}".format(framework_slug, supplier_id, document_name))
+    s3_url = get_signed_document_url(uploader,
+                                     "{}/{}/{}".format(framework_slug, supplier_id, document_name))
     if not s3_url:
         abort(404)
 
