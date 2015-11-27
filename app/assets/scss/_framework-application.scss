@@ -4,154 +4,36 @@
 .framework-application-status {
 
   @include core-19;
-  font-weight: bold;
   padding-bottom: $gutter * 2/3;
-  padding-top: $gutter * 1/2;
 
   @include media(tablet) {
     padding-top: 0;
   }
 
-}
-
-.big-number {
-  //@include bold-27;
-  @include inline-block;
-  padding-top: 5px;
-  //padding-right: 1px;
-}
-
-%framework-application-section,
-.framework-application-section {
-
-  border-top: 1px solid $grey-2;
-  padding-top: $gutter * 2/3;
-  margin-bottom: $gutter * 2/3;
-
-  p {
-    margin-bottom: 5px;
-  }
-
-  h2 {
-    @include bold-24;
-  }
-
-  li {
-    margin-top: 5px;
+  strong {
+    font-weight: normal;
   }
 
 }
 
-.framework-application-section-last {
-  @extend %framework-application-section;
-  border-bottom: 1px solid $grey-2;
-  padding-bottom: $gutter * 2/3;
-}
+.framework-dashboard {
 
-.framework-section-status-neutral {
-  @extend %framework-section-status;
-  color: $secondary-text-colour;
-  font-weight: normal;
-  margin-top: 5px;
-}
+  .browse-list-item {
 
-.framework-section-status-bad {
+    border-top: 1px solid $border-colour;
+    padding-top: $gutter * 2/3;
 
-  @extend %framework-section-status;
-  color: $mellow-red;
-
-  p {
-    margin-bottom: -5px;
-  }
-
-}
-
-.framework-section-status-good {
-  @extend %framework-section-status;
-}
-
-.framework-section-validation-bar {
-  border-left: 5px solid $mellow-red;
-  padding-left: 15px;
-  margin-bottom: 25px;
-}
-
-
-.submission-status-bad {
-
-  @extend %submission-status;
-  color: $mellow-red;
-
-  @include bold-16;
-
-  @include media(desktop) {
-    @include bold-19;
-  }
-
-}
-
-.submission-service-counts-column {
-
-  float: left;
-  box-sizing: border-box;
-  margin-top: 10px;
-  width: 49%;
-  padding-right: 10px;
-  vertical-align: top;
-  @include core-16;
-
-  @include media(desktop) {
-    margin-top: 0;
-    @include core-19;
-  }
-
-}
-
-.draft-service-count {
-  margin-top: $gutter/3;
-  color: $secondary-text-colour;
-}
-
-%framework-agreement-section,
-.framework-agreement-section {
-  padding: 20px 0 15px 0;
-  border-top: 1px solid #dee0e2;
-
-  .document-list {
-    padding-bottom: 0;
-  }
-
-  .question {
-    margin: 0;
-
-    .question-heading {
-      position: absolute;
-      left: -9999em;
-    }
-  }
-
-  h3 {
-    margin-bottom: 5px;
-  }
-
-  .lead-in {
-    margin-bottom: 10px;
-  }
-
-  ol {
-    list-style: decimal;
-    margin-left: 1.5em;
-    margin-bottom: 10px;
-
-    li {
+    h2 {
+      @include bold-24;
       margin-bottom: 5px;
     }
-  }
-}
 
-.framework-agreement-section-first {
-  @extend %framework-agreement-section;
-  border-top: none;
+    .guidance-link {
+      margin-bottom: 10px
+    }
+
+  }
+
 }
 
 /* Temporary styles, to be added to toolkit */

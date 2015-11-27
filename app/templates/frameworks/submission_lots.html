@@ -46,7 +46,7 @@
     {%
       with
       message = 'You need to <a href="' + url_for('.framework_supplier_declaration', framework_slug=framework.slug) + '">make the supplier&nbsp;declaration</a> before any services can be submitted',
-      type = 'warning'
+      type = 'destructive'
     %}
       {% include 'toolkit/notification-banner.html' %}
     {% endwith %}
