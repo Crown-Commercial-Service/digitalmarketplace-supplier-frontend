@@ -1111,7 +1111,7 @@ class TestSendClarificationQuestionEmail(BaseApplicationTest):
                 }
             )
 
-    def _assert_email(self, send_email, is_called=True, succeeds=True):
+    def _assert_clarification_email(self, send_email, is_called=True, succeeds=True):
 
         if succeeds:
             assert_equal(2, send_email.call_count)
@@ -1125,8 +1125,8 @@ class TestSendClarificationQuestionEmail(BaseApplicationTest):
                 "digitalmarketplace@mailinator.com",
                 mock.ANY,
                 "MANDRILL",
-                "Clarification question",
-                "suppliers@digitalmarketplace.service.gov.uk",
+                "G-Cloud 7 clarification question",
+                "suppliers+g-cloud-7@digitalmarketplace.service.gov.uk",
                 "G-Cloud 7 Supplier",
                 ["clarification-question"]
             )
@@ -1141,7 +1141,7 @@ class TestSendClarificationQuestionEmail(BaseApplicationTest):
                 ["clarification-question-confirm"]
             )
 
-    def _assert_g7_email(self, send_email, succeeds=True):
+    def _assert_application_email(self, send_email, succeeds=True):
 
         if succeeds:
             assert_equal(1, send_email.call_count)
@@ -1156,7 +1156,7 @@ class TestSendClarificationQuestionEmail(BaseApplicationTest):
                 "G-Cloud 7 application question",
                 "email@email.com",
                 "G-Cloud 7 Supplier",
-                ["g7-application-question"]
+                ["application-question"]
             )
 
     @mock.patch('app.main.views.frameworks.data_api_client')
@@ -1180,7 +1180,7 @@ class TestSendClarificationQuestionEmail(BaseApplicationTest):
         ]:
 
             response = self._send_email(invalid_clarification_question['question'])
-            self._assert_email(send_email, is_called=False, succeeds=False)
+            self._assert_clarification_email(send_email, is_called=False, succeeds=False)
 
             assert_equal(response.status_code, 400)
             assert_true(
@@ -1201,7 +1201,7 @@ class TestSendClarificationQuestionEmail(BaseApplicationTest):
         clarification_question = 'This is a clarification question.'
         response = self._send_email(clarification_question)
 
-        self._assert_email(send_email)
+        self._assert_clarification_email(send_email)
 
         assert_equal(response.status_code, 200)
         assert_true(
@@ -1213,17 +1213,16 @@ class TestSendClarificationQuestionEmail(BaseApplicationTest):
     @mock.patch('app.main.views.frameworks.data_api_client')
     @mock.patch('app.main.views.frameworks.send_email')
     def test_should_call_send_g7_email_with_correct_params(self, send_email, data_api_client, s3):
-        data_api_client.get_framework.return_value = self.framework('open')
-        self.app.config['FEATURE_FLAGS_G7_CLARIFICATIONS_CLOSED'] = 1
+        data_api_client.get_framework.return_value = self.framework('open', clarification_questions_open=False)
         clarification_question = 'This is a G7 question.'
         response = self._send_email(clarification_question)
 
-        self._assert_g7_email(send_email)
+        self._assert_application_email(send_email)
 
         assert_equal(response.status_code, 200)
-        assert_true(
-            self.strip_all_whitespace('<p class="banner-message">Your question has been sent. You\'ll get a reply from the Crown Commercial Service soon.</p>')  # noqa
-            in self.strip_all_whitespace(response.get_data(as_text=True))
+        assert_in(
+            self.strip_all_whitespace('<p class="banner-message">Your question has been sent. You\'ll get a reply from the Crown Commercial Service soon.</p>'),  # noqa
+            self.strip_all_whitespace(response.get_data(as_text=True))
         )
 
     @mock.patch('dmutils.s3.S3')
@@ -1234,7 +1233,7 @@ class TestSendClarificationQuestionEmail(BaseApplicationTest):
         clarification_question = 'This is a clarification question'
         response = self._send_email(clarification_question)
 
-        self._assert_email(send_email)
+        self._assert_clarification_email(send_email)
 
         assert_equal(response.status_code, 200)
         data_api_client.create_audit_event.assert_called_with(
@@ -1248,12 +1247,11 @@ class TestSendClarificationQuestionEmail(BaseApplicationTest):
     @mock.patch('app.main.views.frameworks.data_api_client')
     @mock.patch('app.main.views.frameworks.send_email')
     def test_should_create_g7_question_audit_event(self, send_email, data_api_client, s3):
-        data_api_client.get_framework.return_value = self.framework('open')
-        self.app.config['FEATURE_FLAGS_G7_CLARIFICATIONS_CLOSED'] = 1
+        data_api_client.get_framework.return_value = self.framework('open', clarification_questions_open=False)
         clarification_question = 'This is a G7 question'
         response = self._send_email(clarification_question)
 
-        self._assert_g7_email(send_email)
+        self._assert_application_email(send_email)
 
         assert_equal(response.status_code, 200)
         data_api_client.create_audit_event.assert_called_with(
@@ -1271,7 +1269,7 @@ class TestSendClarificationQuestionEmail(BaseApplicationTest):
 
         clarification_question = 'This is a clarification question.'
         response = self._send_email(clarification_question)
-        self._assert_email(send_email, succeeds=False)
+        self._assert_clarification_email(send_email, succeeds=False)
 
         assert_equal(response.status_code, 503)
 

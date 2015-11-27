@@ -171,7 +171,7 @@ class BaseApplicationTest(object):
         }
 
     @staticmethod
-    def framework(status='open', name='G-Cloud 7', slug='g-cloud-7'):
+    def framework(status='open', name='G-Cloud 7', slug='g-cloud-7', clarification_questions_open=True):
         if slug == 'g-cloud-7':
             lots = [
                 {'id': 1, 'slug': 'iaas', 'name': 'Infrastructure as a Service', 'one_service_limit': False},
@@ -185,6 +185,7 @@ class BaseApplicationTest(object):
         return {
             'frameworks': {
                 'status': status,
+                'clarificationQuestionsOpen': clarification_questions_open,
                 'name': name,
                 'slug': slug,
                 'lots': lots,
