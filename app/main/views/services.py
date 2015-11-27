@@ -538,11 +538,15 @@ def remove_subsection(framework_slug, lot_slug, service_id, question_slug):
                     draft,
                     current_user.email_address
                 )
+                flash({'service_name': question_to_remove.label}, 'service_deleted')
             except HTTPError as e:
                 abort(e.status_code)
         else:
             # You can't remove the last one
-            flash('remove_last_attempted', 'error')
+            flash({
+                'remove_last_attempted': containing_section.name,
+                'service_name': question_to_remove.label
+            }, 'error')
 
         return redirect(
             url_for('.view_service_submission',

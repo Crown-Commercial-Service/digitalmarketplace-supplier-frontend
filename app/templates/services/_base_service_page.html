@@ -12,16 +12,18 @@
           {% else %}
             <div class="banner-success-without-action">
           {% endif %}
-          {% if message == 'remove_last_attempted' %}
-            <p class="banner-message">
-              You can't remove all items from this service &ndash; it must have at least one.<br>
-              To remove it, add another item first.<br>
-              If you don't want to submit this service, delete it.
-            </p>
+              <p class="banner-message">
+          {% if 'remove_last_attempted' in message %}
+                You can't remove the last item from &ldquo;{{ message.remove_last_attempted }}&rdquo;.<br>
+                To remove &ldquo;{{ message.service_name or 'it' }}&rdquo;, add another one first.<br>
+                If you don't want to submit in this lot, delete it.
+            {% elif category == 'service_deleted' %}
+                <strong>{{message.service_name}}</strong> was deleted
             {% else %}
-              {{ message }}
+                {{ message }}
             {% endif %}
-          </div>
+              </p>
+            </div>
         {% endfor %}
       {% endif %}
     {% endwith %}
