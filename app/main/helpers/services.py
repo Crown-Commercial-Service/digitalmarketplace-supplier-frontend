@@ -63,11 +63,6 @@ def get_signed_document_url(uploader, document_path):
         return url._replace(netloc=base_url.netloc, scheme=base_url.scheme).geturl()
 
 
-# TODO: REMOVE
-def get_draft_document_url(uploader, document_path):
-    return get_signed_document_url(uploader, document_path)
-
-
 def parse_document_upload_time(data):
     match = re.search("(\d{4}-\d{2}-\d{2}-\d{2}\d{2})\..{2,3}$", data)
     if match:
