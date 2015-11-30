@@ -17,7 +17,7 @@
     <div class="column-one-whole">
       {% import "toolkit/summary-table.html" as summary %}
       {% for section in sections %}
-        {{ summary.heading(section.name) }}
+        {{ summary.heading(section.name, id=section.slug) }}
         {% if section.editable %}
           {% block edit_link scoped %}{% endblock %}
         {% endif %}
@@ -39,7 +39,7 @@
             {% if question.answer_required %}
               {% call summary.field() %}
                 {% if framework and framework.status == 'open' %}
-                    <a href="{{ url_for(".edit_service_submission", framework_slug=framework.slug, lot_slug=service_data.lot, service_id=service_id, section_id=section.id) }}">Answer required</a>
+                    <a href="{{ url_for(".edit_service_submission", framework_slug=framework.slug, lot_slug=service_data.lot, service_id=service_id, section_id=section.id, _anchor=question.id) }}">Answer required</a>
                 {% else %}
                   Not answered
                 {% endif %}
