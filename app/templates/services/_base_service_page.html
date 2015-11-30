@@ -39,7 +39,7 @@
             {% if question.answer_required %}
               {% call summary.field() %}
                 {% if framework and framework.status == 'open' %}
-                    <a href="{{ url_for(".edit_service_submission", framework_slug=framework.slug, lot_slug=service_data.lot, service_id=service_id, section_id=section.id) }}">Answer required</a>
+                    <a href="{{ url_for(".edit_service_submission", framework_slug=framework.slug, lot_slug=service_data.lot, service_id=service_id, section_id=section.id) }}#{{ question.id }}">Answer required</a>
                 {% else %}
                   Not answered
                 {% endif %}
