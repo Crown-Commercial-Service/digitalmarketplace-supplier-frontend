@@ -76,7 +76,7 @@
     by {{ last_edit.userName }}
   </p>
   {% if framework.status == 'open' %}
-    {% if unanswered_required or unanswered_optional %}
+    {% if not one_service_limit and (unanswered_required or unanswered_optional) %}
       <p class="last-edited">
         {{ submission.multiline_string(
           submission.unanswered_required_text(unanswered_required, unanswered_optional),
