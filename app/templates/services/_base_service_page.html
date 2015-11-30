@@ -17,7 +17,7 @@
     <div class="column-one-whole">
       {% import "toolkit/summary-table.html" as summary %}
       {% for section in sections %}
-        {{ summary.heading(section.name) }}
+        {{ summary.heading(section.name, id=section.slug) }}
         {% if section.editable %}
           {% block edit_link scoped %}{% endblock %}
         {% endif %}

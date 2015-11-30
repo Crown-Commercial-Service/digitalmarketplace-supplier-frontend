@@ -831,7 +831,10 @@ class TestEditDraftService(BaseApplicationTest):
             data={})
 
         assert_equal(302, res.status_code)
-        assert_equal('http://localhost/suppliers/frameworks/g-cloud-7/submissions/scs/1', res.headers['Location'])
+        assert_equal(
+            'http://localhost/suppliers/frameworks/g-cloud-7/submissions/scs/1#sfia-rate-card',
+            res.headers['Location']
+        )
 
     def test_update_redirects_to_edit_submission_if_return_to_summary(self, data_api_client, s3):
         s3.return_value.bucket_short_name = 'submissions'
@@ -844,7 +847,10 @@ class TestEditDraftService(BaseApplicationTest):
             data={})
 
         assert_equal(302, res.status_code)
-        assert_equal('http://localhost/suppliers/frameworks/g-cloud-7/submissions/scs/1', res.headers['Location'])
+        assert_equal(
+            'http://localhost/suppliers/frameworks/g-cloud-7/submissions/scs/1#service-description',
+            res.headers['Location']
+        )
 
     def test_update_redirects_to_edit_submission_if_grey_button_clicked(self, data_api_client, s3):
         s3.return_value.bucket_short_name = 'submissions'
@@ -857,7 +863,10 @@ class TestEditDraftService(BaseApplicationTest):
             data={})
 
         assert_equal(302, res.status_code)
-        assert_equal('http://localhost/suppliers/frameworks/g-cloud-7/submissions/scs/1', res.headers['Location'])
+        assert_equal(
+            'http://localhost/suppliers/frameworks/g-cloud-7/submissions/scs/1#service-description',
+            res.headers['Location']
+        )
 
     def test_update_with_answer_required_error(self, data_api_client, s3):
         s3.return_value.bucket_short_name = 'submissions'
