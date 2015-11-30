@@ -500,15 +500,11 @@ def update_section_submission(framework_slug, lot_slug, service_id, section_id, 
                                 service_id=service_id,
                                 section_id=next_section))
     else:
-        return redirect("{}#{}".format(
-            url_for(
-                ".view_service_submission",
-                framework_slug=framework['slug'],
-                lot_slug=draft['lot'],
-                service_id=service_id
-            ),
-            section_id
-        ))
+        return redirect(url_for(".view_service_submission",
+                                framework_slug=framework['slug'],
+                                lot_slug=draft['lot'],
+                                service_id=service_id,
+                                _anchor=section_id))
 
 
 def _update_service_status(service, error_message=None):
