@@ -520,8 +520,14 @@ def remove_subsection(framework_slug, lot_slug, service_id, section_id, question
         abort(404)
 
     content = content_loader.get_manifest(framework_slug, 'edit_submission').filter(draft)
+    section = content.get_section(section_id)
+    containing_section = section
+    if section and (question_slug is not None):
+        section = section.get_question_as_section(question_slug)
+    if section is None or not section.editable:
+        abort(404)
+
     question_to_remove = content.get_question_by_slug(question_slug)
-    containing_section = content.get_section(section_id)
     fields_to_remove = question_to_remove.form_fields
 
     if request.args.get("confirm") and request.method == "POST":
