@@ -1003,7 +1003,7 @@ class TestEditDraftService(BaseApplicationTest):
 
         res = self.client.get(
             '/suppliers/frameworks/digital-outcomes-and-specialists/submissions/' +
-            'digital-specialists/1/remove/specialists/agile-coach'
+            'digital-specialists/1/remove/digital-specialists/agile-coach'
         )
 
         assert_equal(res.status_code, 302)
@@ -1022,7 +1022,7 @@ class TestEditDraftService(BaseApplicationTest):
 
         res3 = self.client.post(
             '/suppliers/frameworks/digital-outcomes-and-specialists/submissions/' +
-            'digital-specialists/1/remove/specialists/agile-coach?confirm=True')
+            'digital-specialists/1/remove/digital-specialists/agile-coach?confirm=True')
 
         assert_equal(res3.status_code, 302)
         assert(res3.location.endswith(
@@ -1062,7 +1062,7 @@ class TestEditDraftService(BaseApplicationTest):
 
         res = self.client.get(
             '/suppliers/frameworks/digital-outcomes-and-specialists/submissions/' +
-            'digital-specialists/1/remove/specialists/agile-coach'
+            'digital-specialists/1/remove/digital-specialists/agile-coach'
         )
 
         assert_equal(res.status_code, 302)
@@ -1085,7 +1085,7 @@ class TestEditDraftService(BaseApplicationTest):
         data_api_client.get_draft_service.return_value = draft_service
         res = self.client.post(
             '/suppliers/frameworks/digital-outcomes-and-specialists/submissions/' +
-            'digital-specialists/1/remove/specialists/agile-coach?confirm=True')
+            'digital-specialists/1/remove/digital-specialists/agile-coach?confirm=True')
 
         assert_equal(res.status_code, 404)
         data_api_client.update_draft_service.assert_not_called()
@@ -1094,7 +1094,7 @@ class TestEditDraftService(BaseApplicationTest):
         data_api_client.get_draft_service.side_effect = HTTPError(mock.Mock(status_code=504))
         res = self.client.post(
             '/suppliers/frameworks/digital-outcomes-and-specialists/submissions/' +
-            'digital-specialists/1/remove/specialists/agile-coach?confirm=True')
+            'digital-specialists/1/remove/digital-specialists/agile-coach?confirm=True')
         assert_equal(res.status_code, 504)
 
     def test_fails_if_api_update_fails(self, data_api_client, s3):
@@ -1102,7 +1102,7 @@ class TestEditDraftService(BaseApplicationTest):
         data_api_client.update_draft_service.side_effect = HTTPError(mock.Mock(status_code=504))
         res = self.client.post(
             '/suppliers/frameworks/digital-outcomes-and-specialists/submissions/' +
-            'digital-specialists/1/remove/specialists/agile-coach?confirm=True')
+            'digital-specialists/1/remove/digital-specialists/agile-coach?confirm=True')
         assert_equal(res.status_code, 504)
 
 

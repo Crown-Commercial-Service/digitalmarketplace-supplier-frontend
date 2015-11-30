@@ -7,7 +7,7 @@ from ...main import main, content_loader
 from ..helpers.services import (
     is_service_modifiable, is_service_associated_with_supplier,
     get_signed_document_url, count_unanswered_questions,
-    get_next_section_name, get_containing_section)
+    get_next_section_name)
 
 from ..helpers.frameworks import get_framework_and_lot, get_declaration_status
 
@@ -521,18 +521,16 @@ def remove_subsection(framework_slug, lot_slug, service_id, section_id, question
 
     content = content_loader.get_manifest(framework_slug, 'edit_submission').filter(draft)
     question_to_remove = content.get_question_by_slug(question_slug)
-    containing_section = get_containing_section(content, question_to_remove)
+    containing_section = content.get_section(section_id)
     fields_to_remove = question_to_remove.form_fields
 
     if request.args.get("confirm") and request.method == "POST":
         # Remove the section
-        for field in fields_to_remove:
-            draft[field] = None
-
+        update_json = {field: None for field in fields_to_remove}
         try:
             data_api_client.update_draft_service(
                 service_id,
-                draft,
+                update_json,
                 current_user.email_address
             )
             flash({'service_name': question_to_remove.label}, 'service_deleted')
