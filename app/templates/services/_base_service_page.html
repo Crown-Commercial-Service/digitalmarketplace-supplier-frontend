@@ -33,8 +33,8 @@
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
         {%
           with
-          action = "<button class=\"button-destructive banner-action\" type=\"submit\">Yes &ndash; remove &ldquo;{}&rdquo;</button>".format(sections.get_question_by_slug(confirm_remove).label) | safe,
-          message = "Are you sure you want to remove &ldquo;{}&rdquo;?".format(sections.get_question_by_slug(confirm_remove).label) | safe,
+          action = "<button class=\"button-destructive banner-action\" type=\"submit\">Yes &ndash; remove &lsquo;{}&rsquo;</button>".format(sections.get_question_by_slug(confirm_remove).label) | safe,
+          message = "Are you sure you want to remove &lsquo;{}&rsquo;?".format(sections.get_question_by_slug(confirm_remove).label) | safe,
           type = "destructive"
         %}
           {% include "toolkit/notification-banner.html" %}

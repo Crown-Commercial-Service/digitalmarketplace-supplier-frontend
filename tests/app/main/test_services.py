@@ -1018,7 +1018,7 @@ class TestEditDraftService(BaseApplicationTest):
             'digital-specialists/1?section_id=specialists&confirm_remove=agile-coach'
         )
         assert_equal(res2.status_code, 200)
-        assert_in(u'Are you sure you want to remove &ldquo;Agile coach&rdquo;?', res2.get_data(as_text=True))
+        assert_in(u'Are you sure you want to remove &lsquo;Agile coach&rsquo;?', res2.get_data(as_text=True))
 
         res3 = self.client.post(
             '/suppliers/frameworks/digital-outcomes-and-specialists/submissions/' +
