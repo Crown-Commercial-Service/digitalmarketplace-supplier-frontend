@@ -1,0 +1,6 @@
+question: When was your organisation first registered?
+type: text
+validations:
+  -
+    name: under_character_limit
+    message: "Maximum 5000 characters."

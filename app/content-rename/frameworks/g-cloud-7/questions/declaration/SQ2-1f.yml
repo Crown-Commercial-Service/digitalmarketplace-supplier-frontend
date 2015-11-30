@@ -1,0 +1,11 @@
+question: >
+  Please confirm whether, within the past 5 years, anyone who represents your organisation or a partner organisation has been convicted of any offence listed in:
+
+
+    - section 41 of the Counter Terrorism Act 2008
+
+    - schedule 2 of the Counter Terrorism Act 2008 where the court has determined that there is a terrorist connection
+
+hint: "Answer 'yes' if anyone who represents your organisation or partner organisation has been convicted of any of the above."
+
+type: boolean

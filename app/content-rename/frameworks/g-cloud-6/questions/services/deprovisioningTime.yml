@@ -1,0 +1,23 @@
+depends:
+  -
+    "on": lot
+    being:
+      - SaaS
+      - saas
+      - PaaS
+      - paas
+      - IaaS
+      - iaas
+hint: ""
+type: text
+validations:
+  -
+    name: answer_required
+    message: 'You need to answer this question.'
+  -
+    name: under_20_words
+    message: 'Deprovisioning time must be no more than 20 words.'
+  -
+    name: under_character_limit
+    message: "Deprovisioning time must be no more than 200 characters."
+question: 'Service deprovisioning time'

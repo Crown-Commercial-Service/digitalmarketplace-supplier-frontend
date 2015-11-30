@@ -1,0 +1,13 @@
+question: Testing and auditing
+name: Testing and auditing
+optional: true
+depends:
+  - "on": lot
+    being:
+      - digital-outcomes
+type: multiquestion
+any_of: capability
+questions:
+  - testingAndAuditingTypes
+
+empty_message: You haven't added any testing and auditing capabilities

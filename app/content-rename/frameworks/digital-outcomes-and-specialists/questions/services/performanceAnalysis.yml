@@ -1,0 +1,13 @@
+question: Performance analysis and data
+name: Performance analysis and data
+optional: true
+depends:
+  - "on": lot
+    being:
+      - digital-outcomes
+type: multiquestion
+any_of: capability
+questions:
+  - performanceAnalysisTypes
+
+empty_message: You haven't added any performance analysis and data capabilities

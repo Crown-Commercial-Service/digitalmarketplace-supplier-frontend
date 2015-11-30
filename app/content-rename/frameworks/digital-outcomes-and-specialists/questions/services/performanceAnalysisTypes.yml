@@ -1,0 +1,19 @@
+question: What types of performance analysis can you provide?
+depends:
+  - "on": lot
+    being:
+      - digital-outcomes
+type: checkboxes
+options:
+  - label: A/B and multivariate testing
+  - label: Data analysis
+  - label: Data cleansing
+  - label: Data visualisation
+  - label: Performance frameworks
+  - label: Performance reporting
+  - label: Statistical modelling
+  - label: Web analytics
+
+validations:
+  - name: answer_required
+    message: 'You need to answer this question.'

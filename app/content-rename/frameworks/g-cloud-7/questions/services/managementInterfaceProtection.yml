@@ -1,0 +1,19 @@
+hint: 'Do you tell consumers what functionality and protection is available for management interfaces?'
+depends:
+  -
+    "on": lot
+    being:
+      - PaaS
+      - paas
+      - IaaS
+      - iaas
+assuranceApproach: 3answers-type2
+type: boolean
+validations:
+  -
+    name: answer_required
+    message: 'You need to answer this question.'
+  -
+    name: assurance_required
+    message: 'You need to confirm how you can back up your response.'
+question: 'Management interface protection'

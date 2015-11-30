@@ -1,0 +1,6 @@
+pending:
+  template_name: 'temporary-message'
+  heading: 'G‑Cloud 7 is closed for applications'
+  messages:
+    - 'Applications are being reviewed.'
+    - 'G‑Cloud 7 services will be available from 23 November 2015.'

@@ -1,0 +1,20 @@
+question: What types of security can you provide?
+depends:
+  - "on": lot
+    being:
+      - digital-outcomes
+type: checkboxes
+options:
+  - label: CESG information assurance certification
+  - label: Firewall audit
+  - label: Incident response and forensics
+  - label: Infrastructure review
+  - label: Risk management
+  - label: Security policy
+  - label: IT health check
+  - label: Threat modelling
+  - label: Vulnerability and penetration testing
+
+validations:
+  - name: answer_required
+    message: 'You need to answer this question.'

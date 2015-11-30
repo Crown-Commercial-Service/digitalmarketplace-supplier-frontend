@@ -1,0 +1,44 @@
+hint: 'This is an indicative price. Users will be able to refer to your pricing document for more information.'
+depends:
+  -
+    "on": lot
+    being:
+      - SaaS
+      - saas
+      - PaaS
+      - paas
+      - IaaS
+      - iaas
+      - SCS
+      - scs
+type: pricing
+question: 'Service price'
+fields:
+  minimum_price: priceMin
+  maximum_price: priceMax
+  price_unit: priceUnit
+  price_interval: priceInterval
+optional_fields:
+  - maximum_price
+  - price_interval
+validations:
+  -
+    name: answer_required
+    field: priceMin
+    message: 'Minimum price requires an answer.'
+  -
+    name: answer_required
+    field: priceUnit
+    message: 'Pricing unit requires an answer. If none of the provided units apply, please choose ''Unit''.'
+  -
+    name: not_a_number
+    field: priceMin
+    message: 'Minimum price must be a number, without units, eg 99.95'
+  -
+    name: not_a_number
+    field: priceMax
+    message: 'Maximum price must be a number, without units, eg 99.95'
+  -
+    name: max_less_than_min
+    field: priceMax
+    message: 'Minimum price must be less than maximum price'

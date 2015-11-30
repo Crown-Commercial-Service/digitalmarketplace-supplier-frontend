@@ -1,0 +1,10 @@
+question: >
+  Please confirm whether, within the past 3 years, your organisation or any of your partner organisations has:
+
+
+    - shown significant or persistent deficiencies in the performance of a substantive requirement under a prior public contract, a
+      prior contract with a contracting entity, or a prior concession contract,
+      which led to early termination of the contract, damages or other
+      comparable sanctions
+
+type: boolean

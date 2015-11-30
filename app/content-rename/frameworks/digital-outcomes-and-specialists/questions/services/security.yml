@@ -1,0 +1,13 @@
+question: Security
+name: Security
+optional: true
+depends:
+  - "on": lot
+    being:
+      - digital-outcomes
+type: multiquestion
+any_of: capability
+questions:
+  - securityTypes
+
+empty_message: You haven't added any security capabilities

@@ -1,0 +1,7 @@
+question: Do you support the publication of specially written software under the appropriate open source licence so that it can be used and improved by other authors?
+type: boolean
+depends:
+  - "on": "lot"
+    being:
+      - digital-outcomes
+      - digital-specialists

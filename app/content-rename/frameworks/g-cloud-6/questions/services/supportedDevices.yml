@@ -1,0 +1,26 @@
+depends:
+  -
+    "on": lot
+    being:
+      - SaaS
+      - saas
+      - PaaS
+      - paas
+      - IaaS
+      - iaas
+hint: 'Choose all that apply.'
+type: checkboxes
+options:
+    -
+        label: PC
+    -
+        label: Mac
+    -
+        label: Smartphone
+    -
+        label: Tablet
+validations:
+  -
+    name: answer_required
+    message: 'You need to answer this question.'
+question: 'Supported devices'

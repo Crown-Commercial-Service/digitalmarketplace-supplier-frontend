@@ -1,0 +1,25 @@
+depends:
+  -
+    "on": lot
+    being:
+      - SaaS
+      - saas
+      - PaaS
+      - paas
+      - IaaS
+      - iaas
+      - SCS
+      - scs
+hint: 'eg 24/7 or 9 to 5. (Maximum 20 words.)'
+type: text
+validations:
+  -
+    name: answer_required
+    message: 'You need to answer this question.'
+  -
+    name: under_20_words
+    message: 'Support availability must be no more than 20 words.'
+  -
+    name: under_character_limit
+    message: "Support availability must be no more than 200 characters."
+question: 'Support availability'

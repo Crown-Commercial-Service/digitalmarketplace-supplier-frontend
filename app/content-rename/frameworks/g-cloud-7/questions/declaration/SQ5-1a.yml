@@ -1,0 +1,15 @@
+question: >
+  Does your organisation have, or
+  will it have prior to the framework award, employer’s liability insurance of at least
+  £5 million?
+
+hint:  Employer’s liability insurance is a legal requirement except for businesses
+  employing only the owner or close family members.
+type: radios
+options:
+  -
+    label: "Yes – your organisation has, or will have in place, employer’s liability insurance of at least £5 million and you will provide certification prior to framework award."
+  -
+    label: "No - your organisation does not have, and will not have in place, employer’s liability insurance of at least £5 million prior to framework award."
+  -
+    label: "Not applicable - your organisation does not need employer’s liability insurance because your organisation employs only the owner or close family members."

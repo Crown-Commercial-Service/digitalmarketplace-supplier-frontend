@@ -1,0 +1,3 @@
+question: Is your business registered with the appropriate trade or professional register(s) in the EU member state where it's established?
+hint: "We think this can be deleted as it is a duplicate of a question asked earlier"
+type: boolean

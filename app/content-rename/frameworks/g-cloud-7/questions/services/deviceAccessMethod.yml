@@ -1,0 +1,28 @@
+hint: 'Which end devices are the cloud service accessible from? Choose all that apply.'
+depends:
+  -
+    "on": lot
+    being:
+      - SaaS
+      - saas
+      - PaaS
+      - paas
+      - IaaS
+      - iaas
+assuranceApproach: 2answers-type1
+type: checkboxes
+options:
+    -
+        label: 'Corporate/enterprise devices'
+    -
+        label: 'Partner devices'
+    -
+        label: 'Unknown devices'
+validations:
+  -
+    name: answer_required
+    message: 'You need to answer this question.'
+  -
+    name: assurance_required
+    message: 'You need to confirm how you can back up your response.'
+question: 'Device access method'

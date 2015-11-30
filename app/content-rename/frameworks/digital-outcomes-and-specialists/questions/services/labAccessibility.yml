@@ -1,0 +1,24 @@
+name: How accessible is your studio?
+question: >
+  How accessible is your studio?
+
+  Describe the ways in which your lab is accessible or inaccessible.
+
+  eg wheelchair access or hearing loops provided.
+depends:
+  - "on": lot
+    being:
+      - user-research-studios
+type: textbox_large
+max_length_in_words: 50
+
+validations:
+  -
+    name: answer_required
+    message: 'You need to answer this question.'
+  -
+    name: under_50_words
+    message: 'Your description must be no more than 50 words.'
+  -
+    name: under_character_limit
+    message: "Your description must be no more than 500 characters."

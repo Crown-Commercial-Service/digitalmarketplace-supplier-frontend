@@ -1,0 +1,28 @@
+depends:
+  -
+    "on": lot
+    being:
+      - SaaS
+      - saas
+      - PaaS
+      - paas
+      - IaaS
+      - iaas
+      - SCS
+      - scs
+hint: 'Please upload your pricing document. This document will not be indexed by search on the Digital Marketplace. Use an Open Document Format (ODF) or PDF/A (eg .pdf, .odt). (Maximum file size 5MB.)'
+type: upload
+validations:
+  -
+    name: answer_required
+    message: 'You need to answer this question.'
+  -
+    name: file_is_open_document_format
+    message: 'Your document is not in an open format. Please save as an Open Document Format (ODF) or PDF/A (eg .pdf, .odt).'
+  -
+    name: file_is_less_than_5mb
+    message: 'Your document exceeds the 5MB limit. Please reduce file size.'
+  -
+    name: file_can_be_saved
+    message: 'Your document failed to upload. Please try again.'
+question: 'Pricing document'

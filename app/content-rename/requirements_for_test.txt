@@ -1,0 +1,4 @@
+-r requirements.txt
+jsonschema==2.3.0
+pytest==2.7.0
+PyYAML==3.11

@@ -1,0 +1,16 @@
+question: Do you have an viewing area?
+
+depends:
+  - "on": lot
+    being:
+      - user-research-studios
+
+type: radios
+options:
+  - label: "No"
+  - label: Yes – included as standard
+  - label: Yes – for an additional cost
+
+validations:
+  - name: answer_required
+    message: 'You need to answer this question.'

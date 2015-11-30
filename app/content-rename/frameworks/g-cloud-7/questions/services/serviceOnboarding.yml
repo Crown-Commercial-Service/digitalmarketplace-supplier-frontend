@@ -1,0 +1,16 @@
+depends:
+  -
+    "on": lot
+    being:
+      - SaaS
+      - saas
+      - PaaS
+      - paas
+      - IaaS
+      - iaas
+type: boolean
+validations:
+  -
+    name: answer_required
+    message: 'You need to answer this question.'
+question: 'Service onboarding process included'

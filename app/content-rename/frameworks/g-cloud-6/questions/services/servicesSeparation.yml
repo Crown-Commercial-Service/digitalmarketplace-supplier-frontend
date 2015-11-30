@@ -1,0 +1,21 @@
+hint: 'Do you securely separate consumer data and services from other consumers of the service?'
+depends:
+  -
+    "on": lot
+    being:
+      - SaaS
+      - saas
+      - PaaS
+      - paas
+      - IaaS
+      - iaas
+assuranceApproach: 4answers-type3
+type: boolean
+validations:
+  -
+    name: answer_required
+    message: 'You need to answer this question.'
+  -
+    name: assurance_required
+    message: 'You need to confirm how you can back up your response.'
+question: 'Services separation'

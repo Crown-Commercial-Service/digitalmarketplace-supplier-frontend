@@ -1,0 +1,27 @@
+hint: 'Please provide a short description of your service. You''ll be asked to go into more detail about the features and benefits of your service on the next page. Company information should not be included here. You can provide a company description for your supplier page elsewhere. This content will be indexed by search. Using additional keywords may impact your acceptance onto the Digital Marketplace. (Maximum 50 words.)'
+depends:
+  -
+    "on": lot
+    being:
+      - SaaS
+      - saas
+      - PaaS
+      - paas
+      - IaaS
+      - iaas
+      - SCS
+      - scs
+type: textarea
+max_length_in_words: 50
+validations:
+  -
+    name: answer_required
+    message: 'You need to answer this question.'
+  -
+    name: under_50_words
+    message: 'Your description must be no more than 50 words.'
+  -
+    name: under_character_limit
+    message: "Your description must be no more than 500 characters."
+question: 'Service summary'
+type: textbox_large

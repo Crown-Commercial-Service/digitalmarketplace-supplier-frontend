@@ -1,0 +1,176 @@
+{
+  "title": "Question",
+  "$schema": "http://json-schema.org/schema#",
+  "type": "object",
+  "dependencies": {
+    "questions": {
+      "properties": {
+        "type": {"enum": ["multiquestion"]}
+      }
+    },
+    "fields": {
+      "properties": {
+        "type": {"enum": ["pricing"]}
+      }
+    }
+  },
+  "properties": {
+    "question": {
+      "type": "string"
+    },
+    "type": {
+      "enum": [
+        "boolean", "text", "radios", "list", "checkboxes", "service_id",
+        "pricing", "upload", "percentage", "textbox_large", "multiquestion"
+      ]
+    },
+    "hint": {
+      "type": "string"
+    },
+    "options": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "label": {
+            "type": "string"
+          },
+          "filter_label": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "value": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "label"
+        ]
+      }
+    },
+    "name": {
+      "type": "string"
+    },
+    "questions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "any_of": {
+      "type": "string"
+    },
+    "validations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "enum": [
+              "answer_required",
+              "assurance_required",
+              "file_can_be_saved",
+              "file_is_less_than_5mb",
+              "file_is_open_document_format",
+              "invalid_format",
+              "max_less_than_min",
+              "not_money_format",
+              "not_a_number",
+              "under_10_items",
+              "under_10_words",
+              "under_20_words",
+              "under_50_words",
+              "under_character_limit"
+            ]
+          },
+          "field": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "message"
+        ]
+      }
+    },
+    "depends": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "on": {
+            "type": "string"
+          },
+          "being": {
+            "type": "array"
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "on",
+          "being"
+        ]
+      }
+    },
+    "list_item_name": {
+      "type": "string"
+    },
+    "assuranceApproach": {
+      "enum": [
+        "2answers-type1",
+        "3answers-type1",
+        "3answers-type2",
+        "3answers-type3",
+        "4answers-type1",
+        "4answers-type2",
+        "4answers-type3",
+        "5answers-type1"
+      ]
+    },
+    "fields": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "minimum_price": {"type": "string"},
+        "maximum_price": {"type": "string"},
+        "price_interval": {"type": "string"},
+        "price_unit": {"type": "string"}
+      }
+    },
+    "field_defaults": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "minimum_price": {"type": "string"},
+        "maximum_price": {"type": "string"},
+        "price_interval": {"type": "string"},
+        "price_unit": {"type": "string"}
+      }
+    },
+    "max_length_in_words": {
+      "type": "integer"
+    },
+    "optional": {
+      "type": "boolean"
+    },
+    "optional_fields": {
+      "type": "array",
+      "items": {"type": "string"}
+    },
+    "empty_message": {
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "question",
+    "type"
+  ]
+}

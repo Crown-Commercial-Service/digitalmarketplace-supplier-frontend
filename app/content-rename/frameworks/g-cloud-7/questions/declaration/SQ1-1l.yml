@@ -1,0 +1,14 @@
+question: "Is your organisation classed as a:"
+
+type: checkboxes
+options:
+  -
+    label: voluntary community social enterprise (VCSE)?
+  -
+    label: sheltered workshop?
+  -
+    label: public service mutual?
+
+    label: none of the above?
+
+

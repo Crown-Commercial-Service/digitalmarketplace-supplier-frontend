@@ -1,0 +1,7 @@
+question: >
+  Please confirm whether any of your organisation’s tax returns, submitted on or after 1 October 2012, have been found to be incorrect on or after 1 April 2013 because:
+
+    - HMRC successfully challenged it under the General Anti-Abuse Rule (GAAR) or Halifax abuse principle
+    - a tax authority (in a jurisdiction in which your organisation is established) successfully challenged it under any tax rules or legislation that have an effect equivalent or similar to the GAAR or Halifax abuse principle
+    - an avoidance scheme that your organisation was involved with failed and was, or should have been, notified under the Disclosure of Tax Avoidance Scheme (DOTAS) or equivalent
+type: boolean

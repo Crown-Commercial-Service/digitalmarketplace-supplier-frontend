@@ -1,0 +1,5 @@
+question: >
+  Please confirm whether, within the past 3 years, your organisation or any of your partner organisations has:
+
+    - provided misleading information that may have an influence on decisions concerning exclusion, selection or award
+type: boolean

@@ -1,0 +1,18 @@
+question: What types of testing and auditing can you provide?
+depends:
+  - "on": lot
+    being:
+      - digital-outcomes
+type: checkboxes
+options:
+  - label: Accessibility testing
+  - label: Application testing
+  - label: Data auditing
+  - label: Load and performance testing
+  - label: Process auditing
+  - label: Software auditing
+  - label: System auditing
+
+validations:
+  - name: answer_required
+    message: 'You need to answer this question.'

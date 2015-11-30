@@ -1,0 +1,20 @@
+name: What is the name of the lab?
+question: >
+  What is the name of the lab?
+
+  Provide the name of the room where participants and researchers carry out testing.
+type: text
+
+depends:
+  -
+    "on": lot
+    being:
+      - user-research-studios
+
+validations:
+  -
+    name: answer_required
+    message: 'You need to answer this question.'
+  -
+    name: under_character_limit
+    message: "Your studio name must be no more than 100 characters."

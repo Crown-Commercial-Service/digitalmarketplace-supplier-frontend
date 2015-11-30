@@ -1,0 +1,7 @@
+question: Do you support the government’s need for free and open access to non-personal user and service data so that it can deliver and improve its services?
+type: boolean
+depends:
+  - "on": "lot"
+    being:
+      - digital-outcomes
+      - digital-specialists

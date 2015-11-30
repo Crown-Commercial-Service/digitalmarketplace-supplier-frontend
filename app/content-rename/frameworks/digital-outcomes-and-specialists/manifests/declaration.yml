@@ -1,0 +1,148 @@
+-
+  name: Essentials
+  editable: True
+  description: >
+    You must make this declaration to apply to Digital Outcomes and
+    Specialists. You can come back and change your answers at any time before
+    14 February 2016.
+  questions:
+    - termsOfParticipation
+    - termsAndConditions
+    - 10WorkingDays
+    - informationChanges
+    - requisiteAuthority
+    - accurateInformation
+    - unfairCompetition
+    - readUnderstoodGuidance
+    - understandTool
+    - understandHowToAskQuestions
+    - proofOfClaims
+    - skillsAndResources
+    - accuratelyDescribed
+    - employersInsurance
+    - offerServicesYourselves
+    - fullAccountability
+
+-
+  name: Grounds for mandatory exclusion
+  editable: True
+  description: >
+    You must be able to truthfully answer 'no' to every question under 'Grounds for mandatory exclusion' for your bid to be
+    considered eligible. If you can't answer 'no' to every question in this
+    section, it's very unlikely that your bid will be accepted.
+
+
+    In questions [[conspiracyCorruptionBribery]] to [[organisedCrime]], 'anyone who represents your organisation' includes members of your group of economic
+    operators, their proposed subcontractors, and any directors, partners, or
+    any other person who has powers of representation, decision or control.
+    Check that your organisation complies with [Regulation 57(1) of the Public
+    Contracts Regulations 2015](http://www.legislation.gov.uk/uksi/2015/102/regulation/57/made).
+  questions:
+    - conspiracyCorruptionBribery
+    - fraudAndTheft
+    - terrorism
+    - organisedCrime
+
+-
+  name: Grounds for discretionary exclusion
+  editable: True
+  description: >
+    You must be able to truthfully answer 'no' to every question under 'Grounds for discretionary exclusion'
+    for your bid to be considered eligible. If you can't answer 'no', your bid may not be accepted. If
+    you do answer 'yes', you must provide full details of any subsequent event or remedial action that
+    you think the Crown Commercial Service (CCS) should take into consideration. CCS will use the information
+    you provide to consider whether or not you will be able to proceed any further with this procurement.
+
+
+    In questions [[taxEvasion]] to [[misleadingInformation]], 'partner organisations' include members
+    of your group of economic operators or their proposed subcontractors.
+
+
+    CCS can also exclude you if you are guilty of serious
+    misrepresentation in providing any information referred to within
+    regulations
+    [23](http://www.legislation.gov.uk/uksi/2015/102/regulation/23/made),
+    [24](http://www.legislation.gov.uk/uksi/2015/102/regulation/24/made),
+    [25](http://www.legislation.gov.uk/uksi/2015/102/regulation/25/made),
+    [26](http://www.legislation.gov.uk/uksi/2015/102/regulation/26/made) or
+    [27](http://www.legislation.gov.uk/uksi/2015/102/regulation/27/made)
+    of the [Public Contracts Regulations 2015](http://www.legislation.gov.uk/uksi/2015/102/contents/made)
+    or if you fail to provide any such information it requests.
+  questions:
+    - taxEvasion
+    - environmentalSocialLabourLaw
+    - bankrupt
+    - graveProfessionalMisconduct
+    - distortingCompetition
+    - conflictOfInterest
+    - distortedCompetition
+    - significantOrPersistentDeficiencies
+    - seriousMisrepresentation
+    - witheldSupportingDocuments
+    - influencedContractingAuthority
+    - confidentialInformation
+    - misleadingInformation
+    - mitigatingFactors
+    - unspentTaxConvictions
+    - GAAR
+    - mitigatingFactors2
+-
+  name: Working with government
+  editable: True
+  description: >
+    You must be able to truthfully answer 'yes' to every question under 'Working with government' for your bid to be
+    considered eligible. If you can't answer 'yes' to every question in this
+    section, it's very unlikely that your bid will be accepted.
+  questions:
+    - MI
+    - canProvideFromDayOne
+    - evidence
+    - environmentallyFriendly
+    - consistentDelivery
+    - skillsAndCapabilityAssessment
+    - continuousProfessionalDevelopment
+    - customerSatisfactionProcess
+    - equalityAndDiversity
+    - civilServiceValues
+-
+  name: Working with digital
+  editable: True
+  description: >
+    You must be able to truthfully answer 'yes' to questions [[technologyCodesOfPractice]] to [[safeguardPersonalData]] under 'Working with digital' for your bid to be
+    considered eligible. If you can't answer 'yes', it's very unlikely that your bid will be accepted. You can answer 'yes' or 'no' to questions [[cyberEssentials]] and [[cyberEssentialsPlus]].
+  questions:
+    - technologyCodesOfPractice
+    - serviceStandard
+    - ongoingEngagement
+    - transparentContracting
+    - publishContracts
+    - safeguardOfficialInformation
+    - safeguardPersonalData
+    - cyberEssentials
+    - cyberEssentialsPlus
+-
+  name: About you
+  editable: True
+  description: >
+    The Crown Commercial Service will use the information you provide under 'About you' to process your application and manage your participation in the Digital and Commercial Specialists framework.
+  questions:
+    - primaryContact
+    - primaryContactEmail
+    - nameOfOrganisation
+    - registeredAddress
+    - tradingStatus
+    - tradingStatusOther
+    - tradingNames
+    - firstRegistered
+    - currentRegisteredCountry
+    - companyRegistrationNumber
+    - registeredVATNumber
+    - establishedInTheUK
+    - appropriateTradeRegisters
+    - appropriateTradeRegistersNumber
+    - licenceOrMemberRequired
+    - licenceOrMemberRequiredDetails
+    - organisationSize
+    - subcontracting
+    - contactNameContractNotice
+    - contactEmailContractNotice

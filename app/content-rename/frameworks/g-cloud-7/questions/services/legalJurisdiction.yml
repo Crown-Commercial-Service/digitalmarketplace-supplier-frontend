@@ -1,0 +1,32 @@
+hint: 'Choose 1'
+depends:
+  -
+    "on": lot
+    being:
+      - SaaS
+      - saas
+      - PaaS
+      - paas
+      - IaaS
+      - iaas
+assuranceApproach: 3answers-type1
+type: radios
+options:
+    -
+        label: UK
+    -
+        label: EU
+    -
+        label: 'USA - Safe Harbor'
+    -
+        label: 'Other countries with data protection treaties'
+    -
+        label: 'Rest of world'
+validations:
+  -
+    name: answer_required
+    message: 'You need to answer this question.'
+  -
+    name: assurance_required
+    message: 'You need to confirm how you can back up your response.'
+question: 'Legal jurisdiction of service provider'

@@ -1,0 +1,15 @@
+question: "Please confirm that all cloud services you are providing have or support:"
+hint: "Your cloud services must have or support all of these characteristics."
+type: checkboxes
+options:
+  -
+    label: on-demand self-service. Your cloud services, eg server time or network storage, must be automatically available without interaction between the supplier and the contracting body.
+  -
+    label: broad network access. Your cloud services must be easily accessible over the network and across a wide range of platforms (eg mobile phones, tablets, laptops and workstations) and a mix of applications that are both thin (the bulk of data processing occurs on the server) and thick (most processing occurs on the local platform).
+  -
+    label: resource pooling. Your computing resources (eg storage, processing, memory and network bandwidth) must be pooled to serve multiple consumers using a multi-tenant model, with different physical and virtual resources dynamically assigned and reassigned according to consumer demand.
+  -
+    label: rapid elasticity. Your cloud services must be quickly, and sometimes automatically, scaled to serve the required number of users, according to demand.
+  -
+    label: measured service. Your resource use (eg storage, processing, bandwidth and number of active user accounts) must be monitored, controlled and reported to the contracting body.
+

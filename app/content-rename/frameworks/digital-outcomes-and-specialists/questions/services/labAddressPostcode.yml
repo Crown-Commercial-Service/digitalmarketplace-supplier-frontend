@@ -1,0 +1,15 @@
+question: Postcode
+
+depends:
+  - "on": lot
+    being:
+      - user-research-studios
+type: text
+
+validations:
+  -
+    name: answer_required
+    message: 'You need to answer this question.'
+  -
+    name: under_character_limit
+    message: "Your answer must be no more than than 10 characters."

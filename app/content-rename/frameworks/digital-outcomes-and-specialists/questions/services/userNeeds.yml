@@ -1,0 +1,7 @@
+question: "Can you demonstrate an understanding of user needs as set out in the [Digital by Default Service Standard](https://www.gov.uk/service-manual/digital-by-default)?"
+type: boolean
+depends:
+  - "on": "lot"
+    being:
+      - digital-outcomes
+      - digital-specialists

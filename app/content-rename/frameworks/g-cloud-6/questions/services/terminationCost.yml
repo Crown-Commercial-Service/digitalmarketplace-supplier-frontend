@@ -1,0 +1,16 @@
+depends:
+  -
+    "on": lot
+    being:
+      - PaaS
+      - paas
+      - IaaS
+      - iaas
+      - SCS
+      - scs
+type: boolean
+validations:
+  -
+    name: answer_required
+    message: 'You need to answer this question.'
+question: 'Termination cost'

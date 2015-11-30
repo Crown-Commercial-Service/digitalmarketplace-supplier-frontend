@@ -1,0 +1,15 @@
+name: Use of open standards
+question: >
+  Will you work according to the government's [Open Standards Principles](https://www.gov.uk/government/publications/open-standards-principles/open-standards-principles) and use the [open standards selected for use across government](http://standards.data.gov.uk/challenges/adopted)?
+
+  This includes publishing any software you build for the government under the appropriate open source licence.
+type: boolean
+depends:
+  - "on": "lot"
+    being:
+      - digital-outcomes
+      - digital-specialists
+
+validations:
+  - name: answer_required
+    message: 'You need to answer this question.'

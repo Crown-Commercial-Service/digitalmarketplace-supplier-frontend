@@ -1,0 +1,122 @@
+{
+  "title": "Question",
+  "$schema": "http://json-schema.org/schema#",
+  "type": "object",
+  "properties": {
+    "question": {
+      "type": "string"
+    },
+    "type": {
+      "enum": [
+        "boolean", "text", "radios", "list", "checkboxes", "service_id",
+        "pricing", "upload", "percentage", "textbox_large"
+      ]
+    },
+    "hint": {
+      "type": "string"
+    },
+    "options": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "label": {
+            "type": "string"
+          },
+          "filterLabel": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "value": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "label"
+        ]
+      }
+    },
+    "validations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "message"
+        ]
+      }
+    },
+    "depends": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "on": {
+            "type": "string"
+          },
+          "being": {
+            "type": "array"
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "on",
+          "being"
+        ]
+      }
+    },
+    "filterLabel": {
+      "type": "string"
+    },
+    "listItemName": {
+      "type": "string"
+    },
+    "addthing": {
+      "type": "string"
+    },
+    "assuranceApproach": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "requirements": {
+      "type": "string"
+    },
+    "filters": {
+      "type": "string"
+    },
+    "servicePageLabel": {
+      "type": "string"
+    },
+    "assuranceHint": {
+      "type": [
+        "null",
+        "string"
+      ]
+    },
+    "maxLengthInWords": {
+      "type": "integer"
+    },
+    "optional": {
+      "type": "boolean"
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "question",
+    "type"
+  ]
+}

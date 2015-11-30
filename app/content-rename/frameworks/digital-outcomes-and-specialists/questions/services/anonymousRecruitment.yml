@@ -1,0 +1,11 @@
+name: Provide discreet recruitment
+question: Can you, if asked, recruit participants without revealing details of the organisation you're recruiting for?
+type: boolean
+depends:
+  - "on": "lot"
+    being:
+      - user-research-participants
+
+validations:
+  - name: answer_required
+    message: 'You need to answer this question.'

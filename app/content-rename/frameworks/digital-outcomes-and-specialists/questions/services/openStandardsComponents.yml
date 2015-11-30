@@ -1,0 +1,7 @@
+question: Do you support the use of standard, accessible data protocols, like open standards, to ensure that they are interoperable?
+type: boolean
+depends:
+  - "on": "lot"
+    being:
+      - digital-outcomes
+      - digital-specialists

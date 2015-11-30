@@ -1,0 +1,14 @@
+question: User researcher
+name: User researcher
+optional: true
+depends:
+  - "on": lot
+    being:
+      - digital-specialists
+type: multiquestion
+any_of: specialist
+questions:
+  - userResearcherLocations
+  - userResearcherDayRate
+
+empty_message: You haven't added a user researcher

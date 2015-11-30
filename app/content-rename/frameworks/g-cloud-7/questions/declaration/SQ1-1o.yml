@@ -1,0 +1,7 @@
+question: If your G-Cloud 7 application is successful, what is the contact email that should be included on the contract notice?
+hint: The contract notice confirms the outcome of the framework competition and includes the names of all the successful suppliers.
+type: text
+validations:
+  -
+    name: invalid_format
+    message: "You must enter a valid email address."

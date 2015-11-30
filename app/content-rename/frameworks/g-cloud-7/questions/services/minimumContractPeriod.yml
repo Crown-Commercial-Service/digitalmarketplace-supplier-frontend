@@ -1,0 +1,29 @@
+depends:
+  -
+    "on": lot
+    being:
+      - SaaS
+      - saas
+      - PaaS
+      - paas
+      - IaaS
+      - iaas
+      - SCS
+      - scs
+type: radios
+options:
+    -
+        label: Hour
+    -
+        label: Day
+    -
+        label: Month
+    -
+        label: Year
+    -
+        label: Other
+validations:
+  -
+    name: answer_required
+    message: 'You need to answer this question.'
+question: 'Minimum contract period'

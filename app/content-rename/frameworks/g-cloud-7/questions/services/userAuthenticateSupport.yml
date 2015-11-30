@@ -1,0 +1,21 @@
+hint: 'Can only authorised individuals from the consumer organisation perform actions affecting the consumer’s service through your support channels?'
+depends:
+  -
+    "on": lot
+    being:
+      - SaaS
+      - saas
+      - PaaS
+      - paas
+      - IaaS
+      - iaas
+assuranceApproach: 3answers-type2
+type: boolean
+validations:
+  -
+    name: answer_required
+    message: 'You need to answer this question.'
+  -
+    name: assurance_required
+    message: 'You need to confirm how you can back up your response.'
+question: 'User access control through support channels'

@@ -1,0 +1,16 @@
+question: How do you recruit participants?
+
+depends:
+  - "on": lot
+    being:
+      - user-research-participants
+
+type: checkboxes
+options:
+  - label: Entirely offline
+  - label: Initial recruitment offline, but then contact them online
+  - label: Entirely online
+
+validations:
+  - name: answer_required
+    message: 'You need to answer this question.'

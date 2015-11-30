@@ -1,0 +1,58 @@
+depends:
+  -
+    "on": lot
+    being:
+      - SaaS
+      - saas
+hint: 'You can choose multiple categories'
+type: checkboxes
+options:
+  -
+    label: Accounting and finance
+  -
+    label: Business intelligence and analytics
+  -
+    label: Collaboration
+  -
+    label: Creative and design
+  -
+    label: Customer relationship management (CRM)
+  -
+    label: Data management
+  -
+    label: Electronic document and records management (EDRM)
+  -
+    label: Energy and environment
+  -
+    label: Healthcare
+  -
+    label: Human resources and employee management
+  -
+    label: IT management
+  -
+    label: Legal
+  -
+    label: Libraries
+  -
+    label: Marketing
+  -
+    label: Operations management
+  -
+    label: Project management and planning
+  -
+    label: Sales
+  -
+    label: Schools and education
+  -
+    label: Security
+  -
+    label: Software development tools
+  -
+    label: Telecoms
+  -
+    label: Transport and logistics
+validations:
+  -
+    name: answer_required
+    message: 'You need to answer this question.'
+question: 'Choose the categories that apply to your service'

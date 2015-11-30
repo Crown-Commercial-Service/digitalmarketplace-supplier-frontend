@@ -1,0 +1,17 @@
+depends:
+  -
+    "on": lot
+    being:
+      - SaaS
+      - saas
+      - PaaS
+      - paas
+      - IaaS
+      - iaas
+hint: 'You can provide more detail on your disaster recovery plan in your service definition document.'
+type: boolean
+validations:
+  -
+    name: answer_required
+    message: 'You need to answer this question.'
+question: 'Backup, disaster recovery and resilience plan in place'

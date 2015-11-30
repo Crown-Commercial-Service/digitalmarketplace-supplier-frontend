@@ -1,0 +1,6 @@
+question: >
+  Please confirm whether any of your organisation’s tax returns submitted on or after 1 October 2012 have:
+
+    - been found to be incorrect as of 1 April 2013
+    - given rise to a criminal conviction for tax-related offences which is unspent, or to civil penalty for fraud or evasion
+type: boolean

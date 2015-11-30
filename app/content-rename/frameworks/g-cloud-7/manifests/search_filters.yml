@@ -1,0 +1,37 @@
+-
+  name: Categories
+  questions:
+    - serviceTypesSCS
+    - serviceTypesSaaS
+    - serviceTypesIaaS
+-
+  name: Pricing
+  questions:
+    - freeOption
+    - trialOption
+-
+  name: Minimum contract period
+  questions:
+    - minimumContractPeriod
+-
+  name: Service management
+  questions:
+    - dataExtractionRemoval
+    - datacentresEUCode
+    - dataBackupRecovery
+    - selfServiceProvisioning
+    - supportForThirdParties
+-
+  name: Datacentre tier
+  questions:
+    - datacentreTier
+-
+  name: Networks the service is directly connected to
+  questions:
+    - networksConnected
+-
+  name: Interoperability
+  questions:
+    - apiAccess
+    - openStandardsSupported
+    - openSource

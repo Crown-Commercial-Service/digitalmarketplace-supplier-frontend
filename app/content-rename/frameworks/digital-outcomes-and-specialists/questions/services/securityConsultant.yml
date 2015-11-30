@@ -1,0 +1,14 @@
+question: Cyber security consultant
+name: Cyber security consultant
+optional: true
+depends:
+  - "on": lot
+    being:
+      - digital-specialists
+type: multiquestion
+any_of: specialist
+questions:
+  - securityConsultantLocations
+  - securityConsultantDayRate
+
+empty_message: You haven't added a cyber security consultant

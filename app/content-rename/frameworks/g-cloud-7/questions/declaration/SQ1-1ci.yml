@@ -1,0 +1,23 @@
+question: What is the trading status of your organisation?
+type: radios
+options:
+  -
+    label: public limited company
+  -
+    label: limited company
+  -
+    label: limited liability company
+  -
+    label: limited liability partnership
+  -
+    label: other partnership
+  -
+    label: sole trader
+  -
+    label: established consortium
+  -
+    label: to-be-formed consortium
+  -
+    label: special purpose vehicle
+  -
+    label: other (please specify)

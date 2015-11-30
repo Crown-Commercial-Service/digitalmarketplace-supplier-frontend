@@ -1,0 +1,4 @@
+question: >
+  Please confirm whether your company or any of your partner companies or subcontractors are an employment agency.
+type: boolean
+hint: "You must answer 'no' to be eligible for consideration on the Digital Outcomes and Specialists framework. Employment agencies will not be accepted on to the Digital Outcomes and Specialists framework."

@@ -1,0 +1,3 @@
+question: Was your business established in the UK?
+hint: 'If you answered ''yes'' to question 26, please move on to question 31.'
+type: boolean

@@ -1,0 +1,20 @@
+question: How much do you charge per day for a business analyst?
+depends:
+  - "on": lot
+    being:
+      - digital-specialists
+type: pricing
+fields:
+  minimum_price: businessAnalystPriceMin
+  maximum_price: businessAnalystPriceMax
+field_defaults:
+  price_unit: Person
+  price_interval: Day
+
+validations:
+  - name: answer_required
+    field: businessAnalystPriceMin
+    message: 'You need to answer this question.'
+  - name: answer_required
+    field: businessAnalystPriceMax
+    message: 'You need to answer this question.'

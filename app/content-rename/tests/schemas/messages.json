@@ -1,0 +1,17 @@
+{
+  "title": "Message",
+  "$schema": "http://json-schema.org/schema#",
+  "type": "object",
+  "properties": {
+    "coming": {
+      "type": "object"
+    },
+    "open": {
+      "type": "object"
+    },
+    "pending": {
+      "type": "object"
+    }
+  },
+  "additionalProperties": false
+}

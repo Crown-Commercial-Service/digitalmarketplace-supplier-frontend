@@ -1,0 +1,29 @@
+hint: 'Include benefits that show how your service helps users improve their business. Use active phrases, eg publish content from multiple devices, quickly manage content on the move.  This content will be indexed by search. Using additional keywords may impact your acceptance on to the Digital Marketplace. Read the [guidance on writing good service descriptions](https://digitalmarketplace.blog.gov.uk/2014/10/21/digital-marketplace-content-its-all-change/). (Maximum 10 words per benefit. Maximum 10 benefits.)'
+depends:
+  -
+    "on": lot
+    being:
+      - SaaS
+      - saas
+      - PaaS
+      - paas
+      - IaaS
+      - iaas
+      - SCS
+      - scs
+list_item_name: 'service benefit'
+type: list
+validations:
+  -
+    name: answer_required
+    message: 'You need to answer this question.'
+  -
+    name: under_10_words
+    message: 'Each benefit must be no more than 10 words.'
+  -
+    name: under_10_items
+    message: 'You must have 10 or fewer benefits.'
+  -
+    name: under_character_limit
+    message: 'Each benefit must be no more than 100 characters.'
+question: 'Service benefits'

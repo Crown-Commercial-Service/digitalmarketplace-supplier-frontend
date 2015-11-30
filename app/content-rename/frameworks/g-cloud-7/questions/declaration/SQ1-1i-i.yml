@@ -1,0 +1,7 @@
+question: If your business was not established in the UK, has it been registered with the appropriate professional or trade register(s) in the EU member state where it's established?
+hint: Check that your organisation complies with [Schedule 5, Regulation 58(5) of the Public Contracts Regulations 2015](http://www.legislation.gov.uk/uksi/2015/102/regulation/58/made).
+type: boolean
+validations:
+  -
+    name: answer_required
+    message: "You must answer this question because you answered no to question 26"
