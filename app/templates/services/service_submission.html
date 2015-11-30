@@ -24,7 +24,7 @@
       {
         "link": url_for(".framework_submission_services", framework_slug=framework.slug, lot_slug=service_data.lot),
         "label": service_data.lotName
-      }
+      } if not one_service_limit else {}
     ]
   %}
     {% include "toolkit/breadcrumb.html" %}
