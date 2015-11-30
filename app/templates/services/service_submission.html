@@ -89,8 +89,6 @@
     {% endif %}
     {% if service_data.status == 'not-submitted' and can_mark_complete and framework.status == 'open' %}
       {% include "partials/complete_service.html" %}
-    {% elif unanswered_required > 0 %}
-      <p class="move-to-complete-hint">When you have added all the required information, you can mark the service as complete.</p>
     {% endif %}
   {% elif framework.status == 'pending' %}
     {% if unanswered_required or unanswered_optional %}
