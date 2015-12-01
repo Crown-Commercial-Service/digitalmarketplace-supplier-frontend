@@ -554,7 +554,7 @@ def remove_subsection(framework_slug, lot_slug, service_id, section_id, question
         section_responses = [field for field in containing_section.get_field_names() if field in draft]
         fields_remaining_after_removal = [field for field in section_responses if field not in fields_to_remove]
 
-        if len(fields_remaining_after_removal) > 0:
+        if draft['status'] == 'not-submitted' or len(fields_remaining_after_removal) > 0:
             # Show page with "Are you sure?" message and button
             return redirect(
                 url_for('.view_service_submission',
@@ -569,7 +569,17 @@ def remove_subsection(framework_slug, lot_slug, service_id, section_id, question
             # You can't remove the last one
             flash({
                 'remove_last_attempted': containing_section.name,
-                'service_name': question_to_remove.label
+                'service_name': question_to_remove.label,
+                'virtual_pageview_url': "{}/{}".format(
+                    url_for(".remove_subsection",
+                            framework_slug=framework_slug,
+                            lot_slug=lot_slug,
+                            service_id=service_id,
+                            section_id=section_id,
+                            question_slug=question_slug
+                            ),
+                    "remove-last-subsection-attempt"
+                )
             }, 'error')
 
     return redirect(

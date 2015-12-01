@@ -17,6 +17,7 @@
                 You must offer one of the {{ message.remove_last_attempted.lower() }} to be eligible.<br>
                 If you don&rsquo;t want to offer {{ (service_data.get('serviceName', service_data['lotName'])).lower() }}, 
                 delete this service.
+                <span data-analytics="trackPageView" data-url="{{message.virtual_pageview_url}}"></span>
             {% elif category == 'service_deleted' %}
                 <strong>{{message.service_name}}</strong> was deleted
             {% else %}
