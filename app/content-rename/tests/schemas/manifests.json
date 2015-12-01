@@ -1,0 +1,27 @@
+{
+  "title": "Manifest",
+  "$schema": "http://json-schema.org/schema#",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "properties": {
+      "name": {
+        "type": "string"
+      },
+      "editable": {
+        "type": "boolean"
+      },
+      "questions": {
+        "type": "array",
+        "items": {
+          "type": "string"
+        }
+      },
+      "description": {
+        "type": "string"
+      }
+    },
+    "required": ["name", "questions"],
+    "additionalProperties": false
+  }
+}

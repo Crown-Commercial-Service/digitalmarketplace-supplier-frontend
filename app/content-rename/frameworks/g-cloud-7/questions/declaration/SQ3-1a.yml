@@ -1,0 +1,9 @@
+question: >
+  Please confirm whether, within the past 3 years, your organisation or any of your partner organisations has:
+
+
+  - violated EU obligations referred to in [Regulation
+    56(2) of the Public Contracts Regulations 2015](http://www.legislation.gov.uk/uksi/2015/102/part/2/chapter/2/crossheading/conduct-of-the-procedure-choice-of-participants-and-award-of-contracts/made) in the fields of environmental, social and labour law
+
+hint: "Check that your organisation complies with [Regulation 57(8) in the Public Contracts Regulations 2015](http://www.legislation.gov.uk/uksi/2015/102/regulation/57/made)."
+type: boolean

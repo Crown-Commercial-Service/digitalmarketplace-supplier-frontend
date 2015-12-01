@@ -1,0 +1,8 @@
+question: >
+  Can you, if asked, recruit participants without revealing details of the
+  government department or agency you're working with?
+type: boolean
+depends:
+  - "on": "lot"
+    being:
+      - user-research-participants

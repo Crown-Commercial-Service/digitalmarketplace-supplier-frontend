@@ -1,0 +1,36 @@
+depends:
+  -
+    "on": lot
+    being:
+      - SaaS
+      - saas
+      - PaaS
+      - paas
+      - IaaS
+      - iaas
+hint: 'Choose all that apply.'
+type: checkboxes
+options:
+    -
+        label: 'Internet Explorer 6'
+    -
+        label: 'Internet Explorer 7'
+    -
+        label: 'Internet Explorer 8'
+    -
+        label: 'Internet Explorer 9'
+    -
+        label: 'Internet Explorer 10+'
+    -
+        label: Firefox
+    -
+        label: Chrome
+    -
+        label: Safari
+    -
+        label: Opera
+validations:
+  -
+    name: answer_required
+    message: 'You need to answer this question.'
+question: 'Supported web browsers'

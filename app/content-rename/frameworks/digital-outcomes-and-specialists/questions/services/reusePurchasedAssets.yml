@@ -1,0 +1,7 @@
+question: Do you support government’s ability to reuse purchased assets across its platforms?
+type: boolean
+depends:
+  - "on": "lot"
+    being:
+      - digital-outcomes
+      - digital-specialists

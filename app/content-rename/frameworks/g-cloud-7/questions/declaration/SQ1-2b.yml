@@ -1,0 +1,6 @@
+question: What is the primary contact's email address?
+type: text
+validations:
+  -
+    name: invalid_format
+    message: "You must enter a valid email address."

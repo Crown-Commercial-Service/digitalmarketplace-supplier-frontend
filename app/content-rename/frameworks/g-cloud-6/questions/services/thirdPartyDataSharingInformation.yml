@@ -1,0 +1,21 @@
+hint: 'Do you inform consumers how much of their information is shared with, or accessible by, third-party suppliers and their supply chains?'
+depends:
+  -
+    "on": lot
+    being:
+      - SaaS
+      - saas
+      - PaaS
+      - paas
+      - IaaS
+      - iaas
+assuranceApproach: 2answers-type1
+type: boolean
+validations:
+  -
+    name: answer_required
+    message: 'You need to answer this question.'
+  -
+    name: assurance_required
+    message: 'You need to confirm how you can back up your response.'
+question: 'Visibility of data shared with third-party suppliers'

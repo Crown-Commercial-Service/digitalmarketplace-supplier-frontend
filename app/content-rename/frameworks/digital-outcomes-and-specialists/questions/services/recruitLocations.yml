@@ -1,0 +1,20 @@
+question: Where can you recruit participants from?
+depends:
+  - "on": lot
+    being:
+      - user-research-participants
+type: checkboxes
+options:
+  - label: "Scotland"
+  - label: "North East England"
+  - label: "North West England"
+  - label: "Yorkshire and the Humber"
+  - label: "East Midlands"
+  - label: "The Midlands"
+  - label: "East England"
+  - label: "Wales"
+  - label: "London"
+  - label: "South East England"
+  - label: "West England"
+  - label: "Northern Ireland"
+  - label: "International (outside the UK)"

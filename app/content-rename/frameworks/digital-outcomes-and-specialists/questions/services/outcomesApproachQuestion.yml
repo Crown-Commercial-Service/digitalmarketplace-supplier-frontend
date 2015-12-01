@@ -1,0 +1,6 @@
+type: text
+question: A question for outcomes
+depends:
+  - "on": lot
+    being:
+      - digital-outcomes

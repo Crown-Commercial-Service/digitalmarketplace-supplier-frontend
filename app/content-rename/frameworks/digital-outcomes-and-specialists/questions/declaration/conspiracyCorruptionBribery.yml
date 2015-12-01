@@ -1,0 +1,11 @@
+question: >
+  Please confirm whether, within the past 5 years, anyone who represents your organisation or a partner organisation has been convicted of:
+
+    - conspiracy within the meaning of section 1 or 1A of the Criminal Law Act 1977 article 9 or 9A of the Criminal Attempts and Conspiracy (Northern Ireland) Order 1983 where that conspiracy relates to participation in a criminal organisation as defined in article 2 of Council Framework Decision 2008/841/JHA on the fight against organised crime
+    - corruption within the meaning of section 1(2) of the Public Bodies Corrupt Practices Act 1889 or section 1 of the Prevention of Corruption Act 1906
+    - the common law offence of bribery
+    - bribery within the meaning of sections 1, 2 or 6 of the Bribery Act 2010
+    - section 113 of the Representation of the People Act 1983
+    - any other offence within the meaning of article 57(1) of the Public Contracts Directive as defined by the law of any jurisdiction outside England and Wales and Northern Ireland
+type: boolean
+hint: Answer 'yes' if anyone who represents your organisation or partner organisation has been convicted of any of the above.

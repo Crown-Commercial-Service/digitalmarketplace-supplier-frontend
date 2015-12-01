@@ -1,0 +1,13 @@
+question: Service delivery
+name: Service delivery
+optional: true
+depends:
+  - "on": lot
+    being:
+      - digital-outcomes
+type: multiquestion
+any_of: capability
+questions:
+  - deliveryTypes
+
+empty_message: You haven't added any service delivery capabilities

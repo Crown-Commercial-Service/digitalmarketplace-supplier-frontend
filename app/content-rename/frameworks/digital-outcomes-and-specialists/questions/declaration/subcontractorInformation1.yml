@@ -1,0 +1,7 @@
+question: >
+  If you are using a subcontractor or consortium or both, please confirm that:
+  
+    - all the information in the application that relates to them is accurate 
+    - you will notify the Crown Commercial Service of any changes to the information you've provided as soon as possible
+type: boolean
+hint: If you are not using a subcontractor or consortium, go to question [[readUnderstoodGuidance]].

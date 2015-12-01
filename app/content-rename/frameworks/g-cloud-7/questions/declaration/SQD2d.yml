@@ -1,0 +1,10 @@
+question: >
+  To provide the required services, is it a legal requirement in the state where you're established to be:
+
+
+  - licensed?
+
+  - a member of a relevant organisation?
+
+hint: "We think this can be deleted as it is a duplicate of a question asked earlier"
+type: boolean

@@ -1,0 +1,32 @@
+depends:
+  -
+    "on": lot
+    being:
+      - SaaS
+      - saas
+      - PaaS
+      - paas
+      - IaaS
+      - iaas
+hint: 'Choose all that apply.'
+type: checkboxes
+options:
+    -
+        label: Internet
+    -
+        label: 'Public Services Network (PSN)'
+    -
+        label: 'Government Secure intranet (GSi)'
+    -
+        label: 'Police National Network (PNN)'
+    -
+        label: 'New NHS Network (N3)'
+    -
+        label: 'Joint Academic Network (JANET)'
+    -
+        label: Other
+validations:
+  -
+    name: answer_required
+    message: 'You need to answer this question.'
+question: 'Networks the service is directly connected to'

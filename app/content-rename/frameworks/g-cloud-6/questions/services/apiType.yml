@@ -1,0 +1,24 @@
+depends:
+  -
+    "on": lot
+    being:
+      - SaaS
+      - saas
+      - PaaS
+      - paas
+      - IaaS
+      - iaas
+hint: 'Examples of API include RESTful and SOAP.'
+type: text
+validations:
+  -
+    name: answer_required
+    message: 'You need to answer this question.'
+  -
+    name: under_20_words
+    message: 'API type must be no more than 20 words.'
+  -
+    name: under_character_limit
+    message: "API type must be no more than 200 characters."
+question: 'API type'
+optional: true

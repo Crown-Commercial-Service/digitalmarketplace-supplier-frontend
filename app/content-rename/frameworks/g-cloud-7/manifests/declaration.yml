@@ -1,0 +1,71 @@
+-
+  name: G-Cloud 7 essentials
+  editable: True
+  questions:
+    - PR1
+    - PR2
+    - SQC2
+    - PR5
+    - PR3
+    - PR4
+    - SQ1-3
+    - SQA2
+    - SQA3
+    - SQA4
+    - SQA5
+    - AQA3
+    - SQ5-1a
+    - SQC3
+-
+  name: About you
+  editable: True
+  questions:
+    - SQ1-2a
+    - SQ1-2b
+    - SQ1-1a
+    - SQ1-1b
+    - SQ1-1ci
+    - SQ1-1cii
+    - SQ1-1k
+    - SQ1-1d-i
+    - SQ1-1d-ii
+    - SQ1-1e
+    - SQ1-1h
+    - SQ5-2a
+    - SQ1-1i-i
+    - SQ1-1i-ii
+    - SQ1-1j-i
+    - SQ1-1j-ii
+    - SQ1-1m
+    - SQE2a
+    - SQ1-1n
+    - SQ1-1o
+-
+  name: Grounds for mandatory exclusion
+  editable: True
+  questions:
+    - SQ2-1abcd
+    - SQ2-1e
+    - SQ2-1f
+    - SQ2-1ghijklmn
+-
+  name: Grounds for discretionary exclusion
+  editable: True
+  questions:
+    - SQ2-2a
+    - SQ3-1a
+    - SQ3-1b
+    - SQ3-1c
+    - SQ3-1d
+    - SQ3-1e
+    - SQ3-1f
+    - SQ3-1g
+    - SQ3-1h-i
+    - SQ3-1h-ii
+    - SQ3-1i-i
+    - SQ3-1i-ii
+    - SQ3-1j
+    - SQ3-1k
+    - SQ4-1a
+    - SQ4-1b
+    - SQ4-1c

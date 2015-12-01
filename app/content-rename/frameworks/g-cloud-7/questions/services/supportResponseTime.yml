@@ -1,0 +1,25 @@
+depends:
+  -
+    "on": lot
+    being:
+      - SaaS
+      - saas
+      - PaaS
+      - paas
+      - IaaS
+      - iaas
+      - SCS
+      - scs
+hint: 'How long will it take until support can begin to be provided? eg 1 hour or 1 business day. (Maximum 20 words.)'
+type: text
+validations:
+  -
+    name: answer_required
+    message: 'You need to answer this question.'
+  -
+    name: under_20_words
+    message: 'Support response time must be no more than 20 words.'
+  -
+    name: under_character_limit
+    message: "Support response time must be no more than 200 characters."
+question: 'Standard support response times'

@@ -1,0 +1,20 @@
+question: How much do you charge per day for a designer?
+depends:
+  - "on": lot
+    being:
+      - digital-specialists
+type: pricing
+fields:
+  minimum_price: designerPriceMin
+  maximum_price: designerPriceMax
+field_defaults:
+  price_unit: Person
+  price_interval: Day
+
+validations:
+  - name: answer_required
+    field: designerPriceMin
+    message: 'You need to answer this question.'
+  - name: answer_required
+    field: designerPriceMax
+    message: 'You need to answer this question.'

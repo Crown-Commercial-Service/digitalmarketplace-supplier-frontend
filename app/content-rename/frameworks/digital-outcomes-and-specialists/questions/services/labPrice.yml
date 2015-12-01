@@ -1,0 +1,14 @@
+question: What is the minimum amount of time your lab can be booked for and how much does it cost?
+
+depends:
+  - "on": lot
+    being:
+      - user-research-studios
+
+type: pricing
+fields:
+  minimum_price: labPriceMin
+  maximum_price: labPriceMax
+field_defaults:
+  price_unit: Lab
+  price_interval: Day

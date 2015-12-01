@@ -1,0 +1,7 @@
+question: What is the full name of the organisation applying to the G-Cloud 7 framework?
+hint: For a group of economic operators, this will be the name of the lead organisation. If you're submitting a response on behalf of another organisation, use their company name and details, not yours.
+type: text
+validations:
+  -
+    name: under_character_limit
+    message: "Maximum 5000 characters."

@@ -1,0 +1,8 @@
+question: >
+ Please confirm whether, within the past 3 years, your organisation or any of your partner organisations has:
+
+
+  - had a conflict of interest within the meaning of [Regulation
+    24 of the Public Contracts Regulations](http://www.legislation.gov.uk/uksi/2015/102/regulation/24/made)
+
+type: boolean

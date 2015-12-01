@@ -1,0 +1,7 @@
+question: Will you work with departments to respond rapidly and efficiently to changes in user needs?
+type: boolean
+depends:
+  - "on": "lot"
+    being:
+      - digital-outcomes
+      - digital-specialists

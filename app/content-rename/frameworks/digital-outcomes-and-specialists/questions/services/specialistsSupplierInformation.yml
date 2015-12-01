@@ -1,0 +1,6 @@
+type: text
+question: Some specialist information
+depends:
+  - "on": lot
+    being:
+      - digital-specialists

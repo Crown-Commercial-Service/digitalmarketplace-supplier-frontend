@@ -1,0 +1,27 @@
+question: What types of software development can you provide?
+depends:
+  - "on": lot
+    being:
+      - digital-outcomes
+type: checkboxes
+options:
+  - label: API development
+  - label: Cloud-based service development
+  - label: Content management system
+  - label: Customer relationship management
+  - label: Database development
+  - label: Desktop application development
+  - label: Frontend web application development
+  - label: Game development
+  - label: Geographic information systems (GIS) development
+  - label: Machine learning
+  - label: Mainframe
+  - label: Message queues
+  - label: Mobile application development
+  - label: Search
+  - label: Systems integration
+  - label: Web application development
+
+validations:
+  - name: answer_required
+    message: 'You need to answer this question.'

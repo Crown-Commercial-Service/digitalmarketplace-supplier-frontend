@@ -1,0 +1,7 @@
+question: "What is the DUNS number for your organisation's head office?"
+hint: There are 9 digits in a DUNS number.
+type: text
+validations:
+  -
+    name: invalid_format
+    message: "You must enter a valid DUNS number."

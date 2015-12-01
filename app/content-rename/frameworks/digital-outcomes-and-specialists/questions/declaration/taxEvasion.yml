@@ -1,0 +1,3 @@
+question: Have any members of your organisation or a partner organisation been legally found to be in breach of tax payments or social security contributions?
+type: boolean
+hint: "'Legally found' means any judicial or administrative decision, which has final or binding effect. Check that your organisation complies with [Regulation 57(3) of the Public Contracts Regulations 2015](http://www.legislation.gov.uk/uksi/2015/102/regulation/57/made)."

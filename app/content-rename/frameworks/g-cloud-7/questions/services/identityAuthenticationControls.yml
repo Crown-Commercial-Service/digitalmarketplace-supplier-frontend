@@ -1,0 +1,36 @@
+hint: 'How do your identity and authentication controls ensure that users are authorised to access specific interfaces? Choose all that apply.'
+depends:
+  -
+    "on": lot
+    being:
+      - SaaS
+      - saas
+      - PaaS
+      - paas
+      - IaaS
+      - iaas
+assuranceApproach: 3answers-type3
+type: checkboxes
+options:
+    -
+        label: 'Username and two-factor authentication'
+    -
+        label: 'Username and TLS client certificate'
+    -
+        label: 'Authentication federation'
+    -
+        label: 'Limited access over dedicated link, enterprise or community network'
+    -
+        label: 'Username and password'
+    -
+        label: 'Username and strong password/passphrase enforcement'
+    -
+        label: 'Other mechanism'
+validations:
+  -
+    name: answer_required
+    message: 'You need to answer this question.'
+  -
+    name: assurance_required
+    message: 'You need to confirm how you can back up your response.'
+question: 'Identity and authentication controls'

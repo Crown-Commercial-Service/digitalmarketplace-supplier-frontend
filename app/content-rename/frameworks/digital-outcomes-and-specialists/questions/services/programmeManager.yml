@@ -1,0 +1,14 @@
+question: Programme manager
+name: Programme manager
+optional: true
+depends:
+  - "on": lot
+    being:
+      - digital-specialists
+type: multiquestion
+any_of: specialist
+questions:
+  - programmeManagerLocations
+  - programmeManagerDayRate
+
+empty_message: You haven't added a programme manager

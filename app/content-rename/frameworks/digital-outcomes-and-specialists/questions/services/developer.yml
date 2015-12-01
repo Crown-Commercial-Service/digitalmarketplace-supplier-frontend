@@ -1,0 +1,14 @@
+question: Developer
+name: Developer
+optional: true
+depends:
+  - "on": lot
+    being:
+      - digital-specialists
+type: multiquestion
+any_of: specialist
+questions:
+  - developerLocations
+  - developerDayRate
+
+empty_message: You haven't added a developer

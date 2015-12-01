@@ -1,0 +1,24 @@
+question: Where will your delivery manager work?
+depends:
+  - "on": lot
+    being:
+      - digital-specialists
+type: checkboxes
+options:
+  - label: "Off-site"
+  - label: "Scotland"
+  - label: "North East England"
+  - label: "North West England"
+  - label: "Yorkshire and the Humber"
+  - label: "East Midlands"
+  - label: "The Midlands"
+  - label: "East England"
+  - label: "Wales"
+  - label: "London"
+  - label: "South East England"
+  - label: "West England"
+  - label: "Northern Ireland"
+
+validations:
+  - name: answer_required
+    message: 'You need to answer this question.'

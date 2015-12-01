@@ -1,0 +1,37 @@
+-
+  name: Service attributes
+  editable: false
+  questions:
+    - id
+    - lotName
+-
+  name: Description
+  editable: true
+  questions:
+    - serviceName
+    - serviceSummary
+-
+  name: Features and benefits
+  editable: true
+  questions:
+    - serviceFeatures
+    - serviceBenefits
+-
+  name: Pricing
+  editable: true
+  questions:
+    - priceString
+    - vatIncluded
+    - educationPricing
+    - terminationCost
+    - trialOption
+    - freeOption
+    - minimumContractPeriod
+-
+  name: Documents
+  editable: true
+  questions:
+    - serviceDefinitionDocumentURL
+    - termsAndConditionsDocumentURL
+    - sfiaRateDocumentURL
+    - pricingDocumentURL

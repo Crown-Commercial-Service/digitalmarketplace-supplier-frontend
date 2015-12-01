@@ -1,0 +1,17 @@
+hint: 'Storage is persistent if recorded data is available indefinitely.'
+depends:
+  -
+    "on": lot
+    being:
+      - SaaS
+      - saas
+      - PaaS
+      - paas
+      - IaaS
+      - iaas
+type: boolean
+validations:
+  -
+    name: answer_required
+    message: 'You need to answer this question.'
+question: 'Persistent storage supported'

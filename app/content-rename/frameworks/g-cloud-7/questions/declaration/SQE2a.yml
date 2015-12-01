@@ -1,0 +1,15 @@
+question: 'Please confirm whether you will provide G-Cloud services:'
+hint: 'Choose all that apply. You should only consider subcontractors whose products or services will be integral to the G-Cloud 7 services that you intend to provide.'
+type: checkboxes
+options:
+  -
+    label: yourself without the use of third parties (subcontractors)
+  -
+    label: as a prime contractor, using third parties (subcontractors) to provide some services
+  -
+    label: as a prime contractor, using third parties (subcontractors) to provide all services
+  -
+    label: as part of a consortium or special purpose vehicle, using members only to provide all services
+  -
+    label: as part of a consortium or special purpose vehicle, using third parties (subcontractors) to provide some services
+

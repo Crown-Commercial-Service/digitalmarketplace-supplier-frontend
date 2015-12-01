@@ -1,0 +1,12 @@
+name: Share non-personal data
+question: Will you share non-personal user and service data to help the government continuously improve its services?
+type: boolean
+depends:
+  - "on": "lot"
+    being:
+      - digital-outcomes
+      - digital-specialists
+
+validations:
+  - name: answer_required
+    message: 'You need to answer this question.'

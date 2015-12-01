@@ -1,0 +1,15 @@
+question: >
+  Please confirm if, to provide the services specified in this procurement, it's a legal requirement in the state where you're established to be:
+hint: 'You don''t need to answer this question if your business was established in the UK.'
+type: checkboxes
+options:
+  -
+    label: licensed
+  -
+    label: a member of a relevant organisation
+  -
+    label: none of the above
+validations:
+  -
+    name: answer_required
+    message: "You must answer this question because you answered no to question 26"

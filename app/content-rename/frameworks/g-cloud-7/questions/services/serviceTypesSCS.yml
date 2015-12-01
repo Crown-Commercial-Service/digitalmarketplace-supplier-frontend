@@ -1,0 +1,24 @@
+depends:
+  -
+    "on": lot
+    being:
+      - SCS
+      - scs
+hint: 'You can choose multiple categories'
+type: checkboxes
+options:
+    -
+        label: Implementation
+    -
+        label: 'Ongoing support'
+    -
+        label: Planning
+    -
+        label: Testing
+    -
+        label: Training
+validations:
+  -
+    name: answer_required
+    message: 'You need to answer this question.'
+question: 'Choose the categories that apply to your service'

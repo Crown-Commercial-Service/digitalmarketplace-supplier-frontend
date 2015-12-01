@@ -1,0 +1,26 @@
+name: Where can you work on digital outcomes?
+question: >
+  Where can you work on digital outcomes?
+  
+  You’ll receive notifications for briefs in regions where you can provide services.
+
+  You can update the regions where you can provide services when the framework is live.
+depends:
+  - "on": lot
+    being:
+      - digital-outcomes
+type: checkboxes
+options:
+  - label: "Off-site"
+  - label: "Scotland"
+  - label: "North East England"
+  - label: "North West England"
+  - label: "Yorkshire and the Humber"
+  - label: "East Midlands"
+  - label: "The Midlands"
+  - label: "East England"
+  - label: "Wales"
+  - label: "London"
+  - label: "South East England"
+  - label: "West England"
+  - label: "Northern Ireland"

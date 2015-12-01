@@ -1,0 +1,19 @@
+hint: 'Is all equipment potentially containing consumer data, credentials or configuration information identified at the end of its life or prior to being recycled? Choose 1.'
+depends:
+  -
+    "on": lot
+    being:
+      - PaaS
+      - paas
+      - IaaS
+      - iaas
+assuranceApproach: 4answers-type2
+type: boolean
+validations:
+  -
+    name: answer_required
+    message: 'You need to answer this question.'
+  -
+    name: assurance_required
+    message: 'You need to confirm how you can back up your response.'
+question: 'Secure equipment disposal'

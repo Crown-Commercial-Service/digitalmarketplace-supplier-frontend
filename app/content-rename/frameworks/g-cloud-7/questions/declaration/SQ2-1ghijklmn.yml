@@ -1,0 +1,21 @@
+question: >
+  Please confirm whether, within the past 5 years, anyone who represents your organisation or a partner organisation has been convicted of:
+
+
+    - any offence under sections 44 to 46 of the Serious Crime Act 2007 which relates to an offence covered by subparagraph (f)
+
+    - money laundering within the meaning of sections 340(11) and 415 of the Proceeds of Crime Act 2002
+
+    - an offence in connection with the proceeds of criminal conduct within the meaning of section 93A, 93B or 93C of the Criminal Justice Act 1988 or article 45, 46 or 47 of the Proceeds of Crime (Northern Ireland) Order 1996
+
+    - an offence under section 4 of the Asylum and Immigration (Treatment of Claimants etc.) Act 2004
+
+    - an offence under section 59A of the Sexual Offences Act 2003
+
+    - an offence under section 71 of the Coroners and Justice Act 2009
+
+    - an offence in connection with the proceeds of drug trafficking within the meaning of section 49, 50 or 51 of the Drug Trafficking Act 1994; or
+  any other offence within the meaning of article 57(1) of the Directive
+
+hint: "Answer 'yes' if anyone who represents your organisation or partner organisation has been convicted of any of the above."
+type: boolean

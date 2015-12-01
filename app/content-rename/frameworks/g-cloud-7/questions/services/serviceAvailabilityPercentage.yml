@@ -1,0 +1,24 @@
+hint: 'What is the availability of the service? eg 99.99'
+depends:
+  -
+    "on": lot
+    being:
+      - SaaS
+      - saas
+      - PaaS
+      - paas
+      - IaaS
+      - iaas
+assuranceApproach: 3answers-type1
+type: percentage
+validations:
+  -
+    name: answer_required
+    message: 'You need to answer this question.'
+  -
+    name: not_a_number
+    message: 'Availability must be a number less than 100.'
+  -
+    name: assurance_required
+    message: 'You need to confirm how you can back up your response.'
+question: 'Service availability'

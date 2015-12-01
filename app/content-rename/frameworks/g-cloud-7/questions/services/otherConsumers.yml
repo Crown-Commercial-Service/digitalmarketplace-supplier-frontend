@@ -1,0 +1,30 @@
+hint: 'What types of other consumer do you share the service or platform with?'
+depends:
+  -
+    "on": lot
+    being:
+      - SaaS
+      - saas
+      - PaaS
+      - paas
+      - IaaS
+      - iaas
+assuranceApproach: 3answers-type1
+type: radios
+options:
+    -
+        label: 'No other consumer'
+    -
+        label: 'Only government consumers'
+    -
+        label: 'A specific consumer group, eg Police, Defence or Health'
+    -
+        label: 'Anyone - public'
+validations:
+  -
+    name: answer_required
+    message: 'You need to answer this question.'
+  -
+    name: assurance_required
+    message: 'You need to confirm how you can back up your response.'
+question: 'Type of consumer'

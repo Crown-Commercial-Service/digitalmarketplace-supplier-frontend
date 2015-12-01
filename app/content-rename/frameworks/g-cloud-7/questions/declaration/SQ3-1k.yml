@@ -1,0 +1,8 @@
+question: >
+  If you responded yes to any of questions 39 to 51, please provide details of any
+  mitigating factors that you think should be taken into consideration.
+type: textbox_large
+validations:
+  -
+    name: answer_required
+    message: "You must answer this question because you answered yes to one or more of questions 39 to 51."

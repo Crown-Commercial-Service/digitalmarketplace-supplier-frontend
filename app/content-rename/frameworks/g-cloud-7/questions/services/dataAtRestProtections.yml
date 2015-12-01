@@ -1,0 +1,34 @@
+hint: 'How is storage media containing consumer data protected from unauthorised physical access? Choose all that apply.'
+depends:
+  -
+    "on": lot
+    being:
+      - SaaS
+      - saas
+      - PaaS
+      - paas
+      - IaaS
+      - iaas
+assuranceApproach: 4answers-type1
+type: checkboxes
+options:
+    -
+        label: 'CPA Foundation-grade assured components'
+    -
+        label: 'FIPS-assured encryption'
+    -
+        label: 'Other encryption'
+    -
+        label: 'Secure containers, racks or cages'
+    -
+        label: 'Physical access control'
+    -
+        label: 'No protection'
+validations:
+  -
+    name: answer_required
+    message: 'You need to answer this question.'
+  -
+    name: assurance_required
+    message: 'You need to confirm how you can back up your response.'
+question: 'Data-at-rest protection'

@@ -1,0 +1,6 @@
+question: If you answered 'licensed' or 'a member of a relevant organisation' in question 29, please give details of the state's requirements and confirm whether you've met them.
+type: text
+validations:
+  -
+    name: answer_required
+    message: "You must answer this question because you answered 'licenced' or 'a member of a relevant organisation' to question 29"

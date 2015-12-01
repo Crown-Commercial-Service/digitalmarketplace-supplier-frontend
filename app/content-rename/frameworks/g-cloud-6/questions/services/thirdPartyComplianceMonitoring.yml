@@ -1,0 +1,21 @@
+hint: 'Do you manage your third-party suppliers'' compliance with relevant security requirements?'
+depends:
+  -
+    "on": lot
+    being:
+      - SaaS
+      - saas
+      - PaaS
+      - paas
+      - IaaS
+      - iaas
+assuranceApproach: 2answers-type1
+type: boolean
+validations:
+  -
+    name: answer_required
+    message: 'You need to answer this question.'
+  -
+    name: assurance_required
+    message: 'You need to confirm how you can back up your response.'
+question: 'Third-party supplier compliance monitoring'

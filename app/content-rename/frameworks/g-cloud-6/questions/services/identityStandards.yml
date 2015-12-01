@@ -1,0 +1,21 @@
+depends:
+  -
+    "on": lot
+    being:
+      - SaaS
+      - saas
+hint: 'Examples of identity standards include OAuth and SAML. (Optional.)'
+list_item_name: 'identity standards example'
+type: list
+validations:
+  -
+    name: under_10_words
+    message: 'Each identity standard must be no more than 10 words.'
+  -
+    name: under_10_items
+    message: 'You must have 10 or fewer identity standards.'
+  -
+    name: under_character_limit
+    message: 'Each identity standard must be no more than 100 characters.'
+question: 'Identity standards your service uses'
+optional: true

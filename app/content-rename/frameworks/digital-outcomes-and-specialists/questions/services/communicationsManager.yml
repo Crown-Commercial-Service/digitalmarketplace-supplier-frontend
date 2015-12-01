@@ -1,0 +1,14 @@
+question: Communications manager
+name: Communications manager
+optional: true
+depends:
+  - "on": lot
+    being:
+      - digital-specialists
+type: multiquestion
+any_of: specialist
+questions:
+  - communicationsManagerLocations
+  - communicationsManagerDayRate
+
+empty_message: You haven't added a communications manager

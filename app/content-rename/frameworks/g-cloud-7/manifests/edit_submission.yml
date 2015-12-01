@@ -1,0 +1,272 @@
+-
+  name: Service attributes
+  editable: false
+  questions:
+    - lotName
+-
+  name: Service name
+  editable: true
+  questions:
+    - serviceName
+-
+  name: Service description
+  editable: true
+  questions:
+    - serviceSummary
+-
+  name: Service type
+  editable: true
+  questions:
+    - serviceTypesIaaS
+    - serviceTypesSaaS
+    - serviceTypesSCS
+-
+  name: Features and benefits
+  editable: true
+  questions:
+    - serviceFeatures
+    - serviceBenefits
+-
+  name: Pricing
+  editable: true
+  questions:
+    - priceString
+    - vatIncluded
+    - educationPricing
+    - trialOption
+    - freeOption
+-
+  name: Terms and conditions
+  editable: true
+  questions:
+    - terminationCost
+    - minimumContractPeriod
+-
+  name: Support
+  editable: True
+  questions:
+    - supportTypes
+    - supportForThirdParties
+    - supportAvailability
+    - supportResponseTime
+    - incidentEscalation
+-
+  name: Open standards
+  editable: True
+  questions:
+    - openStandardsSupported
+-
+  name: Onboarding and offboarding
+  editable: True
+  questions:
+    - serviceOnboarding
+    - serviceOffboarding
+-
+  name: Analytics
+  editable: True
+  questions:
+    - analyticsAvailable
+-
+  name: Cloud features
+  editable: True
+  questions:
+    - elasticCloud
+    - guaranteedResources
+    - persistentStorage
+-
+  name: Provisioning
+  editable: True
+  questions:
+    - selfServiceProvisioning
+    - provisioningTime
+    - deprovisioningTime
+-
+  name: Open source
+  editable: True
+  questions:
+    - openSource
+-
+  name: Code libraries
+  editable: True
+  questions:
+    - codeLibraryLanguages
+-
+  name: API access
+  editable: True
+  questions:
+    - apiAccess
+    - apiType
+-
+  name: Networks and connectivity
+  editable: True
+  questions:
+    - networksConnected
+-
+  name: Access
+  editable: True
+  questions:
+    - supportedBrowsers
+    - offlineWorking
+    - supportedDevices
+-
+  name: Certifications
+  editable: True
+  questions:
+    - vendorCertifications
+-
+  name: Identity standards
+  editable: True
+  questions:
+    - identityStandards
+-
+  name: Data storage
+  editable: True
+  questions:
+    - datacentresEUCode
+    - datacentresSpecifyLocation
+    - datacentreTier
+    - dataBackupRecovery
+    - dataExtractionRemoval
+-
+  name: Data-in-transit protection
+  editable: True
+  questions:
+    - dataProtectionBetweenUserAndService
+    - dataProtectionWithinService
+    - dataProtectionBetweenServices
+-
+  name: Asset protection and resilience
+  editable: True
+  questions:
+    - datacentreLocations
+    - dataManagementLocations
+    - legalJurisdiction
+    - datacentreProtectionDisclosure
+    - dataAtRestProtections
+    - dataSecureDeletion
+    - dataStorageMediaDisposal
+    - dataSecureEquipmentDisposal
+    - dataRedundantEquipmentAccountsRevoked
+    - serviceAvailabilityPercentage
+-
+  name: Separation between consumers
+  editable: True
+  questions:
+    - cloudDeploymentModel
+    - otherConsumers
+    - servicesSeparation
+    - servicesManagementSeparation
+-
+  name: Governance
+  editable: True
+  questions:
+    - governanceFramework
+-
+  name: Configuration and change management
+  editable: True
+  questions:
+    - configurationTracking
+    - changeImpactAssessment
+-
+  name: Vulnerability management
+  editable: True
+  questions:
+    - vulnerabilityAssessment
+    - vulnerabilityMonitoring
+    - vulnerabilityMitigationPrioritisation
+    - vulnerabilityTracking
+    - vulnerabilityTimescales
+-
+  name: Event monitoring
+  editable: True
+  questions:
+    - eventMonitoring
+-
+  name: Incident management
+  editable: True
+  questions:
+    - incidentManagementProcess
+    - incidentManagementReporting
+    - incidentDefinitionPublished
+-
+  name: Personnel security
+  editable: True
+  questions:
+    - personnelSecurityChecks
+-
+  name: Secure development
+  editable: True
+  questions:
+    - secureDevelopment
+    - secureDesign
+    - secureConfigurationManagement
+-
+  name: Supply-chain security
+  editable: True
+  questions:
+    - thirdPartyDataSharingInformation
+    - thirdPartySecurityRequirements
+    - thirdPartyRiskAssessment
+    - thirdPartyComplianceMonitoring
+    - hardwareSoftwareVerification
+-
+  name: Authentication of consumers
+  editable: True
+  questions:
+    - userAuthenticateManagement
+    - userAuthenticateSupport
+-
+  name: Separation and access control within management interfaces
+  editable: True
+  questions:
+    - userAccessControlManagement
+    - restrictAdministratorPermissions
+    - managementInterfaceProtection
+-
+  name: Identity and authentication
+  editable: True
+  questions:
+    - identityAuthenticationControls
+-
+  name: External interface protection
+  editable: True
+  questions:
+    - onboardingGuidance
+    - interconnectionMethods
+-
+  name: Secure service administration
+  editable: True
+  questions:
+    - serviceManagementModel
+-
+  name: Audit information provision to consumers
+  editable: True
+  questions:
+    - auditInformationProvided
+-
+  name: Secure use of the service by the customer
+  editable: True
+  questions:
+    - deviceAccessMethod
+    - serviceConfigurationGuidance
+    - trainingProvided
+-
+  name: Service definition
+  editable: true
+  questions:
+    - serviceDefinitionDocumentURL
+-
+  name: Terms and conditions document
+  editable: true
+  questions:
+    - termsAndConditionsDocumentURL
+-
+  name: Pricing document
+  editable: true
+  questions:
+    - pricingDocumentURL
+-
+  name: SFIA rate card
+  editable: true
+  questions:
+    - sfiaRateDocumentURL

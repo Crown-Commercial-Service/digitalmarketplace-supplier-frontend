@@ -1,0 +1,8 @@
+question: >
+  Do you support government aims to buy once and as one buyer so that services can be reused across government?
+type: boolean
+depends:
+  - "on": "lot"
+    being:
+      - digital-outcomes
+      - digital-specialists

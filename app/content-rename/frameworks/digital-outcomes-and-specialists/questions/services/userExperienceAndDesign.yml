@@ -1,0 +1,13 @@
+question: User experience and design
+name: User experience and design
+optional: true
+depends:
+  - "on": lot
+    being:
+      - digital-outcomes
+type: multiquestion
+any_of: capability
+questions:
+  - userExperienceAndDesignTypes
+
+empty_message: You haven't added any user experience and design capabilities

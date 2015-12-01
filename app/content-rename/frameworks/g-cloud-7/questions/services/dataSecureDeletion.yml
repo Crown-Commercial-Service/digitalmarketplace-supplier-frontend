@@ -1,0 +1,30 @@
+hint: 'How do you erase consumer data when resources are moved or re-provisioned, or when the consumer leaves the service, or when they request it to be erased? Choose 1.'
+depends:
+  -
+    "on": lot
+    being:
+      - SaaS
+      - saas
+      - PaaS
+      - paas
+      - IaaS
+      - iaas
+assuranceApproach: 4answers-type1
+type: radios
+options:
+    -
+        label: 'CPA Foundation-grade erasure product'
+    -
+        label: 'CESG or CPNI-approved erasure process'
+    -
+        label: 'Other secure erasure process'
+    -
+        label: 'Other erasure process'
+validations:
+  -
+    name: answer_required
+    message: 'You need to answer this question.'
+  -
+    name: assurance_required
+    message: 'You need to confirm how you can back up your response.'
+question: 'Secure data deletion'

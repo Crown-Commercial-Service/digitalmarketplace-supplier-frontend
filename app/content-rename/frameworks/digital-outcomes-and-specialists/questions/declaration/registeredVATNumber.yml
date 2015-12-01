@@ -1,0 +1,3 @@
+question: What is your organisation’s registered VAT number?
+type: text
+hint: There are typically either 9 or 12 characters in a VAT number. Enter N/A if you don't have a VAT number.

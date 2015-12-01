@@ -1,0 +1,21 @@
+question: What types of user experience and design can you provide?
+depends:
+  - "on": lot
+    being:
+      - digital-outcomes
+type: checkboxes
+options:
+  - label: Accessibility
+  - label: Animation
+  - label: Brand development
+  - label: Content design and copywriting
+  - label: Cross-platform design
+  - label: Information architecture
+  - label: Interaction design
+  - label: Prototyping
+  - label: Service design
+  - label: User experience and design strategy
+
+validations:
+  - name: answer_required
+    message: 'You need to answer this question.'

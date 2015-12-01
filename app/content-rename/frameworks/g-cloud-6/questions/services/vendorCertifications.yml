@@ -1,0 +1,27 @@
+depends:
+  -
+    "on": lot
+    being:
+      - SaaS
+      - saas
+      - PaaS
+      - paas
+      - IaaS
+      - iaas
+      - SCS
+      - scs
+hint: 'Examples of employee or company certifications include VMware Certified Professional and Oracle Gold Partner. (Optional.)'
+list_item_name: 'certification example'
+type: list
+validations:
+    -
+      name: under_10_words
+      message: 'Each certification must be no more than 10 words.'
+    -
+      name: under_10_items
+      message: 'You must have 10 or fewer certifications.'
+    -
+      name: under_character_limit
+      message: 'Each certification must be no more than 100 characters.'
+question: 'Vendor certification(s)'
+optional: true

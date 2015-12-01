@@ -1,0 +1,20 @@
+question: How much do you charge per day for a programme manager?
+depends:
+  - "on": lot
+    being:
+      - digital-specialists
+type: pricing
+fields:
+  minimum_price: programmeManagerPriceMin
+  maximum_price: programmeManagerPriceMax
+field_defaults:
+  price_unit: Person
+  price_interval: Day
+
+validations:
+  - name: answer_required
+    field: programmeManagerPriceMin
+    message: 'You need to answer this question.'
+  - name: answer_required
+    field: programmeManagerPriceMax
+    message: 'You need to answer this question.'

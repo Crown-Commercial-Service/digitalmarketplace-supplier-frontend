@@ -1,0 +1,32 @@
+hint: 'Which technical approach do you use for your service management? Choose all that apply.'
+depends:
+  -
+    "on": lot
+    being:
+      - SaaS
+      - saas
+      - PaaS
+      - paas
+      - IaaS
+      - iaas
+assuranceApproach: 2answers-type1
+type: checkboxes
+options:
+    -
+        label: 'Dedicated devices on a segregated network'
+    -
+        label: 'Dedicated devices for community service management'
+    -
+        label: 'Dedicated devices for multiple community service management'
+    -
+        label: 'Service management via bastion hosts'
+    -
+        label: 'Direct service management'
+validations:
+  -
+    name: answer_required
+    message: 'You need to answer this question.'
+  -
+    name: assurance_required
+    message: 'You need to confirm how you can back up your response.'
+question: 'Service management model'

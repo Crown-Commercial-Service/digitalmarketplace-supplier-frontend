@@ -1,0 +1,23 @@
+depends:
+  -
+    "on": lot
+    being:
+      - SaaS
+      - saas
+      - PaaS
+      - paas
+      - IaaS
+      - iaas
+hint: 'How long does it take to get your service up and running? eg 1 to 5 hours or 2 to 3 days. (Maximum 20 words.)'
+type: text
+validations:
+  -
+    name: answer_required
+    message: 'You need to answer this question.'
+  -
+    name: under_20_words
+    message: 'Provisioning time must be no more than 20 words.'
+  -
+    name: under_character_limit
+    message: "Provisioning time must be no more than 200 characters."
+question: 'Service provisioning time'

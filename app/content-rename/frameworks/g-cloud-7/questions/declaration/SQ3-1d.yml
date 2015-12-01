@@ -1,0 +1,5 @@
+question: >
+  Please confirm whether, within the past 3 years, your organisation or any of your partner organisations has:
+
+    - entered into agreements with other economic operators aimed at distorting competition
+type: boolean

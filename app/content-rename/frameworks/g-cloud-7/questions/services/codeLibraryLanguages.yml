@@ -1,0 +1,21 @@
+depends:
+  -
+    "on": lot
+    being:
+      - SaaS
+      - saas
+hint: 'Examples of code libraries include AWS Ruby SDK and Stripe-Java. Examples of languages include PHP and Python. (Maximum 10 languages.) (Optional.) '
+list_item_name: 'code libraries example'
+type: list
+validations:
+  -
+    name: under_10_words
+    message: 'Each code library must be no more than 10 words.'
+  -
+    name: under_10_items
+    message: 'You must have 10 or fewer code libraries.'
+  -
+    name: under_character_limit
+    message: 'Each code library must be no more than 100 characters.'
+question: 'Languages your code libraries are written in'
+optional: true

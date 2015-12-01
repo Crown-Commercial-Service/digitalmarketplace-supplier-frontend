@@ -1,0 +1,20 @@
+question: What types of support and operations can you provide?
+depends:
+  - "on": lot
+    being:
+      - digital-outcomes
+type: checkboxes
+options:
+  - label: Customer support
+  - label: Firewall management
+  - label: Hosting
+  - label: Incident management
+  - label: Monitoring
+  - label: Network administration
+  - label: Systems administration
+  - label: Service desk
+  - label: Tooling
+
+validations:
+  - name: answer_required
+    message: 'You need to answer this question.'

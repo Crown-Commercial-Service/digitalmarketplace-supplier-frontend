@@ -1,0 +1,177 @@
+-
+  name: Support
+  questions:
+    - supportTypes
+    - supportForThirdParties
+    - supportAvailability
+    - supportResponseTime
+    - incidentEscalation
+-
+  name: Open standards
+  questions:
+    - openStandardsSupported
+-
+  name: Onboarding and offboarding
+  questions:
+    - serviceOnboarding
+    - serviceOffboarding
+-
+  name: Analytics
+  questions:
+    - analyticsAvailable
+-
+  name: Cloud features
+  questions:
+    - elasticCloud
+    - guaranteedResources
+    - persistentStorage
+-
+  name: Provisioning
+  questions:
+    - selfServiceProvisioning
+    - provisioningTime
+    - deprovisioningTime
+-
+  name: Open source
+  questions:
+    - openSource
+-
+  name: Code libraries
+  questions:
+    - codeLibraryLanguages
+-
+  name: API access
+  questions:
+    - apiAccess
+    - apiType
+-
+  name: Networks and connectivity
+  questions:
+    - networksConnected
+-
+  name: Access
+  questions:
+    - supportedBrowsers
+    - offlineWorking
+    - supportedDevices
+-
+  name: Certifications
+  questions:
+    - vendorCertifications
+-
+  name: Identity standards
+  questions:
+    - identityStandards
+-
+  name: Data storage
+  questions:
+    - datacentresEUCode
+    - datacentresSpecifyLocation
+    - datacentreTier
+    - dataBackupRecovery
+    - dataExtractionRemoval
+-
+  name: Data-in-transit protection
+  questions:
+    - dataProtectionBetweenUserAndService
+    - dataProtectionWithinService
+    - dataProtectionBetweenServices
+-
+  name: Asset protection and resilience
+  questions:
+    - datacentreLocations
+    - dataManagementLocations
+    - legalJurisdiction
+    - datacentreProtectionDisclosure
+    - dataAtRestProtections
+    - dataSecureDeletion
+    - dataStorageMediaDisposal
+    - dataSecureEquipmentDisposal
+    - dataRedundantEquipmentAccountsRevoked
+    - serviceAvailabilityPercentage
+-
+  name: Separation between consumers
+  questions:
+    - cloudDeploymentModel
+    - otherConsumers
+    - servicesSeparation
+    - servicesManagementSeparation
+-
+  name: Governance
+  questions:
+    - governanceFramework
+-
+  name: Configuration and change management
+  questions:
+    - configurationTracking
+    - changeImpactAssessment
+-
+  name: Vulnerabilility management
+  questions:
+    - vulnerabilityAssessment
+    - vulnerabilityMonitoring
+    - vulnerabilityMitigationPrioritisation
+    - vulnerabilityTracking
+    - vulnerabilityTimescales
+-
+  name: Event monitoring
+  questions:
+    - eventMonitoring
+-
+  name: Incident management
+  questions:
+    - incidentManagementProcess
+    - incidentManagementReporting
+    - incidentDefinitionPublished
+-
+  name: Personnel security
+  questions:
+    - personnelSecurityChecks
+-
+  name: Secure development
+  questions:
+    - secureDevelopment
+    - secureDesign
+    - secureConfigurationManagement
+-
+  name: Supply-chain security
+  questions:
+    - thirdPartyDataSharingInformation
+    - thirdPartySecurityRequirements
+    - thirdPartyRiskAssessment
+    - thirdPartyComplianceMonitoring
+    - hardwareSoftwareVerification
+-
+  name: Authentication of consumers
+  questions:
+    - userAuthenticateManagement
+    - userAuthenticateSupport
+-
+  name: Separation and access control within management interfaces
+  questions:
+    - userAccessControlManagement
+    - restrictAdministratorPermissions
+    - managementInterfaceProtection
+-
+  name: Identity and authentication
+  questions:
+    - identityAuthenticationControls
+-
+  name: External interface protection
+  questions:
+    - onboardingGuidance
+    - interconnectionMethods
+-
+  name: Secure service administration
+  questions:
+    - serviceManagementModel
+-
+  name: Audit information provision to consumers
+  questions:
+    - auditInformationProvided
+-
+  name: Secure use of the service by the customer
+  questions:
+    - deviceAccessMethod
+    - serviceConfigurationGuidance
+    - trainingProvided

@@ -1,0 +1,20 @@
+question: How much do you charge per day for a developer?
+depends:
+  - "on": lot
+    being:
+      - digital-specialists
+type: pricing
+fields:
+  minimum_price: developerPriceMin
+  maximum_price: developerPriceMax
+field_defaults:
+  price_unit: Person
+  price_interval: Day
+
+validations:
+  - name: answer_required
+    field: developerPriceMin
+    message: 'You need to answer this question.'
+  - name: answer_required
+    field: developerPriceMax
+    message: 'You need to answer this question.'

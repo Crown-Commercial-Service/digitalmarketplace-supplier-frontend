@@ -1,0 +1,19 @@
+hint: 'Are accounts or credentials specific to redundant equipment revoked to reduce their value to an attacker?'
+depends:
+  -
+    "on": lot
+    being:
+      - PaaS
+      - paas
+      - IaaS
+      - iaas
+assuranceApproach: 3answers-type1
+type: boolean
+validations:
+  -
+    name: answer_required
+    message: 'You need to answer this question.'
+  -
+    name: assurance_required
+    message: 'You need to confirm how you can back up your response.'
+question: 'Redundant equipment accounts revoked'

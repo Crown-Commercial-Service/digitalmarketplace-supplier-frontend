@@ -1,0 +1,28 @@
+hint: 'Do you provide audit information to consumers? Choose 1.'
+depends:
+  -
+    "on": lot
+    being:
+      - SaaS
+      - saas
+      - PaaS
+      - paas
+      - IaaS
+      - iaas
+assuranceApproach: 2answers-type1
+type: radios
+options:
+    -
+        label: None
+    -
+        label: 'Data made available'
+    -
+        label: 'Data made available by negotiation'
+validations:
+  -
+    name: answer_required
+    message: 'You need to answer this question.'
+  -
+    name: assurance_required
+    message: 'You need to confirm how you can back up your response.'
+question: 'Audit information provided'

@@ -1,0 +1,13 @@
+question: What is the size of your organisation?
+hint: "[Check the size of your organisation](http://ec.europa.eu/growth/smes/business-friendly-environment/sme-definition/index_en.htm)"
+type: radios
+options:
+  -
+    label: "micro"
+  -
+    label: "small"
+  -
+    label: "medium"
+  -
+    label: "large"
+

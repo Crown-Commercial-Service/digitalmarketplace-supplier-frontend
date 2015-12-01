@@ -1,0 +1,30 @@
+depends:
+  -
+    "on": lot
+    being:
+      - SaaS
+      - saas
+      - PaaS
+      - paas
+      - IaaS
+      - iaas
+      - SCS
+      - scs
+hint: 'Choose all that apply.'
+type: checkboxes
+options:
+    -
+        label: 'Service desk'
+    -
+        label: Email
+    -
+        label: Phone
+    -
+        label: 'Live chat'
+    -
+        label: Onsite
+validations:
+  -
+    name: answer_required
+    message: 'You need to answer this question.'
+question: 'Support service type'

@@ -1,0 +1,13 @@
+question: User research
+name: User research
+optional: true
+depends:
+  - "on": lot
+    being:
+      - digital-outcomes
+type: multiquestion
+any_of: capability
+questions:
+  - userResearchTypes
+
+empty_message: You haven't added any user research capabilities

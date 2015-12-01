@@ -1,0 +1,32 @@
+hint: 'Choose all that apply'
+depends:
+  -
+    "on": lot
+    being:
+      - PaaS
+      - paas
+      - IaaS
+      - iaas
+assuranceApproach: 4answers-type1
+type: checkboxes
+options:
+    -
+        label: 'VPN using TLS, version 1.2 or later'
+    -
+        label: 'VPN using legacy SSL or TLS'
+    -
+        label: VLAN
+    -
+        label: 'Bonded fibre optic connections'
+    -
+        label: 'Other network protection'
+    -
+        label: 'No encryption'
+validations:
+  -
+    name: answer_required
+    message: 'You need to answer this question.'
+  -
+    name: assurance_required
+    message: 'You need to confirm how you can back up your response.'
+question: 'Data protection within service'

@@ -1,0 +1,14 @@
+question: Service manager
+name: Service manager
+optional: true
+depends:
+  - "on": lot
+    being:
+      - digital-specialists
+type: multiquestion
+any_of: specialist
+questions:
+  - serviceManagerLocations
+  - serviceManagerDayRate
+
+empty_message: You haven't added a service manager

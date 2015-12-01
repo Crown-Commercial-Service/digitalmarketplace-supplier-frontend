@@ -1,0 +1,25 @@
+question: "Please confirm that your organisation complies with legal equality and diversity obligations relating to:"
+type: checkboxes
+options:
+  -
+    label: race
+  -
+    label: sexual orientation
+  -
+    label: disability
+  -
+    label: age equality
+  -
+    label: religion or belief
+  -
+    label: gender (sex)
+  -
+    label: gender reassignment
+  -
+    label: marriage or civil partnership
+  -
+    label: pregnancy or maternity
+  -
+    label: human rights
+
+hint: "You must select all the boxes to confirm that your organisation complies with its legal equality and diversity obligations."

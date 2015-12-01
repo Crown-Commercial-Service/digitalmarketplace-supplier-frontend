@@ -1,0 +1,5 @@
+question: What is your organisation's company registration number?
+hint: >
+  If you don't have a Companies House number, provide the company registration
+  number from the country where you first registered.
+type: text
