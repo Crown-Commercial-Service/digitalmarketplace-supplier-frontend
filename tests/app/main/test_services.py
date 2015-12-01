@@ -1038,7 +1038,7 @@ class TestEditDraftService(BaseApplicationTest):
             'email@email.com'
         )
 
-    def test_can_not_remove_last_subsection(self, data_api_client, s3):
+    def test_can_not_remove_last_subsection_from_submitted_draft(self, data_api_client, s3):
         s3.return_value.bucket_short_name = 'submissions'
         data_api_client.get_framework.return_value = self.framework(
             status='open', slug='digital-outcomes-and-specialists'
@@ -1048,6 +1048,7 @@ class TestEditDraftService(BaseApplicationTest):
         draft_service['services'].pop('developerLocations', None)
         draft_service['services'].pop('developerPriceMax', None)
         draft_service['services'].pop('developerPriceMin', None)
+        draft_service['services']['status'] = 'submitted'
 
         data_api_client.get_draft_service.return_value = draft_service
 
