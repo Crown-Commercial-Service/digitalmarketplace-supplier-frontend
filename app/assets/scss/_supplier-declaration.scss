@@ -25,7 +25,27 @@
    }
 
   .question-number {
-    @include bold-19;
+
+    @include core-19;
+    font-weight: bold;
+    display: inline-block;
+    height: 0.5em;
+
+    @include media(mobile) {
+      line-height: 1.25;
+      font-size: 19px;
+    }
+
+    @include media(tablet) {
+      line-height: 1.25;
+      font-size: 19px;
+    }
+
+    @include media(1080px) {
+      display: block;
+      height: 50px;
+    }
+
   }
 
   .validation-wrapper {
