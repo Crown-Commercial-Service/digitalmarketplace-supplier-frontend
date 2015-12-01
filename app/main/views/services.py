@@ -373,6 +373,7 @@ def view_service_submission(framework_slug, lot_slug, service_id):
     return render_template(
         "services/service_submission.html",
         framework=framework,
+        confirm_remove=request.args.get("confirm_remove", None),
         one_service_limit=[
             lot['oneServiceLimit'] for lot in framework['lots'] if lot['slug'] == draft['lot']
         ][0],
