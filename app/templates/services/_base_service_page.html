@@ -60,6 +60,9 @@
         {% if section.editable %}
           {% block edit_link scoped %}{% endblock %}
         {% endif %}
+        {% if section.summary_page_description %}
+          {{ summary.description(section.summary_page_description) }}
+        {% endif %}
         {% call(question) summary.list_table(
           section.questions,
           caption=section.name,
