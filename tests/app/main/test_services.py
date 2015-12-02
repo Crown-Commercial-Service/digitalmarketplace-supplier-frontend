@@ -592,6 +592,28 @@ class TestEditDraftService(BaseApplicationTest):
             }
         }
 
+        self.multiquestion_draft = {
+            'services': {
+                'id': 1,
+                'supplierId': 1234,
+                'supplierName': "supplierName",
+                'lot': 'digital-specialists',
+                'lotName': 'Digital specialists',
+                'agileCoachLocations': ['Wales'],
+                'agileCoachPriceMax': '200',
+                'agileCoachPriceMin': '100',
+                'developerLocations': ['Wales'],
+                'developerPriceMax': '250',
+                'developerPriceMin': '150',
+                'status': "not-submitted",
+            },
+            'auditEvents': {
+                'createdAt': "2015-06-29T15:26:07.650368Z",
+                'userName': "Supplier User",
+            },
+            'validationErrors': {}
+        }
+
     def test_questions_for_this_draft_section_can_be_changed(self, data_api_client, s3):
         s3.return_value.bucket_short_name = 'submissions'
         data_api_client.get_framework.return_value = self.framework(status='open')
@@ -970,6 +992,110 @@ class TestEditDraftService(BaseApplicationTest):
             'email@email.com',
             page_questions=['agileCoachLocations', 'agileCoachPriceMax', 'agileCoachPriceMin']
         )
+
+    def test_remove_subsection(self, data_api_client, s3):
+        s3.return_value.bucket_short_name = 'submissions'
+        data_api_client.get_framework.return_value = self.framework(
+            status='open', slug='digital-outcomes-and-specialists'
+        )
+
+        data_api_client.get_draft_service.return_value = self.multiquestion_draft
+
+        res = self.client.get(
+            '/suppliers/frameworks/digital-outcomes-and-specialists/submissions/' +
+            'digital-specialists/1/remove/individual-specialist-roles/agile-coach'
+        )
+
+        assert_equal(res.status_code, 302)
+        assert(
+            '/suppliers/frameworks/digital-outcomes-and-specialists/submissions/digital-specialists/1?' in res.location
+        )
+        assert('section_id=individual-specialist-roles' in res.location)
+        assert('confirm_remove=agile-coach' in res.location)
+
+        res2 = self.client.get(
+            '/suppliers/frameworks/digital-outcomes-and-specialists/submissions/' +
+            'digital-specialists/1?section_id=specialists&confirm_remove=agile-coach'
+        )
+        assert_equal(res2.status_code, 200)
+        assert_in(u'Are you sure you want to remove agile coach?', res2.get_data(as_text=True))
+
+        res3 = self.client.post(
+            '/suppliers/frameworks/digital-outcomes-and-specialists/submissions/' +
+            'digital-specialists/1/remove/individual-specialist-roles/agile-coach?confirm=True')
+
+        assert_equal(res3.status_code, 302)
+        assert(res3.location.endswith(
+            '/suppliers/frameworks/digital-outcomes-and-specialists/submissions/digital-specialists/1')
+        )
+        data_api_client.update_draft_service.assert_called_once_with(
+            '1',
+            {
+                'agileCoachLocations': None,
+                'agileCoachPriceMax': None,
+                'agileCoachPriceMin': None,
+            },
+            'email@email.com'
+        )
+
+    def test_can_not_remove_last_subsection_from_submitted_draft(self, data_api_client, s3):
+        s3.return_value.bucket_short_name = 'submissions'
+        data_api_client.get_framework.return_value = self.framework(
+            status='open', slug='digital-outcomes-and-specialists'
+        )
+
+        draft_service = copy.deepcopy(self.multiquestion_draft)
+        draft_service['services'].pop('developerLocations', None)
+        draft_service['services'].pop('developerPriceMax', None)
+        draft_service['services'].pop('developerPriceMin', None)
+        draft_service['services']['status'] = 'submitted'
+
+        data_api_client.get_draft_service.return_value = draft_service
+
+        res = self.client.get(
+            '/suppliers/frameworks/digital-outcomes-and-specialists/submissions/' +
+            'digital-specialists/1/remove/individual-specialist-roles/agile-coach'
+        )
+
+        assert_equal(res.status_code, 302)
+        assert(res.location.endswith(
+            '/suppliers/frameworks/digital-outcomes-and-specialists/submissions/digital-specialists/1')
+        )
+
+        res2 = self.client.get(
+            '/suppliers/frameworks/digital-outcomes-and-specialists/submissions/digital-specialists/1'
+        )
+        assert_equal(res2.status_code, 200)
+        assert_in("You must offer one of the individual specialist roles to be eligible.",
+                  res2.get_data(as_text=True))
+
+        data_api_client.update_draft_service.assert_not_called()
+
+    def test_can_not_remove_other_suppliers_subsection(self, data_api_client, s3):
+        draft_service = copy.deepcopy(self.multiquestion_draft)
+        draft_service['services']['supplierId'] = 12345
+        data_api_client.get_draft_service.return_value = draft_service
+        res = self.client.post(
+            '/suppliers/frameworks/digital-outcomes-and-specialists/submissions/' +
+            'digital-specialists/1/remove/individual-specialist-roles/agile-coach?confirm=True')
+
+        assert_equal(res.status_code, 404)
+        data_api_client.update_draft_service.assert_not_called()
+
+    def test_fails_if_api_get_fails(self, data_api_client, s3):
+        data_api_client.get_draft_service.side_effect = HTTPError(mock.Mock(status_code=504))
+        res = self.client.post(
+            '/suppliers/frameworks/digital-outcomes-and-specialists/submissions/' +
+            'digital-specialists/1/remove/individual-specialist-roles/agile-coach?confirm=True')
+        assert_equal(res.status_code, 504)
+
+    def test_fails_if_api_update_fails(self, data_api_client, s3):
+        data_api_client.get_draft_service.return_value = self.multiquestion_draft
+        data_api_client.update_draft_service.side_effect = HTTPError(mock.Mock(status_code=504))
+        res = self.client.post(
+            '/suppliers/frameworks/digital-outcomes-and-specialists/submissions/' +
+            'digital-specialists/1/remove/individual-specialist-roles/agile-coach?confirm=True')
+        assert_equal(res.status_code, 504)
 
 
 @mock.patch('app.main.views.services.data_api_client')

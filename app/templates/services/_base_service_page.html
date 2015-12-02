@@ -4,6 +4,45 @@
 
 {% block main_content %}
   <div class="grid-row">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          {% if category == 'error' %}
+            <div class="banner-destructive-without-action">
+          {% else %}
+            <div class="banner-success-without-action">
+          {% endif %}
+              <p class="banner-message">
+          {% if 'remove_last_attempted' in message %}
+                You must offer one of the {{ message.remove_last_attempted.lower() }} to be eligible.<br>
+                If you don&rsquo;t want to offer {{ (service_data.get('serviceName', service_data['lotName'])).lower() }}, 
+                delete this service.
+                <span data-analytics="trackPageView" data-url="{{message.virtual_pageview_url}}"></span>
+            {% elif category == 'service_deleted' %}
+                <strong>{{message.service_name}}</strong> was deleted
+            {% else %}
+                {{ message }}
+            {% endif %}
+              </p>
+            </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+      
+    {% if confirm_remove %}
+      <form method="post" action='{{ url_for(".remove_subsection", framework_slug=framework.slug, lot_slug=service_data.lot, service_id=service_id, section_id=request.args.get("section_id"), question_slug=confirm_remove, confirm=True) }}'>
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+        {%
+          with
+          action = "<button class=\"button-destructive banner-action\" type=\"submit\">Yes &ndash; remove {}</button>".format(sections.get_question_by_slug(confirm_remove).label.lower() ) | safe,
+          message = "Are you sure you want to remove {}?".format(sections.get_question_by_slug(confirm_remove).label.lower() ) | safe,
+          type = "destructive"
+        %}
+          {% include "toolkit/notification-banner.html" %}
+        {% endwith %}
+      </form>
+    {% endif %}
+
     {% block before_heading %}{% endblock %}
     <div class="column-two-thirds">
       {% with
@@ -52,6 +91,11 @@
               {{ summary[question.type](question.value, question.assurance) }}
             {% endif %}
             {% if section.edit_questions %}
+              {% if not question.is_empty %}
+                {{ summary.remove_link('Remove', url_for(".remove_subsection", framework_slug=framework.slug, lot_slug=service_data.lot, service_id=service_id, section_id=section.id, question_slug=question.slug)) }}
+              {% else %}
+                {{ summary.text("") }}
+              {% endif %}
               {{ summary.edit_link('Add' if question.is_empty else 'Edit', url_for(".edit_service_submission", framework_slug=framework.slug, lot_slug=service_data.lot, service_id=service_id, section_id=section.id, question_slug=question.slug)) }}
             {% endif %}
           {% endcall %}
