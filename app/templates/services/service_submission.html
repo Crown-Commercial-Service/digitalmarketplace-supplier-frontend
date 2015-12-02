@@ -68,10 +68,8 @@
 {% block before_sections %}
 
 <div class="column-one-third align-with-heading">
-  <p>
-    <strong>Last edited</strong>
-  </p>
-  <p class="last-edited">
+  <p class='last-edited hint'>
+    Last edited:
     {{ last_edit.createdAt|datetimeformat }}
     by {{ last_edit.userName }}
   </p>
@@ -100,7 +98,12 @@
       </p>
     {% endif %}
   {% endif %}
-</div>
+  {% if service_data.status == 'not-submitted' and not can_mark_complete and framework.status == 'open' %}
+  <p>
+    Once you’ve entered all the required information, you can mark the service as complete.
+  </p>
+  {% endif %}
+  </div>
 {% endblock %}
 
 {% block before_heading %}
