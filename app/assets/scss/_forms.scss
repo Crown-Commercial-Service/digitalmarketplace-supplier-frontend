@@ -7,3 +7,11 @@
 a.button-save {
   @include inline-block;
 }
+
+.question-heading p {
+  margin-bottom: 10px;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
