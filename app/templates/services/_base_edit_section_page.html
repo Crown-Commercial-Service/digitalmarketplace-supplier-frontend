@@ -25,7 +25,7 @@
     {% endwith %}
   {% endif %}
 
-  <form method="post" enctype="multipart/form-data">
+  <form method="post" enctype="multipart/form-data" action="{{ request.path }}">
 
     <div class="grid-row">
       <div class="column-two-thirds">
