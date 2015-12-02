@@ -7,8 +7,7 @@ from ...main import main, content_loader
 from ..helpers.services import (
     is_service_modifiable, is_service_associated_with_supplier,
     get_signed_document_url, count_unanswered_questions,
-    get_next_section_name)
-
+)
 from ..helpers.frameworks import get_framework_and_lot, get_declaration_status
 
 from dmutils.apiclient import APIError, HTTPError
@@ -261,8 +260,7 @@ def copy_draft_service(framework_slug, lot_slug, service_id):
                             framework_slug=framework['slug'],
                             lot_slug=draft['lot'],
                             service_id=draft_copy['id'],
-                            section_id=content.get_next_editable_section_id(),
-                            return_to_summary=1))
+                            section_id=content.get_next_editable_section_id()))
 
 
 @main.route('/frameworks/<framework_slug>/submissions/<lot_slug>/<service_id>/complete', methods=['POST'])
@@ -375,7 +373,7 @@ def view_service_submission(framework_slug, lot_slug, service_id):
         framework=framework,
         confirm_remove=request.args.get("confirm_remove", None),
         one_service_limit=[
-            lot['oneServiceLimit'] for lot in framework['lots'] if lot['slug'] == draft['lot']
+            l['oneServiceLimit'] for l in framework['lots'] if l['slug'] == draft['lot']
         ][0],
         service_id=service_id,
         service_data=draft,
@@ -419,10 +417,8 @@ def edit_service_submission(framework_slug, lot_slug, service_id, section_id, qu
         "services/edit_submission_section.html",
         section=section,
         framework=framework,
-        next_section_name=get_next_section_name(content, section.id),
         service_data=draft,
         service_id=service_id,
-        return_to_summary=bool(request.args.get('return_to_summary')),
         **main.config['BASE_TEMPLATE_DATA']
     )
 
@@ -483,29 +479,17 @@ def update_section_submission(framework_slug, lot_slug, service_id, section_id, 
             "services/edit_submission_section.html",
             framework=framework,
             section=section,
-            next_section_name=get_next_section_name(content, section.id),
             service_data=update_data,
             service_id=service_id,
-            return_to_summary=bool(request.args.get('return_to_summary')),
             errors=errors,
             **main.config['BASE_TEMPLATE_DATA']
             )
 
-    return_to_summary = bool(request.args.get('return_to_summary'))
-    next_section = content.get_next_editable_section_id(section_id)
-
-    if next_section and not return_to_summary and request.form.get('continue_to_next_section'):
-        return redirect(url_for(".edit_service_submission",
-                                framework_slug=framework['slug'],
-                                lot_slug=draft['lot'],
-                                service_id=service_id,
-                                section_id=next_section))
-    else:
-        return redirect(url_for(".view_service_submission",
-                                framework_slug=framework['slug'],
-                                lot_slug=draft['lot'],
-                                service_id=service_id,
-                                _anchor=section_id))
+    return redirect(url_for(".view_service_submission",
+                            framework_slug=framework['slug'],
+                            lot_slug=draft['lot'],
+                            service_id=service_id,
+                            _anchor=section_id))
 
 
 @main.route('/frameworks/<framework_slug>/submissions/<lot_slug>/<service_id>/remove/<section_id>/<question_slug>',
