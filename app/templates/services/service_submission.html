@@ -152,6 +152,23 @@
         </form>
         {% endif %}
       </div>
+      {% if one_service_limit %}
+        {% set back_to_service_url = url_for(".framework_submission_lots", framework_slug=framework.slug) %}
+        {% set back_to_service_link_text = 'Back to application' %}
+      {% else %}
+        {% set back_to_service_url = url_for(".framework_submission_services", framework_slug=framework.slug, lot_slug=service_data.lot) %}
+        {% set back_to_service_link_text = 'Back to {}'.format(service_data['lotName']|lower) %}
+      {% endif %}
+      <div class="column-two-thirds">
+        <div class="back-link">
+          {% with
+          url = back_to_service_url,
+          text = back_to_service_link_text
+          %}
+          {% include "toolkit/back-link.html" %}
+          {% endwith %}
+        </div>
+      </div>
     </div>
   {% endif %}
 {% endblock %}
