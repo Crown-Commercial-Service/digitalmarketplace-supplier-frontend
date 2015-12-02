@@ -11,10 +11,10 @@
   .question-heading-with-hint li,
   .hint li {
 
-    margin: 10px 0 10px 10px;
+    margin: 10px 0 10px 20px;
     list-style: disc;
 
-    @include media(tablet) {
+    @include media(1080px) {
       margin-left: 0;
     }
 
