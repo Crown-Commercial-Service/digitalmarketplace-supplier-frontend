@@ -19,7 +19,7 @@
           </p>
           {% if framework.onFramework %}
             <p class='second-line'>
-              Live from {{ framework.dates.go_live }}
+              Live from {{ framework.dates.framework_live_date|safe }}
             </p>
           {% endif %}
         {% endcall %}

@@ -384,7 +384,7 @@ def view_service_submission(framework_slug, lot_slug, service_id):
         can_mark_complete=not validation_errors,
         delete_requested=delete_requested,
         declaration_status=get_declaration_status(data_api_client, framework['slug']),
-        deadline=current_app.config['DOS_CLOSING_DATE'],
+        dates=content_loader.get_message(framework_slug, 'dates'),
         **main.config['BASE_TEMPLATE_DATA']), 200
 
 

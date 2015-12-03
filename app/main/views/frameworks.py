@@ -88,8 +88,8 @@ def framework_dashboard(framework_slug):
             # TODO: ^ make this dynamic, eg, lab, service, unit
         } for lot in lot_question['options'] if count_drafts_by_lot(complete_drafts, lot['value'])],
         declaration_status=declaration_status,
+        dates=content_loader.get_message(framework_slug, 'dates'),
         first_page_of_declaration=first_page,
-        deadline=current_app.config['DOS_CLOSING_DATE'],
         framework=framework,
         application_made=(len(complete_drafts) > 0 and declaration_status == 'complete'),
         supplier_is_on_framework=supplier_is_on_framework,
@@ -348,6 +348,7 @@ def framework_updates(framework_slug, error_message=None, default_textbox_value=
         clarification_question_value=default_textbox_value,
         error_message=error_message,
         files=files,
+        dates=content_loader.get_message(framework_slug, 'dates'),
         **main.config['BASE_TEMPLATE_DATA']
     ), 200 if not error_message else 400
 

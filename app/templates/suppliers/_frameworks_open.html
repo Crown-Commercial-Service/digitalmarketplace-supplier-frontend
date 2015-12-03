@@ -8,7 +8,7 @@
             "title":
             "Continue your {} application".format(framework.name),
             "link": url_for(".framework_dashboard", framework_slug=framework.slug),
-            "body": "Deadline: {}".format(framework.dates.deadline)
+            "body": "Deadline: {}".format(framework.dates.framework_close_date|safe)
           }]
         %}
           {% include "toolkit/browse-list.html" %}
@@ -20,7 +20,7 @@
                 Apply to {{ framework.name }} 
               </h2>
               <p>
-                Deadline: {{ framework.dates.deadline }}
+                Deadline: {{ framework.dates.framework_close_date|safe }}
               </p>
               {%
               with

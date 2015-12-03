@@ -112,7 +112,9 @@
         {% if framework.clarificationQuestionsOpen %}
           All clarification questions and answers will be published here regularly. You’ll receive an email when new answers are available.
         {% else %}
-          The deadline for asking clarification questions has now passed. All clarification questions and answers will be published by 5pm <abbr title="British Summer Time">BST</abbr>, 29 September 2015. You'll receive an email when new answers are posted.
+          The deadline for asking clarification questions has now passed.
+          All clarification questions and answers will be published by {{ dates.clarifications_publish_date|safe }}.
+          You'll receive an email when new answers are posted.
         {% endif %}
       </p>
     </div>
@@ -135,7 +137,7 @@
               {% include "toolkit/forms/textbox.html" %}
             {% endwith %}
             <p>
-              The deadline for clarification questions is 5pm <abbr title="British Summer Time">BST</abbr>, 22 September 2015. All responses will be published by 5pm <abbr title="British Summer Time">BST</abbr>, 29 September 2015.
+              The deadline for clarification questions is {{ dates.clarifications_close_date|safe }}. All responses will be published by {{ dates.clarifications_publish_date|safe }}.
             </p>
             {%
               with

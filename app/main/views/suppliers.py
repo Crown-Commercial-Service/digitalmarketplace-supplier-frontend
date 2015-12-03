@@ -9,8 +9,9 @@ import six
 from dmutils.apiclient import APIError
 from dmutils.audit import AuditTypes
 from dmutils.email import send_email, generate_token, MandrillException
+from dmutils.content_loader import ContentNotFoundError
 
-from ...main import main
+from ...main import main, content_loader
 from ... import data_api_client
 from ..forms.suppliers import EditSupplierForm, EditContactInformationForm, DunsNumberForm, CompaniesHouseNumberForm,\
     CompanyContactDetailsForm, CompanyNameForm, EmailAddressForm
@@ -42,21 +43,18 @@ def dashboard():
         framework['frameworkSlug']: framework
         for framework in data_api_client.get_supplier_frameworks(current_user.supplier_id)['frameworkInterest']
     }
-    framework_dates = {
-        'digital-outcomes-and-specialists': {
-            'deadline': current_app.config['DOS_CLOSING_DATE']  # TODO: un-hard-code
-        },
-        'g-cloud-7': {
-            'go_live': current_app.config['G7_LIVE_DATE']
-        }
-    }
 
     for framework in all_frameworks:
         framework.update(
             supplier_frameworks.get(framework['slug'], {})
         )
+        dates = {}
+        try:
+            dates = content_loader.get_message(framework['slug'], 'dates')
+        except ContentNotFoundError:
+            pass
         framework.update({
-            'dates': framework_dates.get(framework['slug'], {}),
+            'dates': dates,
             'registered_interest': (framework['slug'] in supplier_frameworks),
             'made_application': (
                 framework.get('declaration') and
