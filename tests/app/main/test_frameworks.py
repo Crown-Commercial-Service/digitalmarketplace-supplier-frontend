@@ -951,8 +951,8 @@ class TestFrameworkUpdatesPage(BaseApplicationTest):
         )
 
         section_names = [
-            'G-Cloud 7 communications',
-            'G-Cloud 7 clarification questions and answers',
+            'Communications',
+            'Clarification questions and answers',
         ]
 
         headers = doc.xpath('//div[contains(@class, "updates-document-tables")]/h2[@class="summary-item-heading"]')
@@ -1005,8 +1005,8 @@ class TestFrameworkUpdatesPage(BaseApplicationTest):
             self._assert_page_title_and_table_headings(doc, tables_exist=False)
 
             for empty_message in [
-                '<p class="summary-item-no-content">No communications have been sent out</p>',
-                '<p class="summary-item-no-content">No clarification questions and answers  have been posted yet</p>',
+                '<p class="summary-item-no-content">No communications have been sent out.</p>',
+                '<p class="summary-item-no-content">No clarification questions and answers have been posted yet.</p>',
             ]:
                 assert_true(
                     self.strip_all_whitespace(empty_message)

@@ -1,39 +1,42 @@
-{% for framework in frameworks.open %}
-  {% if framework.registered_interest %}
-    {%
-      with
-      items = [{
-        "title":
-        "Continue your {} application".format(framework.name),
-        "link": url_for(".framework_dashboard", framework_slug=framework.slug),
-        "body": "Make your supplier declaration, add services and view {} updates and clarification questions".format(framework.name),
-        "subtext": "Open for applications until {}".format(framework.dates.deadline)
-      }]
-    %}
-      {% include "toolkit/browse-list.html" %}
-    {% endwith %}
-  {% else %}
-    <form action="{{ url_for('.framework_dashboard', framework_slug=framework.slug) }}" method="POST">
-      <div class="summary-item-lede">
-        <h2 class="summary-item-heading">
-          {{ framework.name }} is open for applications until
-          {{ framework.dates.deadline }}
-        </h2>
-
+ <div class='grid-row'> 
+  <div class='column-two-thirds'>
+    {% for framework in frameworks.open %}
+      {% if framework.registered_interest %}
         {%
-        with
-            type = "save",
-            label = "Start application"
+          with
+          items = [{
+            "title":
+            "Continue your {} application".format(framework.name),
+            "link": url_for(".framework_dashboard", framework_slug=framework.slug),
+            "body": "Deadline: {}".format(framework.dates.deadline)
+          }]
         %}
-            {% include "toolkit/button.html" %}
+          {% include "toolkit/browse-list.html" %}
         {% endwith %}
+      {% else %}
+        <form action="{{ url_for('.framework_dashboard', framework_slug=framework.slug) }}" method="POST">
+            <div class="summary-item-lede">
+              <h2 class="summary-item-heading">
+                Apply to {{ framework.name }} 
+              </h2>
+              <p>
+                Deadline: {{ framework.dates.deadline }}
+              </p>
+              {%
+              with
+                  type = "save",
+                  label = "Start application"
+              %}
+                  {% include "toolkit/button.html" %}
+              {% endwith %}
 
-        <p>
-          Starting your application means you’ll receive emails about the application process.
-        </p>
-
-      </div>
-      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
-    </form>
-  {% endif %}
-{% endfor %}
+              <p>
+                Starting your application means you’ll receive <br>{{ framework.name }} email updates.
+              </p>
+            </div>
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+        </form>
+      {% endif %}
+    {% endfor %}
+  </div>
+</div>

@@ -75,13 +75,13 @@
     <div class="column-one-whole updates-document-tables">
       {% set sections = [
         {
-          "heading": framework.name + " communications",
-          "empty_message": "No communications have been sent out",
+          "heading": "Communications",
+          "empty_message": "No communications have been sent out.",
           "files": files.communications
         },
         {
-          "heading": framework.name + " clarification questions and answers",
-          "empty_message": "No clarification questions and answers have been posted yet",
+          "heading": "Clarification questions and answers",
+          "empty_message": "No clarification questions and answers have been posted yet.",
           "files": files.clarifications
         }
       ] %}
@@ -110,7 +110,7 @@
       {% endfor %}
       <p class="hint">
         {% if framework.clarificationQuestionsOpen %}
-          All clarification questions and answers will be published here regularly. You will receive an email when new answers are posted.
+          All clarification questions and answers will be published here regularly. You’ll receive an email when new answers are available.
         {% else %}
           The deadline for asking clarification questions has now passed. All clarification questions and answers will be published by 5pm <abbr title="British Summer Time">BST</abbr>, 29 September 2015. You'll receive an email when new answers are posted.
         {% endif %}
@@ -126,9 +126,9 @@
             {%
               with
               large=true,
-              question = "Ask a {} clarification question".format(framework.name),
+              question = "Ask a clarification question",
               name = clarification_question_name,
-              hint = "You should ask any questions you have about {} here. The Crown Commercial Service will not respond to you individually. All answers to clarification questions will be published here regularly. (Maximum 5000 characters per question.)".format(framework.name),
+              hint = "You should ask any questions you have about {} here. The Crown Commercial Service will not respond to you individually. (Maximum 5000 characters per question.)".format(framework.name),
               error = error_message,
               value = clarification_question_value
             %}
