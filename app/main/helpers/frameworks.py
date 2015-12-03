@@ -214,7 +214,7 @@ def get_status_for_multi_service_lot_and_service_type(
     if services_status == 'draft':
         return {
             'title': description_of_services,
-            'hint': u'Answer all the questions and mark as complete',
+            'hint': u'Started but not complete',
             'type': u'quiet'
         } if framework_is_open else {
             'title': u'{} {} submitted'.format(

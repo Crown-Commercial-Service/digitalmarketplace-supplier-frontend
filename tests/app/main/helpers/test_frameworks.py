@@ -70,7 +70,7 @@ def get_lot_status_examples():
             [False, 1, 0, None, 'open'],
             [{
                 'title': u'1 draft lab',
-                'hint': u'Answer all the questions and mark as complete',
+                'hint': u'Started but not complete',
                 'type': u'quiet'
             }]
         ),
@@ -90,7 +90,7 @@ def get_lot_status_examples():
                 },
                 {
                     'title': u'1 draft lab',
-                    'hint': u'Answer all the questions and mark as complete',
+                    'hint': u'Started but not complete',
                     'type': u'quiet'
                 }
             ]
@@ -104,7 +104,7 @@ def get_lot_status_examples():
                 },
                 {
                     'title': u'3 draft labs',
-                    'hint': u'Answer all the questions and mark as complete',
+                    'hint': u'Started but not complete',
                     'type': u'quiet'
                 }
             ]
@@ -119,7 +119,7 @@ def get_lot_status_examples():
             [False, 1, 0, 'complete', 'open'],
             [{
                 'title': u'1 draft lab',
-                'hint': u'Answer all the questions and mark as complete',
+                'hint': u'Started but not complete',
                 'type': u'quiet'
             }]
         ),
@@ -141,7 +141,7 @@ def get_lot_status_examples():
                 },
                 {
                     'title': u'1 draft lab',
-                    'hint': u'Answer all the questions and mark as complete',
+                    'hint': u'Started but not complete',
                     'type': u'quiet'
                 }
             ]
@@ -156,7 +156,7 @@ def get_lot_status_examples():
                 },
                 {
                     'title': u'3 draft labs',
-                    'hint': u'Answer all the questions and mark as complete',
+                    'hint': u'Started but not complete',
                     'type': u'quiet'
                 }
             ]
@@ -171,7 +171,7 @@ def get_lot_status_examples():
                 },
                 {
                     'title': u'3 draft labs',
-                    'hint': u'Answer all the questions and mark as complete',
+                    'hint': u'Started but not complete',
                     'type': u'quiet'
                 }
             ]
@@ -186,7 +186,7 @@ def get_lot_status_examples():
                 },
                 {
                     'title': u'1 draft lab',
-                    'hint': u'Answer all the questions and mark as complete',
+                    'hint': u'Started but not complete',
                     'type': u'quiet'
                 }
             ]
