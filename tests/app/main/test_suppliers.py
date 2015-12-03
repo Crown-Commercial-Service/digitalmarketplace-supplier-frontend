@@ -195,7 +195,7 @@ class TestSuppliersDashboard(BaseApplicationTest):
             assert_equal(res.status_code, 200)
 
             assert_in(
-                'G-Cloud 7 is open for applications',
+                'Apply to G-Cloud 7',
                 doc.xpath('//h2[@class="summary-item-heading"]/text()')[0]
             )
 
@@ -610,7 +610,7 @@ class TestSuppliersDashboard(BaseApplicationTest):
 
             assert_equal(res.status_code, 200)
 
-            assert_in("Digital Outcomes and Specialists is open for applications",
+            assert_in("Apply to Digital Outcomes and Specialists",
                       doc.xpath('//div[@class="summary-item-lede"]//h2[@class="summary-item-heading"]/text()')[0])
             assert_equal("Start application", doc.xpath('//div[@class="summary-item-lede"]//input/@value')[0])
 
