@@ -27,72 +27,61 @@
 
 {% block main_content %}
 
-<div class="single-question-page">
+{% with messages = get_flashed_messages(with_categories=true) %}
+{% if messages %}
+{% for category, message in messages %}
+    {% if category == 'error' %}
+      <div class="banner-destructive-without-action">
+    {% elif category == 'success' %}
+      <div class="banner-success-without-action">
+    {% endif %}
+    {% if message == 'user_invited' %}
+    <p class="banner-message">
+        Contributor invited
+    </p>
+    {% elif message == 'user_not_invited' %}
+    <p class="banner-message">
+        Not Invited
+    </p>
+    {% endif %}
+          </div><div class="/sc"></div>
+{% endfor %}
+{% endif %}
+{% endwith %}
 
-  {% with messages = get_flashed_messages(with_categories=true) %}
-  {% if messages %}
-  {% for category, message in messages %}
-      {% if category == 'error' %}
-        <div class="banner-destructive-without-action">
-      {% elif category == 'success' %}
-        <div class="banner-success-without-action">
-      {% endif %}
-      {% if message == 'user_invited' %}
-      <p class="banner-message">
-          Contributor invited
-      </p>
-      {% elif message == 'user_not_invited' %}
-      <p class="banner-message">
-          Not Invited
-      </p>
-      {% endif %}
-            </div><div class="/sc"></div>
-  {% endfor %}
-  {% endif %}
+  {% with
+    heading = "Invite a contributor",
+    smaller = true
+  %}
+    {% include 'toolkit/page-heading.html' %}
   {% endwith %}
 
-    {% with
-      heading = "Invite a contributor",
-      smaller = true
-    %}
-      {% include 'toolkit/page-heading.html' %}
-    {% endwith %}
+<form autocomplete="off" action="{{ url_for('.send_invite_user') }}" method="POST">
 
-  <form autocomplete="off" action="{{ url_for('.send_invite_user') }}" method="POST">
+    <div class="grid-row">
+        <div class="column-two-thirds">
+            {{ form.hidden_tag() }}
 
-      <div class="grid-row">
-          <div class="column-two-thirds">
-              {{ form.hidden_tag() }}
+            {%
+              with
+                question = "Email address",
+                name = "email_address",
+                hint = "An invite will be sent asking the recipient to register as a contributor.",
+                value = form.email_address.data,
+                error = form.email_address.errors[0]
+            %}
+            {% include "toolkit/forms/textbox.html" %}
+            {% endwith %}
 
-              {% if form.email_address.errors %}
-                  <div class="validation-wrapper">
-              {% endif %}
-                  <div class="question">
-                      {{ form.email_address.label(class="question-heading-with-hint") }}
-                      <p class="hint">
-                          An invite will be sent asking the recipient to register as a contributor.
-                      </p>
-                      {% if form.email_address.errors %}
-                      <p class="validation-message" id="error-email-address-textbox">
-                          {% for error in form.email_address.errors %}{{ error }}{% endfor %}
-                      </p>
-                      {% endif %}
-                      {{ form.email_address(class="text-box", autocomplete="off") }}
-                  </div>
-              {% if form.email_address.errors %}
-                  </div>
-              {% endif %}
-
-              {%
-                with
-                type = "save",
-                label = "Send invite"
-              %}
-                {% include "toolkit/button.html" %}
-              {% endwith %}
-          </div>
-      </div>
-  </form>
-</div>
+            {%
+              with
+              type = "save",
+              label = "Send invite"
+            %}
+              {% include "toolkit/button.html" %}
+            {% endwith %}
+        </div>
+    </div>
+</form>
 
 {% endblock %}
