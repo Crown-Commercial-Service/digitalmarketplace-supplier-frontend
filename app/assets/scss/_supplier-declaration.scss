@@ -58,12 +58,14 @@
 
   }
 
-  .section-description {
+}
 
-    p {
-      margin-bottom: $gutter/2;
-    }
+.section-description {
 
+  @include copy-19;
+
+  p {
+    margin-bottom: $gutter/2;
   }
 
 }
