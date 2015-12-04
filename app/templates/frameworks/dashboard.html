@@ -46,14 +46,14 @@
 
       {% if framework.status == 'open' %}
         <aside role="complementary" class="framework-application-status" aria-label="{{ framework.name }} status">
-          Deadline: <strong>{{ deadline|safe }}</strong>
+          Deadline: <strong>{{ dates.framework_close_date|safe }}</strong>
         </aside>
       {% elif framework.status == 'pending' %}
         <div class="summary-item-lede">
           <h2 class="summary-item-heading">{{ framework.name }} is closed for applications</h2>
           {% if application_made %}
             <p>You made your supplier declaration and submitted {{ counts.complete }} {{ 'service' if counts.complete == 1 else 'services' }} for consideration.</p>
-            <p>A letter informing you whether your application was successful or not will be posted on your {{ framework.name }} updates page by Monday, 9 November 2015.</p>
+            <p>A letter informing you whether your application was successful or not will be posted on your {{ framework.name }} updates page by {{ dates.intention_to_award_date|safe }}.</p>
           {% else %}
             <p>You didn't submit an application.</p>
           {% endif %}

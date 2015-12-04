@@ -191,7 +191,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
                       heading[0].xpath('text()')[0])
             assert_in(u"You made your supplier declaration and submitted 1 service for consideration.",
                       heading[0].xpath('../p[1]/text()')[0])
-            assert_in(u"A letter informing you whether your application was successful or not will be posted on your G-Cloud 7 updates page by Monday, 9 November 2015.",  # noqa
+            assert_in(u"A letter informing you whether your application was successful or not will be posted on your G-Cloud 7 updates page by 9 November 2015.",  # noqa
                       heading[0].xpath('../p[2]/text()')[0])  # noqa
 
     def test_declaration_status_when_complete(self, data_api_client, s3):
@@ -1012,6 +1012,34 @@ class TestFrameworkUpdatesPage(BaseApplicationTest):
                     self.strip_all_whitespace(empty_message)
                     in self.strip_all_whitespace(response.get_data(as_text=True))
                 )
+
+    def test_dates_for_open_framework_closed_for_questions(self, s3, data_api_client):
+        data_api_client.get_framework.return_value = self.framework('open', clarification_questions_open=False)
+
+        with self.app.test_client():
+            self.login()
+
+            response = self.client.get('/suppliers/frameworks/g-cloud-7/updates')
+            data = response.get_data(as_text=True)
+
+            assert response.status_code == 200
+            assert "All clarification questions and answers will be published by " \
+                   "5pm <abbr title=\"British Summer Time\">BST</abbr>, 29 September 2015" in data
+            assert "The deadline for clarification questions is 5pm, 22 September 2015" not in data
+
+    def test_dates_for_open_framework_open_for_questions(self, s3, data_api_client):
+        data_api_client.get_framework.return_value = self.framework('open', clarification_questions_open=True)
+
+        with self.app.test_client():
+            self.login()
+
+            response = self.client.get('/suppliers/frameworks/g-cloud-7/updates')
+            data = response.get_data(as_text=True)
+
+            assert response.status_code == 200
+            assert "All clarification questions and answers will be published by 5pm, 29 September 2015" not in data
+            assert "The deadline for clarification questions is " \
+                   "5pm <abbr title=\"British Summer Time\">BST</abbr>, 22 September 2015" in data
 
     def test_the_tables_should_be_displayed_correctly(self, s3, data_api_client):
         data_api_client.get_framework.return_value = self.framework('open')

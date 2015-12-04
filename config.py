@@ -26,8 +26,6 @@ class Config(object):
     DM_MANDRILL_API_KEY = None
     DM_CLARIFICATION_QUESTION_EMAIL = 'digitalmarketplace@mailinator.com'
     DM_FRAMEWORK_AGREEMENTS_EMAIL = 'enquiries@example.com'
-    DOS_CLOSING_DATE = '3pm, 19 January 2016'
-    G7_LIVE_DATE = '23 November 2015'
 
     DM_AGREEMENTS_BUCKET = None
     DM_COMMUNICATIONS_BUCKET = None
