@@ -55,8 +55,6 @@ def framework_dashboard(framework_slug):
     declaration_status = get_declaration_status_from_info(supplier_framework_info)
     supplier_is_on_framework = get_supplier_on_framework_from_info(supplier_framework_info)
 
-    lot_question = content_loader.get_question(framework_slug, 'services', 'lot')
-
     # Do not show a framework dashboard for earlier G-Cloud iterations
     if declaration_status == 'unstarted' and framework['status'] == 'live':
         abort(404)
@@ -80,13 +78,13 @@ def framework_dashboard(framework_slug):
             "complete": len(complete_drafts)
         },
         completed_lots=[{
-            'name': lot['label'],
-            'complete_count': count_drafts_by_lot(complete_drafts, lot['value']),
-            'one_service_limit': has_one_service_limit(lot['value'], framework['lots']),
+            'name': lot['name'],
+            'complete_count': count_drafts_by_lot(complete_drafts, lot['slug']),
+            'one_service_limit': lot['oneServiceLimit'],
             'unit': 'lab' if framework['slug'] == 'digital-outcomes-and-specialists' else 'service',
             'unit_plural': 'labs' if framework['slug'] == 'digital-outcomes-and-specialists' else 'service'
             # TODO: ^ make this dynamic, eg, lab, service, unit
-        } for lot in lot_question['options'] if count_drafts_by_lot(complete_drafts, lot['value'])],
+        } for lot in framework['lots'] if count_drafts_by_lot(complete_drafts, lot['slug'])],
         declaration_status=declaration_status,
         dates=content_loader.get_message(framework_slug, 'dates'),
         first_page_of_declaration=first_page,
