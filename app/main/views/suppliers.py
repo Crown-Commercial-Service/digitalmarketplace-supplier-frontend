@@ -2,7 +2,7 @@
 
 from itertools import chain
 
-from flask import render_template, request, redirect, url_for, abort, session
+from flask import render_template, request, redirect, url_for, abort, session, Markup
 from flask_login import login_required, current_user, current_app
 import six
 
@@ -55,6 +55,7 @@ def dashboard():
             pass
         framework.update({
             'dates': dates,
+            'deadline': Markup("Deadline: {}".format(dates.get('framework_close_date', ''))),
             'registered_interest': (framework['slug'] in supplier_frameworks),
             'made_application': (
                 framework.get('declaration') and
