@@ -1216,7 +1216,7 @@ class TestDeleteDraftService(BaseApplicationTest):
         assert_in('/frameworks/g-cloud-7/submissions/scs/1?delete_requested=True', res.location)
         res2 = self.client.get('/suppliers/frameworks/g-cloud-7/submissions/scs/1?delete_requested=True')
         assert_in(
-            b"Are you sure you want to delete this service?", res2.get_data()
+            b"Are you sure you want to delete this lab?", res2.get_data()
         )
 
     def test_cannot_delete_if_not_open(self, data_api_client):
