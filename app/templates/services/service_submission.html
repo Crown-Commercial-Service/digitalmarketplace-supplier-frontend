@@ -114,9 +114,9 @@
         <input type="hidden" name="delete_confirmed" value="true" />
         <div class="banner-destructive-with-action">
           <p class="banner-message">
-            Are you sure you want to delete this service?
+            Are you sure you want to delete {{ service_data.lotName.lower() if one_service_limit else 'this lab' }}?
           </p>
-          <button type="submit" class="button-destructive banner-action">Yes, delete {{ (service_data.serviceName or service_data.lotName).lower() }}</button>
+          <button type="submit" class="button-destructive banner-action">Yes, delete</button>
         </div>
       </form>
     </div>
@@ -148,7 +148,7 @@
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
           {% with
             type = "destructive",
-            label = "Delete ‘" + service_data.get('serviceName', service_data['lotName'])|lower + "’" if one_service_limit else "Delete this service"
+            label = "Delete"
           %}
             {% include "toolkit/button.html" %}
           {% endwith %}
