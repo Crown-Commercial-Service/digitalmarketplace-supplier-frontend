@@ -117,6 +117,29 @@ class TestFrameworksDashboard(BaseApplicationTest):
                 "email@email.com"
             )
 
+    @mock.patch('app.main.frameworks.send_email')
+    def test_email_sent_when_interest_registered_in_framework(self, send_email, data_api_client, s3):
+        with self.app.test_client():
+            self.login()
+
+            data_api_client.get_framework.return_value = self.framework(status='open')
+            data_api_client.get_supplier_framework_info.return_value = self.supplier_framework()
+            data_api_client.find_users.return_value = {'users': [
+                {'emailAddress': 'email1'}, {'emailAddress': 'email2'}
+            ]}
+            res = self.client.post("/suppliers/frameworks/digital-outcomes-and-specialists")
+
+            assert_equal(res.status_code, 200)
+            send_email.assert_called_once_with(
+                ['email1', 'email2'],
+                mock.ANY,
+                'MANDRILL',
+                'You have started your G-Cloud 7 application',
+                'do-not-reply@digitalmarketplace.service.gov.uk',
+                'Digital Marketplace Admin',
+                ['digital-outcomes-and-specialists-application-started']
+            )
+
     def test_interest_not_registered_in_framework_on_get(self, data_api_client, s3):
         with self.app.test_client():
             self.login()

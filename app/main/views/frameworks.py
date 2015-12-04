@@ -10,7 +10,6 @@ import six
 
 from dmutils.apiclient import APIError
 from dmutils.audit import AuditTypes
-from dmutils import flask_featureflags
 from dmutils.email import send_email, MandrillException
 from dmutils.formats import format_service_price, datetimeformat
 from dmutils import s3
@@ -44,10 +43,25 @@ def framework_dashboard(framework_slug):
     framework = get_framework(data_api_client, framework_slug, open_only=False)
 
     if request.method == 'POST':
+        register_interest_in_framework(data_api_client, framework_slug)
+        supplier_users = data_api_client.find_users(supplier_id=current_user.supplier_id)
+
         try:
-            register_interest_in_framework(data_api_client, framework_slug)
-        except APIError as e:
-            abort(e.status_code)
+            email_body = render_template('emails/dos_application_started.html')
+            send_email(
+                [user['emailAddress'] for user in supplier_users['users']],
+                email_body,
+                current_app.config['DM_MANDRILL_API_KEY'],
+                'You have started your {} application'.format(framework['name']),
+                current_app.config['CLARIFICATION_EMAIL_FROM'],
+                current_app.config['CLARIFICATION_EMAIL_NAME'],
+                ['{}-application-started'.format(framework_slug)]
+            )
+        except MandrillException as e:
+            current_app.logger.error(
+                "Application started email failed to send: {error}, supplier_id: {supplier_id}",
+                extra={'error': six.text_type(e), 'supplier_id': current_user.supplier_id}
+            )
 
     drafts, complete_drafts = get_drafts(data_api_client, current_user.supplier_id, framework_slug)
 
