@@ -52,7 +52,9 @@ class DeclarationValidator(object):
             if validation['name'] == message_key:
                 return validation['message']
         default_messages = {
-            'answer_required': 'Answer required'
+            'answer_required': 'You need to answer this question.',
+            'under_character_limit': 'Your answer must be no more than {} characters.'.format(self.character_limit),
+            'invalid_format': 'You must enter a valid email address.',
         }
         return default_messages.get(
             message_key, 'There was a problem with the answer to this question')
@@ -89,8 +91,8 @@ class DeclarationValidator(object):
         errors_map = {}
         for question_id in self.all_fields():
             if self.content.get_question(question_id).get('type') in ['text', 'textbox_large']:
-                answer_length = len(self.answers.get(question_id, ""))
-                if self.character_limit is not None and answer_length > self.character_limit:
+                answer = self.answers.get(question_id) or ''
+                if self.character_limit is not None and len(answer) > self.character_limit:
                     errors_map[question_id] = "under_character_limit"
 
         return errors_map
@@ -99,7 +101,7 @@ class DeclarationValidator(object):
         errors_map = {}
         if self.email_validation_fields is not None and len(self.email_validation_fields) > 0:
             for field in self.email_validation_fields:
-                if not re.match(EMAIL_REGEX, self.answers.get(field, '')):
+                if self.answers.get(field) is None or not re.match(EMAIL_REGEX, self.answers.get(field, '')):
                     errors_map[field] = 'invalid_format'
         return errors_map
 
