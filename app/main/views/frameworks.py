@@ -49,7 +49,7 @@ def framework_dashboard(framework_slug):
         try:
             email_body = render_template('emails/dos_application_started.html')
             send_email(
-                [user['emailAddress'] for user in supplier_users['users']],
+                [user['emailAddress'] for user in supplier_users['users'] if user['active']],
                 email_body,
                 current_app.config['DM_MANDRILL_API_KEY'],
                 'You have started your {} application'.format(framework['name']),

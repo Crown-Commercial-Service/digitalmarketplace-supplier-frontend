@@ -125,7 +125,9 @@ class TestFrameworksDashboard(BaseApplicationTest):
             data_api_client.get_framework.return_value = self.framework(status='open')
             data_api_client.get_supplier_framework_info.return_value = self.supplier_framework()
             data_api_client.find_users.return_value = {'users': [
-                {'emailAddress': 'email1'}, {'emailAddress': 'email2'}
+                {'emailAddress': 'email1', 'active': True},
+                {'emailAddress': 'email2', 'active': True},
+                {'emailAddress': 'email3', 'active': False}
             ]}
             res = self.client.post("/suppliers/frameworks/digital-outcomes-and-specialists")
 
