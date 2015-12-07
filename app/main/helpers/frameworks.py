@@ -105,6 +105,8 @@ def get_supplier_on_framework_from_info(supplier_framework_info):
 
 
 def question_references(data, get_question):
+    if not data:
+        return data
     return re.sub(
         r"\[\[([^\]]+)\]\]",  # anything that looks like [[nameOfQuestion]]
         lambda question_id: str(get_question(question_id.group(1))['number']),
