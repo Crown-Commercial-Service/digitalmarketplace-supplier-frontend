@@ -414,7 +414,7 @@ def framework_updates_email_clarification_question(framework_slug):
             current_app.config['DM_MANDRILL_API_KEY'],
             subject,
             from_address,
-            "G-Cloud 7 Supplier",
+            "{} Supplier".format(framework['name']),
             tags
         )
     except MandrillException as e:

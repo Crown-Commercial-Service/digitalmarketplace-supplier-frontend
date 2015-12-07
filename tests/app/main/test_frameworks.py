@@ -1197,7 +1197,7 @@ class TestSendClarificationQuestionEmail(BaseApplicationTest):
                 "MANDRILL",
                 "Test Framework clarification question",
                 "suppliers+g-cloud-7@digitalmarketplace.service.gov.uk",
-                "G-Cloud 7 Supplier",
+                "Test Framework Supplier",
                 ["clarification-question"]
             )
         if succeeds:
@@ -1225,7 +1225,7 @@ class TestSendClarificationQuestionEmail(BaseApplicationTest):
                 "MANDRILL",
                 "Test Framework application question",
                 "email@email.com",
-                "G-Cloud 7 Supplier",
+                "Test Framework Supplier",
                 ["application-question"]
             )
 
