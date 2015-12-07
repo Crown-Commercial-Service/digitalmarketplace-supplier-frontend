@@ -54,6 +54,15 @@ class TestLogin(BaseApplicationTest):
         assert_equal(res.location, 'http://localhost/suppliers')
         assert_in('Secure;', res.headers['Set-Cookie'])
 
+    def test_should_redirect_to_dashboard_if_already_logged_in(self):
+        self.client.post("/suppliers/login", data={
+            'email_address': 'valid@email.com',
+            'password': '1234567890'
+        })
+        res = self.client.get("/suppliers/login")
+        assert_equal(res.status_code, 302)
+        assert_equal(res.location, 'http://localhost/suppliers')
+
     def test_should_strip_whitespace_surrounding_login_email_address_field(self):
         self.client.post("/suppliers/login", data={
             'email_address': '  valid@email.com  ',
