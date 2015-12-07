@@ -66,9 +66,8 @@ class DeclarationValidator(object):
         return reduce(add, (section.get_question_ids() for section in self.content))
 
     def fields_with_values(self):
-        # empty list types will not be included so only string types need to be considered
         return set(key for key, value in self.answers.items()
-                   if not isinstance(value, six.string_types) or len(value) > 0)
+                   if value is not None and (not isinstance(value, six.string_types) or len(value) > 0))
 
     def errors(self):
         errors_map = {}
@@ -209,8 +208,8 @@ class DOSValidator(DeclarationValidator):
                 req_fields.add('appropriateTradeRegistersNumber')
 
             req_fields.add('licenceOrMemberRequired')
-            # If 'none of the above' to licenceOrMemberRequired
-            if self.answers.get('licenceOrMemberRequired') is True:
+            # If not 'none of the above' to licenceOrMemberRequired
+            if self.answers.get('licenceOrMemberRequired') in ['licensed', 'a member of a relevant organisation']:
                 req_fields.add('licenceOrMemberRequiredDetails')
 
         return req_fields

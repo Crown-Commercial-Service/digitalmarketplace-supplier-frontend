@@ -25,7 +25,7 @@ FULL_DOS_SUBMISSION = {
     "fullAccountability": True,
     "skillsAndCapabilityAssessment": True,
     "subcontracting": "yourself without the use of third parties (subcontractors)",
-    "licenceOrMemberRequired": "licensed",
+    "licenceOrMemberRequired": "none of the above",
     "mitigatingFactors2": "",
     "accuratelyDescribed": True,
     "tradingStatus": "other (please specify)",
@@ -214,12 +214,12 @@ def test_licence_or_member_details_error_depends_on_licence_or_member(content, s
     assert validator.errors() == {}
 
     submission['establishedInTheUK'] = False
-    submission['licenceOrMemberRequired'] = False
+    submission['licenceOrMemberRequired'] = 'none of the above'
     validator = DOSValidator(content, submission)
     assert validator.errors() == {}
 
     submission['establishedInTheUK'] = False
-    submission['licenceOrMemberRequired'] = True
+    submission['licenceOrMemberRequired'] = 'licensed'
     validator = DOSValidator(content, submission)
     assert validator.errors() == {"licenceOrMemberRequiredDetails": "answer_required"}
 
