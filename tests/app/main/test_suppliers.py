@@ -109,6 +109,25 @@ class TestSuppliersDashboard(BaseApplicationTest):
 
     @mock.patch("app.main.views.suppliers.data_api_client")
     @mock.patch("app.main.views.suppliers.get_current_suppliers_users")
+    def test_shows_flashed_messages(self, get_current_suppliers_users, data_api_client):
+        with self.client.session_transaction() as session:
+            session['_flashes'] = [('error', 'This is an error')]
+
+        data_api_client.get_framework.return_value = self.framework('open')
+        data_api_client.get_supplier.side_effect = get_supplier
+        data_api_client.find_audit_events.return_value = {
+            "auditEvents": []
+        }
+        get_current_suppliers_users.side_effect = get_user
+        with self.app.test_client():
+            self.login()
+
+            res = self.client.get("/suppliers")
+
+            assert "This is an error" in res.get_data(as_text=True)
+
+    @mock.patch("app.main.views.suppliers.data_api_client")
+    @mock.patch("app.main.views.suppliers.get_current_suppliers_users")
     def test_shows_edit_buttons(self, get_current_suppliers_users, data_api_client):
         data_api_client.get_supplier.side_effect = get_supplier
         data_api_client.find_frameworks.return_value = find_frameworks_return_value

@@ -54,6 +54,24 @@ class TestLogin(BaseApplicationTest):
         assert_equal(res.location, 'http://localhost/suppliers')
         assert_in('Secure;', res.headers['Set-Cookie'])
 
+    def test_should_redirect_to_dashboard_if_already_logged_in(self):
+        self.login()
+        res = self.client.get("/suppliers/login")
+        assert_equal(res.status_code, 302)
+        assert_equal(res.location, 'http://localhost/suppliers')
+
+    def test_should_redirect_to_next_url_if_supplier_app(self):
+        self.login()
+        res = self.client.get("/suppliers/login?next=/suppliers/foo-bar")
+        assert_equal(res.status_code, 302)
+        assert_equal(res.location, 'http://localhost/suppliers/foo-bar')
+
+    def test_should_redirect_to_dashboard_if_next_url_not_supplier_app(self):
+        self.login()
+        res = self.client.get("/suppliers/login?next=/foo-bar")
+        assert_equal(res.status_code, 302)
+        assert_equal(res.location, 'http://localhost/suppliers')
+
     def test_should_strip_whitespace_surrounding_login_email_address_field(self):
         self.client.post("/suppliers/login", data={
             'email_address': '  valid@email.com  ',
@@ -982,7 +1000,6 @@ class TestInviteUser(BaseApplicationTest):
     @mock.patch('app.main.views.login.data_api_client')
     def test_should_redirect_to_login_page_if_logged_in_user_is_not_invited_user(self, data_api_client):
         with self.app.app_context():
-
             self.login()
             data_api_client.get_user.return_value = self.user(
                 999,
@@ -994,13 +1011,14 @@ class TestInviteUser(BaseApplicationTest):
 
             token = self._generate_token()
             res = self.client.get(
-                '/suppliers/create-user/{}'.format(token),
-                follow_redirects=True
+                '/suppliers/create-user/{}'.format(token)
             )
-            assert_equal(res.status_code, 200)
-            assert_in(
-                "Log in to the Digital Marketplace",
-                res.get_data(as_text=True)
+            assert res.status_code == 302
+            assert res.location == 'http://localhost/suppliers'
+
+        with self.client.session_transaction() as session:
+            assert session['_flashes'][0] == (
+                'error', 'You are trying to create a user while logged in as a different user'
             )
 
     @mock.patch('app.main.views.login.data_api_client')
@@ -1010,7 +1028,7 @@ class TestInviteUser(BaseApplicationTest):
             self.login()
             data_api_client.get_user.return_value = self.user(
                 123,
-                'test@email.com',
+                'email@email.com',
                 1234,
                 'Supplier Name',
                 'Users name'
@@ -1018,14 +1036,10 @@ class TestInviteUser(BaseApplicationTest):
 
             token = self._generate_token()
             res = self.client.get(
-                '/suppliers/create-user/{}'.format(token),
-                follow_redirects=True
+                '/suppliers/create-user/{}'.format(token)
             )
-            assert_equal(res.status_code, 200)
-            assert_in(
-                "Log in to the Digital Marketplace",
-                res.get_data(as_text=True)
-            )
+            assert_equal(res.status_code, 302)
+            assert_in(res.location, 'http://localhost/suppliers')
 
     @mock.patch('app.main.views.login.data_api_client')
     def test_should_create_user_if_user_does_not_exist(self, data_api_client):

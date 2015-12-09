@@ -24,6 +24,10 @@ SEVEN_DAYS_IN_SECONDS = 604800
 @main.route('/login', methods=["GET"])
 def render_login():
     next_url = request.args.get('next')
+    if current_user.is_authenticated():
+        if next_url and next_url.startswith('/suppliers'):
+            return redirect(next_url)
+        return redirect(url_for('.dashboard'))
     template_data = main.config['BASE_TEMPLATE_DATA']
     return render_template(
         "auth/login.html",
@@ -251,10 +255,12 @@ def create_user(encoded_token):
         # valid supplier account exists
         if user.role == 'supplier' and not is_registered_to_another_supplier and not is_inactive_or_locked:
             # valid supplier account exists and is logged in
-            if not current_user.is_anonymous() and current_user.email_address == user.email_address:
+            if not current_user.is_authenticated():
+                return redirect(url_for('.render_login'))
+            else:
+                if current_user.email_address != user.email_address:
+                    flash('You are trying to create a user while logged in as a different user', 'error')
                 return redirect(url_for('.dashboard'))
-
-            return redirect(url_for('.render_login'))
 
         return render_template(
             "auth/update-user.html",
