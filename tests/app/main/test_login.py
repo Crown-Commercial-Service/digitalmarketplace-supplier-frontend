@@ -60,6 +60,18 @@ class TestLogin(BaseApplicationTest):
         assert_equal(res.status_code, 302)
         assert_equal(res.location, 'http://localhost/suppliers')
 
+    def test_should_redirect_to_next_url_if_supplier_app(self):
+        self.login()
+        res = self.client.get("/suppliers/login?next=/suppliers/foo-bar")
+        assert_equal(res.status_code, 302)
+        assert_equal(res.location, 'http://localhost/suppliers/foo-bar')
+
+    def test_should_redirect_to_dashboard_if_next_url_not_supplier_app(self):
+        self.login()
+        res = self.client.get("/suppliers/login?next=/foo-bar")
+        assert_equal(res.status_code, 302)
+        assert_equal(res.location, 'http://localhost/suppliers')
+
     def test_should_strip_whitespace_surrounding_login_email_address_field(self):
         self.client.post("/suppliers/login", data={
             'email_address': '  valid@email.com  ',

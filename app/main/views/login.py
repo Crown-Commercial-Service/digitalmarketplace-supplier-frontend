@@ -23,9 +23,11 @@ SEVEN_DAYS_IN_SECONDS = 604800
 
 @main.route('/login', methods=["GET"])
 def render_login():
-    if current_user.is_authenticated():
-        return redirect(url_for('.dashboard'))
     next_url = request.args.get('next')
+    if current_user.is_authenticated():
+        if next_url and next_url.startswith('/suppliers'):
+            return redirect(next_url)
+        return redirect(url_for('.dashboard'))
     template_data = main.config['BASE_TEMPLATE_DATA']
     return render_template(
         "auth/login.html",
