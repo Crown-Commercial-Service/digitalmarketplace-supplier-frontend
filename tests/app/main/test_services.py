@@ -141,7 +141,14 @@ class TestSupplierUpdateService(BaseApplicationTest):
                 'status': service_status,
                 'id': '123',
                 'frameworkName': 'G-Cloud 6',
+                'frameworkSlug': 'g-cloud-6',
                 'supplierId': 1234 if service_belongs_to_user else 1235
+            }
+        }
+        data_api_client.get_framework.return_value = {
+            'frameworks': {
+                'name': 'G-Cloud 6',
+                'slug': 'g-cloud-6',
             }
         }
 
