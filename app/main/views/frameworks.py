@@ -73,7 +73,7 @@ def framework_dashboard(framework_slug):
     if declaration_status == 'unstarted' and framework['status'] == 'live':
         abort(404)
 
-    key_list = s3.S3(current_app.config['DM_COMMUNICATIONS_BUCKET']).list(framework_slug)
+    key_list = s3.S3(current_app.config['DM_COMMUNICATIONS_BUCKET']).list(framework_slug, load_timestamps=True)
     key_list.reverse()
 
     try:
@@ -343,7 +343,7 @@ def framework_updates(framework_slug, error_message=None, default_textbox_value=
                                    'supplier_id': current_user.supplier_id})
 
     communications_bucket = s3.S3(current_app.config['DM_COMMUNICATIONS_BUCKET'])
-    file_list = communications_bucket.list('{}/communications/updates/'.format(framework_slug))
+    file_list = communications_bucket.list('{}/communications/updates/'.format(framework_slug), load_timestamps=True)
     files = {
         'communications': [],
         'clarifications': [],
