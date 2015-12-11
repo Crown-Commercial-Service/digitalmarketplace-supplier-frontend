@@ -419,6 +419,9 @@ def edit_service_submission(framework_slug, lot_slug, service_id, section_id, qu
         framework=framework,
         service_data=draft,
         service_id=service_id,
+        one_service_limit=[
+            l['oneServiceLimit'] for l in framework['lots'] if l['slug'] == draft['lot']
+            ][0],
         **main.config['BASE_TEMPLATE_DATA']
     )
 
@@ -473,14 +476,19 @@ def update_section_submission(framework_slug, lot_slug, service_id, section_id, 
             errors = section.get_error_messages(e.message, draft['lot'])
 
     if errors:
-        if not update_data.get('serviceName', None):
-            update_data['serviceName'] = draft.get('serviceName', '')
+        keys_required_for_template = ['serviceName', 'lot', 'lotName']
+        for k in keys_required_for_template:
+            if k in draft and k not in update_data:
+                update_data[k] = draft[k]
         return render_template(
             "services/edit_submission_section.html",
             framework=framework,
             section=section,
             service_data=update_data,
             service_id=service_id,
+            one_service_limit=[
+                l['oneServiceLimit'] for l in framework['lots'] if l['slug'] == draft['lot']
+                ][0],
             errors=errors,
             **main.config['BASE_TEMPLATE_DATA']
             )
