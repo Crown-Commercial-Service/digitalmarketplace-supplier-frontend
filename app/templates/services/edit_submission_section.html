@@ -20,9 +20,13 @@
         "label": "Services"
       },
       {
+        "link": url_for(".framework_submission_services", framework_slug=framework.slug, lot_slug=service_data.lot),
+        "label": service_data.lotName
+      },
+      {
         "link": url_for(".view_service_submission", framework_slug=framework.slug, lot_slug=service_data.lot, service_id=service_id),
         "label": service_data.get('serviceName', service_data['lotName'])
-      }
+      } if not one_service_limit else {}
     ]
   %}
     {% include "toolkit/breadcrumb.html" %}

@@ -8,7 +8,7 @@ from ..helpers.services import (
     is_service_modifiable, is_service_associated_with_supplier,
     get_signed_document_url, count_unanswered_questions,
 )
-from ..helpers.frameworks import get_framework_and_lot, get_declaration_status
+from ..helpers.frameworks import get_framework_and_lot, get_declaration_status, has_one_service_limit
 
 from dmutils.apiclient import APIError, HTTPError
 from dmutils import s3
@@ -372,9 +372,7 @@ def view_service_submission(framework_slug, lot_slug, service_id):
         "services/service_submission.html",
         framework=framework,
         confirm_remove=request.args.get("confirm_remove", None),
-        one_service_limit=[
-            l['oneServiceLimit'] for l in framework['lots'] if l['slug'] == draft['lot']
-        ][0],
+        one_service_limit=has_one_service_limit(lot_slug, framework['lots']),
         service_id=service_id,
         service_data=draft,
         last_edit=last_edit,
@@ -419,6 +417,7 @@ def edit_service_submission(framework_slug, lot_slug, service_id, section_id, qu
         framework=framework,
         service_data=draft,
         service_id=service_id,
+        one_service_limit=has_one_service_limit(lot_slug, framework['lots']),
         **main.config['BASE_TEMPLATE_DATA']
     )
 
@@ -473,14 +472,17 @@ def update_section_submission(framework_slug, lot_slug, service_id, section_id, 
             errors = section.get_error_messages(e.message, draft['lot'])
 
     if errors:
-        if not update_data.get('serviceName', None):
-            update_data['serviceName'] = draft.get('serviceName', '')
+        keys_required_for_template = ['serviceName', 'lot', 'lotName']
+        for k in keys_required_for_template:
+            if k in draft and k not in update_data:
+                update_data[k] = draft[k]
         return render_template(
             "services/edit_submission_section.html",
             framework=framework,
             section=section,
             service_data=update_data,
             service_id=service_id,
+            one_service_limit=has_one_service_limit(lot_slug, framework['lots']),
             errors=errors,
             **main.config['BASE_TEMPLATE_DATA']
             )
