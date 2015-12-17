@@ -582,8 +582,9 @@ def _update_service_status(service, error_message=None):
 
     template_data = main.config['BASE_TEMPLATE_DATA']
     status_code = 400 if error_message else 200
+    framework = data_api_client.get_framework(service['frameworkSlug'])['frameworks']
 
-    content = content_loader.get_manifest('g-cloud-6', 'edit_service').filter(service)
+    content = content_loader.get_manifest(framework['slug'], 'edit_service').filter(service)
 
     question = {
         'question': 'Choose service status',
@@ -607,6 +608,7 @@ def _update_service_status(service, error_message=None):
         "services/service.html",
         service_id=service.get('id'),
         service_data=service,
+        framework=framework,
         sections=content.summary(service),
         error=error_message,
         **dict(question, **template_data)), status_code
