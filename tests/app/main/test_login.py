@@ -10,9 +10,8 @@ import mock
 
 EMAIL_EMPTY_ERROR = "Email address must be provided"
 EMAIL_INVALID_ERROR = "Please enter a valid email address"
-EMAIL_SENT_MESSAGE = "If that Digital Marketplace supplier account exists, " \
-                     "you will be sent an email containing a link to reset " \
-                     "your password."
+EMAIL_SENT_MESSAGE = "If the email address you've entered belongs to a Digital Marketplace account, " \
+                     "we'll send a link to reset the password."
 PASSWORD_EMPTY_ERROR = "Please enter your password"
 PASSWORD_INVALID_ERROR = "Passwords must be between 10 and 50 characters"
 PASSWORD_MISMATCH_ERROR = "The passwords you entered do not match"
@@ -208,6 +207,15 @@ class TestResetPassword(BaseApplicationTest):
         assert_equal(res.status_code, 302)
         assert_equal(res.location,
                      'http://localhost/suppliers/reset-password')
+
+    @mock.patch('app.main.views.login.send_email')
+    def test_show_email_sent_message_on_success(self, send_email):
+        res = self.client.post("/suppliers/reset-password", data={
+            'email_address': 'email@email.com'
+        }, follow_redirects=True)
+        assert res.status_code == 200
+        content = self.strip_all_whitespace(res.get_data(as_text=True))
+        assert self.strip_all_whitespace(EMAIL_SENT_MESSAGE) in content
 
     @mock.patch('app.main.views.login.send_email')
     def test_should_strip_whitespace_surrounding_reset_password_email_address_field(self, send_email):
