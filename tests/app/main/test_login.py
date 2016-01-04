@@ -1,26 +1,24 @@
 # coding: utf-8
+from __future__ import unicode_literals
 
 from dmutils.apiclient import HTTPError
 from dmutils.audit import AuditTypes
 from dmutils.email import generate_token, MandrillException
-from nose.tools import assert_equal, assert_true, assert_is_not_none, assert_in, assert_false
 from ..helpers import BaseApplicationTest
 from lxml import html
 import mock
 
 EMAIL_EMPTY_ERROR = "Email address must be provided"
 EMAIL_INVALID_ERROR = "Please enter a valid email address"
-EMAIL_SENT_MESSAGE = "If that Digital Marketplace supplier account exists, " \
-                     "you will be sent an email containing a link to reset " \
-                     "your password."
+EMAIL_SENT_MESSAGE = "If the email address you've entered belongs to a Digital Marketplace account, we'll send a link to reset the password."  # noqa
 PASSWORD_EMPTY_ERROR = "Please enter your password"
 PASSWORD_INVALID_ERROR = "Passwords must be between 10 and 50 characters"
 PASSWORD_MISMATCH_ERROR = "The passwords you entered do not match"
 NEW_PASSWORD_EMPTY_ERROR = "Please enter a new password"
 NEW_PASSWORD_CONFIRM_EMPTY_ERROR = "Please confirm your new password"
 
-TOKEN_CREATED_BEFORE_PASSWORD_LAST_CHANGED_ERROR = \
-    'This password reset link is invalid.'
+TOKEN_CREATED_BEFORE_PASSWORD_LAST_CHANGED_ERROR = "This password reset link is invalid."
+USER_LINK_EXPIRED_ERROR = "Check you’ve entered the correct link or ask the person who invited you to send a new invitation."  # noqa
 
 
 class TestLogin(BaseApplicationTest):
@@ -42,35 +40,35 @@ class TestLogin(BaseApplicationTest):
 
     def test_should_show_login_page(self):
         res = self.client.get("/suppliers/login")
-        assert_equal(res.status_code, 200)
-        assert_true("Log in to the Digital Marketplace" in res.get_data(as_text=True))
+        assert res.status_code == 200
+        assert "Log in to the Digital Marketplace" in res.get_data(as_text=True)
 
     def test_should_redirect_to_dashboard_on_login(self):
         res = self.client.post("/suppliers/login", data={
             'email_address': 'valid@email.com',
             'password': '1234567890'
         })
-        assert_equal(res.status_code, 302)
-        assert_equal(res.location, 'http://localhost/suppliers')
-        assert_in('Secure;', res.headers['Set-Cookie'])
+        assert res.status_code == 302
+        assert res.location == 'http://localhost/suppliers'
+        assert 'Secure;' in res.headers['Set-Cookie']
 
     def test_should_redirect_to_dashboard_if_already_logged_in(self):
         self.login()
         res = self.client.get("/suppliers/login")
-        assert_equal(res.status_code, 302)
-        assert_equal(res.location, 'http://localhost/suppliers')
+        assert res.status_code == 302
+        assert res.location == 'http://localhost/suppliers'
 
     def test_should_redirect_to_next_url_if_supplier_app(self):
         self.login()
         res = self.client.get("/suppliers/login?next=/suppliers/foo-bar")
-        assert_equal(res.status_code, 302)
-        assert_equal(res.location, 'http://localhost/suppliers/foo-bar')
+        assert res.status_code == 302
+        assert res.location == 'http://localhost/suppliers/foo-bar'
 
     def test_should_redirect_to_dashboard_if_next_url_not_supplier_app(self):
         self.login()
         res = self.client.get("/suppliers/login?next=/foo-bar")
-        assert_equal(res.status_code, 302)
-        assert_equal(res.location, 'http://localhost/suppliers')
+        assert res.status_code == 302
+        assert res.location == 'http://localhost/suppliers'
 
     def test_should_strip_whitespace_surrounding_login_email_address_field(self):
         self.client.post("/suppliers/login", data={
@@ -92,8 +90,8 @@ class TestLogin(BaseApplicationTest):
                                    'email_address': 'valid@email.com',
                                    'password': '1234567890'
                                })
-        assert_equal(res.status_code, 302)
-        assert_equal(res.location, 'http://localhost/suppliers/services/123')
+        assert res.status_code == 302
+        assert res.location == 'http://localhost/suppliers/services/123'
 
     def test_bad_next_url_takes_user_to_dashboard(self):
         res = self.client.post("/suppliers/login?next=http://badness.com",
@@ -101,8 +99,8 @@ class TestLogin(BaseApplicationTest):
                                    'email_address': 'valid@email.com',
                                    'password': '1234567890'
                                })
-        assert_equal(res.status_code, 302)
-        assert_equal(res.location, 'http://localhost/suppliers')
+        assert res.status_code == 302
+        assert res.location == 'http://localhost/suppliers'
 
     def test_should_have_cookie_on_redirect(self):
         with self.app.app_context():
@@ -113,14 +111,14 @@ class TestLogin(BaseApplicationTest):
                 'password': '1234567890'
             })
             cookie_value = self.get_cookie_by_name(res, 'dm_session')
-            assert_is_not_none(cookie_value['dm_session'])
-            assert_equal(cookie_value['Secure; HttpOnly; Path'], '/')
-            assert_equal(cookie_value["Domain"], "127.0.0.1")
+            assert cookie_value['dm_session'] is not None
+            assert cookie_value['Secure; HttpOnly; Path'] == '/'
+            assert cookie_value["Domain"] == "127.0.0.1"
 
     def test_should_redirect_to_login_on_logout(self):
         res = self.client.get('/suppliers/logout')
-        assert_equal(res.status_code, 302)
-        assert_equal(res.location, 'http://localhost/suppliers/login')
+        assert res.status_code == 302
+        assert res.location == 'http://localhost/suppliers/login'
 
     @mock.patch('app.main.views.login.data_api_client')
     def test_should_return_a_403_for_invalid_login(self, data_api_client):
@@ -130,21 +128,16 @@ class TestLogin(BaseApplicationTest):
             'email_address': 'valid@email.com',
             'password': '1234567890'
         })
-        assert_in(
-            self.strip_all_whitespace("Make sure you've entered the right email address and password"),
-            self.strip_all_whitespace(res.get_data(as_text=True)))
-        assert_equal(res.status_code, 403)
+        assert self.strip_all_whitespace("Make sure you've entered the right email address and password") \
+            in self.strip_all_whitespace(res.get_data(as_text=True))
+        assert res.status_code == 403
 
     def test_should_be_validation_error_if_no_email_or_password(self):
         res = self.client.post("/suppliers/login", data={})
         content = self.strip_all_whitespace(res.get_data(as_text=True))
-        assert_equal(res.status_code, 400)
-        assert_true(
-            self.strip_all_whitespace(EMAIL_EMPTY_ERROR)
-            in content)
-        assert_true(
-            self.strip_all_whitespace(PASSWORD_EMPTY_ERROR)
-            in content)
+        assert res.status_code == 400
+        assert self.strip_all_whitespace(EMAIL_EMPTY_ERROR) in content
+        assert self.strip_all_whitespace(PASSWORD_EMPTY_ERROR) in content
 
     def test_should_be_validation_error_if_invalid_email(self):
         res = self.client.post("/suppliers/login", data={
@@ -152,10 +145,8 @@ class TestLogin(BaseApplicationTest):
             'password': '1234567890'
         })
         content = self.strip_all_whitespace(res.get_data(as_text=True))
-        assert_equal(res.status_code, 400)
-        assert_true(
-            self.strip_all_whitespace(EMAIL_INVALID_ERROR)
-            in content)
+        assert res.status_code == 400
+        assert self.strip_all_whitespace(EMAIL_INVALID_ERROR) in content
 
 
 class TestResetPassword(BaseApplicationTest):
@@ -185,29 +176,33 @@ class TestResetPassword(BaseApplicationTest):
     def test_email_should_not_be_empty(self):
         res = self.client.post("/suppliers/reset-password", data={})
         content = self.strip_all_whitespace(res.get_data(as_text=True))
-        assert_equal(res.status_code, 400)
-        assert_true(
-            self.strip_all_whitespace(EMAIL_EMPTY_ERROR)
-            in content)
+        assert res.status_code == 400
+        assert self.strip_all_whitespace(EMAIL_EMPTY_ERROR) in content
 
     def test_email_should_be_valid(self):
         res = self.client.post("/suppliers/reset-password", data={
             'email_address': 'invalid'
         })
         content = self.strip_all_whitespace(res.get_data(as_text=True))
-        assert_equal(res.status_code, 400)
-        assert_true(
-            self.strip_all_whitespace(EMAIL_INVALID_ERROR)
-            in content)
+        assert res.status_code == 400
+        assert self.strip_all_whitespace(EMAIL_INVALID_ERROR) in content
 
     @mock.patch('app.main.views.login.send_email')
     def test_redirect_to_same_page_on_success(self, send_email):
         res = self.client.post("/suppliers/reset-password", data={
             'email_address': 'email@email.com'
         })
-        assert_equal(res.status_code, 302)
-        assert_equal(res.location,
-                     'http://localhost/suppliers/reset-password')
+        assert res.status_code == 302
+        assert res.location == 'http://localhost/suppliers/reset-password'
+
+    @mock.patch('app.main.views.login.send_email')
+    def test_show_email_sent_message_on_success(self, send_email):
+        res = self.client.post("/suppliers/reset-password", data={
+            'email_address': 'email@email.com'
+        }, follow_redirects=True)
+        assert res.status_code == 200
+        content = self.strip_all_whitespace(res.get_data(as_text=True))
+        assert self.strip_all_whitespace(EMAIL_SENT_MESSAGE) in content
 
     @mock.patch('app.main.views.login.send_email')
     def test_should_strip_whitespace_surrounding_reset_password_email_address_field(self, send_email):
@@ -225,10 +220,8 @@ class TestResetPassword(BaseApplicationTest):
             url = '/suppliers/reset-password/{}'.format(token)
 
         res = self.client.get(url)
-        assert_equal(res.status_code, 200)
-        assert_true(
-            "Reset password for email@email.com" in res.get_data(as_text=True)
-        )
+        assert res.status_code == 200
+        assert "Reset password for email@email.com" in res.get_data(as_text=True)
 
     def test_password_should_not_be_empty(self):
         with self.app.app_context():
@@ -242,13 +235,9 @@ class TestResetPassword(BaseApplicationTest):
                 'password': '',
                 'confirm_password': ''
             })
-            assert_equal(res.status_code, 400)
-            assert_true(
-                NEW_PASSWORD_EMPTY_ERROR in res.get_data(as_text=True)
-            )
-            assert_true(
-                NEW_PASSWORD_CONFIRM_EMPTY_ERROR in res.get_data(as_text=True)
-            )
+            assert res.status_code == 400
+            assert NEW_PASSWORD_EMPTY_ERROR in res.get_data(as_text=True)
+            assert NEW_PASSWORD_CONFIRM_EMPTY_ERROR in res.get_data(as_text=True)
 
     def test_password_should_be_over_ten_chars_long(self):
         with self.app.app_context():
@@ -262,10 +251,8 @@ class TestResetPassword(BaseApplicationTest):
                 'password': '123456789',
                 'confirm_password': '123456789'
             })
-            assert_equal(res.status_code, 400)
-            assert_true(
-                PASSWORD_INVALID_ERROR in res.get_data(as_text=True)
-            )
+            assert res.status_code == 400
+            assert PASSWORD_INVALID_ERROR in res.get_data(as_text=True)
 
     def test_password_should_be_under_51_chars_long(self):
         with self.app.app_context():
@@ -281,10 +268,8 @@ class TestResetPassword(BaseApplicationTest):
                 'confirm_password':
                     '123456789012345678901234567890123456789012345678901'
             })
-            assert_equal(res.status_code, 400)
-            assert_true(
-                PASSWORD_INVALID_ERROR in res.get_data(as_text=True)
-            )
+            assert res.status_code == 400
+            assert PASSWORD_INVALID_ERROR in res.get_data(as_text=True)
 
     def test_passwords_should_match(self):
         with self.app.app_context():
@@ -298,10 +283,8 @@ class TestResetPassword(BaseApplicationTest):
                 'password': '1234567890',
                 'confirm_password': '0123456789'
             })
-            assert_equal(res.status_code, 400)
-            assert_true(
-                PASSWORD_MISMATCH_ERROR in res.get_data(as_text=True)
-            )
+            assert res.status_code == 400
+            assert PASSWORD_MISMATCH_ERROR in res.get_data(as_text=True)
 
     def test_redirect_to_login_page_on_success(self):
         with self.app.app_context():
@@ -315,9 +298,8 @@ class TestResetPassword(BaseApplicationTest):
                 'password': '1234567890',
                 'confirm_password': '1234567890'
             })
-            assert_equal(res.status_code, 302)
-            assert_equal(res.location,
-                         'http://localhost/suppliers/login')
+            assert res.status_code == 302
+            assert res.location == 'http://localhost/suppliers/login'
 
     def test_should_not_strip_whitespace_surrounding_reset_password_password_field(self):
         with self.app.app_context():
@@ -353,11 +335,8 @@ class TestResetPassword(BaseApplicationTest):
                 'confirm_password': '1234567890'
             }, follow_redirects=True)
 
-            assert_equal(res.status_code, 200)
-            assert_true(
-                TOKEN_CREATED_BEFORE_PASSWORD_LAST_CHANGED_ERROR
-                in res.get_data(as_text=True)
-            )
+            assert res.status_code == 200
+            assert TOKEN_CREATED_BEFORE_PASSWORD_LAST_CHANGED_ERROR in res.get_data(as_text=True)
 
     @mock.patch('app.main.views.login.send_email')
     def test_should_call_send_email_with_correct_params(
@@ -384,8 +363,7 @@ class TestResetPassword(BaseApplicationTest):
                 data={'email_address': 'email@email.com'}
             )
 
-            assert_equal(res.status_code, 302)
-
+            assert res.status_code == 302
             send_email.assert_called_once_with(
                 "email@email.com",
                 mock.ANY,
@@ -418,7 +396,7 @@ class TestResetPassword(BaseApplicationTest):
                 data={'email_address': 'email@email.com'}
             )
 
-            assert_equal(res.status_code, 503)
+            assert res.status_code == 503
 
 
 class TestLoginFormsNotAutofillable(BaseApplicationTest):
@@ -426,28 +404,28 @@ class TestLoginFormsNotAutofillable(BaseApplicationTest):
             self, url, expected_title, expected_lede=None
     ):
         response = self.client.get(url)
-        assert_equal(response.status_code, 200)
+        assert response.status_code == 200
 
         document = html.fromstring(response.get_data(as_text=True))
 
         page_title = document.xpath(
             '//main[@id="content"]//h1/text()')[0].strip()
-        assert_equal(expected_title, page_title)
+        assert expected_title == page_title
 
         if expected_lede:
             page_lede = document.xpath(
                 '//main[@id="content"]//p[@class="lede"]/text()')[0].strip()
-            assert_equal(expected_lede, page_lede)
+            assert expected_lede == page_lede
 
         forms = document.xpath('//main[@id="content"]//form')
 
         for form in forms:
-            assert_equal("off", form.get('autocomplete'))
+            assert form.get('autocomplete') == "off"
             non_hidden_inputs = form.xpath('//input[@type!="hidden"]')
 
             for input in non_hidden_inputs:
                 if input.get('type') != 'submit':
-                    assert_equal("off", input.get('autocomplete'))
+                    assert input.get('autocomplete') == "off"
 
     def test_login_form_and_inputs_not_autofillable(self):
         self._forms_and_inputs_not_autofillable(
@@ -514,8 +492,8 @@ class TestInviteUser(BaseApplicationTest):
                     'email_address': 'invalid'
                 }
             )
-            assert_true("Please enter a valid email address" in res.get_data(as_text=True))
-            assert_equal(res.status_code, 400)
+            assert EMAIL_INVALID_ERROR in res.get_data(as_text=True)
+            assert res.status_code == 400
 
     def test_should_be_an_error_for_missing_email(self):
         with self.app.app_context():
@@ -524,14 +502,14 @@ class TestInviteUser(BaseApplicationTest):
                 '/suppliers/invite-user',
                 data={}
             )
-            assert_true("Email address must be provided" in res.get_data(as_text=True))
-            assert_equal(res.status_code, 400)
+            assert EMAIL_EMPTY_ERROR in res.get_data(as_text=True)
+            assert res.status_code == 400
 
     @mock.patch('app.main.views.login.data_api_client')
     @mock.patch('app.main.views.login.send_email')
-    def test_should_redirect_to_list_users_on_success_invite(self,
-                                                             send_email,
-                                                             data_api_client):
+    def test_should_redirect_to_list_users_on_success_invite(
+            self, send_email, data_api_client
+    ):
         with self.app.app_context():
             self.login()
             res = self.client.post(
@@ -540,8 +518,8 @@ class TestInviteUser(BaseApplicationTest):
                     'email_address': 'this@isvalid.com'
                 }
             )
-            assert_equal(res.status_code, 302)
-            assert_equal(res.location, 'http://localhost/suppliers/users')
+            assert res.status_code == 302
+            assert res.location == 'http://localhost/suppliers/users'
 
     @mock.patch('app.main.views.login.data_api_client')
     @mock.patch('app.main.views.login.send_email')
@@ -584,7 +562,7 @@ class TestInviteUser(BaseApplicationTest):
                 data={
                     'email_address': 'this@isvalid.com'
                 })
-            assert_equal(res.status_code, 302)
+            assert res.status_code == 302
             generate_token.assert_called_once_with(
                 {
                     "supplier_id": 1234,
@@ -608,7 +586,7 @@ class TestInviteUser(BaseApplicationTest):
                 data={
                     'email_address': 'total rubbish'
                 })
-            assert_equal(res.status_code, 400)
+            assert res.status_code == 400
             assert not send_email.called
             assert not generate_token.called
 
@@ -626,7 +604,7 @@ class TestInviteUser(BaseApplicationTest):
                 data={'email_address': 'email@email.com', 'name': 'valid'}
             )
 
-            assert_equal(res.status_code, 503)
+            assert res.status_code == 503
 
     @mock.patch('app.main.views.login.data_api_client')
     @mock.patch('app.main.views.login.send_email')
@@ -647,7 +625,7 @@ class TestInviteUser(BaseApplicationTest):
                 data={'email_address': 'email@email.com', 'name': 'valid'}
             )
 
-            assert_equal(res.status_code, 302)
+            assert res.status_code == 302
 
             send_email.assert_called_once_with(
                 "email@email.com",
@@ -671,7 +649,7 @@ class TestInviteUser(BaseApplicationTest):
                 '/suppliers/invite-user',
                 data={'email_address': 'email@example.com', 'name': 'valid'})
 
-            assert_equal(res.status_code, 302)
+            assert res.status_code == 302
 
             data_api_client.create_audit_event.assert_called_once_with(
                 audit_type=AuditTypes.invite_user,
@@ -686,22 +664,22 @@ class TestInviteUser(BaseApplicationTest):
             res = self.client.get(
                 '/suppliers/create-user/{}'.format(token)
             )
-            assert_equal(res.status_code, 400)
+            assert res.status_code == 400
 
     def test_should_be_an_error_for_missing_token(self):
         with self.app.app_context():
             res = self.client.get(
                 '/suppliers/create-user'
             )
-            assert_equal(res.status_code, 404)
+            assert res.status_code == 404
 
     def test_should_be_an_error_for_missing_token_trailing_slash(self):
         with self.app.app_context():
             res = self.client.get(
                 '/suppliers/create-user/'
             )
-            assert_equal(res.status_code, 301)
-            assert_equal(res.location, 'http://localhost/suppliers/create-user')
+            assert res.status_code == 301
+            assert res.location == 'http://localhost/suppliers/create-user'
 
     @mock.patch('app.main.views.login.data_api_client')
     def test_should_be_an_error_for_invalid_token_contents(self, data_api_client):
@@ -718,9 +696,9 @@ class TestInviteUser(BaseApplicationTest):
             res = self.client.get(
                 '/suppliers/create-user/{}'.format(token)
             )
-            assert_equal(res.status_code, 400)
-            assert_equal(data_api_client.get_user.called, False)
-            assert_equal(data_api_client.get_supplier.called, False)
+            assert res.status_code == 400
+            assert data_api_client.get_user.called is False
+            assert data_api_client.get_supplier.called is False
 
     def test_should_be_a_bad_request_if_token_expired(self):
         with self.app.app_context():
@@ -729,11 +707,8 @@ class TestInviteUser(BaseApplicationTest):
                 '/suppliers/create-user/12345'
             )
 
-            assert_equal(res.status_code, 400)
-            assert_true(
-                u"Check you’ve entered the correct link or ask the person who invited you to send a new invitation."  # noqa
-                in res.get_data(as_text=True)
-            )
+            assert res.status_code == 400
+            assert USER_LINK_EXPIRED_ERROR in res.get_data(as_text=True)  # noqa
 
     @mock.patch('app.main.views.login.data_api_client')
     def test_should_render_create_user_page_if_user_does_not_exist(self, data_api_client):
@@ -746,14 +721,14 @@ class TestInviteUser(BaseApplicationTest):
                 '/suppliers/create-user/{}'.format(token)
             )
 
-            assert_equal(res.status_code, 200)
+            assert res.status_code == 200
             for message in [
                 "Supplier Name",
                 "test@email.com",
                 '<input type="submit" class="button-save"  value="Create contributor account" />',
                 '<form autocomplete="off" action="/suppliers/create-user/{}" method="POST" id="createUserForm">'.format(token)  # noqa
             ]:
-                assert_in(message, res.get_data(as_text=True))
+                assert message in res.get_data(as_text=True)
 
     @mock.patch('app.main.views.login.data_api_client')
     def test_should_render_update_user_page_if_user_does_exist(self, data_api_client):
@@ -772,13 +747,13 @@ class TestInviteUser(BaseApplicationTest):
                 '/suppliers/create-user/{}'.format(token)
             )
 
-            assert_equal(res.status_code, 200)
+            assert res.status_code == 200
             for message in [
                 "Supplier Name",
                 '<input type="submit" class="button-save"  value="Create contributor account" />',
                 '<form autocomplete="off" action="/suppliers/update-user/{}" method="POST" id="updateUserForm">'.format(token)  # noqa
             ]:
-                assert_in(message, res.get_data(as_text=True))
+                assert message in res.get_data(as_text=True)
 
     def test_should_be_an_error_if_invalid_token_on_submit(self):
         with self.app.app_context():
@@ -790,13 +765,9 @@ class TestInviteUser(BaseApplicationTest):
                     'email_address': 'valid@test.com'}
             )
 
-            assert_equal(res.status_code, 400)
-            assert_true(
-                u"Check you’ve entered the correct link or ask the person who invited you to send a new invitation." in res.get_data(as_text=True)  # noqa
-            )
-            assert_false(
-                '<input type="submit" class="button-save"  value="Create contributor account" />' in res.get_data(as_text=True)  # noqa
-            )
+            assert res.status_code == 400
+            assert USER_LINK_EXPIRED_ERROR in res.get_data(as_text=True)  # noqa
+            assert '<input type="submit" class="button-save"  value="Create contributor account" />' not in res.get_data(as_text=True)  # noqa
 
     def test_should_be_an_error_if_invalid_token_on_update(self):
         with self.app.app_context():
@@ -804,13 +775,9 @@ class TestInviteUser(BaseApplicationTest):
                 '/suppliers/update-user/invalidtoken'
             )
 
-            assert_equal(res.status_code, 400)
-            assert_true(
-                u"Check you’ve entered the correct link or ask the person who invited you to send a new invitation." in res.get_data(as_text=True)  # noqa
-            )
-            assert_false(
-                '<input type="submit" class="button-save"  value="Update user" />' in res.get_data(as_text=True)  # noqa
-            )
+            assert res.status_code == 400
+            assert USER_LINK_EXPIRED_ERROR in res.get_data(as_text=True)  # noqa
+            assert '<input type="submit" class="button-save"  value="Update user" />' not in res.get_data(as_text=True)
 
     def test_should_be_an_error_if_missing_name_and_password(self):
         with self.app.app_context():
@@ -821,12 +788,12 @@ class TestInviteUser(BaseApplicationTest):
                 data={}
             )
 
-            assert_equal(res.status_code, 400)
+            assert res.status_code == 400
             for message in [
                 "Please enter a name",
                 "Please enter a password"
             ]:
-                assert_in(message, res.get_data(as_text=True))
+                assert message in res.get_data(as_text=True)
 
     def test_should_be_an_error_if_too_short_name_and_password(self):
         with self.app.app_context():
@@ -840,12 +807,12 @@ class TestInviteUser(BaseApplicationTest):
                 }
             )
 
-            assert_equal(res.status_code, 400)
+            assert res.status_code == 400
             for message in [
                 "Please enter a name",
                 "Passwords must be between 10 and 50 characters"
             ]:
-                assert_in(message, res.get_data(as_text=True))
+                assert message in res.get_data(as_text=True)
 
     def test_should_be_an_error_if_too_long_name_and_password(self):
         with self.app.app_context():
@@ -862,14 +829,14 @@ class TestInviteUser(BaseApplicationTest):
                 }
             )
 
-            assert_equal(res.status_code, 400)
+            assert res.status_code == 400
             for message in [
                 "Names must be between 1 and 255 characters",
                 "Passwords must be between 10 and 50 characters",
                 "Create contributor account for Supplier Name",
                 "test@email.com"
             ]:
-                assert_in(message, res.get_data(as_text=True))
+                assert message in res.get_data(as_text=True)
 
     @mock.patch('app.main.views.login.data_api_client')
     def test_should_render_update_user_page_with_admin_message_if_user_is_an_admin(self, data_api_client):
@@ -889,11 +856,11 @@ class TestInviteUser(BaseApplicationTest):
                 '/suppliers/create-user/{}'.format(token)
             )
 
-            assert_equal(res.status_code, 200)
+            assert res.status_code == 200
             for message in [
                 "You have an administrator account",
             ]:
-                assert_in(message, res.get_data(as_text=True))
+                assert message in res.get_data(as_text=True)
 
     @mock.patch('app.main.views.login.data_api_client')
     def test_should_render_update_user_page_with_locked_message_if_user_is_locked(self, data_api_client):
@@ -913,12 +880,12 @@ class TestInviteUser(BaseApplicationTest):
                 '/suppliers/create-user/{}'.format(token)
             )
 
-            assert_equal(res.status_code, 200)
+            assert res.status_code == 200
             for message in [
                 "Your account has been locked",
                 'Email <a href="mailto:enquiries@digitalmarketplace.service.gov.uk">enquiries@digitalmarketplace.service.gov.uk</a> to unlock your account'  # noqa
             ]:
-                assert_in(message, res.get_data(as_text=True))
+                assert message in res.get_data(as_text=True)
 
     @mock.patch('app.main.views.login.data_api_client')
     def test_should_render_update_user_page_with_inactive_message_if_user_is_not_active(self, data_api_client):
@@ -938,12 +905,12 @@ class TestInviteUser(BaseApplicationTest):
                 '/suppliers/create-user/{}'.format(token)
             )
 
-            assert_equal(res.status_code, 200)
+            assert res.status_code == 200
             for message in [
                 "Your account has been deactivated",
                 'Email <a href="mailto:enquiries@digitalmarketplace.service.gov.uk">enquiries@digitalmarketplace.service.gov.uk</a> to reactivate your account'  # noqa
             ]:
-                assert_in(message, res.get_data(as_text=True))
+                assert message in res.get_data(as_text=True)
 
     @mock.patch('app.main.views.login.data_api_client')
     def test_should_render_update_user_page_with_wrong_supplier_message_if_invited_by_wrong_supplier(self, data_api_client):  # noqa
@@ -967,12 +934,12 @@ class TestInviteUser(BaseApplicationTest):
                 '/suppliers/create-user/{}'.format(token)
             )
 
-            assert_equal(res.status_code, 200)
+            assert res.status_code == 200
             for message in [
                 u"You were invited by ‘Different Supplier Name’",
                 u"Your account is registered with ‘Supplier Name’"
             ]:
-                assert_in(message, res.get_data(as_text=True))
+                assert message in res.get_data(as_text=True)
 
     @mock.patch('app.main.views.login.data_api_client')
     def test_should_redirect_to_login_page_if_user_is_already_a_supplier(self, data_api_client):
@@ -991,11 +958,8 @@ class TestInviteUser(BaseApplicationTest):
                 '/suppliers/create-user/{}'.format(token),
                 follow_redirects=True
             )
-            assert_equal(res.status_code, 200)
-            assert_in(
-                "Log in to the Digital Marketplace",
-                res.get_data(as_text=True)
-            )
+            assert res.status_code == 200
+            assert "Log in to the Digital Marketplace" in res.get_data(as_text=True)
 
     @mock.patch('app.main.views.login.data_api_client')
     def test_should_redirect_to_login_page_if_logged_in_user_is_not_invited_user(self, data_api_client):
@@ -1038,8 +1002,8 @@ class TestInviteUser(BaseApplicationTest):
             res = self.client.get(
                 '/suppliers/create-user/{}'.format(token)
             )
-            assert_equal(res.status_code, 302)
-            assert_in(res.location, 'http://localhost/suppliers')
+            assert res.status_code == 302
+            assert res.location == 'http://localhost/suppliers'
 
     @mock.patch('app.main.views.login.data_api_client')
     def test_should_create_user_if_user_does_not_exist(self, data_api_client):
@@ -1064,8 +1028,8 @@ class TestInviteUser(BaseApplicationTest):
                 'supplierId': 1234
             })
 
-            assert_equal(res.status_code, 302)
-            assert_equal(res.location, 'http://localhost/suppliers')
+            assert res.status_code == 302
+            assert res.location == 'http://localhost/suppliers'
 
     @mock.patch('app.main.views.login.data_api_client')
     def test_should_strip_whitespace_surrounding_create_user_name_field(self, data_api_client):
@@ -1135,8 +1099,8 @@ class TestInviteUser(BaseApplicationTest):
                 updater="email@email.com"
             )
 
-            assert_equal(res.status_code, 302)
-            assert_equal(res.location, 'http://localhost/suppliers')
+            assert res.status_code == 302
+            assert res.location == 'http://localhost/suppliers'
 
     @mock.patch('app.main.views.login.data_api_client')
     def test_should_update_user_if_not_logged_in(self, data_api_client):
@@ -1161,8 +1125,8 @@ class TestInviteUser(BaseApplicationTest):
                 updater="test@email.com"
             )
 
-            assert_equal(res.status_code, 302)
-            assert_equal(res.location, 'http://localhost/suppliers')
+            assert res.status_code == 302
+            assert res.location == 'http://localhost/suppliers'
 
     @mock.patch('app.main.views.login.data_api_client')
     def test_should_not_update_a_supplier_account(self, data_api_client):
@@ -1184,7 +1148,7 @@ class TestInviteUser(BaseApplicationTest):
             )
 
             assert data_api_client.get_user.called
-            assert_equal(res.status_code, 400)
+            assert res.status_code == 400
 
     @mock.patch('app.main.views.login.data_api_client')
     def test_should_not_update_an_admin_account(self, data_api_client):
@@ -1207,7 +1171,7 @@ class TestInviteUser(BaseApplicationTest):
             )
 
             assert data_api_client.get_user.called
-            assert_equal(res.status_code, 400)
+            assert res.status_code == 400
 
     @mock.patch('app.main.views.login.data_api_client')
     def test_should_not_update_a_locked_account(self, data_api_client):
@@ -1230,7 +1194,7 @@ class TestInviteUser(BaseApplicationTest):
             )
 
             assert data_api_client.get_user.called
-            assert_equal(res.status_code, 400)
+            assert res.status_code == 400
 
     @mock.patch('app.main.views.login.data_api_client')
     def test_should_not_update_an_inactive_account(self, data_api_client):
@@ -1253,7 +1217,7 @@ class TestInviteUser(BaseApplicationTest):
             )
 
             assert data_api_client.get_user.called
-            assert_equal(res.status_code, 400)
+            assert res.status_code == 400
 
     @mock.patch('app.main.views.login.data_api_client')
     def test_should_be_a_503_if_api_fails(self, data_api_client):
@@ -1269,4 +1233,4 @@ class TestInviteUser(BaseApplicationTest):
                     'name': 'valid name'
                 }
             )
-            assert_equal(res.status_code, 503)
+            assert res.status_code == 503
