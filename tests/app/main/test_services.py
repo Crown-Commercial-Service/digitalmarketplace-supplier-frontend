@@ -4,7 +4,7 @@ try:
 except ImportError:
     from io import BytesIO as StringIO
 
-from dmutils.apiclient import HTTPError
+from dmapiclient import HTTPError
 import copy
 import mock
 from lxml import html

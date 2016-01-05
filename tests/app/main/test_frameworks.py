@@ -7,8 +7,8 @@ from nose.tools import assert_equal, assert_true, assert_in, assert_not_in
 import os
 import mock
 from lxml import html
-from dmutils.apiclient import APIError
-from dmutils.audit import AuditTypes
+from dmapiclient import APIError
+from dmapiclient.audit import AuditTypes
 from dmutils.email import MandrillException
 from dmutils.s3 import S3ResponseError
 

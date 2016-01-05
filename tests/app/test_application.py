@@ -3,7 +3,7 @@
 import mock
 from nose.tools import assert_equal, assert_true
 from .helpers import BaseApplicationTest
-from dmutils.apiclient.errors import HTTPError
+from dmapiclient.errors import HTTPError
 from app.main.helpers.frameworks import question_references
 
 

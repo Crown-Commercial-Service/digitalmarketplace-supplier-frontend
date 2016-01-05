@@ -6,7 +6,7 @@ from datetime import datetime
 from flask import current_app, flash, redirect, render_template, url_for, \
     request, abort
 from flask_login import logout_user, login_user
-from dmutils.audit import AuditTypes
+from dmapiclient.audit import AuditTypes
 from dmutils.user import user_has_role, User
 from dmutils.formats import DATETIME_FORMAT
 from dmutils.email import send_email, \

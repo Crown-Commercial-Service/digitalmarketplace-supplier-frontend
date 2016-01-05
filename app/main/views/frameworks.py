@@ -8,8 +8,8 @@ from flask import render_template, request, abort, flash, redirect, url_for, cur
 from flask_login import login_required, current_user
 import six
 
-from dmutils.apiclient import APIError
-from dmutils.audit import AuditTypes
+from dmapiclient import APIError
+from dmapiclient.audit import AuditTypes
 from dmutils.email import send_email, MandrillException
 from dmutils.formats import format_service_price, datetimeformat
 from dmutils import s3

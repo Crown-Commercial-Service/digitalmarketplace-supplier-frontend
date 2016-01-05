@@ -10,7 +10,7 @@ from ..helpers.services import (
 )
 from ..helpers.frameworks import get_framework_and_lot, get_declaration_status, has_one_service_limit
 
-from dmutils.apiclient import APIError, HTTPError
+from dmapiclient import APIError, HTTPError
 from dmutils import s3
 from dmutils.documents import upload_service_documents
 
