@@ -68,13 +68,11 @@
       {{ summary.text(item.lotName or item.lot) }}
 
       {% call summary.field(action=True) %}
-          {% if item.status == "published" %}
-            Live
-          {% elif item.status == "enabled" %}
-            Unavailable
-          {% elif item.status == "disabled" %}
-            Removed
-          {% endif %}
+        {% if item.status == "published" %}
+          Live
+        {% else %}
+          Removed
+        {% endif %}
       {% endcall %}
 
     {% endcall %}
