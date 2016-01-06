@@ -1,8 +1,8 @@
 # coding: utf-8
 from __future__ import unicode_literals
 
-from dmutils.apiclient import HTTPError
-from dmutils.audit import AuditTypes
+from dmapiclient import HTTPError
+from dmapiclient.audit import AuditTypes
 from dmutils.email import generate_token, MandrillException
 from ..helpers import BaseApplicationTest
 from lxml import html

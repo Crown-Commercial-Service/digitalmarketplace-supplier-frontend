@@ -6,8 +6,8 @@ from flask import render_template, request, redirect, url_for, abort, session, M
 from flask_login import login_required, current_user, current_app
 import six
 
-from dmutils.apiclient import APIError
-from dmutils.audit import AuditTypes
+from dmapiclient import APIError
+from dmapiclient.audit import AuditTypes
 from dmutils.email import send_email, generate_token, MandrillException
 from dmutils.content_loader import ContentNotFoundError
 

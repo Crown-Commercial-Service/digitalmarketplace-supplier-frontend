@@ -3,7 +3,7 @@ import re
 
 from flask import abort
 from flask_login import current_user
-from dmutils.apiclient import APIError
+from dmapiclient import APIError
 
 
 def get_framework(client, framework_slug, open_only=True):

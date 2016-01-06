@@ -3,7 +3,7 @@ from datetime import datetime
 from flask import abort, current_app
 from flask_login import current_user
 
-from dmutils.apiclient import APIError
+from dmapiclient import APIError
 
 try:
     import urlparse

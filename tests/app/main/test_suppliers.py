@@ -1,6 +1,6 @@
 # coding=utf-8
 
-from dmutils.apiclient import HTTPError
+from dmapiclient import HTTPError
 from dmutils.email import MandrillException
 import mock
 from flask import session

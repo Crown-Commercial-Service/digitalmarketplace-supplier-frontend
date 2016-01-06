@@ -1,6 +1,6 @@
 from flask import render_template
 from app.main import main
-from dmutils.apiclient import APIError
+from dmapiclient import APIError
 from dmutils.s3 import S3ResponseError
 from dmutils.content_loader import QuestionNotFoundError
 
