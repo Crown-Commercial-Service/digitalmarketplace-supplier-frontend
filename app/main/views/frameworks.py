@@ -16,8 +16,8 @@ from dmutils import s3
 from dmutils.deprecation import deprecated
 from dmutils.documents import (
     get_agreement_document_path, get_signed_url, get_extension,
-    file_is_less_than_5mb, file_is_empty
-)
+    file_is_less_than_5mb, file_is_empty,
+    get_countersigned_agreement_document_path)
 
 from ... import data_api_client
 from ...main import main, content_loader
@@ -26,7 +26,8 @@ from ..helpers.frameworks import get_declaration_status, \
     get_last_modified_from_first_matching_file, register_interest_in_framework, \
     get_supplier_on_framework_from_info, get_declaration_status_from_info, \
     get_supplier_framework_info, get_framework, get_framework_and_lot, \
-    count_drafts_by_lot, get_statuses_for_lot, has_one_service_limit
+    count_drafts_by_lot, get_statuses_for_lot, has_one_service_limit, \
+    countersigned_framework_agreement_exists_in_bucket
 from ..helpers.validation import get_validator
 from ..helpers.services import (
     get_signed_document_url,
@@ -87,10 +88,9 @@ def framework_dashboard(framework_slug):
 
     return render_template(
         "frameworks/dashboard.html",
-        counts={
-            "draft": len(drafts),
-            "complete": len(complete_drafts)
-        },
+        agreement_countersigned=countersigned_framework_agreement_exists_in_bucket(
+            framework_slug, current_app.config['DM_AGREEMENTS_BUCKET']),
+        application_made=(len(complete_drafts) > 0 and declaration_status == 'complete'),
         completed_lots=[{
             'name': lot['name'],
             'complete_count': count_drafts_by_lot(complete_drafts, lot['slug']),
@@ -99,13 +99,14 @@ def framework_dashboard(framework_slug):
             'unit_plural': 'labs' if framework['slug'] == 'digital-outcomes-and-specialists' else 'service'
             # TODO: ^ make this dynamic, eg, lab, service, unit
         } for lot in framework['lots'] if count_drafts_by_lot(complete_drafts, lot['slug'])],
-        declaration_status=declaration_status,
+        counts={
+            "draft": len(drafts),
+            "complete": len(complete_drafts)
+        },
         dates=content_loader.get_message(framework_slug, 'dates'),
+        declaration_status=declaration_status,
         first_page_of_declaration=first_page,
         framework=framework,
-        application_made=(len(complete_drafts) > 0 and declaration_status == 'complete'),
-        supplier_is_on_framework=supplier_is_on_framework,
-        supplier_pack_filename=supplier_pack_filename,
         last_modified={
             'supplier_pack': get_last_modified_from_first_matching_file(
                 key_list, framework_slug, "communications/{}".format(supplier_pack_filename)
@@ -114,6 +115,8 @@ def framework_dashboard(framework_slug):
                 key_list, framework_slug, "communications/updates/"
             )
         },
+        supplier_is_on_framework=supplier_is_on_framework,
+        supplier_pack_filename=supplier_pack_filename,
         **main.config['BASE_TEMPLATE_DATA']
     ), 200
 
@@ -307,8 +310,11 @@ def download_agreement_file(framework_slug, document_name):
     legal_supplier_name = supplier_framework_info['declaration']['SQ1-1a']
 
     agreements_bucket = s3.S3(current_app.config['DM_AGREEMENTS_BUCKET'])
-    path = get_agreement_document_path(
-        framework_slug, current_user.supplier_id, legal_supplier_name, document_name)
+    if document_name == 'countersigned-agreement':
+        path = get_countersigned_agreement_document_path(framework_slug, supplier_framework_info['supplierId'])
+    else:
+        path = get_agreement_document_path(
+            framework_slug, current_user.supplier_id, legal_supplier_name, document_name)
     url = get_signed_url(agreements_bucket, path, current_app.config['DM_ASSETS_URL'])
     if not url:
         abort(404)
@@ -361,6 +367,8 @@ def framework_updates(framework_slug, error_message=None, default_textbox_value=
         error_message=error_message,
         files=files,
         dates=content_loader.get_message(framework_slug, 'dates'),
+        agreement_countersigned=countersigned_framework_agreement_exists_in_bucket(
+            framework_slug, current_app.config['DM_AGREEMENTS_BUCKET']),
         **main.config['BASE_TEMPLATE_DATA']
     ), 200 if not error_message else 400
 
