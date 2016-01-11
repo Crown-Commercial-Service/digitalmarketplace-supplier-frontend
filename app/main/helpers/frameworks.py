@@ -1,9 +1,11 @@
 # -*- coding: utf-8 -*-
+from dmutils.documents import get_countersigned_agreement_document_path
 import re
 
 from flask import abort
 from flask_login import current_user
 from dmapiclient import APIError
+from dmutils import s3
 
 
 def get_framework(client, framework_slug, open_only=True):
@@ -256,3 +258,9 @@ def has_one_service_limit(lot_slug, framework_lots):
     for lot in framework_lots:
         if lot['slug'] == lot_slug:
             return lot['oneServiceLimit']
+
+
+def countersigned_framework_agreement_exists_in_bucket(framework_slug, bucket):
+    agreements_bucket = s3.S3(bucket)
+    countersigned_path = get_countersigned_agreement_document_path(framework_slug, current_user.supplier_id)
+    return agreements_bucket.path_exists(countersigned_path)
