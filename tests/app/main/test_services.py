@@ -10,10 +10,8 @@ import mock
 from lxml import html
 from freezegun import freeze_time
 
-from nose.tools import assert_equal, assert_true, assert_false, \
-    assert_in, assert_not_in
+from nose.tools import assert_equal, assert_true, assert_false, assert_in, assert_not_in
 from tests.app.helpers import BaseApplicationTest
-from app.main import content_loader
 
 
 class TestListServices(BaseApplicationTest):
