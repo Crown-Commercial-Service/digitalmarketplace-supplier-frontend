@@ -22,13 +22,17 @@
 {% endblock %}
 
 {% block before_sections %}
-  {% if service_data.status == "published" %}
-    <div class="column-one-third">
-      {% with label="View service", url="/g-cloud/services/" + service_id %}
-        {% include "toolkit/link-button.html" %}
-      {% endwith %}
+    <div class="column-two-thirds">
+      <div class="view-service-link">
+        {%
+          with
+          url = "/g-cloud/services/{}".format(service_id),
+          text = "View service page on the Digital Marketplace"
+        %}
+          {% include "toolkit/secondary-action-link.html" %}
+        {% endwith %}
+      </div>
     </div>
-  {% endif %}
   {% if error %}
     <div class="column-one-whole">
       {% with
