@@ -408,7 +408,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
     def test_result_letter_is_not_shown_when_no_application(self, data_api_client, s3):
         with self.app.test_client():
             self.login()
-
+            s3.return_value.path_exists.return_value = False
             data_api_client.get_framework.return_value = self.framework(status='standstill')
             data_api_client.get_framework_interest.return_value = {'frameworks': ['g-cloud-7']}
             data_api_client.find_draft_services.return_value = {
@@ -424,10 +424,10 @@ class TestFrameworksDashboard(BaseApplicationTest):
 
             assert_not_in(u'Download your application result letter', data)
 
-    def test_link_to_framework_agreement_is_shown_if_supplier_is_on_framework(self, data_api_client, s3):
+    def test_link_to_unsigned_framework_agreement_is_shown_if_supplier_is_on_framework(self, data_api_client, s3):
         with self.app.test_client():
             self.login()
-
+            s3.return_value.path_exists.return_value = False
             data_api_client.get_framework.return_value = self.framework(status='standstill')
             data_api_client.get_framework_interest.return_value = {'frameworks': ['g-cloud-7']}
             data_api_client.find_draft_services.return_value = {
@@ -463,6 +463,26 @@ class TestFrameworksDashboard(BaseApplicationTest):
             data = res.get_data(as_text=True)
 
             assert_not_in(u'Sign and return your framework agreement', data)
+
+    def test_link_to_countersigned_framework_agreement_is_shown_if_it_exists(self, data_api_client, s3):
+        with self.app.test_client():
+            self.login()
+            s3.return_value.path_exists.return_value = True
+            data_api_client.get_framework.return_value = self.framework(status='standstill')
+            data_api_client.get_framework_interest.return_value = {'frameworks': ['g-cloud-7']}
+            data_api_client.find_draft_services.return_value = {
+                "services": [
+                    {'serviceName': 'A service', 'status': 'submitted', 'lot': 'iaas'}
+                ]
+            }
+            data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
+                on_framework=True)
+
+            res = self.client.get("/suppliers/frameworks/g-cloud-7")
+
+            data = res.get_data(as_text=True)
+
+            assert_in(u'Download your countersigned framework agreement', data)
 
 
 @mock.patch('app.main.views.frameworks.data_api_client', autospec=True)
@@ -1054,6 +1074,7 @@ class TestFrameworkUpdatesPage(BaseApplicationTest):
 
     def test_dates_for_open_framework_open_for_questions(self, s3, data_api_client):
         data_api_client.get_framework.return_value = self.framework('open', clarification_questions_open=True)
+        s3.return_value.path_exists.return_value = False
 
         with self.app.test_client():
             self.login()
@@ -1156,6 +1177,32 @@ class TestFrameworkUpdatesPage(BaseApplicationTest):
                         )
                     )
 
+    def test_question_box_is_shown_if_countersigned_agreement_is_not_yet_returned(self, s3, data_api_client):
+        data_api_client.get_framework.return_value = self.framework('live', clarification_questions_open=False)
+        s3.return_value.path_exists.return_value = False
+
+        with self.app.test_client():
+            self.login()
+
+            response = self.client.get('/suppliers/frameworks/g-cloud-7/updates')
+            data = response.get_data(as_text=True)
+
+            assert response.status_code == 200
+            assert_in(u'Ask a question about your G-Cloud 7 application', data)
+
+    def test_no_question_box_shown_if_countersigned_agreement_is_returned(self, s3, data_api_client):
+        data_api_client.get_framework.return_value = self.framework('live', clarification_questions_open=False)
+        s3.return_value.path_exists.return_value = True
+
+        with self.app.test_client():
+            self.login()
+
+            response = self.client.get('/suppliers/frameworks/g-cloud-7/updates')
+            data = response.get_data(as_text=True)
+
+            assert response.status_code == 200
+            assert_not_in(u'Ask a question about your G-Cloud 7 application', data)
+
 
 class FakeMail(object):
     """An object that equals strings containing all of the given substrings
@@ -1236,6 +1283,7 @@ class TestSendClarificationQuestionEmail(BaseApplicationTest):
     @mock.patch('app.main.views.frameworks.send_email')
     def test_should_not_send_email_if_invalid_clarification_question(self, send_email, s3, data_api_client):
         data_api_client.get_framework.return_value = self.framework('open')
+        s3.return_value.path_exists.return_value = False
 
         for invalid_clarification_question in [
             {
