@@ -47,10 +47,10 @@ def edit_service(service_id):
     return _update_service_status(service)
 
 
-@main.route('/services/<string:service_id>', methods=['POST'])
+@main.route('/services/<string:service_id>/remove', methods=['POST'])
 @login_required
 @flask_featureflags.is_active_feature('EDIT_SERVICE_PAGE')
-def update_service_status(service_id):
+def remove_service(service_id):
     service = data_api_client.get_service(service_id).get('services')
 
     if not is_service_associated_with_supplier(service):
@@ -62,40 +62,17 @@ def update_service_status(service_id):
             "Sorry, but this service isn't modifiable."
         )
 
-    # Value should be either public or private
-    status = request.form.get('status', '').lower()
-
-    translate_frontend_to_api = {
-        'public': 'published',
-        'private': 'enabled'
-    }
-
-    if status in translate_frontend_to_api.keys():
-        status = translate_frontend_to_api[status]
-    else:
-        return _update_service_status(
-            service,
-            "Sorry, but '{}' is not a valid status.".format(status)
-        )
-
-    try:
-        updated_service = data_api_client.update_service_status(
-            service.get('id'), status,
-            current_user.email_address)
-
-    except APIError:
-
-        return _update_service_status(
-            service,
-            "Sorry, there's been a problem updating the status."
-        )
+    updated_service = data_api_client.update_service_status(
+        service.get('id'), 'enabled',
+        current_user.email_address)
 
     updated_service = updated_service.get("services")
     return redirect(
-        url_for(".list_services",
-                updated_service_id=updated_service.get("id"),
-                updated_service_name=updated_service.get("serviceName"),
-                updated_service_status=updated_service.get("status"))
+        url_for(
+            ".list_services",
+            updated_service_id=updated_service.get("id"),
+            updated_service_name=updated_service.get("serviceName"),
+            updated_service_status=updated_service.get("status"))
     )
 
 
@@ -585,24 +562,6 @@ def _update_service_status(service, error_message=None):
 
     content = content_loader.get_manifest(framework['slug'], 'edit_service').filter(service)
 
-    question = {
-        'question': 'Choose service status',
-        'hint': 'Private services don\'t appear in search results '
-                'and don\'t have a URL',
-        'name': 'status',
-        'type': 'radio',
-        'inline': True,
-        'value': "Public" if service['status'] == 'published' else "Private",
-        'options': [
-            {
-                'label': 'Public'
-            },
-            {
-                'label': 'Private'
-            }
-        ]
-    }
-
     return render_template(
         "services/service.html",
         service_id=service.get('id'),
@@ -610,4 +569,4 @@ def _update_service_status(service, error_message=None):
         framework=framework,
         sections=content.summary(service),
         error=error_message,
-        **dict(question, **template_data)), status_code
+        **dict(**template_data)), status_code
