@@ -57,34 +57,23 @@
   ) %}
     {% call summary.row() %}
 
-      {% if 'EDIT_SERVICE_PAGE' is active_feature %}
-        {{ summary.service_link(
-            item.serviceName,
-            url_for('.edit_service', service_id=item.id)
-        ) }}
-      {% else %}
-        {{ summary.field_name(item.serviceName, wide=True) }}
-      {% endif %}
+      {{ summary.service_link(
+          item.serviceName,
+          url_for('.edit_service', service_id=item.id) if 'EDIT_SERVICE_PAGE' is active_feature
+          else '/g-cloud/services/{}'.format(item.id)
+      ) }}
 
       {{ summary.text(item.frameworkName) }}
 
       {{ summary.text(item.lotName or item.lot) }}
 
-      {% if item.status == "published" %}
-        {{ summary.edit_link("View service", '/g-cloud/services/' + item.id) }}
-      {% elif item.status == "disabled" %}
-        {% call summary.field(action=True) %}
-          <span class="service-status-{{ item.status }}">
-            Removed
-          </span>
-        {% endcall %}
-      {% elif item.status == "enabled" %}
-        {% call summary.field(action=True) %}
-          <span class="service-status-{{ item.status }}">
-            Private
-          </span>
-        {% endcall %}
-      {% endif %}
+      {% call summary.field(action=True) %}
+        {% if item.status == "published" %}
+          Live
+        {% else %}
+          Removed
+        {% endif %}
+      {% endcall %}
 
     {% endcall %}
   {% endcall %}
