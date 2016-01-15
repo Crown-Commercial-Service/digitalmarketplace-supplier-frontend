@@ -43,11 +43,14 @@
       {% endwith %}
     </div>
   {% endif %}
-    <div class="column-one-whole">
-      {% include "services/_edit-status.html" %}
-    </div>
 {% endblock %}
 
 {% block edit_link %}
   {{ summary.top_link("Edit", url_for(".edit_section", service_id=service_id, section_id=section.id)) }}
+{% endblock %}
+
+{% block after_sections %}
+    <div class="column-two-thirds">
+      {% include "services/_edit-status.html" %}
+    </div>
 {% endblock %}
