@@ -93,7 +93,7 @@
             {% else %}
               {{ summary[question.type](question.value, question.assurance) }}
             {% endif %}
-            {% if section.edit_questions %}
+            {% if section.edit_questions and framework.status == 'open' %}
               {% if not question.is_empty %}
                 {{ summary.remove_link('Remove', url_for(".remove_subsection", framework_slug=framework.slug, lot_slug=service_data.lot, service_id=service_id, section_id=section.id, question_slug=question.slug)) }}
               {% else %}
