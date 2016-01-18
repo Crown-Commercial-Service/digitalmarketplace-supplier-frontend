@@ -6,6 +6,7 @@ from werkzeug.http import parse_cookie
 from app import data_api_client
 from datetime import datetime, timedelta
 from dmutils.formats import DATETIME_FORMAT
+from nose.tools import assert_in, assert_not_in
 
 
 FULL_G7_SUBMISSION = {
@@ -231,3 +232,9 @@ class BaseApplicationTest(object):
 
             login_api_client.authenticate_user.assert_called_once_with(
                 "valid@email.com", "1234567890")
+
+    def assert_in_strip_whitespace(self, needle, haystack):
+        return assert_in(self.strip_all_whitespace(needle), self.strip_all_whitespace(haystack))
+
+    def assert_not_in_strip_whitespace(self, needle, haystack):
+        return assert_not_in(self.strip_all_whitespace(needle), self.strip_all_whitespace(haystack))

@@ -178,14 +178,14 @@ class TestSupplierUpdateService(BaseApplicationTest):
             'Service name 123' in res.get_data(as_text=True)
         )
 
-        assert_in(
-            self.strip_all_whitespace('<h2>Remove this service</h2>'),
-            self.strip_all_whitespace(res.get_data(as_text=True))
+        self.assert_in_strip_whitespace(
+            '<h2>Remove this service</h2>',
+            res.get_data(as_text=True)
         )
 
-        assert_not_in(
-            self.strip_all_whitespace('<h2>This service was removed on Monday 23 March 2015</h2>'),
-            self.strip_all_whitespace(res.get_data(as_text=True))
+        self.assert_not_in_strip_whitespace(
+            '<h2>This service was removed on Monday 23 March 2015</h2>',
+            res.get_data(as_text=True)
         )
 
         self._post_remove_service(service_should_be_modifiable=True)
@@ -202,14 +202,14 @@ class TestSupplierUpdateService(BaseApplicationTest):
             'Service name 123' in res.get_data(as_text=True)
         )
 
-        assert_in(
-            self.strip_all_whitespace('<h2>This service was removed on Monday 23 March 2015</h2>'),
-            self.strip_all_whitespace(res.get_data(as_text=True))
+        self.assert_in_strip_whitespace(
+            '<h2>This service was removed on Monday 23 March 2015</h2>',
+            res.get_data(as_text=True)
         )
 
-        assert_not_in(
-            self.strip_all_whitespace('<h2>Remove this service</h2>'),
-            self.strip_all_whitespace(res.get_data(as_text=True))
+        self.assert_not_in_strip_whitespace(
+            '<h2>Remove this service</h2>',
+            res.get_data(as_text=True)
         )
 
         self._post_remove_service(service_should_be_modifiable=False)
@@ -222,14 +222,14 @@ class TestSupplierUpdateService(BaseApplicationTest):
 
         res = self.client.get('/suppliers/services/123')
         assert_equal(res.status_code, 200)
-        assert_in(
+        self.assert_in_strip_whitespace(
             'Service name 123',
             res.get_data(as_text=True)
         )
 
-        assert_in(
-            self.strip_all_whitespace('<h2>This service was removed on Monday 23 March 2015</h2>'),
-            self.strip_all_whitespace(res.get_data(as_text=True))
+        self.assert_in_strip_whitespace(
+            '<h2>This service was removed on Monday 23 March 2015</h2>',
+            res.get_data(as_text=True)
         )
 
         self._post_remove_service(service_should_be_modifiable=False)
