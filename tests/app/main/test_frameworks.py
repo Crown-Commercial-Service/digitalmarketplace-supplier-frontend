@@ -102,7 +102,8 @@ class TestFrameworksDashboard(BaseApplicationTest):
 
         assert_equal(res.status_code, 404)
 
-    def test_interest_registered_in_framework_on_post(self, data_api_client, s3):
+    @mock.patch('app.main.frameworks.send_email')
+    def test_interest_registered_in_framework_on_post(self, send_email, data_api_client, s3):
         with self.app.test_client():
             self.login()
 
