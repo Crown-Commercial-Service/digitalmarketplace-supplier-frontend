@@ -23,9 +23,6 @@ def list_services():
     return render_template(
         "services/list_services.html",
         services=suppliers_services,
-        updated_service_id=request.args.get('updated_service_id'),
-        updated_service_name=request.args.get('updated_service_name'),
-        updated_service_status=request.args.get('updated_service_status'),
         **main.config['BASE_TEMPLATE_DATA']), 200
 
 
@@ -77,13 +74,13 @@ def remove_service(service_id):
         current_user.email_address)
 
     updated_service = updated_service.get('services')
-    return redirect(
-        url_for(
-            ".list_services",
-            updated_service_id=updated_service.get("id"),
-            updated_service_name=updated_service.get("serviceName"),
-            updated_service_status=updated_service.get("status"))
-    )
+
+    flash({
+        'updated_service_id': updated_service.get('id'),
+        'updated_service_name': updated_service.get('serviceName')
+    }, 'remove_service')
+
+    return redirect(url_for(".list_services"))
 
 
 @main.route('/services/<string:service_id>/edit/<string:section_id>', methods=['GET'])
