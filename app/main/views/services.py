@@ -3,10 +3,7 @@ from flask import render_template, request, redirect, url_for, abort, flash, cur
 
 from ... import data_api_client, flask_featureflags
 from ...main import main, content_loader
-from ..helpers.services import (
-    is_service_modifiable, is_service_associated_with_supplier,
-    get_signed_document_url, count_unanswered_questions,
-)
+from ..helpers.services import is_service_associated_with_supplier, get_signed_document_url, count_unanswered_questions
 from ..helpers.frameworks import get_framework_and_lot, get_declaration_status, has_one_service_limit
 
 from dmapiclient import APIError, HTTPError
@@ -39,12 +36,26 @@ def list_services():
 @login_required
 @flask_featureflags.is_active_feature('EDIT_SERVICE_PAGE')
 def edit_service(service_id):
-    service = data_api_client.get_service(service_id).get('services')
+    service = data_api_client.get_service(service_id)
+    service_unavailability_information = service.get('serviceMadeUnavailableAuditEvent')
+    service = service.get('services')
 
     if not is_service_associated_with_supplier(service):
         abort(404)
 
-    return _update_service_status(service)
+    template_data = main.config['BASE_TEMPLATE_DATA']
+    framework = data_api_client.get_framework(service['frameworkSlug'])['frameworks']
+
+    content = content_loader.get_manifest(framework['slug'], 'edit_service').filter(service)
+
+    return render_template(
+        "services/service.html",
+        service_id=service.get('id'),
+        service_data=service,
+        service_unavailability_information=service_unavailability_information,
+        framework=framework,
+        sections=content.summary(service),
+        **dict(**template_data))
 
 
 @main.route('/services/<string:service_id>/remove', methods=['POST'])
@@ -56,14 +67,13 @@ def remove_service(service_id):
     if not is_service_associated_with_supplier(service):
         abort(404)
 
-    if not is_service_modifiable(service):
-        return _update_service_status(
-            service,
-            "Sorry, but this service isn't modifiable."
-        )
+    # suppliers can't un-remove a service
+    if service.get('status') != 'published':
+        abort(400)
 
     updated_service = data_api_client.update_service_status(
-        service.get('id'), 'enabled',
+        service.get('id'),
+        'enabled',
         current_user.email_address)
 
     updated_service = updated_service.get("services")
@@ -552,21 +562,3 @@ def remove_subsection(framework_slug, lot_slug, service_id, section_id, question
                 service_id=service_id,
                 confirm_remove=None
                 ))
-
-
-def _update_service_status(service, error_message=None):
-
-    template_data = main.config['BASE_TEMPLATE_DATA']
-    status_code = 400 if error_message else 200
-    framework = data_api_client.get_framework(service['frameworkSlug'])['frameworks']
-
-    content = content_loader.get_manifest(framework['slug'], 'edit_service').filter(service)
-
-    return render_template(
-        "services/service.html",
-        service_id=service.get('id'),
-        service_data=service,
-        framework=framework,
-        sections=content.summary(service),
-        error=error_message,
-        **dict(**template_data)), status_code

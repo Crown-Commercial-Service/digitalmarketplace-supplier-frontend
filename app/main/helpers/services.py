@@ -51,10 +51,6 @@ def is_service_associated_with_supplier(service):
     return service.get('supplierId') == current_user.supplier_id
 
 
-def is_service_modifiable(service):
-    return service.get('status') != 'disabled'
-
-
 def get_signed_document_url(uploader, document_path):
     url = uploader.get_signed_url(document_path)
     if url is not None:
