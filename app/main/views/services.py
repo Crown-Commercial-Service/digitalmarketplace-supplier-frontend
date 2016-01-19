@@ -76,7 +76,7 @@ def remove_service(service_id):
         'enabled',
         current_user.email_address)
 
-    updated_service = updated_service.get("services")
+    updated_service = updated_service.get('services')
     return redirect(
         url_for(
             ".list_services",

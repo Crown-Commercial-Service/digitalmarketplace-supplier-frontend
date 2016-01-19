@@ -21,6 +21,21 @@
   {% endwith %}
 {% endblock %}
 
+{% block before_heading %}
+  <div class="column-one-whole">
+    {% if service_data.status != 'published' and service_unavailability_information %}
+      {%
+        with
+        message = "If you don’t know why this service was removed or you want to reinstate it, contact <a href='mailto:enquiries@digitalmarketplace.service.gov.uk'>enquiries@digitalmarketplace.service.gov.uk</a>.",
+        type = "temporary-message",
+        heading = "This service was removed on {}".format(service_unavailability_information.createdAt|dateformat)
+      %}
+        {% include "toolkit/notification-banner.html" %}
+      {% endwith %}
+    {% endif %}
+  </div>
+{% endblock %}
+
 {% block before_sections %}
     <div class="column-two-thirds">
       <div class="view-service-link">
