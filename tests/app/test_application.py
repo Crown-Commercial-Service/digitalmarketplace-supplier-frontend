@@ -40,7 +40,7 @@ class TestApplication(BaseApplicationTest):
             "enquiries@digitalmarketplace.service.gov.uk</a>"
             in res.get_data(as_text=True))
 
-    @mock.patch('app.main.views.services.data_api_client')
+    @mock.patch('app.main.views.suppliers.data_api_client')
     def test_503(self, data_api_client):
         with self.app.test_client():
             self.login()
