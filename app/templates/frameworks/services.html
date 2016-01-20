@@ -143,12 +143,12 @@
       {% endif %}
     {% endcall %}
   {% endcall %}
-  <div class='back-link'>
-    {% with
+
+  {%
+    with
     url = url_for(".framework_submission_lots", framework_slug=framework.slug),
     text = "Back to application"
-    %}
-    {% include "toolkit/back-link.html" %}
-    {% endwith %}
-  </div>
+  %}
+    {% include "toolkit/secondary-action-link.html" %}
+  {% endwith %}
 {% endblock %}

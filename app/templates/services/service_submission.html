@@ -165,14 +165,13 @@
         {% set back_to_service_link_text = 'Back to {}'.format(service_data['lotName']|lower) %}
       {% endif %}
       <div class="column-two-thirds">
-        <div class="back-link">
-          {% with
-          url = back_to_service_url,
-          text = back_to_service_link_text
+          {%
+            with
+            url = back_to_service_url,
+            text = back_to_service_link_text
           %}
-          {% include "toolkit/back-link.html" %}
+            {% include "toolkit/secondary-action-link.html" %}
           {% endwith %}
-        </div>
       </div>
     </div>
   {% endif %}
