@@ -84,7 +84,7 @@ def remove_service(service_id):
 
 @main.route('/services/<string:service_id>/edit/<string:section_id>', methods=['GET'])
 @login_required
-@flask_featureflags.is_active_feature('EDIT_SERVICE_PAGE')
+@flask_featureflags.is_active_feature('EDIT_SECTIONS')
 def edit_section(service_id, section_id):
     service = data_api_client.get_service(service_id)
     if service is None:
@@ -110,7 +110,7 @@ def edit_section(service_id, section_id):
 
 @main.route('/services/<string:service_id>/edit/<string:section_id>', methods=['POST'])
 @login_required
-@flask_featureflags.is_active_feature('EDIT_SERVICE_PAGE')
+@flask_featureflags.is_active_feature('EDIT_SECTIONS')
 def update_section(service_id, section_id):
     service = data_api_client.get_service(service_id)
     if service is None:

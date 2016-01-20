@@ -61,7 +61,9 @@
 {% endblock %}
 
 {% block edit_link %}
-  {{ summary.top_link("Edit", url_for(".edit_section", service_id=service_id, section_id=section.id)) }}
+  {% if 'EDIT_SECTIONS' is active_feature %}
+    {{ summary.top_link("Edit", url_for(".edit_section", service_id=service_id, section_id=section.id)) }}
+  {% endif %}
 {% endblock %}
 
 {% block after_sections %}

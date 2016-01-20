@@ -66,6 +66,7 @@ class Config(object):
     RAISE_ERROR_ON_MISSING_FEATURES = True
 
     FEATURE_FLAGS_EDIT_SERVICE_PAGE = False
+    FEATURE_FLAGS_EDIT_SECTIONS = False
 
     # Logging
     DM_LOG_LEVEL = 'DEBUG'
@@ -95,6 +96,7 @@ class Test(Config):
     DM_CLARIFICATION_QUESTION_EMAIL = 'digitalmarketplace@mailinator.com'
 
     FEATURE_FLAGS_EDIT_SERVICE_PAGE = enabled_since('2015-06-03')
+    FEATURE_FLAGS_EDIT_SECTIONS = enabled_since('2016-01-20')
 
 
 class Development(Config):
@@ -103,6 +105,7 @@ class Development(Config):
 
     # Dates not formatted like YYYY-(0)M-(0)D will fail
     FEATURE_FLAGS_EDIT_SERVICE_PAGE = enabled_since('2015-06-03')
+    FEATURE_FLAGS_EDIT_SECTIONS = enabled_since('2016-01-20')
 
 
 class Live(Config):
