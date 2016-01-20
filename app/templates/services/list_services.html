@@ -27,7 +27,7 @@
         {% if category == 'remove_service' %}
           <div class="banner-success-without-action">
             <p class="banner-message">
-              <a href="{{ url_for('.edit_service', service_id=message.updated_service_id ) }}">{{ message.updated_service_name }}</a> has been removed.
+              {{ message.updated_service_name }} has been removed.
             </p>
           </div>
         {% endif %}

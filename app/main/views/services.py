@@ -76,7 +76,6 @@ def remove_service(service_id):
     updated_service = updated_service.get('services')
 
     flash({
-        'updated_service_id': updated_service.get('id'),
         'updated_service_name': updated_service.get('serviceName')
     }, 'remove_service')
 

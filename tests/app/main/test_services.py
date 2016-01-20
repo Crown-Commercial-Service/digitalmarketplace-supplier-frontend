@@ -244,7 +244,7 @@ class TestSupplierUpdateService(BaseApplicationTest):
 
         assert_equal(res.status_code, 200)
         self.assert_in_strip_whitespace(
-            '<a href="/suppliers/services/123">Service name 123</a> has been removed.',
+            'Service name 123 has been removed.',
             res.get_data(as_text=True)
         )
 
