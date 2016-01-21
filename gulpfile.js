@@ -237,7 +237,7 @@ gulp.task(
   'copy:frameworks',
   copyFactory(
     "frameworks YAML into app folder",
-    sspContentRoot, 'app/content'
+    sspContentRoot + '/frameworks', 'app/content/frameworks'
   )
 );
 
