@@ -229,8 +229,6 @@ def create_user(encoded_token):
         user_json = data_api_client.get_user(email_address=token.get("email_address"))
 
         if not user_json:
-
-            # account does not exist
             return render_template(
                 "auth/create-user.html",
                 form=form,
@@ -240,8 +238,6 @@ def create_user(encoded_token):
                 **template_data), 200
 
         user = User.from_json(user_json)
-
-        # locked or inactive
         is_inactive_or_locked = 'inactive' if not user.active else 'locked' if user.is_locked() else False
 
         # supplier account exists (wrong supplier)
@@ -272,50 +268,6 @@ def create_user(encoded_token):
             is_inactive_or_locked=is_inactive_or_locked,
             is_registered_to_another_supplier=is_registered_to_another_supplier,
             **template_data), 200
-
-
-@main.route('/update-user/<string:encoded_token>', methods=["POST"])
-def submit_update_user(encoded_token):
-    template_data = main.config['BASE_TEMPLATE_DATA']
-
-    token = decode_invitation_token(encoded_token)
-    if token is None:
-        current_app.logger.warning(
-            "createuser.token_invalid: {encoded_token}",
-            extra={'encoded_token': encoded_token})
-        flash('token_invalid', 'error')
-        return render_template(
-            "auth/update-user.html",
-            token=None,
-            email_address=None,
-            supplier_name=None,
-            **template_data), 400
-
-    else:
-        user_json = data_api_client.get_user(email_address=token.get("email_address"))
-
-        user = User.from_json(user_json)
-        if user.is_locked() or not user.is_active() or not user_has_role(user_json, 'buyer'):
-            current_app.logger.warning(
-                "createuser.user_invalid: "
-                "user_id: {user_id} supplier_id: {supplier_id}",
-                extra={'user_id': user.id,
-                       'supplier_id': token.get('supplier_id')})
-            abort(400, "should not update an existing supplier")
-
-        if current_user.is_anonymous():
-            updater = token.get("email_address")
-        else:
-            updater = current_user.email_address
-
-        data_api_client.update_user(
-            user_id=user.id,
-            supplier_id=token.get("supplier_id"),
-            role='supplier',
-            updater=updater
-        )
-        login_user(user)
-        return redirect(url_for('.dashboard'))
 
 
 @main.route('/create-user/<string:encoded_token>', methods=["POST"])
