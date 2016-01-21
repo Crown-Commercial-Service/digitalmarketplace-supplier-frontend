@@ -939,6 +939,29 @@ class TestCreateUser(BaseApplicationTest):
         assert res.location == 'http://localhost/suppliers'
 
     @mock.patch('app.main.views.login.data_api_client')
+    def test_should_return_an_error_if_user_exists(self, data_api_client):
+        data_api_client.create_user.side_effect = HTTPError(mock.Mock(status_code=409))
+
+        token = self._generate_token()
+        res = self.client.post(
+            '/suppliers/create-user/{}'.format(token),
+            data={
+                'password': 'validpassword',
+                'name': 'valid name'
+            }
+        )
+
+        data_api_client.create_user.assert_called_once_with({
+            'role': 'supplier',
+            'password': 'validpassword',
+            'emailAddress': 'test@email.com',
+            'name': 'valid name',
+            'supplierId': 1234
+        })
+
+        assert res.status_code == 400
+
+    @mock.patch('app.main.views.login.data_api_client')
     def test_should_strip_whitespace_surrounding_create_user_name_field(self, data_api_client):
         data_api_client.get_user.return_value = None
         token = self._generate_token()

@@ -6,11 +6,14 @@ from datetime import datetime
 from flask import current_app, flash, redirect, render_template, url_for, \
     request, abort
 from flask_login import logout_user, login_user
+
+from dmapiclient import HTTPError
 from dmapiclient.audit import AuditTypes
 from dmutils.user import user_has_role, User
 from dmutils.formats import DATETIME_FORMAT
 from dmutils.email import send_email, \
     generate_token, decode_token, MandrillException
+
 from .. import main
 from ..forms.auth_forms import LoginForm, EmailAddressForm, ChangePasswordForm, CreateUserForm
 from ..helpers import hash_email
@@ -279,7 +282,6 @@ def submit_create_user(encoded_token):
     if token is None:
         current_app.logger.warning("createuser.token_invalid: {encoded_token}",
                                    extra={'encoded_token': encoded_token})
-        flash('token_invalid', 'error')
         return render_template(
             "auth/create-user.html",
             form=form,
@@ -295,22 +297,35 @@ def submit_create_user(encoded_token):
                 extra={'form_errors': ", ".join(form.errors)})
             return render_template(
                 "auth/create-user.html",
-                valid_token=False,
                 form=form,
                 token=encoded_token,
                 email_address=token.get('email_address'),
                 supplier_name=token.get('supplier_name'),
                 **template_data), 400
 
-        user = data_api_client.create_user({
-            'name': form.name.data,
-            'password': form.password.data,
-            'emailAddress': token.get('email_address'),
-            'role': 'supplier',
-            'supplierId': token.get('supplier_id')
-        })
-        user = User.from_json(user)
-        login_user(user)
+        try:
+            user = data_api_client.create_user({
+                'name': form.name.data,
+                'password': form.password.data,
+                'emailAddress': token.get('email_address'),
+                'role': 'supplier',
+                'supplierId': token.get('supplier_id')
+            })
+
+            user = User.from_json(user)
+            login_user(user)
+
+        except HTTPError as e:
+            if e.status_code == 409:
+                return render_template(
+                    "auth/create-user.html",
+                    form=form,
+                    token=None,
+                    email_address=None,
+                    supplier_name=None,
+                    **template_data), 400
+            else:
+                raise
 
         return redirect(url_for('.dashboard'))
 
