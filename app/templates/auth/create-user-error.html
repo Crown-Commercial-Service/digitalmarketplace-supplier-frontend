@@ -35,7 +35,7 @@
 
 {% elif user %}
 
-  {% if user.role == 'supplier' and token.get("supplier_name") != user.supplier_name %}
+  {% if user.role == 'supplier' and token.get("supplier_id") != user.supplier_id %}
 
   <header class="page-heading-smaller">
     <h1>The details you provided are registered with another supplier.</h1>
