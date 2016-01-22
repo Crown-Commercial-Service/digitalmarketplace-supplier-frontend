@@ -6,7 +6,7 @@ from ...main import main, content_loader
 from ..helpers.services import is_service_associated_with_supplier, get_signed_document_url, count_unanswered_questions
 from ..helpers.frameworks import get_framework_and_lot, get_declaration_status, has_one_service_limit
 
-from dmapiclient import APIError, HTTPError
+from dmapiclient import HTTPError
 from dmutils import s3
 from dmutils.documents import upload_service_documents
 
@@ -229,14 +229,10 @@ def copy_draft_service(framework_slug, lot_slug, service_id):
         {'lot': lot['slug']}
     )
 
-    try:
-        draft_copy = data_api_client.copy_draft_service(
-            service_id,
-            current_user.email_address
-        )['services']
-
-    except APIError as e:
-        abort(e.status_code)
+    draft_copy = data_api_client.copy_draft_service(
+        service_id,
+        current_user.email_address
+    )['services']
 
     return redirect(url_for(".edit_service_submission",
                             framework_slug=framework['slug'],
@@ -254,14 +250,10 @@ def complete_draft_service(framework_slug, lot_slug, service_id):
     if not is_service_associated_with_supplier(draft):
         abort(404)
 
-    try:
-        data_api_client.complete_draft_service(
-            service_id,
-            current_user.email_address
-        )
-
-    except APIError as e:
-        abort(e.status_code)
+    data_api_client.complete_draft_service(
+        service_id,
+        current_user.email_address
+    )
 
     flash({
         'service_name': draft.get('serviceName') or draft.get('lotName'),
@@ -291,13 +283,10 @@ def delete_draft_service(framework_slug, lot_slug, service_id):
         abort(404)
 
     if request.form.get('delete_confirmed') == 'true':
-        try:
-            data_api_client.delete_draft_service(
-                service_id,
-                current_user.email_address
-            )
-        except APIError as e:
-            abort(e.status_code)
+        data_api_client.delete_draft_service(
+            service_id,
+            current_user.email_address
+        )
 
         flash({'service_name': draft.get('serviceName', draft['lotName'])}, 'service_deleted')
         if lot['oneServiceLimit']:
