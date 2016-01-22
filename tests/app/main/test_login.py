@@ -779,7 +779,7 @@ class TestCreateUser(BaseApplicationTest):
         )
 
         assert res.status_code == 400
-        assert "You have a buyer account" in res.get_data(as_text=True)
+        assert "Account already exists" in res.get_data(as_text=True)
 
     @mock.patch('app.main.views.login.data_api_client')
     def test_should_return_an_error_with_admin_message_if_user_is_an_admin(self, data_api_client):
@@ -791,7 +791,7 @@ class TestCreateUser(BaseApplicationTest):
         )
 
         assert res.status_code == 400
-        assert "You have an administrator account" in res.get_data(as_text=True)
+        assert "Account already exists" in res.get_data(as_text=True)
 
     @mock.patch('app.main.views.login.data_api_client')
     def test_should_return_an_error_with_locked_message_if_user_is_locked(self, data_api_client):
@@ -856,7 +856,7 @@ class TestCreateUser(BaseApplicationTest):
         assert u"Your account is registered with ‘Supplier Name’" in res.get_data(as_text=True)
 
     @mock.patch('app.main.views.login.data_api_client')
-    def test_should_redirect_to_login_page_if_user_is_already_a_supplier(self, data_api_client):
+    def test_should_return_an_error_if_user_is_already_a_supplier(self, data_api_client):
         data_api_client.get_user.return_value = self.user(
             123,
             'test@email.com',
@@ -870,11 +870,12 @@ class TestCreateUser(BaseApplicationTest):
             '/suppliers/create-user/{}'.format(token),
             follow_redirects=True
         )
-        assert res.status_code == 200
-        assert "Log in to the Digital Marketplace" in res.get_data(as_text=True)
+
+        assert res.status_code == 400
+        assert "Account already exists" in res.get_data(as_text=True)
 
     @mock.patch('app.main.views.login.data_api_client')
-    def test_should_redirect_to_login_page_if_logged_in_user_is_not_invited_user(self, data_api_client):
+    def test_should_return_an_error_if_logged_in_user_is_not_invited_user(self, data_api_client):
         self.login()
         data_api_client.get_user.return_value = self.user(
             999,
@@ -888,16 +889,12 @@ class TestCreateUser(BaseApplicationTest):
         res = self.client.get(
             '/suppliers/create-user/{}'.format(token)
         )
-        assert res.status_code == 302
-        assert res.location == 'http://localhost/suppliers'
 
-        with self.client.session_transaction() as session:
-            assert session['_flashes'][0] == (
-                'error', 'You are trying to create a user while logged in as a different user'
-            )
+        assert res.status_code == 400
+        assert "Account already exists" in res.get_data(as_text=True)
 
     @mock.patch('app.main.views.login.data_api_client')
-    def test_should_redirect_to_dashboard_page_if_user_is_already_logged_in(self, data_api_client):
+    def test_should_return_an_error_if_user_is_already_logged_in(self, data_api_client):
         self.login()
         data_api_client.get_user.return_value = self.user(
             123,
@@ -911,8 +908,9 @@ class TestCreateUser(BaseApplicationTest):
         res = self.client.get(
             '/suppliers/create-user/{}'.format(token)
         )
-        assert res.status_code == 302
-        assert res.location == 'http://localhost/suppliers'
+
+        assert res.status_code == 400
+        assert "Account already exists" in res.get_data(as_text=True)
 
     @mock.patch('app.main.views.login.data_api_client')
     def test_should_create_user_if_user_does_not_exist(self, data_api_client):

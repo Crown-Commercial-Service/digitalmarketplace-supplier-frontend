@@ -219,58 +219,28 @@ def create_user(encoded_token):
         current_app.logger.warning(
             "createuser.token_invalid: {encoded_token}",
             extra={'encoded_token': encoded_token})
-        flash('token_invalid', 'error')
         return render_template(
-            "auth/create-user.html",
-            form=form,
+            "auth/create-user-error.html",
             token=None,
-            email_address=None,
-            supplier_name=None,
             **template_data), 400
 
-    else:
-        user_json = data_api_client.get_user(email_address=token.get("email_address"))
+    user_json = data_api_client.get_user(email_address=token.get("email_address"))
 
-        if not user_json:
-            return render_template(
-                "auth/create-user.html",
-                form=form,
-                email_address=token['email_address'],
-                supplier_name=token['supplier_name'],
-                token=encoded_token,
-                **template_data), 200
-
-        user = User.from_json(user_json)
-        is_inactive_or_locked = 'inactive' if not user.active else 'locked' if user.is_locked() else False
-
-        # supplier account exists (wrong supplier)
-        is_registered_to_another_supplier = False
-        if user.role == 'supplier' and token.get("supplier_name") != user.supplier_name:
-            is_registered_to_another_supplier = {
-                'supplier_who_sent_the_invitation': token.get("supplier_name"),
-                'supplier_registered_with_account': user.supplier_name,
-            }
-
-        # valid supplier account exists
-        if user.role == 'supplier' and not is_registered_to_another_supplier and not is_inactive_or_locked:
-            # valid supplier account exists and is logged in
-            if not current_user.is_authenticated():
-                return redirect(url_for('.render_login'))
-            else:
-                if current_user.email_address != user.email_address:
-                    flash('You are trying to create a user while logged in as a different user', 'error')
-                return redirect(url_for('.dashboard'))
-
+    if not user_json:
         return render_template(
-            "auth/update-user.html",
-            user=user_json["users"],
+            "auth/create-user.html",
             form=form,
             email_address=token['email_address'],
             supplier_name=token['supplier_name'],
             token=encoded_token,
-            is_inactive_or_locked=is_inactive_or_locked,
-            is_registered_to_another_supplier=is_registered_to_another_supplier,
             **template_data), 200
+
+    user = User.from_json(user_json)
+    return render_template(
+        "auth/create-user-error.html",
+        token=token,
+        user=user,
+        **template_data), 400
 
 
 @main.route('/create-user/<string:encoded_token>', methods=["POST"])
