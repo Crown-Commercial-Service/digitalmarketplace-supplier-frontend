@@ -253,11 +253,8 @@ def submit_create_user(encoded_token):
         current_app.logger.warning("createuser.token_invalid: {encoded_token}",
                                    extra={'encoded_token': encoded_token})
         return render_template(
-            "auth/create-user.html",
-            form=form,
+            "auth/create-user-error.html",
             token=None,
-            email_address=None,
-            supplier_name=None,
             **template_data), 400
 
     else:
@@ -286,16 +283,13 @@ def submit_create_user(encoded_token):
             login_user(user)
 
         except HTTPError as e:
-            if e.status_code == 409:
-                return render_template(
-                    "auth/create-user.html",
-                    form=form,
-                    token=None,
-                    email_address=None,
-                    supplier_name=None,
-                    **template_data), 400
-            else:
+            if e.status_code != 409:
                 raise
+
+            return render_template(
+                "auth/create-user-error.html",
+                token=None,
+                **template_data), 400
 
         return redirect(url_for('.dashboard'))
 
