@@ -178,11 +178,25 @@ class TestSupplierUpdateService(BaseApplicationTest):
             'Service name 123' in res.get_data(as_text=True)
         )
 
+        # first message should be there
         self.assert_in_strip_whitespace(
-            '<h2>Remove this service</h2>',
+            'Remove this service',
             res.get_data(as_text=True)
         )
 
+        # confirmation message should not have been triggered yet
+        self.assert_not_in_strip_whitespace(
+            'Are you sure you want to remove your service?',
+            res.get_data(as_text=True)
+        )
+
+        # service removed message should not have been triggered yet
+        self.assert_not_in_strip_whitespace(
+            'Service name 123 has been removed.',
+            res.get_data(as_text=True)
+        )
+
+        # service removed notification banner shouldn't be there either
         self.assert_not_in_strip_whitespace(
             '<h2>This service was removed on Monday 23 March 2015</h2>',
             res.get_data(as_text=True)
@@ -234,7 +248,7 @@ class TestSupplierUpdateService(BaseApplicationTest):
 
         self._post_remove_service(service_should_be_modifiable=False)
 
-    def test_should_view_correct_notification_message_if_service_removed(
+    def test_should_view_confirmation_message_if_first_remove_service_button_clicked(
             self, data_api_client
     ):
         self.login()
@@ -243,8 +257,45 @@ class TestSupplierUpdateService(BaseApplicationTest):
         res = self.client.post('/suppliers/services/123/remove', follow_redirects=True)
 
         assert_equal(res.status_code, 200)
+
+        # first message should be gone
+        self.assert_not_in_strip_whitespace(
+            'Remove this service',
+            res.get_data(as_text=True)
+        )
+
+        # confirmation message should be there
+        self.assert_in_strip_whitespace(
+            'Are you sure you want to remove your service?',
+            res.get_data(as_text=True)
+        )
+
+        # service removed message should not have been triggered yet
+        self.assert_not_in_strip_whitespace(
+            'Service name 123 has been removed.',
+            res.get_data(as_text=True)
+        )
+
+    def test_should_view_correct_notification_message_if_service_removed(
+            self, data_api_client
+    ):
+        self.login()
+        self._get_service(data_api_client, service_status='published')
+
+        res = self.client.post(
+            '/suppliers/services/123/remove',
+            data={'remove_confirmed': True},
+            follow_redirects=True)
+
+        assert_equal(res.status_code, 200)
         self.assert_in_strip_whitespace(
             'Service name 123 has been removed.',
+            res.get_data(as_text=True)
+        )
+
+        # the "are you sure" message should be gone
+        self.assert_not_in_strip_whitespace(
+            'Are you sure you want to remove your service?',
             res.get_data(as_text=True)
         )
 
