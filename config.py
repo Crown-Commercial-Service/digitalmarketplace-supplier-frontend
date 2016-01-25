@@ -105,7 +105,7 @@ class Development(Config):
 
     # Dates not formatted like YYYY-(0)M-(0)D will fail
     FEATURE_FLAGS_EDIT_SERVICE_PAGE = enabled_since('2015-06-03')
-    FEATURE_FLAGS_EDIT_SECTIONS = enabled_since('2016-01-20')
+    FEATURE_FLAGS_EDIT_SECTIONS = enabled_since('2016-01-25')
 
 
 class Live(Config):
@@ -125,7 +125,8 @@ class Production(Live):
 
 
 class Staging(Production):
-    pass
+    FEATURE_FLAGS_EDIT_SERVICE_PAGE = enabled_since('2015-06-03')
+    FEATURE_FLAGS_EDIT_SECTIONS = enabled_since('2016-01-25')
 
 configs = {
     'development': Development,
