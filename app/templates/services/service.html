@@ -32,6 +32,26 @@
       %}
         {% include "toolkit/notification-banner.html" %}
       {% endwith %}
+    {% elif remove_requested %}
+      <div class="banner-destructive-with-action">
+        <p class="banner-message">
+          Are you sure you want to remove your service?
+        </p>
+        <p class="banner-message">
+          When you remove a service, you can only reinstate it by emailing <a href='mailto:enquiries@digitalmarketplace.service.gov.uk'>enquiries@digitalmarketplace.service.gov.uk</a>.
+        </p>
+        <form class="banner-action" action="{{ url_for('.remove_service', service_id=service_id ) }}" method="POST">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+          <input type="hidden" name="remove_confirmed" value="true" />
+            {%
+              with
+              type = "destructive",
+              label = "Remove service"
+            %}
+              {% include "toolkit/button.html" %}
+            {% endwith %}
+        </form>
+      </div>
     {% endif %}
   </div>
 {% endblock %}
@@ -67,7 +87,28 @@
 {% endblock %}
 
 {% block after_sections %}
+  {% if service_data.status == 'published' and not remove_requested %}
     <div class="column-two-thirds">
-      {% include "services/_remove-service.html" %}
+      <div class="edit-service-status-panel">
+        <h2>Remove this service</h2>
+        <p>If you remove a service, it won’t be available to buy on the Digital Marketplace
+          and it won’t appear in search results.</p>
+        <p>Your service page will be updated to include a message showing users that the service
+          is no longer available to buy.</p>
+        <p>You’ll need to email
+          <a href="mailto:enquiries@digitalmarketplace.service.gov.uk">enquiries@digitalmarketplace.service.gov.uk</a>
+           to reinstate your service.</p>
+        <form action="{{ url_for('.remove_service', service_id=service_id ) }}" method="POST">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+            {%
+              with
+              type = "destructive",
+              label = "Remove service"
+            %}
+              {% include "toolkit/button.html" %}
+            {% endwith %}
+        </form>
+      </div>
     </div>
+  {% endif %}
 {% endblock %}

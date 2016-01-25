@@ -44,6 +44,7 @@ def edit_service(service_id):
     framework = data_api_client.get_framework(service['frameworkSlug'])['frameworks']
 
     content = content_loader.get_manifest(framework['slug'], 'edit_service').filter(service)
+    remove_requested = True if request.args.get('remove_requested') else False
 
     return render_template(
         "services/service.html",
@@ -52,6 +53,7 @@ def edit_service(service_id):
         service_unavailability_information=service_unavailability_information,
         framework=framework,
         sections=content.summary(service),
+        remove_requested=remove_requested,
         **dict(**template_data))
 
 
@@ -68,18 +70,25 @@ def remove_service(service_id):
     if service.get('status') != 'published':
         abort(400)
 
-    updated_service = data_api_client.update_service_status(
-        service.get('id'),
-        'enabled',
-        current_user.email_address)
+    if request.form.get('remove_confirmed'):
 
-    updated_service = updated_service.get('services')
+        updated_service = data_api_client.update_service_status(
+            service.get('id'),
+            'enabled',
+            current_user.email_address)
 
-    flash({
-        'updated_service_name': updated_service.get('serviceName')
-    }, 'remove_service')
+        updated_service = updated_service.get('services')
 
-    return redirect(url_for(".list_services"))
+        flash({
+            'updated_service_name': updated_service.get('serviceName')
+        }, 'remove_service')
+
+        return redirect(url_for(".list_services"))
+
+    return redirect(url_for(
+        ".edit_service",
+        service_id=service_id,
+        remove_requested=True))
 
 
 @main.route('/services/<string:service_id>/edit/<string:section_id>', methods=['GET'])
