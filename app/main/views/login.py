@@ -6,11 +6,14 @@ from datetime import datetime
 from flask import current_app, flash, redirect, render_template, url_for, \
     request, abort
 from flask_login import logout_user, login_user
+
+from dmapiclient import HTTPError
 from dmapiclient.audit import AuditTypes
 from dmutils.user import user_has_role, User
 from dmutils.formats import DATETIME_FORMAT
 from dmutils.email import send_email, \
     generate_token, decode_token, MandrillException
+
 from .. import main
 from ..forms.auth_forms import LoginForm, EmailAddressForm, ChangePasswordForm, CreateUserForm
 from ..helpers import hash_email
@@ -216,106 +219,28 @@ def create_user(encoded_token):
         current_app.logger.warning(
             "createuser.token_invalid: {encoded_token}",
             extra={'encoded_token': encoded_token})
-        flash('token_invalid', 'error')
         return render_template(
-            "auth/create-user.html",
-            form=form,
+            "auth/create-user-error.html",
             token=None,
-            email_address=None,
-            supplier_name=None,
             **template_data), 400
 
-    else:
-        user_json = data_api_client.get_user(email_address=token.get("email_address"))
+    user_json = data_api_client.get_user(email_address=token.get("email_address"))
 
-        if not user_json:
-
-            # account does not exist
-            return render_template(
-                "auth/create-user.html",
-                form=form,
-                email_address=token['email_address'],
-                supplier_name=token['supplier_name'],
-                token=encoded_token,
-                **template_data), 200
-
-        user = User.from_json(user_json)
-
-        # locked or inactive
-        is_inactive_or_locked = 'inactive' if not user.active else 'locked' if user.is_locked() else False
-
-        # supplier account exists (wrong supplier)
-        is_registered_to_another_supplier = False
-        if user.role == 'supplier' and token.get("supplier_name") != user.supplier_name:
-            is_registered_to_another_supplier = {
-                'supplier_who_sent_the_invitation': token.get("supplier_name"),
-                'supplier_registered_with_account': user.supplier_name,
-            }
-
-        # valid supplier account exists
-        if user.role == 'supplier' and not is_registered_to_another_supplier and not is_inactive_or_locked:
-            # valid supplier account exists and is logged in
-            if not current_user.is_authenticated():
-                return redirect(url_for('.render_login'))
-            else:
-                if current_user.email_address != user.email_address:
-                    flash('You are trying to create a user while logged in as a different user', 'error')
-                return redirect(url_for('.dashboard'))
-
+    if not user_json:
         return render_template(
-            "auth/update-user.html",
-            user=user_json["users"],
+            "auth/create-user.html",
             form=form,
             email_address=token['email_address'],
             supplier_name=token['supplier_name'],
             token=encoded_token,
-            is_inactive_or_locked=is_inactive_or_locked,
-            is_registered_to_another_supplier=is_registered_to_another_supplier,
             **template_data), 200
 
-
-@main.route('/update-user/<string:encoded_token>', methods=["POST"])
-def submit_update_user(encoded_token):
-    template_data = main.config['BASE_TEMPLATE_DATA']
-
-    token = decode_invitation_token(encoded_token)
-    if token is None:
-        current_app.logger.warning(
-            "createuser.token_invalid: {encoded_token}",
-            extra={'encoded_token': encoded_token})
-        flash('token_invalid', 'error')
-        return render_template(
-            "auth/update-user.html",
-            token=None,
-            email_address=None,
-            supplier_name=None,
-            **template_data), 400
-
-    else:
-        user_json = data_api_client.get_user(email_address=token.get("email_address"))
-
-        user = User.from_json(user_json)
-        if user.is_locked() or not user.is_active() or not user_has_role(user_json, 'buyer'):
-            current_app.logger.warning(
-                "createuser.user_invalid: "
-                "user_id: {user_id} supplier_id: {supplier_id}",
-                extra={'user_id': user.id,
-                       'supplier_id': token.get('supplier_id')})
-            abort(400, "should not update an existing supplier")
-
-        if current_user.is_anonymous():
-            updater = token.get("email_address")
-        else:
-            updater = current_user.email_address
-
-        data_api_client.update_user(
-            user_id=user.id,
-            supplier_id=token.get("supplier_id"),
-            role='supplier',
-            updater=updater
-        )
-        login_user(user)
-        return redirect(url_for('.dashboard'))
+    user = User.from_json(user_json)
+    return render_template(
+        "auth/create-user-error.html",
+        token=token,
+        user=user,
+        **template_data), 400
 
 
 @main.route('/create-user/<string:encoded_token>', methods=["POST"])
@@ -327,13 +252,9 @@ def submit_create_user(encoded_token):
     if token is None:
         current_app.logger.warning("createuser.token_invalid: {encoded_token}",
                                    extra={'encoded_token': encoded_token})
-        flash('token_invalid', 'error')
         return render_template(
-            "auth/create-user.html",
-            form=form,
+            "auth/create-user-error.html",
             token=None,
-            email_address=None,
-            supplier_name=None,
             **template_data), 400
 
     else:
@@ -343,22 +264,32 @@ def submit_create_user(encoded_token):
                 extra={'form_errors': ", ".join(form.errors)})
             return render_template(
                 "auth/create-user.html",
-                valid_token=False,
                 form=form,
                 token=encoded_token,
                 email_address=token.get('email_address'),
                 supplier_name=token.get('supplier_name'),
                 **template_data), 400
 
-        user = data_api_client.create_user({
-            'name': form.name.data,
-            'password': form.password.data,
-            'emailAddress': token.get('email_address'),
-            'role': 'supplier',
-            'supplierId': token.get('supplier_id')
-        })
-        user = User.from_json(user)
-        login_user(user)
+        try:
+            user = data_api_client.create_user({
+                'name': form.name.data,
+                'password': form.password.data,
+                'emailAddress': token.get('email_address'),
+                'role': 'supplier',
+                'supplierId': token.get('supplier_id')
+            })
+
+            user = User.from_json(user)
+            login_user(user)
+
+        except HTTPError as e:
+            if e.status_code != 409:
+                raise
+
+            return render_template(
+                "auth/create-user-error.html",
+                token=None,
+                **template_data), 400
 
         return redirect(url_for('.dashboard'))
 
