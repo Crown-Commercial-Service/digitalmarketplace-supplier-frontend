@@ -40,8 +40,8 @@
   <header class="page-heading-smaller">
     <h1>The details you provided are registered with another supplier.</h1>
   </header>
-  <p>You were invited by ‘{{ token.get("supplier_name") }}’</p>
-  <p>Your account is registered with ‘{{ user.supplier_name }}’</p>
+  <p>You were invited by ‘{{ token.get("supplier_name") }}’.</p>
+  <p>Your account is registered with ‘{{ user.supplier_name }}’.</p>
   <br>
   <p>
     <a href="{{ url_for('.render_login') }}">Log in</a> to your {{ user.supplier_name }} account or email
