@@ -13,11 +13,12 @@ from dmutils.content_loader import ContentNotFoundError
 
 from ...main import main, content_loader
 from ... import data_api_client
-from ..forms.suppliers import EditSupplierForm, EditContactInformationForm, DunsNumberForm, CompaniesHouseNumberForm,\
+from ..forms.suppliers import (
+    EditSupplierForm, EditContactInformationForm, DunsNumberForm, CompaniesHouseNumberForm,
     CompanyContactDetailsForm, CompanyNameForm, EmailAddressForm
-from ..helpers.frameworks import get_declaration_status, frameworks_by_slug, get_frameworks_by_status
+)
+from ..helpers.frameworks import get_frameworks_by_status
 from ..helpers import hash_email
-from ..helpers.services import get_drafts
 from .users import get_current_suppliers_users
 
 

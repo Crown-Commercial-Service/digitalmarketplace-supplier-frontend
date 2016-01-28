@@ -21,14 +21,53 @@
   {% endwith %}
 {% endblock %}
 
-{% block before_sections %}
-  {% if service_data.status == "published" %}
-    <div class="column-one-third">
-      {% with label="View service", url="/g-cloud/services/" + service_id %}
-        {% include "toolkit/link-button.html" %}
+{% block before_heading %}
+  <div class="column-one-whole">
+    {% if service_data.status != 'published' and service_unavailability_information %}
+      {%
+        with
+        message = "If you don’t know why this service was removed or you want to reinstate it, contact <a href='mailto:enquiries@digitalmarketplace.service.gov.uk'>enquiries@digitalmarketplace.service.gov.uk</a>.",
+        type = "temporary-message",
+        heading = "This service was removed on {}".format(service_unavailability_information.createdAt|dateformat)
+      %}
+        {% include "toolkit/notification-banner.html" %}
       {% endwith %}
+    {% elif remove_requested %}
+      <div class="banner-destructive-with-action">
+        <p class="banner-message">
+          Are you sure you want to remove your service?
+        </p>
+        <p class="banner-message">
+          When you remove a service, you can only reinstate it by emailing <a href='mailto:enquiries@digitalmarketplace.service.gov.uk'>enquiries@digitalmarketplace.service.gov.uk</a>.
+        </p>
+        <form class="banner-action" action="{{ url_for('.remove_service', service_id=service_id ) }}" method="POST">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+          <input type="hidden" name="remove_confirmed" value="true" />
+            {%
+              with
+              type = "destructive",
+              label = "Remove service"
+            %}
+              {% include "toolkit/button.html" %}
+            {% endwith %}
+        </form>
+      </div>
+    {% endif %}
+  </div>
+{% endblock %}
+
+{% block before_sections %}
+    <div class="column-two-thirds">
+      <div class="view-service-link">
+        {%
+          with
+          url = "/g-cloud/services/{}".format(service_id),
+          text = "View service page on the Digital Marketplace"
+        %}
+          {% include "toolkit/secondary-action-link.html" %}
+        {% endwith %}
+      </div>
     </div>
-  {% endif %}
   {% if error %}
     <div class="column-one-whole">
       {% with
@@ -39,11 +78,37 @@
       {% endwith %}
     </div>
   {% endif %}
-    <div class="column-one-whole">
-      {% include "services/_edit-status.html" %}
-    </div>
 {% endblock %}
 
 {% block edit_link %}
-  {{ summary.top_link("Edit", url_for(".edit_section", service_id=service_id, section_id=section.id)) }}
+  {% if 'EDIT_SECTIONS' is active_feature %}
+    {{ summary.top_link("Edit", url_for(".edit_section", service_id=service_id, section_id=section.id)) }}
+  {% endif %}
+{% endblock %}
+
+{% block after_sections %}
+  {% if service_data.status == 'published' and not remove_requested %}
+    <div class="column-two-thirds">
+      <div class="edit-service-status-panel">
+        <h2>Remove this service</h2>
+        <p>If you remove a service, it won’t be available to buy on the Digital Marketplace
+          and it won’t appear in search results.</p>
+        <p>Your service page will be updated to include a message showing users that the service
+          is no longer available to buy.</p>
+        <p>You’ll need to email
+          <a href="mailto:enquiries@digitalmarketplace.service.gov.uk">enquiries@digitalmarketplace.service.gov.uk</a>
+           to reinstate your service.</p>
+        <form action="{{ url_for('.remove_service', service_id=service_id ) }}" method="POST">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+            {%
+              with
+              type = "destructive",
+              label = "Remove service"
+            %}
+              {% include "toolkit/button.html" %}
+            {% endwith %}
+        </form>
+      </div>
+    </div>
+  {% endif %}
 {% endblock %}

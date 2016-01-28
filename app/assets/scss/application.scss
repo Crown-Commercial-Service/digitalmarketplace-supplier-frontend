@@ -1,3 +1,4 @@
+// GOVUK Front-end toolkit styles
 @import "_phase_banner.scss";
 @import "_grid_layout.scss";
 @import "_typography.scss";
@@ -22,29 +23,35 @@ $path: "/suppliers/static/images/";
   margin-bottom: $gutter * 2;
 }
 
-@import "toolkit/_digital-marketplace-colours.scss";
-@import "toolkit/_buttons.scss";
+// Digital Marketplace Front-end toolkit styles
 @import "toolkit/_breadcrumb.scss";
 @import "toolkit/_browse-list.scss";
-@import "toolkit/_page-headings.scss";
-@import "toolkit/search/_search-result.scss";
+@import "toolkit/_buttons.scss";
+@import "toolkit/_contact-details";
+@import "toolkit/_digital-marketplace-colours.scss";
+@import "toolkit/_document";
+@import "toolkit/_grids.scss";
+@import "toolkit/_link-button";
 @import "toolkit/_notification-banners.scss";
+@import "toolkit/_page-headings.scss";
 @import "toolkit/_service-id.scss";
-@import "toolkit/document";
-@import "toolkit/contact-details";
-@import "toolkit/link-button";
-@import "toolkit/temporary-message.scss";
-@import "toolkit/forms/_questions.scss";
-@import "toolkit/forms/_summary.scss";
+@import "toolkit/_temporary-message.scss";
 @import "toolkit/forms/_hint.scss";
-@import "toolkit/forms/_selection-buttons.scss";
-@import "toolkit/forms/_textboxes.scss";
-@import "toolkit/forms/_validation.scss";
-@import "toolkit/forms/_upload.scss";
 @import "toolkit/forms/_pricing.scss";
+@import "toolkit/forms/_questions.scss";
+@import "toolkit/forms/_selection-buttons.scss";
+@import "toolkit/forms/_summary.scss";
+@import "toolkit/forms/_textboxes.scss";
+@import "toolkit/forms/_upload.scss";
+@import "toolkit/forms/_validation.scss";
+@import "toolkit/search/_search-result.scss";
 
+/* Blocks shared between multiple selectors */
+@import "shared_placeholders/_temporary-messages.scss";
+
+
+// Suppliers app styles
 @import "_text.scss";
-@import "_grids.scss";
 @import "_footer.scss";
 @import "_lists.scss";
 @import "_forms.scss";
@@ -53,7 +60,7 @@ $path: "/suppliers/static/images/";
 @import "_single-summary-page.scss";
 
 @import "_service-status.scss";
-@import "_return-link.scss";
+@import "_view-service-link.scss";
 @import "_framework-application.scss";
 @import "_assurance-question.scss";
 @import "_supplier-declaration.scss";

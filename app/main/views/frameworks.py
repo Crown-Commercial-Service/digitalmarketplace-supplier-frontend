@@ -22,12 +22,12 @@ from dmutils.documents import (
 from ... import data_api_client
 from ...main import main, content_loader
 from ..helpers import hash_email
-from ..helpers.frameworks import get_declaration_status, \
-    get_last_modified_from_first_matching_file, register_interest_in_framework, \
-    get_supplier_on_framework_from_info, get_declaration_status_from_info, \
-    get_supplier_framework_info, get_framework, get_framework_and_lot, \
-    count_drafts_by_lot, get_statuses_for_lot, has_one_service_limit, \
+from ..helpers.frameworks import (
+    get_declaration_status, get_last_modified_from_first_matching_file, register_interest_in_framework,
+    get_supplier_on_framework_from_info, get_declaration_status_from_info, get_supplier_framework_info,
+    get_framework, get_framework_and_lot, count_drafts_by_lot, get_statuses_for_lot, has_one_service_limit,
     countersigned_framework_agreement_exists_in_bucket
+)
 from ..helpers.validation import get_validator
 from ..helpers.services import (
     get_signed_document_url,

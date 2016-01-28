@@ -3,16 +3,14 @@ import six
 from flask_login import login_required, current_user
 from itsdangerous import BadSignature, SignatureExpired
 from datetime import datetime
-from flask import current_app, flash, redirect, render_template, url_for, \
-    request, abort
+from flask import current_app, flash, redirect, render_template, url_for, request, abort
 from flask_login import logout_user, login_user
 
 from dmapiclient import HTTPError
 from dmapiclient.audit import AuditTypes
 from dmutils.user import user_has_role, User
 from dmutils.formats import DATETIME_FORMAT
-from dmutils.email import send_email, \
-    generate_token, decode_token, MandrillException
+from dmutils.email import send_email, generate_token, decode_token, MandrillException
 
 from .. import main
 from ..forms.auth_forms import LoginForm, EmailAddressForm, ChangePasswordForm, CreateUserForm

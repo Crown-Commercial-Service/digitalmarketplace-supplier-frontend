@@ -10,10 +10,8 @@ import mock
 from lxml import html
 from freezegun import freeze_time
 
-from nose.tools import assert_equal, assert_true, assert_false, \
-    assert_in, assert_not_in
+from nose.tools import assert_equal, assert_true, assert_false, assert_in, assert_not_in
 from tests.app.helpers import BaseApplicationTest
-from app.main import content_loader
 
 
 class TestListServices(BaseApplicationTest):
@@ -145,6 +143,13 @@ class TestSupplierUpdateService(BaseApplicationTest):
                 'supplierId': 1234 if service_belongs_to_user else 1235
             }
         }
+        if service_status == 'published':
+            data_api_client.update_service_status.return_value = data_api_client.get_service.return_value
+        else:
+            data_api_client.get_service.return_value['serviceMadeUnavailableAuditEvent'] = {
+                "createdAt": "2015-03-23T09:30:00.00001Z"
+            }
+
         data_api_client.get_framework.return_value = {
             'frameworks': {
                 'name': 'G-Cloud 6',
@@ -152,38 +157,15 @@ class TestSupplierUpdateService(BaseApplicationTest):
             }
         }
 
-    def _post_status_update(
-            self, status, expected_status_code):
-        res = self.client.post('/suppliers/services/123', data={
-            'status': status,
-        })
-        assert_equal(res.status_code, expected_status_code)
+    def _post_remove_service(self, service_should_be_modifiable, failing_status_code=400):
 
-    def _post_status_updates(
-            self,
-            service_should_be_modifiable=True,
-            failing_status_code=400
-    ):
         expected_status_code = \
             302 if service_should_be_modifiable else failing_status_code
 
-        # Should work if service not removed/disabled or another supplier's
-        self._post_status_update('private', expected_status_code)
-        self._post_status_update('public', expected_status_code)
+        res = self.client.post('/suppliers/services/123/remove')
+        assert_equal(res.status_code, expected_status_code)
 
-        # Database statuses should not work
-        self._post_status_update('published', failing_status_code)
-        self._post_status_update('enabled', failing_status_code)
-
-        # Removing a service should be impossible
-        self._post_status_update('removed', failing_status_code)
-        self._post_status_update('disabled', failing_status_code)
-
-        # non-statuses should not work
-        self._post_status_update('orange', failing_status_code)
-        self._post_status_update('banana', failing_status_code)
-
-    def test_should_view_public_service_with_correct_input_checked(
+    def test_should_view_public_service_with_correct_message(
             self, data_api_client
     ):
         self.login()
@@ -196,21 +178,33 @@ class TestSupplierUpdateService(BaseApplicationTest):
             'Service name 123' in res.get_data(as_text=True)
         )
 
-        # check that 'public' is selected.
-        assert_true(
-            '<input type="radio" name="status" id="input-status-1" value="Public" checked="checked"'  # noqa
-            in res.get_data(as_text=True)
-        )
-        assert_false(
-            '<input type="radio" name="status" id="input-status-2" value="Private" checked="checked"'  # noqa
-            in res.get_data(as_text=True)
+        # first message should be there
+        self.assert_in_strip_whitespace(
+            'Remove this service',
+            res.get_data(as_text=True)
         )
 
-        self._post_status_updates(
-            service_should_be_modifiable=True
+        # confirmation message should not have been triggered yet
+        self.assert_not_in_strip_whitespace(
+            'Are you sure you want to remove your service?',
+            res.get_data(as_text=True)
         )
 
-    def test_should_view_private_service_with_correct_input_checked(
+        # service removed message should not have been triggered yet
+        self.assert_not_in_strip_whitespace(
+            'Service name 123 has been removed.',
+            res.get_data(as_text=True)
+        )
+
+        # service removed notification banner shouldn't be there either
+        self.assert_not_in_strip_whitespace(
+            '<h2>This service was removed on Monday 23 March 2015</h2>',
+            res.get_data(as_text=True)
+        )
+
+        self._post_remove_service(service_should_be_modifiable=True)
+
+    def test_should_view_private_service_with_correct_message(
             self, data_api_client
     ):
         self.login()
@@ -222,19 +216,17 @@ class TestSupplierUpdateService(BaseApplicationTest):
             'Service name 123' in res.get_data(as_text=True)
         )
 
-        # check that 'public' is not selected.
-        assert_false(
-            '<input type="radio" name="status" id="input-status-1" value="Public" checked="checked"'  # noqa
-            in res.get_data(as_text=True)
-        )
-        assert_true(
-            '<input type="radio" name="status" id="input-status-2" value="Private" checked="checked"'  # noqa
-            in res.get_data(as_text=True)
+        self.assert_in_strip_whitespace(
+            '<h2>This service was removed on Monday 23 March 2015</h2>',
+            res.get_data(as_text=True)
         )
 
-        self._post_status_updates(
-            service_should_be_modifiable=True
+        self.assert_not_in_strip_whitespace(
+            '<h2>Remove this service</h2>',
+            res.get_data(as_text=True)
         )
+
+        self._post_remove_service(service_should_be_modifiable=False)
 
     def test_should_view_disabled_service_with_removed_message(
             self, data_api_client
@@ -244,17 +236,67 @@ class TestSupplierUpdateService(BaseApplicationTest):
 
         res = self.client.get('/suppliers/services/123')
         assert_equal(res.status_code, 200)
-        assert_true(
-            'Service name 123' in res.get_data(as_text=True)
+        self.assert_in_strip_whitespace(
+            'Service name 123',
+            res.get_data(as_text=True)
         )
 
-        assert_true(
-            'This service has been removed'
-            in res.get_data(as_text=True)
+        self.assert_in_strip_whitespace(
+            '<h2>This service was removed on Monday 23 March 2015</h2>',
+            res.get_data(as_text=True)
         )
 
-        self._post_status_updates(
-            service_should_be_modifiable=False
+        self._post_remove_service(service_should_be_modifiable=False)
+
+    def test_should_view_confirmation_message_if_first_remove_service_button_clicked(
+            self, data_api_client
+    ):
+        self.login()
+        self._get_service(data_api_client, service_status='published')
+
+        res = self.client.post('/suppliers/services/123/remove', follow_redirects=True)
+
+        assert_equal(res.status_code, 200)
+
+        # first message should be gone
+        self.assert_not_in_strip_whitespace(
+            'Remove this service',
+            res.get_data(as_text=True)
+        )
+
+        # confirmation message should be there
+        self.assert_in_strip_whitespace(
+            'Are you sure you want to remove your service?',
+            res.get_data(as_text=True)
+        )
+
+        # service removed message should not have been triggered yet
+        self.assert_not_in_strip_whitespace(
+            'Service name 123 has been removed.',
+            res.get_data(as_text=True)
+        )
+
+    def test_should_view_correct_notification_message_if_service_removed(
+            self, data_api_client
+    ):
+        self.login()
+        self._get_service(data_api_client, service_status='published')
+
+        res = self.client.post(
+            '/suppliers/services/123/remove',
+            data={'remove_confirmed': True},
+            follow_redirects=True)
+
+        assert_equal(res.status_code, 200)
+        self.assert_in_strip_whitespace(
+            'Service name 123 has been removed.',
+            res.get_data(as_text=True)
+        )
+
+        # the "are you sure" message should be gone
+        self.assert_not_in_strip_whitespace(
+            'Are you sure you want to remove your service?',
+            res.get_data(as_text=True)
         )
 
     def test_should_not_view_other_suppliers_services(
@@ -267,10 +309,7 @@ class TestSupplierUpdateService(BaseApplicationTest):
         assert_equal(res.status_code, 404)
 
         # Should all be 404 if service doesn't belong to supplier
-        self._post_status_updates(
-            service_should_be_modifiable=False,
-            failing_status_code=404
-        )
+        self._post_remove_service(service_should_be_modifiable=False, failing_status_code=404)
 
     def test_should_redirect_to_login_if_not_logged_in(self, data_api_client):
         res = self.client.get("/suppliers/services/123")

@@ -1,23 +1,9 @@
-.service-status,
-%service-status {
-  font-weight: bold;
-}
+.edit-service-status-panel {
+  h2 {
+    @extend .summary-item-heading;
+  }
 
-.service-status-removed,
-.service-status-disabled {
-  @extend %service-status;
-  color: $mellow-red;
-}
-
-.service-status-published,
-.service-status-public {
-  @extend %service-status;
-  color: $button-colour;
-}
-
-.service-status-unpublished,
-.service-status-enabled,
-.service-status-private {
-  @extend %service-status;
-  color: $secondary-text-colour;
+  p {
+    margin: 10px 0;
+  }
 }

@@ -1,16 +1,12 @@
 from flask_login import login_required, current_user
-from flask import render_template, request, redirect, url_for, abort, flash, \
-    current_app
+from flask import render_template, request, redirect, url_for, abort, flash, current_app
 
 from ... import data_api_client, flask_featureflags
 from ...main import main, content_loader
-from ..helpers.services import (
-    is_service_modifiable, is_service_associated_with_supplier,
-    get_signed_document_url, count_unanswered_questions,
-)
+from ..helpers.services import is_service_associated_with_supplier, get_signed_document_url, count_unanswered_questions
 from ..helpers.frameworks import get_framework_and_lot, get_declaration_status, has_one_service_limit
 
-from dmapiclient import APIError, HTTPError
+from dmapiclient import HTTPError
 from dmutils import s3
 from dmutils.documents import upload_service_documents
 
@@ -27,9 +23,6 @@ def list_services():
     return render_template(
         "services/list_services.html",
         services=suppliers_services,
-        updated_service_id=request.args.get('updated_service_id'),
-        updated_service_name=request.args.get('updated_service_name'),
-        updated_service_status=request.args.get('updated_service_status'),
         **main.config['BASE_TEMPLATE_DATA']), 200
 
 
@@ -40,69 +33,67 @@ def list_services():
 @login_required
 @flask_featureflags.is_active_feature('EDIT_SERVICE_PAGE')
 def edit_service(service_id):
-    service = data_api_client.get_service(service_id).get('services')
+    service = data_api_client.get_service(service_id)
+    service_unavailability_information = service.get('serviceMadeUnavailableAuditEvent')
+    service = service.get('services')
 
     if not is_service_associated_with_supplier(service):
         abort(404)
 
-    return _update_service_status(service)
+    template_data = main.config['BASE_TEMPLATE_DATA']
+    framework = data_api_client.get_framework(service['frameworkSlug'])['frameworks']
+
+    content = content_loader.get_manifest(framework['slug'], 'edit_service').filter(service)
+    remove_requested = True if request.args.get('remove_requested') else False
+
+    return render_template(
+        "services/service.html",
+        service_id=service.get('id'),
+        service_data=service,
+        service_unavailability_information=service_unavailability_information,
+        framework=framework,
+        sections=content.summary(service),
+        remove_requested=remove_requested,
+        **dict(**template_data))
 
 
-@main.route('/services/<string:service_id>', methods=['POST'])
+@main.route('/services/<string:service_id>/remove', methods=['POST'])
 @login_required
 @flask_featureflags.is_active_feature('EDIT_SERVICE_PAGE')
-def update_service_status(service_id):
+def remove_service(service_id):
     service = data_api_client.get_service(service_id).get('services')
 
     if not is_service_associated_with_supplier(service):
         abort(404)
 
-    if not is_service_modifiable(service):
-        return _update_service_status(
-            service,
-            "Sorry, but this service isn't modifiable."
-        )
+    # suppliers can't un-remove a service
+    if service.get('status') != 'published':
+        abort(400)
 
-    # Value should be either public or private
-    status = request.form.get('status', '').lower()
+    if request.form.get('remove_confirmed'):
 
-    translate_frontend_to_api = {
-        'public': 'published',
-        'private': 'enabled'
-    }
-
-    if status in translate_frontend_to_api.keys():
-        status = translate_frontend_to_api[status]
-    else:
-        return _update_service_status(
-            service,
-            "Sorry, but '{}' is not a valid status.".format(status)
-        )
-
-    try:
         updated_service = data_api_client.update_service_status(
-            service.get('id'), status,
+            service.get('id'),
+            'enabled',
             current_user.email_address)
 
-    except APIError:
+        updated_service = updated_service.get('services')
 
-        return _update_service_status(
-            service,
-            "Sorry, there's been a problem updating the status."
-        )
+        flash({
+            'updated_service_name': updated_service.get('serviceName')
+        }, 'remove_service')
 
-    updated_service = updated_service.get("services")
-    return redirect(
-        url_for(".list_services",
-                updated_service_id=updated_service.get("id"),
-                updated_service_name=updated_service.get("serviceName"),
-                updated_service_status=updated_service.get("status"))
-    )
+        return redirect(url_for(".list_services"))
+
+    return redirect(url_for(
+        ".edit_service",
+        service_id=service_id,
+        remove_requested=True))
 
 
 @main.route('/services/<string:service_id>/edit/<string:section_id>', methods=['GET'])
 @login_required
-@flask_featureflags.is_active_feature('EDIT_SERVICE_PAGE')
+@flask_featureflags.is_active_feature('EDIT_SECTIONS')
 def edit_section(service_id, section_id):
     service = data_api_client.get_service(service_id)
     if service is None:
@@ -128,7 +119,7 @@ def edit_section(service_id, section_id):
 
 @main.route('/services/<string:service_id>/edit/<string:section_id>', methods=['POST'])
 @login_required
-@flask_featureflags.is_active_feature('EDIT_SERVICE_PAGE')
+@flask_featureflags.is_active_feature('EDIT_SECTIONS')
 def update_section(service_id, section_id):
     service = data_api_client.get_service(service_id)
     if service is None:
@@ -247,14 +238,10 @@ def copy_draft_service(framework_slug, lot_slug, service_id):
         {'lot': lot['slug']}
     )
 
-    try:
-        draft_copy = data_api_client.copy_draft_service(
-            service_id,
-            current_user.email_address
-        )['services']
-
-    except APIError as e:
-        abort(e.status_code)
+    draft_copy = data_api_client.copy_draft_service(
+        service_id,
+        current_user.email_address
+    )['services']
 
     return redirect(url_for(".edit_service_submission",
                             framework_slug=framework['slug'],
@@ -272,14 +259,10 @@ def complete_draft_service(framework_slug, lot_slug, service_id):
     if not is_service_associated_with_supplier(draft):
         abort(404)
 
-    try:
-        data_api_client.complete_draft_service(
-            service_id,
-            current_user.email_address
-        )
-
-    except APIError as e:
-        abort(e.status_code)
+    data_api_client.complete_draft_service(
+        service_id,
+        current_user.email_address
+    )
 
     flash({
         'service_name': draft.get('serviceName') or draft.get('lotName'),
@@ -309,13 +292,10 @@ def delete_draft_service(framework_slug, lot_slug, service_id):
         abort(404)
 
     if request.form.get('delete_confirmed') == 'true':
-        try:
-            data_api_client.delete_draft_service(
-                service_id,
-                current_user.email_address
-            )
-        except APIError as e:
-            abort(e.status_code)
+        data_api_client.delete_draft_service(
+            service_id,
+            current_user.email_address
+        )
 
         flash({'service_name': draft.get('serviceName', draft['lotName'])}, 'service_deleted')
         if lot['oneServiceLimit']:
@@ -576,39 +556,3 @@ def remove_subsection(framework_slug, lot_slug, service_id, section_id, question
                 service_id=service_id,
                 confirm_remove=None
                 ))
-
-
-def _update_service_status(service, error_message=None):
-
-    template_data = main.config['BASE_TEMPLATE_DATA']
-    status_code = 400 if error_message else 200
-    framework = data_api_client.get_framework(service['frameworkSlug'])['frameworks']
-
-    content = content_loader.get_manifest(framework['slug'], 'edit_service').filter(service)
-
-    question = {
-        'question': 'Choose service status',
-        'hint': 'Private services don\'t appear in search results '
-                'and don\'t have a URL',
-        'name': 'status',
-        'type': 'radio',
-        'inline': True,
-        'value': "Public" if service['status'] == 'published' else "Private",
-        'options': [
-            {
-                'label': 'Public'
-            },
-            {
-                'label': 'Private'
-            }
-        ]
-    }
-
-    return render_template(
-        "services/service.html",
-        service_id=service.get('id'),
-        service_data=service,
-        framework=framework,
-        sections=content.summary(service),
-        error=error_message,
-        **dict(question, **template_data)), status_code
