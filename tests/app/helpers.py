@@ -2,6 +2,7 @@
 import re
 from mock import patch
 from app import create_app
+from tests import login_for_tests
 from werkzeug.http import parse_cookie
 from app import data_api_client
 from datetime import datetime, timedelta
@@ -89,6 +90,7 @@ FULL_G7_SUBMISSION = {
 class BaseApplicationTest(object):
     def setup(self):
         self.app = create_app('test')
+        self.app.register_blueprint(login_for_tests)
         self.client = self.app.test_client()
         self.get_user_patch = None
 
@@ -225,13 +227,8 @@ class BaseApplicationTest(object):
             )
             self.get_user_patch.start()
 
-            self.client.post("/suppliers/login", data={
-                'email_address': 'valid@email.com',
-                'password': '1234567890'
-            })
-
-            login_api_client.authenticate_user.assert_called_once_with(
-                "valid@email.com", "1234567890")
+            response = self.client.get("/auto-login")
+            assert response.status_code == 200
 
     def assert_in_strip_whitespace(self, needle, haystack):
         return assert_in(self.strip_all_whitespace(needle), self.strip_all_whitespace(haystack))
