@@ -1,4 +1,5 @@
-from flask import render_template
+import urllib
+from flask import redirect, render_template, request
 from app.main import main
 from dmapiclient import APIError
 from dmutils.s3 import S3ResponseError
@@ -18,6 +19,14 @@ def s3_response_error_handler(e):
 @main.app_errorhandler(QuestionNotFoundError)
 def content_loader_error_handler(e):
     return _render_error_page(400)
+
+
+@main.app_errorhandler(401)
+def page_unauthorized(e):
+    if request.method == 'GET':
+        return redirect('/login?next={}'.format(urllib.quote_plus(request.path)))
+    else:
+        return redirect('/login')
 
 
 @main.app_errorhandler(404)
