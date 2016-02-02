@@ -1,16 +1,13 @@
 from __future__ import absolute_import
 import six
 from flask_login import login_required, current_user
-from itsdangerous import BadSignature, SignatureExpired
-from datetime import datetime
 from flask import current_app, flash, redirect, render_template, url_for, abort
 from flask_login import login_user
 
 from dmapiclient import HTTPError
 from dmapiclient.audit import AuditTypes
 from dmutils.user import User
-from dmutils.formats import DATETIME_FORMAT
-from dmutils.email import send_email, generate_token, decode_token, MandrillException
+from dmutils.email import decode_invitation_token, generate_token, send_email, MandrillException
 
 from .. import main
 from ..forms.auth_forms import EmailAddressForm, CreateUserForm
@@ -18,16 +15,12 @@ from ..helpers import hash_email
 from ... import data_api_client
 
 
-ONE_DAY_IN_SECONDS = 86400
-SEVEN_DAYS_IN_SECONDS = 604800
-
-
 @main.route('/create-user/<string:encoded_token>', methods=["GET"])
 def create_user(encoded_token):
     form = CreateUserForm()
     template_data = main.config['BASE_TEMPLATE_DATA']
 
-    token = decode_invitation_token(encoded_token)
+    token = decode_invitation_token(encoded_token, role='supplier')
 
     if token is None:
         current_app.logger.warning(
@@ -62,7 +55,7 @@ def submit_create_user(encoded_token):
     template_data = main.config['BASE_TEMPLATE_DATA']
     form = CreateUserForm()
 
-    token = decode_invitation_token(encoded_token)
+    token = decode_invitation_token(encoded_token, role='supplier')
     if token is None:
         current_app.logger.warning("createuser.token_invalid: {encoded_token}",
                                    extra={'encoded_token': encoded_token})
@@ -178,67 +171,3 @@ def send_invite_user():
             "auth/submit-email-address.html",
             form=form,
             **template_data), 400
-
-
-def decode_password_reset_token(token):
-    try:
-        decoded, timestamp = decode_token(
-            token,
-            main.config["SECRET_KEY"],
-            main.config["RESET_PASSWORD_SALT"],
-            ONE_DAY_IN_SECONDS
-        )
-    except SignatureExpired:
-        current_app.logger.info("Password reset attempt with expired token.")
-        flash('token_expired', 'error')
-        return None
-    except BadSignature as e:
-        current_app.logger.info("Error changing password: {error}", extra={'error': six.text_type(e)})
-        flash('token_invalid', 'error')
-        return None
-
-    user = data_api_client.get_user(decoded["user"])
-    user_last_changed_password_at = datetime.strptime(
-        user['users']['passwordChangedAt'],
-        DATETIME_FORMAT
-    )
-
-    if token_created_before_password_last_changed(
-            timestamp,
-            user_last_changed_password_at
-    ):
-        current_app.logger.info("Error changing password: Token generated earlier than password was last changed.")
-        flash('token_invalid', 'error')
-        return None
-
-    return decoded
-
-
-def decode_invitation_token(encoded_token):
-    try:
-        token, timestamp = decode_token(
-            encoded_token,
-            current_app.config['SHARED_EMAIL_KEY'],
-            current_app.config['INVITE_EMAIL_SALT'],
-            SEVEN_DAYS_IN_SECONDS
-        )
-        if all(field in token for field in ("email_address", 'supplier_id', 'supplier_name')):
-            return token
-        else:
-            raise ValueError('Missing invalid invitation token')
-    except SignatureExpired as e:
-        current_app.logger.info("Invitation attempt with expired token. error {error}",
-                                extra={'error': six.text_type(e)})
-        return None
-    except BadSignature as e:
-        current_app.logger.info("Invitation reset attempt with expired token. error {error}",
-                                extra={'error': six.text_type(e)})
-        return None
-    except ValueError as e:
-        current_app.logger.info("error {error}",
-                                extra={'error': six.text_type(e)})
-        return None
-
-
-def token_created_before_password_last_changed(token_timestamp, user_timestamp):
-    return token_timestamp < user_timestamp
