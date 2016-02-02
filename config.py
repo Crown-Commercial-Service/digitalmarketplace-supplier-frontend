@@ -95,7 +95,7 @@ class Test(Config):
     SHARED_EMAIL_KEY = "KEY"
     DM_CLARIFICATION_QUESTION_EMAIL = 'digitalmarketplace@mailinator.com'
 
-    FEATURE_FLAGS_EDIT_SECTIONS = enabled_since('2016-01-20')
+    FEATURE_FLAGS_EDIT_SECTIONS = enabled_since('2015-06-03')
 
 
 class Development(Config):
@@ -103,7 +103,7 @@ class Development(Config):
     SESSION_COOKIE_SECURE = False
 
     # Dates not formatted like YYYY-(0)M-(0)D will fail
-    FEATURE_FLAGS_EDIT_SECTIONS = enabled_since('2016-01-25')
+    FEATURE_FLAGS_EDIT_SECTIONS = enabled_since('2015-06-03')
 
 
 class Live(Config):
@@ -124,7 +124,7 @@ class Production(Live):
 
 class Staging(Production):
     pass
-    FEATURE_FLAGS_EDIT_SECTIONS = enabled_since('2016-01-25')
+    FEATURE_FLAGS_EDIT_SECTIONS = enabled_since('2015-06-03')
 
 configs = {
     'development': Development,
