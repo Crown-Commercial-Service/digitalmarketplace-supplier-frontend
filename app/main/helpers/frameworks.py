@@ -93,17 +93,17 @@ def get_supplier_framework_info(data_api_client, framework_slug):
 
 
 def get_declaration_status_from_info(supplier_framework_info):
-    if not (supplier_framework_info or {}).get('declaration'):
+    if not supplier_framework_info or not supplier_framework_info.get('declaration'):
         return 'unstarted'
-    else:
-        return supplier_framework_info['declaration'].get('status', 'unstarted')
+
+    return supplier_framework_info['declaration'].get('status', 'unstarted')
 
 
 def get_supplier_on_framework_from_info(supplier_framework_info):
-    if supplier_framework_info is None:
+    if not supplier_framework_info:
         return False
-    else:
-        return bool(supplier_framework_info.get('onFramework'))
+
+    return bool(supplier_framework_info.get('onFramework'))
 
 
 def question_references(data, get_question):

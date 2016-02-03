@@ -11,7 +11,7 @@ except ImportError:
     import urllib.parse as urlparse
 
 
-def get_drafts(apiclient, supplier_id, framework_slug):
+def get_drafts(apiclient, framework_slug):
     try:
         drafts = apiclient.find_draft_services(
             current_user.supplier_id,
@@ -27,8 +27,8 @@ def get_drafts(apiclient, supplier_id, framework_slug):
     return drafts, complete_drafts
 
 
-def get_lot_drafts(apiclient, supplier_id, framework_slug, lot_slug):
-    drafts, complete_drafts = get_drafts(apiclient, supplier_id, framework_slug)
+def get_lot_drafts(apiclient, framework_slug, lot_slug):
+    drafts, complete_drafts = get_drafts(apiclient, framework_slug)
     return (
         [draft for draft in drafts if draft['lot'] == lot_slug],
         [draft for draft in complete_drafts if draft['lot'] == lot_slug]

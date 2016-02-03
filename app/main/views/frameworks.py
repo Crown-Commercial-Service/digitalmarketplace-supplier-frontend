@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 import itertools
 from datetime import datetime
-from dmutils.content_loader import ContentNotFoundError
 
 from dateutil.parser import parse as date_parse
 from flask import render_template, request, abort, flash, redirect, url_for, current_app
@@ -30,10 +29,8 @@ from ..helpers.frameworks import (
 )
 from ..helpers.validation import get_validator
 from ..helpers.services import (
-    get_signed_document_url,
-    get_drafts, get_lot_drafts, count_unanswered_questions
+    get_signed_document_url, get_drafts, get_lot_drafts, count_unanswered_questions
 )
-
 
 CLARIFICATION_QUESTION_NAME = 'clarification_question'
 
@@ -64,7 +61,7 @@ def framework_dashboard(framework_slug):
                 extra={'error': six.text_type(e), 'supplier_id': current_user.supplier_id}
             )
 
-    drafts, complete_drafts = get_drafts(data_api_client, current_user.supplier_id, framework_slug)
+    drafts, complete_drafts = get_drafts(data_api_client, framework_slug)
 
     supplier_framework_info = get_supplier_framework_info(data_api_client, framework_slug)
     declaration_status = get_declaration_status_from_info(supplier_framework_info)
@@ -77,15 +74,13 @@ def framework_dashboard(framework_slug):
     key_list = s3.S3(current_app.config['DM_COMMUNICATIONS_BUCKET']).list(framework_slug, load_timestamps=True)
     key_list.reverse()
 
-    try:
-        first_page = content_loader.get_manifest(
-            framework_slug, 'declaration'
-        ).get_next_editable_section_id()
-    except ContentNotFoundError:
-        first_page = None
+    first_page = content_loader.get_manifest(
+        framework_slug, 'declaration'
+    ).get_next_editable_section_id()
 
     supplier_pack_filename = '{}-supplier-pack.zip'.format(framework_slug)
 
+    # a lot of these variables are being set quite differently on the supplier dashboard
     return render_template(
         "frameworks/dashboard.html",
         agreement_countersigned=countersigned_framework_agreement_exists_in_bucket(
@@ -126,7 +121,7 @@ def framework_dashboard(framework_slug):
 def framework_submission_lots(framework_slug):
     framework = get_framework(data_api_client, framework_slug, open_only=False)
 
-    drafts, complete_drafts = get_drafts(data_api_client, current_user.supplier_id, framework_slug)
+    drafts, complete_drafts = get_drafts(data_api_client, framework_slug)
     declaration_status = get_declaration_status(data_api_client, framework_slug)
     application_made = len(complete_drafts) > 0 and declaration_status == 'complete'
     if framework['status'] == 'pending' and not application_made:
@@ -165,7 +160,7 @@ def framework_submission_lots(framework_slug):
 def framework_submission_services(framework_slug, lot_slug):
     framework, lot = get_framework_and_lot(data_api_client, framework_slug, lot_slug, open_only=False)
 
-    drafts, complete_drafts = get_lot_drafts(data_api_client, current_user.supplier_id, framework_slug, lot_slug)
+    drafts, complete_drafts = get_lot_drafts(data_api_client, framework_slug, lot_slug)
     declaration_status = get_declaration_status(data_api_client, framework_slug)
     if framework['status'] == 'pending' and declaration_status != 'complete':
         abort(404)
