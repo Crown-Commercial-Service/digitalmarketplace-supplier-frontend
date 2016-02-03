@@ -192,15 +192,8 @@
             </li>
           {% elif framework.status in ['pending', 'standstill'] and application_made %}
             <li class="browse-list-item">
-              <a class="browse-list-item-link" href="{{ url_for('.framework_submission_lots', framework_slug=framework.slug) }}">
-                View services
-              </a>
-              <div class="browse-list-item-status-happy">
-                <p class="browse-list-item-status-title">
-                  You submitted
-                </p>
-              </div>
-              <ul class="browse-list-item-status-list">
+              <h2>You submitted:</h2>
+              <ul class="list-bullet">
                 {% for lot in completed_lots %}
                   {% if lot.one_service_limit %}
                     <li>{{ lot.name }}</li>
@@ -212,6 +205,9 @@
                   {% endif %}
                 {% endfor %}
               </ul>
+              <a href="{{ url_for('.framework_submission_lots', framework_slug=framework.slug) }}">
+                View submitted services
+              </a>
             </li>
           {% endif %}
 

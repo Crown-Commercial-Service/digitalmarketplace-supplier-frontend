@@ -27,6 +27,9 @@ ol {
 .list-bullet,
 .list-number {
   margin-top: 5px;
+}
+
+.list-number {
   margin-bottom: 20px;
 }
 
@@ -44,6 +47,7 @@ ol {
 
   ul {
     padding-bottom: 0;
+    margin-bottom: 20px;
 
     @include media(tablet) {
       padding-bottom: $gutter-half;
