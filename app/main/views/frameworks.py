@@ -79,13 +79,15 @@ def framework_dashboard(framework_slug):
         framework_slug, 'declaration'
     ).get_next_editable_section_id()
 
+    # filenames
     supplier_pack_filename = '{}-supplier-pack.zip'.format(framework_slug)
+    result_letter_filename = RESULT_LETTER_FILENAME
+    countersigned_agreement_filename = None
+    if countersigned_framework_agreement_exists_in_bucket(framework_slug, current_app.config['DM_AGREEMENTS_BUCKET']):
+        countersigned_agreement_filename = COUNTERSIGNED_AGREEMENT_FILENAME
 
-    # a lot of these variables are being set quite differently on the supplier dashboard
     return render_template(
         "frameworks/dashboard.html",
-        agreement_countersigned=countersigned_framework_agreement_exists_in_bucket(
-            framework_slug, current_app.config['DM_AGREEMENTS_BUCKET']),
         application_made=(len(complete_drafts) > 0 and declaration_status == 'complete'),
         completed_lots=[{
             'name': lot['name'],
@@ -113,6 +115,8 @@ def framework_dashboard(framework_slug):
         },
         supplier_is_on_framework=supplier_is_on_framework,
         supplier_pack_filename=supplier_pack_filename,
+        result_letter_filename=result_letter_filename,
+        countersigned_agreement_filename=countersigned_agreement_filename,
         **main.config['BASE_TEMPLATE_DATA']
     ), 200
 

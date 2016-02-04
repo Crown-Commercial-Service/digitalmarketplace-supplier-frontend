@@ -211,13 +211,13 @@
             </li>
           {% endif %}
 
-          {% if framework.status in ['standstill', 'live'] and agreement_countersigned %}
+          {% if framework.status in ['standstill', 'live'] and countersigned_agreement_filename %}
             <li class="unbulleted-item">
-              <a href="{{ url_for('.download_agreement_file', framework_slug=framework.slug, document_name='countersigned-agreement') }}"><span>Download your countersigned framework agreement (.pdf)</span></a>
+              <a href="{{ url_for('.download_agreement_file', framework_slug=framework.slug, document_name=countersigned_agreement_filename) }}"><span>Download your countersigned framework agreement (.pdf)</span></a>
             </li>
 
             <li class="unbulleted-item">
-              <a href="{{ url_for('.download_agreement_file', framework_slug=framework.slug, document_name='result-letter.pdf') }}">
+              <a href="{{ url_for('.download_agreement_file', framework_slug=framework.slug, document_name=result_letter_filename) }}">
                 <span>Download your application result letter (.pdf)</span>
               </a>
             </li>
