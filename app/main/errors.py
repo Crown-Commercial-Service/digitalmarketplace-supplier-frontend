@@ -1,4 +1,8 @@
-import urllib
+import sys
+if sys.version_info[0] < 3:
+    from urllib import quote_plus
+else:
+    from urllib.parse import quote_plus
 from flask import redirect, render_template, request
 from app.main import main
 from dmapiclient import APIError
@@ -24,7 +28,7 @@ def content_loader_error_handler(e):
 @main.app_errorhandler(401)
 def page_unauthorized(e):
     if request.method == 'GET':
-        return redirect('/login?next={}'.format(urllib.quote_plus(request.path)))
+        return redirect('/login?next={}'.format(quote_plus(request.path)))
     else:
         return redirect('/login')
 
