@@ -14,8 +14,9 @@ from dmutils.formats import format_service_price, datetimeformat
 from dmutils import s3
 from dmutils.deprecation import deprecated
 from dmutils.documents import (
+    RESULT_LETTER_FILENAME, AGREEMENT_FILENAME, SIGNED_AGREEMENT_PREFIX, COUNTERSIGNED_AGREEMENT_FILENAME,
     get_agreement_document_path, get_signed_url, get_extension, file_is_less_than_5mb, file_is_empty,
-    get_countersigned_agreement_document_path, sanitise_supplier_name
+    sanitise_supplier_name,
 )
 
 from ... import data_api_client
@@ -532,19 +533,19 @@ def upload_framework_agreement(framework_slug):
     agreements_bucket = s3.S3(current_app.config['DM_AGREEMENTS_BUCKET'])
     extension = get_extension(request.files['agreement'].filename)
 
-    # TODO: get rid of this; rewrite `.get_agreement_document_path()` function in dmutils
-    path = '{0}/agreements/{1}/{1}-signed-framework-agreement{2}'.format(
+    path = get_agreement_document_path(
         framework_slug,
         current_user.supplier_id,
-        extension
+        '{}{}'.format(SIGNED_AGREEMENT_PREFIX, extension)
     )
     agreements_bucket.save(
         path,
         request.files['agreement'],
         acl='private',
-        download_filename='{}-{}-signed-framework-agreement{}'.format(
+        download_filename='{}-{}-{}{}'.format(
             sanitise_supplier_name(current_user.supplier_name),
             current_user.supplier_id,
+            SIGNED_AGREEMENT_PREFIX,
             extension
         )
     )
