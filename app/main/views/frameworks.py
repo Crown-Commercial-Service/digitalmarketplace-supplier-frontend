@@ -302,14 +302,9 @@ def download_agreement_file(framework_slug, document_name):
     supplier_framework_info = get_supplier_framework_info(data_api_client, framework_slug)
     if supplier_framework_info is None or not supplier_framework_info.get("declaration"):
         abort(404)
-    legal_supplier_name = supplier_framework_info['declaration']['SQ1-1a']
 
     agreements_bucket = s3.S3(current_app.config['DM_AGREEMENTS_BUCKET'])
-    if document_name == 'countersigned-agreement':
-        path = get_countersigned_agreement_document_path(framework_slug, supplier_framework_info['supplierId'])
-    else:
-        path = get_agreement_document_path(
-            framework_slug, current_user.supplier_id, legal_supplier_name, document_name)
+    path = get_agreement_document_path(framework_slug, current_user.supplier_id, document_name)
     url = get_signed_url(agreements_bucket, path, current_app.config['DM_ASSETS_URL'])
     if not url:
         abort(404)
