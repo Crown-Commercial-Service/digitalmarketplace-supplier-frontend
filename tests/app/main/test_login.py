@@ -5,7 +5,6 @@ from dmapiclient import HTTPError
 from dmapiclient.audit import AuditTypes
 from dmutils.email import generate_token, MandrillException
 from ..helpers import BaseApplicationTest
-from lxml import html
 import mock
 
 EMAIL_EMPTY_ERROR = "Email address must be provided"
@@ -19,6 +18,16 @@ NEW_PASSWORD_CONFIRM_EMPTY_ERROR = "Please confirm your new password"
 
 TOKEN_CREATED_BEFORE_PASSWORD_LAST_CHANGED_ERROR = "This password reset link is invalid."
 USER_LINK_EXPIRED_ERROR = "Check you’ve entered the correct link or ask the person who invited you to send a new invitation."  # noqa
+
+
+class TestSupplierRoleRequired(BaseApplicationTest):
+    def test_buyer_cannot_access_supplier_dashboard(self):
+        with self.app.app_context():
+            self.login_as_buyer()
+            res = self.client.get('/suppliers')
+            assert res.status_code == 302
+            assert res.location == 'http://localhost/login?next=%2Fsuppliers'
+            self.assert_flashes('supplier-role-required', expected_category='error')
 
 
 class TestInviteUser(BaseApplicationTest):
@@ -335,6 +344,7 @@ class TestCreateUser(BaseApplicationTest):
         )
 
         assert res.status_code == 400
+        print("RESPONSE: {}".format(res.get_data(as_text=True)))
         assert "Account already exists" in res.get_data(as_text=True)
 
     @mock.patch('app.main.views.login.data_api_client')

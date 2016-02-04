@@ -3,6 +3,7 @@ from flask import render_template, request, redirect, url_for, abort, flash, cur
 
 from ... import data_api_client, flask_featureflags
 from ...main import main, content_loader
+from ..helpers import supplier_role_required
 from ..helpers.services import is_service_associated_with_supplier, get_signed_document_url, count_unanswered_questions
 from ..helpers.frameworks import get_framework_and_lot, get_declaration_status, has_one_service_limit
 
@@ -12,6 +13,7 @@ from dmutils.documents import upload_service_documents
 
 
 @main.route('/services')
+@supplier_role_required
 @login_required
 def list_services():
     suppliers_services = sorted(
@@ -30,6 +32,7 @@ def list_services():
 
 
 @main.route('/services/<string:service_id>', methods=['GET'])
+@supplier_role_required
 @login_required
 @flask_featureflags.is_active_feature('EDIT_SERVICE_PAGE')
 def edit_service(service_id):
@@ -58,6 +61,7 @@ def edit_service(service_id):
 
 
 @main.route('/services/<string:service_id>/remove', methods=['POST'])
+@supplier_role_required
 @login_required
 @flask_featureflags.is_active_feature('EDIT_SERVICE_PAGE')
 def remove_service(service_id):
@@ -92,6 +96,7 @@ def remove_service(service_id):
 
 
 @main.route('/services/<string:service_id>/edit/<string:section_id>', methods=['GET'])
+@supplier_role_required
 @login_required
 @flask_featureflags.is_active_feature('EDIT_SECTIONS')
 def edit_section(service_id, section_id):
@@ -118,6 +123,7 @@ def edit_section(service_id, section_id):
 
 
 @main.route('/services/<string:service_id>/edit/<string:section_id>', methods=['POST'])
+@supplier_role_required
 @login_required
 @flask_featureflags.is_active_feature('EDIT_SECTIONS')
 def update_section(service_id, section_id):
@@ -161,6 +167,7 @@ def update_section(service_id, section_id):
 
 
 @main.route('/frameworks/<framework_slug>/submissions/<lot_slug>/create', methods=['GET'])
+@supplier_role_required
 @login_required
 def start_new_draft_service(framework_slug, lot_slug):
     """Page to kick off creation of a new service."""
@@ -183,6 +190,7 @@ def start_new_draft_service(framework_slug, lot_slug):
 
 
 @main.route('/frameworks/<framework_slug>/submissions/<lot_slug>/create', methods=['POST'])
+@supplier_role_required
 @login_required
 def create_new_draft_service(framework_slug, lot_slug):
     """Hits up the data API to create a new draft service."""
@@ -226,6 +234,7 @@ def create_new_draft_service(framework_slug, lot_slug):
 
 
 @main.route('/frameworks/<framework_slug>/submissions/<lot_slug>/<service_id>/copy', methods=['POST'])
+@supplier_role_required
 @login_required
 def copy_draft_service(framework_slug, lot_slug, service_id):
     framework, lot = get_framework_and_lot(data_api_client, framework_slug, lot_slug, open_only=True)
@@ -251,6 +260,7 @@ def copy_draft_service(framework_slug, lot_slug, service_id):
 
 
 @main.route('/frameworks/<framework_slug>/submissions/<lot_slug>/<service_id>/complete', methods=['POST'])
+@supplier_role_required
 @login_required
 def complete_draft_service(framework_slug, lot_slug, service_id):
     framework, lot = get_framework_and_lot(data_api_client, framework_slug, lot_slug, open_only=True)
@@ -283,6 +293,7 @@ def complete_draft_service(framework_slug, lot_slug, service_id):
 
 
 @main.route('/frameworks/<framework_slug>/submissions/<lot_slug>/<service_id>/delete', methods=['POST'])
+@supplier_role_required
 @login_required
 def delete_draft_service(framework_slug, lot_slug, service_id):
     framework, lot = get_framework_and_lot(data_api_client, framework_slug, lot_slug, open_only=True)
@@ -313,6 +324,7 @@ def delete_draft_service(framework_slug, lot_slug, service_id):
 
 
 @main.route('/frameworks/<framework_slug>/submissions/documents/<int:supplier_id>/<document_name>', methods=['GET'])
+@supplier_role_required
 @login_required
 def service_submission_document(framework_slug, supplier_id, document_name):
     if current_user.supplier_id != supplier_id:
@@ -328,6 +340,7 @@ def service_submission_document(framework_slug, supplier_id, document_name):
 
 
 @main.route('/frameworks/<framework_slug>/submissions/<lot_slug>/<service_id>', methods=['GET'])
+@supplier_role_required
 @login_required
 def view_service_submission(framework_slug, lot_slug, service_id):
     framework, lot = get_framework_and_lot(data_api_client, framework_slug, lot_slug, open_only=False)
@@ -369,6 +382,7 @@ def view_service_submission(framework_slug, lot_slug, service_id):
 @main.route('/frameworks/<framework_slug>/submissions/<lot_slug>/<service_id>/edit/<section_id>', methods=['GET'])
 @main.route('/frameworks/<framework_slug>/submissions/<lot_slug>/<service_id>/edit/<section_id>/<question_slug>',
             methods=['GET'])
+@supplier_role_required
 @login_required
 def edit_service_submission(framework_slug, lot_slug, service_id, section_id, question_slug=None):
     framework, lot = get_framework_and_lot(data_api_client, framework_slug, lot_slug, open_only=True)
@@ -405,6 +419,7 @@ def edit_service_submission(framework_slug, lot_slug, service_id, section_id, qu
 @main.route('/frameworks/<framework_slug>/submissions/<lot_slug>/<service_id>/edit/<section_id>', methods=['POST'])
 @main.route('/frameworks/<framework_slug>/submissions/<lot_slug>/<service_id>/edit/<section_id>/<question_slug>',
             methods=['POST'])
+@supplier_role_required
 @login_required
 def update_section_submission(framework_slug, lot_slug, service_id, section_id, question_slug=None):
     framework, lot = get_framework_and_lot(data_api_client, framework_slug, lot_slug, open_only=True)
@@ -476,6 +491,7 @@ def update_section_submission(framework_slug, lot_slug, service_id, section_id, 
 
 @main.route('/frameworks/<framework_slug>/submissions/<lot_slug>/<service_id>/remove/<section_id>/<question_slug>',
             methods=['GET', 'POST'])
+@supplier_role_required
 @login_required
 def remove_subsection(framework_slug, lot_slug, service_id, section_id, question_slug):
     try:

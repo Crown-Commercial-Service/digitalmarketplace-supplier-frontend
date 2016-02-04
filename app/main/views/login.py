@@ -11,7 +11,7 @@ from dmutils.email import decode_invitation_token, generate_token, send_email, M
 
 from .. import main
 from ..forms.auth_forms import EmailAddressForm, CreateUserForm
-from ..helpers import hash_email
+from ..helpers import hash_email, supplier_role_required
 from ... import data_api_client
 
 
@@ -102,6 +102,7 @@ def submit_create_user(encoded_token):
 
 
 @main.route('/invite-user', methods=["GET"])
+@supplier_role_required
 @login_required
 def invite_user():
     form = EmailAddressForm()
@@ -115,6 +116,7 @@ def invite_user():
 
 
 @main.route('/invite-user', methods=["POST"])
+@supplier_role_required
 @login_required
 def send_invite_user():
     form = EmailAddressForm()

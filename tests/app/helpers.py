@@ -230,8 +230,34 @@ class BaseApplicationTest(object):
             response = self.client.get("/auto-login")
             assert response.status_code == 200
 
+    def login_as_buyer(self):
+        with patch('app.main.views.login.data_api_client') as login_api_client:
+
+            login_api_client.authenticate_user.return_value = self.user(
+                234, "buyer@email.com", None, None, 'Buyer', role='buyer')
+
+            self.get_user_patch = patch.object(
+                data_api_client,
+                'get_user',
+                return_value=self.user(234, "buyer@email.com", None, None, 'Buyer', role='buyer')
+            )
+            self.get_user_patch.start()
+
+            response = self.client.get("/auto-buyer-login")
+            assert response.status_code == 200
+
     def assert_in_strip_whitespace(self, needle, haystack):
         return assert_in(self.strip_all_whitespace(needle), self.strip_all_whitespace(haystack))
 
     def assert_not_in_strip_whitespace(self, needle, haystack):
         return assert_not_in(self.strip_all_whitespace(needle), self.strip_all_whitespace(haystack))
+
+    # Method to test flashes taken from http://blog.paulopoiati.com/2013/02/22/testing-flash-messages-in-flask/
+    def assert_flashes(self, expected_message, expected_category='message'):
+        with self.client.session_transaction() as session:
+            try:
+                category, message = session['_flashes'][0]
+            except KeyError:
+                raise AssertionError('nothing flashed')
+            assert expected_message in message
+            assert expected_category == category
