@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from dmutils.documents import get_countersigned_agreement_document_path
+from dmutils.documents import get_agreement_document_path, COUNTERSIGNED_AGREEMENT_FILENAME
 import re
 
 from flask import abort
@@ -262,5 +262,6 @@ def has_one_service_limit(lot_slug, framework_lots):
 
 def countersigned_framework_agreement_exists_in_bucket(framework_slug, bucket):
     agreements_bucket = s3.S3(bucket)
-    countersigned_path = get_countersigned_agreement_document_path(framework_slug, current_user.supplier_id)
+    countersigned_path = get_agreement_document_path(
+        framework_slug, current_user.supplier_id, COUNTERSIGNED_AGREEMENT_FILENAME)
     return agreements_bucket.path_exists(countersigned_path)
