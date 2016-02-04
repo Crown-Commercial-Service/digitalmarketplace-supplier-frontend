@@ -496,6 +496,7 @@ def framework_agreement(framework_slug):
         "frameworks/agreement.html",
         framework=framework,
         supplier_framework=supplier_framework,
+        agreement_filename=AGREEMENT_FILENAME,
         **template_data
     ), 200
 
@@ -527,6 +528,7 @@ def upload_framework_agreement(framework_slug):
             framework=framework,
             supplier_framework=supplier_framework,
             upload_error=upload_error,
+            agreement_filename=AGREEMENT_FILENAME,
             **template_data
         ), 400
 
