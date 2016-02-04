@@ -27,13 +27,10 @@ from .users import get_current_suppliers_users
 def dashboard():
     template_data = main.config['BASE_TEMPLATE_DATA']
 
-    try:
-        supplier = data_api_client.get_supplier(
-            current_user.supplier_id
-        )['suppliers']
-        supplier['contact'] = supplier['contactInformation'][0]
-    except APIError as e:
-        abort(e.status_code)
+    supplier = data_api_client.get_supplier(
+        current_user.supplier_id
+    )['suppliers']
+    supplier['contact'] = supplier['contactInformation'][0]
 
     all_frameworks = sorted(
         data_api_client.find_frameworks()['frameworks'],

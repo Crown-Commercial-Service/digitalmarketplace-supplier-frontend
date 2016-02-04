@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 import itertools
 from datetime import datetime
-from dmutils.content_loader import ContentNotFoundError
 
 from dateutil.parser import parse as date_parse
 from flask import render_template, request, abort, flash, redirect, url_for, current_app
@@ -15,9 +14,9 @@ from dmutils.formats import format_service_price, datetimeformat
 from dmutils import s3
 from dmutils.deprecation import deprecated
 from dmutils.documents import (
-    get_agreement_document_path, get_signed_url, get_extension,
-    file_is_less_than_5mb, file_is_empty,
-    get_countersigned_agreement_document_path)
+    get_agreement_document_path, get_signed_url, get_extension, file_is_less_than_5mb, file_is_empty,
+    get_countersigned_agreement_document_path, sanitise_supplier_name
+)
 
 from ... import data_api_client
 from ...main import main, content_loader
@@ -30,10 +29,8 @@ from ..helpers.frameworks import (
 )
 from ..helpers.validation import get_validator
 from ..helpers.services import (
-    get_signed_document_url,
-    get_drafts, get_lot_drafts, count_unanswered_questions
+    get_signed_document_url, get_drafts, get_lot_drafts, count_unanswered_questions
 )
-
 
 CLARIFICATION_QUESTION_NAME = 'clarification_question'
 
@@ -64,7 +61,7 @@ def framework_dashboard(framework_slug):
                 extra={'error': six.text_type(e), 'supplier_id': current_user.supplier_id}
             )
 
-    drafts, complete_drafts = get_drafts(data_api_client, current_user.supplier_id, framework_slug)
+    drafts, complete_drafts = get_drafts(data_api_client, framework_slug)
 
     supplier_framework_info = get_supplier_framework_info(data_api_client, framework_slug)
     declaration_status = get_declaration_status_from_info(supplier_framework_info)
@@ -77,15 +74,13 @@ def framework_dashboard(framework_slug):
     key_list = s3.S3(current_app.config['DM_COMMUNICATIONS_BUCKET']).list(framework_slug, load_timestamps=True)
     key_list.reverse()
 
-    try:
-        first_page = content_loader.get_manifest(
-            framework_slug, 'declaration'
-        ).get_next_editable_section_id()
-    except ContentNotFoundError:
-        first_page = None
+    first_page = content_loader.get_manifest(
+        framework_slug, 'declaration'
+    ).get_next_editable_section_id()
 
     supplier_pack_filename = '{}-supplier-pack.zip'.format(framework_slug)
 
+    # a lot of these variables are being set quite differently on the supplier dashboard
     return render_template(
         "frameworks/dashboard.html",
         agreement_countersigned=countersigned_framework_agreement_exists_in_bucket(
@@ -126,7 +121,7 @@ def framework_dashboard(framework_slug):
 def framework_submission_lots(framework_slug):
     framework = get_framework(data_api_client, framework_slug, open_only=False)
 
-    drafts, complete_drafts = get_drafts(data_api_client, current_user.supplier_id, framework_slug)
+    drafts, complete_drafts = get_drafts(data_api_client, framework_slug)
     declaration_status = get_declaration_status(data_api_client, framework_slug)
     application_made = len(complete_drafts) > 0 and declaration_status == 'complete'
     if framework['status'] == 'pending' and not application_made:
@@ -165,7 +160,7 @@ def framework_submission_lots(framework_slug):
 def framework_submission_services(framework_slug, lot_slug):
     framework, lot = get_framework_and_lot(data_api_client, framework_slug, lot_slug, open_only=False)
 
-    drafts, complete_drafts = get_lot_drafts(data_api_client, current_user.supplier_id, framework_slug, lot_slug)
+    drafts, complete_drafts = get_lot_drafts(data_api_client, framework_slug, lot_slug)
     declaration_status = get_declaration_status(data_api_client, framework_slug)
     if framework['status'] == 'pending' and declaration_status != 'complete':
         abort(404)
@@ -540,12 +535,24 @@ def upload_framework_agreement(framework_slug):
         ), 400
 
     agreements_bucket = s3.S3(current_app.config['DM_AGREEMENTS_BUCKET'])
-    legal_supplier_name = supplier_framework['declaration']['SQ1-1a']
     extension = get_extension(request.files['agreement'].filename)
-    path = get_agreement_document_path(
-        framework_slug, current_user.supplier_id, legal_supplier_name,
-        'signed-framework-agreement{}'.format(extension))
-    agreements_bucket.save(path, request.files['agreement'], acl='private')
+
+    # TODO: get rid of this; rewrite `.get_agreement_document_path()` function in dmutils
+    path = '{0}/agreements/{1}/{1}-signed-framework-agreement{2}'.format(
+        framework_slug,
+        current_user.supplier_id,
+        extension
+    )
+    agreements_bucket.save(
+        path,
+        request.files['agreement'],
+        acl='private',
+        download_filename='{}-{}-signed-framework-agreement{}'.format(
+            sanitise_supplier_name(current_user.supplier_name),
+            current_user.supplier_id,
+            extension
+        )
+    )
 
     data_api_client.register_framework_agreement_returned(
         current_user.supplier_id, framework_slug, current_user.email_address)
