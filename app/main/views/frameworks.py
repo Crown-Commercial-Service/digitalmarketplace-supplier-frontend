@@ -515,7 +515,7 @@ def upload_framework_agreement(framework_slug):
     supplier_framework = data_api_client.get_supplier_framework_info(
         current_user.supplier_id, framework_slug
     )['frameworkInterest']
-    if not supplier_framework['onFramework']:
+    if not supplier_framework or not supplier_framework['onFramework']:
         abort(404)
 
     template_data = main.config['BASE_TEMPLATE_DATA']
