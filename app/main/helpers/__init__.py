@@ -1,5 +1,6 @@
 import hashlib
 import base64
+import flask_login
 import six
 from functools import wraps
 from flask import current_app, flash
@@ -13,8 +14,9 @@ def hash_email(email):
     return base64.urlsafe_b64encode(m.digest())
 
 
-def supplier_role_required(func):
+def login_required(func):
     @wraps(func)
+    @flask_login.login_required
     def decorated_view(*args, **kwargs):
         if current_user.is_authenticated() and current_user.role != 'supplier':
             flash('supplier-role-required', 'error')

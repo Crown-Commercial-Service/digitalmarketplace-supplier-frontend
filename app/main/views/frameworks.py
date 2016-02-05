@@ -4,7 +4,7 @@ from datetime import datetime
 
 from dateutil.parser import parse as date_parse
 from flask import render_template, request, abort, flash, redirect, url_for, current_app
-from flask_login import login_required, current_user
+from flask_login import current_user
 import six
 
 from dmapiclient import APIError
@@ -21,7 +21,7 @@ from dmutils.documents import (
 
 from ... import data_api_client
 from ...main import main, content_loader
-from ..helpers import hash_email, supplier_role_required
+from ..helpers import hash_email, login_required
 from ..helpers.frameworks import (
     get_declaration_status, get_last_modified_from_first_matching_file, register_interest_in_framework,
     get_supplier_on_framework_from_info, get_declaration_status_from_info, get_supplier_framework_info,
@@ -37,7 +37,6 @@ CLARIFICATION_QUESTION_NAME = 'clarification_question'
 
 
 @main.route('/frameworks/<framework_slug>', methods=['GET', 'POST'])
-@supplier_role_required
 @login_required
 def framework_dashboard(framework_slug):
     framework = get_framework(data_api_client, framework_slug, open_only=False)
@@ -123,7 +122,6 @@ def framework_dashboard(framework_slug):
 
 
 @main.route('/frameworks/<framework_slug>/submissions', methods=['GET'])
-@supplier_role_required
 @login_required
 def framework_submission_lots(framework_slug):
     framework = get_framework(data_api_client, framework_slug, open_only=False)
@@ -163,7 +161,6 @@ def framework_submission_lots(framework_slug):
 
 
 @main.route('/frameworks/<framework_slug>/submissions/<lot_slug>', methods=['GET'])
-@supplier_role_required
 @login_required
 def framework_submission_services(framework_slug, lot_slug):
     framework, lot = get_framework_and_lot(data_api_client, framework_slug, lot_slug, open_only=False)
@@ -209,7 +206,6 @@ def framework_submission_services(framework_slug, lot_slug):
 
 @main.route('/frameworks/<framework_slug>/declaration', methods=['GET'])
 @main.route('/frameworks/<framework_slug>/declaration/<string:section_id>', methods=['GET', 'POST'])
-@supplier_role_required
 @login_required
 def framework_supplier_declaration(framework_slug, section_id=None):
     framework = get_framework(data_api_client, framework_slug, open_only=True)
@@ -295,7 +291,6 @@ def framework_supplier_declaration(framework_slug, section_id=None):
 
 
 @main.route('/frameworks/<framework_slug>/files/<path:filepath>', methods=['GET'])
-@supplier_role_required
 @login_required
 def download_supplier_file(framework_slug, filepath):
     uploader = s3.S3(current_app.config['DM_COMMUNICATIONS_BUCKET'])
@@ -307,7 +302,6 @@ def download_supplier_file(framework_slug, filepath):
 
 
 @main.route('/frameworks/<framework_slug>/agreements/<document_name>', methods=['GET'])
-@supplier_role_required
 @login_required
 def download_agreement_file(framework_slug, document_name):
     supplier_framework_info = get_supplier_framework_info(data_api_client, framework_slug)
@@ -340,7 +334,6 @@ def g7_download_zip_redirect_pdf(framework_slug, filepath):
 
 
 @main.route('/frameworks/<framework_slug>/updates', methods=['GET'])
-@supplier_role_required
 @login_required
 def framework_updates(framework_slug, error_message=None, default_textbox_value=None):
     framework = get_framework(data_api_client, framework_slug, open_only=False)
@@ -376,7 +369,6 @@ def framework_updates(framework_slug, error_message=None, default_textbox_value=
 
 
 @main.route('/frameworks/<framework_slug>/updates', methods=['POST'])
-@supplier_role_required
 @login_required
 def framework_updates_email_clarification_question(framework_slug):
     framework = get_framework(data_api_client, framework_slug, open_only=False)
@@ -485,7 +477,6 @@ def framework_updates_email_clarification_question(framework_slug):
 
 
 @main.route('/frameworks/<framework_slug>/agreement', methods=['GET'])
-@supplier_role_required
 @login_required
 def framework_agreement(framework_slug):
     framework = data_api_client.get_framework(framework_slug)['frameworks']
@@ -515,7 +506,6 @@ def framework_agreement(framework_slug):
 
 
 @main.route('/frameworks/<framework_slug>/agreement', methods=['POST'])
-@supplier_role_required
 @login_required
 def upload_framework_agreement(framework_slug):
     framework = data_api_client.get_framework(framework_slug)['frameworks']

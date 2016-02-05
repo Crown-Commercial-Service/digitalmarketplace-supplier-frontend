@@ -1,7 +1,7 @@
-from flask_login import login_required, current_user
+from flask_login import current_user
 from flask import render_template, abort, flash, url_for, redirect, current_app
 
-from ..helpers import supplier_role_required
+from ..helpers import login_required
 from ...main import main
 from ... import data_api_client
 
@@ -24,7 +24,6 @@ def get_current_suppliers_users():
 
 
 @main.route('/users')
-@supplier_role_required
 @login_required
 def list_users():
 
@@ -38,7 +37,6 @@ def list_users():
 
 
 @main.route('/users/<int:user_id>/deactivate', methods=['POST'])
-@supplier_role_required
 @login_required
 def deactivate_user(user_id):
 
