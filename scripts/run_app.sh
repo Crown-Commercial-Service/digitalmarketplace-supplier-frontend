@@ -17,7 +17,7 @@ export DM_API_AUTH_TOKEN=${DM_API_AUTH_TOKEN:=myToken}
 
 export DM_SUBMISSIONS_BUCKET=${DM_SUBMISSIONS_BUCKET:=digitalmarketplace-documents-dev-dev}
 export DM_COMMUNICATIONS_BUCKET=${DM_COMMUNICATIONS_BUCKET:=digitalmarketplace-documents-dev-dev}
-export DM_AGREEMENTS_BUCKET=${DM_AGREEMENTS_BUCKET:=digitalmarketplace-agreements-dev-dev}
+export DM_AGREEMENTS_BUCKET=${DM_AGREEMENTS_BUCKET:=digitalmarketplace-documents-dev-dev}
 export DM_DOCUMENTS_BUCKET=${DM_DOCUMENTS_BUCKET:=digitalmarketplace-documents-dev-dev}
 export DM_ASSETS_URL=${DM_ASSETS_URL:=https://${DM_SUBMISSIONS_BUCKET}.s3-eu-west-1.amazonaws.com}
 
