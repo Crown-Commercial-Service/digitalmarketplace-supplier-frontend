@@ -1,7 +1,6 @@
-import sys
-if sys.version_info[0] < 3:
+try:
     from urllib import quote_plus
-else:
+except ImportError:
     from urllib.parse import quote_plus
 from flask import redirect, render_template, request
 from app.main import main
