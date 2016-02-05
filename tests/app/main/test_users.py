@@ -100,17 +100,12 @@ class TestListUsers(BaseApplicationTest):
 
 class TestPostUsers(BaseApplicationTest):
 
-    def test_cannot_see_deactivate_url_unless_logged_in(self):
+    def test_cannot_deactivate_user_unless_logged_in(self):
         res = self.client.post(
-            '/suppliers/users/123/deactivate',
-            follow_redirects=True
+            '/suppliers/users/123/deactivate'
         )
-
-        assert_equal(res.status_code, 200)
-        assert_in(
-            self.strip_all_whitespace('<title>Log in'),
-            self.strip_all_whitespace(res.get_data(as_text=True))
-        )
+        assert_equal(res.status_code, 302)
+        assert_equal(res.location, 'http://localhost/login')
 
     def test_cannot_deactivate_self(self):
         with self.app.test_client():

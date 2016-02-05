@@ -4,7 +4,7 @@ from datetime import datetime
 
 from dateutil.parser import parse as date_parse
 from flask import render_template, request, abort, flash, redirect, url_for, current_app
-from flask_login import login_required, current_user
+from flask_login import current_user
 import six
 
 from dmapiclient import APIError
@@ -21,7 +21,7 @@ from dmutils.documents import (
 
 from ... import data_api_client
 from ...main import main, content_loader
-from ..helpers import hash_email
+from ..helpers import hash_email, login_required
 from ..helpers.frameworks import (
     get_declaration_status, get_last_modified_from_first_matching_file, register_interest_in_framework,
     get_supplier_on_framework_from_info, get_declaration_status_from_info, get_supplier_framework_info,

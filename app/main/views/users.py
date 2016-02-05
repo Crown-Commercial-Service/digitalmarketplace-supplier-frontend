@@ -1,6 +1,7 @@
-from flask_login import login_required, current_user
+from flask_login import current_user
 from flask import render_template, abort, flash, url_for, redirect, current_app
 
+from ..helpers import login_required
 from ...main import main
 from ... import data_api_client
 

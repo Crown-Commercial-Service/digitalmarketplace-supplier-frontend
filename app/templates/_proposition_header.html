@@ -5,10 +5,11 @@
       <a href="/" id="proposition-name">Digital Marketplace</a>
       <ul id="proposition-links">
         {% if current_user.email_address %}
-        <li><a class="home" href="{{ url_for('main.logout') }}">Log out</a></li>
+        <li><a class="home" href="/logout">Log out</a></li>
         {% else %}
-        <li><a class="home" href="{{ url_for('main.render_login') }}">Supplier login</a></li>
+        <li><a class="home" href="/login">Log in</a></li>
         {% endif %}
+        <li><a href="{{ url_for('main.create_new_supplier') }}">Create supplier account</a></li>
       </ul>
     </nav>
   </div>

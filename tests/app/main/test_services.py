@@ -74,7 +74,7 @@ class TestListServices(BaseApplicationTest):
 
             res = self.client.get('/suppliers/services')
             assert_equal(res.status_code, 302)
-            assert_equal(res.location, 'http://localhost/suppliers/login?next=%2Fsuppliers%2Fservices')
+            assert_equal(res.location, 'http://localhost/login?next=%2Fsuppliers%2Fservices')
 
     @mock.patch('app.main.views.services.data_api_client')
     def test_shows_services_edit_button_with_id(self, data_api_client):
@@ -123,8 +123,7 @@ class TestListServicesLogin(BaseApplicationTest):
         res = self.client.get("/suppliers/services")
         assert_equal(res.status_code, 302)
         assert_equal(res.location,
-                     'http://localhost/suppliers/login'
-                     '?next=%2Fsuppliers%2Fservices')
+                     'http://localhost/login?next=%2Fsuppliers%2Fservices')
 
 
 @mock.patch('app.main.views.services.data_api_client')
@@ -315,8 +314,7 @@ class TestSupplierUpdateService(BaseApplicationTest):
         res = self.client.get("/suppliers/services/123")
         assert_equal(res.status_code, 302)
         assert_equal(res.location,
-                     'http://localhost/suppliers/login'
-                     '?next=%2Fsuppliers%2Fservices%2F123')
+                     'http://localhost/login?next=%2Fsuppliers%2Fservices%2F123')
 
 
 @mock.patch('app.main.views.services.data_api_client')

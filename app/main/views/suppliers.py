@@ -3,7 +3,7 @@
 from itertools import chain
 
 from flask import render_template, request, redirect, url_for, abort, session, Markup
-from flask_login import login_required, current_user, current_app
+from flask_login import current_user, current_app
 import six
 
 from dmapiclient import APIError
@@ -18,7 +18,7 @@ from ..forms.suppliers import (
     CompanyContactDetailsForm, CompanyNameForm, EmailAddressForm
 )
 from ..helpers.frameworks import get_frameworks_by_status
-from ..helpers import hash_email
+from ..helpers import hash_email, login_required
 from .users import get_current_suppliers_users
 
 

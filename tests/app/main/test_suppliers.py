@@ -687,11 +687,6 @@ class TestSupplierDashboardLogin(BaseApplicationTest):
 
             data_api_client.get_supplier.side_effect = get_supplier
 
-            self.client.post("/suppliers/login", data={
-                "email_address": "valid@email.com",
-                "password": "1234567890"
-            })
-
             res = self.client.get("/suppliers")
 
             assert_equal(res.status_code, 200)
@@ -709,8 +704,7 @@ class TestSupplierDashboardLogin(BaseApplicationTest):
         res = self.client.get("/suppliers")
         assert_equal(res.status_code, 302)
         assert_equal(res.location,
-                     "http://localhost/suppliers/login"
-                     "?next=%2Fsuppliers")
+                     "http://localhost/login?next=%2Fsuppliers")
 
 
 @mock.patch("app.main.views.suppliers.data_api_client")
@@ -917,7 +911,7 @@ class TestSupplierUpdate(BaseApplicationTest):
         assert_equal(res.status_code, 302)
         assert_equal(
             res.location,
-            "http://localhost/suppliers/login?next=%2Fsuppliers%2Fedit"
+            "http://localhost/login?next=%2Fsuppliers%2Fedit"
         )
 
 

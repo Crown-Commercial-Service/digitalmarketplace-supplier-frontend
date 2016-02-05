@@ -41,7 +41,6 @@ def create_app(config_name):
                                    url_prefix='/suppliers')
     application.register_blueprint(main_blueprint,
                                    url_prefix='/suppliers')
-    login_manager.login_view = 'main.render_login'
     login_manager.login_message_category = "must_login"
     main_blueprint.config = application.config.copy()
 

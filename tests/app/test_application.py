@@ -12,7 +12,7 @@ class TestApplication(BaseApplicationTest):
         super(TestApplication, self).setup()
 
     def test_response_headers(self):
-        response = self.client.get('/suppliers/login')
+        response = self.client.get('/suppliers/create')
 
         assert 200 == response.status_code
         assert (
@@ -58,12 +58,12 @@ class TestApplication(BaseApplicationTest):
                 in res.get_data(as_text=True))
 
     def test_header_xframeoptions_set_to_deny(self):
-        res = self.client.get('/suppliers/login')
+        res = self.client.get('/suppliers/create')
         assert 200 == res.status_code
         assert 'DENY', res.headers['X-Frame-Options']
 
     def test_should_use_local_cookie_page_on_cookie_message(self):
-        res = self.client.get('/suppliers/login')
+        res = self.client.get('/suppliers/create')
         assert_equal(200, res.status_code)
         assert_true(
             '<p>GOV.UK uses cookies to make the site simpler. <a href="/cookies">Find out more about cookies</a></p>'
