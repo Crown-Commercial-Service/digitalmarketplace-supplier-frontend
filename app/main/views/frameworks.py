@@ -82,9 +82,9 @@ def framework_dashboard(framework_slug):
     # filenames
     supplier_pack_filename = '{}-supplier-pack.zip'.format(framework_slug)
     result_letter_filename = RESULT_LETTER_FILENAME
-    countersigned_agreement_filename = None
+    countersigned_agreement_file = None
     if countersigned_framework_agreement_exists_in_bucket(framework_slug, current_app.config['DM_AGREEMENTS_BUCKET']):
-        countersigned_agreement_filename = COUNTERSIGNED_AGREEMENT_FILENAME
+        countersigned_agreement_file = COUNTERSIGNED_AGREEMENT_FILENAME
 
     return render_template(
         "frameworks/dashboard.html",
@@ -116,7 +116,7 @@ def framework_dashboard(framework_slug):
         supplier_is_on_framework=supplier_is_on_framework,
         supplier_pack_filename=supplier_pack_filename,
         result_letter_filename=result_letter_filename,
-        countersigned_agreement_filename=countersigned_agreement_filename,
+        countersigned_agreement_file=countersigned_agreement_file,
         **main.config['BASE_TEMPLATE_DATA']
     ), 200
 

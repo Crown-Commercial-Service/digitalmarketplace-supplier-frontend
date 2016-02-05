@@ -72,7 +72,7 @@
       <nav role="navigation">
         <ul class="browse-list">
 
-          {% if framework.status in ['standstill', 'live'] and application_made and not agreement_countersigned %}
+          {% if framework.status in ['standstill', 'live'] and application_made and not countersigned_agreement_file %}
             <li class="browse-list-item">
               <a class="browse-list-item-link" href="{{ url_for('.download_agreement_file', framework_slug=framework.slug, document_name='result-letter.pdf') }}" download>
                 <span>Download your application result letter (.pdf)</span>
@@ -211,9 +211,9 @@
             </li>
           {% endif %}
 
-          {% if framework.status in ['standstill', 'live'] and countersigned_agreement_filename %}
+          {% if framework.status in ['standstill', 'live'] and countersigned_agreement_file %}
             <li class="unbulleted-item">
-              <a href="{{ url_for('.download_agreement_file', framework_slug=framework.slug, document_name=countersigned_agreement_filename) }}"><span>Download your countersigned framework agreement (.pdf)</span></a>
+              <a href="{{ url_for('.download_agreement_file', framework_slug=framework.slug, document_name=countersigned_agreement_file) }}"><span>Download your countersigned framework agreement (.pdf)</span></a>
             </li>
 
             <li class="unbulleted-item">
