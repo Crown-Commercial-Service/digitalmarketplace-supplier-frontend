@@ -14,8 +14,9 @@ from dmutils.formats import format_service_price, datetimeformat
 from dmutils import s3
 from dmutils.deprecation import deprecated
 from dmutils.documents import (
+    RESULT_LETTER_FILENAME, AGREEMENT_FILENAME, SIGNED_AGREEMENT_PREFIX, COUNTERSIGNED_AGREEMENT_FILENAME,
     get_agreement_document_path, get_signed_url, get_extension, file_is_less_than_5mb, file_is_empty,
-    get_countersigned_agreement_document_path, sanitise_supplier_name
+    sanitise_supplier_name,
 )
 
 from ... import data_api_client
@@ -78,13 +79,15 @@ def framework_dashboard(framework_slug):
         framework_slug, 'declaration'
     ).get_next_editable_section_id()
 
+    # filenames
     supplier_pack_filename = '{}-supplier-pack.zip'.format(framework_slug)
+    result_letter_filename = RESULT_LETTER_FILENAME
+    countersigned_agreement_filename = None
+    if countersigned_framework_agreement_exists_in_bucket(framework_slug, current_app.config['DM_AGREEMENTS_BUCKET']):
+        countersigned_agreement_filename = COUNTERSIGNED_AGREEMENT_FILENAME
 
-    # a lot of these variables are being set quite differently on the supplier dashboard
     return render_template(
         "frameworks/dashboard.html",
-        agreement_countersigned=countersigned_framework_agreement_exists_in_bucket(
-            framework_slug, current_app.config['DM_AGREEMENTS_BUCKET']),
         application_made=(len(complete_drafts) > 0 and declaration_status == 'complete'),
         completed_lots=[{
             'name': lot['name'],
@@ -112,6 +115,8 @@ def framework_dashboard(framework_slug):
         },
         supplier_is_on_framework=supplier_is_on_framework,
         supplier_pack_filename=supplier_pack_filename,
+        result_letter_filename=result_letter_filename,
+        countersigned_agreement_filename=countersigned_agreement_filename,
         **main.config['BASE_TEMPLATE_DATA']
     ), 200
 
@@ -302,14 +307,9 @@ def download_agreement_file(framework_slug, document_name):
     supplier_framework_info = get_supplier_framework_info(data_api_client, framework_slug)
     if supplier_framework_info is None or not supplier_framework_info.get("declaration"):
         abort(404)
-    legal_supplier_name = supplier_framework_info['declaration']['SQ1-1a']
 
     agreements_bucket = s3.S3(current_app.config['DM_AGREEMENTS_BUCKET'])
-    if document_name == 'countersigned-agreement':
-        path = get_countersigned_agreement_document_path(framework_slug, supplier_framework_info['supplierId'])
-    else:
-        path = get_agreement_document_path(
-            framework_slug, current_user.supplier_id, legal_supplier_name, document_name)
+    path = get_agreement_document_path(framework_slug, current_user.supplier_id, document_name)
     url = get_signed_url(agreements_bucket, path, current_app.config['DM_ASSETS_URL'])
     if not url:
         abort(404)
@@ -500,6 +500,7 @@ def framework_agreement(framework_slug):
         "frameworks/agreement.html",
         framework=framework,
         supplier_framework=supplier_framework,
+        agreement_filename=AGREEMENT_FILENAME,
         **template_data
     ), 200
 
@@ -514,7 +515,7 @@ def upload_framework_agreement(framework_slug):
     supplier_framework = data_api_client.get_supplier_framework_info(
         current_user.supplier_id, framework_slug
     )['frameworkInterest']
-    if not supplier_framework['onFramework']:
+    if not supplier_framework or not supplier_framework['onFramework']:
         abort(404)
 
     template_data = main.config['BASE_TEMPLATE_DATA']
@@ -531,25 +532,26 @@ def upload_framework_agreement(framework_slug):
             framework=framework,
             supplier_framework=supplier_framework,
             upload_error=upload_error,
+            agreement_filename=AGREEMENT_FILENAME,
             **template_data
         ), 400
 
     agreements_bucket = s3.S3(current_app.config['DM_AGREEMENTS_BUCKET'])
     extension = get_extension(request.files['agreement'].filename)
 
-    # TODO: get rid of this; rewrite `.get_agreement_document_path()` function in dmutils
-    path = '{0}/agreements/{1}/{1}-signed-framework-agreement{2}'.format(
+    path = get_agreement_document_path(
         framework_slug,
         current_user.supplier_id,
-        extension
+        '{}{}'.format(SIGNED_AGREEMENT_PREFIX, extension)
     )
     agreements_bucket.save(
         path,
         request.files['agreement'],
         acl='private',
-        download_filename='{}-{}-signed-framework-agreement{}'.format(
+        download_filename='{}-{}-{}{}'.format(
             sanitise_supplier_name(current_user.supplier_name),
             current_user.supplier_id,
+            SIGNED_AGREEMENT_PREFIX,
             extension
         )
     )
