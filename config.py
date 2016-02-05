@@ -49,8 +49,8 @@ class Config(object):
     DM_FOLLOW_UP_EMAIL_TO = 'digitalmarketplace@mailinator.com'
 
     CREATE_USER_SUBJECT = 'Create your Digital Marketplace account'
-    SECRET_KEY = os.getenv('DM_PASSWORD_SECRET_KEY')
-    SHARED_EMAIL_KEY = os.getenv('DM_SHARED_EMAIL_KEY')
+    SECRET_KEY = None
+    SHARED_EMAIL_KEY = None
     RESET_PASSWORD_SALT = 'ResetPasswordSalt'
     INVITE_EMAIL_SALT = 'InviteEmailSalt'
 
@@ -87,8 +87,6 @@ class Config(object):
 class Test(Config):
     DEBUG = True
     DM_LOG_LEVEL = 'CRITICAL'
-    DM_API_AUTH_TOKEN = 'test'
-    DM_API_URL = 'http://localhost'
     WTF_CSRF_ENABLED = False
     SERVER_NAME = 'localhost'
     DM_MANDRILL_API_KEY = 'MANDRILL'
@@ -97,6 +95,14 @@ class Test(Config):
 
     FEATURE_FLAGS_EDIT_SECTIONS = enabled_since('2015-06-03')
 
+    DM_DATA_API_AUTH_TOKEN = 'myToken'
+
+    SECRET_KEY = 'not_very_secret'
+
+    DM_SUBMISSIONS_BUCKET = 'digitalmarketplace-submissions-dev-dev'
+    DM_COMMUNICATIONS_BUCKET = 'digitalmarketplace-communications-dev-dev'
+    DM_ASSETS_URL = 'http://asset-host'
+
 
 class Development(Config):
     DEBUG = True
@@ -104,6 +110,20 @@ class Development(Config):
 
     # Dates not formatted like YYYY-(0)M-(0)D will fail
     FEATURE_FLAGS_EDIT_SECTIONS = enabled_since('2015-06-03')
+
+    DM_DATA_API_URL = "http://localhost:5000"
+    DM_DATA_API_AUTH_TOKEN = "myToken"
+    DM_API_AUTH_TOKEN = "myToken"
+
+    DM_SUBMISSIONS_BUCKET = "digitalmarketplace-documents-dev-dev"
+    DM_COMMUNICATIONS_BUCKET = "digitalmarketplace-documents-dev-dev"
+    DM_AGREEMENTS_BUCKET = "digitalmarketplace-documents-dev-dev"
+    DM_DOCUMENTS_BUCKET = "digitalmarketplace-documents-dev-dev"
+    DM_ASSETS_URL = "https://{}.s3-eu-west-1.amazonaws.com".format(DM_SUBMISSIONS_BUCKET)
+
+    DM_MANDRILL_API_KEY = "not_a_real_key"
+    SHARED_EMAIL_KEY = "very_secret"
+    SECRET_KEY = 'verySecretKey'
 
 
 class Live(Config):
@@ -124,7 +144,6 @@ class Production(Live):
 
 class Staging(Production):
     pass
-    FEATURE_FLAGS_EDIT_SECTIONS = enabled_since('2015-06-03')
 
 configs = {
     'development': Development,

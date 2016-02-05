@@ -5,12 +5,6 @@
 # NOTE: This script expects to be run from the project root with
 # ./scripts/run_tests.sh
 
-# Use default environment vars for localhost if not already set
-. ./scripts/test_env.sh
-
-echo "Environment variables in use:"
-env | grep DM_
-
 set -o pipefail
 
 function display_result {
