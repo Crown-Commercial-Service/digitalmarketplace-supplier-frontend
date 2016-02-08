@@ -1,4 +1,5 @@
 SHELL := /bin/bash
+VIRTUALENV_ROOT := $(shell [ -z $$VIRTUAL_ENV ] && echo ./venv || echo $$VIRTUAL_ENV)
 
 run_all: requirements frontend_build run_app
 
@@ -9,10 +10,10 @@ virtualenv:
 	[ -z $$VIRTUAL_ENV ] && virtualenv venv || true
 
 requirements: virtualenv requirements.txt
-	pip install -r requirements.txt
+	${VIRTUALENV_ROOT}/bin/pip install -r requirements.txt
 
 requirements_for_test: virtualenv requirements_for_test.txt
-	pip install -r requirements_for_test.txt
+	${VIRTUALENV_ROOT}/bin/pip install -r requirements_for_test.txt
 
 frontend_build:
 	npm run --silent frontend-build:production
@@ -20,10 +21,10 @@ frontend_build:
 test: show_environment test_pep8 test_python test_javascript
 
 test_pep8: virtualenv
-	pep8 .
+	${VIRTUALENV_ROOT}/bin/pep8 .
 
 test_python: virtualenv
-	py.test ${PYTEST_ARGS}
+	${VIRTUALENV_ROOT}/bin/py.test ${PYTEST_ARGS}
 
 test_javascript: frontend_build
 	npm test
