@@ -1,5 +1,5 @@
 SHELL := /bin/bash
-VIRTUALENV_ROOT := $(shell [ -z $$VIRTUAL_ENV ] && echo ./venv || echo $$VIRTUAL_ENV)
+VIRTUALENV_ROOT := $(shell [ -z $$VIRTUAL_ENV ] && echo $$(pwd)/venv || echo $$VIRTUAL_ENV)
 
 run_all: requirements frontend_build run_app
 
