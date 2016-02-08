@@ -1,0 +1,110 @@
+{% if framework.status in ['standstill', 'live'] and application_made and not countersigned_agreement_file %}
+<li class="browse-list-item">
+  <a class="browse-list-item-link" href="{{ url_for('.download_agreement_file', framework_slug=framework.slug, document_name='result-letter.pdf') }}" download>
+    <span>Download your application {% if supplier_is_on_framework %}award{% else %}result{% endif %} letter (.pdf)</span>
+  </a>
+  {% if supplier_is_on_framework %}
+    <p>This letter is a record of your successful {{ framework.name }} application.</p>
+  {% else %}
+    <p>This letter informs you if your {{ framework.name }} application has been successful.</p>
+  {% endif %}
+
+</li>
+
+  {% if supplier_is_on_framework %}
+  <li class="browse-list-item">
+    <a class="browse-list-item-link" href="{{ url_for('.framework_agreement', framework_slug=framework.slug) }}">
+      <span>Sign and return your framework agreement</span>
+    </a>
+    <p>Your agreement will need to be signed by both you and the Crown Commercial Service before you can sell {{framework.name}} services.</p>
+  </li>
+  {% endif %}
+{% endif %}
+
+{% if framework.status == 'open' %}
+<li class="browse-list-item">
+  <a class="browse-list-item-link" href="{{ url_for('.framework_supplier_declaration', framework_slug=framework.slug, section_id=first_page_of_declaration) }}">
+    {% if declaration_status == 'unstarted' %}
+      <span>Make supplier declaration</span>
+    {% else %}
+      <span>Edit supplier declaration</span>
+    {% endif %}
+  </a>
+  <p class="browse-list-item-body">
+    Agree to the terms of the bid, provide supplier information and
+    confirm&nbsp;eligibility.
+  </p>
+  {% if declaration_status == 'unstarted' and not counts.complete %}
+  <div class="browse-list-item-status-quiet">
+    <p class="browse-list-item-status-title">You need to make the supplier declaration</p>
+  </div>
+  {% elif declaration_status == 'started' and not counts.complete %}
+  <div class="browse-list-item-status-quiet">
+    <p class="browse-list-item-status-title">You need to finish making the supplier declaration</p>
+  </div>
+  {% elif declaration_status == 'unstarted' and counts.complete %}
+  <div class="browse-list-item-status-angry">
+    <p class="browse-list-item-status-title">
+      <strong>No services will be submitted because you haven’t made the supplier declaration</strong>
+    </p>
+  </div>
+  {% elif declaration_status == 'started' and counts.complete %}
+  <div class="browse-list-item-status-angry">
+    <p class="browse-list-item-status-title">
+      <strong>No services will be submitted because you haven’t finished making the supplier declaration</strong>
+    </p>
+  </div>
+  {% elif declaration_status == 'complete' %}
+  <div class="browse-list-item-status-happy">
+    <p class="browse-list-item-status-title">
+      <strong>You’ve made the supplier declaration</strong>
+    </p>
+  </div>
+  {% endif %}
+</li>
+{% endif %}
+
+{% if framework.status == 'open' %}
+<li class="browse-list-item">
+  <a class="browse-list-item-link" href="{{ url_for('.framework_submission_lots', framework_slug=framework.slug) }}">
+    <span>Add, edit and complete services</span>
+  </a>
+  {% if not counts.complete and not counts.draft %}
+  <div class="browse-list-item-status-quiet">
+    <p class="browse-list-item-status-title">You need to add and complete services</p>
+  </div>
+  {% endif %}
+
+  {% if counts.draft and not counts.complete %}
+  <div class="browse-list-item-status-quiet">
+    <p class="browse-list-item-status-title">No services marked as complete</p>
+  </div>
+  {% endif %}
+
+  {% if counts.complete %}
+    {% if declaration_status == 'complete' %}
+      <div class="browse-list-item-status-happy">
+        <p class="browse-list-item-status-title">You’re submitting</p>
+    {% else %}
+      <div class="browse-list-item-status-default">
+        <p class="browse-list-item-status-title">You’ve completed:</p>
+    {% endif %}
+        <ul class="browse-list-item-status-list">
+          {% for lot in completed_lots %}
+            {% if lot.one_service_limit %}
+            <li>
+              {{lot.name|lower}}
+            </li>
+            {% else %}
+            <li>
+              {{ lot.complete_count }}
+              {{ lot.unit if (1 == lot.complete_count) else lot.unit_plural }} in
+              {{ lot.name|lower }}
+            </li>
+            {% endif %}
+          {% endfor %}
+        </ul>
+      </div>
+    {% endif %}
+</li>
+{% endif %}

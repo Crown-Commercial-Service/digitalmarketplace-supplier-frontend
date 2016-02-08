@@ -1,0 +1,83 @@
+{% if framework.status in ['standstill', 'live'] and countersigned_agreement_file %}
+<li class="unbulleted-item">
+  <a href="{{ url_for('.download_agreement_file', framework_slug=framework.slug, document_name=countersigned_agreement_file) }}">
+    <span>Download your countersigned framework agreement (.pdf)</span>
+  </a>
+</li>
+
+<li class="unbulleted-item">
+  <a href="{{ url_for('.download_agreement_file', framework_slug=framework.slug, document_name=result_letter_filename) }}">
+    <span>Download your application result letter (.pdf)</span>
+  </a>
+</li>
+
+<li class="unbulleted-item">
+  <a href="{{ url_for('.download_supplier_file', filepath=supplier_pack_filename, framework_slug=framework.slug) }}">
+    <span>Download guidance and legal documentation (.zip)</span>
+  </a>
+  {% if last_modified.supplier_pack %}
+  <div class="hint">
+    Last updated
+    <time datetime="{{ last_modified.supplier_pack }}">
+      {{ last_modified.supplier_pack|dateformat }}
+    </time>
+  </div>
+  {% endif %}
+</li>
+
+<li class="unbulleted-item">
+  <a href="{{ url_for('.framework_updates', framework_slug=framework.slug) }}">
+    <span>Read updates and clarification question responses</span>
+  </a>
+  {% if last_modified.supplier_updates %}
+  <div class="hint">
+    Last updated
+    <time datetime="{{ last_modified.supplier_updates }}">
+      {{ last_modified.supplier_updates|dateformat }}
+    </time>
+  </div>
+  {% endif %}
+</li>
+
+{% else %}
+<li class="browse-list-item">
+  <h2>
+    Guidance, updates and questions
+  </h2>
+  <ul>
+    <li class="guidance-link">
+      <a href="{{ url_for('.download_supplier_file', filepath=supplier_pack_filename, framework_slug=framework.slug) }}">
+        <span>Download guidance and legal documentation (.zip)</span>
+      </a>
+      {% if last_modified.supplier_pack %}
+      <div class="hint">
+        Last updated
+        <time datetime="{{ last_modified.supplier_pack }}">
+          {{ last_modified.supplier_pack|dateformat }}
+        </time>
+      </div>
+      {% endif %}
+    </li>
+
+    <li class="guidance-link">
+      <a href="{{ url_for('.framework_updates', framework_slug=framework.slug) }}">
+        <span>
+          {% if framework.clarificationQuestionsOpen %}
+            Read updates and ask clarification questions
+          {% else %}
+            Read updates and clarification question responses
+          {% endif %}
+        </span>
+      </a>
+      {% if last_modified.supplier_updates %}
+      <div class="hint">
+        Last updated
+        <time datetime="{{ last_modified.supplier_updates }}">
+          {{ last_modified.supplier_updates|dateformat }}
+        </time>
+      </div>
+      {% endif %}
+    </li>
+  </ul>
+</li>
+{% endif %}
