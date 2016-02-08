@@ -4,7 +4,6 @@ try:
 except ImportError:
     from io import BytesIO as StringIO
 from nose.tools import assert_equal, assert_true, assert_in, assert_not_in
-import os
 import mock
 from lxml import html
 from dmapiclient import APIError
@@ -373,7 +372,6 @@ class TestFrameworksDashboard(BaseApplicationTest):
             self.login()
 
             data_api_client.get_framework.return_value = self.framework(status='standstill')
-            data_api_client.get_framework_interest.return_value = {'frameworks': ['g-cloud-7']}
             data_api_client.find_draft_services.return_value = {
                 "services": [
                     {'serviceName': 'A service', 'status': 'submitted', 'lot': 'iaas'}
@@ -392,7 +390,6 @@ class TestFrameworksDashboard(BaseApplicationTest):
             self.login()
 
             data_api_client.get_framework.return_value = self.framework(status='pending')
-            data_api_client.get_framework_interest.return_value = {'frameworks': ['g-cloud-7']}
             data_api_client.find_draft_services.return_value = {
                 "services": [
                     {'serviceName': 'A service', 'status': 'submitted', 'lot': 'iaas'}
@@ -411,7 +408,6 @@ class TestFrameworksDashboard(BaseApplicationTest):
             self.login()
             s3.return_value.path_exists.return_value = False
             data_api_client.get_framework.return_value = self.framework(status='standstill')
-            data_api_client.get_framework_interest.return_value = {'frameworks': ['g-cloud-7']}
             data_api_client.find_draft_services.return_value = {
                 "services": [
                     {'serviceName': 'A service', 'status': 'not-submitted'}
@@ -430,7 +426,6 @@ class TestFrameworksDashboard(BaseApplicationTest):
             self.login()
             s3.return_value.path_exists.return_value = False
             data_api_client.get_framework.return_value = self.framework(status='standstill')
-            data_api_client.get_framework_interest.return_value = {'frameworks': ['g-cloud-7']}
             data_api_client.find_draft_services.return_value = {
                 "services": [
                     {'serviceName': 'A service', 'status': 'submitted', 'lot': 'iaas'}
@@ -449,8 +444,6 @@ class TestFrameworksDashboard(BaseApplicationTest):
         with self.app.test_client():
             self.login()
 
-            data_api_client.get_framework.return_value = self.framework(status='standstill')
-            data_api_client.get_framework_interest.return_value = {'frameworks': ['g-cloud-7']}
             data_api_client.find_draft_services.return_value = {
                 "services": [
                     {'serviceName': 'A service', 'status': 'submitted', 'lot': 'iaas'}
@@ -470,7 +463,6 @@ class TestFrameworksDashboard(BaseApplicationTest):
             self.login()
             s3.return_value.path_exists.return_value = True
             data_api_client.get_framework.return_value = self.framework(status='standstill')
-            data_api_client.get_framework_interest.return_value = {'frameworks': ['g-cloud-7']}
             data_api_client.find_draft_services.return_value = {
                 "services": [
                     {'serviceName': 'A service', 'status': 'submitted', 'lot': 'iaas'}
