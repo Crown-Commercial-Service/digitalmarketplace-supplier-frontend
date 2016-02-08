@@ -7,7 +7,7 @@ run_app: show_environment virtualenv
 	python application.py runserver
 
 virtualenv:
-	[ -z $$VIRTUAL_ENV ] && virtualenv venv || true
+	[ -z $$VIRTUAL_ENV ] && [ ! -d venv ] && virtualenv venv || true
 
 requirements: virtualenv requirements.txt
 	${VIRTUALENV_ROOT}/bin/pip install -r requirements.txt
