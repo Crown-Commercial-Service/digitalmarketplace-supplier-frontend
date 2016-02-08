@@ -8,26 +8,29 @@ Frontend supplier application for the digital marketplace.
 
 - Python app, based on the [Flask framework](http://flask.pocoo.org/)
 
-## Setup
+## Quickstart
 
 Install [Virtualenv](https://virtualenv.pypa.io/en/latest/)
+```
+sudo easy_install virtualenv
+```
 
+Install dependencies, build assets and run the app
+```
+make run_all
+```
+
+## Full setup
+
+Install [Virtualenv](https://virtualenv.pypa.io/en/latest/)
 ```
 sudo easy_install virtualenv
 ```
 
 Create a virtual environment
- 
  ```
  virtualenv ./venv
  ```
-
-Set the required environment variables (for dev use local API instance if you 
-have it running):
-```
-export DM_DATA_API_URL=http://localhost:5000
-export DM_DATA_API_AUTH_TOKEN=<auth_token>
-```
 
 ### Activate the virtual environment
 
@@ -39,7 +42,7 @@ source ./venv/bin/activate
 
 Install new Python dependencies with pip
 
-```pip install -r requirements_for_test.txt```
+```make requirements_for_test```
 
 
 ## Front-end
@@ -84,37 +87,27 @@ Note: `npm run frontend-install` is run automatically as a post-install task whe
 To run the whole testsuite:
 
 ```
-./scripts/run_tests.sh
+make test
 ```
 
-To just run the JavaScript tests:
+To test individual parts of the test stack use the `test_pep8`, `test_python`
+or `test_javascript` targets.
 
+eg.
 ```
-npm test
-```
-
-### Run the server
-
-To run the Supplier Frontend App for local development you can use the convenient run
-script, which sets the required environment variables to defaults if they have
-not already been set:
-
-```
-./scripts/run_app.sh
+make test_javascript
 ```
 
-The script is a wrapper around `python application.py runserver` so all the options available there
-can also be sent in. For example, to set the host:
+### Run the development server
+
+To run the Supplier Frontend App for local development use the `run_all` target.
+This will install requirements, build assets and run the app.
 
 ```
-./scripts/run_app.sh -h '0.0.0.0'
+make run_all
 ```
 
-More generally, the command to start the server is:
-
-```
-python application.py runserver
-```
+To just run the application use the `run_app` target.
 
 The supplier frontend runs on port 5003. Use the app at [http://127.0.0.1:5003/suppliers](http://127.0.0.1:5003/suppliers)
 
