@@ -47,7 +47,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
             else:
                 assert_equal(len(hint), 0)
 
-    def test_shows_for_pending(self, data_api_client, s3):
+    def test_framework_dashboard_shows_for_pending_if_declaration_exists(self, data_api_client, s3):
         with self.app.test_client():
             self.login()
 
@@ -56,20 +56,11 @@ class TestFrameworksDashboard(BaseApplicationTest):
         res = self.client.get("/suppliers/frameworks/g-cloud-7")
 
         assert_equal(res.status_code, 200)
-
-    def test_title_for_pending(self, data_api_client, s3):
-        with self.app.test_client():
-            self.login()
-
-        data_api_client.get_framework.return_value = self.framework(status='pending')
-        data_api_client.get_supplier_framework_info.return_value = self.supplier_framework()
-        res = self.client.get("/suppliers/frameworks/g-cloud-7")
-
         doc = html.fromstring(res.get_data(as_text=True))
         assert_equal(
             len(doc.xpath('//h1[contains(text(), "Your G-Cloud 7 application")]')), 1)
 
-    def test_shows_for_live_if_declaration_exists(self, data_api_client, s3):
+    def test_framework_dashboard_shows_for_live_if_declaration_exists(self, data_api_client, s3):
         with self.app.test_client():
             self.login()
 
@@ -78,15 +69,6 @@ class TestFrameworksDashboard(BaseApplicationTest):
         res = self.client.get("/suppliers/frameworks/g-cloud-7")
 
         assert_equal(res.status_code, 200)
-
-    def test_title_for_live(self, data_api_client, s3):
-        with self.app.test_client():
-            self.login()
-
-        data_api_client.get_framework.return_value = self.framework(status='live')
-        data_api_client.get_supplier_framework_info.return_value = self.supplier_framework()
-        res = self.client.get("/suppliers/frameworks/g-cloud-7")
-
         doc = html.fromstring(res.get_data(as_text=True))
         assert_equal(
             len(doc.xpath('//h1[contains(text(), "Your G-Cloud 7 documents")]')), 1)
@@ -439,6 +421,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
             data = res.get_data(as_text=True)
 
             assert_in(u'Sign and return your framework agreement', data)
+            assert_not_in(u'Download your countersigned framework agreement', data)
 
     def test_link_to_framework_agreement_is_not_shown_if_supplier_is_not_on_framework(self, data_api_client, s3):
         with self.app.test_client():
@@ -475,6 +458,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
 
             data = res.get_data(as_text=True)
 
+            assert_not_in(u'Sign and return your framework agreement', data)
             assert_in(u'Download your countersigned framework agreement', data)
 
 
