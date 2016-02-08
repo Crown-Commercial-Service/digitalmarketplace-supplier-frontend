@@ -41,8 +41,12 @@ class TestFrameworksDashboard(BaseApplicationTest):
 
             if last_updated.get('time'):
                 time = hint[0].find('./time')
-                assert_equal(last_updated['time']['text'], time.text)
-                assert_equal(last_updated['time']['datetime'], time.get('datetime'))
+                assert_equal(
+                    BaseApplicationTest.strip_all_whitespace(last_updated['time']['text']),
+                    BaseApplicationTest.strip_all_whitespace(time.text))
+                assert_equal(
+                    BaseApplicationTest.strip_all_whitespace(last_updated['time']['datetime']),
+                    BaseApplicationTest.strip_all_whitespace(time.get('datetime')))
 
             else:
                 assert_equal(len(hint), 0)
