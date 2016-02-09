@@ -427,6 +427,37 @@ class TestFrameworksDashboard(BaseApplicationTest):
             assert_in(u'Sign and return your framework agreement', data)
             assert_not_in(u'Download your countersigned framework agreement', data)
 
+    def test_pending_success_message_is_explicit_if_supplier_is_on_framework(self, data_api_client, s3):
+        with self.app.test_client():
+            self.login()
+
+        s3.return_value.path_exists.return_value = False
+        data_api_client.get_framework.return_value = self.framework(status='standstill')
+        data_api_client.find_draft_services.return_value = {
+            "services": [
+                {'serviceName': 'A service', 'status': 'submitted', 'lot': 'iaas'}
+            ]
+        }
+        data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(on_framework=True)
+        res = self.client.get("/suppliers/frameworks/g-cloud-7")
+        assert_equal(res.status_code, 200)
+
+        data = res.get_data(as_text=True)
+
+        for success_message in [
+            u'Your application was successful. You\'ll be able to sell services when the G-Cloud 7 framework is live',
+            u'Download your application award letter (.pdf)',
+            u'This letter is a record of your successful G-Cloud 7 application.'
+        ]:
+            assert_in(success_message, data)
+
+        for equivocal_message in [
+            u'You made your supplier declaration and submitted 1 service.',
+            u'Download your application result letter (.pdf)',
+            u'This letter informs you if your G-Cloud 7 application has been successful.'
+        ]:
+            assert_not_in(equivocal_message, data)
+
     def test_link_to_framework_agreement_is_not_shown_if_supplier_is_not_on_framework(self, data_api_client, s3):
         with self.app.test_client():
             self.login()
@@ -444,6 +475,37 @@ class TestFrameworksDashboard(BaseApplicationTest):
             data = res.get_data(as_text=True)
 
             assert_not_in(u'Sign and return your framework agreement', data)
+
+    def test_pending_success_message_is_equivocal_if_supplier_is_on_framework(self, data_api_client, s3):
+        with self.app.test_client():
+            self.login()
+
+        s3.return_value.path_exists.return_value = False
+        data_api_client.get_framework.return_value = self.framework(status='standstill')
+        data_api_client.find_draft_services.return_value = {
+            "services": [
+                {'serviceName': 'A service', 'status': 'submitted', 'lot': 'iaas'}
+            ]
+        }
+        data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(on_framework=False)
+        res = self.client.get("/suppliers/frameworks/g-cloud-7")
+        assert_equal(res.status_code, 200)
+
+        data = res.get_data(as_text=True)
+
+        for success_message in [
+            u'Your application was successful. You\'ll be able to sell services when the G-Cloud 7 framework is live',
+            u'Download your application award letter (.pdf)',
+            u'This letter is a record of your successful G-Cloud 7 application.'
+        ]:
+            assert_not_in(success_message, data)
+
+        for equivocal_message in [
+            u'You made your supplier declaration and submitted 1 service.',
+            u'Download your application result letter (.pdf)',
+            u'This letter informs you if your G-Cloud 7 application has been successful.'
+        ]:
+            assert_in(equivocal_message, data)
 
     def test_link_to_countersigned_framework_agreement_is_shown_if_it_exists(self, data_api_client, s3):
         with self.app.test_client():
