@@ -4,7 +4,6 @@ try:
 except ImportError:
     from io import BytesIO as StringIO
 from nose.tools import assert_equal, assert_true, assert_in, assert_not_in
-import os
 import mock
 from lxml import html
 from dmapiclient import APIError
@@ -42,13 +41,17 @@ class TestFrameworksDashboard(BaseApplicationTest):
 
             if last_updated.get('time'):
                 time = hint[0].find('./time')
-                assert_equal(last_updated['time']['text'], time.text)
-                assert_equal(last_updated['time']['datetime'], time.get('datetime'))
+                assert_equal(
+                    BaseApplicationTest.strip_all_whitespace(last_updated['time']['text']),
+                    BaseApplicationTest.strip_all_whitespace(time.text))
+                assert_equal(
+                    BaseApplicationTest.strip_all_whitespace(last_updated['time']['datetime']),
+                    BaseApplicationTest.strip_all_whitespace(time.get('datetime')))
 
             else:
                 assert_equal(len(hint), 0)
 
-    def test_shows_for_pending(self, data_api_client, s3):
+    def test_framework_dashboard_shows_for_pending_if_declaration_exists(self, data_api_client, s3):
         with self.app.test_client():
             self.login()
 
@@ -57,20 +60,11 @@ class TestFrameworksDashboard(BaseApplicationTest):
         res = self.client.get("/suppliers/frameworks/g-cloud-7")
 
         assert_equal(res.status_code, 200)
-
-    def test_title_for_pending(self, data_api_client, s3):
-        with self.app.test_client():
-            self.login()
-
-        data_api_client.get_framework.return_value = self.framework(status='pending')
-        data_api_client.get_supplier_framework_info.return_value = self.supplier_framework()
-        res = self.client.get("/suppliers/frameworks/g-cloud-7")
-
         doc = html.fromstring(res.get_data(as_text=True))
         assert_equal(
             len(doc.xpath('//h1[contains(text(), "Your G-Cloud 7 application")]')), 1)
 
-    def test_shows_for_live_if_declaration_exists(self, data_api_client, s3):
+    def test_framework_dashboard_shows_for_live_if_declaration_exists(self, data_api_client, s3):
         with self.app.test_client():
             self.login()
 
@@ -79,15 +73,6 @@ class TestFrameworksDashboard(BaseApplicationTest):
         res = self.client.get("/suppliers/frameworks/g-cloud-7")
 
         assert_equal(res.status_code, 200)
-
-    def test_title_for_live(self, data_api_client, s3):
-        with self.app.test_client():
-            self.login()
-
-        data_api_client.get_framework.return_value = self.framework(status='live')
-        data_api_client.get_supplier_framework_info.return_value = self.supplier_framework()
-        res = self.client.get("/suppliers/frameworks/g-cloud-7")
-
         doc = html.fromstring(res.get_data(as_text=True))
         assert_equal(
             len(doc.xpath('//h1[contains(text(), "Your G-Cloud 7 documents")]')), 1)
@@ -373,7 +358,6 @@ class TestFrameworksDashboard(BaseApplicationTest):
             self.login()
 
             data_api_client.get_framework.return_value = self.framework(status='standstill')
-            data_api_client.get_framework_interest.return_value = {'frameworks': ['g-cloud-7']}
             data_api_client.find_draft_services.return_value = {
                 "services": [
                     {'serviceName': 'A service', 'status': 'submitted', 'lot': 'iaas'}
@@ -392,7 +376,6 @@ class TestFrameworksDashboard(BaseApplicationTest):
             self.login()
 
             data_api_client.get_framework.return_value = self.framework(status='pending')
-            data_api_client.get_framework_interest.return_value = {'frameworks': ['g-cloud-7']}
             data_api_client.find_draft_services.return_value = {
                 "services": [
                     {'serviceName': 'A service', 'status': 'submitted', 'lot': 'iaas'}
@@ -411,7 +394,6 @@ class TestFrameworksDashboard(BaseApplicationTest):
             self.login()
             s3.return_value.path_exists.return_value = False
             data_api_client.get_framework.return_value = self.framework(status='standstill')
-            data_api_client.get_framework_interest.return_value = {'frameworks': ['g-cloud-7']}
             data_api_client.find_draft_services.return_value = {
                 "services": [
                     {'serviceName': 'A service', 'status': 'not-submitted'}
@@ -430,7 +412,6 @@ class TestFrameworksDashboard(BaseApplicationTest):
             self.login()
             s3.return_value.path_exists.return_value = False
             data_api_client.get_framework.return_value = self.framework(status='standstill')
-            data_api_client.get_framework_interest.return_value = {'frameworks': ['g-cloud-7']}
             data_api_client.find_draft_services.return_value = {
                 "services": [
                     {'serviceName': 'A service', 'status': 'submitted', 'lot': 'iaas'}
@@ -444,13 +425,43 @@ class TestFrameworksDashboard(BaseApplicationTest):
             data = res.get_data(as_text=True)
 
             assert_in(u'Sign and return your framework agreement', data)
+            assert_not_in(u'Download your countersigned framework agreement', data)
+
+    def test_pending_success_message_is_explicit_if_supplier_is_on_framework(self, data_api_client, s3):
+        with self.app.test_client():
+            self.login()
+
+        s3.return_value.path_exists.return_value = False
+        data_api_client.get_framework.return_value = self.framework(status='standstill')
+        data_api_client.find_draft_services.return_value = {
+            "services": [
+                {'serviceName': 'A service', 'status': 'submitted', 'lot': 'iaas'}
+            ]
+        }
+        data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(on_framework=True)
+        res = self.client.get("/suppliers/frameworks/g-cloud-7")
+        assert_equal(res.status_code, 200)
+
+        data = res.get_data(as_text=True)
+
+        for success_message in [
+            u'Your application was successful. You\'ll be able to sell services when the G-Cloud 7 framework is live',
+            u'Download your application award letter (.pdf)',
+            u'This letter is a record of your successful G-Cloud 7 application.'
+        ]:
+            assert_in(success_message, data)
+
+        for equivocal_message in [
+            u'You made your supplier declaration and submitted 1 service.',
+            u'Download your application result letter (.pdf)',
+            u'This letter informs you if your G-Cloud 7 application has been successful.'
+        ]:
+            assert_not_in(equivocal_message, data)
 
     def test_link_to_framework_agreement_is_not_shown_if_supplier_is_not_on_framework(self, data_api_client, s3):
         with self.app.test_client():
             self.login()
 
-            data_api_client.get_framework.return_value = self.framework(status='standstill')
-            data_api_client.get_framework_interest.return_value = {'frameworks': ['g-cloud-7']}
             data_api_client.find_draft_services.return_value = {
                 "services": [
                     {'serviceName': 'A service', 'status': 'submitted', 'lot': 'iaas'}
@@ -465,12 +476,42 @@ class TestFrameworksDashboard(BaseApplicationTest):
 
             assert_not_in(u'Sign and return your framework agreement', data)
 
+    def test_pending_success_message_is_equivocal_if_supplier_is_on_framework(self, data_api_client, s3):
+        with self.app.test_client():
+            self.login()
+
+        s3.return_value.path_exists.return_value = False
+        data_api_client.get_framework.return_value = self.framework(status='standstill')
+        data_api_client.find_draft_services.return_value = {
+            "services": [
+                {'serviceName': 'A service', 'status': 'submitted', 'lot': 'iaas'}
+            ]
+        }
+        data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(on_framework=False)
+        res = self.client.get("/suppliers/frameworks/g-cloud-7")
+        assert_equal(res.status_code, 200)
+
+        data = res.get_data(as_text=True)
+
+        for success_message in [
+            u'Your application was successful. You\'ll be able to sell services when the G-Cloud 7 framework is live',
+            u'Download your application award letter (.pdf)',
+            u'This letter is a record of your successful G-Cloud 7 application.'
+        ]:
+            assert_not_in(success_message, data)
+
+        for equivocal_message in [
+            u'You made your supplier declaration and submitted 1 service.',
+            u'Download your application result letter (.pdf)',
+            u'This letter informs you if your G-Cloud 7 application has been successful.'
+        ]:
+            assert_in(equivocal_message, data)
+
     def test_link_to_countersigned_framework_agreement_is_shown_if_it_exists(self, data_api_client, s3):
         with self.app.test_client():
             self.login()
             s3.return_value.path_exists.return_value = True
             data_api_client.get_framework.return_value = self.framework(status='standstill')
-            data_api_client.get_framework_interest.return_value = {'frameworks': ['g-cloud-7']}
             data_api_client.find_draft_services.return_value = {
                 "services": [
                     {'serviceName': 'A service', 'status': 'submitted', 'lot': 'iaas'}
@@ -483,6 +524,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
 
             data = res.get_data(as_text=True)
 
+            assert_not_in(u'Sign and return your framework agreement', data)
             assert_in(u'Download your countersigned framework agreement', data)
 
 
