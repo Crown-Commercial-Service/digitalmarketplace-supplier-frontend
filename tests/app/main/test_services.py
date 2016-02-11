@@ -7,11 +7,22 @@ except ImportError:
 from dmapiclient import HTTPError
 import copy
 import mock
+import pytest
 from lxml import html
 from freezegun import freeze_time
 
 from nose.tools import assert_equal, assert_true, assert_false, assert_in, assert_not_in
 from tests.app.helpers import BaseApplicationTest
+
+
+@pytest.fixture(params=["g-cloud-6", "g-cloud-7"])
+def fixture_framework_slug_and_name(request):
+    frameworks = {
+        'g-cloud-6': ('g-cloud-6', 'G-Cloud 6'),
+        'g-cloud-7': ('g-cloud-7', 'G-Cloud 7')
+    }
+
+    return frameworks[request.param]
 
 
 class TestListServices(BaseApplicationTest):
@@ -130,15 +141,19 @@ class TestListServicesLogin(BaseApplicationTest):
 class TestSupplierUpdateService(BaseApplicationTest):
     def _get_service(self,
                      data_api_client,
+                     framework_slug_and_name,
                      service_status="published",
                      service_belongs_to_user=True):
+
+        framework_slug, framework_name = framework_slug_and_name
+
         data_api_client.get_service.return_value = {
             'services': {
                 'serviceName': 'Service name 123',
                 'status': service_status,
                 'id': '123',
-                'frameworkName': 'G-Cloud 6',
-                'frameworkSlug': 'g-cloud-6',
+                'frameworkName': framework_name,
+                'frameworkSlug': framework_slug,
                 'supplierId': 1234 if service_belongs_to_user else 1235
             }
         }
@@ -151,8 +166,8 @@ class TestSupplierUpdateService(BaseApplicationTest):
 
         data_api_client.get_framework.return_value = {
             'frameworks': {
-                'name': 'G-Cloud 6',
-                'slug': 'g-cloud-6',
+                'name': framework_name,
+                'slug': framework_slug
             }
         }
 
@@ -165,10 +180,10 @@ class TestSupplierUpdateService(BaseApplicationTest):
         assert_equal(res.status_code, expected_status_code)
 
     def test_should_view_public_service_with_correct_message(
-            self, data_api_client
+            self, data_api_client, fixture_framework_slug_and_name
     ):
         self.login()
-        self._get_service(data_api_client, service_status='published')
+        self._get_service(data_api_client, fixture_framework_slug_and_name, service_status='published')
 
         res = self.client.get('/suppliers/services/123')
         assert_equal(res.status_code, 200)
@@ -204,10 +219,10 @@ class TestSupplierUpdateService(BaseApplicationTest):
         self._post_remove_service(service_should_be_modifiable=True)
 
     def test_should_view_private_service_with_correct_message(
-            self, data_api_client
+            self, data_api_client, fixture_framework_slug_and_name
     ):
         self.login()
-        self._get_service(data_api_client, service_status='enabled')
+        self._get_service(data_api_client, fixture_framework_slug_and_name, service_status='enabled')
 
         res = self.client.get('/suppliers/services/123')
         assert_equal(res.status_code, 200)
@@ -228,10 +243,10 @@ class TestSupplierUpdateService(BaseApplicationTest):
         self._post_remove_service(service_should_be_modifiable=False)
 
     def test_should_view_disabled_service_with_removed_message(
-            self, data_api_client
+            self, data_api_client, fixture_framework_slug_and_name
     ):
         self.login()
-        self._get_service(data_api_client, service_status='disabled')
+        self._get_service(data_api_client, fixture_framework_slug_and_name, service_status='disabled')
 
         res = self.client.get('/suppliers/services/123')
         assert_equal(res.status_code, 200)
@@ -248,10 +263,10 @@ class TestSupplierUpdateService(BaseApplicationTest):
         self._post_remove_service(service_should_be_modifiable=False)
 
     def test_should_view_confirmation_message_if_first_remove_service_button_clicked(
-            self, data_api_client
+            self, data_api_client, fixture_framework_slug_and_name
     ):
         self.login()
-        self._get_service(data_api_client, service_status='published')
+        self._get_service(data_api_client, fixture_framework_slug_and_name, service_status='published')
 
         res = self.client.post('/suppliers/services/123/remove', follow_redirects=True)
 
@@ -276,10 +291,10 @@ class TestSupplierUpdateService(BaseApplicationTest):
         )
 
     def test_should_view_correct_notification_message_if_service_removed(
-            self, data_api_client
+            self, data_api_client, fixture_framework_slug_and_name
     ):
         self.login()
-        self._get_service(data_api_client, service_status='published')
+        self._get_service(data_api_client, fixture_framework_slug_and_name, service_status='published')
 
         res = self.client.post(
             '/suppliers/services/123/remove',
@@ -299,10 +314,11 @@ class TestSupplierUpdateService(BaseApplicationTest):
         )
 
     def test_should_not_view_other_suppliers_services(
-            self, data_api_client
+            self, data_api_client, fixture_framework_slug_and_name
     ):
         self.login()
-        self._get_service(data_api_client, service_status='published', service_belongs_to_user=False)
+        self._get_service(
+            data_api_client, fixture_framework_slug_and_name, service_status='published', service_belongs_to_user=False)
 
         res = self.client.get('/suppliers/services/123')
         assert_equal(res.status_code, 404)
