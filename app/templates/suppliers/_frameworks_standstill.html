@@ -17,7 +17,7 @@
           <p>
             {{ framework.name }}
           </p>
-          {% if framework.onFramework %}
+          {% if framework.onFramework and framework.dates.framework_live_date %}
             <p class='second-line'>
               Live from {{ framework.dates.framework_live_date|safe }}
             </p>
