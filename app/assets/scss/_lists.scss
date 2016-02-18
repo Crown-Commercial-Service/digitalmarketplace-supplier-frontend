@@ -71,3 +71,46 @@ ol {
   list-style-type: none;
   margin-bottom: 10px;
 }
+
+%framework-agreement-section,
+.framework-agreement-section {
+  padding: 20px 0 15px 0;
+  border-top: 1px solid #dee0e2;
+
+  .document-list {
+    padding-bottom: 0;
+  }
+
+  .question {
+    margin: 0;
+
+    .question-heading {
+      position: absolute;
+      left: -9999em;
+      margin-bottom: 10px
+    }
+  }
+
+  h3 {
+    margin-bottom: 5px;
+  }
+
+  .lead-in {
+    margin-bottom: 10px;
+  }
+
+  ol {
+    list-style: decimal;
+    margin-left: 1.5em;
+    margin-bottom: 10px;
+
+    li {
+      margin-bottom: 5px;
+    }
+  }
+}
+
+.framework-agreement-section-first {
+  @extend %framework-agreement-section;
+  border-top: none;
+}
