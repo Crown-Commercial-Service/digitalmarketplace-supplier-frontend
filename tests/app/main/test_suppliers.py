@@ -353,9 +353,11 @@ class TestSuppliersDashboard(BaseApplicationTest):
 
     @mock.patch("app.main.views.suppliers.data_api_client")
     @mock.patch("app.main.views.suppliers.get_current_suppliers_users")
+    @mock.patch("app.main.views.suppliers.content_loader")
     def test_shows_gcloud_7_in_standstill_application_passed(
-        self, get_current_suppliers_users, data_api_client
+        self, content_loader, get_current_suppliers_users, data_api_client
     ):
+        content_loader.get_message.return_value = {'framework_live_date': '23 November 2015'}
         data_api_client.get_supplier.side_effect = get_supplier
         data_api_client.get_supplier_frameworks.return_value = {
             'frameworkInterest': [
@@ -406,6 +408,56 @@ class TestSuppliersDashboard(BaseApplicationTest):
                       first_row)
             assert_in(u"You must sign the framework agreement to sell these services",
                       first_row)
+
+    @mock.patch("app.main.views.suppliers.data_api_client")
+    @mock.patch("app.main.views.suppliers.get_current_suppliers_users")
+    @mock.patch("app.main.views.suppliers.content_loader")
+    def test_shows_gcloud_7_in_standstill_application_passed_without_live_date(
+        self, content_loader, get_current_suppliers_users, data_api_client
+    ):
+        content_loader.get_message.return_value = {'framework_live_date': ''}
+        data_api_client.get_supplier.side_effect = get_supplier
+        data_api_client.get_supplier_frameworks.return_value = {
+            'frameworkInterest': [
+                {
+                    'frameworkSlug': 'g-cloud-7',
+                    'declaration': {'status': 'complete'},
+                    'drafts_count': 0,
+                    'complete_drafts_count': 99,
+                    'onFramework': True,
+                    'agreementReturned': False
+                }
+            ]
+        }
+        data_api_client.find_frameworks.return_value = {
+            "frameworks": [
+                {
+                    'status': 'standstill',
+                    'slug': 'g-cloud-7',
+                    'name': 'G-Cloud 7'
+                }
+            ]
+        }
+
+        with self.app.test_client():
+            self.login()
+            res = self.client.get("/suppliers")
+            assert res.status_code == 200
+            doc = html.fromstring(res.get_data(as_text=True))
+
+            first_table = doc.xpath(
+                '//table[@class="summary-item-body"]'
+            )
+
+            assert_in(u"Pending services",
+                      first_table[0].xpath('caption/text()')[0])
+
+            first_row = "".join(first_table[0].xpath('tbody/descendant::*/text()'))
+            assert_in(u"G-Cloud 7",
+                      first_row)
+            assert_not_in(
+                u"Live from",
+                first_row)
 
     @mock.patch("app.main.views.suppliers.data_api_client")
     @mock.patch("app.main.views.suppliers.get_current_suppliers_users")
