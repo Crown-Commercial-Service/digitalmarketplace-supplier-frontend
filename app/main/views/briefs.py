@@ -1,4 +1,4 @@
-from flask import render_template, request, redirect, flash
+from flask import render_template, abort, request, redirect, flash
 from flask_login import current_user
 
 from ..helpers import login_required
@@ -7,7 +7,8 @@ from ..helpers.briefs import (
     ensure_supplier_is_eligible_for_brief,
     send_brief_clarification_question,
 )
-from ...main import main
+from ..helpers.frameworks import get_framework_and_lot
+from ...main import main, content_loader
 from ... import data_api_client
 
 
@@ -38,3 +39,35 @@ def ask_brief_clarification_question(brief_id):
         clarification_question_name='clarification-question',
         clarification_question_value=clarification_question_value
     ), 200 if not error_message else 400
+
+
+@main.route('/opportunities/<int:brief_id>/responses/create', methods=['GET'])
+@login_required
+def submit_brief_response(brief_id):
+
+    brief = data_api_client.get_brief(brief_id)['briefs']
+    if brief['status'] != 'live':
+        abort(404)
+
+    framework_slug = brief['frameworkSlug']
+    lot_slug = brief['lotSlug']
+
+    framework, lot = get_framework_and_lot(data_api_client, framework_slug, lot_slug, open_only=False)
+
+    content = content_loader.get_manifest(framework_slug, 'edit_brief_response').filter(
+        {'lot': lot_slug}
+    )
+    section = content.get_section(content.get_next_editable_section_id())
+
+    # pass all of the brief yes/no questions into the ContentQuestion
+    for question in section.questions:
+        if question.type == 'boolean_list':
+            question.boolean_list_questions = brief[question.id]
+
+    return render_template(
+        "services/edit_submission_section.html",
+        framework=framework,
+        service_data={},
+        section=section,
+        **dict(main.config['BASE_TEMPLATE_DATA'])
+    ), 200
