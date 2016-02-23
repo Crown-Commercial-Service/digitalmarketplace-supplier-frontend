@@ -167,7 +167,8 @@ class TestSupplierUpdateService(BaseApplicationTest):
         data_api_client.get_framework.return_value = {
             'frameworks': {
                 'name': framework_name,
-                'slug': framework_slug
+                'slug': framework_slug,
+                'status': 'live'
             }
         }
 
