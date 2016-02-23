@@ -52,7 +52,7 @@ def submit_brief_response(brief_id):
     framework_slug = brief['frameworkSlug']
     lot_slug = brief['lotSlug']
 
-    framework, lot = get_framework_and_lot(data_api_client, framework_slug, lot_slug)
+    framework, lot = get_framework_and_lot(data_api_client, framework_slug, lot_slug, allowed_statuses=['live'])
 
     content = content_loader.get_manifest(framework_slug, 'edit_brief_response').filter(
         {'lot': lot_slug}
