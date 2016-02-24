@@ -7,6 +7,7 @@ from flask_wtf.csrf import CsrfProtect
 import dmapiclient
 from dmutils import init_app, flask_featureflags
 from dmutils.user import User
+from dmutils.config import convert_to_boolean
 
 from config import configs
 
@@ -73,6 +74,10 @@ def create_app(config_name):
 
     application.add_template_filter(question_references)
     application.add_template_filter(parse_document_upload_time)
+
+    @application.template_filter('convert_to_boolean')
+    def convert_to_boolean_filter(data):
+        return convert_to_boolean(data)
 
     return application
 
