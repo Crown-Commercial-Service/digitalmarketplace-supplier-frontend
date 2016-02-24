@@ -145,3 +145,45 @@
     {% include "toolkit/forms/textbox.html" %}
   {% endwith %}
 {%- endmacro %}
+
+{% macro boolean_list(question_content, service_data, errors, question_number=None, get_question=None) -%}
+
+  {% set error = errors.get(question_content.id)['message']|question_references(get_question) %}
+  {% if error %}
+    <div class="validation-wrapper">
+  {% endif %}
+    <fieldset class="question" id="{{ question_content.id }}" style="margin: 20px 0; border-bottom: 2px #F3F3F3 solid;">
+      <legend>
+        <span class="question-heading">
+          <h2 class="heading-for-a-set-of-questions" style="font-size: 28px;">{{ question_content.question }}</h2>
+        </span>
+      </legend>
+      <span class="hint">
+        <p>{{ question_content.hint }}</p>
+      </span>
+
+      {% if error %}
+        <span class="validation-message" id="error-{{ question_content.id }}">
+          {{ error }}
+        </span>
+      {% endif %}
+
+      {% for boolean_question in question_content.boolean_list_questions %}
+        {% set boolean_question_id = '{}-{}'.format(question_content.id, loop.index0) %}
+        {% with
+            boolean_question_content = {
+              'id': boolean_question_id,
+              'question': boolean_question,
+            },
+            data = {
+              boolean_question_id: service_data[boolean_question_id]|convert_to_boolean
+            }
+        %}
+          {{ boolean(boolean_question_content, data, {}) }}
+        {% endwith %}
+      {% endfor %}
+    </fieldset>
+  {% if error %}
+    </div>
+  {% endif %}
+{%- endmacro %}
