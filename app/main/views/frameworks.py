@@ -317,22 +317,6 @@ def download_agreement_file(framework_slug, document_name):
     return redirect(url)
 
 
-@main.route('/frameworks/<any("g-cloud-7"):framework_slug>/<path:filepath>.zip', methods=['GET'])
-@deprecated(dies_at=datetime(2015, 11, 9))
-def g7_download_zip_redirect_zip(framework_slug, filepath):
-    return redirect(url_for('.download_supplier_file',
-                            framework_slug='g-cloud-7',
-                            filepath='{}.zip'.format(filepath)), 301)
-
-
-@main.route('/frameworks/<any("g-cloud-7"):framework_slug>/<path:filepath>.pdf', methods=['GET'])
-@deprecated(dies_at=datetime(2015, 11, 9))
-def g7_download_zip_redirect_pdf(framework_slug, filepath):
-    return redirect(url_for('.download_supplier_file',
-                            framework_slug='g-cloud-7',
-                            filepath='{}.pdf'.format(filepath)), 301)
-
-
 @main.route('/frameworks/<framework_slug>/updates', methods=['GET'])
 @login_required
 def framework_updates(framework_slug, error_message=None, default_textbox_value=None):
