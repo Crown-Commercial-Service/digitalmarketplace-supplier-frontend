@@ -1,4 +1,4 @@
-from flask import render_template, abort, redirect, url_for, request, flash
+from flask import render_template, redirect, url_for, request, flash
 from flask_login import current_user
 
 from dmapiclient import HTTPError
@@ -8,6 +8,7 @@ from ..helpers.briefs import (
     get_brief,
     ensure_supplier_is_eligible_for_brief,
     send_brief_clarification_question,
+    inject_yes_no_questions_into_section_questions
 )
 from ..helpers.frameworks import get_framework_and_lot
 from ...main import main, content_loader
@@ -17,7 +18,7 @@ from ... import data_api_client
 @main.route('/opportunities/<int:brief_id>/ask-a-question', methods=['GET', 'POST'])
 @login_required
 def ask_brief_clarification_question(brief_id):
-    brief = get_brief(data_api_client, brief_id)
+    brief = get_brief(data_api_client, brief_id, allowed_statuses=['live'])
     ensure_supplier_is_eligible_for_brief(brief, current_user.supplier_id)
 
     error_message = None
@@ -47,24 +48,16 @@ def ask_brief_clarification_question(brief_id):
 @login_required
 def submit_brief_response(brief_id):
 
-    brief = data_api_client.get_brief(brief_id)['briefs']
-    if brief['status'] != 'live':
-        abort(404)
+    brief = get_brief(data_api_client, brief_id, allowed_statuses=['live'])
+    ensure_supplier_is_eligible_for_brief(brief, current_user.supplier_id)
 
-    framework_slug = brief['frameworkSlug']
-    lot_slug = brief['lotSlug']
+    framework, lot = get_framework_and_lot(
+        data_api_client, brief['frameworkSlug'], brief['lotSlug'], allowed_statuses=['live'])
 
-    framework, lot = get_framework_and_lot(data_api_client, framework_slug, lot_slug, allowed_statuses=['live'])
-
-    content = content_loader.get_manifest(framework_slug, 'edit_brief_response').filter(
-        {'lot': lot_slug}
-    )
+    content = content_loader.get_manifest(framework['slug'], 'edit_brief_response').filter({'lot': lot['slug']})
     section = content.get_section(content.get_next_editable_section_id())
 
-    # pass all of the brief yes/no questions into the ContentQuestion
-    for question in section.questions:
-        if question.type == 'boolean_list':
-            question.boolean_list_questions = brief[question.id]
+    inject_yes_no_questions_into_section_questions(section, brief)
 
     return render_template(
         "services/edit_submission_section.html",
@@ -81,19 +74,13 @@ def submit_brief_response(brief_id):
 def create_new_brief_response(brief_id):
     """Hits up the data API to create a new brief response."""
 
-    brief = data_api_client.get_brief(brief_id)['briefs']
-    if brief['status'] != 'live':
-        abort(404)
+    brief = get_brief(data_api_client, brief_id, allowed_statuses=['live'])
+    ensure_supplier_is_eligible_for_brief(brief, current_user.supplier_id)
 
-    framework_slug = brief['frameworkSlug']
-    lot_slug = brief['lotSlug']
+    framework, lot = get_framework_and_lot(
+        data_api_client, brief['frameworkSlug'], brief['lotSlug'], allowed_statuses=['live'])
 
-    # need the check that the framework is live
-    framework, lot = get_framework_and_lot(data_api_client, framework_slug, lot_slug, allowed_statuses=['live'])
-
-    content = content_loader.get_manifest(framework_slug, 'edit_brief_response').filter(
-        {'lot': lot_slug}
-    )
+    content = content_loader.get_manifest(framework['slug'], 'edit_brief_response').filter({'lot': lot['slug']})
     section = content.get_section(content.get_next_editable_section_id())
     response_data = section.get_data(request.form)
 
@@ -102,12 +89,9 @@ def create_new_brief_response(brief_id):
             brief_id, current_user.supplier_id, response_data, current_user.email_address
         )['briefResponses']
     except HTTPError as e:
-        errors = section.get_error_messages(e.message, lot_slug)
+        errors = section.get_error_messages(e.message, lot['slug'])
 
-        # pass all of the brief yes/no questions into the ContentQuestion
-        for question in section.questions:
-            if question.type == 'boolean_list':
-                question.boolean_list_questions = brief[question.id]
+        inject_yes_no_questions_into_section_questions(section, brief)
 
         return render_template(
             "services/edit_submission_section.html",

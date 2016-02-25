@@ -6,12 +6,16 @@ import datetime
 from flask import abort, current_app, render_template
 from flask_login import current_user
 
-from dmutils.email import send_email, hash_email, MandrillException
+from dmutils.email import send_email, MandrillException
 
 
-def get_brief(data_api_client, brief_id, live_only=True):
+def get_brief(data_api_client, brief_id, allowed_statuses=None):
+    if allowed_statuses is None:
+        allowed_statuses = []
+
     brief = data_api_client.get_brief(brief_id)['briefs']
-    if live_only and brief['status'] != 'live':
+
+    if allowed_statuses and brief['status'] not in allowed_statuses:
         abort(404)
 
     return brief
@@ -80,3 +84,11 @@ def send_brief_clarification_question(brief, clarification_question):
 
 def get_brief_user_emails(brief):
     return [user['emailAddress'] for user in brief['users'] if user['active']]
+
+
+def inject_yes_no_questions_into_section_questions(section, brief):
+
+    # pass all of the brief yes/no questions into the appropriate ContentQuestions
+    for question in section.questions:
+        if question.type == 'boolean_list':
+            question.boolean_list_questions = brief[question.id]
