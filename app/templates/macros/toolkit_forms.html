@@ -152,16 +152,14 @@
   {% if error %}
     <div class="validation-wrapper">
   {% endif %}
-    <fieldset class="question" id="{{ question_content.id }}" style="margin: 20px 0; border-bottom: 2px #F3F3F3 solid;">
+    <fieldset class="question question-boolean-list" id="{{ question_content.id }}">
         <span class="question-heading">
-          <h2 class="heading-for-a-set-of-questions" style="font-size: 28px;">{{ question_content.question }}</h2>
+          <h2>{{ question_content.question }}</h2>
         </span>
       <legend>
         <span class="visually-hidden">{{ question_content.name }}</span>
       </legend>
-      <span class="hint">
-        <p>{{ question_content.hint }}</p>
-      </span>
+        <p class="question-description">{{ question_content.hint }}</p>
 
       {% if error %}
         <span class="validation-message" id="error-{{ question_content.id }}">
