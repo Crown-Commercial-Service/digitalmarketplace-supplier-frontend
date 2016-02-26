@@ -148,10 +148,6 @@
 
 {% macro boolean_list(question_content, service_data, errors, question_number=None, get_question=None) -%}
 
-  {% set error = errors.get(question_content.id)['message']|question_references(get_question) %}
-  {% if error %}
-    <div class="validation-wrapper">
-  {% endif %}
     <fieldset class="question question-boolean-list" id="{{ question_content.id }}">
         <span class="question-heading">
           <h2>{{ question_content.question }}</h2>
@@ -178,11 +174,8 @@
               boolean_question_id: service_data[boolean_question_id]|convert_to_boolean
             }
         %}
-          {{ boolean(boolean_question_content, data, {}) }}
+          {{ boolean(boolean_question_content, data, errors) }}
         {% endwith %}
       {% endfor %}
     </fieldset>
-  {% if error %}
-    </div>
-  {% endif %}
 {%- endmacro %}

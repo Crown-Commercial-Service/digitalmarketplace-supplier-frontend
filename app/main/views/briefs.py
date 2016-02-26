@@ -1,3 +1,5 @@
+from collections import OrderedDict
+
 from flask import render_template, redirect, url_for, request, flash
 from flask_login import current_user
 
@@ -89,7 +91,36 @@ def create_new_brief_response(brief_id):
             brief_id, current_user.supplier_id, response_data, current_user.email_address
         )['briefResponses']
     except HTTPError as e:
+        # `errors` doesn't take into account error messages in (nested) boolean_list question fields
         errors = section.get_error_messages(e.message, lot['slug'])
+        new_errors = OrderedDict()
+
+        while len(errors):
+            old_error = errors.popitem(last=False)
+            question_id, error_message = old_error
+
+            if section.get_question(question_id).type == 'boolean_list':
+                # errors don't get passed into a boolean list (or, therefore, its nested questions)
+                # unless a 'truthy' value exists for its parent id
+                new_errors[question_id] = True
+
+                for index, essential_question in enumerate(brief[question_id]):
+                    try:
+                        # check the response data for True/False values returned from boolean_list questions
+                        value_we_want_to_be_true_or_false = response_data[question_id][index]
+                    except (IndexError, KeyError):
+                        value_we_want_to_be_true_or_false = None
+
+                    if not isinstance(value_we_want_to_be_true_or_false, bool):
+                        # Each non-boolean value is an error
+                        boolean_question_id = "{}-{}".format(question_id, index)
+                        new_errors[boolean_question_id] = {
+                            'input_name': boolean_question_id,
+                            'message': error_message['message'],
+                            'question': essential_question
+                        }
+            else:
+                new_errors[question_id] = error_message
 
         inject_yes_no_questions_into_section_questions(section, brief)
 
@@ -98,7 +129,7 @@ def create_new_brief_response(brief_id):
             framework=framework,
             service_data=request.form,
             section=section,
-            errors=errors,
+            errors=new_errors,
             **dict(main.config['BASE_TEMPLATE_DATA'])
         ), 400
 
