@@ -204,6 +204,19 @@ class TestRespondToBrief(BaseApplicationTest):
 
         assert_equal(res.status_code, 404)
 
+    def test_get_submit_brief_response_page_404_if_response_already_exists(self, data_api_client):
+        data_api_client.get_brief.return_value = self.brief
+        data_api_client.get_framework.return_value = self.framework
+        data_api_client.find_brief_responses.return_value = {
+            'briefResponses': [{
+                'briefId': self.brief['briefs']['id'],
+                'supplierId': 1234
+            }]
+        }
+
+        res = self.client.get('/suppliers/opportunities/1234/responses/create')
+        assert_equal(res.status_code, 404)
+
     def test_get_submit_brief_response_page_includes_essential_requirements(self, data_api_client):
         data_api_client.get_brief.return_value = self.brief
         data_api_client.get_framework.return_value = self.framework
@@ -314,6 +327,23 @@ class TestRespondToBrief(BaseApplicationTest):
         framework['frameworks']['status'] = 'standstill'
         data_api_client.get_brief.return_value = self.brief
         data_api_client.get_framework.return_value = framework
+
+        res = self.client.post(
+            '/suppliers/opportunities/1234/responses/create',
+            data=brief_form_submission
+        )
+        assert_equal(res.status_code, 404)
+        assert not data_api_client.create_brief_response.called
+
+    def test_post_create_new_brief_response_404_if_response_already_exists(self, data_api_client):
+        data_api_client.get_brief.return_value = self.brief
+        data_api_client.get_framework.return_value = self.framework
+        data_api_client.find_brief_responses.return_value = {
+            'briefResponses': [{
+                'briefId': self.brief['briefs']['id'],
+                'supplierId': 1234
+            }]
+        }
 
         res = self.client.post(
             '/suppliers/opportunities/1234/responses/create',
