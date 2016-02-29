@@ -901,18 +901,6 @@ class TestFrameworkDocumentDownload(BaseApplicationTest):
 
             assert_equal(res.status_code, 404)
 
-    def test_redirect_g7_document_downloads(self, s3):
-
-        for filename in ['foo.pdf', 'foo.zip', 'foo/bar.pdf']:
-            with self.app.test_client():
-                self.login()
-
-                res = self.client.get('/suppliers/frameworks/g-cloud-7/{}'.format(filename))
-
-                assert_equal(res.status_code, 301)
-                assert_equal(res.location,
-                             'http://localhost/suppliers/frameworks/g-cloud-7/files/{}'.format(filename))
-
 
 @mock.patch('app.main.views.frameworks.data_api_client', autospec=True)
 class TestSupplierDeclaration(BaseApplicationTest):
