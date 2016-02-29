@@ -1,3 +1,5 @@
+# coding: utf-8
+from __future__ import unicode_literals
 from collections import OrderedDict
 
 from flask import render_template, redirect, url_for, request, flash, abort
@@ -64,6 +66,8 @@ def submit_brief_response(brief_id):
     content = content_loader.get_manifest(framework['slug'], 'edit_brief_response').filter({'lot': lot['slug']})
     section = content.get_section(content.get_next_editable_section_id())
 
+    # replace generic 'Apply to opportunity' title with title including the name of the brief
+    section.name = "Apply to ‘{}’".format(brief['title'])
     inject_yes_no_questions_into_section_questions(section, brief)
 
     return render_template(

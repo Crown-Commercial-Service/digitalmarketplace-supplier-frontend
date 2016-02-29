@@ -178,7 +178,7 @@ class TestRespondToBrief(BaseApplicationTest):
 
         assert res.status_code == 200
         data_api_client.get_brief.assert_called_once_with(1234)
-        assert len(doc.xpath('//h1[contains(text(), "Apply to an opportunity")]')) == 1
+        assert len(doc.xpath('//h1[contains(text(), "Apply to ‘I need a thing to do a thing’")]')) == 1
         assert len(doc.xpath('//h2[contains(text(), "Do you fulfill the following essential requirements")]')) == 1
         assert len(doc.xpath('//h2[contains(text(), "Do you fulfill the following nice-to-have requirements?")]')) == 1
 
