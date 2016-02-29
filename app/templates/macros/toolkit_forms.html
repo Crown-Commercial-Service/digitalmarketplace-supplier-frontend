@@ -5,6 +5,10 @@
     hint=(question_content.hint or '')|question_references(get_question)|markdown,
     name=question_content.id,
     value=service_data[question_content.id],
+    unit_in_full=question_content.unit_in_full,
+    unit_position=question_content.unit_position,
+    unit=question_content.unit,
+    smaller=question_content.smaller,
     error=errors.get(question_content.id)['message']|question_references(get_question)
   %}
     {% include "toolkit/forms/textbox.html" %}
