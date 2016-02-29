@@ -27,6 +27,12 @@ def ensure_supplier_is_eligible_for_brief(brief, supplier_id):
     pass
 
 
+def has_supplier_already_submitted_a_brief_response(data_api_client, supplier_id, brief_id):
+
+    brief_responses = data_api_client.find_brief_responses(brief_id=brief_id, supplier_id=supplier_id)['briefResponses']
+    return len(brief_responses) == 0
+
+
 def send_brief_clarification_question(brief, clarification_question):
     # Email the question to brief owners
     email_body = render_template(
