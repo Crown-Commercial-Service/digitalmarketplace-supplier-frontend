@@ -252,8 +252,49 @@ class TestRespondToBrief(BaseApplicationTest):
         assert_equal(res.status_code, 302)
         assert_equal(res.location, "http://localhost/suppliers")
         self.assert_flashes("Your response to &lsquo;I need a thing to do a thing&rsquo; has been submitted.")
-        data_api_client.create_brief_response.assert_called_once_with(1234, 1234, processed_brief_submission,
-                                                                      'email@email.com')
+        data_api_client.create_brief_response.assert_called_once_with(
+            1234, 1234, processed_brief_submission, 'email@email.com')
+
+    def test_post_create_new_brief_response_error_message_for_boolean_list_question_empty(self, data_api_client):
+        data_api_client.get_brief.return_value = self.brief
+        data_api_client.get_framework.return_value = self.framework
+        data_api_client.create_brief_response.side_effect = HTTPError(
+            mock.Mock(status_code=400),
+            {'essentialRequirements': 'answer_required'}
+        )
+        incomplete_brief_form_submission = brief_form_submission.copy()
+        incomplete_brief_form_submission.pop('essentialRequirements-2')
+
+        res = self.client.post(
+            '/suppliers/opportunities/1234/responses/create',
+            data=incomplete_brief_form_submission,
+            follow_redirects=True
+        )
+
+        response_text = res.get_data(as_text=True)
+        assert 'There was a problem with your answer to the following questions' in response_text
+        assert '<a href="#essentialRequirements-2" class="validation-masthead-link">Essential three</a>' \
+               in response_text
+
+    def test_post_create_new_brief_response_error_message_for_normal_question_empty(self, data_api_client):
+        data_api_client.get_brief.return_value = self.brief
+        data_api_client.get_framework.return_value = self.framework
+        data_api_client.create_brief_response.side_effect = HTTPError(
+            mock.Mock(status_code=400),
+            {'availability': 'answer_required'}
+        )
+        incomplete_brief_form_submission = brief_form_submission.copy()
+        incomplete_brief_form_submission.pop('availability')
+
+        res = self.client.post(
+            '/suppliers/opportunities/1234/responses/create',
+            data=incomplete_brief_form_submission,
+            follow_redirects=True
+        )
+
+        response_text = res.get_data(as_text=True)
+        assert 'There was a problem with your answer to the following questions' in response_text
+        assert '<a href="#availability" class="validation-masthead-link">Availability</a>' in response_text
 
     def test_post_create_new_brief_response_404_if_not_live_brief(self, data_api_client):
         brief = self.brief.copy()
@@ -296,8 +337,8 @@ class TestRespondToBrief(BaseApplicationTest):
 
         assert_equal(res.status_code, 400)
         assert_in("You need to answer this question.", res.get_data(as_text=True))
-        data_api_client.create_brief_response.assert_called_once_with(1234, 1234, processed_brief_submission,
-                                                                      'email@email.com')
+        data_api_client.create_brief_response.assert_called_once_with(
+            1234, 1234, processed_brief_submission, 'email@email.com')
 
     def test_post_create_new_brief_response_redirects_to_login_for_buyer(self, data_api_client):
         data_api_client.get_brief.return_value = self.brief
