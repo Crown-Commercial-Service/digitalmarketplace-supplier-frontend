@@ -438,7 +438,7 @@ def framework_updates_email_clarification_question(framework_slug):
             )
         except MandrillException as e:
             current_app.logger.error(
-                "{} clarification question confirmation email failed to send. "
+                "{framework} clarification question confirmation email failed to send. "
                 "error {error} supplier_id {supplier_id} email_hash {email_hash}",
                 extra={'error': six.text_type(e),
                        'framework': framework['slug'],
