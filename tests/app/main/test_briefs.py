@@ -4,7 +4,6 @@ from __future__ import unicode_literals
 import mock
 from dmapiclient import api_stubs, HTTPError
 from dmutils.email import MandrillException
-from nose.tools import assert_equal, assert_in
 from ..helpers import BaseApplicationTest, FakeMail
 from lxml import html
 
@@ -177,14 +176,11 @@ class TestRespondToBrief(BaseApplicationTest):
         res = self.client.get('/suppliers/opportunities/1234/responses/create')
         doc = html.fromstring(res.get_data(as_text=True))
 
-        assert_equal(res.status_code, 200)
+        assert res.status_code == 200
         data_api_client.get_brief.assert_called_once_with(1234)
-        assert_equal(
-            len(doc.xpath('//h1[contains(text(), "Apply to an opportunity")]')), 1)
-        assert_equal(
-            len(doc.xpath('//h2[contains(text(), "Do you fulfill the following essential requirements")]')), 1)
-        assert_equal(
-            len(doc.xpath('//h2[contains(text(), "Do you fulfill the following nice-to-have requirements?")]')), 1)
+        assert len(doc.xpath('//h1[contains(text(), "Apply to an opportunity")]')) == 1
+        assert len(doc.xpath('//h2[contains(text(), "Do you fulfill the following essential requirements")]')) == 1
+        assert len(doc.xpath('//h2[contains(text(), "Do you fulfill the following nice-to-have requirements?")]')) == 1
 
     def test_get_submit_brief_response_page_404_for_not_live_brief(self, data_api_client):
         brief = self.brief.copy()
@@ -193,7 +189,7 @@ class TestRespondToBrief(BaseApplicationTest):
         data_api_client.get_framework.return_value = self.framework
         res = self.client.get('/suppliers/opportunities/1234/responses/create')
 
-        assert_equal(res.status_code, 404)
+        assert res.status_code == 404
 
     def test_get_submit_brief_response_page_404_for_not_live_framework(self, data_api_client):
         framework = self.framework.copy()
@@ -202,7 +198,7 @@ class TestRespondToBrief(BaseApplicationTest):
         data_api_client.get_framework.return_value = framework
         res = self.client.get('/suppliers/opportunities/1234/responses/create')
 
-        assert_equal(res.status_code, 404)
+        assert res.status_code == 404
 
     def test_get_submit_brief_response_page_404_if_response_already_exists(self, data_api_client):
         data_api_client.get_brief.return_value = self.brief
@@ -215,7 +211,7 @@ class TestRespondToBrief(BaseApplicationTest):
         }
 
         res = self.client.get('/suppliers/opportunities/1234/responses/create')
-        assert_equal(res.status_code, 404)
+        assert res.status_code == 404
 
     def test_get_submit_brief_response_page_includes_essential_requirements(self, data_api_client):
         data_api_client.get_brief.return_value = self.brief
@@ -223,12 +219,9 @@ class TestRespondToBrief(BaseApplicationTest):
         res = self.client.get('/suppliers/opportunities/1234/responses/create')
         doc = html.fromstring(res.get_data(as_text=True))
 
-        assert_equal(
-            len(doc.xpath('//p[contains(text(), "Essential one")]')), 1)
-        assert_equal(
-            len(doc.xpath('//p[contains(text(), "Essential two")]')), 1)
-        assert_equal(
-            len(doc.xpath('//p[contains(text(), "Essential three")]')), 1)
+        assert len(doc.xpath('//p[contains(text(), "Essential one")]')) == 1
+        assert len(doc.xpath('//p[contains(text(), "Essential two")]')) == 1
+        assert len(doc.xpath('//p[contains(text(), "Essential three")]')) == 1
 
     def test_get_submit_brief_response_page_includes_nice_to_have_requirements(self, data_api_client):
         data_api_client.get_brief.return_value = self.brief
@@ -236,12 +229,9 @@ class TestRespondToBrief(BaseApplicationTest):
         res = self.client.get('/suppliers/opportunities/1234/responses/create')
         doc = html.fromstring(res.get_data(as_text=True))
 
-        assert_equal(
-            len(doc.xpath('//p[contains(text(), "Top one")]')), 1)
-        assert_equal(
-            len(doc.xpath('//p[contains(text(), "Nice one")]')), 1)
-        assert_equal(
-            len(doc.xpath('//p[contains(text(), "Get sorted")]')), 1)
+        assert len(doc.xpath('//p[contains(text(), "Top one")]')) == 1
+        assert len(doc.xpath('//p[contains(text(), "Nice one")]')) == 1
+        assert len(doc.xpath('//p[contains(text(), "Get sorted")]')) == 1
 
     def test_get_submit_brief_response_page_redirects_to_login_for_buyer(self, data_api_client):
         data_api_client.get_brief.return_value = self.brief
@@ -249,9 +239,8 @@ class TestRespondToBrief(BaseApplicationTest):
         self.login_as_buyer()
         res = self.client.get('/suppliers/opportunities/1234/responses/create')
 
-        assert_equal(res.status_code, 302)
-        assert_equal(res.location,
-                     "http://localhost/login?next=%2Fsuppliers%2Fopportunities%2F1234%2Fresponses%2Fcreate")
+        assert res.status_code == 302
+        assert res.location == "http://localhost/login?next=%2Fsuppliers%2Fopportunities%2F1234%2Fresponses%2Fcreate"
         self.assert_flashes("supplier-role-required", "error")
 
     def test_post_create_new_brief_response(self, data_api_client):
@@ -262,8 +251,8 @@ class TestRespondToBrief(BaseApplicationTest):
             '/suppliers/opportunities/1234/responses/create',
             data=brief_form_submission
         )
-        assert_equal(res.status_code, 302)
-        assert_equal(res.location, "http://localhost/suppliers")
+        assert res.status_code == 302
+        assert res.location == "http://localhost/suppliers"
         self.assert_flashes("Your response to &lsquo;I need a thing to do a thing&rsquo; has been submitted.")
         data_api_client.create_brief_response.assert_called_once_with(
             1234, 1234, processed_brief_submission, 'email@email.com')
@@ -319,7 +308,7 @@ class TestRespondToBrief(BaseApplicationTest):
             '/suppliers/opportunities/1234/responses/create',
             data=brief_form_submission
         )
-        assert_equal(res.status_code, 404)
+        assert res.status_code == 404
         assert not data_api_client.create_brief_response.called
 
     def test_post_create_new_brief_response_404_if_not_live_framework(self, data_api_client):
@@ -332,7 +321,7 @@ class TestRespondToBrief(BaseApplicationTest):
             '/suppliers/opportunities/1234/responses/create',
             data=brief_form_submission
         )
-        assert_equal(res.status_code, 404)
+        assert res.status_code == 404
         assert not data_api_client.create_brief_response.called
 
     def test_post_create_new_brief_response_404_if_response_already_exists(self, data_api_client):
@@ -349,7 +338,7 @@ class TestRespondToBrief(BaseApplicationTest):
             '/suppliers/opportunities/1234/responses/create',
             data=brief_form_submission
         )
-        assert_equal(res.status_code, 404)
+        assert res.status_code == 404
         assert not data_api_client.create_brief_response.called
 
     def test_post_create_new_brief_response_with_api_error_fails(self, data_api_client):
@@ -365,8 +354,8 @@ class TestRespondToBrief(BaseApplicationTest):
             data=brief_form_submission
         )
 
-        assert_equal(res.status_code, 400)
-        assert_in("You need to answer this question.", res.get_data(as_text=True))
+        assert res.status_code == 400
+        assert "You need to answer this question." in res.get_data(as_text=True)
         data_api_client.create_brief_response.assert_called_once_with(
             1234, 1234, processed_brief_submission, 'email@email.com')
 
@@ -378,7 +367,7 @@ class TestRespondToBrief(BaseApplicationTest):
             '/suppliers/opportunities/1234/responses/create',
             data=brief_form_submission
         )
-        assert_equal(res.status_code, 302)
-        assert_equal(res.location, "http://localhost/login")
+        assert res.status_code == 302
+        assert res.location == "http://localhost/login"
         self.assert_flashes("supplier-role-required", "error")
         assert not data_api_client.get_brief.called
