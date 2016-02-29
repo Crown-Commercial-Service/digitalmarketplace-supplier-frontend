@@ -7,7 +7,7 @@ install:
   - npm install
   - npm run frontend-build:production
 script:
-  - ./scripts/run_tests.sh --cov=app --cov-report=term-missing
+  - PYTEST_ARGS='--cov=app --cov-report=term-missing' make test
 after_success:
   - coveralls
 notifications:
