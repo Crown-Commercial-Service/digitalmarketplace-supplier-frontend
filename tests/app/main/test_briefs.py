@@ -1,5 +1,5 @@
 import mock
-from dmapiclient import HTTPError
+from dmapiclient import api_stubs, HTTPError
 from dmutils.email import MandrillException
 
 from ..helpers import BaseApplicationTest, FakeMail
@@ -44,17 +44,10 @@ class TestSubmitClarificationQuestions(BaseApplicationTest):
     @mock.patch('app.main.helpers.briefs.send_email')
     def test_submit_clarification_question(self, send_email, data_api_client):
         self.login()
-        data_api_client.get_brief.return_value = {'briefs': {
-            'status': 'live',
-            'title': 'Important Opportunity',
-            'users': [
-                {'emailAddress': 'a@user.dmdev', 'active': True},
-                {'emailAddress': 'b@user.dmdev', 'active': False},
-            ],
-            'frameworkName': 'Brief Framework Name',
-        }}
+        data_api_client.get_brief.return_value = api_stubs.brief(status="live")
+        data_api_client.get_brief.return_value['briefs']['frameworkName'] = 'Brief Framework Name'
 
-        res = self.client.post('/suppliers/opportunities/1/ask-a-question', data={
+        res = self.client.post('/suppliers/opportunities/1234/ask-a-question', data={
             'clarification-question': "important question",
         })
         assert res.status_code == 200
@@ -66,7 +59,7 @@ class TestSubmitClarificationQuestions(BaseApplicationTest):
                 email_body=FakeMail("important question"),
                 from_email='do-not-reply@digitalmarketplace.service.gov.uk',
                 api_key='MANDRILL',
-                to_email_addresses=['a@user.dmdev'],
+                to_email_addresses=['buyer@email.com'],
                 subject='Important Opportunity clarification question'),
             mock.call(
                 from_name='Digital Marketplace Admin',
@@ -81,20 +74,12 @@ class TestSubmitClarificationQuestions(BaseApplicationTest):
     @mock.patch('app.main.helpers.briefs.send_email')
     def test_submit_clarification_question_fails_on_mandrill_error(self, send_email, data_api_client):
         self.login()
-        data_api_client.get_brief.return_value = {'briefs': {
-            'id': 1,
-            'status': 'live',
-            'title': 'Important Opportunity',
-            'users': [
-                {'emailAddress': 'a@user.dmdev', 'active': True},
-                {'emailAddress': 'b@user.dmdev', 'active': False},
-            ],
-            'frameworkName': 'Brief Framework Name',
-        }}
+        data_api_client.get_brief.return_value = api_stubs.brief(status="live")
+        data_api_client.get_brief.return_value['briefs']['frameworkName'] = 'Framework Name'
 
         send_email.side_effect = MandrillException
 
-        res = self.client.post('/suppliers/opportunities/1/ask-a-question', data={
+        res = self.client.post('/suppliers/opportunities/1234/ask-a-question', data={
             'clarification-question': "important question",
         })
         assert res.status_code == 503
