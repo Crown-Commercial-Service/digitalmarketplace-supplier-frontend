@@ -4,7 +4,7 @@ from flask_login import current_user
 from ..helpers import login_required
 from ..helpers.briefs import (
     get_brief,
-    check_supplier_is_eligible_for_brief,
+    ensure_supplier_is_eligible_for_brief,
     send_brief_clarification_question,
 )
 from ...main import main
@@ -15,7 +15,7 @@ from ... import data_api_client
 @login_required
 def ask_brief_clarification_question(brief_id):
     brief = get_brief(data_api_client, brief_id)
-    check_supplier_is_eligible_for_brief(brief, current_user.supplier_id)
+    ensure_supplier_is_eligible_for_brief(brief, current_user.supplier_id)
 
     error_message = None
     clarification_question_value = None

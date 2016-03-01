@@ -14,7 +14,7 @@ def get_brief(data_api_client, brief_id, live_only=True):
     return brief
 
 
-def check_supplier_is_eligible_for_brief(brief, supplier_id):
+def ensure_supplier_is_eligible_for_brief(brief, supplier_id):
     # TODO connect this with the API endpoint once it exists
     # Should abort or render an error page if the check fails
     pass
