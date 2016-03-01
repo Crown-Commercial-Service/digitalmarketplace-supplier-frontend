@@ -4,8 +4,24 @@
     <meta charset="UTF-8">
 </head>
 <body>
-{{ brief_name }} question asked:
-<br />
-{{ message }}
+  Hello,<br />
+  <br />
+  A supplier has asked a question about ‘{{ brief_name }}’.<br />
+  <br />
+  On {{ current_date|dateformat }}, they asked:<br />
+  <br />
+  {{ message }}
+  <br /><br />
+  You need to answer all questions from suppliers and publish both their questions and your answers on the Digital Marketplace at:<br />
+  <a href="https://www.digitalmarketplace.service.gov.uk/buyers/frameworks/{{ framework_slug }}/requirements/{{ lot_slug }}/{{ brief_id }}/answer-question">https://www.digitalmarketplace.service.gov.uk/buyers/frameworks/{{ framework_slug }}/requirements/{{ lot_slug }}/{{ brief_id }}/answer-question</a><br />
+  <br />
+  All questions and answers will be published on the ‘{{ brief_name }}’ requirements page at:<br />
+  <a href="https://www.digitalmarketplace.service.gov.uk/{{ framework_slug }}/opportunities/{{ brief_id }}">https://www.digitalmarketplace.service.gov.uk/{{ framework_slug }}/opportunities/{{ brief_id }}</a><br />
+  <br />
+  Read more about how to manage supplier questions at:<br />
+  <a href="https://www.gov.uk/guidance/how-to-ask-and-answer-supplier-questions-on-the-digital-marketplace">https://www.gov.uk/guidance/how-to-ask-and-answer-supplier-questions-on-the-digital-marketplace</a><br />
+  <br />
+  Thanks,<br />
+  The Digital Marketplace team<br />
 </body>
 </html>

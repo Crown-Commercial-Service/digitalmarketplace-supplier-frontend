@@ -4,8 +4,18 @@
     <meta charset="UTF-8">
 </head>
 <body>
-Your {{ brief_name }} question:
-<br />
-{{ message }}
+  Dear {{ user_name }},<br />
+  <br />
+  Your question about ‘{{ brief_name }}’ has been sent.<br />
+  <br />
+  You asked:<br />
+  <br />
+  {{ message }}
+  <br /><br />
+  Your question will be posted with the buyer’s response on the ‘{{ brief_name }}’ requirements page at:<br />
+  <a href="https://www.digitalmarketplace.service.gov.uk/{{ framework_slug }}/opportunities/{{ brief_id }}">https://www.digitalmarketplace.service.gov.uk/{{ framework_slug }}/opportunities/{{ brief_id }}</a><br />
+  <br />
+  Thanks,<br />
+  The Digital Marketplace team
 </body>
 </html>

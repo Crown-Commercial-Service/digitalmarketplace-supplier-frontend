@@ -1,4 +1,7 @@
+# -*- coding: utf-8 -*-
+
 import six
+import datetime
 
 from flask import abort, current_app, render_template
 from flask_login import current_user
@@ -24,15 +27,19 @@ def send_brief_clarification_question(brief, clarification_question):
     # Email the question to brief owners
     email_body = render_template(
         "emails/brief_clarification_question.html",
+        brief_id=brief['id'],
         brief_name=brief['title'],
-        message=clarification_question
+        current_date=datetime.datetime.utcnow(),
+        framework_slug=brief['frameworkSlug'],
+        lot_slug=brief['lotSlug'],
+        message=clarification_question,
     )
     try:
         send_email(
             to_email_addresses=get_brief_user_emails(brief),
             email_body=email_body,
             api_key=current_app.config['DM_MANDRILL_API_KEY'],
-            subject="{} clarification question".format(brief['title']),
+            subject=u"You’ve received a new supplier question about ‘{}’".format(brief['title']),
             from_email=current_app.config['CLARIFICATION_EMAIL_FROM'],
             from_name="{} Supplier".format(brief['frameworkName']),
             tags=["brief-clarification-question"]
@@ -48,7 +55,10 @@ def send_brief_clarification_question(brief, clarification_question):
     # Send the supplier a copy of the question
     supplier_email_body = render_template(
         "emails/brief_clarification_question_confirmation.html",
+        brief_id=brief['id'],
+        user_name=current_user.name,
         brief_name=brief['title'],
+        framework_slug=brief['frameworkSlug'],
         message=clarification_question
     )
     try:
@@ -56,7 +66,7 @@ def send_brief_clarification_question(brief, clarification_question):
             to_email_addresses=[current_user.email_address],
             email_body=supplier_email_body,
             api_key=current_app.config['DM_MANDRILL_API_KEY'],
-            subject="Your {} clarification question".format(brief['title']),
+            subject=u"Your question about ‘{}’".format(brief['title']),
             from_email=current_app.config['CLARIFICATION_EMAIL_FROM'],
             from_name=current_app.config['CLARIFICATION_EMAIL_NAME'],
             tags=["brief-clarification-question-confirmation"]

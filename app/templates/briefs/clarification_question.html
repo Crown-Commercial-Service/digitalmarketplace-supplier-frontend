@@ -26,7 +26,7 @@
   {% with messages = get_flashed_messages(with_categories=true) %}
     {% for category, message in messages %}
       {% if message == 'message_sent' %}
-        {% set message = "Your question has been sent. The answer will be published on the opportunity page." %}
+        {% set message = "Your question has been sent. It will be posted with the buyer’s response on the ‘{}’ page.".format(brief.title) %}
       {% endif %}
       {%
         with
@@ -44,7 +44,7 @@
       errors = [
         {
             "input_name": clarification_question_name,
-            "question": "Ask a {} clarification question".format(brief.title)
+            "question": "Ask a question about ‘{}’".format(brief.title)
         }
     ],
       lede = "There was a problem with your submitted question"
@@ -54,7 +54,7 @@
   {% endif %}
 
   {% with
-    heading = "Ask a question about {}".format(brief.title),
+    heading = "Ask a question about ‘{}’".format(brief.title),
     smaller = true
   %}
     {% include 'toolkit/page-heading.html' %}
@@ -64,7 +64,10 @@
     <div class="column-two-thirds">
 
       <div class="hint">
-        <p>Your questions will be published in full, but anonymously on the Digital Marketplace. Don’t put any confidential information in a question.</p>
+        <p>Your question will be published with the buyers’ response.</p>
+        <p>All questions and answers will be posted on the Digital Marketplace. Your company name won’t be visible.</p>
+        <p>You shouldn’t include any confidential information in your question.</p>
+        <p>Read more about <a href="https://www.gov.uk/guidance/how-to-ask-and-answer-supplier-questions-on-the-digital-marketplace">how supplier questions are managed</a>.</p>
       </div>
 
       <form method="post">
@@ -80,8 +83,6 @@
         %}
           {% include "toolkit/forms/textbox.html" %}
         {% endwith %}
-        <p>
-        </p>
         {%
           with
           label="Ask question",
