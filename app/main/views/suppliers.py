@@ -25,8 +25,6 @@ from .users import get_current_suppliers_users
 @main.route('')
 @login_required
 def dashboard():
-    template_data = main.config['BASE_TEMPLATE_DATA']
-
     supplier = data_api_client.get_supplier(
         current_user.supplier_id
     )['suppliers']
@@ -76,16 +74,13 @@ def dashboard():
             'pending': get_frameworks_by_status(all_frameworks, 'pending'),
             'standstill': get_frameworks_by_status(all_frameworks, 'standstill', 'made_application'),
             'live': get_frameworks_by_status(all_frameworks, 'live', 'services_count')
-        },
-        **template_data
+        }
     ), 200
 
 
 @main.route('/edit', methods=['GET'])
 @login_required
 def edit_supplier(supplier_form=None, contact_form=None, error=None):
-    template_data = main.config['BASE_TEMPLATE_DATA']
-
     try:
         supplier = data_api_client.get_supplier(
             current_user.supplier_id
@@ -107,8 +102,7 @@ def edit_supplier(supplier_form=None, contact_form=None, error=None):
         "suppliers/edit_supplier.html",
         error=error,
         supplier_form=supplier_form,
-        contact_form=contact_form,
-        **template_data
+        contact_form=contact_form
     ), 200
 
 
@@ -155,16 +149,13 @@ def update_supplier():
 
 @main.route('/create', methods=['GET'])
 def create_new_supplier():
-    template_data = main.config['BASE_TEMPLATE_DATA']
     return render_template(
-        "suppliers/create_new_supplier.html",
-        **template_data
+        "suppliers/create_new_supplier.html"
     ), 200
 
 
 @main.route('/duns-number', methods=['GET'])
 def duns_number():
-    template_data = main.config['BASE_TEMPLATE_DATA']
     form = DunsNumberForm()
 
     if form.duns_number.name in session:
@@ -172,15 +163,13 @@ def duns_number():
 
     return render_template(
         "suppliers/duns_number.html",
-        form=form,
-        **template_data
+        form=form
     ), 200
 
 
 @main.route('/duns-number', methods=['POST'])
 def submit_duns_number():
     form = DunsNumberForm()
-    template_data = main.config['BASE_TEMPLATE_DATA']
 
     if form.validate_on_submit():
 
@@ -194,8 +183,7 @@ def submit_duns_number():
                     'duns_errors': ",".join(form.duns_number.errors)})
             return render_template(
                 "suppliers/duns_number.html",
-                form=form,
-                **template_data
+                form=form
             ), 400
         session[form.duns_number.name] = form.duns_number.data
         return redirect(url_for(".companies_house_number"))
@@ -207,14 +195,12 @@ def submit_duns_number():
                 'duns_errors': ",".join(form.duns_number.errors)})
         return render_template(
             "suppliers/duns_number.html",
-            form=form,
-            **template_data
+            form=form
         ), 400
 
 
 @main.route('/companies-house-number', methods=['GET'])
 def companies_house_number():
-    template_data = main.config['BASE_TEMPLATE_DATA']
     form = CompaniesHouseNumberForm()
 
     if form.companies_house_number.name in session:
@@ -222,16 +208,13 @@ def companies_house_number():
 
     return render_template(
         "suppliers/companies_house_number.html",
-        form=form,
-        **template_data
+        form=form
     ), 200
 
 
 @main.route('/companies-house-number', methods=['POST'])
 def submit_companies_house_number():
     form = CompaniesHouseNumberForm()
-
-    template_data = main.config['BASE_TEMPLATE_DATA']
 
     if form.validate_on_submit():
         if form.companies_house_number.data:
@@ -247,14 +230,12 @@ def submit_companies_house_number():
                 'duns_errors': ",".join(chain.from_iterable(form.errors.values()))})
         return render_template(
             "suppliers/companies_house_number.html",
-            form=form,
-            **template_data
+            form=form
         ), 400
 
 
 @main.route('/company-name', methods=['GET'])
 def company_name():
-    template_data = main.config['BASE_TEMPLATE_DATA']
     form = CompanyNameForm()
 
     if form.company_name.name in session:
@@ -262,15 +243,13 @@ def company_name():
 
     return render_template(
         "suppliers/company_name.html",
-        form=form,
-        **template_data
+        form=form
     ), 200
 
 
 @main.route('/company-name', methods=['POST'])
 def submit_company_name():
     form = CompanyNameForm()
-    template_data = main.config['BASE_TEMPLATE_DATA']
 
     if form.validate_on_submit():
         session[form.company_name.name] = form.company_name.data
@@ -284,14 +263,12 @@ def submit_company_name():
                 'duns_errors': ",".join(chain.from_iterable(form.errors.values()))})
         return render_template(
             "suppliers/company_name.html",
-            form=form,
-            **template_data
+            form=form
         ), 400
 
 
 @main.route('/company-contact-details', methods=['GET'])
 def company_contact_details():
-    template_data = main.config['BASE_TEMPLATE_DATA']
     form = CompanyContactDetailsForm()
 
     if form.email_address.name in session:
@@ -305,16 +282,13 @@ def company_contact_details():
 
     return render_template(
         "suppliers/company_contact_details.html",
-        form=form,
-        **template_data
+        form=form
     ), 200
 
 
 @main.route('/company-contact-details', methods=['POST'])
 def submit_company_contact_details():
     form = CompanyContactDetailsForm()
-
-    template_data = main.config['BASE_TEMPLATE_DATA']
 
     if form.validate_on_submit():
         session[form.email_address.name] = form.email_address.data
@@ -330,8 +304,7 @@ def submit_company_contact_details():
                 'duns_errors': ",".join(chain.from_iterable(form.errors.values()))})
         return render_template(
             "suppliers/company_contact_details.html",
-            form=form,
-            **template_data
+            form=form
         ), 400
 
 
@@ -342,13 +315,10 @@ def create_your_account():
             session.get('email_supplier_id', 'unknown')))
     form = EmailAddressForm()
 
-    template_data = main.config['BASE_TEMPLATE_DATA']
-
     return render_template(
         "suppliers/create_your_account.html",
         form=form,
-        email_address=session.get('account_email_address', ''),
-        **template_data
+        email_address=session.get('account_email_address', '')
     ), 200
 
 
@@ -357,7 +327,6 @@ def submit_create_your_account():
     current_app.logger.info(
         "suppliercreate: post create-your-account supplier_id:{}".format(
             session.get('email_supplier_id', 'unknown')))
-    template_data = main.config['BASE_TEMPLATE_DATA']
     form = EmailAddressForm()
 
     if form.validate_on_submit():
@@ -367,23 +336,19 @@ def submit_create_your_account():
         return render_template(
             "suppliers/create_your_account.html",
             form=form,
-            email_address=form.email_address.data,
-            **template_data
+            email_address=form.email_address.data
         ), 400
 
 
 @main.route('/company-summary', methods=['GET'])
 def company_summary():
-    template_data = main.config['BASE_TEMPLATE_DATA']
     return render_template(
-        "suppliers/company_summary.html",
-        **template_data
+        "suppliers/company_summary.html"
     ), 200
 
 
 @main.route('/company-summary', methods=['POST'])
 def submit_company_summary():
-    template_data = main.config['BASE_TEMPLATE_DATA']
 
     required_fields = [
         "email_address",
@@ -465,14 +430,12 @@ def submit_company_summary():
     else:
         return render_template(
             "suppliers/company_summary.html",
-            missing_fields=missing_fields,
-            **template_data
+            missing_fields=missing_fields
         ), 400
 
 
 @main.route('/create-your-account-complete', methods=['GET'])
 def create_your_account_complete():
-    template_data = main.config['BASE_TEMPLATE_DATA']
     if 'email_sent_to' in session:
         email_address = session['email_sent_to']
     else:
@@ -481,6 +444,5 @@ def create_your_account_complete():
     session['email_sent_to'] = email_address
     return render_template(
         "suppliers/create_your_account_complete.html",
-        email_address=email_address,
-        **template_data
+        email_address=email_address
     ), 200

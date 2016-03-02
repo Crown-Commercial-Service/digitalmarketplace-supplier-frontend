@@ -116,8 +116,7 @@ def framework_dashboard(framework_slug):
         supplier_is_on_framework=supplier_is_on_framework,
         supplier_pack_filename=supplier_pack_filename,
         result_letter_filename=result_letter_filename,
-        countersigned_agreement_file=countersigned_agreement_file,
-        **main.config['BASE_TEMPLATE_DATA']
+        countersigned_agreement_file=countersigned_agreement_file
     ), 200
 
 
@@ -155,8 +154,7 @@ def framework_submission_lots(framework_slug):
                 'labs' if framework['slug'] == 'digital-outcomes-and-specialists' else 'service'
                 # TODO: ^ make this dynamic, eg, lab, service, unit
             ),
-        } for lot in lot_question['options']],
-        **main.config['BASE_TEMPLATE_DATA']
+        } for lot in lot_question['options']]
     ), 200
 
 
@@ -199,8 +197,7 @@ def framework_submission_services(framework_slug, lot_slug):
         drafts=list(reversed(drafts)),
         declaration_status=declaration_status,
         framework=framework,
-        lot=lot,
-        **main.config['BASE_TEMPLATE_DATA']
+        lot=lot
     ), 200
 
 
@@ -285,8 +282,7 @@ def framework_supplier_declaration(framework_slug, section_id=None):
         declaration_answers=all_answers,
         is_last_page=is_last_page,
         get_question=content.get_question,
-        errors=errors,
-        **main.config['BASE_TEMPLATE_DATA']
+        errors=errors
     ), status_code
 
 
@@ -347,8 +343,7 @@ def framework_updates(framework_slug, error_message=None, default_textbox_value=
         files=files,
         dates=content_loader.get_message(framework_slug, 'dates'),
         agreement_countersigned=countersigned_framework_agreement_exists_in_bucket(
-            framework_slug, current_app.config['DM_AGREEMENTS_BUCKET']),
-        **main.config['BASE_TEMPLATE_DATA']
+            framework_slug, current_app.config['DM_AGREEMENTS_BUCKET'])
     ), 200 if not error_message else 400
 
 
@@ -478,14 +473,11 @@ def framework_agreement(framework_slug):
             date_parse(supplier_framework['agreementReturnedAt'])
         )
 
-    template_data = main.config['BASE_TEMPLATE_DATA']
-
     return render_template(
         "frameworks/agreement.html",
         framework=framework,
         supplier_framework=supplier_framework,
-        agreement_filename=AGREEMENT_FILENAME,
-        **template_data
+        agreement_filename=AGREEMENT_FILENAME
     ), 200
 
 
@@ -502,8 +494,6 @@ def upload_framework_agreement(framework_slug):
     if not supplier_framework or not supplier_framework['onFramework']:
         abort(404)
 
-    template_data = main.config['BASE_TEMPLATE_DATA']
-
     upload_error = None
     if not file_is_less_than_5mb(request.files['agreement']):
         upload_error = "Document must be less than 5Mb"
@@ -516,8 +506,7 @@ def upload_framework_agreement(framework_slug):
             framework=framework,
             supplier_framework=supplier_framework,
             upload_error=upload_error,
-            agreement_filename=AGREEMENT_FILENAME,
-            **template_data
+            agreement_filename=AGREEMENT_FILENAME
         ), 400
 
     agreements_bucket = s3.S3(current_app.config['DM_AGREEMENTS_BUCKET'])

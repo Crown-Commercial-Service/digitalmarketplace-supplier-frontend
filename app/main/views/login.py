@@ -18,7 +18,6 @@ from ... import data_api_client
 @main.route('/create-user/<string:encoded_token>', methods=["GET"])
 def create_user(encoded_token):
     form = CreateUserForm()
-    template_data = main.config['BASE_TEMPLATE_DATA']
 
     token = decode_invitation_token(encoded_token, role='supplier')
 
@@ -28,8 +27,7 @@ def create_user(encoded_token):
             extra={'encoded_token': encoded_token})
         return render_template(
             "auth/create-user-error.html",
-            token=None,
-            **template_data), 400
+            token=None), 400
 
     user_json = data_api_client.get_user(email_address=token.get("email_address"))
 
@@ -39,20 +37,17 @@ def create_user(encoded_token):
             form=form,
             email_address=token['email_address'],
             supplier_name=token['supplier_name'],
-            token=encoded_token,
-            **template_data), 200
+            token=encoded_token), 200
 
     user = User.from_json(user_json)
     return render_template(
         "auth/create-user-error.html",
         token=token,
-        user=user,
-        **template_data), 400
+        user=user), 400
 
 
 @main.route('/create-user/<string:encoded_token>', methods=["POST"])
 def submit_create_user(encoded_token):
-    template_data = main.config['BASE_TEMPLATE_DATA']
     form = CreateUserForm()
 
     token = decode_invitation_token(encoded_token, role='supplier')
@@ -61,8 +56,7 @@ def submit_create_user(encoded_token):
                                    extra={'encoded_token': encoded_token})
         return render_template(
             "auth/create-user-error.html",
-            token=None,
-            **template_data), 400
+            token=None), 400
 
     else:
         if not form.validate_on_submit():
@@ -74,8 +68,7 @@ def submit_create_user(encoded_token):
                 form=form,
                 token=encoded_token,
                 email_address=token.get('email_address'),
-                supplier_name=token.get('supplier_name'),
-                **template_data), 400
+                supplier_name=token.get('supplier_name')), 400
 
         try:
             user = data_api_client.create_user({
@@ -95,8 +88,7 @@ def submit_create_user(encoded_token):
 
             return render_template(
                 "auth/create-user-error.html",
-                token=None,
-                **template_data), 400
+                token=None), 400
 
         return redirect(url_for('.dashboard'))
 
@@ -106,12 +98,9 @@ def submit_create_user(encoded_token):
 def invite_user():
     form = EmailAddressForm()
 
-    template_data = main.config['BASE_TEMPLATE_DATA']
-
     return render_template(
         "auth/submit-email-address.html",
-        form=form,
-        **template_data), 200
+        form=form), 200
 
 
 @main.route('/invite-user', methods=["POST"])
@@ -166,8 +155,6 @@ def send_invite_user():
         flash('user_invited', 'success')
         return redirect(url_for('.list_users'))
     else:
-        template_data = main.config['BASE_TEMPLATE_DATA']
         return render_template(
             "auth/submit-email-address.html",
-            form=form,
-            **template_data), 400
+            form=form), 400

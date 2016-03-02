@@ -27,13 +27,11 @@ def get_current_suppliers_users():
 @login_required
 def list_users():
 
-    template_data = main.config['BASE_TEMPLATE_DATA']
-
     return render_template(
         "users/list_users.html",
         current_user=current_user,
-        users=get_current_suppliers_users(),
-        **template_data), 200
+        users=get_current_suppliers_users()
+    ), 200
 
 
 @main.route('/users/<int:user_id>/deactivate', methods=['POST'])
