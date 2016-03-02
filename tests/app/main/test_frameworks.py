@@ -11,7 +11,7 @@ from dmapiclient.audit import AuditTypes
 from dmutils.email import MandrillException
 from dmutils.s3 import S3ResponseError
 
-from ..helpers import BaseApplicationTest, FULL_G7_SUBMISSION
+from ..helpers import BaseApplicationTest, FULL_G7_SUBMISSION, FakeMail
 
 
 def _return_fake_s3_file_dict(directory, filename, ext, last_modified=None, size=None):
@@ -1245,19 +1245,6 @@ class TestFrameworkUpdatesPage(BaseApplicationTest):
 
             assert response.status_code == 200
             assert_not_in(u'Ask a question about your G-Cloud 7 application', data)
-
-
-class FakeMail(object):
-    """An object that equals strings containing all of the given substrings
-
-    Can be used in mock.call comparisons (eg to verify email templates).
-
-    """
-    def __init__(self, *substrings):
-        self.substrings = substrings
-
-    def __eq__(self, other):
-        return all(substring in other for substring in self.substrings)
 
 
 class TestSendClarificationQuestionEmail(BaseApplicationTest):

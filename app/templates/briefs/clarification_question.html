@@ -1,0 +1,100 @@
+{% extends "_base_page.html" %}
+{% import "toolkit/summary-table.html" as summary %}
+
+{% block page_title %}Ask a question about {{ brief.title }} – Digital Marketplace{% endblock %}
+
+{% block breadcrumb %}
+  {%
+    with items = [
+      {
+        "link": "/",
+        "label": "Digital Marketplace",
+      },
+      {
+        "link": url_for(".dashboard"),
+        "label": "Your account",
+      },
+    ]
+  %}
+    {% include "toolkit/breadcrumb.html" %}
+  {% endwith %}
+{% endblock %}
+
+{% block main_content %}
+
+<div class="single-question-page">
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for category, message in messages %}
+      {% if message == 'message_sent' %}
+        {% set message = "Your question has been sent. It will be posted with the buyer’s response on the ‘{}’ page.".format(brief.title) %}
+      {% endif %}
+      {%
+        with
+        message = message,
+        type = "destructive" if category == 'error' else "success"
+      %}
+        {% include "toolkit/notification-banner.html" %}
+      {% endwith %}
+    {% endfor %}
+  {% endwith %}
+
+  {% if error_message %}
+    {%
+      with
+      errors = [
+        {
+            "input_name": clarification_question_name,
+            "question": "Ask a question about ‘{}’".format(brief.title)
+        }
+    ],
+      lede = "There was a problem with your submitted question"
+    %}
+      {% include "toolkit/forms/validation.html" %}
+    {% endwith %}
+  {% endif %}
+
+  {% with
+    heading = "Ask a question about ‘{}’".format(brief.title),
+    smaller = true
+  %}
+    {% include 'toolkit/page-heading.html' %}
+  {% endwith %}
+
+  <div class="grid-row">
+    <div class="column-two-thirds">
+
+      <div class="hint">
+        <p>Your question will be published with the buyers’ response.</p>
+        <p>All questions and answers will be posted on the Digital Marketplace. Your company name won’t be visible.</p>
+        <p>You shouldn’t include any confidential information in your question.</p>
+        <p>Read more about <a href="https://www.gov.uk/guidance/how-to-ask-and-answer-supplier-questions-on-the-digital-marketplace">how supplier questions are managed</a>.</p>
+      </div>
+
+      <form method="post">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+        {%
+          with
+          large=true,
+          name = clarification_question_name,
+          question = "Ask a question",
+          error = error_message,
+          value = clarification_question_value,
+          max_length_in_words = 100
+        %}
+          {% include "toolkit/forms/textbox.html" %}
+        {% endwith %}
+        {%
+          with
+          label="Ask question",
+          type="save"
+        %}
+          {% include "toolkit/button.html" %}
+        {% endwith %}
+
+        <a href="/opportunities/{{ brief.id }}">Return to {{ brief.title}}</a>
+
+      </div>
+    </div>
+  </form>
+</div>
+{% endblock %}
