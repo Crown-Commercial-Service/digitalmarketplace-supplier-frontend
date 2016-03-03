@@ -161,21 +161,20 @@
       </legend>
         <p class="question-description">{{ question_content.hint }}</p>
 
-      {% if error %}
-        <span class="validation-message" id="error-{{ question_content.id }}">
-          {{ error }}
-        </span>
-      {% endif %}
-
       {% for boolean_question in question_content.boolean_list_questions %}
         {% set boolean_question_id = '{}-{}'.format(question_content.id, loop.index0) %}
+        {% set
+            existing_value = service_data[question_content.id][loop.index0]
+              if (service_data[question_content.id] and service_data[question_content.id][loop.index0] is defined)
+              else None
+        %}
         {% with
             boolean_question_content = {
               'id': boolean_question_id,
               'question': boolean_question,
             },
             data = {
-              boolean_question_id: service_data[boolean_question_id]|convert_to_boolean
+              boolean_question_id: existing_value
             }
         %}
           {{ boolean(boolean_question_content, data, errors) }}

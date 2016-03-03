@@ -140,7 +140,7 @@ def create_new_brief_response(brief_id):
         return render_template(
             "services/edit_submission_section.html",
             framework=framework,
-            service_data=request.form,
+            service_data=response_data,
             section=section,
             errors=new_errors,
             **dict(main.config['BASE_TEMPLATE_DATA'])
