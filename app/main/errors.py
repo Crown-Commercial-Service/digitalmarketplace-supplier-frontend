@@ -56,5 +56,4 @@ def _render_error_page(status_code):
     }
     if status_code not in template_map:
         status_code = 500
-    template_data = main.config['BASE_TEMPLATE_DATA']
-    return render_template(template_map[status_code], **template_data), status_code
+    return render_template(template_map[status_code]), status_code

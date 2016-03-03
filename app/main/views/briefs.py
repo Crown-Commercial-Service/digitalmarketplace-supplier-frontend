@@ -36,6 +36,5 @@ def ask_brief_clarification_question(brief_id):
         brief=brief,
         error_message=error_message,
         clarification_question_name='clarification-question',
-        clarification_question_value=clarification_question_value,
-        **main.config['BASE_TEMPLATE_DATA']
+        clarification_question_value=clarification_question_value
     ), 200 if not error_message else 400

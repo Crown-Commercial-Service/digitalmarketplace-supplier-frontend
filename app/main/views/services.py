@@ -23,8 +23,7 @@ def list_services():
 
     return render_template(
         "services/list_services.html",
-        services=suppliers_services,
-        **main.config['BASE_TEMPLATE_DATA']), 200
+        services=suppliers_services), 200
 
 
 #  #######################  EDITING LIVE SERVICES #############################
@@ -41,7 +40,6 @@ def edit_service(service_id):
     if not is_service_associated_with_supplier(service):
         abort(404)
 
-    template_data = main.config['BASE_TEMPLATE_DATA']
     framework = data_api_client.get_framework(service['frameworkSlug'])['frameworks']
 
     content = content_loader.get_manifest(framework['slug'], 'edit_service').filter(service)
@@ -54,8 +52,8 @@ def edit_service(service_id):
         service_unavailability_information=service_unavailability_information,
         framework=framework,
         sections=content.summary(service),
-        remove_requested=remove_requested,
-        **dict(**template_data))
+        remove_requested=remove_requested
+    )
 
 
 @main.route('/services/<string:service_id>/remove', methods=['POST'])
@@ -113,8 +111,7 @@ def edit_section(service_id, section_id):
         "services/edit_section.html",
         section=section,
         service_data=service,
-        service_id=service_id,
-        **main.config['BASE_TEMPLATE_DATA']
+        service_id=service_id
     )
 
 
@@ -151,8 +148,7 @@ def update_section(service_id, section_id):
             section=section,
             service_data=posted_data,
             service_id=service_id,
-            errors=errors,
-            **main.config['BASE_TEMPLATE_DATA']
+            errors=errors
         )
 
     return redirect(url_for(".edit_service", service_id=service_id))
@@ -178,8 +174,7 @@ def start_new_draft_service(framework_slug, lot_slug):
         "services/edit_submission_section.html",
         framework=framework,
         service_data={},
-        section=section,
-        **dict(main.config['BASE_TEMPLATE_DATA'])
+        section=section
     ), 200
 
 
@@ -212,8 +207,7 @@ def create_new_draft_service(framework_slug, lot_slug):
             framework=framework,
             section=section,
             service_data=update_data,
-            errors=errors,
-            **main.config['BASE_TEMPLATE_DATA']
+            errors=errors
         ), 400
 
     return redirect(
@@ -363,8 +357,8 @@ def view_service_submission(framework_slug, lot_slug, service_id):
         can_mark_complete=not validation_errors,
         delete_requested=delete_requested,
         declaration_status=get_declaration_status(data_api_client, framework['slug']),
-        dates=content_loader.get_message(framework_slug, 'dates'),
-        **main.config['BASE_TEMPLATE_DATA']), 200
+        dates=content_loader.get_message(framework_slug, 'dates')
+    ), 200
 
 
 @main.route('/frameworks/<framework_slug>/submissions/<lot_slug>/<service_id>/edit/<section_id>', methods=['GET'])
@@ -398,8 +392,7 @@ def edit_service_submission(framework_slug, lot_slug, service_id, section_id, qu
         framework=framework,
         service_data=draft,
         service_id=service_id,
-        one_service_limit=has_one_service_limit(lot_slug, framework['lots']),
-        **main.config['BASE_TEMPLATE_DATA']
+        one_service_limit=has_one_service_limit(lot_slug, framework['lots'])
     )
 
 
@@ -464,9 +457,8 @@ def update_section_submission(framework_slug, lot_slug, service_id, section_id, 
             service_data=update_data,
             service_id=service_id,
             one_service_limit=has_one_service_limit(lot_slug, framework['lots']),
-            errors=errors,
-            **main.config['BASE_TEMPLATE_DATA']
-            )
+            errors=errors
+        )
 
     return redirect(url_for(".view_service_submission",
                             framework_slug=framework['slug'],
