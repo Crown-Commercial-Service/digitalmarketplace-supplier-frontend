@@ -31,6 +31,7 @@ $path: "/suppliers/static/images/";
 @import "toolkit/_digital-marketplace-colours.scss";
 @import "toolkit/_document";
 @import "toolkit/_grids.scss";
+@import "toolkit/_instruction-list.scss";
 @import "toolkit/_link-button";
 @import "toolkit/_notification-banners.scss";
 @import "toolkit/_page-headings.scss";
@@ -53,7 +54,6 @@ $path: "/suppliers/static/images/";
 // Suppliers app styles
 @import "_text.scss";
 @import "_footer.scss";
-@import "_lists.scss";
 @import "_forms.scss";
 
 @import "_single-question-page.scss";

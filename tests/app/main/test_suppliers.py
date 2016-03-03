@@ -174,12 +174,11 @@ class TestSuppliersDashboard(BaseApplicationTest):
             self.login()
             res = self.client.get("/suppliers")
             doc = html.fromstring(res.get_data(as_text=True))
-            temp_message = doc.xpath('//aside[@class="temporary-message"]/descendant::*/text()')
 
-            message = doc.xpath('//aside[@class="temporary-message"]')
+            message = doc.xpath('//div[@class="temporary-message"]')
             assert_equal(len(message), 1)
             assert_in(u"Digital Outcomes and Specialists will be open for applications soon",
-                      message[0].xpath('h2/text()')[0])
+                      message[0].xpath('h3/text()')[0])
             assert_in(u"We’ll email you when you can apply to Digital Outcomes and Specialists",
                       message[0].xpath('p/text()')[0])
             assert_in(u"Find out if your services are suitable",
