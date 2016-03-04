@@ -12,7 +12,6 @@ from ..helpers.briefs import (
     get_brief,
     ensure_supplier_is_eligible_for_brief,
     send_brief_clarification_question,
-    inject_yes_no_questions_into_section_questions,
     has_supplier_already_submitted_a_brief_response
 )
 from ..helpers.frameworks import get_framework_and_lot
@@ -68,7 +67,7 @@ def submit_brief_response(brief_id):
 
     # replace generic 'Apply to opportunity' title with title including the name of the brief
     section.name = "Apply to ‘{}’".format(brief['title'])
-    inject_yes_no_questions_into_section_questions(section, brief)
+    section.inject_brief_questions_into_boolean_list_question(brief)
 
     return render_template(
         "services/edit_submission_section.html",
@@ -104,45 +103,17 @@ def create_new_brief_response(brief_id):
             brief_id, current_user.supplier_id, response_data, current_user.email_address
         )['briefResponses']
     except HTTPError as e:
-        # `errors` doesn't take into account error messages in (nested) boolean_list question fields
-        errors = section.get_error_messages(e.message, lot['slug'])
-        new_errors = OrderedDict()
+        section.inject_brief_questions_into_boolean_list_question(brief)
+        section_summary = section.summary(response_data)
 
-        while len(errors):
-            old_error = errors.popitem(last=False)
-            question_id, error_message = old_error
-
-            if section.get_question(question_id).type == 'boolean_list':
-                # errors don't get passed into a boolean list (or, therefore, its nested questions)
-                # unless a 'truthy' value exists for its parent id
-                new_errors[question_id] = True
-
-                for index, essential_question in enumerate(brief[question_id]):
-                    try:
-                        # check the response data for True/False values returned from boolean_list questions
-                        value_we_want_to_be_true_or_false = response_data[question_id][index]
-                    except (IndexError, KeyError):
-                        value_we_want_to_be_true_or_false = None
-
-                    if not isinstance(value_we_want_to_be_true_or_false, bool):
-                        # Each non-boolean value is an error
-                        boolean_question_id = "{}-{}".format(question_id, index)
-                        new_errors[boolean_question_id] = {
-                            'input_name': boolean_question_id,
-                            'message': error_message['message'],
-                            'question': essential_question
-                        }
-            else:
-                new_errors[question_id] = error_message
-
-        inject_yes_no_questions_into_section_questions(section, brief)
+        errors = section_summary.get_error_messages(e.message)
 
         return render_template(
             "services/edit_submission_section.html",
             framework=framework,
             service_data=response_data,
             section=section,
-            errors=new_errors,
+            errors=errors,
             **dict(main.config['BASE_TEMPLATE_DATA'])
         ), 400
 
