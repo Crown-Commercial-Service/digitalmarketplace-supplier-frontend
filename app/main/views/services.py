@@ -140,7 +140,7 @@ def update_section(service_id, section_id):
             posted_data,
             current_user.email_address)
     except HTTPError as e:
-        errors = section.get_error_messages(e.message, service['lot'])
+        errors = section.get_error_messages(e.message)
         if not posted_data.get('serviceName', None):
             posted_data['serviceName'] = service.get('serviceName', '')
         return render_template(
@@ -200,7 +200,7 @@ def create_new_draft_service(framework_slug, lot_slug):
         )['services']
     except HTTPError as e:
         update_data = section.unformat_data(update_data)
-        errors = section.get_error_messages(e.message, lot_slug)
+        errors = section.get_error_messages(e.message)
 
         return render_template(
             "services/edit_submission_section.html",
@@ -429,7 +429,7 @@ def update_section_submission(framework_slug, lot_slug, service_id, section_id, 
         public=False)
 
     if document_errors:
-        errors = section.get_error_messages(document_errors, draft['lot'])
+        errors = section.get_error_messages(document_errors)
     else:
         update_data.update(uploaded_documents)
 
@@ -443,7 +443,7 @@ def update_section_submission(framework_slug, lot_slug, service_id, section_id, 
             )
         except HTTPError as e:
             update_data = section.unformat_data(update_data)
-            errors = section.get_error_messages(e.message, draft['lot'])
+            errors = section.get_error_messages(e.message)
 
     if errors:
         keys_required_for_template = ['serviceName', 'lot', 'lotName']
