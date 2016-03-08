@@ -8,17 +8,20 @@ from dmapiclient import APIError
 from dmutils import s3
 
 
-def get_framework(client, framework_slug, open_only=True):
+def get_framework(client, framework_slug, allowed_statuses=None):
+    if allowed_statuses is None:
+        allowed_statuses = ['open', 'pending', 'standstill', 'live']
+
     framework = client.get_framework(framework_slug)['frameworks']
-    allowed_statuses = ['open'] if open_only else ['open', 'pending', 'standstill', 'live']
-    if framework['status'] not in allowed_statuses:
+
+    if allowed_statuses and framework['status'] not in allowed_statuses:
         abort(404)
 
     return framework
 
 
-def get_framework_and_lot(client, framework_slug, lot_slug, open_only=True):
-    framework = get_framework(client, framework_slug, open_only)
+def get_framework_and_lot(client, framework_slug, lot_slug, allowed_statuses=None):
+    framework = get_framework(client, framework_slug, allowed_statuses)
     return framework, get_framework_lot(framework, lot_slug)
 
 

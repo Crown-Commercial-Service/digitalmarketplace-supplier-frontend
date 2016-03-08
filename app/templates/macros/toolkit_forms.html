@@ -5,6 +5,10 @@
     hint=(question_content.hint or '')|question_references(get_question)|markdown,
     name=question_content.id,
     value=service_data[question_content.id],
+    unit_in_full=question_content.unit_in_full,
+    unit_position=question_content.unit_position,
+    unit=question_content.unit,
+    smaller=question_content.smaller,
     error=errors.get(question_content.id)['message']|question_references(get_question)
   %}
     {% include "toolkit/forms/textbox.html" %}
@@ -144,4 +148,37 @@
   %}
     {% include "toolkit/forms/textbox.html" %}
   {% endwith %}
+{%- endmacro %}
+
+{% macro boolean_list(question_content, service_data, errors, question_number=None, get_question=None) -%}
+
+    <fieldset class="question question-boolean-list" id="{{ question_content.id }}">
+        <span class="question-heading">
+          <h2>{{ question_content.question }}</h2>
+        </span>
+      <legend>
+        <span class="visually-hidden">{{ question_content.name }}</span>
+      </legend>
+        <p class="question-description">{{ question_content.hint }}</p>
+
+      {% for boolean_question in question_content.boolean_list_questions %}
+        {% set boolean_question_id = '{}-{}'.format(question_content.id, loop.index0) %}
+        {% set
+            existing_value = service_data[question_content.id][loop.index0]
+              if (service_data[question_content.id] and service_data[question_content.id][loop.index0] is defined)
+              else None
+        %}
+        {% with
+            boolean_question_content = {
+              'id': boolean_question_id,
+              'question': boolean_question,
+            },
+            data = {
+              boolean_question_id: existing_value
+            }
+        %}
+          {{ boolean(boolean_question_content, data, errors) }}
+        {% endwith %}
+      {% endfor %}
+    </fieldset>
 {%- endmacro %}

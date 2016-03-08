@@ -140,7 +140,7 @@ def update_section(service_id, section_id):
             posted_data,
             current_user.email_address)
     except HTTPError as e:
-        errors = section.get_error_messages(e.message, service['lot'])
+        errors = section.get_error_messages(e.message)
         if not posted_data.get('serviceName', None):
             posted_data['serviceName'] = service.get('serviceName', '')
         return render_template(
@@ -162,7 +162,7 @@ def update_section(service_id, section_id):
 def start_new_draft_service(framework_slug, lot_slug):
     """Page to kick off creation of a new service."""
 
-    framework, lot = get_framework_and_lot(data_api_client, framework_slug, lot_slug, open_only=True)
+    framework, lot = get_framework_and_lot(data_api_client, framework_slug, lot_slug, allowed_statuses=['open'])
 
     content = content_loader.get_manifest(framework_slug, 'edit_submission').filter(
         {'lot': lot['slug']}
@@ -183,7 +183,7 @@ def start_new_draft_service(framework_slug, lot_slug):
 def create_new_draft_service(framework_slug, lot_slug):
     """Hits up the data API to create a new draft service."""
 
-    framework, lot = get_framework_and_lot(data_api_client, framework_slug, lot_slug, open_only=True)
+    framework, lot = get_framework_and_lot(data_api_client, framework_slug, lot_slug, allowed_statuses=['open'])
 
     content = content_loader.get_manifest(framework_slug, 'edit_submission').filter(
         {'lot': lot['slug']}
@@ -200,7 +200,7 @@ def create_new_draft_service(framework_slug, lot_slug):
         )['services']
     except HTTPError as e:
         update_data = section.unformat_data(update_data)
-        errors = section.get_error_messages(e.message, lot_slug)
+        errors = section.get_error_messages(e.message)
 
         return render_template(
             "services/edit_submission_section.html",
@@ -223,7 +223,7 @@ def create_new_draft_service(framework_slug, lot_slug):
 @main.route('/frameworks/<framework_slug>/submissions/<lot_slug>/<service_id>/copy', methods=['POST'])
 @login_required
 def copy_draft_service(framework_slug, lot_slug, service_id):
-    framework, lot = get_framework_and_lot(data_api_client, framework_slug, lot_slug, open_only=True)
+    framework, lot = get_framework_and_lot(data_api_client, framework_slug, lot_slug, allowed_statuses=['open'])
     draft = data_api_client.get_draft_service(service_id).get('services')
 
     if not is_service_associated_with_supplier(draft):
@@ -248,7 +248,7 @@ def copy_draft_service(framework_slug, lot_slug, service_id):
 @main.route('/frameworks/<framework_slug>/submissions/<lot_slug>/<service_id>/complete', methods=['POST'])
 @login_required
 def complete_draft_service(framework_slug, lot_slug, service_id):
-    framework, lot = get_framework_and_lot(data_api_client, framework_slug, lot_slug, open_only=True)
+    framework, lot = get_framework_and_lot(data_api_client, framework_slug, lot_slug, allowed_statuses=['open'])
     draft = data_api_client.get_draft_service(service_id).get('services')
 
     if not is_service_associated_with_supplier(draft):
@@ -280,7 +280,7 @@ def complete_draft_service(framework_slug, lot_slug, service_id):
 @main.route('/frameworks/<framework_slug>/submissions/<lot_slug>/<service_id>/delete', methods=['POST'])
 @login_required
 def delete_draft_service(framework_slug, lot_slug, service_id):
-    framework, lot = get_framework_and_lot(data_api_client, framework_slug, lot_slug, open_only=True)
+    framework, lot = get_framework_and_lot(data_api_client, framework_slug, lot_slug, allowed_statuses=['open'])
     draft = data_api_client.get_draft_service(service_id).get('services')
 
     if not is_service_associated_with_supplier(draft):
@@ -325,7 +325,7 @@ def service_submission_document(framework_slug, supplier_id, document_name):
 @main.route('/frameworks/<framework_slug>/submissions/<lot_slug>/<service_id>', methods=['GET'])
 @login_required
 def view_service_submission(framework_slug, lot_slug, service_id):
-    framework, lot = get_framework_and_lot(data_api_client, framework_slug, lot_slug, open_only=False)
+    framework, lot = get_framework_and_lot(data_api_client, framework_slug, lot_slug)
 
     try:
         data = data_api_client.get_draft_service(service_id)
@@ -366,7 +366,7 @@ def view_service_submission(framework_slug, lot_slug, service_id):
             methods=['GET'])
 @login_required
 def edit_service_submission(framework_slug, lot_slug, service_id, section_id, question_slug=None):
-    framework, lot = get_framework_and_lot(data_api_client, framework_slug, lot_slug, open_only=True)
+    framework, lot = get_framework_and_lot(data_api_client, framework_slug, lot_slug, allowed_statuses=['open'])
 
     try:
         draft = data_api_client.get_draft_service(service_id)['services']
@@ -401,7 +401,7 @@ def edit_service_submission(framework_slug, lot_slug, service_id, section_id, qu
             methods=['POST'])
 @login_required
 def update_section_submission(framework_slug, lot_slug, service_id, section_id, question_slug=None):
-    framework, lot = get_framework_and_lot(data_api_client, framework_slug, lot_slug, open_only=True)
+    framework, lot = get_framework_and_lot(data_api_client, framework_slug, lot_slug, allowed_statuses=['open'])
 
     try:
         draft = data_api_client.get_draft_service(service_id)['services']
@@ -429,7 +429,7 @@ def update_section_submission(framework_slug, lot_slug, service_id, section_id, 
         public=False)
 
     if document_errors:
-        errors = section.get_error_messages(document_errors, draft['lot'])
+        errors = section.get_error_messages(document_errors)
     else:
         update_data.update(uploaded_documents)
 
@@ -443,7 +443,7 @@ def update_section_submission(framework_slug, lot_slug, service_id, section_id, 
             )
         except HTTPError as e:
             update_data = section.unformat_data(update_data)
-            errors = section.get_error_messages(e.message, draft['lot'])
+            errors = section.get_error_messages(e.message)
 
     if errors:
         keys_required_for_template = ['serviceName', 'lot', 'lotName']

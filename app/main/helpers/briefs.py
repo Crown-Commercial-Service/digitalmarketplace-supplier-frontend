@@ -6,12 +6,16 @@ import datetime
 from flask import abort, current_app, render_template
 from flask_login import current_user
 
-from dmutils.email import send_email, hash_email, MandrillException
+from dmutils.email import send_email, MandrillException
 
 
-def get_brief(data_api_client, brief_id, live_only=True):
+def get_brief(data_api_client, brief_id, allowed_statuses=None):
+    if allowed_statuses is None:
+        allowed_statuses = []
+
     brief = data_api_client.get_brief(brief_id)['briefs']
-    if live_only and brief['status'] != 'live':
+
+    if allowed_statuses and brief['status'] not in allowed_statuses:
         abort(404)
 
     return brief
@@ -21,6 +25,12 @@ def ensure_supplier_is_eligible_for_brief(brief, supplier_id):
     # TODO connect this with the API endpoint once it exists
     # Should abort or render an error page if the check fails
     pass
+
+
+def has_supplier_already_submitted_a_brief_response(data_api_client, supplier_id, brief_id):
+
+    brief_responses = data_api_client.find_brief_responses(brief_id=brief_id, supplier_id=supplier_id)['briefResponses']
+    return len(brief_responses) == 0
 
 
 def send_brief_clarification_question(brief, clarification_question):
