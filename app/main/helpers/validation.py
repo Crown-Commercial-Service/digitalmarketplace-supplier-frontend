@@ -142,7 +142,7 @@ class G7Validator(DeclarationValidator):
 
         #  If you answered 'licensed' or 'a member of a relevant organisation' in question 29
         answer_29 = self.answers.get('SQ1-1j-i', [])
-        if len(answer_29) > 0 and \
+        if answer_29 and len(answer_29) > 0 and \
                 ('licensed' in answer_29 or 'a member of a relevant organisation' in answer_29):
                 req_fields.add('SQ1-1j-ii')
 
@@ -164,6 +164,10 @@ class G7Validator(DeclarationValidator):
             req_fields.add('SQ1-1j-i')
 
         return req_fields
+
+
+class G8Validator(G7Validator):
+    pass
 
 
 class DOSValidator(DeclarationValidator):
@@ -217,5 +221,6 @@ class DOSValidator(DeclarationValidator):
 
 VALIDATORS = {
     "g-cloud-7": G7Validator,
+    "g-cloud-8": G8Validator,
     "digital-outcomes-and-specialists": DOSValidator,
 }
