@@ -1,6 +1,5 @@
 # coding: utf-8
 from __future__ import unicode_literals
-from collections import OrderedDict
 
 from flask import render_template, redirect, url_for, request, flash, abort
 from flask_login import current_user
@@ -12,7 +11,7 @@ from ..helpers.briefs import (
     get_brief,
     ensure_supplier_is_eligible_for_brief,
     send_brief_clarification_question,
-    has_supplier_already_submitted_a_brief_response
+    supplier_has_a_brief_response
 )
 from ..helpers.frameworks import get_framework_and_lot
 from ...main import main, content_loader
@@ -57,7 +56,7 @@ def submit_brief_response(brief_id):
     brief = get_brief(data_api_client, brief_id, allowed_statuses=['live'])
     ensure_supplier_is_eligible_for_brief(brief, current_user.supplier_id)
 
-    if not has_supplier_already_submitted_a_brief_response(data_api_client, current_user.supplier_id, brief_id):
+    if supplier_has_a_brief_response(data_api_client, current_user.supplier_id, brief_id):
         # TODO redirect to summary of brief response page with flash message
         abort(404)
 
@@ -89,7 +88,7 @@ def create_new_brief_response(brief_id):
     brief = get_brief(data_api_client, brief_id, allowed_statuses=['live'])
     ensure_supplier_is_eligible_for_brief(brief, current_user.supplier_id)
 
-    if not has_supplier_already_submitted_a_brief_response(data_api_client, current_user.supplier_id, brief_id):
+    if supplier_has_a_brief_response(data_api_client, current_user.supplier_id, brief_id):
         # TODO redirect to summary of brief response page with flash message
         abort(404)
 
