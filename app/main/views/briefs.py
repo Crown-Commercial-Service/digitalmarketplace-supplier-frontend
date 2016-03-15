@@ -9,7 +9,7 @@ from dmapiclient import HTTPError
 from ..helpers import login_required
 from ..helpers.briefs import (
     get_brief,
-    ensure_supplier_is_eligible_for_brief,
+    is_supplier_eligible_for_brief,
     send_brief_clarification_question,
     supplier_has_a_brief_response
 )
@@ -22,9 +22,12 @@ from ... import data_api_client
 @login_required
 def ask_brief_clarification_question(brief_id):
     brief = get_brief(data_api_client, brief_id, allowed_statuses=['live'])
+
     if brief['clarificationQuestionsAreClosed']:
         abort(404)
-    ensure_supplier_is_eligible_for_brief(brief, current_user.supplier_id)
+
+    if not is_supplier_eligible_for_brief(data_api_client, current_user.supplier_id, brief):
+        abort(400)
 
     error_message = None
     clarification_question_value = None
@@ -54,7 +57,9 @@ def ask_brief_clarification_question(brief_id):
 def submit_brief_response(brief_id):
 
     brief = get_brief(data_api_client, brief_id, allowed_statuses=['live'])
-    ensure_supplier_is_eligible_for_brief(brief, current_user.supplier_id)
+
+    if not is_supplier_eligible_for_brief(data_api_client, current_user.supplier_id, brief):
+        abort(400)
 
     if supplier_has_a_brief_response(data_api_client, current_user.supplier_id, brief_id):
         # TODO redirect to summary of brief response page with flash message
@@ -86,7 +91,9 @@ def create_new_brief_response(brief_id):
     """Hits up the data API to create a new brief response."""
 
     brief = get_brief(data_api_client, brief_id, allowed_statuses=['live'])
-    ensure_supplier_is_eligible_for_brief(brief, current_user.supplier_id)
+
+    if not is_supplier_eligible_for_brief(data_api_client, current_user.supplier_id, brief):
+        abort(400)
 
     if supplier_has_a_brief_response(data_api_client, current_user.supplier_id, brief_id):
         # TODO redirect to summary of brief response page with flash message
