@@ -13,7 +13,7 @@ from ..helpers.briefs import (
     send_brief_clarification_question,
     supplier_has_a_brief_response
 )
-from ..helpers.frameworks import get_framework_and_lot
+from ..helpers.frameworks import get_framework_and_lot, get_supplier_framework_info
 from ...main import main, content_loader
 from ... import data_api_client
 
@@ -27,7 +27,7 @@ def ask_brief_clarification_question(brief_id):
         abort(404)
 
     if not is_supplier_eligible_for_brief(data_api_client, current_user.supplier_id, brief):
-        abort(400)
+        return _render_not_eligible_for_brief_error_page(brief)
 
     error_message = None
     clarification_question_value = None
@@ -59,7 +59,7 @@ def submit_brief_response(brief_id):
     brief = get_brief(data_api_client, brief_id, allowed_statuses=['live'])
 
     if not is_supplier_eligible_for_brief(data_api_client, current_user.supplier_id, brief):
-        abort(400)
+        return _render_not_eligible_for_brief_error_page(brief)
 
     if supplier_has_a_brief_response(data_api_client, current_user.supplier_id, brief_id):
         # TODO redirect to summary of brief response page with flash message
@@ -93,7 +93,7 @@ def create_new_brief_response(brief_id):
     brief = get_brief(data_api_client, brief_id, allowed_statuses=['live'])
 
     if not is_supplier_eligible_for_brief(data_api_client, current_user.supplier_id, brief):
-        abort(400)
+        return _render_not_eligible_for_brief_error_page(brief)
 
     if supplier_has_a_brief_response(data_api_client, current_user.supplier_id, brief_id):
         # TODO redirect to summary of brief response page with flash message
@@ -128,3 +128,14 @@ def create_new_brief_response(brief_id):
     flash('Your response to &lsquo;{}&rsquo; has been submitted.'.format(brief['title']))
 
     return redirect(url_for(".dashboard"))
+
+
+def _render_not_eligible_for_brief_error_page(brief):
+    sf = get_supplier_framework_info(data_api_client, brief['frameworkSlug'])
+    on_framework = sf.get('onFramework', False) if sf else False
+    return render_template(
+        "briefs/not_is_supplier_eligible_for_brief_error.html",
+        on_framework=on_framework,
+        framework_name=brief['frameworkName'],
+        **dict(main.config['BASE_TEMPLATE_DATA'])
+    ), 400
