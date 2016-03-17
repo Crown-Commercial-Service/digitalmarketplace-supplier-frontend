@@ -52,96 +52,106 @@ with items = [
                 before you can sell {{ framework.name }} services.</p>
         </div>
 
-        <div class="padding-bottom framework-agreement-section-first">
-            <h2>1. Download your framework agreement</h2>
-            <ul class='document-list'>
-                <li class='document-list-item'>
-                    <a href="{{ url_for('.download_agreement_file', framework_slug=framework.slug, document_name=agreement_filename) }}" class='document-link-with-icon' download>
-                      <span class='document-icon'>PDF<span> document:</span></span>
-                      Download framework agreement
-                    </a>
-                </li>
-            </ul>
-        </div>
 
-        <div class="padding-bottom framework-agreement-section">
-            <h2>2. Read your framework agreement</h2>
-            <p>If you have a question about your framework agreement, <a href="{{ url_for('.framework_updates', framework_slug=framework.slug) }}">contact CCS</a>.</p>
-        </div>
+        <form method="post" enctype="multipart/form-data" action="{{ url_for(".upload_framework_agreement", framework_slug=framework.slug) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
 
-        <div class="padding-bottom framework-agreement-section">
-            <h2>3. Sign your framework agreement</h2>
-            <p class="lead-in">To digitally sign your framework agreement, you need to:</p>
-            <ol>
-              <li>Use <strong>Adobe Reader</strong> to open your {{ framework.name }} framework agreement.
-                    You can download it for free from the <a rel="external" href="https://get.adobe.com/uk/reader/">Adobe Acrobat Reader</a> website.</li>
+          {% if supplier_framework.agreementReturned %}
+            {% set upload_value = "Document uploaded {}".format(supplier_framework.agreementReturnedAt)  %}
+          {% else %}
+            {% set upload_value = "" %}
+          {% endif %}
 
-                <li>Go to page 5 and click the first signature box.</li>
+          {%
+            with
+            items = [
+              {
+                "body": "Download your framework agreement",
+                "documents": [
+                    {
+                        "title": "Download framework agreement",
+                        "link": (url_for('.download_agreement_file', framework_slug=framework.slug, document_name=agreement_filename)),
+                        "file_type": "PDF",
+                        "download": 'True'
+                    }
+                ]
+              },
+              {
+                "body": "Read your framework agreement",
+                "extra": "If you have a question about your framework agreement, contact CCS."
+              },
+              {
+                "body": "Sign your framework agreement",
+                "extra": "Please don't send paper copies to CCS.",
+                "sublist_collection": [
+                  {
+                    "lead_in": "To digitally sign your framework agreement, you need to:",
+                    "sublists": [
+                      {
+                          "body": "Use <strong>Adobe Reader</strong> to open your Digital Outcomes and Specialists framework agreement. You can download it for free from the <a class='external-link-default' href='https://get.adobe.com/uk/reader/' rel='external'>Adobe Reader</a> Website."
+                      },
+                      {
+                          "body": "Go to page 5 and click the first signature box."
+                      },
+                      {
+                          "body": "Use an existing digital ID or create a new one."
+                      },
+                      {
+                          "body": "Enter your name, email and organisation details."
+                      },
+                      {
+                          "body": "Enter and confirm your new password. Enter your password and click ‘Sign’."
+                      },
+                      {
+                          "body": "Save your document to add your digital ID to the signature box."
+                      },
+                      {
+                          "body": "Send your signed framework agreement to CCS by uploading it below."
+                      }
+                    ]
+                  },
+                  {
+                    "lead_in": "If you can’t digitally sign your framework agreement:",
+                    "sublists": [
+                      {
+                        "body": "Print and sign page 5."
+                      },
+                      {
+                        "body": "Scan the page and save as PDF, JPG or PNG."
+                      },
+                      {
+                        "body": "Send your signed framework agreement to CCS by uploading it below."
+                      }
+                    ]
+                  },
+                ]
+              },
+              {
+                "body": "Upload your signed framework agreement",
+                "uploads": [
+                          {
+                              "value": upload_value,
+                              "name": "agreement",
+                              "file_type": "PDF",
+                              "error": upload_error
+                          }
+                          ]
+              }
+            ],
+            verbose = true
+          %}
+            {% include "toolkit/instruction-list.html" %}
+          {% endwith %}
 
-                <li>Use an existing digital ID or create a new one.</li>
 
-                <li>Enter your name, email and organisation details.</li>
-
-                <li>Enter and confirm your new password.</li>
-
-                <li>Enter your password and click ‘Sign’.</li>
-
-                <li>Save your document to add your digital ID to the signature box.</li>
-                
-                <li>Send your signed framework agreement to CCS by uploading it below.</li>
-
-            </ol>
-            <p class="lead-in">
-                If you can’t digitally sign your framework agreement:
-            </p>
-            <ol>
-                <li>Print and sign page 5.</li>
-                
-                <li>Scan the page and save as PDF, JPG or PNG.</li>
-                
-                <li>Send your signed framework agreement to CCS by uploading it below.</li>
-            </ol>
-            <p>
-                Please don’t send paper copies to CCS.
-            </p>
-        </div>
-
-        <div class="padding-bottom framework-agreement-section">
-            <form method="post" enctype="multipart/form-data" action="{{ url_for(".upload_framework_agreement", framework_slug=framework.slug) }}">
-                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
-                <h2>4. Upload your signed framework agreement</h2>
-                {% if supplier_framework.agreementReturned %}
-                    {%
-                    with
-                    question = "Upload your signed framework agreement",
-                    value = "Document uploaded {}".format(supplier_framework.agreementReturnedAt),
-                    file_type = "PDF",
-                    name = "agreement",
-                    error = upload_error
-                    %}
-                    {% include "toolkit/forms/upload.html" %}
-                    {% endwith %}
-                {% else %}
-                    {%
-                    with
-                    question = "Upload your signed framework agreement",
-                    file_type = "PDF",
-                    name = "agreement",
-                    error = upload_error
-                    %}
-                    {% include "toolkit/forms/upload.html" %}
-                    {% endwith %}
-                {% endif %}
-
-                {%
-                with
-                type = "save",
-                label = "Send document to CCS"
-                %}
-                {% include "toolkit/button.html" %}
-                {% endwith %}
-            </form>
-        </div>
+          {%
+          with
+          type = "save",
+          label = "Send document to CCS"
+          %}
+          {% include "toolkit/button.html" %}
+          {% endwith %}
+        </form>
 
         <a href="{{url_for('.framework_dashboard', framework_slug=framework.slug)}}">Return to your {{ framework.name }} application</a>
     </div>
