@@ -6,6 +6,7 @@ import datetime
 from flask import abort, current_app, render_template
 from flask_login import current_user
 
+from dmapiclient.audit import AuditTypes
 from dmutils.email import send_email, MandrillException
 
 
@@ -33,7 +34,7 @@ def has_supplier_already_submitted_a_brief_response(data_api_client, supplier_id
     return len(brief_responses) == 0
 
 
-def send_brief_clarification_question(brief, clarification_question):
+def send_brief_clarification_question(data_api_client, brief, clarification_question):
     # Email the question to brief owners
     email_body = render_template(
         "emails/brief_clarification_question.html",
@@ -61,6 +62,13 @@ def send_brief_clarification_question(brief, clarification_question):
         )
 
         abort(503, "Clarification question email failed to send")
+
+    data_api_client.create_audit_event(
+        audit_type=AuditTypes.send_clarification_question,
+        user=current_user.email_address,
+        object_type="briefs",
+        object_id=brief['id'],
+        data={"question": clarification_question, "briefId": brief['id']})
 
     # Send the supplier a copy of the question
     supplier_email_body = render_template(
