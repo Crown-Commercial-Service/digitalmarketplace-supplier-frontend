@@ -36,7 +36,7 @@ def ask_brief_clarification_question(brief_id):
             clarification_question_value = clarification_question
             error_message = "Question cannot be longer than 5000 characters"
         else:
-            send_brief_clarification_question(brief, clarification_question)
+            send_brief_clarification_question(data_api_client, brief, clarification_question)
             flash('message_sent', 'success')
 
     return render_template(

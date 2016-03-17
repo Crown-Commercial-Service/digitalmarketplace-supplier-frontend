@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 
 import mock
 from dmapiclient import api_stubs, HTTPError
+from dmapiclient.audit import AuditTypes
 from dmutils.email import MandrillException
 from ..helpers import BaseApplicationTest, FakeMail
 from lxml import html
@@ -104,6 +105,14 @@ class TestSubmitClarificationQuestions(BaseApplicationTest):
                 subject=u"Your question about \u2018I need a thing to do a thing\u2019"
             ),
         ])
+
+        data_api_client.create_audit_event.assert_called_with(
+            audit_type=AuditTypes.send_clarification_question,
+            object_type='briefs',
+            data={'briefId': 1234, 'question': u'important question'},
+            user='email@email.com',
+            object_id=1234
+        )
 
     @mock.patch('app.main.helpers.briefs.send_email')
     def test_submit_clarification_question_fails_on_mandrill_error(self, send_email, data_api_client):
