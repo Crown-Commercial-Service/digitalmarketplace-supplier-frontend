@@ -26,14 +26,14 @@ def create_user(encoded_token):
             "createuser.token_invalid: {encoded_token}",
             extra={'encoded_token': encoded_token})
         return render_template(
-            "auth/create-user-error.html",
+            "auth/create_user_error.html",
             token=None), 400
 
     user_json = data_api_client.get_user(email_address=token.get("email_address"))
 
     if not user_json:
         return render_template(
-            "auth/create-user.html",
+            "auth/create_user.html",
             form=form,
             email_address=token['email_address'],
             supplier_name=token['supplier_name'],
@@ -41,7 +41,7 @@ def create_user(encoded_token):
 
     user = User.from_json(user_json)
     return render_template(
-        "auth/create-user-error.html",
+        "auth/create_user_error.html",
         token=token,
         user=user), 400
 
@@ -55,7 +55,7 @@ def submit_create_user(encoded_token):
         current_app.logger.warning("createuser.token_invalid: {encoded_token}",
                                    extra={'encoded_token': encoded_token})
         return render_template(
-            "auth/create-user-error.html",
+            "auth/create_user_error.html",
             token=None), 400
 
     else:
@@ -64,7 +64,7 @@ def submit_create_user(encoded_token):
                 "createuser.invalid: {form_errors}",
                 extra={'form_errors': ", ".join(form.errors)})
             return render_template(
-                "auth/create-user.html",
+                "auth/create_user.html",
                 form=form,
                 token=encoded_token,
                 email_address=token.get('email_address'),
@@ -87,7 +87,7 @@ def submit_create_user(encoded_token):
                 raise
 
             return render_template(
-                "auth/create-user-error.html",
+                "auth/create_user_error.html",
                 token=None), 400
 
         return redirect(url_for('.dashboard'))
@@ -99,7 +99,7 @@ def invite_user():
     form = EmailAddressForm()
 
     return render_template(
-        "auth/submit-email-address.html",
+        "auth/submit_email_address.html",
         form=form), 200
 
 
@@ -156,5 +156,5 @@ def send_invite_user():
         return redirect(url_for('.list_users'))
     else:
         return render_template(
-            "auth/submit-email-address.html",
+            "auth/submit_email_address.html",
             form=form), 400
