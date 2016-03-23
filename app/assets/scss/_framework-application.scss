@@ -13,7 +13,6 @@
   strong {
     font-weight: normal;
   }
-
 }
 
 .framework-dashboard {
@@ -27,13 +26,7 @@
       @include bold-24;
       margin-bottom: 5px;
     }
-
-    .guidance-link {
-      margin-bottom: 10px
-    }
-
   }
-
 }
 
 /* Temporary styles, to be added to toolkit */
@@ -98,7 +91,5 @@
     .second-line {
       color: $secondary-text-colour;
     }
-
   }
-
 }

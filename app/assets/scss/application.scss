@@ -50,6 +50,8 @@ $path: "/suppliers/static/images/";
 /* Blocks shared between multiple selectors */
 @import "shared_placeholders/_temporary-messages.scss";
 
+/* Classes shared between multiple apps */
+@import "shared_scss/_lists.scss";
 
 // Suppliers app styles
 @import "_text.scss";
