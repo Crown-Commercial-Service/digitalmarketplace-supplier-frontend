@@ -37,6 +37,11 @@ processed_brief_submission = {
     "specialistName": "Dave",
 }
 
+ERROR_MESSAGE_PAGE_HEADING = 'You can’t apply for this opportunity'
+ERROR_MESSAGE_NOT_ON_FRAMEWORK = 'You aren’t a Digital Outcomes and Specialists supplier.'
+ERROR_MESSAGE_DONT_PROVIDE_THIS_SERVICE = \
+    'You don’t provide this type of service on the Digital Outcomes and Specialists framework.'
+
 
 @mock.patch('app.main.views.briefs.data_api_client', autospec=True)
 class TestBriefClarificationQuestions(BaseApplicationTest):
@@ -62,6 +67,7 @@ class TestBriefClarificationQuestions(BaseApplicationTest):
     def test_clarification_question_checks_supplier_is_eligible(self, data_api_client):
         self.login()
         data_api_client.get_brief.return_value = api_stubs.brief(status='live')
+        data_api_client.get_brief.return_value['briefs']['frameworkName'] = 'Digital Outcomes and Specialists'
         data_api_client.is_supplier_eligible_for_brief.return_value = False
 
         res = self.client.get('/suppliers/opportunities/1/ask-a-question')
@@ -157,16 +163,40 @@ class TestSubmitClarificationQuestions(BaseApplicationTest):
         assert res.status_code == 404
 
     @mock.patch('app.main.helpers.briefs.send_email')
-    def test_submit_clarification_question_checks_supplier_is_eligible(self, send_email, data_api_client):
+    def test_submit_clarification_question_returns_error_page_if_ineligible_supplier_is_not_on_framework(
+            self, send_email, data_api_client):
         self.login()
         data_api_client.get_brief.return_value = api_stubs.brief(status='live')
-        data_api_client.get_brief.return_value['briefs']['frameworkName'] = 'Brief Framework Name'
+        data_api_client.get_brief.return_value['briefs']['frameworkName'] = 'Digital Outcomes and Specialists'
         data_api_client.is_supplier_eligible_for_brief.return_value = False
-
+        data_api_client.get_supplier_framework_info.return_value = {
+            'frameworkInterest': {'onFramework': False}
+        }
         res = self.client.post('/suppliers/opportunities/1/ask-a-question', data={
             'clarification-question': "important question",
         })
         assert res.status_code == 400
+        assert ERROR_MESSAGE_PAGE_HEADING in res.get_data(as_text=True)
+        assert ERROR_MESSAGE_NOT_ON_FRAMEWORK in res.get_data(as_text=True)
+        assert not data_api_client.create_audit_event.called
+
+    @mock.patch('app.main.helpers.briefs.send_email')
+    def test_submit_clarification_question_returns_error_page_if_ineligible_supplier_is_on_framework(
+            self, send_email, data_api_client):
+        self.login()
+        data_api_client.get_brief.return_value = api_stubs.brief(status='live')
+        data_api_client.get_brief.return_value['briefs']['frameworkName'] = 'Digital Outcomes and Specialists'
+        data_api_client.is_supplier_eligible_for_brief.return_value = False
+        data_api_client.get_supplier_framework_info.return_value = {
+            'frameworkInterest': {'onFramework': True}
+        }
+        res = self.client.post('/suppliers/opportunities/1/ask-a-question', data={
+            'clarification-question': "important question",
+        })
+        assert res.status_code == 400
+        assert ERROR_MESSAGE_PAGE_HEADING in res.get_data(as_text=True)
+        assert ERROR_MESSAGE_DONT_PROVIDE_THIS_SERVICE in res.get_data(as_text=True)
+        assert not data_api_client.create_audit_event.called
 
     def test_submit_empty_clarification_question_returns_validation_error(self, data_api_client):
         self.login()
@@ -236,13 +266,31 @@ class TestRespondToBrief(BaseApplicationTest):
 
         assert res.status_code == 404
 
-    def test_get_brief_response_returns_404_if_supplier_is_not_eligible(self, data_api_client):
+    def test_get_brief_response_returns_error_page_if_ineligible_supplier_not_on_framework(self, data_api_client):
         data_api_client.get_brief.return_value = self.brief
+        data_api_client.get_brief.return_value['briefs']['frameworkName'] = 'Digital Outcomes and Specialists'
         data_api_client.get_framework.return_value = self.framework
         data_api_client.is_supplier_eligible_for_brief.return_value = False
+        data_api_client.get_supplier_framework_info.return_value = {
+            'frameworkInterest': {'onFramework': False}
+        }
 
         res = self.client.get('/suppliers/opportunities/1234/responses/create')
-        assert res.status_code == 400
+        assert ERROR_MESSAGE_PAGE_HEADING in res.get_data(as_text=True)
+        assert ERROR_MESSAGE_NOT_ON_FRAMEWORK in res.get_data(as_text=True)
+
+    def test_get_brief_response_returns_error_page_if_ineligible_supplier_is_on_framework(self, data_api_client):
+        data_api_client.get_brief.return_value = self.brief
+        data_api_client.get_brief.return_value['briefs']['frameworkName'] = 'Digital Outcomes and Specialists'
+        data_api_client.get_framework.return_value = self.framework
+        data_api_client.is_supplier_eligible_for_brief.return_value = False
+        data_api_client.get_supplier_framework_info.return_value = {
+            'frameworkInterest': {'onFramework': True}
+        }
+
+        res = self.client.get('/suppliers/opportunities/1234/responses/create')
+        assert ERROR_MESSAGE_PAGE_HEADING in res.get_data(as_text=True)
+        assert ERROR_MESSAGE_DONT_PROVIDE_THIS_SERVICE in res.get_data(as_text=True)
 
     def test_get_brief_response_returns_404_if_response_already_exists(self, data_api_client):
         data_api_client.get_brief.return_value = self.brief
@@ -385,16 +433,40 @@ class TestRespondToBrief(BaseApplicationTest):
         assert res.status_code == 404
         assert not data_api_client.create_brief_response.called
 
-    def test_create_new_brief_response_404_if_supplier_is_not_eligible(self, data_api_client):
+    def test_create_new_brief_returns_error_page_if_ineligible_supplier_is_not_on_framework(self, data_api_client):
         data_api_client.get_brief.return_value = self.brief
+        data_api_client.get_brief.return_value['briefs']['frameworkName'] = 'Digital Outcomes and Specialists'
         data_api_client.get_framework.return_value = self.framework
         data_api_client.is_supplier_eligible_for_brief.return_value = False
+        data_api_client.get_supplier_framework_info.return_value = {
+            'frameworkInterest': {'onFramework': False}
+        }
 
         res = self.client.post(
             '/suppliers/opportunities/1234/responses/create',
             data=brief_form_submission
         )
         assert res.status_code == 400
+        assert ERROR_MESSAGE_PAGE_HEADING in res.get_data(as_text=True)
+        assert ERROR_MESSAGE_NOT_ON_FRAMEWORK in res.get_data(as_text=True)
+        assert not data_api_client.create_brief_response.called
+
+    def test_create_new_brief_returns_error_page_if_ineligible_supplier_is_on_framework(self, data_api_client):
+        data_api_client.get_brief.return_value = self.brief
+        data_api_client.get_brief.return_value['briefs']['frameworkName'] = 'Digital Outcomes and Specialists'
+        data_api_client.get_framework.return_value = self.framework
+        data_api_client.is_supplier_eligible_for_brief.return_value = False
+        data_api_client.get_supplier_framework_info.return_value = {
+            'frameworkInterest': {'onFramework': True}
+        }
+
+        res = self.client.post(
+            '/suppliers/opportunities/1234/responses/create',
+            data=brief_form_submission
+        )
+        assert res.status_code == 400
+        assert ERROR_MESSAGE_PAGE_HEADING in res.get_data(as_text=True)
+        assert ERROR_MESSAGE_DONT_PROVIDE_THIS_SERVICE in res.get_data(as_text=True)
         assert not data_api_client.create_brief_response.called
 
     def test_create_new_brief_response_with_api_error_fails(self, data_api_client):
