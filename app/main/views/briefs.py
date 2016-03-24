@@ -23,6 +23,8 @@ from ... import data_api_client
 @login_required
 def ask_brief_clarification_question(brief_id):
     brief = get_brief(data_api_client, brief_id, allowed_statuses=['live'])
+    if brief['clarificationQuestionsAreClosed']:
+        abort(404)
     ensure_supplier_is_eligible_for_brief(brief, current_user.supplier_id)
 
     error_message = None
