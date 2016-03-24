@@ -17,7 +17,7 @@
       },
       {
         "link": url_for(".framework_dashboard", framework_slug=framework.slug),
-        "label": "Apply to " + framework.name,
+        "label": ("Apply to " + framework.name) if framework.status == "open" else ("Your " + framework.name + " services"),
       }
     ]
   %}

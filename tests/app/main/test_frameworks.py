@@ -1596,3 +1596,51 @@ class TestG7ServicesList(BaseApplicationTest):
         submissions = self.client.get('/suppliers/frameworks/g-cloud-7/submissions')
 
         assert_in(u'1 complete service was submitted', submissions.get_data(as_text=True))
+
+    def test_dos_drafts_list_with_open_framework(self, count_unanswered, data_api_client):
+        with self.app.test_client():
+            self.login()
+
+        data_api_client.get_framework.return_value = self.framework(slug='digital-outcomes-and-specialists',
+                                                                    status='open')
+        data_api_client.get_supplier_declaration.return_value = {
+            'declaration': {
+                'status': 'complete'
+            }
+        }
+        data_api_client.find_draft_services.return_value = {
+            'services': [
+                {'serviceName': 'draft', 'lot': 'digital-specialists', 'status': 'submitted'},
+            ]
+        }
+
+        submissions = self.client.get('/suppliers/frameworks/digital-outcomes-and-specialists/submissions')
+
+        assert_in(u'This will be submitted', submissions.get_data(as_text=True))
+        assert_in(u'browse-list-item-status-happy', submissions.get_data(as_text=True))
+        assert_in(u'Apply to provide', submissions.get_data(as_text=True))
+
+    def test_dos_drafts_list_with_closed_framework(self, count_unanswered, data_api_client):
+        with self.app.test_client():
+            self.login()
+
+        data_api_client.get_framework.return_value = self.framework(slug="digital-outcomes-and-specialists",
+                                                                    status='pending')
+        data_api_client.get_supplier_declaration.return_value = {
+            'declaration': {
+                'status': 'complete'
+            }
+        }
+        data_api_client.find_draft_services.return_value = {
+            'services': [
+                {'serviceName': 'draft', 'lot': 'digital-specialists', 'status': 'not-submitted'},
+                {'serviceName': 'draft', 'lot': 'digital-specialists', 'status': 'submitted'},
+            ]
+        }
+
+        submissions = self.client.get('/suppliers/frameworks/digital-outcomes-and-specialists/submissions')
+
+        assert submissions.status_code == 200
+
+        assert_in(u'Submitted', submissions.get_data(as_text=True))
+        assert_not_in(u'Apply to provide', submissions.get_data(as_text=True))

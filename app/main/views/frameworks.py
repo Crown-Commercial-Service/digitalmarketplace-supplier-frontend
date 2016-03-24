@@ -128,10 +128,36 @@ def framework_submission_lots(framework_slug):
     drafts, complete_drafts = get_drafts(data_api_client, framework_slug)
     declaration_status = get_declaration_status(data_api_client, framework_slug)
     application_made = len(complete_drafts) > 0 and declaration_status == 'complete'
+    if framework['status'] not in ["open", "pending", "standstill"]:
+        abort(404)
     if framework['status'] == 'pending' and not application_made:
         abort(404)
 
-    lot_question = content_loader.get_question(framework_slug, 'services', 'lot')
+    lots = [
+        dict(lot,
+             draft_count=count_drafts_by_lot(drafts, lot['slug']),
+             complete_count=count_drafts_by_lot(complete_drafts, lot['slug']))
+        for lot in framework['lots']]
+    lot_question = {
+        option["value"]: option
+        for option in content_loader.get_question(framework_slug, 'services', 'lot')['options']
+    }
+    lots = [{
+        "title": lot_question[lot['slug']]['label'] if framework["status"] == "open" else lot["name"],
+        'body': lot_question[lot['slug']]['description'],
+        "link": url_for('.framework_submission_services', framework_slug=framework_slug, lot_slug=lot['slug']),
+        "statuses": get_statuses_for_lot(
+            lot['oneServiceLimit'],
+            lot['draft_count'],
+            lot['complete_count'],
+            declaration_status,
+            framework['status'],
+            lot['name'],
+            'lab' if framework['slug'] == 'digital-outcomes-and-specialists' else 'service',
+            'labs' if framework['slug'] == 'digital-outcomes-and-specialists' else 'service'
+            # TODO: ^ make this dynamic, eg, lab, service, unit
+        ),
+    } for lot in lots if (lot['draft_count'] + lot['complete_count']) > 0]
 
     return render_template(
         "frameworks/submission_lots.html",
@@ -139,22 +165,7 @@ def framework_submission_lots(framework_slug):
         drafts=list(reversed(drafts)),
         declaration_status=declaration_status,
         framework=framework,
-        lots=[{
-            'link': url_for('.framework_submission_services', framework_slug=framework_slug, lot_slug=lot['value']),
-            'title': lot['label'],
-            'body': lot['description'],
-            'statuses': get_statuses_for_lot(
-                has_one_service_limit(lot['value'], framework['lots']),
-                count_drafts_by_lot(drafts, lot['value']),
-                count_drafts_by_lot(complete_drafts, lot['value']),
-                declaration_status,
-                framework['status'],
-                lot['label'],
-                'lab' if framework['slug'] == 'digital-outcomes-and-specialists' else 'service',
-                'labs' if framework['slug'] == 'digital-outcomes-and-specialists' else 'service'
-                # TODO: ^ make this dynamic, eg, lab, service, unit
-            ),
-        } for lot in lot_question['options']]
+        lots=lots,
     ), 200
 
 

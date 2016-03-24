@@ -183,8 +183,7 @@ def get_statuses_for_lot(
 def get_status_for_one_service_lot(
     drafts_count, complete_drafts_count, declaration_complete, framework_is_open, lot_name, unit, unit_plural
 ):
-
-    if drafts_count:
+    if (drafts_count and framework_is_open) or (drafts_count and not complete_drafts_count):
         return {
             'title': u'Started but not complete' if framework_is_open else u'Not completed',
             'type': u'quiet'
