@@ -37,10 +37,16 @@ processed_brief_submission = {
     "specialistName": "Dave",
 }
 
-ERROR_MESSAGE_PAGE_HEADING = 'You can’t apply for this opportunity'
-ERROR_MESSAGE_NOT_ON_FRAMEWORK = 'You aren’t a Digital Outcomes and Specialists supplier.'
-ERROR_MESSAGE_DONT_PROVIDE_THIS_SERVICE = \
+ERROR_MESSAGE_PAGE_HEADING_APPLICATION = 'You can’t apply for this opportunity'
+ERROR_MESSAGE_NOT_ON_FRAMEWORK_APPLICATION = 'You aren’t a Digital Outcomes and Specialists supplier.'
+ERROR_MESSAGE_DONT_PROVIDE_THIS_SERVICE_APPLICATION = \
     'You don’t provide this type of service on the Digital Outcomes and Specialists framework.'
+
+ERROR_MESSAGE_PAGE_HEADING_CLARIFICATION = 'You can’t submit a question for this opportunity'
+ERROR_MESSAGE_NOT_ON_FRAMEWORK_CLARIFICATION = 'You aren’t a Digital Outcomes and Specialists supplier ' \
+    'so you’re not eligible to ask a question about this opportunity.'
+ERROR_MESSAGE_DONT_PROVIDE_THIS_SERVICE_CLARIFICATION = 'You don’t provide this type of service ' \
+    'so you’re not eligible to ask a question about this opportunity.'
 
 
 @mock.patch('app.main.views.briefs.data_api_client', autospec=True)
@@ -176,8 +182,8 @@ class TestSubmitClarificationQuestions(BaseApplicationTest):
             'clarification-question': "important question",
         })
         assert res.status_code == 400
-        assert ERROR_MESSAGE_PAGE_HEADING in res.get_data(as_text=True)
-        assert ERROR_MESSAGE_NOT_ON_FRAMEWORK in res.get_data(as_text=True)
+        assert ERROR_MESSAGE_PAGE_HEADING_CLARIFICATION in res.get_data(as_text=True)
+        assert ERROR_MESSAGE_NOT_ON_FRAMEWORK_CLARIFICATION in res.get_data(as_text=True)
         assert not data_api_client.create_audit_event.called
 
     @mock.patch('app.main.helpers.briefs.send_email')
@@ -194,8 +200,8 @@ class TestSubmitClarificationQuestions(BaseApplicationTest):
             'clarification-question': "important question",
         })
         assert res.status_code == 400
-        assert ERROR_MESSAGE_PAGE_HEADING in res.get_data(as_text=True)
-        assert ERROR_MESSAGE_DONT_PROVIDE_THIS_SERVICE in res.get_data(as_text=True)
+        assert ERROR_MESSAGE_PAGE_HEADING_CLARIFICATION in res.get_data(as_text=True)
+        assert ERROR_MESSAGE_DONT_PROVIDE_THIS_SERVICE_CLARIFICATION in res.get_data(as_text=True)
         assert not data_api_client.create_audit_event.called
 
     def test_submit_empty_clarification_question_returns_validation_error(self, data_api_client):
@@ -276,8 +282,8 @@ class TestRespondToBrief(BaseApplicationTest):
         }
 
         res = self.client.get('/suppliers/opportunities/1234/responses/create')
-        assert ERROR_MESSAGE_PAGE_HEADING in res.get_data(as_text=True)
-        assert ERROR_MESSAGE_NOT_ON_FRAMEWORK in res.get_data(as_text=True)
+        assert ERROR_MESSAGE_PAGE_HEADING_APPLICATION in res.get_data(as_text=True)
+        assert ERROR_MESSAGE_NOT_ON_FRAMEWORK_APPLICATION in res.get_data(as_text=True)
 
     def test_get_brief_response_returns_error_page_if_ineligible_supplier_is_on_framework(self, data_api_client):
         data_api_client.get_brief.return_value = self.brief
@@ -289,8 +295,8 @@ class TestRespondToBrief(BaseApplicationTest):
         }
 
         res = self.client.get('/suppliers/opportunities/1234/responses/create')
-        assert ERROR_MESSAGE_PAGE_HEADING in res.get_data(as_text=True)
-        assert ERROR_MESSAGE_DONT_PROVIDE_THIS_SERVICE in res.get_data(as_text=True)
+        assert ERROR_MESSAGE_PAGE_HEADING_APPLICATION in res.get_data(as_text=True)
+        assert ERROR_MESSAGE_DONT_PROVIDE_THIS_SERVICE_APPLICATION in res.get_data(as_text=True)
 
     def test_get_brief_response_returns_404_if_response_already_exists(self, data_api_client):
         data_api_client.get_brief.return_value = self.brief
@@ -447,8 +453,8 @@ class TestRespondToBrief(BaseApplicationTest):
             data=brief_form_submission
         )
         assert res.status_code == 400
-        assert ERROR_MESSAGE_PAGE_HEADING in res.get_data(as_text=True)
-        assert ERROR_MESSAGE_NOT_ON_FRAMEWORK in res.get_data(as_text=True)
+        assert ERROR_MESSAGE_PAGE_HEADING_APPLICATION in res.get_data(as_text=True)
+        assert ERROR_MESSAGE_NOT_ON_FRAMEWORK_APPLICATION in res.get_data(as_text=True)
         assert not data_api_client.create_brief_response.called
 
     def test_create_new_brief_returns_error_page_if_ineligible_supplier_is_on_framework(self, data_api_client):
@@ -465,8 +471,8 @@ class TestRespondToBrief(BaseApplicationTest):
             data=brief_form_submission
         )
         assert res.status_code == 400
-        assert ERROR_MESSAGE_PAGE_HEADING in res.get_data(as_text=True)
-        assert ERROR_MESSAGE_DONT_PROVIDE_THIS_SERVICE in res.get_data(as_text=True)
+        assert ERROR_MESSAGE_PAGE_HEADING_APPLICATION in res.get_data(as_text=True)
+        assert ERROR_MESSAGE_DONT_PROVIDE_THIS_SERVICE_APPLICATION in res.get_data(as_text=True)
         assert not data_api_client.create_brief_response.called
 
     def test_create_new_brief_response_with_api_error_fails(self, data_api_client):

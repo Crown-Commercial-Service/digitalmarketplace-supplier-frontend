@@ -4,18 +4,32 @@
 
 {% block main_content %}
 
+{% if clarification_question %}
+<div class="grid-row">
+  <div class="column-two-thirds">
+    <header class="page-heading-smaller">
+      <h1>You can’t submit a question for this opportunity</h1>
+    </header>
+    {% if on_framework %}
+      <p>You don’t provide this type of service so you’re not eligible to ask a question about this opportunity.</p>
+    {% else %}
+      <p>You aren’t a {{ framework_name }} supplier so you’re not eligible to ask a question about this opportunity.</p>
+    {% endif %}
+  </div>
+</div>
+{% else %}
 <div class="grid-row">
   <div class="column-two-thirds">
     <header class="page-heading-smaller">
       <h1>You can’t apply for this opportunity</h1>
     </header>
     {% if on_framework %}
-      <p>You don’t provide this type of service on the {{ framework_name }} framework.</p>
+      <p>You don’t provide this type of service on the {{ framework_name }} framework.
     {% else %}
       <p>You aren’t a {{ framework_name }} supplier.</p>
     {% endif %}
-    </div>
   </div>
 </div>
+{% endif %}
 
 {% endblock %}

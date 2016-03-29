@@ -27,7 +27,7 @@ def ask_brief_clarification_question(brief_id):
         abort(404)
 
     if not is_supplier_eligible_for_brief(data_api_client, current_user.supplier_id, brief):
-        return _render_not_eligible_for_brief_error_page(brief)
+        return _render_not_eligible_for_brief_error_page(brief, clarification_question=True)
 
     error_message = None
     clarification_question_value = None
@@ -130,12 +130,13 @@ def create_new_brief_response(brief_id):
     return redirect(url_for(".dashboard"))
 
 
-def _render_not_eligible_for_brief_error_page(brief):
+def _render_not_eligible_for_brief_error_page(brief, clarification_question=False):
     sf = get_supplier_framework_info(data_api_client, brief['frameworkSlug'])
     on_framework = sf.get('onFramework', False) if sf else False
     return render_template(
         "briefs/not_is_supplier_eligible_for_brief_error.html",
         on_framework=on_framework,
+        clarification_question=clarification_question,
         framework_name=brief['frameworkName'],
         **dict(main.config['BASE_TEMPLATE_DATA'])
     ), 400
