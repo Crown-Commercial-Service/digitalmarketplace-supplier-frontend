@@ -1275,9 +1275,10 @@ class TestSendClarificationQuestionEmail(BaseApplicationTest):
                 FakeMail('Supplier name:', 'User name:'),
                 "MANDRILL",
                 "Test Framework clarification question",
-                "suppliers+g-cloud-7@digitalmarketplace.service.gov.uk",
+                "do-not-reply@digitalmarketplace.service.gov.uk",
                 "Test Framework Supplier",
-                ["clarification-question"]
+                ["clarification-question"],
+                reply_to="suppliers+g-cloud-7@digitalmarketplace.service.gov.uk",
             )
         if succeeds:
             send_email.assert_any_call(
@@ -1303,9 +1304,10 @@ class TestSendClarificationQuestionEmail(BaseApplicationTest):
                 FakeMail('Test Framework question asked'),
                 "MANDRILL",
                 "Test Framework application question",
-                "email@email.com",
+                "do-not-reply@digitalmarketplace.service.gov.uk",
                 "Test Framework Supplier",
-                ["application-question"]
+                ["application-question"],
+                reply_to="email@email.com",
             )
 
     @mock.patch('app.main.views.frameworks.data_api_client')
