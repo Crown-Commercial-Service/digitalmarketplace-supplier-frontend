@@ -48,6 +48,8 @@ class Config(object):
     CLARIFICATION_EMAIL_SUBJECT = 'Thanks for your clarification question'
     DM_FOLLOW_UP_EMAIL_TO = 'digitalmarketplace@mailinator.com'
 
+    DM_GENERIC_NOREPLY_EMAIL = 'do-not-reply@digitalmarketplace.service.gov.uk'
+
     CREATE_USER_SUBJECT = 'Create your Digital Marketplace account'
     SECRET_KEY = None
     SHARED_EMAIL_KEY = None

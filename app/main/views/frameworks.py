@@ -406,9 +406,10 @@ def framework_updates_email_clarification_question(framework_slug):
             email_body,
             current_app.config['DM_MANDRILL_API_KEY'],
             subject,
-            from_address,
+            current_app.config["DM_GENERIC_NOREPLY_EMAIL"],
             "{} Supplier".format(framework['name']),
-            tags
+            tags,
+            reply_to=from_address,
         )
     except MandrillException as e:
         current_app.logger.error(
@@ -552,9 +553,10 @@ def upload_framework_agreement(framework_slug):
             email_body,
             current_app.config['DM_MANDRILL_API_KEY'],
             '{} framework agreement'.format(framework['name']),
-            current_user.email_address,
+            current_app.config["DM_GENERIC_NOREPLY_EMAIL"],
             '{} Supplier'.format(framework['name']),
-            ['{}-framework-agreement'.format(framework_slug)]
+            ['{}-framework-agreement'.format(framework_slug)],
+            reply_to=current_user.email_address,
         )
     except MandrillException as e:
         current_app.logger.error(
