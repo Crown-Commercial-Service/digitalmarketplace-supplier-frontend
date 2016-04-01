@@ -1,6 +1,5 @@
 # coding: utf-8
 from __future__ import unicode_literals
-from collections import OrderedDict
 
 from flask import render_template, redirect, url_for, request, flash, abort
 from flask_login import current_user
@@ -10,11 +9,11 @@ from dmapiclient import HTTPError
 from ..helpers import login_required
 from ..helpers.briefs import (
     get_brief,
-    ensure_supplier_is_eligible_for_brief,
+    is_supplier_eligible_for_brief,
     send_brief_clarification_question,
-    has_supplier_already_submitted_a_brief_response
+    supplier_has_a_brief_response
 )
-from ..helpers.frameworks import get_framework_and_lot
+from ..helpers.frameworks import get_framework_and_lot, get_supplier_framework_info
 from ...main import main, content_loader
 from ... import data_api_client
 
@@ -23,9 +22,12 @@ from ... import data_api_client
 @login_required
 def ask_brief_clarification_question(brief_id):
     brief = get_brief(data_api_client, brief_id, allowed_statuses=['live'])
+
     if brief['clarificationQuestionsAreClosed']:
         abort(404)
-    ensure_supplier_is_eligible_for_brief(brief, current_user.supplier_id)
+
+    if not is_supplier_eligible_for_brief(data_api_client, current_user.supplier_id, brief):
+        return _render_not_eligible_for_brief_error_page(brief, clarification_question=True)
 
     error_message = None
     clarification_question_value = None
@@ -55,9 +57,11 @@ def ask_brief_clarification_question(brief_id):
 def submit_brief_response(brief_id):
 
     brief = get_brief(data_api_client, brief_id, allowed_statuses=['live'])
-    ensure_supplier_is_eligible_for_brief(brief, current_user.supplier_id)
 
-    if not has_supplier_already_submitted_a_brief_response(data_api_client, current_user.supplier_id, brief_id):
+    if not is_supplier_eligible_for_brief(data_api_client, current_user.supplier_id, brief):
+        return _render_not_eligible_for_brief_error_page(brief)
+
+    if supplier_has_a_brief_response(data_api_client, current_user.supplier_id, brief_id):
         # TODO redirect to summary of brief response page with flash message
         abort(404)
 
@@ -87,9 +91,11 @@ def create_new_brief_response(brief_id):
     """Hits up the data API to create a new brief response."""
 
     brief = get_brief(data_api_client, brief_id, allowed_statuses=['live'])
-    ensure_supplier_is_eligible_for_brief(brief, current_user.supplier_id)
 
-    if not has_supplier_already_submitted_a_brief_response(data_api_client, current_user.supplier_id, brief_id):
+    if not is_supplier_eligible_for_brief(data_api_client, current_user.supplier_id, brief):
+        return _render_not_eligible_for_brief_error_page(brief)
+
+    if supplier_has_a_brief_response(data_api_client, current_user.supplier_id, brief_id):
         # TODO redirect to summary of brief response page with flash message
         abort(404)
 
@@ -122,3 +128,15 @@ def create_new_brief_response(brief_id):
     flash('Your response to &lsquo;{}&rsquo; has been submitted.'.format(brief['title']))
 
     return redirect(url_for(".dashboard"))
+
+
+def _render_not_eligible_for_brief_error_page(brief, clarification_question=False):
+    sf = get_supplier_framework_info(data_api_client, brief['frameworkSlug'])
+    on_framework = sf.get('onFramework', False) if sf else False
+    return render_template(
+        "briefs/not_is_supplier_eligible_for_brief_error.html",
+        on_framework=on_framework,
+        clarification_question=clarification_question,
+        framework_name=brief['frameworkName'],
+        **dict(main.config['BASE_TEMPLATE_DATA'])
+    ), 400
