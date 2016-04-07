@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 
 import re
 
-from flask import render_template, redirect, url_for, request, flash, abort
+from flask import render_template, redirect, request, flash, abort
 from flask_login import current_user
 
 from dmapiclient import HTTPError
@@ -18,6 +18,9 @@ from ..helpers.briefs import (
 from ..helpers.frameworks import get_framework_and_lot, get_supplier_framework_info
 from ...main import main, content_loader
 from ... import data_api_client
+
+
+SUBMIT_SECOND_RESPONSE_ERROR_MESSAGE = 'You have already submitted a response to ‘{}’ and can not submit another one.'
 
 
 @main.route('/opportunities/<int:brief_id>/ask-a-question', methods=['GET', 'POST'])
@@ -67,8 +70,8 @@ def submit_brief_response(brief_id):
         return _render_not_eligible_for_brief_error_page(brief)
 
     if supplier_has_a_brief_response(data_api_client, current_user.supplier_id, brief_id):
-        # TODO redirect to summary of brief response page with flash message
-        abort(404)
+        flash(SUBMIT_SECOND_RESPONSE_ERROR_MESSAGE.format(brief['title']), 'error')
+        return redirect("/{}/opportunities/{}".format(brief["frameworkSlug"], brief_id))
 
     framework, lot = get_framework_and_lot(
         data_api_client, brief['frameworkSlug'], brief['lotSlug'], allowed_statuses=['live'])
@@ -101,8 +104,8 @@ def create_new_brief_response(brief_id):
         return _render_not_eligible_for_brief_error_page(brief)
 
     if supplier_has_a_brief_response(data_api_client, current_user.supplier_id, brief_id):
-        # TODO redirect to summary of brief response page with flash message
-        abort(404)
+        flash(SUBMIT_SECOND_RESPONSE_ERROR_MESSAGE.format(brief['title']), 'error')
+        return redirect("/{}/opportunities/{}".format(brief["frameworkSlug"], brief_id))
 
     framework, lot = get_framework_and_lot(
         data_api_client, brief['frameworkSlug'], brief['lotSlug'], allowed_statuses=['live'])
@@ -130,9 +133,8 @@ def create_new_brief_response(brief_id):
             **dict(main.config['BASE_TEMPLATE_DATA'])
         ), 400
 
-    flash('Your response to &lsquo;{}&rsquo; has been submitted.'.format(brief['title']))
-
-    return redirect(url_for(".dashboard"))
+    flash('Your response to ‘{}’ has been submitted.'.format(brief['title']))
+    return redirect("/{}/opportunities/{}".format(brief["frameworkSlug"], brief_id))
 
 
 def _render_not_eligible_for_brief_error_page(brief, clarification_question=False):
