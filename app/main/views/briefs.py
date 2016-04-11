@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 
 import re
 
-from flask import render_template, redirect, request, flash, abort, url_for
+from flask import abort, flash, redirect, render_template, request, url_for
 from flask_login import current_user
 
 from dmapiclient import HTTPError
@@ -137,12 +137,32 @@ def create_new_brief_response(brief_id):
         flash('Your response to ‘{}’ has been submitted.'.format(brief['title']))
         return redirect(url_for(".dashboard"))
     else:
-        return redirect(url_for(".not_all_essentials"))
+        return redirect(url_for(".view_response_result", brief_id=brief_id))
 
 
-@main.route('/not-all-essentials')
-def not_all_essentials():
-    return render_template('briefs/not_all_essentials.html')
+@main.route('/opportunities/<int:brief_id>/responses/result')
+def view_response_result(brief_id):
+    brief = get_brief(data_api_client, brief_id, allowed_statuses=['live'])
+
+    if not is_supplier_eligible_for_brief(data_api_client, current_user.supplier_id, brief):
+        return _render_not_eligible_for_brief_error_page(brief)
+
+    brief_response = data_api_client.find_brief_responses(
+        brief_id=brief_id,
+        supplier_id=current_user.supplier_id
+    )['briefResponses']
+
+    if len(brief_response) == 0:
+        result_state = 'not_submitted'
+    elif all(brief_response[0]['essentialRequirements']):
+        result_state = 'submitted_ok'
+    else:
+        result_state = 'submitted_unsuccessful'
+
+    return render_template('briefs/view_response_result.html',
+                           brief=brief,
+                           result_state=result_state
+                           )
 
 
 def _render_not_eligible_for_brief_error_page(brief, clarification_question=False):

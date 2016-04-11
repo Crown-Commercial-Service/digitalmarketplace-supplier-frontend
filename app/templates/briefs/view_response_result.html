@@ -1,0 +1,43 @@
+{% extends "_base_page.html" %}
+
+{% block page_title %}Your response to ‘{{ brief.title }}’ - Digital Marketplace{% endblock %}
+
+{% block main_content %}
+
+<div class="grid-row">
+  <div class="column-two-thirds">
+    <header class="page-heading-smaller">
+      <h1>
+        {{
+            {
+             "not_submitted": "You have not submitted a response to this opportunity",
+             "submitted_ok": "Your response to ‘{}’ has been submitted".format(brief.title),
+             "submitted_unsuccessful": "You did not meet all the essential requirements"
+            }[result_state]
+        }}
+      </h1>
+    </header>
+
+    {% if result_state == "not_submitted" %}
+      <p>
+        You can still <a href="{{ url_for(".submit_brief_response", brief_id=brief.id) }}">submit a response</a>.
+      </p>
+    
+    {% elif result_state == "submitted_ok" %}
+      <p>
+        You will hear whether you have been successful or not from the buyer in due course.
+      </p>
+    
+    {% elif result_state == "submitted_unsuccessful" %}
+      <p>
+        Thank you for your response to this opportunity.
+      </p>
+      <p>
+        As you do not meet all the essential requirements the buyer can not award you a contract for this work.
+      </p>
+    
+    {% endif %}
+
+  </div>
+</div>
+{% endblock %}

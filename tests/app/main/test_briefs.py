@@ -309,7 +309,7 @@ class TestRespondToBrief(BaseApplicationTest):
         assert ERROR_MESSAGE_PAGE_HEADING_APPLICATION in res.get_data(as_text=True)
         assert ERROR_MESSAGE_DONT_PROVIDE_THIS_SERVICE_APPLICATION in res.get_data(as_text=True)
 
-    def test_get_brief_response_returns_404_if_response_already_exists(self, data_api_client):
+    def test_get_brief_response_flashes_error_on_dashboard_if_response_already_exists(self, data_api_client):
         data_api_client.get_brief.return_value = self.brief
         data_api_client.get_framework.return_value = self.framework
         data_api_client.find_brief_responses.return_value = {
@@ -320,7 +320,12 @@ class TestRespondToBrief(BaseApplicationTest):
         }
 
         res = self.client.get('/suppliers/opportunities/1234/responses/create')
-        assert res.status_code == 404
+        assert res.status_code == 302
+        assert res.location == 'http://localhost/suppliers'
+        self.assert_flashes(
+            "You have already submitted a response to ‘I need a thing to do a thing’ and can not submit another one.",
+            "error"
+        )
 
     def test_get_brief_response_page_includes_essential_requirements(self, data_api_client):
         data_api_client.get_brief.return_value = self.brief
@@ -355,6 +360,9 @@ class TestRespondToBrief(BaseApplicationTest):
     def test_create_new_brief_response(self, data_api_client):
         data_api_client.get_brief.return_value = self.brief
         data_api_client.get_framework.return_value = self.framework
+        data_api_client.create_brief_response.return_value = {
+            'briefResponses': {"essentialRequirements": [True, True, True]}
+        }
 
         res = self.client.post(
             '/suppliers/opportunities/1234/responses/create',
@@ -362,7 +370,23 @@ class TestRespondToBrief(BaseApplicationTest):
         )
         assert res.status_code == 302
         assert res.location == "http://localhost/suppliers"
-        self.assert_flashes("Your response to &lsquo;I need a thing to do a thing&rsquo; has been submitted.")
+        self.assert_flashes("Your response to ‘I need a thing to do a thing’ has been submitted.")
+        data_api_client.create_brief_response.assert_called_once_with(
+            1234, 1234, processed_brief_submission, 'email@email.com')
+
+    def test_create_new_brief_response_shows_result_page_for_not_all_essentials(self, data_api_client):
+        data_api_client.get_brief.return_value = self.brief
+        data_api_client.get_framework.return_value = self.framework
+        data_api_client.create_brief_response.return_value = {
+            'briefResponses': {"essentialRequirements": [True, False, True]}
+        }
+
+        res = self.client.post(
+            '/suppliers/opportunities/1234/responses/create',
+            data=brief_form_submission
+        )
+        assert res.status_code == 302
+        assert res.location == "http://localhost/suppliers/opportunities/1234/responses/result"
         data_api_client.create_brief_response.assert_called_once_with(
             1234, 1234, processed_brief_submission, 'email@email.com')
 
@@ -433,7 +457,7 @@ class TestRespondToBrief(BaseApplicationTest):
         assert res.status_code == 404
         assert not data_api_client.create_brief_response.called
 
-    def test_create_new_brief_response_404_if_response_already_exists(self, data_api_client):
+    def test_create_new_brief_response_flashes_error_on_dashboard_if_response_already_exists(self, data_api_client):
         data_api_client.get_brief.return_value = self.brief
         data_api_client.get_framework.return_value = self.framework
         data_api_client.find_brief_responses.return_value = {
@@ -447,7 +471,12 @@ class TestRespondToBrief(BaseApplicationTest):
             '/suppliers/opportunities/1234/responses/create',
             data=brief_form_submission
         )
-        assert res.status_code == 404
+        assert res.status_code == 302
+        assert res.location == 'http://localhost/suppliers'
+        self.assert_flashes(
+            "You have already submitted a response to ‘I need a thing to do a thing’ and can not submit another one.",
+            "error"
+        )
         assert not data_api_client.create_brief_response.called
 
     def test_create_new_brief_returns_error_page_if_ineligible_supplier_is_not_on_framework(self, data_api_client):
@@ -516,3 +545,53 @@ class TestRespondToBrief(BaseApplicationTest):
         assert res.location == "http://localhost/login"
         self.assert_flashes("supplier-role-required", "error")
         assert not data_api_client.get_brief.called
+
+
+@mock.patch("app.main.views.briefs.data_api_client")
+class TestResponseResultPage(BaseApplicationTest):
+
+    def setup(self):
+        super(TestResponseResultPage, self).setup()
+
+        self.brief = api_stubs.brief(status='live')
+        with self.app.test_client():
+            self.login()
+
+    def test_view_response_result_not_submitted(self, data_api_client):
+        data_api_client.get_brief.return_value = self.brief
+        data_api_client.is_supplier_eligible_for_brief.return_value = True
+        data_api_client.find_brief_responses.return_value = {"briefResponses": []}
+        res = self.client.get('/suppliers/opportunities/1234/responses/result')
+
+        assert res.status_code == 200
+        doc = html.fromstring(res.get_data(as_text=True))
+        assert doc.xpath('//h1')[0].text.strip() == "You have not submitted a response to this opportunity"
+
+    def test_view_response_result_submitted_ok(self, data_api_client):
+        data_api_client.get_brief.return_value = self.brief
+        data_api_client.is_supplier_eligible_for_brief.return_value = True
+        data_api_client.find_brief_responses.return_value = {
+            "briefResponses": [
+                {"essentialRequirements": [True, True, True]}
+            ]
+        }
+        res = self.client.get('/suppliers/opportunities/1234/responses/result')
+
+        assert res.status_code == 200
+        doc = html.fromstring(res.get_data(as_text=True))
+        assert doc.xpath('//h1')[0].text.strip() == \
+            "Your response to ‘I need a thing to do a thing’ has been submitted"
+
+    def test_view_response_result_submitted_unsuccessful(self, data_api_client):
+        data_api_client.get_brief.return_value = self.brief
+        data_api_client.is_supplier_eligible_for_brief.return_value = True
+        data_api_client.find_brief_responses.return_value = {
+            "briefResponses": [
+                {"essentialRequirements": [True, False, True]}
+            ]
+        }
+        res = self.client.get('/suppliers/opportunities/1234/responses/result')
+
+        assert res.status_code == 200
+        doc = html.fromstring(res.get_data(as_text=True))
+        assert doc.xpath('//h1')[0].text.strip() == "You did not meet all the essential requirements"
