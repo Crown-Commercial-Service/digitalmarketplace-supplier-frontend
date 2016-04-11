@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 
 import re
 
-from flask import render_template, redirect, request, flash, abort
+from flask import render_template, redirect, request, flash, abort, url_for
 from flask_login import current_user
 
 from dmapiclient import HTTPError
@@ -71,7 +71,7 @@ def submit_brief_response(brief_id):
 
     if supplier_has_a_brief_response(data_api_client, current_user.supplier_id, brief_id):
         flash(SUBMIT_SECOND_RESPONSE_ERROR_MESSAGE.format(brief['title']), 'error')
-        return redirect("/{}/opportunities/{}".format(brief["frameworkSlug"], brief_id))
+        return redirect(url_for(".dashboard"))
 
     framework, lot = get_framework_and_lot(
         data_api_client, brief['frameworkSlug'], brief['lotSlug'], allowed_statuses=['live'])
@@ -105,7 +105,7 @@ def create_new_brief_response(brief_id):
 
     if supplier_has_a_brief_response(data_api_client, current_user.supplier_id, brief_id):
         flash(SUBMIT_SECOND_RESPONSE_ERROR_MESSAGE.format(brief['title']), 'error')
-        return redirect("/{}/opportunities/{}".format(brief["frameworkSlug"], brief_id))
+        return redirect(url_for(".dashboard"))
 
     framework, lot = get_framework_and_lot(
         data_api_client, brief['frameworkSlug'], brief['lotSlug'], allowed_statuses=['live'])
@@ -115,7 +115,7 @@ def create_new_brief_response(brief_id):
     response_data = section.get_data(request.form)
 
     try:
-        data_api_client.create_brief_response(
+        brief_response = data_api_client.create_brief_response(
             brief_id, current_user.supplier_id, response_data, current_user.email_address
         )['briefResponses']
     except HTTPError as e:
@@ -133,8 +133,16 @@ def create_new_brief_response(brief_id):
             **dict(main.config['BASE_TEMPLATE_DATA'])
         ), 400
 
-    flash('Your response to ‘{}’ has been submitted.'.format(brief['title']))
-    return redirect("/{}/opportunities/{}".format(brief["frameworkSlug"], brief_id))
+    if all(brief_response['essentialRequirements']):
+        flash('Your response to ‘{}’ has been submitted.'.format(brief['title']))
+        return redirect(url_for(".dashboard"))
+    else:
+        return redirect(url_for(".not_all_essentials"))
+
+
+@main.route('/not-all-essentials')
+def not_all_essentials():
+    return render_template('briefs/not_all_essentials.html')
 
 
 def _render_not_eligible_for_brief_error_page(brief, clarification_question=False):
