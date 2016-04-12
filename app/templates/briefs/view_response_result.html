@@ -10,9 +10,9 @@
       <h1>
         {{
             {
-             "not_submitted": "You have not submitted a response to this opportunity",
+             "not_submitted": "You haven’t submitted a response to this opportunity",
              "submitted_ok": "Your response to ‘{}’ has been submitted".format(brief.title),
-             "submitted_unsuccessful": "You did not meet all the essential requirements"
+             "submitted_unsuccessful": "You don’t meet all the essential requirements"
             }[result_state]
         }}
       </h1>
@@ -26,7 +26,7 @@
     
     {% elif result_state == "submitted_ok" %}
       <p>
-        You will hear whether you have been successful or not from the buyer in due course.
+        You’ll hear whether you’ve been successful or not from the buyer soon.
       </p>
     
     {% elif result_state == "submitted_unsuccessful" %}
@@ -34,7 +34,7 @@
         Thank you for your response to this opportunity.
       </p>
       <p>
-        As you do not meet all the essential requirements the buyer can not award you a contract for this work.
+        As you don’t meet all the essential requirements the buyer can’t award you a contract for this work.
       </p>
     {% endif %}
     </div>

@@ -323,7 +323,7 @@ class TestRespondToBrief(BaseApplicationTest):
         assert res.status_code == 302
         assert res.location == 'http://localhost/suppliers'
         self.assert_flashes(
-            "You have already submitted a response to ‘I need a thing to do a thing’ and can not submit another one.",
+            "You’ve already submitted a response to ‘I need a thing to do a thing’ and can’t submit another one.",
             "error"
         )
 
@@ -474,7 +474,7 @@ class TestRespondToBrief(BaseApplicationTest):
         assert res.status_code == 302
         assert res.location == 'http://localhost/suppliers'
         self.assert_flashes(
-            "You have already submitted a response to ‘I need a thing to do a thing’ and can not submit another one.",
+            "You’ve already submitted a response to ‘I need a thing to do a thing’ and can’t submit another one.",
             "error"
         )
         assert not data_api_client.create_brief_response.called
@@ -565,7 +565,7 @@ class TestResponseResultPage(BaseApplicationTest):
 
         assert res.status_code == 200
         doc = html.fromstring(res.get_data(as_text=True))
-        assert doc.xpath('//h1')[0].text.strip() == "You have not submitted a response to this opportunity"
+        assert doc.xpath('//h1')[0].text.strip() == "You haven’t submitted a response to this opportunity"
 
     def test_view_response_result_submitted_ok(self, data_api_client):
         data_api_client.get_brief.return_value = self.brief
@@ -594,4 +594,4 @@ class TestResponseResultPage(BaseApplicationTest):
 
         assert res.status_code == 200
         doc = html.fromstring(res.get_data(as_text=True))
-        assert doc.xpath('//h1')[0].text.strip() == "You did not meet all the essential requirements"
+        assert doc.xpath('//h1')[0].text.strip() == "You don’t meet all the essential requirements"

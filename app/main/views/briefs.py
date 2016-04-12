@@ -20,7 +20,7 @@ from ...main import main, content_loader
 from ... import data_api_client
 
 
-SUBMIT_SECOND_RESPONSE_ERROR_MESSAGE = 'You have already submitted a response to ‘{}’ and can not submit another one.'
+SUBMIT_SECOND_RESPONSE_ERROR_MESSAGE = 'You’ve already submitted a response to ‘{}’ and can’t submit another one.'
 
 
 @main.route('/opportunities/<int:brief_id>/ask-a-question', methods=['GET', 'POST'])
