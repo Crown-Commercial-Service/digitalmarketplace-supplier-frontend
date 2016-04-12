@@ -60,8 +60,7 @@
 
       {{ summary.service_link(
           item.serviceName or item.lotName,
-          url_for('.edit_service', service_id=item.id) if 'EDIT_SERVICE_PAGE' is active_feature
-          else '/g-cloud/services/{}'.format(item.id)
+          url_for('.edit_service', service_id=item.id)
       ) }}
 
       {{ summary.text(item.frameworkName) }}

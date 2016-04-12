@@ -67,7 +67,6 @@ class Config(object):
     # Feature Flags
     RAISE_ERROR_ON_MISSING_FEATURES = True
 
-    FEATURE_FLAGS_EDIT_SERVICE_PAGE = enabled_since('2016-02-02')
     FEATURE_FLAGS_EDIT_SECTIONS = False
 
     # Logging
