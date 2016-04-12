@@ -88,7 +88,7 @@ class TestListServices(BaseApplicationTest):
             assert_equal(res.location, 'http://localhost/login?next=%2Fsuppliers%2Fservices')
 
     @mock.patch('app.main.views.services.data_api_client')
-    def test_shows_services_edit_button_with_id(self, data_api_client):
+    def test_shows_service_edit_link_with_id(self, data_api_client):
         with self.app.test_client():
             self.login()
 
@@ -107,6 +107,48 @@ class TestListServices(BaseApplicationTest):
                 supplier_id=1234)
             assert_true(
                 "/suppliers/services/123" in res.get_data(as_text=True))
+
+    @mock.patch('app.main.views.services.data_api_client')
+    def test_services_without_service_name_show_lot_instead(self, data_api_client):
+        with self.app.test_client():
+            self.login()
+
+            data_api_client.find_services.return_value = {
+                'services': [{
+                    'status': 'published',
+                    'id': '123',
+                    'lotName': 'Special Lot Name',
+                    'frameworkSlug': 'digital-outcomes-and-specialists'
+                }]
+            }
+
+            res = self.client.get('/suppliers/services')
+            assert_equal(res.status_code, 200)
+            data_api_client.find_services.assert_called_once_with(supplier_id=1234)
+
+            assert "Special Lot Name" in res.get_data(as_text=True)
+
+    @mock.patch('app.main.views.services.data_api_client')
+    def test_shows_dos_service_name_without_edit_link(self, data_api_client):
+        with self.app.test_client():
+            self.login()
+
+            data_api_client.find_services.return_value = {
+                'services': [{
+                    'serviceName': 'Service name 123',
+                    'lotName': 'Special Lot Name',
+                    'status': 'published',
+                    'id': '123',
+                    'frameworkSlug': 'digital-outcomes-and-specialists'
+                }]
+            }
+
+            res = self.client.get('/suppliers/services')
+            assert_equal(res.status_code, 200)
+            data_api_client.find_services.assert_called_once_with(supplier_id=1234)
+
+            assert "Service name 123" in res.get_data(as_text=True)
+            assert "/suppliers/services/123" not in res.get_data(as_text=True)
 
 
 class TestListServicesLogin(BaseApplicationTest):
