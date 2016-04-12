@@ -18,6 +18,7 @@
       </h1>
     </header>
 
+    <div class="dmspeak">
     {% if result_state == "not_submitted" %}
       <p>
         You can still <a href="{{ url_for(".submit_brief_response", brief_id=brief.id) }}">submit a response</a>.
@@ -35,9 +36,17 @@
       <p>
         As you do not meet all the essential requirements the buyer can not award you a contract for this work.
       </p>
-    
     {% endif %}
-
+    </div>
   </div>
 </div>
-{% endblock %}
+
+  {%
+    with
+      url = "/{}/opportunities".format(brief.frameworkSlug),
+      text = "View all opportunities"
+  %}
+    {% include "toolkit/secondary-action-link.html" %}
+  {% endwith %}
+  
+  {% endblock %}
