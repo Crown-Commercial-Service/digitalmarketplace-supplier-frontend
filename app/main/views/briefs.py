@@ -1,6 +1,8 @@
 # coding: utf-8
 from __future__ import unicode_literals
 
+import re
+
 from flask import render_template, redirect, url_for, request, flash, abort
 from flask_login import current_user
 
@@ -39,6 +41,9 @@ def ask_brief_clarification_question(brief_id):
         elif len(clarification_question) > 5000:
             clarification_question_value = clarification_question
             error_message = "Question cannot be longer than 5000 characters"
+        elif not re.match("^$|(^(?:\\S+\\s+){0,99}\\S+$)", clarification_question):
+            clarification_question_value = clarification_question
+            error_message = "Question must be no more than 100 words"
         else:
             send_brief_clarification_question(data_api_client, brief, clarification_question)
             flash('message_sent', 'success')

@@ -224,6 +224,17 @@ class TestSubmitClarificationQuestions(BaseApplicationTest):
         assert res.status_code == 400
         assert "cannot be longer than" in res.get_data(as_text=True)
 
+    @mock.patch('app.main.helpers.briefs.send_email')
+    def test_clarification_question_has_max_word_limit(self, send_email, data_api_client):
+        self.login()
+        data_api_client.get_brief.return_value = api_stubs.brief(status='live')
+
+        res = self.client.post('/suppliers/opportunities/1/ask-a-question', data={
+            'clarification-question': "a " * 101,
+        })
+        assert res.status_code == 400
+        assert "must be no more than 100 words" in res.get_data(as_text=True)
+
 
 @mock.patch("app.main.views.briefs.data_api_client")
 class TestRespondToBrief(BaseApplicationTest):
