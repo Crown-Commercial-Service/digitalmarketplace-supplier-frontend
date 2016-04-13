@@ -53,15 +53,16 @@
     {% endwith %}
   {% endif %}
 
-  {% with
-    heading = "Ask a question about ‘{}’".format(brief.title),
-    smaller = true
-  %}
-    {% include 'toolkit/page-heading.html' %}
-  {% endwith %}
-
   <div class="grid-row">
     <div class="column-two-thirds">
+
+      {% with
+        heading = "Ask a question about ‘{}’".format(brief.title),
+        smaller = true
+      %}
+        {% include 'toolkit/page-heading.html' %}
+      {% endwith %}
+
 
       <div class="hint">
         <p>Your question will be published with the buyers’ response by {{ brief.clarificationQuestionsClosedAt | dateformat }}.</p>
@@ -90,11 +91,11 @@
         %}
           {% include "toolkit/button.html" %}
         {% endwith %}
+      </form>
 
-        <a href="/{{ brief.frameworkSlug }}/opportunities/{{ brief.id }}">Return to {{ brief.title }}</a>
+      <a href="/{{ brief.frameworkSlug }}/opportunities/{{ brief.id }}">Return to {{ brief.title }}</a>
 
-      </div>
     </div>
-  </form>
+  </div>
 </div>
 {% endblock %}
