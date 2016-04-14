@@ -31,7 +31,6 @@ def list_services():
 
 @main.route('/services/<string:service_id>', methods=['GET'])
 @login_required
-@flask_featureflags.is_active_feature('EDIT_SERVICE_PAGE')
 def edit_service(service_id):
     service = data_api_client.get_service(service_id)
     service_unavailability_information = service.get('serviceMadeUnavailableAuditEvent')
@@ -58,7 +57,6 @@ def edit_service(service_id):
 
 @main.route('/services/<string:service_id>/remove', methods=['POST'])
 @login_required
-@flask_featureflags.is_active_feature('EDIT_SERVICE_PAGE')
 def remove_service(service_id):
     service = data_api_client.get_service(service_id).get('services')
 
