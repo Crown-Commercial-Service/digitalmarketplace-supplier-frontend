@@ -50,6 +50,53 @@ ERROR_MESSAGE_DONT_PROVIDE_THIS_SERVICE_CLARIFICATION = 'You don’t provide thi
 
 
 @mock.patch('app.main.views.briefs.data_api_client', autospec=True)
+class TestBriefQuestionAndAnswerSession(BaseApplicationTest):
+    def test_q_and_a_session_details_requires_login(self, data_api_client):
+        res = self.client.get('/suppliers/opportunities/1/question-and-answer-session')
+        assert res.status_code == 302
+        assert '/login' in res.headers['Location']
+
+    def test_q_and_a_session_details(self, data_api_client):
+        self.login()
+        data_api_client.get_brief.return_value = api_stubs.brief(status='live')
+        data_api_client.get_brief.return_value['briefs']['questionAndAnswerSessionDetails'] = 'SESSION DETAILS'
+
+        res = self.client.get('/suppliers/opportunities/1/question-and-answer-session')
+        assert res.status_code == 200
+        assert 'SESSION DETAILS' in res.get_data(as_text=True)
+
+    def test_q_and_a_session_details_checks_supplier_is_eligible(self, data_api_client):
+        self.login()
+        data_api_client.get_brief.return_value = api_stubs.brief(status='live')
+        data_api_client.get_brief.return_value['briefs']['frameworkName'] = 'Digital Outcomes and Specialists'
+        data_api_client.is_supplier_eligible_for_brief.return_value = False
+
+        res = self.client.get('/suppliers/opportunities/1/question-and-answer-session')
+        assert res.status_code == 400
+
+    def test_q_and_a_session_details_requires_existing_brief_id(self, data_api_client):
+        self.login()
+        data_api_client.get_brief.side_effect = HTTPError(mock.Mock(status_code=404))
+
+        res = self.client.get('/suppliers/opportunities/1/question-and-answer-session')
+        assert res.status_code == 404
+
+    def test_q_and_a_session_details_requires_live_brief(self, data_api_client):
+        self.login()
+        data_api_client.get_brief.return_value = api_stubs.brief(status='expired')
+
+        res = self.client.get('/suppliers/opportunities/1/question-and-answer-session')
+        assert res.status_code == 404
+
+    def test_q_and_a_session_details_requires_questions_to_be_open(self, data_api_client):
+        self.login()
+        data_api_client.get_brief.return_value = api_stubs.brief(status='live', clarification_questions_closed=True)
+
+        res = self.client.get('/suppliers/opportunities/1/question-and-answer-session')
+        assert res.status_code == 404
+
+
+@mock.patch('app.main.views.briefs.data_api_client', autospec=True)
 class TestBriefClarificationQuestions(BaseApplicationTest):
     def test_clarification_question_form_requires_login(self, data_api_client):
         res = self.client.get('/suppliers/opportunities/1/ask-a-question')

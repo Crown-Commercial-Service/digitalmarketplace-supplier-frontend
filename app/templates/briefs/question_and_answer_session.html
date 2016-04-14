@@ -1,0 +1,44 @@
+{% extends "_base_page.html" %}
+{% import "toolkit/summary-table.html" as summary %}
+
+{% block page_title %}{{ brief.title }} question and answer session details – Digital Marketplace{% endblock %}
+
+{% block breadcrumb %}
+  {%
+    with items = [
+      {
+        "link": "/",
+        "label": "Digital Marketplace",
+      },
+      {
+        "link": url_for(".dashboard"),
+        "label": "Your account",
+      },
+    ]
+  %}
+    {% include "toolkit/breadcrumb.html" %}
+  {% endwith %}
+{% endblock %}
+
+{% block main_content %}
+
+<div class="grid-row">
+  <div class="column-two-thirds">
+    {% with
+      heading = "‘{}’ question and answer session details".format(brief.title),
+      smaller = true
+    %}
+      {% include 'toolkit/page-heading.html' %}
+    {% endwith %}
+
+    <div class="padding-bottom-small">
+      <p>
+        {{ brief.questionAndAnswerSessionDetails }}
+      </p>
+    </div>
+
+
+    <a href="/{{ brief.frameworkSlug }}/opportunities/{{ brief.id }}">Return to {{ brief.title }}</a>
+  </div>
+</div>
+{% endblock %}
