@@ -20,9 +20,6 @@ from ...main import main, content_loader
 from ... import data_api_client
 
 
-SUBMIT_SECOND_RESPONSE_ERROR_MESSAGE = 'You’ve already applied for ‘{}’ so you can’t apply again.'
-
-
 @main.route('/opportunities/<int:brief_id>/ask-a-question', methods=['GET', 'POST'])
 @login_required
 def ask_brief_clarification_question(brief_id):
@@ -70,8 +67,8 @@ def submit_brief_response(brief_id):
         return _render_not_eligible_for_brief_error_page(brief)
 
     if supplier_has_a_brief_response(data_api_client, current_user.supplier_id, brief_id):
-        flash(SUBMIT_SECOND_RESPONSE_ERROR_MESSAGE.format(brief['title']), 'error')
-        return redirect(url_for(".dashboard"))
+        flash('already_applied', 'error')
+        return redirect(url_for(".view_response_result", brief_id=brief_id))
 
     framework, lot = get_framework_and_lot(
         data_api_client, brief['frameworkSlug'], brief['lotSlug'], allowed_statuses=['live'])
@@ -104,8 +101,8 @@ def create_new_brief_response(brief_id):
         return _render_not_eligible_for_brief_error_page(brief)
 
     if supplier_has_a_brief_response(data_api_client, current_user.supplier_id, brief_id):
-        flash(SUBMIT_SECOND_RESPONSE_ERROR_MESSAGE.format(brief['title']), 'error')
-        return redirect(url_for(".dashboard"))
+        flash('already_applied', 'error')
+        return redirect(url_for(".view_response_result", brief_id=brief_id))
 
     framework, lot = get_framework_and_lot(
         data_api_client, brief['frameworkSlug'], brief['lotSlug'], allowed_statuses=['live'])
@@ -153,7 +150,7 @@ def view_response_result(brief_id):
     )['briefResponses']
 
     if len(brief_response) == 0:
-        result_state = 'not_submitted'
+        return redirect(url_for(".submit_brief_response", brief_id=brief_id))
     elif all(brief_response[0]['essentialRequirements']):
         result_state = 'submitted_ok'
     else:

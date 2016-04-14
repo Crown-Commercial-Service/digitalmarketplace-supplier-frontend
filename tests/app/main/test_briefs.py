@@ -309,7 +309,7 @@ class TestRespondToBrief(BaseApplicationTest):
         assert ERROR_MESSAGE_PAGE_HEADING_APPLICATION in res.get_data(as_text=True)
         assert ERROR_MESSAGE_DONT_PROVIDE_THIS_SERVICE_APPLICATION in res.get_data(as_text=True)
 
-    def test_get_brief_response_flashes_error_on_dashboard_if_response_already_exists(self, data_api_client):
+    def test_get_brief_response_flashes_error_on_result_page_if_response_already_exists(self, data_api_client):
         data_api_client.get_brief.return_value = self.brief
         data_api_client.get_framework.return_value = self.framework
         data_api_client.find_brief_responses.return_value = {
@@ -321,11 +321,8 @@ class TestRespondToBrief(BaseApplicationTest):
 
         res = self.client.get('/suppliers/opportunities/1234/responses/create')
         assert res.status_code == 302
-        assert res.location == 'http://localhost/suppliers'
-        self.assert_flashes(
-            "You’ve already applied for ‘I need a thing to do a thing’ so you can’t apply again.",
-            "error"
-        )
+        assert res.location == 'http://localhost/suppliers/opportunities/1234/responses/result'
+        self.assert_flashes("already_applied", "error")
 
     def test_get_brief_response_page_includes_essential_requirements(self, data_api_client):
         data_api_client.get_brief.return_value = self.brief
@@ -457,7 +454,7 @@ class TestRespondToBrief(BaseApplicationTest):
         assert res.status_code == 404
         assert not data_api_client.create_brief_response.called
 
-    def test_create_new_brief_response_flashes_error_on_dashboard_if_response_already_exists(self, data_api_client):
+    def test_create_new_brief_response_flashes_error_on_result_page_if_response_already_exists(self, data_api_client):
         data_api_client.get_brief.return_value = self.brief
         data_api_client.get_framework.return_value = self.framework
         data_api_client.find_brief_responses.return_value = {
@@ -472,11 +469,8 @@ class TestRespondToBrief(BaseApplicationTest):
             data=brief_form_submission
         )
         assert res.status_code == 302
-        assert res.location == 'http://localhost/suppliers'
-        self.assert_flashes(
-            "You’ve already applied for ‘I need a thing to do a thing’ so you can’t apply again.",
-            "error"
-        )
+        assert res.location == 'http://localhost/suppliers/opportunities/1234/responses/result'
+        self.assert_flashes("already_applied", "error")
         assert not data_api_client.create_brief_response.called
 
     def test_create_new_brief_returns_error_page_if_ineligible_supplier_is_not_on_framework(self, data_api_client):
@@ -557,16 +551,6 @@ class TestResponseResultPage(BaseApplicationTest):
         with self.app.test_client():
             self.login()
 
-    def test_view_response_result_not_submitted(self, data_api_client):
-        data_api_client.get_brief.return_value = self.brief
-        data_api_client.is_supplier_eligible_for_brief.return_value = True
-        data_api_client.find_brief_responses.return_value = {"briefResponses": []}
-        res = self.client.get('/suppliers/opportunities/1234/responses/result')
-
-        assert res.status_code == 200
-        doc = html.fromstring(res.get_data(as_text=True))
-        assert doc.xpath('//h1')[0].text.strip() == "You haven’t applied for this opportunity"
-
     def test_view_response_result_submitted_ok(self, data_api_client):
         data_api_client.get_brief.return_value = self.brief
         data_api_client.is_supplier_eligible_for_brief.return_value = True
@@ -595,3 +579,12 @@ class TestResponseResultPage(BaseApplicationTest):
         assert res.status_code == 200
         doc = html.fromstring(res.get_data(as_text=True))
         assert doc.xpath('//h1')[0].text.strip() == "You don’t meet all the essential requirements"
+
+    def test_view_response_result_not_submitted_redirect_to_submit_page(self, data_api_client):
+        data_api_client.get_brief.return_value = self.brief
+        data_api_client.is_supplier_eligible_for_brief.return_value = True
+        data_api_client.find_brief_responses.return_value = {"briefResponses": []}
+        res = self.client.get('/suppliers/opportunities/1234/responses/result')
+
+        assert res.status_code == 302
+        assert res.location == 'http://localhost/suppliers/opportunities/1234/responses/create'
