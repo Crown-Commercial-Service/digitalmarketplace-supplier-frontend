@@ -59,7 +59,7 @@ def ask_brief_clarification_question(brief_id):
 
 @main.route('/opportunities/<int:brief_id>/responses/create', methods=['GET'])
 @login_required
-def submit_brief_response(brief_id):
+def brief_response(brief_id):
 
     brief = get_brief(data_api_client, brief_id, allowed_statuses=['live'])
 
@@ -92,7 +92,7 @@ def submit_brief_response(brief_id):
 # Add a create route
 @main.route('/opportunities/<int:brief_id>/responses/create', methods=['POST'])
 @login_required
-def create_new_brief_response(brief_id):
+def submit_brief_response(brief_id):
     """Hits up the data API to create a new brief response."""
 
     brief = get_brief(data_api_client, brief_id, allowed_statuses=['live'])
@@ -150,7 +150,7 @@ def view_response_result(brief_id):
     )['briefResponses']
 
     if len(brief_response) == 0:
-        return redirect(url_for(".submit_brief_response", brief_id=brief_id))
+        return redirect(url_for(".brief_response", brief_id=brief_id))
     elif all(brief_response[0]['essentialRequirements']):
         result_state = 'submitted_ok'
     else:
