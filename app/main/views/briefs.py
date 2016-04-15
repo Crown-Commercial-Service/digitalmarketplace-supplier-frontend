@@ -20,6 +20,23 @@ from ...main import main, content_loader
 from ... import data_api_client
 
 
+@main.route('/opportunities/<int:brief_id>/question-and-answer-session', methods=['GET'])
+@login_required
+def question_and_answer_session(brief_id):
+    brief = get_brief(data_api_client, brief_id, allowed_statuses=['live'])
+
+    if brief['clarificationQuestionsAreClosed']:
+        abort(404)
+
+    if not is_supplier_eligible_for_brief(data_api_client, current_user.supplier_id, brief):
+        return _render_not_eligible_for_brief_error_page(brief, clarification_question=True)
+
+    return render_template(
+        "briefs/question_and_answer_session.html",
+        brief=brief,
+    ), 200
+
+
 @main.route('/opportunities/<int:brief_id>/ask-a-question', methods=['GET', 'POST'])
 @login_required
 def ask_brief_clarification_question(brief_id):

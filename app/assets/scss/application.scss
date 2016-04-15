@@ -85,3 +85,7 @@ $path: "/suppliers/static/images/";
   @include core-19;
   margin: (1.5 * $gutter) 0 (2 * $gutter);
 }
+
+.padding-bottom-small {
+  padding-bottom: 10px;
+}

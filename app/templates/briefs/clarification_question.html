@@ -26,7 +26,7 @@
   {% with messages = get_flashed_messages(with_categories=true) %}
     {% for category, message in messages %}
       {% if message == 'message_sent' %}
-        {% set message = "Your question has been sent. It will be posted with the buyer’s response on the ‘{}’ page.".format(brief.title) %}
+        {% set message = "Your question has been sent. The buyer will post your question and their answer on the ‘{}’ page.".format(brief.title) %}
       {% endif %}
       {%
         with
@@ -53,15 +53,16 @@
     {% endwith %}
   {% endif %}
 
-  {% with
-    heading = "Ask a question about ‘{}’".format(brief.title),
-    smaller = true
-  %}
-    {% include 'toolkit/page-heading.html' %}
-  {% endwith %}
-
   <div class="grid-row">
     <div class="column-two-thirds">
+
+      {% with
+        heading = "Ask a question about ‘{}’".format(brief.title),
+        smaller = true
+      %}
+        {% include 'toolkit/page-heading.html' %}
+      {% endwith %}
+
 
       <div class="hint">
         <p>Your question will be published with the buyers’ response by {{ brief.clarificationQuestionsClosedAt | dateformat }}.</p>
@@ -90,11 +91,11 @@
         %}
           {% include "toolkit/button.html" %}
         {% endwith %}
+      </form>
 
-        <a href="/{{ brief.frameworkSlug }}/opportunities/{{ brief.id }}">Return to {{ brief.title }}</a>
+      <a href="/{{ brief.frameworkSlug }}/opportunities/{{ brief.id }}">Return to {{ brief.title }}</a>
 
-      </div>
     </div>
-  </form>
+  </div>
 </div>
 {% endblock %}
