@@ -52,6 +52,7 @@ $path: "/suppliers/static/images/";
 
 /* Classes shared between multiple apps */
 @import "shared_scss/_lists.scss";
+@import "shared_scss/_dmspeak.scss";
 
 // Suppliers app styles
 @import "_text.scss";

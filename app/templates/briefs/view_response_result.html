@@ -1,0 +1,61 @@
+{% extends "_base_page.html" %}
+
+{% block page_title %}Your response to ‘{{ brief.title }}’ - Digital Marketplace{% endblock %}
+
+{% block main_content %}
+
+{% with messages = get_flashed_messages(with_categories=True) %}
+  {% for category, message in messages %}
+    {%
+    with
+    message = {
+      "already_applied": "You’ve already applied for ‘{}’ so you can’t apply again".format(brief.title) if result_state == "submitted_ok" 
+                    else "You already applied for ‘{}’ but you didn’t meet the essential requirements".format(brief.title)
+    }[message] or message,
+    type = "destructive" if category == "error" else "success"
+    %}
+      {% include "toolkit/notification-banner.html" %}
+    {% endwith %}
+  {% endfor %}
+{% endwith %}
+
+<div class="grid-row">
+  <div class="column-two-thirds">
+    {% with
+      heading = {
+                  "submitted_ok": "Your response to ‘{}’ has been submitted".format(brief.title),
+                  "submitted_unsuccessful": "You don’t meet all the essential requirements"
+                }[result_state],
+      smaller = true
+      %}
+        {% include 'toolkit/page-heading.html' %}
+    {% endwith %}
+
+    <div class="dmspeak">
+
+    {% if result_state == "submitted_ok" %}
+      <p>
+        The buyer will tell you whether you’ve been successful or not soon.
+      </p>
+    
+    {% elif result_state == "submitted_unsuccessful" %}
+      <p>
+        Thank you for applying for this opportunity.
+      </p>
+      <p>
+        You don’t meet all the essential requirements so the buyer can’t add you to their shortlist.
+      </p>
+    {% endif %}
+    </div>
+  </div>
+</div>
+
+  {%
+    with
+      url = "/{}/opportunities".format(brief.frameworkSlug),
+      text = "View all opportunities"
+  %}
+    {% include "toolkit/secondary-action-link.html" %}
+  {% endwith %}
+  
+  {% endblock %}

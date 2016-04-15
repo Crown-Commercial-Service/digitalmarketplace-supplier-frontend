@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 
 import re
 
-from flask import render_template, redirect, url_for, request, flash, abort
+from flask import abort, flash, redirect, render_template, request, url_for
 from flask_login import current_user
 
 from dmapiclient import HTTPError
@@ -59,7 +59,7 @@ def ask_brief_clarification_question(brief_id):
 
 @main.route('/opportunities/<int:brief_id>/responses/create', methods=['GET'])
 @login_required
-def submit_brief_response(brief_id):
+def brief_response(brief_id):
 
     brief = get_brief(data_api_client, brief_id, allowed_statuses=['live'])
 
@@ -67,8 +67,8 @@ def submit_brief_response(brief_id):
         return _render_not_eligible_for_brief_error_page(brief)
 
     if supplier_has_a_brief_response(data_api_client, current_user.supplier_id, brief_id):
-        # TODO redirect to summary of brief response page with flash message
-        abort(404)
+        flash('already_applied', 'error')
+        return redirect(url_for(".view_response_result", brief_id=brief_id))
 
     framework, lot = get_framework_and_lot(
         data_api_client, brief['frameworkSlug'], brief['lotSlug'], allowed_statuses=['live'])
@@ -92,7 +92,7 @@ def submit_brief_response(brief_id):
 # Add a create route
 @main.route('/opportunities/<int:brief_id>/responses/create', methods=['POST'])
 @login_required
-def create_new_brief_response(brief_id):
+def submit_brief_response(brief_id):
     """Hits up the data API to create a new brief response."""
 
     brief = get_brief(data_api_client, brief_id, allowed_statuses=['live'])
@@ -101,8 +101,8 @@ def create_new_brief_response(brief_id):
         return _render_not_eligible_for_brief_error_page(brief)
 
     if supplier_has_a_brief_response(data_api_client, current_user.supplier_id, brief_id):
-        # TODO redirect to summary of brief response page with flash message
-        abort(404)
+        flash('already_applied', 'error')
+        return redirect(url_for(".view_response_result", brief_id=brief_id))
 
     framework, lot = get_framework_and_lot(
         data_api_client, brief['frameworkSlug'], brief['lotSlug'], allowed_statuses=['live'])
@@ -112,7 +112,7 @@ def create_new_brief_response(brief_id):
     response_data = section.get_data(request.form)
 
     try:
-        data_api_client.create_brief_response(
+        brief_response = data_api_client.create_brief_response(
             brief_id, current_user.supplier_id, response_data, current_user.email_address
         )['briefResponses']
     except HTTPError as e:
@@ -130,9 +130,36 @@ def create_new_brief_response(brief_id):
             **dict(main.config['BASE_TEMPLATE_DATA'])
         ), 400
 
-    flash('Your response to &lsquo;{}&rsquo; has been submitted.'.format(brief['title']))
+    if all(brief_response['essentialRequirements']):
+        flash('Your response to ‘{}’ has been submitted.'.format(brief['title']))
+        return redirect(url_for(".dashboard"))
+    else:
+        return redirect(url_for(".view_response_result", brief_id=brief_id))
 
-    return redirect(url_for(".dashboard"))
+
+@main.route('/opportunities/<int:brief_id>/responses/result')
+def view_response_result(brief_id):
+    brief = get_brief(data_api_client, brief_id, allowed_statuses=['live'])
+
+    if not is_supplier_eligible_for_brief(data_api_client, current_user.supplier_id, brief):
+        return _render_not_eligible_for_brief_error_page(brief)
+
+    brief_response = data_api_client.find_brief_responses(
+        brief_id=brief_id,
+        supplier_id=current_user.supplier_id
+    )['briefResponses']
+
+    if len(brief_response) == 0:
+        return redirect(url_for(".brief_response", brief_id=brief_id))
+    elif all(brief_response[0]['essentialRequirements']):
+        result_state = 'submitted_ok'
+    else:
+        result_state = 'submitted_unsuccessful'
+
+    return render_template('briefs/view_response_result.html',
+                           brief=brief,
+                           result_state=result_state
+                           )
 
 
 def _render_not_eligible_for_brief_error_page(brief, clarification_question=False):
