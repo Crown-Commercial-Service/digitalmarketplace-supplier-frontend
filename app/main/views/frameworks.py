@@ -88,7 +88,7 @@ def framework_dashboard(framework_slug):
 
     return render_template(
         "frameworks/dashboard.html",
-        application_made=(len(complete_drafts) > 0 and declaration_status == 'complete'),
+        application_made=supplier_is_on_framework or (len(complete_drafts) > 0 and declaration_status == 'complete'),
         completed_lots=[{
             'name': lot['name'],
             'complete_count': count_drafts_by_lot(complete_drafts, lot['slug']),
