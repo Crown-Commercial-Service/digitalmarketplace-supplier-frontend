@@ -41,13 +41,13 @@ ERROR_MESSAGE_PAGE_HEADING_APPLICATION = 'You can’t apply for this opportunity
 ERROR_MESSAGE_NOT_ON_FRAMEWORK_APPLICATION = \
     'You can’t apply for this opportunity because you’re not a Digital Outcomes and Specialists supplier.'
 ERROR_MESSAGE_DONT_PROVIDE_THIS_SERVICE_APPLICATION = \
-    'You can’t apply for this opportunity because you don’t provide a service:'
+    'You can’t apply for this opportunity because you don’t provide'
 
-ERROR_MESSAGE_PAGE_HEADING_CLARIFICATION = 'You can’t submit a question for this opportunity'
+ERROR_MESSAGE_PAGE_HEADING_CLARIFICATION = 'You can’t ask a question about this opportunity'
 ERROR_MESSAGE_NOT_ON_FRAMEWORK_CLARIFICATION = \
     'You can’t ask a question about this opportunity because you’re not a Digital Outcomes and Specialists supplier.'
 ERROR_MESSAGE_DONT_PROVIDE_THIS_SERVICE_CLARIFICATION = \
-    'You can’t ask a question about this opportunity because you don’t provide a service:'
+    'You can’t ask a question about this opportunity because you don’t provide'
 
 
 @mock.patch('app.main.views.briefs.data_api_client', autospec=True)
