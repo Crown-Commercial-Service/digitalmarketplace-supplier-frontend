@@ -187,5 +187,6 @@ def _render_not_eligible_for_brief_error_page(brief, clarification_question=Fals
         on_framework=on_framework,
         clarification_question=clarification_question,
         framework_name=brief['frameworkName'],
+        lot=brief['lotSlug'],
         **dict(main.config['BASE_TEMPLATE_DATA'])
     ), 400

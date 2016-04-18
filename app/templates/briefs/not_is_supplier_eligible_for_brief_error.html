@@ -11,9 +11,16 @@
       <h1>You can’t submit a question for this opportunity</h1>
     </header>
     {% if on_framework %}
-      <p>You don’t provide this type of service so you’re not eligible to ask a question about this opportunity.</p>
+      <p>You can’t ask a question about this opportunity because you don’t provide a service:</p>
+      <ul class="list-bullet">
+        <li>in this category</li>
+        <li>at this location</li>
+        {% if lot == 'digital-specialists' %}
+          <li>with this digital specialist role</li>
+        {% endif %}
+      </ul>
     {% else %}
-      <p>You aren’t a {{ framework_name }} supplier so you’re not eligible to ask a question about this opportunity.</p>
+      <p>You can’t ask a question about this opportunity because you’re not a {{ framework_name }} supplier.</p>
     {% endif %}
   </div>
 </div>
@@ -24,9 +31,16 @@
       <h1>You can’t apply for this opportunity</h1>
     </header>
     {% if on_framework %}
-      <p>You don’t provide this type of service on the {{ framework_name }} framework.
+      <p>You can’t apply for this opportunity because you don’t provide a service:</p>
+      <ul class="list-bullet">
+        <li>in this category</li>
+        <li>at this location</li>
+        {% if lot == 'digital-specialists' %}
+        <li>with this digital specialist role</li>
+        {% endif %}
+      </ul>
     {% else %}
-      <p>You aren’t a {{ framework_name }} supplier.</p>
+      <p>You can’t apply for this opportunity because you’re not a {{ framework_name }} supplier.</p>
     {% endif %}
   </div>
 </div>
