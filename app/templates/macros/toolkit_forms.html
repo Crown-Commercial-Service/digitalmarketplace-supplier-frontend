@@ -119,6 +119,7 @@
     question=question_content.question,
     fields=question_content.fields,
     optional_fields=question_content.optional_fields,
+    price=service_data.get(question_content.fields.price),
     minimum_price=service_data.get(question_content.fields.minimum_price),
     maximum_price=service_data.get(question_content.fields.maximum_price),
     price_unit=service_data.get(question_content.fields.price_unit),
