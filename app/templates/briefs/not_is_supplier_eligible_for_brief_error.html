@@ -8,12 +8,16 @@
 <div class="grid-row">
   <div class="column-two-thirds">
     <header class="page-heading-smaller">
-      <h1>You can’t submit a question for this opportunity</h1>
+      <h1>You can’t ask a question about this opportunity</h1>
     </header>
     {% if on_framework %}
-      <p>You don’t provide this type of service so you’re not eligible to ask a question about this opportunity.</p>
+      <p>
+        You can’t ask a question about this opportunity because you don’t provide
+        {{ "this digital specialist role" if lot == 'digital-specialists' else "a service in this category" }}
+        at this location.
+      </p>
     {% else %}
-      <p>You aren’t a {{ framework_name }} supplier so you’re not eligible to ask a question about this opportunity.</p>
+      <p>You can’t ask a question about this opportunity because you’re not a {{ framework_name }} supplier.</p>
     {% endif %}
   </div>
 </div>
@@ -24,9 +28,13 @@
       <h1>You can’t apply for this opportunity</h1>
     </header>
     {% if on_framework %}
-      <p>You don’t provide this type of service on the {{ framework_name }} framework.
+      <p>
+        You can’t apply for this opportunity because you don’t provide
+        {{ "this digital specialist role" if lot == 'digital-specialists' else "a service in this category" }}
+        at this location.
+      </p>
     {% else %}
-      <p>You aren’t a {{ framework_name }} supplier.</p>
+      <p>You can’t apply for this opportunity because you’re not a {{ framework_name }} supplier.</p>
     {% endif %}
   </div>
 </div>

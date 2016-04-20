@@ -38,15 +38,16 @@ processed_brief_submission = {
 }
 
 ERROR_MESSAGE_PAGE_HEADING_APPLICATION = 'You can’t apply for this opportunity'
-ERROR_MESSAGE_NOT_ON_FRAMEWORK_APPLICATION = 'You aren’t a Digital Outcomes and Specialists supplier.'
+ERROR_MESSAGE_NOT_ON_FRAMEWORK_APPLICATION = \
+    'You can’t apply for this opportunity because you’re not a Digital Outcomes and Specialists supplier.'
 ERROR_MESSAGE_DONT_PROVIDE_THIS_SERVICE_APPLICATION = \
-    'You don’t provide this type of service on the Digital Outcomes and Specialists framework.'
+    'You can’t apply for this opportunity because you don’t provide'
 
-ERROR_MESSAGE_PAGE_HEADING_CLARIFICATION = 'You can’t submit a question for this opportunity'
-ERROR_MESSAGE_NOT_ON_FRAMEWORK_CLARIFICATION = 'You aren’t a Digital Outcomes and Specialists supplier ' \
-    'so you’re not eligible to ask a question about this opportunity.'
-ERROR_MESSAGE_DONT_PROVIDE_THIS_SERVICE_CLARIFICATION = 'You don’t provide this type of service ' \
-    'so you’re not eligible to ask a question about this opportunity.'
+ERROR_MESSAGE_PAGE_HEADING_CLARIFICATION = 'You can’t ask a question about this opportunity'
+ERROR_MESSAGE_NOT_ON_FRAMEWORK_CLARIFICATION = \
+    'You can’t ask a question about this opportunity because you’re not a Digital Outcomes and Specialists supplier.'
+ERROR_MESSAGE_DONT_PROVIDE_THIS_SERVICE_CLARIFICATION = \
+    'You can’t ask a question about this opportunity because you don’t provide'
 
 
 @mock.patch('app.main.views.briefs.data_api_client', autospec=True)
