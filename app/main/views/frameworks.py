@@ -12,7 +12,6 @@ from dmapiclient.audit import AuditTypes
 from dmutils.email import send_email, MandrillException
 from dmutils.formats import format_service_price, datetimeformat
 from dmutils import s3
-from dmutils.deprecation import deprecated
 from dmutils.documents import (
     RESULT_LETTER_FILENAME, AGREEMENT_FILENAME, SIGNED_AGREEMENT_PREFIX, COUNTERSIGNED_AGREEMENT_FILENAME,
     get_agreement_document_path, get_signed_url, get_extension, file_is_less_than_5mb, file_is_empty,
