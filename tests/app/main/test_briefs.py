@@ -329,7 +329,7 @@ class TestRespondToBrief(BaseApplicationTest):
 
         assert res.status_code == 200
         data_api_client.get_brief.assert_called_once_with(1234)
-        assert len(doc.xpath('//h1[contains(text(), "Apply to ‘I need a thing to do a thing’")]')) == 1
+        assert len(doc.xpath('//h1[contains(text(), "Apply for ‘I need a thing to do a thing’")]')) == 1
         assert len(doc.xpath('//h2[contains(text(), "Do you have the essential skills and experience?")]')) == 1
         assert len(doc.xpath(
             '//h2[contains(text(), "Do you have any of the nice-to-have skills and experience?")]')) == 1
@@ -479,7 +479,7 @@ class TestRespondToBrief(BaseApplicationTest):
             '[contains(text(), "There was a problem with your answer to the following questions")]')) == 1
         assert doc.xpath(
             '//*[@id="content"]//a[@href="#essentialRequirements-2"]')[0].text_content() == 'Essential three'
-        assert len(doc.xpath('//h1[contains(text(), "Apply to ‘I need a thing to do a thing’")]')) == 1
+        assert len(doc.xpath('//h1[contains(text(), "Apply for ‘I need a thing to do a thing’")]')) == 1
         assert len(doc.xpath('//h2[contains(text(), "Do you have the essential skills and experience?")]')) == 1
         assert len(doc.xpath(
             '//h2[contains(text(), "Do you have any of the nice-to-have skills and experience?")]')) == 1
@@ -507,7 +507,7 @@ class TestRespondToBrief(BaseApplicationTest):
             '[contains(text(), "There was a problem with your answer to the following questions")]')) == 1
         assert doc.xpath(
             '//*[@id="content"]//a[@href="#availability"]')[0].text_content() == 'Availability'
-        assert len(doc.xpath('//h1[contains(text(), "Apply to ‘I need a thing to do a thing’")]')) == 1
+        assert len(doc.xpath('//h1[contains(text(), "Apply for ‘I need a thing to do a thing’")]')) == 1
         assert len(doc.xpath('//h2[contains(text(), "Do you have the essential skills and experience?")]')) == 1
         assert len(doc.xpath(
             '//h2[contains(text(), "Do you have any of the nice-to-have skills and experience?")]')) == 1

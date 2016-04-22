@@ -93,8 +93,8 @@ def brief_response(brief_id):
     content = content_loader.get_manifest(framework['slug'], 'edit_brief_response').filter({'lot': lot['slug']})
     section = content.get_section(content.get_next_editable_section_id())
 
-    # replace generic 'Apply to opportunity' title with title including the name of the brief
-    section.name = "Apply to ‘{}’".format(brief['title'])
+    # replace generic 'Apply for opportunity' title with title including the name of the brief
+    section.name = "Apply for ‘{}’".format(brief['title'])
     section.inject_brief_questions_into_boolean_list_question(brief)
 
     return render_template(
@@ -133,8 +133,8 @@ def submit_brief_response(brief_id):
             brief_id, current_user.supplier_id, response_data, current_user.email_address
         )['briefResponses']
     except HTTPError as e:
-        # replace generic 'Apply to opportunity' title with title including the name of the brief
-        section.name = "Apply to ‘{}’".format(brief['title'])
+        # replace generic 'Apply for opportunity' title with title including the name of the brief
+        section.name = "Apply for ‘{}’".format(brief['title'])
         section.inject_brief_questions_into_boolean_list_question(brief)
         section_summary = section.summary(response_data)
 
