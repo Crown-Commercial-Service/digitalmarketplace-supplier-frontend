@@ -1278,8 +1278,8 @@ class TestCreateSupplier(BaseApplicationTest):
         res = self.client.get("/suppliers/duns-number")
         assert_equal(res.status_code, 200)
         assert_equal(
-            '<input type="text" name="duns_number" id="input-duns_number" class="text-box" value="999" />'
-            in res.get_data(as_text=True),
+            '<inputtype="text"name="duns_number"id="input-duns_number"class="text-box"value="999"/>'
+            in self.strip_all_whitespace(res.get_data(as_text=True)),
             True)
 
     def test_should_populate_companies_house_from_session(self):
@@ -1287,14 +1287,19 @@ class TestCreateSupplier(BaseApplicationTest):
             sess['companies_house_number'] = "999"
         res = self.client.get("/suppliers/companies-house-number")
         assert_equal(res.status_code, 200)
-        assert_true('<input type="text" name="companies_house_number" id="input-companies_house_number" class="text-box" value="999" />' in res.get_data(as_text=True))  # noqa
+        assert_true(
+            '<inputtype="text"name="companies_house_number"id="input-companies_house_number"class="text-box"value="999"/>'  # noqa
+            in self.strip_all_whitespace(res.get_data(as_text=True))
+        )
 
     def test_should_populate_company_name_from_session(self):
         with self.client.session_transaction() as sess:
             sess['company_name'] = "Name"
         res = self.client.get("/suppliers/company-name")
         assert_equal(res.status_code, 200)
-        assert_true('<input type="text" name="company_name" id="input-company_name" class="text-box" value="Name" />' in res.get_data(as_text=True))  # noqa
+        assert_true(
+            '<inputtype="text"name="company_name"id="input-company_name"class="text-box"value="Name"/>'
+            in self.strip_all_whitespace(res.get_data(as_text=True)))
 
     def test_should_populate_contact_details_from_session(self):
         with self.client.session_transaction() as sess:
@@ -1303,11 +1308,21 @@ class TestCreateSupplier(BaseApplicationTest):
             sess['phone_number'] = "phone_number"
         res = self.client.get("/suppliers/company-contact-details")
         assert_equal(res.status_code, 200)
-        assert_true('<input type="text" name="email_address" id="input-email_address" class="text-box" value="email_address" />' in res.get_data(as_text=True))  # noqa
+        stripped_page = self.strip_all_whitespace(res.get_data(as_text=True))
+        assert_true(
+            '<inputtype="text"name="email_address"id="input-email_address"class="text-box"value="email_address"/>'
+            in stripped_page
+        )
 
-        assert_true('<input type="text" name="contact_name" id="input-contact_name" class="text-box" value="contact_name" />' in res.get_data(as_text=True))  # noqa
+        assert_true(
+            '<inputtype="text"name="contact_name"id="input-contact_name"class="text-box"value="contact_name"/>'
+            in stripped_page
+        )
 
-        assert_true('<input type="text" name="phone_number" id="input-phone_number" class="text-box" value="phone_number" />' in res.get_data(as_text=True))  # noqa
+        assert_true(
+            '<inputtype="text"name="phone_number"id="input-phone_number"class="text-box"value="phone_number"/>'
+            in stripped_page
+        )
 
     def test_should_be_an_error_to_be_submit_company_with_incomplete_session(self):
         res = self.client.post("/suppliers/company-summary")

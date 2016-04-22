@@ -18,7 +18,6 @@ brief_form_submission = {
     "niceToHaveRequirements-0": False,
     "niceToHaveRequirements-1": True,
     "niceToHaveRequirements-2": False,
-    "specialistName": "Dave",
 }
 
 processed_brief_submission = {
@@ -34,7 +33,6 @@ processed_brief_submission = {
         True,
         False
     ],
-    "specialistName": "Dave",
 }
 
 ERROR_MESSAGE_PAGE_HEADING_APPLICATION = 'You can’t apply for this opportunity'
@@ -310,8 +308,9 @@ class TestRespondToBrief(BaseApplicationTest):
         assert res.status_code == 200
         data_api_client.get_brief.assert_called_once_with(1234)
         assert len(doc.xpath('//h1[contains(text(), "Apply to ‘I need a thing to do a thing’")]')) == 1
-        assert len(doc.xpath('//h2[contains(text(), "Do you fulfill the following essential requirements")]')) == 1
-        assert len(doc.xpath('//h2[contains(text(), "Do you fulfill the following nice-to-have requirements?")]')) == 1
+        assert len(doc.xpath('//h2[contains(text(), "Do you have the essential skills and experience?")]')) == 1
+        assert len(doc.xpath(
+            '//h2[contains(text(), "Do you have any of the nice-to-have skills and experience?")]')) == 1
 
     def test_get_brief_response_returns_404_for_not_live_brief(self, data_api_client):
         brief = self.brief.copy()
