@@ -472,7 +472,7 @@ class TestEditService(BaseApplicationTest):
         document = html.fromstring(res.get_data(as_text=True))
         assert_equal(
             "You need to answer this question.",
-            document.xpath('//span[@id="error-serviceSummary"]/text()')[0].strip())
+            document.xpath('//span[@class="validation-message"]/text()')[0].strip())
 
     def test_update_with_under_50_words_error(self, data_api_client):
         data_api_client.get_service.return_value = self.empty_service
@@ -487,7 +487,7 @@ class TestEditService(BaseApplicationTest):
         document = html.fromstring(res.get_data(as_text=True))
         assert_equal(
             "Your description must be no more than 50 words.",
-            document.xpath('//span[@id="error-serviceSummary"]/text()')[0].strip())
+            document.xpath('//span[@class="validation-message"]/text()')[0].strip())
 
     def test_update_non_existent_service_returns_404(self, data_api_client):
         data_api_client.get_service.return_value = None
@@ -960,7 +960,7 @@ class TestEditDraftService(BaseApplicationTest):
         document = html.fromstring(res.get_data(as_text=True))
         assert_equal(
             "You need to answer this question.",
-            document.xpath('//span[@id="error-serviceSummary"]/text()')[0].strip())
+            document.xpath('//span[@class="validation-message"]/text()')[0].strip())
 
     def test_update_with_under_50_words_error(self, data_api_client, s3):
         s3.return_value.bucket_short_name = 'submissions'
@@ -977,7 +977,7 @@ class TestEditDraftService(BaseApplicationTest):
         document = html.fromstring(res.get_data(as_text=True))
         assert_equal(
             "Your description must be no more than 50 words.",
-            document.xpath('//span[@id="error-serviceSummary"]/text()')[0].strip())
+            document.xpath('//span[@class="validation-message"]/text()')[0].strip())
 
     def test_update_with_pricing_errors(self, data_api_client, s3):
         s3.return_value.bucket_short_name = 'submissions'
@@ -1002,7 +1002,7 @@ class TestEditDraftService(BaseApplicationTest):
             assert_equal(res.status_code, 200)
             document = html.fromstring(res.get_data(as_text=True))
             assert_equal(
-                message, document.xpath('//span[@id="error-priceString"]/text()')[0].strip())
+                message, document.xpath('//span[@class="validation-message"]/text()')[0].strip())
 
     def test_update_non_existent_draft_service_returns_404(self, data_api_client, s3):
         data_api_client.get_draft_service.side_effect = HTTPError(mock.Mock(status_code=404))
