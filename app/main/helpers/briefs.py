@@ -37,7 +37,7 @@ def send_brief_clarification_question(data_api_client, brief, clarification_ques
         "emails/brief_clarification_question.html",
         brief_id=brief['id'],
         brief_name=brief['title'],
-        current_date=datetime.datetime.utcnow(),
+        publish_by_date=brief['clarificationQuestionsPublishedBy'],
         framework_slug=brief['frameworkSlug'],
         lot_slug=brief['lotSlug'],
         message=clarification_question,
