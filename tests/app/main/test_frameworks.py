@@ -200,10 +200,11 @@ class TestFrameworksDashboard(BaseApplicationTest):
             assert_true(len(heading) > 0)
             assert_in(u"G-Cloud 7 is closed for applications",
                       heading[0].xpath('text()')[0])
+            lede = doc.xpath('//div[@class="summary-item-lede"]')
             assert_in(u"You made your supplier declaration and submitted 1 service for consideration.",
-                      heading[0].xpath('../p[1]/text()')[0])
-            assert_in(u"A letter informing you whether your application was successful or not will be posted on your G-Cloud 7 updates page by 9 November 2015.",  # noqa
-                      heading[0].xpath('../p[2]/text()')[0])  # noqa
+                      lede[0].xpath('./p[1]/text()')[0])
+            assert_in(u"A letter informing you whether your application was successful or not will be posted on your G-Cloud 7 updates page by",  # noqa
+                      lede[0].xpath('./p[2]/text()')[0])  # noqa
 
     def test_declaration_status_when_complete(self, data_api_client, s3):
         with self.app.test_client():
@@ -1111,9 +1112,9 @@ class TestFrameworkUpdatesPage(BaseApplicationTest):
             data = response.get_data(as_text=True)
 
             assert response.status_code == 200
-            assert "All clarification questions and answers will be published by " \
-                   "5pm <abbr title=\"British Summer Time\">BST</abbr>, 29 September 2015" in data
-            assert "The deadline for clarification questions is 5pm, 22 September 2015" not in data
+            assert 'All clarification questions and answers will be published by ' \
+                   '<p>5pm <abbr title="British Summer Time">BST</abbr>, 29 September 2015</p>.' in data
+            assert "The deadline for clarification questions is" not in data
 
     def test_dates_for_open_framework_open_for_questions(self, s3, data_api_client):
         data_api_client.get_framework.return_value = self.framework('open', clarification_questions_open=True)
@@ -1126,9 +1127,9 @@ class TestFrameworkUpdatesPage(BaseApplicationTest):
             data = response.get_data(as_text=True)
 
             assert response.status_code == 200
-            assert "All clarification questions and answers will be published by 5pm, 29 September 2015" not in data
-            assert "The deadline for clarification questions is " \
-                   "5pm <abbr title=\"British Summer Time\">BST</abbr>, 22 September 2015" in data
+            assert "All clarification questions and answers will be published by" not in data
+            assert 'The deadline for clarification questions is ' \
+                   '<p>5pm <abbr title="British Summer Time">BST</abbr>, 22 September 2015</p>.' in data
 
     def test_the_tables_should_be_displayed_correctly(self, s3, data_api_client):
         data_api_client.get_framework.return_value = self.framework('open')
