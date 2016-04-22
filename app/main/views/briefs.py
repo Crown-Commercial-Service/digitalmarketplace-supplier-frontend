@@ -98,9 +98,8 @@ def brief_response(brief_id):
     section.inject_brief_questions_into_boolean_list_question(brief)
 
     return render_template(
-        "services/edit_submission_section.html",
-        framework=framework,
-        service_data={},
+        "briefs/brief_response.html",
+        service_data=brief,
         section=section,
         **dict(main.config['BASE_TEMPLATE_DATA'])
     ), 200
