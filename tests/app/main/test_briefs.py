@@ -150,8 +150,10 @@ class TestSubmitClarificationQuestions(BaseApplicationTest):
     @mock.patch('app.main.helpers.briefs.send_email')
     def test_submit_clarification_question(self, send_email, data_api_client):
         self.login()
-        data_api_client.get_brief.return_value = api_stubs.brief(status="live")
-        data_api_client.get_brief.return_value['briefs']['frameworkName'] = 'Brief Framework Name'
+        brief = api_stubs.brief(status="live")
+        brief['briefs']['frameworkName'] = 'Brief Framework Name'
+        brief['briefs']['clarificationQuestionsPublishedBy'] = '2016-03-29T10:11:13.000000Z'
+        data_api_client.get_brief.return_value = brief
 
         res = self.client.post('/suppliers/opportunities/1234/ask-a-question', data={
             'clarification-question': "important question",
@@ -190,8 +192,10 @@ class TestSubmitClarificationQuestions(BaseApplicationTest):
     @mock.patch('app.main.helpers.briefs.send_email')
     def test_submit_clarification_question_fails_on_mandrill_error(self, send_email, data_api_client):
         self.login()
-        data_api_client.get_brief.return_value = api_stubs.brief(status="live")
-        data_api_client.get_brief.return_value['briefs']['frameworkName'] = 'Framework Name'
+        brief = api_stubs.brief(status="live")
+        brief['briefs']['frameworkName'] = 'Framework Name'
+        brief['briefs']['clarificationQuestionsPublishedBy'] = '2016-03-29T10:11:13.000000Z'
+        data_api_client.get_brief.return_value = brief
 
         send_email.side_effect = MandrillException
 
