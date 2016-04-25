@@ -156,7 +156,7 @@ def framework_submission_lots(framework_slug):
             'labs' if framework['slug'] == 'digital-outcomes-and-specialists' else 'service'
             # TODO: ^ make this dynamic, eg, lab, service, unit
         ),
-    } for lot in lots if (lot['draft_count'] + lot['complete_count']) > 0]
+    } for lot in lots if framework["status"] == "open" or (lot['draft_count'] + lot['complete_count']) > 0]
 
     return render_template(
         "frameworks/submission_lots.html",
