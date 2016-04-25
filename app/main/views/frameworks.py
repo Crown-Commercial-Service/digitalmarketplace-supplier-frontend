@@ -245,7 +245,7 @@ def framework_supplier_declaration(framework_slug, section_id=None):
         errors = {}
         all_answers = saved_answers
     else:
-        submitted_answers = content.get_all_data(request.form)
+        submitted_answers = section.get_data(request.form)
         all_answers = dict(saved_answers, **submitted_answers)
 
         validator = get_validator(framework, content, submitted_answers)
