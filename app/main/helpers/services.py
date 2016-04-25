@@ -63,3 +63,10 @@ def parse_document_upload_time(data):
     match = re.search("(\d{4}-\d{2}-\d{2}-\d{2}\d{2})\..{2,3}$", data)
     if match:
         return datetime.strptime(match.group(1), "%Y-%m-%d-%H%M")
+
+
+def get_next_section_name(content, current_section_id):
+    if content.get_next_editable_section_id(current_section_id):
+        return content.get_section(
+            content.get_next_editable_section_id(current_section_id)
+        ).name
