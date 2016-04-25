@@ -45,7 +45,7 @@ def framework_dashboard(framework_slug):
         supplier_users = data_api_client.find_users(supplier_id=current_user.supplier_id)
 
         try:
-            email_body = render_template('emails/dos_application_started.html')
+            email_body = render_template('emails/{}_application_started.html'.format(framework_slug))
             send_email(
                 [user['emailAddress'] for user in supplier_users['users'] if user['active']],
                 email_body,
