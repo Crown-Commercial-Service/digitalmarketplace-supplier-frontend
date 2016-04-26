@@ -308,7 +308,7 @@ def delete_draft_service(framework_slug, lot_slug, service_id):
                                 delete_requested=True))
 
 
-@main.route('/frameworks/submissions/<framework_slug>/submissions/<int:supplier_id>/<document_name>', methods=['GET'])
+@main.route('/assets/<framework_slug>/submissions/<int:supplier_id>/<document_name>', methods=['GET'])
 @login_required
 def service_submission_document(framework_slug, supplier_id, document_name):
     if current_user.supplier_id != supplier_id:
@@ -426,7 +426,7 @@ def update_section_submission(framework_slug, lot_slug, service_id, section_id, 
     update_data = section.get_data(request.form)
 
     uploader = s3.S3(current_app.config['DM_SUBMISSIONS_BUCKET'])
-    documents_url = url_for('.dashboard', _external=True) + '/frameworks/submissions/'
+    documents_url = url_for('.dashboard', _external=True) + '/assets/'
     uploaded_documents, document_errors = upload_service_documents(
         uploader, documents_url, draft, request.files, section,
         public=False)

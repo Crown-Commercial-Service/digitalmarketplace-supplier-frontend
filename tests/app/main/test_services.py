@@ -845,7 +845,7 @@ class TestEditDraftService(BaseApplicationTest):
         assert_equal(res.status_code, 302)
         data_api_client.update_draft_service.assert_called_once_with(
             '1', {
-                'serviceDefinitionDocumentURL': 'http://localhost/suppliers/frameworks/submissions/g-slug/submissions/1234/1-service-definition-document-2015-01-02-0304.pdf'  # noqa
+                'serviceDefinitionDocumentURL': 'http://localhost/suppliers/assets/g-slug/submissions/1234/1-service-definition-document-2015-01-02-0304.pdf'  # noqa
             }, 'email@email.com',
             page_questions=['serviceDefinitionDocumentURL']
         )
@@ -1415,7 +1415,7 @@ class TestSubmissionDocuments(BaseApplicationTest):
         s3.return_value.get_signed_url.return_value = 'http://example.com/document.pdf'
 
         res = self.client.get(
-            '/suppliers/frameworks/submissions/g-cloud-7/submissions/1234/document.pdf'
+            '/suppliers/assets/g-cloud-7/submissions/1234/document.pdf'
         )
 
         assert_equal(res.status_code, 302)
