@@ -166,10 +166,6 @@ class G7Validator(DeclarationValidator):
         return req_fields
 
 
-class G8Validator(G7Validator):
-    pass
-
-
 class DOSValidator(DeclarationValidator):
     optional_fields = set([
         "mitigatingFactors", "mitigatingFactors2", "tradingStatusOther",
@@ -217,6 +213,10 @@ class DOSValidator(DeclarationValidator):
                 req_fields.add('licenceOrMemberRequiredDetails')
 
         return req_fields
+
+
+class G8Validator(DOSValidator):
+    pass
 
 
 VALIDATORS = {

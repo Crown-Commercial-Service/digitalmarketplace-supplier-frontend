@@ -45,7 +45,7 @@ def framework_dashboard(framework_slug):
         supplier_users = data_api_client.find_users(supplier_id=current_user.supplier_id)
 
         try:
-            email_body = render_template('emails/dos_application_started.html')
+            email_body = render_template('emails/{}_application_started.html'.format(framework_slug))
             send_email(
                 [user['emailAddress'] for user in supplier_users['users'] if user['active']],
                 email_body,
@@ -245,7 +245,7 @@ def framework_supplier_declaration(framework_slug, section_id=None):
         errors = {}
         all_answers = saved_answers
     else:
-        submitted_answers = content.get_all_data(request.form)
+        submitted_answers = section.get_data(request.form)
         all_answers = dict(saved_answers, **submitted_answers)
 
         validator = get_validator(framework, content, submitted_answers)
