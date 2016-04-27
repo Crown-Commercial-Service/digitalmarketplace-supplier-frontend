@@ -2,7 +2,9 @@
   {%
     with
     question=question_content.question|question_references(get_question)|markdown,
-    hint=(question_content.hint or '')|question_references(get_question)|markdown,
+    question_advice=question_content.question_advice,
+    hint=(question_content.hint or '')|question_references(get_question),
+    optional=question_content.optional,
     name=question_content.id,
     value=service_data[question_content.id],
     unit_in_full=question_content.unit_in_full,
@@ -19,7 +21,9 @@
   {%
     with
     question=question_content.question|question_references(get_question)|markdown,
-    hint=(question_content.hint or '')|question_references(get_question)|markdown,
+    question_advice=question_content.question_advice,
+    hint=(question_content.hint or '')|question_references(get_question),
+    optional=question_content.optional,
     name=question_content.id,
     value=service_data[question_content.id],
     large=True,
@@ -36,7 +40,9 @@
     name=question_content.id,
     number_of_items=10,
     question=question_content.question|question_references(get_question)|markdown,
-    hint=(question_content.hint or '')|question_references(get_question)|markdown,
+    question_advice=question_content.question_advice,
+    hint=(question_content.hint or '')|question_references(get_question),
+    optional=question_content.optional,
     values=service_data[question_content.id],
     id=question_content.id,
     error=errors.get(question_content.id)['message']|question_references(get_question)
@@ -50,7 +56,9 @@
     with
     name=question_content.id,
     question=question_content.question|question_references(get_question)|markdown,
-    hint=(question_content.hint or '')|question_references(get_question)|markdown,
+    question_advice=question_content.question_advice,
+    hint=(question_content.hint or '')|question_references(get_question),
+    optional=question_content.optional,
     value=service_data[question_content.id],
     id=question_content.id,
     options=question_content.options,
@@ -67,8 +75,10 @@
     with
     name=question_content.id,
     question=question_content.question|question_references(get_question)|markdown,
-    hint=(question_content.hint or '')|question_references(get_question)|markdown,
+    question_advice=question_content.question_advice,
+    hint=(question_content.hint or '')|question_references(get_question),
     hint_underneath=(question_content.hint_underneath or False),
+    optional=question_content.optional,
     value=service_data[question_content.id],
     id=question_content.id,
     options=question_content.options,
@@ -85,7 +95,9 @@
     with
     name=question_content.id,
     question=question_content.question|question_references(get_question)|markdown,
-    hint=(question_content.hint or '')|question_references(get_question)|markdown,
+    question_advice=question_content.question_advice,
+    hint=(question_content.hint or '')|question_references(get_question),
+    optional=question_content.optional,
     value=service_data[question_content.id],
     id=question_content.id,
     type='boolean',
@@ -100,7 +112,9 @@
   {%
     with
     question=question_content.question|question_references(get_question)|markdown,
-    hint=(question_content.hint or '')|question_references(get_question)|markdown,
+    question_advice=question_content.question_advice,
+    hint=(question_content.hint or '')|question_references(get_question),
+    optional=question_content.optional,
     name=question_content.id,
     value="Document uploaded {}".format(
       service_data[question_content.id]|parse_document_upload_time|datetimeformat
@@ -117,6 +131,7 @@
     with
     name=question_content.id,
     question=question_content.question,
+    question_advice=question_content.question_advice,
     fields=question_content.fields,
     optional_fields=question_content.optional_fields,
     price=service_data.get(question_content.fields.price),
@@ -125,7 +140,8 @@
     price_unit=service_data.get(question_content.fields.price_unit),
     price_interval=service_data.get(question_content.fields.price_interval),
     hours_for_price=service_data.get(question_content.fields.hours_for_price),
-    hint=(question_content.hint or '')|markdown,
+    hint=(question_content.hint or ''),
+    optional=question_content.optional,
     id=question_content.id,
     error=errors.get(question_content.id)['message']|question_references(get_question),
     question_number=question_number
@@ -141,7 +157,9 @@
     unit_position="after",
     unit="%",
     question=question_content.question|question_references(get_question)|markdown,
-    hint=(question_content.hint or '')|question_references(get_question)|markdown,
+    question_advice=question_content.question_advice,
+    hint=(question_content.hint or '')|question_references(get_question),
+    optional=question_content.optional,
     name=question_content.id,
     value=service_data[question_content.id],
     error=errors.get(question_content.id)['message']|question_references(get_question),
@@ -160,7 +178,14 @@
       <legend>
         <span class="visually-hidden">{{ question_content.name }}</span>
       </legend>
-        <p class="question-description">{{ question_content.hint }}</p>
+      {% if question_content.question_advice %}
+        <span class="question-advice" id="input-{{ name }}-question-advice">
+          {{ question_content.question_advice|markdown }}
+        </span>
+      {% endif %}
+      {% if question_content.hint %}
+        <p class="question-description">{{ question_content.hint|markdown }}</p>
+      {% endif %}
 
       {% for boolean_question in question_content.boolean_list_questions %}
         {% set boolean_question_id = '{}-{}'.format(question_content.id, loop.index0) %}
