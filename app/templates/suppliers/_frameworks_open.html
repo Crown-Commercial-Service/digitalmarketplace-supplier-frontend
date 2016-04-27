@@ -8,7 +8,7 @@
             "title":
             "Continue your {} application".format(framework.name),
             "link": url_for(".framework_dashboard", framework_slug=framework.slug),
-            "body": framework.deadline,
+            "body": framework.deadline|markdown,
           }]
         %}
           {% include "toolkit/browse-list.html" %}
