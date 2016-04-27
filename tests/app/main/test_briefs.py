@@ -506,7 +506,7 @@ class TestRespondToBrief(BaseApplicationTest):
             '//*[@id="validation-masthead-heading"]'
             '[contains(text(), "There was a problem with your answer to the following questions")]')) == 1
         assert doc.xpath(
-            '//*[@id="content"]//a[@href="#availability"]')[0].text_content() == 'Availability'
+            '//*[@id="content"]//a[@href="#availability"]')[0].text_content() == 'Date the specialist can start work'
         assert len(doc.xpath('//h1[contains(text(), "Apply for ‘I need a thing to do a thing’")]')) == 1
         assert len(doc.xpath('//h2[contains(text(), "Do you have the essential skills and experience?")]')) == 1
         assert len(doc.xpath(
