@@ -4,7 +4,8 @@ from flask import render_template, request, redirect, url_for, abort, flash, cur
 from ... import data_api_client, flask_featureflags
 from ...main import main, content_loader
 from ..helpers import login_required
-from ..helpers.services import is_service_associated_with_supplier, get_signed_document_url, count_unanswered_questions
+from ..helpers.services import is_service_associated_with_supplier, get_signed_document_url, count_unanswered_questions, \
+    get_next_section_name
 from ..helpers.frameworks import get_framework_and_lot, get_declaration_status, has_one_service_limit
 
 from dmapiclient import HTTPError
@@ -240,7 +241,9 @@ def copy_draft_service(framework_slug, lot_slug, service_id):
                             framework_slug=framework['slug'],
                             lot_slug=draft['lot'],
                             service_id=draft_copy['id'],
-                            section_id=content.get_next_editable_section_id()))
+                            section_id=content.get_next_editable_section_id(),
+                            return_to_summary=1
+                            ))
 
 
 @main.route('/frameworks/<framework_slug>/submissions/<lot_slug>/<service_id>/complete', methods=['POST'])
@@ -305,7 +308,7 @@ def delete_draft_service(framework_slug, lot_slug, service_id):
                                 delete_requested=True))
 
 
-@main.route('/frameworks/<framework_slug>/submissions/documents/<int:supplier_id>/<document_name>', methods=['GET'])
+@main.route('/assets/<framework_slug>/submissions/<int:supplier_id>/<document_name>', methods=['GET'])
 @login_required
 def service_submission_document(framework_slug, supplier_id, document_name):
     if current_user.supplier_id != supplier_id:
@@ -313,7 +316,7 @@ def service_submission_document(framework_slug, supplier_id, document_name):
 
     uploader = s3.S3(current_app.config['DM_SUBMISSIONS_BUCKET'])
     s3_url = get_signed_document_url(uploader,
-                                     "{}/{}/{}".format(framework_slug, supplier_id, document_name))
+                                     "{}/submissions/{}/{}".format(framework_slug, supplier_id, document_name))
     if not s3_url:
         abort(404)
 
@@ -388,8 +391,10 @@ def edit_service_submission(framework_slug, lot_slug, service_id, section_id, qu
         "services/edit_submission_section.html",
         section=section,
         framework=framework,
+        next_section_name=get_next_section_name(content, section.id),
         service_data=draft,
         service_id=service_id,
+        return_to_summary=bool(request.args.get('return_to_summary')),
         one_service_limit=has_one_service_limit(lot_slug, framework['lots'])
     )
 
@@ -421,7 +426,7 @@ def update_section_submission(framework_slug, lot_slug, service_id, section_id, 
     update_data = section.get_data(request.form)
 
     uploader = s3.S3(current_app.config['DM_SUBMISSIONS_BUCKET'])
-    documents_url = url_for('.dashboard', _external=True) + '/submission/documents/'
+    documents_url = url_for('.dashboard', _external=True) + '/assets/'
     uploaded_documents, document_errors = upload_service_documents(
         uploader, documents_url, draft, request.files, section,
         public=False)
@@ -452,17 +457,29 @@ def update_section_submission(framework_slug, lot_slug, service_id, section_id, 
             "services/edit_submission_section.html",
             framework=framework,
             section=section,
+            next_section_name=get_next_section_name(content, section.id),
             service_data=update_data,
             service_id=service_id,
             one_service_limit=has_one_service_limit(lot_slug, framework['lots']),
+            return_to_summary=bool(request.args.get('return_to_summary')),
             errors=errors
         )
 
-    return redirect(url_for(".view_service_submission",
-                            framework_slug=framework['slug'],
-                            lot_slug=draft['lot'],
-                            service_id=service_id,
-                            _anchor=section_id))
+    return_to_summary = bool(request.args.get('return_to_summary'))
+    next_section = content.get_next_editable_section_id(section_id)
+
+    if next_section and not return_to_summary and request.form.get('continue_to_next_section'):
+        return redirect(url_for(".edit_service_submission",
+                                framework_slug=framework['slug'],
+                                lot_slug=draft['lot'],
+                                service_id=service_id,
+                                section_id=next_section))
+    else:
+        return redirect(url_for(".view_service_submission",
+                                framework_slug=framework['slug'],
+                                lot_slug=draft['lot'],
+                                service_id=service_id,
+                                _anchor=section_id))
 
 
 @main.route('/frameworks/<framework_slug>/submissions/<lot_slug>/<service_id>/remove/<section_id>/<question_slug>',

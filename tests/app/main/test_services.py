@@ -845,7 +845,7 @@ class TestEditDraftService(BaseApplicationTest):
         assert_equal(res.status_code, 302)
         data_api_client.update_draft_service.assert_called_once_with(
             '1', {
-                'serviceDefinitionDocumentURL': 'http://localhost/suppliers/submission/documents/g-slug/submissions/1234/1-service-definition-document-2015-01-02-0304.pdf'  # noqa
+                'serviceDefinitionDocumentURL': 'http://localhost/suppliers/assets/g-slug/submissions/1234/1-service-definition-document-2015-01-02-0304.pdf'  # noqa
             }, 'email@email.com',
             page_questions=['serviceDefinitionDocumentURL']
         )
@@ -929,7 +929,55 @@ class TestEditDraftService(BaseApplicationTest):
         )
         assert_equal(404, res.status_code)
 
-    def test_update_redirects_to_summary(self, data_api_client, s3):
+    def test_update_redirects_to_next_editable_section(self, data_api_client, s3):
+        s3.return_value.bucket_short_name = 'submissions'
+        data_api_client.get_framework.return_value = self.framework(status='open')
+        data_api_client.get_draft_service.return_value = self.empty_draft
+        data_api_client.update_draft_service.return_value = None
+
+        res = self.client.post(
+            '/suppliers/frameworks/g-cloud-7/submissions/scs/1/edit/service-description',
+            data={
+                'continue_to_next_section': 'Save and continue'
+            })
+
+        assert_equal(302, res.status_code)
+        assert_equal('http://localhost/suppliers/frameworks/g-cloud-7/submissions/scs/1/edit/service-type',
+                     res.headers['Location'])
+
+    def test_update_redirects_to_edit_submission_if_no_next_editable_section(self, data_api_client, s3):
+        s3.return_value.bucket_short_name = 'submissions'
+        data_api_client.get_framework.return_value = self.framework(status='open')
+        data_api_client.get_draft_service.return_value = self.empty_draft
+        data_api_client.update_draft_service.return_value = None
+
+        res = self.client.post(
+            '/suppliers/frameworks/g-cloud-7/submissions/scs/1/edit/sfia-rate-card',
+            data={})
+
+        assert_equal(302, res.status_code)
+        assert_equal(
+            'http://localhost/suppliers/frameworks/g-cloud-7/submissions/scs/1#sfia-rate-card',
+            res.headers['Location']
+        )
+
+    def test_update_redirects_to_edit_submission_if_return_to_summary(self, data_api_client, s3):
+        s3.return_value.bucket_short_name = 'submissions'
+        data_api_client.get_framework.return_value = self.framework(status='open')
+        data_api_client.get_draft_service.return_value = self.empty_draft
+        data_api_client.update_draft_service.return_value = None
+
+        res = self.client.post(
+            '/suppliers/frameworks/g-cloud-7/submissions/scs/1/edit/service-description?return_to_summary=1',
+            data={})
+
+        assert_equal(302, res.status_code)
+        assert_equal(
+            'http://localhost/suppliers/frameworks/g-cloud-7/submissions/scs/1#service-description',
+            res.headers['Location']
+        )
+
+    def test_update_redirects_to_edit_submission_if_save_and_return_grey_button_clicked(self, data_api_client, s3):
         s3.return_value.bucket_short_name = 'submissions'
         data_api_client.get_framework.return_value = self.framework(status='open')
         data_api_client.get_draft_service.return_value = self.empty_draft
@@ -1367,7 +1415,7 @@ class TestSubmissionDocuments(BaseApplicationTest):
         s3.return_value.get_signed_url.return_value = 'http://example.com/document.pdf'
 
         res = self.client.get(
-            '/suppliers/frameworks/g-cloud-7/submissions/documents/1234/document.pdf'
+            '/suppliers/assets/g-cloud-7/submissions/1234/document.pdf'
         )
 
         assert_equal(res.status_code, 302)

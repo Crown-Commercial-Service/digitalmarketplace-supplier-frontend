@@ -23,6 +23,11 @@
     color: $secondary-text-colour;
 }
 
+.next-page-message {
+  color: $secondary-text-colour;
+  margin: -10px 0 $gutter 0;
+}
+
 .delete-draft-button {
 
   margin-top: $gutter;

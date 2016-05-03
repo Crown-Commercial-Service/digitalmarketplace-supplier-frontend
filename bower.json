@@ -7,6 +7,6 @@
     "jquery-details": "https://github.com/mathiasbynens/jquery-details/archive/v0.1.0.tar.gz",
     "digitalmarketplace-frontend-toolkit": "git://github.com/alphagov/digitalmarketplace-frontend-toolkit#v15.11.3",
     "govuk_template": "https://github.com/alphagov/govuk_template/releases/download/v0.14.1/jinja_govuk_template-0.14.1.tgz",
-    "digitalmarketplace-frameworks": "git://github.com/alphagov/digitalmarketplace-frameworks#v0.31.3"
+    "digitalmarketplace-frameworks": "git://github.com/alphagov/digitalmarketplace-frameworks#v1.0.0"
   }
 }

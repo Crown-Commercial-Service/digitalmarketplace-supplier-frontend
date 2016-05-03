@@ -116,9 +116,9 @@ class Development(Config):
     DM_DATA_API_AUTH_TOKEN = "myToken"
     DM_API_AUTH_TOKEN = "myToken"
 
-    DM_SUBMISSIONS_BUCKET = "digitalmarketplace-documents-dev-dev"
-    DM_COMMUNICATIONS_BUCKET = "digitalmarketplace-documents-dev-dev"
-    DM_AGREEMENTS_BUCKET = "digitalmarketplace-documents-dev-dev"
+    DM_SUBMISSIONS_BUCKET = "digitalmarketplace-submissions-dev-dev"
+    DM_COMMUNICATIONS_BUCKET = "digitalmarketplace-communications-dev-dev"
+    DM_AGREEMENTS_BUCKET = "digitalmarketplace-agreements-dev-dev"
     DM_DOCUMENTS_BUCKET = "digitalmarketplace-documents-dev-dev"
     DM_ASSETS_URL = "https://{}.s3-eu-west-1.amazonaws.com".format(DM_SUBMISSIONS_BUCKET)
 
