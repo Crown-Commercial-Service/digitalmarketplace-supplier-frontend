@@ -172,19 +172,21 @@
 {% macro boolean_list(question_content, service_data, errors, question_number=None, get_question=None) -%}
   {% if question_content.boolean_list_questions %}
     <fieldset class="question question-boolean-list" id="{{ question_content.id }}">
+        <legend>
+          <span class="visually-hidden">{{ question_content.name }}</span>
+        </legend>
+
         <span class="question-heading">
           <h2>{{ question_content.question }}</h2>
         </span>
-      <legend>
-        <span class="visually-hidden">{{ question_content.name }}</span>
-      </legend>
+
       {% if question_content.question_advice %}
         <span class="question-advice" id="input-{{ name }}-question-advice">
           {{ question_content.question_advice|markdown }}
         </span>
       {% endif %}
       {% if question_content.hint %}
-        <p class="question-description">{{ question_content.hint|markdown }}</p>
+        <span class="hint">{{ question_content.hint|markdown }}</span>
       {% endif %}
 
       {% for boolean_question in question_content.boolean_list_questions %}
@@ -208,4 +210,37 @@
       {% endfor %}
     </fieldset>
   {% endif %}
+{%- endmacro %}
+
+{% macro multiquestion(question_content, service_data, errors, question_number=None, get_question=None) -%}
+  <fieldset class="question" id="{{ question_content.id }}">
+    <legend>
+      <span class="visually-hidden">{{ question_content.name }}</span>
+    </legend>
+
+    <span class="question-heading{% if question_content.hint %}-with-hint{% endif %}">
+        <span class="question-number">
+          {{ question_number }}
+        </span>
+        {{ question_content.question }}
+    </span>
+
+    {% if question_content.question_advice %}
+    <span class="question-advice" id="input-{{ name }}-question-advice">
+      {{ question_content.question_advice|markdown }}
+    </span>
+    {% endif %}
+
+    {% if question_content.hint %}
+    <span class="hint">{{ question_content.hint|markdown }}</span>
+    {% endif %}
+
+    {% for child_question in question_content.questions %}
+      {% if errors and errors[child_question.id] %}
+        {{ text(child_question, service_data, errors) }}
+      {% else %}
+        {{ text(child_question, service_data, {}) }}
+      {% endif %}
+    {% endfor %}
+  </fieldset>
 {%- endmacro %}

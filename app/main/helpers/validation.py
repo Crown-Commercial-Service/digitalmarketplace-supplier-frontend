@@ -36,12 +36,14 @@ class DeclarationValidator(object):
     def get_error_messages(self):
         raw_errors_map = self.errors()
         errors_map = list()
-        for question_number, question_id in enumerate(self.all_fields()):
+        for question_id in self.all_fields():
             if question_id in raw_errors_map:
+                question_number = self.content.get_question(question_id).get('number')
                 validation_message = self.get_error_message(question_id, raw_errors_map[question_id])
                 errors_map.append((question_id, {
                     'input_name': question_id,
-                    'question': "Question {}".format(question_number + 1),
+                    'question': "Question {}".format(question_number)
+                    if question_number else self.content.get_question(question_id).get('question'),
                     'message': validation_message,
                 }))
 
