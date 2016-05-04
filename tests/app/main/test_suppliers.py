@@ -902,7 +902,7 @@ class TestSupplierUpdate(BaseApplicationTest):
         })
 
         assert_equal(status, 200)
-        assert_in('Email can not be empty', resp)
+        assert_in('You must provide an email address', resp)
 
         assert_false(data_api_client.update_supplier.called)
         assert_false(
