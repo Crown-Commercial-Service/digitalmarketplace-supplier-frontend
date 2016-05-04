@@ -508,7 +508,7 @@ class TestCreateDraftService(BaseApplicationTest):
     def setup(self):
         super(TestCreateDraftService, self).setup()
         self._answer_required = 'Answer is required'
-        self._validation_error = 'There was a problem with your answer to the following questions'
+        self._validation_error = 'There was a problem with your answer to:'
 
         with self.app.test_client():
             self.login()

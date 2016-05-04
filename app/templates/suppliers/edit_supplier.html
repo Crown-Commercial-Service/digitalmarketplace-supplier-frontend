@@ -42,19 +42,27 @@
   {% if supplier_form.errors or contact_form.errors %}
       <div class="validation-masthead" aria-labelledby="validation-masthead-heading">
           <h3 class="validation-masthead-heading" id="validation-masthead-heading">
-              There was a problem with your answer to the following questions
+              There was a problem with the details you gave for:
           </h3>
+          {% if supplier_form.errors %}
+          <ul>
           {% for field_name, field_errors in supplier_form.errors|dictsort %}
             {% for error in field_errors %}
-              <a href="#{{ field_name }}-label" class="validation-masthead-link">{{ supplier_form[field_name].label }}</a>
+              <li><a href="#{{ field_name }}" class="validation-masthead-link">{{ supplier_form[field_name].label.text }}</a>
             {% endfor %}
           {% endfor %}
+          </ul>
+          {% endif %}
 
+          {% if contact_form.errors %}
+          <ul>
           {% for field_name, field_errors in contact_form.errors|dictsort %}
             {% for error in field_errors %}
-            <a href="#contact_{{ field_name }}-label" class="validation-masthead-link">{{ contact_form[field_name].label }}</a>
+            <li><a href="#contact_{{ field_name }}" class="validation-masthead-link">{{ contact_form[field_name].label.text }}</a></li>
             {% endfor %}
           {% endfor %}
+          </ul>
+          {% endif %}
       </div>
   {% endif %}
 

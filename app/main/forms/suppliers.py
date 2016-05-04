@@ -39,11 +39,11 @@ class EditContactInformationForm(Form):
     website = StripWhitespaceStringField()
     phoneNumber = StripWhitespaceStringField('Phone number')
     email = StripWhitespaceStringField('Email address', validators=[
-        DataRequired(message="Email can not be empty"),
+        DataRequired(message="You must provide an email address"),
         Email(message="Please enter a valid email address")
     ])
     contactName = StripWhitespaceStringField('Contact name', validators=[
-        DataRequired(message="Contact name can not be empty"),
+        DataRequired(message="You must provide a contact name"),
     ])
 
 

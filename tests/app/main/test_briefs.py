@@ -476,7 +476,7 @@ class TestRespondToBrief(BaseApplicationTest):
 
         assert len(doc.xpath(
             '//*[@id="validation-masthead-heading"]'
-            '[contains(text(), "There was a problem with your answer to the following questions")]')) == 1
+            '[contains(text(), "There was a problem with your answer to:")]')) == 1
         assert doc.xpath(
             '//*[@id="content"]//a[@href="#essentialRequirements-2"]')[0].text_content() == 'Essential three'
         assert len(doc.xpath('//h1[contains(text(), "Apply for ‘I need a thing to do a thing’")]')) == 1
@@ -504,7 +504,7 @@ class TestRespondToBrief(BaseApplicationTest):
 
         assert len(doc.xpath(
             '//*[@id="validation-masthead-heading"]'
-            '[contains(text(), "There was a problem with your answer to the following questions")]')) == 1
+            '[contains(text(), "There was a problem with your answer to:")]')) == 1
         assert doc.xpath(
             '//*[@id="content"]//a[@href="#availability"]')[0].text_content() == 'Date the specialist can start work'
         assert len(doc.xpath('//h1[contains(text(), "Apply for ‘I need a thing to do a thing’")]')) == 1
