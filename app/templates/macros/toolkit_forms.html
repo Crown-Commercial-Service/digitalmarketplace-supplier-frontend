@@ -209,3 +209,38 @@
     </fieldset>
   {% endif %}
 {%- endmacro %}
+
+{% macro multiquestion(question_content, service_data, errors, question_number=None, get_question=None) -%}
+<div class="question" id="{{ question_content.id }}">
+  <label for="input-{{ question_content.id }}">
+      <span class="question-heading{% if question_content.hint %}-with-hint{% endif %}">
+          <span class="question-number">
+            {{ question_number }}
+          </span>
+        
+        {{ question_content.question }}
+        
+      </span>
+
+  </label>
+  <legend>
+    <span class="visually-hidden">{{ question_content.name }}</span>
+  </legend>
+  {% if question_content.question_advice %}
+        <span class="question-advice" id="input-{{ name }}-question-advice">
+          {{ question_content.question_advice|markdown }}
+        </span>
+  {% endif %}
+  {% if question_content.hint %}
+  <p class="question-description">{{ question_content.hint|markdown }}</p>
+  {% endif %}
+
+  {% for child_question in question_content.questions %}
+    {% if errors and errors[child_question.id] %}
+      {{ text(child_question, service_data, errors) }}
+    {% else %}
+      {{ text(child_question, service_data, {}) }}
+    {% endif %}
+  {% endfor %}
+</div>
+{%- endmacro %}
