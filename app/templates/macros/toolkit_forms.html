@@ -150,12 +150,12 @@
   {% endwith %}
 {%- endmacro %}
 
-{% macro percentage(question_content, service_data, errors, question_number=None, get_question=None) -%}
+{% macro number(question_content, service_data, errors, question_number=None, get_question=None) -%}
   {%
     with
-    unit_in_full="percent",
-    unit_position="after",
-    unit="%",
+    unit=question_content.unit,
+    unit_in_full=question_content.unit_in_full,
+    unit_position=question_content.unit_position,
     question=question_content.question|question_references(get_question)|markdown,
     question_advice=question_content.question_advice,
     hint=(question_content.hint or '')|question_references(get_question),
@@ -163,7 +163,8 @@
     name=question_content.id,
     value=service_data[question_content.id],
     error=errors.get(question_content.id)['message']|question_references(get_question),
-    question_number=question_number
+    question_number=question_number,
+    smaller=True
   %}
     {% include "toolkit/forms/textbox.html" %}
   {% endwith %}
