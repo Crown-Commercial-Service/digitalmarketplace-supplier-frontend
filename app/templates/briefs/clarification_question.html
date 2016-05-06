@@ -63,16 +63,15 @@
         {% include 'toolkit/page-heading.html' %}
       {% endwith %}
 
-
-      <div class="hint">
-        <p>Your question will be published with the buyers’ response by {{ brief.clarificationQuestionsPublishedBy | dateformat }}.</p>
-        <p>All questions and answers will be posted on the Digital Marketplace. Your company name won’t be visible.</p>
-        <p>You shouldn’t include any confidential information in your question.</p>
-        <p>Read more about <a href="https://www.gov.uk/guidance/how-to-answer-supplier-questions-about-your-digital-outcomes-and-specialists-requirements">how supplier questions are managed</a>.</p>
-      </div>
-
       <form method="post">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+        {% set question_advice =
+          'Your question will be published with the buyers’ response by {}.
+           \n\nAll questions and answers will be posted on the Digital Marketplace. Your company name won’t be visible.
+           \n\nYou shouldn’t include any confidential information in your question.
+           \n\nRead more about <a href="https://www.gov.uk/guidance/how-to-answer-supplier-questions-about-your-digital-outcomes-and-specialists-requirements">how supplier questions are managed</a>.
+          '.format(brief.clarificationQuestionsPublishedBy|dateformat)
+        %}
         {%
           with
           large=true,
