@@ -256,12 +256,6 @@ def get_status_for_multi_service_lot_and_service_type(
         }
 
 
-def has_one_service_limit(lot_slug, framework_lots):
-    for lot in framework_lots:
-        if lot['slug'] == lot_slug:
-            return lot['oneServiceLimit']
-
-
 def countersigned_framework_agreement_exists_in_bucket(framework_slug, bucket):
     agreements_bucket = s3.S3(bucket)
     countersigned_path = get_agreement_document_path(
