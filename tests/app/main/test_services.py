@@ -54,7 +54,7 @@ class TestListServices(BaseApplicationTest):
                     'serviceName': 'Service name 123',
                     'status': 'published',
                     'id': '123',
-                    'lot': 'saas',
+                    'lotSlug': 'saas',
                     'lotName': 'Software as a Service',
                     'frameworkName': 'G-Cloud 1',
                     'frameworkSlug': 'g-cloud-1'
@@ -384,10 +384,12 @@ class TestEditService(BaseApplicationTest):
             'serviceName': 'Service name 123',
             'status': 'published',
             'id': '123',
+            'frameworkSlug': 'g-cloud-6',
             'frameworkName': 'G-Cloud 6',
             'supplierId': 1234,
             'supplierName': 'We supply any',
             'lot': 'scs',
+            'lotSlug': 'scs',
             'lotName': "Specialist Cloud Services",
         }
     }
@@ -430,7 +432,7 @@ class TestEditService(BaseApplicationTest):
         res = self.client.post(
             '/suppliers/services/1/edit/service-attributes',
             data={
-                'lot': 'scs',
+                'lotSlug': 'scs',
             })
         assert_equal(res.status_code, 404)
 
@@ -535,7 +537,7 @@ class TestCreateDraftService(BaseApplicationTest):
                 'id': 1,
                 'supplierId': 1234,
                 'supplierName': "supplierName",
-                'lot': "scs",
+                'lotSlug': "scs",
                 'lotName': "Specialist Cloud Services",
                 'status': "not-submitted",
                 'frameworkName': "frameworkName",
@@ -601,9 +603,10 @@ class TestCopyDraft(BaseApplicationTest):
             'id': 1,
             'supplierId': 1234,
             'supplierName': "supplierName",
-            'lot': "scs",
+            'lotSlug': "scs",
             'status': "not-submitted",
             'frameworkName': "frameworkName",
+            'frameworkSlug': 'g-cloud-7',
             'links': {},
             'updatedAt': "2015-06-29T15:26:07.650368Z"
         }
@@ -642,9 +645,10 @@ class TestCompleteDraft(BaseApplicationTest):
             'id': 1,
             'supplierId': 1234,
             'supplierName': "supplierName",
-            'lot': "scs",
+            'lotSlug': "scs",
             'status': "not-submitted",
             'frameworkName': "frameworkName",
+            'frameworkSlug': 'g-cloud-7',
             'links': {},
             'updatedAt': "2015-06-29T15:26:07.650368Z"
         }
@@ -685,13 +689,14 @@ class TestEditDraftService(BaseApplicationTest):
             'services': {
                 'id': 1,
                 'supplierId': 1234,
-                'supplierName': "supplierName",
-                'lot': "scs",
-                'status': "not-submitted",
-                'frameworkSlug': 'g-slug',
-                'frameworkName': "frameworkName",
+                'supplierName': 'supplierName',
+                'lot': 'scs',
+                'lotSlug': 'scs',
+                'status': 'not-submitted',
+                'frameworkSlug': 'g-cloud-7',
+                'frameworkName': 'frameworkName',
                 'links': {},
-                'updatedAt': "2015-06-29T15:26:07.650368Z"
+                'updatedAt': '2015-06-29T15:26:07.650368Z'
             }
         }
 
@@ -699,8 +704,10 @@ class TestEditDraftService(BaseApplicationTest):
             'services': {
                 'id': 1,
                 'supplierId': 1234,
-                'supplierName': "supplierName",
+                'supplierName': 'supplierName',
                 'lot': 'digital-specialists',
+                'lotSlug': 'digital-specialists',
+                'frameworkSlug': 'digital-outcomes-and-specialists',
                 'lotName': 'Digital specialists',
                 'agileCoachLocations': ['Wales'],
                 'agileCoachPriceMax': '200',
@@ -708,11 +715,11 @@ class TestEditDraftService(BaseApplicationTest):
                 'developerLocations': ['Wales'],
                 'developerPriceMax': '250',
                 'developerPriceMin': '150',
-                'status': "not-submitted",
+                'status': 'not-submitted',
             },
             'auditEvents': {
-                'createdAt': "2015-06-29T15:26:07.650368Z",
-                'userName': "Supplier User",
+                'createdAt': '2015-06-29T15:26:07.650368Z',
+                'userName': 'Supplier User',
             },
             'validationErrors': {}
         }
@@ -776,7 +783,7 @@ class TestEditDraftService(BaseApplicationTest):
         res = self.client.post(
             '/suppliers/frameworks/g-cloud-7/submissions/scs/1/edit/service-attributes',
             data={
-                'lot': 'scs',
+                'lotSlug': 'scs',
             })
         assert_equal(res.status_code, 404)
 
@@ -845,13 +852,13 @@ class TestEditDraftService(BaseApplicationTest):
         assert_equal(res.status_code, 302)
         data_api_client.update_draft_service.assert_called_once_with(
             '1', {
-                'serviceDefinitionDocumentURL': 'http://localhost/suppliers/assets/g-slug/submissions/1234/1-service-definition-document-2015-01-02-0304.pdf'  # noqa
+                'serviceDefinitionDocumentURL': 'http://localhost/suppliers/assets/g-cloud-7/submissions/1234/1-service-definition-document-2015-01-02-0304.pdf'  # noqa
             }, 'email@email.com',
             page_questions=['serviceDefinitionDocumentURL']
         )
 
         s3.return_value.save.assert_called_once_with(
-            'g-slug/submissions/1234/1-service-definition-document-2015-01-02-0304.pdf',
+            'g-cloud-7/submissions/1234/1-service-definition-document-2015-01-02-0304.pdf',
             mock.ANY, acl='private'
         )
 
@@ -1070,9 +1077,11 @@ class TestEditDraftService(BaseApplicationTest):
         data_api_client.get_framework.return_value = self.framework(
             status='open', slug='digital-outcomes-and-specialists'
         )
-
-        self.empty_draft['services']['lot'] = 'digital-specialists'
-        data_api_client.get_draft_service.return_value = self.empty_draft
+        draft = self.empty_draft.copy()
+        draft['services']['lot'] = 'digital-specialists'
+        draft['services']['lotSlug'] = 'digital-specialists'
+        draft['services']['frameworkSlug'] = 'digital-outcomes-and-specialists'
+        data_api_client.get_draft_service.return_value = draft
 
         res = self.client.get(
             '/suppliers/frameworks/digital-outcomes-and-specialists/submissions/' +
@@ -1208,20 +1217,22 @@ class TestShowDraftService(BaseApplicationTest):
         'services': {
             'id': 1,
             'supplierId': 1234,
-            'supplierName': "supplierName",
-            'lot': "scs",
-            'status': "not-submitted",
-            'frameworkName': "frameworkName",
+            'supplierName': 'supplierName',
+            'lot': 'scs',
+            'lotSlug': 'scs',
+            'status': 'not-submitted',
+            'frameworkName': 'frameworkName',
+            'frameworkSlug': 'g-cloud-7',
             'priceMin': '12.50',
             'priceMax': '15',
             'priceUnit': 'Person',
             'priceInterval': 'Second',
             'links': {},
-            'updatedAt': "2015-06-29T15:26:07.650368Z"
+            'updatedAt': '2015-06-29T15:26:07.650368Z'
         },
         'auditEvents': {
-            'createdAt': "2015-06-29T15:26:07.650368Z",
-            'userName': "Supplier User",
+            'createdAt': '2015-06-29T15:26:07.650368Z',
+            'userName': 'Supplier User',
 
         },
         'validationErrors': {}
@@ -1335,10 +1346,10 @@ class TestDeleteDraftService(BaseApplicationTest):
             'id': 1,
             'supplierId': 1234,
             'supplierName': "supplierName",
-            'lot': "scs",
+            'lotSlug': "scs",
             'lotName': "Specialist Cloud Services",
             'status': "not-submitted",
-            'frameworkSlug': 'g-slug',
+            'frameworkSlug': 'g-cloud-7',
             'frameworkName': "frameworkName",
             'links': {},
             'serviceName': 'My rubbish draft',
@@ -1367,7 +1378,7 @@ class TestDeleteDraftService(BaseApplicationTest):
         assert_in('/frameworks/g-cloud-7/submissions/scs/1?delete_requested=True', res.location)
         res2 = self.client.get('/suppliers/frameworks/g-cloud-7/submissions/scs/1?delete_requested=True')
         assert_in(
-            b"Are you sure you want to delete this lab?", res2.get_data()
+            b"Are you sure you want to delete this service?", res2.get_data()
         )
 
     def test_cannot_delete_if_not_open(self, data_api_client):

@@ -147,7 +147,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
             data_api_client.get_framework_interest.return_value = {'frameworks': ['g-cloud-7']}
             data_api_client.find_draft_services.return_value = {
                 "services": [
-                    {'serviceName': 'A service', 'status': 'submitted', 'lot': 'iaas'}
+                    {'serviceName': 'A service', 'status': 'submitted', 'lotSlug': 'iaas'}
                 ]
             }
             data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(declaration=None)
@@ -188,7 +188,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
             data_api_client.get_framework_interest.return_value = {'frameworks': ['g-cloud-7']}
             data_api_client.find_draft_services.return_value = {
                 "services": [
-                    {'serviceName': 'A service', 'status': 'submitted', 'lot': 'iaas'}
+                    {'serviceName': 'A service', 'status': 'submitted', 'lotSlug': 'iaas'}
                 ]
             }
             data_api_client.get_supplier_framework_info.return_value = self.supplier_framework()
@@ -361,7 +361,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
             data_api_client.get_framework.return_value = self.framework(status='standstill')
             data_api_client.find_draft_services.return_value = {
                 "services": [
-                    {'serviceName': 'A service', 'status': 'submitted', 'lot': 'iaas'}
+                    {'serviceName': 'A service', 'status': 'submitted', 'lotSlug': 'iaas'}
                 ]
             }
             data_api_client.get_supplier_framework_info.return_value = self.supplier_framework()
@@ -379,7 +379,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
             data_api_client.get_framework.return_value = self.framework(status='pending')
             data_api_client.find_draft_services.return_value = {
                 "services": [
-                    {'serviceName': 'A service', 'status': 'submitted', 'lot': 'iaas'}
+                    {'serviceName': 'A service', 'status': 'submitted', 'lotSlug': 'iaas'}
                 ]
             }
             data_api_client.get_supplier_framework_info.return_value = self.supplier_framework()
@@ -415,7 +415,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
             data_api_client.get_framework.return_value = self.framework(status='standstill')
             data_api_client.find_draft_services.return_value = {
                 "services": [
-                    {'serviceName': 'A service', 'status': 'submitted', 'lot': 'iaas'}
+                    {'serviceName': 'A service', 'status': 'submitted', 'lotSlug': 'iaas'}
                 ]
             }
             data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
@@ -436,7 +436,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
         data_api_client.get_framework.return_value = self.framework(status='standstill')
         data_api_client.find_draft_services.return_value = {
             "services": [
-                {'serviceName': 'A service', 'status': 'submitted', 'lot': 'iaas'}
+                {'serviceName': 'A service', 'status': 'submitted', 'lotSlug': 'iaas'}
             ]
         }
         data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(on_framework=True)
@@ -465,7 +465,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
 
             data_api_client.find_draft_services.return_value = {
                 "services": [
-                    {'serviceName': 'A service', 'status': 'submitted', 'lot': 'iaas'}
+                    {'serviceName': 'A service', 'status': 'submitted', 'lotSlug': 'iaas'}
                 ]
             }
             data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
@@ -485,7 +485,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
         data_api_client.get_framework.return_value = self.framework(status='standstill')
         data_api_client.find_draft_services.return_value = {
             "services": [
-                {'serviceName': 'A service', 'status': 'submitted', 'lot': 'iaas'}
+                {'serviceName': 'A service', 'status': 'submitted', 'lotSlug': 'iaas'}
             ]
         }
         data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(on_framework=False)
@@ -515,7 +515,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
             data_api_client.get_framework.return_value = self.framework(status='standstill')
             data_api_client.find_draft_services.return_value = {
                 "services": [
-                    {'serviceName': 'A service', 'status': 'submitted', 'lot': 'iaas'}
+                    {'serviceName': 'A service', 'status': 'submitted', 'lotSlug': 'iaas'}
                 ]
             }
             data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
@@ -1479,7 +1479,7 @@ class TestG7ServicesList(BaseApplicationTest):
         data_api_client.get_supplier_declaration.return_value = {'declaration': FULL_G7_SUBMISSION}  # noqa
         data_api_client.find_draft_services.return_value = {
             'services': [
-                {'serviceName': 'draft', 'lot': 'scs', 'status': 'submitted'},
+                {'serviceName': 'draft', 'lotSlug': 'scs', 'status': 'submitted'},
             ]
         }
         count_unanswered.return_value = 0, 1
@@ -1503,7 +1503,7 @@ class TestG7ServicesList(BaseApplicationTest):
         data_api_client.get_framework.return_value = self.framework(status='open')
         data_api_client.find_draft_services.return_value = {
             'services': [
-                {'serviceName': 'draft', 'lot': 'scs', 'status': 'not-submitted'},
+                {'serviceName': 'draft', 'lotSlug': 'scs', 'status': 'not-submitted'},
             ]
         }
 
@@ -1525,7 +1525,7 @@ class TestG7ServicesList(BaseApplicationTest):
         data_api_client.get_framework.return_value = self.framework(status='open')
         data_api_client.find_draft_services.return_value = {
             'services': [
-                {'serviceName': 'draft', 'lot': 'scs', 'status': 'not-submitted'},
+                {'serviceName': 'draft', 'lotSlug': 'scs', 'status': 'not-submitted'},
             ]
         }
 
@@ -1543,7 +1543,7 @@ class TestG7ServicesList(BaseApplicationTest):
         data_api_client.get_framework.return_value = self.framework(status='open')
         data_api_client.find_draft_services.return_value = {
             'services': [
-                {'serviceName': 'draft', 'lot': 'scs', 'status': 'submitted'},
+                {'serviceName': 'draft', 'lotSlug': 'scs', 'status': 'submitted'},
             ]
         }
 
@@ -1569,7 +1569,7 @@ class TestG7ServicesList(BaseApplicationTest):
         }
         data_api_client.find_draft_services.return_value = {
             'services': [
-                {'serviceName': 'draft', 'lot': 'scs', 'status': 'submitted'},
+                {'serviceName': 'draft', 'lotSlug': 'scs', 'status': 'submitted'},
             ]
         }
 
@@ -1591,8 +1591,8 @@ class TestG7ServicesList(BaseApplicationTest):
         }
         data_api_client.find_draft_services.return_value = {
             'services': [
-                {'serviceName': 'draft', 'lot': 'scs', 'status': 'not-submitted'},
-                {'serviceName': 'draft', 'lot': 'scs', 'status': 'submitted'},
+                {'serviceName': 'draft', 'lotSlug': 'scs', 'status': 'not-submitted'},
+                {'serviceName': 'draft', 'lotSlug': 'scs', 'status': 'submitted'},
             ]
         }
 
@@ -1613,7 +1613,7 @@ class TestG7ServicesList(BaseApplicationTest):
         }
         data_api_client.find_draft_services.return_value = {
             'services': [
-                {'serviceName': 'draft', 'lot': 'digital-specialists', 'status': 'submitted'},
+                {'serviceName': 'draft', 'lotSlug': 'digital-specialists', 'status': 'submitted'},
             ]
         }
 
@@ -1636,8 +1636,8 @@ class TestG7ServicesList(BaseApplicationTest):
         }
         data_api_client.find_draft_services.return_value = {
             'services': [
-                {'serviceName': 'draft', 'lot': 'digital-specialists', 'status': 'not-submitted'},
-                {'serviceName': 'draft', 'lot': 'digital-specialists', 'status': 'submitted'},
+                {'serviceName': 'draft', 'lotSlug': 'digital-specialists', 'status': 'not-submitted'},
+                {'serviceName': 'draft', 'lotSlug': 'digital-specialists', 'status': 'submitted'},
             ]
         }
 

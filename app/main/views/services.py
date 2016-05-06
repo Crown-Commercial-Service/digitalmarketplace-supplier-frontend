@@ -213,7 +213,7 @@ def create_new_draft_service(framework_slug, lot_slug):
         url_for(
             ".view_service_submission",
             framework_slug=framework['slug'],
-            lot_slug=draft_service['lot'],
+            lot_slug=draft_service['lotSlug'],
             service_id=draft_service['id'],
         )
     )
@@ -242,7 +242,7 @@ def copy_draft_service(framework_slug, lot_slug, service_id):
 
     return redirect(url_for(".edit_service_submission",
                             framework_slug=framework['slug'],
-                            lot_slug=draft['lot'],
+                            lot_slug=draft['lotSlug'],
                             service_id=draft_copy['id'],
                             section_id=content.get_next_editable_section_id(),
                             return_to_summary=1
@@ -312,7 +312,7 @@ def delete_draft_service(framework_slug, lot_slug, service_id):
     else:
         return redirect(url_for(".view_service_submission",
                                 framework_slug=framework['slug'],
-                                lot_slug=draft['lot'],
+                                lot_slug=draft['lotSlug'],
                                 service_id=service_id,
                                 delete_requested=True))
 
@@ -489,13 +489,13 @@ def update_section_submission(framework_slug, lot_slug, service_id, section_id, 
     if next_section and not return_to_summary and request.form.get('continue_to_next_section'):
         return redirect(url_for(".edit_service_submission",
                                 framework_slug=framework['slug'],
-                                lot_slug=draft['lot'],
+                                lot_slug=draft['lotSlug'],
                                 service_id=service_id,
                                 section_id=next_section))
     else:
         return redirect(url_for(".view_service_submission",
                                 framework_slug=framework['slug'],
-                                lot_slug=draft['lot'],
+                                lot_slug=draft['lotSlug'],
                                 service_id=service_id,
                                 _anchor=section_id))
 
