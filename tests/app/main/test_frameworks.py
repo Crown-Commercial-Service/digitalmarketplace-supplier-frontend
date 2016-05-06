@@ -280,14 +280,14 @@ class TestFrameworksDashboard(BaseApplicationTest):
                 {
                     'text': "Download guidance and legal documentation (.zip)",
                     'time': {
-                        'text': 'Thursday 01 January 2015',
+                        'text': 'Thursday 1 January 2015',
                         'datetime': '2015-01-01T14:00:00.000Z'
                     }
                 },
                 {
                     'text': "Read updates and ask clarification questions",
                     'time': {
-                        'text': 'Monday 02 February 2015',
+                        'text': 'Monday 2 February 2015',
                         'datetime': '2015-02-02T14:00:00.000Z'
                     }
                 }
@@ -317,7 +317,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
                 {
                     'text': "Download guidance and legal documentation (.zip)",
                     'time': {
-                        'text': 'Thursday 01 January 2015',
+                        'text': 'Thursday 1 January 2015',
                         'datetime': '2015-01-01T14:00:00.000Z'
                     }
                 },
@@ -586,7 +586,7 @@ class TestFrameworkAgreement(BaseApplicationTest):
                 u'/suppliers/frameworks/g-cloud-7/agreement',
                 doc.xpath('//form')[0].action
             )
-            assert_in(u'Document uploaded Monday 02 November 2015 at 15:25', data)
+            assert_in(u'Document uploaded Monday 2 November 2015 at 15:25', data)
             assert_in(u'Your document has been uploaded', data)
 
     def test_upload_message_if_agreement_is_not_returned(self, data_api_client):
