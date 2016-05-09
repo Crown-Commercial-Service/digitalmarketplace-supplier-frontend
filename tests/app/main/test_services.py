@@ -12,7 +12,7 @@ from lxml import html
 from freezegun import freeze_time
 
 from nose.tools import assert_equal, assert_true, assert_false, assert_in, assert_not_in
-from tests.app.helpers import BaseApplicationTest
+from tests.app.helpers import BaseApplicationTest, EMPTY_G7_DRAFT
 
 
 @pytest.fixture(params=["g-cloud-6", "g-cloud-7"])
@@ -532,19 +532,7 @@ class TestCreateDraftService(BaseApplicationTest):
 
     def _test_post_create_draft_service(self, data, if_error_expected, data_api_client):
         data_api_client.get_framework.return_value = self.framework(status='open')
-        data_api_client.create_new_draft_service.return_value = {
-            'services': {
-                'id': 1,
-                'supplierId': 1234,
-                'supplierName': "supplierName",
-                'lotSlug': "scs",
-                'lotName': "Specialist Cloud Services",
-                'status': "not-submitted",
-                'frameworkName': "frameworkName",
-                'links': {},
-                'updatedAt': "2015-06-29T15:26:07.650368Z"
-            }
-        }
+        data_api_client.create_new_draft_service.return_value = {"services": EMPTY_G7_DRAFT}
 
         res = self.client.post(
             '/suppliers/frameworks/g-cloud-7/submissions/scs/create',
@@ -599,17 +587,7 @@ class TestCopyDraft(BaseApplicationTest):
         with self.app.test_client():
             self.login()
 
-        self.draft = {
-            'id': 1,
-            'supplierId': 1234,
-            'supplierName': "supplierName",
-            'lotSlug': "scs",
-            'status': "not-submitted",
-            'frameworkName': "frameworkName",
-            'frameworkSlug': 'g-cloud-7',
-            'links': {},
-            'updatedAt': "2015-06-29T15:26:07.650368Z"
-        }
+        self.draft = EMPTY_G7_DRAFT.copy()
 
     def test_copy_draft(self, data_api_client):
         data_api_client.get_framework.return_value = self.framework(status='open')
@@ -641,22 +619,11 @@ class TestCompleteDraft(BaseApplicationTest):
         with self.app.test_client():
             self.login()
 
-        self.draft = {
-            'id': 1,
-            'supplierId': 1234,
-            'supplierName': "supplierName",
-            'lotSlug': "scs",
-            'status': "not-submitted",
-            'frameworkName': "frameworkName",
-            'frameworkSlug': 'g-cloud-7',
-            'links': {},
-            'updatedAt': "2015-06-29T15:26:07.650368Z"
-        }
+        self.draft = EMPTY_G7_DRAFT.copy()
 
     def test_complete_draft(self, data_api_client):
         data_api_client.get_framework.return_value = self.framework(status='open')
         data_api_client.get_draft_service.return_value = {'services': self.draft}
-
         res = self.client.post('/suppliers/frameworks/g-cloud-7/submissions/scs/1/complete')
         assert_equal(res.status_code, 302)
         assert_true('lot=scs' in res.location)
@@ -685,20 +652,7 @@ class TestEditDraftService(BaseApplicationTest):
         with self.app.test_client():
             self.login()
 
-        self.empty_draft = {
-            'services': {
-                'id': 1,
-                'supplierId': 1234,
-                'supplierName': 'supplierName',
-                'lot': 'scs',
-                'lotSlug': 'scs',
-                'status': 'not-submitted',
-                'frameworkSlug': 'g-cloud-7',
-                'frameworkName': 'frameworkName',
-                'links': {},
-                'updatedAt': '2015-06-29T15:26:07.650368Z'
-            }
-        }
+        self.empty_draft = {'services': EMPTY_G7_DRAFT}
 
         self.multiquestion_draft = {
             'services': {
@@ -1213,27 +1167,19 @@ class TestEditDraftService(BaseApplicationTest):
 @mock.patch('app.main.views.services.data_api_client')
 class TestShowDraftService(BaseApplicationTest):
 
+    draft_service_data = EMPTY_G7_DRAFT.copy()
+    draft_service_data.update({
+        'priceMin': '12.50',
+        'priceMax': '15',
+        'priceUnit': 'Person',
+        'priceInterval': 'Second',
+    })
+
     draft_service = {
-        'services': {
-            'id': 1,
-            'supplierId': 1234,
-            'supplierName': 'supplierName',
-            'lot': 'scs',
-            'lotSlug': 'scs',
-            'status': 'not-submitted',
-            'frameworkName': 'frameworkName',
-            'frameworkSlug': 'g-cloud-7',
-            'priceMin': '12.50',
-            'priceMax': '15',
-            'priceUnit': 'Person',
-            'priceInterval': 'Second',
-            'links': {},
-            'updatedAt': '2015-06-29T15:26:07.650368Z'
-        },
+        'services': draft_service_data,
         'auditEvents': {
             'createdAt': '2015-06-29T15:26:07.650368Z',
             'userName': 'Supplier User',
-
         },
         'validationErrors': {}
     }
@@ -1341,21 +1287,13 @@ class TestShowDraftService(BaseApplicationTest):
 @mock.patch('app.main.views.services.data_api_client')
 class TestDeleteDraftService(BaseApplicationTest):
 
+    draft_service_data = EMPTY_G7_DRAFT.copy()
+    draft_service_data.update({
+        'serviceName': 'My rubbish draft',
+        'serviceSummary': 'This is the worst service ever',
+    })
     draft_to_delete = {
-        'services': {
-            'id': 1,
-            'supplierId': 1234,
-            'supplierName': "supplierName",
-            'lotSlug': "scs",
-            'lotName': "Specialist Cloud Services",
-            'status': "not-submitted",
-            'frameworkSlug': 'g-cloud-7',
-            'frameworkName': "frameworkName",
-            'links': {},
-            'serviceName': 'My rubbish draft',
-            'serviceSummary': 'This is the worst service ever',
-            'updatedAt': "2015-06-29T15:26:07.650368Z"
-        },
+        'services': draft_service_data,
         'auditEvents': {
             'createdAt': "2015-06-29T15:26:07.650368Z",
             'userName': "Supplier User",
