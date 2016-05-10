@@ -1,6 +1,6 @@
 {% if framework.status == 'open' %}
 <aside role="complementary" class="framework-application-status" aria-label="{{ framework.name }} status">
-  Deadline: <strong>{{ dates.framework_close_date|markdown }}</strong>
+  Deadline: <strong>{{ dates.framework_close_date }}</strong>
 </aside>
 
 {% elif framework.status in ['pending', 'standstill', 'live'] %}
@@ -13,7 +13,7 @@
     {% elif framework.status == 'pending' %}
       {# supplier_is_on_framework should never be true before standstill #}
       <p>You made your supplier declaration and submitted {{ counts.complete }} {{ 'service' if counts.complete == 1 else 'services' }} for consideration.</p>
-      <p>A letter informing you whether your application was successful or not will be posted on your {{ framework.name }} updates page by {{ dates.intention_to_award_date|markdown }}.</p>
+      <p>A letter informing you whether your application was successful or not will be posted on your {{ framework.name }} updates page by {{ dates.intention_to_award_date }}.</p>
 
     {% elif framework.status == 'standstill' %}
       {% if supplier_is_on_framework %}
