@@ -10,7 +10,8 @@ import six
 from dmapiclient import APIError
 from dmapiclient.audit import AuditTypes
 from dmutils.email import send_email, MandrillException
-from dmutils.formats import format_service_price, datetimeformat
+from dmcontent.formats import format_service_price
+from dmutils.formats import datetimeformat
 from dmutils import s3
 from dmutils.documents import (
     RESULT_LETTER_FILENAME, AGREEMENT_FILENAME, SIGNED_AGREEMENT_PREFIX, COUNTERSIGNED_AGREEMENT_FILENAME,
