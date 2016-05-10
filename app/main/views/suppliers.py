@@ -9,7 +9,7 @@ import six
 from dmapiclient import APIError
 from dmapiclient.audit import AuditTypes
 from dmutils.email import send_email, generate_token, MandrillException
-from dmutils.content_loader import ContentNotFoundError
+from dmcontent.content_loader import ContentNotFoundError
 
 from ...main import main, content_loader
 from ... import data_api_client
