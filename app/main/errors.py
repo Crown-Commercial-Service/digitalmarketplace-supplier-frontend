@@ -6,7 +6,7 @@ from flask import redirect, render_template, request
 from app.main import main
 from dmapiclient import APIError
 from dmutils.s3 import S3ResponseError
-from dmutils.content_loader import QuestionNotFoundError
+from dmcontent.content_loader import QuestionNotFoundError
 
 
 @main.app_errorhandler(APIError)
