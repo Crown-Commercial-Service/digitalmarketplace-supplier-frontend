@@ -12,7 +12,7 @@ from lxml import html
 from freezegun import freeze_time
 
 from nose.tools import assert_equal, assert_true, assert_false, assert_in, assert_not_in
-from tests.app.helpers import BaseApplicationTest, EMPTY_G7_DRAFT
+from tests.app.helpers import BaseApplicationTest, empty_g7_draft
 
 
 @pytest.fixture(params=["g-cloud-6", "g-cloud-7"])
@@ -532,7 +532,7 @@ class TestCreateDraftService(BaseApplicationTest):
 
     def _test_post_create_draft_service(self, data, if_error_expected, data_api_client):
         data_api_client.get_framework.return_value = self.framework(status='open')
-        data_api_client.create_new_draft_service.return_value = {"services": EMPTY_G7_DRAFT}
+        data_api_client.create_new_draft_service.return_value = {"services": empty_g7_draft()}
 
         res = self.client.post(
             '/suppliers/frameworks/g-cloud-7/submissions/scs/create',
@@ -587,7 +587,7 @@ class TestCopyDraft(BaseApplicationTest):
         with self.app.test_client():
             self.login()
 
-        self.draft = EMPTY_G7_DRAFT.copy()
+        self.draft = empty_g7_draft()
 
     def test_copy_draft(self, data_api_client):
         data_api_client.get_framework.return_value = self.framework(status='open')
@@ -619,7 +619,7 @@ class TestCompleteDraft(BaseApplicationTest):
         with self.app.test_client():
             self.login()
 
-        self.draft = EMPTY_G7_DRAFT.copy()
+        self.draft = empty_g7_draft()
 
     def test_complete_draft(self, data_api_client):
         data_api_client.get_framework.return_value = self.framework(status='open')
@@ -652,7 +652,7 @@ class TestEditDraftService(BaseApplicationTest):
         with self.app.test_client():
             self.login()
 
-        self.empty_draft = {'services': EMPTY_G7_DRAFT}
+        self.empty_draft = {'services': empty_g7_draft()}
 
         self.multiquestion_draft = {
             'services': {
@@ -1167,7 +1167,7 @@ class TestEditDraftService(BaseApplicationTest):
 @mock.patch('app.main.views.services.data_api_client')
 class TestShowDraftService(BaseApplicationTest):
 
-    draft_service_data = EMPTY_G7_DRAFT.copy()
+    draft_service_data = empty_g7_draft()
     draft_service_data.update({
         'priceMin': '12.50',
         'priceMax': '15',
@@ -1287,7 +1287,7 @@ class TestShowDraftService(BaseApplicationTest):
 @mock.patch('app.main.views.services.data_api_client')
 class TestDeleteDraftService(BaseApplicationTest):
 
-    draft_service_data = EMPTY_G7_DRAFT.copy()
+    draft_service_data = empty_g7_draft()
     draft_service_data.update({
         'serviceName': 'My rubbish draft',
         'serviceSummary': 'This is the worst service ever',

@@ -86,19 +86,21 @@ FULL_G7_SUBMISSION = {
     "SQE2a": ["as a prime contractor, using third parties (subcontractors) to provide some services"]
 }
 
-EMPTY_G7_DRAFT = {
-    'id': 1,
-    'supplierId': 1234,
-    'supplierName': 'supplierName',
-    'frameworkName': 'G-Cloud 7',
-    'frameworkSlug': 'g-cloud-7',
-    'lot': 'scs',
-    'lotSlug': 'scs',
-    'lotName': 'Specialist Cloud Services',
-    'status': 'not-submitted',
-    'links': {},
-    'updatedAt': '2015-06-29T15:26:07.650368Z'
-}
+
+def empty_g7_draft():
+    return {
+        'id': 1,
+        'supplierId': 1234,
+        'supplierName': 'supplierName',
+        'frameworkName': 'G-Cloud 7',
+        'frameworkSlug': 'g-cloud-7',
+        'lot': 'scs',
+        'lotSlug': 'scs',
+        'lotName': 'Specialist Cloud Services',
+        'status': 'not-submitted',
+        'links': {},
+        'updatedAt': '2015-06-29T15:26:07.650368Z'
+    }
 
 
 class BaseApplicationTest(object):
