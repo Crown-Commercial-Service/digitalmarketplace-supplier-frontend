@@ -30,17 +30,16 @@
     <div class="column-two-thirds">
       <form method="POST" action="{{ url_for('.companies_house_number') }}">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-        {% set question_advice =
-            'This is a unique 8-character number given to your organisation by Companies House.
-            \n\n<a href="https://beta.companieshouse.gov.uk/">Visit Companies House to get your number</a>
-            '
-        %}
         {%
           with
             question = "Companies House number",
             name = "companies_house_number",
             value = form.companies_house_number.data,
-            error = form.companies_house_number.errors[0]
+            error = form.companies_house_number.errors[0],
+            question_advice =
+            'This is a unique 8-character number given to your organisation by Companies House.
+            \n\n<a href="https://beta.companieshouse.gov.uk/">Visit Companies House to get your number</a>
+            '
         %}
         {% include "toolkit/forms/textbox.html" %}
         {% endwith %}

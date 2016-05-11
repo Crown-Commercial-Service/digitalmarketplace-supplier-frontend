@@ -29,15 +29,14 @@
     <div class="column-two-thirds">
       <form method="POST" action="{{ url_for('.company_name') }}">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-        {% set question_advice =
-            'This is how buyers will see your company’s name on the Digital&nbsp;Marketplace.'
-        %}
         {%
           with
             question = "Company name",
             name = "company_name",
             value = form.company_name.data,
-            error = form.company_name.errors[0]
+            error = form.company_name.errors[0],
+            question_advice =
+            'This is how buyers will see your company’s name on the Digital&nbsp;Marketplace.'
         %}
         {% include "toolkit/forms/textbox.html" %}
 
