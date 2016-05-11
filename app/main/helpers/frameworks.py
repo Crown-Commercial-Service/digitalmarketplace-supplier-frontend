@@ -127,9 +127,9 @@ def get_frameworks_by_status(frameworks, status, extra_condition=False):
     ]
 
 
-def count_drafts_by_lot(drafts, lot):
+def count_drafts_by_lot(drafts, lotSlug):
     return len([
-        draft for draft in drafts if draft['lot'] == lot
+        draft for draft in drafts if draft['lotSlug'] == lotSlug
     ])
 
 
@@ -254,12 +254,6 @@ def get_status_for_multi_service_lot_and_service_type(
             ),
             'type': u'quiet'
         }
-
-
-def has_one_service_limit(lot_slug, framework_lots):
-    for lot in framework_lots:
-        if lot['slug'] == lot_slug:
-            return lot['oneServiceLimit']
 
 
 def countersigned_framework_agreement_exists_in_bucket(framework_slug, bucket):

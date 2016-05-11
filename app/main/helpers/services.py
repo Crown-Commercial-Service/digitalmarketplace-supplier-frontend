@@ -30,8 +30,8 @@ def get_drafts(apiclient, framework_slug):
 def get_lot_drafts(apiclient, framework_slug, lot_slug):
     drafts, complete_drafts = get_drafts(apiclient, framework_slug)
     return (
-        [draft for draft in drafts if draft['lot'] == lot_slug],
-        [draft for draft in complete_drafts if draft['lot'] == lot_slug]
+        [draft for draft in drafts if draft['lotSlug'] == lot_slug],
+        [draft for draft in complete_drafts if draft['lotSlug'] == lot_slug]
     )
 
 

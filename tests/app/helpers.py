@@ -87,6 +87,22 @@ FULL_G7_SUBMISSION = {
 }
 
 
+def empty_g7_draft():
+    return {
+        'id': 1,
+        'supplierId': 1234,
+        'supplierName': 'supplierName',
+        'frameworkName': 'G-Cloud 7',
+        'frameworkSlug': 'g-cloud-7',
+        'lot': 'scs',
+        'lotSlug': 'scs',
+        'lotName': 'Specialist Cloud Services',
+        'status': 'not-submitted',
+        'links': {},
+        'updatedAt': '2015-06-29T15:26:07.650368Z'
+    }
+
+
 class BaseApplicationTest(object):
     def setup(self):
         self.app = create_app('test')
@@ -177,12 +193,15 @@ class BaseApplicationTest(object):
     def framework(status='open', name='G-Cloud 7', slug='g-cloud-7', clarification_questions_open=True):
         if slug == 'g-cloud-7':
             lots = [
-                {'id': 1, 'slug': 'iaas', 'name': 'Infrastructure as a Service', 'oneServiceLimit': False},
-                {'id': 2, 'slug': 'scs', 'name': 'Specialist Cloud Services', 'oneServiceLimit': False},
+                {'id': 1, 'slug': 'iaas', 'name': 'Infrastructure as a Service', 'oneServiceLimit': False,
+                 'unitSingular': 'service', 'unitPlural': 'service'},
+                {'id': 2, 'slug': 'scs', 'name': 'Specialist Cloud Services', 'oneServiceLimit': False,
+                 'unitSingular': 'service', 'unitPlural': 'service'},
             ]
         elif slug == 'digital-outcomes-and-specialists':
             lots = [
-                {'id': 1, 'slug': 'digital-specialists', 'name': 'Digital specialists', 'oneServiceLimit': True},
+                {'id': 1, 'slug': 'digital-specialists', 'name': 'Digital specialists', 'oneServiceLimit': True,
+                 'unitSingular': 'service', 'unitPlural': 'service'},
             ]
 
         return {

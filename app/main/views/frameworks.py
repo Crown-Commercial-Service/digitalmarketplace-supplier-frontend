@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import itertools
-from datetime import datetime
 
 from dateutil.parser import parse as date_parse
 from flask import render_template, request, abort, flash, redirect, url_for, current_app
@@ -25,7 +24,7 @@ from ..helpers import hash_email, login_required
 from ..helpers.frameworks import (
     get_declaration_status, get_last_modified_from_first_matching_file, register_interest_in_framework,
     get_supplier_on_framework_from_info, get_declaration_status_from_info, get_supplier_framework_info,
-    get_framework, get_framework_and_lot, count_drafts_by_lot, get_statuses_for_lot, has_one_service_limit,
+    get_framework, get_framework_and_lot, count_drafts_by_lot, get_statuses_for_lot,
     countersigned_framework_agreement_exists_in_bucket
 )
 from ..helpers.validation import get_validator
@@ -153,9 +152,8 @@ def framework_submission_lots(framework_slug):
             declaration_status,
             framework['status'],
             lot['name'],
-            'lab' if framework['slug'] == 'digital-outcomes-and-specialists' else 'service',
-            'labs' if framework['slug'] == 'digital-outcomes-and-specialists' else 'services'
-            # TODO: ^ make this dynamic, eg, lab, service, unit
+            lot['unitSingular'],
+            lot['unitPlural']
         ),
     } for lot in lots if framework["status"] == "open" or (lot['draft_count'] + lot['complete_count']) > 0]
 

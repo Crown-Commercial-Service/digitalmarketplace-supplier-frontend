@@ -6,7 +6,7 @@ from ...main import main, content_loader
 from ..helpers import login_required
 from ..helpers.services import is_service_associated_with_supplier, get_signed_document_url, count_unanswered_questions, \
     get_next_section_name
-from ..helpers.frameworks import get_framework_and_lot, get_declaration_status, has_one_service_limit
+from ..helpers.frameworks import get_framework_and_lot, get_declaration_status
 
 from dmapiclient import HTTPError
 from dmutils import s3
@@ -213,7 +213,7 @@ def create_new_draft_service(framework_slug, lot_slug):
         url_for(
             ".view_service_submission",
             framework_slug=framework['slug'],
-            lot_slug=draft_service['lot'],
+            lot_slug=draft_service['lotSlug'],
             service_id=draft_service['id'],
         )
     )
@@ -224,6 +224,9 @@ def create_new_draft_service(framework_slug, lot_slug):
 def copy_draft_service(framework_slug, lot_slug, service_id):
     framework, lot = get_framework_and_lot(data_api_client, framework_slug, lot_slug, allowed_statuses=['open'])
     draft = data_api_client.get_draft_service(service_id).get('services')
+
+    if draft['lotSlug'] != lot_slug or draft['frameworkSlug'] != framework_slug:
+        abort(404)
 
     if not is_service_associated_with_supplier(draft):
         abort(404)
@@ -239,7 +242,7 @@ def copy_draft_service(framework_slug, lot_slug, service_id):
 
     return redirect(url_for(".edit_service_submission",
                             framework_slug=framework['slug'],
-                            lot_slug=draft['lot'],
+                            lot_slug=draft['lotSlug'],
                             service_id=draft_copy['id'],
                             section_id=content.get_next_editable_section_id(),
                             return_to_summary=1
@@ -251,6 +254,9 @@ def copy_draft_service(framework_slug, lot_slug, service_id):
 def complete_draft_service(framework_slug, lot_slug, service_id):
     framework, lot = get_framework_and_lot(data_api_client, framework_slug, lot_slug, allowed_statuses=['open'])
     draft = data_api_client.get_draft_service(service_id).get('services')
+
+    if draft['lotSlug'] != lot_slug or draft['frameworkSlug'] != framework_slug:
+        abort(404)
 
     if not is_service_associated_with_supplier(draft):
         abort(404)
@@ -284,6 +290,9 @@ def delete_draft_service(framework_slug, lot_slug, service_id):
     framework, lot = get_framework_and_lot(data_api_client, framework_slug, lot_slug, allowed_statuses=['open'])
     draft = data_api_client.get_draft_service(service_id).get('services')
 
+    if draft['lotSlug'] != lot_slug or draft['frameworkSlug'] != framework_slug:
+        abort(404)
+
     if not is_service_associated_with_supplier(draft):
         abort(404)
 
@@ -303,7 +312,7 @@ def delete_draft_service(framework_slug, lot_slug, service_id):
     else:
         return redirect(url_for(".view_service_submission",
                                 framework_slug=framework['slug'],
-                                lot_slug=draft['lot'],
+                                lot_slug=draft['lotSlug'],
                                 service_id=service_id,
                                 delete_requested=True))
 
@@ -334,6 +343,9 @@ def view_service_submission(framework_slug, lot_slug, service_id):
     except HTTPError as e:
         abort(e.status_code)
 
+    if draft['lotSlug'] != lot_slug or draft['frameworkSlug'] != framework_slug:
+        abort(404)
+
     if not is_service_associated_with_supplier(draft):
         abort(404)
 
@@ -347,8 +359,8 @@ def view_service_submission(framework_slug, lot_slug, service_id):
     return render_template(
         "services/service_submission.html",
         framework=framework,
+        lot=lot,
         confirm_remove=request.args.get("confirm_remove", None),
-        one_service_limit=has_one_service_limit(lot_slug, framework['lots']),
         service_id=service_id,
         service_data=draft,
         last_edit=last_edit,
@@ -374,6 +386,9 @@ def edit_service_submission(framework_slug, lot_slug, service_id, section_id, qu
     except HTTPError as e:
         abort(e.status_code)
 
+    if draft['lotSlug'] != lot_slug or draft['frameworkSlug'] != framework_slug:
+        abort(404)
+
     if not is_service_associated_with_supplier(draft):
         abort(404)
 
@@ -395,7 +410,7 @@ def edit_service_submission(framework_slug, lot_slug, service_id, section_id, qu
         service_data=draft,
         service_id=service_id,
         return_to_summary=bool(request.args.get('return_to_summary')),
-        one_service_limit=has_one_service_limit(lot_slug, framework['lots'])
+        one_service_limit=lot['oneServiceLimit']
     )
 
 
@@ -410,6 +425,9 @@ def update_section_submission(framework_slug, lot_slug, service_id, section_id, 
         draft = data_api_client.get_draft_service(service_id)['services']
     except HTTPError as e:
         abort(e.status_code)
+
+    if draft['lotSlug'] != lot_slug or draft['frameworkSlug'] != framework_slug:
+        abort(404)
 
     if not is_service_associated_with_supplier(draft):
         abort(404)
@@ -460,7 +478,7 @@ def update_section_submission(framework_slug, lot_slug, service_id, section_id, 
             next_section_name=get_next_section_name(content, section.id),
             service_data=update_data,
             service_id=service_id,
-            one_service_limit=has_one_service_limit(lot_slug, framework['lots']),
+            one_service_limit=lot['oneServiceLimit'],
             return_to_summary=bool(request.args.get('return_to_summary')),
             errors=errors
         )
@@ -471,13 +489,13 @@ def update_section_submission(framework_slug, lot_slug, service_id, section_id, 
     if next_section and not return_to_summary and request.form.get('continue_to_next_section'):
         return redirect(url_for(".edit_service_submission",
                                 framework_slug=framework['slug'],
-                                lot_slug=draft['lot'],
+                                lot_slug=draft['lotSlug'],
                                 service_id=service_id,
                                 section_id=next_section))
     else:
         return redirect(url_for(".view_service_submission",
                                 framework_slug=framework['slug'],
-                                lot_slug=draft['lot'],
+                                lot_slug=draft['lotSlug'],
                                 service_id=service_id,
                                 _anchor=section_id))
 
