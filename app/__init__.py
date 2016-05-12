@@ -71,11 +71,13 @@ def create_app(config_name):
         session.permanent = True
         session.modified = True
 
+    G_CLOUD_REGEX = re.compile(r"(G-Cloud )(\d)")
+
     @application.after_request
     def dont_break_gcloud(response):
         if "text/html" in response.content_type:
-            page = response.get_data()
-            page = re.sub("(G-Cloud )(\d)", r'G&#8209;Cloud&nbsp;\2', page)
+            page = response.get_data(as_text=True)
+            page = G_CLOUD_REGEX.sub(r'G&#8209;Cloud&nbsp;\2', page)
             response.set_data(page)
         return response
 
