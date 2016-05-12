@@ -60,9 +60,10 @@ class TestFrameworksDashboard(BaseApplicationTest):
         res = self.client.get("/suppliers/frameworks/g-cloud-7")
 
         assert_equal(res.status_code, 200)
-        doc = html.fromstring(res.get_data(as_text=True))
-        assert_equal(
-            len(doc.xpath('//h1[contains(text(), "Your G-Cloud 7 application")]')), 1)
+        self.assert_in_strip_whitespace(
+            u"<h1>Your G&#8209;Cloud&nbsp;7 application</h1>",
+            res.get_data(as_text=True)
+        )
 
     def test_framework_dashboard_shows_for_live_if_declaration_exists(self, data_api_client, s3):
         with self.app.test_client():
@@ -74,8 +75,10 @@ class TestFrameworksDashboard(BaseApplicationTest):
 
         assert_equal(res.status_code, 200)
         doc = html.fromstring(res.get_data(as_text=True))
-        assert_equal(
-            len(doc.xpath('//h1[contains(text(), "Your G-Cloud 7 documents")]')), 1)
+        self.assert_in_strip_whitespace(
+            u"<h1>Your G&#8209;Cloud&nbsp;7 documents</h1>",
+            res.get_data(as_text=True)
+        )
 
     def test_does_not_show_for_live_if_no_declaration(self, data_api_client, s3):
         with self.app.test_client():
@@ -175,7 +178,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
 
             heading = doc.xpath('//div[@class="summary-item-lede"]//h2[@class="summary-item-heading"]')
             assert_true(len(heading) > 0)
-            assert_in(u"G-Cloud 7 is closed for applications",
+            assert_in(u"G\u2011Cloud\xa07 is closed for applications",
                       heading[0].xpath('text()')[0])
             assert_in(u"You didn't submit an application.",
                       heading[0].xpath('../p[1]/text()')[0])
@@ -198,12 +201,12 @@ class TestFrameworksDashboard(BaseApplicationTest):
             doc = html.fromstring(res.get_data(as_text=True))
             heading = doc.xpath('//div[@class="summary-item-lede"]//h2[@class="summary-item-heading"]')
             assert_true(len(heading) > 0)
-            assert_in(u"G-Cloud 7 is closed for applications",
+            assert_in(u"G\u2011Cloud\xa07 is closed for applications",
                       heading[0].xpath('text()')[0])
             lede = doc.xpath('//div[@class="summary-item-lede"]')
             assert_in(u"You made your supplier declaration and submitted 1 service for consideration.",
                       lede[0].xpath('./p[1]/text()')[0])
-            assert_in(u"A letter informing you whether your application was successful or not will be posted on your G-Cloud 7 updates page by",  # noqa
+            assert_in(u"A letter informing you whether your application was successful or not will be posted on your G\u2011Cloud\xa07 updates page by",  # noqa
                       lede[0].xpath('./p[2]/text()')[0])  # noqa
 
     def test_declaration_status_when_complete(self, data_api_client, s3):
@@ -446,16 +449,17 @@ class TestFrameworksDashboard(BaseApplicationTest):
         data = res.get_data(as_text=True)
 
         for success_message in [
-            u'Your application was successful. You\'ll be able to sell services when the G-Cloud 7 framework is live',
+            u'Your application was successful. '
+            u'You\'ll be able to sell services when the G&#8209;Cloud&nbsp;7 framework is live.',
             u'Download your application award letter (.pdf)',
-            u'This letter is a record of your successful G-Cloud 7 application.'
+            u'This letter is a record of your successful G&#8209;Cloud&nbsp;7 application.'
         ]:
             assert_in(success_message, data)
 
         for equivocal_message in [
             u'You made your supplier declaration and submitted 1 service.',
             u'Download your application result letter (.pdf)',
-            u'This letter informs you if your G-Cloud 7 application has been successful.'
+            u'This letter informs you if your G&#8209;Cloud&nbsp;7 application has been successful.'
         ]:
             assert_not_in(equivocal_message, data)
 
@@ -495,16 +499,17 @@ class TestFrameworksDashboard(BaseApplicationTest):
         data = res.get_data(as_text=True)
 
         for success_message in [
-            u'Your application was successful. You\'ll be able to sell services when the G-Cloud 7 framework is live',
+            u'Your application was successful. '
+            u'You\'ll be able to sell services when the G&#8209;Cloud&nbsp;7 framework is live',
             u'Download your application award letter (.pdf)',
-            u'This letter is a record of your successful G-Cloud 7 application.'
+            u'This letter is a record of your successful G&#8209;Cloud&nbsp;7 application.'
         ]:
             assert_not_in(success_message, data)
 
         for equivocal_message in [
             u'You made your supplier declaration and submitted 1 service.',
             u'Download your application result letter (.pdf)',
-            u'This letter informs you if your G-Cloud 7 application has been successful.'
+            u'This letter informs you if your G&#8209;Cloud&nbsp;7 application has been successful.'
         ]:
             assert_in(equivocal_message, data)
 
@@ -1035,7 +1040,7 @@ class TestFrameworkUpdatesPage(BaseApplicationTest):
     def _assert_page_title_and_table_headings(self, doc, tables_exist=True):
 
         assert_true(
-            self.strip_all_whitespace('G-Cloud 7 updates')
+            self.strip_all_whitespace(u'G\u2011Cloud\xa07 updates')
             in self.strip_all_whitespace(doc.xpath('//h1')[0].text)
         )
 
@@ -1230,7 +1235,7 @@ class TestFrameworkUpdatesPage(BaseApplicationTest):
             data = response.get_data(as_text=True)
 
             assert response.status_code == 200
-            assert_in(u'Ask a question about your G-Cloud 7 application', data)
+            assert_in(u'Ask a question about your G&#8209;Cloud&nbsp;7 application', data)
 
     def test_no_question_box_shown_if_countersigned_agreement_is_returned(self, s3, data_api_client):
         data_api_client.get_framework.return_value = self.framework('live', clarification_questions_open=False)
@@ -1243,7 +1248,7 @@ class TestFrameworkUpdatesPage(BaseApplicationTest):
             data = response.get_data(as_text=True)
 
             assert response.status_code == 200
-            assert_not_in(u'Ask a question about your G-Cloud 7 application', data)
+            assert_not_in(u'Ask a question about your G&#8209;Cloud&nbsp;7 application', data)
 
 
 class TestSendClarificationQuestionEmail(BaseApplicationTest):
@@ -1488,7 +1493,7 @@ class TestG7ServicesList(BaseApplicationTest):
         assert_equal(response.status_code, 200)
         heading = doc.xpath('//div[@class="summary-item-lede"]//h2[@class="summary-item-heading"]')
         assert_true(len(heading) > 0)
-        assert_in(u"G-Cloud 7 is closed for applications",
+        assert_in(u"G\u2011Cloud\xa07 is closed for applications",
                   heading[0].xpath('text()')[0])
         assert_in(u"You made your supplier declaration and submitted 1 complete service.",
                   heading[0].xpath('../p[1]/text()')[0])

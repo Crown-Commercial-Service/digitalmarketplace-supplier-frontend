@@ -213,7 +213,7 @@ class TestSuppliersDashboard(BaseApplicationTest):
             assert_equal(res.status_code, 200)
 
             assert_in(
-                'Apply to G-Cloud 7',
+                u'Apply to G\u2011Cloud\xa07',
                 doc.xpath('//h2[@class="summary-item-heading"]/text()')[0]
             )
 
@@ -241,7 +241,7 @@ class TestSuppliersDashboard(BaseApplicationTest):
 
             assert_equal(res.status_code, 200)
             assert_equal(doc.xpath('//a[@href="/suppliers/frameworks/g-cloud-7"]/span/text()')[0],
-                         "Continue your G-Cloud 7 application")
+                         u"Continue your G\u2011Cloud\xa07 application")
 
     @mock.patch("app.main.views.suppliers.data_api_client")
     @mock.patch("app.main.views.suppliers.get_current_suppliers_users")
@@ -267,7 +267,7 @@ class TestSuppliersDashboard(BaseApplicationTest):
 
             message = doc.xpath('//aside[@class="temporary-message"]')
             assert_true(len(message) > 0)
-            assert_in(u"G-Cloud 7 is closed for applications",
+            assert_in(u"G\u2011Cloud\xa07 is closed for applications",
                       message[0].xpath('h2/text()')[0])
             assert_true(len(message[0].xpath('p[1]/a[@href="https://digitalmarketplace.blog.gov.uk/"]')) > 0)
 
@@ -304,7 +304,7 @@ class TestSuppliersDashboard(BaseApplicationTest):
 
             message = doc.xpath('//aside[@class="temporary-message"]')
             assert_true(len(message) > 0)
-            assert_in(u"G-Cloud 7 is closed for applications",
+            assert_in(u"G\u2011Cloud\xa07 is closed for applications",
                       message[0].xpath('h2/text()')[0])
             assert_in(u"You didn’t submit an application",
                       message[0].xpath('p[1]/text()')[0])
@@ -342,7 +342,7 @@ class TestSuppliersDashboard(BaseApplicationTest):
             doc = html.fromstring(res.get_data(as_text=True))
             headings = doc.xpath('//h2[@class="summary-item-heading"]')
             assert_true(len(headings) > 0)
-            assert_in(u"G-Cloud 7 is closed for applications",
+            assert_in(u"G\u2011Cloud\xa07 is closed for applications",
                       headings[0].xpath('text()')[0])
             assert_in(u"You submitted 99 services for consideration",
                       headings[0].xpath('../p[1]/text()')[0])
@@ -397,7 +397,7 @@ class TestSuppliersDashboard(BaseApplicationTest):
                       first_table[0].xpath('caption/text()')[0])
 
             first_row = "".join(first_table[0].xpath('tbody/descendant::*/text()'))
-            assert_in(u"G-Cloud 7",
+            assert_in(u"G\u2011Cloud\xa07",
                       first_row)
             assert_in(u"Live from 23 November 2015",
                       first_row)
@@ -452,7 +452,7 @@ class TestSuppliersDashboard(BaseApplicationTest):
                       first_table[0].xpath('caption/text()')[0])
 
             first_row = "".join(first_table[0].xpath('tbody/descendant::*/text()'))
-            assert_in(u"G-Cloud 7",
+            assert_in(u"G\u2011Cloud\xa07",
                       first_row)
             assert_not_in(
                 u"Live from",
@@ -503,7 +503,7 @@ class TestSuppliersDashboard(BaseApplicationTest):
                       first_table[0].xpath('caption/text()')[0])
 
             first_row = "".join(first_table[0].xpath('tbody/descendant::*/text()'))
-            assert_in(u"G-Cloud 7",
+            assert_in(u"G\u2011Cloud\xa07",
                       first_row)
             assert_in(u"Live from 23 November 2015",
                       first_row)
@@ -585,7 +585,7 @@ class TestSuppliersDashboard(BaseApplicationTest):
                       first_table[0].xpath('caption/text()')[0])
 
             first_row = "".join(first_table[0].xpath('tbody/descendant::*/text()'))
-            assert_in(u"G-Cloud 7",
+            assert_in(u"G\u2011Cloud\xa07",
                       first_row)
             assert_not_in(u"Live from 23 November 2015",
                           first_row)
@@ -641,7 +641,7 @@ class TestSuppliersDashboard(BaseApplicationTest):
                       first_table[0].xpath('caption/text()')[0])
 
             first_row = "".join(first_table[0].xpath('tbody/descendant::*/text()'))
-            assert_in(u"G-Cloud 7",
+            assert_in(u"G\u2011Cloud\xa07",
                       first_row)
             assert_in(u"Live from 23 November 2015",
                       first_row)

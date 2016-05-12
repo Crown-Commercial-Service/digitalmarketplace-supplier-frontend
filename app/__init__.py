@@ -71,6 +71,14 @@ def create_app(config_name):
         session.permanent = True
         session.modified = True
 
+    @application.after_request
+    def dont_break_gcloud(response):
+        if "text/html" in response.content_type:
+            page = response.get_data()
+            page = re.sub("(G-Cloud )(\d)", r'G&#8209;Cloud&nbsp;\2', page)
+            response.set_data(page)
+        return response
+
     application.add_template_filter(question_references)
     application.add_template_filter(parse_document_upload_time)
 
