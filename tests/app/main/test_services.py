@@ -67,7 +67,7 @@ class TestListServices(BaseApplicationTest):
                 supplier_id=1234)
             assert_true("Service name 123" in res.get_data(as_text=True))
             assert_true("Software as a Service" in res.get_data(as_text=True))
-            assert_true("G-Cloud 1" in res.get_data(as_text=True))
+            assert_true("G&#8209;Cloud&nbsp;1" in res.get_data(as_text=True))
 
     @mock.patch('app.data_api_client')
     def test_should_not_be_able_to_see_page_if_made_inactive(self, services_data_api_client):
@@ -1280,7 +1280,7 @@ class TestShowDraftService(BaseApplicationTest):
         assert_true(len(message) > 0)
         assert_in(u"This service was submitted",
                   message[0].xpath('h2[@class="temporary-message-heading"]/text()')[0])
-        assert_in(u"If your application is successful, it will be available on the Digital Marketplace when G-Cloud 7 goes live.",  # noqa
+        assert_in(u"If your application is successful, it will be available on the Digital Marketplace when G\u2011Cloud\xa07 goes live.",  # noqa
                   message[0].xpath('p[@class="temporary-message-message"]/text()')[0])
 
 
