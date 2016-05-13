@@ -20,6 +20,7 @@ def get_validator(framework, content, answers):
 
 class DeclarationValidator(object):
     email_validation_fields = []
+    number_string_fields = []
     character_limit = None
     optional_fields = set([])
 
@@ -103,6 +104,13 @@ class DeclarationValidator(object):
         if self.email_validation_fields is not None and len(self.email_validation_fields) > 0:
             for field in self.email_validation_fields:
                 if self.answers.get(field) is None or not re.match(EMAIL_REGEX, self.answers.get(field, '')):
+                    errors_map[field] = 'invalid_format'
+
+        if self.number_string_fields is not None and len(self.number_string_fields) > 0:
+            for field, length in self.number_string_fields:
+                if self.answers.get(field) is None or not re.match(
+                        '^\d{{{0}}}$'.format(length), self.answers.get(field, '')
+                ):
                     errors_map[field] = 'invalid_format'
         return errors_map
 
@@ -218,7 +226,7 @@ class DOSValidator(DeclarationValidator):
 
 
 class G8Validator(DOSValidator):
-    pass
+    number_string_fields = [('dunsNumber', 9)]
 
 
 VALIDATORS = {
