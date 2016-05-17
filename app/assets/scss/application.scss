@@ -11,7 +11,13 @@ $path: "/suppliers/static/images/";
 @import "forms/word-counter";
 @import "forms/list-entry";
 
-@import "_reset.scss";
+/* Classes shared between multiple apps */
+@import "shared_scss/_reset.scss";
+@import "shared_scss/_lists.scss";
+@import "shared_scss/_dmspeak.scss";
+
+/* Blocks shared between multiple selectors */
+@import "shared_placeholders/_temporary-messages.scss";
 
 #wrapper, .wrapper {
   @extend %site-width-container;
@@ -47,12 +53,6 @@ $path: "/suppliers/static/images/";
 @import "toolkit/forms/_validation.scss";
 @import "toolkit/search/_search-result.scss";
 
-/* Blocks shared between multiple selectors */
-@import "shared_placeholders/_temporary-messages.scss";
-
-/* Classes shared between multiple apps */
-@import "shared_scss/_lists.scss";
-@import "shared_scss/_dmspeak.scss";
 
 // Suppliers app styles
 @import "_text.scss";
