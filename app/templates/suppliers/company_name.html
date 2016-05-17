@@ -27,9 +27,6 @@
   {% endwith %}
   <div class="grid-row">
     <div class="column-two-thirds">
-      <p class="hint">
-        This is how buyers will see your company’s name on the Digital&nbsp;Marketplace.
-      </p>
       <form method="POST" action="{{ url_for('.company_name') }}">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
         {%
@@ -37,8 +34,10 @@
             question = "Company name",
             name = "company_name",
             value = form.company_name.data,
-            error = form.company_name.errors[0]
-            %}
+            error = form.company_name.errors[0],
+            question_advice =
+            'This is how buyers will see your company’s name on the Digital&nbsp;Marketplace.'
+        %}
         {% include "toolkit/forms/textbox.html" %}
 
         {% endwith %}
