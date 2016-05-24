@@ -71,7 +71,6 @@ def send_brief_clarification_question(data_api_client, brief, clarification_ques
     supplier_email_body = render_template(
         "emails/brief_clarification_question_confirmation.html",
         brief_id=brief['id'],
-        user_name=current_user.name,
         brief_name=brief['title'],
         framework_slug=brief['frameworkSlug'],
         message=clarification_question
