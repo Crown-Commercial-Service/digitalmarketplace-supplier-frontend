@@ -169,6 +169,11 @@ describe("GOVUK.Analytics", function () {
       var $flashMessage;
 
       it("Should not send a pageview if the flash message is absent", function () {
+        spyOn(GOVUK.GDM.analytics.location, "pathname")
+          .and
+          .callFake(function () {
+            return "/suppliers/opportunities/1/ask-a-question";
+        });
         window.GOVUK.GDM.analytics.virtualPageViews();
         expect(window.ga.calls.any()).toEqual(false);
       });
@@ -185,13 +190,13 @@ describe("GOVUK.Analytics", function () {
           .and
           .callFake(function () {
             return "/suppliers/opportunities/1/ask-a-question";
-          });
+        });
 
         spyOn(GOVUK.GDM.analytics.location, "href")
           .and
           .callFake(function () {
             return "https://www.digitalmarketplace.service.gov.uk/suppliers/opportunities/1/ask-a-question";
-          });
+        });
         window.GOVUK.GDM.analytics.virtualPageViews();
 
         $flashMessage.remove();
