@@ -11,6 +11,20 @@
         universalId: universalId,
         cookieDomain: cookieDomain
       });
+    },
+    'location': {
+      'href': function () {
+        return root.location.search;
+      },
+      'pathname': function () {
+        return root.location.pathname;
+      },
+      'hostname': function () {
+        return root.location.hostname;
+      },
+      'search': function () {
+        return root.location.search;
+      }
     }
   };
 })(window);

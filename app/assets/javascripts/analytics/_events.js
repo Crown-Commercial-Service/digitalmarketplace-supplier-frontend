@@ -25,7 +25,7 @@
 
   ScrollTracker.prototype.getConfigForCurrentPath = function getConfigForCurrentPath(sitewideConfig) {
     for (var path in sitewideConfig) {
-      if ( root.location.pathname == path ) return sitewideConfig[path];
+      if ( GOVUK.GDM.analytics.location.pathname() == path ) return sitewideConfig[path];
     }
   };
 
@@ -109,7 +109,7 @@
           category = 'internal-link',
           action = $target.text(),
           fileTypesRegExp = /\.(pdf|pda|odt|ods|odp|zip)$/,
-          currentHost = root.location.hostname,
+          currentHost = GOVUK.GDM.analytics.location.hostname(),
           currentHostRegExp = (currentHost !== '') ? new RegExp(currentHost) : /^$/g; // this ccode can run in an environment without a host, ie. a html file
 
       /*
@@ -132,7 +132,7 @@
     },
     'registerSubmitButtonClick': function () {
 
-      var currentURL = root.location.href;
+      var currentURL = GOVUK.GDM.analytics.location.href();
 
       if (
         currentURL.match(/^(https|http){1}/) &&
