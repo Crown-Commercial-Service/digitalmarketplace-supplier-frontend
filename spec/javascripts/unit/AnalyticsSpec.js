@@ -138,16 +138,16 @@ describe("GOVUK.Analytics", function () {
   });
 
   describe("Virtual Page Views", function () {
-    var $analyticsString;
     beforeEach(function () {
        window.ga.calls.reset();
     });
 
-    afterEach(function () {
-      $analyticsString.remove();
-
-    });
     describe("When called", function () {
+      var $analyticsString;
+
+      afterEach(function () {
+        $analyticsString.remove();
+      });
 
       it("Should not call google analytics without a url", function () {
         $analyticsString = $("<div data-analytics='trackPageView'/>");
@@ -162,6 +162,40 @@ describe("GOVUK.Analytics", function () {
         window.GOVUK.GDM.analytics.virtualPageViews();
         expect(window.ga.calls.first().args).toEqual([ 'send', 'pageview', { page: 'http://example.com' } ]);
         expect(window.ga.calls.count()).toEqual(1);
+      });
+    });
+
+    describe("When the clarification question for an opportunity page is loaded", function () {
+      var $flashMessage;
+
+      it("Should not send a pageview if the flash message is absent", function () {
+        window.GOVUK.GDM.analytics.virtualPageViews();
+        expect(window.ga.calls.any()).toEqual(false);
+      });
+
+      it("Should send a pageview with a query string if the flash message is absent", function () {
+        $flashMessage = $('<div class="banner-success-without-action">' +
+                            '<p class="banner-message">' +
+                              'Your question has been sent. The buyer will post your question and their answer on the ‘Contracts finder’ page.' +
+                            '</p>' +
+                          '</div>');
+        $(document.body).append($flashMessage);
+
+        spyOn(GOVUK.GDM.analytics.location, "pathname")
+          .and
+          .callFake(function () {
+            return "/suppliers/opportunities/1/ask-a-question";
+          });
+
+        spyOn(GOVUK.GDM.analytics.location, "href")
+          .and
+          .callFake(function () {
+            return "https://www.digitalmarketplace.service.gov.uk/suppliers/opportunities/1/ask-a-question";
+          });
+        window.GOVUK.GDM.analytics.virtualPageViews();
+
+        $flashMessage.remove();
+        expect(window.ga.calls.first().args).toEqual([ 'send', 'pageview', { page: "https://www.digitalmarketplace.service.gov.uk/suppliers/opportunities/1/ask-a-question?submitted=true" } ]);
       });
     });
 
