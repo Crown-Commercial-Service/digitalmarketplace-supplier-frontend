@@ -436,7 +436,7 @@ class TestRespondToBrief(BaseApplicationTest):
             data=brief_form_submission
         )
         assert res.status_code == 302
-        assert res.location == "http://localhost/suppliers"
+        assert res.location == "http://localhost/suppliers?applied_for_brief=1234"
         self.assert_flashes("Your response to ‘I need a thing to do a thing’ has been submitted.")
         data_api_client.create_brief_response.assert_called_once_with(
             1234, 1234, processed_brief_submission, 'email@email.com')
