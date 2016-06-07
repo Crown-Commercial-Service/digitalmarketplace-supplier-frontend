@@ -151,6 +151,7 @@ def submit_brief_response(brief_id):
 
     if all(brief_response['essentialRequirements']):
         flash('Your response to ‘{}’ has been submitted.'.format(brief['title']))
+        # applied_for_brief parameter is used to track brief applications by analytics
         return redirect(url_for(".dashboard", applied_for_brief=brief['id']))
     else:
         return redirect(url_for(".view_response_result", brief_id=brief_id))
