@@ -76,6 +76,10 @@
   }
 
   .footer-meta {
+    padding: 0 $gutter-half;
+    @include media(tablet) {
+      padding: 0;
+    }
 
     .terms-and-conditions {
       display: block;
