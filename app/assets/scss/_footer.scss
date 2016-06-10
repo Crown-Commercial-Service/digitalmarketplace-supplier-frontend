@@ -5,22 +5,6 @@
 
 #footer {
 
-    h2 {
-
-      @include bold-19;
-      padding: 10px 0 0;
-      margin: 0;
-      border-bottom: none;
-
-      @include media(tablet) {
-
-        padding: 0 0 20px;
-        border-bottom: 1px solid #a1acb2;
-
-      }
-
-    }
-
   .footer-categories {
 
     padding: 0 $gutter-half $gutter;
@@ -36,6 +20,22 @@
       @include media(tablet) {
         padding: 0 $gutter-half $gutter * 2;
       }
+    }
+
+    h2 {
+
+      @include bold-19;
+      padding: 10px 0 0;
+      margin: 0;
+      border-bottom: none;
+
+      @include media(tablet) {
+
+        padding: 0 0 20px;
+        border-bottom: 1px solid #a1acb2;
+
+      }
+
     }
 
     ul {
