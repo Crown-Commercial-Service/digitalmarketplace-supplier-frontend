@@ -5,20 +5,18 @@
 
 #footer {
 
-  .footer-categories {
+  .footer-categories, .footer-meta {
+    @extend %grid-row;
+  }
 
-    padding: 0 $gutter-half $gutter;
-    overflow: hidden;
+  .footer-categories {
 
     .footer-about,
     .footer-buyers,
     .footer-suppliers {
-
       @include grid-column( 1/3 );
-      padding: 0;
-
       @include media(tablet) {
-        padding: 0 $gutter-half $gutter * 2;
+        padding-bottom: $gutter * 2;
       }
     }
 
