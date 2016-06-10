@@ -80,6 +80,9 @@
     @include media(tablet) {
       padding: 0;
     }
+    /* Temporary fix:
+       chrome is breaking this layout when font-size-adjust is set */
+    font-size-adjust: none;
 
     .terms-and-conditions {
       display: block;
