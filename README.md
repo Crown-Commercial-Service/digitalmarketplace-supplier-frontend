@@ -20,6 +20,8 @@ Install dependencies, build assets and run the app
 make run_all
 ```
 
+Debian (jessie) users will need `libxslt1-dev` and `libxml2-dev` installed for `requirements_for_test`.
+
 ## Full setup
 
 Install [Virtualenv](https://virtualenv.pypa.io/en/latest/)
