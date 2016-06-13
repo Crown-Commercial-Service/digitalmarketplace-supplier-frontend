@@ -181,7 +181,7 @@ describe("GOVUK.Analytics", function () {
       it("Should send a pageview with a query string if the flash message is absent", function () {
         $flashMessage = $('<div class="banner-success-without-action">' +
                             '<p class="banner-message">' +
-                              'Your question has been sent. The buyer will post your question and their answer on the ‘Contracts finder’ page.' +
+                              '\n    Your question has been sent. The buyer will post your question and their answer on the ‘Dissolve a company’ page.\n' +
                             '</p>' +
                           '</div>');
         $(document.body).append($flashMessage);
