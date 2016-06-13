@@ -4,40 +4,24 @@
 
 {% block main_content %}
 
-{% if clarification_question %}
+{% with inhibited_action="ask a question about" if clarification_question else "apply for" %}
 <div class="grid-row">
   <div class="column-two-thirds">
     <header class="page-heading-smaller">
-      <h1>You can’t ask a question about this opportunity</h1>
+      <h1>You can’t {{ inhibited_action }} this opportunity</h1>
     </header>
-    {% if on_framework %}
-      <p>
-        You can’t ask a question about this opportunity because you don’t provide
-        {{ "this digital specialist role" if lot == 'digital-specialists' else "a service in this category" }}
-        at this location.
-      </p>
-    {% else %}
-      <p>You can’t ask a question about this opportunity because you’re not a {{ framework_name }} supplier.</p>
-    {% endif %}
+    <p>
+      You can’t {{ inhibited_action }} this opportunity because
+      {% if has_framework_service %}
+        you didn’t say you could provide
+        {{ "this specialist role" if has_framework_lot_service else "services in this category" }}
+        when you applied to the Digital Outcomes and Specialists framework.
+      {% else %}
+        you’re not a {{ framework_name }} supplier.
+      {% endif %}
+    </p>
   </div>
 </div>
-{% else %}
-<div class="grid-row">
-  <div class="column-two-thirds">
-    <header class="page-heading-smaller">
-      <h1>You can’t apply for this opportunity</h1>
-    </header>
-    {% if on_framework %}
-      <p>
-        You can’t apply for this opportunity because you don’t provide
-        {{ "this digital specialist role" if lot == 'digital-specialists' else "a service in this category" }}
-        at this location.
-      </p>
-    {% else %}
-      <p>You can’t apply for this opportunity because you’re not a {{ framework_name }} supplier.</p>
-    {% endif %}
-  </div>
-</div>
-{% endif %}
+{% endwith %}
 
 {% endblock %}
