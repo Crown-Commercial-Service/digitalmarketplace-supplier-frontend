@@ -178,7 +178,7 @@ describe("GOVUK.Analytics", function () {
         expect(window.ga.calls.any()).toEqual(false);
       });
 
-      it("Should send a pageview with a query string if the flash message is absent", function () {
+      it("Should send a pageview with a query string if the flash message is present", function () {
         $flashMessage = $('<div class="banner-success-without-action">' +
                             '<p class="banner-message">' +
                               '\n    Your question has been sent. The buyer will post your question and their answer on the ‘Dissolve a company’ page.\n' +
