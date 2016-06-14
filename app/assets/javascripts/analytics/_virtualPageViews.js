@@ -10,13 +10,13 @@
   };
 
   GOVUK.GDM.analytics.virtualPageViews = function() {
-    var $flashMessage;
+    var $messageSent;
 
     $('[data-analytics=trackPageView]').each(sendVirtualPageView);
     if (GOVUK.GDM.analytics.location.pathname().match(/^\/suppliers\/opportunities\/\d+\/ask-a-question/) !== null) {
-      $flashMessage = $('.banner-success-without-action .banner-message');
+      $messageSent = $('#content form').attr('data-message-sent') === 'true';
 
-      if ($flashMessage.text().replace(/^\s+|\s+$/g, '').match(/^Your question has been sent/) !== null) {
+      if ($messageSent) {
         GOVUK.analytics.trackPageview(GOVUK.GDM.analytics.location.href() + '?submitted=true');
       }
     }

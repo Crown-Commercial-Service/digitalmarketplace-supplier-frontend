@@ -1,6 +1,8 @@
 {% extends "_base_page.html" %}
 {% import "toolkit/summary-table.html" as summary %}
 
+{% set message_sent = 'message_sent' in get_flashed_messages() %}
+
 {% block page_title %}Ask a question about {{ brief.title }} – Digital Marketplace{% endblock %}
 
 {% block breadcrumb %}
@@ -63,7 +65,8 @@
         {% include 'toolkit/page-heading.html' %}
       {% endwith %}
 
-      <form method="post">
+      <!-- data-message-sent is used for analytics tracking -->
+      <form method="post" data-message-sent="{{ message_sent|lower }}">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
         {%
           with
