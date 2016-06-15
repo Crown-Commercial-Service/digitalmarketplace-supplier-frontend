@@ -76,9 +76,11 @@
   }
 
   .footer-meta {
-    padding: 0 $gutter-half;
+    padding-left: $gutter-half;
+    padding-right: $gutter-half;
     @include media(tablet) {
-      padding: 0;
+      padding-left: 0;
+      padding-right: 0;
     }
     /* Temporary fix:
        chrome is breaking this layout when font-size-adjust is set */
