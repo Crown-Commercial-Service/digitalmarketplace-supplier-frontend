@@ -166,9 +166,23 @@ describe("GOVUK.Analytics", function () {
     });
 
     describe("When the clarification question for an opportunity page is loaded", function () {
-      var $flashMessage;
+      var $form,
+          $content;
 
-      it("Should not send a pageview if the flash message is absent", function () {
+      beforeEach(function () {
+        $content = $('<div id="content" />');
+        $form = $('<form />');
+        $content.append($form);
+        $(document.body).append($content);
+      });
+
+      afterEach(function () {
+        $content.remove();
+      });
+
+      it("Should not send a pageview if question not sent", function () {
+        $form.attr('data-message-sent', 'false');
+
         spyOn(GOVUK.GDM.analytics.location, "pathname")
           .and
           .callFake(function () {
@@ -178,13 +192,8 @@ describe("GOVUK.Analytics", function () {
         expect(window.ga.calls.any()).toEqual(false);
       });
 
-      it("Should send a pageview with a query string if the flash message is absent", function () {
-        $flashMessage = $('<div class="banner-success-without-action">' +
-                            '<p class="banner-message">' +
-                              'Your question has been sent. The buyer will post your question and their answer on the ‘Contracts finder’ page.' +
-                            '</p>' +
-                          '</div>');
-        $(document.body).append($flashMessage);
+      it("Should send a pageview with a query string if question sent", function () {
+        $form.attr('data-message-sent', 'true');
 
         spyOn(GOVUK.GDM.analytics.location, "pathname")
           .and
@@ -199,7 +208,6 @@ describe("GOVUK.Analytics", function () {
         });
         window.GOVUK.GDM.analytics.virtualPageViews();
 
-        $flashMessage.remove();
         expect(window.ga.calls.first().args).toEqual([ 'send', 'pageview', { page: "https://www.digitalmarketplace.service.gov.uk/suppliers/opportunities/1/ask-a-question?submitted=true" } ]);
       });
     });
