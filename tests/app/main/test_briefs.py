@@ -36,16 +36,24 @@ processed_brief_submission = {
 }
 
 ERROR_MESSAGE_PAGE_HEADING_APPLICATION = 'You can’t apply for this opportunity'
-ERROR_MESSAGE_NOT_ON_FRAMEWORK_APPLICATION = \
+ERROR_MESSAGE_NO_SERVICE_ON_LOT_APPLICATION = \
+    'You can’t apply for this opportunity because you didn’t say you'\
+    ' could provide services in this category when you applied to the Digital Outcomes and Specialists framework.'
+ERROR_MESSAGE_NO_SERVICE_ON_FRAMEWORK_APPLICATION = \
     'You can’t apply for this opportunity because you’re not a Digital Outcomes and Specialists supplier.'
-ERROR_MESSAGE_DONT_PROVIDE_THIS_SERVICE_APPLICATION = \
-    'You can’t apply for this opportunity because you don’t provide'
+ERROR_MESSAGE_NO_SERVICE_WITH_ROLE_APPLICATION = \
+    'You can’t apply for this opportunity because you didn’t say you'\
+    ' could provide this specialist role when you applied to the Digital Outcomes and Specialists framework.'
 
 ERROR_MESSAGE_PAGE_HEADING_CLARIFICATION = 'You can’t ask a question about this opportunity'
-ERROR_MESSAGE_NOT_ON_FRAMEWORK_CLARIFICATION = \
+ERROR_MESSAGE_NO_SERVICE_ON_LOT_CLARIFICATION = \
+    'You can’t ask a question about this opportunity because you didn’t say you'\
+    ' could provide services in this category when you applied to the Digital Outcomes and Specialists framework.'
+ERROR_MESSAGE_NO_SERVICE_ON_FRAMEWORK_CLARIFICATION = \
     'You can’t ask a question about this opportunity because you’re not a Digital Outcomes and Specialists supplier.'
-ERROR_MESSAGE_DONT_PROVIDE_THIS_SERVICE_CLARIFICATION = \
-    'You can’t ask a question about this opportunity because you don’t provide'
+ERROR_MESSAGE_NO_SERVICE_WITH_ROLE_CLARIFICATION = \
+    'You can’t ask a question about this opportunity because you didn’t say you'\
+    ' could provide this specialist role when you applied to the Digital Outcomes and Specialists framework.'
 
 
 @mock.patch('app.main.views.briefs.data_api_client', autospec=True)
@@ -66,7 +74,7 @@ class TestBriefQuestionAndAnswerSession(BaseApplicationTest):
 
     def test_q_and_a_session_details_checks_supplier_is_eligible(self, data_api_client):
         self.login()
-        data_api_client.get_brief.return_value = api_stubs.brief(status='live')
+        data_api_client.get_brief.return_value = api_stubs.brief(status='live', lot_slug='digital-specialists')
         data_api_client.get_brief.return_value['briefs']['frameworkName'] = 'Digital Outcomes and Specialists'
         data_api_client.is_supplier_eligible_for_brief.return_value = False
 
@@ -118,7 +126,7 @@ class TestBriefClarificationQuestions(BaseApplicationTest):
 
     def test_clarification_question_checks_supplier_is_eligible(self, data_api_client):
         self.login()
-        data_api_client.get_brief.return_value = api_stubs.brief(status='live')
+        data_api_client.get_brief.return_value = api_stubs.brief(status='live', lot_slug='digital-specialists')
         data_api_client.get_brief.return_value['briefs']['frameworkName'] = 'Digital Outcomes and Specialists'
         data_api_client.is_supplier_eligible_for_brief.return_value = False
 
@@ -219,39 +227,74 @@ class TestSubmitClarificationQuestions(BaseApplicationTest):
         assert res.status_code == 404
 
     @mock.patch('app.main.helpers.briefs.send_email')
-    def test_submit_clarification_question_returns_error_page_if_ineligible_supplier_is_not_on_framework(
+    def test_submit_clarification_question_returns_error_page_if_supplier_has_no_services_on_lot(
             self, send_email, data_api_client):
         self.login()
-        data_api_client.get_brief.return_value = api_stubs.brief(status='live')
+        data_api_client.get_brief.return_value = api_stubs.brief(status='live', lot_slug='digital-specialists')
         data_api_client.get_brief.return_value['briefs']['frameworkName'] = 'Digital Outcomes and Specialists'
         data_api_client.is_supplier_eligible_for_brief.return_value = False
-        data_api_client.get_supplier_framework_info.return_value = {
-            'frameworkInterest': {'onFramework': False}
-        }
+        data_api_client.find_services.side_effect = lambda *args, **kwargs: (
+            {"services": [{"something": "nonempty"}]} if kwargs.get("lot") is None else {"services": []}
+        )
+
         res = self.client.post('/suppliers/opportunities/1/ask-a-question', data={
             'clarification-question': "important question",
         })
+        doc = html.fromstring(res.get_data(as_text=True))
+
         assert res.status_code == 400
-        assert ERROR_MESSAGE_PAGE_HEADING_CLARIFICATION in res.get_data(as_text=True)
-        assert ERROR_MESSAGE_NOT_ON_FRAMEWORK_CLARIFICATION in res.get_data(as_text=True)
+        assert doc.xpath('normalize-space(//h1/text())') == ERROR_MESSAGE_PAGE_HEADING_CLARIFICATION
+        assert len(doc.xpath(
+            '//*[contains(normalize-space(text()), normalize-space("{}"))]'.format(
+                ERROR_MESSAGE_NO_SERVICE_ON_LOT_CLARIFICATION
+            )
+        )) == 1
         assert not data_api_client.create_audit_event.called
 
     @mock.patch('app.main.helpers.briefs.send_email')
-    def test_submit_clarification_question_returns_error_page_if_ineligible_supplier_is_on_framework(
+    def test_submit_clarification_question_returns_error_page_if_supplier_has_no_services_on_framework(
             self, send_email, data_api_client):
         self.login()
-        data_api_client.get_brief.return_value = api_stubs.brief(status='live')
+        data_api_client.get_brief.return_value = api_stubs.brief(status='live', lot_slug='digital-specialists')
         data_api_client.get_brief.return_value['briefs']['frameworkName'] = 'Digital Outcomes and Specialists'
         data_api_client.is_supplier_eligible_for_brief.return_value = False
-        data_api_client.get_supplier_framework_info.return_value = {
-            'frameworkInterest': {'onFramework': True}
-        }
+        data_api_client.find_services.return_value = {"services": []}
+
         res = self.client.post('/suppliers/opportunities/1/ask-a-question', data={
             'clarification-question': "important question",
         })
+        doc = html.fromstring(res.get_data(as_text=True))
+
         assert res.status_code == 400
-        assert ERROR_MESSAGE_PAGE_HEADING_CLARIFICATION in res.get_data(as_text=True)
-        assert ERROR_MESSAGE_DONT_PROVIDE_THIS_SERVICE_CLARIFICATION in res.get_data(as_text=True)
+        assert doc.xpath('normalize-space(//h1/text())') == ERROR_MESSAGE_PAGE_HEADING_CLARIFICATION
+        assert len(doc.xpath(
+            '//*[contains(normalize-space(text()), normalize-space("{}"))]'.format(
+                ERROR_MESSAGE_NO_SERVICE_ON_FRAMEWORK_CLARIFICATION
+            )
+        )) == 1
+        assert not data_api_client.create_audit_event.called
+
+    @mock.patch('app.main.helpers.briefs.send_email')
+    def test_submit_clarification_question_returns_error_page_if_supplier_has_no_services_with_role(
+            self, send_email, data_api_client):
+        self.login()
+        data_api_client.get_brief.return_value = api_stubs.brief(status='live', lot_slug='digital-specialists')
+        data_api_client.get_brief.return_value['briefs']['frameworkName'] = 'Digital Outcomes and Specialists'
+        data_api_client.is_supplier_eligible_for_brief.return_value = False
+        data_api_client.find_services.return_value = {"services": [{"something": "nonempty"}]}
+
+        res = self.client.post('/suppliers/opportunities/1/ask-a-question', data={
+            'clarification-question': "important question",
+        })
+        doc = html.fromstring(res.get_data(as_text=True))
+
+        assert res.status_code == 400
+        assert doc.xpath('normalize-space(//h1/text())') == ERROR_MESSAGE_PAGE_HEADING_CLARIFICATION
+        assert len(doc.xpath(
+            '//*[contains(normalize-space(text()), normalize-space("{}"))]'.format(
+                ERROR_MESSAGE_NO_SERVICE_WITH_ROLE_CLARIFICATION
+            )
+        )) == 1
         assert not data_api_client.create_audit_event.called
 
     def test_submit_empty_clarification_question_returns_validation_error(self, data_api_client):
@@ -292,7 +335,7 @@ class TestRespondToBrief(BaseApplicationTest):
     def setup(self):
         super(TestRespondToBrief, self).setup()
 
-        self.brief = api_stubs.brief(status='live')
+        self.brief = api_stubs.brief(status='live', lot_slug='digital-specialists')
         self.brief['briefs']['essentialRequirements'] = ['Essential one', 'Essential two', 'Essential three']
         self.brief['briefs']['niceToHaveRequirements'] = ['Nice one', 'Top one', 'Get sorted']
 
@@ -353,31 +396,64 @@ class TestRespondToBrief(BaseApplicationTest):
 
         assert res.status_code == 404
 
-    def test_get_brief_response_returns_error_page_if_ineligible_supplier_not_on_framework(self, data_api_client):
+    def test_get_brief_response_returns_error_page_if_supplier_has_no_services_on_lot(self, data_api_client):
         data_api_client.get_brief.return_value = self.brief
         data_api_client.get_brief.return_value['briefs']['frameworkName'] = 'Digital Outcomes and Specialists'
         data_api_client.get_framework.return_value = self.framework
         data_api_client.is_supplier_eligible_for_brief.return_value = False
-        data_api_client.get_supplier_framework_info.return_value = {
-            'frameworkInterest': {'onFramework': False}
-        }
+        data_api_client.find_services.side_effect = lambda *args, **kwargs: (
+            {"services": [{"something": "nonempty"}]} if kwargs.get("lot") is None else {"services": []}
+        )
 
         res = self.client.get('/suppliers/opportunities/1234/responses/create')
-        assert ERROR_MESSAGE_PAGE_HEADING_APPLICATION in res.get_data(as_text=True)
-        assert ERROR_MESSAGE_NOT_ON_FRAMEWORK_APPLICATION in res.get_data(as_text=True)
+        doc = html.fromstring(res.get_data(as_text=True))
 
-    def test_get_brief_response_returns_error_page_if_ineligible_supplier_is_on_framework(self, data_api_client):
+        assert res.status_code == 400
+        assert doc.xpath('normalize-space(//h1/text())') == ERROR_MESSAGE_PAGE_HEADING_APPLICATION
+        assert len(doc.xpath(
+            '//*[contains(normalize-space(text()), normalize-space("{}"))]'.format(
+                ERROR_MESSAGE_NO_SERVICE_ON_LOT_APPLICATION
+            )
+        )) == 1
+        assert not data_api_client.create_audit_event.called
+
+    def test_get_brief_response_returns_error_page_if_supplier_has_no_services_on_framework(self, data_api_client):
         data_api_client.get_brief.return_value = self.brief
         data_api_client.get_brief.return_value['briefs']['frameworkName'] = 'Digital Outcomes and Specialists'
         data_api_client.get_framework.return_value = self.framework
         data_api_client.is_supplier_eligible_for_brief.return_value = False
-        data_api_client.get_supplier_framework_info.return_value = {
-            'frameworkInterest': {'onFramework': True}
-        }
+        data_api_client.find_services.return_value = {"services": []}
 
         res = self.client.get('/suppliers/opportunities/1234/responses/create')
-        assert ERROR_MESSAGE_PAGE_HEADING_APPLICATION in res.get_data(as_text=True)
-        assert ERROR_MESSAGE_DONT_PROVIDE_THIS_SERVICE_APPLICATION in res.get_data(as_text=True)
+        doc = html.fromstring(res.get_data(as_text=True))
+
+        assert res.status_code == 400
+        assert doc.xpath('normalize-space(//h1/text())') == ERROR_MESSAGE_PAGE_HEADING_APPLICATION
+        assert len(doc.xpath(
+            '//*[contains(normalize-space(text()), normalize-space("{}"))]'.format(
+                ERROR_MESSAGE_NO_SERVICE_ON_FRAMEWORK_APPLICATION
+            )
+        )) == 1
+        assert not data_api_client.create_audit_event.called
+
+    def test_get_brief_response_returns_error_page_if_supplier_has_no_services_with_role(self, data_api_client):
+        data_api_client.get_brief.return_value = self.brief
+        data_api_client.get_brief.return_value['briefs']['frameworkName'] = 'Digital Outcomes and Specialists'
+        data_api_client.get_framework.return_value = self.framework
+        data_api_client.is_supplier_eligible_for_brief.return_value = False
+        data_api_client.find_services.return_value = {"services": [{"something": "nonempty"}]}
+
+        res = self.client.get('/suppliers/opportunities/1234/responses/create')
+        doc = html.fromstring(res.get_data(as_text=True))
+
+        assert res.status_code == 400
+        assert doc.xpath('normalize-space(//h1/text())') == ERROR_MESSAGE_PAGE_HEADING_APPLICATION
+        assert len(doc.xpath(
+            '//*[contains(normalize-space(text()), normalize-space("{}"))]'.format(
+                ERROR_MESSAGE_NO_SERVICE_WITH_ROLE_APPLICATION
+            )
+        )) == 1
+        assert not data_api_client.create_audit_event.called
 
     def test_get_brief_response_flashes_error_on_result_page_if_response_already_exists(self, data_api_client):
         data_api_client.get_brief.return_value = self.brief
@@ -558,40 +634,72 @@ class TestRespondToBrief(BaseApplicationTest):
         self.assert_flashes("already_applied", "error")
         assert not data_api_client.create_brief_response.called
 
-    def test_create_new_brief_returns_error_page_if_ineligible_supplier_is_not_on_framework(self, data_api_client):
+    def test_create_new_brief_returns_error_page_if_supplier_has_no_services_on_lot(self, data_api_client):
         data_api_client.get_brief.return_value = self.brief
         data_api_client.get_brief.return_value['briefs']['frameworkName'] = 'Digital Outcomes and Specialists'
         data_api_client.get_framework.return_value = self.framework
         data_api_client.is_supplier_eligible_for_brief.return_value = False
-        data_api_client.get_supplier_framework_info.return_value = {
-            'frameworkInterest': {'onFramework': False}
-        }
+        data_api_client.find_services.side_effect = lambda *args, **kwargs: (
+            {"services": [{"something": "nonempty"}]} if kwargs.get("lot") is None else {"services": []}
+        )
 
         res = self.client.post(
             '/suppliers/opportunities/1234/responses/create',
             data=brief_form_submission
         )
+        doc = html.fromstring(res.get_data(as_text=True))
+
         assert res.status_code == 400
-        assert ERROR_MESSAGE_PAGE_HEADING_APPLICATION in res.get_data(as_text=True)
-        assert ERROR_MESSAGE_NOT_ON_FRAMEWORK_APPLICATION in res.get_data(as_text=True)
+        assert doc.xpath('normalize-space(//h1/text())') == ERROR_MESSAGE_PAGE_HEADING_APPLICATION
+        assert len(doc.xpath(
+            '//*[contains(normalize-space(text()), normalize-space("{}"))]'.format(
+                ERROR_MESSAGE_NO_SERVICE_ON_LOT_APPLICATION
+            )
+        )) == 1
         assert not data_api_client.create_brief_response.called
 
-    def test_create_new_brief_returns_error_page_if_ineligible_supplier_is_on_framework(self, data_api_client):
+    def test_create_new_brief_returns_error_page_if_supplier_has_no_services_on_framework(self, data_api_client):
         data_api_client.get_brief.return_value = self.brief
         data_api_client.get_brief.return_value['briefs']['frameworkName'] = 'Digital Outcomes and Specialists'
         data_api_client.get_framework.return_value = self.framework
         data_api_client.is_supplier_eligible_for_brief.return_value = False
-        data_api_client.get_supplier_framework_info.return_value = {
-            'frameworkInterest': {'onFramework': True}
-        }
+        data_api_client.find_services.return_value = {"services": []}
 
         res = self.client.post(
             '/suppliers/opportunities/1234/responses/create',
             data=brief_form_submission
         )
+        doc = html.fromstring(res.get_data(as_text=True))
+
         assert res.status_code == 400
-        assert ERROR_MESSAGE_PAGE_HEADING_APPLICATION in res.get_data(as_text=True)
-        assert ERROR_MESSAGE_DONT_PROVIDE_THIS_SERVICE_APPLICATION in res.get_data(as_text=True)
+        assert doc.xpath('normalize-space(//h1/text())') == ERROR_MESSAGE_PAGE_HEADING_APPLICATION
+        assert len(doc.xpath(
+            '//*[contains(normalize-space(text()), normalize-space("{}"))]'.format(
+                ERROR_MESSAGE_NO_SERVICE_ON_FRAMEWORK_APPLICATION
+            )
+        )) == 1
+        assert not data_api_client.create_brief_response.called
+
+    def test_create_new_brief_returns_error_page_if_supplier_has_no_services_with_role(self, data_api_client):
+        data_api_client.get_brief.return_value = self.brief
+        data_api_client.get_brief.return_value['briefs']['frameworkName'] = 'Digital Outcomes and Specialists'
+        data_api_client.get_framework.return_value = self.framework
+        data_api_client.is_supplier_eligible_for_brief.return_value = False
+        data_api_client.find_services.return_value = {"services": [{"something": "nonempty"}]}
+
+        res = self.client.post(
+            '/suppliers/opportunities/1234/responses/create',
+            data=brief_form_submission
+        )
+        doc = html.fromstring(res.get_data(as_text=True))
+
+        assert res.status_code == 400
+        assert doc.xpath('normalize-space(//h1/text())') == ERROR_MESSAGE_PAGE_HEADING_APPLICATION
+        assert len(doc.xpath(
+            '//*[contains(normalize-space(text()), normalize-space("{}"))]'.format(
+                ERROR_MESSAGE_NO_SERVICE_WITH_ROLE_APPLICATION
+            )
+        )) == 1
         assert not data_api_client.create_brief_response.called
 
     def test_create_new_brief_response_with_api_error_fails(self, data_api_client):

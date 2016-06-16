@@ -184,12 +184,21 @@ def view_response_result(brief_id):
 
 
 def _render_not_eligible_for_brief_error_page(brief, clarification_question=False):
-    sf = get_supplier_framework_info(data_api_client, brief['frameworkSlug'])
-    on_framework = sf.get('onFramework', False) if sf else False
+    common_kwargs = {
+        "supplier_id": current_user.supplier_id,
+        "framework": brief['frameworkSlug'],
+    }
+    has_framework_service = bool(data_api_client.find_services(**common_kwargs)["services"])
+    has_framework_lot_service = has_framework_service and bool(data_api_client.find_services(
+        **dict(common_kwargs, lot=brief['lotSlug'])
+    )["services"])
+    # if has_framework_lot_service is true, we can deduce that the problem is that the roles don't match.
+
     return render_template(
         "briefs/not_is_supplier_eligible_for_brief_error.html",
-        on_framework=on_framework,
         clarification_question=clarification_question,
+        has_framework_service=has_framework_service,
+        has_framework_lot_service=has_framework_lot_service,
         framework_name=brief['frameworkName'],
         lot=brief['lotSlug'],
         **dict(main.config['BASE_TEMPLATE_DATA'])
