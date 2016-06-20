@@ -14,7 +14,7 @@
     },
     'location': {
       'href': function () {
-        return root.location.search;
+        return root.location.href;
       },
       'pathname': function () {
         return root.location.pathname;
