@@ -17,7 +17,7 @@
       $messageSent = $('#content form').attr('data-message-sent') === 'true';
 
       if ($messageSent) {
-        GOVUK.analytics.trackPageview(GOVUK.GDM.analytics.location.href() + '?submitted=true');
+        GOVUK.analytics.trackPageview(GOVUK.GDM.analytics.location.pathname() + '?submitted=true');
       }
     }
   };
