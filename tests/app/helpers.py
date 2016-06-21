@@ -190,12 +190,22 @@ class BaseApplicationTest(object):
         }
 
     @staticmethod
-    def framework(status='open', name='G-Cloud 7', slug='g-cloud-7', clarification_questions_open=True):
-        if slug == 'g-cloud-7':
+    def framework(
+            status='open',
+            name='G-Cloud 7',
+            slug='g-cloud-7',
+            clarification_questions_open=True,
+            framework_agreement_version=None
+    ):
+        if 'g-cloud-' in slug:
             lots = [
                 {'id': 1, 'slug': 'iaas', 'name': 'Infrastructure as a Service', 'oneServiceLimit': False,
                  'unitSingular': 'service', 'unitPlural': 'service'},
                 {'id': 2, 'slug': 'scs', 'name': 'Specialist Cloud Services', 'oneServiceLimit': False,
+                 'unitSingular': 'service', 'unitPlural': 'service'},
+                {'id': 3, 'slug': 'paas', 'name': 'Platform as a Service', 'oneServiceLimit': False,
+                 'unitSingular': 'service', 'unitPlural': 'service'},
+                {'id': 4, 'slug': 'saas', 'name': 'Software as a Service', 'oneServiceLimit': False,
                  'unitSingular': 'service', 'unitPlural': 'service'},
             ]
         elif slug == 'digital-outcomes-and-specialists':
@@ -211,6 +221,7 @@ class BaseApplicationTest(object):
                 'name': name,
                 'slug': slug,
                 'lots': lots,
+                'frameworkAgreementVersion': framework_agreement_version
             }
         }
 

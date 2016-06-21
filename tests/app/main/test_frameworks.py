@@ -25,6 +25,15 @@ def _return_fake_s3_file_dict(directory, filename, ext, last_modified=None, size
     }
 
 
+def get_g_cloud_8():
+    return BaseApplicationTest.framework(
+        status='standstill',
+        name='G-Cloud 8',
+        slug='g-cloud-8',
+        framework_agreement_version='v1.0'
+    )
+
+
 @mock.patch('dmutils.s3.S3')
 @mock.patch('app.main.views.frameworks.data_api_client', autospec=True)
 class TestFrameworksDashboard(BaseApplicationTest):
@@ -540,8 +549,11 @@ class TestFrameworkAgreement(BaseApplicationTest):
                 on_framework=True)
 
             res = self.client.get("/suppliers/frameworks/g-cloud-7/agreement")
+            data = res.get_data(as_text=True)
 
             assert_equal(res.status_code, 200)
+            assert_in(u'Send document to CCS', data)
+            assert_not_in(u'Return your signed signature page', data)
 
     def test_page_returns_404_if_framework_in_wrong_state(self, data_api_client):
         with self.app.test_client():
@@ -608,6 +620,58 @@ class TestFrameworkAgreement(BaseApplicationTest):
             )
             assert_not_in(u'Document uploaded', data)
             assert_not_in(u'Your document has been uploaded', data)
+
+    def test_loads_contract_start_page_if_framework_agreement_version_exists(self, data_api_client):
+        with self.app.test_client():
+            self.login()
+
+            data_api_client.get_framework.return_value = get_g_cloud_8()
+            data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
+                on_framework=True)
+
+            res = self.client.get("/suppliers/frameworks/g-cloud-8/agreement")
+            data = res.get_data(as_text=True)
+
+            assert res.status_code == 200
+            assert u'Return your signed signature page' in data
+            assert u'Send document to CCS' not in data
+
+    def test_two_lots_passed_on_contract_start_page(self, data_api_client):
+        with self.app.test_client():
+            self.login()
+
+            data_api_client.get_framework.return_value = get_g_cloud_8()
+            data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
+                on_framework=True)
+            data_api_client.find_draft_services.return_value = {
+                'services': [
+                    {'lotSlug': 'saas', 'status': 'submitted'},
+                    {'lotSlug': 'scs', 'status': 'submitted'}
+                ]
+            }
+            expected_lots_and_statuses = [
+                ('Software as a Service', 'Pass'),
+                ('Platform as a Service', 'No application'),
+                ('Infrastructure as a Service', 'No application'),
+                ('Specialist Cloud Services', 'Pass'),
+            ]
+
+            res = self.client.get("/suppliers/frameworks/g-cloud-8/agreement")
+            doc = html.fromstring(res.get_data(as_text=True))
+
+            assert res.status_code == 200
+
+            lots_and_statuses = []
+            lot_table_rows = doc.xpath('//*[@id="content"]//table/tbody/tr')
+            for row in lot_table_rows:
+                cells = row.findall('./td')
+                lots_and_statuses.append(
+                    (cells[0].text_content().strip(), cells[1].text_content().strip())
+                )
+
+            assert len(lots_and_statuses) == len(expected_lots_and_statuses)
+            for lot_and_status in lots_and_statuses:
+                assert lot_and_status in expected_lots_and_statuses
 
 
 @mock.patch('dmutils.s3.S3')

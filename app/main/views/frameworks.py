@@ -39,7 +39,6 @@ CLARIFICATION_QUESTION_NAME = 'clarification_question'
 @login_required
 def framework_dashboard(framework_slug):
     framework = get_framework(data_api_client, framework_slug)
-
     if request.method == 'POST':
         register_interest_in_framework(data_api_client, framework_slug)
         supplier_users = data_api_client.find_users(supplier_id=current_user.supplier_id)
@@ -85,9 +84,12 @@ def framework_dashboard(framework_slug):
     if countersigned_framework_agreement_exists_in_bucket(framework_slug, current_app.config['DM_AGREEMENTS_BUCKET']):
         countersigned_agreement_file = COUNTERSIGNED_AGREEMENT_FILENAME
 
+    application_made = supplier_is_on_framework or (len(complete_drafts) > 0 and declaration_status == 'complete')
+    lots_with_completed_drafts = [lot for lot in framework['lots'] if count_drafts_by_lot(complete_drafts, lot['slug'])]
+
     return render_template(
         "frameworks/dashboard.html",
-        application_made=supplier_is_on_framework or (len(complete_drafts) > 0 and declaration_status == 'complete'),
+        application_made=application_made,
         completed_lots=[{
             'name': lot['name'],
             'complete_count': count_drafts_by_lot(complete_drafts, lot['slug']),
@@ -95,7 +97,7 @@ def framework_dashboard(framework_slug):
             'unit': 'lab' if framework['slug'] == 'digital-outcomes-and-specialists' else 'service',
             'unit_plural': 'labs' if framework['slug'] == 'digital-outcomes-and-specialists' else 'service'
             # TODO: ^ make this dynamic, eg, lab, service, unit
-        } for lot in framework['lots'] if count_drafts_by_lot(complete_drafts, lot['slug'])],
+        } for lot in lots_with_completed_drafts],
         counts={
             "draft": len(drafts),
             "complete": len(complete_drafts)
@@ -480,6 +482,22 @@ def framework_agreement(framework_slug):
         supplier_framework['agreementReturnedAt'] = datetimeformat(
             date_parse(supplier_framework['agreementReturnedAt'])
         )
+
+    # if there's a frameworkAgreementVersion key, it means we're on G-Cloud 8 or higher
+    if framework.get('frameworkAgreementVersion'):
+        drafts, complete_drafts = get_drafts(data_api_client, framework_slug)
+        lots_with_completed_drafts = [
+            lot for lot in framework['lots'] if count_drafts_by_lot(complete_drafts, lot['slug'])
+        ]
+
+        return render_template(
+            'frameworks/contract_start.html',
+            framework=framework,
+            lots=[{
+                'name': lot['name'],
+                'has_completed_draft': (lot in lots_with_completed_drafts)
+            } for lot in framework['lots']],
+        ), 200
 
     return render_template(
         "frameworks/agreement.html",
