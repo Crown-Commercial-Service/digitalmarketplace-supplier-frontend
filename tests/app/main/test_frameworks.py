@@ -203,7 +203,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
             lede = doc.xpath('//div[@class="summary-item-lede"]')
             assert_in(u"You made your supplier declaration and submitted 1 service for consideration.",
                       lede[0].xpath('./p[1]/text()')[0])
-            assert_in(u"A letter informing you whether your application was successful or not will be posted on your G-Cloud 7 updates page by",  # noqa
+            assert_in(u"We’ll let you know the result of your application by ",  # noqa
                       lede[0].xpath('./p[2]/text()')[0])  # noqa
 
     def test_declaration_status_when_complete(self, data_api_client, s3):
