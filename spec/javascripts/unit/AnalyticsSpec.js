@@ -208,7 +208,7 @@ describe("GOVUK.Analytics", function () {
         });
         window.GOVUK.GDM.analytics.virtualPageViews();
 
-        expect(window.ga.calls.first().args).toEqual([ 'send', 'pageview', { page: "https://www.digitalmarketplace.service.gov.uk/suppliers/opportunities/1/ask-a-question?submitted=true" } ]);
+        expect(window.ga.calls.first().args).toEqual([ 'send', 'pageview', { page: "/suppliers/opportunities/1/ask-a-question?submitted=true" } ]);
       });
     });
 
