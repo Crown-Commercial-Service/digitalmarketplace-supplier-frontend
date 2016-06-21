@@ -6,9 +6,9 @@
       <ul id="proposition-links">
         {% if current_user.is_authenticated() %}
           <li><a href="{{ url_for('main.dashboard') }}">View your account</a></li>
-          <li><a class="home" href="/logout">Log out</a></li>
+          <li><a href="/logout">Log out</a></li>
         {% else %}
-          <li><a class="home" href="/login">Log in</a></li>
+          <li><a href="/login">Log in</a></li>
         {% endif %}
       </ul>
     </nav>
