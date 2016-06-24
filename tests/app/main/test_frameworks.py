@@ -530,6 +530,56 @@ class TestFrameworksDashboard(BaseApplicationTest):
 
 
 @mock.patch('app.main.views.frameworks.data_api_client', autospec=True)
+class TestFrameworkSigning(BaseApplicationTest):
+    def test_page_returns_404_if_no_framework_agreement_version(self, data_api_client):
+        with self.app.test_client():
+            self.login()
+
+            data_api_client.get_framework.return_value = self.framework(status="live", framework_agreement_version=None)
+            data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(on_framework=True)
+
+            res = self.client.get("/suppliers/frameworks/g-cloud-8/signing")
+
+            assert_equal(res.status_code, 404)
+
+    def test_page_returns_404_if_framework_in_wrong_state(self, data_api_client):
+        with self.app.test_client():
+            self.login()
+
+            data_api_client.get_framework.return_value = self.framework(status="open",
+                                                                        framework_agreement_version="xyz")
+            data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(on_framework=True)
+
+            res = self.client.get("/suppliers/frameworks/g-cloud-8/signing")
+
+            assert_equal(res.status_code, 404)
+
+    def test_page_returns_404_if_not_on_framework(self, data_api_client):
+        with self.app.test_client():
+            self.login()
+
+            data_api_client.get_framework.return_value = self.framework(status="live",
+                                                                        framework_agreement_version="xyz")
+            data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(on_framework=False)
+
+            res = self.client.get("/suppliers/frameworks/g-cloud-8/signing")
+
+            assert_equal(res.status_code, 404)
+
+    def test_page_returns_200_if_conditions_met(self, data_api_client):
+        with self.app.test_client():
+            self.login()
+
+            data_api_client.get_framework.return_value = self.framework(status="expired",
+                                                                        framework_agreement_version="xyz")
+            data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(on_framework=True)
+
+            res = self.client.get("/suppliers/frameworks/g-cloud-8/signing")
+
+            assert_equal(res.status_code, 200)
+
+
+@mock.patch('app.main.views.frameworks.data_api_client', autospec=True)
 class TestFrameworkAgreement(BaseApplicationTest):
     def test_page_renders_if_all_ok(self, data_api_client):
         with self.app.test_client():

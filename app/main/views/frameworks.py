@@ -119,6 +119,30 @@ def framework_dashboard(framework_slug):
     ), 200
 
 
+@main.route('/frameworks/<framework_slug>/signing', methods=['GET'])
+@login_required
+def framework_signing(framework_slug):
+    framework = get_framework(data_api_client, framework_slug, allowed_statuses=("standstill", "live", "expired",))
+
+    if not framework.get("frameworkAgreementVersion"):
+        # presumably an old pre-g8 framework that we don't want to enable this feature for
+        abort(404)
+
+    supplier_framework_info = get_supplier_framework_info(data_api_client, framework_slug)
+    if not get_supplier_on_framework_from_info(supplier_framework_info):
+        abort(404)
+
+    drafts, complete_drafts = get_drafts(data_api_client, framework_slug)
+    applied_lot_slugs = frozenset(draft["lotSlug"] for draft in complete_drafts)
+
+    return render_template(
+        "frameworks/signing.html",
+        framework=framework,
+        applied_lots=tuple(lot for lot in framework["lots"] if lot["slug"] in applied_lot_slugs),
+        supplier_framework_info=supplier_framework_info,
+    ), 200
+
+
 @main.route('/frameworks/<framework_slug>/submissions', methods=['GET'])
 @login_required
 def framework_submission_lots(framework_slug):
