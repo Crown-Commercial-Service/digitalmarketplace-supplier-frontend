@@ -731,7 +731,7 @@ class TestFrameworkAgreementUpload(BaseApplicationTest):
             assert_in(u'Document must be less than 5Mb', res.get_data(as_text=True))
 
     @mock.patch('app.main.views.frameworks.file_is_empty')
-    def test_page_returns_400_if_file_is_too_large(self, file_is_empty, data_api_client, send_email, s3):
+    def test_page_returns_400_if_file_is_empty(self, file_is_empty, data_api_client, send_email, s3):
         with self.app.test_client():
             self.login()
 
@@ -743,7 +743,7 @@ class TestFrameworkAgreementUpload(BaseApplicationTest):
             res = self.client.post(
                 '/suppliers/frameworks/g-cloud-7/agreement',
                 data={
-                    'agreement': (StringIO(b'doc'), 'test.pdf'),
+                    'agreement': (StringIO(b''), 'test.pdf'),
                 }
             )
 
