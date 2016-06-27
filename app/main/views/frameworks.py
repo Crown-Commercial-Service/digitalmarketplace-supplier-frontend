@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
-import itertools
+from itertools import chain
 
 from dateutil.parser import parse as date_parse
-from flask import render_template, request, abort, flash, redirect, url_for, current_app
+from flask import render_template, request, abort, flash, redirect, url_for, current_app, session
 from flask_login import current_user
 import six
 
@@ -31,6 +31,7 @@ from ..helpers.validation import get_validator
 from ..helpers.services import (
     get_signed_document_url, get_drafts, get_lot_drafts, count_unanswered_questions
 )
+from ..forms.frameworks import SignerDetailsForm
 
 CLARIFICATION_QUESTION_NAME = 'clarification_question'
 
@@ -191,7 +192,7 @@ def framework_submission_services(framework_slug, lot_slug):
                     framework_slug=framework_slug, lot_slug=lot_slug, service_id=draft['id'])
         )
 
-    for draft in itertools.chain(drafts, complete_drafts):
+    for draft in chain(drafts, complete_drafts):
         draft['priceString'] = format_service_price(draft)
         content = content_loader.get_manifest(framework_slug, 'edit_submission').filter(draft)
         sections = content.summary(draft)
@@ -584,3 +585,55 @@ def upload_framework_agreement(framework_slug):
         abort(503, "Framework agreement email failed to send")
 
     return redirect(url_for('.framework_agreement', framework_slug=framework_slug))
+
+@main.route('/frameworks/<framework_slug>/signer-details', methods=['GET'])
+def signer_details(framework_slug):
+    framework = get_framework(data_api_client, framework_slug)
+
+    form = SignerDetailsForm()
+
+    if form.full_name.name in session:
+        form.full_name.data = session[form.full_name.name]
+
+    if form.role.name in session:
+        form.role.data = session[form.role.name]
+
+    return render_template(
+        "frameworks/signer_details.html",
+        form=form,
+        framework=framework,
+    ), 200
+
+
+@main.route('/frameworks/<framework_slug>/signer-details', methods=['POST'])
+def submit_signer_details(framework_slug):
+    framework = get_framework(data_api_client, framework_slug)
+
+    form = SignerDetailsForm()
+
+    if form.validate_on_submit():
+        session[form.full_name.name] = form.full_name.data
+        session[form.role.name] = form.role.data
+
+        return redirect(url_for(".signature_upload", framework_slug=framework_slug))
+    else:
+        current_app.logger.warning(
+            "signaturepage.fail: full_name:{full_name} role:{role} {errors}",
+            extra={
+                'full_name': session.get('full_name'),
+                'role': session.get('role'),
+                'errors': ",".join(chain.from_iterable(form.errors.values()))})
+
+        form_errors = []
+        if form.errors:
+            error_keys_in_order = [key for key in ['full_name', 'role'] if key in form.errors.keys()]
+            form_errors = [
+                {'question': form[key].label.text, 'input_name': key} for key in error_keys_in_order
+            ]
+
+        return render_template(
+            "frameworks/signer_details.html",
+            form=form,
+            form_errors=form_errors,
+            framework=framework,
+        ), 400

@@ -5,6 +5,7 @@ except ImportError:
     from io import BytesIO as StringIO
 from nose.tools import assert_equal, assert_true, assert_in, assert_not_in
 import mock
+from flask import session
 from lxml import html
 from dmapiclient import APIError
 from dmapiclient.audit import AuditTypes
@@ -1709,3 +1710,96 @@ class TestG7ServicesList(BaseApplicationTest):
 
         assert_in(u'Submitted', submissions.get_data(as_text=True))
         assert_not_in(u'Apply to provide', submissions.get_data(as_text=True))
+
+
+@mock.patch("app.main.frameworks.data_api_client")
+class TestReturnSignedAgreement(BaseApplicationTest):
+
+    def test_should_be_an_error_if_no_full_name(self, data_api_client):
+        data_api_client.get_framework.return_value = get_g_cloud_8()
+        res = self.client.post(
+            "/suppliers/frameworks/g-cloud-8/signer-details",
+            data={
+                'role': "The Boss"
+            }
+        )
+        assert res.status_code == 400
+        page = res.get_data(as_text=True)
+        assert "You must provide the full name of the person signing on behalf of the company" in page
+
+    def test_should_be_an_error_if_no_role(self, data_api_client):
+        data_api_client.get_framework.return_value = get_g_cloud_8()
+        res = self.client.post(
+            "/suppliers/frameworks/g-cloud-8/signer-details",
+            data={
+                'full_name': "Josh Moss"
+            }
+        )
+        assert res.status_code == 400
+        page = res.get_data(as_text=True)
+        assert "You must provide the role of the person signing on behalf of the company" in page
+
+    def test_should_be_an_error_if_signer_details_fields_more_than_255_characters(self, data_api_client):
+        data_api_client.get_framework.return_value = get_g_cloud_8()
+
+        # 255 characters should be fine
+        res = self.client.post(
+            "/suppliers/frameworks/g-cloud-8/signer-details",
+            data={
+                'full_name': "J" * 255,
+                'role': "J" * 255
+            }
+        )
+        assert res.status_code == 302
+
+        # 256 characters should be an error
+        res = self.client.post(
+            "/suppliers/frameworks/g-cloud-8/signer-details",
+            data={
+                'full_name': "J" * 256,
+                'role': "J" * 256
+            }
+        )
+        assert res.status_code == 400
+        page = res.get_data(as_text=True)
+        assert "You must provide a name under 256 characters" in page
+        assert "You must provide a role under 256 characters" in page
+
+    def test_should_strip_whitespace_on_signer_details_fields(self, data_api_client):
+        signer_details = {
+            'full_name': "   Josh Moss   ",
+            'role': "   The Boss   "
+        }
+
+        data_api_client.get_framework.return_value = get_g_cloud_8()
+
+        with self.client as c:
+            res = c.post(
+                "/suppliers/frameworks/g-cloud-8/signer-details",
+                data=signer_details
+            )
+            assert res.status_code == 302
+
+            for key, value in signer_details.items():
+                assert key in session
+                assert session.get(key) == value.strip()
+
+    def test_provide_signer_details_form_with_valid_input_redirects_to_upload_page(self, data_api_client):
+        signer_details = {
+            'full_name': "Josh Moss",
+            'role': "The Boss"
+        }
+
+        data_api_client.get_framework.return_value = get_g_cloud_8()
+        with self.client as c:
+            res = c.post(
+                "/suppliers/frameworks/g-cloud-8/signer-details",
+                data=signer_details
+            )
+
+            for key, value in signer_details.items():
+                assert key in session
+                assert session.get(key) == value
+
+            assert res.status_code == 302
+            assert "suppliers/frameworks/g-cloud-8/signature-upload" in res.location

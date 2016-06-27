@@ -91,7 +91,7 @@
             }, 
             {
                 "body": "Return your signed signature page and give the details of the person who signed it.",
-                "bottom": "<strong><a href='#'>Return your signed signature page</a></strong>"
+                "bottom": "<strong><a href='{}'>Return your signed signature page</a></strong>".format(url_for('.signer_details', framework_slug=framework.slug))
             } 
           ]
         %}
