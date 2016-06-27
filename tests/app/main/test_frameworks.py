@@ -728,8 +728,8 @@ class TestFrameworkAgreementUpload(BaseApplicationTest):
                 }
             )
 
-            assert_equal(res.status_code, 400)
-            assert_in(u'Document must be less than 5Mb', res.get_data(as_text=True))
+            assert res.status_code == 400
+            assert u'Document must be less than 5MB' in res.get_data(as_text=True)
 
     @mock.patch('app.main.views.frameworks.file_is_empty')
     def test_page_returns_400_if_file_is_empty(self, file_is_empty, data_api_client, send_email, s3):
@@ -1821,3 +1821,68 @@ class TestReturnSignedAgreement(BaseApplicationTest):
 
             assert res.status_code == 302
             assert "suppliers/frameworks/g-cloud-8/signature-upload" in res.location
+
+    @mock.patch('app.main.views.frameworks.file_is_empty')
+    def test_signature_upload_returns_400_if_file_is_empty(
+        self, file_is_empty, return_supplier_framework, data_api_client
+    ):
+        with self.app.test_client():
+            self.login()
+
+            data_api_client.get_framework.return_value = get_g_cloud_8()
+            return_supplier_framework.return_value = self.supplier_framework(on_framework=True)
+            file_is_empty.return_value = True
+
+            res = self.client.post(
+                '/suppliers/frameworks/g-cloud-8/signature-upload',
+                data={
+                    'signature_page': (StringIO(b''), 'test.pdf'),
+                }
+            )
+
+            assert res.status_code == 400
+            assert 'The file must not be empty' in res.get_data(as_text=True)
+
+    @mock.patch('app.main.views.frameworks.file_is_image')
+    def test_signature_upload_returns_400_if_file_is_not_image_or_pdf(
+        self, file_is_image, return_supplier_framework, data_api_client
+    ):
+        with self.app.test_client():
+            self.login()
+
+            data_api_client.get_framework.return_value = get_g_cloud_8()
+            return_supplier_framework.return_value = self.supplier_framework(on_framework=True)
+            file_is_image.return_value = False
+
+            res = self.client.post(
+                '/suppliers/frameworks/g-cloud-8/signature-upload',
+                data={
+                    'signature_page': (StringIO(b'asdf'), 'test.txt'),
+                }
+            )
+
+            assert res.status_code == 400
+            assert 'The file must be a PDF, JPG or PNG' in res.get_data(as_text=True)
+
+    @mock.patch('app.main.views.frameworks.file_is_less_than_5mb')
+    def test_signature_upload_returns_400_if_file_is_larger_than_5mb(
+        self, file_is_less_than_5mb, return_supplier_framework, data_api_client
+    ):
+        with self.app.test_client():
+            self.login()
+
+            data_api_client.get_framework.return_value = get_g_cloud_8()
+            return_supplier_framework.return_value = self.supplier_framework(on_framework=True)
+            file_is_less_than_5mb.return_value = False
+
+            res = self.client.post(
+                '/suppliers/frameworks/g-cloud-8/signature-upload',
+                data={
+                    'signature_page': (StringIO(b'asdf'), 'test.jpg'),
+                }
+            )
+
+            assert res.status_code == 400
+            assert 'The file must be less than 5MB' in res.get_data(as_text=True)
+
+

@@ -15,7 +15,7 @@ from dmutils import s3
 from dmutils.documents import (
     RESULT_LETTER_FILENAME, AGREEMENT_FILENAME, SIGNED_AGREEMENT_PREFIX, COUNTERSIGNED_AGREEMENT_FILENAME,
     get_agreement_document_path, get_signed_url, get_extension, file_is_less_than_5mb, file_is_empty, file_is_image,
-    sanitise_supplier_name,
+    file_is_pdf, sanitise_supplier_name
 )
 
 from ... import data_api_client
@@ -511,7 +511,7 @@ def upload_framework_agreement(framework_slug):
 
     upload_error = None
     if not file_is_less_than_5mb(request.files['agreement']):
-        upload_error = "Document must be less than 5Mb"
+        upload_error = "Document must be less than 5MB"
     elif file_is_empty(request.files['agreement']):
         upload_error = "Document must not be empty"
 
@@ -576,6 +576,7 @@ def upload_framework_agreement(framework_slug):
 
     return redirect(url_for('.framework_agreement', framework_slug=framework_slug))
 
+
 @main.route('/frameworks/<framework_slug>/signer-details', methods=['GET'])
 @login_required
 def signer_details(framework_slug):
@@ -631,3 +632,53 @@ def submit_signer_details(framework_slug):
             form_errors=form_errors,
             framework=framework,
         ), 400
+
+
+@main.route('/frameworks/<framework_slug>/signature-upload', methods=['GET'])
+@login_required
+def signature_upload(framework_slug):
+    framework = get_framework(data_api_client, framework_slug)
+    return_supplier_framework_info_if_on_framework_or_abort(data_api_client, framework_slug)
+
+    # form = SignerDetailsForm()
+
+    # if form.full_name.name in session:
+    #     form.full_name.data = session[form.full_name.name]
+
+    # if form.role.name in session:
+    #     form.role.data = session[form.role.name]
+
+    # TODO get a filename or something
+
+    return render_template(
+        "frameworks/signature_upload.html",
+        framework=framework,
+    ), 200
+
+
+@main.route('/frameworks/<framework_slug>/signature-upload', methods=['POST'])
+@login_required
+def submit_signature_upload(framework_slug):
+    framework = get_framework(data_api_client, framework_slug, allowed_statuses=['standstill', 'live'])
+    return_supplier_framework_info_if_on_framework_or_abort(data_api_client, framework_slug)
+
+    upload_error = None
+    if not file_is_image(request.files['signature_page']) and not file_is_pdf(request.files['signature_page']):
+        upload_error = "The file must be a PDF, JPG or PNG"
+    elif not file_is_less_than_5mb(request.files['signature_page']):
+        upload_error = "The file must be less than 5MB"
+    elif file_is_empty(request.files['signature_page']):
+        upload_error = "The file must not be empty"
+
+    if upload_error is not None:
+        return render_template(
+            "frameworks/signature_upload.html",
+            framework=framework,
+            upload_error=upload_error
+        ), 400
+
+    return render_template(
+        "frameworks/signature_upload.html",
+        # form=form,
+        framework=framework,
+    ), 200

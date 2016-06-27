@@ -1,0 +1,75 @@
+{% extends "_base_page.html" %}
+
+{% block page_title %}Signature upload – Digital Marketplace{% endblock %}
+
+{% block breadcrumb %}
+  {%
+    with items = [
+      {
+        "link": "/",
+        "label": "Digital Marketplace",
+      },
+      {
+        "link": url_for(".dashboard"),
+        "label": "Your account",
+      },
+      {
+        "link": url_for(".framework_dashboard", framework_slug=framework.slug),
+        "label": "Your " + framework.name + " application"
+      }
+    ]
+  %}
+    {% include "toolkit/breadcrumb.html" %}
+  {% endwith %}
+{% endblock %}
+
+{% block main_content %}
+<div class="single-question-page">
+  {%
+    with
+    heading = "Upload your signed signature page",
+    smaller = True
+  %}
+    {% include "toolkit/page-heading.html" %}
+  {% endwith %}
+
+  {% if upload_error %}
+    {%
+      with
+        errors = [{
+          'question': 'Upload your signed signature page',
+          'input_name': 'signature_page'
+        }]
+    %}
+      {% include 'toolkit/forms/validation.html' %}
+    {% endwith %}
+  {% endif %}
+
+  <div class="grid-row">
+    <div class="column-two-thirds">
+      <form method="POST" enctype="multipart/form-data" action="{{ url_for('.submit_signature_upload', framework_slug=framework.slug) }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+          {%
+            with
+            question = "Upload your signed signature page",
+            name = "signature_page",
+            question_advice = 
+            "You only need to return the signed signature page. 
+            \n\nThe file must be saved as a PDF, JPG or PNG.",
+            error = upload_error
+          %}
+            {% include "toolkit/forms/upload.html" %}
+          {% endwith %}
+
+          {%
+            with
+              type = "save",
+              label = "Save and continue"
+          %}
+            {% include "toolkit/button.html" %}
+          {% endwith %}
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
