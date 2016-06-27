@@ -15,7 +15,7 @@ from ..helpers.briefs import (
     send_brief_clarification_question,
     supplier_has_a_brief_response
 )
-from ..helpers.frameworks import get_framework_and_lot, get_supplier_framework_info
+from ..helpers.frameworks import get_framework_and_lot
 from ...main import main, content_loader
 from ... import data_api_client
 
@@ -176,10 +176,19 @@ def view_response_result(brief_id):
     else:
         result_state = 'submitted_unsuccessful'
 
+    framework, lot = get_framework_and_lot(
+        data_api_client, brief['frameworkSlug'], brief['lotSlug'], allowed_statuses=['live'])
+
+    content = content_loader.get_manifest(framework['slug'], 'display_brief_response').filter({'lot': lot['slug']})
+
+    for section in content:
+        section.inject_brief_questions_into_boolean_list_question(brief)
     return render_template(
         'briefs/view_response_result.html',
         brief=brief,
-        result_state=result_state
+        brief_response=brief_response,
+        result_state=result_state,
+        content=content
     )
 
 

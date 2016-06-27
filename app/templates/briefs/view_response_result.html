@@ -9,7 +9,7 @@
     {%
     with
     message = {
-      "already_applied": "You’ve already applied for ‘{}’ so you can’t apply again".format(brief.title) if result_state == "submitted_ok" 
+      "already_applied": "You’ve already applied for ‘{}’ so you can’t apply again".format(brief.title) if result_state == "submitted_ok"
                     else "You already applied for ‘{}’ but you didn’t meet the essential requirements".format(brief.title)
     }[message] or message,
     type = "destructive" if category == "error" else "success"
@@ -47,6 +47,12 @@
       </p>
     {% endif %}
     </div>
+  </div>
+</div>
+
+<div class="grid-row">
+  <div class="column-one-whole">
+    {% include 'briefs/_brief_response_data.html' %}
   </div>
 </div>
 
