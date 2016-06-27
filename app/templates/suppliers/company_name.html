@@ -1,5 +1,4 @@
 {% extends "_base_page.html" %}
-{% import "toolkit/summary-table.html" as summary %}
 
 {% block page_title %}Company name – Create new supplier – Digital Marketplace{% endblock %}
 
@@ -27,7 +26,7 @@
   {% endwith %}
   <div class="grid-row">
     <div class="column-two-thirds">
-      <form method="POST" action="{{ url_for('.company_name') }}">
+      <form method="POST" action="{{ url_for('.submit_company_name') }}">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
         {%
           with
