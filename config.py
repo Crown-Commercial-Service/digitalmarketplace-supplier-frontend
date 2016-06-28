@@ -71,8 +71,8 @@ class Config(object):
 
     # Logging
     DM_LOG_LEVEL = 'DEBUG'
+    DM_LOG_PATH = None
     DM_APP_NAME = 'supplier-frontend'
-    DM_LOG_PATH = '/var/log/digitalmarketplace/application.log'
     DM_DOWNSTREAM_REQUEST_ID_HEADER = 'X-Amz-Cf-Id'
 
     @staticmethod
@@ -130,6 +130,7 @@ class Development(Config):
 class Live(Config):
     """Base config for deployed environments"""
     DEBUG = False
+    DM_LOG_PATH = '/var/log/digitalmarketplace/application.log'
     DM_HTTP_PROTO = 'https'
 
     DM_FRAMEWORK_AGREEMENTS_EMAIL = 'enquiries@digitalmarketplace.service.gov.uk'
