@@ -34,16 +34,24 @@
     <div class="dmspeak">
 
     {% if result_state == "submitted_ok" %}
-      <p>
-        The buyer will tell you whether you’ve been successful or not soon.
-      </p>
-    
+    <ol class="list-number">
+      <li>
+        <div class="explanation-list">
+          <p class="lead"> When the opportunity closes, the buyer will create a shortlist. They can exclude you if:</p>
+          <ul class="list-bullet">
+            <li>you can’t start when they need you to</li>
+            <li>you have fewer nice‑to‑have skills and experience than qualifying suppliers</li>
+            {% if brief.lot == "digital-specialists" and brief.get('budgetRange') %}
+            <li>your day rate exceeds their budget</li>
+            {% endif %}
+          </ul>
+        </div>
+      </li>
+    </ol>
+
     {% elif result_state == "submitted_unsuccessful" %}
       <p>
-        Thank you for applying for this opportunity.
-      </p>
-      <p>
-        You don’t meet all the essential requirements so the buyer can’t add you to their shortlist.
+        You don’t have all the essential skills and experience so the buyer can’t add you to their shortlist.
       </p>
     {% endif %}
     </div>
