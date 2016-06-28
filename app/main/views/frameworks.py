@@ -677,8 +677,24 @@ def submit_signature_upload(framework_slug):
             upload_error=upload_error
         ), 400
 
-    return render_template(
-        "frameworks/signature_upload.html",
-        # form=form,
-        framework=framework,
-    ), 200
+    agreements_bucket = s3.S3(current_app.config['DM_AGREEMENTS_BUCKET'])
+    extension = get_extension(request.files['signature_page'].filename)
+
+    path = get_agreement_document_path(
+        framework_slug,
+        current_user.supplier_id,
+        '{}{}'.format(SIGNED_AGREEMENT_PREFIX, extension)
+    )
+    agreements_bucket.save(
+        path,
+        request.files['signature_page'],
+        acl='private',
+        download_filename='{}-{}-{}{}'.format(
+            sanitise_supplier_name(current_user.supplier_name),
+            current_user.supplier_id,
+            SIGNED_AGREEMENT_PREFIX,
+            extension
+        )
+    )
+
+    return redirect(url_for(".signature_upload", framework_slug=framework_slug))

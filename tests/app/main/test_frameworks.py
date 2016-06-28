@@ -1885,4 +1885,26 @@ class TestReturnSignedAgreement(BaseApplicationTest):
             assert res.status_code == 400
             assert 'The file must be less than 5MB' in res.get_data(as_text=True)
 
+    @mock.patch('dmutils.s3.S3')
+    def test_upload_signature_page(self, s3, return_supplier_framework, data_api_client):
+        with self.app.test_client():
+            self.login()
 
+            data_api_client.get_framework.return_value = get_g_cloud_8()
+            return_supplier_framework.return_value = self.supplier_framework(on_framework=True)
+
+            res = self.client.post(
+                '/suppliers/frameworks/g-cloud-8/signature-upload',
+                data={
+                    'signature_page': (StringIO(b'asdf'), 'test.jpg'),
+                }
+            )
+
+            s3.return_value.save.assert_called_with(
+                'g-cloud-8/agreements/1234/1234-signed-framework-agreement.jpg',
+                mock.ANY,
+                acl='private',
+                download_filename='Supplier_Name-1234-signed-framework-agreement.jpg'
+            )
+            assert res.status_code == 302
+            assert res.location == 'http://localhost/suppliers/frameworks/g-cloud-7/agreement'
