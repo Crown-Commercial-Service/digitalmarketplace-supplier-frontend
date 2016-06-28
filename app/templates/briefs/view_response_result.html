@@ -58,10 +58,10 @@
 
   {%
     with
-      url = "/{}/opportunities".format(brief.frameworkSlug),
-      text = "View all opportunities"
+      url = url_for(".dashboard"),
+      text = "Your account"
   %}
     {% include "toolkit/secondary-action-link.html" %}
   {% endwith %}
-  
+
   {% endblock %}
