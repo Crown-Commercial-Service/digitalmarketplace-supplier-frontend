@@ -1,0 +1,27 @@
+{% import "toolkit/summary-table.html" as summary %}
+{% for section in content.summary(brief_response) %}
+    {{ summary.heading(section.name, id="opportunity-attributes-{}".format(loop.index)) }}
+    {% call(item) summary.list_table(
+      section.questions,
+      caption=section.name,
+      field_headings=[
+        "Opportunity attribute name",
+        "Opportunity attribute value"
+      ],
+      field_headings_visible=False
+    ) %}
+        {% if item.type == "boolean_list" %}
+          {% for question in item.boolean_list_questions %}
+            {% call summary.row() %}
+              {{ summary.field_name(question) }}
+              {{ summary[item.type](question) }}
+            {% endcall %}
+          {% endfor %}
+        {% else %}
+        {% call summary.row() %}
+          {{ summary.field_name(item.label) }}
+          {{ summary[item.type](item.value) }}
+        {% endcall %}
+        {% endif %}
+    {% endcall %}
+{% endfor %}
