@@ -1717,6 +1717,7 @@ class TestG7ServicesList(BaseApplicationTest):
 class TestReturnSignedAgreement(BaseApplicationTest):
 
     def test_should_be_an_error_if_no_full_name(self, return_supplier_framework, data_api_client):
+        self.login()
         data_api_client.get_framework.return_value = get_g_cloud_8()
         return_supplier_framework.return_value = self.supplier_framework(on_framework=True)
 
@@ -1731,6 +1732,7 @@ class TestReturnSignedAgreement(BaseApplicationTest):
         assert "You must provide the full name of the person signing on behalf of the company" in page
 
     def test_should_be_an_error_if_no_role(self, return_supplier_framework, data_api_client):
+        self.login()
         data_api_client.get_framework.return_value = get_g_cloud_8()
         return_supplier_framework.return_value = self.supplier_framework(on_framework=True)
 
@@ -1747,6 +1749,7 @@ class TestReturnSignedAgreement(BaseApplicationTest):
     def test_should_be_an_error_if_signer_details_fields_more_than_255_characters(
             self, return_supplier_framework, data_api_client
     ):
+        self.login()
         data_api_client.get_framework.return_value = get_g_cloud_8()
         return_supplier_framework.return_value = self.supplier_framework(on_framework=True)
 
@@ -1783,6 +1786,7 @@ class TestReturnSignedAgreement(BaseApplicationTest):
         return_supplier_framework.return_value = self.supplier_framework(on_framework=True)
 
         with self.client as c:
+            self.login()
             res = c.post(
                 "/suppliers/frameworks/g-cloud-8/signer-details",
                 data=signer_details
@@ -1805,6 +1809,7 @@ class TestReturnSignedAgreement(BaseApplicationTest):
         return_supplier_framework.return_value = self.supplier_framework(on_framework=True)
 
         with self.client as c:
+            self.login()
             res = c.post(
                 "/suppliers/frameworks/g-cloud-8/signer-details",
                 data=signer_details
