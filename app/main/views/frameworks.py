@@ -14,7 +14,7 @@ from dmutils.formats import datetimeformat
 from dmutils import s3
 from dmutils.documents import (
     RESULT_LETTER_FILENAME, AGREEMENT_FILENAME, SIGNED_AGREEMENT_PREFIX, COUNTERSIGNED_AGREEMENT_FILENAME,
-    get_agreement_document_path, get_signed_url, get_extension, file_is_less_than_5mb, file_is_empty,
+    get_agreement_document_path, get_signed_url, get_extension, file_is_less_than_5mb, file_is_empty, file_is_image,
     sanitise_supplier_name,
 )
 
@@ -25,7 +25,7 @@ from ..helpers.frameworks import (
     get_declaration_status, get_last_modified_from_first_matching_file, register_interest_in_framework,
     get_supplier_on_framework_from_info, get_declaration_status_from_info, get_supplier_framework_info,
     get_framework, get_framework_and_lot, count_drafts_by_lot, get_statuses_for_lot,
-    countersigned_framework_agreement_exists_in_bucket
+    countersigned_framework_agreement_exists_in_bucket, return_supplier_framework_info_if_on_framework_or_abort
 )
 from ..helpers.validation import get_validator
 from ..helpers.services import (
@@ -472,12 +472,7 @@ def framework_updates_email_clarification_question(framework_slug):
 @login_required
 def framework_agreement(framework_slug):
     framework = get_framework(data_api_client, framework_slug, allowed_statuses=['standstill', 'live'])
-
-    supplier_framework = data_api_client.get_supplier_framework_info(
-        current_user.supplier_id, framework_slug
-    )['frameworkInterest']
-    if not supplier_framework['onFramework']:
-        abort(404)
+    supplier_framework = return_supplier_framework_info_if_on_framework_or_abort(data_api_client, framework_slug)
 
     if supplier_framework['agreementReturned']:
         supplier_framework['agreementReturnedAt'] = datetimeformat(
@@ -512,12 +507,7 @@ def framework_agreement(framework_slug):
 @login_required
 def upload_framework_agreement(framework_slug):
     framework = get_framework(data_api_client, framework_slug, allowed_statuses=['standstill', 'live'])
-
-    supplier_framework = data_api_client.get_supplier_framework_info(
-        current_user.supplier_id, framework_slug
-    )['frameworkInterest']
-    if not supplier_framework or not supplier_framework['onFramework']:
-        abort(404)
+    supplier_framework = return_supplier_framework_info_if_on_framework_or_abort(data_api_client, framework_slug)
 
     upload_error = None
     if not file_is_less_than_5mb(request.files['agreement']):
@@ -589,6 +579,7 @@ def upload_framework_agreement(framework_slug):
 @main.route('/frameworks/<framework_slug>/signer-details', methods=['GET'])
 def signer_details(framework_slug):
     framework = get_framework(data_api_client, framework_slug)
+    return_supplier_framework_info_if_on_framework_or_abort(data_api_client, framework_slug)
 
     form = SignerDetailsForm()
 
@@ -608,6 +599,7 @@ def signer_details(framework_slug):
 @main.route('/frameworks/<framework_slug>/signer-details', methods=['POST'])
 def submit_signer_details(framework_slug):
     framework = get_framework(data_api_client, framework_slug)
+    return_supplier_framework_info_if_on_framework_or_abort(data_api_client, framework_slug)
 
     form = SignerDetailsForm()
 

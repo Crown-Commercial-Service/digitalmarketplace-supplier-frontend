@@ -1713,10 +1713,13 @@ class TestG7ServicesList(BaseApplicationTest):
 
 
 @mock.patch("app.main.frameworks.data_api_client")
+@mock.patch("app.main.frameworks.return_supplier_framework_info_if_on_framework_or_abort")
 class TestReturnSignedAgreement(BaseApplicationTest):
 
-    def test_should_be_an_error_if_no_full_name(self, data_api_client):
+    def test_should_be_an_error_if_no_full_name(self, return_supplier_framework, data_api_client):
         data_api_client.get_framework.return_value = get_g_cloud_8()
+        return_supplier_framework.return_value = self.supplier_framework(on_framework=True)
+
         res = self.client.post(
             "/suppliers/frameworks/g-cloud-8/signer-details",
             data={
@@ -1727,8 +1730,10 @@ class TestReturnSignedAgreement(BaseApplicationTest):
         page = res.get_data(as_text=True)
         assert "You must provide the full name of the person signing on behalf of the company" in page
 
-    def test_should_be_an_error_if_no_role(self, data_api_client):
+    def test_should_be_an_error_if_no_role(self, return_supplier_framework, data_api_client):
         data_api_client.get_framework.return_value = get_g_cloud_8()
+        return_supplier_framework.return_value = self.supplier_framework(on_framework=True)
+
         res = self.client.post(
             "/suppliers/frameworks/g-cloud-8/signer-details",
             data={
@@ -1739,8 +1744,11 @@ class TestReturnSignedAgreement(BaseApplicationTest):
         page = res.get_data(as_text=True)
         assert "You must provide the role of the person signing on behalf of the company" in page
 
-    def test_should_be_an_error_if_signer_details_fields_more_than_255_characters(self, data_api_client):
+    def test_should_be_an_error_if_signer_details_fields_more_than_255_characters(
+            self, return_supplier_framework, data_api_client
+    ):
         data_api_client.get_framework.return_value = get_g_cloud_8()
+        return_supplier_framework.return_value = self.supplier_framework(on_framework=True)
 
         # 255 characters should be fine
         res = self.client.post(
@@ -1765,13 +1773,14 @@ class TestReturnSignedAgreement(BaseApplicationTest):
         assert "You must provide a name under 256 characters" in page
         assert "You must provide a role under 256 characters" in page
 
-    def test_should_strip_whitespace_on_signer_details_fields(self, data_api_client):
+    def test_should_strip_whitespace_on_signer_details_fields(self, return_supplier_framework, data_api_client):
         signer_details = {
             'full_name': "   Josh Moss   ",
             'role': "   The Boss   "
         }
 
         data_api_client.get_framework.return_value = get_g_cloud_8()
+        return_supplier_framework.return_value = self.supplier_framework(on_framework=True)
 
         with self.client as c:
             res = c.post(
@@ -1784,13 +1793,17 @@ class TestReturnSignedAgreement(BaseApplicationTest):
                 assert key in session
                 assert session.get(key) == value.strip()
 
-    def test_provide_signer_details_form_with_valid_input_redirects_to_upload_page(self, data_api_client):
+    def test_provide_signer_details_form_with_valid_input_redirects_to_upload_page(
+            self, return_supplier_framework, data_api_client
+    ):
         signer_details = {
             'full_name': "Josh Moss",
             'role': "The Boss"
         }
 
         data_api_client.get_framework.return_value = get_g_cloud_8()
+        return_supplier_framework.return_value = self.supplier_framework(on_framework=True)
+
         with self.client as c:
             res = c.post(
                 "/suppliers/frameworks/g-cloud-8/signer-details",
