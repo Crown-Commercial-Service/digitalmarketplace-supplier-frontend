@@ -176,6 +176,7 @@ def view_response_result(brief_id):
     else:
         result_state = 'submitted_unsuccessful'
 
+    brief_response = brief_response[0]
     framework, lot = get_framework_and_lot(
         data_api_client, brief['frameworkSlug'], brief['lotSlug'], allowed_statuses=['live'])
 
