@@ -109,6 +109,16 @@ def get_supplier_on_framework_from_info(supplier_framework_info):
     return bool(supplier_framework_info.get('onFramework'))
 
 
+def return_supplier_framework_info_if_on_framework_or_abort(data_api_client, framework_slug):
+    # returns a supplier_framework or None if not found
+    supplier_framework = get_supplier_framework_info(data_api_client, framework_slug)
+
+    if not get_supplier_on_framework_from_info(supplier_framework):
+        abort(404)
+
+    return supplier_framework
+
+
 def question_references(data, get_question):
     if not data:
         return data
