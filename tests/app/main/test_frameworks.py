@@ -456,7 +456,9 @@ class TestFrameworksDashboard(BaseApplicationTest):
         data = res.get_data(as_text=True)
 
         for success_message in [
-            u'Your application was successful. You\'ll be able to sell services when the G-Cloud 7 framework is live',
+            u'Your application was successful. '
+                u'You must return a signed framework agreement signature page before you can '
+                u'sell services on the Digital Marketplace.',
             u'Download your application award letter (.pdf)',
             u'This letter is a record of your successful G-Cloud 7 application.'
         ]:
