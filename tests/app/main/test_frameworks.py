@@ -1719,7 +1719,7 @@ class TestReturnSignedAgreement(BaseApplicationTest):
     def test_should_be_an_error_if_no_full_name(self, return_supplier_framework, data_api_client):
         self.login()
         data_api_client.get_framework.return_value = get_g_cloud_8()
-        return_supplier_framework.return_value = self.supplier_framework(on_framework=True)
+        return_supplier_framework.return_value = self.supplier_framework(on_framework=True)['frameworkInterest']
 
         res = self.client.post(
             "/suppliers/frameworks/g-cloud-8/signer-details",
@@ -1734,7 +1734,7 @@ class TestReturnSignedAgreement(BaseApplicationTest):
     def test_should_be_an_error_if_no_role(self, return_supplier_framework, data_api_client):
         self.login()
         data_api_client.get_framework.return_value = get_g_cloud_8()
-        return_supplier_framework.return_value = self.supplier_framework(on_framework=True)
+        return_supplier_framework.return_value = self.supplier_framework(on_framework=True)['frameworkInterest']
 
         res = self.client.post(
             "/suppliers/frameworks/g-cloud-8/signer-details",
@@ -1751,7 +1751,7 @@ class TestReturnSignedAgreement(BaseApplicationTest):
     ):
         self.login()
         data_api_client.get_framework.return_value = get_g_cloud_8()
-        return_supplier_framework.return_value = self.supplier_framework(on_framework=True)
+        return_supplier_framework.return_value = self.supplier_framework(on_framework=True)['frameworkInterest']
 
         # 255 characters should be fine
         res = self.client.post(
@@ -1783,7 +1783,7 @@ class TestReturnSignedAgreement(BaseApplicationTest):
         }
 
         data_api_client.get_framework.return_value = get_g_cloud_8()
-        return_supplier_framework.return_value = self.supplier_framework(on_framework=True)
+        return_supplier_framework.return_value = self.supplier_framework(on_framework=True)['frameworkInterest']
 
         with self.client as c:
             self.login()
@@ -1806,7 +1806,7 @@ class TestReturnSignedAgreement(BaseApplicationTest):
         }
 
         data_api_client.get_framework.return_value = get_g_cloud_8()
-        return_supplier_framework.return_value = self.supplier_framework(on_framework=True)
+        return_supplier_framework.return_value = self.supplier_framework(on_framework=True)['frameworkInterest']
 
         with self.client as c:
             self.login()
@@ -1830,7 +1830,7 @@ class TestReturnSignedAgreement(BaseApplicationTest):
             self.login()
 
             data_api_client.get_framework.return_value = get_g_cloud_8()
-            return_supplier_framework.return_value = self.supplier_framework(on_framework=True)
+            return_supplier_framework.return_value = self.supplier_framework(on_framework=True)['frameworkInterest']
             file_is_empty.return_value = True
 
             res = self.client.post(
@@ -1851,7 +1851,7 @@ class TestReturnSignedAgreement(BaseApplicationTest):
             self.login()
 
             data_api_client.get_framework.return_value = get_g_cloud_8()
-            return_supplier_framework.return_value = self.supplier_framework(on_framework=True)
+            return_supplier_framework.return_value = self.supplier_framework(on_framework=True)['frameworkInterest']
             file_is_image.return_value = False
 
             res = self.client.post(
@@ -1872,7 +1872,7 @@ class TestReturnSignedAgreement(BaseApplicationTest):
             self.login()
 
             data_api_client.get_framework.return_value = get_g_cloud_8()
-            return_supplier_framework.return_value = self.supplier_framework(on_framework=True)
+            return_supplier_framework.return_value = self.supplier_framework(on_framework=True)['frameworkInterest']
             file_is_less_than_5mb.return_value = False
 
             res = self.client.post(
@@ -1891,7 +1891,7 @@ class TestReturnSignedAgreement(BaseApplicationTest):
             self.login()
 
             data_api_client.get_framework.return_value = get_g_cloud_8()
-            return_supplier_framework.return_value = self.supplier_framework(on_framework=True)
+            return_supplier_framework.return_value = self.supplier_framework(on_framework=True)['frameworkInterest']
 
             res = self.client.post(
                 '/suppliers/frameworks/g-cloud-8/signature-upload',
