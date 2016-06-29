@@ -31,7 +31,7 @@ from ..helpers.validation import get_validator
 from ..helpers.services import (
     get_signed_document_url, get_drafts, get_lot_drafts, count_unanswered_questions
 )
-from ..forms.frameworks import SignerDetailsForm
+from ..forms.frameworks import SignerDetailsForm, ContractReviewForm
 
 CLARIFICATION_QUESTION_NAME = 'clarification_question'
 
@@ -619,12 +619,10 @@ def submit_signer_details(framework_slug):
                 'role': session.get('role'),
                 'errors': ",".join(chain.from_iterable(form.errors.values()))})
 
-        form_errors = []
-        if form.errors:
-            error_keys_in_order = [key for key in ['full_name', 'role'] if key in form.errors.keys()]
-            form_errors = [
-                {'question': form[key].label.text, 'input_name': key} for key in error_keys_in_order
-            ]
+        error_keys_in_order = [key for key in ['full_name', 'role'] if key in form.errors.keys()]
+        form_errors = [
+            {'question': form[key].label.text, 'input_name': key} for key in error_keys_in_order
+        ]
 
         return render_template(
             "frameworks/signer_details.html",
@@ -697,4 +695,61 @@ def submit_signature_upload(framework_slug):
         )
     )
 
-    return redirect(url_for(".signature_upload", framework_slug=framework_slug))
+    session['signature_page'] = request.files['signature_page'].filename
+
+    return redirect(url_for(".contract_review", framework_slug=framework_slug))
+
+
+@main.route('/frameworks/<framework_slug>/contract-review', methods=['GET'])
+@login_required
+def contract_review(framework_slug):
+    framework = get_framework(data_api_client, framework_slug)
+    supplier_framework = return_supplier_framework_info_if_on_framework_or_abort(data_api_client, framework_slug)
+
+    form = ContractReviewForm()
+    form.authority.description = "I have the authority to return this agreement on behalf of {}".format(
+        current_user.supplier_name
+    )
+
+    return render_template(
+        "frameworks/contract_review.html",
+        declaration=supplier_framework['declaration'],
+        form=form,
+        framework=framework,
+    ), 200
+
+
+@main.route('/frameworks/<framework_slug>/contract-review', methods=['POST'])
+@login_required
+def submit_contract_review(framework_slug):
+    framework = get_framework(data_api_client, framework_slug)
+    supplier_framework = return_supplier_framework_info_if_on_framework_or_abort(data_api_client, framework_slug)
+
+    form = ContractReviewForm()
+    form.authority.description = "I have the authority to return this agreement on behalf of {}".format(
+        current_user.supplier_name
+    )
+
+    if form.validate_on_submit():
+        return redirect(url_for(".contract_review", framework_slug=framework_slug))
+
+    else:
+        current_app.logger.warning(
+            "signaturepage.fail: full_name:{full_name} role:{role} signature_page:{signature_page} {errors}",
+            extra={
+                'full_name': session.get('full_name'),
+                'role': session.get('role'),
+                'signature_page': session.get('signature_page'),
+                'errors': ",".join(chain.from_iterable(form.errors.values()))})
+
+        form_errors = [
+            {'question': form['authority'].label.text, 'input_name': 'input-authority-1'}
+        ]
+
+        return render_template(
+            "frameworks/contract_review.html",
+            declaration=supplier_framework['declaration'],
+            form=form,
+            form_errors=form_errors,
+            framework=framework,
+        ), 400

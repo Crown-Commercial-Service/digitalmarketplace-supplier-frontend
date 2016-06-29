@@ -1,0 +1,112 @@
+{% extends "_base_page.html" %}
+
+{% block page_title %}Review your contract – Digital Marketplace{% endblock %}
+
+{% block breadcrumb %}
+  {%
+    with items = [
+      {
+        "link": "/",
+        "label": "Digital Marketplace",
+      },
+      {
+        "link": url_for(".dashboard"),
+        "label": "Your account",
+      },
+      {
+        "link": url_for(".framework_dashboard", framework_slug=framework.slug),
+        "label": "Your " + framework.name + " application"
+      }
+    ]
+  %}
+    {% include "toolkit/breadcrumb.html" %}
+  {% endwith %}
+{% endblock %}
+
+{% block main_content %}
+
+<div class="grid-row">
+  <div class="column-two-thirds">
+    {%
+      with
+      heading = "Check the details you’ve given before returning the signature page for {}".format(current_user.supplier_name),
+      smaller = True
+    %}
+      {% include "toolkit/page-heading.html" %}
+    {% endwith %}
+  </div>
+</div>
+
+{% if form.errors %}
+  {%
+    with
+      errors = form_errors
+  %}
+    {% include 'toolkit/forms/validation.html' %}
+  {% endwith %}
+{% endif %}
+
+<div>
+  {% import "toolkit/summary-table.html" as summary %}
+  {% call(item) summary.mapping_table(
+    caption='Supplier information',
+    field_headings=[
+      'Label',
+      'Value',
+      'Action'
+    ],
+    field_headings_visible=False
+  ) %}
+    {% call summary.row() %}
+      {{ summary.field_name('Person who signed') }}
+      {% call summary.field() %}
+        <p>{{ session.full_name }}</p><p>{{ session.role }}</p>
+      {% endcall %}
+      {{ summary.edit_link("Edit", url_for('.signer_details', framework_slug=framework.slug)) }}
+    {% endcall %}
+    {% call summary.row() %}
+      {{ summary.field_name('Signature page') }}
+      {{ summary.text(session.signature_page) }}
+      {{ summary.edit_link("Change", url_for('.signature_upload', framework_slug=framework.slug)) }}
+    {% endcall %}
+  {% endcall %}
+</div>
+
+<div class="single-question-page">
+<div class="grid-row">
+  <div class="column-two-thirds">
+
+    <form method="POST" action="{{ url_for('.submit_contract_review', framework_slug=framework.slug) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+        {%
+          with
+          type = "checkbox",
+          name = "authority",
+          question = form.authority.label,
+          options = [{
+              "label": form.authority.description,
+          }],
+          error=form.authority.errors[0]
+        %}
+          {% include "toolkit/forms/selection-buttons.html" %}
+        {% endwith %}
+
+        {%
+          with
+            type = "save",
+            label = "Return signed signature page"
+        %}
+          {% include "toolkit/button.html" %}
+        {% endwith %}
+    </form>
+
+    <div class="dmspeak">
+      <p>Returning the signature page will notify the Crown Commercial Service and the primary contact you gave in your G-Cloud 8 application, {{ declaration.primaryContact }} at {{ declaration.primaryContactEmail }}.</p>
+
+      <p>You’ll also receive an email to confirm that the signature page has been returned.</p>
+    </div>
+  </div>
+</div>
+</div>
+
+{% endblock %}

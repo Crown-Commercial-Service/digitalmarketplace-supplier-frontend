@@ -1907,4 +1907,58 @@ class TestReturnSignedAgreement(BaseApplicationTest):
                 download_filename='Supplier_Name-1234-signed-framework-agreement.jpg'
             )
             assert res.status_code == 302
-            assert res.location == 'http://localhost/suppliers/frameworks/g-cloud-7/agreement'
+            assert res.location == 'http://localhost/suppliers/frameworks/g-cloud-8/contract-review'
+
+    def test_contract_review_page_loads_with_correct_supplier_details(self, return_supplier_framework, data_api_client):
+        with self.app.test_client():
+            self.login()
+            data_api_client.get_framework.return_value = get_g_cloud_8()
+            supplier_framework = self.supplier_framework(on_framework=True)['frameworkInterest']
+            supplier_framework['declaration']['primaryContact'] = 'contact name'
+            supplier_framework['declaration']['primaryContactEmail'] = 'email@email.com'
+            return_supplier_framework.return_value = supplier_framework
+
+            res = self.client.get(
+                "/suppliers/frameworks/g-cloud-8/contract-review"
+            )
+            assert res.status_code == 200
+            page = res.get_data(as_text=True)
+            assert "I have the authority to return this agreement on behalf of Supplier Name" in page
+            assert "Returning the signature page will notify the Crown Commercial Service and the primary contact you "
+            "gave in your G-Cloud 8 application, contact name at email@email.com." in page
+
+    def test_contract_review_page_loads_with_signer_details_and_filename_from_session(
+        self, return_supplier_framework, data_api_client
+    ):
+        with self.app.test_client():
+            self.login()
+            data_api_client.get_framework.return_value = get_g_cloud_8()
+            return_supplier_framework.return_value = self.supplier_framework(on_framework=True)['frameworkInterest']
+
+            with self.client.session_transaction() as sess:
+                sess['full_name'] = "signer_full_name"
+                sess['role'] = "signer_role"
+                sess['signature_page'] = "example.pdf"
+
+            res = self.client.get(
+                "/suppliers/frameworks/g-cloud-8/contract-review"
+            )
+            assert res.status_code == 200
+            page_without_whitespace = self.strip_all_whitespace(res.get_data(as_text=True))
+            assert '<tdclass="summary-item-field"><span><p>signer_full_name</p><p>signer_role</p></span></td>' \
+                in page_without_whitespace
+            assert '<tdclass="summary-item-field"><span>example.pdf</span></td>' in page_without_whitespace
+
+    def test_should_be_an_error_if_authority_not_checked(self, return_supplier_framework, data_api_client):
+        with self.app.test_client():
+            self.login()
+            data_api_client.get_framework.return_value = get_g_cloud_8()
+            return_supplier_framework.return_value = self.supplier_framework(on_framework=True)['frameworkInterest']
+
+            res = self.client.post(
+                "/suppliers/frameworks/g-cloud-8/contract-review",
+                data={}
+            )
+            assert res.status_code == 400
+            page = res.get_data(as_text=True)
+            assert "You must confirm you have the authority to return the agreement" in page
