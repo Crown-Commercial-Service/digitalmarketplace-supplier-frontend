@@ -1,27 +1,29 @@
 {% import "toolkit/summary-table.html" as summary %}
 {% for section in content.summary(brief_response) %}
-    {{ summary.heading(section.name, id="opportunity-attributes-{}".format(loop.index)) }}
-    {% call(item) summary.list_table(
-      section.questions,
-      caption=section.name,
-      field_headings=[
-        "Opportunity attribute name",
-        "Opportunity attribute value"
-      ],
-      field_headings_visible=False
-    ) %}
-        {% if item.type == "boolean_list" %}
-          {% for question in item.boolean_list_questions %}
+    {% if not (section.id == 'your-nice-to-have-skills-and-experience' and not section.get_question('niceToHaveRequirements').boolean_list_questions) %}
+        {{ summary.heading(section.name, id="opportunity-attributes-{}".format(loop.index)) }}
+        {% call(item) summary.list_table(
+          section.questions,
+          caption=section.name,
+          field_headings=[
+            "Opportunity attribute name",
+            "Opportunity attribute value"
+          ],
+          field_headings_visible=False
+        ) %}
+            {% if item.type == "boolean_list" %}
+              {% for question in item.boolean_list_questions %}
+                {% call summary.row() %}
+                  {{ summary.field_name(question) }}
+                  {{ summary['boolean'](item.value[loop.index0]) }}
+                {% endcall %}
+              {% endfor %}
+            {% else %}
             {% call summary.row() %}
-              {{ summary.field_name(question) }}
-              {{ summary['boolean'](item.value[loop.index0]) }}
+              {{ summary.field_name(item.label) }}
+              {{ summary[item.type](item.value) }}
             {% endcall %}
-          {% endfor %}
-        {% else %}
-        {% call summary.row() %}
-          {{ summary.field_name(item.label) }}
-          {{ summary[item.type](item.value) }}
+            {% endif %}
         {% endcall %}
-        {% endif %}
-    {% endcall %}
+    {% endif %}
 {% endfor %}
