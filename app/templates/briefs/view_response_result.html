@@ -23,7 +23,7 @@
   <div class="column-two-thirds">
     {% with
       heading = {
-                  "submitted_ok": "Your response to ‘{}’ has been submitted".format(brief.title),
+                  "submitted_ok": "Your response to ‘{}’ has been sent".format(brief.title),
                   "submitted_unsuccessful": "You don’t meet all the essential requirements"
                 }[result_state],
       smaller = true
@@ -82,6 +82,8 @@
               <li>
               {% if brief.lot == "user-research-participants" %}
                 evidence showing how you meet their availability criteria
+              {% elif brief.lot == "digital-specialists" %}
+                evidence showing how the specialist meets their cultural fit criteria
               {% else %}
                 evidence showing how you meet their cultural fit criteria
               {% endif %}
@@ -90,16 +92,12 @@
           </div>
           
           <div class="explanation-list padding-bottom-small">
-            <p class="lead">The buyer will use the assessment methods listed in their requirements to evaluate your evidence:</p>
-              {% if brief.get('evaluationType')|length > 1 %}
+            <p class="lead">The buyer will use the assessment methods listed in their requirements to evaluate your evidence. They’ll use:</p>
                 <ul class="list-bullet">
                 {% for eval_type in brief.get('evaluationType') %}
                   <li>{{ 'an' if eval_type == 'Interview' else 'a' }} {{ eval_type|lower }}</li>
                 {% endfor %}
                 </ul>
-              {% else %}
-                <p>a {{ brief.get('evaluationType')[0]|lower }}</p>
-              {% endif %}
           </div>
           
           <p>
@@ -129,6 +127,8 @@
     {% include 'briefs/_brief_response_data.html' %}
   </div>
 </div>
+
+<p class="padding-bottom-small">&nbsp;</p>
 
   {%
     with
