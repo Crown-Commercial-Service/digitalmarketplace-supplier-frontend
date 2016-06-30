@@ -512,8 +512,7 @@ class TestRespondToBrief(BaseApplicationTest):
             data=brief_form_submission
         )
         assert res.status_code == 302
-        assert res.location == "http://localhost/suppliers?applied_for_brief=1234"
-        self.assert_flashes("Your response to ‘I need a thing to do a thing’ has been submitted.")
+        assert res.location == "http://localhost/suppliers/opportunities/1234/responses/result?result=success"
         data_api_client.create_brief_response.assert_called_once_with(
             1234, 1234, processed_brief_submission, 'email@email.com')
 
@@ -529,7 +528,7 @@ class TestRespondToBrief(BaseApplicationTest):
             data=brief_form_submission
         )
         assert res.status_code == 302
-        assert res.location == "http://localhost/suppliers/opportunities/1234/responses/result"
+        assert res.location == "http://localhost/suppliers/opportunities/1234/responses/result?result=fail"
         data_api_client.create_brief_response.assert_called_once_with(
             1234, 1234, processed_brief_submission, 'email@email.com')
 
@@ -739,13 +738,18 @@ class TestResponseResultPage(BaseApplicationTest):
 
     def setup(self):
         super(TestResponseResultPage, self).setup()
-
+        lots = [api_stubs.lot(slug="digital-specialists", allows_brief=True)]
+        self.framework = api_stubs.framework(status="live", slug="digital-outcomes-and-specialists",
+                                             clarification_questions_open=False, lots=lots)
         self.brief = api_stubs.brief(status='live')
+        self.brief['briefs']['essentialRequirements'] = ['Must one', 'Must two', 'Must three']
+        self.brief['briefs']['evaluationType'] = ['Interview', 'Work history']
         with self.app.test_client():
             self.login()
 
     def test_view_response_result_submitted_ok(self, data_api_client):
         data_api_client.get_brief.return_value = self.brief
+        data_api_client.get_framework.return_value = self.framework
         data_api_client.is_supplier_eligible_for_brief.return_value = True
         data_api_client.find_brief_responses.return_value = {
             "briefResponses": [
@@ -757,10 +761,11 @@ class TestResponseResultPage(BaseApplicationTest):
         assert res.status_code == 200
         doc = html.fromstring(res.get_data(as_text=True))
         assert doc.xpath('//h1')[0].text.strip() == \
-            "Your response to ‘I need a thing to do a thing’ has been submitted"
+            "Your response to ‘I need a thing to do a thing’ has been sent"
 
     def test_view_response_result_submitted_unsuccessful(self, data_api_client):
         data_api_client.get_brief.return_value = self.brief
+        data_api_client.get_framework.return_value = self.framework
         data_api_client.is_supplier_eligible_for_brief.return_value = True
         data_api_client.find_brief_responses.return_value = {
             "briefResponses": [
