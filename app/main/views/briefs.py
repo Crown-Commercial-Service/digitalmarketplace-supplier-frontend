@@ -150,8 +150,7 @@ def submit_brief_response(brief_id):
         ), 400
 
     if all(brief_response['essentialRequirements']):
-        flash('Your response to ‘{}’ has been sent.'.format(brief['title']))
-        # result parameter is used to track brief applications by analytics
+        # "result" parameter is used to track brief applications by analytics
         return redirect(url_for(".view_response_result", brief_id=brief_id, result='success'))
     else:
         return redirect(url_for(".view_response_result", brief_id=brief_id, result='fail'))
