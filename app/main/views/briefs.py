@@ -150,11 +150,11 @@ def submit_brief_response(brief_id):
         ), 400
 
     if all(brief_response['essentialRequirements']):
-        flash('Your response to ‘{}’ has been submitted.'.format(brief['title']))
-        # applied_for_brief parameter is used to track brief applications by analytics
-        return redirect(url_for(".dashboard", applied_for_brief=brief['id']))
+        flash('Your response to ‘{}’ has been sent.'.format(brief['title']))
+        # result parameter is used to track brief applications by analytics
+        return redirect(url_for(".view_response_result", brief_id=brief_id, result='success'))
     else:
-        return redirect(url_for(".view_response_result", brief_id=brief_id))
+        return redirect(url_for(".view_response_result", brief_id=brief_id, result='fail'))
 
 
 @main.route('/opportunities/<int:brief_id>/responses/result')
