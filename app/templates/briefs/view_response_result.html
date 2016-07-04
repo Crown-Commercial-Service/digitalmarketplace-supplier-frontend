@@ -45,7 +45,7 @@
             <ul class="list-bullet">
               <li>you can’t start when they need you to</li>
               <li>you have fewer nice‑to‑have skills and experience than other suppliers</li>
-              {% if brief.lot == "digital-specialists" and brief.get('budgetRange') %}
+              {% if brief.lotSlug == "digital-specialists" and brief.get('budgetRange') %}
               <li>your day rate exceeds their budget</li>
               {% endif %}
             </ul>
@@ -68,21 +68,21 @@
             <p class="lead"> At the evaluation stage, the buyer will ask you to provide:</p>
             <ul class="list-bullet">
               <li>
-              {% if brief.lot == "digital-specialists" %}
+              {% if brief.lotSlug == "digital-specialists" %}
                 evidence of the specialist’s skills and experience
               {% else %} 
                 evidence of your skills and experience
               {% endif %}
               </li>
               
-              {% if brief.lot != "digital-specialists" %}
+              {% if brief.lotSlug != "digital-specialists" %}
                 <li>your proposal</li>
               {% endif %}
               
               <li>
-              {% if brief.lot == "user-research-participants" %}
+              {% if brief.lotSlug == "user-research-participants" %}
                 evidence showing how you meet their availability criteria
-              {% elif brief.lot == "digital-specialists" %}
+              {% elif brief.lotSlug == "digital-specialists" %}
                 evidence showing how the specialist meets their cultural fit criteria
               {% else %}
                 evidence showing how you meet their cultural fit criteria
@@ -102,7 +102,7 @@
           
           <p>
             Your evidence must describe the skills and experience of the 
-            {{ 'person' if brief.lot == "digital-specialists" else 'people' }} 
+            {{ 'person' if brief.lotSlug == "digital-specialists" else 'people' }} 
             who’ll be working on the project.
           </p>
         </li>
