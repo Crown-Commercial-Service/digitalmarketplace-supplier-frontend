@@ -94,7 +94,7 @@
           <div class="explanation-list padding-bottom-small">
             <p class="lead">The buyer will use the assessment methods listed in their requirements to evaluate your evidence. They’ll use:</p>
                 <ul class="list-bullet">
-                {% for eval_type in brief.get('evaluationType') %}
+                {% for eval_type in brief.get('evaluationType', []) %}
                   <li>{{ 'an' if eval_type == 'Interview' else 'a' }} {{ eval_type|lower }}</li>
                 {% endfor %}
                 </ul>
