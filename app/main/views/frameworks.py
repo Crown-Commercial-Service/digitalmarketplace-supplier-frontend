@@ -581,20 +581,23 @@ def upload_framework_agreement(framework_slug):
 @login_required
 def signer_details(framework_slug):
     framework = get_framework(data_api_client, framework_slug)
-    return_supplier_framework_info_if_on_framework_or_abort(data_api_client, framework_slug)
+    supplier_framework = return_supplier_framework_info_if_on_framework_or_abort(data_api_client, framework_slug)
 
     form = SignerDetailsForm()
 
-    if form.full_name.name in session:
-        form.full_name.data = session[form.full_name.name]
+    question_keys = ['signerName', 'signerRole']
 
-    if form.role.name in session:
-        form.role.data = session[form.role.name]
+    # if the signer* keys exist, prefill them in the form
+    if supplier_framework['agreementDetails']:
+        for question_key in question_keys:
+            if question_key in supplier_framework['agreementDetails']:
+                form[question_key].data = supplier_framework['agreementDetails'][question_key]
 
     return render_template(
         "frameworks/signer_details.html",
         form=form,
         framework=framework,
+        question_keys=question_keys,
     ), 200
 
 
@@ -602,24 +605,31 @@ def signer_details(framework_slug):
 @login_required
 def submit_signer_details(framework_slug):
     framework = get_framework(data_api_client, framework_slug)
-    return_supplier_framework_info_if_on_framework_or_abort(data_api_client, framework_slug)
+    supplier_framework = return_supplier_framework_info_if_on_framework_or_abort(data_api_client, framework_slug)
 
     form = SignerDetailsForm()
 
+    question_keys = ['signerName', 'signerRole']
+
     if form.validate_on_submit():
-        session[form.full_name.name] = form.full_name.data
-        session[form.role.name] = form.role.data
+        agreement_details = {
+            'signerName': request.form.get('signerName'),
+            'signerRole': request.form.get('signerRole'),
+        }
+        # Do we need to do anything else here? i.e. what happens if this fails
+        data_api_client.update_supplier_framework_agreement_details(
+            current_user.supplier_id, framework_slug, agreement_details, current_user.email_address)
 
         return redirect(url_for(".signature_upload", framework_slug=framework_slug))
     else:
         current_app.logger.warning(
-            "signaturepage.fail: full_name:{full_name} role:{role} {errors}",
+            "signaturepage.fail: signerName:{signerName} signerRole:{signerRole} {errors}",
             extra={
-                'full_name': session.get('full_name'),
-                'role': session.get('role'),
+                'signerName': request.form.get('signerName'),
+                'signerRole': request.form.get('signerRole'),
                 'errors': ",".join(chain.from_iterable(form.errors.values()))})
 
-        error_keys_in_order = [key for key in ['full_name', 'role'] if key in form.errors.keys()]
+        error_keys_in_order = [key for key in question_keys if key in form.errors.keys()]
         form_errors = [
             {'question': form[key].label.text, 'input_name': key} for key in error_keys_in_order
         ]
@@ -629,6 +639,7 @@ def submit_signer_details(framework_slug):
             form=form,
             form_errors=form_errors,
             framework=framework,
+            question_keys=question_keys,
         ), 400
 
 
@@ -713,9 +724,9 @@ def contract_review(framework_slug):
 
     return render_template(
         "frameworks/contract_review.html",
-        declaration=supplier_framework['declaration'],
         form=form,
         framework=framework,
+        supplier_framework=supplier_framework
     ), 200
 
 
@@ -731,14 +742,20 @@ def submit_contract_review(framework_slug):
     )
 
     if form.validate_on_submit():
+        # Do we need to do anything else here? i.e. what happens if this fails
+        # Is current_user.id correct or should we be trying to use current_user.get_id
+        data_api_client.register_framework_agreement_returned(
+            current_user.supplier_id, framework_slug, current_user.email_address, current_user.id)
+
         return redirect(url_for(".contract_review", framework_slug=framework_slug))
 
     else:
         current_app.logger.warning(
-            "signaturepage.fail: full_name:{full_name} role:{role} signature_page:{signature_page} {errors}",
+            "signaturepage.fail: signerName:{signerName} "
+            "signerRole:{signerRole} signature_page:{signature_page} {errors}",
             extra={
-                'full_name': session.get('full_name'),
-                'role': session.get('role'),
+                'signerName': session.get('signerName'),
+                'signerRole': session.get('signerRole'),
                 'signature_page': session.get('signature_page'),
                 'errors': ",".join(chain.from_iterable(form.errors.values()))})
 
@@ -748,8 +765,8 @@ def submit_contract_review(framework_slug):
 
         return render_template(
             "frameworks/contract_review.html",
-            declaration=supplier_framework['declaration'],
             form=form,
             form_errors=form_errors,
             framework=framework,
+            supplier_framework=supplier_framework
         ), 400

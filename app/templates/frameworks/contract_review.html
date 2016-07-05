@@ -60,7 +60,7 @@
     {% call summary.row() %}
       {{ summary.field_name('Person who signed') }}
       {% call summary.field() %}
-        <p>{{ session.full_name }}</p><p>{{ session.role }}</p>
+        <p>{{ supplier_framework.agreementDetails.signerName }}</p><p>{{ supplier_framework.agreementDetails.signerRole }}</p>
       {% endcall %}
       {{ summary.edit_link("Edit", url_for('.signer_details', framework_slug=framework.slug)) }}
     {% endcall %}
@@ -101,7 +101,7 @@
     </form>
 
     <div class="dmspeak">
-      <p>Returning the signature page will notify the Crown Commercial Service and the primary contact you gave in your G-Cloud 8 application, {{ declaration.primaryContact }} at {{ declaration.primaryContactEmail }}.</p>
+      <p>Returning the signature page will notify the Crown Commercial Service and the primary contact you gave in your G-Cloud 8 application, {{ supplier_framework.declaration.primaryContact }} at {{ supplier_framework.declaration.primaryContactEmail }}.</p>
 
       <p>You’ll also receive an email to confirm that the signature page has been returned.</p>
     </div>
