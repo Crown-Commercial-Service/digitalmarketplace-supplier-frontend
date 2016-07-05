@@ -14,7 +14,7 @@
             {% if item.type == "boolean_list" %}
               {% for question in item.boolean_list_questions %}
                 {% call summary.row() %}
-                  {{ summary.field_name(question) }}
+                  {{ summary.field_name(question, two_thirds=True) }}
                   {{ summary['boolean'](item.value[loop.index0]) }}
                 {% endcall %}
               {% endfor %}
