@@ -743,7 +743,7 @@ class TestResponseResultPage(BaseApplicationTest):
                                              clarification_questions_open=False, lots=lots)
         self.brief = api_stubs.brief(status='live')
         self.brief['briefs']['essentialRequirements'] = ['Must one', 'Must two', 'Must three']
-        self.brief['briefs']['evaluationType'] = ['Interview', 'Work history']
+        self.brief['briefs']['evaluationType'] = ['Interview']
         with self.app.test_client():
             self.login()
 
@@ -887,6 +887,23 @@ class TestResponseResultPage(BaseApplicationTest):
         doc = html.fromstring(res.get_data(as_text=True))
         assert len(doc.xpath('//li[contains(normalize-space(text()), "your day rate exceeds their budget")]')) == 0
 
+    def test_evaluation_methods_load_default_value(self, data_api_client):
+        no_extra_eval_brief = self.brief.copy()
+        no_extra_eval_brief['briefs'].pop('evaluationType')
+        data_api_client.get_brief.return_value = no_extra_eval_brief
+        data_api_client.get_framework.return_value = self.framework
+        data_api_client.is_supplier_eligible_for_brief.return_value = True
+        data_api_client.find_brief_responses.return_value = {
+            "briefResponses": [
+                {"essentialRequirements": [True, True, True]}
+            ]
+        }
+        res = self.client.get('/suppliers/opportunities/1234/responses/result')
+
+        assert res.status_code == 200
+        doc = html.fromstring(res.get_data(as_text=True))
+        assert len(doc.xpath('//li[contains(normalize-space(text()), "a work history")]')) == 1
+
     def test_evaluation_methods_shown_with_a_or_an(self, data_api_client):
         data_api_client.get_brief.return_value = self.brief
         data_api_client.get_framework.return_value = self.framework
@@ -900,5 +917,5 @@ class TestResponseResultPage(BaseApplicationTest):
 
         assert res.status_code == 200
         doc = html.fromstring(res.get_data(as_text=True))
-        assert len(doc.xpath('//li[contains(normalize-space(text()), "an interview")]')) == 1
         assert len(doc.xpath('//li[contains(normalize-space(text()), "a work history")]')) == 1
+        assert len(doc.xpath('//li[contains(normalize-space(text()), "an interview")]')) == 1
