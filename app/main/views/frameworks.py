@@ -138,6 +138,7 @@ def framework_signing(framework_slug):
     return render_template(
         "frameworks/signing.html",
         framework=framework,
+        supplier=supplier,
         applied_lots=tuple(lot for lot in framework["lots"] if lot["slug"] in applied_lot_slugs),
         supplier_framework_info=supplier_framework_info,
     ), 200
