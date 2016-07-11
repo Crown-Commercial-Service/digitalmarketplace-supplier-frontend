@@ -747,6 +747,36 @@ def submit_contract_review(framework_slug):
         data_api_client.register_framework_agreement_returned(
             current_user.supplier_id, framework_slug, current_user.email_address, current_user.id)
 
+        try:
+            email_subject = 'Your {} signature page has been received'.format(framework['name'])
+            email_body = render_template(
+                'emails/framework_agreement_with_framework_version_returned.html',
+                framework_name=framework['name'],
+                framework_slug=framework['slug']
+            )
+
+            # Not sure who this is sent to
+            # Need to add a from name
+            # I assume no reply to address.
+            # Not sure if tags are needed
+            send_email(
+                'useremailtogohere',
+                email_body,
+                current_app.config['DM_MANDRILL_API_KEY'],
+                email_subject,
+                current_app.config["DM_GENERIC_NOREPLY_EMAIL"],
+                'from name to go here',
+                []
+            )
+        except MandrillException as e:
+            # current_app.logger.error(
+            #     "Framework agreement email failed to send. "
+            #     "error {error} supplier_id {supplier_id} email_hash {email_hash}",
+            #     extra={'error': six.text_type(e),
+            #            'supplier_id': current_user.supplier_id,
+            #            'email_hash': hash_email(current_user.email_address)})
+            abort(503, "Framework agreement email failed to send")
+
         return redirect(url_for(".contract_review", framework_slug=framework_slug))
 
     else:
