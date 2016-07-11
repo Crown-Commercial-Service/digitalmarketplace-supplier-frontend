@@ -1,5 +1,5 @@
 {% import "toolkit/summary-table.html" as summary %}
-{% for section in content.summary(brief_response) %}
+{% for section in response_content.summary(brief_response) %}
     {% if not (section.id == 'your-nice-to-have-skills-and-experience' and not section.get_question('niceToHaveRequirements').boolean_list_questions) %}
         {{ summary.heading(section.name, id="opportunity-attributes-{}".format(loop.index)) }}
         {% call(item) summary.list_table(

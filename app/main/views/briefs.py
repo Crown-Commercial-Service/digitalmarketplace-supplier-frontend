@@ -179,16 +179,22 @@ def view_response_result(brief_id):
     framework, lot = get_framework_and_lot(
         data_api_client, brief['frameworkSlug'], brief['lotSlug'], allowed_statuses=['live'])
 
-    content = content_loader.get_manifest(framework['slug'], 'display_brief_response').filter({'lot': lot['slug']})
-
-    for section in content:
+    response_content = content_loader.get_manifest(
+        framework['slug'], 'display_brief_response').filter({'lot': lot['slug']})
+    for section in response_content:
         section.inject_brief_questions_into_boolean_list_question(brief)
+
+    brief_content = content_loader.get_manifest(
+        framework['slug'], 'edit_brief').filter({'lot': lot['slug']})
+    brief_summary = brief_content.summary(brief)
+
     return render_template(
         'briefs/view_response_result.html',
         brief=brief,
+        brief_summary=brief_summary,
         brief_response=brief_response,
         result_state=result_state,
-        content=content
+        response_content=response_content
     )
 
 

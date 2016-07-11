@@ -14,6 +14,7 @@ content_loader.load_messages('g-cloud-7', ['dates'])
 
 content_loader.load_manifest('digital-outcomes-and-specialists', 'declaration', 'declaration')
 content_loader.load_manifest('digital-outcomes-and-specialists', 'services', 'edit_submission')
+content_loader.load_manifest('digital-outcomes-and-specialists', 'briefs', 'edit_brief')
 content_loader.load_manifest('digital-outcomes-and-specialists', 'brief-responses', 'edit_brief_response')
 content_loader.load_manifest('digital-outcomes-and-specialists', 'brief-responses', 'display_brief_response')
 content_loader.load_messages('digital-outcomes-and-specialists', ['dates'])
