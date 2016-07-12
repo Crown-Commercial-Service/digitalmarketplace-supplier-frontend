@@ -1726,7 +1726,7 @@ class TestReturnSignedAgreement(BaseApplicationTest):
         res = self.client.post(
             "/suppliers/frameworks/g-cloud-8/signer-details",
             data={
-                'role': "The Boss"
+                'signerRole': "The Boss"
             }
         )
         assert res.status_code == 400
@@ -1741,7 +1741,7 @@ class TestReturnSignedAgreement(BaseApplicationTest):
         res = self.client.post(
             "/suppliers/frameworks/g-cloud-8/signer-details",
             data={
-                'full_name': "Josh Moss"
+                'signerName': "Josh Moss"
             }
         )
         assert res.status_code == 400
@@ -1787,18 +1787,19 @@ class TestReturnSignedAgreement(BaseApplicationTest):
         data_api_client.get_framework.return_value = get_g_cloud_8()
         return_supplier_framework.return_value = self.supplier_framework(on_framework=True)['frameworkInterest']
 
-        # this test needs fixing but not sure what we are going to assert as no longer using session
-        with self.client as c:
-            self.login()
-            res = c.post(
-                "/suppliers/frameworks/g-cloud-8/signer-details",
-                data=signer_details
-            )
-            assert res.status_code == 302
+        self.login()
+        res = self.client.post(
+            "/suppliers/frameworks/g-cloud-8/signer-details",
+            data=signer_details
+        )
+        assert res.status_code == 302
 
-            for key, value in signer_details.items():
-                assert key in session
-                assert session.get(key) == value.strip()
+        data_api_client.update_supplier_framework_agreement_details.assert_called_with(
+            1234,
+            'g-cloud-8',
+            {'signerName': u'Josh Moss', 'signerRole': u'The Boss'},
+            'email@email.com'
+        )
 
     def test_provide_signer_details_form_with_valid_input_redirects_to_upload_page(
             self, return_supplier_framework, data_api_client

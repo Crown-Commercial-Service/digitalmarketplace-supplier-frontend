@@ -577,7 +577,7 @@ def upload_framework_agreement(framework_slug):
     return redirect(url_for('.framework_agreement', framework_slug=framework_slug))
 
 
-@main.route('/frameworks/<framework_slug>/signer-details', methods=['GET'])
+@main.route('/frameworks/<framework_slug>/signer-details', methods=['GET', 'POST'])
 @login_required
 def signer_details(framework_slug):
     framework = get_framework(data_api_client, framework_slug)
@@ -586,6 +586,30 @@ def signer_details(framework_slug):
     form = SignerDetailsForm()
 
     question_keys = ['signerName', 'signerRole']
+    form_errors = {}
+
+    if request.method == 'POST':
+
+        if form.validate_on_submit():
+            agreement_details = {question_key: form[question_key].data for question_key in question_keys}
+
+            data_api_client.update_supplier_framework_agreement_details(
+                current_user.supplier_id, framework_slug, agreement_details, current_user.email_address
+            )
+
+            return redirect(url_for(".signature_upload", framework_slug=framework_slug))
+        else:
+            current_app.logger.warning(
+                "signaturepage.fail: signerName:{signerName} signerRole:{signerRole} {errors}",
+                extra={
+                    'signerName': form['signerName'].data,
+                    'signerRole': form['signerRole'].data,
+                    'errors': ",".join(chain.from_iterable(form.errors.values()))})
+
+            error_keys_in_order = [key for key in question_keys if key in form.errors.keys()]
+            form_errors = [
+                {'question': form[key].label.text, 'input_name': key} for key in error_keys_in_order
+            ]
 
     # if the signer* keys exist, prefill them in the form
     if supplier_framework['agreementDetails']:
@@ -596,51 +620,10 @@ def signer_details(framework_slug):
     return render_template(
         "frameworks/signer_details.html",
         form=form,
+        form_errors=form_errors,
         framework=framework,
         question_keys=question_keys,
-    ), 200
-
-
-@main.route('/frameworks/<framework_slug>/signer-details', methods=['POST'])
-@login_required
-def submit_signer_details(framework_slug):
-    framework = get_framework(data_api_client, framework_slug)
-    supplier_framework = return_supplier_framework_info_if_on_framework_or_abort(data_api_client, framework_slug)
-
-    form = SignerDetailsForm()
-
-    question_keys = ['signerName', 'signerRole']
-
-    if form.validate_on_submit():
-        agreement_details = {
-            'signerName': request.form.get('signerName'),
-            'signerRole': request.form.get('signerRole'),
-        }
-        # Do we need to do anything else here? i.e. what happens if this fails
-        data_api_client.update_supplier_framework_agreement_details(
-            current_user.supplier_id, framework_slug, agreement_details, current_user.email_address)
-
-        return redirect(url_for(".signature_upload", framework_slug=framework_slug))
-    else:
-        current_app.logger.warning(
-            "signaturepage.fail: signerName:{signerName} signerRole:{signerRole} {errors}",
-            extra={
-                'signerName': request.form.get('signerName'),
-                'signerRole': request.form.get('signerRole'),
-                'errors': ",".join(chain.from_iterable(form.errors.values()))})
-
-        error_keys_in_order = [key for key in question_keys if key in form.errors.keys()]
-        form_errors = [
-            {'question': form[key].label.text, 'input_name': key} for key in error_keys_in_order
-        ]
-
-        return render_template(
-            "frameworks/signer_details.html",
-            form=form,
-            form_errors=form_errors,
-            framework=framework,
-            question_keys=question_keys,
-        ), 400
+    ), 400 if form_errors else 200
 
 
 @main.route('/frameworks/<framework_slug>/signature-upload', methods=['GET'])
