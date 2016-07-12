@@ -123,6 +123,7 @@ def framework_dashboard(framework_slug):
 @login_required
 def framework_signing(framework_slug):
     framework = get_framework(data_api_client, framework_slug, allowed_statuses=("standstill", "live", "expired",))
+    supplier = data_api_client.get_supplier(current_user.supplier_id)['suppliers']
 
     if not framework.get("frameworkAgreementVersion"):
         # presumably an old pre-g8 framework that we don't want to enable this feature for

@@ -58,7 +58,7 @@
   margin-left: 0;
 }
 #signing .signature p {
-  min-height: 25px;
+  min-height: 30px;
 }
 #signing .signature ul {
   padding: 0;
@@ -70,12 +70,6 @@
   width: 80%;
   border-bottom: 1px dashed black;
   margin-left: 25%;
-}
-#signing .footer {
-  position: absolute;
-  bottom: 25px;
-  left: 75px;
-  right: 75px;
 }
 #signing .footer p, #signing .footer strong{
   font-size: 8px;

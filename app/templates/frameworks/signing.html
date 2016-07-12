@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html moznomarginboxes mozdisallowselectionprint>
+<html>
   <head>
     <meta charset="utf-8" />
     <title>{% block page_title %}G-Cloud 8 framework agreement{% endblock %}</title>
@@ -33,13 +33,15 @@
                   </p>
                   <p class="instruction-list-item-extra-information">
                     <strong>registered address:</strong>
-                    {{ supplier.contactInformation[0].address1 }},
-                    {{ supplier.contactInformation[0].city }},
-                    {{ supplier.contactInformation[0].postcode }}
+                    {% with contact_information=supplier.contactInformation[0] %}
+                      {{ contact_information.address1 }},
+                      {{ contact_information.city }},
+                      {{ contact_information.postcode }}
+                    {% endwith %}
                   </p>
                   <p class="instruction-list-item-extra-information">
                     <strong>company number:</strong>
-                    <!-- {{companies_house_number}} -->
+                    {{ supplier.companiesHouseNumber }}
                   </p>
                   <p class="instruction-list-item-extra-information">
                     (the ‘Supplier’), as a Supplier of G-Cloud 8 services who can bid for Call-Off Contracts as outlined in the Contract Notice within the Official Journal of the European Union reference TBC OJEU Contract Notice).
@@ -50,21 +52,21 @@
                   <p class="instruction-list-item-body">
                     <strong>Appointment is to:</strong>
 <!--                     Lot 1: Infrastructure as a Service (IaaS), Lot 2: Platform as a Service (PaaS), Lot 3: Software as a Service (SaaS), Lot 4: Specialist Cloud Services -->
-                    [COMPANY LOTS]
+                    {{applied_lots}}
                   </p>
                 </li>
 
                 <li class="instruction-list-item">
                   <p class="instruction-list-item-body">
                     <strong>Appointment begins at:</strong>
-                    01/08/2016
+                    29/07/2016
                   </p>
                 </li>
 
                 <li class="instruction-list-item">
                   <p class="instruction-list-item-body">
                     <strong>Appointment expires at:</strong>
-                    23:59 on 31/07/2017 (unless this Framework Agreement is extended  by CCS or is terminated early).
+                    23:59 on 28/07/2017 (unless this Framework Agreement is extended by CCS or is terminated early).
                   </p>
                 </li>
 
@@ -111,7 +113,7 @@
       </ol>
       <div class="signatures">
         <div class="signature">
-          <p>Signed by or on behalf of {{supplier_name}},</p>
+          <p>Signed by or on behalf of {{supplier.name}},</p>
           <ul>
             <li>
               <strong>Signature:</strong>
@@ -157,9 +159,8 @@
       </div>
       <div class="footer">
         <p>G-Cloud 8 Framework Agreement - Version: RM1557viii-18-07-16 - Signature page</p>
-        <p>Signature attachment for G-Cloud 8 Framework Agreement, Version: RM1557viii-18-07-16</p>
         <p>
-          <a href="https://www.gov.uk/government/publications/digital-outcomes-and-specialists-framework-agreement">www.gov.uk/government/publications/g-cloud8-framework-agreement</a>
+          <a href="https://www.gov.uk/government/publications/g-cloud-8-framework-agreement">www.gov.uk/government/publications/g-cloud-8-framework-agreement</a>
         </p>
         <div class="page-number">
           <p>
