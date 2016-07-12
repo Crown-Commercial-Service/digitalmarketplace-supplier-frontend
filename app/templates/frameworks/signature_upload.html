@@ -47,15 +47,16 @@
 
   <div class="grid-row">
     <div class="column-two-thirds">
-      <form method="POST" enctype="multipart/form-data" action="{{ url_for('.submit_signature_upload', framework_slug=framework.slug) }}">
+      <form method="POST" enctype="multipart/form-data" action="{{ url_for('.signature_upload', framework_slug=framework.slug) }}">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
           {%
             with
             question = "Upload your signed signature page",
             name = "signature_page",
             question_advice = 
-            "You only need to return the signed signature page. 
-            \n\nThe file must be saved as a PDF, JPG or PNG.",
+              "You only need to return the signed signature page.
+              \n\nThe file must be saved as a PDF, JPG or PNG.",
+            value="Document uploaded {}".format(signature_page.last_modified|datetimeformat) if signature_page else None,
             error = upload_error
           %}
             {% include "toolkit/forms/upload.html" %}

@@ -1709,7 +1709,6 @@ class TestG7ServicesList(BaseApplicationTest):
         submissions = self.client.get('/suppliers/frameworks/digital-outcomes-and-specialists/submissions')
 
         assert submissions.status_code == 200
-
         assert_in(u'Submitted', submissions.get_data(as_text=True))
         assert_not_in(u'Apply to provide', submissions.get_data(as_text=True))
 
@@ -1822,15 +1821,17 @@ class TestReturnSignedAgreement(BaseApplicationTest):
             assert res.status_code == 302
             assert "suppliers/frameworks/g-cloud-8/signature-upload" in res.location
 
+    @mock.patch('dmutils.s3.S3')
     @mock.patch('app.main.views.frameworks.file_is_empty')
     def test_signature_upload_returns_400_if_file_is_empty(
-        self, file_is_empty, return_supplier_framework, data_api_client
+        self, file_is_empty, s3, return_supplier_framework, data_api_client
     ):
         with self.app.test_client():
             self.login()
 
             data_api_client.get_framework.return_value = get_g_cloud_8()
             return_supplier_framework.return_value = self.supplier_framework(on_framework=True)['frameworkInterest']
+            s3.return_value.list.return_value = []
             file_is_empty.return_value = True
 
             res = self.client.post(
@@ -1843,15 +1844,17 @@ class TestReturnSignedAgreement(BaseApplicationTest):
             assert res.status_code == 400
             assert 'The file must not be empty' in res.get_data(as_text=True)
 
+    @mock.patch('dmutils.s3.S3')
     @mock.patch('app.main.views.frameworks.file_is_image')
     def test_signature_upload_returns_400_if_file_is_not_image_or_pdf(
-        self, file_is_image, return_supplier_framework, data_api_client
+        self, file_is_image, s3, return_supplier_framework, data_api_client
     ):
         with self.app.test_client():
             self.login()
 
             data_api_client.get_framework.return_value = get_g_cloud_8()
             return_supplier_framework.return_value = self.supplier_framework(on_framework=True)['frameworkInterest']
+            s3.return_value.list.return_value = []
             file_is_image.return_value = False
 
             res = self.client.post(
@@ -1864,15 +1867,17 @@ class TestReturnSignedAgreement(BaseApplicationTest):
             assert res.status_code == 400
             assert 'The file must be a PDF, JPG or PNG' in res.get_data(as_text=True)
 
+    @mock.patch('dmutils.s3.S3')
     @mock.patch('app.main.views.frameworks.file_is_less_than_5mb')
     def test_signature_upload_returns_400_if_file_is_larger_than_5mb(
-        self, file_is_less_than_5mb, return_supplier_framework, data_api_client
+        self, file_is_less_than_5mb, s3, return_supplier_framework, data_api_client
     ):
         with self.app.test_client():
             self.login()
 
             data_api_client.get_framework.return_value = get_g_cloud_8()
             return_supplier_framework.return_value = self.supplier_framework(on_framework=True)['frameworkInterest']
+            s3.return_value.list.return_value = []
             file_is_less_than_5mb.return_value = False
 
             res = self.client.post(
@@ -1884,6 +1889,26 @@ class TestReturnSignedAgreement(BaseApplicationTest):
 
             assert res.status_code == 400
             assert 'The file must be less than 5MB' in res.get_data(as_text=True)
+
+    @mock.patch('dmutils.s3.S3')
+    def test_signature_page_displays_already_uploaded_file(self, s3, return_supplier_framework, data_api_client):
+        with self.app.test_client():
+            self.login()
+
+            data_api_client.get_framework.return_value = get_g_cloud_8()
+            return_supplier_framework.return_value = self.supplier_framework(on_framework=True)['frameworkInterest']
+
+            s3.return_value.list.return_value = [{
+                'last_modified': '2016-07-10T21:18:00.000000Z'
+            }]
+            res = self.client.get(
+                '/suppliers/frameworks/g-cloud-8/signature-upload'
+            )
+
+            assert res.status_code == 200
+            print(res.get_data(as_text=True))
+            # some kind of BST thing
+            assert "Document uploaded Sunday 10 July 2016 at 22:18" in res.get_data(as_text=True)
 
     @mock.patch('dmutils.s3.S3')
     def test_upload_signature_page(self, s3, return_supplier_framework, data_api_client):
@@ -1903,8 +1928,7 @@ class TestReturnSignedAgreement(BaseApplicationTest):
             s3.return_value.save.assert_called_with(
                 'g-cloud-8/agreements/1234/1234-signed-framework-agreement.jpg',
                 mock.ANY,
-                acl='private',
-                download_filename='Supplier_Name-1234-signed-framework-agreement.jpg'
+                acl='private'
             )
             assert res.status_code == 302
             assert res.location == 'http://localhost/suppliers/frameworks/g-cloud-8/contract-review'

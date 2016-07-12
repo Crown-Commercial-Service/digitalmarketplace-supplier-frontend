@@ -626,72 +626,51 @@ def signer_details(framework_slug):
     ), 400 if form_errors else 200
 
 
-@main.route('/frameworks/<framework_slug>/signature-upload', methods=['GET'])
+@main.route('/frameworks/<framework_slug>/signature-upload', methods=['GET', 'POST'])
 @login_required
 def signature_upload(framework_slug):
     framework = get_framework(data_api_client, framework_slug)
     return_supplier_framework_info_if_on_framework_or_abort(data_api_client, framework_slug)
+    agreements_bucket = s3.S3(current_app.config['DM_AGREEMENTS_BUCKET'])
+    upload_error = None
 
-    # form = SignerDetailsForm()
+    if request.method == 'POST':
+        if not file_is_image(request.files['signature_page']) and not file_is_pdf(request.files['signature_page']):
+            upload_error = "The file must be a PDF, JPG or PNG"
+        elif not file_is_less_than_5mb(request.files['signature_page']):
+            upload_error = "The file must be less than 5MB"
+        elif file_is_empty(request.files['signature_page']):
+            upload_error = "The file must not be empty"
 
-    # if form.full_name.name in session:
-    #     form.full_name.data = session[form.full_name.name]
+        if not upload_error:
+            upload_path = get_agreement_document_path(
+                framework_slug,
+                current_user.supplier_id,
+                '{}{}'.format(SIGNED_AGREEMENT_PREFIX, get_extension(request.files['signature_page'].filename))
+            )
+            agreements_bucket.save(
+                upload_path,
+                request.files['signature_page'],
+                acl='private'
+            )
 
-    # if form.role.name in session:
-    #     form.role.data = session[form.role.name]
+            return redirect(url_for(".contract_review", framework_slug=framework_slug))
 
-    # TODO get a filename or something
+    # we can search by path (without the file extension) to get all agreement files and then use the latest one
+    download_path = get_agreement_document_path(
+        framework_slug,
+        current_user.supplier_id,
+        SIGNED_AGREEMENT_PREFIX
+    )
+    files = agreements_bucket.list(download_path)
+    signature_page = files.pop() if files else None
 
     return render_template(
         "frameworks/signature_upload.html",
         framework=framework,
-    ), 200
-
-
-@main.route('/frameworks/<framework_slug>/signature-upload', methods=['POST'])
-@login_required
-def submit_signature_upload(framework_slug):
-    framework = get_framework(data_api_client, framework_slug, allowed_statuses=['standstill', 'live'])
-    return_supplier_framework_info_if_on_framework_or_abort(data_api_client, framework_slug)
-
-    upload_error = None
-    if not file_is_image(request.files['signature_page']) and not file_is_pdf(request.files['signature_page']):
-        upload_error = "The file must be a PDF, JPG or PNG"
-    elif not file_is_less_than_5mb(request.files['signature_page']):
-        upload_error = "The file must be less than 5MB"
-    elif file_is_empty(request.files['signature_page']):
-        upload_error = "The file must not be empty"
-
-    if upload_error is not None:
-        return render_template(
-            "frameworks/signature_upload.html",
-            framework=framework,
-            upload_error=upload_error
-        ), 400
-
-    agreements_bucket = s3.S3(current_app.config['DM_AGREEMENTS_BUCKET'])
-    extension = get_extension(request.files['signature_page'].filename)
-
-    path = get_agreement_document_path(
-        framework_slug,
-        current_user.supplier_id,
-        '{}{}'.format(SIGNED_AGREEMENT_PREFIX, extension)
-    )
-    agreements_bucket.save(
-        path,
-        request.files['signature_page'],
-        acl='private',
-        download_filename='{}-{}-{}{}'.format(
-            sanitise_supplier_name(current_user.supplier_name),
-            current_user.supplier_id,
-            SIGNED_AGREEMENT_PREFIX,
-            extension
-        )
-    )
-
-    session['signature_page'] = request.files['signature_page'].filename
-
-    return redirect(url_for(".contract_review", framework_slug=framework_slug))
+        signature_page=signature_page,
+        upload_error=upload_error,
+    ), 400 if upload_error else 200
 
 
 @main.route('/frameworks/<framework_slug>/contract-review', methods=['GET'])
