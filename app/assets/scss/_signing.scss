@@ -1,0 +1,88 @@
+#signing {
+  position: relative;
+  #wrapper {
+    padding: 95px 100px;
+    main{
+      position: relative;
+    }
+  }
+  h1, h2, p, strong {
+    font-family: arial, helvetica, sans-serif;
+    font-size: 16px;
+  }
+  h1, h2{
+    margin-bottom: 15px;
+  }
+
+  h2{
+    font-size: 18px;
+  }
+
+  li.no-number:before {
+    visibility: hidden;
+    position: absolute;
+    list-style-type: none;
+  }
+  ol {
+    padding: 0;
+    &.instruction-list {
+      padding-left: 35px;
+      li {
+        margin-bottom: 15px;
+      }
+    }
+    counter-reset: item;
+    position: relative;
+  }
+  li {
+    display: block;
+  }
+  ol li:before {
+    content: counters(item, ".") " ";
+    counter-increment: item;
+    position: absolute;
+    left: 0px;
+    font-family: arial;
+    font-weight: 200;
+    font-size: 16px;
+  }
+  .signatures {
+    margin-top: 25px;
+  }
+  .signature {
+    margin-top: 0;
+    width: 45%;
+    float: left;
+    margin-left: 10%;
+    &:first-child {
+      margin-left: 0;
+    }
+    ul {
+      margin-top: 25px;
+      padding: 0;
+    }
+    li {
+      margin-top: 15px;
+    }
+    .dashed-line {
+      width: 80%;
+      border-bottom: 1px dashed black;
+      margin-left: 25%;
+    }
+  }
+  .footer {
+    position: absolute;
+    bottom: -125px;
+    left: 0;
+    right: 0;
+    p, strong {
+      font-size: 14px;
+      margin: 0;
+    }
+    .page-number {
+      position: absolute;
+      right: 0;
+      bottom: 0;
+    }
+  }
+}

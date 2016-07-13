@@ -28,7 +28,7 @@ var jsDistributionFolder = staticFolder + '/javascripts';
 var jsDistributionFile = 'application.js';
 
 // CSS paths
-var cssSourceGlob = assetsFolder + '/scss/application*.scss';
+var cssSourceGlob = [assetsFolder + '/scss/application*.scss', assetsFolder + '/scss/signing.scss'];
 var cssDistributionFolder = staticFolder + '/stylesheets';
 
 // Configuration

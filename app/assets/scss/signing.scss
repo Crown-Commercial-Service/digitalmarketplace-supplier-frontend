@@ -1,0 +1,102 @@
+#signing #wrapper{
+  margin: 50px 50px;
+}
+#signing main{
+  position: relative;
+}
+#signing h1, #signing h2, #signing p, #signing strong {
+  font-family: arial, helvetica, sans-serif;
+  font-size: 10pt !important;
+}
+#signing h1, #signing h2{
+  font-family: arial, helvetica, sans-serif;
+  margin-bottom: 15px;
+}
+#signing h2{
+  font-size: 11pt !important;
+}
+#signing li.no-number:before {
+  visibility: hidden;
+  position: absolute;
+  list-style-type: none;
+}
+#signing ol{
+  padding: 0;
+}
+#signing ol.instruction-list {
+  padding-left: 30px;
+}
+#signing ol {
+  counter-reset: item;
+  position: relative;
+}
+#signing li, #signing .instruction-list-item-extra-information {
+  display: block;
+  margin-bottom: -5px;
+}
+#signing OL LI:before {
+  content: counters(item,".") " ";
+  counter-increment: item;
+  position: absolute;
+  left: 0px;
+  font-family: arial;
+  font-weight: 200;
+  font-size: 11px;
+}
+#signing .signatures {
+  margin-top: 25px;
+}
+#signing .signature {
+  margin-top: 0;
+  width: 45%;
+  float: left;
+  margin-left: 10%;
+}
+#signing .signature:first-child{
+  margin-left: 0;
+}
+#signing .signature p {
+  min-height: 30px;
+}
+#signing .signature ul {
+  padding: 0;
+}
+#signing .signature li {
+  margin-top: 5px;
+}
+#signing .signature .dashed-line {
+  width: 80%;
+  border-bottom: 1px dashed black;
+  margin-left: 25%;
+}
+#signing .footer{
+  position: relative;
+  width: 100%;
+  float: left;
+  margin-top: 30px;
+}
+#signing .footer p, #signing .footer strong{
+  margin: 0;
+  font-size: 8pt !important;
+}
+#signing .footer .page-number {
+  position: absolute;
+  right: 0;
+  bottom: 11px;
+  font-size: 8pt !important;
+}
+#signing .bulleted-list{
+  padding-left: 0;
+}
+#signing .bulleted-list li{
+  margin-bottom: -10px;
+}
+#signing .less-margin {
+  margin-bottom: -10px;
+}
+@page
+{
+    size: auto;   /* auto is the initial value */
+    margin: 0mm;  /* this affects the margin in the printer settings */
+}
+

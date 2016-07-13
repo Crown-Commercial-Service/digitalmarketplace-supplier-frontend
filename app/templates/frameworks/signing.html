@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>{% block page_title %}G-Cloud 8 framework agreement{% endblock %}</title>
+    <link href="{{ asset_path }}stylesheets/signing.css" media="print" rel="stylesheet" type="text/css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+  </head>
+
+  <body id="signing">
+    <div id="wrapper">
+      <main id="content" role="main">
+
+        <ol class="">
+          <li class="no-number">
+                <h1>Signature page for G-Cloud 8 Framework Agreement, version: RM1557viii-14-07-16</h1>
+                <h2>Section 1 - The appointment</h2>
+                <ol class="instruction-list">
+                  <li class="instruction-list-item">
+
+                    <p class="instruction-list-item-body">
+                      <strong>Appointment</strong>
+                    </p>
+
+                    <p class="instruction-list-item-extra-information">
+                      Subject to the terms of this Framework Agreement (RM1557viii), the Minister for the Cabinet Office, represented by the Crown Commercial Service (CCS), 9th Floor, The Capital, Old Hall Street, Liverpool, L3 9PP, appoints:
+                    </p>
+
+                    <p class="instruction-list-item-extra-information">
+                      <strong>company:</strong>
+                      {{supplier.name}}
+                    </p>
+                    <p class="instruction-list-item-extra-information">
+                      <strong>registered address:</strong>
+                      {% with contact_information=supplier.contactInformation[0] %}
+                        {{ contact_information.address1 }},
+                        {{ contact_information.city }},
+                        {{ contact_information.postcode }}
+                      {% endwith %}
+                    </p>
+                    <p class="instruction-list-item-extra-information">
+                      <strong>company number:</strong>
+                      {{ supplier.companiesHouseNumber }}
+                    </p>
+                    <p class="instruction-list-item-extra-information">
+                      (the ‘Supplier’), as a Supplier of G-Cloud 8 services who can bid for Call-Off Contracts as outlined in the Contract Notice within the Official Journal of the European Union reference TBC OJEU Contract Notice).
+                    </p>
+                  </li>
+
+                  <li class="instruction-list-item">
+                    <p class="instruction-list-item-body">
+                      <strong>Appointment is to:</strong>
+  <!--                     Lot 1: Infrastructure as a Service (IaaS), Lot 2: Platform as a Service (PaaS), Lot 3: Software as a Service (SaaS), Lot 4: Specialist Cloud Services -->
+                      {{applied_lots}}
+                    </p>
+                  </li>
+
+                  <li class="instruction-list-item">
+                    <p class="instruction-list-item-body">
+                      <strong>Appointment begins at:</strong>
+                      29/07/2016
+                    </p>
+                  </li>
+
+                  <li class="instruction-list-item">
+                    <p class="instruction-list-item-body">
+                      <strong>Appointment expires at:</strong>
+                      23:59 on 28/07/2017 (unless this Framework Agreement is extended by CCS or is terminated early).
+                    </p>
+                  </li>
+
+                  <li class="instruction-list-item">
+                    <p class="instruction-list-item-body">
+                      <strong>Extension:</strong>
+                      Up to 6 months, by CCS giving written notice to Suppliers.
+                    </p>
+                  </li>
+
+                  <li class="instruction-list-item">
+                    <p class="instruction-list-item-body">
+                      <strong>Term:</strong>
+                      From and including the date at 1.3 above (Appointment begins at) to and including the date at 1.4 above (Appointment expires at).
+                    </p>
+                  </li>
+
+                  <li class="instruction-list-item">
+                    <p class="instruction-list-item-body">
+                      <strong>Call-Off Contract duration:</strong>
+                      Maximum 24 months.
+                    </p>
+                  </li>
+
+                  <li class="instruction-list-item">
+                    <p class="instruction-list-item-body">
+                      By signing this Framework Agreement, the Supplier agrees to comply with all the terms of this Framework Agreement.
+                    </p>
+                  </li>
+
+                  <li class="instruction-list-item">
+                    <p class="instruction-list-item-body">
+                      All Sections, including the Invitation To Tender (ITT), and Schedules annexed to this Framework Agreement are expressly a part of this Framework Agreement.
+                    </p>
+                  </li>
+
+                  <li class="instruction-list-item">
+                    <p class="instruction-list-item-body">
+                      CCS appoints the Supplier as the the potential provider of G-Cloud Services and Additional Services in accordance with the terms of the Supplier’s Tender and the Supplier shall be eligible to be considered for the award of orders for such G-Cloud Services and Additional Services by the CCS and Other Contracting Bodies during the Term; and in consideration of the Supplier agreeing to enter into this Framework Agreement and to perform its obligations under it, CCS agrees to pay and the Supplier agrees to accept the sum of £0.05, receipt of which is hereby acknowledged by the Supplier.
+                    </p>
+                  </li>
+                  <li class="instruction-list-item">
+                    <p class="instruction-list-item-body less-margin">
+                      Your finalised Framework Agreement will include:
+                    </p>
+                    <ul class="bulleted-list">
+                      <li class="no-number"><p>• a signature page, signed by the supplier</p></li>
+                      <li class="no-number"><p>• a signature page, signed by the Crown Commercial Service</p></li>
+                      <li class="no-number"><p>• the rest of the Framework Agreement document</li>
+                    </ul>
+                    <p class="instruction-list-item-body" >
+                      The signature pages and the rest of the Framework Agreement document are 'counterparts' before signing and 'duplicate originals' after signing. The duplicate originals together constitute one Framework Agreement signed by all the necessary parties.</p>
+                  </li>
+                </ol>
+            </li>
+        </ol>
+        <div class="signatures">
+          <div class="signature">
+            <p>Signed by or on behalf of {{supplier.name}},</p>
+            <ul>
+              <li>
+                <strong>Signature:</strong>
+                <div class="dashed-line"></div>
+              </li>
+              <li>
+                <strong>Name:</strong>
+                <div class="dashed-line"></div>
+              </li>
+              <li>
+                <strong>Role:</strong>
+                <div class="dashed-line"></div>
+              </li>
+              <li>
+                <strong>Date:</strong>
+                <div class="dashed-line"></div>
+              </li>
+            </ul>
+          </div>
+
+          <div class="signature">
+            <p>Countersigned by or on behalf of CCS,</p>
+            <ul>
+              <li>
+                <strong>Signature:</strong>
+                <div class="dashed-line"></div>
+              </li>
+              <li>
+                <strong>Name:</strong>
+                <div class="dashed-line"></div>
+              </li>
+              <li>
+                <strong>Role:</strong>
+                <div class="dashed-line"></div>
+              </li>
+              <li>
+                <strong>Date:</strong>
+                <div class="dashed-line"></div>
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="footer">
+          <p>G-Cloud 8 Framework Agreement - Version: RM1557viii-14-07-16 - Signature page</p>
+          <p>
+            <a href="https://www.gov.uk/government/publications/g-cloud-8-framework-agreement">www.gov.uk/government/publications/g-cloud-8-framework-agreement</a>
+          </p>
+          <div class="page-number">
+            <p>
+              Page
+              <strong>3</strong>
+              of
+              <strong>31</strong>
+            </p>
+          </div>
+        </div>
+
+      </main>
+
+    </div>
+  </body>
+</html>
