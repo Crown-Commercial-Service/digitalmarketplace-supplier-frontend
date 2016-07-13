@@ -493,6 +493,7 @@ def framework_agreement(framework_slug):
                 'name': lot['name'],
                 'has_completed_draft': (lot in lots_with_completed_drafts)
             } for lot in framework['lots']],
+            supplier_framework=supplier_framework,
         ), 200
 
     return render_template(
@@ -623,6 +624,7 @@ def signer_details(framework_slug):
         form_errors=form_errors,
         framework=framework,
         question_keys=question_keys,
+        supplier_framework=supplier_framework,
     ), 400 if form_errors else 200
 
 
@@ -700,7 +702,7 @@ def submit_contract_review(framework_slug):
 
     form = ContractReviewForm()
     form.authority.description = "I have the authority to return this agreement on behalf of {}".format(
-        current_user.supplier_name
+        supplier_framework['declaration']['nameOfOrganisation']
     )
 
     if form.validate_on_submit():

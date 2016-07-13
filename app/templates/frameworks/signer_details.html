@@ -28,7 +28,7 @@
   <div class="column-two-thirds">
     {%
     with
-      heading = "Details of the person who is signing on behalf of {}".format(current_user.supplier_name),
+      heading = "Details of the person who is signing on behalf of {}".format(supplier_framework.declaration.nameOfOrganisation),
       smaller = True
     %}
       {% include "toolkit/page-heading.html" %}

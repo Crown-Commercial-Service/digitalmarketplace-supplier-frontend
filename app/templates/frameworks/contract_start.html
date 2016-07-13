@@ -52,7 +52,7 @@
       </div>
 
       <div>
-        {{ summary.heading(current_user.supplier_name) }}
+        {{ summary.heading(supplier_framework.declaration.nameOfOrganisation) }}
         {% call(item) summary.list_table(
           lots,
           caption="Lot application status table",

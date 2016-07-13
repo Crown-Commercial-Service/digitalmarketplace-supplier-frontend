@@ -29,7 +29,7 @@
   <div class="column-two-thirds">
     {%
       with
-      heading = "Check the details you’ve given before returning the signature page for {}".format(current_user.supplier_name),
+      heading = "Check the details you’ve given before returning the signature page for {}".format(supplier_framework.declaration.nameOfOrganisation),
       smaller = True
     %}
       {% include "toolkit/page-heading.html" %}
@@ -76,6 +76,12 @@
 <div class="grid-row">
   <div class="column-two-thirds">
 
+     <div class="dmspeak">
+      <p>Returning the signature page will notify the Crown Commercial Service and the primary contact you gave in your {{ framework.name }} application, {{ supplier_framework.declaration.primaryContact }} at {{ supplier_framework.declaration.primaryContactEmail }}.</p>
+
+      <p>You’ll also receive an email to confirm that the signature page has been returned.</p>
+    </div>
+
     <form method="POST" action="{{ url_for('.submit_contract_review', framework_slug=framework.slug) }}">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
         {%
@@ -100,11 +106,6 @@
         {% endwith %}
     </form>
 
-    <div class="dmspeak">
-      <p>Returning the signature page will notify the Crown Commercial Service and the primary contact you gave in your G-Cloud 8 application, {{ supplier_framework.declaration.primaryContact }} at {{ supplier_framework.declaration.primaryContactEmail }}.</p>
-
-      <p>You’ll also receive an email to confirm that the signature page has been returned.</p>
-    </div>
   </div>
 </div>
 </div>
