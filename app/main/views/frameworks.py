@@ -658,6 +658,8 @@ def signature_upload(framework_slug):
                 acl='private'
             )
 
+            session['signature_page'] = request.files['signature_page'].filename
+
             return redirect(url_for(".contract_review", framework_slug=framework_slug))
 
     # we can search by path (without the file extension) to get all agreement files and then use the latest one
@@ -730,10 +732,11 @@ def contract_review(framework_slug):
 
         else:
             current_app.logger.warning(
-                "signaturepage.fail: signerName:{signerName} signerRole:{signerRole} {errors}",
+                "signaturepage.fail: signerName:{signerName} signerRole:{signerRole} signature_page:{signature_page} {errors}",  # noqa
                 extra={
                     'signerName': supplier_framework['agreementDetails']['signerName'],
                     'signerRole': supplier_framework['agreementDetails']['signerRole'],
+                    'signature_page': session.get('signature_page'),
                     'errors': ",".join(chain.from_iterable(form.errors.values()))
                 }
             )
@@ -754,15 +757,13 @@ def contract_review(framework_slug):
     )
     files = agreements_bucket.list(download_path)
     signature_page = files.pop() if files else None
-    # The default view (download_agreement_file) uses the DM_SUBMISSIONS_BUCKET, which doesn't work
-    signature_page_url = get_signed_url(agreements_bucket, signature_page['path'], 'https://{}.s3-eu-west-1.amazonaws.com'.format(current_app.config['DM_AGREEMENTS_BUCKET']))  # noqa
 
     return render_template(
         "frameworks/contract_review.html",
         form=form,
         form_errors=form_errors,
         framework=framework,
-        signature_page_url=signature_page_url,
+        signature_page=signature_page,
         supplier_framework=supplier_framework,
     ), 400 if form_errors else 200
 

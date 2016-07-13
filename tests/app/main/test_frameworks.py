@@ -1891,24 +1891,49 @@ class TestReturnSignedAgreement(BaseApplicationTest):
             assert 'The file must be less than 5MB' in res.get_data(as_text=True)
 
     @mock.patch('dmutils.s3.S3')
-    def test_signature_page_displays_already_uploaded_file(self, s3, return_supplier_framework, data_api_client):
+    def test_signature_page_displays_uploaded_filename_and_timestamp(self, s3, return_supplier_framework, data_api_client):  # noqa
         with self.app.test_client():
-            self.login()
-
             data_api_client.get_framework.return_value = get_g_cloud_8()
             return_supplier_framework.return_value = self.supplier_framework(on_framework=True)['frameworkInterest']
 
             s3.return_value.list.return_value = [{
                 'last_modified': '2016-07-10T21:18:00.000000Z'
             }]
-            res = self.client.get(
-                '/suppliers/frameworks/g-cloud-8/signature-upload'
-            )
 
-            assert res.status_code == 200
-            print(res.get_data(as_text=True))
-            # some kind of BST thing
-            assert "Document uploaded Sunday 10 July 2016 at 22:18" in res.get_data(as_text=True)
+            with self.client as c:
+                self.login()
+
+                with self.client.session_transaction() as sess:
+                    sess['signature_page'] = 'test.pdf'
+
+                res = c.get(
+                    '/suppliers/frameworks/g-cloud-8/signature-upload'
+                )
+                assert res.status_code == 200
+                # some kind of BST thing
+                assert "test.pdf, uploaded Sunday 10 July 2016 at 22:18" in res.get_data(as_text=True)
+
+    @mock.patch('dmutils.s3.S3')
+    def test_signature_page_displays_file_upload_timestamp_if_no_filename_in_session(
+            self, s3, return_supplier_framework, data_api_client
+    ):
+        with self.app.test_client():
+            data_api_client.get_framework.return_value = get_g_cloud_8()
+            return_supplier_framework.return_value = self.supplier_framework(on_framework=True)['frameworkInterest']
+
+            s3.return_value.list.return_value = [{
+                'last_modified': '2016-07-10T21:18:00.000000Z'
+            }]
+
+            with self.client as c:
+                self.login()
+                res = c.get(
+                    '/suppliers/frameworks/g-cloud-8/signature-upload'
+                )
+                assert res.status_code == 200
+                # some kind of BST thing
+                assert "Uploaded Sunday 10 July 2016 at 22:18" in res.get_data(as_text=True)
+
 
     @mock.patch('dmutils.s3.S3')
     def test_upload_signature_page(self, s3, return_supplier_framework, data_api_client):
@@ -1933,8 +1958,32 @@ class TestReturnSignedAgreement(BaseApplicationTest):
             assert res.status_code == 302
             assert res.location == 'http://localhost/suppliers/frameworks/g-cloud-8/contract-review'
 
-    def test_contract_review_page_loads_with_correct_supplier_and_signer_details(
-        self, return_supplier_framework, data_api_client
+    @mock.patch('dmutils.s3.S3')
+    def test_signature_page_allows_continuation_without_file_chosen_to_be_uploaded_if_an_uploaded_file_already_exists(
+            self, s3, return_supplier_framework, data_api_client
+    ):
+        with self.app.test_client():
+            data_api_client.get_framework.return_value = get_g_cloud_8()
+            return_supplier_framework.return_value = self.supplier_framework(on_framework=True)['frameworkInterest']
+
+            s3.return_value.list.return_value = [{
+                'last_modified': '2016-07-10T21:18:00.000000Z'
+            }]
+
+            with self.client as c:
+                self.login()
+                res = c.post(
+                    '/suppliers/frameworks/g-cloud-8/signature-upload',
+                    data={
+                        'signature_page': (StringIO(b''), ''),
+                    }
+                )
+                assert res.status_code == 302
+                assert res.location == 'http://localhost/suppliers/frameworks/g-cloud-8/contract-review'
+
+    @mock.patch('dmutils.s3.S3')
+    def test_contract_review_page_loads_with_correct_supplier_and_signer_details_and_filename(
+        self, s3, return_supplier_framework, data_api_client
     ):
         with self.app.test_client():
             self.login()
@@ -1943,7 +1992,14 @@ class TestReturnSignedAgreement(BaseApplicationTest):
             supplier_framework['agreementDetails'] = {'signerName': 'signer_name', 'signerRole': 'signer_role'}
             supplier_framework['declaration']['primaryContact'] = 'contact name'
             supplier_framework['declaration']['primaryContactEmail'] = 'email@email.com'
+            supplier_framework['declaration']['nameOfOrganisation'] = 'company name'
             return_supplier_framework.return_value = supplier_framework
+            s3.return_value.list.return_value = [{
+                'last_modified': '2016-07-10T21:18:00.000000Z'
+            }]
+
+            with self.client.session_transaction() as sess:
+                sess['signature_page'] = 'test.pdf'
 
             res = self.client.get(
                 "/suppliers/frameworks/g-cloud-8/contract-review"
@@ -1951,39 +2007,53 @@ class TestReturnSignedAgreement(BaseApplicationTest):
             assert res.status_code == 200
             page = res.get_data(as_text=True)
             page_without_whitespace = self.strip_all_whitespace(page)
+            assert u'Check the details you’ve given before returning the signature page for company name' in page
             assert '<tdclass="summary-item-field"><span><p>signer_name</p><p>signer_role</p></span></td>' \
                 in page_without_whitespace
-            assert "I have the authority to return this agreement on behalf of Supplier Name" in page
+            assert "I have the authority to return this agreement on behalf of company name" in page
             assert "Returning the signature page will notify the Crown Commercial Service and the primary contact you "
             "gave in your G-Cloud 8 application, contact name at email@email.com." in page
+            assert '<tdclass="summary-item-field-first"><span>test.pdf</span></td>' in page_without_whitespace
 
-    def test_contract_review_page_loads_with_filename_from_session(
-        self, return_supplier_framework, data_api_client
+    @mock.patch('dmutils.s3.S3')
+    def test_contract_review_page_loads_with_uploaded_time_of_file_if_no_filename_in_session(
+            self, s3, return_supplier_framework, data_api_client
     ):
         with self.app.test_client():
             self.login()
             data_api_client.get_framework.return_value = get_g_cloud_8()
             supplier_framework = self.supplier_framework(on_framework=True)['frameworkInterest']
             supplier_framework['agreementDetails'] = {'signerName': 'signer_name', 'signerRole': 'signer_role'}
+            supplier_framework['declaration']['primaryContact'] = 'contact name'
+            supplier_framework['declaration']['primaryContactEmail'] = 'email@email.com'
+            supplier_framework['declaration']['nameOfOrganisation'] = 'company name'
             return_supplier_framework.return_value = supplier_framework
-
-            with self.client.session_transaction() as sess:
-                sess['signature_page'] = "example.pdf"
+            s3.return_value.list.return_value = [{
+                'last_modified': '2016-07-10T21:18:00.000000Z'
+            }]
 
             res = self.client.get(
                 "/suppliers/frameworks/g-cloud-8/contract-review"
             )
             assert res.status_code == 200
-            page_without_whitespace = self.strip_all_whitespace(res.get_data(as_text=True))
-            assert '<tdclass="summary-item-field"><span>example.pdf</span></td>' in page_without_whitespace
+            page = res.get_data(as_text=True)
+            assert u'Check the details you’ve given before returning the signature page for company name' in page
+            assert '<tdclass="summary-item-field-first"><span>UploadedSunday10July2016at22:18</span></td>' in self.strip_all_whitespace(page)  # noqa
 
-    def test_should_be_an_error_if_authorisation_not_checked(self, return_supplier_framework, data_api_client):
+    @mock.patch('dmutils.s3.S3')
+    def test_should_be_an_error_if_authorisation_not_checked(self, s3, return_supplier_framework, data_api_client):
         with self.app.test_client():
             self.login()
             data_api_client.get_framework.return_value = get_g_cloud_8()
             supplier_framework = self.supplier_framework(on_framework=True)['frameworkInterest']
             supplier_framework['agreementDetails'] = {'signerName': 'signer_name', 'signerRole': 'signer_role'}
+            supplier_framework['declaration']['primaryContact'] = 'contact name'
+            supplier_framework['declaration']['primaryContactEmail'] = 'email@email.com'
+            supplier_framework['declaration']['nameOfOrganisation'] = 'company name'
             return_supplier_framework.return_value = supplier_framework
+            s3.return_value.list.return_value = [{
+                'last_modified': '2016-07-10T21:18:00.000000Z'
+            }]
 
             res = self.client.post(
                 "/suppliers/frameworks/g-cloud-8/contract-review",
