@@ -71,6 +71,19 @@ $path: "/suppliers/static/images/";
 
 @import "_create_supplier.scss";
 
+.authority-form-wrapper {
+
+  margin-top: 40px;
+
+  form .question {
+    margin: 10px 0 15px 0;
+  }
+
+  .button-save {
+    margin-top: 0;
+  }
+}
+
 .filter-field-text {
   @include core-16;
   @include box-sizing(border-box);
