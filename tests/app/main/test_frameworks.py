@@ -1977,7 +1977,7 @@ class TestReturnSignedAgreement(BaseApplicationTest):
             page_without_whitespace = self.strip_all_whitespace(res.get_data(as_text=True))
             assert '<tdclass="summary-item-field"><span>example.pdf</span></td>' in page_without_whitespace
 
-    def test_should_be_an_error_if_authority_not_checked(self, return_supplier_framework, data_api_client):
+    def test_should_be_an_error_if_authorisation_not_checked(self, return_supplier_framework, data_api_client):
         with self.app.test_client():
             self.login()
             data_api_client.get_framework.return_value = get_g_cloud_8()

@@ -36,7 +36,7 @@
           {% endif %}
         {% endcall %}
         {% if not framework.needs_to_complete_declaration %}
-          {{ summary.edit_link('View your application', url_for('.framework_dashboard', framework_slug=framework.slug)) }}
+          {{ summary.edit_link('View your documents', url_for('.framework_dashboard', framework_slug=framework.slug)) }}
         {% else %}
           {% call summary.field() %}
           {% endcall %}

@@ -72,7 +72,7 @@
   {% endcall %}
 </div>
 
-<div class="single-question-page authority-form-wrapper">
+<div class="single-question-page authorisation-form-wrapper">
 <div class="grid-row">
   <div class="column-two-thirds">
 
@@ -82,17 +82,17 @@
       <p>You’ll also receive an email to confirm that the signature page has been returned.</p>
     </div>
 
-    <form method="POST" action="{{ url_for('.submit_contract_review', framework_slug=framework.slug) }}">
+    <form method="POST" action="{{ url_for('.contract_review', framework_slug=framework.slug) }}">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
         {%
           with
           type = "checkbox",
-          name = "authority",
-          question = form.authority.label,
+          name = "authorisation",
+          question = form.authorisation.label,
           options = [{
-              "label": form.authority.description,
+              "label": form.authorisation.description,
           }],
-          error=form.authority.errors[0]
+          error=form.authorisation.errors[0]
         %}
           {% include "toolkit/forms/selection-buttons.html" %}
         {% endwith %}
