@@ -84,6 +84,18 @@ $path: "/suppliers/static/images/";
   }
 }
 
+.isolated-text {
+  margin-bottom: 30px;
+}
+
+.browse-list-borderless {
+  .browse-list-item {
+    border-top: none;
+    padding-top: 0;
+    margin-top: 20px;
+  }
+}
+
 .filter-field-text {
   @include core-16;
   @include box-sizing(border-box);

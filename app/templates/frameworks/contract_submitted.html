@@ -1,0 +1,102 @@
+{% extends "_base_page.html" %}
+{% import "toolkit/summary-table.html" as summary %}
+
+{% block page_title %}{{ framework.name }} documents{% endblock %}
+
+{% block breadcrumb %}
+  {%
+    with items = [
+      {
+        "link": "/",
+        "label": "Digital Marketplace",
+      },
+      {
+        "link": url_for(".dashboard"),
+        "label": "Your account",
+      }
+    ]
+  %}
+    {% include "toolkit/breadcrumb.html" %}
+  {% endwith %}
+{% endblock %}
+
+{% block main_content %}
+
+  {% with messages = get_flashed_messages(with_categories=True) %}
+    {% for category, message in messages %}
+      {%
+        with
+        message = message,
+        type = "destructive" if category == 'error' else "success"
+      %}
+        {% include "toolkit/notification-banner.html" %}
+      {% endwith %}
+    {% endfor %}
+  {% endwith %}
+
+  <div class="grid-row framework-dashboard">
+    <div class="column-two-thirds">
+      {% with
+         heading = (
+           framework.name + " documents"
+         ),
+         smaller = True
+      %}
+        {% include "toolkit/page-heading.html" %}
+      {% endwith %}
+
+      <h2 class="page-subheading">Your framework agreement</h2>
+      <div class="summary-item-lede dmspeak">
+        <p>Your framework agreement signature page has been sent to the Crown Commercial Service (<abbr title="Crown Commercial Service">CCS</abbr>).
+          They’ll check and countersign the agreement, or contact you if there’s a problem. You don’t need to wait for <abbr title="Crown Commercial Service">CCS</abbr> to countersign your agreement before you start selling services.<p/>
+      </div>
+
+      {% import "toolkit/summary-table.html" as summary %}
+      {% call(item) summary.mapping_table(
+        caption='Agreement details',
+        field_headings=[
+          'Label',
+          'Value'
+        ],
+        field_headings_visible=False
+      ) %}
+        {% call summary.row() %}
+          {{ summary.field_name('Person who signed') }}
+          {% call summary.field() %}
+            <p>{{ supplier_framework.agreementDetails.signerName }}</p><p>{{ supplier_framework.agreementDetails.signerRole }}</p>
+          {% endcall %}
+        {% endcall %}
+        {% call summary.row() %}
+          {{ summary.field_name('Submitted by') }}
+          {% call summary.field() %}
+            <p>{{ supplier_framework.agreementDetails.uploaderUserName }}</p>
+            <p>{{ supplier_framework.agreementDetails.uploaderUserEmail }}</p>
+            <p>{{ supplier_framework.agreementReturnedAt|datetimeformat }}</p>
+          {% endcall %}
+        {% endcall %}
+        {% call summary.row() %}
+          {{ summary.field_name('Countersignature') }}
+          {{ summary.field_name('Waiting for CCS to countersign') }}
+        {% endcall %}
+      {% endcall %}
+
+      <div class="dmspeak">
+        <div class="isolated-text">
+          <p><a href="https://www.gov.uk/government/publications/digital-outcomes-and-specialists-framework-agreement">Read the standard framework agreement</a></p>
+          <p><a href="{{ signature_page_url }}" target="_blank">Download your framework agreement signature page, signed by your company</a></p>
+        </div>
+
+        <div class="isolated-text">
+          <p>You can start selling your {{ framework.name }} services on the Digital Marketplace from 1 August 2016.</p>
+        </div>
+      </div>
+
+      <nav role="navigation">
+        <ul class="browse-list browse-list-borderless">
+          {% include 'frameworks/_guidance_links.html' %}
+        </ul>
+      </nav>
+
+    </div>
+  </div>
+{% endblock %}
