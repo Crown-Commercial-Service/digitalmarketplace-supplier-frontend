@@ -598,6 +598,11 @@ def signer_details(framework_slug):
                 current_user.supplier_id, framework_slug, agreement_details, current_user.email_address
             )
 
+            # If they have already uploaded a file then let them go to straight to the contract review
+            # page as they are likely editing their signer details
+            if session.get('signature_page'):
+                return redirect(url_for(".contract_review", framework_slug=framework_slug))
+
             return redirect(url_for(".signature_upload", framework_slug=framework_slug))
         else:
             current_app.logger.warning(

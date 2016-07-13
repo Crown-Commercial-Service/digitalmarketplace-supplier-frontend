@@ -1821,6 +1821,31 @@ class TestReturnSignedAgreement(BaseApplicationTest):
             assert res.status_code == 302
             assert "suppliers/frameworks/g-cloud-8/signature-upload" in res.location
 
+    def test_provide_signer_details_form_with_valid_input_redirects_to_contract_review_page_if_filename_in_session(
+            self, return_supplier_framework, data_api_client
+    ):
+        signer_details = {
+            'signerName': "Josh Moss",
+            'signerRole': "The Boss"
+        }
+
+        data_api_client.get_framework.return_value = get_g_cloud_8()
+        return_supplier_framework.return_value = self.supplier_framework(on_framework=True)['frameworkInterest']
+
+        with self.client as c:
+            self.login()
+
+            with self.client.session_transaction() as sess:
+                sess['signature_page'] = 'test.pdf'
+
+            res = c.post(
+                "/suppliers/frameworks/g-cloud-8/signer-details",
+                data=signer_details
+            )
+
+            assert res.status_code == 302
+            assert "suppliers/frameworks/g-cloud-8/contract-review" in res.location
+
     @mock.patch('dmutils.s3.S3')
     @mock.patch('app.main.views.frameworks.file_is_empty')
     def test_signature_upload_returns_400_if_file_is_empty(
@@ -1933,7 +1958,6 @@ class TestReturnSignedAgreement(BaseApplicationTest):
                 assert res.status_code == 200
                 # some kind of BST thing
                 assert "Uploaded Sunday 10 July 2016 at 22:18" in res.get_data(as_text=True)
-
 
     @mock.patch('dmutils.s3.S3')
     def test_upload_signature_page(self, s3, return_supplier_framework, data_api_client):
