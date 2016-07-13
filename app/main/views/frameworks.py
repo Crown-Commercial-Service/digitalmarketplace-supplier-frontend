@@ -643,7 +643,20 @@ def signature_upload(framework_slug):
     agreements_bucket = s3.S3(current_app.config['DM_AGREEMENTS_BUCKET'])
     upload_error = None
 
+    # we can search by path (without the file extension) to get all agreement files and then use the latest one
+    download_path = get_agreement_document_path(
+        framework_slug,
+        current_user.supplier_id,
+        SIGNED_AGREEMENT_PREFIX
+    )
+    files = agreements_bucket.list(download_path)
+    signature_page = files.pop() if files else None
+
     if request.method == 'POST':
+        # No file chosen for upload and file already exists on s3 so can use existing and progress
+        if not request.files['signature_page'].filename and signature_page:
+            return redirect(url_for(".contract_review", framework_slug=framework_slug))
+
         if not file_is_image(request.files['signature_page']) and not file_is_pdf(request.files['signature_page']):
             upload_error = "The file must be a PDF, JPG or PNG"
         elif not file_is_less_than_5mb(request.files['signature_page']):
@@ -666,15 +679,6 @@ def signature_upload(framework_slug):
             session['signature_page'] = request.files['signature_page'].filename
 
             return redirect(url_for(".contract_review", framework_slug=framework_slug))
-
-    # we can search by path (without the file extension) to get all agreement files and then use the latest one
-    download_path = get_agreement_document_path(
-        framework_slug,
-        current_user.supplier_id,
-        SIGNED_AGREEMENT_PREFIX
-    )
-    files = agreements_bucket.list(download_path)
-    signature_page = files.pop() if files else None
 
     return render_template(
         "frameworks/signature_upload.html",
