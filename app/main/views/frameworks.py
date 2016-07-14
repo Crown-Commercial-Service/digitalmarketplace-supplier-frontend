@@ -702,7 +702,7 @@ def signature_upload(framework_slug):
 def contract_review(framework_slug):
     framework = get_framework(data_api_client, framework_slug)
     supplier_framework = return_supplier_framework_info_if_on_framework_or_abort(data_api_client, framework_slug)
-
+    agreements_bucket = s3.S3(current_app.config['DM_AGREEMENTS_BUCKET'])
     form = ContractReviewForm()
     form_errors = None
 
@@ -712,49 +712,35 @@ def contract_review(framework_slug):
                 current_user.supplier_id, framework_slug, current_user.email_address, current_user.id
             )
 
-            email_recipients = [
-                {
-                    'name': supplier_framework['declaration']['primaryContact'],
-                    'to_addresss': supplier_framework['declaration']['primaryContactEmail'],
-                },
-            ]
+            email_recipients = [supplier_framework['declaration']['primaryContactEmail']]
             if supplier_framework['declaration']['primaryContactEmail'] != current_user.email_address:
-                email_recipients.append(
-                    {
-                        'name': current_user.name,
-                        'to_addresss': current_user.email_address
-                    }
+                email_recipients.append(current_user.email_address)
+
+            try:
+                email_body = render_template(
+                    'emails/framework_agreement_with_framework_version_returned.html',
+                    framework_name=framework['name'],
+                    framework_slug=framework['slug'],
+                    framework_live_date=content_loader.get_message(framework_slug, 'dates')['framework_live_date'],  # noqa
                 )
 
-            # for recipient in email_recipients:
-            #     try:
-            #         email_subject = 'Your {} signature page has been received'.format(framework['name'])
-            #         email_body = render_template(
-            #             'emails/framework_agreement_with_framework_version_returned.html',
-            #             framework_name=framework['name'],
-            #             framework_slug=framework['slug'],
-            #             name=recipient['name'],
-            #             framework_live_date=content_loader.get_message(framework_slug, 'dates')['framework_live_date'],  # noqa
-            #         )
-            #         # Need to add a from name
-            #         # I assume no reply to address.
-            #         send_email(
-            #             recipient['to_address'],
-            #             email_body,
-            #             current_app.config['DM_MANDRILL_API_KEY'],
-            #             email_subject,
-            #             current_app.config["DM_GENERIC_NOREPLY_EMAIL"],
-            #             'from name to go here',
-            #             ['{}-framework-agreement'.format(framework_slug)],
-            #         )
-            #     except MandrillException as e:
-            #         # current_app.logger.error(
-            #         #     "Framework agreement email failed to send. "
-            #         #     "error {error} supplier_id {supplier_id} email_hash {email_hash}",
-            #         #     extra={'error': six.text_type(e),
-            #         #            'supplier_id': current_user.supplier_id,
-            #         #            'email_hash': hash_email(current_user.email_address)})
-            #         abort(503, "Framework agreement email failed to send")
+                send_email(
+                    email_recipients,
+                    email_body,
+                    current_app.config['DM_MANDRILL_API_KEY'],
+                    'Your {} signature page has been received'.format(framework['name']),
+                    current_app.config["DM_GENERIC_NOREPLY_EMAIL"],
+                    current_app.config["FRAMEWORK_AGREEMENT_RETURNED_NAME"],
+                    ['{}-framework-agreement'.format(framework_slug)],
+                )
+            except MandrillException as e:
+                current_app.logger.error(
+                    "Framework agreement email failed to send. "
+                    "error {error} supplier_id {supplier_id} email_hash {email_hash}",
+                    extra={'error': six.text_type(e),
+                           'supplier_id': current_user.supplier_id,
+                           'email_hash': hash_email(current_user.email_address)})
+                abort(503, "Framework agreement email failed to send")
 
             flash(
                 'Your framework agreement has been returned to the Crown Commercial Service to be countersigned.',
