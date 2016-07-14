@@ -25,7 +25,8 @@ from ..helpers.frameworks import (
     get_declaration_status, get_last_modified_from_first_matching_file, register_interest_in_framework,
     get_supplier_on_framework_from_info, get_declaration_status_from_info, get_supplier_framework_info,
     get_framework, get_framework_and_lot, count_drafts_by_lot, get_statuses_for_lot,
-    countersigned_framework_agreement_exists_in_bucket, return_supplier_framework_info_if_on_framework_or_abort
+    countersigned_framework_agreement_exists_in_bucket, return_supplier_framework_info_if_on_framework_or_abort,
+    get_most_recently_uploaded_agreement_file_or_none
 )
 from ..helpers.validation import get_validator
 from ..helpers.services import (
@@ -641,16 +642,8 @@ def signature_upload(framework_slug):
     framework = get_framework(data_api_client, framework_slug)
     return_supplier_framework_info_if_on_framework_or_abort(data_api_client, framework_slug)
     agreements_bucket = s3.S3(current_app.config['DM_AGREEMENTS_BUCKET'])
+    signature_page = get_most_recently_uploaded_agreement_file_or_none(agreements_bucket, framework_slug)
     upload_error = None
-
-    # we can search by path (without the file extension) to get all agreement files and then use the latest one
-    download_path = get_agreement_document_path(
-        framework_slug,
-        current_user.supplier_id,
-        SIGNED_AGREEMENT_PREFIX
-    )
-    files = agreements_bucket.list(download_path)
-    signature_page = files.pop() if files else None
 
     if request.method == 'POST':
         # No file chosen for upload and file already exists on s3 so can use existing and progress
@@ -758,14 +751,7 @@ def contract_review(framework_slug):
         supplier_framework['declaration']['nameOfOrganisation']
     )
 
-    # we could just use some of this stuff to get the filename but we don't know the extension
-    download_path = get_agreement_document_path(
-        framework_slug,
-        current_user.supplier_id,
-        SIGNED_AGREEMENT_PREFIX
-    )
-    files = agreements_bucket.list(download_path)
-    signature_page = files.pop() if files else None
+    signature_page = get_most_recently_uploaded_agreement_file_or_none(agreements_bucket, framework_slug)
 
     return render_template(
         "frameworks/contract_review.html",
@@ -783,15 +769,8 @@ def contract_submitted(framework_slug):
     framework = get_framework(data_api_client, framework_slug)
     supplier_framework = return_supplier_framework_info_if_on_framework_or_abort(data_api_client, framework_slug)
     agreements_bucket = s3.S3(current_app.config['DM_AGREEMENTS_BUCKET'])
+    signature_page = get_most_recently_uploaded_agreement_file_or_none(agreements_bucket, framework_slug)
 
-    # we could just use some of this stuff to get the filename but we don't know the extension
-    download_path = get_agreement_document_path(
-        framework_slug,
-        current_user.supplier_id,
-        SIGNED_AGREEMENT_PREFIX
-    )
-    files = agreements_bucket.list(download_path)
-    signature_page = files.pop() if files else None
     # The default view (download_agreement_file) uses the DM_SUBMISSIONS_BUCKET, which doesn't work
     signature_page_url = get_signed_url(agreements_bucket, signature_page['path'], 'https://{}.s3-eu-west-1.amazonaws.com'.format(current_app.config['DM_AGREEMENTS_BUCKET']))  # noqa
 
