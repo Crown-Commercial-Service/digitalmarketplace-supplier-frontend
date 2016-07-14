@@ -2086,3 +2086,39 @@ class TestReturnSignedAgreement(BaseApplicationTest):
             assert res.status_code == 400
             page = res.get_data(as_text=True)
             assert "You must confirm you have the authority to return the agreement" in page
+
+    @mock.patch('dmutils.s3.S3')
+    @mock.patch('app.main.frameworks.get_supplier_framework_info')
+    def test_framework_dashboard_shows_returned_agreement_details(
+            self, get_supplier_framework_info, s3, return_supplier_framework, data_api_client
+    ):
+        with self.app.test_client():
+            self.login()
+            data_api_client.get_framework.return_value = get_g_cloud_8()
+            supplier_framework = self.supplier_framework(
+                on_framework=True,
+                agreement_returned=True,
+                agreement_returned_at='2016-07-10T21:20:00.000000Z'
+            )['frameworkInterest']
+            supplier_framework['agreementDetails'] = {
+                'frameworkAgreementVersion': 'v1.0',
+                'signerName': 'signer name',
+                'signerRole': 'signer role',
+                'uploaderUserId': 123,
+                'uploaderUserName': 'User',
+                'uploaderUserEmail': 'email@email.com',
+            }
+            get_supplier_framework_info.return_value = supplier_framework
+
+            s3.return_value.list.return_value = [_return_fake_s3_file_dict('g-cloud-8/agreements/{}', '123-framework-agreement', 'pdf', last_modified='2016-07-10T21:18:00.000000Z')]  # noqa
+            s3.return_value.get_signed_url.return_value = 'http://your-agreement-file.com'
+
+            res = self.client.get("/suppliers/frameworks/g-cloud-8")
+            page = res.get_data(as_text=True)
+            assert res.status_code == 200
+            assert 'G-Cloud 8 documents' in page
+
+            page_without_whitespace = self.strip_all_whitespace(page)
+            assert '<tdclass="summary-item-field"><span><p>signername</p><p>signerrole</p></span></td>' in page_without_whitespace  # noqa
+            assert '<tdclass="summary-item-field"><span><p>User</p><p>email@email.com</p><p>Sunday10July2016at22:20</p></span></td>' in page_without_whitespace  # noqa
+            assert '<tdclass="summary-item-field-first"><span>WaitingforCCStocountersign</span></td>' in page_without_whitespace  # noqa
