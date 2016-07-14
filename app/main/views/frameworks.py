@@ -703,6 +703,17 @@ def contract_review(framework_slug):
     framework = get_framework(data_api_client, framework_slug)
     supplier_framework = return_supplier_framework_info_if_on_framework_or_abort(data_api_client, framework_slug)
     agreements_bucket = s3.S3(current_app.config['DM_AGREEMENTS_BUCKET'])
+    signature_page = get_most_recently_uploaded_agreement_file_or_none(agreements_bucket, framework_slug)
+
+    # if supplier_framework doesn't have a name or a role or the agreement file, then 404
+    if not (
+        supplier_framework['agreementDetails'] and
+        supplier_framework['agreementDetails'].get('signerName') and
+        supplier_framework['agreementDetails'].get('signerRole') and
+        signature_page
+    ):
+        abort(404)
+
     form = ContractReviewForm()
     form_errors = None
 
@@ -767,8 +778,6 @@ def contract_review(framework_slug):
     form.authorisation.description = "I have the authority to return this agreement on behalf of {}".format(
         supplier_framework['declaration']['nameOfOrganisation']
     )
-
-    signature_page = get_most_recently_uploaded_agreement_file_or_none(agreements_bucket, framework_slug)
 
     return render_template(
         "frameworks/contract_review.html",

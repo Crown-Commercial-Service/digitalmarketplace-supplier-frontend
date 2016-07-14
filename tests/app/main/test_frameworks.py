@@ -2065,6 +2065,28 @@ class TestReturnSignedAgreement(BaseApplicationTest):
             assert '<tdclass="summary-item-field-first"><span>UploadedSunday10July2016at22:18</span></td>' in self.strip_all_whitespace(page)  # noqa
 
     @mock.patch('dmutils.s3.S3')
+    def test_contract_review_page_aborts_if_visited_when_information_required_to_return_agreement_does_not_exist(
+        self, s3, return_supplier_framework, data_api_client
+    ):
+        with self.app.test_client():
+            self.login()
+            data_api_client.get_framework.return_value = get_g_cloud_8()
+            supplier_framework = self.supplier_framework(on_framework=True)['frameworkInterest']
+            supplier_framework['agreementDetails'] = {'signerName': 'signer_name', 'signerRole': 'signer_role'}
+            supplier_framework['declaration']['primaryContact'] = 'contact name'
+            supplier_framework['declaration']['primaryContactEmail'] = 'email@email.com'
+            supplier_framework['declaration']['nameOfOrganisation'] = 'company name'
+            return_supplier_framework.return_value = supplier_framework
+
+            # no file has been uploaded
+            s3.return_value.list.return_value = []
+
+            res = self.client.get(
+                "/suppliers/frameworks/g-cloud-8/contract-review"
+            )
+            assert res.status_code == 404
+
+    @mock.patch('dmutils.s3.S3')
     @mock.patch('app.main.frameworks.send_email')
     def test_return_400_response_and_no_email_sent_if_authorisation_not_checked(
             self, send_email, s3, return_supplier_framework, data_api_client
