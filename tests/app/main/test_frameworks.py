@@ -1717,6 +1717,18 @@ class TestG7ServicesList(BaseApplicationTest):
 @mock.patch("app.main.frameworks.return_supplier_framework_info_if_on_framework_or_abort")
 class TestReturnSignedAgreement(BaseApplicationTest):
 
+    def test_signer_details_shows_company_name(self, return_supplier_framework, data_api_client):
+        self.login()
+        data_api_client.get_framework.return_value = get_g_cloud_8()
+        supplier_framework = self.supplier_framework(on_framework=True)['frameworkInterest']
+        supplier_framework['declaration']['nameOfOrganisation'] = u'£unicodename'
+        return_supplier_framework.return_value = supplier_framework
+
+        res = self.client.get("/suppliers/frameworks/g-cloud-8/signer-details")
+        page = res.get_data(as_text=True)
+        assert res.status_code == 200
+        assert u'Details of the person who is signing on behalf of £unicodename' in page
+
     def test_should_be_an_error_if_no_full_name(self, return_supplier_framework, data_api_client):
         self.login()
         data_api_client.get_framework.return_value = get_g_cloud_8()
@@ -2016,7 +2028,7 @@ class TestReturnSignedAgreement(BaseApplicationTest):
             supplier_framework['agreementDetails'] = {'signerName': 'signer_name', 'signerRole': 'signer_role'}
             supplier_framework['declaration']['primaryContact'] = 'contact name'
             supplier_framework['declaration']['primaryContactEmail'] = 'email@email.com'
-            supplier_framework['declaration']['nameOfOrganisation'] = 'company name'
+            supplier_framework['declaration']['nameOfOrganisation'] = u'£unicodename'
             return_supplier_framework.return_value = supplier_framework
             s3.return_value.list.return_value = [{
                 'last_modified': '2016-07-10T21:18:00.000000Z'
@@ -2031,10 +2043,10 @@ class TestReturnSignedAgreement(BaseApplicationTest):
             assert res.status_code == 200
             page = res.get_data(as_text=True)
             page_without_whitespace = self.strip_all_whitespace(page)
-            assert u'Check the details you’ve given before returning the signature page for company name' in page
+            assert u'Check the details you’ve given before returning the signature page for £unicodename' in page
             assert '<tdclass="summary-item-field"><span><p>signer_name</p><p>signer_role</p></span></td>' \
                 in page_without_whitespace
-            assert "I have the authority to return this agreement on behalf of company name" in page
+            assert u"I have the authority to return this agreement on behalf of £unicodename" in page
             assert "Returning the signature page will notify the Crown Commercial Service and the primary contact you "
             "gave in your G-Cloud 8 application, contact name at email@email.com." in page
             assert '<tdclass="summary-item-field-first"><span>test.pdf</span></td>' in page_without_whitespace

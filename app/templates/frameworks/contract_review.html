@@ -29,7 +29,7 @@
   <div class="column-two-thirds">
     {%
       with
-      heading = "Check the details you’ve given before returning the signature page for {}".format(supplier_framework.declaration.nameOfOrganisation),
+      heading = "Check the details you’ve given before returning the signature page for %s" | format(supplier_framework.declaration.nameOfOrganisation),
       smaller = True
     %}
       {% include "toolkit/page-heading.html" %}

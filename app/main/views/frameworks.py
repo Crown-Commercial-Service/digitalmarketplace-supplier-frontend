@@ -756,7 +756,7 @@ def contract_review(framework_slug):
                 {'question': form['authorisation'].label.text, 'input_name': 'authorisation'}
             ]
 
-    form.authorisation.description = "I have the authority to return this agreement on behalf of {}".format(
+    form.authorisation.description = u"I have the authority to return this agreement on behalf of {}".format(
         supplier_framework['declaration']['nameOfOrganisation']
     )
 
