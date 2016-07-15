@@ -715,7 +715,7 @@ def contract_review(framework_slug):
             )
 
             email_recipients = [supplier_framework['declaration']['primaryContactEmail']]
-            if supplier_framework['declaration']['primaryContactEmail'] != current_user.email_address:
+            if supplier_framework['declaration']['primaryContactEmail'].lower() != current_user.email_address.lower():
                 email_recipients.append(current_user.email_address)
 
             try:
