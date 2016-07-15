@@ -1,7 +1,10 @@
 # -*- coding: utf-8 -*-
 import pytest
+import mock
 from nose.tools import assert_equal
-from app.main.helpers.frameworks import get_statuses_for_lot
+from werkzeug.exceptions import HTTPException
+
+from app.main.helpers.frameworks import get_statuses_for_lot, return_supplier_framework_info_if_on_framework_or_abort
 
 
 def get_lot_status_examples():
@@ -301,3 +304,30 @@ def test_get_status_for_lot(parameters, expected_result):
             unit_plural='labs'
         )
     )
+
+
+@mock.patch("app.main.helpers.frameworks.current_user")
+def test_return_supplier_framework_info_if_on_framework_or_abort_aborts_if_no_supplier_framework_exists(current_user):
+    data_api_client = mock.Mock()
+    data_api_client.get_supplier_framework_info.return_value = {'frameworkInterest': {}}
+    with pytest.raises(HTTPException):
+        return_supplier_framework_info_if_on_framework_or_abort(data_api_client, 'g-cloud-8')
+
+
+@mock.patch("app.main.helpers.frameworks.current_user")
+def test_return_supplier_framework_info_if_on_framework_or_abort_aborts_if_on_framework_false(current_user):
+    data_api_client = mock.Mock()
+    data_api_client.get_supplier_framework_info.return_value = {'frameworkInterest': {'onFramework': None}}
+    with pytest.raises(HTTPException):
+        return_supplier_framework_info_if_on_framework_or_abort(data_api_client, 'g-cloud-8')
+
+
+@mock.patch("app.main.helpers.frameworks.current_user")
+def test_return_supplier_framework_info_if_on_framework_or_abort_returns_supplier_framework_if_on_framework(
+        current_user
+):
+    supplier_framework_response = {'frameworkInterest': {'onFramework': True}}
+    data_api_client = mock.Mock()
+    data_api_client.get_supplier_framework_info.return_value = supplier_framework_response
+    assert return_supplier_framework_info_if_on_framework_or_abort(data_api_client, 'g-cloud-8') == \
+        supplier_framework_response['frameworkInterest']

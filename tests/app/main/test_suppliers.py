@@ -593,7 +593,7 @@ class TestSuppliersDashboard(BaseApplicationTest):
                       first_row)
             assert_not_in(u"You must sign the framework agreement to sell these services",
                           first_row)
-            assert_in(u"View your application",
+            assert_in(u"View your documents",
                       first_row)
 
     @mock.patch("app.main.views.suppliers.data_api_client")

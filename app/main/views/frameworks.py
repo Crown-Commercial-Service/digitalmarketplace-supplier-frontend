@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
-import itertools
+from itertools import chain
 
 from dateutil.parser import parse as date_parse
-from flask import render_template, request, abort, flash, redirect, url_for, current_app
+from flask import render_template, request, abort, flash, redirect, url_for, current_app, session
 from flask_login import current_user
 import six
 
@@ -14,8 +14,8 @@ from dmutils.formats import datetimeformat
 from dmutils import s3
 from dmutils.documents import (
     RESULT_LETTER_FILENAME, AGREEMENT_FILENAME, SIGNED_AGREEMENT_PREFIX, COUNTERSIGNED_AGREEMENT_FILENAME,
-    get_agreement_document_path, get_signed_url, get_extension, file_is_less_than_5mb, file_is_empty,
-    sanitise_supplier_name,
+    get_agreement_document_path, get_signed_url, get_extension, file_is_less_than_5mb, file_is_empty, file_is_image,
+    file_is_pdf, sanitise_supplier_name
 )
 
 from ... import data_api_client
@@ -25,12 +25,14 @@ from ..helpers.frameworks import (
     get_declaration_status, get_last_modified_from_first_matching_file, register_interest_in_framework,
     get_supplier_on_framework_from_info, get_declaration_status_from_info, get_supplier_framework_info,
     get_framework, get_framework_and_lot, count_drafts_by_lot, get_statuses_for_lot,
-    countersigned_framework_agreement_exists_in_bucket
+    countersigned_framework_agreement_exists_in_bucket, return_supplier_framework_info_if_on_framework_or_abort,
+    get_most_recently_uploaded_agreement_file_or_none
 )
 from ..helpers.validation import get_validator
 from ..helpers.services import (
     get_signed_document_url, get_drafts, get_lot_drafts, count_unanswered_questions
 )
+from ..forms.frameworks import SignerDetailsForm, ContractReviewForm
 
 CLARIFICATION_QUESTION_NAME = 'clarification_question'
 
@@ -39,7 +41,6 @@ CLARIFICATION_QUESTION_NAME = 'clarification_question'
 @login_required
 def framework_dashboard(framework_slug):
     framework = get_framework(data_api_client, framework_slug)
-
     if request.method == 'POST':
         register_interest_in_framework(data_api_client, framework_slug)
         supplier_users = data_api_client.find_users(supplier_id=current_user.supplier_id)
@@ -85,9 +86,35 @@ def framework_dashboard(framework_slug):
     if countersigned_framework_agreement_exists_in_bucket(framework_slug, current_app.config['DM_AGREEMENTS_BUCKET']):
         countersigned_agreement_file = COUNTERSIGNED_AGREEMENT_FILENAME
 
+    application_made = supplier_is_on_framework or (len(complete_drafts) > 0 and declaration_status == 'complete')
+    lots_with_completed_drafts = [lot for lot in framework['lots'] if count_drafts_by_lot(complete_drafts, lot['slug'])]
+
+    last_modified = {
+        'supplier_pack': get_last_modified_from_first_matching_file(
+            key_list, framework_slug, "communications/{}".format(supplier_pack_filename)
+        ),
+        'supplier_updates': get_last_modified_from_first_matching_file(
+            key_list, framework_slug, "communications/updates/"
+        )
+    }
+
+    # if supplier has returned agreement for framework with framework_agreement_version, show contract_submitted page
+    if supplier_is_on_framework and framework['frameworkAgreementVersion'] and supplier_framework_info['agreementReturned']:  # noqa
+        agreements_bucket = s3.S3(current_app.config['DM_AGREEMENTS_BUCKET'])
+        signature_page = get_most_recently_uploaded_agreement_file_or_none(agreements_bucket, framework_slug)
+
+        return render_template(
+            "frameworks/contract_submitted.html",
+            framework=framework,
+            framework_live_date=content_loader.get_message(framework_slug, 'dates')['framework_live_date'],
+            document_name='{}.{}'.format(SIGNED_AGREEMENT_PREFIX, signature_page['ext']),
+            supplier_framework=supplier_framework_info,
+            last_modified=last_modified
+        ), 200
+
     return render_template(
         "frameworks/dashboard.html",
-        application_made=supplier_is_on_framework or (len(complete_drafts) > 0 and declaration_status == 'complete'),
+        application_made=application_made,
         completed_lots=[{
             'name': lot['name'],
             'complete_count': count_drafts_by_lot(complete_drafts, lot['slug']),
@@ -95,7 +122,7 @@ def framework_dashboard(framework_slug):
             'unit': 'lab' if framework['slug'] == 'digital-outcomes-and-specialists' else 'service',
             'unit_plural': 'labs' if framework['slug'] == 'digital-outcomes-and-specialists' else 'service'
             # TODO: ^ make this dynamic, eg, lab, service, unit
-        } for lot in framework['lots'] if count_drafts_by_lot(complete_drafts, lot['slug'])],
+        } for lot in lots_with_completed_drafts],
         counts={
             "draft": len(drafts),
             "complete": len(complete_drafts)
@@ -104,14 +131,7 @@ def framework_dashboard(framework_slug):
         declaration_status=declaration_status,
         first_page_of_declaration=first_page,
         framework=framework,
-        last_modified={
-            'supplier_pack': get_last_modified_from_first_matching_file(
-                key_list, framework_slug, "communications/{}".format(supplier_pack_filename)
-            ),
-            'supplier_updates': get_last_modified_from_first_matching_file(
-                key_list, framework_slug, "communications/updates/"
-            )
-        },
+        last_modified=last_modified,
         supplier_is_on_framework=supplier_is_on_framework,
         supplier_pack_filename=supplier_pack_filename,
         result_letter_filename=result_letter_filename,
@@ -189,7 +209,7 @@ def framework_submission_services(framework_slug, lot_slug):
                     framework_slug=framework_slug, lot_slug=lot_slug, service_id=draft['id'])
         )
 
-    for draft in itertools.chain(drafts, complete_drafts):
+    for draft in chain(drafts, complete_drafts):
         draft['priceString'] = format_service_price(draft)
         content = content_loader.get_manifest(framework_slug, 'edit_submission').filter(draft)
         sections = content.summary(draft)
@@ -469,17 +489,29 @@ def framework_updates_email_clarification_question(framework_slug):
 @login_required
 def framework_agreement(framework_slug):
     framework = get_framework(data_api_client, framework_slug, allowed_statuses=['standstill', 'live'])
-
-    supplier_framework = data_api_client.get_supplier_framework_info(
-        current_user.supplier_id, framework_slug
-    )['frameworkInterest']
-    if not supplier_framework['onFramework']:
-        abort(404)
+    supplier_framework = return_supplier_framework_info_if_on_framework_or_abort(data_api_client, framework_slug)
 
     if supplier_framework['agreementReturned']:
         supplier_framework['agreementReturnedAt'] = datetimeformat(
             date_parse(supplier_framework['agreementReturnedAt'])
         )
+
+    # if there's a frameworkAgreementVersion key, it means we're on G-Cloud 8 or higher
+    if framework.get('frameworkAgreementVersion'):
+        drafts, complete_drafts = get_drafts(data_api_client, framework_slug)
+        lots_with_completed_drafts = [
+            lot for lot in framework['lots'] if count_drafts_by_lot(complete_drafts, lot['slug'])
+        ]
+
+        return render_template(
+            'frameworks/contract_start.html',
+            framework=framework,
+            lots=[{
+                'name': lot['name'],
+                'has_completed_draft': (lot in lots_with_completed_drafts)
+            } for lot in framework['lots']],
+            supplier_framework=supplier_framework,
+        ), 200
 
     return render_template(
         "frameworks/agreement.html",
@@ -493,16 +525,11 @@ def framework_agreement(framework_slug):
 @login_required
 def upload_framework_agreement(framework_slug):
     framework = get_framework(data_api_client, framework_slug, allowed_statuses=['standstill', 'live'])
-
-    supplier_framework = data_api_client.get_supplier_framework_info(
-        current_user.supplier_id, framework_slug
-    )['frameworkInterest']
-    if not supplier_framework or not supplier_framework['onFramework']:
-        abort(404)
+    supplier_framework = return_supplier_framework_info_if_on_framework_or_abort(data_api_client, framework_slug)
 
     upload_error = None
     if not file_is_less_than_5mb(request.files['agreement']):
-        upload_error = "Document must be less than 5Mb"
+        upload_error = "Document must be less than 5MB"
     elif file_is_empty(request.files['agreement']):
         upload_error = "Document must not be empty"
 
@@ -566,3 +593,178 @@ def upload_framework_agreement(framework_slug):
         abort(503, "Framework agreement email failed to send")
 
     return redirect(url_for('.framework_agreement', framework_slug=framework_slug))
+
+
+@main.route('/frameworks/<framework_slug>/signer-details', methods=['GET', 'POST'])
+@login_required
+def signer_details(framework_slug):
+    framework = get_framework(data_api_client, framework_slug)
+    supplier_framework = return_supplier_framework_info_if_on_framework_or_abort(data_api_client, framework_slug)
+
+    form = SignerDetailsForm()
+
+    question_keys = ['signerName', 'signerRole']
+    form_errors = {}
+
+    if request.method == 'POST':
+
+        if form.validate_on_submit():
+            agreement_details = {question_key: form[question_key].data for question_key in question_keys}
+
+            data_api_client.update_supplier_framework_agreement_details(
+                current_user.supplier_id, framework_slug, agreement_details, current_user.email_address
+            )
+
+            # If they have already uploaded a file then let them go to straight to the contract review
+            # page as they are likely editing their signer details
+            if session.get('signature_page'):
+                return redirect(url_for(".contract_review", framework_slug=framework_slug))
+
+            return redirect(url_for(".signature_upload", framework_slug=framework_slug))
+        else:
+            error_keys_in_order = [key for key in question_keys if key in form.errors.keys()]
+            form_errors = [
+                {'question': form[key].label.text, 'input_name': key} for key in error_keys_in_order
+            ]
+
+    # if the signer* keys exist, prefill them in the form
+    if supplier_framework['agreementDetails']:
+        for question_key in question_keys:
+            if question_key in supplier_framework['agreementDetails']:
+                form[question_key].data = supplier_framework['agreementDetails'][question_key]
+
+    return render_template(
+        "frameworks/signer_details.html",
+        form=form,
+        form_errors=form_errors,
+        framework=framework,
+        question_keys=question_keys,
+        supplier_framework=supplier_framework,
+    ), 400 if form_errors else 200
+
+
+@main.route('/frameworks/<framework_slug>/signature-upload', methods=['GET', 'POST'])
+@login_required
+def signature_upload(framework_slug):
+    framework = get_framework(data_api_client, framework_slug)
+    return_supplier_framework_info_if_on_framework_or_abort(data_api_client, framework_slug)
+    agreements_bucket = s3.S3(current_app.config['DM_AGREEMENTS_BUCKET'])
+    signature_page = get_most_recently_uploaded_agreement_file_or_none(agreements_bucket, framework_slug)
+    upload_error = None
+
+    if request.method == 'POST':
+        # No file chosen for upload and file already exists on s3 so can use existing and progress
+        if not request.files['signature_page'].filename and signature_page:
+            return redirect(url_for(".contract_review", framework_slug=framework_slug))
+
+        if not file_is_image(request.files['signature_page']) and not file_is_pdf(request.files['signature_page']):
+            upload_error = "The file must be a PDF, JPG or PNG"
+        elif not file_is_less_than_5mb(request.files['signature_page']):
+            upload_error = "The file must be less than 5MB"
+        elif file_is_empty(request.files['signature_page']):
+            upload_error = "The file must not be empty"
+
+        if not upload_error:
+            upload_path = get_agreement_document_path(
+                framework_slug,
+                current_user.supplier_id,
+                '{}{}'.format(SIGNED_AGREEMENT_PREFIX, get_extension(request.files['signature_page'].filename))
+            )
+            agreements_bucket.save(
+                upload_path,
+                request.files['signature_page'],
+                acl='private'
+            )
+
+            session['signature_page'] = request.files['signature_page'].filename
+
+            return redirect(url_for(".contract_review", framework_slug=framework_slug))
+
+    return render_template(
+        "frameworks/signature_upload.html",
+        framework=framework,
+        signature_page=signature_page,
+        upload_error=upload_error,
+    ), 400 if upload_error else 200
+
+
+@main.route('/frameworks/<framework_slug>/contract-review', methods=['GET', 'POST'])
+@login_required
+def contract_review(framework_slug):
+    framework = get_framework(data_api_client, framework_slug)
+    supplier_framework = return_supplier_framework_info_if_on_framework_or_abort(data_api_client, framework_slug)
+    agreements_bucket = s3.S3(current_app.config['DM_AGREEMENTS_BUCKET'])
+    signature_page = get_most_recently_uploaded_agreement_file_or_none(agreements_bucket, framework_slug)
+
+    # if supplier_framework doesn't have a name or a role or the agreement file, then 404
+    if not (
+        supplier_framework['agreementDetails'] and
+        supplier_framework['agreementDetails'].get('signerName') and
+        supplier_framework['agreementDetails'].get('signerRole') and
+        signature_page
+    ):
+        abort(404)
+
+    form = ContractReviewForm()
+    form_errors = None
+
+    if request.method == 'POST':
+        if form.validate_on_submit():
+            data_api_client.register_framework_agreement_returned(
+                current_user.supplier_id, framework_slug, current_user.email_address, current_user.id
+            )
+
+            email_recipients = [supplier_framework['declaration']['primaryContactEmail']]
+            if supplier_framework['declaration']['primaryContactEmail'].lower() != current_user.email_address.lower():
+                email_recipients.append(current_user.email_address)
+
+            try:
+                email_body = render_template(
+                    'emails/framework_agreement_with_framework_version_returned.html',
+                    framework_name=framework['name'],
+                    framework_slug=framework['slug'],
+                    framework_live_date=content_loader.get_message(framework_slug, 'dates')['framework_live_date'],  # noqa
+                )
+
+                send_email(
+                    email_recipients,
+                    email_body,
+                    current_app.config['DM_MANDRILL_API_KEY'],
+                    'Your {} signature page has been received'.format(framework['name']),
+                    current_app.config["DM_GENERIC_NOREPLY_EMAIL"],
+                    current_app.config["FRAMEWORK_AGREEMENT_RETURNED_NAME"],
+                    ['{}-framework-agreement'.format(framework_slug)],
+                )
+            except MandrillException as e:
+                current_app.logger.error(
+                    "Framework agreement email failed to send. "
+                    "error {error} supplier_id {supplier_id} email_hash {email_hash}",
+                    extra={'error': six.text_type(e),
+                           'supplier_id': current_user.supplier_id,
+                           'email_hash': hash_email(current_user.email_address)})
+                abort(503, "Framework agreement email failed to send")
+
+            flash(
+                'Your framework agreement has been returned to the Crown Commercial Service to be countersigned.',
+                'success'
+            )
+
+            return redirect(url_for(".framework_dashboard", framework_slug=framework_slug))
+
+        else:
+            form_errors = [
+                {'question': form['authorisation'].label.text, 'input_name': 'authorisation'}
+            ]
+
+    form.authorisation.description = u"I have the authority to return this agreement on behalf of {}".format(
+        supplier_framework['declaration']['nameOfOrganisation']
+    )
+
+    return render_template(
+        "frameworks/contract_review.html",
+        form=form,
+        form_errors=form_errors,
+        framework=framework,
+        signature_page=signature_page,
+        supplier_framework=supplier_framework,
+    ), 400 if form_errors else 200

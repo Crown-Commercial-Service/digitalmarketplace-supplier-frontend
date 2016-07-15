@@ -48,6 +48,8 @@ class Config(object):
     CLARIFICATION_EMAIL_SUBJECT = 'Thanks for your clarification question'
     DM_FOLLOW_UP_EMAIL_TO = 'digitalmarketplace@mailinator.com'
 
+    FRAMEWORK_AGREEMENT_RETURNED_NAME = 'Digital Marketplace Admin'
+
     DM_GENERIC_NOREPLY_EMAIL = 'do-not-reply@digitalmarketplace.service.gov.uk'
 
     CREATE_USER_SUBJECT = 'Create your Digital Marketplace account'
@@ -71,8 +73,8 @@ class Config(object):
 
     # Logging
     DM_LOG_LEVEL = 'DEBUG'
+    DM_LOG_PATH = None
     DM_APP_NAME = 'supplier-frontend'
-    DM_LOG_PATH = '/var/log/digitalmarketplace/application.log'
     DM_DOWNSTREAM_REQUEST_ID_HEADER = 'X-Amz-Cf-Id'
 
     @staticmethod
@@ -130,6 +132,7 @@ class Development(Config):
 class Live(Config):
     """Base config for deployed environments"""
     DEBUG = False
+    DM_LOG_PATH = '/var/log/digitalmarketplace/application.log'
     DM_HTTP_PROTO = 'https'
 
     DM_FRAMEWORK_AGREEMENTS_EMAIL = 'enquiries@digitalmarketplace.service.gov.uk'

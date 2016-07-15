@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from dmutils.documents import get_agreement_document_path, COUNTERSIGNED_AGREEMENT_FILENAME
+from dmutils.documents import get_agreement_document_path, COUNTERSIGNED_AGREEMENT_FILENAME, SIGNED_AGREEMENT_PREFIX
 import re
 
 from flask import abort
@@ -107,6 +107,16 @@ def get_supplier_on_framework_from_info(supplier_framework_info):
         return False
 
     return bool(supplier_framework_info.get('onFramework'))
+
+
+def return_supplier_framework_info_if_on_framework_or_abort(data_api_client, framework_slug):
+    # returns a supplier_framework or None if not found
+    supplier_framework = get_supplier_framework_info(data_api_client, framework_slug)
+
+    if not get_supplier_on_framework_from_info(supplier_framework):
+        abort(404)
+
+    return supplier_framework
 
 
 def question_references(data, get_question):
@@ -261,3 +271,13 @@ def countersigned_framework_agreement_exists_in_bucket(framework_slug, bucket):
     countersigned_path = get_agreement_document_path(
         framework_slug, current_user.supplier_id, COUNTERSIGNED_AGREEMENT_FILENAME)
     return agreements_bucket.path_exists(countersigned_path)
+
+
+def get_most_recently_uploaded_agreement_file_or_none(bucket, framework_slug):
+    download_path = get_agreement_document_path(
+        framework_slug,
+        current_user.supplier_id,
+        SIGNED_AGREEMENT_PREFIX
+    )
+    files = bucket.list(download_path)
+    return files.pop() if files else None

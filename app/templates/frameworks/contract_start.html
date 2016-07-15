@@ -1,0 +1,104 @@
+{% extends "_base_page.html" %}
+{% import "toolkit/summary-table.html" as summary %}
+
+{% block page_title %}Apply to {{ framework.name }} – Digital Marketplace{% endblock %}
+
+{% block breadcrumb %}
+  {%
+    with items = [
+      {
+        "link": "/",
+        "label": "Digital Marketplace",
+      },
+      {
+        "link": url_for(".dashboard"),
+        "label": "Your account",
+      },
+      {
+        "link": url_for(".framework_dashboard", framework_slug=framework.slug),
+        "label": "Your " + framework.name + " application"
+      }
+    ]
+  %}
+    {% include "toolkit/breadcrumb.html" %}
+  {% endwith %}
+{% endblock %}
+
+{% block main_content %}
+
+  {% with messages = get_flashed_messages(with_categories=True) %}
+    {% for category, message in messages %}
+      {% if category == 'declaration_complete' %}
+        <div data-analytics="trackPageView"
+          data-url="{{message}}">
+        </div>
+      {% endif %}
+    {% endfor %}
+  {% endwith %}
+
+  <div class="grid-row framework-dashboard">
+    <div class="column-two-thirds">
+      {% with
+         heading = (
+           framework.name + " framework agreement"
+         ),
+         smaller = True
+      %}
+        {% include "toolkit/page-heading.html" %}
+      {% endwith %}
+
+      <div class="summary-item-lede">
+        <p>Your application was successful. You must return a signed framework agreement signature page before you can sell services on the Digital Marketplace.<p/>
+      </div>
+
+      <div>
+        {{ summary.heading(supplier_framework.declaration.nameOfOrganisation) }}
+        {% call(item) summary.list_table(
+          lots,
+          caption="Lot application status table",
+          field_headings=[
+            "Lot name",
+            "Application status"
+          ],
+          field_headings_visible=False
+        ) %}
+          {% call summary.row() %}
+            {{ summary.text(item.name) }}
+            {{ summary.text('Pass' if item.has_completed_draft else 'No application') }}
+          {% endcall %}
+        {% endcall %}
+      </div>
+
+      <div>
+        <h2 class="page-subheading">What you need to do</h2>
+
+        {%
+          with
+          verbose = true,
+          items = [
+            {
+                "body": "Sign your framework agreement signature page.", 
+                "top": "The person signing must have the authority to agree to the framework terms, eg director or company secretary.",
+                "documents": [
+                    {
+                        "title": "Signature page", 
+                        "link": "#", 
+                        "file_type": "PDF",
+                        "download": True
+                    }
+                ],
+                "bottom": "You can review the <a href='https://www.gov.uk/government/uploads/system/uploads/attachment_data/file/518833/DOS-Framework-Agreement.pdf' download>standard framework agreement</a> on GOV.UK."
+            }, 
+            {
+                "body": "Return your signed signature page and give the details of the person who signed it.",
+                "bottom": "<strong><a href='{}'>Return your signed signature page</a></strong>".format(url_for('.signer_details', framework_slug=framework.slug))
+            } 
+          ]
+        %}
+          {% include "toolkit/instruction-list.html" %}
+        {% endwith %}
+      </div>  
+      
+    </div>
+  </div>
+{% endblock %}

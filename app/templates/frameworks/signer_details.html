@@ -1,0 +1,73 @@
+{% extends "_base_page.html" %}
+
+{% block page_title %}Signer details – Digital Marketplace{% endblock %}
+
+{% block breadcrumb %}
+  {%
+    with items = [
+      {
+        "link": "/",
+        "label": "Digital Marketplace",
+      },
+      {
+        "link": url_for(".dashboard"),
+        "label": "Your account",
+      },
+      {
+        "link": url_for(".framework_dashboard", framework_slug=framework.slug),
+        "label": "Your " + framework.name + " application"
+      }
+    ]
+  %}
+    {% include "toolkit/breadcrumb.html" %}
+  {% endwith %}
+{% endblock %}
+
+{% block main_content %}
+<div class="grid-row">
+  <div class="column-two-thirds">
+    {%
+    with
+      heading = "Details of the person who is signing on behalf of %s" | format(supplier_framework.declaration.nameOfOrganisation),
+      smaller = True
+    %}
+      {% include "toolkit/page-heading.html" %}
+    {% endwith %}
+
+    {% if form.errors %}
+      {%
+        with
+          errors = form_errors
+      %}
+        {% include 'toolkit/forms/validation.html' %}
+      {% endwith %}
+    {% endif %}
+
+    <form method="POST" action="{{ url_for('.signer_details', framework_slug=framework.slug) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+        {% for question_key in question_keys %}
+          {%
+            with
+              question = form[question_key].label,
+              name = question_key,
+              value = form[question_key].data,
+              hint = form[question_key].description,
+              error = form[question_key].errors[0]
+          %}
+            {% include "toolkit/forms/textbox.html" %}
+          {% endwith %}
+
+        {% endfor %}
+
+
+        {%
+          with
+            type = "save",
+            label = "Continue"
+        %}
+          {% include "toolkit/button.html" %}
+        {% endwith %}
+    </form>
+  </div>
+</div>
+{% endblock %}
