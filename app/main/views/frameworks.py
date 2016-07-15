@@ -622,15 +622,6 @@ def signer_details(framework_slug):
 
             return redirect(url_for(".signature_upload", framework_slug=framework_slug))
         else:
-            current_app.logger.warning(
-                "signaturepage.fail: signerName:{signerName} signerRole:{signerRole} {errors}",
-                extra={
-                    'signerName': form['signerName'].data,
-                    'signerRole': form['signerRole'].data,
-                    'errors': ",".join(chain.from_iterable(form.errors.values()))
-                }
-            )
-
             error_keys_in_order = [key for key in question_keys if key in form.errors.keys()]
             form_errors = [
                 {'question': form[key].label.text, 'input_name': key} for key in error_keys_in_order
@@ -761,16 +752,6 @@ def contract_review(framework_slug):
             return redirect(url_for(".framework_dashboard", framework_slug=framework_slug))
 
         else:
-            current_app.logger.warning(
-                "signaturepage.fail: signerName:{signerName} signerRole:{signerRole} signature_page:{signature_page} {errors}",  # noqa
-                extra={
-                    'signerName': supplier_framework['agreementDetails']['signerName'],
-                    'signerRole': supplier_framework['agreementDetails']['signerRole'],
-                    'signature_page': session.get('signature_page'),
-                    'errors': ",".join(chain.from_iterable(form.errors.values()))
-                }
-            )
-
             form_errors = [
                 {'question': form['authorisation'].label.text, 'input_name': 'authorisation'}
             ]
