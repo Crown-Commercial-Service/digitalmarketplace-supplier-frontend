@@ -97,7 +97,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
 
         assert_equal(res.status_code, 404)
 
-    @mock.patch('app.main.frameworks.send_email')
+    @mock.patch('app.main.views.frameworks.send_email')
     def test_interest_registered_in_framework_on_post(self, send_email, data_api_client, s3):
         with self.app.test_client():
             self.login()
@@ -113,7 +113,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
                 "email@email.com"
             )
 
-    @mock.patch('app.main.frameworks.send_email')
+    @mock.patch('app.main.views.frameworks.send_email')
     def test_email_sent_when_interest_registered_in_framework(self, send_email, data_api_client, s3):
         with self.app.test_client():
             self.login()
@@ -678,7 +678,7 @@ class TestFrameworkAgreement(BaseApplicationTest):
 
 
 @mock.patch('dmutils.s3.S3')
-@mock.patch('app.main.frameworks.send_email')
+@mock.patch('app.main.views.frameworks.send_email')
 @mock.patch('app.main.views.frameworks.data_api_client', autospec=True)
 class TestFrameworkAgreementUpload(BaseApplicationTest):
     def test_page_returns_404_if_framework_in_wrong_state(self, data_api_client, send_email, s3):
@@ -1713,8 +1713,8 @@ class TestG7ServicesList(BaseApplicationTest):
         assert_not_in(u'Apply to provide', submissions.get_data(as_text=True))
 
 
-@mock.patch("app.main.frameworks.data_api_client")
-@mock.patch("app.main.frameworks.return_supplier_framework_info_if_on_framework_or_abort")
+@mock.patch("app.main.views.frameworks.data_api_client")
+@mock.patch("app.main.views.frameworks.return_supplier_framework_info_if_on_framework_or_abort")
 class TestReturnSignedAgreement(BaseApplicationTest):
 
     def test_signer_details_shows_company_name(self, return_supplier_framework, data_api_client):
@@ -2099,7 +2099,7 @@ class TestReturnSignedAgreement(BaseApplicationTest):
             assert res.status_code == 404
 
     @mock.patch('dmutils.s3.S3')
-    @mock.patch('app.main.frameworks.send_email')
+    @mock.patch('app.main.views.frameworks.send_email')
     def test_return_400_response_and_no_email_sent_if_authorisation_not_checked(
             self, send_email, s3, return_supplier_framework, data_api_client
     ):
@@ -2126,7 +2126,7 @@ class TestReturnSignedAgreement(BaseApplicationTest):
             assert "You must confirm you have the authority to return the agreement" in page
 
     @mock.patch('dmutils.s3.S3')
-    @mock.patch('app.main.frameworks.send_email')
+    @mock.patch('app.main.views.frameworks.send_email')
     def test_valid_framework_agreement_returned_sends_confirmation_emails_and_redirects_to_framework_dashboard(
         self, send_email, s3, return_supplier_framework, data_api_client
     ):
@@ -2151,8 +2151,8 @@ class TestReturnSignedAgreement(BaseApplicationTest):
             )
 
             # Delcaration primaryContactEmail and current_user.email_address are different so expect two recipients
-            send_email.assert_called_once(
-                ['email@email.com', 'email2@email.com'],
+            send_email.assert_called_once_with(
+                ['email2@email.com', 'email@email.com'],
                 mock.ANY,
                 'MANDRILL',
                 'Your G-Cloud 8 signature page has been received',
@@ -2165,7 +2165,7 @@ class TestReturnSignedAgreement(BaseApplicationTest):
             assert res.location == 'http://localhost/suppliers/frameworks/g-cloud-8'
 
     @mock.patch('dmutils.s3.S3')
-    @mock.patch('app.main.frameworks.send_email')
+    @mock.patch('app.main.views.frameworks.send_email')
     def test_valid_framework_agreement_returned_sends_only_one_confirmation_email_if_contact_email_addresses_are_equal(
         self, send_email, s3, return_supplier_framework, data_api_client
     ):
@@ -2189,8 +2189,8 @@ class TestReturnSignedAgreement(BaseApplicationTest):
                 }
             )
 
-            send_email.assert_called_once(
-                'email@email.com',
+            send_email.assert_called_once_with(
+                ['email@email.com'],
                 mock.ANY,
                 'MANDRILL',
                 'Your G-Cloud 8 signature page has been received',
@@ -2203,7 +2203,7 @@ class TestReturnSignedAgreement(BaseApplicationTest):
             assert res.location == 'http://localhost/suppliers/frameworks/g-cloud-8'
 
     @mock.patch('dmutils.s3.S3')
-    @mock.patch('app.main.frameworks.send_email')
+    @mock.patch('app.main.views.frameworks.send_email')
     def test_return_503_response_if_mandrill_exception_raised_by_send_email(
             self, send_email, s3, return_supplier_framework, data_api_client
     ):
@@ -2232,7 +2232,7 @@ class TestReturnSignedAgreement(BaseApplicationTest):
             assert res.status_code == 503
 
     @mock.patch('dmutils.s3.S3')
-    @mock.patch('app.main.frameworks.send_email')
+    @mock.patch('app.main.views.frameworks.send_email')
     def test_email_not_sent_if_api_call_fails(
             self, send_email, s3, return_supplier_framework, data_api_client
     ):
@@ -2262,7 +2262,7 @@ class TestReturnSignedAgreement(BaseApplicationTest):
             assert not send_email.called
 
     @mock.patch('dmutils.s3.S3')
-    @mock.patch('app.main.frameworks.get_supplier_framework_info')
+    @mock.patch('app.main.views.frameworks.get_supplier_framework_info')
     def test_framework_dashboard_shows_returned_agreement_details(
             self, get_supplier_framework_info, s3, return_supplier_framework, data_api_client
     ):
