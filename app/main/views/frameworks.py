@@ -745,6 +745,8 @@ def contract_review(framework_slug):
                            'email_hash': hash_email(current_user.email_address)})
                 abort(503, "Framework agreement email failed to send")
 
+            session.pop('signature_page', None)
+
             flash(
                 'Your framework agreement has been returned to the Crown Commercial Service to be countersigned.',
                 'success'
@@ -757,7 +759,7 @@ def contract_review(framework_slug):
                 {'question': form['authorisation'].label.text, 'input_name': 'authorisation'}
             ]
 
-    form.authorisation.description = u"I have the authority to return this agreement on behalf of {}".format(
+    form.authorisation.description = u"I have the authority to return this agreement on behalf of {}.".format(
         supplier_framework['declaration']['nameOfOrganisation']
     )
 
