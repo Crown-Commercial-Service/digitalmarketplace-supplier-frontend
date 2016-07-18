@@ -2143,6 +2143,9 @@ class TestReturnSignedAgreement(BaseApplicationTest):
                 'last_modified': '2016-07-10T21:18:00.000000Z'
             }]
 
+            with self.client.session_transaction() as sess:
+                sess['signature_page'] = 'test.pdf'
+
             res = self.client.post(
                 "/suppliers/frameworks/g-cloud-8/contract-review",
                 data={
@@ -2160,6 +2163,10 @@ class TestReturnSignedAgreement(BaseApplicationTest):
                 'Digital Marketplace Admin',
                 ['g-cloud-8-framework-agreement']
             )
+
+            # Check 'signature_page' has been removed from session
+            with self.client.session_transaction() as sess:
+                assert 'signature_page' not in sess
 
             assert res.status_code == 302
             assert res.location == 'http://localhost/suppliers/frameworks/g-cloud-8'
