@@ -109,6 +109,7 @@ def framework_dashboard(framework_slug):
             framework_live_date=content_loader.get_message(framework_slug, 'dates')['framework_live_date'],
             document_name='{}.{}'.format(SIGNED_AGREEMENT_PREFIX, signature_page['ext']),
             supplier_framework=supplier_framework_info,
+            supplier_pack_filename=supplier_pack_filename,
             last_modified=last_modified
         ), 200
 
