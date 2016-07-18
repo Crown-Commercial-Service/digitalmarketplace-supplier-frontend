@@ -14,8 +14,8 @@ from dmutils.formats import datetimeformat
 from dmutils import s3
 from dmutils.documents import (
     RESULT_LETTER_FILENAME, AGREEMENT_FILENAME, SIGNED_AGREEMENT_PREFIX, COUNTERSIGNED_AGREEMENT_FILENAME,
-    get_agreement_document_path, get_signed_url, get_extension, file_is_less_than_5mb, file_is_empty, file_is_image,
-    file_is_pdf, sanitise_supplier_name
+    SIGNATURE_PAGE_FILENAME, get_agreement_document_path, get_signed_url, get_extension, file_is_less_than_5mb,
+    file_is_empty, file_is_image, file_is_pdf, sanitise_supplier_name
 )
 
 from ... import data_api_client
@@ -505,6 +505,7 @@ def framework_agreement(framework_slug):
 
         return render_template(
             'frameworks/contract_start.html',
+            signature_page_filename=SIGNATURE_PAGE_FILENAME,
             framework=framework,
             lots=[{
                 'name': lot['name'],
