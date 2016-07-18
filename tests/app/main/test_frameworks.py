@@ -1994,6 +1994,17 @@ class TestReturnSignedAgreement(BaseApplicationTest):
             assert res.status_code == 302
             assert res.location == 'http://localhost/suppliers/frameworks/g-cloud-8/contract-review'
 
+            data_api_client.create_audit_event.assert_called_once_with(
+                audit_type=AuditTypes.upload_signed_agreement,
+                user='email@email.com',
+                object_type='suppliers',
+                object_id=1234,
+                data={
+                    'upload_signed_agreement': u'test.jpg',
+                    'upload_path': 'g-cloud-8/agreements/1234/1234-signed-framework-agreement.jpg'
+                }
+            )
+
     @mock.patch('dmutils.s3.S3')
     def test_signature_page_allows_continuation_without_file_chosen_to_be_uploaded_if_an_uploaded_file_already_exists(
             self, s3, return_supplier_framework, data_api_client

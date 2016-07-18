@@ -680,6 +680,16 @@ def signature_upload(framework_slug):
 
             session['signature_page'] = request.files['signature_page'].filename
 
+            data_api_client.create_audit_event(
+                audit_type=AuditTypes.upload_signed_agreement,
+                user=current_user.email_address,
+                object_type="suppliers",
+                object_id=current_user.supplier_id,
+                data={
+                    "upload_signed_agreement": request.files['signature_page'].filename,
+                    "upload_path": upload_path
+                })
+
             return redirect(url_for(".contract_review", framework_slug=framework_slug))
 
     return render_template(
