@@ -157,6 +157,7 @@ def submit_brief_response(brief_id):
 
 
 @main.route('/opportunities/<int:brief_id>/responses/result')
+@login_required
 def view_response_result(brief_id):
     brief = get_brief(data_api_client, brief_id, allowed_statuses=['live'])
 
