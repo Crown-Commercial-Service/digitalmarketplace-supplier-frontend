@@ -100,7 +100,7 @@
             {% else %}
             <li>
               {{ lot.complete_count }}
-              {{ lot.unit if (1 == lot.complete_count) else lot.unit_plural }} in
+              {{ lot.unitSingular if (1 == lot.complete_count) else lot.unitPlural }} in
               {{ lot.name|lower }}
             </li>
             {% endif %}

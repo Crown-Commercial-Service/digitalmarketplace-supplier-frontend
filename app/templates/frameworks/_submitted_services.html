@@ -8,7 +8,7 @@
       {% else %}
         <li>
           {{ lot.complete_count }} {{ lot.name }}
-          {{ lot.unit if (1 == lot.complete_count) else lot.unit_plural }}
+          {{ lot.unitSingular if (1 == lot.complete_count) else lot.unitPlural }}
         </li>
       {% endif %}
     {% endfor %}
