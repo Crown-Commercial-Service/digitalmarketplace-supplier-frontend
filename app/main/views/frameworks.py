@@ -116,14 +116,10 @@ def framework_dashboard(framework_slug):
     return render_template(
         "frameworks/dashboard.html",
         application_made=application_made,
-        completed_lots=[{
-            'name': lot['name'],
-            'complete_count': count_drafts_by_lot(complete_drafts, lot['slug']),
-            'one_service_limit': lot['oneServiceLimit'],
-            'unit': 'lab' if framework['slug'] == 'digital-outcomes-and-specialists' else 'service',
-            'unit_plural': 'labs' if framework['slug'] == 'digital-outcomes-and-specialists' else 'service'
-            # TODO: ^ make this dynamic, eg, lab, service, unit
-        } for lot in lots_with_completed_drafts],
+        completed_lots=tuple(
+            dict(lot, complete_count=count_drafts_by_lot(complete_drafts, lot['slug']))
+            for lot in lots_with_completed_drafts
+        ),
         counts={
             "draft": len(drafts),
             "complete": len(complete_drafts)
