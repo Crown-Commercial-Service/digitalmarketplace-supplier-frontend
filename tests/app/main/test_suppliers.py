@@ -109,9 +109,15 @@ class TestSuppliersDashboard(BaseApplicationTest):
 
     @mock.patch("app.main.views.suppliers.data_api_client")
     @mock.patch("app.main.views.suppliers.get_current_suppliers_users")
-    def test_shows_flashed_messages(self, get_current_suppliers_users, data_api_client):
+    def test_error_and_success_flashed_messages_only_are_shown_in_banner_messages(
+        self, get_current_suppliers_users, data_api_client
+    ):
         with self.client.session_transaction() as session:
-            session['_flashes'] = [('error', 'This is an error')]
+            session['_flashes'] = [
+                ('error', 'This is an error'),
+                ('success', 'This is a success'),
+                ('flag', 'account-created')
+            ]
 
         data_api_client.get_framework.return_value = self.framework('open')
         data_api_client.get_supplier.side_effect = get_supplier
@@ -123,8 +129,40 @@ class TestSuppliersDashboard(BaseApplicationTest):
             self.login()
 
             res = self.client.get("/suppliers")
+            data = self.strip_all_whitespace(res.get_data(as_text=True))
 
-            assert "This is an error" in res.get_data(as_text=True)
+            assert '<pclass="banner-message">Thisisanerror</p>' in data
+            assert '<pclass="banner-message">Thisisasuccess</p>' in data
+            assert '<pclass="banner-message">account-created</p>' not in data
+
+    @mock.patch("app.main.views.suppliers.data_api_client")
+    @mock.patch("app.main.views.suppliers.get_current_suppliers_users")
+    def test_data_analytics_track_page_view_is_shown_if_account_created_flag_flash_message(
+        self, get_current_suppliers_users, data_api_client
+    ):
+        with self.client.session_transaction() as session:
+            session['_flashes'] = [('flag', 'account-created')]
+
+        with self.app.test_client():
+            self.login()
+
+            res = self.client.get("/suppliers")
+            data = res.get_data(as_text=True)
+
+            assert 'data-analytics="trackPageView" data-url="/suppliers/vpv/?account-created=true"' in data
+
+    @mock.patch("app.main.views.suppliers.data_api_client")
+    @mock.patch("app.main.views.suppliers.get_current_suppliers_users")
+    def test_data_analytics_track_page_view_is_not_shown_if_no_account_created_flag_flash_message(
+        self, get_current_suppliers_users, data_api_client
+    ):
+        with self.app.test_client():
+            self.login()
+
+            res = self.client.get("/suppliers")
+            data = res.get_data(as_text=True)
+
+            assert 'data-analytics="trackPageView" data-url="/suppliers/vpv/?account-created=true"' not in data
 
     @mock.patch("app.main.views.suppliers.data_api_client")
     @mock.patch("app.main.views.suppliers.get_current_suppliers_users")

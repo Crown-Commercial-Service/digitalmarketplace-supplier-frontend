@@ -15,8 +15,7 @@
 {% endblock %}
 
 {% block main_content %}
-
-  {% with messages = get_flashed_messages(with_categories=True) %}
+  {% with messages = get_flashed_messages(with_categories=true, category_filter=["error", "success"]) %}
     {% for category, message in messages %}
       {%
         with
@@ -28,7 +27,12 @@
     {% endfor %}
   {% endwith %}
 
+
+  {% if 'account-created' in get_flashed_messages(category_filter=["flag"]) %}
+  <div class="grid-row" data-analytics="trackPageView" data-url="/suppliers/vpv/?account-created=true">
+  {% else %}
   <div class="grid-row">
+  {% endif %}
     <div class="column-two-thirds">
       {% with
         context = current_user.email_address,
