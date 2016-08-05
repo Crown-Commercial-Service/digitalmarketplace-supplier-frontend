@@ -90,6 +90,7 @@ def submit_create_user(encoded_token):
                 "auth/create_user_error.html",
                 token=None), 400
 
+        flash('account-created', 'flag')
         return redirect(url_for('.dashboard'))
 
 
