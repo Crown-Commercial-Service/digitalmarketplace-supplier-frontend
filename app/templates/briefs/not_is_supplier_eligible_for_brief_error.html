@@ -5,7 +5,7 @@
 {% block main_content %}
 
 {% with inhibited_action="ask a question about" if clarification_question else "apply for" %}
-<div class="grid-row">
+<div class="grid-row" data-reason="{{ reason }}">
   <div class="column-two-thirds">
     <header class="page-heading-smaller">
       <h1>You can’t {{ inhibited_action }} this opportunity</h1>

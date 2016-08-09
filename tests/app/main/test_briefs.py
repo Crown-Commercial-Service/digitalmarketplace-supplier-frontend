@@ -256,7 +256,7 @@ class TestSubmitClarificationQuestions(BaseApplicationTest):
             self, send_email, data_api_client):
         self.login()
         data_api_client.get_brief.return_value = api_stubs.brief(status='live', lot_slug='digital-specialists')
-        data_api_client.get_brief.return_value['briefs']['frameworkName'] = 'Digital Outcomes and Specialists'
+        data_api_client.get_brief.return_value['briefs']['frameworkFramework'] = 'dos'
         data_api_client.is_supplier_eligible_for_brief.return_value = False
         data_api_client.find_services.return_value = {"services": []}
 
@@ -419,7 +419,7 @@ class TestRespondToBrief(BaseApplicationTest):
 
     def test_get_brief_response_returns_error_page_if_supplier_has_no_services_on_framework(self, data_api_client):
         data_api_client.get_brief.return_value = self.brief
-        data_api_client.get_brief.return_value['briefs']['frameworkName'] = 'Digital Outcomes and Specialists'
+        data_api_client.get_brief.return_value['briefs']['frameworkFramework'] = 'dos'
         data_api_client.get_framework.return_value = self.framework
         data_api_client.is_supplier_eligible_for_brief.return_value = False
         data_api_client.find_services.return_value = {"services": []}
@@ -454,6 +454,54 @@ class TestRespondToBrief(BaseApplicationTest):
             )
         )) == 1
         assert not data_api_client.create_audit_event.called
+
+    def test_get_brief_response_does_not_contain_data_reason_if_supplier_is_eligible(self, data_api_client):
+        data_api_client.get_brief.return_value = self.brief
+        data_api_client.get_framework.return_value = self.framework
+        res = self.client.get('/suppliers/opportunities/1234/responses/create')
+
+        assert res.status_code == 200
+        assert 'data-reason='not in res.get_data(as_text=True)
+
+    def test_get_brief_response_has_correct_data_reason_if_supplier_has_no_services_on_lot(self, data_api_client):
+        data_api_client.get_brief.return_value = self.brief
+        data_api_client.get_framework.return_value = self.framework
+        data_api_client.is_supplier_eligible_for_brief.return_value = False
+        data_api_client.find_services.side_effect = lambda *args, **kwargs: (
+            {"services": [{"something": "nonempty"}]} if kwargs.get("lot") is None else {"services": []}
+        )
+
+        res = self.client.get('/suppliers/opportunities/1234/responses/create')
+        data = res.get_data(as_text=True)
+
+        assert res.status_code == 400
+        assert 'data-reason="supplier-not-on-lot"' in data
+
+    def test_get_brief_response_has_correct_data_reason_if_supplier_has_no_services_on_framework(self, data_api_client):
+        data_api_client.get_brief.return_value = self.brief
+        data_api_client.get_brief.return_value['briefs']['frameworkFramework'] = 'dos'
+        data_api_client.get_framework.return_value = self.framework
+        data_api_client.is_supplier_eligible_for_brief.return_value = False
+        data_api_client.find_services.return_value = {"services": []}
+
+        res = self.client.get('/suppliers/opportunities/1234/responses/create')
+        data = res.get_data(as_text=True)
+
+        assert res.status_code == 400
+        assert 'data-reason="supplier-not-on-dos"' in data
+
+    def test_get_brief_response_has_correct_data_reason_if_supplier_has_no_services_with_role(self, data_api_client):
+        data_api_client.get_brief.return_value = self.brief
+        data_api_client.get_brief.return_value['briefs']['frameworkFramework'] = 'dos'
+        data_api_client.get_framework.return_value = self.framework
+        data_api_client.is_supplier_eligible_for_brief.return_value = False
+        data_api_client.find_services.return_value = {"services": [{"something": "nonempty"}]}
+
+        res = self.client.get('/suppliers/opportunities/1234/responses/create')
+        data = res.get_data(as_text=True)
+
+        assert res.status_code == 400
+        assert 'data-reason="supplier-not-on-role"' in data
 
     def test_get_brief_response_flashes_error_on_result_page_if_response_already_exists(self, data_api_client):
         data_api_client.get_brief.return_value = self.brief
@@ -659,7 +707,7 @@ class TestRespondToBrief(BaseApplicationTest):
 
     def test_create_new_brief_returns_error_page_if_supplier_has_no_services_on_framework(self, data_api_client):
         data_api_client.get_brief.return_value = self.brief
-        data_api_client.get_brief.return_value['briefs']['frameworkName'] = 'Digital Outcomes and Specialists'
+        data_api_client.get_brief.return_value['briefs']['frameworkFramework'] = 'dos'
         data_api_client.get_framework.return_value = self.framework
         data_api_client.is_supplier_eligible_for_brief.return_value = False
         data_api_client.find_services.return_value = {"services": []}
