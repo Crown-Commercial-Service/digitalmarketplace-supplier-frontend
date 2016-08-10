@@ -25,11 +25,5 @@ content_loader.load_manifest('g-cloud-8', 'declaration', 'declaration')
 content_loader.load_messages('g-cloud-8', ['dates'])
 
 
-@main.after_request
-def add_cache_control(response):
-    response.cache_control.no_cache = True
-    return response
-
-
 from .views import services, suppliers, login, frameworks, users, briefs
 from . import errors

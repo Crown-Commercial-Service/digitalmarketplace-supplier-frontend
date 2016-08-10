@@ -67,7 +67,7 @@
 
       <!-- data-message-sent is used for analytics tracking -->
       <form method="post" data-message-sent="{{ message_sent|lower }}">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+        {{ form.csrf_token }}
         {%
           with
           large=true,

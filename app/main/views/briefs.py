@@ -7,6 +7,7 @@ from flask import abort, flash, redirect, render_template, request, url_for
 from flask_login import current_user
 
 from dmapiclient import HTTPError
+from dmutils.forms import render_template_with_csrf
 
 from ..helpers import login_required
 from ..helpers.briefs import (
@@ -65,13 +66,15 @@ def ask_brief_clarification_question(brief_id):
             send_brief_clarification_question(data_api_client, brief, clarification_question)
             flash('message_sent', 'success')
 
-    return render_template(
+    status_code = 200 if not error_message else 400
+    return render_template_with_csrf(
         "briefs/clarification_question.html",
+        status_code=status_code,
         brief=brief,
         error_message=error_message,
         clarification_question_name='clarification-question',
         clarification_question_value=clarification_question_value
-    ), 200 if not error_message else 400
+    )
 
 
 @main.route('/opportunities/<int:brief_id>/responses/create', methods=['GET'])
@@ -97,13 +100,13 @@ def brief_response(brief_id):
     section.name = "Apply for ‘{}’".format(brief['title'])
     section.inject_brief_questions_into_boolean_list_question(brief)
 
-    return render_template(
+    return render_template_with_csrf(
         "briefs/brief_response.html",
         brief=brief,
         service_data={},
         section=section,
         **dict(main.config['BASE_TEMPLATE_DATA'])
-    ), 200
+    )
 
 
 # Add a create route
@@ -140,14 +143,15 @@ def submit_brief_response(brief_id):
 
         errors = section_summary.get_error_messages(e.message)
 
-        return render_template(
+        return render_template_with_csrf(
             "briefs/brief_response.html",
+            status_code=400,
             brief=brief,
             service_data=response_data,
             section=section,
             errors=errors,
             **dict(main.config['BASE_TEMPLATE_DATA'])
-        ), 400
+        )
 
     if all(brief_response['essentialRequirements']):
         # "result" parameter is used to track brief applications by analytics

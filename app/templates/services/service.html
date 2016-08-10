@@ -41,7 +41,7 @@
           When you remove a service, you can only reinstate it by emailing <a href='mailto:enquiries@digitalmarketplace.service.gov.uk'>enquiries@digitalmarketplace.service.gov.uk</a>.
         </p>
         <form class="banner-action" action="{{ url_for('.remove_service', service_id=service_id ) }}" method="POST">
-          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+          {{ form.csrf_token }}
           <input type="hidden" name="remove_confirmed" value="true" />
             {%
               with
@@ -99,7 +99,7 @@
           <a href="mailto:enquiries@digitalmarketplace.service.gov.uk">enquiries@digitalmarketplace.service.gov.uk</a>
            to reinstate your service.</p>
         <form action="{{ url_for('.remove_service', service_id=service_id ) }}" method="POST">
-          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+          {{ form.csrf_token }}
             {%
               with
               type = "destructive",

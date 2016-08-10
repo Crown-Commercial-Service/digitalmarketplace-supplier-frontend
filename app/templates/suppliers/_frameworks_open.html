@@ -34,7 +34,7 @@
                 Starting your application means you’ll receive <br>{{ framework.name }} email updates.
               </p>
             </div>
-          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+          {{ form.csrf_token }}
         </form>
       {% endif %}
     {% endfor %}

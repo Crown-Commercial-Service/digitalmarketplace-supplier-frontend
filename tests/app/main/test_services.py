@@ -5,6 +5,7 @@ except ImportError:
     from io import BytesIO as StringIO
 
 from dmapiclient import HTTPError
+from dmutils.forms import FakeCsrf
 import copy
 import mock
 import pytest
@@ -12,7 +13,7 @@ from lxml import html
 from freezegun import freeze_time
 
 from nose.tools import assert_equal, assert_true, assert_false, assert_in, assert_not_in
-from tests.app.helpers import BaseApplicationTest, empty_g7_draft
+from tests.app.helpers import BaseApplicationTest, empty_g7_draft, csrf_only_request
 
 
 @pytest.fixture(params=["g-cloud-6", "g-cloud-7"])
@@ -35,7 +36,7 @@ class TestListServices(BaseApplicationTest):
                 "services": []
                 }
 
-            res = self.client.get('/suppliers/services')
+            res = self.client.get(self.url_for('main.list_services'))
             assert_equal(res.status_code, 200)
             data_api_client.find_services.assert_called_once_with(
                 supplier_id=1234)
@@ -61,7 +62,7 @@ class TestListServices(BaseApplicationTest):
                 }]
             }
 
-            res = self.client.get('/suppliers/services')
+            res = self.client.get(self.url_for('main.list_services'))
             assert_equal(res.status_code, 200)
             data_api_client.find_services.assert_called_once_with(
                 supplier_id=1234)
@@ -72,20 +73,12 @@ class TestListServices(BaseApplicationTest):
     @mock.patch('app.data_api_client')
     def test_should_not_be_able_to_see_page_if_made_inactive(self, services_data_api_client):
         with self.app.test_client():
-            self.login()
+            self.login(active=False)
 
-            services_data_api_client.get_user.return_value = self.user(
-                123,
-                "email@email.com",
-                1234,
-                'Supplier Name',
-                'User name',
-                active=False
-            )
-
-            res = self.client.get('/suppliers/services')
+            services_url = self.url_for('main.list_services')
+            res = self.client.get(services_url)
             assert_equal(res.status_code, 302)
-            assert_equal(res.location, 'http://localhost/login?next=%2Fsuppliers%2Fservices')
+            assert_equal(res.location, self.get_login_redirect_url(services_url))
 
     @mock.patch('app.main.views.services.data_api_client')
     def test_shows_service_edit_link_with_id(self, data_api_client):
@@ -101,12 +94,12 @@ class TestListServices(BaseApplicationTest):
                 }]
             }
 
-            res = self.client.get('/suppliers/services')
+            res = self.client.get(self.url_for('main.list_services'))
             assert_equal(res.status_code, 200)
             data_api_client.find_services.assert_called_once_with(
                 supplier_id=1234)
             assert_true(
-                "/suppliers/services/123" in res.get_data(as_text=True))
+                self.url_for('main.edit_service', service_id=123) in res.get_data(as_text=True))
 
     @mock.patch('app.main.views.services.data_api_client')
     def test_services_without_service_name_show_lot_instead(self, data_api_client):
@@ -122,7 +115,7 @@ class TestListServices(BaseApplicationTest):
                 }]
             }
 
-            res = self.client.get('/suppliers/services')
+            res = self.client.get(self.url_for('main.list_services'))
             assert_equal(res.status_code, 200)
             data_api_client.find_services.assert_called_once_with(supplier_id=1234)
 
@@ -143,12 +136,12 @@ class TestListServices(BaseApplicationTest):
                 }]
             }
 
-            res = self.client.get('/suppliers/services')
+            res = self.client.get(self.url_for('main.list_services'))
             assert_equal(res.status_code, 200)
             data_api_client.find_services.assert_called_once_with(supplier_id=1234)
 
             assert "Service name 123" in res.get_data(as_text=True)
-            assert "/suppliers/services/123" not in res.get_data(as_text=True)
+            assert self.url_for('main.edit_service', service_id=123) not in res.get_data(as_text=True)
 
 
 class TestListServicesLogin(BaseApplicationTest):
@@ -163,7 +156,7 @@ class TestListServicesLogin(BaseApplicationTest):
                 'frameworkSlug': 'g-cloud-1'
             }]}
 
-            res = self.client.get('/suppliers/services')
+            res = self.client.get(self.url_for('main.list_services'))
 
             assert_equal(res.status_code, 200)
 
@@ -173,10 +166,10 @@ class TestListServicesLogin(BaseApplicationTest):
             )
 
     def test_should_redirect_to_login_if_not_logged_in(self):
-        res = self.client.get("/suppliers/services")
+        services_url = self.url_for('main.list_services')
+        res = self.client.get(services_url)
         assert_equal(res.status_code, 302)
-        assert_equal(res.location,
-                     'http://localhost/login?next=%2Fsuppliers%2Fservices')
+        assert_equal(res.location, self.get_login_redirect_url(services_url))
 
 
 @mock.patch('app.main.views.services.data_api_client')
@@ -219,7 +212,7 @@ class TestSupplierUpdateService(BaseApplicationTest):
         expected_status_code = \
             302 if service_should_be_modifiable else failing_status_code
 
-        res = self.client.post('/suppliers/services/123/remove')
+        res = self.client.post(self.url_for('main.remove_service', service_id=123), data=csrf_only_request)
         assert_equal(res.status_code, expected_status_code)
 
     def test_should_view_public_service_with_correct_message(
@@ -228,7 +221,7 @@ class TestSupplierUpdateService(BaseApplicationTest):
         self.login()
         self._get_service(data_api_client, fixture_framework_slug_and_name, service_status='published')
 
-        res = self.client.get('/suppliers/services/123')
+        res = self.client.get(self.url_for('main.edit_service', service_id=123))
         assert_equal(res.status_code, 200)
 
         assert_true(
@@ -267,7 +260,7 @@ class TestSupplierUpdateService(BaseApplicationTest):
         self.login()
         self._get_service(data_api_client, fixture_framework_slug_and_name, service_status='enabled')
 
-        res = self.client.get('/suppliers/services/123')
+        res = self.client.get(self.url_for('main.edit_service', service_id=123))
         assert_equal(res.status_code, 200)
         assert_true(
             'Service name 123' in res.get_data(as_text=True)
@@ -291,7 +284,7 @@ class TestSupplierUpdateService(BaseApplicationTest):
         self.login()
         self._get_service(data_api_client, fixture_framework_slug_and_name, service_status='disabled')
 
-        res = self.client.get('/suppliers/services/123')
+        res = self.client.get(self.url_for('main.edit_service', service_id=123))
         assert_equal(res.status_code, 200)
         self.assert_in_strip_whitespace(
             'Service name 123',
@@ -311,7 +304,11 @@ class TestSupplierUpdateService(BaseApplicationTest):
         self.login()
         self._get_service(data_api_client, fixture_framework_slug_and_name, service_status='published')
 
-        res = self.client.post('/suppliers/services/123/remove', follow_redirects=True)
+        res = self.client.post(
+            self.url_for('main.remove_service', service_id=123),
+            follow_redirects=True,
+            data=csrf_only_request
+        )
 
         assert_equal(res.status_code, 200)
 
@@ -340,8 +337,8 @@ class TestSupplierUpdateService(BaseApplicationTest):
         self._get_service(data_api_client, fixture_framework_slug_and_name, service_status='published')
 
         res = self.client.post(
-            '/suppliers/services/123/remove',
-            data={'remove_confirmed': True},
+            self.url_for('main.remove_service', service_id=123),
+            data={'remove_confirmed': True, 'csrf_token': FakeCsrf.valid_token},
             follow_redirects=True)
 
         assert_equal(res.status_code, 200)
@@ -363,17 +360,17 @@ class TestSupplierUpdateService(BaseApplicationTest):
         self._get_service(
             data_api_client, fixture_framework_slug_and_name, service_status='published', service_belongs_to_user=False)
 
-        res = self.client.get('/suppliers/services/123')
+        res = self.client.get(self.url_for('main.edit_service', service_id=123))
         assert_equal(res.status_code, 404)
 
         # Should all be 404 if service doesn't belong to supplier
         self._post_remove_service(service_should_be_modifiable=False, failing_status_code=404)
 
     def test_should_redirect_to_login_if_not_logged_in(self, data_api_client):
-        res = self.client.get("/suppliers/services/123")
+        edit_url = self.url_for('main.edit_service', service_id=123)
+        res = self.client.get(edit_url)
         assert_equal(res.status_code, 302)
-        assert_equal(res.location,
-                     'http://localhost/login?next=%2Fsuppliers%2Fservices%2F123')
+        assert_equal(res.location, self.get_login_redirect_url(edit_url))
 
 
 @mock.patch('app.main.views.services.data_api_client')
@@ -401,18 +398,20 @@ class TestEditService(BaseApplicationTest):
 
     def test_return_to_service_summary_link_present(self, data_api_client):
         data_api_client.get_service.return_value = self.empty_service
-        res = self.client.get('/suppliers/services/1/edit/description')
+        res = self.client.get(self.url_for('main.edit_section', service_id=1, section_id='description'))
         assert_equal(res.status_code, 200)
+        link_html = '<a href="{}">Return to service summary</a>'.format(self.url_for('main.edit_service', service_id=1))
         assert_in(
-            self.strip_all_whitespace('<a href="/suppliers/services/1">Return to service summary</a>'),
+            self.strip_all_whitespace(link_html),
             self.strip_all_whitespace(res.get_data(as_text=True))
         )
 
     def test_questions_for_this_service_section_can_be_changed(self, data_api_client):
         data_api_client.get_service.return_value = self.empty_service
         res = self.client.post(
-            '/suppliers/services/1/edit/description',
+            self.url_for('main.update_section', service_id=1, section_id='description'),
             data={
+                'csrf_token': FakeCsrf.valid_token,
                 'serviceName': 'The service',
                 'serviceSummary': 'This is the service',
             })
@@ -425,13 +424,14 @@ class TestEditService(BaseApplicationTest):
     def test_editing_readonly_section_is_not_allowed(self, data_api_client):
         data_api_client.get_service.return_value = self.empty_service
 
-        res = self.client.get('/suppliers/services/1/edit/service-attributes')
+        res = self.client.get(self.url_for('main.edit_section', service_id=1, section_id='service-attributes'))
         assert_equal(res.status_code, 404)
 
         data_api_client.get_draft_service.return_value = self.empty_service
         res = self.client.post(
-            '/suppliers/services/1/edit/service-attributes',
+            self.url_for('main.update_section', service_id=1, section_id='service-attributes'),
             data={
+                'csrf_token': FakeCsrf.valid_token,
                 'lotSlug': 'scs',
             })
         assert_equal(res.status_code, 404)
@@ -439,8 +439,9 @@ class TestEditService(BaseApplicationTest):
     def test_only_questions_for_this_service_section_can_be_changed(self, data_api_client):
         data_api_client.get_service.return_value = self.empty_service
         res = self.client.post(
-            '/suppliers/services/1/edit/description',
+            self.url_for('main.update_section', service_id=1, section_id='description'),
             data={
+                'csrf_token': FakeCsrf.valid_token,
                 'serviceFeatures': '',
             })
 
@@ -450,14 +451,14 @@ class TestEditService(BaseApplicationTest):
 
     def test_edit_non_existent_service_returns_404(self, data_api_client):
         data_api_client.get_service.return_value = None
-        res = self.client.get('/suppliers/services/1/edit/description')
+        res = self.client.get(self.url_for('main.edit_section', service_id=1, section_id='description'))
 
         assert_equal(res.status_code, 404)
 
     def test_edit_non_existent_section_returns_404(self, data_api_client):
         data_api_client.get_service.return_value = self.empty_service
         res = self.client.get(
-            '/suppliers/services/1/edit/invalid-section'
+            self.url_for('main.edit_section', service_id=1, section_id='invalid-section')
         )
         assert_equal(404, res.status_code)
 
@@ -467,8 +468,8 @@ class TestEditService(BaseApplicationTest):
             mock.Mock(status_code=400),
             {'serviceSummary': 'answer_required'})
         res = self.client.post(
-            '/suppliers/services/1/edit/description',
-            data={})
+            self.url_for('main.update_section', service_id=1, section_id='description'),
+            data=csrf_only_request)
 
         assert_equal(res.status_code, 200)
         document = html.fromstring(res.get_data(as_text=True))
@@ -482,8 +483,8 @@ class TestEditService(BaseApplicationTest):
             mock.Mock(status_code=400),
             {'serviceSummary': 'under_50_words'})
         res = self.client.post(
-            '/suppliers/services/1/edit/description',
-            data={})
+            self.url_for('main.update_section', service_id=1, section_id='description'),
+            data=csrf_only_request)
 
         assert_equal(res.status_code, 200)
         document = html.fromstring(res.get_data(as_text=True))
@@ -493,14 +494,18 @@ class TestEditService(BaseApplicationTest):
 
     def test_update_non_existent_service_returns_404(self, data_api_client):
         data_api_client.get_service.return_value = None
-        res = self.client.post('/suppliers/services/1/edit/description')
+        res = self.client.post(
+            self.url_for('main.update_section', service_id=1, section_id='description'),
+            data=csrf_only_request
+        )
 
         assert_equal(res.status_code, 404)
 
     def test_update_non_existent_section_returns_404(self, data_api_client):
         data_api_client.get_service.return_value = self.empty_service
         res = self.client.post(
-            '/suppliers/services/1/edit/invalid_section'
+            self.url_for('main.update_section', service_id=1, section_id='invalid_section'),
+            data=csrf_only_request
         )
         assert_equal(404, res.status_code)
 
@@ -518,7 +523,7 @@ class TestCreateDraftService(BaseApplicationTest):
     def test_get_create_draft_service_page_if_open(self, data_api_client):
         data_api_client.get_framework.return_value = self.framework(status='open')
 
-        res = self.client.get('/suppliers/frameworks/g-cloud-7/submissions/scs/create')
+        res = self.client.get(self.url_for('main.start_new_draft_service', framework_slug='g-cloud-7', lot_slug='scs'))
         assert_equal(res.status_code, 200)
         assert_in(u'Service name', res.get_data(as_text=True))
 
@@ -527,7 +532,7 @@ class TestCreateDraftService(BaseApplicationTest):
     def test_can_not_get_create_draft_service_page_if_not_open(self, data_api_client):
         data_api_client.get_framework.return_value = self.framework(status='other')
 
-        res = self.client.get('/suppliers/frameworks/g-cloud-7/submissions/scs/create')
+        res = self.client.get(self.url_for('main.start_new_draft_service', framework_slug='g-cloud-7', lot_slug='scs'))
         assert_equal(res.status_code, 404)
 
     def _test_post_create_draft_service(self, data, if_error_expected, data_api_client):
@@ -535,7 +540,7 @@ class TestCreateDraftService(BaseApplicationTest):
         data_api_client.create_new_draft_service.return_value = {"services": empty_g7_draft()}
 
         res = self.client.post(
-            '/suppliers/frameworks/g-cloud-7/submissions/scs/create',
+            self.url_for('main.create_new_draft_service', framework_slug='g-cloud-7', lot_slug='scs'),
             data=data
         )
 
@@ -547,7 +552,7 @@ class TestCreateDraftService(BaseApplicationTest):
 
     def test_post_create_draft_service_succeeds(self, data_api_client):
         self._test_post_create_draft_service(
-            {'serviceName': "Service Name"},
+            {'serviceName': 'Service Name', 'csrf_token': FakeCsrf.valid_token},
             if_error_expected=False, data_api_client=data_api_client
         )
 
@@ -558,13 +563,13 @@ class TestCreateDraftService(BaseApplicationTest):
         )
 
         self._test_post_create_draft_service(
-            {},
+            csrf_only_request,
             if_error_expected=True, data_api_client=data_api_client
         )
 
         res = self.client.post(
-            '/suppliers/frameworks/g-cloud-7/submissions/scs/create',
-            data={}
+            self.url_for('main.create_new_draft_service', framework_slug='g-cloud-7', lot_slug='scs'),
+            data=csrf_only_request
         )
 
         assert_equal(res.status_code, 400)
@@ -573,7 +578,8 @@ class TestCreateDraftService(BaseApplicationTest):
     def test_cannot_post_if_not_open(self, data_api_client):
         data_api_client.get_framework.return_value = self.framework(status='other')
         res = self.client.post(
-            '/suppliers/submission/g-cloud-7/submissions/scs/create'
+            self.url_for('main.create_new_draft_service', framework_slug='g-cloud-7', lot_slug='scs'),
+            data=csrf_only_request
         )
         assert_equal(res.status_code, 404)
 
@@ -593,20 +599,29 @@ class TestCopyDraft(BaseApplicationTest):
         data_api_client.get_framework.return_value = self.framework(status='open')
         data_api_client.get_draft_service.return_value = {'services': self.draft}
 
-        res = self.client.post('/suppliers/frameworks/g-cloud-7/submissions/scs/1/copy')
+        res = self.client.post(
+            self.url_for('main.copy_draft_service', framework_slug='g-cloud-7', lot_slug='scs', service_id=1),
+            data=csrf_only_request
+        )
         assert_equal(res.status_code, 302)
 
     def test_copy_draft_checks_supplier_id(self, data_api_client):
         self.draft['supplierId'] = 2
         data_api_client.get_draft_service.return_value = {'services': self.draft}
 
-        res = self.client.post('/suppliers/frameworks/g-cloud-7/submissions/scs/1/copy')
+        res = self.client.post(
+            self.url_for('main.copy_draft_service', framework_slug='g-cloud-7', lot_slug='scs', service_id=1),
+            data=csrf_only_request
+        )
         assert_equal(res.status_code, 404)
 
     def test_cannot_copy_draft_if_not_open(self, data_api_client):
         data_api_client.get_framework.return_value = self.framework(status='other')
 
-        res = self.client.post('/suppliers/frameworks/g-cloud-7/submissions/scs/1/copy')
+        res = self.client.post(
+            self.url_for('main.copy_draft_service', framework_slug='g-cloud-7', lot_slug='scs', service_id=1),
+            data=csrf_only_request
+        )
         assert_equal(res.status_code, 404)
 
 
@@ -624,7 +639,10 @@ class TestCompleteDraft(BaseApplicationTest):
     def test_complete_draft(self, data_api_client):
         data_api_client.get_framework.return_value = self.framework(status='open')
         data_api_client.get_draft_service.return_value = {'services': self.draft}
-        res = self.client.post('/suppliers/frameworks/g-cloud-7/submissions/scs/1/complete')
+        res = self.client.post(
+            self.url_for('main.complete_draft_service', framework_slug='g-cloud-7', lot_slug='scs', service_id=1),
+            data=csrf_only_request
+        )
         assert_equal(res.status_code, 302)
         assert_true('lot=scs' in res.location)
         assert_in('/suppliers/frameworks/g-cloud-7/submissions', res.location)
@@ -633,13 +651,19 @@ class TestCompleteDraft(BaseApplicationTest):
         self.draft['supplierId'] = 2
         data_api_client.get_draft_service.return_value = {'services': self.draft}
 
-        res = self.client.post('/suppliers/frameworks/g-cloud-7/submissions/scs/1/complete')
+        res = self.client.post(
+            self.url_for('main.complete_draft_service', framework_slug='g-cloud-7', lot_slug='scs', service_id=1),
+            data=csrf_only_request
+        )
         assert_equal(res.status_code, 404)
 
     def test_cannot_complete_draft_if_not_open(self, data_api_client):
         data_api_client.get_framework.return_value = self.framework(status='other')
 
-        res = self.client.post('/suppliers/frameworks/g-cloud-7/submissions/scs/1/complete')
+        res = self.client.post(
+            self.url_for('main.complete_draft_service', framework_slug='g-cloud-7', lot_slug='scs', service_id=1),
+            data=csrf_only_request
+        )
         assert_equal(res.status_code, 404)
 
 
@@ -683,8 +707,14 @@ class TestEditDraftService(BaseApplicationTest):
         data_api_client.get_framework.return_value = self.framework(status='open')
         data_api_client.get_draft_service.return_value = self.empty_draft
         res = self.client.post(
-            '/suppliers/frameworks/g-cloud-7/submissions/scs/1/edit/service-description',
+            self.url_for(
+                'main.update_section_submission',
+                framework_slug='g-cloud-7',
+                lot_slug='scs',
+                service_id=1,
+                section_id='service-description'),
             data={
+                'csrf_token': FakeCsrf.valid_token,
                 'serviceSummary': 'This is the service',
             })
 
@@ -704,8 +734,14 @@ class TestEditDraftService(BaseApplicationTest):
         data_api_client.get_draft_service.return_value = {'services': draft}
 
         res = self.client.post(
-            '/suppliers/frameworks/g-cloud-7/submissions/scs/1/edit/service-description',
+            self.url_for(
+                'main.update_section_submission',
+                framework_slug='g-cloud-7',
+                lot_slug='scs',
+                service_id=1,
+                section_id='service-description'),
             data={
+                'csrf_token': FakeCsrf.valid_token,
                 'serviceSummary': u"summary",
             })
 
@@ -719,8 +755,14 @@ class TestEditDraftService(BaseApplicationTest):
         data_api_client.get_framework.return_value = self.framework(status='open')
         data_api_client.get_draft_service.return_value = self.empty_draft
         res = self.client.post(
-            '/suppliers/frameworks/g-cloud-7/submissions/scs/1/edit/service-description',
+            self.url_for(
+                'main.update_section_submission',
+                framework_slug='g-cloud-7',
+                lot_slug='scs',
+                service_id=1,
+                section_id='service-description'),
             data={
+                'csrf_token': FakeCsrf.valid_token,
                 'serviceSummary': 'This is the service',
             })
 
@@ -730,13 +772,25 @@ class TestEditDraftService(BaseApplicationTest):
     def test_editing_readonly_section_is_not_allowed(self, data_api_client, s3):
         data_api_client.get_draft_service.return_value = self.empty_draft
 
-        res = self.client.get('/suppliers/frameworks/g-cloud-7/submissions/scs/1/edit/service-attributes')
+        res = self.client.get(
+            self.url_for(
+                'main.edit_service_submission',
+                framework_slug='g-cloud-7',
+                lot_slug='scs',
+                service_id=1,
+                section_id='service-attributes'))
         assert_equal(res.status_code, 404)
 
         data_api_client.get_draft_service.return_value = self.empty_draft
         res = self.client.post(
-            '/suppliers/frameworks/g-cloud-7/submissions/scs/1/edit/service-attributes',
+            self.url_for(
+                'main.update_section_submission',
+                framework_slug='g-cloud-7',
+                lot_slug='scs',
+                service_id=1,
+                section_id='service-attributes'),
             data={
+                'csrf_token': FakeCsrf.valid_token,
                 'lotSlug': 'scs',
             })
         assert_equal(res.status_code, 404)
@@ -745,8 +799,14 @@ class TestEditDraftService(BaseApplicationTest):
         data_api_client.get_framework.return_value = self.framework(status='other')
         data_api_client.get_draft_service.return_value = self.empty_draft
         res = self.client.post(
-            '/suppliers/frameworks/g-cloud-7/submissions/scs/1/edit/service-description',
+            self.url_for(
+                'main.update_section_submission',
+                framework_slug='g-cloud-7',
+                lot_slug='scs',
+                service_id=1,
+                section_id='service-description'),
             data={
+                'csrf_token': FakeCsrf.valid_token,
                 'serviceSummary': 'This is the service',
             })
         assert_equal(res.status_code, 404)
@@ -756,8 +816,14 @@ class TestEditDraftService(BaseApplicationTest):
         data_api_client.get_framework.return_value = self.framework(status='open')
         data_api_client.get_draft_service.return_value = self.empty_draft
         res = self.client.post(
-            '/suppliers/frameworks/g-cloud-7/submissions/scs/1/edit/service-description',
+            self.url_for(
+                'main.update_section_submission',
+                framework_slug='g-cloud-7',
+                lot_slug='scs',
+                service_id=1,
+                section_id='service-description'),
             data={
+                'csrf_token': FakeCsrf.valid_token,
                 'serviceFeatures': '',
             })
 
@@ -773,7 +839,12 @@ class TestEditDraftService(BaseApplicationTest):
         data_api_client.get_framework.return_value = self.framework(status='open')
         data_api_client.get_draft_service.return_value = draft
         response = self.client.get(
-            '/suppliers/frameworks/g-cloud-7/submissions/scs/1/edit/service-definition'
+            self.url_for(
+                'main.edit_service_submission',
+                framework_slug='g-cloud-7',
+                lot_slug='scs',
+                service_id=1,
+                section_id='service-definition')
         )
         document = html.fromstring(response.get_data(as_text=True))
 
@@ -784,7 +855,12 @@ class TestEditDraftService(BaseApplicationTest):
         data_api_client.get_framework.return_value = self.framework(status='open')
         data_api_client.get_draft_service.return_value = self.empty_draft
         response = self.client.get(
-            '/suppliers/frameworks/g-cloud-7/submissions/scs/1/edit/service-definition'
+            self.url_for(
+                'main.edit_service_submission',
+                framework_slug='g-cloud-7',
+                lot_slug='scs',
+                service_id=1,
+                section_id='service-definition')
         )
         document = html.fromstring(response.get_data(as_text=True))
 
@@ -797,16 +873,29 @@ class TestEditDraftService(BaseApplicationTest):
         data_api_client.get_draft_service.return_value = self.empty_draft
         with freeze_time('2015-01-02 03:04:05'):
             res = self.client.post(
-                '/suppliers/frameworks/g-cloud-7/submissions/scs/1/edit/service-definition',
+                self.url_for(
+                    'main.update_section_submission',
+                    framework_slug='g-cloud-7',
+                    lot_slug='scs',
+                    service_id=1,
+                    section_id='service-definition'),
                 data={
+                    'csrf_token': FakeCsrf.valid_token,
                     'serviceDefinitionDocumentURL': (StringIO(b'doc'), 'document.pdf'),
                 }
             )
 
         assert_equal(res.status_code, 302)
+        document_url = self.url_for(
+            'main.service_submission_document',
+            framework_slug='g-cloud-7',
+            supplier_id='1234',
+            document_name='1-service-definition-document-2015-01-02-0304.pdf',
+            _external=True
+        )
         data_api_client.update_draft_service.assert_called_once_with(
             '1', {
-                'serviceDefinitionDocumentURL': 'http://localhost/suppliers/assets/g-cloud-7/submissions/1234/1-service-definition-document-2015-01-02-0304.pdf'  # noqa
+                'serviceDefinitionDocumentURL': document_url
             }, 'email@email.com',
             page_questions=['serviceDefinitionDocumentURL']
         )
@@ -821,8 +910,14 @@ class TestEditDraftService(BaseApplicationTest):
         data_api_client.get_framework.return_value = self.framework(status='open')
         data_api_client.get_draft_service.return_value = self.empty_draft
         res = self.client.post(
-            '/suppliers/frameworks/g-cloud-7/submissions/scs/1/edit/service-definition',
+            self.url_for(
+                'main.update_section_submission',
+                framework_slug='g-cloud-7',
+                lot_slug='scs',
+                service_id=1,
+                section_id='service-definition'),
             data={
+                'csrf_token': FakeCsrf.valid_token,
                 'serviceDefinitionDocumentURL': (StringIO(b''), 'document.pdf'),
                 'unknownDocumentURL': (StringIO(b'doc'), 'document.pdf'),
                 'pricingDocumentURL': (StringIO(b'doc'), 'document.pdf'),
@@ -841,8 +936,14 @@ class TestEditDraftService(BaseApplicationTest):
         data_api_client.get_framework.return_value = self.framework(status='open')
         data_api_client.get_draft_service.return_value = self.empty_draft
         res = self.client.post(
-            '/suppliers/frameworks/g-cloud-7/submissions/scs/1/edit/service-definition',
+            self.url_for(
+                'main.update_section_submission',
+                framework_slug='g-cloud-7',
+                lot_slug='scs',
+                service_id=1,
+                section_id='service-definition'),
             data={
+                'csrf_token': FakeCsrf.valid_token,
                 'serviceDefinitionDocumentURL': 'http://example.com/document.pdf',
             })
 
@@ -857,8 +958,14 @@ class TestEditDraftService(BaseApplicationTest):
         data_api_client.get_framework.return_value = self.framework(status='open')
         data_api_client.get_draft_service.return_value = self.empty_draft
         res = self.client.post(
-            '/suppliers/frameworks/g-cloud-7/submissions/scs/1/edit/pricing',
+            self.url_for(
+                'main.update_section_submission',
+                framework_slug='g-cloud-7',
+                lot_slug='scs',
+                service_id=1,
+                section_id='pricing'),
             data={
+                'csrf_token': FakeCsrf.valid_token,
                 'priceMin': "10.10",
                 'priceMax': "11.10",
                 'priceUnit': "Person",
@@ -879,14 +986,24 @@ class TestEditDraftService(BaseApplicationTest):
 
     def test_edit_non_existent_draft_service_returns_404(self, data_api_client, s3):
         data_api_client.get_draft_service.side_effect = HTTPError(mock.Mock(status_code=404))
-        res = self.client.get('/suppliers/frameworks/g-cloud-7/submissions/scs/1/edit/service-description')
+        res = self.client.get(self.url_for(
+            'main.edit_service_submission',
+            framework_slug='g-cloud-7',
+            lot_slug='scs',
+            service_id=1,
+            section_id='service-description'))
 
         assert_equal(res.status_code, 404)
 
     def test_edit_non_existent_draft_section_returns_404(self, data_api_client, s3):
         data_api_client.get_draft_service.return_value = self.empty_draft
         res = self.client.get(
-            '/suppliers/frameworks/g-cloud-7/submissions/scs/1/edit/invalid_section'
+            self.url_for(
+                'main.edit_service_submission',
+                framework_slug='g-cloud-7',
+                lot_slug='scs',
+                service_id=1,
+                section_id='invalid_section')
         )
         assert_equal(404, res.status_code)
 
@@ -897,14 +1014,27 @@ class TestEditDraftService(BaseApplicationTest):
         data_api_client.update_draft_service.return_value = None
 
         res = self.client.post(
-            '/suppliers/frameworks/g-cloud-7/submissions/scs/1/edit/service-description',
+            self.url_for(
+                'main.update_section_submission',
+                framework_slug='g-cloud-7',
+                lot_slug='scs',
+                service_id=1,
+                section_id='service-description'),
             data={
+                'csrf_token': FakeCsrf.valid_token,
                 'continue_to_next_section': 'Save and continue'
             })
 
         assert_equal(302, res.status_code)
-        assert_equal('http://localhost/suppliers/frameworks/g-cloud-7/submissions/scs/1/edit/service-type',
-                     res.headers['Location'])
+        expected_location = self.url_for(
+            'main.edit_service_submission',
+            framework_slug='g-cloud-7',
+            lot_slug='scs',
+            service_id=1,
+            section_id='service-type',
+            _external=True
+        )
+        assert_equal(expected_location, res.headers['Location'])
 
     def test_update_redirects_to_edit_submission_if_no_next_editable_section(self, data_api_client, s3):
         s3.return_value.bucket_short_name = 'submissions'
@@ -913,14 +1043,23 @@ class TestEditDraftService(BaseApplicationTest):
         data_api_client.update_draft_service.return_value = None
 
         res = self.client.post(
-            '/suppliers/frameworks/g-cloud-7/submissions/scs/1/edit/sfia-rate-card',
-            data={})
+            self.url_for(
+                'main.update_section_submission',
+                framework_slug='g-cloud-7',
+                lot_slug='scs',
+                service_id=1,
+                section_id='sfia-rate-card'),
+            data=csrf_only_request)
 
         assert_equal(302, res.status_code)
-        assert_equal(
-            'http://localhost/suppliers/frameworks/g-cloud-7/submissions/scs/1#sfia-rate-card',
-            res.headers['Location']
-        )
+        expected_location = self.url_for(
+            'main.view_service_submission',
+            framework_slug='g-cloud-7',
+            lot_slug='scs',
+            service_id=1,
+            _external=True
+        ) + '#sfia-rate-card'
+        assert_equal(expected_location, res.headers['Location'])
 
     def test_update_redirects_to_edit_submission_if_return_to_summary(self, data_api_client, s3):
         s3.return_value.bucket_short_name = 'submissions'
@@ -929,14 +1068,24 @@ class TestEditDraftService(BaseApplicationTest):
         data_api_client.update_draft_service.return_value = None
 
         res = self.client.post(
-            '/suppliers/frameworks/g-cloud-7/submissions/scs/1/edit/service-description?return_to_summary=1',
-            data={})
+            self.url_for(
+                'main.update_section_submission',
+                framework_slug='g-cloud-7',
+                lot_slug='scs',
+                service_id=1,
+                section_id='service-description',
+                return_to_summary=1),
+            data=csrf_only_request)
 
         assert_equal(302, res.status_code)
-        assert_equal(
-            'http://localhost/suppliers/frameworks/g-cloud-7/submissions/scs/1#service-description',
-            res.headers['Location']
-        )
+        expected_location = self.url_for(
+            'main.view_service_submission',
+            framework_slug='g-cloud-7',
+            lot_slug='scs',
+            service_id=1,
+            _external=True
+        ) + '#service-description'
+        assert_equal(expected_location, res.headers['Location'])
 
     def test_update_redirects_to_edit_submission_if_save_and_return_grey_button_clicked(self, data_api_client, s3):
         s3.return_value.bucket_short_name = 'submissions'
@@ -945,14 +1094,23 @@ class TestEditDraftService(BaseApplicationTest):
         data_api_client.update_draft_service.return_value = None
 
         res = self.client.post(
-            '/suppliers/frameworks/g-cloud-7/submissions/scs/1/edit/service-description',
-            data={})
+            self.url_for(
+                'main.update_section_submission',
+                framework_slug='g-cloud-7',
+                lot_slug='scs',
+                service_id=1,
+                section_id='service-description'),
+            data=csrf_only_request)
 
         assert_equal(302, res.status_code)
-        assert_equal(
-            'http://localhost/suppliers/frameworks/g-cloud-7/submissions/scs/1#service-description',
-            res.headers['Location']
-        )
+        expected_location = self.url_for(
+            'main.view_service_submission',
+            framework_slug='g-cloud-7',
+            lot_slug='scs',
+            service_id=1,
+            _external=True
+        ) + '#service-description'
+        assert_equal(expected_location, res.headers['Location'])
 
     def test_update_with_answer_required_error(self, data_api_client, s3):
         s3.return_value.bucket_short_name = 'submissions'
@@ -962,8 +1120,13 @@ class TestEditDraftService(BaseApplicationTest):
             mock.Mock(status_code=400),
             {'serviceSummary': 'answer_required'})
         res = self.client.post(
-            '/suppliers/frameworks/g-cloud-7/submissions/scs/1/edit/service-description',
-            data={})
+            self.url_for(
+                'main.update_section_submission',
+                framework_slug='g-cloud-7',
+                lot_slug='scs',
+                service_id=1,
+                section_id='service-description'),
+            data=csrf_only_request)
 
         assert_equal(res.status_code, 200)
         document = html.fromstring(res.get_data(as_text=True))
@@ -979,8 +1142,13 @@ class TestEditDraftService(BaseApplicationTest):
             mock.Mock(status_code=400),
             {'serviceSummary': 'under_50_words'})
         res = self.client.post(
-            '/suppliers/frameworks/g-cloud-7/submissions/scs/1/edit/service-description',
-            data={})
+            self.url_for(
+                'main.update_section_submission',
+                framework_slug='g-cloud-7',
+                lot_slug='scs',
+                service_id=1,
+                section_id='service-description'),
+            data=csrf_only_request)
 
         assert_equal(res.status_code, 200)
         document = html.fromstring(res.get_data(as_text=True))
@@ -1005,8 +1173,13 @@ class TestEditDraftService(BaseApplicationTest):
                 mock.Mock(status_code=400),
                 {field: error})
             res = self.client.post(
-                '/suppliers/frameworks/g-cloud-7/submissions/scs/1/edit/pricing',
-                data={})
+                self.url_for(
+                    'main.update_section_submission',
+                    framework_slug='g-cloud-7',
+                    lot_slug='scs',
+                    service_id=1,
+                    section_id='pricing'),
+                data=csrf_only_request)
 
             assert_equal(res.status_code, 200)
             document = html.fromstring(res.get_data(as_text=True))
@@ -1015,14 +1188,28 @@ class TestEditDraftService(BaseApplicationTest):
 
     def test_update_non_existent_draft_service_returns_404(self, data_api_client, s3):
         data_api_client.get_draft_service.side_effect = HTTPError(mock.Mock(status_code=404))
-        res = self.client.post('/suppliers/frameworks/g-cloud-7/submissions/scs/1/edit/service-description')
+        res = self.client.post(
+            self.url_for(
+                'main.update_section_submission',
+                framework_slug='g-cloud-7',
+                lot_slug='scs',
+                service_id=1,
+                section_id='service-description'),
+            data=csrf_only_request
+        )
 
         assert_equal(res.status_code, 404)
 
     def test_update_non_existent_draft_section_returns_404(self, data_api_client, s3):
         data_api_client.get_draft_service.return_value = self.empty_draft
         res = self.client.post(
-            '/suppliers/frameworks/g-cloud-7/submissions/scs/1/edit/invalid-section'
+            self.url_for(
+                'main.update_section_submission',
+                framework_slug='g-cloud-7',
+                lot_slug='scs',
+                service_id=1,
+                section_id='invalid-section'),
+            data=csrf_only_request
         )
         assert_equal(404, res.status_code)
 
@@ -1038,16 +1225,26 @@ class TestEditDraftService(BaseApplicationTest):
         data_api_client.get_draft_service.return_value = draft
 
         res = self.client.get(
-            '/suppliers/frameworks/digital-outcomes-and-specialists/submissions/' +
-            'digital-specialists/1/edit/individual-specialist-roles/agile-coach'
-        )
+            self.url_for(
+                'main.edit_service_submission',
+                framework_slug='digital-outcomes-and-specialists',
+                lot_slug='digital-specialists',
+                service_id=1,
+                section_id='individual-specialist-roles',
+                question_slug='agile-coach'))
 
         assert_equal(res.status_code, 200)
 
         res = self.client.post(
-            '/suppliers/frameworks/digital-outcomes-and-specialists/submissions/' +
-            'digital-specialists/1/edit/individual-specialist-roles/agile-coach',
+            self.url_for(
+                'main.update_section_submission',
+                framework_slug='digital-outcomes-and-specialists',
+                lot_slug='digital-specialists',
+                service_id=1,
+                section_id='individual-specialist-roles',
+                question_slug='agile-coach'),
             data={
+                'csrf_token': FakeCsrf.valid_token,
                 'agileCoachLocations': ['Scotland'],
             })
 
@@ -1068,9 +1265,13 @@ class TestEditDraftService(BaseApplicationTest):
         data_api_client.get_draft_service.return_value = self.multiquestion_draft
 
         res = self.client.get(
-            '/suppliers/frameworks/digital-outcomes-and-specialists/submissions/' +
-            'digital-specialists/1/remove/individual-specialist-roles/agile-coach'
-        )
+            self.url_for(
+                'main.remove_subsection',
+                framework_slug='digital-outcomes-and-specialists',
+                lot_slug='digital-specialists',
+                service_id=1,
+                section_id='individual-specialist-roles',
+                question_slug='agile-coach'))
 
         assert_equal(res.status_code, 302)
         assert(
@@ -1080,15 +1281,26 @@ class TestEditDraftService(BaseApplicationTest):
         assert('confirm_remove=agile-coach' in res.location)
 
         res2 = self.client.get(
-            '/suppliers/frameworks/digital-outcomes-and-specialists/submissions/' +
-            'digital-specialists/1?section_id=specialists&confirm_remove=agile-coach'
-        )
+            self.url_for(
+                'main.view_service_submission',
+                framework_slug='digital-outcomes-and-specialists',
+                lot_slug='digital-specialists',
+                service_id=1,
+                section_id='specialists',
+                confirm_remove='agile-coach'))
         assert_equal(res2.status_code, 200)
         assert_in(u'Are you sure you want to remove agile coach?', res2.get_data(as_text=True))
 
         res3 = self.client.post(
-            '/suppliers/frameworks/digital-outcomes-and-specialists/submissions/' +
-            'digital-specialists/1/remove/individual-specialist-roles/agile-coach?confirm=True')
+            self.url_for(
+                'main.remove_subsection',
+                framework_slug='digital-outcomes-and-specialists',
+                lot_slug='digital-specialists',
+                service_id=1,
+                section_id='individual-specialist-roles',
+                question_slug='agile-coach',
+                confirm=True),
+            data=csrf_only_request)
 
         assert_equal(res3.status_code, 302)
         assert(res3.location.endswith(
@@ -1119,9 +1331,13 @@ class TestEditDraftService(BaseApplicationTest):
         data_api_client.get_draft_service.return_value = draft_service
 
         res = self.client.get(
-            '/suppliers/frameworks/digital-outcomes-and-specialists/submissions/' +
-            'digital-specialists/1/remove/individual-specialist-roles/agile-coach'
-        )
+            self.url_for(
+                'main.remove_subsection',
+                framework_slug='digital-outcomes-and-specialists',
+                lot_slug='digital-specialists',
+                service_id=1,
+                section_id='individual-specialist-roles',
+                question_slug='agile-coach'))
 
         assert_equal(res.status_code, 302)
         assert(res.location.endswith(
@@ -1129,8 +1345,11 @@ class TestEditDraftService(BaseApplicationTest):
         )
 
         res2 = self.client.get(
-            '/suppliers/frameworks/digital-outcomes-and-specialists/submissions/digital-specialists/1'
-        )
+            self.url_for(
+                'main.view_service_submission',
+                framework_slug='digital-outcomes-and-specialists',
+                lot_slug='digital-specialists',
+                service_id=1))
         assert_equal(res2.status_code, 200)
         assert_in("You must offer one of the individual specialist roles to be eligible.",
                   res2.get_data(as_text=True))
@@ -1142,8 +1361,17 @@ class TestEditDraftService(BaseApplicationTest):
         draft_service['services']['supplierId'] = 12345
         data_api_client.get_draft_service.return_value = draft_service
         res = self.client.post(
-            '/suppliers/frameworks/digital-outcomes-and-specialists/submissions/' +
-            'digital-specialists/1/remove/individual-specialist-roles/agile-coach?confirm=True')
+            self.url_for(
+                'main.remove_subsection',
+                framework_slug='digital-outcomes-and-specialists',
+                lot_slug='digital-specialists',
+                service_id=1,
+                section_id='individual-specialist-roles',
+                question_slug='agile-coach',
+                confirm=True
+            ),
+            data=csrf_only_request
+        )
 
         assert_equal(res.status_code, 404)
         data_api_client.update_draft_service.assert_not_called()
@@ -1151,16 +1379,34 @@ class TestEditDraftService(BaseApplicationTest):
     def test_fails_if_api_get_fails(self, data_api_client, s3):
         data_api_client.get_draft_service.side_effect = HTTPError(mock.Mock(status_code=504))
         res = self.client.post(
-            '/suppliers/frameworks/digital-outcomes-and-specialists/submissions/' +
-            'digital-specialists/1/remove/individual-specialist-roles/agile-coach?confirm=True')
+            self.url_for(
+                'main.remove_subsection',
+                framework_slug='digital-outcomes-and-specialists',
+                lot_slug='digital-specialists',
+                service_id=1,
+                section_id='individual-specialist-roles',
+                question_slug='agile-coach',
+                confirm=True
+            ),
+            data=csrf_only_request
+        )
         assert_equal(res.status_code, 504)
 
     def test_fails_if_api_update_fails(self, data_api_client, s3):
         data_api_client.get_draft_service.return_value = self.multiquestion_draft
         data_api_client.update_draft_service.side_effect = HTTPError(mock.Mock(status_code=504))
         res = self.client.post(
-            '/suppliers/frameworks/digital-outcomes-and-specialists/submissions/' +
-            'digital-specialists/1/remove/individual-specialist-roles/agile-coach?confirm=True')
+            self.url_for(
+                'main.remove_subsection',
+                framework_slug='digital-outcomes-and-specialists',
+                lot_slug='digital-specialists',
+                service_id=1,
+                section_id='individual-specialist-roles',
+                question_slug='agile-coach',
+                confirm=True
+            ),
+            data=csrf_only_request
+        )
         assert_equal(res.status_code, 504)
 
 
@@ -1196,7 +1442,10 @@ class TestShowDraftService(BaseApplicationTest):
     def test_service_price_is_correctly_formatted(self, data_api_client):
         data_api_client.get_framework.return_value = self.framework('open')
         data_api_client.get_draft_service.return_value = self.draft_service
-        res = self.client.get('/suppliers/frameworks/g-cloud-7/submissions/scs/1')
+        res = self.client.get(
+            self.url_for('main.view_service_submission', framework_slug='g-cloud-7', lot_slug='scs', service_id=1)
+        )
+
         document = html.fromstring(res.get_data(as_text=True))
 
         assert_equal(res.status_code, 200)
@@ -1211,7 +1460,9 @@ class TestShowDraftService(BaseApplicationTest):
         data_api_client.get_framework.return_value = self.framework(status='open')
         data_api_client.get_draft_service.return_value = self.draft_service
         count_unanswered.return_value = 1, 2
-        res = self.client.get('/suppliers/frameworks/g-cloud-7/submissions/scs/1')
+        res = self.client.get(
+            self.url_for('main.view_service_submission', framework_slug='g-cloud-7', lot_slug='scs', service_id=1)
+        )
 
         assert_true(u'3 unanswered questions' in res.get_data(as_text=True),
                     "'3 unanswered questions' not found in html")
@@ -1221,7 +1472,9 @@ class TestShowDraftService(BaseApplicationTest):
         data_api_client.get_framework.return_value = self.framework(status='open')
         data_api_client.get_draft_service.return_value = self.draft_service
         count_unanswered.return_value = 0, 1
-        res = self.client.get('/suppliers/frameworks/g-cloud-7/submissions/scs/1')
+        res = self.client.get(
+            self.url_for('main.view_service_submission', framework_slug='g-cloud-7', lot_slug='scs', service_id=1)
+        )
 
         assert_in(u'1 optional question unanswered', res.get_data(as_text=True))
         assert_in(u'<input type="submit" class="button-save"  value="Mark as complete" />',
@@ -1232,7 +1485,9 @@ class TestShowDraftService(BaseApplicationTest):
         data_api_client.get_framework.return_value = self.framework(status='other')
         data_api_client.get_draft_service.return_value = self.draft_service
         count_unanswered.return_value = 0, 1
-        res = self.client.get('/suppliers/frameworks/g-cloud-7/submissions/scs/1')
+        res = self.client.get(
+            self.url_for('main.view_service_submission', framework_slug='g-cloud-7', lot_slug='scs', service_id=1)
+        )
 
         assert_not_in(u'<input type="submit" class="button-save"  value="Mark as complete" />',
                       res.get_data(as_text=True))
@@ -1246,7 +1501,9 @@ class TestShowDraftService(BaseApplicationTest):
         data_api_client.get_draft_service.return_value = draft_service
         count_unanswered.return_value = 0, 1
 
-        res = self.client.get('/suppliers/frameworks/g-cloud-7/submissions/scs/1')
+        res = self.client.get(
+            self.url_for('main.view_service_submission', framework_slug='g-cloud-7', lot_slug='scs', service_id=1)
+        )
 
         assert_not_in(u'<input type="submit" class="button-save"  value="Mark as complete" />',
                       res.get_data(as_text=True))
@@ -1256,7 +1513,9 @@ class TestShowDraftService(BaseApplicationTest):
         data_api_client.get_framework.return_value = self.framework(status='pending')
         data_api_client.get_draft_service.return_value = self.draft_service
         count_unanswered.return_value = 3, 1
-        res = self.client.get('/suppliers/frameworks/g-cloud-7/submissions/scs/1')
+        res = self.client.get(
+            self.url_for('main.view_service_submission', framework_slug='g-cloud-7', lot_slug='scs', service_id=1)
+        )
 
         doc = html.fromstring(res.get_data(as_text=True))
         message = doc.xpath('//aside[@class="temporary-message"]')
@@ -1272,7 +1531,9 @@ class TestShowDraftService(BaseApplicationTest):
         data_api_client.get_framework.return_value = self.framework(status='pending')
         data_api_client.get_draft_service.return_value = self.complete_service
         count_unanswered.return_value = 0, 1
-        res = self.client.get('/suppliers/frameworks/g-cloud-7/submissions/scs/2')
+        res = self.client.get(
+            self.url_for('main.view_service_submission', framework_slug='g-cloud-7', lot_slug='scs', service_id=2)
+        )
 
         doc = html.fromstring(res.get_data(as_text=True))
         message = doc.xpath('//aside[@class="temporary-message"]')
@@ -1310,11 +1571,18 @@ class TestDeleteDraftService(BaseApplicationTest):
         data_api_client.get_framework.return_value = self.framework(status='open')
         data_api_client.get_draft_service.return_value = self.draft_to_delete
         res = self.client.post(
-            '/suppliers/frameworks/g-cloud-7/submissions/scs/1/delete',
-            data={})
+            self.url_for('main.delete_draft_service', framework_slug='g-cloud-7', lot_slug='scs', service_id=1),
+            data=csrf_only_request)
         assert_equal(res.status_code, 302)
         assert_in('/frameworks/g-cloud-7/submissions/scs/1?delete_requested=True', res.location)
-        res2 = self.client.get('/suppliers/frameworks/g-cloud-7/submissions/scs/1?delete_requested=True')
+        res2 = self.client.get(
+            self.url_for(
+                'main.view_service_submission',
+                framework_slug='g-cloud-7',
+                lot_slug='scs',
+                service_id=1,
+                delete_requested=True)
+        )
         assert_in(
             b"Are you sure you want to delete this service?", res2.get_data()
         )
@@ -1323,22 +1591,22 @@ class TestDeleteDraftService(BaseApplicationTest):
         data_api_client.get_framework.return_value = self.framework(status='other')
         data_api_client.get_draft_service.return_value = self.draft_to_delete
         res = self.client.post(
-            '/suppliers/frameworks/g-cloud-7/submissions/scs/1/delete',
-            data={})
+            self.url_for('main.delete_draft_service', framework_slug='g-cloud-7', lot_slug='scs', service_id=1),
+            data=csrf_only_request)
         assert_equal(res.status_code, 404)
 
     def test_confirm_delete_button_deletes_and_redirects_to_dashboard(self, data_api_client):
         data_api_client.get_framework.return_value = self.framework(status='open')
         data_api_client.get_draft_service.return_value = self.draft_to_delete
         res = self.client.post(
-            '/suppliers/frameworks/g-cloud-7/submissions/scs/1/delete',
-            data={'delete_confirmed': 'true'})
+            self.url_for('main.delete_draft_service', framework_slug='g-cloud-7', lot_slug='scs', service_id=1),
+            data={'delete_confirmed': 'true', 'csrf_token': FakeCsrf.valid_token})
 
         data_api_client.delete_draft_service.assert_called_with('1', 'email@email.com')
         assert_equal(res.status_code, 302)
         assert_equal(
             res.location,
-            'http://localhost/suppliers/frameworks/g-cloud-7/submissions/scs'
+            self.url_for('main.framework_submission_services', framework_slug='g-cloud-7', lot_slug='scs', _external=True)  # noqa
         )
 
     def test_cannot_delete_other_suppliers_draft(self, data_api_client):
@@ -1346,8 +1614,8 @@ class TestDeleteDraftService(BaseApplicationTest):
         other_draft['services']['supplierId'] = 12345
         data_api_client.get_draft_service.return_value = other_draft
         res = self.client.post(
-            '/suppliers/frameworks/g-cloud-7/submissions/scs/1/delete',
-            data={'delete_confirmed': 'true'})
+            self.url_for('main.delete_draft_service', framework_slug='g-cloud-7', lot_slug='scs', service_id=1),
+            data={'delete_confirmed': 'true', 'csrf_token': FakeCsrf.valid_token})
 
         assert_equal(res.status_code, 404)
 
@@ -1364,7 +1632,12 @@ class TestSubmissionDocuments(BaseApplicationTest):
         s3.return_value.get_signed_url.return_value = 'http://example.com/document.pdf'
 
         res = self.client.get(
-            '/suppliers/assets/g-cloud-7/submissions/1234/document.pdf'
+            self.url_for(
+                'main.service_submission_document',
+                framework_slug='g-cloud-7',
+                supplier_id='1234',
+                document_name='document.pdf'
+            )
         )
 
         assert_equal(res.status_code, 302)
@@ -1378,14 +1651,24 @@ class TestSubmissionDocuments(BaseApplicationTest):
         s3.return_value.get_signed_url.return_value = None
 
         res = self.client.get(
-            '/suppliers/frameworks/g-cloud-7/submissions/documents/1234/document.pdf'
+            self.url_for(
+                'main.service_submission_document',
+                framework_slug='g-cloud-7',
+                supplier_id='1234',
+                document_name='document.pdf'
+            )
         )
 
         assert_equal(res.status_code, 404)
 
     def test_document_url_not_matching_user_supplier(self, s3):
         res = self.client.get(
-            '/suppliers/frameworks/g-cloud-7/submissions/documents/999/document.pdf'
+            self.url_for(
+                'main.service_submission_document',
+                framework_slug='g-cloud-7',
+                supplier_id='999',
+                document_name='document.pdf'
+            )
         )
 
         assert_equal(res.status_code, 404)

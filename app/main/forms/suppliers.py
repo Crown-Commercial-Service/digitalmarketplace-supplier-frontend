@@ -1,7 +1,6 @@
-from flask.ext.wtf import Form
 from wtforms import IntegerField, FieldList
 from wtforms.validators import DataRequired, ValidationError, Length, Optional, Regexp, Email
-from dmutils.forms import StripWhitespaceStringField
+from dmutils.forms import DmForm, StripWhitespaceStringField
 
 
 def word_length(limit=None, message=None):
@@ -18,7 +17,7 @@ def word_length(limit=None, message=None):
     return _length
 
 
-class EditSupplierForm(Form):
+class EditSupplierForm(DmForm):
     description = StripWhitespaceStringField('Supplier summary', validators=[
         word_length(50, 'Your summary must not be more than %d words')
     ])
@@ -29,7 +28,7 @@ class EditSupplierForm(Form):
             raise ValidationError('You must have 10 or fewer clients')
 
 
-class EditContactInformationForm(Form):
+class EditContactInformationForm(DmForm):
     id = IntegerField()
     address1 = StripWhitespaceStringField('Business address')
     address2 = StripWhitespaceStringField('Business address')
@@ -47,28 +46,28 @@ class EditContactInformationForm(Form):
     ])
 
 
-class DunsNumberForm(Form):
+class DunsNumberForm(DmForm):
     duns_number = StripWhitespaceStringField('DUNS Number', validators=[
         DataRequired(message="You must enter a DUNS number with 9 digits."),
         Regexp(r'^\d{9}$', message="You must enter a DUNS number with 9 digits."),
     ])
 
 
-class CompaniesHouseNumberForm(Form):
+class CompaniesHouseNumberForm(DmForm):
     companies_house_number = StripWhitespaceStringField('Companies house number', validators=[
         Optional(),
         Length(min=8, max=8, message="Companies House numbers must have 8 characters.")
     ])
 
 
-class CompanyNameForm(Form):
+class CompanyNameForm(DmForm):
     company_name = StripWhitespaceStringField('Company name', validators=[
         DataRequired(message="You must provide a company name."),
         Length(max=255, message="You must provide a company name under 256 characters.")
     ])
 
 
-class CompanyContactDetailsForm(Form):
+class CompanyContactDetailsForm(DmForm):
     contact_name = StripWhitespaceStringField('Contact name', validators=[
         DataRequired(message="You must provide a contact name."),
         Length(max=255, message="You must provide a contact name under 256 characters.")
@@ -83,7 +82,7 @@ class CompanyContactDetailsForm(Form):
     ])
 
 
-class EmailAddressForm(Form):
+class EmailAddressForm(DmForm):
     email_address = StripWhitespaceStringField('Email address', validators=[
         DataRequired(message="You must provide a email address."),
         Email(message="You must provide a valid email address.")

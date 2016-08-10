@@ -58,7 +58,7 @@
               {% endif %}
             {% endfor %}
 
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+            {{ form.csrf_token }}
             {% if is_last_page %}
               {%
                 with

@@ -1,10 +1,9 @@
-from flask.ext.wtf import Form
 from wtforms import PasswordField
 from wtforms.validators import DataRequired, Email, EqualTo, Length
-from dmutils.forms import StripWhitespaceStringField
+from dmutils.forms import DmForm, StripWhitespaceStringField
 
 
-class LoginForm(Form):
+class LoginForm(DmForm):
     email_address = StripWhitespaceStringField('Email address', validators=[
         DataRequired(message="Email address must be provided"),
         Email(message="Please enter a valid email address")
@@ -14,14 +13,14 @@ class LoginForm(Form):
     ])
 
 
-class EmailAddressForm(Form):
+class EmailAddressForm(DmForm):
     email_address = StripWhitespaceStringField('Email address', validators=[
         DataRequired(message="Email address must be provided"),
         Email(message="Please enter a valid email address")
     ])
 
 
-class ChangePasswordForm(Form):
+class ChangePasswordForm(DmForm):
     password = PasswordField('Password', validators=[
         DataRequired(message="Please enter a new password"),
         Length(min=10,
@@ -35,7 +34,7 @@ class ChangePasswordForm(Form):
     ])
 
 
-class CreateUserForm(Form):
+class CreateUserForm(DmForm):
     name = StripWhitespaceStringField('Your name', validators=[
         DataRequired(message="Please enter a name"),
         Length(min=1,

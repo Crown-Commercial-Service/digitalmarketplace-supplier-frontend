@@ -11,20 +11,22 @@ from ..helpers.frameworks import get_framework_and_lot, get_declaration_status
 from dmapiclient import HTTPError
 from dmutils import s3
 from dmutils.documents import upload_service_documents
+from dmutils.forms import render_template_with_csrf
 
 
 @main.route('/services')
 @login_required
 def list_services():
-    suppliers_services = sorted(
-        data_api_client.find_services(supplier_id=current_user.supplier_id)["services"],
+    suppliers_services = data_api_client.find_services(supplier_id=current_user.supplier_id)["services"]
+    sorted_services = sorted(
+        suppliers_services,
         key=lambda service: service['frameworkSlug'],
         reverse=True
     )
 
     return render_template(
         "services/list_services.html",
-        services=suppliers_services), 200
+        services=sorted_services), 200
 
 
 #  #######################  EDITING LIVE SERVICES #############################
@@ -45,7 +47,7 @@ def edit_service(service_id):
     content = content_loader.get_manifest(framework['slug'], 'edit_service').filter(service)
     remove_requested = True if request.args.get('remove_requested') else False
 
-    return render_template(
+    return render_template_with_csrf(
         "services/service.html",
         service_id=service.get('id'),
         service_data=service,
@@ -106,7 +108,7 @@ def edit_section(service_id, section_id):
     if section is None or not section.editable:
         abort(404)
 
-    return render_template(
+    return render_template_with_csrf(
         "services/edit_section.html",
         section=section,
         service_data=service,
@@ -142,7 +144,7 @@ def update_section(service_id, section_id):
         errors = section.get_error_messages(e.message)
         if not posted_data.get('serviceName', None):
             posted_data['serviceName'] = service.get('serviceName', '')
-        return render_template(
+        return render_template_with_csrf(
             "services/edit_section.html",
             section=section,
             service_data=posted_data,
@@ -169,12 +171,12 @@ def start_new_draft_service(framework_slug, lot_slug):
 
     section = content.get_section(content.get_next_editable_section_id())
 
-    return render_template(
+    return render_template_with_csrf(
         "services/edit_submission_section.html",
         framework=framework,
         service_data={},
         section=section
-    ), 200
+    )
 
 
 @main.route('/frameworks/<framework_slug>/submissions/<lot_slug>/create', methods=['POST'])
@@ -201,13 +203,14 @@ def create_new_draft_service(framework_slug, lot_slug):
         update_data = section.unformat_data(update_data)
         errors = section.get_error_messages(e.message)
 
-        return render_template(
+        return render_template_with_csrf(
             "services/edit_submission_section.html",
+            status_code=400,
             framework=framework,
             section=section,
             service_data=update_data,
             errors=errors
-        ), 400
+        )
 
     return redirect(
         url_for(
@@ -356,7 +359,7 @@ def view_service_submission(framework_slug, lot_slug, service_id):
     unanswered_required, unanswered_optional = count_unanswered_questions(sections)
     delete_requested = True if request.args.get('delete_requested') else False
 
-    return render_template(
+    return render_template_with_csrf(
         "services/service_submission.html",
         framework=framework,
         lot=lot,
@@ -371,7 +374,7 @@ def view_service_submission(framework_slug, lot_slug, service_id):
         delete_requested=delete_requested,
         declaration_status=get_declaration_status(data_api_client, framework['slug']),
         dates=content_loader.get_message(framework_slug, 'dates')
-    ), 200
+    )
 
 
 @main.route('/frameworks/<framework_slug>/submissions/<lot_slug>/<service_id>/edit/<section_id>', methods=['GET'])
@@ -402,7 +405,7 @@ def edit_service_submission(framework_slug, lot_slug, service_id, section_id, qu
 
     draft = section.unformat_data(draft)
 
-    return render_template(
+    return render_template_with_csrf(
         "services/edit_submission_section.html",
         section=section,
         framework=framework,
@@ -471,7 +474,7 @@ def update_section_submission(framework_slug, lot_slug, service_id, section_id, 
         for k in keys_required_for_template:
             if k in draft and k not in update_data:
                 update_data[k] = draft[k]
-        return render_template(
+        return render_template_with_csrf(
             "services/edit_submission_section.html",
             framework=framework,
             section=section,

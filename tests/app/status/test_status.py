@@ -9,7 +9,7 @@ class TestStatus(BaseApplicationTest):
 
     @mock.patch('app.status.views.data_api_client')
     def test_should_return_200_from_elb_status_check(self, data_api_client):
-        status_response = self.client.get('/suppliers/_status?ignore-dependencies')
+        status_response = self.client.get(self.url_for('status.status') + '?ignore-dependencies')
         assert_equal(200, status_response.status_code)
         assert_false(data_api_client.called)
 
@@ -19,7 +19,7 @@ class TestStatus(BaseApplicationTest):
             "status": "ok"
         }
 
-        status_response = self.client.get('/suppliers/_status')
+        status_response = self.client.get(self.url_for('status.status'))
         assert_equal(200, status_response.status_code)
 
         json_data = json.loads(status_response.get_data().decode('utf-8'))
@@ -37,7 +37,7 @@ class TestStatus(BaseApplicationTest):
             'message': 'Cannot connect to (Data) API'
         }
 
-        status_response = self.client.get('/suppliers/_status')
+        status_response = self.client.get(self.url_for('status.status'))
         assert_equal(500, status_response.status_code)
 
         json_data = json.loads(status_response.get_data().decode('utf-8'))

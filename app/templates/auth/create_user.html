@@ -18,7 +18,7 @@
 
         <div class="grid-row">
             <div class="column-two-thirds">
-                {{ form.hidden_tag() }}
+                {{ form.csrf_token }}
 
                 {% if form.name.errors %}
                 <div class="validation-wrapper">

@@ -54,7 +54,7 @@
             {% endif %}
           {% endfor %}
 
-          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+          {{ form.csrf_token }}
           {% block save_button %}{% endblock %}
 
           {% block return_to_service_link %}

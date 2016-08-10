@@ -1,0 +1,9 @@
+{
+  "checks": {
+    "gov.au-marketplace-suppliers_status_load": {
+      "handlers": ["default", "slack"],
+      "command": "/opt/sensu/embedded/bin/check-http.rb --timeout 10 --url ${URL}/_status --response-code 200 --query '<title>[^<]*[Mm]arketplace[^<]*</title>'",
+      "interval": 300,
+      "standalone": true
+    }
+}
