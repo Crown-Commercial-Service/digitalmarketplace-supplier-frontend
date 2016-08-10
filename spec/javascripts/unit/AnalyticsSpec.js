@@ -213,4 +213,52 @@ describe("GOVUK.Analytics", function () {
     });
 
   });
+
+  describe("Supplier eligible to apply for brief", function() {
+    var $notOnFrameworkString = $('<div class="grid-row" data-reason="supplier-not-on-dos">');
+    
+    afterEach(function () {
+      $notOnFrameworkString.remove();
+    });
+    
+    it('should send custom dimension if data-reason', function() {
+      spyOn(GOVUK.GDM.analytics.location, "pathname")
+          .and
+          .callFake(function () {
+            return "/suppliers/opportunities/1/responses/create";
+        });
+
+      $(document.body).append($notOnFrameworkString);
+
+      window.GOVUK.GDM.analytics.pageViews.init();
+
+      expect(window.ga.calls.first().args).toEqual(['set', 'dimension25', 'supplier-not-on-dos']);
+      expect(window.ga.calls.count()).toEqual(2);
+    });
+
+    it('should send eligible to apply custom dimension if no data-reason', function() {
+      spyOn(GOVUK.GDM.analytics.location, "pathname")
+          .and
+          .callFake(function () {
+            return "/suppliers/opportunities/123/responses/create";
+        });
+
+      window.GOVUK.GDM.analytics.pageViews.init();
+
+      expect(window.ga.calls.first().args).toEqual(['set', 'dimension25', 'supplier-able-to-apply']);
+      expect(window.ga.calls.count()).toEqual(2);
+    });
+
+    it('should not send custom dimension if not on the create response page', function() {
+      spyOn(GOVUK.GDM.analytics.location, "pathname")
+          .and
+          .callFake(function () {
+            return "/suppliers/opportunities/1/responses/result";
+        });
+
+      window.GOVUK.GDM.analytics.pageViews.setCustomDimensions();
+
+      expect(window.ga.calls.any()).toEqual(false);
+    });
+  });
 });
