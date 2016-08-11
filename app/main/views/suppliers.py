@@ -128,6 +128,7 @@ def update_supplier():
         response.status_code = 400
         return response
 
+    # This form data is passed as-is to the API backend.  We don't need to send the CSRF token.
     del supplier_form.csrf_token
     del contact_form.csrf_token
 

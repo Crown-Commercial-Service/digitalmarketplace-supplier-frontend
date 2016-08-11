@@ -23,7 +23,7 @@ class Config(object):
 
     DM_DATA_API_URL = None
     DM_DATA_API_AUTH_TOKEN = None
-    DM_CLARIFICATION_QUESTION_EMAIL = 'marketplace+question@digital.gov.au'
+    DM_CLARIFICATION_QUESTION_EMAIL = 'no-reply@marketplace.digital.gov.au'
     DM_FRAMEWORK_AGREEMENTS_EMAIL = 'enquiries@example.com'
 
     DM_AGREEMENTS_BUCKET = None
@@ -37,21 +37,21 @@ class Config(object):
     DEBUG = False
 
     RESET_PASSWORD_EMAIL_NAME = 'Digital Marketplace Admin'
-    RESET_PASSWORD_EMAIL_FROM = 'marketplace+password@digital.gov.au'
+    RESET_PASSWORD_EMAIL_FROM = 'no-reply@marketplace.digital.gov.au'
     RESET_PASSWORD_EMAIL_SUBJECT = 'Reset your Digital Marketplace password'
 
     INVITE_EMAIL_NAME = 'Digital Marketplace Admin'
-    INVITE_EMAIL_FROM = 'marketplace+invite@digital.gov.au'
+    INVITE_EMAIL_FROM = 'no-reply@marketplace.digital.gov.au'
     INVITE_EMAIL_SUBJECT = 'Your Digital Marketplace invitation'
 
     CLARIFICATION_EMAIL_NAME = 'Digital Marketplace Admin'
-    CLARIFICATION_EMAIL_FROM = 'marketplace+enquiries@digital.gov.au'
+    CLARIFICATION_EMAIL_FROM = 'no-reply@marketplace.digital.gov.au'
     CLARIFICATION_EMAIL_SUBJECT = 'Thanks for your clarification question'
     DM_FOLLOW_UP_EMAIL_TO = 'digitalmarketplace@mailinator.com'
 
     FRAMEWORK_AGREEMENT_RETURNED_NAME = 'Digital Marketplace Admin'
 
-    DM_GENERIC_NOREPLY_EMAIL = 'marketplace+no-reply@digital.gov.au'
+    DM_GENERIC_NOREPLY_EMAIL = 'no-reply@marketplace.digital.gov.au'
 
     CREATE_USER_SUBJECT = 'Create your Digital Marketplace account'
     SECRET_KEY = None
@@ -134,7 +134,7 @@ class Live(Config):
     DM_LOG_PATH = '/var/log/digitalmarketplace/application.log'
     DM_HTTP_PROTO = 'https'
 
-    DM_FRAMEWORK_AGREEMENTS_EMAIL = 'marketplace@digital.gov.au.'
+    DM_FRAMEWORK_AGREEMENTS_EMAIL = 'no-reply@marketplace.digital.gov.au'
 
 
 class Preview(Live):
