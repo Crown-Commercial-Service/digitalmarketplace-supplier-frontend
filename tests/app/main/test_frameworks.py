@@ -2138,7 +2138,7 @@ class TestReturnSignedAgreement(BaseApplicationTest):
 
     @mock.patch('dmutils.s3.S3')
     @mock.patch('app.main.views.frameworks.send_email')
-    def test_valid_framework_agreement_returned_sends_confirmation_emails_and_redirects_to_framework_dashboard(
+    def test_valid_framework_agreement_returned_sends_confirmation_emails_and_unsets_session(
         self, send_email, s3, return_supplier_framework, data_api_client
     ):
         with self.app.test_client():
@@ -2179,9 +2179,6 @@ class TestReturnSignedAgreement(BaseApplicationTest):
             with self.client.session_transaction() as sess:
                 assert 'signature_page' not in sess
 
-            assert res.status_code == 302
-            assert res.location == 'http://localhost/suppliers/frameworks/g-cloud-8'
-
     @mock.patch('dmutils.s3.S3')
     @mock.patch('app.main.views.frameworks.send_email')
     def test_valid_framework_agreement_returned_sends_only_one_confirmation_email_if_contact_email_addresses_are_equal(
@@ -2216,9 +2213,6 @@ class TestReturnSignedAgreement(BaseApplicationTest):
                 'Digital Marketplace Admin',
                 ['g-cloud-8-framework-agreement']
             )
-
-            assert res.status_code == 302
-            assert res.location == 'http://localhost/suppliers/frameworks/g-cloud-8'
 
     @mock.patch('dmutils.s3.S3')
     @mock.patch('app.main.views.frameworks.send_email')
@@ -2278,6 +2272,151 @@ class TestReturnSignedAgreement(BaseApplicationTest):
 
             assert res.status_code == 500
             assert not send_email.called
+
+    @mock.patch('dmutils.s3.S3')
+    @mock.patch('app.main.views.frameworks.send_email')
+    def test_framework_agreement_returned_having_signed_contract_variation_redirects_to_framework_dashboard(
+        self, send_email, s3, return_supplier_framework, data_api_client
+    ):
+        with self.app.test_client():
+            self.login()
+
+            framework = get_g_cloud_8()
+            framework['variations'] = {
+                "1": {"createdAt": "2016-06-06T20:01:34.000000Z"}
+            }
+            data_api_client.get_framework.return_value = framework
+
+            supplier_framework = self.supplier_framework(on_framework=True)['frameworkInterest']
+            supplier_framework['agreementDetails'] = {'signerName': 'signer_name', 'signerRole': 'signer_role'}
+            supplier_framework['agreedVariations'] = {
+                '1': {
+                    "agreedUserId": 2,
+                    "agreedAt": "2016-06-06T00:00:00.000000Z",
+                }
+            }
+            supplier_framework['declaration']['primaryContact'] = 'contact name'
+            supplier_framework['declaration']['primaryContactEmail'] = 'email2@email.com'
+            supplier_framework['declaration']['nameOfOrganisation'] = 'company name'
+            return_supplier_framework.return_value = supplier_framework
+
+            s3.return_value.list.return_value = [{
+                'last_modified': '2016-07-10T21:18:00.000000Z'
+            }]
+
+            res = self.client.post(
+                "/suppliers/frameworks/g-cloud-8/contract-review",
+                data={
+                    'authorisation': 'I have the authority to return this agreement on behalf of company name'
+                }
+            )
+
+            assert res.status_code == 302
+            assert res.location == 'http://localhost/suppliers/frameworks/g-cloud-8'
+
+    @mock.patch('dmutils.s3.S3')
+    @mock.patch('app.main.views.frameworks.send_email')
+    def test_framework_agreement_returned_with_feature_flag_off_redirects_to_framework_dashboard(
+        self, send_email, s3, return_supplier_framework, data_api_client
+    ):
+        with self.app.test_client():
+            self.login()
+            self.app.config['FEATURE_FLAGS_CONTRACT_VARIATION'] = False
+
+            framework = get_g_cloud_8()
+            framework['variations'] = {
+                "1": {"createdAt": "2016-06-06T20:01:34.000000Z"}
+            }
+            data_api_client.get_framework.return_value = framework
+
+            supplier_framework = self.supplier_framework(on_framework=True)['frameworkInterest']
+            supplier_framework['agreementDetails'] = {'signerName': 'signer_name', 'signerRole': 'signer_role'}
+            supplier_framework['declaration']['primaryContact'] = 'contact name'
+            supplier_framework['declaration']['primaryContactEmail'] = 'email2@email.com'
+            supplier_framework['declaration']['nameOfOrganisation'] = 'company name'
+            return_supplier_framework.return_value = supplier_framework
+
+            s3.return_value.list.return_value = [{
+                'last_modified': '2016-07-10T21:18:00.000000Z'
+            }]
+
+            res = self.client.post(
+                "/suppliers/frameworks/g-cloud-8/contract-review",
+                data={
+                    'authorisation': 'I have the authority to return this agreement on behalf of company name'
+                }
+            )
+
+            assert res.status_code == 302
+            assert res.location == 'http://localhost/suppliers/frameworks/g-cloud-8'
+
+    @mock.patch('dmutils.s3.S3')
+    @mock.patch('app.main.views.frameworks.send_email')
+    def test_framework_agreement_returned_having_not_signed_contract_variation_redirects_to_variation(
+        self, send_email, s3, return_supplier_framework, data_api_client
+    ):
+        with self.app.test_client():
+            self.login()
+
+            framework = get_g_cloud_8()
+            framework['variations'] = {
+                "1": {"createdAt": "2016-06-06T20:01:34.000000Z"}
+            }
+            data_api_client.get_framework.return_value = framework
+
+            supplier_framework = self.supplier_framework(on_framework=True)['frameworkInterest']
+            supplier_framework['agreementDetails'] = {'signerName': 'signer_name', 'signerRole': 'signer_role'}
+            supplier_framework['agreedVariations'] = {}
+            supplier_framework['declaration']['primaryContact'] = 'contact name'
+            supplier_framework['declaration']['primaryContactEmail'] = 'email2@email.com'
+            supplier_framework['declaration']['nameOfOrganisation'] = 'company name'
+            return_supplier_framework.return_value = supplier_framework
+            s3.return_value.list.return_value = [{
+                'last_modified': '2016-07-10T21:18:00.000000Z'
+            }]
+
+            res = self.client.post(
+                "/suppliers/frameworks/g-cloud-8/contract-review",
+                data={
+                    'authorisation': 'I have the authority to return this agreement on behalf of company name'
+                }
+            )
+
+            assert res.status_code == 302
+            assert res.location == 'http://localhost/suppliers/frameworks/g-cloud-8/contract-variation/1'
+
+    @mock.patch('dmutils.s3.S3')
+    @mock.patch('app.main.views.frameworks.send_email')
+    def test_framework_agreement_returned_for_framework_with_no_variations_redirects_to_framework_dashboard(
+        self, send_email, s3, return_supplier_framework, data_api_client
+    ):
+        with self.app.test_client():
+            self.login()
+
+            framework = get_g_cloud_8()
+            framework['variations'] = {}
+            data_api_client.get_framework.return_value = framework
+
+            supplier_framework = self.supplier_framework(on_framework=True)['frameworkInterest']
+            supplier_framework['agreementDetails'] = {'signerName': 'signer_name', 'signerRole': 'signer_role'}
+            supplier_framework['declaration']['primaryContact'] = 'contact name'
+            supplier_framework['declaration']['primaryContactEmail'] = 'email2@email.com'
+            supplier_framework['declaration']['nameOfOrganisation'] = 'company name'
+            return_supplier_framework.return_value = supplier_framework
+
+            s3.return_value.list.return_value = [{
+                'last_modified': '2016-07-10T21:18:00.000000Z'
+            }]
+
+            res = self.client.post(
+                "/suppliers/frameworks/g-cloud-8/contract-review",
+                data={
+                    'authorisation': 'I have the authority to return this agreement on behalf of company name'
+                }
+            )
+
+            assert res.status_code == 302
+            assert res.location == 'http://localhost/suppliers/frameworks/g-cloud-8'
 
     @mock.patch('dmutils.s3.S3')
     @mock.patch('app.main.views.frameworks.get_supplier_framework_info')

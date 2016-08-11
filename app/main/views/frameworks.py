@@ -4,6 +4,7 @@ from itertools import chain
 from dateutil.parser import parse as date_parse
 from flask import render_template, request, abort, flash, redirect, url_for, current_app, session
 from flask_login import current_user
+import flask_featureflags as feature
 import six
 
 from dmapiclient import APIError
@@ -754,6 +755,19 @@ def contract_review(framework_slug):
                 'Your framework agreement has been returned to the Crown Commercial Service to be countersigned.',
                 'success'
             )
+
+            if feature.is_active('CONTRACT_VARIATION'):
+                # Redirect to contract variation if it has not been signed
+                if (
+                    framework.get('variations') and
+                    not supplier_framework['agreedVariations']
+                ):
+                    variation_slug = framework['variations'].keys()[0]
+                    return redirect(url_for(
+                        '.view_contract_variation',
+                        framework_slug=framework_slug,
+                        variation_slug=variation_slug
+                    ))
 
             return redirect(url_for(".framework_dashboard", framework_slug=framework_slug))
 
