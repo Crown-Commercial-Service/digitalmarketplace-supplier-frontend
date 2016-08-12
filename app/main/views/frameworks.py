@@ -8,9 +8,10 @@ import six
 
 from dmapiclient import APIError
 from dmapiclient.audit import AuditTypes
-from dmutils.email import send_email, MandrillException
+from dmutils.email import send_email, EmailError
 from dmcontent.formats import format_service_price
 from dmutils.formats import datetimeformat
+from dmutils.forms import render_template_with_csrf
 from dmutils import s3
 from dmutils.documents import (
     RESULT_LETTER_FILENAME, AGREEMENT_FILENAME, SIGNED_AGREEMENT_PREFIX, COUNTERSIGNED_AGREEMENT_FILENAME,
@@ -50,13 +51,12 @@ def framework_dashboard(framework_slug):
             send_email(
                 [user['emailAddress'] for user in supplier_users['users'] if user['active']],
                 email_body,
-                current_app.config['DM_MANDRILL_API_KEY'],
                 'You have started your {} application'.format(framework['name']),
                 current_app.config['CLARIFICATION_EMAIL_FROM'],
                 current_app.config['CLARIFICATION_EMAIL_NAME'],
                 ['{}-application-started'.format(framework_slug)]
             )
-        except MandrillException as e:
+        except EmailError as e:
             current_app.logger.error(
                 "Application started email failed to send: {error}, supplier_id: {supplier_id}",
                 extra={'error': six.text_type(e), 'supplier_id': current_user.supplier_id}
@@ -217,14 +217,14 @@ def framework_submission_services(framework_slug, lot_slug):
             'unanswered_optional': unanswered_optional,
         })
 
-    return render_template(
+    return render_template_with_csrf(
         "frameworks/services.html",
         complete_drafts=list(reversed(complete_drafts)),
         drafts=list(reversed(drafts)),
         declaration_status=declaration_status,
         framework=framework,
         lot=lot
-    ), 200
+    )
 
 
 @main.route('/frameworks/<framework_slug>/declaration', methods=['GET'])
@@ -301,15 +301,16 @@ def framework_supplier_declaration(framework_slug, section_id=None):
             except APIError as e:
                 abort(e.status_code)
 
-    return render_template(
+    return render_template_with_csrf(
         "frameworks/edit_declaration_section.html",
+        status_code=status_code,
         framework=framework,
         section=section,
         declaration_answers=all_answers,
         is_last_page=is_last_page,
         get_question=content.get_question,
         errors=errors
-    ), status_code
+    )
 
 
 @main.route('/frameworks/<framework_slug>/files/<path:filepath>', methods=['GET'])
@@ -360,8 +361,10 @@ def framework_updates(framework_slug, error_message=None, default_textbox_value=
         file['path'] = '/'.join(path_parts[2:])
         files[path_parts[3]].append(file)
 
-    return render_template(
+    status_code = 200 if not error_message else 400
+    return render_template_with_csrf(
         "frameworks/updates.html",
+        status_code=status_code,
         framework=framework,
         clarification_question_name=CLARIFICATION_QUESTION_NAME,
         clarification_question_value=default_textbox_value,
@@ -370,7 +373,7 @@ def framework_updates(framework_slug, error_message=None, default_textbox_value=
         dates=content_loader.get_message(framework_slug, 'dates'),
         agreement_countersigned=countersigned_framework_agreement_exists_in_bucket(
             framework_slug, current_app.config['DM_AGREEMENTS_BUCKET'])
-    ), 200 if not error_message else 400
+    )
 
 
 @main.route('/frameworks/<framework_slug>/updates', methods=['POST'])
@@ -395,7 +398,9 @@ def framework_updates_email_clarification_question(framework_slug):
     if framework['clarificationQuestionsOpen']:
         subject = "{} clarification question".format(framework['name'])
         to_address = current_app.config['DM_CLARIFICATION_QUESTION_EMAIL']
-        from_address = "suppliers+{}@digitalmarketplace.service.gov.uk".format(framework['slug'])
+        # FIXME: we have login_required, so should we use the supplier's email address instead?
+        # Decide once we're actually using this feature.
+        from_address = 'marketplace+{}@digital.gov.au'.format(framework['slug'])
         email_body = render_template(
             "emails/clarification_question.html",
             supplier_name=current_user.supplier_name,
@@ -419,14 +424,13 @@ def framework_updates_email_clarification_question(framework_slug):
         send_email(
             to_address,
             email_body,
-            current_app.config['DM_MANDRILL_API_KEY'],
             subject,
             current_app.config["DM_GENERIC_NOREPLY_EMAIL"],
             "{} Supplier".format(framework['name']),
             tags,
             reply_to=from_address,
         )
-    except MandrillException as e:
+    except EmailError as e:
         current_app.logger.error(
             "{framework} clarification question email failed to send. "
             "error {error} supplier_id {supplier_id} email_hash {email_hash}",
@@ -452,13 +456,12 @@ def framework_updates_email_clarification_question(framework_slug):
             send_email(
                 current_user.email_address,
                 email_body,
-                current_app.config['DM_MANDRILL_API_KEY'],
                 subject,
                 current_app.config['CLARIFICATION_EMAIL_FROM'],
                 current_app.config['CLARIFICATION_EMAIL_NAME'],
                 tags
             )
-        except MandrillException as e:
+        except EmailError as e:
             current_app.logger.error(
                 "{framework} clarification question confirmation email failed to send. "
                 "error {error} supplier_id {supplier_id} email_hash {email_hash}",
@@ -511,12 +514,12 @@ def framework_agreement(framework_slug):
             supplier_framework=supplier_framework,
         ), 200
 
-    return render_template(
+    return render_template_with_csrf(
         "frameworks/agreement.html",
         framework=framework,
         supplier_framework=supplier_framework,
         agreement_filename=AGREEMENT_FILENAME
-    ), 200
+    )
 
 
 @main.route('/frameworks/<framework_slug>/agreement', methods=['POST'])
@@ -532,13 +535,14 @@ def upload_framework_agreement(framework_slug):
         upload_error = "Document must not be empty"
 
     if upload_error is not None:
-        return render_template(
+        return render_template_with_csrf(
             "frameworks/agreement.html",
+            status_code=400,
             framework=framework,
             supplier_framework=supplier_framework,
             upload_error=upload_error,
             agreement_filename=AGREEMENT_FILENAME
-        ), 400
+        )
 
     agreements_bucket = s3.S3(current_app.config['DM_AGREEMENTS_BUCKET'])
     extension = get_extension(request.files['agreement'].filename)
@@ -574,14 +578,13 @@ def upload_framework_agreement(framework_slug):
         send_email(
             current_app.config['DM_FRAMEWORK_AGREEMENTS_EMAIL'],
             email_body,
-            current_app.config['DM_MANDRILL_API_KEY'],
             '{} framework agreement'.format(framework['name']),
             current_app.config["DM_GENERIC_NOREPLY_EMAIL"],
             '{} Supplier'.format(framework['name']),
             ['{}-framework-agreement'.format(framework_slug)],
             reply_to=current_user.email_address,
         )
-    except MandrillException as e:
+    except EmailError as e:
         current_app.logger.error(
             "Framework agreement email failed to send. "
             "error {error} supplier_id {supplier_id} email_hash {email_hash}",
@@ -599,14 +602,13 @@ def signer_details(framework_slug):
     framework = get_framework(data_api_client, framework_slug)
     supplier_framework = return_supplier_framework_info_if_on_framework_or_abort(data_api_client, framework_slug)
 
-    form = SignerDetailsForm()
+    form = SignerDetailsForm(request.form)
 
     question_keys = ['signerName', 'signerRole']
     form_errors = {}
 
     if request.method == 'POST':
-
-        if form.validate_on_submit():
+        if form.validate():
             agreement_details = {question_key: form[question_key].data for question_key in question_keys}
 
             data_api_client.update_supplier_framework_agreement_details(
@@ -631,14 +633,16 @@ def signer_details(framework_slug):
             if question_key in supplier_framework['agreementDetails']:
                 form[question_key].data = supplier_framework['agreementDetails'][question_key]
 
-    return render_template(
+    status_code = 400 if form_errors else 200
+    return render_template_with_csrf(
         "frameworks/signer_details.html",
+        status_code=status_code,
         form=form,
         form_errors=form_errors,
         framework=framework,
         question_keys=question_keys,
         supplier_framework=supplier_framework,
-    ), 400 if form_errors else 200
+    )
 
 
 @main.route('/frameworks/<framework_slug>/signature-upload', methods=['GET', 'POST'])
@@ -688,12 +692,14 @@ def signature_upload(framework_slug):
 
             return redirect(url_for(".contract_review", framework_slug=framework_slug))
 
-    return render_template(
+    status_code = 400 if upload_error else 200
+    return render_template_with_csrf(
         "frameworks/signature_upload.html",
+        status_code=status_code,
         framework=framework,
         signature_page=signature_page,
         upload_error=upload_error,
-    ), 400 if upload_error else 200
+    )
 
 
 @main.route('/frameworks/<framework_slug>/contract-review', methods=['GET', 'POST'])
@@ -713,11 +719,11 @@ def contract_review(framework_slug):
     ):
         abort(404)
 
-    form = ContractReviewForm()
+    form = ContractReviewForm(request.form)
     form_errors = None
 
     if request.method == 'POST':
-        if form.validate_on_submit():
+        if form.validate():
             data_api_client.register_framework_agreement_returned(
                 current_user.supplier_id, framework_slug, current_user.email_address, current_user.id
             )
@@ -737,13 +743,12 @@ def contract_review(framework_slug):
                 send_email(
                     email_recipients,
                     email_body,
-                    current_app.config['DM_MANDRILL_API_KEY'],
                     'Your {} signature page has been received'.format(framework['name']),
                     current_app.config["DM_GENERIC_NOREPLY_EMAIL"],
                     current_app.config["FRAMEWORK_AGREEMENT_RETURNED_NAME"],
                     ['{}-framework-agreement'.format(framework_slug)],
                 )
-            except MandrillException as e:
+            except EmailError as e:
                 current_app.logger.error(
                     "Framework agreement email failed to send. "
                     "error {error} supplier_id {supplier_id} email_hash {email_hash}",
@@ -770,11 +775,13 @@ def contract_review(framework_slug):
         supplier_framework['declaration']['nameOfOrganisation']
     )
 
-    return render_template(
+    status_code = 400 if form_errors else 200
+    return render_template_with_csrf(
         "frameworks/contract_review.html",
+        status_code=status_code,
         form=form,
         form_errors=form_errors,
         framework=framework,
         signature_page=signature_page,
         supplier_framework=supplier_framework,
-    ), 400 if form_errors else 200
+    )

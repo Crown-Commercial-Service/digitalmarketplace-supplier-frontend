@@ -18,7 +18,7 @@ def login_required(func):
     @wraps(func)
     @flask_login.login_required
     def decorated_view(*args, **kwargs):
-        if current_user.is_authenticated() and current_user.role != 'supplier':
+        if current_user.is_authenticated and current_user.role != 'supplier':
             flash('supplier-role-required', 'error')
             return current_app.login_manager.unauthorized()
         return func(*args, **kwargs)

@@ -1,11 +1,12 @@
 # coding=utf-8
 
 from dmapiclient import HTTPError
-from dmutils.email import MandrillException
+from dmutils.email import EmailError
+from dmutils.forms import FakeCsrf
 import mock
 from flask import session
-from nose.tools import assert_equal, assert_true, assert_in, assert_false, assert_not_in
-from tests.app.helpers import BaseApplicationTest
+from nose.tools import assert_equal, assert_true, assert_in, assert_false, assert_greater, assert_not_in
+from tests.app.helpers import BaseApplicationTest, csrf_only_request
 from lxml import html
 
 
@@ -72,7 +73,7 @@ class TestSuppliersDashboard(BaseApplicationTest):
         with self.app.test_client():
             self.login()
 
-            res = self.client.get("/suppliers")
+            res = self.client.get(self.url_for('main.dashboard'))
             assert_equal(res.status_code, 200)
 
             data_api_client.get_supplier.assert_called_once_with(1234)
@@ -128,41 +129,12 @@ class TestSuppliersDashboard(BaseApplicationTest):
         with self.app.test_client():
             self.login()
 
-            res = self.client.get("/suppliers")
+            res = self.client.get(self.url_for('main.dashboard'))
             data = self.strip_all_whitespace(res.get_data(as_text=True))
 
-            assert '<pclass="banner-message">Thisisanerror</p>' in data
-            assert '<pclass="banner-message">Thisisasuccess</p>' in data
-            assert '<pclass="banner-message">account-created</p>' not in data
-
-    @mock.patch("app.main.views.suppliers.data_api_client")
-    @mock.patch("app.main.views.suppliers.get_current_suppliers_users")
-    def test_data_analytics_track_page_view_is_shown_if_account_created_flag_flash_message(
-        self, get_current_suppliers_users, data_api_client
-    ):
-        with self.client.session_transaction() as session:
-            session['_flashes'] = [('flag', 'account-created')]
-
-        with self.app.test_client():
-            self.login()
-
-            res = self.client.get("/suppliers")
-            data = res.get_data(as_text=True)
-
-            assert 'data-analytics="trackPageView" data-url="/suppliers/vpv/?account-created=true"' in data
-
-    @mock.patch("app.main.views.suppliers.data_api_client")
-    @mock.patch("app.main.views.suppliers.get_current_suppliers_users")
-    def test_data_analytics_track_page_view_is_not_shown_if_no_account_created_flag_flash_message(
-        self, get_current_suppliers_users, data_api_client
-    ):
-        with self.app.test_client():
-            self.login()
-
-            res = self.client.get("/suppliers")
-            data = res.get_data(as_text=True)
-
-            assert 'data-analytics="trackPageView" data-url="/suppliers/vpv/?account-created=true"' not in data
+            assert_in('<pclass="banner-message">Thisisanerror</p>', data)
+            assert_in('<pclass="banner-message">Thisisasuccess</p>', data)
+            assert_not_in('<pclass="banner-message">account-created</p>', data)
 
     @mock.patch("app.main.views.suppliers.data_api_client")
     @mock.patch("app.main.views.suppliers.get_current_suppliers_users")
@@ -178,11 +150,14 @@ class TestSuppliersDashboard(BaseApplicationTest):
         with self.app.test_client():
             self.login()
 
-            res = self.client.get("/suppliers")
+            res = self.client.get(self.url_for('main.dashboard'))
             assert_equal(res.status_code, 200)
 
-            assert_in('<a href="/suppliers/edit" class="summary-change-link">Edit</a>', res.get_data(as_text=True))
-            assert_in('<a href="/suppliers/services" class="summary-change-link">View</a>', res.get_data(as_text=True))
+            doc_data = res.get_data(as_text=True)
+            edit_link = '<a href="{}" class="summary-change-link">Edit</a>'.format(self.url_for('main.edit_supplier'))
+            assert_in(edit_link, doc_data)
+            view_link = '<a href="{}" class="summary-change-link">View</a>'.format(self.url_for('main.list_services'))
+            assert_in(view_link, doc_data)
 
     @mock.patch("app.main.views.suppliers.data_api_client")
     @mock.patch("app.main.views.suppliers.get_current_suppliers_users")
@@ -210,7 +185,7 @@ class TestSuppliersDashboard(BaseApplicationTest):
 
         with self.app.test_client():
             self.login()
-            res = self.client.get("/suppliers")
+            res = self.client.get(self.url_for('main.dashboard'))
             doc = html.fromstring(res.get_data(as_text=True))
 
             message = doc.xpath('//div[@class="temporary-message"]')
@@ -245,7 +220,7 @@ class TestSuppliersDashboard(BaseApplicationTest):
         with self.app.test_client():
             self.login()
 
-            res = self.client.get("/suppliers")
+            res = self.client.get(self.url_for('main.dashboard'))
             doc = html.fromstring(res.get_data(as_text=True))
 
             assert_equal(res.status_code, 200)
@@ -274,12 +249,13 @@ class TestSuppliersDashboard(BaseApplicationTest):
         with self.app.test_client():
             self.login()
 
-            res = self.client.get("/suppliers")
+            res = self.client.get(self.url_for('main.dashboard'))
             doc = html.fromstring(res.get_data(as_text=True))
 
             assert_equal(res.status_code, 200)
-            assert_equal(doc.xpath('//a[@href="/suppliers/frameworks/g-cloud-7"]/span/text()')[0],
-                         "Continue your G-Cloud 7 application")
+            dashboard_url = self.url_for('main.framework_dashboard', framework_slug='g-cloud-7')
+            assert_equal(doc.xpath('//a[@href="{}"]/span/text()'.format(dashboard_url))[0],
+                         'Continue your G-Cloud 7 application')
 
     @mock.patch("app.main.views.suppliers.data_api_client")
     @mock.patch("app.main.views.suppliers.get_current_suppliers_users")
@@ -300,14 +276,13 @@ class TestSuppliersDashboard(BaseApplicationTest):
         with self.app.test_client():
             self.login()
 
-            res = self.client.get("/suppliers")
+            res = self.client.get(self.url_for('main.dashboard'))
             doc = html.fromstring(res.get_data(as_text=True))
 
             message = doc.xpath('//aside[@class="temporary-message"]')
-            assert_true(len(message) > 0)
+            assert_greater(len(message), 0)
             assert_in(u"G-Cloud 7 is closed for applications",
                       message[0].xpath('h2/text()')[0])
-            assert_true(len(message[0].xpath('p[1]/a[@href="https://digitalmarketplace.blog.gov.uk/"]')) > 0)
 
     @mock.patch("app.main.views.suppliers.data_api_client")
     @mock.patch("app.main.views.suppliers.get_current_suppliers_users")
@@ -337,16 +312,16 @@ class TestSuppliersDashboard(BaseApplicationTest):
         with self.app.test_client():
             self.login()
 
-            res = self.client.get("/suppliers")
+            res = self.client.get(self.url_for('main.dashboard'))
             doc = html.fromstring(res.get_data(as_text=True))
 
             message = doc.xpath('//aside[@class="temporary-message"]')
-            assert_true(len(message) > 0)
+            assert_greater(len(message), 0)
             assert_in(u"G-Cloud 7 is closed for applications",
                       message[0].xpath('h2/text()')[0])
             assert_in(u"You didn’t submit an application",
                       message[0].xpath('p[1]/text()')[0])
-            assert_true(len(message[0].xpath('p[2]/a[contains(@href, "suppliers/frameworks/g-cloud-7")]')) > 0)
+            assert_greater(len(message[0].xpath('p[2]/a[contains(@href, "suppliers/frameworks/g-cloud-7")]')), 0)
 
     @mock.patch("app.main.views.suppliers.data_api_client")
     @mock.patch("app.main.views.suppliers.get_current_suppliers_users")
@@ -376,15 +351,15 @@ class TestSuppliersDashboard(BaseApplicationTest):
 
         with self.app.test_client():
             self.login()
-            res = self.client.get("/suppliers")
+            res = self.client.get(self.url_for('main.dashboard'))
             doc = html.fromstring(res.get_data(as_text=True))
             headings = doc.xpath('//h2[@class="summary-item-heading"]')
-            assert_true(len(headings) > 0)
+            assert_greater(len(headings), 0)
             assert_in(u"G-Cloud 7 is closed for applications",
                       headings[0].xpath('text()')[0])
             assert_in(u"You submitted 99 services for consideration",
                       headings[0].xpath('../p[1]/text()')[0])
-            assert_true(len(headings[0].xpath('../p[1]/a[contains(@href, "suppliers/frameworks/g-cloud-7")]')) > 0)
+            assert_greater(len(headings[0].xpath('../p[1]/a[contains(@href, "suppliers/frameworks/g-cloud-7")]')), 0)
             assert_in(u"View your submitted application",
                       headings[0].xpath('../p[1]/a/text()')[0])
 
@@ -420,7 +395,7 @@ class TestSuppliersDashboard(BaseApplicationTest):
 
         with self.app.test_client():
             self.login()
-            res = self.client.get("/suppliers")
+            res = self.client.get(self.url_for('main.dashboard'))
             doc = html.fromstring(res.get_data(as_text=True))
             headings = doc.xpath('//h2[@class="summary-item-heading"]')
 
@@ -478,7 +453,7 @@ class TestSuppliersDashboard(BaseApplicationTest):
 
         with self.app.test_client():
             self.login()
-            res = self.client.get("/suppliers")
+            res = self.client.get(self.url_for('main.dashboard'))
             assert res.status_code == 200
             doc = html.fromstring(res.get_data(as_text=True))
 
@@ -526,7 +501,7 @@ class TestSuppliersDashboard(BaseApplicationTest):
 
         with self.app.test_client():
             self.login()
-            res = self.client.get("/suppliers")
+            res = self.client.get(self.url_for('main.dashboard'))
             doc = html.fromstring(res.get_data(as_text=True))
             headings = doc.xpath('//h2[@class="summary-item-heading"]')
 
@@ -571,7 +546,7 @@ class TestSuppliersDashboard(BaseApplicationTest):
 
         with self.app.test_client():
             self.login()
-            res = self.client.get("/suppliers")
+            res = self.client.get(self.url_for('main.dashboard'))
             doc = html.fromstring(res.get_data(as_text=True))
             headings = doc.xpath('//h2[@class="summary-item-heading"]')
 
@@ -608,7 +583,7 @@ class TestSuppliersDashboard(BaseApplicationTest):
 
         with self.app.test_client():
             self.login()
-            res = self.client.get("/suppliers")
+            res = self.client.get(self.url_for('main.dashboard'))
             doc = html.fromstring(res.get_data(as_text=True))
             headings = doc.xpath('//h2[@class="summary-item-heading"]')
 
@@ -664,7 +639,7 @@ class TestSuppliersDashboard(BaseApplicationTest):
 
         with self.app.test_client():
             self.login()
-            res = self.client.get("/suppliers")
+            res = self.client.get(self.url_for('main.dashboard'))
             doc = html.fromstring(res.get_data(as_text=True))
             headings = doc.xpath('//h2[@class="summary-item-heading"]')
 
@@ -713,7 +688,7 @@ class TestSuppliersDashboard(BaseApplicationTest):
         with self.app.test_client():
             self.login()
 
-            res = self.client.get("/suppliers")
+            res = self.client.get(self.url_for('main.dashboard'))
             doc = html.fromstring(res.get_data(as_text=True))
 
             assert_equal(res.status_code, 200)
@@ -749,7 +724,7 @@ class TestSuppliersDashboard(BaseApplicationTest):
         with self.app.test_client():
             self.login()
 
-            res = self.client.get("/suppliers")
+            res = self.client.get(self.url_for('main.dashboard'))
             doc = html.fromstring(res.get_data(as_text=True))
 
             assert_equal(res.status_code, 200)
@@ -776,7 +751,7 @@ class TestSupplierDashboardLogin(BaseApplicationTest):
 
             data_api_client.get_supplier.side_effect = get_supplier
 
-            res = self.client.get("/suppliers")
+            res = self.client.get(self.url_for('main.dashboard'))
 
             assert_equal(res.status_code, 200)
 
@@ -790,15 +765,15 @@ class TestSupplierDashboardLogin(BaseApplicationTest):
             )
 
     def test_should_redirect_to_login_if_not_logged_in(self):
-        res = self.client.get("/suppliers")
+        dashboard_url = self.url_for('main.dashboard')
+        res = self.client.get(dashboard_url)
         assert_equal(res.status_code, 302)
-        assert_equal(res.location,
-                     "http://localhost/login?next=%2Fsuppliers")
+        assert_equal(res.location, self.get_login_redirect_url(dashboard_url))
 
 
 @mock.patch("app.main.views.suppliers.data_api_client")
 class TestSupplierUpdate(BaseApplicationTest):
-    def post_supplier_edit(self, data=None, **kwargs):
+    def post_supplier_edit(self, data=None, csrf_token=FakeCsrf.valid_token, **kwargs):
         if data is None:
             data = {
                 "description": "New Description",
@@ -815,7 +790,9 @@ class TestSupplierUpdate(BaseApplicationTest):
                 "contact_postcode": "11 AB",
             }
         data.update(kwargs)
-        res = self.client.post("/suppliers/edit", data=data)
+        if csrf_token is not None:
+            data['csrf_token'] = csrf_token
+        res = self.client.post(self.url_for('main.update_supplier'), data=data)
         return res.status_code, res.get_data(as_text=True)
 
     def test_should_render_edit_page_with_minimum_data(self, data_api_client):
@@ -840,7 +817,7 @@ class TestSupplierUpdate(BaseApplicationTest):
 
         data_api_client.get_supplier.side_effect = limited_supplier
 
-        response = self.client.get("/suppliers/edit")
+        response = self.client.get(self.url_for('main.update_supplier'))
         assert_equal(response.status_code, 200)
 
     def test_update_all_supplier_fields(self, data_api_client):
@@ -879,6 +856,7 @@ class TestSupplierUpdate(BaseApplicationTest):
         self.login()
 
         data = {
+            'csrf_token': FakeCsrf.valid_token,
             "description": "  New Description  ",
             "clients": ["  ClientA  ", "  ClientB  "],
             "contact_id": 2,
@@ -926,6 +904,7 @@ class TestSupplierUpdate(BaseApplicationTest):
         self.login()
 
         status, resp = self.post_supplier_edit({
+            'csrf_token': FakeCsrf.valid_token,
             "description": "New Description",
             "clients": ["ClientA", "", "ClientB"],
             "contact_id": 2,
@@ -939,7 +918,7 @@ class TestSupplierUpdate(BaseApplicationTest):
             "contact_postcode": "11 AB",
         })
 
-        assert_equal(status, 200)
+        assert_equal(status, 400)
         assert_in('You must provide an email address', resp)
 
         assert_false(data_api_client.update_supplier.called)
@@ -979,7 +958,7 @@ class TestSupplierUpdate(BaseApplicationTest):
             description="DESCR " * 51
         )
 
-        assert_equal(status, 200)
+        assert_equal(status, 400)
         assert_in('must not be more than 50', resp)
 
         assert_false(data_api_client.update_supplier.called)
@@ -992,31 +971,30 @@ class TestSupplierUpdate(BaseApplicationTest):
             clients=["", "A Client"] * 11
         )
 
-        assert_equal(status, 200)
+        assert_equal(status, 400)
         assert_in('You must have 10 or fewer clients', resp)
 
     def test_should_redirect_to_login_if_not_logged_in(self, data_api_client):
-        res = self.client.get("/suppliers/edit")
+        edit_url = self.url_for('main.edit_supplier')
+        res = self.client.get(edit_url)
         assert_equal(res.status_code, 302)
-        assert_equal(
-            res.location,
-            "http://localhost/login?next=%2Fsuppliers%2Fedit"
-        )
+        assert_equal(res.location, self.get_login_redirect_url(edit_url))
 
 
 class TestCreateSupplier(BaseApplicationTest):
     def test_should_be_an_error_if_no_duns_number(self):
         res = self.client.post(
-            "/suppliers/duns-number",
-            data={}
+            self.url_for('main.submit_duns_number'),
+            data=csrf_only_request,
         )
         assert_equal(res.status_code, 400)
         assert_in("You must enter a DUNS number with 9 digits.", res.get_data(as_text=True))
 
     def test_should_be_an_error_if_no_duns_number_is_letters(self):
         res = self.client.post(
-            "/suppliers/duns-number",
+            self.url_for('main.submit_duns_number'),
             data={
+                'csrf_token': FakeCsrf.valid_token,
                 'duns_number': "invalid"
             }
         )
@@ -1025,8 +1003,9 @@ class TestCreateSupplier(BaseApplicationTest):
 
     def test_should_be_an_error_if_no_duns_number_is_less_than_nine_digits(self):
         res = self.client.post(
-            "/suppliers/duns-number",
+            self.url_for('main.submit_duns_number'),
             data={
+                'csrf_token': FakeCsrf.valid_token,
                 'duns_number': "12345678"
             }
         )
@@ -1035,8 +1014,9 @@ class TestCreateSupplier(BaseApplicationTest):
 
     def test_should_be_an_error_if_no_duns_number_is_more_than_nine_digits(self):
         res = self.client.post(
-            "/suppliers/duns-number",
+            self.url_for('main.submit_duns_number'),
             data={
+                'csrf_token': FakeCsrf.valid_token,
                 'duns_number': "1234567890"
             }
         )
@@ -1051,8 +1031,9 @@ class TestCreateSupplier(BaseApplicationTest):
             ]
         }
         res = self.client.post(
-            "/suppliers/duns-number",
+            self.url_for('main.submit_duns_number'),
             data={
+                'csrf_token': FakeCsrf.valid_token,
                 'duns_number': "123456789"
             }
         )
@@ -1065,52 +1046,42 @@ class TestCreateSupplier(BaseApplicationTest):
     def test_should_allow_nine_digit_duns_number(self, data_api_client):
         data_api_client.find_suppliers.return_value = {"suppliers": []}
         res = self.client.post(
-            "/suppliers/duns-number",
+            self.url_for('main.submit_duns_number'),
             data={
+                'csrf_token': FakeCsrf.valid_token,
                 'duns_number': "123456789"
             }
         )
         assert_equal(res.status_code, 302)
-        assert_equal(res.location, 'http://localhost/suppliers/companies-house-number')
+        assert_equal(res.location, self.url_for('main.companies_house_number', _external=True))
 
     @mock.patch("app.main.suppliers.data_api_client")
     def test_should_allow_duns_numbers_that_start_with_zero(self, data_api_client):
         data_api_client.find_suppliers.return_value = {"suppliers": []}
         res = self.client.post(
-            "/suppliers/duns-number",
+            self.url_for('main.submit_duns_number'),
             data={
+                'csrf_token': FakeCsrf.valid_token,
                 'duns_number': "012345678"
             }
         )
         assert_equal(res.status_code, 302)
-        assert_equal(res.location, 'http://localhost/suppliers/companies-house-number')
-
-    @mock.patch("app.main.suppliers.data_api_client")
-    def test_should_strip_whitespace_surrounding_duns_number_field(self, data_api_client):
-        data_api_client.find_suppliers.return_value = {"suppliers": []}
-        with self.client as c:
-            c.post(
-                "/suppliers/duns-number",
-                data={
-                    'duns_number': "  012345678  "
-                }
-            )
-            assert_true("duns_number" in session)
-            assert_equal(session.get("duns_number"), "012345678")
+        assert_equal(res.location, self.url_for('main.companies_house_number', _external=True))
 
     def test_should_not_be_an_error_if_no_companies_house_number(self):
         res = self.client.post(
-            "/suppliers/companies-house-number",
-            data={}
+            self.url_for('main.submit_companies_house_number'),
+            data=csrf_only_request,
         )
         assert_equal(res.status_code, 302)
-        assert_equal(res.location, 'http://localhost/suppliers/company-name')
+        assert_equal(res.location, self.url_for('main.company_name', _external=True))
 
     def test_should_be_an_error_if_companies_house_number_is_not_8_characters_short(self):
         res = self.client.post(
-            "/suppliers/companies-house-number",
+            self.url_for('main.submit_companies_house_number'),
             data={
-                'companies_house_number': "short"
+                'csrf_token': FakeCsrf.valid_token,
+                'companies_house_number': 'short',
             }
         )
         assert_equal(res.status_code, 400)
@@ -1118,9 +1089,10 @@ class TestCreateSupplier(BaseApplicationTest):
 
     def test_should_be_an_error_if_companies_house_number_is_not_8_characters_long(self):
         res = self.client.post(
-            "/suppliers/companies-house-number",
+            self.url_for('main.submit_companies_house_number'),
             data={
-                'companies_house_number': "muchtoolongtobecompanieshouse"
+                'csrf_token': FakeCsrf.valid_token,
+                'companies_house_number': 'muchtoolongtobecompanieshouse',
             }
         )
         assert_equal(res.status_code, 400)
@@ -1129,62 +1101,67 @@ class TestCreateSupplier(BaseApplicationTest):
     def test_should_allow_valid_companies_house_number(self):
         with self.client as c:
             res = c.post(
-                "/suppliers/companies-house-number",
+                self.url_for('main.submit_companies_house_number'),
                 data={
-                    'companies_house_number': "SC001122"
+                    'csrf_token': FakeCsrf.valid_token,
+                    'companies_house_number': 'SC001122',
                 }
             )
             assert_equal(res.status_code, 302)
-            assert_equal(res.location, 'http://localhost/suppliers/company-name')
+            assert_equal(res.location, self.url_for('main.company_name', _external=True))
 
     def test_should_strip_whitespace_surrounding_companies_house_number_field(self):
         with self.client as c:
             c.post(
-                "/suppliers/companies-house-number",
+                self.url_for('main.submit_companies_house_number'),
                 data={
-                    'companies_house_number': "  SC001122  "
+                    'csrf_token': FakeCsrf.valid_token,
+                    'companies_house_number': '  SC001122  '
                 }
             )
-            assert_true("companies_house_number" in session)
+            assert_in("companies_house_number", session)
             assert_equal(session.get("companies_house_number"), "SC001122")
 
     def test_should_wipe_companies_house_number_if_not_supplied(self):
         with self.client as c:
             res = c.post(
-                "/suppliers/companies-house-number",
+                self.url_for('main.submit_companies_house_number'),
                 data={
-                    'companies_house_number': ""
+                    'csrf_token': FakeCsrf.valid_token,
+                    'companies_house_number': '',
                 }
             )
             assert_equal(res.status_code, 302)
-            assert_equal(res.location, 'http://localhost/suppliers/company-name')
+            assert_equal(res.location, self.url_for('main.company_name', _external=True))
             assert_false("companies_house_number" in session)
 
     def test_should_allow_valid_company_name(self):
         res = self.client.post(
-            "/suppliers/company-name",
+            self.url_for('main.submit_company_name'),
             data={
-                'company_name': "My Company"
+                'csrf_token': FakeCsrf.valid_token,
+                'company_name': 'My Company',
             }
         )
         assert_equal(res.status_code, 302)
-        assert_equal(res.location, 'http://localhost/suppliers/company-contact-details')
+        assert_equal(res.location, self.url_for('main.company_contact_details', _external=True))
 
     def test_should_strip_whitespace_surrounding_company_name_field(self):
         with self.client as c:
             c.post(
-                "/suppliers/company-name",
+                self.url_for('main.submit_company_name'),
                 data={
-                    'company_name': "  My Company  "
+                    'csrf_token': FakeCsrf.valid_token,
+                    'company_name': '  My Company  ',
                 }
             )
-            assert_true("company_name" in session)
+            assert_in("company_name", session)
             assert_equal(session.get("company_name"), "My Company")
 
     def test_should_be_an_error_if_no_company_name(self):
         res = self.client.post(
-            "/suppliers/company-name",
-            data={}
+            self.url_for('main.submit_company_name'),
+            data=csrf_only_request,
         )
         assert_equal(res.status_code, 400)
         assert_in("You must provide a company name.", res.get_data(as_text=True))
@@ -1192,8 +1169,9 @@ class TestCreateSupplier(BaseApplicationTest):
     def test_should_be_an_error_if_company_name_too_long(self):
         twofiftysix = "a" * 256
         res = self.client.post(
-            "/suppliers/company-name",
+            self.url_for('main.submit_company_name'),
             data={
+                'csrf_token': FakeCsrf.valid_token,
                 'company_name': twofiftysix
             }
         )
@@ -1202,18 +1180,20 @@ class TestCreateSupplier(BaseApplicationTest):
 
     def test_should_allow_valid_company_contact_details(self):
         res = self.client.post(
-            "/suppliers/company-contact-details",
+            self.url_for('main.submit_company_contact_details'),
             data={
+                'csrf_token': FakeCsrf.valid_token,
                 'contact_name': "Name",
                 'email_address': "name@email.com",
                 'phone_number': "999"
             }
         )
         assert_equal(res.status_code, 302)
-        assert_equal(res.location, 'http://localhost/suppliers/create-your-account')
+        assert_equal(res.location, self.url_for('main.create_your_account', _external=True))
 
     def test_should_strip_whitespace_surrounding_contact_details_fields(self):
         contact_details = {
+            'csrf_token': FakeCsrf.valid_token,
             'contact_name': "  Name  ",
             'email_address': "  name@email.com  ",
             'phone_number': "  999  "
@@ -1221,107 +1201,106 @@ class TestCreateSupplier(BaseApplicationTest):
 
         with self.client as c:
             c.post(
-                "/suppliers/company-contact-details",
+                self.url_for('main.submit_company_contact_details'),
                 data=contact_details
             )
 
+            contact_details.pop('csrf_token')
             for key, value in contact_details.items():
-                assert_true(key in session)
+                assert_in(key, session)
                 assert_equal(session.get(key), value.strip())
 
     def test_should_not_allow_contact_details_without_name(self):
         res = self.client.post(
-            "/suppliers/company-contact-details",
+            self.url_for('main.submit_company_contact_details'),
             data={
+                'csrf_token': FakeCsrf.valid_token,
                 'email_address': "name@email.com",
                 'phone_number': "999"
             }
         )
         assert_equal(res.status_code, 400)
-        assert_true("You must provide a contact name." in res.get_data(as_text=True))
+        assert_in("You must provide a contact name.", res.get_data(as_text=True))
 
     def test_should_not_allow_contact_details_with_too_long_name(self):
         twofiftysix = "a" * 256
         res = self.client.post(
-            "/suppliers/company-contact-details",
+            self.url_for('main.submit_company_contact_details'),
             data={
+                'csrf_token': FakeCsrf.valid_token,
                 'contact_name': twofiftysix,
                 'email_address': "name@email.com",
                 'phone_number': "999"
             }
         )
         assert_equal(res.status_code, 400)
-        assert_true("You must provide a contact name under 256 characters." in res.get_data(as_text=True))
+        assert_in("You must provide a contact name under 256 characters.", res.get_data(as_text=True))
 
     def test_should_not_allow_contact_details_without_email(self):
         res = self.client.post(
-            "/suppliers/company-contact-details",
+            self.url_for('main.submit_company_contact_details'),
             data={
+                'csrf_token': FakeCsrf.valid_token,
                 'contact_name': "Name",
                 'phone_number': "999"
             }
         )
         assert_equal(res.status_code, 400)
-        assert_true("You must provide a email address." in res.get_data(as_text=True))
+        assert_in("You must provide a email address.", res.get_data(as_text=True))
 
     def test_should_not_allow_contact_details_with_invalid_email(self):
         res = self.client.post(
-            "/suppliers/company-contact-details",
+            self.url_for('main.submit_company_contact_details'),
             data={
+                'csrf_token': FakeCsrf.valid_token,
                 'contact_name': "Name",
                 'email_address': "notrightatall",
                 'phone_number': "999"
             }
         )
         assert_equal(res.status_code, 400)
-        assert_true("You must provide a valid email address." in res.get_data(as_text=True))
+        assert_in("You must provide a valid email address.", res.get_data(as_text=True))
 
     def test_should_not_allow_contact_details_without_phone_number(self):
         res = self.client.post(
-            "/suppliers/company-contact-details",
+            self.url_for('main.submit_company_contact_details'),
             data={
+                'csrf_token': FakeCsrf.valid_token,
                 'contact_name': "Name",
                 'email_address': "name@email.com"
             }
         )
         assert_equal(res.status_code, 400)
-        assert_true("You must provide a phone number." in res.get_data(as_text=True))
+        assert_in("You must provide a phone number.", res.get_data(as_text=True))
 
     def test_should_not_allow_contact_details_with_invalid_phone_number(self):
         twentyone = "a" * 21
         res = self.client.post(
-            "/suppliers/company-contact-details",
+            self.url_for('main.submit_company_contact_details'),
             data={
+                'csrf_token': FakeCsrf.valid_token,
                 'contact_name': "Name",
                 'email_address': "name@email.com",
                 'phone_number': twentyone
             }
         )
         assert_equal(res.status_code, 400)
-        assert_true("You must provide a phone number under 20 characters." in res.get_data(as_text=True))
+        assert_in("You must provide a phone number under 20 characters.", res.get_data(as_text=True))
 
     def test_should_show_multiple_errors(self):
         res = self.client.post(
-            "/suppliers/company-contact-details",
-            data={}
+            self.url_for('main.submit_company_contact_details'),
+            data=csrf_only_request,
         )
         assert_equal(res.status_code, 400)
-        assert_true("You must provide a phone number." in res.get_data(as_text=True))
-        assert_true("You must provide a email address." in res.get_data(as_text=True))
-        assert_true("You must provide a contact name." in res.get_data(as_text=True))
-
-    def test_should_populate_duns_from_session(self):
-        with self.client.session_transaction() as sess:
-            sess['duns_number'] = "999"
-        res = self.client.get("/suppliers/duns-number")
-        assert res.status_code == 200
-        assert '<inputtype="text"name="duns_number"id="input-duns_number"class="text-box"value="999"' \
-            in self.strip_all_whitespace(res.get_data(as_text=True))
+        assert_in("You must provide a phone number.", res.get_data(as_text=True))
+        assert_in("You must provide a email address.", res.get_data(as_text=True))
+        assert_in("You must provide a contact name.", res.get_data(as_text=True))
 
     def test_should_populate_companies_house_from_session(self):
         with self.client.session_transaction() as sess:
             sess['companies_house_number'] = "999"
-        res = self.client.get("/suppliers/companies-house-number")
+        res = self.client.get(self.url_for('main.companies_house_number'))
         assert res.status_code == 200
         assert '<inputtype="text"name="companies_house_number"id="input-companies_house_number"' \
             'class="text-box"value="999"' in self.strip_all_whitespace(res.get_data(as_text=True))
@@ -1329,7 +1308,7 @@ class TestCreateSupplier(BaseApplicationTest):
     def test_should_populate_company_name_from_session(self):
         with self.client.session_transaction() as sess:
             sess['company_name'] = "Name"
-        res = self.client.get("/suppliers/company-name")
+        res = self.client.get(self.url_for('main.company_name'))
         assert res.status_code == 200
         assert '<inputtype="text"name="company_name"id="input-company_name"class="text-box"value="Name"' \
             in self.strip_all_whitespace(res.get_data(as_text=True))
@@ -1339,7 +1318,7 @@ class TestCreateSupplier(BaseApplicationTest):
             sess['email_address'] = "email_address"
             sess['contact_name'] = "contact_name"
             sess['phone_number'] = "phone_number"
-        res = self.client.get("/suppliers/company-contact-details")
+        res = self.client.get(self.url_for('main.company_contact_details'))
         assert res.status_code == 200
         stripped_page = self.strip_all_whitespace(res.get_data(as_text=True))
         assert '<inputtype="text"name="email_address"id="input-email_address"class="text-box"value="email_address"' \
@@ -1352,9 +1331,9 @@ class TestCreateSupplier(BaseApplicationTest):
             in stripped_page
 
     def test_should_be_an_error_to_be_submit_company_with_incomplete_session(self):
-        res = self.client.post("/suppliers/company-summary")
+        res = self.client.post(self.url_for('main.submit_company_summary'), data=csrf_only_request)
         assert res.status_code == 400
-        assert 'You must answer all the questions' in res.get_data(as_text=True)
+        assert_in('You must answer all the questions', res.get_data(as_text=True))
 
     @mock.patch("app.main.suppliers.data_api_client")
     @mock.patch("app.main.suppliers.send_email")
@@ -1371,9 +1350,9 @@ class TestCreateSupplier(BaseApplicationTest):
                 sess['account_email_address'] = "valid@email.com"
 
             data_api_client.create_supplier.return_value = self.supplier()
-            res = c.post("/suppliers/company-summary")
+            res = c.post(self.url_for('main.submit_company_summary'), data=csrf_only_request)
             assert_equal(res.status_code, 302)
-            assert_equal(res.location, "http://localhost/suppliers/create-your-account-complete")
+            assert_equal(res.location, self.url_for('main.create_your_account_complete', _external=True))
             data_api_client.create_supplier.assert_called_once_with({
                 "contactInformation": [{
                     "email": "email_address",
@@ -1407,13 +1386,14 @@ class TestCreateSupplier(BaseApplicationTest):
 
         data_api_client.create_supplier.return_value = self.supplier()
         res = self.client.post(
-            "/suppliers/company-summary",
+            self.url_for('main.submit_company_summary'),
             data={
+                'csrf_token': FakeCsrf.valid_token,
                 'email_address': 'valid@email.com'
             }
         )
         assert_equal(res.status_code, 302)
-        assert_equal(res.location, "http://localhost/suppliers/create-your-account-complete")
+        assert_equal(res.location, self.url_for('main.create_your_account_complete', _external=True))
         data_api_client.create_supplier.assert_called_once_with({
             "contactInformation": [{
                 "email": "email_address",
@@ -1433,7 +1413,7 @@ class TestCreateSupplier(BaseApplicationTest):
             sess['duns_number'] = "duns_number"
 
         data_api_client.create_supplier.return_value = True
-        res = self.client.post("/suppliers/company-summary")
+        res = self.client.post(self.url_for('main.submit_company_summary'), data=csrf_only_request)
         assert_equal(res.status_code, 400)
         assert_equal(data_api_client.create_supplier.called, False)
         assert_equal(
@@ -1451,7 +1431,7 @@ class TestCreateSupplier(BaseApplicationTest):
             sess['account_email_address'] = "account_email_address"
 
         data_api_client.create_supplier.side_effect = HTTPError("gone bad")
-        res = self.client.post("/suppliers/company-summary")
+        res = self.client.post(self.url_for('main.submit_company_summary'), data=csrf_only_request)
         assert_equal(res.status_code, 503)
 
     def test_should_require_an_email_address(self):
@@ -1459,24 +1439,25 @@ class TestCreateSupplier(BaseApplicationTest):
             sess['email_company_name'] = "company_name"
             sess['email_supplier_id'] = 1234
         res = self.client.post(
-            "/suppliers/create-your-account",
-            data={}
+            self.url_for('main.submit_create_your_account'),
+            data=csrf_only_request,
         )
         assert_equal(res.status_code, 400)
-        assert_true("You must provide a email address." in res.get_data(as_text=True))
+        assert_in("You must provide a email address.", res.get_data(as_text=True))
 
     def test_should_not_allow_incorrect_email_address(self):
         with self.client.session_transaction() as sess:
             sess['email_company_name'] = "company_name"
             sess['email_supplier_id'] = 1234
         res = self.client.post(
-            "/suppliers/create-your-account",
+            self.url_for('main.submit_create_your_account'),
             data={
+                'csrf_token': FakeCsrf.valid_token,
                 'email_address': "bademail"
             }
         )
         assert_equal(res.status_code, 400)
-        assert_true("You must provide a valid email address." in res.get_data(as_text=True))
+        assert_in("You must provide a valid email address.", res.get_data(as_text=True))
 
     @mock.patch("app.main.suppliers.data_api_client")
     @mock.patch("app.main.suppliers.send_email")
@@ -1493,7 +1474,7 @@ class TestCreateSupplier(BaseApplicationTest):
 
             data_api_client.create_supplier.return_value = self.supplier()
 
-            res = c.post("/suppliers/company-summary")
+            res = c.post(self.url_for('main.submit_company_summary'), data=csrf_only_request)
 
             generate_token.assert_called_once_with(
                 {
@@ -1508,23 +1489,20 @@ class TestCreateSupplier(BaseApplicationTest):
             send_email.assert_called_once_with(
                 "valid@email.com",
                 mock.ANY,
-                "MANDRILL",
                 "Create your Digital Marketplace account",
-                "enquiries@digitalmarketplace.service.gov.uk",
+                self.app.config['RESET_PASSWORD_EMAIL_FROM'],
                 "Digital Marketplace Admin",
                 ["user-creation"]
             )
 
             assert_equal(res.status_code, 302)
-            assert_equal(res.location, 'http://localhost/suppliers/create-your-account-complete')
+            assert_equal(res.location, self.url_for('main.create_your_account_complete', _external=True))
             assert_equal(session['email_sent_to'], 'valid@email.com')
 
     @mock.patch("app.main.suppliers.send_email")
     @mock.patch("app.main.suppliers.generate_token")
     def test_should_be_an_error_if_incomplete_session_on_account_creation(self, generate_token, send_email):
-        res = self.client.post(
-            "/suppliers/company-summary"
-        )
+        res = self.client.post(self.url_for('main.submit_company_summary'), data=csrf_only_request)
 
         assert_false(generate_token.called)
         assert_false(send_email.called)
@@ -1533,7 +1511,7 @@ class TestCreateSupplier(BaseApplicationTest):
     @mock.patch("app.main.suppliers.data_api_client")
     @mock.patch("app.main.suppliers.send_email")
     @mock.patch("app.main.suppliers.generate_token")
-    def test_should_be_a_503_if_mandrill_failure_on_creation_email(self, generate_token, send_email, data_api_client):
+    def test_return_503_response_if_server_error_sending_email(self, generate_token, send_email, data_api_client):
         with self.client.session_transaction() as sess:
             sess['email_address'] = "email_address"
             sess['phone_number'] = "phone_number"
@@ -1542,12 +1520,10 @@ class TestCreateSupplier(BaseApplicationTest):
             sess['company_name'] = "company_name"
             sess['account_email_address'] = "valid@email.com"
 
-        send_email.side_effect = MandrillException("Failed")
+        send_email.side_effect = EmailError("Failed")
         data_api_client.create_supplier.return_value = self.supplier()
 
-        res = self.client.post(
-            "/suppliers/company-summary"
-        )
+        res = self.client.post(self.url_for('main.submit_company_summary'), data=csrf_only_request)
 
         generate_token.assert_called_once_with(
             {
@@ -1562,9 +1538,8 @@ class TestCreateSupplier(BaseApplicationTest):
         send_email.assert_called_once_with(
             "valid@email.com",
             mock.ANY,
-            "MANDRILL",
             "Create your Digital Marketplace account",
-            "enquiries@digitalmarketplace.service.gov.uk",
+            self.app.config['RESET_PASSWORD_EMAIL_FROM'],
             "Digital Marketplace Admin",
             ["user-creation"]
         )
@@ -1577,10 +1552,10 @@ class TestCreateSupplier(BaseApplicationTest):
                 sess['email_sent_to'] = "my@email.com"
                 sess['other_stuff'] = True
 
-            res = c.get("/suppliers/create-your-account-complete")
+            res = c.get(self.url_for('main.create_your_account_complete'))
 
             assert_equal(res.status_code, 200)
-            assert_true('An email has been sent to my@email.com' in res.get_data(as_text=True))
+            assert_in('An email has been sent to my@email.com', res.get_data(as_text=True))
             assert_false('other_stuff' in session)
 
     def test_should_show_email_address_even_when_refreshed(self):
@@ -1588,12 +1563,12 @@ class TestCreateSupplier(BaseApplicationTest):
             with c.session_transaction() as sess:
                 sess['email_sent_to'] = 'my-email@example.com'
 
-            res = c.get('/suppliers/create-your-account-complete')
+            res = c.get(self.url_for('main.create_your_account_complete'))
 
             assert_equal(res.status_code, 200)
-            assert_true('An email has been sent to my-email@example.com' in res.get_data(as_text=True))
+            assert_in('An email has been sent to my-email@example.com', res.get_data(as_text=True))
 
-            res = c.get('/suppliers/create-your-account-complete')
+            res = c.get(self.url_for('main.create_your_account_complete'))
 
             assert_equal(res.status_code, 200)
-            assert_true('An email has been sent to my-email@example.com' in res.get_data(as_text=True))
+            assert_in('An email has been sent to my-email@example.com', res.get_data(as_text=True))

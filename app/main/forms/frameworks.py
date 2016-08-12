@@ -1,10 +1,9 @@
-from flask.ext.wtf import Form
 from wtforms import BooleanField
 from wtforms.validators import DataRequired, Length
-from dmutils.forms import StripWhitespaceStringField
+from dmutils.forms import DmForm, StripWhitespaceStringField
 
 
-class SignerDetailsForm(Form):
+class SignerDetailsForm(DmForm):
     signerName = StripWhitespaceStringField('Full name', validators=[
         DataRequired(message="You must provide the full name of the person signing on behalf of the company."),
         Length(max=255, message="You must provide a name under 256 characters.")
@@ -20,7 +19,7 @@ class SignerDetailsForm(Form):
     )
 
 
-class ContractReviewForm(Form):
+class ContractReviewForm(DmForm):
     authorisation = BooleanField(
         'Authorisation',
         validators=[DataRequired(message="You must confirm you have the authority to return the agreement.")]

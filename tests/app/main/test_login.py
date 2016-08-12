@@ -3,8 +3,9 @@ from __future__ import unicode_literals
 
 from dmapiclient import HTTPError
 from dmapiclient.audit import AuditTypes
-from dmutils.email import generate_token, MandrillException
-from ..helpers import BaseApplicationTest
+from dmutils.email import generate_token, EmailError
+from dmutils.forms import FakeCsrf
+from ..helpers import BaseApplicationTest, csrf_only_request
 import mock
 
 EMAIL_EMPTY_ERROR = "Email address must be provided"
@@ -24,9 +25,10 @@ class TestSupplierRoleRequired(BaseApplicationTest):
     def test_buyer_cannot_access_supplier_dashboard(self):
         with self.app.app_context():
             self.login_as_buyer()
-            res = self.client.get('/suppliers')
+            dashboard_url = self.url_for('main.dashboard')
+            res = self.client.get(dashboard_url)
             assert res.status_code == 302
-            assert res.location == 'http://localhost/login?next=%2Fsuppliers'
+            assert res.location == self.get_login_redirect_url(dashboard_url)
             self.assert_flashes('supplier-role-required', expected_category='error')
 
 
@@ -35,8 +37,9 @@ class TestInviteUser(BaseApplicationTest):
         with self.app.app_context():
             self.login()
             res = self.client.post(
-                '/suppliers/invite-user',
+                self.url_for('main.send_invite_user'),
                 data={
+                    'csrf_token': FakeCsrf.valid_token,
                     'email_address': 'invalid'
                 }
             )
@@ -47,8 +50,8 @@ class TestInviteUser(BaseApplicationTest):
         with self.app.app_context():
             self.login()
             res = self.client.post(
-                '/suppliers/invite-user',
-                data={}
+                self.url_for('main.send_invite_user'),
+                data=csrf_only_request
             )
             assert EMAIL_EMPTY_ERROR in res.get_data(as_text=True)
             assert res.status_code == 400
@@ -59,13 +62,14 @@ class TestInviteUser(BaseApplicationTest):
         with self.app.app_context():
             self.login()
             res = self.client.post(
-                '/suppliers/invite-user',
+                self.url_for('main.send_invite_user'),
                 data={
-                    'email_address': 'this@isvalid.com'
+                    'csrf_token': FakeCsrf.valid_token,
+                    'email_address': 'this@isvalid.com',
                 }
             )
             assert res.status_code == 302
-            assert res.location == 'http://localhost/suppliers/users'
+            assert res.location == self.url_for('main.list_users', _external=True)
 
     @mock.patch('app.main.views.login.data_api_client')
     @mock.patch('app.main.views.login.send_email')
@@ -73,14 +77,14 @@ class TestInviteUser(BaseApplicationTest):
         with self.app.app_context():
             self.login()
             self.client.post(
-                '/suppliers/invite-user',
+                self.url_for('main.send_invite_user'),
                 data={
-                    'email_address': '  this@isvalid.com  '
+                    'csrf_token': FakeCsrf.valid_token,
+                    'email_address': '  this@isvalid.com  ',
                 }
             )
             send_email.assert_called_once_with(
                 'this@isvalid.com',
-                mock.ANY,
                 mock.ANY,
                 mock.ANY,
                 mock.ANY,
@@ -99,9 +103,10 @@ class TestInviteUser(BaseApplicationTest):
 
             self.login()
             res = self.client.post(
-                '/suppliers/invite-user',
+                self.url_for('main.send_invite_user'),
                 data={
-                    'email_address': 'this@isvalid.com'
+                    'csrf_token': FakeCsrf.valid_token,
+                    'email_address': 'this@isvalid.com',
                 })
             assert res.status_code == 302
             generate_token.assert_called_once_with(
@@ -121,9 +126,10 @@ class TestInviteUser(BaseApplicationTest):
 
             self.login()
             res = self.client.post(
-                '/suppliers/invite-user',
+                self.url_for('main.send_invite_user'),
                 data={
-                    'email_address': 'total rubbish'
+                    'csrf_token': FakeCsrf.valid_token,
+                    'email_address': 'total rubbish',
                 })
             assert res.status_code == 400
             assert not send_email.called
@@ -134,11 +140,15 @@ class TestInviteUser(BaseApplicationTest):
         with self.app.app_context():
             self.login()
 
-            send_email.side_effect = MandrillException(Exception('API is down'))
+            send_email.side_effect = EmailError(Exception('API is down'))
 
             res = self.client.post(
-                '/suppliers/invite-user',
-                data={'email_address': 'email@email.com', 'name': 'valid'}
+                self.url_for('main.send_invite_user'),
+                data={
+                    'csrf_token': FakeCsrf.valid_token,
+                    'email_address': 'email@email.com',
+                    'name': 'valid',
+                }
             )
 
             assert res.status_code == 503
@@ -150,14 +160,17 @@ class TestInviteUser(BaseApplicationTest):
 
             self.login()
 
-            self.app.config['DM_MANDRILL_API_KEY'] = "API KEY"
             self.app.config['INVITE_EMAIL_SUBJECT'] = "SUBJECT"
             self.app.config['INVITE_EMAIL_FROM'] = "EMAIL FROM"
             self.app.config['INVITE_EMAIL_NAME'] = "EMAIL NAME"
 
             res = self.client.post(
-                '/suppliers/invite-user',
-                data={'email_address': 'email@email.com', 'name': 'valid'}
+                self.url_for('main.send_invite_user'),
+                data={
+                    'csrf_token': FakeCsrf.valid_token,
+                    'email_address': 'email@email.com',
+                    'name': 'valid',
+                }
             )
 
             assert res.status_code == 302
@@ -165,7 +178,6 @@ class TestInviteUser(BaseApplicationTest):
             send_email.assert_called_once_with(
                 "email@email.com",
                 mock.ANY,
-                "API KEY",
                 "SUBJECT",
                 "EMAIL FROM",
                 "EMAIL NAME",
@@ -179,8 +191,13 @@ class TestInviteUser(BaseApplicationTest):
             self.login()
 
             res = self.client.post(
-                '/suppliers/invite-user',
-                data={'email_address': 'email@example.com', 'name': 'valid'})
+                self.url_for('main.send_invite_user'),
+                data={
+                    'csrf_token': FakeCsrf.valid_token,
+                    'email_address': 'email@example.com',
+                    'name': 'valid',
+                }
+            )
 
             assert res.status_code == 302
 
@@ -188,7 +205,7 @@ class TestInviteUser(BaseApplicationTest):
                 audit_type=AuditTypes.invite_user,
                 user='email@email.com',
                 object_type='suppliers',
-                object_id=1234,
+                object_id=mock.ANY,
                 data={'invitedEmail': 'email@example.com'})
 
 
@@ -207,18 +224,13 @@ class TestCreateUser(BaseApplicationTest):
     def test_should_be_an_error_for_invalid_token(self):
         token = "1234"
         res = self.client.get(
-            '/suppliers/create-user/{}'.format(token)
+            self.url_for('main.create_user', encoded_token=token)
         )
         assert res.status_code == 400
 
     def test_should_be_an_error_for_missing_token(self):
         res = self.client.get('/suppliers/create-user')
         assert res.status_code == 404
-
-    def test_should_be_an_error_for_missing_token_trailing_slash(self):
-        res = self.client.get('/suppliers/create-user/')
-        assert res.status_code == 301
-        assert res.location == 'http://localhost/suppliers/create-user'
 
     @mock.patch('app.main.views.login.data_api_client')
     def test_should_be_an_error_for_invalid_token_contents(self, data_api_client):
@@ -231,7 +243,7 @@ class TestCreateUser(BaseApplicationTest):
         )
 
         res = self.client.get(
-            '/suppliers/create-user/{}'.format(token)
+            self.url_for('main.create_user', encoded_token=token)
         )
         assert res.status_code == 400
         assert data_api_client.get_user.called is False
@@ -239,7 +251,7 @@ class TestCreateUser(BaseApplicationTest):
 
     def test_should_be_a_bad_request_if_token_expired(self):
         res = self.client.get(
-            '/suppliers/create-user/12345'
+            self.url_for('main.create_user', encoded_token=12345)
         )
 
         assert res.status_code == 400
@@ -251,7 +263,7 @@ class TestCreateUser(BaseApplicationTest):
 
         token = self._generate_token()
         res = self.client.get(
-            '/suppliers/create-user/{}'.format(token)
+            self.url_for('main.create_user', encoded_token=token)
         )
 
         assert res.status_code == 200
@@ -259,14 +271,15 @@ class TestCreateUser(BaseApplicationTest):
             "Supplier Name",
             "test@email.com",
             '<input type="submit" class="button-save"  value="Create contributor account" />',
-            '<form autocomplete="off" action="/suppliers/create-user/%s" method="POST" id="createUserForm">' % token
+            token,
         ]:
             assert message in res.get_data(as_text=True)
 
     def test_should_be_an_error_if_invalid_token_on_submit(self):
         res = self.client.post(
-            '/suppliers/create-user/invalidtoken',
+            self.url_for('main.submit_create_user', encoded_token='invalidtoken'),
             data={
+                'csrf_token': FakeCsrf.valid_token,
                 'password': '123456789',
                 'name': 'name',
                 'email_address': 'valid@test.com'}
@@ -282,8 +295,8 @@ class TestCreateUser(BaseApplicationTest):
     def test_should_be_an_error_if_missing_name_and_password(self):
         token = self._generate_token()
         res = self.client.post(
-            '/suppliers/create-user/{}'.format(token),
-            data={}
+            self.url_for('main.submit_create_user', encoded_token=token),
+            data=csrf_only_request
         )
 
         assert res.status_code == 400
@@ -296,8 +309,9 @@ class TestCreateUser(BaseApplicationTest):
     def test_should_be_an_error_if_too_short_name_and_password(self):
         token = self._generate_token()
         res = self.client.post(
-            '/suppliers/create-user/{}'.format(token),
+            self.url_for('main.submit_create_user', encoded_token=token),
             data={
+                'csrf_token': FakeCsrf.valid_token,
                 'password': "123456789",
                 'name': ""
             }
@@ -318,8 +332,9 @@ class TestCreateUser(BaseApplicationTest):
             fiftyone = "a" * 51
 
             res = self.client.post(
-                '/suppliers/create-user/{}'.format(token),
+                self.url_for('main.submit_create_user', encoded_token=token),
                 data={
+                    'csrf_token': FakeCsrf.valid_token,
                     'password': fiftyone,
                     'name': twofiftysix
                 }
@@ -340,7 +355,7 @@ class TestCreateUser(BaseApplicationTest):
 
         token = self._generate_token()
         res = self.client.get(
-            '/suppliers/create-user/{}'.format(token)
+            self.url_for('main.create_user', encoded_token=token)
         )
 
         assert res.status_code == 400
@@ -353,7 +368,7 @@ class TestCreateUser(BaseApplicationTest):
 
         token = self._generate_token()
         res = self.client.get(
-            '/suppliers/create-user/{}'.format(token)
+            self.url_for('main.create_user', encoded_token=token)
         )
 
         assert res.status_code == 400
@@ -372,7 +387,7 @@ class TestCreateUser(BaseApplicationTest):
 
         token = self._generate_token()
         res = self.client.get(
-            '/suppliers/create-user/{}'.format(token)
+            self.url_for('main.create_user', encoded_token=token)
         )
 
         assert res.status_code == 400
@@ -391,7 +406,7 @@ class TestCreateUser(BaseApplicationTest):
 
         token = self._generate_token()
         res = self.client.get(
-            '/suppliers/create-user/{}'.format(token)
+            self.url_for('main.create_user', encoded_token=token)
         )
 
         assert res.status_code == 400
@@ -414,7 +429,7 @@ class TestCreateUser(BaseApplicationTest):
         )
 
         res = self.client.get(
-            '/suppliers/create-user/{}'.format(token)
+            self.url_for('main.create_user', encoded_token=token)
         )
 
         assert res.status_code == 400
@@ -433,7 +448,7 @@ class TestCreateUser(BaseApplicationTest):
 
         token = self._generate_token()
         res = self.client.get(
-            '/suppliers/create-user/{}'.format(token),
+            self.url_for('main.create_user', encoded_token=token),
             follow_redirects=True
         )
 
@@ -453,7 +468,7 @@ class TestCreateUser(BaseApplicationTest):
 
         token = self._generate_token()
         res = self.client.get(
-            '/suppliers/create-user/{}'.format(token)
+            self.url_for('main.create_user', encoded_token=token)
         )
 
         assert res.status_code == 400
@@ -472,7 +487,7 @@ class TestCreateUser(BaseApplicationTest):
 
         token = self._generate_token()
         res = self.client.get(
-            '/suppliers/create-user/{}'.format(token)
+            self.url_for('main.create_user', encoded_token=token)
         )
 
         assert res.status_code == 400
@@ -484,8 +499,9 @@ class TestCreateUser(BaseApplicationTest):
 
         token = self._generate_token()
         res = self.client.post(
-            '/suppliers/create-user/{}'.format(token),
+            self.url_for('main.submit_create_user', encoded_token=token),
             data={
+                'csrf_token': FakeCsrf.valid_token,
                 'password': 'validpassword',
                 'name': 'valid name'
             }
@@ -500,7 +516,7 @@ class TestCreateUser(BaseApplicationTest):
         })
 
         assert res.status_code == 302
-        assert res.location == 'http://localhost/suppliers'
+        assert res.location == self.url_for('main.dashboard', _external=True)
         self.assert_flashes('account-created', 'flag')
 
     @mock.patch('app.main.views.login.data_api_client')
@@ -509,8 +525,9 @@ class TestCreateUser(BaseApplicationTest):
 
         token = self._generate_token()
         res = self.client.post(
-            '/suppliers/create-user/{}'.format(token),
+            self.url_for('main.submit_create_user', encoded_token=token),
             data={
+                'csrf_token': FakeCsrf.valid_token,
                 'password': 'validpassword',
                 'name': 'valid name'
             }
@@ -531,8 +548,9 @@ class TestCreateUser(BaseApplicationTest):
         data_api_client.get_user.return_value = None
         token = self._generate_token()
         self.client.post(
-            '/suppliers/create-user/{}'.format(token),
+            self.url_for('main.submit_create_user', encoded_token=token),
             data={
+                'csrf_token': FakeCsrf.valid_token,
                 'password': 'validpassword',
                 'name': '  valid name  '
             }
@@ -551,8 +569,9 @@ class TestCreateUser(BaseApplicationTest):
         data_api_client.get_user.return_value = None
         token = self._generate_token()
         self.client.post(
-            '/suppliers/create-user/{}'.format(token),
+            self.url_for('main.submit_create_user', encoded_token=token),
             data={
+                'csrf_token': FakeCsrf.valid_token,
                 'password': '  validpassword  ',
                 'name': 'valid name  '
             }
@@ -574,8 +593,9 @@ class TestCreateUser(BaseApplicationTest):
 
             token = self._generate_token()
             res = self.client.post(
-                '/suppliers/create-user/{}'.format(token),
+                self.url_for('main.submit_create_user', encoded_token=token),
                 data={
+                    'csrf_token': FakeCsrf.valid_token,
                     'password': 'validpassword',
                     'name': 'valid name'
                 }

@@ -48,7 +48,7 @@
           <ul>
           {% for field_name, field_errors in supplier_form.errors|dictsort %}
             {% for error in field_errors %}
-              <li><a href="#{{ field_name }}" class="validation-masthead-link">{{ supplier_form[field_name].label.text }}</a>
+            <li><a href="#{{ field_name }}" class="validation-masthead-link">{{ error }}</a>
             {% endfor %}
           {% endfor %}
           </ul>
@@ -68,7 +68,7 @@
 
   <form action="{{ url_for('.update_supplier') }}" method="post" enctype="multipart/form-data">
 
-  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+  {{ form.csrf_token }}
 
   <div class="grid-row">
     <div class="column-two-thirds">

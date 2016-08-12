@@ -2,7 +2,7 @@ try:
     from urllib import quote_plus
 except ImportError:
     from urllib.parse import quote_plus
-from flask import redirect, render_template, request
+from flask import current_app, redirect, render_template, request
 from app.main import main
 from dmapiclient import APIError
 from dmutils.s3 import S3ResponseError
@@ -26,10 +26,11 @@ def content_loader_error_handler(e):
 
 @main.app_errorhandler(401)
 def page_unauthorized(e):
+    url_prefix = current_app.config['URL_PREFIX']
     if request.method == 'GET':
-        return redirect('/login?next={}'.format(quote_plus(request.path)))
+        return redirect(url_prefix + '/login?next={}'.format(quote_plus(request.path)))
     else:
-        return redirect('/login')
+        return redirect(url_prefix + '/login')
 
 
 @main.app_errorhandler(404)

@@ -1,13 +1,14 @@
 from __future__ import absolute_import
 import six
 from flask_login import current_user
-from flask import current_app, flash, redirect, render_template, url_for, abort
+from flask import current_app, flash, redirect, render_template, request, url_for, abort
 from flask_login import login_user
 
 from dmapiclient import HTTPError
 from dmapiclient.audit import AuditTypes
 from dmutils.user import User
-from dmutils.email import decode_invitation_token, generate_token, send_email, MandrillException
+from dmutils.email import decode_invitation_token, generate_token, send_email, EmailError
+from dmutils.forms import render_template_with_csrf
 
 from .. import main
 from ..forms.auth_forms import EmailAddressForm, CreateUserForm
@@ -32,12 +33,12 @@ def create_user(encoded_token):
     user_json = data_api_client.get_user(email_address=token.get("email_address"))
 
     if not user_json:
-        return render_template(
+        return render_template_with_csrf(
             "auth/create_user.html",
             form=form,
             email_address=token['email_address'],
             supplier_name=token['supplier_name'],
-            token=encoded_token), 200
+            token=encoded_token)
 
     user = User.from_json(user_json)
     return render_template(
@@ -48,7 +49,7 @@ def create_user(encoded_token):
 
 @main.route('/create-user/<string:encoded_token>', methods=["POST"])
 def submit_create_user(encoded_token):
-    form = CreateUserForm()
+    form = CreateUserForm(request.form)
 
     token = decode_invitation_token(encoded_token, role='supplier')
     if token is None:
@@ -59,7 +60,7 @@ def submit_create_user(encoded_token):
             token=None), 400
 
     else:
-        if not form.validate_on_submit():
+        if not form.validate():
             current_app.logger.warning(
                 "createuser.invalid: {form_errors}",
                 extra={'form_errors': ", ".join(form.errors)})
@@ -99,17 +100,17 @@ def submit_create_user(encoded_token):
 def invite_user():
     form = EmailAddressForm()
 
-    return render_template(
+    return render_template_with_csrf(
         "auth/submit_email_address.html",
-        form=form), 200
+        form=form)
 
 
 @main.route('/invite-user', methods=["POST"])
 @login_required
 def send_invite_user():
-    form = EmailAddressForm()
+    form = EmailAddressForm(request.form)
 
-    if form.validate_on_submit():
+    if form.validate():
         token = generate_token(
             {
                 "supplier_id": current_user.supplier_id,
@@ -130,13 +131,12 @@ def send_invite_user():
             send_email(
                 form.email_address.data,
                 email_body,
-                current_app.config['DM_MANDRILL_API_KEY'],
                 current_app.config['INVITE_EMAIL_SUBJECT'],
                 current_app.config['INVITE_EMAIL_FROM'],
                 current_app.config['INVITE_EMAIL_NAME'],
                 ["user-invite"]
             )
-        except MandrillException as e:
+        except EmailError as e:
             current_app.logger.error(
                 "Invitation email failed to send. "
                 "error {error} supplier_id {supplier_id} email_hash {email_hash}",
@@ -156,6 +156,7 @@ def send_invite_user():
         flash('user_invited', 'success')
         return redirect(url_for('.list_users'))
     else:
-        return render_template(
+        return render_template_with_csrf(
             "auth/submit_email_address.html",
-            form=form), 400
+            status_code=400,
+            form=form)

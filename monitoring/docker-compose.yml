@@ -1,0 +1,13 @@
+sensu-server:
+  image: ausdto/monitoring-stack
+  ports:
+    - "5672:5672"
+    - "3000:3000"
+
+gov-au-marketplace:
+  build: .
+  hostname: dm-supplier-frontend
+  links:
+    - sensu-server
+  environment:
+    - URL=https://dm-supplier-frontend.apps.platform.digital.gov.au/marketplace/suppliers

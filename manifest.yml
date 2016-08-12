@@ -1,0 +1,9 @@
+applications:
+    - name: dm-dev-supplier-frontend
+      command: python application.py runprodserver
+      buildpack: https://github.com/cloudfoundry/buildpack-python.git
+      memory: 128M
+      disk_quota: 1G
+      instances: 1
+      env:
+          DM_DATA_API_URL: https://dm-dev-api.apps.staging.digital.gov.au/

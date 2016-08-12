@@ -1,6 +1,8 @@
 from flask_login import current_user
 from flask import render_template, abort, flash, url_for, redirect, current_app
 
+from dmutils.forms import render_template_with_csrf
+
 from ..helpers import login_required
 from ...main import main
 from ... import data_api_client
@@ -27,11 +29,11 @@ def get_current_suppliers_users():
 @login_required
 def list_users():
 
-    return render_template(
+    return render_template_with_csrf(
         "users/list_users.html",
         current_user=current_user,
         users=get_current_suppliers_users()
-    ), 200
+    )
 
 
 @main.route('/users/<int:user_id>/deactivate', methods=['POST'])

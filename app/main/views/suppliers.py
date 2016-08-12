@@ -2,13 +2,14 @@
 
 from itertools import chain
 
-from flask import render_template, request, redirect, url_for, abort, session, Markup
+from flask import render_template, request, redirect, url_for, abort, session, Markup, make_response
 from flask_login import current_user, current_app
 import six
 
 from dmapiclient import APIError
 from dmapiclient.audit import AuditTypes
-from dmutils.email import send_email, generate_token, MandrillException
+from dmutils.email import send_email, generate_token, EmailError
+from dmutils.forms import render_template_with_csrf
 from dmcontent.content_loader import ContentNotFoundError
 
 from ...main import main, content_loader
@@ -64,7 +65,7 @@ def dashboard():
             )
         })
 
-    return render_template(
+    return render_template_with_csrf(
         "suppliers/dashboard.html",
         supplier=supplier,
         users=get_current_suppliers_users(),
@@ -75,7 +76,7 @@ def dashboard():
             'standstill': get_frameworks_by_status(all_frameworks, 'standstill', 'made_application'),
             'live': get_frameworks_by_status(all_frameworks, 'live', 'services_count')
         }
-    ), 200
+    )
 
 
 @main.route('/edit', methods=['GET'])
@@ -98,12 +99,12 @@ def edit_supplier(supplier_form=None, contact_form=None, error=None):
             **supplier['contactInformation'][0]
         )
 
-    return render_template(
+    return render_template_with_csrf(
         "suppliers/edit_supplier.html",
         error=error,
         supplier_form=supplier_form,
         contact_form=contact_form
-    ), 200
+    )
 
 
 @main.route('/edit', methods=['POST'])
@@ -114,17 +115,22 @@ def update_supplier():
     # JS list-entry plugin generates input names. So instead of letting
     # the form search for request keys we pass in the values directly as data
     supplier_form = EditSupplierForm(
-        formdata=None,
+        csrf_token=request.form['csrf_token'],
         description=request.form['description'],
         clients=filter(None, request.form.getlist('clients'))
     )
 
-    contact_form = EditContactInformationForm(prefix='contact_')
+    contact_form = EditContactInformationForm(request.form, prefix='contact_')
+    contact_form.csrf_token.data = request.form['csrf_token']
 
-    if not (supplier_form.validate_on_submit() and
-            contact_form.validate_on_submit()):
-        return edit_supplier(supplier_form=supplier_form,
-                             contact_form=contact_form)
+    if not (supplier_form.validate() and contact_form.validate()):
+        response = make_response(edit_supplier(supplier_form=supplier_form, contact_form=contact_form))
+        response.status_code = 400
+        return response
+
+    # This form data is passed as-is to the API backend.  We don't need to send the CSRF token.
+    del supplier_form.csrf_token
+    del contact_form.csrf_token
 
     try:
         data_api_client.update_supplier(
@@ -140,63 +146,20 @@ def update_supplier():
             current_user.email_address
         )
     except APIError as e:
-        return edit_supplier(supplier_form=supplier_form,
-                             contact_form=contact_form,
-                             error=e.message)
+        response = make_response(edit_supplier(supplier_form=supplier_form,
+                                               contact_form=contact_form,
+                                               error=e.message))
+        response.status_code = 500
+        return response
 
     return redirect(url_for(".dashboard"))
 
 
 @main.route('/create', methods=['GET'])
 def create_new_supplier():
-    return render_template(
+    return render_template_with_csrf(
         "suppliers/create_new_supplier.html"
-    ), 200
-
-
-@main.route('/duns-number', methods=['GET'])
-def duns_number():
-    form = DunsNumberForm()
-
-    if form.duns_number.name in session:
-        form.duns_number.data = session[form.duns_number.name]
-
-    return render_template(
-        "suppliers/duns_number.html",
-        form=form
-    ), 200
-
-
-@main.route('/duns-number', methods=['POST'])
-def submit_duns_number():
-    form = DunsNumberForm()
-
-    if form.validate_on_submit():
-
-        suppliers = data_api_client.find_suppliers(duns_number=form.duns_number.data)
-        if len(suppliers["suppliers"]) > 0:
-            form.duns_number.errors = ["DUNS number already used"]
-            current_app.logger.warning(
-                "suppliercreate.fail: duns:{duns} {duns_errors}",
-                extra={
-                    'duns': form.duns_number.data,
-                    'duns_errors': ",".join(form.duns_number.errors)})
-            return render_template(
-                "suppliers/duns_number.html",
-                form=form
-            ), 400
-        session[form.duns_number.name] = form.duns_number.data
-        return redirect(url_for(".companies_house_number"))
-    else:
-        current_app.logger.warning(
-            "suppliercreate.fail: duns:{duns} {duns_errors}",
-            extra={
-                'duns': form.duns_number.data,
-                'duns_errors': ",".join(form.duns_number.errors)})
-        return render_template(
-            "suppliers/duns_number.html",
-            form=form
-        ), 400
+    )
 
 
 @main.route('/companies-house-number', methods=['GET'])
@@ -206,17 +169,17 @@ def companies_house_number():
     if form.companies_house_number.name in session:
         form.companies_house_number.data = session[form.companies_house_number.name]
 
-    return render_template(
+    return render_template_with_csrf(
         "suppliers/companies_house_number.html",
         form=form
-    ), 200
+    )
 
 
 @main.route('/companies-house-number', methods=['POST'])
 def submit_companies_house_number():
-    form = CompaniesHouseNumberForm()
+    form = CompaniesHouseNumberForm(request.form)
 
-    if form.validate_on_submit():
+    if form.validate():
         if form.companies_house_number.data:
             session[form.companies_house_number.name] = form.companies_house_number.data
         else:
@@ -228,10 +191,11 @@ def submit_companies_house_number():
             extra={
                 'duns': session.get('duns_number'),
                 'duns_errors': ",".join(chain.from_iterable(form.errors.values()))})
-        return render_template(
+        return render_template_with_csrf(
             "suppliers/companies_house_number.html",
+            status_code=400,
             form=form
-        ), 400
+        )
 
 
 @main.route('/company-name', methods=['GET'])
@@ -241,17 +205,17 @@ def company_name():
     if form.company_name.name in session:
         form.company_name.data = session[form.company_name.name]
 
-    return render_template(
+    return render_template_with_csrf(
         "suppliers/company_name.html",
         form=form
-    ), 200
+    )
 
 
 @main.route('/company-name', methods=['POST'])
 def submit_company_name():
-    form = CompanyNameForm()
+    form = CompanyNameForm(request.form)
 
-    if form.validate_on_submit():
+    if form.validate():
         session[form.company_name.name] = form.company_name.data
         return redirect(url_for(".company_contact_details"))
     else:
@@ -261,10 +225,11 @@ def submit_company_name():
                 'duns': session.get('duns_number'),
                 'company_name': session.get('company_name'),
                 'duns_errors': ",".join(chain.from_iterable(form.errors.values()))})
-        return render_template(
+        return render_template_with_csrf(
             "suppliers/company_name.html",
+            status_code=400,
             form=form
-        ), 400
+        )
 
 
 @main.route('/company-contact-details', methods=['GET'])
@@ -280,17 +245,17 @@ def company_contact_details():
     if form.contact_name.name in session:
         form.contact_name.data = session[form.contact_name.name]
 
-    return render_template(
+    return render_template_with_csrf(
         "suppliers/company_contact_details.html",
         form=form
-    ), 200
+    )
 
 
 @main.route('/company-contact-details', methods=['POST'])
 def submit_company_contact_details():
-    form = CompanyContactDetailsForm()
+    form = CompanyContactDetailsForm(request.form)
 
-    if form.validate_on_submit():
+    if form.validate():
         session[form.email_address.name] = form.email_address.data
         session[form.phone_number.name] = form.phone_number.data
         session[form.contact_name.name] = form.contact_name.data
@@ -302,10 +267,11 @@ def submit_company_contact_details():
                 'duns': session.get('duns_number'),
                 'company_name': session.get('company_name'),
                 'duns_errors': ",".join(chain.from_iterable(form.errors.values()))})
-        return render_template(
+        return render_template_with_csrf(
             "suppliers/company_contact_details.html",
+            status_code=400,
             form=form
-        ), 400
+        )
 
 
 @main.route('/create-your-account', methods=['GET'])
@@ -315,11 +281,11 @@ def create_your_account():
             session.get('email_supplier_id', 'unknown')))
     form = EmailAddressForm()
 
-    return render_template(
+    return render_template_with_csrf(
         "suppliers/create_your_account.html",
         form=form,
         email_address=session.get('account_email_address', '')
-    ), 200
+    )
 
 
 @main.route('/create-your-account', methods=['POST'])
@@ -327,24 +293,25 @@ def submit_create_your_account():
     current_app.logger.info(
         "suppliercreate: post create-your-account supplier_id:{}".format(
             session.get('email_supplier_id', 'unknown')))
-    form = EmailAddressForm()
+    form = EmailAddressForm(request.form)
 
-    if form.validate_on_submit():
+    if form.validate():
         session['account_email_address'] = form.email_address.data
         return redirect(url_for(".company_summary"))
     else:
-        return render_template(
+        return render_template_with_csrf(
             "suppliers/create_your_account.html",
+            status_code=400,
             form=form,
             email_address=form.email_address.data
-        ), 400
+        )
 
 
 @main.route('/company-summary', methods=['GET'])
 def company_summary():
-    return render_template(
+    return render_template_with_csrf(
         "suppliers/company_summary.html"
-    ), 200
+    )
 
 
 @main.route('/company-summary', methods=['POST'])
@@ -403,14 +370,13 @@ def submit_company_summary():
             send_email(
                 account_email_address,
                 email_body,
-                current_app.config['DM_MANDRILL_API_KEY'],
                 current_app.config['CREATE_USER_SUBJECT'],
                 current_app.config['RESET_PASSWORD_EMAIL_FROM'],
                 current_app.config['RESET_PASSWORD_EMAIL_NAME'],
                 ["user-creation"]
             )
             session['email_sent_to'] = account_email_address
-        except MandrillException as e:
+        except EmailError as e:
             current_app.logger.error(
                 "suppliercreate.fail: Create user email failed to send. "
                 "error {error} supplier_id {supplier_id} email_hash {email_hash}",
@@ -428,10 +394,11 @@ def submit_company_summary():
 
         return redirect(url_for('.create_your_account_complete'), 302)
     else:
-        return render_template(
+        return render_template_with_csrf(
             "suppliers/company_summary.html",
+            status_code=400,
             missing_fields=missing_fields
-        ), 400
+        )
 
 
 @main.route('/create-your-account-complete', methods=['GET'])
@@ -442,7 +409,52 @@ def create_your_account_complete():
         email_address = "the email address you supplied"
     session.clear()
     session['email_sent_to'] = email_address
-    return render_template(
+    return render_template_with_csrf(
         "suppliers/create_your_account_complete.html",
         email_address=email_address
+    )
+
+
+@main.route('/duns-number', methods=['GET'])
+def duns_number():
+    form = DunsNumberForm()
+
+    if form.duns_number.name in session:
+        form.duns_number.data = session[form.duns_number.name]
+
+    return render_template_with_csrf(
+        "suppliers/duns_number.html",
+        form=form
     ), 200
+
+
+@main.route('/duns-number', methods=['POST'])
+def submit_duns_number():
+    form = DunsNumberForm(request.form)
+
+    if form.validate():
+
+        suppliers = data_api_client.find_suppliers(duns_number=form.duns_number.data)
+        if len(suppliers["suppliers"]) > 0:
+            form.duns_number.errors = ["DUNS number already used"]
+            current_app.logger.warning(
+                "suppliercreate.fail: duns:{duns} {duns_errors}",
+                extra={
+                    'duns': form.duns_number.data,
+                    'duns_errors': ",".join(form.duns_number.errors)})
+            return render_template(
+                "suppliers/duns_number.html",
+                form=form
+            ), 400
+        session[form.duns_number.name] = form.duns_number.data
+        return redirect(url_for(".companies_house_number"))
+    else:
+        current_app.logger.warning(
+            "suppliercreate.fail: duns:{duns} {duns_errors}",
+            extra={
+                'duns': form.duns_number.data,
+                'duns_errors': ",".join(form.duns_number.errors)})
+        return render_template(
+            "suppliers/duns_number.html",
+            form=form
+        ), 400

@@ -1,6 +1,6 @@
 import mock
 from nose.tools import assert_equal, assert_in, assert_not_in
-from tests.app.helpers import BaseApplicationTest
+from tests.app.helpers import BaseApplicationTest, csrf_only_request
 
 
 def get_users(additional_users=None, index=None):
@@ -63,7 +63,7 @@ class TestListUsers(BaseApplicationTest):
 
             data_api_client.find_users.return_value = get_users()
 
-            res = self.client.get('/suppliers/users')
+            res = self.client.get(self.url_for('main.list_users'))
             assert_equal(res.status_code, 200)
             data_api_client.find_users.assert_called_once_with(supplier_id=1234)
 
@@ -73,8 +73,6 @@ class TestListUsers(BaseApplicationTest):
                 "email@email.com",
                 "Don Draper",
                 "don@scdp.com",
-                # deactivate button for Don
-                "<form method=\"post\" action=\"/suppliers/users/1/deactivate\">"
             ]:
                 assert_in(
                     self.strip_all_whitespace(
@@ -87,8 +85,6 @@ class TestListUsers(BaseApplicationTest):
             for string in [
                 "Lane Pryce",
                 "lane@scdp.com",
-                # deactivate button for logged-in user
-                "<form method=\"post\" action=\"/suppliers/users/123/deactivate\">"
             ]:
                 assert_not_in(
                     self.strip_all_whitespace(
@@ -101,17 +97,15 @@ class TestListUsers(BaseApplicationTest):
 class TestPostUsers(BaseApplicationTest):
 
     def test_cannot_deactivate_user_unless_logged_in(self):
-        res = self.client.post(
-            '/suppliers/users/123/deactivate'
-        )
+        res = self.client.post(self.url_for('main.deactivate_user', user_id=123), data=csrf_only_request)
         assert_equal(res.status_code, 302)
-        assert_equal(res.location, 'http://localhost/login')
+        assert_equal(res.location, self.get_login_redirect_url())
 
     def test_cannot_deactivate_self(self):
         with self.app.test_client():
             self.login()
 
-            res = self.client.post('/suppliers/users/123/deactivate')
+            res = self.client.post(self.url_for('main.deactivate_user', user_id=123), data=csrf_only_request)
             assert_equal(res.status_code, 404)
 
     @mock.patch('app.main.views.users.data_api_client')
@@ -121,7 +115,7 @@ class TestPostUsers(BaseApplicationTest):
 
             data_api_client.find_users.return_value = get_users()
 
-            res = self.client.post('/suppliers/users/1231231231231/deactivate')
+            res = self.client.post(self.url_for('main.deactivate_user', user_id=1231231231231), data=csrf_only_request)
             assert_equal(res.status_code, 404)
 
     @mock.patch('app.main.views.users.data_api_client')
@@ -143,7 +137,7 @@ class TestPostUsers(BaseApplicationTest):
             data_api_client.find_users.return_value = get_users(additional_users)
             data_api_client.get_user.return_value = get_users(additional_users, index=3)
 
-            res = self.client.post('/suppliers/users/3/deactivate')
+            res = self.client.post(self.url_for('main.deactivate_user', user_id=3), data=csrf_only_request)
             assert_equal(res.status_code, 404)
 
     @mock.patch('app.main.views.users.data_api_client')
@@ -169,7 +163,7 @@ class TestPostUsers(BaseApplicationTest):
             data_api_client.find_users.return_value = get_users(additional_users)
             data_api_client.get_user.return_value = get_users(additional_users, index=3)
 
-            res = self.client.post('/suppliers/users/4/deactivate')
+            res = self.client.post(self.url_for('main.deactivate_user', user_id=4), data=csrf_only_request)
             assert_equal(res.status_code, 404)
 
     @mock.patch('app.main.views.users.data_api_client')
@@ -182,7 +176,11 @@ class TestPostUsers(BaseApplicationTest):
             data_api_client.update_user.return_value = True
 
             res = self.client.post(
-                '/suppliers/users/1/deactivate', follow_redirects=True)
+                self.url_for('main.deactivate_user', user_id=1),
+                '/suppliers/users/1/deactivate',
+                follow_redirects=True,
+                data=csrf_only_request
+            )
             assert_equal(res.status_code, 200)
             assert_in(
                 self.strip_all_whitespace('Don Draper (don@scdp.com) has been removed as a contributor'),

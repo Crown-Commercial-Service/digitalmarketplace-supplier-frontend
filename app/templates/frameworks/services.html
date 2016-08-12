@@ -105,7 +105,8 @@
         submission.unanswered_optional_text(draft.unanswered_required, draft.unanswered_optional)
       )) }}
         {{ summary.button(text="Make a copy",
-                           action=url_for('.copy_draft_service', framework_slug=framework.slug, lot_slug=draft.lot, service_id=draft.id)) }}
+                          action=url_for('.copy_draft_service', framework_slug=framework.slug, lot_slug=draft.lot, service_id=draft.id),
+                          csrf_token_value=form.csrf_token.current_token) }}
       {% else %}
         {{ summary.text() }}
         {{ summary.text() }}
@@ -137,7 +138,8 @@
       ) }}
       {% if framework.status == 'open' %}
         {{ summary.button(text="Make a copy",
-                           action=url_for('.copy_draft_service', framework_slug=framework.slug, lot_slug=draft.lot, service_id=draft.id)) }}
+                          action=url_for('.copy_draft_service', framework_slug=framework.slug, lot_slug=draft.lot, service_id=draft.id),
+                          csrf_token_value=form.csrf_token.current_token) }}
       {% else %}
         {{ summary.text() }}
       {% endif %}

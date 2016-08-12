@@ -31,7 +31,7 @@
       
     {% if confirm_remove %}
       <form method="post" action='{{ url_for(".remove_subsection", framework_slug=framework.slug, lot_slug=service_data.lot, service_id=service_id, section_id=request.args.get("section_id"), question_slug=confirm_remove, confirm=True) }}'>
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+        {{ form.csrf_token }}
         {%
           with
           action = "<button class=\"button-destructive banner-action\" type=\"submit\">Yes &ndash; remove {}</button>".format(sections.get_question_by_slug(confirm_remove).label.lower() ) | safe,

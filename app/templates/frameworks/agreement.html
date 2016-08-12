@@ -54,7 +54,7 @@ with items = [
 
 
         <form method="post" enctype="multipart/form-data" action="{{ url_for(".upload_framework_agreement", framework_slug=framework.slug) }}">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+          {{ form.csrf_token }}
 
           {% if supplier_framework.agreementReturned %}
             {% set upload_value = "Document uploaded {}".format(supplier_framework.agreementReturnedAt)  %}

@@ -87,7 +87,7 @@
     </div>
 
     <form method="POST" action="{{ url_for('.contract_review', framework_slug=framework.slug) }}">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+        {{ form.csrf_token }}
         {%
           with
           type = "checkbox",

@@ -112,7 +112,7 @@
   {% if delete_requested %}
     <div class="column-one-whole">
       <form action="{{ url_for('.delete_draft_service', framework_slug=framework.slug, lot_slug=service_data.lot, service_id=service_id ) }}" method="POST">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+        {{ form.csrf_token }}
         <input type="hidden" name="delete_confirmed" value="true" />
         <div class="banner-destructive-with-action">
           <p class="banner-message">
@@ -147,7 +147,7 @@
         {% endif %}
         {% if framework.status == 'open' %}
         <form action="{{ url_for('.delete_draft_service', framework_slug=framework.slug, lot_slug=service_data.lot, service_id=service_id ) }}" method="POST">
-          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+          {{ form.csrf_token }}
           {% with
             type = "destructive",
             label = "Delete"

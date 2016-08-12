@@ -4,12 +4,14 @@ from __future__ import unicode_literals
 import mock
 from dmapiclient import api_stubs, HTTPError
 from dmapiclient.audit import AuditTypes
-from dmutils.email import MandrillException
+from dmutils.email import EmailError
+from dmutils.forms import FakeCsrf
 from ..helpers import BaseApplicationTest, FakeMail
 from lxml import html
 
 
 brief_form_submission = {
+    'csrf_token': FakeCsrf.valid_token,
     "availability": "Next Tuesday",
     "dayRate": "£200",
     "essentialRequirements-0": True,
@@ -59,7 +61,7 @@ ERROR_MESSAGE_NO_SERVICE_WITH_ROLE_CLARIFICATION = \
 @mock.patch('app.main.views.briefs.data_api_client', autospec=True)
 class TestBriefQuestionAndAnswerSession(BaseApplicationTest):
     def test_q_and_a_session_details_requires_login(self, data_api_client):
-        res = self.client.get('/suppliers/opportunities/1/question-and-answer-session')
+        res = self.client.get(self.url_for('main.question_and_answer_session', brief_id=1))
         assert res.status_code == 302
         assert '/login' in res.headers['Location']
 
@@ -68,7 +70,7 @@ class TestBriefQuestionAndAnswerSession(BaseApplicationTest):
         data_api_client.get_brief.return_value = api_stubs.brief(status='live')
         data_api_client.get_brief.return_value['briefs']['questionAndAnswerSessionDetails'] = 'SESSION DETAILS'
 
-        res = self.client.get('/suppliers/opportunities/1/question-and-answer-session')
+        res = self.client.get(self.url_for('main.question_and_answer_session', brief_id=1))
         assert res.status_code == 200
         assert 'SESSION DETAILS' in res.get_data(as_text=True)
 
@@ -78,35 +80,35 @@ class TestBriefQuestionAndAnswerSession(BaseApplicationTest):
         data_api_client.get_brief.return_value['briefs']['frameworkName'] = 'Digital Outcomes and Specialists'
         data_api_client.is_supplier_eligible_for_brief.return_value = False
 
-        res = self.client.get('/suppliers/opportunities/1/question-and-answer-session')
+        res = self.client.get(self.url_for('main.question_and_answer_session', brief_id=1))
         assert res.status_code == 400
 
     def test_q_and_a_session_details_requires_existing_brief_id(self, data_api_client):
         self.login()
         data_api_client.get_brief.side_effect = HTTPError(mock.Mock(status_code=404))
 
-        res = self.client.get('/suppliers/opportunities/1/question-and-answer-session')
+        res = self.client.get(self.url_for('main.question_and_answer_session', brief_id=1))
         assert res.status_code == 404
 
     def test_q_and_a_session_details_requires_live_brief(self, data_api_client):
         self.login()
         data_api_client.get_brief.return_value = api_stubs.brief(status='expired')
 
-        res = self.client.get('/suppliers/opportunities/1/question-and-answer-session')
+        res = self.client.get(self.url_for('main.question_and_answer_session', brief_id=1))
         assert res.status_code == 404
 
     def test_q_and_a_session_details_requires_questions_to_be_open(self, data_api_client):
         self.login()
         data_api_client.get_brief.return_value = api_stubs.brief(status='live', clarification_questions_closed=True)
 
-        res = self.client.get('/suppliers/opportunities/1/question-and-answer-session')
+        res = self.client.get(self.url_for('main.question_and_answer_session', brief_id=1))
         assert res.status_code == 404
 
 
 @mock.patch('app.main.views.briefs.data_api_client', autospec=True)
 class TestBriefClarificationQuestions(BaseApplicationTest):
     def test_clarification_question_form_requires_login(self, data_api_client):
-        res = self.client.get('/suppliers/opportunities/1/ask-a-question')
+        res = self.client.get(self.url_for('main.ask_brief_clarification_question', brief_id=1))
         assert res.status_code == 302
         assert '/login' in res.headers['Location']
 
@@ -114,14 +116,14 @@ class TestBriefClarificationQuestions(BaseApplicationTest):
         self.login()
         data_api_client.get_brief.return_value = api_stubs.brief(status='live')
 
-        res = self.client.get('/suppliers/opportunities/1/ask-a-question')
+        res = self.client.get(self.url_for('main.ask_brief_clarification_question', brief_id=1))
         assert res.status_code == 200
 
     def test_clarification_question_form_requires_existing_brief_id(self, data_api_client):
         self.login()
         data_api_client.get_brief.side_effect = HTTPError(mock.Mock(status_code=404))
 
-        res = self.client.get('/suppliers/opportunities/1/ask-a-question')
+        res = self.client.get(self.url_for('main.ask_brief_clarification_question', brief_id=1))
         assert res.status_code == 404
 
     def test_clarification_question_checks_supplier_is_eligible(self, data_api_client):
@@ -130,28 +132,31 @@ class TestBriefClarificationQuestions(BaseApplicationTest):
         data_api_client.get_brief.return_value['briefs']['frameworkName'] = 'Digital Outcomes and Specialists'
         data_api_client.is_supplier_eligible_for_brief.return_value = False
 
-        res = self.client.get('/suppliers/opportunities/1/ask-a-question')
+        res = self.client.get(self.url_for('main.ask_brief_clarification_question', brief_id=1))
         assert res.status_code == 400
 
     def test_clarification_question_form_requires_live_brief(self, data_api_client):
         self.login()
         data_api_client.get_brief.return_value = api_stubs.brief(status='expired')
 
-        res = self.client.get('/suppliers/opportunities/1/ask-a-question')
+        res = self.client.get(self.url_for('main.ask_brief_clarification_question', brief_id=1))
         assert res.status_code == 404
 
     def test_clarification_question_form_requires_questions_to_be_open(self, data_api_client):
         self.login()
         data_api_client.get_brief.return_value = api_stubs.brief(status='live', clarification_questions_closed=True)
 
-        res = self.client.get('/suppliers/opportunities/1/ask-a-question')
+        res = self.client.get(self.url_for('main.ask_brief_clarification_question', brief_id=1))
         assert res.status_code == 404
 
 
 @mock.patch('app.main.views.briefs.data_api_client', autospec=True)
 class TestSubmitClarificationQuestions(BaseApplicationTest):
     def test_submit_clarification_question_requires_login(self, data_api_client):
-        res = self.client.post('/suppliers/opportunities/1/ask-a-question')
+        res = self.client.post(
+            self.url_for('main.ask_brief_clarification_question', brief_id=1),
+            data={'csrf_token': FakeCsrf.valid_token}
+        )
         assert res.status_code == 302
         assert '/login' in res.headers['Location']
 
@@ -163,7 +168,8 @@ class TestSubmitClarificationQuestions(BaseApplicationTest):
         brief['briefs']['clarificationQuestionsPublishedBy'] = '2016-03-29T10:11:13.000000Z'
         data_api_client.get_brief.return_value = brief
 
-        res = self.client.post('/suppliers/opportunities/1234/ask-a-question', data={
+        res = self.client.post(self.url_for('main.ask_brief_clarification_question', brief_id=1234), data={
+            'csrf_token': FakeCsrf.valid_token,
             'clarification-question': "important question",
         })
         assert res.status_code == 200
@@ -173,8 +179,7 @@ class TestSubmitClarificationQuestions(BaseApplicationTest):
                 from_name='Brief Framework Name Supplier',
                 tags=['brief-clarification-question'],
                 email_body=FakeMail("important question"),
-                from_email='do-not-reply@digitalmarketplace.service.gov.uk',
-                api_key='MANDRILL',
+                from_email=self.app.config['CLARIFICATION_EMAIL_FROM'],
                 to_email_addresses=['buyer@email.com'],
                 subject=u"You\u2019ve received a new supplier question about \u2018I need a thing to do a thing\u2019"
             ),
@@ -182,8 +187,7 @@ class TestSubmitClarificationQuestions(BaseApplicationTest):
                 from_name='Digital Marketplace Admin',
                 tags=['brief-clarification-question-confirmation'],
                 email_body=FakeMail("important question"),
-                from_email='do-not-reply@digitalmarketplace.service.gov.uk',
-                api_key='MANDRILL',
+                from_email=self.app.config['CLARIFICATION_EMAIL_FROM'],
                 to_email_addresses=['email@email.com'],
                 subject=u"Your question about \u2018I need a thing to do a thing\u2019"
             ),
@@ -198,16 +202,17 @@ class TestSubmitClarificationQuestions(BaseApplicationTest):
         )
 
     @mock.patch('app.main.helpers.briefs.send_email')
-    def test_submit_clarification_question_fails_on_mandrill_error(self, send_email, data_api_client):
+    def test_submit_clarification_question_fails_on_email_backend_error(self, send_email, data_api_client):
         self.login()
         brief = api_stubs.brief(status="live")
         brief['briefs']['frameworkName'] = 'Framework Name'
         brief['briefs']['clarificationQuestionsPublishedBy'] = '2016-03-29T10:11:13.000000Z'
         data_api_client.get_brief.return_value = brief
 
-        send_email.side_effect = MandrillException
+        send_email.side_effect = EmailError
 
-        res = self.client.post('/suppliers/opportunities/1234/ask-a-question', data={
+        res = self.client.post(self.url_for('main.ask_brief_clarification_question', brief_id=1234), data={
+            'csrf_token': FakeCsrf.valid_token,
             'clarification-question': "important question",
         })
         assert res.status_code == 503
@@ -216,14 +221,18 @@ class TestSubmitClarificationQuestions(BaseApplicationTest):
         self.login()
         data_api_client.get_brief.side_effect = HTTPError(mock.Mock(status_code=404))
 
-        res = self.client.post('/suppliers/opportunities/1/ask-a-question')
+        res = self.client.post(self.url_for('main.ask_brief_clarification_question', brief_id=1), data={
+            'csrf_token': FakeCsrf.valid_token,
+        })
         assert res.status_code == 404
 
     def test_submit_clarification_question_requires_live_brief(self, data_api_client):
         self.login()
         data_api_client.get_brief.return_value = api_stubs.brief(status='expired')
 
-        res = self.client.post('/suppliers/opportunities/1/ask-a-question')
+        res = self.client.post(self.url_for('main.ask_brief_clarification_question', brief_id=1), data={
+            'csrf_token': FakeCsrf.valid_token,
+        })
         assert res.status_code == 404
 
     @mock.patch('app.main.helpers.briefs.send_email')
@@ -237,7 +246,8 @@ class TestSubmitClarificationQuestions(BaseApplicationTest):
             {"services": [{"something": "nonempty"}]} if kwargs.get("lot") is None else {"services": []}
         )
 
-        res = self.client.post('/suppliers/opportunities/1/ask-a-question', data={
+        res = self.client.post(self.url_for('main.ask_brief_clarification_question', brief_id=1), data={
+            'csrf_token': FakeCsrf.valid_token,
             'clarification-question': "important question",
         })
         doc = html.fromstring(res.get_data(as_text=True))
@@ -260,7 +270,8 @@ class TestSubmitClarificationQuestions(BaseApplicationTest):
         data_api_client.is_supplier_eligible_for_brief.return_value = False
         data_api_client.find_services.return_value = {"services": []}
 
-        res = self.client.post('/suppliers/opportunities/1/ask-a-question', data={
+        res = self.client.post(self.url_for('main.ask_brief_clarification_question', brief_id=1), data={
+            'csrf_token': FakeCsrf.valid_token,
             'clarification-question': "important question",
         })
         doc = html.fromstring(res.get_data(as_text=True))
@@ -283,7 +294,8 @@ class TestSubmitClarificationQuestions(BaseApplicationTest):
         data_api_client.is_supplier_eligible_for_brief.return_value = False
         data_api_client.find_services.return_value = {"services": [{"something": "nonempty"}]}
 
-        res = self.client.post('/suppliers/opportunities/1/ask-a-question', data={
+        res = self.client.post(self.url_for('main.ask_brief_clarification_question', brief_id=1), data={
+            'csrf_token': FakeCsrf.valid_token,
             'clarification-question': "important question",
         })
         doc = html.fromstring(res.get_data(as_text=True))
@@ -301,7 +313,8 @@ class TestSubmitClarificationQuestions(BaseApplicationTest):
         self.login()
         data_api_client.get_brief.return_value = api_stubs.brief(status='live')
 
-        res = self.client.post('/suppliers/opportunities/1/ask-a-question', data={
+        res = self.client.post(self.url_for('main.ask_brief_clarification_question', brief_id=1), data={
+            'csrf_token': FakeCsrf.valid_token,
             'clarification-question': "",
         })
         assert res.status_code == 400
@@ -311,7 +324,8 @@ class TestSubmitClarificationQuestions(BaseApplicationTest):
         self.login()
         data_api_client.get_brief.return_value = api_stubs.brief(status='live')
 
-        res = self.client.post('/suppliers/opportunities/1/ask-a-question', data={
+        res = self.client.post(self.url_for('main.ask_brief_clarification_question', brief_id=1), data={
+            'csrf_token': FakeCsrf.valid_token,
             'clarification-question': "a" * 5100,
         })
         assert res.status_code == 400
@@ -322,7 +336,8 @@ class TestSubmitClarificationQuestions(BaseApplicationTest):
         self.login()
         data_api_client.get_brief.return_value = api_stubs.brief(status='live')
 
-        res = self.client.post('/suppliers/opportunities/1/ask-a-question', data={
+        res = self.client.post(self.url_for('main.ask_brief_clarification_question', brief_id=1), data={
+            'csrf_token': FakeCsrf.valid_token,
             'clarification-question': "a " * 101,
         })
         assert res.status_code == 400
@@ -367,7 +382,7 @@ class TestRespondToBrief(BaseApplicationTest):
     def test_get_brief_response_page(self, data_api_client):
         data_api_client.get_brief.return_value = self.brief
         data_api_client.get_framework.return_value = self.framework
-        res = self.client.get('/suppliers/opportunities/1234/responses/create')
+        res = self.client.get(self.url_for('main.brief_response', brief_id=1234))
         doc = html.fromstring(res.get_data(as_text=True))
 
         assert res.status_code == 200
@@ -383,7 +398,7 @@ class TestRespondToBrief(BaseApplicationTest):
         brief['briefs']['status'] = 'draft'
         data_api_client.get_brief.return_value = brief
         data_api_client.get_framework.return_value = self.framework
-        res = self.client.get('/suppliers/opportunities/1234/responses/create')
+        res = self.client.get(self.url_for('main.brief_response', brief_id=1234))
 
         assert res.status_code == 404
 
@@ -392,7 +407,7 @@ class TestRespondToBrief(BaseApplicationTest):
         framework['frameworks']['status'] = 'standstill'
         data_api_client.get_brief.return_value = self.brief
         data_api_client.get_framework.return_value = framework
-        res = self.client.get('/suppliers/opportunities/1234/responses/create')
+        res = self.client.get(self.url_for('main.brief_response', brief_id=1234))
 
         assert res.status_code == 404
 
@@ -405,7 +420,7 @@ class TestRespondToBrief(BaseApplicationTest):
             {"services": [{"something": "nonempty"}]} if kwargs.get("lot") is None else {"services": []}
         )
 
-        res = self.client.get('/suppliers/opportunities/1234/responses/create')
+        res = self.client.get(self.url_for('main.brief_response', brief_id=1234))
         doc = html.fromstring(res.get_data(as_text=True))
 
         assert res.status_code == 400
@@ -424,7 +439,7 @@ class TestRespondToBrief(BaseApplicationTest):
         data_api_client.is_supplier_eligible_for_brief.return_value = False
         data_api_client.find_services.return_value = {"services": []}
 
-        res = self.client.get('/suppliers/opportunities/1234/responses/create')
+        res = self.client.get(self.url_for('main.brief_response', brief_id=1234))
         doc = html.fromstring(res.get_data(as_text=True))
 
         assert res.status_code == 400
@@ -443,7 +458,7 @@ class TestRespondToBrief(BaseApplicationTest):
         data_api_client.is_supplier_eligible_for_brief.return_value = False
         data_api_client.find_services.return_value = {"services": [{"something": "nonempty"}]}
 
-        res = self.client.get('/suppliers/opportunities/1234/responses/create')
+        res = self.client.get(self.url_for('main.brief_response', brief_id=1234))
         doc = html.fromstring(res.get_data(as_text=True))
 
         assert res.status_code == 400
@@ -465,15 +480,15 @@ class TestRespondToBrief(BaseApplicationTest):
             }]
         }
 
-        res = self.client.get('/suppliers/opportunities/1234/responses/create')
+        res = self.client.get(self.url_for('main.brief_response', brief_id=1234))
         assert res.status_code == 302
-        assert res.location == 'http://localhost/suppliers/opportunities/1234/responses/result'
+        assert res.location == self.url_for('main.view_response_result', brief_id=1234, _external=True)
         self.assert_flashes("already_applied", "error")
 
     def test_get_brief_response_page_includes_essential_requirements(self, data_api_client):
         data_api_client.get_brief.return_value = self.brief
         data_api_client.get_framework.return_value = self.framework
-        res = self.client.get('/suppliers/opportunities/1234/responses/create')
+        res = self.client.get(self.url_for('main.brief_response', brief_id=1234))
         doc = html.fromstring(res.get_data(as_text=True))
 
         assert len(doc.xpath('//p[contains(text(), "Essential one")]')) == 1
@@ -483,7 +498,7 @@ class TestRespondToBrief(BaseApplicationTest):
     def test_get_brief_response_page_includes_nice_to_have_requirements(self, data_api_client):
         data_api_client.get_brief.return_value = self.brief
         data_api_client.get_framework.return_value = self.framework
-        res = self.client.get('/suppliers/opportunities/1234/responses/create')
+        res = self.client.get(self.url_for('main.brief_response', brief_id=1234))
         doc = html.fromstring(res.get_data(as_text=True))
 
         assert len(doc.xpath('//p[contains(text(), "Top one")]')) == 1
@@ -494,10 +509,11 @@ class TestRespondToBrief(BaseApplicationTest):
         data_api_client.get_brief.return_value = self.brief
         data_api_client.get_framework.return_value = self.framework
         self.login_as_buyer()
-        res = self.client.get('/suppliers/opportunities/1234/responses/create')
+        create_url = self.url_for('main.brief_response', brief_id=1234)
+        res = self.client.get(create_url)
 
         assert res.status_code == 302
-        assert res.location == "http://localhost/login?next=%2Fsuppliers%2Fopportunities%2F1234%2Fresponses%2Fcreate"
+        assert res.location == self.get_login_redirect_url(create_url)
         self.assert_flashes("supplier-role-required", "error")
 
     def test_create_new_brief_response(self, data_api_client):
@@ -508,11 +524,12 @@ class TestRespondToBrief(BaseApplicationTest):
         }
 
         res = self.client.post(
-            '/suppliers/opportunities/1234/responses/create',
+            self.url_for('main.brief_response', brief_id=1234),
             data=brief_form_submission
         )
+        expected_location = self.url_for('main.view_response_result', brief_id=1234, result='success', _external=True)
         assert res.status_code == 302
-        assert res.location == "http://localhost/suppliers/opportunities/1234/responses/result?result=success"
+        assert res.location == expected_location
         data_api_client.create_brief_response.assert_called_once_with(
             1234, 1234, processed_brief_submission, 'email@email.com')
 
@@ -524,11 +541,11 @@ class TestRespondToBrief(BaseApplicationTest):
         }
 
         res = self.client.post(
-            '/suppliers/opportunities/1234/responses/create',
+            self.url_for('main.brief_response', brief_id=1234),
             data=brief_form_submission
         )
         assert res.status_code == 302
-        assert res.location == "http://localhost/suppliers/opportunities/1234/responses/result?result=fail"
+        assert res.location == self.url_for('main.view_response_result', brief_id=1234, result='fail', _external=True)
         data_api_client.create_brief_response.assert_called_once_with(
             1234, 1234, processed_brief_submission, 'email@email.com')
 
@@ -543,10 +560,11 @@ class TestRespondToBrief(BaseApplicationTest):
         incomplete_brief_form_submission.pop('essentialRequirements-2')
 
         res = self.client.post(
-            '/suppliers/opportunities/1234/responses/create',
+            self.url_for('main.brief_response', brief_id=1234),
             data=incomplete_brief_form_submission,
             follow_redirects=True
         )
+        assert res.status_code == 400
         doc = html.fromstring(res.get_data(as_text=True))
 
         assert len(doc.xpath(
@@ -571,7 +589,7 @@ class TestRespondToBrief(BaseApplicationTest):
         incomplete_brief_form_submission.pop('availability')
 
         res = self.client.post(
-            '/suppliers/opportunities/1234/responses/create',
+            self.url_for('main.brief_response', brief_id=1234),
             data=incomplete_brief_form_submission,
             follow_redirects=True
         )
@@ -595,7 +613,7 @@ class TestRespondToBrief(BaseApplicationTest):
         data_api_client.get_framework.return_value = self.framework
 
         res = self.client.post(
-            '/suppliers/opportunities/1234/responses/create',
+            self.url_for('main.brief_response', brief_id=1234),
             data=brief_form_submission
         )
         assert res.status_code == 404
@@ -608,7 +626,7 @@ class TestRespondToBrief(BaseApplicationTest):
         data_api_client.get_framework.return_value = framework
 
         res = self.client.post(
-            '/suppliers/opportunities/1234/responses/create',
+            self.url_for('main.brief_response', brief_id=1234),
             data=brief_form_submission
         )
         assert res.status_code == 404
@@ -625,11 +643,11 @@ class TestRespondToBrief(BaseApplicationTest):
         }
 
         res = self.client.post(
-            '/suppliers/opportunities/1234/responses/create',
+            self.url_for('main.brief_response', brief_id=1234),
             data=brief_form_submission
         )
         assert res.status_code == 302
-        assert res.location == 'http://localhost/suppliers/opportunities/1234/responses/result'
+        assert res.location == self.url_for('main.view_response_result', brief_id=1234, _external=True)
         self.assert_flashes("already_applied", "error")
         assert not data_api_client.create_brief_response.called
 
@@ -643,7 +661,7 @@ class TestRespondToBrief(BaseApplicationTest):
         )
 
         res = self.client.post(
-            '/suppliers/opportunities/1234/responses/create',
+            self.url_for('main.brief_response', brief_id=1234),
             data=brief_form_submission
         )
         doc = html.fromstring(res.get_data(as_text=True))
@@ -665,7 +683,7 @@ class TestRespondToBrief(BaseApplicationTest):
         data_api_client.find_services.return_value = {"services": []}
 
         res = self.client.post(
-            '/suppliers/opportunities/1234/responses/create',
+            self.url_for('main.brief_response', brief_id=1234),
             data=brief_form_submission
         )
         doc = html.fromstring(res.get_data(as_text=True))
@@ -687,7 +705,7 @@ class TestRespondToBrief(BaseApplicationTest):
         data_api_client.find_services.return_value = {"services": [{"something": "nonempty"}]}
 
         res = self.client.post(
-            '/suppliers/opportunities/1234/responses/create',
+            self.url_for('main.brief_response', brief_id=1234),
             data=brief_form_submission
         )
         doc = html.fromstring(res.get_data(as_text=True))
@@ -710,7 +728,7 @@ class TestRespondToBrief(BaseApplicationTest):
         )
 
         res = self.client.post(
-            '/suppliers/opportunities/1234/responses/create',
+            self.url_for('main.brief_response', brief_id=1234),
             data=brief_form_submission
         )
 
@@ -724,11 +742,11 @@ class TestRespondToBrief(BaseApplicationTest):
         data_api_client.get_framework.return_value = self.framework
         self.login_as_buyer()
         res = self.client.post(
-            '/suppliers/opportunities/1234/responses/create',
+            self.url_for('main.brief_response', brief_id=1234),
             data=brief_form_submission
         )
         assert res.status_code == 302
-        assert res.location == "http://localhost/login"
+        assert res.location == self.get_login_redirect_url()
         self.assert_flashes("supplier-role-required", "error")
         assert not data_api_client.get_brief.called
 
@@ -756,7 +774,7 @@ class TestResponseResultPage(BaseApplicationTest):
                 {"essentialRequirements": [True, True, True]}
             ]
         }
-        res = self.client.get('/suppliers/opportunities/1234/responses/result')
+        res = self.client.get(self.url_for('main.view_response_result', brief_id=1234))
 
         assert res.status_code == 200
         doc = html.fromstring(res.get_data(as_text=True))
@@ -772,7 +790,7 @@ class TestResponseResultPage(BaseApplicationTest):
                 {"essentialRequirements": [True, False, True]}
             ]
         }
-        res = self.client.get('/suppliers/opportunities/1234/responses/result')
+        res = self.client.get(self.url_for('main.view_response_result', brief_id=1234))
 
         assert res.status_code == 200
         doc = html.fromstring(res.get_data(as_text=True))
@@ -782,10 +800,10 @@ class TestResponseResultPage(BaseApplicationTest):
         data_api_client.get_brief.return_value = self.brief
         data_api_client.is_supplier_eligible_for_brief.return_value = True
         data_api_client.find_brief_responses.return_value = {"briefResponses": []}
-        res = self.client.get('/suppliers/opportunities/1234/responses/result')
+        res = self.client.get(self.url_for('main.view_response_result', brief_id=1234))
 
         assert res.status_code == 302
-        assert res.location == 'http://localhost/suppliers/opportunities/1234/responses/create'
+        assert res.location == self.url_for('main.brief_response', brief_id=1234, _external=True)
 
     def test_essential_skills_shown_with_response(self, data_api_client):
         data_api_client.get_brief.return_value = self.brief
@@ -796,7 +814,7 @@ class TestResponseResultPage(BaseApplicationTest):
                 {"essentialRequirements": [True, True, True]}
             ]
         }
-        res = self.client.get('/suppliers/opportunities/1234/responses/result')
+        res = self.client.get(self.url_for('main.view_response_result', brief_id=1234))
 
         assert res.status_code == 200
         doc = html.fromstring(res.get_data(as_text=True))
@@ -816,7 +834,7 @@ class TestResponseResultPage(BaseApplicationTest):
                 }
             ]
         }
-        res = self.client.get('/suppliers/opportunities/1234/responses/result')
+        res = self.client.get(self.url_for('main.view_response_result', brief_id=1234))
 
         assert res.status_code == 200
         doc = html.fromstring(res.get_data(as_text=True))
@@ -833,7 +851,7 @@ class TestResponseResultPage(BaseApplicationTest):
                 {"essentialRequirements": [True, True, True]}
             ]
         }
-        res = self.client.get('/suppliers/opportunities/1234/responses/result')
+        res = self.client.get(self.url_for('main.view_response_result', brief_id=1234))
 
         assert res.status_code == 200
         doc = html.fromstring(res.get_data(as_text=True))
@@ -850,7 +868,7 @@ class TestResponseResultPage(BaseApplicationTest):
                 {"essentialRequirements": [True, True, True]}
             ]
         }
-        res = self.client.get('/suppliers/opportunities/1234/responses/result')
+        res = self.client.get(self.url_for('main.view_response_result', brief_id=1234))
 
         assert res.status_code == 200
         doc = html.fromstring(res.get_data(as_text=True))
@@ -867,7 +885,7 @@ class TestResponseResultPage(BaseApplicationTest):
                 {"essentialRequirements": [True, True, True]}
             ]
         }
-        res = self.client.get('/suppliers/opportunities/1234/responses/result')
+        res = self.client.get(self.url_for('main.view_response_result', brief_id=1234))
         assert res.status_code == 200
         doc = html.fromstring(res.get_data(as_text=True))
         assert len(doc.xpath('//li[contains(normalize-space(text()), "your day rate exceeds their budget")]')) == 1
@@ -881,7 +899,7 @@ class TestResponseResultPage(BaseApplicationTest):
                 {"essentialRequirements": [True, True, True]}
             ]
         }
-        res = self.client.get('/suppliers/opportunities/1234/responses/result')
+        res = self.client.get(self.url_for('main.view_response_result', brief_id=1234))
 
         assert res.status_code == 200
         doc = html.fromstring(res.get_data(as_text=True))
@@ -898,7 +916,7 @@ class TestResponseResultPage(BaseApplicationTest):
                 {"essentialRequirements": [True, True, True]}
             ]
         }
-        res = self.client.get('/suppliers/opportunities/1234/responses/result')
+        res = self.client.get(self.url_for('main.view_response_result', brief_id=1234))
 
         assert res.status_code == 200
         doc = html.fromstring(res.get_data(as_text=True))
@@ -913,7 +931,7 @@ class TestResponseResultPage(BaseApplicationTest):
                 {"essentialRequirements": [True, True, True]}
             ]
         }
-        res = self.client.get('/suppliers/opportunities/1234/responses/result')
+        res = self.client.get(self.url_for('main.view_response_result', brief_id=1234))
 
         assert res.status_code == 200
         doc = html.fromstring(res.get_data(as_text=True))

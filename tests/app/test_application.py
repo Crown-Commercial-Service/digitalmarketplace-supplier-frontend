@@ -12,33 +12,14 @@ class TestApplication(BaseApplicationTest):
         super(TestApplication, self).setup()
 
     def test_response_headers(self):
-        response = self.client.get('/suppliers/create')
+        response = self.client.get(self.url_for('main.create_new_supplier'))
 
         assert 200 == response.status_code
-        assert (
-            response.headers['cache-control'] ==
-            "no-cache"
-        )
 
     def test_url_with_non_canonical_trailing_slash(self):
-        response = self.client.get('/suppliers/')
+        response = self.client.get(self.url_for('main.create_new_supplier') + '/')
         assert 301 == response.status_code
-        assert "http://localhost/suppliers" == response.location
-
-    def test_404(self):
-        res = self.client.get('/service/1234')
-        assert_equal(404, res.status_code)
-        assert_true(
-            u"Check you’ve entered the correct web "
-            u"address or start again on the Digital Marketplace homepage."
-            in res.get_data(as_text=True))
-        assert_true(
-            u"If you can’t find what you’re looking for, contact us at "
-            u"<a href=\"mailto:enquiries@digitalmarketplace.service.gov.uk?"
-            u"subject=Digital%20Marketplace%20feedback\" title=\"Please "
-            u"send feedback to enquiries@digitalmarketplace.service.gov.uk\">"
-            u"enquiries@digitalmarketplace.service.gov.uk</a>"
-            in res.get_data(as_text=True))
+        assert self.url_for('main.create_new_supplier', _external=True) == response.location
 
     @mock.patch('app.main.views.suppliers.data_api_client')
     def test_503(self, data_api_client):
@@ -48,7 +29,7 @@ class TestApplication(BaseApplicationTest):
             data_api_client.get_supplier.side_effect = HTTPError('API is down')
             self.app.config['DEBUG'] = False
 
-            res = self.client.get('/suppliers')
+            res = self.client.get(self.url_for('main.dashboard'))
             assert_equal(503, res.status_code)
             assert_true(
                 u"Sorry, we’re experiencing technical difficulties"
@@ -58,17 +39,9 @@ class TestApplication(BaseApplicationTest):
                 in res.get_data(as_text=True))
 
     def test_header_xframeoptions_set_to_deny(self):
-        res = self.client.get('/suppliers/create')
-        assert 200 == res.status_code
-        assert 'DENY', res.headers['X-Frame-Options']
-
-    def test_should_use_local_cookie_page_on_cookie_message(self):
-        res = self.client.get('/suppliers/create')
-        assert_equal(200, res.status_code)
-        assert_true(
-            '<p>GOV.UK uses cookies to make the site simpler. <a href="/cookies">Find out more about cookies</a></p>'
-            in res.get_data(as_text=True)
-        )
+        response = self.client.get(self.url_for('main.create_new_supplier'))
+        assert 200 == response.status_code
+        assert 'DENY', respose.headers['X-Frame-Options']
 
 
 class TestQuestionReferences(object):

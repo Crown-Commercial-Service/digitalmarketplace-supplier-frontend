@@ -125,7 +125,7 @@
       <form method="post">
         <div class="grid-row">
           <div class="column-two-thirds">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+            {{ form.csrf_token }}
               {%
                 with
                 large=true,
@@ -157,7 +157,7 @@
       <form method="post">
         <div class="grid-row">
           <div class="column-two-thirds">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+            {{ form.csrf_token }}
             {%
               with
               large=true,

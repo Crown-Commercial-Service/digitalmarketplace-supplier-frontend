@@ -1,16 +1,22 @@
 # -*- coding: utf-8 -*-
 import re
-from mock import patch
+from datetime import datetime, timedelta
+from urllib2 import quote
+
 from app import create_app
 from tests import login_for_tests
-from werkzeug.http import parse_cookie
 from app import data_api_client
-from datetime import datetime, timedelta
 from dmutils.formats import DATETIME_FORMAT
+from dmutils.forms import FakeCsrf
+
+from flask import url_for
+from mock import patch
 from nose.tools import assert_in, assert_not_in
+from werkzeug.http import parse_cookie
 
 
 FULL_G7_SUBMISSION = {
+    'csrf_token': FakeCsrf.valid_token,
     "status": "complete",
     "PR1": "true",
     "PR2": "true",
@@ -86,6 +92,10 @@ FULL_G7_SUBMISSION = {
     "SQE2a": ["as a prime contractor, using third parties (subcontractors) to provide some services"]
 }
 
+csrf_only_request = {
+    'csrf_token': FakeCsrf.valid_token,
+}
+
 
 def empty_g7_draft():
     return {
@@ -112,6 +122,26 @@ class BaseApplicationTest(object):
 
     def teardown(self):
         self.teardown_login()
+
+    def expand_path(self, path):
+        return self.app.config['URL_PREFIX'] + path
+
+    def url_for(self, handler_name, _external=False, **kwargs):
+        with self.app.app_context():
+            return url_for(handler_name, _external=_external, **kwargs)
+
+    def get_login_redirect_url(self, target_url=None):
+        # This app has been split from the buyer frontend, but supplier logins are still done through the same login
+        # page.  We have to construct the login URL manually, but at least doing it once here is better than doing it
+        # throughout all the test cases.
+        scheme = self.app.config['DM_HTTP_PROTO']
+        host = self.app.config['SERVER_NAME']
+        url_prefix = self.app.config['URL_PREFIX']
+        redirect_url = '{}://{}{}/login'.format(scheme, host, url_prefix)
+        if target_url is not None:
+            encoded_target = quote(target_url, safe='')
+            redirect_url += '?next=' + encoded_target
+        return redirect_url
 
     @staticmethod
     def get_cookie_by_name(response, name):
@@ -252,15 +282,15 @@ class BaseApplicationTest(object):
         if self.get_user_patch is not None:
             self.get_user_patch.stop()
 
-    def login(self):
+    def login(self, **kwargs):
         with patch('app.main.views.login.data_api_client') as login_api_client:
-            login_api_client.authenticate_user.return_value = self.user(
-                123, "email@email.com", 1234, 'Supplier Name', 'Name')
+            user = self.user(123, "email@email.com", 1234, 'Supplier Name', 'Name', **kwargs)
+            login_api_client.authenticate_user.return_value = user
 
             self.get_user_patch = patch.object(
                 data_api_client,
                 'get_user',
-                return_value=self.user(123, "email@email.com", 1234, 'Supplier Name', 'Name')
+                return_value=user
             )
             self.get_user_patch.start()
 
