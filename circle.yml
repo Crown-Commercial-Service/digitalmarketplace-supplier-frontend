@@ -19,7 +19,6 @@ dependencies:
     - cf -v
   override:
     - ./scripts/ci_build.sh
-    - DOCKERFILE_PATH=./monitoring/Dockerfile DOCKER_IMAGE_NAME=gov-au-marketplace-supplier ./scripts/ci-monitor-build.sh
 
 test:
   override:
@@ -36,6 +35,7 @@ deployment:
   production:
     tag: /release-.*/
     commands:
+      - DOCKERFILE_PATH=./monitoring/Dockerfile DOCKER_IMAGE_NAME=gov-au-marketplace-supplier ./scripts/ci-monitor-build.sh
       - cf login -a https://api.system.platform.digital.gov.au -o dto -u $CF_USER_PROD -p $CF_PASSWORD_PROD
       - cf target -o dto -s digital-marketplace
       - cf unmap-route dm-supplier-frontend-green apps.platform.digital.gov.au -n dm-supplier
