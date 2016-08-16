@@ -27,7 +27,7 @@ from .users import get_current_suppliers_users
 @login_required
 def dashboard():
     supplier = data_api_client.get_supplier(
-        current_user.supplier_id
+        current_user.supplier_code
     )['suppliers']
     supplier['contact'] = supplier['contactInformation'][0]
 
@@ -38,7 +38,7 @@ def dashboard():
     )
     supplier_frameworks = {
         framework['frameworkSlug']: framework
-        for framework in data_api_client.get_supplier_frameworks(current_user.supplier_id)['frameworkInterest']
+        for framework in data_api_client.get_supplier_frameworks(current_user.supplier_code)['frameworkInterest']
     }
 
     for framework in all_frameworks:
@@ -84,7 +84,7 @@ def dashboard():
 def edit_supplier(supplier_form=None, contact_form=None, error=None):
     try:
         supplier = data_api_client.get_supplier(
-            current_user.supplier_id
+            current_user.supplier_code
         )['suppliers']
     except APIError as e:
         abort(e.status_code)
@@ -134,13 +134,13 @@ def update_supplier():
 
     try:
         data_api_client.update_supplier(
-            current_user.supplier_id,
+            current_user.supplier_code,
             supplier_form.data,
             current_user.email_address
         )
 
         data_api_client.update_contact_information(
-            current_user.supplier_id,
+            current_user.supplier_code,
             contact_form.id.data,
             contact_form.data,
             current_user.email_address
@@ -277,8 +277,8 @@ def submit_company_contact_details():
 @main.route('/create-your-account', methods=['GET'])
 def create_your_account():
     current_app.logger.info(
-        "suppliercreate: get create-your-account supplier_id:{}".format(
-            session.get('email_supplier_id', 'unknown')))
+        "suppliercreate: get create-your-account supplier_code:{}".format(
+            session.get('email_supplier_code', 'unknown')))
     form = EmailAddressForm()
 
     return render_template_with_csrf(
@@ -291,8 +291,8 @@ def create_your_account():
 @main.route('/create-your-account', methods=['POST'])
 def submit_create_your_account():
     current_app.logger.info(
-        "suppliercreate: post create-your-account supplier_id:{}".format(
-            session.get('email_supplier_id', 'unknown')))
+        "suppliercreate: post create-your-account supplier_code:{}".format(
+            session.get('email_supplier_code', 'unknown')))
     form = EmailAddressForm(request.form)
 
     if form.validate():
@@ -347,12 +347,12 @@ def submit_company_summary():
         supplier = data_api_client.create_supplier(supplier)
         session.clear()
         session['email_company_name'] = supplier['suppliers']['name']
-        session['email_supplier_id'] = supplier['suppliers']['id']
+        session['email_supplier_code'] = supplier['suppliers']['id']
 
         token = generate_token(
             {
                 "email_address":  account_email_address,
-                "supplier_id": session['email_supplier_id'],
+                "supplier_code": session['email_supplier_code'],
                 "supplier_name": session['email_company_name']
             },
             current_app.config['SHARED_EMAIL_KEY'],
@@ -379,17 +379,17 @@ def submit_company_summary():
         except EmailError as e:
             current_app.logger.error(
                 "suppliercreate.fail: Create user email failed to send. "
-                "error {error} supplier_id {supplier_id} email_hash {email_hash}",
+                "error {error} supplier_code {supplier_code} email_hash {email_hash}",
                 extra={
                     'error': six.text_type(e),
-                    'supplier_id': session['email_supplier_id'],
+                    'supplier_code': session['email_supplier_code'],
                     'email_hash': hash_email(account_email_address)})
             abort(503, "Failed to send user creation email")
 
         data_api_client.create_audit_event(
             audit_type=AuditTypes.invite_user,
             object_type='suppliers',
-            object_id=session['email_supplier_id'],
+            object_id=session['email_supplier_code'],
             data={'invitedEmail': account_email_address})
 
         return redirect(url_for('.create_your_account_complete'), 302)

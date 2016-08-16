@@ -111,7 +111,7 @@ class TestInviteUser(BaseApplicationTest):
             assert res.status_code == 302
             generate_token.assert_called_once_with(
                 {
-                    "supplier_id": 1234,
+                    "supplier_code": 1234,
                     "supplier_name": "Supplier Name",
                     "email_address": "this@isvalid.com"
                 },
@@ -210,10 +210,10 @@ class TestInviteUser(BaseApplicationTest):
 
 
 class TestCreateUser(BaseApplicationTest):
-    def _generate_token(self, supplier_id=1234, supplier_name='Supplier Name', email_address='test@email.com'):
+    def _generate_token(self, supplier_code=1234, supplier_name='Supplier Name', email_address='test@email.com'):
         return generate_token(
             {
-                'supplier_id': supplier_id,
+                'supplier_code': supplier_code,
                 'supplier_name': supplier_name,
                 'email_address': email_address
             },
@@ -423,7 +423,7 @@ class TestCreateUser(BaseApplicationTest):
         )
 
         token = self._generate_token(
-            supplier_id=9999,
+            supplier_code=9999,
             supplier_name='Different Supplier Name',
             email_address='different_supplier@email.com'
         )
@@ -512,7 +512,7 @@ class TestCreateUser(BaseApplicationTest):
             'password': 'validpassword',
             'emailAddress': 'test@email.com',
             'name': 'valid name',
-            'supplierId': 1234
+            'supplierCode': 1234
         })
 
         assert res.status_code == 302
@@ -533,21 +533,21 @@ class TestCreateUser(BaseApplicationTest):
             }
         )
 
+        assert res.status_code == 400
+
         data_api_client.create_user.assert_called_once_with({
             'role': 'supplier',
             'password': 'validpassword',
             'emailAddress': 'test@email.com',
             'name': 'valid name',
-            'supplierId': 1234
+            'supplierCode': 1234
         })
-
-        assert res.status_code == 400
 
     @mock.patch('app.main.views.login.data_api_client')
     def test_should_strip_whitespace_surrounding_create_user_name_field(self, data_api_client):
         data_api_client.get_user.return_value = None
         token = self._generate_token()
-        self.client.post(
+        res = self.client.post(
             self.url_for('main.submit_create_user', encoded_token=token),
             data={
                 'csrf_token': FakeCsrf.valid_token,
@@ -556,19 +556,21 @@ class TestCreateUser(BaseApplicationTest):
             }
         )
 
+        assert res.status_code == 302
+
         data_api_client.create_user.assert_called_once_with({
             'role': mock.ANY,
             'password': 'validpassword',
             'emailAddress': mock.ANY,
             'name': 'valid name',
-            'supplierId': mock.ANY
+            'supplierCode': mock.ANY
         })
 
     @mock.patch('app.main.views.login.data_api_client')
     def test_should_not_strip_whitespace_surrounding_create_user_password_field(self, data_api_client):
         data_api_client.get_user.return_value = None
         token = self._generate_token()
-        self.client.post(
+        res = self.client.post(
             self.url_for('main.submit_create_user', encoded_token=token),
             data={
                 'csrf_token': FakeCsrf.valid_token,
@@ -577,12 +579,14 @@ class TestCreateUser(BaseApplicationTest):
             }
         )
 
+        assert res.status_code == 302
+
         data_api_client.create_user.assert_called_once_with({
             'role': mock.ANY,
             'password': '  validpassword  ',
             'emailAddress': mock.ANY,
             'name': 'valid name',
-            'supplierId': mock.ANY
+            'supplierCode': mock.ANY
         })
 
     @mock.patch('app.main.views.login.data_api_client')

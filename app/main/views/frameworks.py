@@ -44,7 +44,7 @@ def framework_dashboard(framework_slug):
     framework = get_framework(data_api_client, framework_slug)
     if request.method == 'POST':
         register_interest_in_framework(data_api_client, framework_slug)
-        supplier_users = data_api_client.find_users(supplier_id=current_user.supplier_id)
+        supplier_users = data_api_client.find_users(supplier_code=current_user.supplier_code)
 
         try:
             email_body = render_template('emails/{}_application_started.html'.format(framework_slug))
@@ -58,8 +58,8 @@ def framework_dashboard(framework_slug):
             )
         except EmailError as e:
             current_app.logger.error(
-                "Application started email failed to send: {error}, supplier_id: {supplier_id}",
-                extra={'error': six.text_type(e), 'supplier_id': current_user.supplier_id}
+                "Application started email failed to send: {error}, supplier_code: {supplier_code}",
+                extra={'error': six.text_type(e), 'supplier_code': current_user.supplier_code}
             )
 
     drafts, complete_drafts = get_drafts(data_api_client, framework_slug)
@@ -198,7 +198,7 @@ def framework_submission_services(framework_slug, lot_slug):
         draft = next(iter(drafts + complete_drafts), None)
         if not draft:
             draft = data_api_client.create_new_draft_service(
-                framework_slug, lot_slug, current_user.supplier_id, {}, current_user.email_address,
+                framework_slug, lot_slug, current_user.supplier_code, {}, current_user.email_address,
             )['services']
 
         return redirect(
@@ -250,7 +250,7 @@ def framework_supplier_declaration(framework_slug, section_id=None):
     saved_answers = {}
 
     try:
-        response = data_api_client.get_supplier_declaration(current_user.supplier_id, framework_slug)
+        response = data_api_client.get_supplier_declaration(current_user.supplier_code, framework_slug)
         if response['declaration']:
             saved_answers = response['declaration']
     except APIError as e:
@@ -277,7 +277,7 @@ def framework_supplier_declaration(framework_slug, section_id=None):
                 all_answers.update({"status": "complete"})
             try:
                 data_api_client.set_supplier_declaration(
-                    current_user.supplier_id,
+                    current_user.supplier_code,
                     framework_slug,
                     all_answers,
                     current_user.email_address
@@ -332,7 +332,7 @@ def download_agreement_file(framework_slug, document_name):
         abort(404)
 
     agreements_bucket = s3.S3(current_app.config['DM_AGREEMENTS_BUCKET'])
-    path = get_agreement_document_path(framework_slug, current_user.supplier_id, document_name)
+    path = get_agreement_document_path(framework_slug, current_user.supplier_code, document_name)
     url = get_signed_url(agreements_bucket, path, current_app.config['DM_ASSETS_URL'])
     if not url:
         abort(404)
@@ -345,10 +345,10 @@ def download_agreement_file(framework_slug, document_name):
 def framework_updates(framework_slug, error_message=None, default_textbox_value=None):
     framework = get_framework(data_api_client, framework_slug)
 
-    current_app.logger.info("{framework_slug}-updates.viewed: user_id {user_id} supplier_id {supplier_id}",
+    current_app.logger.info("{framework_slug}-updates.viewed: user_id {user_id} supplier_code {supplier_code}",
                             extra={'framework_slug': framework_slug,
                                    'user_id': current_user.id,
-                                   'supplier_id': current_user.supplier_id})
+                                   'supplier_code': current_user.supplier_code})
 
     communications_bucket = s3.S3(current_app.config['DM_COMMUNICATIONS_BUCKET'])
     file_list = communications_bucket.list('{}/communications/updates/'.format(framework_slug), load_timestamps=True)
@@ -433,10 +433,10 @@ def framework_updates_email_clarification_question(framework_slug):
     except EmailError as e:
         current_app.logger.error(
             "{framework} clarification question email failed to send. "
-            "error {error} supplier_id {supplier_id} email_hash {email_hash}",
+            "error {error} supplier_code {supplier_code} email_hash {email_hash}",
             extra={'error': six.text_type(e),
                    'framework': framework['slug'],
-                   'supplier_id': current_user.supplier_id,
+                   'supplier_code': current_user.supplier_code,
                    'email_hash': hash_email(current_user.email_address)})
         abort(503, "Clarification question email failed to send")
 
@@ -464,10 +464,10 @@ def framework_updates_email_clarification_question(framework_slug):
         except EmailError as e:
             current_app.logger.error(
                 "{framework} clarification question confirmation email failed to send. "
-                "error {error} supplier_id {supplier_id} email_hash {email_hash}",
+                "error {error} supplier_code {supplier_code} email_hash {email_hash}",
                 extra={'error': six.text_type(e),
                        'framework': framework['slug'],
-                       'supplier_id': current_user.supplier_id,
+                       'supplier_code': current_user.supplier_code,
                        'email_hash': hash_email(current_user.email_address)})
     else:
         # Do not send confirmation email to the user who submitted the question
@@ -478,7 +478,7 @@ def framework_updates_email_clarification_question(framework_slug):
         audit_type=audit_type,
         user=current_user.email_address,
         object_type="suppliers",
-        object_id=current_user.supplier_id,
+        object_id=current_user.supplier_code,
         data={"question": clarification_question, 'framework': framework['slug']})
 
     flash('message_sent', 'success')
@@ -549,7 +549,7 @@ def upload_framework_agreement(framework_slug):
 
     path = get_agreement_document_path(
         framework_slug,
-        current_user.supplier_id,
+        current_user.supplier_code,
         '{}{}'.format(SIGNED_AGREEMENT_PREFIX, extension)
     )
     agreements_bucket.save(
@@ -558,21 +558,21 @@ def upload_framework_agreement(framework_slug):
         acl='private',
         download_filename='{}-{}-{}{}'.format(
             sanitise_supplier_name(current_user.supplier_name),
-            current_user.supplier_id,
+            current_user.supplier_code,
             SIGNED_AGREEMENT_PREFIX,
             extension
         )
     )
 
     data_api_client.register_framework_agreement_returned(
-        current_user.supplier_id, framework_slug, current_user.email_address)
+        current_user.supplier_code, framework_slug, current_user.email_address)
 
     try:
         email_body = render_template(
             'emails/framework_agreement_uploaded.html',
             framework_name=framework['name'],
             supplier_name=current_user.supplier_name,
-            supplier_id=current_user.supplier_id,
+            supplier_code=current_user.supplier_code,
             user_name=current_user.name
         )
         send_email(
@@ -587,9 +587,9 @@ def upload_framework_agreement(framework_slug):
     except EmailError as e:
         current_app.logger.error(
             "Framework agreement email failed to send. "
-            "error {error} supplier_id {supplier_id} email_hash {email_hash}",
+            "error {error} supplier_code {supplier_code} email_hash {email_hash}",
             extra={'error': six.text_type(e),
-                   'supplier_id': current_user.supplier_id,
+                   'supplier_code': current_user.supplier_code,
                    'email_hash': hash_email(current_user.email_address)})
         abort(503, "Framework agreement email failed to send")
 
@@ -612,7 +612,7 @@ def signer_details(framework_slug):
             agreement_details = {question_key: form[question_key].data for question_key in question_keys}
 
             data_api_client.update_supplier_framework_agreement_details(
-                current_user.supplier_id, framework_slug, agreement_details, current_user.email_address
+                current_user.supplier_code, framework_slug, agreement_details, current_user.email_address
             )
 
             # If they have already uploaded a file then let them go to straight to the contract review
@@ -669,7 +669,7 @@ def signature_upload(framework_slug):
         if not upload_error:
             upload_path = get_agreement_document_path(
                 framework_slug,
-                current_user.supplier_id,
+                current_user.supplier_code,
                 '{}{}'.format(SIGNED_AGREEMENT_PREFIX, get_extension(request.files['signature_page'].filename))
             )
             agreements_bucket.save(
@@ -684,7 +684,7 @@ def signature_upload(framework_slug):
                 audit_type=AuditTypes.upload_signed_agreement,
                 user=current_user.email_address,
                 object_type="suppliers",
-                object_id=current_user.supplier_id,
+                object_id=current_user.supplier_code,
                 data={
                     "upload_signed_agreement": request.files['signature_page'].filename,
                     "upload_path": upload_path
@@ -725,7 +725,7 @@ def contract_review(framework_slug):
     if request.method == 'POST':
         if form.validate():
             data_api_client.register_framework_agreement_returned(
-                current_user.supplier_id, framework_slug, current_user.email_address, current_user.id
+                current_user.supplier_code, framework_slug, current_user.email_address, current_user.id
             )
 
             email_recipients = [supplier_framework['declaration']['primaryContactEmail']]
@@ -751,9 +751,9 @@ def contract_review(framework_slug):
             except EmailError as e:
                 current_app.logger.error(
                     "Framework agreement email failed to send. "
-                    "error {error} supplier_id {supplier_id} email_hash {email_hash}",
+                    "error {error} supplier_code {supplier_code} email_hash {email_hash}",
                     extra={'error': six.text_type(e),
-                           'supplier_id': current_user.supplier_id,
+                           'supplier_code': current_user.supplier_code,
                            'email_hash': hash_email(current_user.email_address)})
                 abort(503, "Framework agreement email failed to send")
 

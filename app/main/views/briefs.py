@@ -29,7 +29,7 @@ def question_and_answer_session(brief_id):
     if brief['clarificationQuestionsAreClosed']:
         abort(404)
 
-    if not is_supplier_eligible_for_brief(data_api_client, current_user.supplier_id, brief):
+    if not is_supplier_eligible_for_brief(data_api_client, current_user.supplier_code, brief):
         return _render_not_eligible_for_brief_error_page(brief, clarification_question=True)
 
     return render_template(
@@ -46,7 +46,7 @@ def ask_brief_clarification_question(brief_id):
     if brief['clarificationQuestionsAreClosed']:
         abort(404)
 
-    if not is_supplier_eligible_for_brief(data_api_client, current_user.supplier_id, brief):
+    if not is_supplier_eligible_for_brief(data_api_client, current_user.supplier_code, brief):
         return _render_not_eligible_for_brief_error_page(brief, clarification_question=True)
 
     error_message = None
@@ -83,10 +83,10 @@ def brief_response(brief_id):
 
     brief = get_brief(data_api_client, brief_id, allowed_statuses=['live'])
 
-    if not is_supplier_eligible_for_brief(data_api_client, current_user.supplier_id, brief):
+    if not is_supplier_eligible_for_brief(data_api_client, current_user.supplier_code, brief):
         return _render_not_eligible_for_brief_error_page(brief)
 
-    if supplier_has_a_brief_response(data_api_client, current_user.supplier_id, brief_id):
+    if supplier_has_a_brief_response(data_api_client, current_user.supplier_code, brief_id):
         flash('already_applied', 'error')
         return redirect(url_for(".view_response_result", brief_id=brief_id))
 
@@ -117,10 +117,10 @@ def submit_brief_response(brief_id):
 
     brief = get_brief(data_api_client, brief_id, allowed_statuses=['live'])
 
-    if not is_supplier_eligible_for_brief(data_api_client, current_user.supplier_id, brief):
+    if not is_supplier_eligible_for_brief(data_api_client, current_user.supplier_code, brief):
         return _render_not_eligible_for_brief_error_page(brief)
 
-    if supplier_has_a_brief_response(data_api_client, current_user.supplier_id, brief_id):
+    if supplier_has_a_brief_response(data_api_client, current_user.supplier_code, brief_id):
         flash('already_applied', 'error')
         return redirect(url_for(".view_response_result", brief_id=brief_id))
 
@@ -133,7 +133,7 @@ def submit_brief_response(brief_id):
 
     try:
         brief_response = data_api_client.create_brief_response(
-            brief_id, current_user.supplier_id, response_data, current_user.email_address
+            brief_id, current_user.supplier_code, response_data, current_user.email_address
         )['briefResponses']
     except HTTPError as e:
         # replace generic 'Apply for opportunity' title with title including the name of the brief
@@ -165,12 +165,12 @@ def submit_brief_response(brief_id):
 def view_response_result(brief_id):
     brief = get_brief(data_api_client, brief_id, allowed_statuses=['live'])
 
-    if not is_supplier_eligible_for_brief(data_api_client, current_user.supplier_id, brief):
+    if not is_supplier_eligible_for_brief(data_api_client, current_user.supplier_code, brief):
         return _render_not_eligible_for_brief_error_page(brief)
 
     brief_response = data_api_client.find_brief_responses(
         brief_id=brief_id,
-        supplier_id=current_user.supplier_id
+        supplier_code=current_user.supplier_code
     )['briefResponses']
 
     if len(brief_response) == 0:
@@ -205,7 +205,7 @@ def view_response_result(brief_id):
 
 def _render_not_eligible_for_brief_error_page(brief, clarification_question=False):
     common_kwargs = {
-        "supplier_id": current_user.supplier_id,
+        "supplier_code": current_user.supplier_code,
         "framework": brief['frameworkSlug'],
     }
     has_framework_service = bool(data_api_client.find_services(**common_kwargs)["services"])

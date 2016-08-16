@@ -11,7 +11,7 @@ from ... import data_api_client
 def get_current_suppliers_users():
 
     users = data_api_client.find_users(
-        supplier_id=current_user.supplier_id
+        supplier_code=current_user.supplier_code
     ).get('users')
 
     active_users = [user for user in users if user['active']]
@@ -43,10 +43,10 @@ def deactivate_user(user_id):
     # check that id is not current user
     if user_id == current_user.id:
         current_app.logger.error(
-            "deactivate_user cannot deactivate self, user_id={user_id} supplier_id={supplier_id}",
+            "deactivate_user cannot deactivate self, user_id={user_id} supplier_code={supplier_code}",
             extra={
                 'user_id': current_user.id,
-                'supplier_id': current_user.supplier_id})
+                'supplier_code': current_user.supplier_code})
         abort(404)
 
     # check that user exists
@@ -55,9 +55,9 @@ def deactivate_user(user_id):
     if not user_to_deactivate or not user_to_deactivate.get('users'):
         current_app.logger.error(
             "deactivate_user user to deactivate not found, "
-            "user_id={user_id} supplier_id={supplier_id} user_id_to_deactivate={to_deactivate}",
+            "user_id={user_id} supplier_code={supplier_code} user_id_to_deactivate={to_deactivate}",
             extra={
-                'user_id': current_user.id, 'supplier_id': current_user.supplier_id,
+                'user_id': current_user.id, 'supplier_code': current_user.supplier_code,
                 'to_deactivate': user_id})
         abort(404)
 
@@ -65,12 +65,12 @@ def deactivate_user(user_id):
 
     # check that user to deactivate belongs to supplier of current user
     if user_to_deactivate['role'] != 'supplier' \
-            or user_to_deactivate['supplier']['supplierId'] != current_user.supplier_id:
+            or user_to_deactivate['supplier']['supplierCode'] != current_user.supplier_code:
         current_app.logger.error(
             "deactivate_user cannot deactivate another suppliers' users, "
-            "user_id={user_id} supplier_id={supplier_id} user_id_to_deactivate={to_deactivate}",
+            "user_id={user_id} supplier_code={supplier_code} user_id_to_deactivate={to_deactivate}",
             extra={
-                'user_id': current_user.id, 'supplier_id': current_user.supplier_id,
+                'user_id': current_user.id, 'supplier_code': current_user.supplier_code,
                 'to_deactivate': user_id})
         abort(404)
 

@@ -41,7 +41,7 @@ def get_framework_lot(framework, lot_slug):
 
 
 def register_interest_in_framework(client, framework_slug):
-    client.register_framework_interest(current_user.supplier_id, framework_slug, current_user.email_address)
+    client.register_framework_interest(current_user.supplier_code, framework_slug, current_user.email_address)
 
 
 def get_last_modified_from_first_matching_file(key_list, framework_slug, prefix):
@@ -69,7 +69,7 @@ def get_first_question_index(content, section):
 def get_declaration_status(data_api_client, framework_slug):
     try:
         declaration = data_api_client.get_supplier_declaration(
-            current_user.supplier_id, framework_slug
+            current_user.supplier_code, framework_slug
         )['declaration']
     except APIError as e:
         if e.status_code == 404:
@@ -86,7 +86,7 @@ def get_declaration_status(data_api_client, framework_slug):
 def get_supplier_framework_info(data_api_client, framework_slug):
     try:
         return data_api_client.get_supplier_framework_info(
-            current_user.supplier_id, framework_slug
+            current_user.supplier_code, framework_slug
         )['frameworkInterest']
     except APIError as e:
         if e.status_code == 404:
@@ -269,14 +269,14 @@ def get_status_for_multi_service_lot_and_service_type(
 def countersigned_framework_agreement_exists_in_bucket(framework_slug, bucket):
     agreements_bucket = s3.S3(bucket)
     countersigned_path = get_agreement_document_path(
-        framework_slug, current_user.supplier_id, COUNTERSIGNED_AGREEMENT_FILENAME)
+        framework_slug, current_user.supplier_code, COUNTERSIGNED_AGREEMENT_FILENAME)
     return agreements_bucket.path_exists(countersigned_path)
 
 
 def get_most_recently_uploaded_agreement_file_or_none(bucket, framework_slug):
     download_path = get_agreement_document_path(
         framework_slug,
-        current_user.supplier_id,
+        current_user.supplier_code,
         SIGNED_AGREEMENT_PREFIX
     )
     files = bucket.list(download_path)

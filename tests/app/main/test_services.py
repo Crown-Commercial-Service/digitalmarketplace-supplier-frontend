@@ -39,7 +39,7 @@ class TestListServices(BaseApplicationTest):
             res = self.client.get(self.url_for('main.list_services'))
             assert_equal(res.status_code, 200)
             data_api_client.find_services.assert_called_once_with(
-                supplier_id=1234)
+                supplier_code=1234)
             assert_in(
                 "You don&#39;t have any services on the Digital Marketplace",
                 res.get_data(as_text=True)
@@ -65,7 +65,7 @@ class TestListServices(BaseApplicationTest):
             res = self.client.get(self.url_for('main.list_services'))
             assert_equal(res.status_code, 200)
             data_api_client.find_services.assert_called_once_with(
-                supplier_id=1234)
+                supplier_code=1234)
             assert_true("Service name 123" in res.get_data(as_text=True))
             assert_true("Software as a Service" in res.get_data(as_text=True))
             assert_true("G-Cloud 1" in res.get_data(as_text=True))
@@ -97,7 +97,7 @@ class TestListServices(BaseApplicationTest):
             res = self.client.get(self.url_for('main.list_services'))
             assert_equal(res.status_code, 200)
             data_api_client.find_services.assert_called_once_with(
-                supplier_id=1234)
+                supplier_code=1234)
             assert_true(
                 self.url_for('main.edit_service', service_id=123) in res.get_data(as_text=True))
 
@@ -117,7 +117,7 @@ class TestListServices(BaseApplicationTest):
 
             res = self.client.get(self.url_for('main.list_services'))
             assert_equal(res.status_code, 200)
-            data_api_client.find_services.assert_called_once_with(supplier_id=1234)
+            data_api_client.find_services.assert_called_once_with(supplier_code=1234)
 
             assert "Special Lot Name" in res.get_data(as_text=True)
 
@@ -138,7 +138,7 @@ class TestListServices(BaseApplicationTest):
 
             res = self.client.get(self.url_for('main.list_services'))
             assert_equal(res.status_code, 200)
-            data_api_client.find_services.assert_called_once_with(supplier_id=1234)
+            data_api_client.find_services.assert_called_once_with(supplier_code=1234)
 
             assert "Service name 123" in res.get_data(as_text=True)
             assert self.url_for('main.edit_service', service_id=123) not in res.get_data(as_text=True)
@@ -189,7 +189,7 @@ class TestSupplierUpdateService(BaseApplicationTest):
                 'id': '123',
                 'frameworkName': framework_name,
                 'frameworkSlug': framework_slug,
-                'supplierId': 1234 if service_belongs_to_user else 1235
+                'supplierCode': 1234 if service_belongs_to_user else 1235
             }
         }
         if service_status == 'published':
@@ -383,7 +383,7 @@ class TestEditService(BaseApplicationTest):
             'id': '123',
             'frameworkSlug': 'g-cloud-6',
             'frameworkName': 'G-Cloud 6',
-            'supplierId': 1234,
+            'supplierCode': 1234,
             'supplierName': 'We supply any',
             'lot': 'scs',
             'lotSlug': 'scs',
@@ -605,8 +605,8 @@ class TestCopyDraft(BaseApplicationTest):
         )
         assert_equal(res.status_code, 302)
 
-    def test_copy_draft_checks_supplier_id(self, data_api_client):
-        self.draft['supplierId'] = 2
+    def test_copy_draft_checks_supplier_code(self, data_api_client):
+        self.draft['supplierCode'] = 2
         data_api_client.get_draft_service.return_value = {'services': self.draft}
 
         res = self.client.post(
@@ -647,8 +647,8 @@ class TestCompleteDraft(BaseApplicationTest):
         assert_true('lot=scs' in res.location)
         assert_in('/suppliers/frameworks/g-cloud-7/submissions', res.location)
 
-    def test_complete_draft_checks_supplier_id(self, data_api_client):
-        self.draft['supplierId'] = 2
+    def test_complete_draft_checks_supplier_code(self, data_api_client):
+        self.draft['supplierCode'] = 2
         data_api_client.get_draft_service.return_value = {'services': self.draft}
 
         res = self.client.post(
@@ -681,7 +681,7 @@ class TestEditDraftService(BaseApplicationTest):
         self.multiquestion_draft = {
             'services': {
                 'id': 1,
-                'supplierId': 1234,
+                'supplierCode': 1234,
                 'supplierName': 'supplierName',
                 'lot': 'digital-specialists',
                 'lotSlug': 'digital-specialists',
@@ -889,7 +889,7 @@ class TestEditDraftService(BaseApplicationTest):
         document_url = self.url_for(
             'main.service_submission_document',
             framework_slug='g-cloud-7',
-            supplier_id='1234',
+            supplier_code='1234',
             document_name='1-service-definition-document-2015-01-02-0304.pdf',
             _external=True
         )
@@ -1358,7 +1358,7 @@ class TestEditDraftService(BaseApplicationTest):
 
     def test_can_not_remove_other_suppliers_subsection(self, data_api_client, s3):
         draft_service = copy.deepcopy(self.multiquestion_draft)
-        draft_service['services']['supplierId'] = 12345
+        draft_service['services']['supplierCode'] = 12345
         data_api_client.get_draft_service.return_value = draft_service
         res = self.client.post(
             self.url_for(
@@ -1611,7 +1611,7 @@ class TestDeleteDraftService(BaseApplicationTest):
 
     def test_cannot_delete_other_suppliers_draft(self, data_api_client):
         other_draft = copy.deepcopy(self.draft_to_delete)
-        other_draft['services']['supplierId'] = 12345
+        other_draft['services']['supplierCode'] = 12345
         data_api_client.get_draft_service.return_value = other_draft
         res = self.client.post(
             self.url_for('main.delete_draft_service', framework_slug='g-cloud-7', lot_slug='scs', service_id=1),
@@ -1635,7 +1635,7 @@ class TestSubmissionDocuments(BaseApplicationTest):
             self.url_for(
                 'main.service_submission_document',
                 framework_slug='g-cloud-7',
-                supplier_id='1234',
+                supplier_code='1234',
                 document_name='document.pdf'
             )
         )
@@ -1654,7 +1654,7 @@ class TestSubmissionDocuments(BaseApplicationTest):
             self.url_for(
                 'main.service_submission_document',
                 framework_slug='g-cloud-7',
-                supplier_id='1234',
+                supplier_code='1234',
                 document_name='document.pdf'
             )
         )
@@ -1666,7 +1666,7 @@ class TestSubmissionDocuments(BaseApplicationTest):
             self.url_for(
                 'main.service_submission_document',
                 framework_slug='g-cloud-7',
-                supplier_id='999',
+                supplier_code='999',
                 document_name='document.pdf'
             )
         )

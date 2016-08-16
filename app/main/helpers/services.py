@@ -14,7 +14,7 @@ except ImportError:
 def get_drafts(apiclient, framework_slug):
     try:
         drafts = apiclient.find_draft_services(
-            current_user.supplier_id,
+            current_user.supplier_code,
             framework=framework_slug
         )['services']
 
@@ -48,7 +48,7 @@ def count_unanswered_questions(service_attributes):
 
 
 def is_service_associated_with_supplier(service):
-    return service.get('supplierId') == current_user.supplier_id
+    return service.get('supplierCode') == current_user.supplier_code
 
 
 def get_signed_document_url(uploader, document_path):
