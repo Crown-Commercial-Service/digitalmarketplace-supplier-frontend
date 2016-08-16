@@ -136,8 +136,8 @@ class BaseApplicationTest(object):
         # throughout all the test cases.
         scheme = self.app.config['DM_HTTP_PROTO']
         host = self.app.config['SERVER_NAME']
-        url_prefix = self.app.config['URL_PREFIX']
-        redirect_url = '{}://{}{}/login'.format(scheme, host, url_prefix)
+        base_prefix = self.app.config['BASE_PREFIX']
+        redirect_url = '{}://{}{}/login'.format(scheme, host, base_prefix)
         if target_url is not None:
             encoded_target = quote(target_url, safe='')
             redirect_url += '?next=' + encoded_target
