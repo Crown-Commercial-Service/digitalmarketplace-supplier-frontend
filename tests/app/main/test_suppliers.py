@@ -55,7 +55,7 @@ def get_user():
         'role': 'supplier',
         'supplier': {
             'name': "Supplier Name",
-            'supplierId': 1234
+            'supplierCode': 1234
         }
     }]
 
@@ -1369,7 +1369,7 @@ class TestCreateSupplier(BaseApplicationTest):
             assert_false('duns_number' in session)
             assert_false('company_name' in session)
             assert_false('companies_house_number' in session)
-            assert_equal(session['email_supplier_id'], 12345)
+            assert_equal(session['email_supplier_code'], 12345)
             assert_equal(session['email_company_name'], 'Supplier Name')
 
     @mock.patch("app.main.suppliers.data_api_client")
@@ -1437,7 +1437,7 @@ class TestCreateSupplier(BaseApplicationTest):
     def test_should_require_an_email_address(self):
         with self.client.session_transaction() as sess:
             sess['email_company_name'] = "company_name"
-            sess['email_supplier_id'] = 1234
+            sess['email_supplier_code'] = 1234
         res = self.client.post(
             self.url_for('main.submit_create_your_account'),
             data=csrf_only_request,
@@ -1448,7 +1448,7 @@ class TestCreateSupplier(BaseApplicationTest):
     def test_should_not_allow_incorrect_email_address(self):
         with self.client.session_transaction() as sess:
             sess['email_company_name'] = "company_name"
-            sess['email_supplier_id'] = 1234
+            sess['email_supplier_code'] = 1234
         res = self.client.post(
             self.url_for('main.submit_create_your_account'),
             data={
@@ -1479,7 +1479,7 @@ class TestCreateSupplier(BaseApplicationTest):
             generate_token.assert_called_once_with(
                 {
                     "email_address": "valid@email.com",
-                    "supplier_id": 12345,
+                    "supplier_code": 12345,
                     "supplier_name": "Supplier Name"
                 },
                 "KEY",
@@ -1528,7 +1528,7 @@ class TestCreateSupplier(BaseApplicationTest):
         generate_token.assert_called_once_with(
             {
                 "email_address": "valid@email.com",
-                "supplier_id": 12345,
+                "supplier_code": 12345,
                 "supplier_name": "Supplier Name"
             },
             "KEY",

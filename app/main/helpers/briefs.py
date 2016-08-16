@@ -22,12 +22,13 @@ def get_brief(data_api_client, brief_id, allowed_statuses=None):
     return brief
 
 
-def is_supplier_eligible_for_brief(data_api_client, supplier_id, brief):
-    return data_api_client.is_supplier_eligible_for_brief(supplier_id, brief['id'])
+def is_supplier_eligible_for_brief(data_api_client, supplier_code, brief):
+    return data_api_client.is_supplier_eligible_for_brief(supplier_code, brief['id'])
 
 
-def supplier_has_a_brief_response(data_api_client, supplier_id, brief_id):
-    brief_responses = data_api_client.find_brief_responses(brief_id=brief_id, supplier_id=supplier_id)['briefResponses']
+def supplier_has_a_brief_response(data_api_client, supplier_code, brief_id):
+    brief_response_result = data_api_client.find_brief_responses(brief_id=brief_id, supplier_code=supplier_code)
+    brief_responses = brief_response_result['briefResponses']
     return len(brief_responses) != 0
 
 
@@ -53,8 +54,8 @@ def send_brief_clarification_question(data_api_client, brief, clarification_ques
         )
     except EmailError as e:
         current_app.logger.error(
-            "Brief question email failed to send. error={error} supplier_id={supplier_id} brief_id={brief_id}",
-            extra={'error': six.text_type(e), 'supplier_id': current_user.supplier_id, 'brief_id': brief['id']}
+            "Brief question email failed to send. error={error} supplier_code={supplier_code} brief_id={brief_id}",
+            extra={'error': six.text_type(e), 'supplier_code': current_user.supplier_code, 'brief_id': brief['id']}
         )
 
         abort(503, "Clarification question email failed to send")
@@ -85,8 +86,8 @@ def send_brief_clarification_question(data_api_client, brief, clarification_ques
         )
     except EmailError as e:
         current_app.logger.error(
-            "Brief question supplier email failed to send. error={error} supplier_id={supplier_id} brief_id={brief_id}",
-            extra={'error': six.text_type(e), 'supplier_id': current_user.supplier_id, 'brief_id': brief['id']}
+            'Brief question supplier email failed to send. error={error} supplier_code={supplier_code} brief_id={brief_id}',  # noqa
+            extra={'error': six.text_type(e), 'supplier_code': current_user.supplier_code, 'brief_id': brief['id']}
         )
 
 

@@ -100,7 +100,7 @@ csrf_only_request = {
 def empty_g7_draft():
     return {
         'id': 1,
-        'supplierId': 1234,
+        'supplierCode': 1234,
         'supplierName': 'supplierName',
         'frameworkName': 'G-Cloud 7',
         'frameworkSlug': 'g-cloud-7',
@@ -172,7 +172,7 @@ class BaseApplicationTest(object):
         }
 
     @staticmethod
-    def user(id, email_address, supplier_id, supplier_name, name,
+    def user(id, email_address, supplier_code, supplier_name, name,
              is_token_valid=True, locked=False, active=True, role='buyer'):
 
         hours_offset = -1 if is_token_valid else 1
@@ -189,9 +189,9 @@ class BaseApplicationTest(object):
             'passwordChangedAt': password_changed_at
         }
 
-        if supplier_id:
+        if supplier_code:
             supplier = {
-                "supplierId": supplier_id,
+                "supplierCode": supplier_code,
                 "name": supplier_name,
             }
             user['role'] = 'supplier'

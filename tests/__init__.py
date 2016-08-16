@@ -13,7 +13,7 @@ def auto_login():
         'name': 'Name',
         'emailAddress': 'email@email.com',
         'role': 'supplier',
-        'supplierId': 1234
+        'supplierCode': 1234
     }
     }
     user = User.from_json(user_json)

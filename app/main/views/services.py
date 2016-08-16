@@ -17,7 +17,7 @@ from dmutils.forms import render_template_with_csrf
 @main.route('/services')
 @login_required
 def list_services():
-    suppliers_services = data_api_client.find_services(supplier_id=current_user.supplier_id)["services"]
+    suppliers_services = data_api_client.find_services(supplier_code=current_user.supplier_code)["services"]
     sorted_services = sorted(
         suppliers_services,
         key=lambda service: service['frameworkSlug'],
@@ -196,7 +196,7 @@ def create_new_draft_service(framework_slug, lot_slug):
 
     try:
         draft_service = data_api_client.create_new_draft_service(
-            framework_slug, lot['slug'], current_user.supplier_id, update_data,
+            framework_slug, lot['slug'], current_user.supplier_code, update_data,
             current_user.email_address, page_questions=section.get_field_names()
         )['services']
     except HTTPError as e:
@@ -320,15 +320,15 @@ def delete_draft_service(framework_slug, lot_slug, service_id):
                                 delete_requested=True))
 
 
-@main.route('/assets/<framework_slug>/submissions/<int:supplier_id>/<document_name>', methods=['GET'])
+@main.route('/assets/<framework_slug>/submissions/<int:supplier_code>/<document_name>', methods=['GET'])
 @login_required
-def service_submission_document(framework_slug, supplier_id, document_name):
-    if current_user.supplier_id != supplier_id:
+def service_submission_document(framework_slug, supplier_code, document_name):
+    if current_user.supplier_code != supplier_code:
         abort(404)
 
     uploader = s3.S3(current_app.config['DM_SUBMISSIONS_BUCKET'])
     s3_url = get_signed_document_url(uploader,
-                                     "{}/submissions/{}/{}".format(framework_slug, supplier_id, document_name))
+                                     "{}/submissions/{}/{}".format(framework_slug, supplier_code, document_name))
     if not s3_url:
         abort(404)
 

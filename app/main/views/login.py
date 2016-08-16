@@ -58,7 +58,6 @@ def submit_create_user(encoded_token):
         return render_template(
             "auth/create_user_error.html",
             token=None), 400
-
     else:
         if not form.validate():
             current_app.logger.warning(
@@ -77,7 +76,7 @@ def submit_create_user(encoded_token):
                 'password': form.password.data,
                 'emailAddress': token.get('email_address'),
                 'role': 'supplier',
-                'supplierId': token.get('supplier_id')
+                'supplierCode': token.get('supplier_code')
             })
 
             user = User.from_json(user)
@@ -113,7 +112,7 @@ def send_invite_user():
     if form.validate():
         token = generate_token(
             {
-                "supplier_id": current_user.supplier_id,
+                "supplier_code": current_user.supplier_code,
                 "supplier_name": current_user.supplier_name,
                 "email_address": form.email_address.data
             },
@@ -139,9 +138,9 @@ def send_invite_user():
         except EmailError as e:
             current_app.logger.error(
                 "Invitation email failed to send. "
-                "error {error} supplier_id {supplier_id} email_hash {email_hash}",
+                "error {error} supplier_code {supplier_code} email_hash {email_hash}",
                 extra={'error': six.text_type(e),
-                       'supplier_id': current_user.supplier_id,
+                       'supplier_code': current_user.supplier_code,
                        'email_hash': hash_email(current_user.email_address)})
             abort(503, "Failed to send user invite reset")
 
@@ -149,7 +148,7 @@ def send_invite_user():
             audit_type=AuditTypes.invite_user,
             user=current_user.email_address,
             object_type='suppliers',
-            object_id=current_user.supplier_id,
+            object_id=current_user.supplier_code,
             data={'invitedEmail': form.email_address.data},
         )
 

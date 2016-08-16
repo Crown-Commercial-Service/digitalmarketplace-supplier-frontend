@@ -16,7 +16,7 @@ def get_users(additional_users=None, index=None):
                 'role': 'supplier',
                 'supplier': {
                     'name': "Supplier Name",
-                    'supplierId': 1234
+                    'supplierCode': 1234
                 }
             },
             {
@@ -29,7 +29,7 @@ def get_users(additional_users=None, index=None):
                 'role': 'supplier',
                 'supplier': {
                     'name': "Supplier Name",
-                    'supplierId': 1234
+                    'supplierCode': 1234
                 }
             },
             # inactive user
@@ -43,7 +43,7 @@ def get_users(additional_users=None, index=None):
                 'role': 'supplier',
                 'supplier': {
                     'name': "Supplier Name",
-                    'supplierId': 1234
+                    'supplierCode': 1234
                 }
             }
         ]
@@ -65,7 +65,7 @@ class TestListUsers(BaseApplicationTest):
 
             res = self.client.get(self.url_for('main.list_users'))
             assert_equal(res.status_code, 200)
-            data_api_client.find_users.assert_called_once_with(supplier_id=1234)
+            data_api_client.find_users.assert_called_once_with(supplier_code=1234)
 
             # strings we would expect to find in the output
             for string in [
@@ -156,7 +156,7 @@ class TestPostUsers(BaseApplicationTest):
                     'role': 'supplier',
                     'supplier': {
                         'name': "Puttnam, Powell, and Lowe",
-                        'supplierId': 9999
+                        'supplierCode': 9999
                     }
                 }
             ]

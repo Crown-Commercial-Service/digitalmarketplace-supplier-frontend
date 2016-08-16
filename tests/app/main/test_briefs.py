@@ -476,7 +476,7 @@ class TestRespondToBrief(BaseApplicationTest):
         data_api_client.find_brief_responses.return_value = {
             'briefResponses': [{
                 'briefId': self.brief['briefs']['id'],
-                'supplierId': 1234
+                'supplierCode': 1234
             }]
         }
 
@@ -638,7 +638,7 @@ class TestRespondToBrief(BaseApplicationTest):
         data_api_client.find_brief_responses.return_value = {
             'briefResponses': [{
                 'briefId': self.brief['briefs']['id'],
-                'supplierId': 1234
+                'supplierCode': 1234
             }]
         }
 
