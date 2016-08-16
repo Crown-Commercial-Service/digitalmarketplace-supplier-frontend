@@ -26,11 +26,11 @@ def content_loader_error_handler(e):
 
 @main.app_errorhandler(401)
 def page_unauthorized(e):
-    url_prefix = current_app.config['URL_PREFIX']
+    base_prefix = current_app.config['BASE_PREFIX']
     if request.method == 'GET':
-        return redirect(url_prefix + '/login?next={}'.format(quote_plus(request.path)))
+        return redirect(base_prefix + '/login?next={}'.format(quote_plus(request.path)))
     else:
-        return redirect(url_prefix + '/login')
+        return redirect(base_prefix + '/login')
 
 
 @main.app_errorhandler(404)

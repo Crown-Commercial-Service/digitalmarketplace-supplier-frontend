@@ -13,7 +13,8 @@ class Config(object):
     SESSION_COOKIE_HTTPONLY = True
     SESSION_COOKIE_SECURE = True
 
-    URL_PREFIX = '/marketplace/suppliers'
+    BASE_PREFIX = '/marketplace'
+    URL_PREFIX = BASE_PREFIX + '/suppliers'
 
     CSRF_ENABLED = True
     CSRF_TIME_LIMIT = 8*3600
