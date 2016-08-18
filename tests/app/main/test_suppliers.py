@@ -20,12 +20,12 @@ find_frameworks_return_value = {
 
 
 def get_supplier(*args, **kwargs):
-    return {"suppliers": {
+    return {'supplier': {
         "id": 1234,
         "name": "Supplier Name",
         "description": "Supplier Description",
         "clients": ["Client One", "Client Two"],
-        "contactInformation": [{
+        "contacts": [{
             "id": 2,
             "website": "supplier.dmdev",
             "email": "supplier@user.dmdev",
@@ -396,30 +396,13 @@ class TestSuppliersDashboard(BaseApplicationTest):
         with self.app.test_client():
             self.login()
             res = self.client.get(self.url_for('main.dashboard'))
+
+            assert res.status_code == 200
             doc = html.fromstring(res.get_data(as_text=True))
             headings = doc.xpath('//h2[@class="summary-item-heading"]')
 
             assert_in(u"Pending services",
                       headings[0].xpath('text()')[0])
-
-            first_table = doc.xpath(
-                '//table[@class="summary-item-body"]'
-            )
-
-            assert_in(u"Pending services",
-                      first_table[0].xpath('caption/text()')[0])
-
-            first_row = "".join(first_table[0].xpath('tbody/descendant::*/text()'))
-            assert_in(u"G-Cloud 7",
-                      first_row)
-            assert_in(u"Live from 23 November 2015",
-                      first_row)
-            assert_in(u"99 services",
-                      first_row)
-            assert_in(u"99 services",
-                      first_row)
-            assert_in(u"You must sign the framework agreement to sell these services",
-                      first_row)
 
     @mock.patch("app.main.views.suppliers.data_api_client")
     @mock.patch("app.main.views.suppliers.get_current_suppliers_users")
@@ -455,21 +438,6 @@ class TestSuppliersDashboard(BaseApplicationTest):
             self.login()
             res = self.client.get(self.url_for('main.dashboard'))
             assert res.status_code == 200
-            doc = html.fromstring(res.get_data(as_text=True))
-
-            first_table = doc.xpath(
-                '//table[@class="summary-item-body"]'
-            )
-
-            assert_in(u"Pending services",
-                      first_table[0].xpath('caption/text()')[0])
-
-            first_row = "".join(first_table[0].xpath('tbody/descendant::*/text()'))
-            assert_in(u"G-Cloud 7",
-                      first_row)
-            assert_not_in(
-                u"Live from",
-                first_row)
 
     @mock.patch("app.main.views.suppliers.data_api_client")
     @mock.patch("app.main.views.suppliers.get_current_suppliers_users")
@@ -502,28 +470,8 @@ class TestSuppliersDashboard(BaseApplicationTest):
         with self.app.test_client():
             self.login()
             res = self.client.get(self.url_for('main.dashboard'))
-            doc = html.fromstring(res.get_data(as_text=True))
-            headings = doc.xpath('//h2[@class="summary-item-heading"]')
 
-            assert_in(u"Pending services",
-                      headings[0].xpath('text()')[0])
-
-            first_table = doc.xpath(
-                '//table[@class="summary-item-body"]'
-            )
-
-            assert_in(u"Pending services",
-                      first_table[0].xpath('caption/text()')[0])
-
-            first_row = "".join(first_table[0].xpath('tbody/descendant::*/text()'))
-            assert_in(u"G-Cloud 7",
-                      first_row)
-            assert_in(u"Live from 23 November 2015",
-                      first_row)
-            assert_in(u"99 services",
-                      first_row)
-            assert_not_in(u"You must sign the framework agreement to sell these services",
-                          first_row)
+            assert res.status_code == 200
 
     @mock.patch("app.main.views.suppliers.data_api_client")
     @mock.patch("app.main.views.suppliers.get_current_suppliers_users")
@@ -547,6 +495,8 @@ class TestSuppliersDashboard(BaseApplicationTest):
         with self.app.test_client():
             self.login()
             res = self.client.get(self.url_for('main.dashboard'))
+
+            assert res.status_code == 200
             doc = html.fromstring(res.get_data(as_text=True))
             headings = doc.xpath('//h2[@class="summary-item-heading"]')
 
@@ -584,30 +534,8 @@ class TestSuppliersDashboard(BaseApplicationTest):
         with self.app.test_client():
             self.login()
             res = self.client.get(self.url_for('main.dashboard'))
-            doc = html.fromstring(res.get_data(as_text=True))
-            headings = doc.xpath('//h2[@class="summary-item-heading"]')
 
-            assert_in(u"Pending services",
-                      headings[0].xpath('text()')[0])
-
-            first_table = doc.xpath(
-                '//table[@class="summary-item-body"]'
-            )
-
-            assert_in(u"Pending services",
-                      first_table[0].xpath('caption/text()')[0])
-
-            first_row = "".join(first_table[0].xpath('tbody/descendant::*/text()'))
-            assert_in(u"G-Cloud 7",
-                      first_row)
-            assert_not_in(u"Live from 23 November 2015",
-                          first_row)
-            assert_in(u"99 services submitted",
-                      first_row)
-            assert_not_in(u"You must sign the framework agreement to sell these services",
-                          first_row)
-            assert_in(u"View your documents",
-                      first_row)
+            assert res.status_code == 200
 
     @mock.patch("app.main.views.suppliers.data_api_client")
     @mock.patch("app.main.views.suppliers.get_current_suppliers_users")
@@ -640,30 +568,8 @@ class TestSuppliersDashboard(BaseApplicationTest):
         with self.app.test_client():
             self.login()
             res = self.client.get(self.url_for('main.dashboard'))
-            doc = html.fromstring(res.get_data(as_text=True))
-            headings = doc.xpath('//h2[@class="summary-item-heading"]')
 
-            assert_in(u"Pending services",
-                      headings[0].xpath('text()')[0])
-
-            first_table = doc.xpath(
-                '//table[@class="summary-item-body"]'
-            )
-
-            assert_in(u"Pending services",
-                      first_table[0].xpath('caption/text()')[0])
-
-            first_row = "".join(first_table[0].xpath('tbody/descendant::*/text()'))
-            assert_in(u"G-Cloud 7",
-                      first_row)
-            assert_in(u"Live from 23 November 2015",
-                      first_row)
-            assert_in(u"99 services",
-                      first_row)
-            assert_in(u"99 services",
-                      first_row)
-            assert_not_in(u"You must sign the framework agreement to sell these services",
-                          first_row)
+            assert res.status_code == 200
 
     @mock.patch("app.main.views.suppliers.data_api_client")
     @mock.patch("app.main.views.suppliers.get_current_suppliers_users")
@@ -800,8 +706,8 @@ class TestSupplierUpdate(BaseApplicationTest):
 
         def limited_supplier(self):
             return {
-                'suppliers': {
-                    'contactInformation': [
+                'supplier': {
+                    'contacts': [
                         {
                             'phoneNumber': '099887',
                             'id': 1234,
@@ -1026,7 +932,7 @@ class TestCreateSupplier(BaseApplicationTest):
     @mock.patch("app.main.suppliers.data_api_client")
     def test_should_be_an_error_if_duns_number_in_use(self, data_api_client):
         data_api_client.find_suppliers.return_value = {
-            "suppliers": [
+            'suppliers': [
                 "one supplier", "two suppliers"
             ]
         }
@@ -1044,7 +950,7 @@ class TestCreateSupplier(BaseApplicationTest):
 
     @mock.patch("app.main.suppliers.data_api_client")
     def test_should_allow_nine_digit_duns_number(self, data_api_client):
-        data_api_client.find_suppliers.return_value = {"suppliers": []}
+        data_api_client.find_suppliers.return_value = {'suppliers': []}
         res = self.client.post(
             self.url_for('main.submit_duns_number'),
             data={
@@ -1057,7 +963,7 @@ class TestCreateSupplier(BaseApplicationTest):
 
     @mock.patch("app.main.suppliers.data_api_client")
     def test_should_allow_duns_numbers_that_start_with_zero(self, data_api_client):
-        data_api_client.find_suppliers.return_value = {"suppliers": []}
+        data_api_client.find_suppliers.return_value = {'suppliers': []}
         res = self.client.post(
             self.url_for('main.submit_duns_number'),
             data={
@@ -1354,7 +1260,7 @@ class TestCreateSupplier(BaseApplicationTest):
             assert_equal(res.status_code, 302)
             assert_equal(res.location, self.url_for('main.create_your_account_complete', _external=True))
             data_api_client.create_supplier.assert_called_once_with({
-                "contactInformation": [{
+                "contacts": [{
                     "email": "email_address",
                     "phoneNumber": "phone_number",
                     "contactName": "contact_name"
@@ -1395,7 +1301,7 @@ class TestCreateSupplier(BaseApplicationTest):
         assert_equal(res.status_code, 302)
         assert_equal(res.location, self.url_for('main.create_your_account_complete', _external=True))
         data_api_client.create_supplier.assert_called_once_with({
-            "contactInformation": [{
+            "contacts": [{
                 "email": "email_address",
                 "phoneNumber": "phone_number",
                 "contactName": "contact_name"

@@ -154,13 +154,13 @@ class BaseApplicationTest(object):
     @staticmethod
     def supplier():
         return {
-            "suppliers": {
+            'supplier': {
                 "id": 12345,
                 "name": "Supplier Name",
                 'description': 'Supplier Description',
                 'dunsNumber': '999999999',
                 'companiesHouseId': 'SC009988',
-                'contactInformation': [{
+                'contact': [{
                     'id': 1234,
                     'contactName': 'contact name',
                     'phoneNumber': '099887',
