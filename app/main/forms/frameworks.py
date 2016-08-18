@@ -25,3 +25,12 @@ class ContractReviewForm(Form):
         'Authorisation',
         validators=[DataRequired(message="You must confirm you have the authority to return the agreement.")]
     )
+
+
+class AcceptAgreementVariationForm(Form):
+    accept_changes = BooleanField(
+        'I accept these proposed changes',
+        validators=[
+            DataRequired(message="If you agree to the proposed changes then you must check the box before saving.")
+        ]
+    )
