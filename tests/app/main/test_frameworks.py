@@ -2337,7 +2337,7 @@ class TestContractVariation(BaseApplicationTest):
             status='live',
             framework_agreement_version='3.1'
         )
-        self.g8_framework['frameworks']['variations'] = {1: {"createdAt": "2018-08-16"}}
+        self.g8_framework['frameworks']['variations'] = {"1": {"createdAt": "2018-08-16"}}
 
         with self.app.test_client():
             self.login()
@@ -2352,16 +2352,6 @@ class TestContractVariation(BaseApplicationTest):
         assert_equal(
             len(doc.xpath('//h1[contains(text(), "G-Cloud 8: proposed contract variation")]')), 1)
 
-    def test_get_page_renders_with_default_variation_number(self, data_api_client):
-        data_api_client.get_framework.return_value = self.g8_framework
-        data_api_client.get_supplier_framework_info.return_value = self.good_supplier_framework
-        res = self.client.get("/suppliers/frameworks/g-cloud-8/contract-variation")
-
-        assert_equal(res.status_code, 200)
-        doc = html.fromstring(res.get_data(as_text=True))
-        assert_equal(
-            len(doc.xpath('//h1[contains(text(), "G-Cloud 8: proposed contract variation")]')), 1)
-
     def test_supplier_must_be_on_framework(self, data_api_client):
         supplier_not_on_framework = self.good_supplier_framework.copy()
         supplier_not_on_framework['frameworkInterest']['onFramework'] = False
@@ -2369,7 +2359,7 @@ class TestContractVariation(BaseApplicationTest):
         data_api_client.get_framework.return_value = self.g8_framework
         data_api_client.get_supplier_framework_info.return_value = supplier_not_on_framework
 
-        res = self.client.get("/suppliers/frameworks/g-cloud-8/contract-variation")
+        res = self.client.get("/suppliers/frameworks/g-cloud-8/contract-variation/1")
 
         assert_equal(res.status_code, 404)
 
@@ -2388,14 +2378,14 @@ class TestContractVariation(BaseApplicationTest):
         data_api_client.get_framework.return_value = self.g8_framework
         data_api_client.get_supplier_framework_info.return_value = agreement_not_returned
 
-        res = self.client.get("/suppliers/frameworks/g-cloud-8/contract-variation")
+        res = self.client.get("/suppliers/frameworks/g-cloud-8/contract-variation/1")
 
         assert_equal(res.status_code, 404)
 
     def test_shows_form_if_not_yet_agreed(self, data_api_client):
         data_api_client.get_framework.return_value = self.g8_framework
         data_api_client.get_supplier_framework_info.return_value = self.good_supplier_framework
-        res = self.client.get("/suppliers/frameworks/g-cloud-8/contract-variation")
+        res = self.client.get("/suppliers/frameworks/g-cloud-8/contract-variation/1")
 
         assert_equal(res.status_code, 200)
         doc = html.fromstring(res.get_data(as_text=True))
@@ -2406,10 +2396,10 @@ class TestContractVariation(BaseApplicationTest):
 
     def test_shows_signer_details_and_no_form_if_already_agreed(self, data_api_client):
         already_agreed = self.good_supplier_framework.copy()
-        already_agreed['frameworkInterest']['agreedVariations'] = {1: {"agreedAt": "Already"}}
+        already_agreed['frameworkInterest']['agreedVariations'] = {"1": {"agreedAt": "Already"}}
         data_api_client.get_framework.return_value = self.g8_framework
         data_api_client.get_supplier_framework_info.return_value = already_agreed
-        res = self.client.get("/suppliers/frameworks/g-cloud-8/contract-variation")
+        res = self.client.get("/suppliers/frameworks/g-cloud-8/contract-variation/1")
 
         assert_equal(res.status_code, 200)
         doc = html.fromstring(res.get_data(as_text=True))
@@ -2423,7 +2413,7 @@ class TestContractVariation(BaseApplicationTest):
     def test_api_is_called_to_agree(self, data_api_client):
         data_api_client.get_framework.return_value = self.g8_framework
         data_api_client.get_supplier_framework_info.return_value = self.good_supplier_framework
-        res = self.client.post("/suppliers/frameworks/g-cloud-8/contract-variation",
+        res = self.client.post("/suppliers/frameworks/g-cloud-8/contract-variation/1",
                                data={"accept_changes": "Yes"}
                                )
 
@@ -2435,7 +2425,7 @@ class TestContractVariation(BaseApplicationTest):
     def test_email_is_sent_to_correct_users(self, send_email, data_api_client):
         data_api_client.get_framework.return_value = self.g8_framework
         data_api_client.get_supplier_framework_info.return_value = self.good_supplier_framework
-        res = self.client.post("/suppliers/frameworks/g-cloud-8/contract-variation",
+        res = self.client.post("/suppliers/frameworks/g-cloud-8/contract-variation/1",
                                data={"accept_changes": "Yes"}
                                )
 
@@ -2456,7 +2446,7 @@ class TestContractVariation(BaseApplicationTest):
         same_email_as_current_user['frameworkInterest']['declaration']['primaryContactEmail'] = 'email@email.com'
         data_api_client.get_framework.return_value = self.g8_framework
         data_api_client.get_supplier_framework_info.return_value = same_email_as_current_user
-        res = self.client.post("/suppliers/frameworks/g-cloud-8/contract-variation",
+        res = self.client.post("/suppliers/frameworks/g-cloud-8/contract-variation/1",
                                data={"accept_changes": "Yes"}
                                )
 
@@ -2474,22 +2464,21 @@ class TestContractVariation(BaseApplicationTest):
     def test_success_message_is_displayed_on_success(self, data_api_client):
         data_api_client.get_framework.return_value = self.g8_framework
         data_api_client.get_supplier_framework_info.return_value = self.good_supplier_framework
-        res = self.client.post("/suppliers/frameworks/g-cloud-8/contract-variation",
+        res = self.client.post("/suppliers/frameworks/g-cloud-8/contract-variation/1",
                                data={"accept_changes": "Yes"}
                                )
 
         assert_equal(res.status_code, 200)
         doc = html.fromstring(res.get_data(as_text=True))
         assert_equal(
-            len(doc.xpath('//p[@class="banner-message"][contains(text(), "You have accepted the proposed changes.")]')), 1)
-        
+            len(doc.xpath('//p[@class="banner-message"][contains(text(), "You have accepted the proposed changes.")]')), 1)  # noqa
 
     def test_error_if_box_not_ticked(self, data_api_client):
         data_api_client.get_framework.return_value = self.g8_framework
         data_api_client.get_supplier_framework_info.return_value = self.good_supplier_framework
-        res = self.client.post("/suppliers/frameworks/g-cloud-8/contract-variation", data={})
+        res = self.client.post("/suppliers/frameworks/g-cloud-8/contract-variation/1", data={})
 
         assert_equal(res.status_code, 400)
         doc = html.fromstring(res.get_data(as_text=True))
         assert_equal(
-            len(doc.xpath('//p[@class="banner-message"][contains(text(), "You have accepted the proposed changes.")]')), 1)
+            len(doc.xpath('//span[@class="validation-message"][contains(text(), "If you agree to the proposed changes then you must check the box before saving.")]')), 1)  # noqa

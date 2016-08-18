@@ -281,3 +281,10 @@ def get_most_recently_uploaded_agreement_file_or_none(bucket, framework_slug):
     )
     files = bucket.list(download_path)
     return files.pop() if files else None
+
+
+def returned_agreement_email_recipients(supplier_framework):
+    email_recipients = [supplier_framework['declaration']['primaryContactEmail']]
+    if supplier_framework['declaration']['primaryContactEmail'].lower() != current_user.email_address.lower():
+        email_recipients.append(current_user.email_address)
+    return email_recipients

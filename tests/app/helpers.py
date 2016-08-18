@@ -232,7 +232,8 @@ class BaseApplicationTest(object):
         on_framework=False,
         agreement_returned=False,
         agreement_returned_at=None,
-        agreement_details=None
+        agreement_details=None,
+        agreed_variations={}
     ):
         if declaration == 'default':
             declaration = FULL_G7_SUBMISSION.copy()
@@ -244,7 +245,8 @@ class BaseApplicationTest(object):
                 'onFramework': on_framework,
                 'agreementReturned': agreement_returned,
                 'agreementReturnedAt': agreement_returned_at,
-                'agreementDetails': agreement_details
+                'agreementDetails': agreement_details,
+                'agreedVariations': agreed_variations
             }
         }
 

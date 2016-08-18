@@ -18,7 +18,7 @@ from dmutils.documents import (
     file_is_empty, file_is_image, file_is_pdf, sanitise_supplier_name
 )
 
-from ... import data_api_client
+from ... import data_api_client, flask_featureflags
 from ...main import main, content_loader
 from ..helpers import hash_email, login_required
 from ..helpers.frameworks import (
@@ -26,13 +26,13 @@ from ..helpers.frameworks import (
     get_supplier_on_framework_from_info, get_declaration_status_from_info, get_supplier_framework_info,
     get_framework, get_framework_and_lot, count_drafts_by_lot, get_statuses_for_lot,
     countersigned_framework_agreement_exists_in_bucket, return_supplier_framework_info_if_on_framework_or_abort,
-    get_most_recently_uploaded_agreement_file_or_none
-)
+    get_most_recently_uploaded_agreement_file_or_none,
+    returned_agreement_email_recipients)
 from ..helpers.validation import get_validator
 from ..helpers.services import (
     get_signed_document_url, get_drafts, get_lot_drafts, count_unanswered_questions
 )
-from ..forms.frameworks import SignerDetailsForm, ContractReviewForm
+from ..forms.frameworks import SignerDetailsForm, ContractReviewForm, AcceptAgreementVariationForm
 
 CLARIFICATION_QUESTION_NAME = 'clarification_question'
 
@@ -722,10 +722,6 @@ def contract_review(framework_slug):
                 current_user.supplier_id, framework_slug, current_user.email_address, current_user.id
             )
 
-            email_recipients = [supplier_framework['declaration']['primaryContactEmail']]
-            if supplier_framework['declaration']['primaryContactEmail'].lower() != current_user.email_address.lower():
-                email_recipients.append(current_user.email_address)
-
             try:
                 email_body = render_template(
                     'emails/framework_agreement_with_framework_version_returned.html',
@@ -735,7 +731,7 @@ def contract_review(framework_slug):
                 )
 
                 send_email(
-                    email_recipients,
+                    returned_agreement_email_recipients(supplier_framework),
                     email_body,
                     current_app.config['DM_MANDRILL_API_KEY'],
                     'Your {} signature page has been received'.format(framework['name']),
@@ -777,4 +773,72 @@ def contract_review(framework_slug):
         framework=framework,
         signature_page=signature_page,
         supplier_framework=supplier_framework,
+    ), 400 if form_errors else 200
+
+
+@main.route('/frameworks/<framework_slug>/contract-variation/<variation_slug>', methods=['GET', 'POST'])
+@flask_featureflags.is_active_feature('CONTRACT_VARIATION')
+@login_required
+def view_contract_variation(framework_slug, variation_slug):
+    framework = get_framework(data_api_client, framework_slug)
+    supplier_framework = return_supplier_framework_info_if_on_framework_or_abort(data_api_client, framework_slug)
+
+    # 404 if framework doesn't have contract variation
+    if not framework.get('variations', {}).get(variation_slug):
+        abort(404)
+
+    # 404 if agreement hasn't been returned yet
+    if not supplier_framework['agreementReturned']:
+        abort(404)
+
+    already_agreed = True if supplier_framework['agreedVariations'].get(variation_slug) else False
+    variation_content_name = 'contract_variation_{}'.format(variation_slug)
+    content_loader.load_messages(framework_slug, [variation_content_name])
+    form = AcceptAgreementVariationForm()
+    form_errors = None
+
+    if request.method == 'POST':
+        if form.validate_on_submit():
+            # FIXME: Set the agreement as accepted in the API
+            # data_api_client.set_variation_agreed(
+            #     current_user.id,
+            #     current_user.supplier_id,
+            #     framework_slug,
+            #     variation_slug
+            # )
+
+            # Send email confirming accepted
+            try:
+                email_body = render_template(
+                    'emails/{}_variation_{}_agreed.html'.format(framework_slug, variation_slug)
+                )
+                send_email(
+                    returned_agreement_email_recipients(supplier_framework),
+                    email_body,
+                    current_app.config['DM_MANDRILL_API_KEY'],
+                    '{}: you have accepted the proposed contract variation'.format(framework['name']),
+                    current_app.config['CLARIFICATION_EMAIL_FROM'],
+                    current_app.config['CLARIFICATION_EMAIL_NAME'],
+                    ['{}-variation-accepted'.format(framework_slug)]
+                )
+            except MandrillException as e:
+                current_app.logger.error(
+                    "Variation agreed email failed to send: {error}, supplier_id: {supplier_id}",
+                    extra={'error': six.text_type(e), 'supplier_id': current_user.supplier_id}
+                )
+            flash('variation_accepted')
+        else:
+            form_errors = [
+                {'question': form['accept_changes'].label.text, 'input_name': 'agreement'}
+            ]
+
+    return render_template(
+        "frameworks/contract_variation.html",
+        form=form,
+        form_errors=form_errors,
+        framework=framework,
+        supplier_framework=supplier_framework,
+        variation=content_loader.get_message(framework_slug, variation_content_name),
+        already_agreed=already_agreed,
+        supplier_name=supplier_framework['declaration']['nameOfOrganisation']
     ), 400 if form_errors else 200
