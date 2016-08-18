@@ -811,6 +811,24 @@ class TestResponseResultPage(BaseApplicationTest):
         assert doc.xpath('//h1')[0].text.strip() == \
             "Your response to ‘I need a thing to do a thing’ has been sent"
 
+    def test_view_response_result_submitted_ok_for_closed_brief(self, data_api_client):
+        closed_brief = self.brief.copy()
+        closed_brief['briefs']['status'] = 'closed'
+        data_api_client.get_brief.return_value = closed_brief
+        data_api_client.get_framework.return_value = self.framework
+        data_api_client.is_supplier_eligible_for_brief.return_value = True
+        data_api_client.find_brief_responses.return_value = {
+            "briefResponses": [
+                {"essentialRequirements": [True, True, True]}
+            ]
+        }
+        res = self.client.get('/suppliers/opportunities/1234/responses/result')
+
+        assert res.status_code == 200
+        doc = html.fromstring(res.get_data(as_text=True))
+        assert doc.xpath('//h1')[0].text.strip() == \
+            "Your response to ‘I need a thing to do a thing’ has been sent"
+
     def test_view_response_result_submitted_unsuccessful(self, data_api_client):
         data_api_client.get_brief.return_value = self.brief
         data_api_client.get_framework.return_value = self.framework
