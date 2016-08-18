@@ -1464,6 +1464,7 @@ class TestShowDraftService(BaseApplicationTest):
             self.url_for('main.view_service_submission', framework_slug='g-cloud-7', lot_slug='scs', service_id=1)
         )
 
+        assert_equal(res.status_code, 200)
         assert_true(u'3 unanswered questions' in res.get_data(as_text=True),
                     "'3 unanswered questions' not found in html")
 
@@ -1476,9 +1477,10 @@ class TestShowDraftService(BaseApplicationTest):
             self.url_for('main.view_service_submission', framework_slug='g-cloud-7', lot_slug='scs', service_id=1)
         )
 
+        assert_equal(res.status_code, 200)
         assert_in(u'1 optional question unanswered', res.get_data(as_text=True))
-        assert_in(u'<input type="submit" class="button-save"  value="Mark as complete" />',
-                  res.get_data(as_text=True))
+        assert_in(u'<input type="submit" class="button-save" value="Mark as complete"/>'.replace(' ', ''),
+                  res.get_data(as_text=True).replace(' ', ''))
 
     @mock.patch('app.main.views.services.count_unanswered_questions')
     def test_no_move_to_complete_button_if_not_open(self, count_unanswered, data_api_client):
@@ -1489,8 +1491,9 @@ class TestShowDraftService(BaseApplicationTest):
             self.url_for('main.view_service_submission', framework_slug='g-cloud-7', lot_slug='scs', service_id=1)
         )
 
-        assert_not_in(u'<input type="submit" class="button-save"  value="Mark as complete" />',
-                      res.get_data(as_text=True))
+        assert_equal(res.status_code, 404)
+        assert_not_in(u'<input type="submit" class="button-save" value="Mark as complete"/>'.replace(' ', ''),
+                      res.get_data(as_text=True).replace(' ', ''))
 
     @mock.patch('app.main.views.services.count_unanswered_questions')
     def test_no_move_to_complete_button_if_validation_errors(self, count_unanswered, data_api_client):
@@ -1505,6 +1508,7 @@ class TestShowDraftService(BaseApplicationTest):
             self.url_for('main.view_service_submission', framework_slug='g-cloud-7', lot_slug='scs', service_id=1)
         )
 
+        assert_equal(res.status_code, 200)
         assert_not_in(u'<input type="submit" class="button-save"  value="Mark as complete" />',
                       res.get_data(as_text=True))
 
@@ -1517,6 +1521,7 @@ class TestShowDraftService(BaseApplicationTest):
             self.url_for('main.view_service_submission', framework_slug='g-cloud-7', lot_slug='scs', service_id=1)
         )
 
+        assert_equal(res.status_code, 200)
         doc = html.fromstring(res.get_data(as_text=True))
         message = doc.xpath('//aside[@class="temporary-message"]')
 
@@ -1535,6 +1540,7 @@ class TestShowDraftService(BaseApplicationTest):
             self.url_for('main.view_service_submission', framework_slug='g-cloud-7', lot_slug='scs', service_id=2)
         )
 
+        assert_equal(res.status_code, 200)
         doc = html.fromstring(res.get_data(as_text=True))
         message = doc.xpath('//aside[@class="temporary-message"]')
 

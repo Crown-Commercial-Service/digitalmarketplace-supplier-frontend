@@ -111,6 +111,7 @@ class Test(Config):
 class Development(Config):
     DEBUG = True
     SESSION_COOKIE_SECURE = False
+    DM_SEND_EMAIL_TO_STDERR = False
 
     # Dates not formatted like YYYY-(0)M-(0)D will fail
     FEATURE_FLAGS_EDIT_SECTIONS = enabled_since('2015-06-03')

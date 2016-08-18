@@ -19,6 +19,13 @@ content_loader.load_manifest('digital-outcomes-and-specialists', 'brief-response
 content_loader.load_manifest('digital-outcomes-and-specialists', 'brief-responses', 'display_brief_response')
 content_loader.load_messages('digital-outcomes-and-specialists', ['dates'])
 
+content_loader.load_manifest('digital-service-professionals', 'declaration', 'declaration')
+content_loader.load_manifest('digital-service-professionals', 'services', 'edit_submission')
+content_loader.load_manifest('digital-service-professionals', 'briefs', 'edit_brief')
+content_loader.load_manifest('digital-service-professionals', 'brief-responses', 'edit_brief_response')
+content_loader.load_manifest('digital-service-professionals', 'brief-responses', 'display_brief_response')
+content_loader.load_messages('digital-service-professionals', ['dates'])
+
 content_loader.load_manifest('g-cloud-8', 'services', 'edit_service')
 content_loader.load_manifest('g-cloud-8', 'services', 'edit_submission')
 content_loader.load_manifest('g-cloud-8', 'declaration', 'declaration')

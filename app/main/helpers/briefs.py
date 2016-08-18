@@ -23,6 +23,9 @@ def get_brief(data_api_client, brief_id, allowed_statuses=None):
 
 
 def is_supplier_eligible_for_brief(data_api_client, supplier_code, brief):
+    # FIXME: this is implemented by checking if the given supplier offers a relevant service.
+    # Current suppliers don't have services.
+    return True
     return data_api_client.is_supplier_eligible_for_brief(supplier_code, brief['id'])
 
 
@@ -49,8 +52,7 @@ def send_brief_clarification_question(data_api_client, brief, clarification_ques
             email_body=email_body,
             subject=u"You’ve received a new supplier question about ‘{}’".format(brief['title']),
             from_email=current_app.config['CLARIFICATION_EMAIL_FROM'],
-            from_name="{} Supplier".format(brief['frameworkName']),
-            tags=["brief-clarification-question"]
+            from_name="{} Supplier".format(brief['frameworkName'])
         )
     except EmailError as e:
         current_app.logger.error(
@@ -81,8 +83,7 @@ def send_brief_clarification_question(data_api_client, brief, clarification_ques
             email_body=supplier_email_body,
             subject=u"Your question about ‘{}’".format(brief['title']),
             from_email=current_app.config['CLARIFICATION_EMAIL_FROM'],
-            from_name=current_app.config['CLARIFICATION_EMAIL_NAME'],
-            tags=["brief-clarification-question-confirmation"]
+            from_name=current_app.config['CLARIFICATION_EMAIL_NAME']
         )
     except EmailError as e:
         current_app.logger.error(

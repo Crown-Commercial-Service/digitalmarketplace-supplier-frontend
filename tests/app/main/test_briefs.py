@@ -74,15 +74,6 @@ class TestBriefQuestionAndAnswerSession(BaseApplicationTest):
         assert res.status_code == 200
         assert 'SESSION DETAILS' in res.get_data(as_text=True)
 
-    def test_q_and_a_session_details_checks_supplier_is_eligible(self, data_api_client):
-        self.login()
-        data_api_client.get_brief.return_value = api_stubs.brief(status='live', lot_slug='digital-specialists')
-        data_api_client.get_brief.return_value['briefs']['frameworkName'] = 'Digital Outcomes and Specialists'
-        data_api_client.is_supplier_eligible_for_brief.return_value = False
-
-        res = self.client.get(self.url_for('main.question_and_answer_session', brief_id=1))
-        assert res.status_code == 400
-
     def test_q_and_a_session_details_requires_existing_brief_id(self, data_api_client):
         self.login()
         data_api_client.get_brief.side_effect = HTTPError(mock.Mock(status_code=404))
@@ -126,15 +117,6 @@ class TestBriefClarificationQuestions(BaseApplicationTest):
         res = self.client.get(self.url_for('main.ask_brief_clarification_question', brief_id=1))
         assert res.status_code == 404
 
-    def test_clarification_question_checks_supplier_is_eligible(self, data_api_client):
-        self.login()
-        data_api_client.get_brief.return_value = api_stubs.brief(status='live', lot_slug='digital-specialists')
-        data_api_client.get_brief.return_value['briefs']['frameworkName'] = 'Digital Outcomes and Specialists'
-        data_api_client.is_supplier_eligible_for_brief.return_value = False
-
-        res = self.client.get(self.url_for('main.ask_brief_clarification_question', brief_id=1))
-        assert res.status_code == 400
-
     def test_clarification_question_form_requires_live_brief(self, data_api_client):
         self.login()
         data_api_client.get_brief.return_value = api_stubs.brief(status='expired')
@@ -177,7 +159,6 @@ class TestSubmitClarificationQuestions(BaseApplicationTest):
         send_email.assert_has_calls([
             mock.call(
                 from_name='Brief Framework Name Supplier',
-                tags=['brief-clarification-question'],
                 email_body=FakeMail("important question"),
                 from_email=self.app.config['CLARIFICATION_EMAIL_FROM'],
                 to_email_addresses=['buyer@email.com'],
@@ -185,7 +166,6 @@ class TestSubmitClarificationQuestions(BaseApplicationTest):
             ),
             mock.call(
                 from_name='Digital Marketplace Admin',
-                tags=['brief-clarification-question-confirmation'],
                 email_body=FakeMail("important question"),
                 from_email=self.app.config['CLARIFICATION_EMAIL_FROM'],
                 to_email_addresses=['email@email.com'],
@@ -234,80 +214,6 @@ class TestSubmitClarificationQuestions(BaseApplicationTest):
             'csrf_token': FakeCsrf.valid_token,
         })
         assert res.status_code == 404
-
-    @mock.patch('app.main.helpers.briefs.send_email')
-    def test_submit_clarification_question_returns_error_page_if_supplier_has_no_services_on_lot(
-            self, send_email, data_api_client):
-        self.login()
-        data_api_client.get_brief.return_value = api_stubs.brief(status='live', lot_slug='digital-specialists')
-        data_api_client.get_brief.return_value['briefs']['frameworkName'] = 'Digital Outcomes and Specialists'
-        data_api_client.is_supplier_eligible_for_brief.return_value = False
-        data_api_client.find_services.side_effect = lambda *args, **kwargs: (
-            {"services": [{"something": "nonempty"}]} if kwargs.get("lot") is None else {"services": []}
-        )
-
-        res = self.client.post(self.url_for('main.ask_brief_clarification_question', brief_id=1), data={
-            'csrf_token': FakeCsrf.valid_token,
-            'clarification-question': "important question",
-        })
-        doc = html.fromstring(res.get_data(as_text=True))
-
-        assert res.status_code == 400
-        assert doc.xpath('normalize-space(//h1/text())') == ERROR_MESSAGE_PAGE_HEADING_CLARIFICATION
-        assert len(doc.xpath(
-            '//*[contains(normalize-space(text()), normalize-space("{}"))]'.format(
-                ERROR_MESSAGE_NO_SERVICE_ON_LOT_CLARIFICATION
-            )
-        )) == 1
-        assert not data_api_client.create_audit_event.called
-
-    @mock.patch('app.main.helpers.briefs.send_email')
-    def test_submit_clarification_question_returns_error_page_if_supplier_has_no_services_on_framework(
-            self, send_email, data_api_client):
-        self.login()
-        data_api_client.get_brief.return_value = api_stubs.brief(status='live', lot_slug='digital-specialists')
-        data_api_client.get_brief.return_value['briefs']['frameworkName'] = 'Digital Outcomes and Specialists'
-        data_api_client.is_supplier_eligible_for_brief.return_value = False
-        data_api_client.find_services.return_value = {"services": []}
-
-        res = self.client.post(self.url_for('main.ask_brief_clarification_question', brief_id=1), data={
-            'csrf_token': FakeCsrf.valid_token,
-            'clarification-question': "important question",
-        })
-        doc = html.fromstring(res.get_data(as_text=True))
-
-        assert res.status_code == 400
-        assert doc.xpath('normalize-space(//h1/text())') == ERROR_MESSAGE_PAGE_HEADING_CLARIFICATION
-        assert len(doc.xpath(
-            '//*[contains(normalize-space(text()), normalize-space("{}"))]'.format(
-                ERROR_MESSAGE_NO_SERVICE_ON_FRAMEWORK_CLARIFICATION
-            )
-        )) == 1
-        assert not data_api_client.create_audit_event.called
-
-    @mock.patch('app.main.helpers.briefs.send_email')
-    def test_submit_clarification_question_returns_error_page_if_supplier_has_no_services_with_role(
-            self, send_email, data_api_client):
-        self.login()
-        data_api_client.get_brief.return_value = api_stubs.brief(status='live', lot_slug='digital-specialists')
-        data_api_client.get_brief.return_value['briefs']['frameworkName'] = 'Digital Outcomes and Specialists'
-        data_api_client.is_supplier_eligible_for_brief.return_value = False
-        data_api_client.find_services.return_value = {"services": [{"something": "nonempty"}]}
-
-        res = self.client.post(self.url_for('main.ask_brief_clarification_question', brief_id=1), data={
-            'csrf_token': FakeCsrf.valid_token,
-            'clarification-question': "important question",
-        })
-        doc = html.fromstring(res.get_data(as_text=True))
-
-        assert res.status_code == 400
-        assert doc.xpath('normalize-space(//h1/text())') == ERROR_MESSAGE_PAGE_HEADING_CLARIFICATION
-        assert len(doc.xpath(
-            '//*[contains(normalize-space(text()), normalize-space("{}"))]'.format(
-                ERROR_MESSAGE_NO_SERVICE_WITH_ROLE_CLARIFICATION
-            )
-        )) == 1
-        assert not data_api_client.create_audit_event.called
 
     def test_submit_empty_clarification_question_returns_validation_error(self, data_api_client):
         self.login()
@@ -410,65 +316,6 @@ class TestRespondToBrief(BaseApplicationTest):
         res = self.client.get(self.url_for('main.brief_response', brief_id=1234))
 
         assert res.status_code == 404
-
-    def test_get_brief_response_returns_error_page_if_supplier_has_no_services_on_lot(self, data_api_client):
-        data_api_client.get_brief.return_value = self.brief
-        data_api_client.get_brief.return_value['briefs']['frameworkName'] = 'Digital Outcomes and Specialists'
-        data_api_client.get_framework.return_value = self.framework
-        data_api_client.is_supplier_eligible_for_brief.return_value = False
-        data_api_client.find_services.side_effect = lambda *args, **kwargs: (
-            {"services": [{"something": "nonempty"}]} if kwargs.get("lot") is None else {"services": []}
-        )
-
-        res = self.client.get(self.url_for('main.brief_response', brief_id=1234))
-        doc = html.fromstring(res.get_data(as_text=True))
-
-        assert res.status_code == 400
-        assert doc.xpath('normalize-space(//h1/text())') == ERROR_MESSAGE_PAGE_HEADING_APPLICATION
-        assert len(doc.xpath(
-            '//*[contains(normalize-space(text()), normalize-space("{}"))]'.format(
-                ERROR_MESSAGE_NO_SERVICE_ON_LOT_APPLICATION
-            )
-        )) == 1
-        assert not data_api_client.create_audit_event.called
-
-    def test_get_brief_response_returns_error_page_if_supplier_has_no_services_on_framework(self, data_api_client):
-        data_api_client.get_brief.return_value = self.brief
-        data_api_client.get_brief.return_value['briefs']['frameworkName'] = 'Digital Outcomes and Specialists'
-        data_api_client.get_framework.return_value = self.framework
-        data_api_client.is_supplier_eligible_for_brief.return_value = False
-        data_api_client.find_services.return_value = {"services": []}
-
-        res = self.client.get(self.url_for('main.brief_response', brief_id=1234))
-        doc = html.fromstring(res.get_data(as_text=True))
-
-        assert res.status_code == 400
-        assert doc.xpath('normalize-space(//h1/text())') == ERROR_MESSAGE_PAGE_HEADING_APPLICATION
-        assert len(doc.xpath(
-            '//*[contains(normalize-space(text()), normalize-space("{}"))]'.format(
-                ERROR_MESSAGE_NO_SERVICE_ON_FRAMEWORK_APPLICATION
-            )
-        )) == 1
-        assert not data_api_client.create_audit_event.called
-
-    def test_get_brief_response_returns_error_page_if_supplier_has_no_services_with_role(self, data_api_client):
-        data_api_client.get_brief.return_value = self.brief
-        data_api_client.get_brief.return_value['briefs']['frameworkName'] = 'Digital Outcomes and Specialists'
-        data_api_client.get_framework.return_value = self.framework
-        data_api_client.is_supplier_eligible_for_brief.return_value = False
-        data_api_client.find_services.return_value = {"services": [{"something": "nonempty"}]}
-
-        res = self.client.get(self.url_for('main.brief_response', brief_id=1234))
-        doc = html.fromstring(res.get_data(as_text=True))
-
-        assert res.status_code == 400
-        assert doc.xpath('normalize-space(//h1/text())') == ERROR_MESSAGE_PAGE_HEADING_APPLICATION
-        assert len(doc.xpath(
-            '//*[contains(normalize-space(text()), normalize-space("{}"))]'.format(
-                ERROR_MESSAGE_NO_SERVICE_WITH_ROLE_APPLICATION
-            )
-        )) == 1
-        assert not data_api_client.create_audit_event.called
 
     def test_get_brief_response_flashes_error_on_result_page_if_response_already_exists(self, data_api_client):
         data_api_client.get_brief.return_value = self.brief
@@ -649,74 +496,6 @@ class TestRespondToBrief(BaseApplicationTest):
         assert res.status_code == 302
         assert res.location == self.url_for('main.view_response_result', brief_id=1234, _external=True)
         self.assert_flashes("already_applied", "error")
-        assert not data_api_client.create_brief_response.called
-
-    def test_create_new_brief_returns_error_page_if_supplier_has_no_services_on_lot(self, data_api_client):
-        data_api_client.get_brief.return_value = self.brief
-        data_api_client.get_brief.return_value['briefs']['frameworkName'] = 'Digital Outcomes and Specialists'
-        data_api_client.get_framework.return_value = self.framework
-        data_api_client.is_supplier_eligible_for_brief.return_value = False
-        data_api_client.find_services.side_effect = lambda *args, **kwargs: (
-            {"services": [{"something": "nonempty"}]} if kwargs.get("lot") is None else {"services": []}
-        )
-
-        res = self.client.post(
-            self.url_for('main.brief_response', brief_id=1234),
-            data=brief_form_submission
-        )
-        doc = html.fromstring(res.get_data(as_text=True))
-
-        assert res.status_code == 400
-        assert doc.xpath('normalize-space(//h1/text())') == ERROR_MESSAGE_PAGE_HEADING_APPLICATION
-        assert len(doc.xpath(
-            '//*[contains(normalize-space(text()), normalize-space("{}"))]'.format(
-                ERROR_MESSAGE_NO_SERVICE_ON_LOT_APPLICATION
-            )
-        )) == 1
-        assert not data_api_client.create_brief_response.called
-
-    def test_create_new_brief_returns_error_page_if_supplier_has_no_services_on_framework(self, data_api_client):
-        data_api_client.get_brief.return_value = self.brief
-        data_api_client.get_brief.return_value['briefs']['frameworkName'] = 'Digital Outcomes and Specialists'
-        data_api_client.get_framework.return_value = self.framework
-        data_api_client.is_supplier_eligible_for_brief.return_value = False
-        data_api_client.find_services.return_value = {"services": []}
-
-        res = self.client.post(
-            self.url_for('main.brief_response', brief_id=1234),
-            data=brief_form_submission
-        )
-        doc = html.fromstring(res.get_data(as_text=True))
-
-        assert res.status_code == 400
-        assert doc.xpath('normalize-space(//h1/text())') == ERROR_MESSAGE_PAGE_HEADING_APPLICATION
-        assert len(doc.xpath(
-            '//*[contains(normalize-space(text()), normalize-space("{}"))]'.format(
-                ERROR_MESSAGE_NO_SERVICE_ON_FRAMEWORK_APPLICATION
-            )
-        )) == 1
-        assert not data_api_client.create_brief_response.called
-
-    def test_create_new_brief_returns_error_page_if_supplier_has_no_services_with_role(self, data_api_client):
-        data_api_client.get_brief.return_value = self.brief
-        data_api_client.get_brief.return_value['briefs']['frameworkName'] = 'Digital Outcomes and Specialists'
-        data_api_client.get_framework.return_value = self.framework
-        data_api_client.is_supplier_eligible_for_brief.return_value = False
-        data_api_client.find_services.return_value = {"services": [{"something": "nonempty"}]}
-
-        res = self.client.post(
-            self.url_for('main.brief_response', brief_id=1234),
-            data=brief_form_submission
-        )
-        doc = html.fromstring(res.get_data(as_text=True))
-
-        assert res.status_code == 400
-        assert doc.xpath('normalize-space(//h1/text())') == ERROR_MESSAGE_PAGE_HEADING_APPLICATION
-        assert len(doc.xpath(
-            '//*[contains(normalize-space(text()), normalize-space("{}"))]'.format(
-                ERROR_MESSAGE_NO_SERVICE_WITH_ROLE_APPLICATION
-            )
-        )) == 1
         assert not data_api_client.create_brief_response.called
 
     def test_create_new_brief_response_with_api_error_fails(self, data_api_client):

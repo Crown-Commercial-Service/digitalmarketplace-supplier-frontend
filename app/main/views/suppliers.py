@@ -28,8 +28,8 @@ from .users import get_current_suppliers_users
 def dashboard():
     supplier = data_api_client.get_supplier(
         current_user.supplier_code
-    )['suppliers']
-    supplier['contact'] = supplier['contactInformation'][0]
+    )['supplier']
+    supplier['contact'] = supplier['contacts'][0]
 
     all_frameworks = sorted(
         data_api_client.find_frameworks()['frameworks'],
@@ -85,7 +85,7 @@ def edit_supplier(supplier_form=None, contact_form=None, error=None):
     try:
         supplier = data_api_client.get_supplier(
             current_user.supplier_code
-        )['suppliers']
+        )['supplier']
     except APIError as e:
         abort(e.status_code)
 
@@ -96,7 +96,7 @@ def edit_supplier(supplier_form=None, contact_form=None, error=None):
         )
         contact_form = EditContactInformationForm(
             prefix='contact_',
-            **supplier['contactInformation'][0]
+            **supplier['contacts'][0]
         )
 
     return render_template_with_csrf(
@@ -332,7 +332,7 @@ def submit_company_summary():
         supplier = {
             "name": session["company_name"],
             "dunsNumber": str(session["duns_number"]),
-            "contactInformation": [{
+            "contacts": [{
                 "email": session["email_address"],
                 "phoneNumber": session["phone_number"],
                 "contactName": session["contact_name"]
@@ -344,10 +344,10 @@ def submit_company_summary():
 
         account_email_address = session.get("account_email_address", None)
 
-        supplier = data_api_client.create_supplier(supplier)
+        supplier = data_api_client.create_supplier(supplier)['supplier']
         session.clear()
-        session['email_company_name'] = supplier['suppliers']['name']
-        session['email_supplier_code'] = supplier['suppliers']['id']
+        session['email_company_name'] = supplier['name']
+        session['email_supplier_code'] = supplier['id']
 
         token = generate_token(
             {

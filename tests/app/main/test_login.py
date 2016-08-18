@@ -267,13 +267,14 @@ class TestCreateUser(BaseApplicationTest):
         )
 
         assert res.status_code == 200
+        page_text = res.get_data(as_text=True).replace(' ', '')
         for message in [
             "Supplier Name",
             "test@email.com",
             '<input type="submit" class="button-save"  value="Create contributor account" />',
             token,
         ]:
-            assert message in res.get_data(as_text=True)
+            assert message.replace(' ', '') in page_text
 
     def test_should_be_an_error_if_invalid_token_on_submit(self):
         res = self.client.post(
