@@ -830,7 +830,7 @@ def view_contract_variation(framework_slug, variation_slug):
             already_agreed = True
         else:
             form_errors = [
-                {'question': form['accept_changes'].label.text, 'input_name': 'agreement'}
+                {'question': form['accept_changes'].label.text, 'input_name': 'accept_changes'}
             ]
 
     return render_template(
