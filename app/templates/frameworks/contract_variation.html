@@ -131,7 +131,7 @@
               {% include "toolkit/forms/selection-buttons.html" %}
               {% endwith %}
               
-              <p>We will notify you when CCS has countersigned the changes and they come into effect.</p>
+              <p>We’ll tell you when CCS has countersigned the changes and they come into effect.</p>
                 {%
                   with
                   label="Save and continue",
@@ -161,10 +161,19 @@
                 {{ summary.text(item.value) }}
               {% endcall %}
             {% endcall %}
+
+            <p class="padding-bottom-small">&nbsp;</p>
+
+            {%
+              with
+                url = url_for(".framework_dashboard", framework_slug=framework.slug),
+                text = "Return to your documents page"
+            %}
+              {% include "toolkit/secondary-action-link.html" %}
+            {% endwith %}
           {% endif %}
           
           </div>
       </div>
-
 
 {% endblock %}
