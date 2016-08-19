@@ -72,9 +72,9 @@
           
           <div class="section-description">
             {{ variation.variation_description|replace("[[SUPPLIER_NAME]]", supplier_name)|markdown }}
-          {% if not already_agreed and variation.not_agreed_extra %}
+          {% if not agreed_details and variation.not_agreed_extra %}
             {{ variation.not_agreed_extra|replace("[[SUPPLIER_NAME]]", supplier_name)|markdown }}
-          {% elif already_agreed and variation.agreed_extra %}
+          {% elif agreed_details and variation.agreed_extra %}
             {{ variation.agreed_extra|replace("[[SUPPLIER_NAME]]", supplier_name)|markdown }}
           {% endif %}
           </div>
@@ -113,7 +113,7 @@
             {% endcall %}
           {% endcall %}
           
-          {% if not already_agreed %}
+          {% if not agreed_details %}
 
             <form method="post" class="supplier-declaration">
               <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />

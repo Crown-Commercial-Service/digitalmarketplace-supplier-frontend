@@ -791,7 +791,7 @@ def view_contract_variation(framework_slug, variation_slug):
     if not supplier_framework['agreementReturned']:
         abort(404)
 
-    already_agreed = True if supplier_framework['agreedVariations'].get(variation_slug) else False
+    agreed_details = supplier_framework['agreedVariations'].get(variation_slug)
     variation_content_name = 'contract_variation_{}'.format(variation_slug)
     content_loader.load_messages(framework_slug, [variation_content_name])
     form = AcceptAgreementVariationForm()
@@ -799,13 +799,13 @@ def view_contract_variation(framework_slug, variation_slug):
 
     if request.method == 'POST':
         if form.validate_on_submit():
-            data_api_client.agree_framework_variation(
+            agreed_details = data_api_client.agree_framework_variation(
                 current_user.supplier_id,
                 framework_slug,
                 variation_slug,
                 current_user.id,
                 current_user.email_address
-            )
+            )['agreedVariations']
 
             # Send email confirming accepted
             try:
@@ -827,7 +827,6 @@ def view_contract_variation(framework_slug, variation_slug):
                     extra={'error': six.text_type(e), 'supplier_id': current_user.supplier_id}
                 )
             flash('variation_accepted')
-            already_agreed = True
         else:
             form_errors = [
                 {'question': form['accept_changes'].label.text, 'input_name': 'accept_changes'}
@@ -840,7 +839,6 @@ def view_contract_variation(framework_slug, variation_slug):
         framework=framework,
         supplier_framework=supplier_framework,
         variation=content_loader.get_message(framework_slug, variation_content_name),
-        already_agreed=already_agreed,
-        agreed_details=supplier_framework['agreedVariations'].get(variation_slug),
+        agreed_details=agreed_details,
         supplier_name=supplier_framework['declaration']['nameOfOrganisation']
     ), 400 if form_errors else 200
