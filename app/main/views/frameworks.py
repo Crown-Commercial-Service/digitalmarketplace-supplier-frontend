@@ -799,13 +799,13 @@ def view_contract_variation(framework_slug, variation_slug):
 
     if request.method == 'POST':
         if form.validate_on_submit():
-            # FIXME: Set the agreement as accepted in the API
-            # data_api_client.set_variation_agreed(
-            #     current_user.id,
-            #     current_user.supplier_id,
-            #     framework_slug,
-            #     variation_slug
-            # )
+            data_api_client.agree_framework_variation(
+                current_user.supplier_id,
+                framework_slug,
+                variation_slug,
+                current_user.id,
+                current_user.email_address
+            )
 
             # Send email confirming accepted
             try:
@@ -827,6 +827,7 @@ def view_contract_variation(framework_slug, variation_slug):
                     extra={'error': six.text_type(e), 'supplier_id': current_user.supplier_id}
                 )
             flash('variation_accepted')
+            already_agreed = True
         else:
             form_errors = [
                 {'question': form['accept_changes'].label.text, 'input_name': 'agreement'}

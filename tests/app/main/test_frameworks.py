@@ -2418,8 +2418,9 @@ class TestContractVariation(BaseApplicationTest):
                                )
 
         assert_equal(res.status_code, 200)
-        # FIXME: when API client method exists
-        # data_api_client.set_variation_agreed.assert_called_once_with(1234, "g-cloud-8", 1)
+        data_api_client.agree_framework_variation.assert_called_once_with(
+            1234, 'g-cloud-8', '1', 123, 'email@email.com'
+        )
 
     @mock.patch('app.main.views.frameworks.send_email')
     def test_email_is_sent_to_correct_users(self, send_email, data_api_client):
