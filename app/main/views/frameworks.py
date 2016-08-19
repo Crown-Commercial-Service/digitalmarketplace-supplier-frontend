@@ -841,5 +841,6 @@ def view_contract_variation(framework_slug, variation_slug):
         supplier_framework=supplier_framework,
         variation=content_loader.get_message(framework_slug, variation_content_name),
         already_agreed=already_agreed,
+        agreed_details=supplier_framework['agreedVariations'].get(variation_slug),
         supplier_name=supplier_framework['declaration']['nameOfOrganisation']
     ), 400 if form_errors else 200

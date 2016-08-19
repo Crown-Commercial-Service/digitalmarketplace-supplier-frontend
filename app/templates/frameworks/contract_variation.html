@@ -146,8 +146,8 @@
             {{ summary.heading("Contract variation status", id="contract_variation_status") }}
             {% call(item) summary.list_table(
               [
-                {"key": "Agreed by", "value": "agreed by details"},
-                {"key": "Countersigned by", "value": "ccs details or Waiting for CCS to countersign"}
+                {"key": "Agreed by", "value": "{}<br />{}<br />{}".format(agreed_details.agreedUserName, agreed_details.agreedUserEmail, agreed_details.agreedAt|datetimeformat)|safe},
+                {"key": "Countersigned by", "value": "Waiting for CCS to countersign"}
               ],
               caption="Contract variation status",
               field_headings=[

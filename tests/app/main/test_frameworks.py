@@ -2396,15 +2396,23 @@ class TestContractVariation(BaseApplicationTest):
 
     def test_shows_signer_details_and_no_form_if_already_agreed(self, data_api_client):
         already_agreed = self.good_supplier_framework.copy()
-        already_agreed['frameworkInterest']['agreedVariations'] = {"1": {"agreedAt": "Already"}}
+        already_agreed['frameworkInterest']['agreedVariations'] = {
+            "1": {
+                "agreedAt": "2016-08-19T15:47:08.116613Z",
+                "agreedUserId": 1,
+                "agreedUserEmail": "agreed@email.com",
+                "agreedUserName": "William Drayton",
+            }}
         data_api_client.get_framework.return_value = self.g8_framework
         data_api_client.get_supplier_framework_info.return_value = already_agreed
         res = self.client.get("/suppliers/frameworks/g-cloud-8/contract-variation/1")
 
         assert_equal(res.status_code, 200)
-        doc = html.fromstring(res.get_data(as_text=True))
+        page_text = res.get_data(as_text=True)
+        doc = html.fromstring(page_text)
         assert_equal(
             len(doc.xpath('//h2[contains(text(), "Contract variation status")]')), 1)
+        assert "<span>William Drayton<br />agreed@email.com<br />Friday 19 August 2016 at 16:47</span>" in page_text
         assert_equal(
             len(doc.xpath('//label[contains(text(), "I accept these proposed changes")]')), 0)
         assert_equal(
