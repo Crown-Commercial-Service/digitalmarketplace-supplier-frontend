@@ -19,7 +19,7 @@ from ..forms.suppliers import (
     CompanyContactDetailsForm, CompanyNameForm, EmailAddressForm
 )
 from ..helpers.frameworks import get_frameworks_by_status
-from ..helpers import hash_email, login_required
+from ..helpers import debug_only, hash_email, login_required
 from .users import get_current_suppliers_users
 
 
@@ -80,6 +80,7 @@ def dashboard():
 
 
 @main.route('/edit', methods=['GET'])
+@debug_only
 @login_required
 def edit_supplier(supplier_form=None, contact_form=None, error=None):
     try:
@@ -108,6 +109,7 @@ def edit_supplier(supplier_form=None, contact_form=None, error=None):
 
 
 @main.route('/edit', methods=['POST'])
+@debug_only
 @login_required
 def update_supplier():
     # FieldList expects post parameter keys to have number suffixes
@@ -156,6 +158,7 @@ def update_supplier():
 
 
 @main.route('/create', methods=['GET'])
+@debug_only
 def create_new_supplier():
     return render_template_with_csrf(
         "suppliers/create_new_supplier.html"
@@ -163,6 +166,7 @@ def create_new_supplier():
 
 
 @main.route('/companies-house-number', methods=['GET'])
+@debug_only
 def companies_house_number():
     form = CompaniesHouseNumberForm()
 
@@ -176,6 +180,7 @@ def companies_house_number():
 
 
 @main.route('/companies-house-number', methods=['POST'])
+@debug_only
 def submit_companies_house_number():
     form = CompaniesHouseNumberForm(request.form)
 
@@ -199,6 +204,7 @@ def submit_companies_house_number():
 
 
 @main.route('/company-name', methods=['GET'])
+@debug_only
 def company_name():
     form = CompanyNameForm()
 
@@ -212,6 +218,7 @@ def company_name():
 
 
 @main.route('/company-name', methods=['POST'])
+@debug_only
 def submit_company_name():
     form = CompanyNameForm(request.form)
 
@@ -233,6 +240,7 @@ def submit_company_name():
 
 
 @main.route('/company-contact-details', methods=['GET'])
+@debug_only
 def company_contact_details():
     form = CompanyContactDetailsForm()
 
@@ -252,6 +260,7 @@ def company_contact_details():
 
 
 @main.route('/company-contact-details', methods=['POST'])
+@debug_only
 def submit_company_contact_details():
     form = CompanyContactDetailsForm(request.form)
 
@@ -275,6 +284,7 @@ def submit_company_contact_details():
 
 
 @main.route('/create-your-account', methods=['GET'])
+@debug_only
 def create_your_account():
     current_app.logger.info(
         "suppliercreate: get create-your-account supplier_code:{}".format(
@@ -289,6 +299,7 @@ def create_your_account():
 
 
 @main.route('/create-your-account', methods=['POST'])
+@debug_only
 def submit_create_your_account():
     current_app.logger.info(
         "suppliercreate: post create-your-account supplier_code:{}".format(
@@ -308,6 +319,7 @@ def submit_create_your_account():
 
 
 @main.route('/company-summary', methods=['GET'])
+@debug_only
 def company_summary():
     return render_template_with_csrf(
         "suppliers/company_summary.html"
@@ -315,6 +327,7 @@ def company_summary():
 
 
 @main.route('/company-summary', methods=['POST'])
+@debug_only
 def submit_company_summary():
 
     required_fields = [
@@ -402,6 +415,7 @@ def submit_company_summary():
 
 
 @main.route('/create-your-account-complete', methods=['GET'])
+@debug_only
 def create_your_account_complete():
     if 'email_sent_to' in session:
         email_address = session['email_sent_to']
@@ -416,6 +430,7 @@ def create_your_account_complete():
 
 
 @main.route('/duns-number', methods=['GET'])
+@debug_only
 def duns_number():
     form = DunsNumberForm()
 
@@ -429,6 +444,7 @@ def duns_number():
 
 
 @main.route('/duns-number', methods=['POST'])
+@debug_only
 def submit_duns_number():
     form = DunsNumberForm(request.form)
 
