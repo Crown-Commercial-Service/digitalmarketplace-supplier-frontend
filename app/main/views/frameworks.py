@@ -791,21 +791,23 @@ def view_contract_variation(framework_slug, variation_slug):
     if not supplier_framework['agreementReturned']:
         abort(404)
 
-    agreed_details = supplier_framework['agreedVariations'].get(variation_slug)
+    agreed_details = supplier_framework['agreedVariations'].get(variation_slug, {})
     variation_content_name = 'contract_variation_{}'.format(variation_slug)
     content_loader.load_messages(framework_slug, [variation_content_name])
     form = AcceptAgreementVariationForm()
     form_errors = None
 
-    if request.method == 'POST':
+    # Do not call API or send email if already agreed to
+    if request.method == 'POST' and not agreed_details.get("agreedAt"):
         if form.validate_on_submit():
-            agreed_details = data_api_client.agree_framework_variation(
+            # Set variation as agreed to in database
+            data_api_client.agree_framework_variation(
                 current_user.supplier_id,
                 framework_slug,
                 variation_slug,
                 current_user.id,
                 current_user.email_address
-            )['agreedVariations']
+            )
 
             # Send email confirming accepted
             try:
@@ -827,6 +829,10 @@ def view_contract_variation(framework_slug, variation_slug):
                     extra={'error': six.text_type(e), 'supplier_id': current_user.supplier_id}
                 )
             flash('variation_accepted')
+            return redirect(url_for(".view_contract_variation",
+                                    framework_slug=framework_slug,
+                                    variation_slug=variation_slug)
+                            )
         else:
             form_errors = [
                 {'question': form['accept_changes'].label.text, 'input_name': 'accept_changes'}
