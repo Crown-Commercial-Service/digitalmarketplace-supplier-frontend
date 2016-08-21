@@ -2480,6 +2480,26 @@ class TestContractVariation(BaseApplicationTest):
             doc.xpath('//p[@class="banner-message"][contains(text(), "You have accepted the proposed changes.")]')
         ) == 1
 
+    @mock.patch('app.main.views.frameworks.send_email')
+    def test_api_is_not_called_and_no_email_sent_for_subsequent_posts(self, send_email, data_api_client):
+        already_agreed = self.good_supplier_framework.copy()
+        already_agreed['frameworkInterest']['agreedVariations'] = {
+            "1": {
+                "agreedAt": "2016-08-19T15:47:08.116613Z",
+                "agreedUserId": 1,
+                "agreedUserEmail": "agreed@email.com",
+                "agreedUserName": "William Drayton",
+            }}
+        data_api_client.get_framework.return_value = self.g8_framework
+        data_api_client.get_supplier_framework_info.return_value = already_agreed
+
+        res = self.client.post("/suppliers/frameworks/g-cloud-8/contract-variation/1",
+                               data={"accept_changes": "Yes"}
+                               )
+        assert res.status_code == 200
+        assert not data_api_client.agree_framework_variation.called
+        assert not send_email.called
+
     def test_error_if_box_not_ticked(self, data_api_client):
         data_api_client.get_framework.return_value = self.g8_framework
         data_api_client.get_supplier_framework_info.return_value = self.good_supplier_framework
