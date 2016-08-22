@@ -64,10 +64,10 @@
         <div class="feedback">
           <ul class="inline-links--inverted">
             {% if not current_user.is_authenticated %}
-            <li><a href="{{ url_for('main.create-your-account') }}">Sign up</a></li>
-            <li><a href="{{ url_for('main.render_login') }}">Log in</a></li>
+            <li><a href="{{ config['BASE_PREFIX'] + '/buyers/create' }}">Sign up</a></li>
+            <li><a href="{{ config['BASE_PREFIX'] + '/login' }}">Log in</a></li>
             {% else %}
-            <li><a href="{{ url_for('main.list_users') }}">Log out</a></li>
+            <li><a href="{{ config['BASE_PREFIX'] + '/logout' }}">Log out</a></li>
             {% endif %}
           </ul>
         </div>
