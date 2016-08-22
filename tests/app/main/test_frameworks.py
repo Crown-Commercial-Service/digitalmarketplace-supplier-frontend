@@ -2509,5 +2509,5 @@ class TestContractVariation(BaseApplicationTest):
 
         assert res.status_code == 400
         assert len(
-            doc.xpath('//span[@class="validation-message"][contains(text(), "If you agree to the proposed changes then you must check the box before saving.")]')  # noqa
+            doc.xpath('//span[@class="validation-message"][contains(text(), "You can only save and continue if you agree to the proposed changes")]')  # noqa
         ) == 1
