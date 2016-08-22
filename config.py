@@ -95,13 +95,13 @@ class Test(Config):
     CSRF_FAKED = True
     DM_LOG_LEVEL = 'CRITICAL'
     SERVER_NAME = 'localhost'
-    SHARED_EMAIL_KEY = "KEY"
 
     FEATURE_FLAGS_EDIT_SECTIONS = enabled_since('2015-06-03')
 
     DM_DATA_API_AUTH_TOKEN = 'myToken'
 
-    SECRET_KEY = 'not_very_secret'
+    SECRET_KEY = 'TestKeyTestKeyTestKeyTestKeyTestKeyTestKeyX='
+    SHARED_EMAIL_KEY = SECRET_KEY
 
     DM_SUBMISSIONS_BUCKET = 'digitalmarketplace-submissions-dev-dev'
     DM_COMMUNICATIONS_BUCKET = 'digitalmarketplace-communications-dev-dev'
@@ -126,8 +126,8 @@ class Development(Config):
     DM_DOCUMENTS_BUCKET = "digitalmarketplace-documents-dev-dev"
     DM_ASSETS_URL = "https://{}.s3-eu-west-1.amazonaws.com".format(DM_SUBMISSIONS_BUCKET)
 
-    SHARED_EMAIL_KEY = "very_secret"
-    SECRET_KEY = 'verySecretKey'
+    SECRET_KEY = 'DevKeyDevKeyDevKeyDevKeyDevKeyDevKeyDevKeyX='
+    SHARED_EMAIL_KEY = SECRET_KEY
 
 
 class Live(Config):

@@ -368,7 +368,7 @@ def submit_company_summary():
                 "supplier_code": session['email_supplier_code'],
                 "supplier_name": session['email_company_name']
             },
-            current_app.config['SHARED_EMAIL_KEY'],
+            current_app.config['SECRET_KEY'],
             current_app.config['INVITE_EMAIL_SALT']
         )
 

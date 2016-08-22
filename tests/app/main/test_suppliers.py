@@ -1318,7 +1318,7 @@ class TestCreateSupplier(BaseApplicationTest):
                     "supplier_code": 12345,
                     "supplier_name": "Supplier Name"
                 },
-                "KEY",
+                self.app.config['SECRET_KEY'],
                 "InviteEmailSalt"
             )
 
@@ -1367,7 +1367,7 @@ class TestCreateSupplier(BaseApplicationTest):
                 "supplier_code": 12345,
                 "supplier_name": "Supplier Name"
             },
-            "KEY",
+            self.app.config['SECRET_KEY'],
             "InviteEmailSalt"
         )
 
