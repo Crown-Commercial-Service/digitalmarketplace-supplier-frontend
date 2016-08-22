@@ -762,7 +762,7 @@ def contract_review(framework_slug):
                     framework.get('variations') and
                     not supplier_framework['agreedVariations']
                 ):
-                    variation_slug = framework['variations'].keys()[0]
+                    variation_slug = list(framework['variations'].keys())[0]
                     return redirect(url_for(
                         '.view_contract_variation',
                         framework_slug=framework_slug,
