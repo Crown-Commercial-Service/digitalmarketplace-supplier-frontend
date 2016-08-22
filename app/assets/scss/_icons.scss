@@ -1,0 +1,42 @@
+@mixin inline-background-image($img) {
+  background-image: url('/marketplace/static/images/icons/' + $img + '.png');
+  background-image: none, url('/marketplace/static/images/icons/' + $img + '.svg'),
+  linear-gradient(transparent, transparent);
+}
+
+%icon-arrow-right {
+  @include inline-background-image('arrow-right');
+}
+
+%icon-arrow-right--white {
+  @include inline-background-image('arrow-right--white');
+}
+
+%icon-arrow-right--aqua {
+  @include inline-background-image('arrow-right--aqua');
+}
+
+%icon-arrow-left--black {
+  @include inline-background-image('arrow-left--black');
+}
+
+%icon-bars {
+  @include inline-background-image('bars');
+}
+
+%icon-close {
+  @include inline-background-image('close');
+}
+
+%icon-chevron-down--navy {
+  @include inline-background-image('chevron-down--navy');
+}
+
+%icon-chevron-up--white {
+  @include inline-background-image('chevron-up--white');
+}
+
+// Specific functions
+%icon-external-link--aqua {
+  @include inline-background-image('external-link--aqua');
+}

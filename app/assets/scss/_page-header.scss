@@ -1,0 +1,139 @@
+.govau--header {
+  background-color: $non-black;
+  padding: $small-spacing 0;
+
+  .logo {
+    font-size: 1.12rem;
+    font-weight: $base-font-weight;
+  }
+}
+
+.marketplace--header {
+  // @include linear-gradient(to left, $dark-navy, $aqua, $fallback: $aqua);
+  @include link-colours($link-inverted-colour, $link-inverted-colour, $link-colour);
+
+  position: relative;
+  padding: $medium-spacing 0 ($base-spacing * 3);
+  padding-bottom: $medium-spacing;
+  margin-bottom: 0;
+  background-color: $aqua;
+  color: $body-inverted-text-colour;
+
+  @include media($tablet) {
+    padding-bottom: $medium-spacing;
+  }
+
+  .marketplace--logo {
+    float: left;
+
+    @include media($tablet) {
+      padding-bottom: 0;
+    }
+  }
+
+  .logo {
+    @extend h3;
+
+    padding-bottom: 0;
+    border-bottom: none;
+    color: $body-inverted-text-colour;
+    font-family: $base-sans-serif;
+    font-weight: 400;
+    letter-spacing: 2px;
+
+    &:hover,
+    &:focus {
+      border-bottom: 1px;
+    }
+  }
+
+  [class^='badge'] {
+    vertical-align: super;
+    margin-left: $tiny-spacing;
+  }
+}
+
+.phase-banner {
+  background: $navy;
+  color: $non-white;
+  padding: $tiny-spacing 0;
+
+  p {
+    font-size: rem(14);
+    margin: 0;
+  }
+
+  a {
+    @include link-colours($non-white, $white, $navy);
+  }
+}
+
+.hero {
+  padding: ($base-spacing * 2) 0;
+  margin-bottom: 0;
+  background-color: $hero-bg-inverted-colour;
+  color: $body-text-colour;
+
+  .site-title {
+    @extend h1;
+
+    margin: $tiny-spacing 0;
+    color: $body-text-colour;
+  }
+
+  .tagline {
+    @extend h4;
+    font-weight: $base-font-weight;
+  }
+
+  a {
+    @include link-colours($non-black, $white, $non-black);
+    border-bottom: solid 1px $link-colour;
+  }
+}
+
+.hero-main {
+  // @include linear-gradient(to left, $dark-navy, $aqua, $fallback: $hero-bg-colour);
+  @include position(relative, null);
+  
+  padding: 0 0 ($base-spacing * 2);
+  margin-bottom: 0;
+  background-color: $hero-bg-colour;
+  color: $body-inverted-text-colour;
+
+  h1 {
+    margin: 0 0 $tiny-spacing/2;
+    color: $body-inverted-text-colour;
+
+      @include media($tablet) {
+        font-size: 3rem;
+      }
+  }
+
+  .tagline {
+    @extend h4;
+    font-weight: $base-font-weight;
+
+    @include media($tablet) {
+      font-size: rem(20);
+      margin-top: 0;
+    }
+  }
+
+  a {
+    @include link-colours($white, $white, $non-black);
+  }
+
+  [class^='badge'] {
+    @include media($tablet) {
+      vertical-align: text-top;
+    }
+  }
+}
+
+.content--hero {
+  @include media($desktop) {
+    @include span-columns(9 of 16);
+    margin-top: -2rem;
+  }
+}

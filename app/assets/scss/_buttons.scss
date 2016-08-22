@@ -1,0 +1,39 @@
+button,
+.button,
+[role='button'],
+[type='button'] {
+  height: auto;
+  margin: 0 $small-spacing $small-spacing 0;
+
+  .content--hero & {
+    margin: $small-spacing*2 $small-spacing 0 0;
+
+    &.inverted {
+      border-color: $button-inverted-colour;
+      background-color: $button-inverted-colour;
+      color: $button-inverted-text-colour;
+      font-size: rem(17);
+
+      &:hover,
+      &:active,
+      &:focus {
+        border: 1px solid $button-inverted-colour;
+        background-color: transparent;
+        color: $white;
+      }
+    }
+  }
+
+  .callout--info & {
+    margin-bottom: $tiny-spacing;
+  }
+}
+
+.sidebar {
+  button,
+  .button,
+  [role='button'],
+  [type='button'] {
+    width: 100%;
+  }
+}

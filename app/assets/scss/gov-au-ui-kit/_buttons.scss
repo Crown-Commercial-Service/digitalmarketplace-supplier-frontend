@@ -1,0 +1,101 @@
+/*
+Buttons
+
+Buttons signal action&mdash;use them to move the user through a transaction.
+
+Use 1 button per page to build a strong call to action. Adding a second or third button forces users to make a choice. If choice is required use another kind of element eg radio button.
+
+Use button text to describe what the button does&mdash;keep it short.
+
+The button alignment in [forms](section-forms.html) should put the primary action button at the left edge, in the user's line of sight.
+
+<hr />
+
+This guidance is in part adapted from [GOV.UK elements](http://govuk-elements.herokuapp.com/) under [Open Government Licence v3.0](https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/), and [18F Draft US Web Design Standards](https://standards.usa.gov/getting-started/) under [CC0 1.0 Universal](https://creativecommons.org/publicdomain/zero/1.0/legalcode).
+
+Style guide: Buttons
+*/
+
+/*
+Creating buttons
+
+Call buttons using:
+
+- `<button>` element (for actions like submitting a form)
+- the `role` property of `a` elements (eg an anchor link).
+
+Do not apply styles to disabled buttons.
+
+Markup: templates/buttons-examples.hbs
+
+Style guide: Buttons.1 Creating buttons
+*/
+
+@mixin button-colours($bg-colour, $bg-colour--hover, $bg-colour--active, $text-colour, $text-colour--hover: $text-colour) {
+  button,
+  [role='button'] {
+    background-color: $bg-colour;
+    color: $text-colour;
+    border: 1px solid $bg-colour--hover;
+
+    &:hover,
+    &:focus {
+      background-color: $bg-colour--hover;
+      color: $text-colour--hover;
+    }
+
+    &:active {
+      background-color: $bg-colour--active;
+    }
+
+    &[disabled],
+    &.disabled {
+      &,
+      &:hover,
+      &:active,
+      &:focus {
+        cursor: not-allowed;
+        border-color: transparent;
+        background-color: $button-bg-colour--disabled;
+        color: $non-black;
+      }
+    }
+  }
+}
+
+%base-button {
+  -webkit-appearance: none;
+  appearance: none;
+  display: inline-block;
+  margin: 0 $small-spacing $small-spacing 0;
+  height: $base-spacing * 1.5;
+  border-radius: $tiny-border-radius;
+  outline: 0;
+  padding: $tiny-spacing $medium-spacing $tiny-spacing * 1.3;
+  text-decoration: none;
+  font-weight: $bold-font-weight;
+
+  @include media($tablet) {
+    margin: $small-spacing;
+  }
+}
+
+button,
+.button,
+[role='button'],
+[type='button'] {
+  @extend %base-button;
+
+  &.inverted {
+    border: 1px solid $button-inverted-colour;
+    background-color: transparent;
+
+    &:hover,
+    &:active,
+    &:focus {
+      border-color: $button-inverted-colour;
+      background-color: $button-inverted-colour;
+      color: $button-inverted-text-colour;
+    }
+  }
+}

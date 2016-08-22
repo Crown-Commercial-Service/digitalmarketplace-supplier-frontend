@@ -1,0 +1,298 @@
+// Validation
+.validation-masthead {
+  background: rgba(red,0.1);
+  padding: 1.353em;
+  margin: 2em 0;
+
+  h1 {
+    font-size: 1.059em;
+  }
+
+  a {
+    width: 99%;
+    border-bottom: 1px solid black;
+    line-height: 2em;
+
+    &::after {
+      content: "\A";
+      white-space: pre;
+    }
+  }
+}
+
+// Buyer brief overview page
+header.page-heading-smaller {
+  h1 {
+    &:first-of-type {
+      margin-top: 0.4em;
+    }
+  }
+}
+
+p.context {
+  color: lighten($grey, 5%);
+  font-size: 1.412em;
+  margin-bottom: 0.25em;
+  margin-top: 1em;
+}
+
+h2.instruction-list-item-body {
+  padding-top: 1em;
+  padding-left: 1.625em;
+
+  &:first-of-type {
+    border: none;
+    padding-top: 0;
+  }
+
+  span.step-number {
+    position: absolute;
+    margin-left: -1.625em;
+  }
+}
+
+ol.instruction-list {
+  margin-left: 0;
+  padding-left: 0;
+  padding-bottom: 2em;
+
+  >li {
+    list-style: none;
+    font-size: 1.059rem;
+
+    span.tick {
+      position: absolute;
+      margin-left: -1.35em;
+      margin-top: 0.25em;
+    }  
+
+    p {
+      &.instruction-list-item-top {
+        padding-left: 2.3em;
+      }
+    }
+
+    a {
+      font-weight: 700;
+    }
+
+    ul {
+      li {
+        list-style: none;
+        padding-left: 0.1em;
+      }
+    }
+  }
+}
+
+
+// Buyer Brief forms
+
+
+.brief-builder {
+
+  &.brief-section {
+    main {
+      .content-main {
+        &:first-child {
+          .column-two-thirds {
+            width: 100%;
+            @include media($desktop) {
+              width: 66.6666666667%;
+            }
+          }
+        }
+      }
+    }
+  }
+
+  label {
+    .question-heading-with-hint {
+      p {
+        float: left;
+      }
+
+      p + span.question-optional,
+      p + span.text-box-unit-qualifier {
+        float: left;
+        line-height: 1.6em;
+        padding-left: 0.5em;
+      }
+    }
+
+    &::after {
+      content: '';
+      display: table;
+      clear: both;
+    }
+  }
+
+  input[type='checkbox'] + label,
+  input[type='radio'] + label {
+    font-weight: $bold-font-weight;
+    margin: 0 0 8px;
+    padding-bottom: 6px;
+
+    >p {
+      font-weight: 400;
+      margin-bottom: 0.5em;
+      padding-right: 20px;
+    }
+
+    &:before {
+      top: 12px;
+    }
+
+    &:after {
+      top: 17px;
+    }
+  }
+
+  input[type='checkbox']:checked + label,
+  input[type='radio']:checked + label {
+    font-weight: 700;
+    outline: 1px solid $light-grey;
+
+    &::after {
+      top: 17px;
+    }
+  }
+
+  .question {
+    span.hint.word-count-counter {
+      p {
+        margin-top: $tiny-spacing;
+      }
+    }
+  }
+
+  form {
+
+    .validation-message {
+      clear: both;
+      display: block;
+    }
+
+    .word-count-counter {
+      color: $input-count-colour;
+      float: right;
+    }
+
+    .text-box-unit + .hint {
+      float: none;
+    }
+  }
+
+  table.content-table {
+    margin: 2em 0;
+
+    caption {
+      font-size: 1.0625rem;
+      padding-bottom: 1em;
+      text-align: left;
+    }
+
+    thead {
+      display: none;
+    }
+
+    td {
+
+      padding: $tiny-spacing;
+
+      @include media($tablet) {
+        padding: 1.2em;
+      }
+    }
+
+    tr {
+      border-bottom: 1px solid $light-grey;
+
+      &:first-child {
+        border-top: 1px solid $light-grey;
+      }
+
+      td, th {
+        vertical-align: top;
+        padding-left: 0;
+
+        &:nth-child(1) {
+          font-weight: 700;
+          width: 40%;
+        }
+
+        &:nth-child(3) {
+          color: lighten($grey, 5%);
+          text-align: right;
+
+          a {
+            color: lighten($grey, 5%);
+            border-bottom: 1px solid $light-grey;
+
+            &:hover {
+              color: $black;
+            }
+          }
+        }
+      }
+
+      &:nth-child(even) {
+        background-color: white;
+      }
+    }
+  }
+
+  .question-optional {
+    font-size: rem(17);
+  }
+
+  .list-entry-remove,
+  .list-entry-add {
+    background: $white;
+    border: 0;
+    border-bottom: 1px solid $non-black;
+    color: $non-black;
+    display: inline;
+    font-weight: $base-font-weight;
+    align-items: stretch;
+    padding: 0;
+    width: auto;
+
+    &:focus,
+    &:hover {
+      background: $light-aqua;
+      border-bottom: 1px solid $non-black;
+      color: $non-black;
+    }
+  }
+}
+
+.validation-wrapper, #technicalWeighting, #culturalWeighting, #priceWeighting {
+  .text-box-smaller {
+    width: 40%;
+  }
+  .text-box-unit {
+    display: inline-block;
+    margin-left: 0.5em;
+  }
+}
+
+// Shortlist and evaluation process - Criteria
+
+#essentialRequirements, #niceToHaveRequirements, #culturalFitCriteria {
+
+  .question-heading-with-hint {
+    p {
+      font-size: 2.750em;
+      padding: 0.5em 0 0.25em 0;
+    }
+  }
+
+  .text-box {
+    width: 60%;
+  }
+
+  .list-entry-remove {
+    margin-left: 1em;
+  }
+}

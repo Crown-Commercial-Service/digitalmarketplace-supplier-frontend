@@ -1,0 +1,110 @@
+{% block top_of_page %}{% endblock %}
+<!DOCTYPE html>
+<!--[if lt IE 9]><html class="lte-ie8" lang="{{ html_lang|default('en') }}"><![endif]-->
+<!--[if gt IE 8]><!--><html lang="{{ html_lang|default('en') }}"><!--<![endif]-->
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>{% block page_title %}Marketplace - The place to do ICT business with government{% endblock %}</title>
+
+  <script src="https://ajax.googleapis.com/ajax/libs/webfont/1.6.16/webfont.js"></script>
+  <script>
+    WebFont.load({
+      google: {
+        families: ['Open+Sans:400italic,700,400:latin,latin-ext']
+      }
+    });
+  </script>
+
+  <link rel="shortcut icon" href="{{ asset_path }}images/favicon.png" type="image/x-icon" />
+
+  <link rel="apple-touch-icon-precomposed" sizes="152x152" href="{{ asset_path }}images/apple-touch-icon.png">
+  <link rel="apple-touch-icon-precomposed" sizes="120x120" href="{{ asset_path }}images/apple-touch-icon.png">
+  <link rel="apple-touch-icon-precomposed" sizes="76x76" href="{{ asset_path }}images/apple-touch-icon.png">
+  <link rel="apple-touch-icon-precomposed" href="{{ asset_path }}images/apple-touch-icon.png">
+
+  {% block head %}{% endblock %}
+
+</head>
+
+<body class="{% block body_classes %}{% endblock %}">
+  <script>document.body.className = ((document.body.className) ? document.body.className + ' js-enabled' : 'js-enabled');</script>
+
+  {% block body_start %}{% endblock %}
+
+  <div class="skip-to">
+    <a href="#content">Skip to main content</a>
+    <!-- <a href="#nav">Skip to section navigation</a> -->
+  </div>
+
+  <header role="banner" class="{% block header_class %}{% endblock %}">
+
+    <section class="phase-banner">
+      <div class="wrapper">
+        <p>
+            This is a private beta. To provide feedback, email us at <a href="mailto:marketplace@digital.gov.au">marketplace@digital.gov.au</a>.
+        </p>
+      </div>
+    </section>
+    <section class="govau--header">
+      <div class="wrapper">
+        <div class="govau--logo">
+          <a href="{{ homepage_url|default('/') }}" title="{{ logo_link_title|default('Go to the GOV.AU homepage') }}" class="logo">GOV.AU</a>
+        </div>
+      </div>
+    </section>
+    <section class="marketplace--header">
+      <div class="wrapper">
+        {% if "/marketplace" != request.path %}
+        <div class="marketplace--logo">
+          <a href="/marketplace" title="{{ logo_link_title|default('Go to the Marketplace homepage') }}" class="logo">/marketplace</a> <span class="badge--beta">private beta</span>
+        </div>
+        {% endif %}
+        <div class="feedback">
+          <ul class="inline-links--inverted">
+            {% if not current_user.is_authenticated %}
+            <li><a href="{{ url_for('main.create-your-account') }}">Sign up</a></li>
+            <li><a href="{{ url_for('main.render_login') }}">Log in</a></li>
+            {% else %}
+            <li><a href="{{ url_for('main.list_users') }}">Log out</a></li>
+            {% endif %}
+          </ul>
+        </div>
+        <nav class="global-nav" aria-label="global navigation" tabindex="2">
+          <ul>
+            <li><a href="#">Find a supplier</a></li>
+            <li><a href="#">View opportunities</a></li>
+            <li><a href="#">Create a brief</a></li>
+            <li><a href="#">Become an ICT supplier</a></li>
+            <li><a href="#">Buyer's guide</a></li>
+            <li><a href="#">About the Digital Marketplace</a></li>
+          </ul>
+        </nav>
+      </div>
+    </section>
+    {% block hero %}{% endblock %}
+
+  </header>
+
+  {% block breadcrumb %}{% endblock %}
+
+  <main class="{% block main_class %}{% endblock %}">
+    {% block content_summary %}{% endblock %}
+    {% block sidebar %}{% endblock %}
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer role="contentinfo">
+    <div class="wrapper">
+      {% block footer_top %}{% endblock %}
+      {% block footer %}{% endblock %}
+    </div>
+  </footer>
+
+  {% block body_end %}{% endblock %} 
+  
+  <script type="text/javascript" src="https://gov-au-ui-kit.apps.staging.digital.gov.au/latest/ui-kit.min.js"></script>
+
+  </body>
+  </html>

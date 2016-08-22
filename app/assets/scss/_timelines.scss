@@ -1,0 +1,37 @@
+ul {
+  &.timeline {
+    list-style-type: circle;
+    padding: rem(40) 0 rem(30) rem(10);
+    > li {
+      padding: 0 0 rem(40) rem(30);
+      list-style: none;
+      border-left: $light-grey 5px solid;
+      margin-bottom: 0;
+      &::before {
+        content: '';
+        background: $white;
+        border: 5px solid $non-black;
+        border-radius: 1.2em;
+        height: rem(25);
+        width: rem(25);
+        display: inline-block;
+        float: left;
+        margin-left: rem(-45);
+        margin-top: 0;
+      }
+      &:last-of-type {
+        border-left-color: transparent;
+        padding-bottom: 0;
+      }
+      h3 {
+        @extend h4;
+        margin: 0 0 rem(5);
+      }
+    }
+  }
+  &.links {
+    > li {
+      list-style: none;
+    }
+  }
+}

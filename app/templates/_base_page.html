@@ -1,41 +1,24 @@
-{% extends "govuk/govuk_template.html" %}
+{% extends "main_template.html" %}
 
 {% block head %}
   {% include "_stylesheets.html" %}
 {% endblock %}
 
-{% block cookie_message %}
-  {% include "_cookie_message.html" %}
-{% endblock %}
-
-{% block header_class %}with-proposition{% endblock %}
-
-{% block proposition_header %}
-  {% include "_proposition_header.html" %}
-{% endblock %}
+{% block sidebar %}{% endblock %}
 
 {% block content %}
-  {% include "_phase_banner.html" %}
   {% block breadcrumb %}{% endblock %}
-  <div id="wrapper">
-    <main id="content" role="main">
-      {% block main_content %}
-      {% endblock %}
-    </main>
-  </div>
+  <article role="main" id="content" class="content-main">
+    {% block main_content %}{% endblock %}
+  </article>
 {% endblock %}
 
 {% block footer_top %}
-  {% include "_footer_categories.html" %}
+  {% include "_footer_top.html" %}
 {% endblock %}
 
-{% block footer_support_links %}
-  <h2 class="visuallyhidden">Support links</h2>
-    <ul>
-        <li><a href="/terms-and-conditions" class="terms-and-conditions">Terms and conditions</a></li>
-        <li><a href="/cookies">Cookies</a></li>
-        <li>Built by the <a href="https://www.gov.uk/government/organisations/government-digital-service">Government Digital Service</a></li>
-    </ul>
+{% block footer %}
+  {% include "_footer.html" %}
 {% endblock %}
 
 {% block body_end %}
