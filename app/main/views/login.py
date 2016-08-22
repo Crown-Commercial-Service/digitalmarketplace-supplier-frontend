@@ -20,7 +20,7 @@ from ... import data_api_client
 def create_user(encoded_token):
     form = CreateUserForm()
 
-    token = decode_invitation_token(encoded_token, role='supplier')
+    token = decode_invitation_token(encoded_token.encode(), role='supplier')
 
     if token is None:
         current_app.logger.warning(
@@ -51,7 +51,7 @@ def create_user(encoded_token):
 def submit_create_user(encoded_token):
     form = CreateUserForm(request.form)
 
-    token = decode_invitation_token(encoded_token, role='supplier')
+    token = decode_invitation_token(encoded_token.encode(), role='supplier')
     if token is None:
         current_app.logger.warning("createuser.token_invalid: {encoded_token}",
                                    extra={'encoded_token': encoded_token})
@@ -116,7 +116,7 @@ def send_invite_user():
                 "supplier_name": current_user.supplier_name,
                 "email_address": form.email_address.data
             },
-            current_app.config['SHARED_EMAIL_KEY'],
+            current_app.config['SECRET_KEY'],
             current_app.config['INVITE_EMAIL_SALT']
         )
         url = url_for('main.create_user', encoded_token=token, _external=True)

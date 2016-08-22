@@ -1,6 +1,8 @@
 # coding: utf-8
 from __future__ import unicode_literals
 
+import urllib2
+
 from dmapiclient import HTTPError
 from dmapiclient.audit import AuditTypes
 from dmutils.email import generate_token, EmailError
@@ -98,9 +100,6 @@ class TestInviteUser(BaseApplicationTest):
     def test_should_call_generate_token_with_correct_params(self, send_email, generate_token, data_api_client):
         with self.app.app_context():
 
-            self.app.config['SHARED_EMAIL_KEY'] = "KEY"
-            self.app.config['INVITE_EMAIL_SALT'] = "SALT"
-
             self.login()
             res = self.client.post(
                 self.url_for('main.send_invite_user'),
@@ -115,8 +114,8 @@ class TestInviteUser(BaseApplicationTest):
                     "supplier_name": "Supplier Name",
                     "email_address": "this@isvalid.com"
                 },
-                'KEY',
-                'SALT'
+                self.app.config['SECRET_KEY'],
+                self.app.config['INVITE_EMAIL_SALT']
             )
 
     @mock.patch('app.main.views.login.send_email')
@@ -217,7 +216,7 @@ class TestCreateUser(BaseApplicationTest):
                 'supplier_name': supplier_name,
                 'email_address': email_address
             },
-            self.app.config['SHARED_EMAIL_KEY'],
+            self.app.config['SECRET_KEY'],
             self.app.config['INVITE_EMAIL_SALT']
         )
 
@@ -238,7 +237,7 @@ class TestCreateUser(BaseApplicationTest):
             {
                 'this_is_not_expected': 1234
             },
-            self.app.config['SHARED_EMAIL_KEY'],
+            self.app.config['SECRET_KEY'],
             self.app.config['INVITE_EMAIL_SALT']
         )
 
@@ -272,7 +271,7 @@ class TestCreateUser(BaseApplicationTest):
             "Supplier Name",
             "test@email.com",
             '<input type="submit" class="button-save"  value="Create contributor account" />',
-            token,
+            urllib2.quote(token),
         ]:
             assert message.replace(' ', '') in page_text
 
