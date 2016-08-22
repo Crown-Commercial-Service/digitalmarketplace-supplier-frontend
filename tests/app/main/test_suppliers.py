@@ -63,53 +63,6 @@ def get_user():
 class TestSuppliersDashboard(BaseApplicationTest):
     @mock.patch("app.main.views.suppliers.data_api_client")
     @mock.patch("app.main.views.suppliers.get_current_suppliers_users")
-    def test_shows_supplier_info(self, get_current_suppliers_users, data_api_client):
-        data_api_client.get_framework.return_value = self.framework('open')
-        data_api_client.get_supplier.side_effect = get_supplier
-        data_api_client.find_audit_events.return_value = {
-            "auditEvents": []
-        }
-        get_current_suppliers_users.side_effect = get_user
-        with self.app.test_client():
-            self.login()
-
-            res = self.client.get(self.url_for('main.dashboard'))
-            assert_equal(res.status_code, 200)
-
-            data_api_client.get_supplier.assert_called_once_with(1234)
-
-            resp_data = res.get_data(as_text=True)
-
-            assert_in("Supplier Description", resp_data)
-            assert_in("Client One", resp_data)
-            assert_in("Client Two", resp_data)
-
-            assert_in("1 Street", resp_data)
-            assert_in("2 Building", resp_data)
-            assert_in("supplier.dmdev", resp_data)
-            assert_in("supplier@user.dmdev", resp_data)
-            assert_in("Supplier Person", resp_data)
-            assert_in("0800123123", resp_data)
-            assert_in("Supplierville", resp_data)
-            assert_in("Supplierland", resp_data)
-            assert_in("11 AB", resp_data)
-
-            # Check contributors table exists
-            assert_in(
-                self.strip_all_whitespace('Contributors</h2>'),
-                self.strip_all_whitespace(resp_data)
-            )
-            assert_in(
-                self.strip_all_whitespace('User Name</span></td>'),
-                self.strip_all_whitespace(resp_data)
-            )
-            assert_in(
-                self.strip_all_whitespace('email@email.com</span></td>'),
-                self.strip_all_whitespace(resp_data)
-            )
-
-    @mock.patch("app.main.views.suppliers.data_api_client")
-    @mock.patch("app.main.views.suppliers.get_current_suppliers_users")
     def test_error_and_success_flashed_messages_only_are_shown_in_banner_messages(
         self, get_current_suppliers_users, data_api_client
     ):
@@ -135,29 +88,6 @@ class TestSuppliersDashboard(BaseApplicationTest):
             assert_in('<pclass="banner-message">Thisisanerror</p>', data)
             assert_in('<pclass="banner-message">Thisisasuccess</p>', data)
             assert_not_in('<pclass="banner-message">account-created</p>', data)
-
-    @mock.patch("app.main.views.suppliers.data_api_client")
-    @mock.patch("app.main.views.suppliers.get_current_suppliers_users")
-    def test_shows_edit_buttons(self, get_current_suppliers_users, data_api_client):
-        data_api_client.get_supplier.side_effect = get_supplier
-        data_api_client.find_frameworks.return_value = find_frameworks_return_value
-        data_api_client.get_supplier_frameworks.return_value = {
-            'frameworkInterest': [
-                {'frameworkSlug': 'g-cloud-6', 'services_count': 99}
-            ]
-        }
-        get_current_suppliers_users.side_effect = get_user
-        with self.app.test_client():
-            self.login()
-
-            res = self.client.get(self.url_for('main.dashboard'))
-            assert_equal(res.status_code, 200)
-
-            doc_data = res.get_data(as_text=True)
-            edit_link = '<a href="{}" class="summary-change-link">Edit</a>'.format(self.url_for('main.edit_supplier'))
-            assert_in(edit_link, doc_data)
-            view_link = '<a href="{}" class="summary-change-link">View</a>'.format(self.url_for('main.list_services'))
-            assert_in(view_link, doc_data)
 
     @mock.patch("app.main.views.suppliers.data_api_client")
     @mock.patch("app.main.views.suppliers.get_current_suppliers_users")
