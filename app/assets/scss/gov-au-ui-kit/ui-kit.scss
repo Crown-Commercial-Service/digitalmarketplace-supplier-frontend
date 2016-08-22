@@ -1,12 +1,12 @@
-// Path to assets for use with file-url()
-$path: "/suppliers/static/images/";
+@import './vendor/entity';
+@import './vendor/normalize';
+@import './vendor/bourbon/bourbon';
 
-// GOV.AU UI Kit
-@import 'gov-au-ui-kit/ui-kit';
-
-// Custom styles
 @import 'grid-settings';
+@import './vendor/neat/neat';
+
 @import 'variables';
+
 @import 'icons';
 @import 'colours';
 @import 'typography';
@@ -16,15 +16,12 @@ $path: "/suppliers/static/images/";
 @import 'block-elements';
 @import 'forms';
 @import 'navigation';
-@import 'pagination';
 @import 'lists';
 @import 'accordions';
 @import 'images';
 @import 'video';
-@import 'timelines';
 @import 'page-header';
 @import 'page-footer';
+
 @import 'ie';
 @import 'print';
-@import 'helpers';
-@import 'search';

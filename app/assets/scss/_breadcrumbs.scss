@@ -1,0 +1,54 @@
+#global-breadcrumb{
+  background: $aqua;
+
+  // padding: $medium-spacing 0 ($base-spacing * 3);
+  // padding: 0 ($base-spacing * 3);
+
+  ol{
+    max-width: 75em;
+    margin-left: auto;
+    margin-right: auto;
+    margin-bottom: 0.5em;
+
+    @include media($mobile) {
+      padding: 0.5em 1.625em;
+    }
+
+    @include media($tablet) {
+      padding: 0.5em 1.25em;
+    }
+
+    @include media($desktop) {
+      padding: 0.5em 2em;
+    }
+
+    li{
+      display: inline;
+      // @include link-colours($link-inverted-colour, $link-inverted-colour, $link-colour);
+
+        a{
+          font-size:0.875rem;
+          color: white;
+          text-decoration: none;
+          border-bottom:1px solid white;
+
+          &:after{
+            content:' > ';
+            color: white;
+            border-bottom: 1px solid $aqua;
+            font-size:0.875rem;
+            padding: 0 0.5em;
+          }
+
+          &:hover{
+            background: white;
+            color: black;
+
+            &:after{
+              background: $aqua;
+            }
+          }
+        }
+    }
+  }
+}

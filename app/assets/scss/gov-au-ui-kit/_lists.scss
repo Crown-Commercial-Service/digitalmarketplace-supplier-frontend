@@ -1,0 +1,331 @@
+/*
+List styles
+
+List styles make collections of similar content more usable and discoverable.
+
+You can add usual body elements within each list item (eg ordered and unordered lists).
+
+Use `<a class="see-more">` after your list to link to an index of all items.
+
+Style guide: List styles
+*/
+
+/*
+Horizontal style
+
+Horizontal style provides a single column of list items.
+
+Markup: templates/lists-horizontal.hbs
+
+Style guide: List styles.1 Horizontal style
+*/
+
+/*
+Vertical style
+
+Vertical style provides multiple columns of list items. By default the vertical lists are displayed in 2 columns.
+
+You can change the number of columns used:
+
+- `.vertical-list--thirds` give 3 columns of list items
+- `.vertical-list--fourths` give 4 columns of list items.
+
+For [browsers that don't support Flexbox layout](http://caniuse.com/#feat=flexbox) lists will appear as in horizontal style with images (if used) below each list item.
+
+Markup: templates/lists-vertical.hbs
+
+Style guide: List styles.2 Vertical style
+*/
+
+/*
+Small list style
+
+Use small list style for large groups of list items.
+
+Markup: templates/lists-small.hbs
+
+Style guide: List styles.3 Small list style
+*/
+
+/*
+Highlighted words style
+
+Use highlighted words style for a list with repeating phrases.
+
+Markup: templates/lists-highlighted.hbs
+
+Style guide: List styles.4 Highlighted word style
+*/
+
+%base-list {
+  list-style: none;
+  margin: ($base-spacing * 2) 0;
+  padding: 0;
+
+  .tags {
+    @include link-colours($button-bg-colour, v, $link-colour);
+    color: $grey;
+
+    dl,
+    dt,
+    dd {
+      display: inline-block;
+      margin: 0;
+      padding: 0;
+      line-height: $base-heading-leading * 1.5;
+    }
+
+    dt,
+    dd {
+      margin-right: $tiny-spacing;
+      font-size: $small-font-size;
+    }
+
+    a {
+      padding: 2px $tiny-spacing;
+      border: 1px solid $button-bg-colour;
+      border-radius: 2px;
+
+      &:hover,
+      &:focus {
+        border-color: $link-colour--hover;
+      }
+    }
+  }
+
+  .meta {
+    font-size: $small-font-size;
+    margin-bottom: $small-spacing;
+
+    time {
+      color: $grey;
+    }
+  }
+
+  > li {
+    padding: $base-spacing 0;
+    border-bottom: solid 1px $border-colour;
+    margin-bottom: 0;
+  }
+
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    margin-top: 0;
+    margin-bottom: $tiny-spacing;
+  }
+
+  h3 {
+    @extend h4;
+  }
+
+  img {
+    display: block;
+  }
+}
+
+.list-horizontal {
+  @extend %base-list;
+
+  > li {
+
+    @include media($tablet) {
+      display: flex;
+    }
+
+    figure {
+
+      @include media($tablet) {
+        flex: 0 0 35%;
+        margin-right: $base-spacing;
+      }
+    }
+
+    .meta {
+      time {
+        display: inline-block;
+        margin-right: $small-spacing;
+      }
+    }
+
+    &:last-child {
+      border-bottom: none;
+    }
+
+    &.hero-item {
+      border-top: solid 1px $border-colour;
+
+      figure {
+        @include media($tablet) {
+          flex-basis: 65%;
+        }
+      }
+    }
+
+  }
+
+}
+
+.list-vertical {
+  @extend %base-list;
+
+  &.no-border {
+    li:nth-child(-n+2) {
+      border-top: none;
+      padding-top: 0;
+    }
+  }
+
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+
+  > li {
+
+    border-top: 4px solid $border-colour;
+    border-bottom: none;
+    flex: 0 0 100%;
+
+    @include media($tablet) {
+      flex-basis: 48%;
+    }
+
+    article {
+      display: flex;
+      flex-wrap: wrap;
+
+      h3,
+      div,
+      p {
+        flex: 0 0 100%;
+      }
+    }
+
+    h3 {
+      min-height: auto;
+
+      @include media ($tablet) {
+        min-height:  $base-spacing * 2;
+      }
+    }
+
+    p {
+      min-height: auto;
+
+      @include media ($tablet) {
+        min-height: $base-spacing * 3;
+      }
+    }
+
+    .meta {
+      order: -1;
+
+      time {
+        display: block;
+      }
+    }
+  }
+}
+
+.list-vertical--thirds {
+  @extend .list-vertical;
+
+  &.no-border {
+    li:nth-child(-n+3) {
+      border-top: none;
+      padding-top: 0;
+    }
+  }
+
+  > li {
+    @include media ($tablet) {
+      flex: 0 0 31%;
+    }
+  }
+}
+
+.list-vertical--fourths {
+  @extend .list-vertical;
+
+  &.no-border {
+    li:nth-child(-n+4) {
+      border-top: none;
+      padding-top: 0;
+    }
+  }
+
+  > li {
+    @include media ($tablet) {
+      flex: 0 0 22%;
+    }
+  }
+}
+
+.list-small {
+  @extend %base-list;
+  border-top: solid 1px $border-colour;
+
+  a {
+    @extend %icon-arrow-right;
+
+    display: block;
+    padding: $small-spacing;
+    padding-left: ($base-spacing * 2);
+    border-bottom: none;
+
+    background-repeat: no-repeat;
+    background-position: $base-spacing ($small-spacing * 1.75);
+    background-size: $tiny-spacing auto;
+    transition: background $transition-timing $transition-easing;
+
+    &:hover,
+    &:active {
+      background-position: ($base-spacing * 1.25) ($small-spacing * 1.75);
+      background-color: $non-white;
+
+      span {
+        color: $dark-aqua;
+      }
+    }
+
+  }
+
+  span {
+    color: $link-colour;
+    text-decoration: none;
+    border-bottom: 1px solid;
+  }
+
+  li {
+    padding: 0;
+  }
+
+  .meta {
+    display: block;
+    margin: 0;
+  }
+}
+
+.list-highlighted {
+  @extend %base-list;
+
+  li {
+    list-style: none;
+    border-bottom: 0;
+    padding-bottom: $base-spacing;
+    padding-top: 0;
+  }
+
+  a {
+    font-size: $large-font-size;
+    font-weight: $heading-font-weight;
+    line-height: $base-heading-leading;
+
+    span {
+      display: block;
+      font-size: $smaller-font-size;
+    }
+  }
+}

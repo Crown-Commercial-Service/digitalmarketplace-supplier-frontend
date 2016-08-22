@@ -1,6 +1,0 @@
-@import "design-patterns/_alpha-beta.scss";
-
-.phase-banner  {
-  @include phase-banner(beta);
-  @extend %site-width-container;
-}

@@ -1,0 +1,70 @@
+.wrapper {
+  @include position(relative, null);
+  box-sizing: border-box;
+}
+
+.catalogue {
+  .intro {
+
+    @include link-colours($non-black, $light-aqua, $non-black);
+
+    border-bottom: $border-colour;
+    border-bottom-style: solid;
+    border-bottom-width: 1px;
+
+    padding-bottom: 1em;
+    margin-bottom: 3em;
+  }
+}
+
+main {
+  
+  box-sizing: border-box;
+  width: 100%;
+
+  .content-main {
+    @include media($desktop) {
+      @include span-columns(11 of 16);
+      @include shift(0);
+    }
+
+    &:first-child {
+      @include media($desktop) {
+        @include span-columns(11 of 16);
+        @include shift(0);
+      }
+
+      .home & {
+        @include media($tablet) {
+          @include span-columns(12 of 12);
+        }
+        @include media($desktop) {
+          @include span-columns(16 of 16);
+        }
+      }
+
+      .brief-builder &,
+      .form-page & {
+        @include media($tablet) {
+          @include span-columns(8 of 12);
+          @include shift(2);
+        }
+        @include media($desktop) {
+          @include span-columns(10 of 16);
+          @include shift(3);
+        }
+      }
+
+      .brief-builder.brief-section & {
+        @include media($tablet) {
+          @include span-columns(10 of 12);
+          @include shift(1);
+        }
+        @include media($desktop) {
+          @include span-columns(12 of 16);
+          @include shift(2);
+        }
+      }
+    }
+  }
+}

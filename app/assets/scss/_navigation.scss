@@ -1,0 +1,132 @@
+
+.global-nav-toggle {
+  font-size: rem(17);
+  font-weight: $base-font-weight;
+  margin: 0;
+
+  .marketplace--header & {
+    border: 0;
+    border-bottom: 1px solid;
+  }
+
+  &::before {
+    @extend %icon-bars;
+    content: '';
+    position: absolute;
+    top: .25em;
+    bottom: .25em;
+    left: ($base-spacing * -1);
+    width: $medium-spacing;
+    background-repeat: no-repeat;
+    background-size: auto 100%;
+  }
+
+  &[aria-expanded='true'] {
+    &::before {
+      @extend %icon-close;
+    }
+  }
+
+  &:focus,
+  &:hover {
+    background-color: $white;
+    border-color: transparent;
+    color: $non-black;
+  }
+}
+
+.global-nav {
+  li {
+    padding-left: 0;
+
+    a {
+      padding-left: .2rem;
+      
+      &:focus,
+      &:hover {
+        background-color: $white;
+        border-color: transparent;
+        color: $non-black;
+        outline: $body-inverted-text-colour;
+      }
+    }
+
+  }  
+}
+
+.marketplace--header {
+
+  [class^='inline-links'] {
+    padding: $tiny-spacing*.25 0;
+
+    li {
+      display: inline-block;
+      margin: 0;
+
+      &:not(:last-child) {
+        margin-right: $base-spacing*.8125;
+      }
+
+      a {
+        padding-bottom: $tiny-spacing*.15;
+      }
+    }
+  }
+
+  small {
+    font-size: rem(14);
+  }
+
+}
+
+.global-breadcrumb {
+  // @include linear-gradient(to left, $dark-navy, $aqua, $fallback: $hero-bg-colour);
+  background: $hero-bg-colour;
+
+  [class^='breadcrumbs'] {
+    ul {
+      font-size: rem(14);
+      padding-bottom: $medium-spacing;
+
+      li {
+        &:not(:last-child) {
+          background-size: auto rem(11);
+          padding-right: 1.7em;
+        }
+      }
+    }
+  }
+}
+
+.scroll-to-top {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  display: none;
+  border-bottom: none !important;
+  text-align: center;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05rem;
+  background-color: $aqua;
+  padding: 1.5rem 1rem 0.5rem;
+  line-height: 1.1rem;
+  color: $white !important;
+  &::before {
+    @extend %icon-chevron-up--white;
+
+    content: '';
+    position: absolute;
+    display: block;
+    width: 0.7em;
+    height: $medium-spacing;
+    top: 0.5rem;
+    left: 50%;
+    background-repeat: no-repeat;
+    background-position: left $tiny-spacing;
+    background-size: (0.8 * $small-spacing) auto;
+    border-bottom: none;
+    -ms-transform: translateX(-50%);
+    transform: translateX(-50%);
+  }
+}

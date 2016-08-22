@@ -1,0 +1,15 @@
+footer[role='contentinfo'] {
+  .footer-top {
+    nav {
+      ul {
+        @include media($mobile) {
+          flex-basis: 40%;
+        }
+
+        @include media($tablet) {
+          flex-basis: 20%;
+        }
+      }
+    }
+  }
+}

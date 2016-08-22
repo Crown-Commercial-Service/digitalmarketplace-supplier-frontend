@@ -1,0 +1,168 @@
+h1 {
+  font-weight: $bold-font-weight;
+}
+
+h2 {
+  font-size: rem(24);
+  font-weight: $bold-font-weight;
+}
+
+.bigger {
+  font-size: rem(24);
+}
+
+.badge--beta {
+  background-color: $white;
+  color: $aqua;
+}
+
+$badges: (
+  'new':      $badge-colour--new,
+);
+
+@each $badge-type, $colour in $badges {
+  .badge--#{$badge-type} {
+    display: inline-block;
+    background-color: $colour;
+    border-radius: $large-border-radius;
+    padding: $tiny-spacing $small-spacing;
+    line-height: 1;
+    letter-spacing: 1px;
+    color: lighten($colour, 75%);
+    font-size: rem(14);
+  }
+}
+
+.badge--new {
+  color: $white !important;
+  border: 0 none !important;
+  margin-left: $tiny-spacing;
+}
+
+.content-main {
+
+  .number-results {
+    span {
+      font-size: rem(32);
+      font-weight: $bold-font-weight;
+    }
+  }
+}
+
+.callout--hero {
+  display: none;
+  // @extend %base-callout;
+  // @include position(relative, null);
+  // background: $darker-aqua;
+  // box-shadow: 0 0 0 transparent;
+
+  // @include media($desktop) {
+  //   @include position(absolute, null 0 (-$base-spacing*5) null);
+  //   @include span-columns(5 of 16);
+  //   @include shift(2);
+  //   margin: 0;
+  // }
+
+  // h2 {
+  //   @extend h3;
+  //   font-weight: $base-font-weight;
+  // }
+}
+
+.secondary-page {
+  h1 {
+    font-size: rem(28);
+    margin: 0.8em 0 0.4em;
+    @include media($tablet) {
+      font-size: rem(32);
+    }
+  }
+
+  blockquote {
+    margin-bottom: 2em;
+  }
+}
+
+.has-intro {
+  .content-main {
+    p:first-of-type {
+      @extend h3;
+      font-weight: $base-font-weight;
+      margin-bottom: $base-spacing;
+    }
+  }
+}
+
+.content-details {
+
+  article {
+    h1 {
+      font-size: rem(28);
+      margin: $base-spacing/2 0 0.4em;
+      @include media($tablet) {
+        font-size: rem(32);
+      }
+    }
+  }
+
+  h2 {
+    font-size: rem(22);
+    font-weight: $heading-font-weight;
+
+    @include media($tablet) {
+      flex: 0 0 21.5%;
+      margin-right: $base-spacing;
+
+      small {
+        font-size: 65%;
+        font-weight: normal;
+      }
+    }
+  }
+
+  .callout--info {
+    @extend .callout;
+    margin: 1.6em 0;
+    box-shadow: none;
+    background-color: $light-blue;
+  }
+}
+
+.banner-warning-without-action {
+  @extend .callout;
+  margin: 1.6em 0;
+  box-shadow: none;
+  background-color: $light-blue;
+
+  h2 {
+    margin-top: 0.8em;
+  }
+}
+
+.about-us {
+  blockquote {
+    quotes: '\2018''\2019''\2018''\2019';
+  }
+}
+
+.catalogue {
+  hr:first-of-type {
+    margin: 2em 0 3em;
+  }
+}
+
+.sidebar {
+
+  h2 {
+    @include clearfix;
+    @extend h3;
+    margin-top: 0;
+    font-weight: $base-font-weight;
+
+    span {
+      @extend p;
+      float: right;
+      margin: .3rem 0 0;
+    }
+  }
+}

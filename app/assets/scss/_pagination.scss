@@ -1,0 +1,45 @@
+.pagination {
+  margin-top: 2em;
+  div:first-of-type {
+    margin-bottom: 1em;
+  }
+  div:first-of-type,
+  div:last-of-type {
+    float: none;
+    text-align: center;
+  }
+  @include media($tablet) {
+    div:first-of-type {
+      float: left;
+    }
+    div:last-of-type {
+      float: right;
+    }
+  }
+}
+.pagination-controls {
+  list-style: none;
+  padding-left: 0;
+  @include media($tablet) {
+    margin-top: -0.75em;
+  }
+  li {
+    display: inline-block;
+    &.current {
+      a {
+        background-color: $non-white;
+      }
+    }
+  }
+  a {
+    border: 0;
+    display: inline-block;
+    padding: 0.5em 1em;
+    text-align: center;
+    text-decoration: underline;
+    &:hover {
+      background-color: $aqua !important;
+      color: $white;
+    }
+  }
+}

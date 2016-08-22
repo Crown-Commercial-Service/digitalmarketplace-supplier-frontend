@@ -1,0 +1,12 @@
+.sidebar {
+  details,
+  .accordion {
+    margin: 0 0 $medium-spacing;
+  }
+  .accordion-panel {
+    padding: $medium-spacing 0 0;
+  }
+  input[type='checkbox'] + label {
+    margin: 0;
+  }
+}

@@ -1,0 +1,147 @@
+[class^='controls'] {
+  @include link-colours($link-inverted-colour, $link-inverted-colour, $controls-bg-colour);
+  @include button-colours($controls-bg-colour, $body-inverted-text-colour, $body-inverted-text-colour, $controls-bg-colour);
+
+  padding: $tiny-spacing 0;
+  background-color: $controls-bg-colour;
+  color: $body-inverted-text-colour;
+
+  section {
+
+    @include span-columns(4 of 4);
+
+    @include media($tablet) {
+      @include span-columns(6 of 12);
+    }
+
+    @include media($desktop) {
+      @include span-columns(8 of 16);
+    }
+
+    &:first-child:last-child {
+      @include span-columns(4 of 4);
+
+      @include media($tablet) {
+        @include span-columns(12 of 12);
+      }
+
+      @include media($desktop) {
+        @include span-columns(16 of 16);
+      }
+    }
+
+    &.right {
+      @include media($tablet) {
+        text-align: right;
+      }
+    }
+  }
+
+  [class^='breadcrumbs'] {
+    width: auto;
+    margin-right: $small-spacing;
+    background-color: transparent;
+  }
+
+  [role='button'] {
+    margin: 0;
+  }
+
+  &[class$='--contrast'] {
+    @include button-colours($controls-contrast-bg-colour, $body-inverted-text-colour, $body-inverted-text-colour, $body-inverted-text-colour, $controls-contrast-bg-colour);
+
+    background-color: $controls-contrast-bg-colour;
+
+    [role='button']:hover,
+    [role='button']:focus {
+      color: $controls-contrast-bg-colour;
+    }
+  }
+}
+
+.govau--header {
+  @include link-colours($link-inverted-colour, $link-inverted-colour, $link-colour);
+  @include button-colours($header-bg-colour, $body-inverted-text-colour, $body-inverted-text-colour, $body-inverted-text-colour, $header-bg-colour);
+
+  position: relative;
+  padding: $medium-spacing 0 ($base-spacing * 3);
+  padding-bottom: $medium-spacing;
+  margin-bottom: 0;
+  background-color: $header-bg-colour;
+  color: $body-inverted-text-colour;
+
+  @include media($tablet) {
+    padding-bottom: $medium-spacing;
+  }
+
+  .govau--logo {
+    float: left;
+
+    @include media($tablet) {
+      padding-bottom: 0;
+    }
+  }
+
+  .logo {
+    font-size: rem(24);
+    font-weight: $heading-font-weight;
+    padding-bottom: 2px;
+    border-bottom: 0;
+    color: $body-inverted-text-colour;
+    font-family: $base-sans-serif;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+  }
+
+  [class^='badge'] {
+    vertical-align: text-bottom;
+    margin-left: $tiny-spacing;
+  }
+}
+
+.feedback {
+  display: none;
+
+  @include media($tablet) {
+    display: block;
+    float: right;
+    margin-left: $base-spacing;
+  }
+}
+
+.button--feedback {
+  @extend .inverted;
+
+  margin: 0;
+  width: 100%;
+  text-align: center;
+
+  @include media($tablet) {
+    width: auto;
+    text-align: initial;
+  }
+}
+
+.hero {
+  @include link-colours($link-inverted-colour, $link-inverted-colour, $link-colour);
+  padding: ($base-spacing * 2) 0;
+  margin-bottom: 0;
+  background-color: $hero-bg-colour;
+  color: $body-inverted-text-colour;
+
+  .site-title {
+    @extend h1;
+
+    margin: $tiny-spacing 0;
+    color: $body-inverted-text-colour;
+  }
+
+  .tagline {
+    @extend h4;
+    font-weight: $base-font-weight;
+  }
+
+  code {
+    color: $body-inverted-text-colour;
+  }
+}
