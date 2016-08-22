@@ -2324,7 +2324,7 @@ class TestReturnSignedAgreement(BaseApplicationTest):
             self.app.config['FEATURE_FLAGS_CONTRACT_VARIATION'] = False
 
             framework = get_g_cloud_8()
-            framework['variations'] = {
+            framework['frameworks']['variations'] = {
                 "1": {"createdAt": "2016-06-06T20:01:34.000000Z"}
             }
             data_api_client.get_framework.return_value = framework
@@ -2359,7 +2359,7 @@ class TestReturnSignedAgreement(BaseApplicationTest):
             self.login()
 
             framework = get_g_cloud_8()
-            framework['variations'] = {
+            framework['frameworks']['variations'] = {
                 "1": {"createdAt": "2016-06-06T20:01:34.000000Z"}
             }
             data_api_client.get_framework.return_value = framework
@@ -2381,7 +2381,6 @@ class TestReturnSignedAgreement(BaseApplicationTest):
                     'authorisation': 'I have the authority to return this agreement on behalf of company name'
                 }
             )
-
             assert res.status_code == 302
             assert res.location == 'http://localhost/suppliers/frameworks/g-cloud-8/contract-variation/1'
 
