@@ -110,7 +110,6 @@ def get_supplier_on_framework_from_info(supplier_framework_info):
 
 
 def return_supplier_framework_info_if_on_framework_or_abort(data_api_client, framework_slug):
-    # returns a supplier_framework or None if not found
     supplier_framework = get_supplier_framework_info(data_api_client, framework_slug)
 
     if not get_supplier_on_framework_from_info(supplier_framework):
@@ -281,3 +280,10 @@ def get_most_recently_uploaded_agreement_file_or_none(bucket, framework_slug):
     )
     files = bucket.list(download_path)
     return files.pop() if files else None
+
+
+def returned_agreement_email_recipients(supplier_framework):
+    email_recipients = [supplier_framework['declaration']['primaryContactEmail']]
+    if supplier_framework['declaration']['primaryContactEmail'].lower() != current_user.email_address.lower():
+        email_recipients.append(current_user.email_address)
+    return email_recipients
