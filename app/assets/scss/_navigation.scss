@@ -80,8 +80,7 @@
 }
 
 .global-breadcrumb {
-  // @include linear-gradient(to left, $dark-navy, $aqua, $fallback: $hero-bg-colour);
-  background: $hero-bg-colour;
+  background: #0098b0;
 
   [class^='breadcrumbs'] {
     ul {

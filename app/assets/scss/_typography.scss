@@ -13,7 +13,9 @@ h2 {
 
 .badge--beta {
   background-color: $white;
-  color: $aqua;
+  color: #0098b0;
+  margin-top: $small-spacing;
+  padding: .3em .6em;
 }
 
 $badges: (
