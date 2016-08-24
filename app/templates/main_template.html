@@ -43,7 +43,7 @@
     <section class="phase-banner">
       <div class="wrapper">
         <p>
-            This is a private beta. To provide feedback, email us at <a href="mailto:marketplace@digital.gov.au">marketplace@digital.gov.au</a>.
+          This is a private beta. To provide feedback, email us at <a href="mailto:marketplace@digital.gov.au">marketplace@digital.gov.au</a>.
         </p>
       </div>
     </section>
@@ -58,10 +58,10 @@
       <div class="wrapper">
         {% if "/marketplace" != request.path %}
         <div class="marketplace--logo">
-          <a href="/marketplace" title="{{ logo_link_title|default('Go to the Marketplace homepage') }}" class="logo">/marketplace</a> <span class="badge--beta">private beta</span>
+          <a href="/marketplace" title="{{ logo_link_title|default('Go to the Marketplace homepage') }}" class="logo">Digital Marketplace</a> <span class="badge--beta">BETA</span>
         </div>
         {% endif %}
-        <div class="feedback">
+        <div class="user-nav">
           <ul class="inline-links--inverted">
             {% if not current_user.is_authenticated %}
             <li><a href="{{ config['BASE_PREFIX'] + '/buyers/create' }}">Sign up</a></li>
@@ -71,16 +71,6 @@
             {% endif %}
           </ul>
         </div>
-        <nav class="global-nav" aria-label="global navigation" tabindex="2">
-          <ul>
-            <li><a href="#">Find a supplier</a></li>
-            <li><a href="#">View opportunities</a></li>
-            <li><a href="#">Create a brief</a></li>
-            <li><a href="#">Become an ICT supplier</a></li>
-            <li><a href="#">Buyer's guide</a></li>
-            <li><a href="#">About the Digital Marketplace</a></li>
-          </ul>
-        </nav>
       </div>
     </section>
     {% block hero %}{% endblock %}
@@ -95,6 +85,8 @@
     {% block content %}{% endblock %}
   </main>
 
+  {% block content_sub %}{% endblock %}
+
   <footer role="contentinfo">
     <div class="wrapper">
       {% block footer_top %}{% endblock %}
@@ -106,5 +98,5 @@
   
   <script type="text/javascript" src="https://gov-au-ui-kit.apps.staging.digital.gov.au/latest/ui-kit.min.js"></script>
 
-  </body>
-  </html>
+</body>
+</html>

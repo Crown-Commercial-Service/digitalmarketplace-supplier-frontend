@@ -269,7 +269,7 @@ class TestRespondToBrief(BaseApplicationTest):
 
     def _test_breadcrumbs_on_brief_response_page(self, response):
         breadcrumbs = html.fromstring(response.get_data(as_text=True)).xpath(
-            '//*[@id="global-breadcrumb"]/nav/ol/li'
+            '//*[@class="global-breadcrumb"]/nav/div/ul/li'
         )
         brief = self.brief['briefs']
 
@@ -338,9 +338,9 @@ class TestRespondToBrief(BaseApplicationTest):
         res = self.client.get(self.url_for('main.brief_response', brief_id=1234))
         doc = html.fromstring(res.get_data(as_text=True))
 
-        assert len(doc.xpath('//p[contains(text(), "Essential one")]')) == 1
-        assert len(doc.xpath('//p[contains(text(), "Essential two")]')) == 1
-        assert len(doc.xpath('//p[contains(text(), "Essential three")]')) == 1
+        assert len(doc.xpath('//span[contains(text(), "Essential one")]')) == 1
+        assert len(doc.xpath('//span[contains(text(), "Essential two")]')) == 1
+        assert len(doc.xpath('//span[contains(text(), "Essential three")]')) == 1
 
     def test_get_brief_response_page_includes_nice_to_have_requirements(self, data_api_client):
         data_api_client.get_brief.return_value = self.brief
@@ -348,9 +348,9 @@ class TestRespondToBrief(BaseApplicationTest):
         res = self.client.get(self.url_for('main.brief_response', brief_id=1234))
         doc = html.fromstring(res.get_data(as_text=True))
 
-        assert len(doc.xpath('//p[contains(text(), "Top one")]')) == 1
-        assert len(doc.xpath('//p[contains(text(), "Nice one")]')) == 1
-        assert len(doc.xpath('//p[contains(text(), "Get sorted")]')) == 1
+        assert len(doc.xpath('//span[contains(text(), "Top one")]')) == 1
+        assert len(doc.xpath('//span[contains(text(), "Nice one")]')) == 1
+        assert len(doc.xpath('//span[contains(text(), "Get sorted")]')) == 1
 
     def test_get_brief_response_page_redirects_to_login_for_buyer(self, data_api_client):
         data_api_client.get_brief.return_value = self.brief
