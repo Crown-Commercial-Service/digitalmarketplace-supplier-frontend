@@ -105,7 +105,6 @@ def brief_response(brief_id):
         brief=brief,
         service_data={},
         section=section,
-        **dict(main.config['BASE_TEMPLATE_DATA'])
     )
 
 
@@ -150,7 +149,6 @@ def submit_brief_response(brief_id):
             service_data=response_data,
             section=section,
             errors=errors,
-            **dict(main.config['BASE_TEMPLATE_DATA'])
         )
 
     if all(brief_response['essentialRequirements']):
@@ -221,5 +219,4 @@ def _render_not_eligible_for_brief_error_page(brief, clarification_question=Fals
         has_framework_lot_service=has_framework_lot_service,
         framework_name=brief['frameworkName'],
         lot=brief['lotSlug'],
-        **dict(main.config['BASE_TEMPLATE_DATA'])
     ), 400
