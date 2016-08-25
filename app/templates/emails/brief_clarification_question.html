@@ -15,9 +15,7 @@
   </div>
   
   <p>
-  You must publish this question with your answer on the ‘{{ brief_name }}’ page by {{ publish_by_date|dateformat }} at:<br>
-  {% set questions_url %}{{ request.host_url[:-1] }}{{ config['BASE_PREFIX'] }}/buyers/frameworks/{{ framework_slug }}/requirements/{{ lot_slug }}/{{ brief_id }}/supplier-questions{% endset %}
-  <a href="{{ questions_url }}">{{ questions_url }}</a>
+  You must <a href="{{ request.host_url[:-1] }}{{ config['BASE_PREFIX'] }}/buyers/frameworks/{{ framework_slug }}/requirements/{{ lot_slug }}/{{ brief_id }}/supplier-questions">publish this question with your answer</a> on the '{{ brief_name }}' page by {{ publish_by_date|dateformat }}.
   </p>
 
   <p>

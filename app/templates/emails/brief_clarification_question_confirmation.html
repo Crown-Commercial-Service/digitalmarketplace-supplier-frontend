@@ -15,9 +15,7 @@
   </div>
 
   <p>
-  Your question will be posted with the buyer’s answer on the ‘{{ brief_name }}’ page at:<br>
-  {% set brief_url %}{{ request.host_url[:-1] }}{{ config['BASE_PREFIX'] }}/{{ framework_slug }}/opportunities/{{ brief_id }}{% endset %}
-  <a href="{{ brief_url }}">{{ brief_url }}</a>
+  Your question will be posted with the buyer’s answer on the <a href="{{ request.host_url[:-1] }}{{ config['BASE_PREFIX'] }}/{{ framework_slug }}/opportunities/{{ brief_id }}">'{{ brief_name }}' page</a>.
   </p>
 
   <p>
