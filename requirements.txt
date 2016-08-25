@@ -7,3 +7,4 @@ git+https://github.com/alphagov/digitalmarketplace-content-loader.git@1.2.0#egg=
 git+https://github.com/AusDTO/digitalmarketplace-apiclient.git@6.0.0#egg=digitalmarketplace-apiclient==6.0.0
 
 markdown==2.6.2
+newrelic==2.68.0.50
