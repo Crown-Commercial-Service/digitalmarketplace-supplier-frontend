@@ -1,3 +1,4 @@
+import os
 import urlparse
 
 from flask import Flask, request
@@ -20,9 +21,10 @@ from app.main.helpers.frameworks import question_references
 
 
 def create_app(config_name):
+    asset_path = os.environ.get('ASSET_PATH', configs[config_name].ASSET_PATH)
     application = Flask(__name__,
                         static_folder='static/',
-                        static_url_path=configs[config_name].STATIC_URL_PATH)
+                        static_url_path=asset_path)
 
     init_app(
         application,
