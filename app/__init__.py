@@ -1,4 +1,4 @@
-import re
+import urlparse
 
 from flask import Flask, request
 from flask_login import LoginManager
@@ -52,5 +52,11 @@ def create_app(config_name):
     def check_csrf_token():
         if request.method in ('POST', 'PATCH', 'DELETE'):
             valid_csrf_or_abort()
+
+    @application.context_processor
+    def extra_template_variables():
+        return {
+            'marketplace_home': urlparse.urljoin('/', application.config['BASE_PREFIX']),
+        }
 
     return application
