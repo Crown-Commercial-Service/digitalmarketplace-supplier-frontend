@@ -1,5 +1,5 @@
 applications:
-    - command: python application.py runprodserver
+    - command: scripts/cf_run_app.sh
       buildpack: https://github.com/cloudfoundry/buildpack-python.git
       memory: 128M
       disk_quota: 1G
