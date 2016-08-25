@@ -1,10 +1,29 @@
 .content-main {
 
-  label {
-    @extend h4;
-    margin-bottom: 0;
+  .list-entry {
+    position: relative;
   }
 
+  label {
+    @extend h4;
+
+    & + input {
+      margin-top: $tiny-spacing;
+    }
+
+    &.text-box-number-label {
+      color: $grey;
+      left: $tiny-spacing;
+      margin: 0;
+      position: absolute;
+      top: $tiny-spacing;
+
+      & + input {
+        margin-bottom: 1em;
+        padding-left: 2.2em;
+      }
+    }
+  }
 }
 
 .registration-pages {
@@ -16,12 +35,23 @@
   }
 
   form {
+
     .hint {
       color: $grey;
+      margin-bottom: 0;
     }
+
     .hint-with-error {
       color: $error-colour;
     }
+
+    .validation-message {
+      color: $error-colour;
+      display: block;
+      font-size: rem(14);
+      font-weight: $base-font-weight;
+    }
+
     fieldset {
       label {
         margin-top: 0;
@@ -39,6 +69,56 @@
           outline: 3px solid $red;
         }
       }
+    }
+  }
+
+  #employment_status {
+    list-style: none;
+    margin: $base-spacing 0;
+    padding: 0;
+  }
+}
+
+form {
+
+  .question-heading {
+    font-weight: $bold-font-weight;
+  }
+
+  fieldset {
+    legend {
+      margin-bottom: 0.8em;
+    }
+  }
+
+  input[type='checkbox'] + label,
+  input[type='radio'] + label {
+    outline: 1px solid $light-grey;
+    margin: 0 0 8px;
+
+    >p {
+      font-size: rem(14);
+      font-weight: 400;
+      margin-bottom: 0.1em;
+      padding-right: 20px;
+    }
+
+    &::before {
+      top: 12px;
+    }
+
+    &::after {
+      top: 17px;
+    }
+  }
+
+  input[type='checkbox']:checked + label,
+  input[type='radio']:checked + label {
+    font-weight: 700;
+    outline: 2px solid $grey;
+
+    &::after {
+      top: 17px;
     }
   }
 }

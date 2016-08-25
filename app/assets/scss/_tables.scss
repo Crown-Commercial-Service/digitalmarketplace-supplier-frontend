@@ -1,21 +1,92 @@
-.content-table {
-  th {
-    font-weight: normal;
+table.content-table {
+
+  margin: 1em 0 4em;
+
+  thead {
+    tr {
+      th {
+        font-weight: 700;
+        &:nth-child(3) {
+          color: $non-black;
+        }
+      }
+    }
   }
-  td {
-    // font-weight: bold;
+
+  caption {
+    font-size: 1.0625rem;
+    padding-bottom: 1em;
+    text-align: left;
   }
-  th,
+
   td {
-    border-bottom: 0;
+
+    padding: $tiny-spacing;
+
+    @include media($tablet) {
+      padding: 1em 1.2em;
+    }
+  }
+
+  tr {
+    border-bottom: 1px solid $light-grey;
+
+    &:first-child {
+      border-top: 1px solid $light-grey;
+    }
+
+    td, th {
+      font-size: rem(14);
+      font-weight: 400;
+      vertical-align: top;
+      padding-left: 0;
+
+      &:nth-child(1) {
+        width: 40%;
+      }
+
+      &:nth-child(3) {
+        color: $grey;
+        text-align: right;
+      }
+    }
+
+    &:nth-child(even) {
+      background-color: white;
+    }
+  }
+
+  p {
+    font-size: rem(14);
+  }
+
+  ul,
+  ol {
+    font-size: rem(14);
+    padding-left: 1.5em;
+  }
+
+  &.summary-item-body {
+    tr:first-child {
+      border-top: 0;
+    }
+  }
+
+  &.summary-item-body-no-bottom-border-row-bold-borders-text-large {
+    tr:first-child {
+      border-top: 0;
+    }
   }
 }
 
-.roles-and-rates {
-  .content-table {
+.content-table {
+  thead {
+    border-bottom: 1px solid $grey;
+  }
 
-    @include media($tablet) {
-      width: 70%;
+  .summary-item-field-headings {
+    th {
+      border-bottom: 0;
     }
   }
 }
