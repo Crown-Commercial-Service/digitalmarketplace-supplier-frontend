@@ -59,8 +59,7 @@ class Config(object):
     RESET_PASSWORD_SALT = 'ResetPasswordSalt'
     INVITE_EMAIL_SALT = 'InviteEmailSalt'
 
-    STATIC_URL_PATH = URL_PREFIX + '/static'
-    ASSET_PATH = STATIC_URL_PATH + '/'
+    ASSET_PATH = URL_PREFIX + '/static'
 
     # Feature Flags
     RAISE_ERROR_ON_MISSING_FEATURES = True
