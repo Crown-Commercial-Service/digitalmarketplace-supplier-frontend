@@ -1,0 +1,12 @@
+applications:
+    - name: dm-dev-supplier
+      command: scripts/cf_run_app.sh
+      buildpack: https://github.com/cloudfoundry/buildpack-python.git
+      memory: 128M
+      disk_quota: 1G
+      instances: 1
+      env:
+          BASE_PREFIX: ''
+          URL_PREFIX: '/suppliers'
+          NEW_RELIC_ENVIRONMENT: staging
+          DM_DATA_API_URL: https://dm-dev-api.apps.staging.digital.gov.au/
