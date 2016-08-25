@@ -1,38 +1,6 @@
-// Validation
-.validation-masthead {
-  background: rgba(red,0.1);
-  padding: 1.353em;
-  margin: 2em 0;
-
-  h1 {
-    font-size: 1.059em;
-  }
-
-  a {
-    width: 99%;
-    border-bottom: 1px solid black;
-    line-height: 2em;
-
-    &::after {
-      content: "\A";
-      white-space: pre;
-    }
-  }
-}
-
-// Buyer brief overview page
-header.page-heading-smaller {
-  h1 {
-    &:first-of-type {
-      margin-top: 0.4em;
-    }
-  }
-}
-
 p.context {
-  color: lighten($grey, 5%);
-  font-size: 1.412em;
-  margin-bottom: 0.25em;
+  color: $grey;
+  margin-bottom: 0;
   margin-top: 1em;
 }
 
@@ -60,6 +28,11 @@ ol.instruction-list {
     list-style: none;
     font-size: 1.059rem;
 
+    &.divider {
+      border-bottom: 1px solid $light-grey;
+      padding-bottom: 1.5em;
+    }
+
     span.tick {
       position: absolute;
       margin-left: -1.35em;
@@ -68,17 +41,15 @@ ol.instruction-list {
 
     p {
       &.instruction-list-item-top {
+        margin-bottom: 0;
         padding-left: 2.3em;
       }
-    }
-
-    a {
-      font-weight: 700;
     }
 
     ul {
       li {
         list-style: none;
+        margin-bottom: 0.2em;
         padding-left: 0.1em;
       }
     }
@@ -106,55 +77,13 @@ ol.instruction-list {
     }
   }
 
+  .question {
+    margin-bottom: 3em;
+  }
+
   label {
     .question-heading-with-hint {
-      p {
-        float: left;
-      }
-
-      p + span.question-optional,
-      p + span.text-box-unit-qualifier {
-        float: left;
-        line-height: 1.6em;
-        padding-left: 0.5em;
-      }
-    }
-
-    &::after {
-      content: '';
-      display: table;
-      clear: both;
-    }
-  }
-
-  input[type='checkbox'] + label,
-  input[type='radio'] + label {
-    font-weight: $bold-font-weight;
-    margin: 0 0 8px;
-    padding-bottom: 6px;
-
-    >p {
-      font-weight: 400;
-      margin-bottom: 0.5em;
-      padding-right: 20px;
-    }
-
-    &:before {
-      top: 12px;
-    }
-
-    &:after {
-      top: 17px;
-    }
-  }
-
-  input[type='checkbox']:checked + label,
-  input[type='radio']:checked + label {
-    font-weight: 700;
-    outline: 1px solid $light-grey;
-
-    &::after {
-      top: 17px;
+      font-size: rem(18);
     }
   }
 
@@ -173,6 +102,10 @@ ol.instruction-list {
       display: block;
     }
 
+    textarea {
+      height: 14.375em;
+    }
+
     .word-count-counter {
       color: $input-count-colour;
       float: right;
@@ -181,68 +114,23 @@ ol.instruction-list {
     .text-box-unit + .hint {
       float: none;
     }
-  }
 
-  table.content-table {
-    margin: 2em 0;
-
-    caption {
-      font-size: 1.0625rem;
-      padding-bottom: 1em;
-      text-align: left;
-    }
-
-    thead {
-      display: none;
-    }
-
-    td {
-
-      padding: $tiny-spacing;
-
-      @include media($tablet) {
-        padding: 1.2em;
-      }
-    }
-
-    tr {
-      border-bottom: 1px solid $light-grey;
-
-      &:first-child {
-        border-top: 1px solid $light-grey;
-      }
-
-      td, th {
-        vertical-align: top;
-        padding-left: 0;
-
-        &:nth-child(1) {
-          font-weight: 700;
-          width: 40%;
+    .large-text {
+      line-height: $small-leading;
+      margin-bottom: $tiny-spacing;
+      margin-top: $base-spacing;
+      span {
+        font-weight: $bold-font-weight;
+        margin: 0;
+        @include media($tablet) {
+          font-size: rem(24);
         }
-
-        &:nth-child(3) {
-          color: lighten($grey, 5%);
-          text-align: right;
-
-          a {
-            color: lighten($grey, 5%);
-            border-bottom: 1px solid $light-grey;
-
-            &:hover {
-              color: $black;
-            }
-          }
-        }
-      }
-
-      &:nth-child(even) {
-        background-color: white;
       }
     }
   }
 
   .question-optional {
+    color: $grey;
     font-size: rem(17);
   }
 
@@ -265,6 +153,10 @@ ol.instruction-list {
       color: $non-black;
     }
   }
+
+  .list-entry-remove {
+    margin-left: 1em;
+  }
 }
 
 .validation-wrapper, #technicalWeighting, #culturalWeighting, #priceWeighting {
@@ -274,25 +166,17 @@ ol.instruction-list {
   .text-box-unit {
     display: inline-block;
     margin-left: 0.5em;
+    margin-top: 0.4em;
   }
 }
 
 // Shortlist and evaluation process - Criteria
 
 #essentialRequirements, #niceToHaveRequirements, #culturalFitCriteria {
-
-  .question-heading-with-hint {
-    p {
-      font-size: 2.750em;
-      padding: 0.5em 0 0.25em 0;
-    }
-  }
-
   .text-box {
     width: 60%;
-  }
-
-  .list-entry-remove {
-    margin-left: 1em;
+    @include media($tablet) {
+      width: 80%;
+    }
   }
 }

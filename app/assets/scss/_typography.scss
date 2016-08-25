@@ -20,7 +20,7 @@ h2 {
 
 $badges: (
   'new':      $badge-colour--new,
-);
+  );
 
 @each $badge-type, $colour in $badges {
   .badge--#{$badge-type} {
@@ -41,13 +41,12 @@ $badges: (
   margin-left: $tiny-spacing;
 }
 
-.content-main {
 
-  .number-results {
-    span {
-      font-size: rem(32);
-      font-weight: $bold-font-weight;
-    }
+span {
+  .number-results &,
+  &.search-summary-count {
+    font-size: rem(32);
+    font-weight: $bold-font-weight;
   }
 }
 
@@ -108,7 +107,6 @@ $badges: (
   }
 
   h2 {
-    font-size: rem(22);
     font-weight: $heading-font-weight;
 
     @include media($tablet) {
@@ -122,12 +120,55 @@ $badges: (
     }
   }
 
-  .callout--info {
-    @extend .callout;
-    margin: 1.6em 0;
-    box-shadow: none;
-    background-color: $light-blue;
+  .content-table {
+
+    td, th {
+
+      &:nth-child(1) {
+        font-weight: 700;
+        width: 40%;
+      }
+    }
   }
+}
+
+.callout--info {
+  @extend .callout;
+  margin: 1.6em 0;
+  box-shadow: none;
+  background-color: $light-blue;
+
+  h2 {
+    margin: 1.2rem 0 .4rem;
+  }
+}
+
+// Validation
+.validation-masthead {
+  background: rgba(red,0.1);
+  padding: 1.353em;
+  margin: 2em 0;
+
+  .validation-masthead-heading {
+    font-weight: $bold-font-weight;
+  }
+
+  a {
+    width: 99%;
+    border-bottom: 1px solid black;
+    line-height: 2em;
+
+    &::after {
+      content: "\A";
+      white-space: pre;
+    }
+  }
+}
+
+.validation-message {
+  display: block;
+  font-size: rem(17);
+  font-weight: $base-font-weight;
 }
 
 .banner-warning-without-action {
