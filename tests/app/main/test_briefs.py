@@ -278,7 +278,8 @@ class TestRespondToBrief(BaseApplicationTest):
             ('Opportunities', '/digital-outcomes-and-specialists/opportunities')
         ]
 
-        assert len(breadcrumbs) == len(breadcrumbs_we_expect)
+        # +1 is for the static current page
+        assert len(breadcrumbs) == len(breadcrumbs_we_expect) + 1
 
         for index, link in enumerate(breadcrumbs_we_expect):
             assert breadcrumbs[index].find('a').text_content().strip() == link[0]
