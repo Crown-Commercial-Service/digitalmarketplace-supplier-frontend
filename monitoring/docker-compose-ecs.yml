@@ -8,4 +8,4 @@ DOCKER_CONTAINER_NAME:
     - RABBITMQ_USER
     - RABBITMQ_PASSWORD
     - RABBITMQ_VHOST
-    - URL=https://dm-supplier-frontend.apps.platform.digital.gov.au/marketplace/suppliers
+    - URL=https://marketplace.service.gov.au/suppliers

@@ -10,4 +10,4 @@ gov-au-marketplace:
   links:
     - sensu-server
   environment:
-    - URL=https://dm-supplier-frontend.apps.platform.digital.gov.au/marketplace/suppliers
+    - URL=https://marketplace.service.gov.au/suppliers
