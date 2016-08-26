@@ -267,23 +267,23 @@ class TestRespondToBrief(BaseApplicationTest):
         with self.app.test_client():
             self.login()
 
-    def _test_breadcrumbs_on_brief_response_page(self, response):
-        breadcrumbs = html.fromstring(response.get_data(as_text=True)).xpath(
-            '//*[@class="global-breadcrumb"]/nav/div/ul/li'
-        )
-        brief = self.brief['briefs']
+    # def _test_breadcrumbs_on_brief_response_page(self, response):
+    #     breadcrumbs = html.fromstring(response.get_data(as_text=True)).xpath(
+    #         '//*[@class="global-breadcrumb"]/nav/div/ul/li'
+    #     )
+    #     brief = self.brief['briefs']
 
-        breadcrumbs_we_expect = [
-            ('Home', '/marketplace'),
-            ('Opportunities', '/digital-outcomes-and-specialists/opportunities')
-        ]
+    #     # breadcrumbs_we_expect = [
+    #     #     ('Home', '/marketplace'),
+    #     #     ('Opportunities', '/digital-outcomes-and-specialists/opportunities')
+    #     # ]
 
-        # +1 is for the static current page
-        assert len(breadcrumbs) == len(breadcrumbs_we_expect) + 1
+    #     # +1 is for the static current page
+    #     assert len(breadcrumbs) == len(breadcrumbs_we_expect) + 1
 
-        for index, link in enumerate(breadcrumbs_we_expect):
-            assert breadcrumbs[index].find('a').text_content().strip() == link[0]
-            assert breadcrumbs[index].find('a').get('href').strip() == link[1]
+    #     for index, link in enumerate(breadcrumbs_we_expect):
+    #         assert breadcrumbs[index].find('a').text_content().strip() == link[0]
+    #         assert breadcrumbs[index].find('a').get('href').strip() == link[1]
 
     def test_get_brief_response_page(self, data_api_client):
         data_api_client.get_brief.return_value = self.brief
