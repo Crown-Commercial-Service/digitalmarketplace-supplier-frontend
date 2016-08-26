@@ -275,8 +275,7 @@ class TestRespondToBrief(BaseApplicationTest):
 
         breadcrumbs_we_expect = [
             ('Home', '/marketplace'),
-            ('Opportunities', '/digital-outcomes-and-specialists/opportunities'),
-            (brief['title'], '/digital-outcomes-and-specialists/opportunities/{}'.format(brief['id']))
+            ('Opportunities', '/digital-outcomes-and-specialists/opportunities')
         ]
 
         assert len(breadcrumbs) == len(breadcrumbs_we_expect)
