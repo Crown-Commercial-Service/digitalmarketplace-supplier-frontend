@@ -9,12 +9,19 @@
   {%
     with items = [
       {
-        "link": "/",
-        "label": "Digital Marketplace",
+        "link": "/marketplace",
+        "label": "Home",
       },
       {
-        "link": url_for(".dashboard"),
-        "label": "Your account",
+        "link": "/marketplace/{}/opportunities".format(brief.frameworkSlug),
+        "label": "Opportunities"
+      },
+      {
+        "link": "/marketplace/{}/opportunities/{}".format(brief.frameworkSlug, brief.id),
+        "label": "Opportunity details"
+      },
+      {
+        "label": "Ask a question"
       },
     ]
   %}
@@ -88,6 +95,7 @@
         {%
           with
           label="Ask question",
+          role="button",
           type="save"
         %}
           {% include "toolkit/button.html" %}

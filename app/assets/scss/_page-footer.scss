@@ -1,5 +1,7 @@
 footer[role='contentinfo'] {
+
   .footer-top {
+
     nav {
       ul {
         @include media($mobile) {
@@ -11,5 +13,48 @@ footer[role='contentinfo'] {
         }
       }
     }
+
+  }
+
+  .footer-logo {
+
+    ul {
+      display: table;
+      margin: 0 auto;
+
+      @include media($desktop) {
+        display: inline-block;
+        margin: 0;
+      }
+    }
+
+    li {
+      display: inline-block;
+      margin: 0 $base-spacing 0 0;
+      
+      &:not(:last-of-type) {
+        margin-bottom: $base-spacing*1.5;
+      }
+    }
+
+    @include media($tablet) {
+      @include span-columns(12 of 12);
+    }
+
+    @include media($desktop) {
+      
+      li {
+
+        &:not(:first-of-type) {
+          margin: 0 0 0 $base-spacing*1.5;
+        }
+      
+        &:last-child {
+          margin-left: $small-spacing;
+        }
+
+      }
+    }
+
   }
 }

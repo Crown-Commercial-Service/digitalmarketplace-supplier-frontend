@@ -5,16 +5,19 @@
   {%
     with items = [
       {
-        "link": "/",
-        "label": "Digital Marketplace"
+        "link": "/marketplace",
+        "label": "Home"
       },
       {
-        "link": "/{}/opportunities".format(brief.frameworkSlug),
-        "label": "Supplier opportunities"
+        "link": "/marketplace/{}/opportunities".format(brief.frameworkSlug),
+        "label": "Opportunities"
       },
       {
-        "link": "/{}/opportunities/{}".format(brief.frameworkSlug, brief.id),
-        "label": brief.title
+        "link": "/marketplace/{}/opportunities/{}".format(brief.frameworkSlug, brief.id),
+        "label": "Opportunity details"
+      },
+      {
+        "label": "Apply for opportunity"
       },
     ]
   %}
