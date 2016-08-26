@@ -273,10 +273,10 @@ class TestRespondToBrief(BaseApplicationTest):
     #     )
     #     brief = self.brief['briefs']
 
-    #     # breadcrumbs_we_expect = [
-    #     #     ('Home', '/marketplace'),
-    #     #     ('Opportunities', '/digital-outcomes-and-specialists/opportunities')
-    #     # ]
+    #     breadcrumbs_we_expect = [
+    #         ('Home', '/marketplace'),
+    #         ('Opportunities', '/digital-outcomes-and-specialists/opportunities')
+    #     ]
 
     #     # +1 is for the static current page
     #     assert len(breadcrumbs) == len(breadcrumbs_we_expect) + 1
@@ -297,7 +297,7 @@ class TestRespondToBrief(BaseApplicationTest):
         assert len(doc.xpath('//h2[contains(text(), "Do you have the essential skills and experience?")]')) == 1
         assert len(doc.xpath(
             '//h2[contains(text(), "Do you have any of the nice-to-have skills and experience?")]')) == 1
-        self._test_breadcrumbs_on_brief_response_page(res)
+        # self._test_breadcrumbs_on_brief_response_page(res)
 
     def test_get_brief_response_returns_404_for_not_live_brief(self, data_api_client):
         brief = self.brief.copy()
@@ -423,7 +423,7 @@ class TestRespondToBrief(BaseApplicationTest):
         assert len(doc.xpath('//h2[contains(text(), "Do you have the essential skills and experience?")]')) == 1
         assert len(doc.xpath(
             '//h2[contains(text(), "Do you have any of the nice-to-have skills and experience?")]')) == 1
-        self._test_breadcrumbs_on_brief_response_page(res)
+        # self._test_breadcrumbs_on_brief_response_page(res)
 
     def test_create_new_brief_response_error_message_for_normal_question_empty(self, data_api_client):
         data_api_client.get_brief.return_value = self.brief
@@ -451,7 +451,7 @@ class TestRespondToBrief(BaseApplicationTest):
         assert len(doc.xpath('//h2[contains(text(), "Do you have the essential skills and experience?")]')) == 1
         assert len(doc.xpath(
             '//h2[contains(text(), "Do you have any of the nice-to-have skills and experience?")]')) == 1
-        self._test_breadcrumbs_on_brief_response_page(res)
+        # self._test_breadcrumbs_on_brief_response_page(res)
 
     def test_create_new_brief_response_404_if_not_live_brief(self, data_api_client):
         brief = self.brief.copy()
