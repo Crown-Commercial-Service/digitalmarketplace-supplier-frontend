@@ -274,8 +274,8 @@ class TestRespondToBrief(BaseApplicationTest):
         brief = self.brief['briefs']
 
         breadcrumbs_we_expect = [
-            ('Digital Marketplace', '/'),
-            ('Supplier opportunities', '/digital-outcomes-and-specialists/opportunities'),
+            ('Home', '/marketplace'),
+            ('Opportunities', '/digital-outcomes-and-specialists/opportunities'),
             (brief['title'], '/digital-outcomes-and-specialists/opportunities/{}'.format(brief['id']))
         ]
 
