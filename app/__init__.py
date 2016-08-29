@@ -59,6 +59,7 @@ def create_app(config_name):
     def extra_template_variables():
         return {
             'marketplace_home': urlparse.urljoin('/', application.config['BASE_PREFIX']),
+            'generic_contact_email': application.config['GENERIC_CONTACT_EMAIL'],
         }
 
     return application

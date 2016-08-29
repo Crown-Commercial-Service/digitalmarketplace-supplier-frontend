@@ -14,7 +14,7 @@
 {% endwith %}
 
 
-    <form autocomplete="off" action="{{ url_for('.submit_create_user', encoded_token=token) }}" method="POST" id="createUserForm">
+    <form autocomplete="off" action="{{ url_for('.submit_create_user', token=token) }}" method="POST" id="createUserForm">
 
         <div class="grid-row">
             <div class="column-two-thirds">

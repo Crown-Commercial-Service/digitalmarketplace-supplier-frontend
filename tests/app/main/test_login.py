@@ -3,6 +3,8 @@ from __future__ import unicode_literals
 
 import urllib2
 
+from app.main.helpers.users import generate_supplier_invitation_token
+
 from dmapiclient import HTTPError
 from dmapiclient.audit import AuditTypes
 from dmutils.email import generate_token, EmailError
@@ -95,11 +97,10 @@ class TestInviteUser(BaseApplicationTest):
             )
 
     @mock.patch('app.main.views.login.data_api_client')
-    @mock.patch('app.main.views.login.generate_token')
+    @mock.patch('app.main.views.login.generate_supplier_invitation_token')
     @mock.patch('app.main.views.login.send_email')
-    def test_should_call_generate_token_with_correct_params(self, send_email, generate_token, data_api_client):
+    def test_should_call_generate_token_with_correct_params(self, send_email, supplier_token_mock, data_api_client):
         with self.app.app_context():
-
             self.login()
             res = self.client.post(
                 self.url_for('main.send_invite_user'),
@@ -108,21 +109,17 @@ class TestInviteUser(BaseApplicationTest):
                     'email_address': 'this@isvalid.com',
                 })
             assert res.status_code == 302
-            generate_token.assert_called_once_with(
-                {
-                    "supplier_code": 1234,
-                    "supplier_name": "Supplier Name",
-                    "email_address": "this@isvalid.com"
-                },
-                self.app.config['SECRET_KEY'],
-                self.app.config['INVITE_EMAIL_SALT']
+            supplier_token_mock.assert_called_once_with(
+                name='',
+                email_address='this@isvalid.com',
+                supplier_code=1234,
+                supplier_name='Supplier Name',
             )
 
     @mock.patch('app.main.views.login.send_email')
     @mock.patch('app.main.views.login.generate_token')
     def test_should_not_generate_token_or_send_email_if_invalid_email(self, send_email, generate_token):
         with self.app.app_context():
-
             self.login()
             res = self.client.post(
                 self.url_for('main.send_invite_user'),
@@ -209,23 +206,21 @@ class TestInviteUser(BaseApplicationTest):
 
 
 class TestCreateUser(BaseApplicationTest):
-    def _generate_token(self, supplier_code=1234, supplier_name='Supplier Name', email_address='test@email.com'):
-        return generate_token(
-            {
-                'supplier_code': supplier_code,
-                'supplier_name': supplier_name,
-                'email_address': email_address
-            },
-            self.app.config['SECRET_KEY'],
-            self.app.config['INVITE_EMAIL_SALT']
-        )
+    def _generate_token(self, supplier_code=1234, supplier_name='Supplier Name', name='Me', email_address='test@email.com'):  # noqa
+        with self.app.app_context():
+            return generate_supplier_invitation_token(
+                name=name,
+                email_address=email_address,
+                supplier_code=supplier_code,
+                supplier_name=supplier_name,
+            )
 
     def test_should_be_an_error_for_invalid_token(self):
         token = "1234"
         res = self.client.get(
-            self.url_for('main.create_user', encoded_token=token)
+            self.url_for('main.create_user', token=token)
         )
-        assert res.status_code == 400
+        assert res.status_code == 404
 
     def test_should_be_an_error_for_missing_token(self):
         res = self.client.get('/suppliers/create-user')
@@ -238,22 +233,22 @@ class TestCreateUser(BaseApplicationTest):
                 'this_is_not_expected': 1234
             },
             self.app.config['SECRET_KEY'],
-            self.app.config['INVITE_EMAIL_SALT']
+            self.app.config['SUPPLIER_INVITE_TOKEN_SALT']
         )
 
         res = self.client.get(
-            self.url_for('main.create_user', encoded_token=token)
+            self.url_for('main.create_user', token=token)
         )
-        assert res.status_code == 400
+        assert res.status_code == 404
         assert data_api_client.get_user.called is False
         assert data_api_client.get_supplier.called is False
 
     def test_should_be_a_bad_request_if_token_expired(self):
         res = self.client.get(
-            self.url_for('main.create_user', encoded_token=12345)
+            self.url_for('main.create_user', token=12345)
         )
 
-        assert res.status_code == 400
+        assert res.status_code == 404
         assert USER_LINK_EXPIRED_ERROR in res.get_data(as_text=True)
 
     @mock.patch('app.main.views.login.data_api_client')
@@ -262,7 +257,7 @@ class TestCreateUser(BaseApplicationTest):
 
         token = self._generate_token()
         res = self.client.get(
-            self.url_for('main.create_user', encoded_token=token)
+            self.url_for('main.create_user', token=token)
         )
 
         assert res.status_code == 200
@@ -277,7 +272,7 @@ class TestCreateUser(BaseApplicationTest):
 
     def test_should_be_an_error_if_invalid_token_on_submit(self):
         res = self.client.post(
-            self.url_for('main.submit_create_user', encoded_token='invalidtoken'),
+            self.url_for('main.submit_create_user', token='invalidtoken'),
             data={
                 'csrf_token': FakeCsrf.valid_token,
                 'password': '123456789',
@@ -285,7 +280,7 @@ class TestCreateUser(BaseApplicationTest):
                 'email_address': 'valid@test.com'}
         )
 
-        assert res.status_code == 400
+        assert res.status_code == 404
         assert USER_LINK_EXPIRED_ERROR in res.get_data(as_text=True)
         assert (
             '<input type="submit" class="button-save"  value="Create contributor account" />'
@@ -295,7 +290,7 @@ class TestCreateUser(BaseApplicationTest):
     def test_should_be_an_error_if_missing_name_and_password(self):
         token = self._generate_token()
         res = self.client.post(
-            self.url_for('main.submit_create_user', encoded_token=token),
+            self.url_for('main.submit_create_user', token=token),
             data=csrf_only_request
         )
 
@@ -309,7 +304,7 @@ class TestCreateUser(BaseApplicationTest):
     def test_should_be_an_error_if_too_short_name_and_password(self):
         token = self._generate_token()
         res = self.client.post(
-            self.url_for('main.submit_create_user', encoded_token=token),
+            self.url_for('main.submit_create_user', token=token),
             data={
                 'csrf_token': FakeCsrf.valid_token,
                 'password': "123456789",
@@ -326,13 +321,12 @@ class TestCreateUser(BaseApplicationTest):
 
     def test_should_be_an_error_if_too_long_name_and_password(self):
         with self.app.app_context():
-
             token = self._generate_token()
             twofiftysix = "a" * 256
             fiftyone = "a" * 51
 
             res = self.client.post(
-                self.url_for('main.submit_create_user', encoded_token=token),
+                self.url_for('main.submit_create_user', token=token),
                 data={
                     'csrf_token': FakeCsrf.valid_token,
                     'password': fiftyone,
@@ -355,7 +349,7 @@ class TestCreateUser(BaseApplicationTest):
 
         token = self._generate_token()
         res = self.client.get(
-            self.url_for('main.create_user', encoded_token=token)
+            self.url_for('main.create_user', token=token)
         )
 
         assert res.status_code == 400
@@ -368,7 +362,7 @@ class TestCreateUser(BaseApplicationTest):
 
         token = self._generate_token()
         res = self.client.get(
-            self.url_for('main.create_user', encoded_token=token)
+            self.url_for('main.create_user', token=token)
         )
 
         assert res.status_code == 400
@@ -387,7 +381,7 @@ class TestCreateUser(BaseApplicationTest):
 
         token = self._generate_token()
         res = self.client.get(
-            self.url_for('main.create_user', encoded_token=token)
+            self.url_for('main.create_user', token=token)
         )
 
         assert res.status_code == 400
@@ -406,7 +400,7 @@ class TestCreateUser(BaseApplicationTest):
 
         token = self._generate_token()
         res = self.client.get(
-            self.url_for('main.create_user', encoded_token=token)
+            self.url_for('main.create_user', token=token)
         )
 
         assert res.status_code == 400
@@ -429,7 +423,7 @@ class TestCreateUser(BaseApplicationTest):
         )
 
         res = self.client.get(
-            self.url_for('main.create_user', encoded_token=token)
+            self.url_for('main.create_user', token=token)
         )
 
         assert res.status_code == 400
@@ -448,7 +442,7 @@ class TestCreateUser(BaseApplicationTest):
 
         token = self._generate_token()
         res = self.client.get(
-            self.url_for('main.create_user', encoded_token=token),
+            self.url_for('main.create_user', token=token),
             follow_redirects=True
         )
 
@@ -468,7 +462,7 @@ class TestCreateUser(BaseApplicationTest):
 
         token = self._generate_token()
         res = self.client.get(
-            self.url_for('main.create_user', encoded_token=token)
+            self.url_for('main.create_user', token=token)
         )
 
         assert res.status_code == 400
@@ -487,7 +481,7 @@ class TestCreateUser(BaseApplicationTest):
 
         token = self._generate_token()
         res = self.client.get(
-            self.url_for('main.create_user', encoded_token=token)
+            self.url_for('main.create_user', token=token)
         )
 
         assert res.status_code == 400
@@ -499,7 +493,7 @@ class TestCreateUser(BaseApplicationTest):
 
         token = self._generate_token()
         res = self.client.post(
-            self.url_for('main.submit_create_user', encoded_token=token),
+            self.url_for('main.submit_create_user', token=token),
             data={
                 'csrf_token': FakeCsrf.valid_token,
                 'password': 'validpassword',
@@ -525,7 +519,7 @@ class TestCreateUser(BaseApplicationTest):
 
         token = self._generate_token()
         res = self.client.post(
-            self.url_for('main.submit_create_user', encoded_token=token),
+            self.url_for('main.submit_create_user', token=token),
             data={
                 'csrf_token': FakeCsrf.valid_token,
                 'password': 'validpassword',
@@ -548,7 +542,7 @@ class TestCreateUser(BaseApplicationTest):
         data_api_client.get_user.return_value = None
         token = self._generate_token()
         res = self.client.post(
-            self.url_for('main.submit_create_user', encoded_token=token),
+            self.url_for('main.submit_create_user', token=token),
             data={
                 'csrf_token': FakeCsrf.valid_token,
                 'password': 'validpassword',
@@ -571,7 +565,7 @@ class TestCreateUser(BaseApplicationTest):
         data_api_client.get_user.return_value = None
         token = self._generate_token()
         res = self.client.post(
-            self.url_for('main.submit_create_user', encoded_token=token),
+            self.url_for('main.submit_create_user', token=token),
             data={
                 'csrf_token': FakeCsrf.valid_token,
                 'password': '  validpassword  ',
@@ -597,7 +591,7 @@ class TestCreateUser(BaseApplicationTest):
 
             token = self._generate_token()
             res = self.client.post(
-                self.url_for('main.submit_create_user', encoded_token=token),
+                self.url_for('main.submit_create_user', token=token),
                 data={
                     'csrf_token': FakeCsrf.valid_token,
                     'password': 'validpassword',

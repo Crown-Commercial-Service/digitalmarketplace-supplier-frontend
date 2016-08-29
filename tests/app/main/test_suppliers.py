@@ -819,8 +819,7 @@ class TestCreateSupplier(BaseApplicationTest):
 
     @mock.patch("app.main.suppliers.data_api_client")
     @mock.patch("app.main.suppliers.send_email")
-    @mock.patch("app.main.suppliers.generate_token")
-    def test_should_allow_correct_email_address(self, generate_token, send_email, data_api_client):
+    def test_should_allow_correct_email_address(self, send_email, data_api_client):
         with self.client as c:
             with c.session_transaction() as sess:
                 sess['email_address'] = "email_address"
@@ -833,16 +832,6 @@ class TestCreateSupplier(BaseApplicationTest):
             data_api_client.create_supplier.return_value = self.supplier()
 
             res = c.post(self.url_for('main.submit_company_summary'), data=csrf_only_request)
-
-            generate_token.assert_called_once_with(
-                {
-                    "email_address": "valid@email.com",
-                    "supplier_code": 12345,
-                    "supplier_name": "Supplier Name"
-                },
-                self.app.config['SECRET_KEY'],
-                "InviteEmailSalt"
-            )
 
             send_email.assert_called_once_with(
                 "valid@email.com",
@@ -866,10 +855,9 @@ class TestCreateSupplier(BaseApplicationTest):
         assert_false(send_email.called)
         assert_equal(res.status_code, 400)
 
-    @mock.patch("app.main.suppliers.data_api_client")
-    @mock.patch("app.main.suppliers.send_email")
-    @mock.patch("app.main.suppliers.generate_token")
-    def test_return_503_response_if_server_error_sending_email(self, generate_token, send_email, data_api_client):
+    @mock.patch('app.main.suppliers.data_api_client')
+    @mock.patch('app.main.suppliers.send_email')
+    def test_return_503_response_if_server_error_sending_email(self, send_email, data_api_client):
         with self.client.session_transaction() as sess:
             sess['email_address'] = "email_address"
             sess['phone_number'] = "phone_number"
@@ -882,16 +870,6 @@ class TestCreateSupplier(BaseApplicationTest):
         data_api_client.create_supplier.return_value = self.supplier()
 
         res = self.client.post(self.url_for('main.submit_company_summary'), data=csrf_only_request)
-
-        generate_token.assert_called_once_with(
-            {
-                "email_address": "valid@email.com",
-                "supplier_code": 12345,
-                "supplier_name": "Supplier Name"
-            },
-            self.app.config['SECRET_KEY'],
-            "InviteEmailSalt"
-        )
 
         send_email.assert_called_once_with(
             "valid@email.com",

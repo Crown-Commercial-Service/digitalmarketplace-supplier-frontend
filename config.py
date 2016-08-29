@@ -36,6 +36,8 @@ class Config(object):
 
     DEBUG = False
 
+    GENERIC_CONTACT_EMAIL = 'marketplace@digital.gov.au'
+
     RESET_PASSWORD_EMAIL_NAME = 'Digital Marketplace Admin'
     RESET_PASSWORD_EMAIL_FROM = 'no-reply@marketplace.digital.gov.au'
     RESET_PASSWORD_EMAIL_SUBJECT = 'Reset your Digital Marketplace password'
@@ -57,7 +59,7 @@ class Config(object):
     SECRET_KEY = None
     SHARED_EMAIL_KEY = None
     RESET_PASSWORD_SALT = 'ResetPasswordSalt'
-    INVITE_EMAIL_SALT = 'InviteEmailSalt'
+    SUPPLIER_INVITE_TOKEN_SALT = 'SupplierInviteEmail'
 
     ASSET_PATH = URL_PREFIX + '/static'
 

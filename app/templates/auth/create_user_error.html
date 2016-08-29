@@ -4,7 +4,7 @@
 
 {% block main_content %}
 
-{% if not token %}
+{% if not data %}
 
 <header class="page-heading-smaller">
   <h1>Expired link</h1>
@@ -12,7 +12,7 @@
 <p>
     The link you used to create an account may have expired.<br/>
     Check you’ve entered the correct link or ask the person who invited you to send a new invitation.<br/>
-    If you still can’t create a contributor account, email <a href="mailto:enquiries@digitalmarketplace.service.gov.uk">enquiries@digitalmarketplace.service.gov.uk</a>.
+    If you still can’t create a contributor account, email <a href="mailto:{{ generic_contact_email }}">{{ generic_contact_email }}</a>.
 </p>
 
 {% elif not user.active %}
@@ -21,7 +21,7 @@
   <h1>Your account has been deactivated.</h1>
 </header>
 <p>
-    Email <a href="mailto:enquiries@digitalmarketplace.service.gov.uk">enquiries@digitalmarketplace.service.gov.uk</a> to reactivate your account.
+    Email <a href="mailto:{{ generic_contact_email }}">{{ generic_contact_email }}</a> to reactivate your account.
 </p>
 
 {% elif user.locked %}
@@ -30,22 +30,22 @@
   <h1>Your account has been locked.</h1>
 </header>
 <p>
-    Email <a href="mailto:enquiries@digitalmarketplace.service.gov.uk">enquiries@digitalmarketplace.service.gov.uk</a> to unlock your account.
+    Email <a href="mailto:{{ generic_contact_email }}">{{ generic_contact_email }}</a> to unlock your account.
 </p>
 
 {% elif user %}
 
-  {% if user.role == 'supplier' and token.get("supplier_code") != user.supplier_code %}
+  {% if user.role == 'supplier' and data['supplierCode'] != user.supplier_code %}
 
   <header class="page-heading-smaller">
     <h1>The details you provided are registered with another supplier.</h1>
   </header>
-  <p>You were invited by ‘{{ token.get("supplier_name") }}’.</p>
+  <p>You were invited by ‘{{ data['supplierName'] }}’.</p>
   <p>Your account is registered with ‘{{ user.supplier_name }}’.</p>
   <br>
   <p>
     <a href="/login">Log in</a> to your {{ user.supplier_name }} account or email
-    <a href="mailto:enquiries@digitalmarketplace.service.gov.uk">enquiries@digitalmarketplace.service.gov.uk</a> to register your account with a different organisation.
+    <a href="mailto:{{ generic_contact_email }}">{{ generic_contact_email }}</a> to register your account with a different organisation.
   </p>
 
   {% else %}
