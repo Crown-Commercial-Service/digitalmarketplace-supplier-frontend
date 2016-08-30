@@ -18,6 +18,7 @@ from ..forms.suppliers import (
     EditSupplierForm, EditContactInformationForm, DunsNumberForm, CompaniesHouseNumberForm,
     CompanyContactDetailsForm, CompanyNameForm, EmailAddressForm
 )
+from app.main.helpers.users import generate_supplier_invitation_token
 from ..helpers.frameworks import get_frameworks_by_status
 from ..helpers import debug_only, hash_email, login_required
 from .users import get_current_suppliers_users
@@ -362,17 +363,14 @@ def submit_company_summary():
         session['email_company_name'] = supplier['name']
         session['email_supplier_code'] = supplier['id']
 
-        token = generate_token(
-            {
-                "email_address":  account_email_address,
-                "supplier_code": session['email_supplier_code'],
-                "supplier_name": session['email_company_name']
-            },
-            current_app.config['SECRET_KEY'],
-            current_app.config['INVITE_EMAIL_SALT']
+        token = generate_supplier_invitation_token(
+            name='',
+            email_address=account_email_address,
+            supplier_code=session['email_supplier_code'],
+            supplier_name=session['email_company_name']
         )
 
-        url = url_for('main.create_user', encoded_token=token, _external=True)
+        url = url_for('main.create_user', token=token, _external=True)
 
         email_body = render_template(
             "emails/create_user_email.html",
