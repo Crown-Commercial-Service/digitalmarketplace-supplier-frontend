@@ -37,23 +37,25 @@ class Config(object):
     DEBUG = False
 
     GENERIC_CONTACT_EMAIL = 'marketplace@digital.gov.au'
+    DM_GENERIC_NOREPLY_EMAIL = 'no-reply@marketplace.digital.gov.au'
+    DM_GENERIC_ADMIN_NAME = 'Digital Marketplace Admin'
 
-    RESET_PASSWORD_EMAIL_NAME = 'Digital Marketplace Admin'
+    RESET_PASSWORD_EMAIL_NAME = DM_GENERIC_ADMIN_NAME
     RESET_PASSWORD_EMAIL_FROM = 'no-reply@marketplace.digital.gov.au'
     RESET_PASSWORD_EMAIL_SUBJECT = 'Reset your Digital Marketplace password'
 
-    INVITE_EMAIL_NAME = 'Digital Marketplace Admin'
+    INVITE_EMAIL_NAME = DM_GENERIC_ADMIN_NAME
     INVITE_EMAIL_FROM = 'no-reply@marketplace.digital.gov.au'
     INVITE_EMAIL_SUBJECT = 'Your Digital Marketplace invitation'
 
-    CLARIFICATION_EMAIL_NAME = 'Digital Marketplace Admin'
+    NEW_SUPPLIER_INVITE_SUBJECT = 'Digital Marketplace - invitation to create a seller account'
+
+    CLARIFICATION_EMAIL_NAME = DM_GENERIC_ADMIN_NAME
     CLARIFICATION_EMAIL_FROM = 'no-reply@marketplace.digital.gov.au'
     CLARIFICATION_EMAIL_SUBJECT = 'Thanks for your clarification question'
     DM_FOLLOW_UP_EMAIL_TO = 'digitalmarketplace@mailinator.com'
 
-    FRAMEWORK_AGREEMENT_RETURNED_NAME = 'Digital Marketplace Admin'
-
-    DM_GENERIC_NOREPLY_EMAIL = 'no-reply@marketplace.digital.gov.au'
+    FRAMEWORK_AGREEMENT_RETURNED_NAME = DM_GENERIC_ADMIN_NAME
 
     CREATE_USER_SUBJECT = 'Create your Digital Marketplace account'
     SECRET_KEY = None
