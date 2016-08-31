@@ -644,8 +644,14 @@ class TestCompleteDraft(BaseApplicationTest):
             data=csrf_only_request
         )
         assert_equal(res.status_code, 302)
-        assert_true('lot=scs' in res.location)
-        assert_in('/suppliers/frameworks/g-cloud-7/submissions', res.location)
+        target_url = self.url_for(
+            'main.framework_submission_services',
+            framework_slug='g-cloud-7',
+            lot='scs',
+            lot_slug='scs',
+            _external=True
+        )
+        assert_equal(res.location, target_url)
 
     def test_complete_draft_checks_supplier_code(self, data_api_client):
         self.draft['supplierCode'] = 2
@@ -1273,10 +1279,14 @@ class TestEditDraftService(BaseApplicationTest):
                 section_id='individual-specialist-roles',
                 question_slug='agile-coach'))
 
-        assert_equal(res.status_code, 302)
-        assert(
-            '/suppliers/frameworks/digital-outcomes-and-specialists/submissions/digital-specialists/1?' in res.location
+        view_service_submission_url = self.url_for(
+            'main.view_service_submission',
+            framework_slug='digital-outcomes-and-specialists',
+            lot_slug='digital-specialists',
+            service_id=1
         )
+        assert_equal(res.status_code, 302)
+        assert view_service_submission_url in res.location
         assert('section_id=individual-specialist-roles' in res.location)
         assert('confirm_remove=agile-coach' in res.location)
 
@@ -1303,9 +1313,7 @@ class TestEditDraftService(BaseApplicationTest):
             data=csrf_only_request)
 
         assert_equal(res3.status_code, 302)
-        assert(res3.location.endswith(
-            '/suppliers/frameworks/digital-outcomes-and-specialists/submissions/digital-specialists/1')
-        )
+        assert res3.location.endswith(view_service_submission_url)
         data_api_client.update_draft_service.assert_called_once_with(
             '1',
             {
@@ -1340,16 +1348,15 @@ class TestEditDraftService(BaseApplicationTest):
                 question_slug='agile-coach'))
 
         assert_equal(res.status_code, 302)
-        assert(res.location.endswith(
-            '/suppliers/frameworks/digital-outcomes-and-specialists/submissions/digital-specialists/1')
+        view_service_submission_url = self.url_for(
+            'main.view_service_submission',
+            framework_slug='digital-outcomes-and-specialists',
+            lot_slug='digital-specialists',
+            service_id=1
         )
+        assert res.location.endswith(view_service_submission_url)
 
-        res2 = self.client.get(
-            self.url_for(
-                'main.view_service_submission',
-                framework_slug='digital-outcomes-and-specialists',
-                lot_slug='digital-specialists',
-                service_id=1))
+        res2 = self.client.get(view_service_submission_url)
         assert_equal(res2.status_code, 200)
         assert_in("You must offer one of the individual specialist roles to be eligible.",
                   res2.get_data(as_text=True))
