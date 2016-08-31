@@ -58,6 +58,21 @@
                 </div>
             {% endif %}
 
+            <div>
+                {% set accept_terms_label %}I accept the <a href="/terms-of-use">Terms of Use</a> and <a href="/privacy-policy">Privacy Policy</a>.{% endset %}
+                {% if form.accept_terms.errors %}
+                    {{ form.accept_terms(class="invalid") }}
+                {% else %}
+                    {{ form.accept_terms }}
+                {% endif %}
+                {{ form.accept_terms.label(text=accept_terms_label) }}
+                {% if form.accept_terms.errors %}
+                <div class="validation-message" id="error-terms-checkbox">
+                    {% for error in form.accept_terms.errors %}{{ error }}{% endfor %}
+                </div>
+                {% endif %}
+            </div>
+
             {%
               with
               type = "save",
