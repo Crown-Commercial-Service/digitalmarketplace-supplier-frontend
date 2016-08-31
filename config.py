@@ -131,6 +131,7 @@ class Live(Config):
     """Base config for deployed environments"""
     DEBUG = False
     DM_HTTP_PROTO = 'https'
+    SERVER_NAME = 'marketplace.service.gov.au'
 
     DM_FRAMEWORK_AGREEMENTS_EMAIL = 'no-reply@marketplace.digital.gov.au'
 
