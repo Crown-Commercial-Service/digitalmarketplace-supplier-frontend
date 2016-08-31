@@ -4,6 +4,7 @@ import os
 import sys
 from app import create_app
 from dmutils import init_manager
+import app.invites
 
 
 port = int(os.getenv('PORT', '5003'))
@@ -15,6 +16,7 @@ application.jinja_options = {
 }
 
 manager = init_manager(application, port, ['./app/content/frameworks'])
+app.invites.init_manager(manager)
 
 application.logger.info('Command line: {}'.format(sys.argv))
 
