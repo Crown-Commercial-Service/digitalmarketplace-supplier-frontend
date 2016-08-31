@@ -1,8 +1,8 @@
 from __future__ import absolute_import
 import six
-from flask_login import current_user
-from flask import current_app, flash, redirect, render_template, request, url_for, abort
-from flask_login import login_user
+
+from flask_login import current_user, login_user
+from flask import current_app, flash, make_response, redirect, render_template, request, url_for, abort
 
 from dmapiclient import HTTPError
 from dmapiclient.audit import AuditTypes
@@ -17,17 +17,32 @@ from app.main.helpers import login_required
 from app.main.helpers.users import decode_supplier_invitation_token, generate_supplier_invitation_token
 
 
+def get_create_user_data(token):
+    if token == 'fake-token' and current_app.config['DEBUG']:
+        data = {
+            'name': 'Debug User',
+            'emailAddress': 'debug@example.com',
+            'supplierCode': 0,
+            'supplierName': 'Example Pty Ltd',
+        }
+    else:
+        try:
+            data = decode_supplier_invitation_token(token.encode())
+        except InvalidToken:
+            current_app.logger.warning(
+                'createuser.token_invalid: {token}',
+                extra={'token': token})
+            body = render_template(
+                'auth/create_user_error.html',
+                data=None
+            )
+            abort(make_response(body, 404))
+    return data
+
+
 @main.route('/create-user/<string:token>', methods=['GET'])
 def create_user(token):
-    try:
-        data = decode_supplier_invitation_token(token.encode())
-    except InvalidToken:
-        current_app.logger.warning(
-            'createuser.token_invalid: {token}',
-            extra={'token': token})
-        return render_template(
-            'auth/create_user_error.html',
-            data=None), 404
+    data = get_create_user_data(token)
 
     user_json = data_api_client.get_user(email_address=data['emailAddress'])
 
@@ -49,16 +64,8 @@ def create_user(token):
 
 @main.route('/create-user/<string:token>', methods=['POST'])
 def submit_create_user(token):
+    data = get_create_user_data(token)
     form = CreateUserForm(request.form)
-
-    try:
-        data = decode_supplier_invitation_token(token.encode())
-    except InvalidToken:
-        current_app.logger.warning('createuser.token_invalid: {token}',
-                                   extra={'token': token})
-        return render_template(
-            'auth/create_user_error.html',
-            token=None), 404
 
     if not form.validate():
         current_app.logger.warning(
@@ -70,6 +77,9 @@ def submit_create_user(token):
             token=token,
             email_address=data['emailAddress'],
             supplier_name=data['supplierName']), 400
+
+    if token == 'fake-token':
+        return redirect('/')
 
     try:
         user = data_api_client.create_user({
