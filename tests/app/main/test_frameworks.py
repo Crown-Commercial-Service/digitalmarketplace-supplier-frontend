@@ -1910,7 +1910,8 @@ class TestReturnSignedAgreement(BaseApplicationTest):
             )
 
             assert res.status_code == 302
-            assert "suppliers/frameworks/g-cloud-8/signature-upload" in res.location
+            target_url = self.url_for('main.signature_upload', framework_slug='g-cloud-8', _external=True)
+            assert res.location == target_url
 
     def test_provide_signer_details_form_with_valid_input_redirects_to_contract_review_page_if_filename_in_session(
             self, return_supplier_framework, data_api_client
@@ -1936,7 +1937,8 @@ class TestReturnSignedAgreement(BaseApplicationTest):
             )
 
             assert res.status_code == 302
-            assert "suppliers/frameworks/g-cloud-8/contract-review" in res.location
+            target_url = self.url_for('main.contract_review', framework_slug='g-cloud-8', _external=True)
+            assert res.location == target_url
 
     @mock.patch('dmutils.s3.S3')
     @mock.patch('app.main.views.frameworks.file_is_empty')
