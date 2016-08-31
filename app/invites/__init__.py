@@ -19,7 +19,12 @@ def send_supplier_invite(name, email_address, supplier_code, supplier_name):
     Raises EmailError if failed to send, or HTTPError if logging failed.
     """
     token = generate_supplier_invitation_token(name, email_address, supplier_code, supplier_name)
-    activation_url = url_for('main.create_user', token=token)
+    activation_url = url_for(
+        'main.create_user',
+        token=token,
+        _external=True,
+        _scheme=current_app.config['DM_HTTP_PROTO']
+    )
     subject = current_app.config['NEW_SUPPLIER_INVITE_SUBJECT']
     email_body = render_template(
         'emails/new_supplier_invite_email.html',
