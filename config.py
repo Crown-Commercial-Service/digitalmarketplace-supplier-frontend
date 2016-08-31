@@ -33,6 +33,8 @@ class Config(object):
     DM_ASSETS_URL = None
 
     DM_HTTP_PROTO = 'http'
+    DM_SEND_EMAIL_TO_STDERR = False
+    DM_CACHE_TYPE = 'dev'
 
     DEBUG = False
 
@@ -108,7 +110,6 @@ class Test(Config):
 class Development(Config):
     DEBUG = True
     SESSION_COOKIE_SECURE = False
-    DM_SEND_EMAIL_TO_STDERR = False
 
     # Dates not formatted like YYYY-(0)M-(0)D will fail
     FEATURE_FLAGS_EDIT_SECTIONS = enabled_since('2015-06-03')
@@ -131,6 +132,7 @@ class Live(Config):
     """Base config for deployed environments"""
     DEBUG = False
     DM_HTTP_PROTO = 'https'
+    DM_CACHE_TYPE = 'prod'
     SERVER_NAME = 'marketplace.service.gov.au'
 
     DM_FRAMEWORK_AGREEMENTS_EMAIL = 'no-reply@marketplace.digital.gov.au'
