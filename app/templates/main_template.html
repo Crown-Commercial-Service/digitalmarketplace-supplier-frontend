@@ -58,7 +58,7 @@
       <div class="wrapper">
         {% if marketplace_home != request.path %}
         <div class="marketplace--logo">
-          <a href="{{ marketplace_home }}" title="{{ logo_link_title|default('Go to the Marketplace homepage') }}" class="logo">Digital Marketplace</a> <span class="badge--beta">PRIVATE BETA</span>
+          <a href="{{ marketplace_home }}" title="{{ logo_link_title|default('Go to the Marketplace homepage') }}" class="logo">Digital Marketplace</a> <span class="badge--beta">BETA</span>
         </div>
         {% endif %}
         <div class="user-nav">
@@ -67,6 +67,7 @@
             <li><a href="{{ config['BASE_PREFIX'] + '/buyers/create' }}">Sign up</a></li>
             <li><a href="{{ config['BASE_PREFIX'] + '/login' }}">Log in</a></li>
             {% else %}
+            <li><a href="{% if current_user.role == 'buyer' %}{{ config['BASE_PREFIX'] + '/sellers' }}{% else %}/sellers{% endif %}">Dashboard</a></li>
             <li><a href="{{ config['BASE_PREFIX'] + '/logout' }}">Log out</a></li>
             {% endif %}
           </ul>
