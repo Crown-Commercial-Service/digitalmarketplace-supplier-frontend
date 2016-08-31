@@ -5,8 +5,6 @@ applications:
       disk_quota: 1G
       instances: 4
       env:
-          BASE_PREFIX: ''
-          URL_PREFIX: '/suppliers'
           DM_ENVIRONMENT: production
           NEW_RELIC_ENVIRONMENT: production
           DM_DATA_API_URL:  https://dm-api.apps.platform.digital.gov.au/
