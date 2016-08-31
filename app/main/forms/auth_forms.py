@@ -1,4 +1,5 @@
 from wtforms import PasswordField
+from wtforms.fields.core import BooleanField
 from wtforms.validators import DataRequired, Email, EqualTo, Length
 from dmutils.forms import DmForm, StripWhitespaceStringField
 
@@ -50,3 +51,9 @@ class CreateUserForm(DmForm):
                message="Passwords must be between 10 and 50 characters"
                )
     ])
+
+    accept_terms = BooleanField(
+        validators=[
+            DataRequired(message="You must accept the terms and conditions")
+        ]
+    )

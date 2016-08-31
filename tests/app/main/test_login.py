@@ -277,7 +277,9 @@ class TestCreateUser(BaseApplicationTest):
                 'csrf_token': FakeCsrf.valid_token,
                 'password': '123456789',
                 'name': 'name',
-                'email_address': 'valid@test.com'}
+                'email_address': 'valid@test.com',
+                'accept_terms': 'y',
+            }
         )
 
         assert res.status_code == 404
@@ -308,7 +310,8 @@ class TestCreateUser(BaseApplicationTest):
             data={
                 'csrf_token': FakeCsrf.valid_token,
                 'password': "123456789",
-                'name': ""
+                'name': '',
+                'accept_terms': 'y',
             }
         )
 
@@ -330,7 +333,8 @@ class TestCreateUser(BaseApplicationTest):
                 data={
                     'csrf_token': FakeCsrf.valid_token,
                     'password': fiftyone,
-                    'name': twofiftysix
+                    'name': twofiftysix,
+                    'accept_terms': 'y',
                 }
             )
 
@@ -342,6 +346,22 @@ class TestCreateUser(BaseApplicationTest):
                 "test@email.com"
             ]:
                 assert message in res.get_data(as_text=True)
+
+    def test_require_acceptance_of_terms(self):
+        token = self._generate_token()
+        res = self.client.post(
+            self.url_for('main.submit_create_user', token=token),
+            data={
+                'csrf_token': FakeCsrf.valid_token,
+                'password': 'SuperStrongPassword!!!',
+                'name': 'Person',
+                # no accept_terms
+            }
+        )
+
+        assert res.status_code == 400
+        print res.get_data(as_text=True)
+        assert 'must accept the terms' in res.get_data(as_text=True)
 
     @mock.patch('app.main.views.login.data_api_client')
     def test_should_return_an_error_if_user_exists_and_is_a_buyer(self, data_api_client):
@@ -497,7 +517,8 @@ class TestCreateUser(BaseApplicationTest):
             data={
                 'csrf_token': FakeCsrf.valid_token,
                 'password': 'validpassword',
-                'name': 'valid name'
+                'name': 'valid name',
+                'accept_terms': 'y',
             }
         )
 
@@ -523,7 +544,8 @@ class TestCreateUser(BaseApplicationTest):
             data={
                 'csrf_token': FakeCsrf.valid_token,
                 'password': 'validpassword',
-                'name': 'valid name'
+                'name': 'valid name',
+                'accept_terms': 'y',
             }
         )
 
@@ -546,7 +568,8 @@ class TestCreateUser(BaseApplicationTest):
             data={
                 'csrf_token': FakeCsrf.valid_token,
                 'password': 'validpassword',
-                'name': '  valid name  '
+                'name': '  valid name  ',
+                'accept_terms': 'y',
             }
         )
 
@@ -569,7 +592,8 @@ class TestCreateUser(BaseApplicationTest):
             data={
                 'csrf_token': FakeCsrf.valid_token,
                 'password': '  validpassword  ',
-                'name': 'valid name  '
+                'name': 'valid name  ',
+                'accept_terms': 'y',
             }
         )
 
@@ -595,7 +619,8 @@ class TestCreateUser(BaseApplicationTest):
                 data={
                     'csrf_token': FakeCsrf.valid_token,
                     'password': 'validpassword',
-                    'name': 'valid name'
+                    'name': 'valid name',
+                    'accept_terms': 'y',
                 }
             )
             assert res.status_code == 503
