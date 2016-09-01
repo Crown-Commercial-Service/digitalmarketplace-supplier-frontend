@@ -340,10 +340,10 @@ class TestCreateUser(BaseApplicationTest):
 
             assert res.status_code == 400
             for message in [
-                "Names must be between 1 and 255 characters",
-                "Passwords must be between 10 and 50 characters",
-                "Create contributor account for Supplier Name",
-                "test@email.com"
+                'Names must be between 1 and 255 characters',
+                'Passwords must be between 10 and 50 characters',
+                'Create',
+                'test@email.com'
             ]:
                 assert message in res.get_data(as_text=True)
 
