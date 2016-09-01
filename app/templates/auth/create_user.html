@@ -2,7 +2,7 @@
 
 {% block page_title %}Create account – Digital Marketplace{% endblock %}
 
-{% block body_classes %}registration-pages{% endblock %}
+{% block body_classes %}brief-builder registration-pages{% endblock %}
 
 {% block breadcrumb %}
   {%
@@ -32,48 +32,51 @@
 {% endwith %}
 
 
+  {% if form.errors %}
+  <div class="validation-masthead" aria-labelledby="validation-masthead-heading" aria-role="group" tabindex="-1">
+    <p class="validation-masthead-heading" id="validation-masthead-heading">
+      {{ lede or "There was a problem with your answer to:"}}
+    </p>
+    {% if form.name.errors %}
+      <a href="#name" class="validation-masthead-link">{{ form.name.label }}</a>
+    {% endif %}
+    {% if form.password.errors %}
+      <a href="#password" class="validation-masthead-link">{{ form.password.label }}</a>
+    {% endif %}
+    {% if form.accept_terms.errors %}
+      <a href="#accept_terms" class="validation-masthead-link">{{ form.accept_terms.label }}</a>
+    {% endif %}
+  </div>
+  {% endif %}
+
     <form autocomplete="off" action="{{ url_for('.submit_create_user', token=token) }}" method="POST" id="createUserForm">
 
         <div class="grid-row">
             <div class="column-two-thirds">
                 {{ form.csrf_token }}
 
-                {% if form.name.errors %}
-                <div class="validation-wrapper">
-                    {% endif %}
                     <div class="question">
                         {{ form.name.label(class="question-heading-with-hint") }}
                         {% if form.name.errors %}
-                        <p class="validation-message" id="error-name-textbox">
-                            {% for error in form.name.errors %}{{ error }}{% endfor %}
-                        </p>
-                        {% endif %}
+                        {{ form.name(class="text-box invalid", autocomplete="off") }}
+                        {% else %}
                         {{ form.name(class="text-box", autocomplete="off") }}
+                        {% endif %}
                     </div>
-                    {% if form.name.errors %}
-                </div>
-                {% endif %}
 
-                {% if form.password.errors %}
-                <div class="validation-wrapper">
-            {% endif %}
                 <div class="question">
                     {{ form.password.label(class="question-heading-with-hint") }}
                     <p class="hint">
                       Must be between 10 and 50 characters
                     </p>
                     {% if form.password.errors %}
-                    <p class="validation-message" id="error-password-textbox">
-                        {% for error in form.password.errors %}{{ error }}{% endfor %}
-                    </p>
+                    {{ form.password(class="text-box invalid", autocomplete="off", autofocus="autofocus") }}
+                    {% else %}
+                    {{ form.password(class="text-box", autocomplete="off", autofocus="autofocus") }}
                     {% endif %}
-                    {{ form.password(class="text-box", autocomplete="off", autofocus) }}
                 </div>
-            {% if form.password.errors %}
-                </div>
-            {% endif %}
 
-            <div>
+            <div class="question top">
                 {% set accept_terms_label %}I accept the <a href="/terms-of-use">Terms of Use</a>.{% endset %}
                 {% if form.accept_terms.errors %}
                     {{ form.accept_terms(class="invalid") }}
@@ -81,18 +84,13 @@
                     {{ form.accept_terms }}
                 {% endif %}
                 {{ form.accept_terms.label(text=accept_terms_label) }}
-                {% if form.accept_terms.errors %}
-                <span class="validation-message" id="error-terms-checkbox">
-                    {% for error in form.accept_terms.errors %}{{ error }}{% endfor %}
-                </span>
-                {% endif %}
             </div>
 
             {%
               with
               type = "save",
               role = "button",
-              label = "Create contributor account"
+              label = "Create account"
             %}
               {% include "toolkit/button.html" %}
             {% endwith %}

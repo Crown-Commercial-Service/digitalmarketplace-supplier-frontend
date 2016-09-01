@@ -81,6 +81,17 @@ ol.instruction-list {
     margin-bottom: 3em;
   }
 
+  &.registration-pages {
+    .question {
+      margin-bottom: 0;
+
+      &.top {
+        margin-bottom: 2em;
+        margin-top: 2em;
+      }
+    }
+  }
+
   label {
     .question-heading-with-hint {
       font-size: rem(18);
