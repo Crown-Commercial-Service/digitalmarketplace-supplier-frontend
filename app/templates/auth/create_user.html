@@ -12,7 +12,7 @@
         "label": "Home",
       },
       {
-        "label": "Create contributor account"
+        "label": "Create account"
       }
     ]
   %}
@@ -31,22 +31,19 @@
   {% include "toolkit/page-heading.html" %}
 {% endwith %}
 
-
   {% if form.errors %}
-  <div class="validation-masthead" aria-labelledby="validation-masthead-heading" aria-role="group" tabindex="-1">
-    <p class="validation-masthead-heading" id="validation-masthead-heading">
-      {{ lede or "There was a problem with your answer to:"}}
-    </p>
-    {% if form.name.errors %}
-      <a href="#name" class="validation-masthead-link">{{ form.name.label }}</a>
-    {% endif %}
-    {% if form.password.errors %}
-      <a href="#password" class="validation-masthead-link">{{ form.password.label }}</a>
-    {% endif %}
-    {% if form.accept_terms.errors %}
-      <a href="#accept_terms" class="validation-masthead-link">{{ form.accept_terms.label }}</a>
-    {% endif %}
-  </div>
+    <div class="callout--warning" aria-labelledby="validation-masthead-heading" aria-role="group" tabindex="-1">
+      <p class="validation-masthead-heading" id="validation-masthead-heading">
+        There was a problem with the details you gave:
+      </p>
+      <ul>
+      {% for field_name, field_errors in form.errors|dictsort if field_errors %}
+        {% for error in field_errors %}
+        <li><a href="#{{ form[field_name].name }}" class="validation-masthead-link">{{ error }}</a></li>
+        {% endfor %}
+      {% endfor %}
+      </ul>
+    </div>
   {% endif %}
 
     <form autocomplete="off" action="{{ url_for('.submit_create_user', token=token) }}" method="POST" id="createUserForm">

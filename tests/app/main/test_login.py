@@ -265,7 +265,7 @@ class TestCreateUser(BaseApplicationTest):
         for message in [
             "Supplier Name",
             "test@email.com",
-            '<input type="submit" class="button-save"  value="Create contributor account" />',
+            '<input type="submit" class="button-save"',
             urllib2.quote(token),
         ]:
             assert message.replace(' ', '') in page_text
@@ -285,7 +285,7 @@ class TestCreateUser(BaseApplicationTest):
         assert res.status_code == 404
         assert USER_LINK_EXPIRED_ERROR in res.get_data(as_text=True)
         assert (
-            '<input type="submit" class="button-save"  value="Create contributor account" />'
+            '<input type="submit" class="button-save"'
             not in res.get_data(as_text=True)
         )
 
@@ -360,7 +360,6 @@ class TestCreateUser(BaseApplicationTest):
         )
 
         assert res.status_code == 400
-        print res.get_data(as_text=True)
         assert 'must accept the terms' in res.get_data(as_text=True)
 
     @mock.patch('app.main.views.login.data_api_client')
