@@ -9,11 +9,11 @@
     with items = [
       {
         "link": "/",
-        "label": "Digital Marketplace"
+        "label": "Home"
       },
       {
         "link": url_for(".dashboard"),
-        "label": "Your account"
+        "label": "Dashboard"
       },
       {
         "link": url_for(".list_users"),
@@ -76,6 +76,7 @@
             {%
               with
               type = "save",
+              role = "button",
               label = "Send invite"
             %}
               {% include "toolkit/button.html" %}
