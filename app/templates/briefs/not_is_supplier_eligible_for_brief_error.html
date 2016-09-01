@@ -5,18 +5,18 @@
 {% block main_content %}
 
 {% with inhibited_action="ask a question about" if clarification_question else "apply for" %}
-<div class="grid-row" data-reason="{{ reason }}">
+<div class="grid-row" data-reason="{{ data_reason_slug }}">
   <div class="column-two-thirds">
     <header class="page-heading-smaller">
       <h1>You can’t {{ inhibited_action }} this opportunity</h1>
     </header>
     <p>
       You can’t {{ inhibited_action }} this opportunity because
-      {% if has_framework_service %}
+      {% if reason == "supplier-not-on-role" or reason == "supplier-not-on-lot" %}
         you didn’t say you could provide
-        {{ "this specialist role" if has_framework_lot_service else "services in this category" }}
+        {{ "this specialist role" if reason == "supplier-not-on-role" else "services in this category" }}
         when you applied to the Digital Outcomes and Specialists framework.
-      {% else %}
+      {% elif reason == "supplier-not-on-framework" %}
         you’re not a {{ framework_name }} supplier.
       {% endif %}
     </p>
