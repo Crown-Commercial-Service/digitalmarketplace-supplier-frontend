@@ -1,13 +1,13 @@
 {% extends "_base_page.html" %}
 
-{% block page_title %}Create contributor account – Digital Marketplace{% endblock %}
+{% block page_title %}Create account – Digital Marketplace{% endblock %}
 
 {% block main_content %}
 
 {%
   with
   smaller = true,
-  heading = "Create contributor account for " ~ supplier_name,
+  heading = "Create an account for " ~ supplier_name,
   context = email_address
 %}
   {% include "toolkit/page-heading.html" %}
@@ -25,9 +25,6 @@
                     {% endif %}
                     <div class="question">
                         {{ form.name.label(class="question-heading-with-hint") }}
-                        <p class="hint">
-                            Enter the name to be referred to on the Digital Marketplace
-                        </p>
                         {% if form.name.errors %}
                         <p class="validation-message" id="error-name-textbox">
                             {% for error in form.name.errors %}{{ error }}{% endfor %}
@@ -59,7 +56,7 @@
             {% endif %}
 
             <div>
-                {% set accept_terms_label %}I accept the <a href="/terms-of-use">Terms of Use</a> and <a href="/privacy-policy">Privacy Policy</a>.{% endset %}
+                {% set accept_terms_label %}I accept the <a href="/terms-of-use">Terms of Use</a>.{% endset %}
                 {% if form.accept_terms.errors %}
                     {{ form.accept_terms(class="invalid") }}
                 {% else %}
