@@ -2,6 +2,24 @@
 
 {% block page_title %}Create account – Digital Marketplace{% endblock %}
 
+{% block body_classes %}registration-pages{% endblock %}
+
+{% block breadcrumb %}
+  {%
+    with items = [
+      {
+        "link": "/",
+        "label": "Home",
+      },
+      {
+        "label": "Create contributor account"
+      }
+    ]
+  %}
+    {% include "toolkit/breadcrumb.html" %}
+  {% endwith %}
+{% endblock %}
+
 {% block main_content %}
 
 {%
@@ -49,7 +67,7 @@
                         {% for error in form.password.errors %}{{ error }}{% endfor %}
                     </p>
                     {% endif %}
-                    {{ form.password(class="text-box", autocomplete="off") }}
+                    {{ form.password(class="text-box", autocomplete="off", autofocus) }}
                 </div>
             {% if form.password.errors %}
                 </div>
@@ -64,15 +82,16 @@
                 {% endif %}
                 {{ form.accept_terms.label(text=accept_terms_label) }}
                 {% if form.accept_terms.errors %}
-                <div class="validation-message" id="error-terms-checkbox">
+                <span class="validation-message" id="error-terms-checkbox">
                     {% for error in form.accept_terms.errors %}{{ error }}{% endfor %}
-                </div>
+                </span>
                 {% endif %}
             </div>
 
             {%
               with
               type = "save",
+              role = "button",
               label = "Create contributor account"
             %}
               {% include "toolkit/button.html" %}
