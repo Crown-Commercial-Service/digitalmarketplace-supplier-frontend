@@ -5,15 +5,15 @@
   {%
     with items = [
       {
-        "link": "/marketplace",
+        "link": "/",
         "label": "Home"
       },
       {
-        "link": "/marketplace/{}/opportunities".format(brief.frameworkSlug),
+        "link": "/{}/opportunities".format(brief.frameworkSlug),
         "label": "Opportunities"
       },
       {
-        "link": "/marketplace/{}/opportunities/{}".format(brief.frameworkSlug, brief.id),
+        "link": "/{}/opportunities/{}".format(brief.frameworkSlug, brief.id),
         "label": "Opportunity details"
       },
       {
