@@ -70,3 +70,6 @@ app/content
 
 # Front end generated assets
 app/static
+
+# IDE
+.idea/

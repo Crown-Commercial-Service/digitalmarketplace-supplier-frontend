@@ -4,115 +4,67 @@
 
 {% block main_content %}
 
-{% with messages = get_flashed_messages(with_categories=True) %}
-  {% for category, message in messages %}
-    {%
-    with
+    {% with messages = get_flashed_messages(with_categories=True) %}
+        {% for category, message in messages %}
+            {% with
     message = {
       "already_applied": "You’ve already applied for ‘{}’ so you can’t apply again".format(brief.title) if result_state == "submitted_ok"
                     else "You already applied for ‘{}’ but you didn’t meet the essential requirements".format(brief.title)
     }[message] or message,
-    type = "destructive" if category == "error" else "success"
-    %}
-      {% include "toolkit/notification-banner.html" %}
+    type = "destructive" if category == "error" else "success" %}
+                {% include "toolkit/notification-banner.html" %}
+            {% endwith %}
+        {% endfor %}
     {% endwith %}
-  {% endfor %}
-{% endwith %}
 
-<div class="grid-row">
-  <div class="column-two-thirds">
+    <div class="grid-row">
+    <div class="column-two-thirds">
     {% with
       heading = {
-                  "submitted_ok": "Your response to ‘{}’ has been sent".format(brief.title),
+                  "submitted_ok": "You've now applied for ‘{}’".format(brief.title),
                   "submitted_unsuccessful": "You don’t meet all the essential requirements"
                 }[result_state],
-      smaller = true
-      %}
+      smaller = true %}
         {% include 'toolkit/page-heading.html' %}
     {% endwith %}
 
     <div class="dmspeak">
 
     {% if result_state == "submitted_ok" %}
-      <h2 class="summary-item-heading">What happens next</h2>
+    <h2 class="summary-item-heading">What happens next</h2>
+    <p>
+        {% if brief_summary.get_question('sellerSelector').value == "allSellers" %}
+            If you are shortlisted the buyer will contact you to request:
+        {% else %}
+            The buyer will contact you soon to request:
+        {% endif %}
+    </p>
 
-      <h3>Shortlist</h3>
-      
-      <ol class="list-number">
+    <ul class="list-bullet">
         <li>
-          <div class="explanation-list padding-bottom-small">
-            <p class="lead"> When the opportunity closes, the buyer will create a shortlist. They can exclude you if:</p>
-            <ul class="list-bullet">
-              <li>you can’t start when they need you to</li>
-              <li>you have fewer nice‑to‑have skills and experience than other sellers</li>
-              {% if brief.lotSlug == "digital-specialists" and brief.get('budgetRange') %}
-              <li>your day rate exceeds their budget</li>
-              {% endif %}
-            </ul>
-          </div>
-          <p>The buyer will tell you if you’ve been excluded.</p>
+            {% if brief.lotSlug == "digital-professionals" %}
+                your resume
+            {% else %}
+                your proposal
+            {% endif %}
         </li>
-        
-        <li>
-          <p>If the buyer can’t reduce the number of sellers to {{ brief.get('numberOfSuppliers') }} or less, they
-             may ask for written evidence of your essential and nice-to-have skills and experience.</p>
-          <p>The buyer will evaluate your evidence and let you know if you made it through to the evaluation stage.</p>
-        </li>
-      </ol>
+        {% with evaluation_types=brief_summary.get_question('evaluationType').value %}
+            {% for evaluation_type in brief_summary.get_question('evaluationType').value %}
+                {% if not evaluation_type|lower in ['interview', 'scenario or test', 'presentation', 'written proposal'] %}
+                    <li>{{ evaluation_type|lower }}</li>
+                {% endif %}
+            {% endfor %}
 
-      <h3>Evaluation</h3>
+            {% if 'interview' in evaluation_types or 'scenario or test' in evaluation_types or
+                            'presentation' in evaluation_types %}
+                <li>a meeting</li>
+            {% endif %}
+        {% endwith %}
+    </ul>
 
-      <ol class="list-number" start="3">
-        <li>
-          <div class="explanation-list padding-bottom-small">
-            <p class="lead"> At the evaluation stage, the buyer will ask you to provide:</p>
-            <ul class="list-bullet">
-              <li>
-              {% if brief.lotSlug == "digital-specialists" %}
-                evidence of the specialist’s skills and experience
-              {% else %} 
-                evidence of your skills and experience
-              {% endif %}
-              </li>
-              
-              {% if brief.lotSlug != "digital-specialists" %}
-                <li>your proposal</li>
-              {% endif %}
-              
-              <li>
-              {% if brief.lotSlug == "user-research-participants" %}
-                evidence showing how you meet their availability criteria
-              {% elif brief.lotSlug == "digital-specialists" %}
-                evidence showing how the specialist meets their cultural fit criteria
-              {% else %}
-                evidence showing how you meet their cultural fit criteria
-              {% endif %}
-              </li>
-            </ul>
-          </div>
-          
-          <div class="explanation-list padding-bottom-small">
-            <p class="lead">The buyer will use the assessment methods listed in their requirements to evaluate your evidence. They’ll use:</p>
-                <ul class="list-bullet">
-                {% for eval_type in brief_summary.get_question('evaluationType').value %}
-                  <li>{{ 'an' if eval_type == 'Interview' else 'a' }} {{ eval_type|lower }}</li>
-                {% endfor %}
-                </ul>
-          </div>
-          
-          <p>
-            Your evidence must describe the skills and experience of the 
-            {{ 'person' if brief.lotSlug == "digital-specialists" else 'people' }} 
-            who’ll be working on the project.
-          </p>
-        </li>
+    <p>All applicants, successful and unsuccessful, will be notified about the result by email.</p>
+    <p>Best of luck!</p>
 
-        <li>
-          <p>The buyer will score all sellers who reached the evaluation stage using the weightings they published 
-            with their requirements. They’ll provide feedback if you’re unsuccessful.</p>
-        </li>
-      </ol>
-      
     {% elif result_state == "submitted_unsuccessful" %}
       <p>
         You don’t have all the essential skills and experience so you can’t go through to the shortlisting stage.
@@ -122,20 +74,10 @@
   </div>
 </div>
 
-<div class="grid-row">
-  <div class="column-one-whole">
-    {% include 'briefs/_brief_response_data.html' %}
-  </div>
-</div>
+    {% with
+      url = '/{}/opportunities'.format(brief.frameworkSlug),
+      text = "View more opportunity" %}
+        {% include "toolkit/secondary-action-link.html" %}
+    {% endwith %}
 
-<p class="padding-bottom-small">&nbsp;</p>
-
-  {%
-    with
-      url = url_for(".dashboard"),
-      text = "Your account"
-  %}
-    {% include "toolkit/secondary-action-link.html" %}
-  {% endwith %}
-
-  {% endblock %}
+{% endblock %}
