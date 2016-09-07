@@ -22,7 +22,7 @@ h2.instruction-list-item-body {
 ol.instruction-list {
   margin-left: 0;
   padding-left: 0;
-  padding-bottom: 2em;
+  padding-bottom: 0;
 
   >li {
     list-style: none;
@@ -128,13 +128,13 @@ ol.instruction-list {
 
     .large-text {
       line-height: $small-leading;
-      margin-bottom: $tiny-spacing;
+      margin-bottom: $small-spacing;
       margin-top: $base-spacing;
       span {
         font-weight: $bold-font-weight;
         margin: 0;
         @include media($tablet) {
-          font-size: rem(24);
+          font-size: rem(26);
         }
       }
     }
@@ -143,6 +143,16 @@ ol.instruction-list {
   .question-optional {
     color: $grey;
     font-size: rem(17);
+  }
+
+  .text-box-number-label {
+    & + input[class='text-box'] {
+      width: 60%;
+
+      @include media($tablet) {
+        width: 80%;
+      }
+    }
   }
 
   .list-entry-remove,
@@ -178,16 +188,5 @@ ol.instruction-list {
     display: inline-block;
     margin-left: 0.5em;
     margin-top: 0.4em;
-  }
-}
-
-// Shortlist and evaluation process - Criteria
-
-#essentialRequirements, #niceToHaveRequirements, #culturalFitCriteria {
-  .text-box {
-    width: 60%;
-    @include media($tablet) {
-      width: 80%;
-    }
   }
 }
