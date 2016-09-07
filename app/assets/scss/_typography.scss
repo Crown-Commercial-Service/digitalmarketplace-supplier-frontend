@@ -3,8 +3,18 @@ h1 {
 }
 
 h2 {
-  font-size: rem(24);
+  font-size: rem(26);
   font-weight: $bold-font-weight;
+  margin-bottom: $small-spacing;
+
+  .contrast-headings & {
+    font-weight: $base-font-weight;
+    margin-bottom: $tiny-spacing;
+  }
+}
+
+h3 {
+  font-size: rem(20);
 }
 
 .bigger {
@@ -41,6 +51,29 @@ $badges: (
   margin-left: $tiny-spacing;
 }
 
+%base-badge {
+  display: inline-block;
+  border-radius: $large-border-radius;
+  color: $non-black;
+  margin-top: $small-spacing;
+  margin-bottom: $small-spacing;
+  padding: .4em .8em;
+  line-height: 1;
+  letter-spacing: 1px;
+  font-size: rem(14);
+}
+
+.badge--open-to-all {
+  @extend %base-badge;
+
+  background-color: $light-green;
+}
+
+.badge--open-to-selected {
+  @extend %base-badge;
+
+  background-color: $light-blue;
+}
 
 span {
   .number-results &,
@@ -51,23 +84,26 @@ span {
 }
 
 .callout--hero {
-  display: none;
-  // @extend %base-callout;
-  // @include position(relative, null);
-  // background: $darker-aqua;
-  // box-shadow: 0 0 0 transparent;
+  @extend %base-callout;
+  @include position(relative, null);
+  background: $darker-aqua;
+  box-shadow: 0 0 0 transparent;
 
-  // @include media($desktop) {
-  //   @include position(absolute, null 0 (-$base-spacing*5) null);
-  //   @include span-columns(5 of 16);
-  //   @include shift(2);
-  //   margin: 0;
-  // }
+  @include media($sm-desktop) {
+    @include position(absolute, null $tiny-spacing*3 (-$base-spacing*4.375) null);
+    @include span-columns(5 of 16);
+    @include shift(2);
+    margin: 0;
+  }
 
-  // h2 {
-  //   @extend h3;
-  //   font-weight: $base-font-weight;
-  // }
+  h2 {
+    @extend h3;
+    font-weight: $base-font-weight;
+  }
+
+  p {
+    margin-bottom: 0;
+  }
 }
 
 .secondary-page {
@@ -138,6 +174,10 @@ span {
   box-shadow: none;
   background-color: $light-blue;
 
+  @media print {
+    border: 1px solid $non-black;
+  }
+
   h2 {
     margin: 1.2rem 0 .4rem;
   }
@@ -176,6 +216,10 @@ span {
   margin: 1.6em 0;
   box-shadow: none;
   background-color: $light-blue;
+
+  @media print {
+    border: 1px solid $non-black;
+  }
 
   h2 {
     margin-top: 0.8em;

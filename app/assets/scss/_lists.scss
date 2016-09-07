@@ -1,5 +1,6 @@
 
 .list-horizontal {
+  width: 100%;
   .tags {
     a {
       display: inline-block;
@@ -12,34 +13,94 @@
   }
 }
 
+.list-horizontal,
+.list-vertical,
+.list-vertical--thirds,
+.list-vertical--fourths,
+.list-small,
+.list-highlighted {
+  > li {
+    padding-left: 0.2em;
+    h3 {
+      min-height: auto;
+    }
+  }
+}
+
+.list-horizontal,
+.list-vertical,
+.list-vertical--thirds,
+.list-vertical--fourths, {
+  > li {
+    article {
+      width: 100%;
+    }
+  }
+}
+
 .home {
   h2 {
     font-size: rem(24);
     margin-bottom: $small-spacing;
+    margin-top: 0;    
   }
-  .list-vertical--thirds {
+
+  .list-vertical {
 
     &:last-of-type {
       margin-bottom: 0;
     }
 
     > li {
+
       border-width: 0;
-      padding: 0;
+
+      @include media($tablet) {   
+        flex-basis: 40%;
+        width: 40%;
+      }
 
       p {
+        display: inline-block;
         min-height: auto;
+        @include media($tablet) {
+          width: 60%;
+        }
       }
+
     }
 
-    .list-small {
-      width: 100%;
+    .list-horizontal {
 
-        li {
-          margin-left: 0;
+      li {
+        border-width: 0;
+        border-left: solid 1px $border-colour;
+        margin-left: 0;
+        padding-left: $base-spacing;
+
+        h3 {
+          min-height: auto;
         }
+
+        a {
+          padding-right: 0;
+        }
+      }
+
     }
   }
+
+  .sub {
+    li {
+      border-left: solid 1px $border-colour;
+      margin-left: 0;
+      padding-left: $base-spacing;
+    }
+    h3 {
+      min-height: auto;
+    }
+  }
+
 }
 
 .content-details {
@@ -57,11 +118,74 @@
     }
 
     li {
+      >p {
+
+        font-weight: $heading-font-weight;
+
+        @include media($tablet) {
+          width: 21.5%;
+          flex: 0 0 21.5%;
+          margin-right: $base-spacing;
+
+          small {
+            font-size: 65%;
+            font-weight: normal;
+          }
+        }
+      }
       article {
         width: 100%;
+        @include media($tablet) {
+          width: 79.5%;
+        }
       }
     }
   }
+}
+
+.brief-result {
+
+  ul {
+    margin: 0;
+    padding: 0;
+  }
+  
+  li {
+    display: inline-block;
+    margin: 0;
+    padding: 0;
+  }
+
+  p {
+    margin-bottom: 0;
+  }
+
+  .organisation {
+    font-size: $small-font-size;
+    font-weight: $bold-font-weight;
+    margin: 0;
+    padding: $small-spacing 0 $tiny-spacing*.5;
+    
+    li:not(:last-child) {
+      margin-right: $medium-spacing;
+    }
+  }
+
+  .category {
+    color: $grey;
+    font-size: $small-font-size;
+  }
+
+  .status {
+    color: $grey;
+    font-size: $small-font-size;
+    margin: $tiny-spacing*.5 0 $small-spacing;
+
+    li:not(:last-child) {
+      margin-right: $medium-spacing;
+    }
+  }
+
 }
 
 .go-back {

@@ -37,6 +37,7 @@
     border-bottom: none;
     color: $body-inverted-text-colour;
     font-family: $base-sans-serif;
+    font-size: rem(26);
     letter-spacing: 1px;
 
     &:hover,
@@ -136,10 +137,6 @@
 }
 
 .content--hero {
-  @include media($tablet) {
-    @include span-columns(9 of 12);
-    margin-top: -2rem;
-  }
   @include media($desktop) {
     @include span-columns(12 of 16);
   }
