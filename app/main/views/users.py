@@ -1,4 +1,3 @@
-import flask_featureflags
 from flask_login import current_user
 from flask import render_template, abort, flash, url_for, redirect, current_app
 
@@ -27,7 +26,6 @@ def get_current_suppliers_users():
 
 
 @main.route('/users')
-@flask_featureflags.is_active_feature("INVITE_CONTRIBUTOR")
 @login_required
 def list_users():
 

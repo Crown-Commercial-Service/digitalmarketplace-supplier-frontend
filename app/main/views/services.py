@@ -1,8 +1,7 @@
 from flask_login import current_user
 from flask import render_template, request, redirect, url_for, abort, flash, current_app
-import flask_featureflags
 
-from ... import data_api_client
+from ... import data_api_client, flask_featureflags
 from ...main import main, content_loader
 from ..helpers import login_required
 from ..helpers.services import is_service_associated_with_supplier, get_signed_document_url, count_unanswered_questions, \
