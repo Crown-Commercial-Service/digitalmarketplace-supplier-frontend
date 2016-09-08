@@ -93,7 +93,6 @@ class TestInviteUser(BaseApplicationTest):
                 mock.ANY,
                 mock.ANY,
                 mock.ANY,
-                mock.ANY,
             )
 
     @mock.patch('app.main.views.login.data_api_client')
@@ -177,7 +176,6 @@ class TestInviteUser(BaseApplicationTest):
                 "SUBJECT",
                 "EMAIL FROM",
                 "EMAIL NAME",
-                ["user-invite"]
             )
 
     @mock.patch('app.main.views.login.data_api_client')

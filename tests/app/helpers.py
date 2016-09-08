@@ -13,6 +13,7 @@ from flask import url_for
 from mock import patch
 from nose.tools import assert_in, assert_not_in
 from werkzeug.http import parse_cookie
+from flask_featureflags import FeatureFlag
 
 
 FULL_G7_SUBMISSION = {
@@ -119,6 +120,7 @@ class BaseApplicationTest(object):
         self.app.register_blueprint(login_for_tests)
         self.client = self.app.test_client()
         self.get_user_patch = None
+        self.feature_flags = FeatureFlag(self.app)
 
     def teardown(self):
         self.teardown_login()
