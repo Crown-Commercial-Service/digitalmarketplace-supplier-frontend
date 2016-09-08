@@ -1,6 +1,5 @@
 from __future__ import absolute_import
 import six
-import flask_featureflags
 
 from flask_login import current_user, login_user
 from flask import current_app, flash, make_response, redirect, render_template, request, url_for, abort
@@ -107,7 +106,6 @@ def submit_create_user(token):
 
 
 @main.route('/invite-user', methods=['GET'])
-@flask_featureflags.is_active_feature("INVITE_CONTRIBUTOR")
 @login_required
 def invite_user():
     form = EmailAddressForm()
@@ -121,6 +119,7 @@ def invite_user():
 @login_required
 def send_invite_user():
     form = EmailAddressForm(request.form)
+
     if form.validate():
         token = generate_supplier_invitation_token(
             name='',
@@ -141,7 +140,8 @@ def send_invite_user():
                 email_body,
                 current_app.config['INVITE_EMAIL_SUBJECT'],
                 current_app.config['INVITE_EMAIL_FROM'],
-                current_app.config['INVITE_EMAIL_NAME']
+                current_app.config['INVITE_EMAIL_NAME'],
+                ['user-invite']
             )
         except EmailError as e:
             current_app.logger.error(
