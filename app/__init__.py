@@ -5,7 +5,7 @@ from flask import Flask, request
 from flask_login import LoginManager
 
 import dmapiclient
-from dmutils import init_app, init_frontend_app, flask_featureflags
+from dmutils import init_app, init_frontend_app
 from dmutils.user import User
 from dmutils.forms import valid_csrf_or_abort
 
@@ -14,7 +14,6 @@ from config import configs
 
 data_api_client = dmapiclient.DataAPIClient()
 login_manager = LoginManager()
-feature_flags = flask_featureflags.FeatureFlag()
 
 from app.main.helpers.services import parse_document_upload_time
 from app.main.helpers.frameworks import question_references
@@ -30,7 +29,6 @@ def create_app(config_name):
         application,
         configs[config_name],
         data_api_client=data_api_client,
-        feature_flags=feature_flags,
         login_manager=login_manager,
     )
 

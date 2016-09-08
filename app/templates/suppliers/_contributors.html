@@ -1,7 +1,9 @@
 {% import "toolkit/summary-table.html" as summary %}
 
 {{ summary.heading("Contributors") }}
-{# summary.top_link("Invite or remove", url_for('.list_users')) #}
+{% if 'INVITE_CONTRIBUTOR' is active_feature %}
+    {{ summary.top_link("Invite or remove", url_for('.list_users')) }}
+{% endif %}
 {% call(item) summary.table(
   users,
   caption="Contributors",
