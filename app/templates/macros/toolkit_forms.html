@@ -150,6 +150,14 @@
   {% endwith %}
 {%- endmacro %}
 
+{% macro pricing_aud(question_content, service_data, errors, question_number=None, get_question=None) -%}
+{{ pricing(question_content, service_data, errors, question_number, get_question) }}
+{%- endmacro %}
+
+{% macro pricing_gbp(question_content, service_data, errors, question_number=None, get_question=None) -%}
+{{ pricing(question_content, service_data, errors, question_number, get_question) }}
+{%- endmacro %}
+
 {% macro number(question_content, service_data, errors, question_number=None, get_question=None) -%}
   {%
     with

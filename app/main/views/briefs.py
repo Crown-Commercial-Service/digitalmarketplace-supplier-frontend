@@ -103,6 +103,7 @@ def brief_response(brief_id):
     return render_template_with_csrf(
         "briefs/brief_response.html",
         brief=brief,
+        lot_slug=brief['lotSlug'],
         service_data={},
         section=section,
     )

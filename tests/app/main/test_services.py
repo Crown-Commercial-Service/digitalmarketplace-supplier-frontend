@@ -1460,7 +1460,7 @@ class TestShowDraftService(BaseApplicationTest):
         service_price_xpath = service_price_row_xpath + '/td[@class="summary-item-field"]/span/text()'
         assert_equal(
             document.xpath(service_price_xpath)[0].strip(),
-            u"£12.50 to £15 per person per second")
+            u"$12.50 to $15 per person per second")
 
     @mock.patch('app.main.views.services.count_unanswered_questions')
     def test_unanswered_questions_count(self, count_unanswered, data_api_client):
