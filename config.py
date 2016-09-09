@@ -67,10 +67,11 @@ class Config(object):
 
     ASSET_PATH = URL_PREFIX + '/static'
 
-    # Feature Flags
-    RAISE_ERROR_ON_MISSING_FEATURES = True
-
-    FEATURE_FLAGS_EDIT_SECTIONS = False
+    # List all you feature flags below
+    FEATURE_FLAGS = {
+        'INVITE_CONTRIBUTOR': False,
+        'EDIT_SECTIONS': False,
+    }
 
     # Logging
     DM_LOG_LEVEL = 'DEBUG'
@@ -95,7 +96,13 @@ class Test(Config):
     DM_LOG_LEVEL = 'CRITICAL'
     SERVER_NAME = 'localhost'
 
-    FEATURE_FLAGS_EDIT_SECTIONS = enabled_since('2015-06-03')
+    # Throw an exception in dev when a feature flag is used in code but not defined. Otherwise it is assumed False.
+    RAISE_ERROR_ON_MISSING_FEATURES = True
+    # List all you feature flags below
+    FEATURE_FLAGS = {
+        'INVITE_CONTRIBUTOR': True,
+        'EDIT_SECTIONS': True,
+    }
 
     DM_DATA_API_AUTH_TOKEN = 'myToken'
 
@@ -111,8 +118,13 @@ class Development(Config):
     DEBUG = True
     SESSION_COOKIE_SECURE = False
 
-    # Dates not formatted like YYYY-(0)M-(0)D will fail
-    FEATURE_FLAGS_EDIT_SECTIONS = enabled_since('2015-06-03')
+    # Throw an exception in dev when a feature flag is used in code but not defined. Otherwise it is assumed False.
+    RAISE_ERROR_ON_MISSING_FEATURES = True
+    # List all you feature flags below
+    FEATURE_FLAGS = {
+        'INVITE_CONTRIBUTOR': True,
+        'EDIT_SECTIONS': True,
+    }
 
     DM_DATA_API_URL = "http://localhost:5000"
     DM_DATA_API_AUTH_TOKEN = "myToken"

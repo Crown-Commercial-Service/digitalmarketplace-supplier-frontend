@@ -1,10 +1,10 @@
-.sidebar-searchbox{
+.sidebar-searchbox {
   margin: 0;
 
-  >div{
+  >div {
     padding:0 1em 1em 1em;
 
-    .sidebar-searchbox{
+    .sidebar-searchbox {
       width: 100%;
       outline-offset: 0;
       border: 2px solid #bbbbbb;
@@ -14,11 +14,41 @@
     }
   }
 
-  .sidebar-searchbutton{
+  .sidebar-searchbutton {
     margin: 1em 0 0 0;
   }
 }
 
-.marketplace-sidebar-filter-btn-box{
+.marketplace-sidebar-filter-btn-box {
   padding: 0 1em;
+}
+
+.search-controls {
+
+  border-bottom: 1px solid $light-grey;
+  padding-bottom: 1.5em;
+  @include media ($mobile) {
+    padding-bottom: 2em;
+  }
+
+  div[class^="sort-order"] {
+    float: none;
+    @include media ($mobile) {
+      float: left;
+    }
+  }
+
+  .results-shown {
+    float: none;
+    @include media($mobile) {
+      float: right;
+    }
+  }
+
+  & + .list-horizontal {
+    clear: both;
+  }
+}
+
+.sidebar {
 }

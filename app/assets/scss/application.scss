@@ -1,5 +1,5 @@
 // Path to assets for use with file-url()
-$path: "/suppliers/static/images/";
+$path: "/static/images/";
 
 // GOV.AU UI Kit
 @import 'gov-au-ui-kit/ui-kit';
@@ -28,4 +28,5 @@ $path: "/suppliers/static/images/";
 @import 'print';
 @import 'helpers';
 @import 'search';
+// @import 'breadcrumbs';
 @import 'buyerpages';
