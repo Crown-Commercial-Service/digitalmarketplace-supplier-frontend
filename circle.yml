@@ -35,9 +35,14 @@ deployment:
   production:
     tag: /release-.*/
     commands:
-      - DOCKERFILE_PATH=./monitoring/Dockerfile DOCKER_IMAGE_NAME=gov-au-marketplace-supplier ./scripts/ci-monitor-build.sh
       - cf login -a https://api.system.platform.digital.gov.au -o dto -u $CF_USER_PROD -p $CF_PASSWORD_PROD
       - cf target -o dto -s digital-marketplace
       - APP=dm-supplier-green ./scripts/cf_ha_deploy.sh
       - APP=dm-supplier-blue ./scripts/cf_ha_deploy.sh
+      - ./scripts/ci-notify.sh
+
+  monitoring:
+    tag: /monitor-.*/
+    commands:
+      - DOCKERFILE_PATH=./monitoring/Dockerfile DOCKER_IMAGE_NAME=gov-au-marketplace-supplier ./scripts/ci-monitor-build.sh
       - DOCKER_COMPOSE_FILE_PATH=./monitoring/docker-compose-ecs.yml DOCKER_IMAGE_NAME=gov-au-marketplace-supplier DOCKER_CONTAINER_NAME=gov-au-marketplace-supplier ./scripts/ci-monitor-deploy.sh
