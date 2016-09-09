@@ -1,0 +1,37 @@
+.dashboard {
+  h2 {
+    &.summary-item-heading {
+      float: none;
+      @include media($tablet) {
+        float: left;
+      }
+    }
+  }
+  p {
+    &.summary-item-top-level-action {
+      float: none;
+      @include media($tablet) {
+        float: right;
+        margin-top: rem(41.6);
+      }
+    }
+  }
+}
+
+.contributors {
+  h1 {
+    float: none;
+    @include media($tablet) {
+      float: left;
+    }
+  }
+  a {
+    &.summary-change-link {
+      float: none;
+      @include media($tablet) {
+        float: right;
+        margin-top: 0.4rem;
+      }
+    }
+  }
+}
