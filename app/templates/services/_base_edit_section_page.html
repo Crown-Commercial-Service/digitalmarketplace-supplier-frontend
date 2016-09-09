@@ -18,7 +18,7 @@
 
       {% if section.description %}
         <div class="section-description">
-          {{ section.description|markdown }}
+          {{ section.get_description_for_lot(log_slug)|markdown }}
         </div>
       {% endif %}
 
