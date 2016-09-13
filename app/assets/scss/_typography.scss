@@ -180,6 +180,14 @@ span {
 
   h2 {
     margin: 1.2rem 0 .4rem;
+
+    & + p {
+      margin-bottom: $medium-spacing;
+    }
+  }
+
+  p {
+    margin-bottom: 0;
   }
 }
 
