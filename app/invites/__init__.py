@@ -5,12 +5,35 @@ import requests
 import sys
 
 from flask import current_app, render_template, url_for
+from flask_script import Manager
 
 from dmapiclient import HTTPError
 from dmutils.email import EmailError, send_email
 
 from app import data_api_client
 from app.main.helpers.users import generate_supplier_invitation_token
+
+
+# This stuff is a bit kludgy.  If we did it all in the server, we'd have all the configuration and keys needed to send
+# emails properly, but then it would be harder to handle the variety of special requests for invites that we get.
+# These tools were created as a quick solution to an initial problem.  Maybe more of this code can be turned into
+# server-side handlers after the use cases stabilise.
+#
+# To use these commands, first pull the environment variables from a production server using
+# $ cf env <supplier-app-name>
+# Export these variables inside your own shell.
+#
+# After that, this will produce a list of suppliers who haven't received invites:
+# $ python application.py supplier_invites list_candidates > /tmp/invites
+#
+# And this will send the invites:
+# $ python application.py supplier_invites send < /tmp/invites
+#
+# The invite list ultimately comes from data entered into a spreadsheet, so it's a good idea to check the list for
+# obvious errors.  Before doing a live mailout, you can also test sending using the Example Pty Ltd supplier.
+#
+# Run this for more docs:
+# $ python application.py supplier_invites -?
 
 
 def send_supplier_invite(name, email_address, supplier_code, supplier_name):
@@ -45,7 +68,23 @@ def send_supplier_invite(name, email_address, supplier_code, supplier_name):
     )
 
 
-def send_supplier_invites(source=sys.stdin):
+def format_potential_invites(contact_list, sink=sys.stdout):
+    """
+    Formats json contact/supplier info as CSV.
+
+    Using CSV as a common format makes ad-hoc usage of these tools easier.
+    """
+    output = csv.writer(sink)
+    for candidate in contact_list:
+        contact = candidate['contact']
+        name = contact['name']
+        email_address = contact['email']
+        supplier_code = candidate['supplierCode']
+        supplier_name = candidate['supplierName']
+        output.writerow((name, email_address, supplier_code, supplier_name))
+
+
+def send(source=sys.stdin):
     """
     Read CSV list of suppliers to be invited and send invites.
 
@@ -64,21 +103,24 @@ def send_supplier_invites(source=sys.stdin):
             logging.error('Failed to record invite for {}'.format(supplier_record))
 
 
-def list_supplier_invite_candidates(sink=sys.stdout):
+def list_candidates(sink=sys.stdout):
     """
     Output list of candidates for supplier account invites as CSV list.
 
     The format is the same as for send_supplier_invites.
     """
     response = data_api_client.list_supplier_account_invite_candidates()
-    output = csv.writer(sink)
-    for candidate in response['results']:
-        contact = candidate['contact']
-        name = contact['name']
-        email_address = contact['email']
-        supplier_code = candidate['supplierCode']
-        supplier_name = candidate['supplierName']
-        output.writerow((name, email_address, supplier_code, supplier_name))
+    format_potential_invites(response['results'], sink)
+
+
+def list_unclaimed(sink=sys.stdout):
+    """
+    Output list of unclaimed invitees in CSV format for resending invites.
+
+    The format is the same as for send_supplier_invites.
+    """
+    response = data_api_client.list_unclaimed_supplier_account_invites()
+    format_potential_invites(response['results'], sink)
 
 
 def init_manager(manager):
@@ -86,6 +128,12 @@ def init_manager(manager):
 
     These can be run from the command line.
     """
+    sub_manager = Manager(
+        description='Commands for managing supplier invites',
+        usage='Run "python application.py supplier_invites -?" to see subcommand list'
+    )
 
-    manager.command(send_supplier_invites)
-    manager.command(list_supplier_invite_candidates)
+    sub_manager.command(send)
+    sub_manager.command(list_candidates)
+    sub_manager.command(list_unclaimed)
+    manager.add_command('supplier_invites', sub_manager)
