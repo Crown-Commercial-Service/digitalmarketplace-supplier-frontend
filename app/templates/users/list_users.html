@@ -38,6 +38,7 @@
           {%
             with
             message = message,
+            info = "yes",
             type = "destructive" if category == 'error' else "success"
           %}
             {% include "toolkit/notification-banner.html" %}
