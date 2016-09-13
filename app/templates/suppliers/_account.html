@@ -1,6 +1,7 @@
 {% import "toolkit/summary-table.html" as summary %}
 
 {{ summary.heading("Account information") }}
+{{ summary.top_link("View your profile", '/supplier/{}'.format(current_user.supplier_code)) }}
 {% call(item) summary.table(
   [
     ("Email address", current_user.email_address)
