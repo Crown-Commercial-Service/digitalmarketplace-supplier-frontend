@@ -107,7 +107,7 @@ class TestInviteUser(BaseApplicationTest):
             generate_token.assert_called_once_with(
                 {
                     "supplier_id": 1234,
-                    "supplier_name": "Supplier Name",
+                    "supplier_name": "Supplier NĀme",
                     "email_address": "this@isvalid.com"
                 },
                 'KEY',

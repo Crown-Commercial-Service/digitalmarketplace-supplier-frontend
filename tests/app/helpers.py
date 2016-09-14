@@ -257,12 +257,12 @@ class BaseApplicationTest(object):
     def login(self):
         with patch('app.main.views.login.data_api_client') as login_api_client:
             login_api_client.authenticate_user.return_value = self.user(
-                123, "email@email.com", 1234, 'Supplier Name', 'Name')
+                123, "email@email.com", 1234, u'Supplier NĀme', u'Năme')
 
             self.get_user_patch = patch.object(
                 data_api_client,
                 'get_user',
-                return_value=self.user(123, "email@email.com", 1234, 'Supplier Name', 'Name')
+                return_value=self.user(123, "email@email.com", 1234, u'Supplier NĀme', u'Năme')
             )
             self.get_user_patch.start()
 
@@ -273,7 +273,7 @@ class BaseApplicationTest(object):
         with patch('app.main.views.login.data_api_client') as login_api_client:
 
             login_api_client.authenticate_user.return_value = self.user(
-                234, "buyer@email.com", None, None, 'Buyer', role='buyer')
+                234, "buyer@email.com", None, None, 'Ā Buyer', role='buyer')
 
             self.get_user_patch = patch.object(
                 data_api_client,
