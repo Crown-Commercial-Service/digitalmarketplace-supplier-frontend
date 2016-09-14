@@ -774,7 +774,7 @@ class TestFrameworkAgreementUpload(BaseApplicationTest):
                 'g-cloud-7/agreements/1234/1234-signed-framework-agreement.pdf',
                 mock.ANY,
                 acl='private',
-                download_filename='Supplier_Name-1234-signed-framework-agreement.pdf'
+                download_filename='Supplier_Nme-1234-signed-framework-agreement.pdf'
             )
             assert not data_api_client.register_framework_agreement_returned.called
             assert not send_email.called
@@ -800,7 +800,7 @@ class TestFrameworkAgreementUpload(BaseApplicationTest):
                 'g-cloud-7/agreements/1234/1234-signed-framework-agreement.pdf',
                 mock.ANY,
                 acl='private',
-                download_filename='Supplier_Name-1234-signed-framework-agreement.pdf'
+                download_filename='Supplier_Nme-1234-signed-framework-agreement.pdf'
             )
             data_api_client.register_framework_agreement_returned.assert_called_with(
                 1234, 'g-cloud-7', 'email@email.com')
@@ -827,7 +827,7 @@ class TestFrameworkAgreementUpload(BaseApplicationTest):
                 'g-cloud-7/agreements/1234/1234-signed-framework-agreement.pdf',
                 mock.ANY,
                 acl='private',
-                download_filename='Supplier_Name-1234-signed-framework-agreement.pdf'
+                download_filename='Supplier_Nme-1234-signed-framework-agreement.pdf'
             )
             data_api_client.register_framework_agreement_returned.assert_called_with(
                 1234, 'g-cloud-7', 'email@email.com')
@@ -852,7 +852,7 @@ class TestFrameworkAgreementUpload(BaseApplicationTest):
                 'g-cloud-7/agreements/1234/1234-signed-framework-agreement.pdf',
                 mock.ANY,
                 acl='private',
-                download_filename='Supplier_Name-1234-signed-framework-agreement.pdf'
+                download_filename='Supplier_Nme-1234-signed-framework-agreement.pdf'
             )
             assert_equal(res.status_code, 302)
             assert_equal(res.location, 'http://localhost/suppliers/frameworks/g-cloud-7/agreement')
@@ -876,7 +876,7 @@ class TestFrameworkAgreementUpload(BaseApplicationTest):
                 'g-cloud-7/agreements/1234/1234-signed-framework-agreement.jpg',
                 mock.ANY,
                 acl='private',
-                download_filename='Supplier_Name-1234-signed-framework-agreement.jpg'
+                download_filename='Supplier_Nme-1234-signed-framework-agreement.jpg'
             )
             assert_equal(res.status_code, 302)
             assert_equal(res.location, 'http://localhost/suppliers/frameworks/g-cloud-7/agreement')
@@ -2637,7 +2637,7 @@ class TestContractVariation(BaseApplicationTest):
                 "agreedAt": "2016-08-19T15:47:08.116613Z",
                 "agreedUserId": 1,
                 "agreedUserEmail": "agreed@email.com",
-                "agreedUserName": "William Drayton",
+                "agreedUserName": u"William Drăyton",
             }}
         data_api_client.get_framework.return_value = self.g8_framework
         data_api_client.get_supplier_framework_info.return_value = already_agreed
@@ -2648,7 +2648,7 @@ class TestContractVariation(BaseApplicationTest):
 
         assert res.status_code == 200
         assert len(doc.xpath('//h2[contains(text(), "Contract variation status")]')) == 1
-        assert "<span>William Drayton<br />agreed@email.com<br />Friday 19 August 2016 at 16:47</span>" in page_text
+        assert u"<span>William Drăyton<br />agreed@email.com<br />Friday 19 August 2016 at 16:47</span>" in page_text
         assert len(doc.xpath('//label[contains(text(), "I accept these proposed changes")]')) == 0
         assert len(doc.xpath('//input[@value="Save and continue"]')) == 0
 

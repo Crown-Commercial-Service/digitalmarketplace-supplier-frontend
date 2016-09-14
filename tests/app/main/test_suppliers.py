@@ -767,10 +767,10 @@ class TestSupplierDashboardLogin(BaseApplicationTest):
         with self.app.test_client():
             self.login()
             data_api_client.authenticate_user.return_value = self.user(
-                123, "email@email.com", 1234, "Supplier Name", "Name")
+                123, "email@email.com", 1234, u'Supplier NĀme', u'Năme')
 
             data_api_client.get_user.return_value = self.user(
-                123, "email@email.com", 1234, "Supplier Name", "Name")
+                123, "email@email.com", 1234, u'Supplier NĀme', u'Năme')
 
             data_api_client.find_frameworks.return_value = find_frameworks_return_value
 
@@ -781,7 +781,7 @@ class TestSupplierDashboardLogin(BaseApplicationTest):
             assert_equal(res.status_code, 200)
 
             assert_in(
-                self.strip_all_whitespace("<h1>Supplier Name</h1>"),
+                self.strip_all_whitespace(u"<h1>Supplier NĀme</h1>"),
                 self.strip_all_whitespace(res.get_data(as_text=True))
             )
             assert_in(
