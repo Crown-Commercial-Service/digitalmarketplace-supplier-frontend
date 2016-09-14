@@ -143,6 +143,7 @@ class Live(Config):
 
 class Preview(Live):
     FEATURE_FLAGS_CONTRACT_VARIATION = enabled_since('2016-08-22')
+    FEATURE_FLAGS_EDIT_SECTIONS = enabled_since('2016-09-14')
 
 
 class Production(Live):
@@ -151,6 +152,7 @@ class Production(Live):
 
 class Staging(Production):
     FEATURE_FLAGS_CONTRACT_VARIATION = enabled_since('2016-08-22')
+    FEATURE_FLAGS_EDIT_SECTIONS = enabled_since('2016-09-14')
 
 configs = {
     'development': Development,
