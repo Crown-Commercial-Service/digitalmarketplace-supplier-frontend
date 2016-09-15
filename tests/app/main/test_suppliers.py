@@ -134,18 +134,10 @@ class TestSupplierUpdate(BaseApplicationTest):
     def post_supplier_edit(self, data=None, csrf_token=FakeCsrf.valid_token, **kwargs):
         if data is None:
             data = {
-                "description": "New Description",
-                "clients": ["ClientA", "ClientB"],
-                "contact_id": 2,
+                "summary": "New Description",
                 "contact_email": "supplier@user.dmdev",
-                "contact_website": "supplier.dmdev",
-                "contact_contactName": "Supplier Person",
-                "contact_phoneNumber": "0800123123",
-                "contact_address1": "1 Street",
-                "contact_address2": "2 Building",
-                "contact_city": "Supplierville",
-                "contact_country": "Supplierland",
-                "contact_postcode": "11 AB",
+                "contact_name": "Supplier Person",
+                "contact_phone": "0800123123",
             }
         data.update(kwargs)
         if csrf_token is not None:
@@ -188,24 +180,12 @@ class TestSupplierUpdate(BaseApplicationTest):
         data_api_client.update_supplier.assert_called_once_with(
             1234,
             {
-                'clients': [u'ClientA', u'ClientB'],
-                'description': u'New Description'
+                'summary': u'New Description'
             },
-            'email@email.com'
-        )
-        data_api_client.update_contact_information.assert_called_once_with(
-            1234, 2,
             {
-                'website': u'supplier.dmdev',
-                'city': u'Supplierville',
-                'country': u'Supplierland',
-                'address1': u'1 Street',
-                'address2': u'2 Building',
-                'email': u'supplier@user.dmdev',
-                'phoneNumber': u'0800123123',
-                'postcode': u'11 AB',
-                'contactName': u'Supplier Person',
-                'id': 2
+                'phone': '0800123123',
+                'email': 'supplier@user.dmdev',
+                'name': 'Supplier Person'
             },
             'email@email.com'
         )
@@ -215,18 +195,10 @@ class TestSupplierUpdate(BaseApplicationTest):
 
         data = {
             'csrf_token': FakeCsrf.valid_token,
-            "description": "  New Description  ",
-            "clients": ["  ClientA  ", "  ClientB  "],
-            "contact_id": 2,
+            "summary": "  New Description  ",
             "contact_email": "  supplier@user.dmdev  ",
-            "contact_website": "  supplier.dmdev  ",
-            "contact_contactName": "  Supplier Person  ",
-            "contact_phoneNumber": "  0800123123  ",
-            "contact_address1": "  1 Street  ",
-            "contact_address2": "  2 Building  ",
-            "contact_city": "  Supplierville  ",
-            "contact_country": "  Supplierland  ",
-            "contact_postcode": "  11 AB  "
+            "contact_name": "  Supplier Person  ",
+            "contact_phone": "  0800123123  ",
         }
 
         status, _ = self.post_supplier_edit(data=data)
@@ -235,26 +207,11 @@ class TestSupplierUpdate(BaseApplicationTest):
 
         data_api_client.update_supplier.assert_called_once_with(
             1234,
+            {'summary': 'New Description'},
             {
-                'clients': [u'ClientA', u'ClientB'],
-                'description': u'New Description'
-            },
-            'email@email.com'
-        )
-        data_api_client.update_contact_information.assert_called_once_with(
-            1234, 2,
-            {
-                'website': u'supplier.dmdev',
-                'city': u'Supplierville',
-                'country': u'Supplierland',
-                'address1': u'1 Street',
-                'address2': u'2 Building',
-                'email': u'supplier@user.dmdev',
-                'phoneNumber': u'0800123123',
-                'postcode': u'11 AB',
-                'contactName': u'Supplier Person',
-                'id': 2
-            },
+                'phone': '0800123123',
+                'email': 'supplier@user.dmdev',
+                'name': 'Supplier Person'},
             'email@email.com'
         )
 
@@ -263,17 +220,9 @@ class TestSupplierUpdate(BaseApplicationTest):
 
         status, resp = self.post_supplier_edit({
             'csrf_token': FakeCsrf.valid_token,
-            "description": "New Description",
-            "clients": ["ClientA", "", "ClientB"],
-            "contact_id": 2,
-            "contact_website": "supplier.dmdev",
-            "contact_contactName": "Supplier Person",
-            "contact_phoneNumber": "0800123123",
-            "contact_address1": "1 Street",
-            "contact_address2": "2 Building",
-            "contact_city": "Supplierville",
-            "contact_country": u"Supplierland",
-            "contact_postcode": "11 AB",
+            "summary": "  New Description  ",
+            "contact_name": "  Supplier Person  ",
+            "contact_phone": "  0800123123  ",
         })
 
         assert_equal(status, 400)
@@ -285,17 +234,8 @@ class TestSupplierUpdate(BaseApplicationTest):
         )
 
         assert_in("New Description", resp)
-        assert_in('value="ClientA"', resp)
-        assert_in('value="ClientB"', resp)
-        assert_in('value="2"', resp)
-        assert_in('value="supplier.dmdev"', resp)
         assert_in('value="Supplier Person"', resp)
         assert_in('value="0800123123"', resp)
-        assert_in('value="1 Street"', resp)
-        assert_in('value="2 Building"', resp)
-        assert_in('value="Supplierville"', resp)
-        assert_in('value="Supplierland"', resp)
-        assert_in('value="11 AB"', resp)
 
     def test_description_below_word_length(self, data_api_client):
         self.login()
@@ -307,30 +247,18 @@ class TestSupplierUpdate(BaseApplicationTest):
         assert_equal(status, 302)
 
         assert_true(data_api_client.update_supplier.called)
-        assert_true(data_api_client.update_contact_information.called)
 
     def test_description_above_word_length(self, data_api_client):
         self.login()
 
         status, resp = self.post_supplier_edit(
-            description="DESCR " * 51
+            summary="DESCR " * 51
         )
 
         assert_equal(status, 400)
         assert_in('must not be more than 50', resp)
 
         assert_false(data_api_client.update_supplier.called)
-        assert_false(data_api_client.update_contact_information.called)
-
-    def test_clients_above_limit(self, data_api_client):
-        self.login()
-
-        status, resp = self.post_supplier_edit(
-            clients=["", "A Client"] * 11
-        )
-
-        assert_equal(status, 400)
-        assert_in('You must have 10 or fewer clients', resp)
 
     def test_should_redirect_to_login_if_not_logged_in(self, data_api_client):
         edit_url = self.url_for('main.edit_supplier')
