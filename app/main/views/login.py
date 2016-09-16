@@ -107,7 +107,6 @@ def submit_create_user(token):
 
 
 @main.route('/invite-user', methods=['GET'])
-@flask_featureflags.is_active_feature("INVITE_CONTRIBUTOR")
 @login_required
 def invite_user():
     form = EmailAddressForm()
