@@ -18,30 +18,18 @@ def word_length(limit=None, message=None):
 
 
 class EditSupplierForm(DmForm):
-    description = StripWhitespaceStringField('Supplier summary', validators=[
+    summary = StripWhitespaceStringField('Supplier summary', validators=[
         word_length(50, 'Your summary must not be more than %d words')
     ])
-    clients = FieldList(StripWhitespaceStringField())
-
-    def validate_clients(form, field):
-        if len(field.data) > 10:
-            raise ValidationError('You must have 10 or fewer clients')
 
 
 class EditContactInformationForm(DmForm):
-    id = IntegerField()
-    address1 = StripWhitespaceStringField('Business address')
-    address2 = StripWhitespaceStringField('Business address')
-    city = StripWhitespaceStringField('Town or city')
-    country = StripWhitespaceStringField()
-    postcode = StripWhitespaceStringField()
-    website = StripWhitespaceStringField()
-    phoneNumber = StripWhitespaceStringField('Phone number')
+    phone = StripWhitespaceStringField('Phone number')
     email = StripWhitespaceStringField('Email address', validators=[
         DataRequired(message="You must provide an email address"),
         Email(message="Please enter a valid email address")
     ])
-    contactName = StripWhitespaceStringField('Contact name', validators=[
+    name = StripWhitespaceStringField('Contact name', validators=[
         DataRequired(message="You must provide a contact name"),
     ])
 

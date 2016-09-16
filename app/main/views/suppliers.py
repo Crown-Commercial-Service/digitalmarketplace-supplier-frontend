@@ -93,7 +93,7 @@ def edit_supplier(supplier_form=None, contact_form=None, error=None):
 
     if supplier_form is None:
         supplier_form = EditSupplierForm(
-            description=supplier.get('description', None),
+            summary=supplier.get('summary', None),
             clients=supplier.get('clients', None)
         )
         contact_form = EditContactInformationForm(
@@ -119,7 +119,7 @@ def update_supplier():
     # the form search for request keys we pass in the values directly as data
     supplier_form = EditSupplierForm(
         csrf_token=request.form['csrf_token'],
-        description=request.form['description'],
+        summary=request.form['summary'],
         clients=filter(None, request.form.getlist('clients'))
     )
 
@@ -139,12 +139,6 @@ def update_supplier():
         data_api_client.update_supplier(
             current_user.supplier_code,
             supplier_form.data,
-            current_user.email_address
-        )
-
-        data_api_client.update_contact_information(
-            current_user.supplier_code,
-            contact_form.id.data,
             contact_form.data,
             current_user.email_address
         )

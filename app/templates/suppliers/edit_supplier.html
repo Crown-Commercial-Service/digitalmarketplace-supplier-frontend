@@ -72,31 +72,11 @@
 
   <div class="grid-row">
     <div class="column-two-thirds">
-      {{ forms.question_textarea('description', 'Supplier summary', supplier_form.description.data, '50 words max', errors=supplier_form.description.errors, max_length_in_words=50) }}
+      {{ forms.question_textarea('summary', 'Supplier summary', supplier_form.summary.data, '50 words max', errors=supplier_form.summary.errors, max_length_in_words=50) }}
 
-      {{ forms.question_list_entry('clients', 'Clients', supplier_form.clients.data, '1 client per box, max 10 clients', errors=supplier_form.clients.errors, item_name='client', number_of_items=10) }}
-
-      {{ forms.question_input('contact_contactName', 'Contact name', contact_form.contactName.data, 'Primary contact', errors=contact_form.contactName.errors) }}
-      {{ forms.question_input('contact_website', 'Website', contact_form.website.data, errors=contact_form.website.errors) }}
+      {{ forms.question_input('contact_name', 'Contact name', contact_form.name.data, 'Primary contact', errors=contact_form.name.errors) }}
       {{ forms.question_input('contact_email', 'Email address', contact_form.email.data, errors=contact_form.email.errors) }}
-      {{ forms.question_input('contact_phoneNumber', 'Phone number', contact_form.phoneNumber.data, errors=contact_form.phoneNumber.errors) }}
-
-      <div class="question">
-        <label class="question-heading-with-hint">
-          Business address
-        </label>
-        {{ forms.input('contact_id', contact_form.id.data, type='hidden') }}
-        <div class="box-label" id="address1-label">Building and street</div>
-        {{ forms.input('contact_address1', contact_form.address1.data, errors=contact_form.address1.errors) }}
-        {{ forms.input('contact_address2', contact_form.address2.data, errors=contact_form.address2.errors) }}
-        <div class="box-label" id="city-label">Town or city</div>
-        {{ forms.input('contact_city', contact_form.city.data, errors=contact_form.city.errors) }}
-        <div class="box-label" id="country-label">Country</div>
-        {{ forms.input('contact_country', contact_form.country.data, errors=contact_form.country.errors) }}
-        <div class="box-label" id="postcode-label">Postcode</div>
-        {{ forms.input('contact_postcode', contact_form.postcode.data, errors=contact_form.postcode.errors) }}
-      </div>
-
+      {{ forms.question_input('contact_phone', 'Phone number', contact_form.phone.data, errors=contact_form.phone.errors) }}
     </div>
   </div>
 
