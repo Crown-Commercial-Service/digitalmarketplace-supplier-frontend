@@ -69,7 +69,6 @@ class Config(object):
 
     # List all you feature flags below
     FEATURE_FLAGS = {
-        'INVITE_CONTRIBUTOR': False,
         'EDIT_SECTIONS': False,
     }
 
@@ -100,7 +99,6 @@ class Test(Config):
     RAISE_ERROR_ON_MISSING_FEATURES = True
     # List all you feature flags below
     FEATURE_FLAGS = {
-        'INVITE_CONTRIBUTOR': True,
         'EDIT_SECTIONS': True,
     }
 
@@ -122,7 +120,6 @@ class Development(Config):
     RAISE_ERROR_ON_MISSING_FEATURES = True
     # List all you feature flags below
     FEATURE_FLAGS = {
-        'INVITE_CONTRIBUTOR': True,
         'EDIT_SECTIONS': True,
     }
 
