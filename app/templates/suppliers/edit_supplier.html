@@ -1,7 +1,9 @@
 {% extends "_base_page.html" %}
 {% import "macros/forms.html" as forms %}
 
-{% block page_title %}Edit supplier – Digital Marketplace{% endblock %}
+{% block page_title %}Edit seller – Digital Marketplace{% endblock %}
+
+{% block body_classes %}form-page{% endblock %}
 
 {% block breadcrumb %}
   {%
@@ -24,7 +26,7 @@
   <div class="grid-row">
     <div class="column-one-whole">
       {% with
-        context = "Edit supplier information",
+        context = "Edit seller information",
         heading = current_user.supplier_name
       %}
         {% include 'toolkit/page-heading.html' %}
@@ -72,9 +74,8 @@
 
   <div class="grid-row">
     <div class="column-two-thirds">
-      {{ forms.question_textarea('summary', 'Supplier summary', supplier_form.summary.data, '50 words max', errors=supplier_form.summary.errors, max_length_in_words=50) }}
-
-      {{ forms.question_input('contact_name', 'Contact name', contact_form.name.data, 'Primary contact', errors=contact_form.name.errors) }}
+      {{ forms.question_textarea('summary', 'Seller summary', supplier_form.summary.data, '', errors=supplier_form.summary.errors, max_length_in_words=50) }}
+      {{ forms.question_input('contact_name', 'Name of authorised representative', contact_form.name.data, '', errors=contact_form.name.errors) }}
       {{ forms.question_input('contact_email', 'Email address', contact_form.email.data, errors=contact_form.email.errors) }}
       {{ forms.question_input('contact_phone', 'Phone number', contact_form.phone.data, errors=contact_form.phone.errors) }}
     </div>
@@ -83,6 +84,7 @@
   {%
     with
     type = "save",
+    role = "button",
     label = "Save and return"
   %}
     {% include "toolkit/button.html" %}
