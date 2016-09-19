@@ -90,7 +90,7 @@
     {% include "toolkit/button.html" %}
   {% endwith %}
   <p>
-    <a href="{{ url_for('.dashboard') }}">Return without saving</a>
+    <a href="{{ '/supplier/{}'.format(current_user.supplier_code) }}">Return without saving</a>
   </p>
   </form>
 
