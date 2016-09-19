@@ -149,7 +149,7 @@ def update_supplier():
         response.status_code = 500
         return response
 
-    return redirect(url_for(".dashboard"))
+    return redirect('/supplier/{}'.format(current_user.supplier_code))
 
 
 @main.route('/create', methods=['GET'])
