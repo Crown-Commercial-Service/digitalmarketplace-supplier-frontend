@@ -55,16 +55,6 @@
           {% endfor %}
           </ul>
           {% endif %}
-
-          {% if contact_form.errors %}
-          <ul>
-          {% for field_name, field_errors in contact_form.errors|dictsort %}
-            {% for error in field_errors %}
-            <li><a href="#contact_{{ field_name }}" class="validation-masthead-link">{{ contact_form[field_name].label.text }}</a></li>
-            {% endfor %}
-          {% endfor %}
-          </ul>
-          {% endif %}
       </div>
   {% endif %}
 
@@ -75,9 +65,6 @@
   <div class="grid-row">
     <div class="column-two-thirds">
       {{ forms.question_textarea('summary', 'Seller summary', supplier_form.summary.data, '', errors=supplier_form.summary.errors, max_length_in_words=50) }}
-      {{ forms.question_input('contact_name', 'Name of authorised representative', contact_form.name.data, '', errors=contact_form.name.errors) }}
-      {{ forms.question_input('contact_email', 'Email address', contact_form.email.data, errors=contact_form.email.errors) }}
-      {{ forms.question_input('contact_phone', 'Phone number', contact_form.phone.data, errors=contact_form.phone.errors) }}
     </div>
   </div>
 
