@@ -135,9 +135,6 @@ class TestSupplierUpdate(BaseApplicationTest):
         if data is None:
             data = {
                 "summary": "New Description",
-                "contact_email": "supplier@user.dmdev",
-                "contact_name": "Supplier Person",
-                "contact_phone": "0800123123",
             }
         data.update(kwargs)
         if csrf_token is not None:
@@ -182,12 +179,7 @@ class TestSupplierUpdate(BaseApplicationTest):
             {
                 'summary': u'New Description'
             },
-            {
-                'phone': '0800123123',
-                'email': 'supplier@user.dmdev',
-                'name': 'Supplier Person'
-            },
-            'email@email.com'
+            user='email@email.com'
         )
 
     def test_should_strip_whitespace_surrounding_supplier_update_all_fields(self, data_api_client):
@@ -196,9 +188,6 @@ class TestSupplierUpdate(BaseApplicationTest):
         data = {
             'csrf_token': FakeCsrf.valid_token,
             "summary": "  New Description  ",
-            "contact_email": "  supplier@user.dmdev  ",
-            "contact_name": "  Supplier Person  ",
-            "contact_phone": "  0800123123  ",
         }
 
         status, _ = self.post_supplier_edit(data=data)
@@ -208,34 +197,8 @@ class TestSupplierUpdate(BaseApplicationTest):
         data_api_client.update_supplier.assert_called_once_with(
             1234,
             {'summary': 'New Description'},
-            {
-                'phone': '0800123123',
-                'email': 'supplier@user.dmdev',
-                'name': 'Supplier Person'},
-            'email@email.com'
+            user='email@email.com'
         )
-
-    def test_missing_required_supplier_fields(self, data_api_client):
-        self.login()
-
-        status, resp = self.post_supplier_edit({
-            'csrf_token': FakeCsrf.valid_token,
-            "summary": "  New Description  ",
-            "contact_name": "  Supplier Person  ",
-            "contact_phone": "  0800123123  ",
-        })
-
-        assert_equal(status, 400)
-        assert_in('You must provide an email address', resp)
-
-        assert_false(data_api_client.update_supplier.called)
-        assert_false(
-            data_api_client.update_contact_information.called
-        )
-
-        assert_in("New Description", resp)
-        assert_in('value="Supplier Person"', resp)
-        assert_in('value="0800123123"', resp)
 
     def test_description_below_word_length(self, data_api_client):
         self.login()

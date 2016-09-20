@@ -123,28 +123,22 @@ def update_supplier():
         clients=filter(None, request.form.getlist('clients'))
     )
 
-    contact_form = EditContactInformationForm(request.form, prefix='contact_')
-    contact_form.csrf_token.data = request.form['csrf_token']
-
-    if not (supplier_form.validate() and contact_form.validate()):
-        response = make_response(edit_supplier(supplier_form=supplier_form, contact_form=contact_form))
+    if not (supplier_form.validate()):
+        response = make_response(edit_supplier(supplier_form=supplier_form))
         response.status_code = 400
         return response
 
     # This form data is passed as-is to the API backend.  We don't need to send the CSRF token.
     del supplier_form.csrf_token
-    del contact_form.csrf_token
 
     try:
         data_api_client.update_supplier(
             current_user.supplier_code,
             supplier_form.data,
-            contact_form.data,
-            current_user.email_address
+            user=current_user.email_address
         )
     except APIError as e:
         response = make_response(edit_supplier(supplier_form=supplier_form,
-                                               contact_form=contact_form,
                                                error=e.message))
         response.status_code = 500
         return response
