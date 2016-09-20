@@ -81,7 +81,6 @@ def dashboard():
 
 
 @main.route('/edit', methods=['GET'])
-@debug_only
 @login_required
 def edit_supplier(supplier_form=None, contact_form=None, error=None):
     try:
@@ -89,6 +88,7 @@ def edit_supplier(supplier_form=None, contact_form=None, error=None):
             current_user.supplier_code
         )['supplier']
     except APIError as e:
+        current_app.logger.error(e)
         abort(e.status_code)
 
     if supplier_form is None:
@@ -110,7 +110,6 @@ def edit_supplier(supplier_form=None, contact_form=None, error=None):
 
 
 @main.route('/edit', methods=['POST'])
-@debug_only
 @login_required
 def update_supplier():
     # FieldList expects post parameter keys to have number suffixes
