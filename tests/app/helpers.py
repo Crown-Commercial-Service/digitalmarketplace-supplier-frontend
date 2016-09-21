@@ -13,7 +13,6 @@ from flask import url_for
 from mock import patch
 from nose.tools import assert_in, assert_not_in
 from werkzeug.http import parse_cookie
-from flask_featureflags import FeatureFlag
 
 
 FULL_G7_SUBMISSION = {
@@ -120,7 +119,6 @@ class BaseApplicationTest(object):
         self.app.register_blueprint(login_for_tests)
         self.client = self.app.test_client()
         self.get_user_patch = None
-        self.feature_flags = FeatureFlag(self.app)
 
     def teardown(self):
         self.teardown_login()
@@ -174,12 +172,16 @@ class BaseApplicationTest(object):
         }
 
     @staticmethod
-    def user(id, email_address, supplier_code, supplier_name, name,
-             is_token_valid=True, locked=False, active=True, role='buyer'):
+    def user(id, email_address, supplier_code, supplier_name, name, is_token_valid=True, locked=False, active=True,
+             role='buyer', terms_accepted_date=None):
+
+        now = datetime.utcnow()
 
         hours_offset = -1 if is_token_valid else 1
-        date = datetime.utcnow() + timedelta(hours=hours_offset)
-        password_changed_at = date.strftime(DATETIME_FORMAT)
+        password_changed_date = now + timedelta(hours=hours_offset)
+
+        if terms_accepted_date is None:
+            terms_accepted_date = now
 
         user = {
             "id": id,
@@ -188,7 +190,8 @@ class BaseApplicationTest(object):
             "role": role,
             "locked": locked,
             'active': active,
-            'passwordChangedAt': password_changed_at
+            'passwordChangedAt': password_changed_date.strftime(DATETIME_FORMAT),
+            'termsAcceptedAt': terms_accepted_date.strftime(DATETIME_FORMAT),
         }
 
         if supplier_code:

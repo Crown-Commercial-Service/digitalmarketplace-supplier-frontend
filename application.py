@@ -3,8 +3,6 @@
 import os
 import sys
 
-from flask_featureflags import FeatureFlag
-
 from app import create_app
 from dmutils import init_manager
 import app.invites
@@ -12,7 +10,6 @@ import app.invites
 
 port = int(os.getenv('PORT', '5003'))
 application = create_app(os.getenv('DM_ENVIRONMENT') or 'development')
-feature_flags = FeatureFlag(application)
 application.jinja_options = {
     'extensions': [
         'jinja2.ext.with_'

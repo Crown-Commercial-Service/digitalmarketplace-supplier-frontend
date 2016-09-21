@@ -1,6 +1,10 @@
+from datetime import datetime
+
 from flask import Blueprint
-from dmutils.user import User
 from flask_login import login_user
+
+from dmutils.user import User
+from dmutils.formats import DATETIME_FORMAT
 
 login_for_tests = Blueprint('login_for_tests', __name__)
 
@@ -13,7 +17,8 @@ def auto_login():
         'name': 'Name',
         'emailAddress': 'email@email.com',
         'role': 'supplier',
-        'supplierCode': 1234
+        'supplierCode': 1234,
+        'termsAcceptedAt': datetime(2000, 1, 1).strftime(DATETIME_FORMAT),
     }
     }
     user = User.from_json(user_json)
@@ -27,7 +32,8 @@ def auto_buyer_login():
         'id': 234,
         'name': 'Buyer',
         'emailAddress': 'buyer@email.com',
-        'role': 'buyer'
+        'role': 'buyer',
+        'termsAcceptedAt': datetime(2000, 1, 1).strftime(DATETIME_FORMAT),
     }
     }
     user = User.from_json(user_json)
