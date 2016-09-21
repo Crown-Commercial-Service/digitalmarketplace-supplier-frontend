@@ -213,6 +213,9 @@ class TestCreateUser(BaseApplicationTest):
                 supplier_name=supplier_name,
             )
 
+    def create_user_setup(self, data_api_client):
+        data_api_client.create_user.return_value = self.user(123, 'test@example.gov.au', 'Supplier', 0, 'valid name')
+
     def test_should_be_an_error_for_invalid_token(self):
         token = "1234"
         res = self.client.get(
@@ -507,6 +510,7 @@ class TestCreateUser(BaseApplicationTest):
     @mock.patch('app.main.views.login.data_api_client')
     def test_should_create_user_if_user_does_not_exist(self, data_api_client):
         data_api_client.get_user.return_value = None
+        self.create_user_setup(data_api_client)
 
         token = self._generate_token()
         res = self.client.post(
@@ -559,6 +563,7 @@ class TestCreateUser(BaseApplicationTest):
     @mock.patch('app.main.views.login.data_api_client')
     def test_should_strip_whitespace_surrounding_create_user_name_field(self, data_api_client):
         data_api_client.get_user.return_value = None
+        self.create_user_setup(data_api_client)
         token = self._generate_token()
         res = self.client.post(
             self.url_for('main.submit_create_user', token=token),
@@ -583,6 +588,7 @@ class TestCreateUser(BaseApplicationTest):
     @mock.patch('app.main.views.login.data_api_client')
     def test_should_not_strip_whitespace_surrounding_create_user_password_field(self, data_api_client):
         data_api_client.get_user.return_value = None
+        self.create_user_setup(data_api_client)
         token = self._generate_token()
         res = self.client.post(
             self.url_for('main.submit_create_user', token=token),
