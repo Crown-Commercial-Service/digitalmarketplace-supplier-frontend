@@ -67,9 +67,9 @@ class Config(object):
 
     ASSET_PATH = URL_PREFIX + '/static'
 
-    # List all you feature flags below
     FEATURE_FLAGS = {
-        'EDIT_SECTIONS': False,
+        'EDIT_SECTIONS': True,
+        'ENFORCE_TERMS_REVIEW': True,
     }
 
     # Logging
@@ -97,10 +97,6 @@ class Test(Config):
 
     # Throw an exception in dev when a feature flag is used in code but not defined. Otherwise it is assumed False.
     RAISE_ERROR_ON_MISSING_FEATURES = True
-    # List all you feature flags below
-    FEATURE_FLAGS = {
-        'EDIT_SECTIONS': True,
-    }
 
     DM_DATA_API_AUTH_TOKEN = 'myToken'
 
@@ -118,10 +114,6 @@ class Development(Config):
 
     # Throw an exception in dev when a feature flag is used in code but not defined. Otherwise it is assumed False.
     RAISE_ERROR_ON_MISSING_FEATURES = True
-    # List all you feature flags below
-    FEATURE_FLAGS = {
-        'EDIT_SECTIONS': True,
-    }
 
     DM_DATA_API_URL = "http://localhost:5000"
     DM_DATA_API_AUTH_TOKEN = "myToken"
@@ -145,6 +137,11 @@ class Live(Config):
     SERVER_NAME = 'marketplace.service.gov.au'
 
     DM_FRAMEWORK_AGREEMENTS_EMAIL = 'no-reply@marketplace.digital.gov.au'
+
+    FEATURE_FLAGS = {
+        'EDIT_SECTIONS': False,
+        'ENFORCE_TERMS_REVIEW': False,
+    }
 
 
 class Preview(Live):
