@@ -1388,7 +1388,7 @@ class TestSendClarificationQuestionEmail(BaseApplicationTest):
         if is_called:
             send_email.assert_any_call(
                 self.app.config['DM_CLARIFICATION_QUESTION_EMAIL'],
-                FakeMail('Supplier name:', 'User name:'),
+                FakeMail('Seller name:', 'User name:'),
                 'Test Framework clarification question',
                 self.app.config['DM_GENERIC_NOREPLY_EMAIL'],
                 'Test Framework Supplier',
