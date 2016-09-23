@@ -75,7 +75,8 @@ def send_brief_clarification_question(data_api_client, brief, clarification_ques
         brief_id=brief['id'],
         brief_name=brief['title'],
         framework_slug=brief['frameworkSlug'],
-        message=clarification_question
+        message=clarification_question,
+        supplier_name=current_user.name,
     )
     try:
         send_email(
