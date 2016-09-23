@@ -298,14 +298,14 @@ class TestFrameworksDashboard(BaseApplicationTest):
                 {
                     'text': "Download guidance and legal documentation (.zip)",
                     'time': {
-                        'text': 'Thursday 1 January 2015',
+                        'text': 'Friday 2 January 2015',
                         'datetime': '2015-01-01T14:00:00.000Z'
                     }
                 },
                 {
                     'text': "Read updates and ask clarification questions",
                     'time': {
-                        'text': 'Monday 2 February 2015',
+                        'text': 'Tuesday 3 February 2015',
                         'datetime': '2015-02-02T14:00:00.000Z'
                     }
                 }
@@ -335,7 +335,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
                 {
                     'text': "Download guidance and legal documentation (.zip)",
                     'time': {
-                        'text': 'Thursday 1 January 2015',
+                        'text': 'Friday 2 January 2015',
                         'datetime': '2015-01-01T14:00:00.000Z'
                     }
                 },
@@ -609,7 +609,7 @@ class TestFrameworkAgreement(BaseApplicationTest):
                 self.url_for('main.framework_agreement', framework_slug='g-cloud-7'),
                 doc.xpath('//form')[0].action
             )
-            assert_in(u'Document uploaded Monday 2 November 2015 at 15:25', data)
+            assert_in(u'Document uploaded Tuesday 3 November 2015 at 02:25', data)
             assert_in(u'Your document has been uploaded', data)
 
     def test_upload_message_if_agreement_is_not_returned(self, data_api_client):
@@ -2033,7 +2033,7 @@ class TestReturnSignedAgreement(BaseApplicationTest):
                 )
                 assert res.status_code == 200
                 # some kind of BST thing
-                assert "test.pdf, uploaded Sunday 10 July 2016 at 22:18" in res.get_data(as_text=True)
+                assert "test.pdf, uploaded Monday 11 July 2016 at 07:18" in res.get_data(as_text=True)
 
     @mock.patch('dmutils.s3.S3')
     def test_signature_page_displays_file_upload_timestamp_if_no_filename_in_session(
@@ -2054,7 +2054,7 @@ class TestReturnSignedAgreement(BaseApplicationTest):
                 )
                 assert res.status_code == 200
                 # some kind of BST thing
-                assert "Uploaded Sunday 10 July 2016 at 22:18" in res.get_data(as_text=True)
+                assert "Uploaded Monday 11 July 2016 at 07:18" in res.get_data(as_text=True)
 
     @mock.patch('dmutils.s3.S3')
     def test_upload_signature_page(self, s3, return_supplier_framework, data_api_client):
@@ -2172,7 +2172,7 @@ class TestReturnSignedAgreement(BaseApplicationTest):
             assert res.status_code == 200
             page = res.get_data(as_text=True)
             assert u'Check the details you’ve given before returning the signature page for company name' in page
-            assert '<tdclass="summary-item-field-first"><span>UploadedSunday10July2016at22:18</span></td>' in self.strip_all_whitespace(page)  # noqa
+            assert 'UploadedMonday11July2016at07:18' in self.strip_all_whitespace(page)
 
     @mock.patch('dmutils.s3.S3')
     def test_contract_review_page_aborts_if_visited_when_information_required_to_return_agreement_does_not_exist(
@@ -2402,6 +2402,8 @@ class TestReturnSignedAgreement(BaseApplicationTest):
             assert 'G-Cloud 8 documents' in page
 
             page_without_whitespace = self.strip_all_whitespace(page)
-            assert '<tdclass="summary-item-field"><span><p>signername</p><p>signerrole</p></span></td>' in page_without_whitespace  # noqa
-            assert '<tdclass="summary-item-field"><span><p>User</p><p>email@email.com</p><p>Sunday10July2016at22:20</p></span></td>' in page_without_whitespace  # noqa
-            assert '<tdclass="summary-item-field-first"><span>WaitingforCCStocountersign</span></td>' in page_without_whitespace  # noqa
+            assert 'signername' in page_without_whitespace
+            assert 'signerrole' in page_without_whitespace
+            assert 'email@email.com' in page_without_whitespace
+            assert 'Monday11July2016at07:20' in page_without_whitespace
+            assert 'WaitingforCCStocountersign' in page_without_whitespace
