@@ -10,7 +10,7 @@ from dmapiclient import APIError
 from dmapiclient.audit import AuditTypes
 from dmutils.email import send_email, EmailError
 from dmcontent.formats import format_service_price
-from dmutils.formats import datetimeformat
+from dmutils.formats import DateFormatter
 from dmutils.forms import render_template_with_csrf
 from dmutils import s3
 from dmutils.documents import (
@@ -492,7 +492,8 @@ def framework_agreement(framework_slug):
     supplier_framework = return_supplier_framework_info_if_on_framework_or_abort(data_api_client, framework_slug)
 
     if supplier_framework['agreementReturned']:
-        supplier_framework['agreementReturnedAt'] = datetimeformat(
+        date_formatter = DateFormatter(current_app.config['DM_TIMEZONE'])
+        supplier_framework['agreementReturnedAt'] = date_formatter.datetimeformat(
             date_parse(supplier_framework['agreementReturnedAt'])
         )
 

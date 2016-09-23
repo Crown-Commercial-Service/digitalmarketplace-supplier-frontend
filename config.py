@@ -21,6 +21,8 @@ class Config(object):
     PERMANENT_SESSION_LIFETIME = 4*3600
     DM_DEFAULT_CACHE_MAX_AGE = 48*3600
 
+    DM_TIMEZONE = 'Australia/Sydney'
+
     DM_DATA_API_URL = None
     DM_DATA_API_AUTH_TOKEN = None
     DM_CLARIFICATION_QUESTION_EMAIL = 'no-reply@marketplace.digital.gov.au'
@@ -97,6 +99,9 @@ class Test(Config):
 
     # Throw an exception in dev when a feature flag is used in code but not defined. Otherwise it is assumed False.
     RAISE_ERROR_ON_MISSING_FEATURES = True
+
+    # Used a fixed timezone for tests. Using Sydney timezone will catch more timezone bugs than London.
+    DM_TIMEZONE = 'Australia/Sydney'
 
     DM_DATA_API_AUTH_TOKEN = 'myToken'
 
