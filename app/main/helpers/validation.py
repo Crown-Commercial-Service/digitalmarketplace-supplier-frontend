@@ -233,4 +233,5 @@ VALIDATORS = {
     "g-cloud-7": G7Validator,
     "g-cloud-8": G8Validator,
     "digital-outcomes-and-specialists": DOSValidator,
+    "digital-outcomes-and-specialists-2": DOSValidator,
 }
