@@ -651,7 +651,7 @@ def signer_details(framework_slug):
 @login_required
 def signature_upload(framework_slug):
     framework = get_framework(data_api_client, framework_slug)
-    return_supplier_framework_info_if_on_framework_or_abort(data_api_client, framework_slug)
+    supplier_framework = return_supplier_framework_info_if_on_framework_or_abort(data_api_client, framework_slug)
     agreements_bucket = s3.S3(current_app.config['DM_AGREEMENTS_BUCKET'])
     signature_page = get_most_recently_uploaded_agreement_file_or_none(agreements_bucket, framework_slug)
     upload_error = None
@@ -679,6 +679,10 @@ def signature_upload(framework_slug):
                 request.files['signature_page'],
                 acl='private'
             )
+
+            agreement_id = supplier_framework.get("agreementId")
+            data_api_client.update_framework_agreement(agreement_id, {"signedAgreementPath": upload_path},
+                                                       current_user.email_address)
 
             session['signature_page'] = request.files['signature_page'].filename
 

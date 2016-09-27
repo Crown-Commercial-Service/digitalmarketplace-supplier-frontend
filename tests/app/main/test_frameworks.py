@@ -1988,7 +1988,9 @@ class TestReturnSignedAgreement(BaseApplicationTest):
             self.login()
 
             data_api_client.get_framework.return_value = get_g_cloud_8()
-            return_supplier_framework.return_value = self.supplier_framework(on_framework=True)['frameworkInterest']
+            return_supplier_framework.return_value = self.supplier_framework(
+                on_framework=True, agreement_id=21
+            )['frameworkInterest']
 
             res = self.client.post(
                 '/suppliers/frameworks/g-cloud-8/signature-upload',
@@ -2001,6 +2003,11 @@ class TestReturnSignedAgreement(BaseApplicationTest):
                 'g-cloud-8/agreements/1234/1234-signed-framework-agreement.jpg',
                 mock.ANY,
                 acl='private'
+            )
+            data_api_client.update_framework_agreement.assert_called_with(
+                21,
+                {"signedAgreementPath": 'g-cloud-8/agreements/1234/1234-signed-framework-agreement.jpg'},
+                'email@email.com'
             )
             assert res.status_code == 302
             assert res.location == 'http://localhost/suppliers/frameworks/g-cloud-8/contract-review'
