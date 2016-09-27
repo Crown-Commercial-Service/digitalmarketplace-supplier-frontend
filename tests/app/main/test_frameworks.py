@@ -840,6 +840,9 @@ class TestFrameworkAgreementUpload(BaseApplicationTest):
             data_api_client.get_framework.return_value = self.framework(status='standstill')
             data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
                 on_framework=True)
+            data_api_client.register_framework_agreement_returned.return_value = {
+                "frameworkInterest": {"agreementId": 20}
+            }
 
             res = self.client.post(
                 '/suppliers/frameworks/g-cloud-7/agreement',
@@ -853,6 +856,14 @@ class TestFrameworkAgreementUpload(BaseApplicationTest):
                 mock.ANY,
                 acl='private',
                 download_filename='Supplier_Nme-1234-signed-framework-agreement.pdf'
+            )
+            data_api_client.register_framework_agreement_returned.assert_called_with(
+                1234, 'g-cloud-7', 'email@email.com'
+            )
+            data_api_client.update_framework_agreement.assert_called_with(
+                20,
+                {"signedAgreementPath": 'g-cloud-7/agreements/1234/1234-signed-framework-agreement.pdf'},
+                'email@email.com'
             )
             assert_equal(res.status_code, 302)
             assert_equal(res.location, 'http://localhost/suppliers/frameworks/g-cloud-7/agreement')

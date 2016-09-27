@@ -523,6 +523,9 @@ def framework_agreement(framework_slug):
 @main.route('/frameworks/<framework_slug>/agreement', methods=['POST'])
 @login_required
 def upload_framework_agreement(framework_slug):
+    """
+    This is the route used to upload agreements for pre-G-Cloud 8 frameworks
+    """
     framework = get_framework(data_api_client, framework_slug, allowed_statuses=['standstill', 'live'])
     supplier_framework = return_supplier_framework_info_if_on_framework_or_abort(data_api_client, framework_slug)
 
@@ -561,8 +564,10 @@ def upload_framework_agreement(framework_slug):
         )
     )
 
-    data_api_client.register_framework_agreement_returned(
+    updated_supplier_framework = data_api_client.register_framework_agreement_returned(
         current_user.supplier_id, framework_slug, current_user.email_address)
+    agreement_id = updated_supplier_framework.get("frameworkInterest", {}).get("agreementId")
+    data_api_client.update_framework_agreement(agreement_id, {"signedAgreementPath": path}, current_user.email_address)
 
     try:
         email_body = render_template(
