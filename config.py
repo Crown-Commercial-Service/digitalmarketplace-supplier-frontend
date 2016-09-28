@@ -1,5 +1,4 @@
 import os
-import jinja2
 from dmutils.status import enabled_since, get_version_label
 
 
@@ -79,15 +78,6 @@ class Config(object):
     DM_LOG_PATH = None
     DM_APP_NAME = 'supplier-frontend'
     DM_DOWNSTREAM_REQUEST_ID_HEADER = 'X-Amz-Cf-Id'
-
-    @staticmethod
-    def init_app(app):
-        repo_root = os.path.abspath(os.path.dirname(__file__))
-        template_folders = [
-            os.path.join(repo_root, 'app/templates')
-        ]
-        jinja_loader = jinja2.FileSystemLoader(template_folders)
-        app.jinja_loader = jinja_loader
 
 
 class Test(Config):
