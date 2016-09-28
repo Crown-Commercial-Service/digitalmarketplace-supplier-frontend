@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import pytest
 try:
     from StringIO import StringIO
 except ImportError:
@@ -832,6 +833,32 @@ class TestFrameworkAgreementUpload(BaseApplicationTest):
             data_api_client.register_framework_agreement_returned.assert_called_with(
                 1234, 'g-cloud-7', 'email@email.com')
             send_email.assert_called()
+
+    def test_upload_agreement_document_rolls_back_on_error_setting_document_path(self, data_api_client, send_email, s3):
+        with self.app.test_client():
+            self.login()
+
+            data_api_client.get_framework.return_value = self.framework(status='standstill')
+            data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
+                on_framework=True)
+            data_api_client.register_framework_agreement_returned.return_value = {
+                "frameworkInterest": {"agreementId": 20}
+            }
+            data_api_client.update_framework_agreement.side_effect = Exception("couldn't set the path")
+            with pytest.raises(Exception):
+                res = self.client.post(
+                    '/suppliers/frameworks/g-cloud-7/agreement',
+                    data={
+                        'agreement': (StringIO(b'doc'), 'test.pdf'),
+                    }
+                )
+
+            data_api_client.register_framework_agreement_returned.assert_called_with(
+                1234, 'g-cloud-7', 'email@email.com'
+            )
+            data_api_client.unset_framework_agreement_returned.assert_called_with(
+                1234, 'g-cloud-7', 'email@email.com'
+            )
 
     def test_upload_agreement_document(self, data_api_client, send_email, s3):
         with self.app.test_client():

@@ -567,7 +567,16 @@ def upload_framework_agreement(framework_slug):
     updated_supplier_framework = data_api_client.register_framework_agreement_returned(
         current_user.supplier_id, framework_slug, current_user.email_address)
     agreement_id = updated_supplier_framework.get("frameworkInterest", {}).get("agreementId")
-    data_api_client.update_framework_agreement(agreement_id, {"signedAgreementPath": path}, current_user.email_address)
+    try:
+        # If setting the agreement path fails then rollback the retuned agreement and raise error
+        data_api_client.update_framework_agreement(
+            agreement_id, {"signedAgreementPath": path}, current_user.email_address
+        )
+    except Exception as e:
+        data_api_client.unset_framework_agreement_returned(
+            current_user.supplier_id, framework_slug, current_user.email_address
+        )
+        raise e
 
     try:
         email_body = render_template(
