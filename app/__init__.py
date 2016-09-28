@@ -7,7 +7,6 @@ from flask_login import LoginManager
 import dmapiclient
 from dmutils import init_app, init_frontend_app
 from dmutils.user import User
-from dmutils.forms import valid_csrf_or_abort
 
 from config import configs
 
@@ -47,11 +46,6 @@ def create_app(config_name):
     application.add_template_filter(parse_document_upload_time)
 
     init_frontend_app(application, data_api_client, login_manager)
-
-    @application.before_request
-    def check_csrf_token():
-        if request.method in ('POST', 'PATCH', 'DELETE'):
-            valid_csrf_or_abort()
 
     @application.context_processor
     def extra_template_variables():

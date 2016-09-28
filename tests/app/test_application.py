@@ -3,7 +3,10 @@
 import mock
 from nose.tools import assert_equal, assert_true
 from .helpers import BaseApplicationTest
+
 from dmapiclient.errors import HTTPError
+from dmutils.forms import FakeCsrf
+
 from app.main.helpers.frameworks import question_references
 
 
@@ -42,6 +45,23 @@ class TestApplication(BaseApplicationTest):
         response = self.client.get(self.url_for('main.create_new_supplier'))
         assert 200 == response.status_code
         assert 'DENY', respose.headers['X-Frame-Options']
+
+    @mock.patch('app.main.views.login.send_email')
+    @mock.patch('app.main.views.login.data_api_client')
+    def test_csrf_protection(self, data_api_client, send_email):
+        response = self.client.post(
+            self.url_for('main.send_invite_user'),
+            data={
+                'email_address': 'me@example.com',
+                'csrf_token': FakeCsrf.valid_token,
+            }
+        )
+        assert response.status_code < 400
+        response = self.client.post(
+            self.url_for('main.send_invite_user'),
+            data={'email_address': 'evil@example.com'}
+        )
+        assert 400 == response.status_code
 
 
 class TestQuestionReferences(object):
