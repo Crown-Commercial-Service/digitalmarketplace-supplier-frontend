@@ -814,9 +814,10 @@ def contract_review(framework_slug):
 def view_contract_variation(framework_slug, variation_slug):
     framework = get_framework(data_api_client, framework_slug)
     supplier_framework = return_supplier_framework_info_if_on_framework_or_abort(data_api_client, framework_slug)
+    variation_details = framework.get('variations', {}).get(variation_slug)
 
     # 404 if framework doesn't have contract variation
-    if not framework.get('variations', {}).get(variation_slug):
+    if not variation_details:
         abort(404)
 
     # 404 if agreement hasn't been returned yet
@@ -876,6 +877,7 @@ def view_contract_variation(framework_slug, variation_slug):
         form_errors=form_errors,
         framework=framework,
         supplier_framework=supplier_framework,
+        variation_details=variation_details,
         variation=content_loader.get_message(framework_slug, variation_content_name),
         agreed_details=agreed_details,
         supplier_name=supplier_framework['declaration']['nameOfOrganisation']
