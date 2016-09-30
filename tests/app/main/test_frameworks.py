@@ -2600,6 +2600,47 @@ class TestReturnSignedAgreement(BaseApplicationTest):
             assert res.status_code == 200
             assert 'Read the proposed contract variation' not in page
 
+    @mock.patch('dmutils.s3.S3')
+    @mock.patch('app.main.views.frameworks.get_supplier_framework_info')
+    def test_framework_dashboard_shows_contract_variation_alternate_link_text_after_agreed_by_ccs(
+            self, get_supplier_framework_info, s3, return_supplier_framework, data_api_client
+    ):
+        with self.app.test_client():
+            self.login()
+            g8_with_variation = get_g_cloud_8().copy()
+            g8_with_variation['frameworks']['variations'] = {"1": {
+                "createdAt": "2018-08-16",
+                "countersignedAt": "2018-10-01",
+                "countersignedByName": "A.N. Other",
+                "countersignedByRole": "Head honcho",
+            }
+            }
+            data_api_client.get_framework.return_value = g8_with_variation
+            supplier_framework = self.supplier_framework(
+                on_framework=True,
+                agreement_returned=True,
+                agreement_returned_at='2016-07-10T21:20:00.000000Z',
+                agreed_variations={
+                    "1": {
+                        "agreedAt": "2016-08-19T15:47:08.116613Z",
+                        "agreedUserId": 1,
+                        "agreedUserEmail": "agreed@email.com",
+                        "agreedUserName": u"William Drăyton",
+                    }}
+            )['frameworkInterest']
+            get_supplier_framework_info.return_value = supplier_framework
+
+            s3.return_value.list.return_value = [
+                _return_fake_s3_file_dict('g-cloud-8/agreements/{}', '123-framework-agreement', 'pdf',
+                                          last_modified='2016-07-10T21:18:00.000000Z')]  # noqa
+            s3.return_value.get_signed_url.return_value = 'http://your-agreement-file.com'
+
+            res = self.client.get("/suppliers/frameworks/g-cloud-8")
+            page = res.get_data(as_text=True)
+            assert res.status_code == 200
+            assert 'Read the proposed contract variation' not in page
+            assert 'View the signed contract variation' in page
+
 
 @mock.patch('app.main.views.frameworks.data_api_client', autospec=True)
 class TestContractVariation(BaseApplicationTest):
@@ -2694,6 +2735,37 @@ class TestContractVariation(BaseApplicationTest):
         assert res.status_code == 200
         assert len(doc.xpath('//h2[contains(text(), "Contract variation status")]')) == 1
         assert u"<span>William Drăyton<br />agreed@email.com<br />Friday 19 August 2016 at 16:47</span>" in page_text
+        assert len(doc.xpath('//label[contains(text(), "I accept these proposed changes")]')) == 0
+        assert len(doc.xpath('//input[@value="Save and continue"]')) == 0
+
+    def test_shows_countersigner_details_and_no_form_if_already_agreed(self, data_api_client):
+        already_agreed = self.good_supplier_framework.copy()
+        already_agreed['frameworkInterest']['agreedVariations'] = {
+            "1": {
+                "agreedAt": "2016-08-19T15:47:08.116613Z",
+                "agreedUserId": 1,
+                "agreedUserEmail": "agreed@email.com",
+                "agreedUserName": u"William Drăyton",
+            }}
+        g8_with_countersigned_variation = get_g_cloud_8().copy()
+        g8_with_countersigned_variation['frameworks']['variations'] = {"1": {
+            "createdAt": "2016-08-01T12:30:00.000000Z",
+            "countersignedAt": "2016-10-01T02:00:00.000000Z",
+            "countersignedByName": "A.N. Other",
+            "countersignedByRole": "Head honcho",
+        }
+        }
+        data_api_client.get_framework.return_value = g8_with_countersigned_variation
+        data_api_client.get_supplier_framework_info.return_value = already_agreed
+
+        res = self.client.get("/suppliers/frameworks/g-cloud-8/contract-variation/1")
+        page_text = res.get_data(as_text=True)
+        doc = html.fromstring(page_text)
+
+        assert res.status_code == 200
+        print(page_text)
+        assert len(doc.xpath('//h2[contains(text(), "Contract variation status")]')) == 1
+        assert u"<span>A.N. Other<br />Head honcho<br />Saturday 1 October 2016</span>" in page_text
         assert len(doc.xpath('//label[contains(text(), "I accept these proposed changes")]')) == 0
         assert len(doc.xpath('//input[@value="Save and continue"]')) == 0
 

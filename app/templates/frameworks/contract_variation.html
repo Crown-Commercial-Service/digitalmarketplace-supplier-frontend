@@ -68,11 +68,13 @@
           {% endif %}
           
           <div class="section-description">
-            {{ variation.variation_description|replace("[[SUPPLIER_NAME]]", supplier_name)|markdown }}
-          {% if not agreed_details and variation.not_agreed_extra %}
-            {{ variation.not_agreed_extra|replace("[[SUPPLIER_NAME]]", supplier_name)|markdown }}
-          {% elif agreed_details and variation.agreed_extra %}
-            {{ variation.agreed_extra|replace("[[SUPPLIER_NAME]]", supplier_name)|markdown }}
+          {% if variation_details.get('countersignedAt') and agreed_details %}
+            {{ variation.variation_description_in_place|replace("[[SUPPLIER_NAME]]", supplier_name)|markdown }}
+          {% else %}
+            {{ variation.variation_description_not_in_place|replace("[[SUPPLIER_NAME]]", supplier_name)|markdown }}
+            {% if not agreed_details and variation.variation_not_yet_agreed_extra %}
+              {{ variation.not_agreed_extra|replace("[[SUPPLIER_NAME]]", supplier_name)|markdown }}
+            {% endif %}
           {% endif %}
           </div>
           
@@ -144,7 +146,7 @@
             {% call(item) summary.list_table(
               [
                 {"key": "Agreed by", "value": ("%s<br />%s<br />%s" % (agreed_details.agreedUserName, agreed_details.agreedUserEmail, agreed_details.agreedAt|datetimeformat))|safe},
-                {"key": "Countersigned by", "value": "Waiting for CCS to countersign"}
+                {"key": "Countersigned by", "value": ("%s<br />%s<br />%s" % (variation_details.countersignedByName, variation_details.countersignedByRole, variation_details.countersignedAt|dateformat))|safe if variation_details.get('countersignedAt') else "Waiting for CCS to countersign"}
               ],
               caption="Contract variation status",
               field_headings=[
