@@ -70,7 +70,6 @@ class Config(object):
 
     FEATURE_FLAGS = {
         'EDIT_SECTIONS': True,
-        'ENFORCE_TERMS_REVIEW': True,
     }
 
     # Logging
@@ -135,7 +134,6 @@ class Live(Config):
 
     FEATURE_FLAGS = {
         'EDIT_SECTIONS': False,
-        'ENFORCE_TERMS_REVIEW': False,
     }
 
 
