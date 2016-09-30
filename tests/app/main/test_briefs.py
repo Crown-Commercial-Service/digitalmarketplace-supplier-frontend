@@ -299,6 +299,28 @@ class TestRespondToBrief(BaseApplicationTest):
             '//h2[contains(text(), "Do you have any of the nice-to-have skills and experience?")]')) == 1
         # self._test_breadcrumbs_on_brief_response_page(res)
 
+    def test_get_select_brief_response_page(self, data_api_client):
+        brief = self.brief.copy()
+        brief['briefs']['sellerSelector'] = 'oneSellers'
+        brief['briefs']['sellerEmail'] = 'email@email.com'
+        data_api_client.get_brief.return_value = brief
+        data_api_client.get_framework.return_value = self.framework
+        res = self.client.get(self.url_for('main.brief_response', brief_id=1234))
+        doc = html.fromstring(res.get_data(as_text=True))
+
+        assert res.status_code == 200
+        data_api_client.get_brief.assert_called_once_with(1234)
+
+    def test_get_brief_response_returns_400_for_select_brief(self, data_api_client):
+        brief = self.brief.copy()
+        brief['briefs']['sellerSelector'] = 'someSellers'
+        brief['briefs']['sellerEmailList'] = ['notyou@email.com']
+        data_api_client.get_brief.return_value = brief
+        data_api_client.get_framework.return_value = self.framework
+        res = self.client.get(self.url_for('main.brief_response', brief_id=1234))
+
+        assert res.status_code == 400
+
     def test_get_brief_response_returns_404_for_not_live_brief(self, data_api_client):
         brief = self.brief.copy()
         brief['briefs']['status'] = 'draft'
