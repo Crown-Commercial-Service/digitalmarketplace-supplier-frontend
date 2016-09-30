@@ -1186,10 +1186,6 @@ class TestFrameworkUpdatesPage(BaseApplicationTest):
             )
 
             assert_equal(response.status_code, 503)
-            assert_true(
-                self.strip_all_whitespace(u"<h1>Sorry, we’re experiencing technical difficulties</h1>")
-                in self.strip_all_whitespace(response.get_data(as_text=True))
-            )
 
     def test_empty_messages_exist_if_no_files_returned(self, s3, data_api_client):
         data_api_client.get_framework.return_value = self.framework('open')

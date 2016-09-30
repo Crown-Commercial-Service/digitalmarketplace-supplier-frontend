@@ -1,20 +1,23 @@
 {% extends "_base_page.html" %}
 
-{% block page_title %}Page could not be found - Digital Marketplace{% endblock %}
+{% block page_title %}Page could not be found - Marketplace{% endblock %}
 
 {% block main_content %}
 
 <div class="error-page">
-  <header class="page-heading-smaller">
-    <h1>Page could not be found</h1>
-  </header>
-
-  <p>
-      Check you’ve entered the correct web address or start again on the Digital Marketplace homepage.
-  </p>
-  <p>
-      If you can’t find what you’re looking for, contact us at <a href="mailto:enquiries@digitalmarketplace.service.gov.uk?subject=Digital%20Marketplace%20feedback" title="Please send feedback to enquiries@digitalmarketplace.service.gov.uk">enquiries@digitalmarketplace.service.gov.uk</a>
-  </p>
+    <div class="index-page grid-row">
+        <div class="column-two-thirds">
+            <header class="page-heading-smaller">
+                <h1>Page not found</h1>
+            </header>
+            <p>
+                Check you’ve entered the correct web address or start again on the <a href="{{ marketplace_home }}">Digital Marketplace homepage</a>.
+            </p>
+            <p>
+                If you can’t find what you're looking for, email <a href="mailto:marketplace@digital.gov.au?subject=Marketplace%20feedback" title="Please send feedback to marketplace@digital.gov.au">marketplace@digital.gov.au</a>
+            </p>
+        </div>
+    </div>
 </div>
 
 {% endblock %}
