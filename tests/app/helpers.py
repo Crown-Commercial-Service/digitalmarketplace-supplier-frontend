@@ -236,6 +236,11 @@ class BaseApplicationTest(object):
         agreement_returned=False,
         agreement_returned_at=None,
         agreement_details=None,
+        agreement_path=None,
+        countersigned=False,
+        countersigned_at=None,
+        countersigned_details=None,
+        countersigned_path=None,
         agreed_variations={},
         agreement_id=None
     ):
@@ -250,6 +255,11 @@ class BaseApplicationTest(object):
                 'agreementReturned': agreement_returned,
                 'agreementReturnedAt': agreement_returned_at,
                 'agreementDetails': agreement_details,
+                'agreementPath': agreement_path,
+                'countersigned': countersigned,
+                'countersignedAt': countersigned_at,
+                'countersignedDetails': countersigned_details,
+                'countersignedPath': countersigned_path,
                 'agreementId': agreement_id,
                 'agreedVariations': agreed_variations
             }

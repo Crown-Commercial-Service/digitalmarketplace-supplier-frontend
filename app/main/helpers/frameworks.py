@@ -5,7 +5,6 @@ import re
 from flask import abort
 from flask_login import current_user
 from dmapiclient import APIError
-from dmutils import s3
 
 
 def get_framework(client, framework_slug, allowed_statuses=None):
@@ -263,13 +262,6 @@ def get_status_for_multi_service_lot_and_service_type(
             ),
             'type': u'quiet'
         }
-
-
-def countersigned_framework_agreement_exists_in_bucket(framework_slug, bucket):
-    agreements_bucket = s3.S3(bucket)
-    countersigned_path = get_agreement_document_path(
-        framework_slug, current_user.supplier_id, COUNTERSIGNED_AGREEMENT_FILENAME)
-    return agreements_bucket.path_exists(countersigned_path)
 
 
 def get_most_recently_uploaded_agreement_file_or_none(bucket, framework_slug):

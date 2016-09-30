@@ -1,4 +1,4 @@
-{% if framework.status in ['standstill', 'live'] and application_made and not countersigned_agreement_file %}
+{% if framework.status in ['standstill', 'live'] and application_made and not agreement_has_been_countersigned %}
   {% if not framework.frameworkAgreementVersion %}
   <li class="browse-list-item">
     <a class="browse-list-item-link" href="{{ url_for('.download_agreement_file', framework_slug=framework.slug, document_name='result-letter.pdf') }}" download>

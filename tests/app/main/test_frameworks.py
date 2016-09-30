@@ -404,7 +404,6 @@ class TestFrameworksDashboard(BaseApplicationTest):
     def test_result_letter_is_not_shown_when_no_application(self, data_api_client, s3):
         with self.app.test_client():
             self.login()
-            s3.return_value.path_exists.return_value = False
             data_api_client.get_framework.return_value = self.framework(status='standstill')
             data_api_client.find_draft_services.return_value = {
                 "services": [
@@ -422,7 +421,6 @@ class TestFrameworksDashboard(BaseApplicationTest):
     def test_link_to_unsigned_framework_agreement_is_shown_if_supplier_is_on_framework(self, data_api_client, s3):
         with self.app.test_client():
             self.login()
-            s3.return_value.path_exists.return_value = False
             data_api_client.get_framework.return_value = self.framework(status='standstill')
             data_api_client.find_draft_services.return_value = {
                 "services": [
@@ -443,7 +441,6 @@ class TestFrameworksDashboard(BaseApplicationTest):
         with self.app.test_client():
             self.login()
 
-        s3.return_value.path_exists.return_value = False
         data_api_client.get_framework.return_value = self.framework(status='standstill')
         data_api_client.find_draft_services.return_value = {
             "services": [
@@ -494,7 +491,6 @@ class TestFrameworksDashboard(BaseApplicationTest):
         with self.app.test_client():
             self.login()
 
-        s3.return_value.path_exists.return_value = False
         data_api_client.get_framework.return_value = self.framework(status='standstill')
         data_api_client.find_draft_services.return_value = {
             "services": [
@@ -524,7 +520,6 @@ class TestFrameworksDashboard(BaseApplicationTest):
     def test_link_to_countersigned_framework_agreement_is_shown_if_it_exists(self, data_api_client, s3):
         with self.app.test_client():
             self.login()
-            s3.return_value.path_exists.return_value = True
             data_api_client.get_framework.return_value = self.framework(status='standstill')
             data_api_client.find_draft_services.return_value = {
                 "services": [
@@ -532,7 +527,12 @@ class TestFrameworksDashboard(BaseApplicationTest):
                 ]
             }
             data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
-                on_framework=True)
+                on_framework=True,
+                agreement_returned=True,
+                agreement_path='path',
+                countersigned=True,
+                countersigned_path='path2'
+            )
 
             res = self.client.get("/suppliers/frameworks/g-cloud-7")
 
@@ -960,6 +960,44 @@ class TestFrameworkAgreementDocumentDownload(BaseApplicationTest):
             uploader.get_signed_url.assert_called_with(
                 'g-cloud-7/agreements/1234/1234-example.pdf')
 
+    def test_download_signed_agreement_document(self, S3, data_api_client):
+        supplier_framework = self.supplier_framework()
+        supplier_framework['frameworkInterest']['agreementPath'] = '/1234/1234-signed-agreement.pdf'
+        data_api_client.get_supplier_framework_info.return_value = supplier_framework
+
+        uploader = mock.Mock()
+        S3.return_value = uploader
+        uploader.get_signed_url.return_value = 'http://url/path?param=value'
+
+        with self.app.test_client():
+            self.login()
+
+            res = self.client.get('/suppliers/frameworks/g-cloud-7/agreements/signed-agreement')
+
+            assert_equal(res.status_code, 302)
+            assert_equal(res.location, 'http://asset-host/path?param=value')
+            uploader.get_signed_url.assert_called_with(
+                '/1234/1234-signed-agreement.pdf')
+
+    def test_download_countersigned_agreement_document(self, S3, data_api_client):
+        supplier_framework = self.supplier_framework()
+        supplier_framework['frameworkInterest']['agreementPath'] = '/1234/1234-countersigned-agreement.pdf'
+        data_api_client.get_supplier_framework_info.return_value = supplier_framework
+
+        uploader = mock.Mock()
+        S3.return_value = uploader
+        uploader.get_signed_url.return_value = 'http://url/path?param=value'
+
+        with self.app.test_client():
+            self.login()
+
+            res = self.client.get('/suppliers/frameworks/g-cloud-7/agreements/signed-agreement')
+
+            assert_equal(res.status_code, 302)
+            assert_equal(res.location, 'http://asset-host/path?param=value')
+            uploader.get_signed_url.assert_called_with(
+                '/1234/1234-countersigned-agreement.pdf')
+
     def test_download_document_with_asset_url(self, S3, data_api_client):
         data_api_client.get_supplier_framework_info.return_value = self.supplier_framework()
 
@@ -1222,7 +1260,7 @@ class TestFrameworkUpdatesPage(BaseApplicationTest):
 
     def test_dates_for_open_framework_open_for_questions(self, s3, data_api_client):
         data_api_client.get_framework.return_value = self.framework('open', clarification_questions_open=True)
-        s3.return_value.path_exists.return_value = False
+        data_api_client.get_supplier_framework_info.return_value = self.supplier_framework()
 
         with self.app.test_client():
             self.login()
@@ -1326,7 +1364,7 @@ class TestFrameworkUpdatesPage(BaseApplicationTest):
 
     def test_question_box_is_shown_if_countersigned_agreement_is_not_yet_returned(self, s3, data_api_client):
         data_api_client.get_framework.return_value = self.framework('live', clarification_questions_open=False)
-        s3.return_value.path_exists.return_value = False
+        data_api_client.get_supplier_framework_info.return_value = self.supplier_framework()
 
         with self.app.test_client():
             self.login()
@@ -1339,7 +1377,7 @@ class TestFrameworkUpdatesPage(BaseApplicationTest):
 
     def test_no_question_box_shown_if_countersigned_agreement_is_returned(self, s3, data_api_client):
         data_api_client.get_framework.return_value = self.framework('live', clarification_questions_open=False)
-        s3.return_value.path_exists.return_value = True
+        data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(countersigned_path="path")
 
         with self.app.test_client():
             self.login()
@@ -1419,7 +1457,7 @@ class TestSendClarificationQuestionEmail(BaseApplicationTest):
     @mock.patch('app.main.views.frameworks.send_email')
     def test_should_not_send_email_if_invalid_clarification_question(self, send_email, s3, data_api_client):
         data_api_client.get_framework.return_value = self.framework('open')
-        s3.return_value.path_exists.return_value = False
+        data_api_client.get_supplier_framework_info.return_value = self.supplier_framework()
 
         for invalid_clarification_question in [
             {
@@ -2473,6 +2511,7 @@ class TestReturnSignedAgreement(BaseApplicationTest):
             supplier_framework = self.supplier_framework(
                 on_framework=True,
                 agreement_returned=True,
+                agreement_path='g-cloud-8/agreements/123-framework-agreement.pdf',
                 agreement_returned_at='2016-07-10T21:20:00.000000Z'
             )['frameworkInterest']
             supplier_framework['agreementDetails'] = {
@@ -2485,17 +2524,12 @@ class TestReturnSignedAgreement(BaseApplicationTest):
             }
             get_supplier_framework_info.return_value = supplier_framework
 
-            s3.return_value.list.return_value = [
-                _return_fake_s3_file_dict('g-cloud-8/agreements/{}', '123-framework-agreement', 'pdf',
-                                          last_modified='2016-07-10T21:18:00.000000Z')]  # noqa
-            s3.return_value.get_signed_url.return_value = 'http://your-agreement-file.com'
-
             res = self.client.get("/suppliers/frameworks/g-cloud-8")
             page = res.get_data(as_text=True)
             assert res.status_code == 200
             assert 'G-Cloud 8 documents' in page
-
             page_without_whitespace = self.strip_all_whitespace(page)
+            assert '<a href="/suppliers/frameworks/g-cloud-8/agreements/signed-agreement" target="_blank">Download your framework agreement signature page, signed by your company</a>' in page  # noqa
             assert '<tdclass="summary-item-field"><span><p>signername</p><p>signerrole</p></span></td>' in page_without_whitespace  # noqa
             assert '<tdclass="summary-item-field"><span><p>User</p><p>email@email.com</p><p>Sunday10July2016at22:20</p></span></td>' in page_without_whitespace  # noqa
             assert '<tdclass="summary-item-field-first"><span>WaitingforCCStocountersign</span></td>' in page_without_whitespace  # noqa
@@ -2513,14 +2547,10 @@ class TestReturnSignedAgreement(BaseApplicationTest):
             supplier_framework = self.supplier_framework(
                 on_framework=True,
                 agreement_returned=True,
+                agreement_path='g-cloud-8/agreements/123-framework-agreement.pdf',
                 agreement_returned_at='2016-07-10T21:20:00.000000Z'
             )['frameworkInterest']
             get_supplier_framework_info.return_value = supplier_framework
-
-            s3.return_value.list.return_value = [
-                _return_fake_s3_file_dict('g-cloud-8/agreements/{}', '123-framework-agreement', 'pdf',
-                                          last_modified='2016-07-10T21:18:00.000000Z')]  # noqa
-            s3.return_value.get_signed_url.return_value = 'http://your-agreement-file.com'
 
             res = self.client.get("/suppliers/frameworks/g-cloud-8")
             page = res.get_data(as_text=True)
@@ -2541,14 +2571,10 @@ class TestReturnSignedAgreement(BaseApplicationTest):
             supplier_framework = self.supplier_framework(
                 on_framework=True,
                 agreement_returned=True,
+                agreement_path='g-cloud-8/agreements/123-framework-agreement.pdf',
                 agreement_returned_at='2016-07-10T21:20:00.000000Z'
             )['frameworkInterest']
             get_supplier_framework_info.return_value = supplier_framework
-
-            s3.return_value.list.return_value = [
-                _return_fake_s3_file_dict('g-cloud-8/agreements/{}', '123-framework-agreement', 'pdf',
-                                          last_modified='2016-07-10T21:18:00.000000Z')]  # noqa
-            s3.return_value.get_signed_url.return_value = 'http://your-agreement-file.com'
 
             res = self.client.get("/suppliers/frameworks/g-cloud-8")
             page = res.get_data(as_text=True)
@@ -2566,14 +2592,10 @@ class TestReturnSignedAgreement(BaseApplicationTest):
             supplier_framework = self.supplier_framework(
                 on_framework=True,
                 agreement_returned=True,
+                agreement_path='g-cloud-8/agreements/123-framework-agreement.pdf',
                 agreement_returned_at='2016-07-10T21:20:00.000000Z'
             )['frameworkInterest']
             get_supplier_framework_info.return_value = supplier_framework
-
-            s3.return_value.list.return_value = [
-                _return_fake_s3_file_dict('g-cloud-8/agreements/{}', '123-framework-agreement', 'pdf',
-                                          last_modified='2016-07-10T21:18:00.000000Z')]  # noqa
-            s3.return_value.get_signed_url.return_value = 'http://your-agreement-file.com'
 
             res = self.client.get("/suppliers/frameworks/g-cloud-8")
             page = res.get_data(as_text=True)
@@ -2592,8 +2614,6 @@ class TestReturnSignedAgreement(BaseApplicationTest):
             data_api_client.get_framework.return_value = g8_with_variation
             supplier_framework = self.supplier_framework()['frameworkInterest']
             get_supplier_framework_info.return_value = supplier_framework
-
-            s3.return_value.list.return_value = []
 
             res = self.client.get("/suppliers/frameworks/g-cloud-8")
             page = res.get_data(as_text=True)
@@ -2629,11 +2649,6 @@ class TestReturnSignedAgreement(BaseApplicationTest):
                     }}
             )['frameworkInterest']
             get_supplier_framework_info.return_value = supplier_framework
-
-            s3.return_value.list.return_value = [
-                _return_fake_s3_file_dict('g-cloud-8/agreements/{}', '123-framework-agreement', 'pdf',
-                                          last_modified='2016-07-10T21:18:00.000000Z')]  # noqa
-            s3.return_value.get_signed_url.return_value = 'http://your-agreement-file.com'
 
             res = self.client.get("/suppliers/frameworks/g-cloud-8")
             page = res.get_data(as_text=True)
