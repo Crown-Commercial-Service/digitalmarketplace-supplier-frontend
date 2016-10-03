@@ -2142,12 +2142,16 @@ class TestReturnSignedAgreement(BaseApplicationTest):
         with self.app.test_client():
             self.login()
             data_api_client.get_framework.return_value = get_g_cloud_8()
-            supplier_framework = self.supplier_framework(on_framework=True)['frameworkInterest']
-            supplier_framework['agreementDetails'] = {'signerName': 'signer_name', 'signerRole': 'signer_role'}
-            supplier_framework['declaration']['primaryContact'] = 'contact name'
-            supplier_framework['declaration']['primaryContactEmail'] = 'email@email.com'
-            supplier_framework['declaration']['nameOfOrganisation'] = u'£unicodename'
-            return_supplier_framework.return_value = supplier_framework
+            return_supplier_framework.return_value = self.supplier_framework(
+                on_framework=True,
+                declaration={
+                    "primaryContact": "contact name",
+                    "primaryContactEmail": "email@email.com",
+                    "nameOfOrganisation": u"£unicodename"
+                },
+                agreement_details={"signerName": "signer_name", "signerRole": "signer_role"},
+                agreement_path="I/have/returned/my/agreement.pdf"
+            )['frameworkInterest']
             s3.return_value.get_key.return_value = {
                 'last_modified': '2016-07-10T21:18:00.000000Z'
             }
@@ -2176,12 +2180,16 @@ class TestReturnSignedAgreement(BaseApplicationTest):
         with self.app.test_client():
             self.login()
             data_api_client.get_framework.return_value = get_g_cloud_8()
-            supplier_framework = self.supplier_framework(on_framework=True)['frameworkInterest']
-            supplier_framework['agreementDetails'] = {'signerName': 'signer_name', 'signerRole': 'signer_role'}
-            supplier_framework['declaration']['primaryContact'] = 'contact name'
-            supplier_framework['declaration']['primaryContactEmail'] = 'email@email.com'
-            supplier_framework['declaration']['nameOfOrganisation'] = 'company name'
-            return_supplier_framework.return_value = supplier_framework
+            return_supplier_framework.return_value = self.supplier_framework(
+                on_framework=True,
+                declaration={
+                    "primaryContact": "contact name",
+                    "primaryContactEmail": "email@email.com",
+                    "nameOfOrganisation": u"£unicodename"
+                },
+                agreement_details={"signerName": "signer_name", "signerRole": "signer_role"},
+                agreement_path="I/have/returned/my/agreement.pdf"
+            )['frameworkInterest']
             s3.return_value.get_key.return_value = {
                 'last_modified': '2016-07-10T21:18:00.000000Z'
             }
@@ -2191,7 +2199,7 @@ class TestReturnSignedAgreement(BaseApplicationTest):
             )
             assert res.status_code == 200
             page = res.get_data(as_text=True)
-            assert u'Check the details you’ve given before returning the signature page for company name' in page
+            assert u'Check the details you’ve given before returning the signature page for £unicodename' in page
             assert '<tdclass="summary-item-field-first"><span>UploadedSunday10July2016at22:18</span></td>' in self.strip_all_whitespace(page)  # noqa
 
     @mock.patch('dmutils.s3.S3')
@@ -2201,12 +2209,16 @@ class TestReturnSignedAgreement(BaseApplicationTest):
         with self.app.test_client():
             self.login()
             data_api_client.get_framework.return_value = get_g_cloud_8()
-            supplier_framework = self.supplier_framework(on_framework=True)['frameworkInterest']
-            supplier_framework['agreementDetails'] = {'signerName': 'signer_name', 'signerRole': 'signer_role'}
-            supplier_framework['declaration']['primaryContact'] = 'contact name'
-            supplier_framework['declaration']['primaryContactEmail'] = 'email@email.com'
-            supplier_framework['declaration']['nameOfOrganisation'] = 'company name'
-            return_supplier_framework.return_value = supplier_framework
+            return_supplier_framework.return_value = self.supplier_framework(
+                on_framework=True,
+                declaration={
+                    "primaryContact": "contact name",
+                    "primaryContactEmail": "email@email.com",
+                    "nameOfOrganisation": u"£unicodename"
+                },
+                agreement_details={"signerName": "signer_name", "signerRole": "signer_role"},
+                agreement_path=None  # no file has been uploaded
+            )['frameworkInterest']
 
             # no file has been uploaded
             s3.return_value.get_key.return_value = None
@@ -2224,12 +2236,16 @@ class TestReturnSignedAgreement(BaseApplicationTest):
         with self.app.test_client():
             self.login()
             data_api_client.get_framework.return_value = get_g_cloud_8()
-            supplier_framework = self.supplier_framework(on_framework=True)['frameworkInterest']
-            supplier_framework['agreementDetails'] = {'signerName': 'signer_name', 'signerRole': 'signer_role'}
-            supplier_framework['declaration']['primaryContact'] = 'contact name'
-            supplier_framework['declaration']['primaryContactEmail'] = 'email@email.com'
-            supplier_framework['declaration']['nameOfOrganisation'] = 'company name'
-            return_supplier_framework.return_value = supplier_framework
+            return_supplier_framework.return_value = self.supplier_framework(
+                on_framework=True,
+                declaration={
+                    "primaryContact": "contact name",
+                    "primaryContactEmail": "email@email.com",
+                    "nameOfOrganisation": u"£unicodename"
+                },
+                agreement_details={"signerName": "signer_name", "signerRole": "signer_role"},
+                agreement_path="I/have/returned/my/agreement.pdf"
+            )['frameworkInterest']
             s3.return_value.get_key.return_value = {
                 'last_modified': '2016-07-10T21:18:00.000000Z'
             }
@@ -2251,12 +2267,16 @@ class TestReturnSignedAgreement(BaseApplicationTest):
         with self.app.test_client():
             self.login()
             data_api_client.get_framework.return_value = get_g_cloud_8()
-            supplier_framework = self.supplier_framework(on_framework=True)['frameworkInterest']
-            supplier_framework['agreementDetails'] = {'signerName': 'signer_name', 'signerRole': 'signer_role'}
-            supplier_framework['declaration']['primaryContact'] = 'contact name'
-            supplier_framework['declaration']['primaryContactEmail'] = 'email2@email.com'
-            supplier_framework['declaration']['nameOfOrganisation'] = 'company name'
-            return_supplier_framework.return_value = supplier_framework
+            return_supplier_framework.return_value = self.supplier_framework(
+                on_framework=True,
+                declaration={
+                    "primaryContact": "contact name",
+                    "primaryContactEmail": "email2@email.com",
+                    "nameOfOrganisation": u"£unicodename"
+                },
+                agreement_details={"signerName": "signer_name", "signerRole": "signer_role"},
+                agreement_path="I/have/returned/my/agreement.pdf"
+            )['frameworkInterest']
             s3.return_value.get_key.return_value = {
                 'last_modified': '2016-07-10T21:18:00.000000Z'
             }
@@ -2294,12 +2314,16 @@ class TestReturnSignedAgreement(BaseApplicationTest):
         with self.app.test_client():
             self.login()
             data_api_client.get_framework.return_value = get_g_cloud_8()
-            supplier_framework = self.supplier_framework(on_framework=True)['frameworkInterest']
-            supplier_framework['agreementDetails'] = {'signerName': 'signer_name', 'signerRole': 'signer_role'}
-            supplier_framework['declaration']['primaryContact'] = 'contact name'
-            supplier_framework['declaration']['primaryContactEmail'] = 'email@email.com'
-            supplier_framework['declaration']['nameOfOrganisation'] = 'company name'
-            return_supplier_framework.return_value = supplier_framework
+            return_supplier_framework.return_value = self.supplier_framework(
+                on_framework=True,
+                declaration={
+                    "primaryContact": "contact name",
+                    "primaryContactEmail": "email@email.com",
+                    "nameOfOrganisation": u"£unicodename"
+                },
+                agreement_details={"signerName": "signer_name", "signerRole": "signer_role"},
+                agreement_path="I/have/returned/my/agreement.pdf"
+            )['frameworkInterest']
             s3.return_value.get_key.return_value = {
                 'last_modified': '2016-07-10T21:18:00.000000Z'
             }
@@ -2329,12 +2353,16 @@ class TestReturnSignedAgreement(BaseApplicationTest):
         with self.app.test_client():
             self.login()
             data_api_client.get_framework.return_value = get_g_cloud_8()
-            supplier_framework = self.supplier_framework(on_framework=True)['frameworkInterest']
-            supplier_framework['agreementDetails'] = {'signerName': 'signer_name', 'signerRole': 'signer_role'}
-            supplier_framework['declaration']['primaryContact'] = 'contact name'
-            supplier_framework['declaration']['primaryContactEmail'] = 'email@email.com'
-            supplier_framework['declaration']['nameOfOrganisation'] = 'company name'
-            return_supplier_framework.return_value = supplier_framework
+            return_supplier_framework.return_value = self.supplier_framework(
+                on_framework=True,
+                declaration={
+                    "primaryContact": "contact name",
+                    "primaryContactEmail": "email@email.com",
+                    "nameOfOrganisation": u"£unicodename"
+                },
+                agreement_details={"signerName": "signer_name", "signerRole": "signer_role"},
+                agreement_path="I/have/returned/my/agreement.pdf"
+            )['frameworkInterest']
             s3.return_value.get_key.return_value = {
                 'last_modified': '2016-07-10T21:18:00.000000Z'
             }
@@ -2359,13 +2387,16 @@ class TestReturnSignedAgreement(BaseApplicationTest):
             self.login()
             data_api_client.get_framework.return_value = get_g_cloud_8()
             data_api_client.register_framework_agreement_returned.side_effect = APIError(mock.Mock(status_code=500))
-
-            supplier_framework = self.supplier_framework(on_framework=True)['frameworkInterest']
-            supplier_framework['agreementDetails'] = {'signerName': 'signer_name', 'signerRole': 'signer_role'}
-            supplier_framework['declaration']['primaryContact'] = 'contact name'
-            supplier_framework['declaration']['primaryContactEmail'] = 'email@email.com'
-            supplier_framework['declaration']['nameOfOrganisation'] = 'company name'
-            return_supplier_framework.return_value = supplier_framework
+            return_supplier_framework.return_value = self.supplier_framework(
+                on_framework=True,
+                declaration={
+                    "primaryContact": "contact name",
+                    "primaryContactEmail": "email@email.com",
+                    "nameOfOrganisation": u"£unicodename"
+                },
+                agreement_details={"signerName": "signer_name", "signerRole": "signer_role"},
+                agreement_path="I/have/returned/my/agreement.pdf"
+            )['frameworkInterest']
             s3.return_value.get_key.return_value = {
                 'last_modified': '2016-07-10T21:18:00.000000Z'
             }
@@ -2393,19 +2424,22 @@ class TestReturnSignedAgreement(BaseApplicationTest):
                 "1": {"createdAt": "2016-06-06T20:01:34.000000Z"}
             }
             data_api_client.get_framework.return_value = framework
-
-            supplier_framework = self.supplier_framework(on_framework=True)['frameworkInterest']
-            supplier_framework['agreementDetails'] = {'signerName': 'signer_name', 'signerRole': 'signer_role'}
-            supplier_framework['agreedVariations'] = {
-                '1': {
-                    "agreedUserId": 2,
-                    "agreedAt": "2016-06-06T00:00:00.000000Z",
+            return_supplier_framework.return_value = self.supplier_framework(
+                on_framework=True,
+                declaration={
+                    "primaryContact": "contact name",
+                    "primaryContactEmail": "email2@email.com",
+                    "nameOfOrganisation": u"£unicodename"
+                },
+                agreement_details={"signerName": "signer_name", "signerRole": "signer_role"},
+                agreement_path="I/have/returned/my/agreement.pdf",
+                agreed_variations={
+                    '1': {
+                        "agreedUserId": 2,
+                        "agreedAt": "2016-06-06T00:00:00.000000Z",
+                    }
                 }
-            }
-            supplier_framework['declaration']['primaryContact'] = 'contact name'
-            supplier_framework['declaration']['primaryContactEmail'] = 'email2@email.com'
-            supplier_framework['declaration']['nameOfOrganisation'] = 'company name'
-            return_supplier_framework.return_value = supplier_framework
+            )['frameworkInterest']
 
             s3.return_value.get_key.return_value = {
                 'last_modified': '2016-07-10T21:18:00.000000Z'
@@ -2435,13 +2469,16 @@ class TestReturnSignedAgreement(BaseApplicationTest):
                 "1": {"createdAt": "2016-06-06T20:01:34.000000Z"}
             }
             data_api_client.get_framework.return_value = framework
-
-            supplier_framework = self.supplier_framework(on_framework=True)['frameworkInterest']
-            supplier_framework['agreementDetails'] = {'signerName': 'signer_name', 'signerRole': 'signer_role'}
-            supplier_framework['declaration']['primaryContact'] = 'contact name'
-            supplier_framework['declaration']['primaryContactEmail'] = 'email2@email.com'
-            supplier_framework['declaration']['nameOfOrganisation'] = 'company name'
-            return_supplier_framework.return_value = supplier_framework
+            return_supplier_framework.return_value = self.supplier_framework(
+                on_framework=True,
+                declaration={
+                    "primaryContact": "contact name",
+                    "primaryContactEmail": "email2@email.com",
+                    "nameOfOrganisation": u"£unicodename"
+                },
+                agreement_details={"signerName": "signer_name", "signerRole": "signer_role"},
+                agreement_path="I/have/returned/my/agreement.pdf"
+            )['frameworkInterest']
 
             s3.return_value.get_key.return_value = {
                 'last_modified': '2016-07-10T21:18:00.000000Z'
@@ -2470,14 +2507,18 @@ class TestReturnSignedAgreement(BaseApplicationTest):
                 "1": {"createdAt": "2016-06-06T20:01:34.000000Z"}
             }
             data_api_client.get_framework.return_value = framework
+            return_supplier_framework.return_value = self.supplier_framework(
+                on_framework=True,
+                declaration={
+                    "primaryContact": "contact name",
+                    "primaryContactEmail": "email2@email.com",
+                    "nameOfOrganisation": u"£unicodename"
+                },
+                agreement_details={"signerName": "signer_name", "signerRole": "signer_role"},
+                agreement_path="I/have/returned/my/agreement.pdf",
+                agreed_variations={}
+            )['frameworkInterest']
 
-            supplier_framework = self.supplier_framework(on_framework=True)['frameworkInterest']
-            supplier_framework['agreementDetails'] = {'signerName': 'signer_name', 'signerRole': 'signer_role'}
-            supplier_framework['agreedVariations'] = {}
-            supplier_framework['declaration']['primaryContact'] = 'contact name'
-            supplier_framework['declaration']['primaryContactEmail'] = 'email2@email.com'
-            supplier_framework['declaration']['nameOfOrganisation'] = 'company name'
-            return_supplier_framework.return_value = supplier_framework
             s3.return_value.get_key.return_value = {
                 'last_modified': '2016-07-10T21:18:00.000000Z'
             }
@@ -2503,12 +2544,16 @@ class TestReturnSignedAgreement(BaseApplicationTest):
             framework['variations'] = {}
             data_api_client.get_framework.return_value = framework
 
-            supplier_framework = self.supplier_framework(on_framework=True)['frameworkInterest']
-            supplier_framework['agreementDetails'] = {'signerName': 'signer_name', 'signerRole': 'signer_role'}
-            supplier_framework['declaration']['primaryContact'] = 'contact name'
-            supplier_framework['declaration']['primaryContactEmail'] = 'email2@email.com'
-            supplier_framework['declaration']['nameOfOrganisation'] = 'company name'
-            return_supplier_framework.return_value = supplier_framework
+            return_supplier_framework.return_value = self.supplier_framework(
+                on_framework=True,
+                declaration={
+                    "primaryContact": "contact name",
+                    "primaryContactEmail": "email2@email.com",
+                    "nameOfOrganisation": u"£unicodename"
+                },
+                agreement_details={"signerName": "signer_name", "signerRole": "signer_role"},
+                agreement_path="I/have/returned/my/agreement.pdf"
+            )['frameworkInterest']
 
             s3.return_value.get_key.return_value = {
                 'last_modified': '2016-07-10T21:18:00.000000Z'
@@ -2532,21 +2577,20 @@ class TestReturnSignedAgreement(BaseApplicationTest):
         with self.app.test_client():
             self.login()
             data_api_client.get_framework.return_value = get_g_cloud_8()
-            supplier_framework = self.supplier_framework(
+            get_supplier_framework_info.return_value = self.supplier_framework(
                 on_framework=True,
                 agreement_returned=True,
+                agreement_details={
+                    'frameworkAgreementVersion': 'v1.0',
+                    'signerName': 'signer name',
+                    'signerRole': 'signer role',
+                    'uploaderUserId': 123,
+                    'uploaderUserName': 'User',
+                    'uploaderUserEmail': 'email@email.com'
+                },
                 agreement_path='g-cloud-8/agreements/123-framework-agreement.pdf',
                 agreement_returned_at='2016-07-10T21:20:00.000000Z'
             )['frameworkInterest']
-            supplier_framework['agreementDetails'] = {
-                'frameworkAgreementVersion': 'v1.0',
-                'signerName': 'signer name',
-                'signerRole': 'signer role',
-                'uploaderUserId': 123,
-                'uploaderUserName': 'User',
-                'uploaderUserEmail': 'email@email.com',
-            }
-            get_supplier_framework_info.return_value = supplier_framework
 
             res = self.client.get("/suppliers/frameworks/g-cloud-8")
             page = res.get_data(as_text=True)
@@ -2568,13 +2612,12 @@ class TestReturnSignedAgreement(BaseApplicationTest):
             g8_with_variation = get_g_cloud_8().copy()
             g8_with_variation['frameworks']['variations'] = {"1": {"createdAt": "2018-08-16"}}
             data_api_client.get_framework.return_value = g8_with_variation
-            supplier_framework = self.supplier_framework(
+            get_supplier_framework_info.return_value = self.supplier_framework(
                 on_framework=True,
                 agreement_returned=True,
                 agreement_path='g-cloud-8/agreements/123-framework-agreement.pdf',
                 agreement_returned_at='2016-07-10T21:20:00.000000Z'
             )['frameworkInterest']
-            get_supplier_framework_info.return_value = supplier_framework
 
             res = self.client.get("/suppliers/frameworks/g-cloud-8")
             page = res.get_data(as_text=True)
@@ -2592,13 +2635,12 @@ class TestReturnSignedAgreement(BaseApplicationTest):
             g8_with_variation = get_g_cloud_8().copy()
             g8_with_variation['frameworks']['variations'] = {"1": {"createdAt": "2018-08-16"}}
             data_api_client.get_framework.return_value = g8_with_variation
-            supplier_framework = self.supplier_framework(
+            get_supplier_framework_info.return_value = self.supplier_framework(
                 on_framework=True,
                 agreement_returned=True,
                 agreement_path='g-cloud-8/agreements/123-framework-agreement.pdf',
                 agreement_returned_at='2016-07-10T21:20:00.000000Z'
             )['frameworkInterest']
-            get_supplier_framework_info.return_value = supplier_framework
 
             res = self.client.get("/suppliers/frameworks/g-cloud-8")
             page = res.get_data(as_text=True)
@@ -2613,13 +2655,12 @@ class TestReturnSignedAgreement(BaseApplicationTest):
         with self.app.test_client():
             self.login()
             data_api_client.get_framework.return_value = get_g_cloud_8()
-            supplier_framework = self.supplier_framework(
+            get_supplier_framework_info.return_value = self.supplier_framework(
                 on_framework=True,
                 agreement_returned=True,
                 agreement_path='g-cloud-8/agreements/123-framework-agreement.pdf',
                 agreement_returned_at='2016-07-10T21:20:00.000000Z'
             )['frameworkInterest']
-            get_supplier_framework_info.return_value = supplier_framework
 
             res = self.client.get("/suppliers/frameworks/g-cloud-8")
             page = res.get_data(as_text=True)
@@ -2636,8 +2677,7 @@ class TestReturnSignedAgreement(BaseApplicationTest):
             g8_with_variation = get_g_cloud_8().copy()
             g8_with_variation['frameworks']['variations'] = {"1": {"createdAt": "2018-08-16"}}
             data_api_client.get_framework.return_value = g8_with_variation
-            supplier_framework = self.supplier_framework()['frameworkInterest']
-            get_supplier_framework_info.return_value = supplier_framework
+            get_supplier_framework_info.return_value = self.supplier_framework()['frameworkInterest']
 
             res = self.client.get("/suppliers/frameworks/g-cloud-8")
             page = res.get_data(as_text=True)
@@ -2660,7 +2700,7 @@ class TestReturnSignedAgreement(BaseApplicationTest):
             }
             }
             data_api_client.get_framework.return_value = g8_with_variation
-            supplier_framework = self.supplier_framework(
+            get_supplier_framework_info.return_value = self.supplier_framework(
                 on_framework=True,
                 agreement_returned=True,
                 agreement_returned_at='2016-07-10T21:20:00.000000Z',
@@ -2672,7 +2712,6 @@ class TestReturnSignedAgreement(BaseApplicationTest):
                         "agreedUserName": u"William Drăyton",
                     }}
             )['frameworkInterest']
-            get_supplier_framework_info.return_value = supplier_framework
 
             res = self.client.get("/suppliers/frameworks/g-cloud-8")
             page = res.get_data(as_text=True)

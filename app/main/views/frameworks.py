@@ -732,7 +732,7 @@ def contract_review(framework_slug):
         supplier_framework['agreementDetails'] and
         supplier_framework['agreementDetails'].get('signerName') and
         supplier_framework['agreementDetails'].get('signerRole') and
-        signature_page
+        supplier_framework['agreementPath']
     ):
         abort(404)
 
