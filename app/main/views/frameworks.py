@@ -681,16 +681,23 @@ def signature_upload(framework_slug):
             upload_error = "The file must not be empty"
 
         if not upload_error:
+            extension = get_extension(request.files['signature_page'].filename)
             upload_path = generate_timestamped_document_upload_path(
                 framework_slug,
                 'agreements',
                 current_user.supplier_id,
-                '{}{}'.format(SIGNED_AGREEMENT_PREFIX, get_extension(request.files['signature_page'].filename))
+                '{}{}'.format(SIGNED_AGREEMENT_PREFIX, extension)
             )
             agreements_bucket.save(
                 upload_path,
                 request.files['signature_page'],
-                acl='private'
+                acl='private',
+                download_filename='{}-{}-{}{}'.format(
+                    sanitise_supplier_name(current_user.supplier_name),
+                    current_user.supplier_id,
+                    SIGNED_AGREEMENT_PREFIX,
+                    extension
+                )
             )
 
             agreement_id = supplier_framework.get("agreementId")
