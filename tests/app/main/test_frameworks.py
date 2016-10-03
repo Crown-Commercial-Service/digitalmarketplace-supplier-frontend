@@ -754,13 +754,17 @@ class TestFrameworkAgreementUpload(BaseApplicationTest):
             assert_equal(res.status_code, 400)
             assert_in(u'Document must not be empty', res.get_data(as_text=True))
 
-    def test_api_is_not_updated_and_email_not_sent_if_upload_fails(self, data_api_client, send_email, s3):
+    @mock.patch('app.main.views.frameworks.generate_timestamped_document_upload_path')
+    def test_api_is_not_updated_and_email_not_sent_if_upload_fails(
+        self, generate_timestamped_document_upload_path, data_api_client, send_email, s3
+    ):
         with self.app.test_client():
             self.login()
 
             data_api_client.get_framework.return_value = self.framework(status='standstill')
             data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
                 on_framework=True)
+            generate_timestamped_document_upload_path.return_value = 'my/path.pdf'
             s3.return_value.save.side_effect = S3ResponseError(500, 'All fail')
 
             res = self.client.post(
@@ -772,7 +776,7 @@ class TestFrameworkAgreementUpload(BaseApplicationTest):
 
             assert_equal(res.status_code, 503)
             s3.return_value.save.assert_called_with(
-                'g-cloud-7/agreements/1234/1234-signed-framework-agreement.pdf',
+                'my/path.pdf',
                 mock.ANY,
                 acl='private',
                 download_filename='Supplier_Nme-1234-signed-framework-agreement.pdf'
@@ -780,13 +784,17 @@ class TestFrameworkAgreementUpload(BaseApplicationTest):
             assert not data_api_client.register_framework_agreement_returned.called
             assert not send_email.called
 
-    def test_email_is_not_sent_if_api_update_fails(self, data_api_client, send_email, s3):
+    @mock.patch('app.main.views.frameworks.generate_timestamped_document_upload_path')
+    def test_email_is_not_sent_if_api_update_fails(
+        self, generate_timestamped_document_upload_path, data_api_client, send_email, s3
+    ):
         with self.app.test_client():
             self.login()
 
             data_api_client.get_framework.return_value = self.framework(status='standstill')
             data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
                 on_framework=True)
+            generate_timestamped_document_upload_path.return_value = 'my/path.pdf'
             data_api_client.register_framework_agreement_returned.side_effect = APIError(mock.Mock(status_code=500))
 
             res = self.client.post(
@@ -798,7 +806,7 @@ class TestFrameworkAgreementUpload(BaseApplicationTest):
 
             assert_equal(res.status_code, 500)
             s3.return_value.save.assert_called_with(
-                'g-cloud-7/agreements/1234/1234-signed-framework-agreement.pdf',
+                'my/path.pdf',
                 mock.ANY,
                 acl='private',
                 download_filename='Supplier_Nme-1234-signed-framework-agreement.pdf'
@@ -807,13 +815,17 @@ class TestFrameworkAgreementUpload(BaseApplicationTest):
                 1234, 'g-cloud-7', 'email@email.com')
             assert not send_email.called
 
-    def test_email_failure(self, data_api_client, send_email, s3):
+    @mock.patch('app.main.views.frameworks.generate_timestamped_document_upload_path')
+    def test_email_failure(
+        self, generate_timestamped_document_upload_path, data_api_client, send_email, s3
+    ):
         with self.app.test_client():
             self.login()
 
             data_api_client.get_framework.return_value = self.framework(status='standstill')
             data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
                 on_framework=True)
+            generate_timestamped_document_upload_path.return_value = 'my/path.pdf'
             send_email.side_effect = MandrillException()
 
             res = self.client.post(
@@ -825,7 +837,7 @@ class TestFrameworkAgreementUpload(BaseApplicationTest):
 
             assert_equal(res.status_code, 503)
             s3.return_value.save.assert_called_with(
-                'g-cloud-7/agreements/1234/1234-signed-framework-agreement.pdf',
+                'my/path.pdf',
                 mock.ANY,
                 acl='private',
                 download_filename='Supplier_Nme-1234-signed-framework-agreement.pdf'
@@ -860,7 +872,10 @@ class TestFrameworkAgreementUpload(BaseApplicationTest):
                 1234, 'g-cloud-7', 'email@email.com'
             )
 
-    def test_upload_agreement_document(self, data_api_client, send_email, s3):
+    @mock.patch('app.main.views.frameworks.generate_timestamped_document_upload_path')
+    def test_upload_agreement_document(
+        self, generate_timestamped_document_upload_path, data_api_client, send_email, s3
+    ):
         with self.app.test_client():
             self.login()
 
@@ -870,6 +885,7 @@ class TestFrameworkAgreementUpload(BaseApplicationTest):
             data_api_client.register_framework_agreement_returned.return_value = {
                 "frameworkInterest": {"agreementId": 20}
             }
+            generate_timestamped_document_upload_path.return_value = 'my/path.pdf'
 
             res = self.client.post(
                 '/suppliers/frameworks/g-cloud-7/agreement',
@@ -879,7 +895,7 @@ class TestFrameworkAgreementUpload(BaseApplicationTest):
             )
 
             s3.return_value.save.assert_called_with(
-                'g-cloud-7/agreements/1234/1234-signed-framework-agreement.pdf',
+                'my/path.pdf',
                 mock.ANY,
                 acl='private',
                 download_filename='Supplier_Nme-1234-signed-framework-agreement.pdf'
@@ -889,19 +905,23 @@ class TestFrameworkAgreementUpload(BaseApplicationTest):
             )
             data_api_client.update_framework_agreement.assert_called_with(
                 20,
-                {"signedAgreementPath": 'g-cloud-7/agreements/1234/1234-signed-framework-agreement.pdf'},
+                {"signedAgreementPath": 'my/path.pdf'},
                 'email@email.com'
             )
             assert_equal(res.status_code, 302)
             assert_equal(res.location, 'http://localhost/suppliers/frameworks/g-cloud-7/agreement')
 
-    def test_upload_jpeg_agreement_document(self, data_api_client, send_email, s3):
+    @mock.patch('app.main.views.frameworks.generate_timestamped_document_upload_path')
+    def test_upload_jpeg_agreement_document(
+        self, generate_timestamped_document_upload_path, data_api_client, send_email, s3
+    ):
         with self.app.test_client():
             self.login()
 
             data_api_client.get_framework.return_value = self.framework(status='standstill')
             data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
                 on_framework=True)
+            generate_timestamped_document_upload_path.return_value = 'my/path.jpg'
 
             res = self.client.post(
                 '/suppliers/frameworks/g-cloud-7/agreement',
@@ -911,7 +931,7 @@ class TestFrameworkAgreementUpload(BaseApplicationTest):
             )
 
             s3.return_value.save.assert_called_with(
-                'g-cloud-7/agreements/1234/1234-signed-framework-agreement.jpg',
+                'my/path.jpg',
                 mock.ANY,
                 acl='private',
                 download_filename='Supplier_Nme-1234-signed-framework-agreement.jpg'
@@ -2048,7 +2068,10 @@ class TestReturnSignedAgreement(BaseApplicationTest):
                 assert "Uploaded Sunday 10 July 2016 at 22:18" in res.get_data(as_text=True)
 
     @mock.patch('dmutils.s3.S3')
-    def test_upload_signature_page(self, s3, return_supplier_framework, data_api_client):
+    @mock.patch('app.main.views.frameworks.generate_timestamped_document_upload_path')
+    def test_upload_signature_page(
+        self, generate_timestamped_document_upload_path, s3, return_supplier_framework, data_api_client
+    ):
         with self.app.test_client():
             self.login()
 
@@ -2056,6 +2079,7 @@ class TestReturnSignedAgreement(BaseApplicationTest):
             return_supplier_framework.return_value = self.supplier_framework(
                 on_framework=True, agreement_id=21
             )['frameworkInterest']
+            generate_timestamped_document_upload_path.return_value = 'my/path.jpg'
 
             res = self.client.post(
                 '/suppliers/frameworks/g-cloud-8/signature-upload',
@@ -2065,13 +2089,13 @@ class TestReturnSignedAgreement(BaseApplicationTest):
             )
 
             s3.return_value.save.assert_called_with(
-                'g-cloud-8/agreements/1234/1234-signed-framework-agreement.jpg',
+                'my/path.jpg',
                 mock.ANY,
                 acl='private'
             )
             data_api_client.update_framework_agreement.assert_called_with(
                 21,
-                {"signedAgreementPath": 'g-cloud-8/agreements/1234/1234-signed-framework-agreement.jpg'},
+                {"signedAgreementPath": 'my/path.jpg'},
                 'email@email.com'
             )
             assert res.status_code == 302
@@ -2084,7 +2108,7 @@ class TestReturnSignedAgreement(BaseApplicationTest):
                 object_id=1234,
                 data={
                     'upload_signed_agreement': u'test.jpg',
-                    'upload_path': 'g-cloud-8/agreements/1234/1234-signed-framework-agreement.jpg'
+                    'upload_path': 'my/path.jpg'
                 }
             )
 

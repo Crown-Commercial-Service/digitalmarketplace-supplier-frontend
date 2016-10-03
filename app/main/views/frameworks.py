@@ -15,8 +15,8 @@ from dmutils.formats import datetimeformat
 from dmutils import s3
 from dmutils.documents import (
     RESULT_LETTER_FILENAME, AGREEMENT_FILENAME, SIGNED_AGREEMENT_PREFIX,
-    SIGNATURE_PAGE_FILENAME, get_agreement_document_path, get_signed_url, get_extension, file_is_less_than_5mb,
-    file_is_empty, file_is_image, file_is_pdf, sanitise_supplier_name
+    SIGNATURE_PAGE_FILENAME, get_document_path, generate_timestamped_document_upload_path, get_signed_url,
+    get_extension, file_is_less_than_5mb, file_is_empty, file_is_image, file_is_pdf, sanitise_supplier_name
 )
 
 from ... import data_api_client, flask_featureflags
@@ -331,7 +331,7 @@ def download_agreement_file(framework_slug, document_name):
     elif document_name == 'countersigned-agreement':
         path = supplier_framework_info['countersignedPath']
     else:
-        path = get_agreement_document_path(framework_slug, current_user.supplier_id, document_name)
+        path = get_document_path(framework_slug, current_user.supplier_id, 'agreements', document_name)
 
     if not path:
         abort(404)
@@ -550,8 +550,9 @@ def upload_framework_agreement(framework_slug):
     agreements_bucket = s3.S3(current_app.config['DM_AGREEMENTS_BUCKET'])
     extension = get_extension(request.files['agreement'].filename)
 
-    path = get_agreement_document_path(
+    path = generate_timestamped_document_upload_path(
         framework_slug,
+        'agreements',
         current_user.supplier_id,
         '{}{}'.format(SIGNED_AGREEMENT_PREFIX, extension)
     )
@@ -681,8 +682,9 @@ def signature_upload(framework_slug):
             upload_error = "The file must not be empty"
 
         if not upload_error:
-            upload_path = get_agreement_document_path(
+            upload_path = generate_timestamped_document_upload_path(
                 framework_slug,
+                'agreements',
                 current_user.supplier_id,
                 '{}{}'.format(SIGNED_AGREEMENT_PREFIX, get_extension(request.files['signature_page'].filename))
             )
