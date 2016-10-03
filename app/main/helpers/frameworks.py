@@ -264,16 +264,6 @@ def get_status_for_multi_service_lot_and_service_type(
         }
 
 
-def get_most_recently_uploaded_agreement_file_or_none(bucket, framework_slug):
-    download_path = get_agreement_document_path(
-        framework_slug,
-        current_user.supplier_id,
-        SIGNED_AGREEMENT_PREFIX
-    )
-    files = bucket.list(download_path)
-    return files.pop() if files else None
-
-
 def returned_agreement_email_recipients(supplier_framework):
     email_recipients = [supplier_framework['declaration']['primaryContactEmail']]
     if supplier_framework['declaration']['primaryContactEmail'].lower() != current_user.email_address.lower():

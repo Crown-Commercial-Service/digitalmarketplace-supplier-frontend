@@ -6,7 +6,7 @@ except ImportError:
     from io import BytesIO as StringIO
 from nose.tools import assert_equal, assert_true, assert_in, assert_not_in
 import mock
-from flask import session
+
 from lxml import html
 from dmapiclient import APIError
 from dmapiclient.audit import AuditTypes
@@ -1964,7 +1964,7 @@ class TestReturnSignedAgreement(BaseApplicationTest):
 
             data_api_client.get_framework.return_value = get_g_cloud_8()
             return_supplier_framework.return_value = self.supplier_framework(on_framework=True)['frameworkInterest']
-            s3.return_value.list.return_value = []
+            s3.return_value.get_key.return_value = None
             file_is_empty.return_value = True
 
             res = self.client.post(
@@ -1987,7 +1987,7 @@ class TestReturnSignedAgreement(BaseApplicationTest):
 
             data_api_client.get_framework.return_value = get_g_cloud_8()
             return_supplier_framework.return_value = self.supplier_framework(on_framework=True)['frameworkInterest']
-            s3.return_value.list.return_value = []
+            s3.return_value.get_key.return_value = None
             file_is_image.return_value = False
 
             res = self.client.post(
@@ -2010,7 +2010,7 @@ class TestReturnSignedAgreement(BaseApplicationTest):
 
             data_api_client.get_framework.return_value = get_g_cloud_8()
             return_supplier_framework.return_value = self.supplier_framework(on_framework=True)['frameworkInterest']
-            s3.return_value.list.return_value = []
+            s3.return_value.get_key.return_value = None
             file_is_less_than_5mb.return_value = False
 
             res = self.client.post(
@@ -2029,9 +2029,9 @@ class TestReturnSignedAgreement(BaseApplicationTest):
             data_api_client.get_framework.return_value = get_g_cloud_8()
             return_supplier_framework.return_value = self.supplier_framework(on_framework=True)['frameworkInterest']
 
-            s3.return_value.list.return_value = [{
+            s3.return_value.get_key.return_value = {
                 'last_modified': '2016-07-10T21:18:00.000000Z'
-            }]
+            }
 
             with self.client as c:
                 self.login()
@@ -2054,9 +2054,9 @@ class TestReturnSignedAgreement(BaseApplicationTest):
             data_api_client.get_framework.return_value = get_g_cloud_8()
             return_supplier_framework.return_value = self.supplier_framework(on_framework=True)['frameworkInterest']
 
-            s3.return_value.list.return_value = [{
+            s3.return_value.get_key.return_value = {
                 'last_modified': '2016-07-10T21:18:00.000000Z'
-            }]
+            }
 
             with self.client as c:
                 self.login()
@@ -2120,9 +2120,9 @@ class TestReturnSignedAgreement(BaseApplicationTest):
             data_api_client.get_framework.return_value = get_g_cloud_8()
             return_supplier_framework.return_value = self.supplier_framework(on_framework=True)['frameworkInterest']
 
-            s3.return_value.list.return_value = [{
+            s3.return_value.get_key.return_value = {
                 'last_modified': '2016-07-10T21:18:00.000000Z'
-            }]
+            }
 
             with self.client as c:
                 self.login()
@@ -2148,9 +2148,9 @@ class TestReturnSignedAgreement(BaseApplicationTest):
             supplier_framework['declaration']['primaryContactEmail'] = 'email@email.com'
             supplier_framework['declaration']['nameOfOrganisation'] = u'£unicodename'
             return_supplier_framework.return_value = supplier_framework
-            s3.return_value.list.return_value = [{
+            s3.return_value.get_key.return_value = {
                 'last_modified': '2016-07-10T21:18:00.000000Z'
-            }]
+            }
 
             with self.client.session_transaction() as sess:
                 sess['signature_page'] = 'test.pdf'
@@ -2182,9 +2182,9 @@ class TestReturnSignedAgreement(BaseApplicationTest):
             supplier_framework['declaration']['primaryContactEmail'] = 'email@email.com'
             supplier_framework['declaration']['nameOfOrganisation'] = 'company name'
             return_supplier_framework.return_value = supplier_framework
-            s3.return_value.list.return_value = [{
+            s3.return_value.get_key.return_value = {
                 'last_modified': '2016-07-10T21:18:00.000000Z'
-            }]
+            }
 
             res = self.client.get(
                 "/suppliers/frameworks/g-cloud-8/contract-review"
@@ -2209,7 +2209,7 @@ class TestReturnSignedAgreement(BaseApplicationTest):
             return_supplier_framework.return_value = supplier_framework
 
             # no file has been uploaded
-            s3.return_value.list.return_value = []
+            s3.return_value.get_key.return_value = None
 
             res = self.client.get(
                 "/suppliers/frameworks/g-cloud-8/contract-review"
@@ -2230,9 +2230,9 @@ class TestReturnSignedAgreement(BaseApplicationTest):
             supplier_framework['declaration']['primaryContactEmail'] = 'email@email.com'
             supplier_framework['declaration']['nameOfOrganisation'] = 'company name'
             return_supplier_framework.return_value = supplier_framework
-            s3.return_value.list.return_value = [{
+            s3.return_value.get_key.return_value = {
                 'last_modified': '2016-07-10T21:18:00.000000Z'
-            }]
+            }
 
             res = self.client.post(
                 "/suppliers/frameworks/g-cloud-8/contract-review",
@@ -2257,9 +2257,9 @@ class TestReturnSignedAgreement(BaseApplicationTest):
             supplier_framework['declaration']['primaryContactEmail'] = 'email2@email.com'
             supplier_framework['declaration']['nameOfOrganisation'] = 'company name'
             return_supplier_framework.return_value = supplier_framework
-            s3.return_value.list.return_value = [{
+            s3.return_value.get_key.return_value = {
                 'last_modified': '2016-07-10T21:18:00.000000Z'
-            }]
+            }
 
             with self.client.session_transaction() as sess:
                 sess['signature_page'] = 'test.pdf'
@@ -2300,9 +2300,9 @@ class TestReturnSignedAgreement(BaseApplicationTest):
             supplier_framework['declaration']['primaryContactEmail'] = 'email@email.com'
             supplier_framework['declaration']['nameOfOrganisation'] = 'company name'
             return_supplier_framework.return_value = supplier_framework
-            s3.return_value.list.return_value = [{
+            s3.return_value.get_key.return_value = {
                 'last_modified': '2016-07-10T21:18:00.000000Z'
-            }]
+            }
 
             res = self.client.post(
                 "/suppliers/frameworks/g-cloud-8/contract-review",
@@ -2335,9 +2335,9 @@ class TestReturnSignedAgreement(BaseApplicationTest):
             supplier_framework['declaration']['primaryContactEmail'] = 'email@email.com'
             supplier_framework['declaration']['nameOfOrganisation'] = 'company name'
             return_supplier_framework.return_value = supplier_framework
-            s3.return_value.list.return_value = [{
+            s3.return_value.get_key.return_value = {
                 'last_modified': '2016-07-10T21:18:00.000000Z'
-            }]
+            }
 
             send_email.side_effect = MandrillException()
 
@@ -2366,9 +2366,9 @@ class TestReturnSignedAgreement(BaseApplicationTest):
             supplier_framework['declaration']['primaryContactEmail'] = 'email@email.com'
             supplier_framework['declaration']['nameOfOrganisation'] = 'company name'
             return_supplier_framework.return_value = supplier_framework
-            s3.return_value.list.return_value = [{
+            s3.return_value.get_key.return_value = {
                 'last_modified': '2016-07-10T21:18:00.000000Z'
-            }]
+            }
 
             res = self.client.post(
                 "/suppliers/frameworks/g-cloud-8/contract-review",
@@ -2407,9 +2407,9 @@ class TestReturnSignedAgreement(BaseApplicationTest):
             supplier_framework['declaration']['nameOfOrganisation'] = 'company name'
             return_supplier_framework.return_value = supplier_framework
 
-            s3.return_value.list.return_value = [{
+            s3.return_value.get_key.return_value = {
                 'last_modified': '2016-07-10T21:18:00.000000Z'
-            }]
+            }
 
             res = self.client.post(
                 "/suppliers/frameworks/g-cloud-8/contract-review",
@@ -2443,9 +2443,9 @@ class TestReturnSignedAgreement(BaseApplicationTest):
             supplier_framework['declaration']['nameOfOrganisation'] = 'company name'
             return_supplier_framework.return_value = supplier_framework
 
-            s3.return_value.list.return_value = [{
+            s3.return_value.get_key.return_value = {
                 'last_modified': '2016-07-10T21:18:00.000000Z'
-            }]
+            }
 
             res = self.client.post(
                 "/suppliers/frameworks/g-cloud-8/contract-review",
@@ -2478,9 +2478,9 @@ class TestReturnSignedAgreement(BaseApplicationTest):
             supplier_framework['declaration']['primaryContactEmail'] = 'email2@email.com'
             supplier_framework['declaration']['nameOfOrganisation'] = 'company name'
             return_supplier_framework.return_value = supplier_framework
-            s3.return_value.list.return_value = [{
+            s3.return_value.get_key.return_value = {
                 'last_modified': '2016-07-10T21:18:00.000000Z'
-            }]
+            }
 
             res = self.client.post(
                 "/suppliers/frameworks/g-cloud-8/contract-review",
@@ -2510,9 +2510,9 @@ class TestReturnSignedAgreement(BaseApplicationTest):
             supplier_framework['declaration']['nameOfOrganisation'] = 'company name'
             return_supplier_framework.return_value = supplier_framework
 
-            s3.return_value.list.return_value = [{
+            s3.return_value.get_key.return_value = {
                 'last_modified': '2016-07-10T21:18:00.000000Z'
-            }]
+            }
 
             res = self.client.post(
                 "/suppliers/frameworks/g-cloud-8/contract-review",

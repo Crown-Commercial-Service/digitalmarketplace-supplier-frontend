@@ -26,8 +26,7 @@ from ..helpers.frameworks import (
     get_declaration_status, get_last_modified_from_first_matching_file, register_interest_in_framework,
     get_supplier_on_framework_from_info, get_declaration_status_from_info, get_supplier_framework_info,
     get_framework, get_framework_and_lot, count_drafts_by_lot, get_statuses_for_lot,
-    return_supplier_framework_info_if_on_framework_or_abort, get_most_recently_uploaded_agreement_file_or_none,
-    returned_agreement_email_recipients)
+    return_supplier_framework_info_if_on_framework_or_abort, returned_agreement_email_recipients)
 from ..helpers.validation import get_validator
 from ..helpers.services import (
     get_signed_document_url, get_drafts, get_lot_drafts, count_unanswered_questions
@@ -666,7 +665,7 @@ def signature_upload(framework_slug):
     framework = get_framework(data_api_client, framework_slug)
     supplier_framework = return_supplier_framework_info_if_on_framework_or_abort(data_api_client, framework_slug)
     agreements_bucket = s3.S3(current_app.config['DM_AGREEMENTS_BUCKET'])
-    signature_page = get_most_recently_uploaded_agreement_file_or_none(agreements_bucket, framework_slug)
+    signature_page = agreements_bucket.get_key(supplier_framework['agreementPath'])
     upload_error = None
 
     if request.method == 'POST':
@@ -726,7 +725,7 @@ def contract_review(framework_slug):
     framework = get_framework(data_api_client, framework_slug)
     supplier_framework = return_supplier_framework_info_if_on_framework_or_abort(data_api_client, framework_slug)
     agreements_bucket = s3.S3(current_app.config['DM_AGREEMENTS_BUCKET'])
-    signature_page = get_most_recently_uploaded_agreement_file_or_none(agreements_bucket, framework_slug)
+    signature_page = agreements_bucket.get_key(supplier_framework['agreementPath'])
 
     # if supplier_framework doesn't have a name or a role or the agreement file, then 404
     if not (
