@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-from dmutils.documents import get_agreement_document_path, COUNTERSIGNED_AGREEMENT_FILENAME, SIGNED_AGREEMENT_PREFIX
 import re
 
 from flask import abort
