@@ -27,7 +27,7 @@ def is_supplier_selected_for_brief(data_api_client, current_user, brief):
         return True
     if brief.get('sellerSelector', '') == 'someSellers':
         return current_user.email_address in brief['sellerEmailList']
-    if brief.get('sellerSelector', '') == 'oneSellers':
+    if brief.get('sellerSelector', '') == 'oneSeller':
         return current_user.email_address == brief['sellerEmail']
     return False
 

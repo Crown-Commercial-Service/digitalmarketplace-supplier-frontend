@@ -301,7 +301,7 @@ class TestRespondToBrief(BaseApplicationTest):
 
     def test_get_select_brief_response_page(self, data_api_client):
         brief = self.brief.copy()
-        brief['briefs']['sellerSelector'] = 'oneSellers'
+        brief['briefs']['sellerSelector'] = 'oneSeller'
         brief['briefs']['sellerEmail'] = 'email@email.com'
         data_api_client.get_brief.return_value = brief
         data_api_client.get_framework.return_value = self.framework
