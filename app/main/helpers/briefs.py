@@ -22,6 +22,16 @@ def get_brief(data_api_client, brief_id, allowed_statuses=None):
     return brief
 
 
+def is_supplier_selected_for_brief(data_api_client, current_user, brief):
+    if brief.get('sellerSelector', '') == 'allSellers':
+        return True
+    if brief.get('sellerSelector', '') == 'someSellers':
+        return current_user.email_address in brief['sellerEmailList']
+    if brief.get('sellerSelector', '') == 'oneSellers':
+        return current_user.email_address == brief['sellerEmail']
+    return False
+
+
 def is_supplier_eligible_for_brief(data_api_client, supplier_code, brief):
     # FIXME: this is implemented by checking if the given supplier offers a relevant service.
     # Current suppliers don't have services.

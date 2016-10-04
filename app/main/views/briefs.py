@@ -12,6 +12,7 @@ from dmutils.forms import render_template_with_csrf
 from ..helpers import login_required
 from ..helpers.briefs import (
     get_brief,
+    is_supplier_selected_for_brief,
     is_supplier_eligible_for_brief,
     send_brief_clarification_question,
     supplier_has_a_brief_response
@@ -83,6 +84,9 @@ def brief_response(brief_id):
 
     brief = get_brief(data_api_client, brief_id, allowed_statuses=['live'])
 
+    if not is_supplier_selected_for_brief(data_api_client, current_user, brief):
+        return _render_not_selected_for_brief_error_page()
+
     if not is_supplier_eligible_for_brief(data_api_client, current_user.supplier_code, brief):
         return _render_not_eligible_for_brief_error_page(brief)
 
@@ -116,6 +120,9 @@ def submit_brief_response(brief_id):
     """Hits up the data API to create a new brief response."""
 
     brief = get_brief(data_api_client, brief_id, allowed_statuses=['live'])
+
+    if not is_supplier_selected_for_brief(data_api_client, current_user, brief):
+        return _render_not_selected_for_brief_error_page()
 
     if not is_supplier_eligible_for_brief(data_api_client, current_user.supplier_code, brief):
         return _render_not_eligible_for_brief_error_page(brief)
@@ -164,6 +171,9 @@ def submit_brief_response(brief_id):
 def view_response_result(brief_id):
     brief = get_brief(data_api_client, brief_id, allowed_statuses=['live'])
 
+    if not is_supplier_selected_for_brief(data_api_client, current_user, brief):
+        return _render_not_selected_for_brief_error_page()
+
     if not is_supplier_eligible_for_brief(data_api_client, current_user.supplier_code, brief):
         return _render_not_eligible_for_brief_error_page(brief)
 
@@ -200,6 +210,12 @@ def view_response_result(brief_id):
         result_state=result_state,
         response_content=response_content
     )
+
+
+def _render_not_selected_for_brief_error_page():
+    return render_template(
+        "briefs/not_is_supplier_selected_for_brief_error.html"
+    ), 400
 
 
 def _render_not_eligible_for_brief_error_page(brief, clarification_question=False):
