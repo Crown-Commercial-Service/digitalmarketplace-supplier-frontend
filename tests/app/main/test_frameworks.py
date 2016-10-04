@@ -2091,7 +2091,7 @@ class TestReturnSignedAgreement(BaseApplicationTest):
             s3.return_value.save.assert_called_with(
                 'my/path.jpg',
                 mock.ANY,
-                download_filename='Supplier_Nme-1234-signed-framework-agreement.jpg',
+                download_filename='Supplier_Nme-1234-signed-signature-page.jpg',
                 acl='private'
             )
             data_api_client.update_framework_agreement.assert_called_with(

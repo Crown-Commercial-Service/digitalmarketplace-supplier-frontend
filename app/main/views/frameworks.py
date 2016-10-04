@@ -14,7 +14,7 @@ from dmcontent.formats import format_service_price
 from dmutils.formats import datetimeformat
 from dmutils import s3
 from dmutils.documents import (
-    RESULT_LETTER_FILENAME, AGREEMENT_FILENAME, SIGNED_AGREEMENT_PREFIX,
+    RESULT_LETTER_FILENAME, AGREEMENT_FILENAME, SIGNED_AGREEMENT_PREFIX, SIGNED_SIGNATURE_PAGE_PREFIX,
     SIGNATURE_PAGE_FILENAME, get_document_path, generate_timestamped_document_upload_path, get_signed_url,
     get_extension, file_is_less_than_5mb, file_is_empty, file_is_image, file_is_pdf, sanitise_supplier_name
 )
@@ -695,7 +695,7 @@ def signature_upload(framework_slug):
                 download_filename='{}-{}-{}{}'.format(
                     sanitise_supplier_name(current_user.supplier_name),
                     current_user.supplier_id,
-                    SIGNED_AGREEMENT_PREFIX,
+                    SIGNED_SIGNATURE_PAGE_PREFIX,
                     extension
                 )
             )
