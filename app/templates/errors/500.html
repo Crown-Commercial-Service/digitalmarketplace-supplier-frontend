@@ -1,16 +1,24 @@
 {% extends "_base_page.html" %}
 
-{% block page_title %}Sorry, we’re experiencing technical difficulties - Digital Marketplace{% endblock %}
+{% block page_title %}Sorry, we’re experiencing technical difficulties - Marketplace{% endblock %}
 
 {% block main_content %}
 
 <div class="error-page">
-  <header class="page-heading-smaller">
-    <h1>Sorry, we’re experiencing technical difficulties</h1>
-  </header>
-  <p>
-      Try again later.
-  </p>
+  <div class="index-page grid-row">
+    <div class="column-two-thirds">
+      <header class="page-heading-smaller">
+        <h1>Sorry, we're experiencing technical difficulties</h1>
+      </header>
+      <p>
+        {% if error_message %}
+          {{ error_message }}
+        {% else %}
+          Try again later.
+        {% endif %}
+      </p>
+    </div>
+  </div>
 </div>
 
 {% endblock %}
