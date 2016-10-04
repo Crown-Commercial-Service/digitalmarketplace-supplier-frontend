@@ -2106,7 +2106,8 @@ class TestReturnSignedAgreement(BaseApplicationTest):
                 'my/path.jpg',
                 mock.ANY,
                 download_filename='Supplier_Nme-1234-signed-signature-page.jpg',
-                acl='private'
+                acl='private',
+                disposition_type='inline'
             )
             data_api_client.update_framework_agreement.assert_called_with(
                 21,

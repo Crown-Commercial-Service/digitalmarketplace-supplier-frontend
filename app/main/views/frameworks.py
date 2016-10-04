@@ -697,7 +697,8 @@ def signature_upload(framework_slug):
                     current_user.supplier_id,
                     SIGNED_SIGNATURE_PAGE_PREFIX,
                     extension
-                )
+                ),
+                disposition_type='inline'  # Embeddeding PDFs in admin pages requires 'inline' and not 'attachment'
             )
 
             agreement_id = supplier_framework.get("agreementId")
