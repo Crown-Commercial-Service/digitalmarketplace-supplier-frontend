@@ -894,6 +894,13 @@ class TestFrameworkAgreementUpload(BaseApplicationTest):
                 }
             )
 
+            generate_timestamped_document_upload_path.assert_called_once_with(
+                'g-cloud-7',
+                1234,
+                'agreements',
+                'signed-framework-agreement.pdf'
+            )
+
             s3.return_value.save.assert_called_with(
                 'my/path.pdf',
                 mock.ANY,
@@ -2086,6 +2093,13 @@ class TestReturnSignedAgreement(BaseApplicationTest):
                 data={
                     'signature_page': (StringIO(b'asdf'), 'test.jpg'),
                 }
+            )
+
+            generate_timestamped_document_upload_path.assert_called_once_with(
+                'g-cloud-8',
+                1234,
+                'agreements',
+                'signed-framework-agreement.jpg'
             )
 
             s3.return_value.save.assert_called_with(

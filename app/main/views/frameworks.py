@@ -551,8 +551,8 @@ def upload_framework_agreement(framework_slug):
 
     path = generate_timestamped_document_upload_path(
         framework_slug,
-        'agreements',
         current_user.supplier_id,
+        'agreements',
         '{}{}'.format(SIGNED_AGREEMENT_PREFIX, extension)
     )
     agreements_bucket.save(
@@ -684,8 +684,8 @@ def signature_upload(framework_slug):
             extension = get_extension(request.files['signature_page'].filename)
             upload_path = generate_timestamped_document_upload_path(
                 framework_slug,
-                'agreements',
                 current_user.supplier_id,
+                'agreements',
                 '{}{}'.format(SIGNED_AGREEMENT_PREFIX, extension)
             )
             agreements_bucket.save(
