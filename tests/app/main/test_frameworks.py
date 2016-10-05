@@ -2738,7 +2738,7 @@ class TestContractVariation(BaseApplicationTest):
         assert len(doc.xpath('//label[contains(text(), "I accept these proposed changes")]')) == 0
         assert len(doc.xpath('//input[@value="Save and continue"]')) == 0
 
-    def test_shows_countersigner_details_and_no_form_if_already_agreed(self, data_api_client):
+    def test_shows_updated_heading_and_countersigner_details_but_no_form_if_countersigned(self, data_api_client):
         already_agreed = self.good_supplier_framework.copy()
         already_agreed['frameworkInterest']['agreedVariations'] = {
             "1": {
@@ -2763,7 +2763,7 @@ class TestContractVariation(BaseApplicationTest):
         doc = html.fromstring(page_text)
 
         assert res.status_code == 200
-        print(page_text)
+        assert len(doc.xpath('//h1[contains(text(), "G-Cloud 8: contract variation")]')) == 1
         assert len(doc.xpath('//h2[contains(text(), "Contract variation status")]')) == 1
         assert u"<span>A.N. Other<br />Head honcho<br />Saturday 1 October 2016</span>" in page_text
         assert len(doc.xpath('//label[contains(text(), "I accept these proposed changes")]')) == 0
