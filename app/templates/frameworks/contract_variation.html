@@ -146,7 +146,7 @@
             {% call(item) summary.list_table(
               [
                 {"key": "Agreed by", "value": ("%s<br />%s<br />%s" % (agreed_details.agreedUserName, agreed_details.agreedUserEmail, agreed_details.agreedAt|datetimeformat))|safe},
-                {"key": "Countersigned by", "value": ("%s<br />%s<br />%s" % (variation_details.countersignedByName, variation_details.countersignedByRole, variation_details.countersignedAt|dateformat))|safe if variation_details.get('countersignedAt') else "Waiting for CCS to countersign"}
+                {"key": "Countersigned by", "value": ("%s<br />%s<br />%s" % (variation_details.countersignerName, variation_details.countersignerRole, variation_details.countersignedAt|dateformat))|safe if variation_details.get('countersignedAt') else "Waiting for CCS to countersign"}
               ],
               caption="Contract variation status",
               field_headings=[

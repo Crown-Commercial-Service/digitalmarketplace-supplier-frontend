@@ -2611,8 +2611,8 @@ class TestReturnSignedAgreement(BaseApplicationTest):
             g8_with_variation['frameworks']['variations'] = {"1": {
                 "createdAt": "2018-08-16",
                 "countersignedAt": "2018-10-01",
-                "countersignedByName": "A.N. Other",
-                "countersignedByRole": "Head honcho",
+                "countersignerName": "A.N. Other",
+                "countersignerRole": "Head honcho",
             }
             }
             data_api_client.get_framework.return_value = g8_with_variation
@@ -2751,8 +2751,8 @@ class TestContractVariation(BaseApplicationTest):
         g8_with_countersigned_variation['frameworks']['variations'] = {"1": {
             "createdAt": "2016-08-01T12:30:00.000000Z",
             "countersignedAt": "2016-10-01T02:00:00.000000Z",
-            "countersignedByName": "A.N. Other",
-            "countersignedByRole": "Head honcho",
+            "countersignerName": "A.N. Other",
+            "countersignerRole": "Head honcho",
         }
         }
         data_api_client.get_framework.return_value = g8_with_countersigned_variation
