@@ -15,8 +15,9 @@ from dmutils.formats import datetimeformat
 from dmutils import s3
 from dmutils.documents import (
     RESULT_LETTER_FILENAME, AGREEMENT_FILENAME, SIGNED_AGREEMENT_PREFIX, SIGNED_SIGNATURE_PAGE_PREFIX,
-    SIGNATURE_PAGE_FILENAME, get_document_path, generate_timestamped_document_upload_path, get_signed_url,
-    get_extension, file_is_less_than_5mb, file_is_empty, file_is_image, file_is_pdf, sanitise_supplier_name
+    SIGNATURE_PAGE_FILENAME, get_document_path, generate_timestamped_document_upload_path,
+    degenerate_document_path_and_return_doc_name, get_signed_url, get_extension, file_is_less_than_5mb,
+    file_is_empty, file_is_image, file_is_pdf, sanitise_supplier_name
 )
 
 from ... import data_api_client, flask_featureflags
@@ -81,7 +82,11 @@ def framework_dashboard(framework_slug):
     # filenames
     supplier_pack_filename = '{}-supplier-pack.zip'.format(framework_slug)
     result_letter_filename = RESULT_LETTER_FILENAME
-    agreement_has_been_countersigned = bool(supplier_framework_info and supplier_framework_info['countersignedPath'])
+    countersigned_agreement_file = None
+    if supplier_framework_info and supplier_framework_info['countersignedPath']:
+        countersigned_agreement_file = degenerate_document_path_and_return_doc_name(
+            supplier_framework_info['countersignedPath']
+        )
 
     application_made = supplier_is_on_framework or (len(complete_drafts) > 0 and declaration_status == 'complete')
     lots_with_completed_drafts = [lot for lot in framework['lots'] if count_drafts_by_lot(complete_drafts, lot['slug'])]
@@ -97,8 +102,12 @@ def framework_dashboard(framework_slug):
 
     # if supplier has returned agreement for framework with framework_agreement_version, show contract_submitted page
     if supplier_is_on_framework and framework['frameworkAgreementVersion'] and supplier_framework_info['agreementReturned']:  # noqa
+        signed_agreement_document_name = degenerate_document_path_and_return_doc_name(
+            supplier_framework_info['agreementPath']
+        )
         return render_template(
             "frameworks/contract_submitted.html",
+            document_name=signed_agreement_document_name,
             framework=framework,
             framework_live_date=content_loader.get_message(framework_slug, 'dates')['framework_live_date'],
             supplier_framework=supplier_framework_info,
@@ -108,12 +117,12 @@ def framework_dashboard(framework_slug):
 
     return render_template(
         "frameworks/dashboard.html",
-        agreement_has_been_countersigned=agreement_has_been_countersigned,
         application_made=application_made,
         completed_lots=tuple(
             dict(lot, complete_count=count_drafts_by_lot(complete_drafts, lot['slug']))
             for lot in lots_with_completed_drafts
         ),
+        countersigned_agreement_file=countersigned_agreement_file,
         counts={
             "draft": len(drafts),
             "complete": len(complete_drafts)
@@ -324,17 +333,7 @@ def download_agreement_file(framework_slug, document_name):
         abort(404)
 
     agreements_bucket = s3.S3(current_app.config['DM_AGREEMENTS_BUCKET'])
-
-    if document_name == 'signed-agreement':
-        path = supplier_framework_info['agreementPath']
-    elif document_name == 'countersigned-agreement':
-        path = supplier_framework_info['countersignedPath']
-    else:
-        path = get_document_path(framework_slug, current_user.supplier_id, 'agreements', document_name)
-
-    if not path:
-        abort(404)
-
+    path = get_document_path(framework_slug, current_user.supplier_id, 'agreements', document_name)
     url = get_signed_url(agreements_bucket, path, current_app.config['DM_ASSETS_URL'])
     if not url:
         abort(404)

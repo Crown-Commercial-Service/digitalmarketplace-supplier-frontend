@@ -531,15 +531,15 @@ class TestFrameworksDashboard(BaseApplicationTest):
                 agreement_returned=True,
                 agreement_path='path',
                 countersigned=True,
-                countersigned_path='path2'
+                countersigned_path='g-cloud-7/agreements/1234/1234-countersigned-agreement.pdf'
             )
 
             res = self.client.get("/suppliers/frameworks/g-cloud-7")
 
             data = res.get_data(as_text=True)
 
-            assert_not_in(u'Sign and return your framework agreement', data)
-            assert_in(u'Download your countersigned framework agreement', data)
+            assert 'Sign and return your framework agreement' not in data
+            assert '<ahref="/suppliers/frameworks/g-cloud-7/agreements/countersigned-agreement.pdf"><span>Downloadyourcountersignedframeworkagreement(.pdf)</span></a>' in self.strip_all_whitespace(data)  # noqa
 
 
 @mock.patch('app.main.views.frameworks.data_api_client', autospec=True)
@@ -986,44 +986,6 @@ class TestFrameworkAgreementDocumentDownload(BaseApplicationTest):
             assert_equal(res.location, 'http://asset-host/path?param=value')
             uploader.get_signed_url.assert_called_with(
                 'g-cloud-7/agreements/1234/1234-example.pdf')
-
-    def test_download_signed_agreement_document(self, S3, data_api_client):
-        supplier_framework = self.supplier_framework()
-        supplier_framework['frameworkInterest']['agreementPath'] = '/1234/1234-signed-agreement.pdf'
-        data_api_client.get_supplier_framework_info.return_value = supplier_framework
-
-        uploader = mock.Mock()
-        S3.return_value = uploader
-        uploader.get_signed_url.return_value = 'http://url/path?param=value'
-
-        with self.app.test_client():
-            self.login()
-
-            res = self.client.get('/suppliers/frameworks/g-cloud-7/agreements/signed-agreement')
-
-            assert_equal(res.status_code, 302)
-            assert_equal(res.location, 'http://asset-host/path?param=value')
-            uploader.get_signed_url.assert_called_with(
-                '/1234/1234-signed-agreement.pdf')
-
-    def test_download_countersigned_agreement_document(self, S3, data_api_client):
-        supplier_framework = self.supplier_framework()
-        supplier_framework['frameworkInterest']['agreementPath'] = '/1234/1234-countersigned-agreement.pdf'
-        data_api_client.get_supplier_framework_info.return_value = supplier_framework
-
-        uploader = mock.Mock()
-        S3.return_value = uploader
-        uploader.get_signed_url.return_value = 'http://url/path?param=value'
-
-        with self.app.test_client():
-            self.login()
-
-            res = self.client.get('/suppliers/frameworks/g-cloud-7/agreements/signed-agreement')
-
-            assert_equal(res.status_code, 302)
-            assert_equal(res.location, 'http://asset-host/path?param=value')
-            uploader.get_signed_url.assert_called_with(
-                '/1234/1234-countersigned-agreement.pdf')
 
     def test_download_document_with_asset_url(self, S3, data_api_client):
         data_api_client.get_supplier_framework_info.return_value = self.supplier_framework()
@@ -2613,7 +2575,7 @@ class TestReturnSignedAgreement(BaseApplicationTest):
             assert res.status_code == 200
             assert 'G-Cloud 8 documents' in page
             page_without_whitespace = self.strip_all_whitespace(page)
-            assert '<a href="/suppliers/frameworks/g-cloud-8/agreements/signed-agreement" target="_blank">Download your framework agreement signature page, signed by your company</a>' in page  # noqa
+            assert '<a href="/suppliers/frameworks/g-cloud-8/agreements/framework-agreement.pdf" target="_blank">Download your framework agreement signature page, signed by your company</a>' in page  # noqa
             assert '<tdclass="summary-item-field"><span><p>signername</p><p>signerrole</p></span></td>' in page_without_whitespace  # noqa
             assert '<tdclass="summary-item-field"><span><p>User</p><p>email@email.com</p><p>Sunday10July2016at22:20</p></span></td>' in page_without_whitespace  # noqa
             assert '<tdclass="summary-item-field-first"><span>WaitingforCCStocountersign</span></td>' in page_without_whitespace  # noqa
@@ -2720,6 +2682,7 @@ class TestReturnSignedAgreement(BaseApplicationTest):
                 on_framework=True,
                 agreement_returned=True,
                 agreement_returned_at='2016-07-10T21:20:00.000000Z',
+                agreement_path='g-cloud-8/agreements/1234/1234-signed-agreement.pdf',
                 agreed_variations={
                     "1": {
                         "agreedAt": "2016-08-19T15:47:08.116613Z",
