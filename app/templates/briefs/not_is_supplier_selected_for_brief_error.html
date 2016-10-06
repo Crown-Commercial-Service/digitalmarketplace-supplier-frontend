@@ -4,15 +4,17 @@
 
 {% block main_content %}
 
+{% with inhibited_action="ask a question about" if clarification_question else "apply for" %}
 <div class="grid-row">
   <div class="column-two-thirds">
     <header class="page-heading-smaller">
-      <h1>Only sellers invited by the buyer can apply for this opportunity</h1>
+      <h1>Only sellers invited by the buyer can {{ inhibited_action }} this opportunity</h1>
     </header>
     <p>
-      Only sellers invited by the buyer can apply for this opportunity
+      Only sellers invited by the buyer {{ inhibited_action }} for this opportunity
     </p>
   </div>
 </div>
+{% endwith %}
 
 {% endblock %}

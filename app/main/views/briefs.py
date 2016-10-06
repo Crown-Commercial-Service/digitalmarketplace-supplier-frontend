@@ -30,6 +30,9 @@ def question_and_answer_session(brief_id):
     if brief['clarificationQuestionsAreClosed']:
         abort(404)
 
+    if not is_supplier_selected_for_brief(data_api_client, current_user, brief):
+        return _render_not_selected_for_brief_error_page(clarification_question=True)
+
     if not is_supplier_eligible_for_brief(data_api_client, current_user.supplier_code, brief):
         return _render_not_eligible_for_brief_error_page(brief, clarification_question=True)
 
@@ -46,6 +49,9 @@ def ask_brief_clarification_question(brief_id):
 
     if brief['clarificationQuestionsAreClosed']:
         abort(404)
+
+    if not is_supplier_selected_for_brief(data_api_client, current_user, brief):
+        return _render_not_selected_for_brief_error_page(clarification_question=True)
 
     if not is_supplier_eligible_for_brief(data_api_client, current_user.supplier_code, brief):
         return _render_not_eligible_for_brief_error_page(brief, clarification_question=True)
@@ -212,9 +218,10 @@ def view_response_result(brief_id):
     )
 
 
-def _render_not_selected_for_brief_error_page():
+def _render_not_selected_for_brief_error_page(clarification_question=False):
     return render_template(
-        "briefs/not_is_supplier_selected_for_brief_error.html"
+        "briefs/not_is_supplier_selected_for_brief_error.html",
+        clarification_question=clarification_question,
     ), 400
 
 

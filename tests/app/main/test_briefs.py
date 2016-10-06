@@ -88,6 +88,16 @@ class TestBriefQuestionAndAnswerSession(BaseApplicationTest):
         res = self.client.get(self.url_for('main.question_and_answer_session', brief_id=1))
         assert res.status_code == 404
 
+    def test_q_and_a_session_details_requires_selected_supplier(self, data_api_client):
+        self.login()
+        data_api_client.get_brief.return_value = api_stubs.brief(status='live')
+        data_api_client.get_brief.return_value['briefs']['sellerSelector'] = 'someSellers'
+        data_api_client.get_brief.return_value['briefs']['sellerEmailList'] = ['notyou@email.com']
+
+        res = self.client.get(self.url_for('main.question_and_answer_session', brief_id=1))
+
+        assert res.status_code == 400
+
     def test_q_and_a_session_details_requires_questions_to_be_open(self, data_api_client):
         self.login()
         data_api_client.get_brief.return_value = api_stubs.brief(status='live', clarification_questions_closed=True)
@@ -109,6 +119,15 @@ class TestBriefClarificationQuestions(BaseApplicationTest):
 
         res = self.client.get(self.url_for('main.ask_brief_clarification_question', brief_id=1))
         assert res.status_code == 200
+
+    def test_clarification_question_form_requires_selected_supplier(self, data_api_client):
+        self.login()
+        data_api_client.get_brief.return_value = api_stubs.brief(status='live')
+        data_api_client.get_brief.return_value['briefs']['sellerSelector'] = 'someSellers'
+        data_api_client.get_brief.return_value['briefs']['sellerEmailList'] = ['notyou@email.com']
+
+        res = self.client.get(self.url_for('main.ask_brief_clarification_question', brief_id=1))
+        assert res.status_code == 400
 
     def test_clarification_question_form_requires_existing_brief_id(self, data_api_client):
         self.login()
