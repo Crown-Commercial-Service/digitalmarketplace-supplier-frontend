@@ -379,7 +379,13 @@ def view_service_submission(framework_slug, lot_slug, service_id):
             methods=['GET'])
 @login_required
 def edit_service_submission(framework_slug, lot_slug, service_id, section_id, question_slug=None):
+    """
+        Also accepts URL parameter `return_to_summary` which will remove the option to continue to the next section
+        on submit
+    """
     framework, lot = get_framework_and_lot(data_api_client, framework_slug, lot_slug, allowed_statuses=['open'])
+
+    force_return_to_summary = request.args.get('return_to_summary') or framework['framework'] == "dos"
 
     try:
         draft = data_api_client.get_draft_service(service_id)['services']
@@ -409,7 +415,7 @@ def edit_service_submission(framework_slug, lot_slug, service_id, section_id, qu
         next_section_name=get_next_section_name(content, section.id),
         service_data=draft,
         service_id=service_id,
-        return_to_summary=bool(request.args.get('return_to_summary')),
+        force_return_to_summary=force_return_to_summary,
         one_service_limit=lot['oneServiceLimit']
     )
 
@@ -419,7 +425,13 @@ def edit_service_submission(framework_slug, lot_slug, service_id, section_id, qu
             methods=['POST'])
 @login_required
 def update_section_submission(framework_slug, lot_slug, service_id, section_id, question_slug=None):
+    """
+        Also accepts URL parameter `return_to_summary` which will remove the ability to continue to the next section
+        on submit
+    """
     framework, lot = get_framework_and_lot(data_api_client, framework_slug, lot_slug, allowed_statuses=['open'])
+
+    force_return_to_summary = request.args.get('return_to_summary') or framework['framework'] == "dos"
 
     try:
         draft = data_api_client.get_draft_service(service_id)['services']
@@ -479,14 +491,13 @@ def update_section_submission(framework_slug, lot_slug, service_id, section_id, 
             service_data=update_data,
             service_id=service_id,
             one_service_limit=lot['oneServiceLimit'],
-            return_to_summary=bool(request.args.get('return_to_summary')),
+            force_return_to_summary=force_return_to_summary,
             errors=errors
         )
 
-    return_to_summary = bool(request.args.get('return_to_summary'))
     next_section = content.get_next_editable_section_id(section_id)
 
-    if next_section and not return_to_summary and request.form.get('continue_to_next_section'):
+    if next_section and request.form.get('continue_to_next_section') and not force_return_to_summary:
         return redirect(url_for(".edit_service_submission",
                                 framework_slug=framework['slug'],
                                 lot_slug=draft['lotSlug'],
