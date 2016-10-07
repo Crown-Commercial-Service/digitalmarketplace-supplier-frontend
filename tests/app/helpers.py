@@ -208,11 +208,13 @@ class BaseApplicationTest(object):
                 {'id': 4, 'slug': 'saas', 'name': 'Software as a Service', 'oneServiceLimit': False,
                  'unitSingular': 'service', 'unitPlural': 'service'},
             ]
+            metaframework = "g-cloud"
         elif slug == 'digital-outcomes-and-specialists':
             lots = [
                 {'id': 1, 'slug': 'digital-specialists', 'name': 'Digital specialists', 'oneServiceLimit': True,
                  'unitSingular': 'service', 'unitPlural': 'service'},
             ]
+            metaframework = "dos"
 
         return {
             'frameworks': {
@@ -221,7 +223,8 @@ class BaseApplicationTest(object):
                 'name': name,
                 'slug': slug,
                 'lots': lots,
-                'frameworkAgreementVersion': framework_agreement_version
+                'frameworkAgreementVersion': framework_agreement_version,
+                'framework': metaframework,
             }
         }
 
