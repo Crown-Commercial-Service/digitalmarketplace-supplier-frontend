@@ -87,7 +87,7 @@ FULL_G7_SUBMISSION = {
 }
 
 
-def empty_g7_draft():
+def empty_g7_draft_service():
     return {
         'id': 1,
         'supplierId': 1234,
@@ -99,7 +99,7 @@ def empty_g7_draft():
         'lotName': 'Specialist Cloud Services',
         'status': 'not-submitted',
         'links': {},
-        'updatedAt': '2015-06-29T15:26:07.650368Z'
+        'updatedAt': '2015-06-29T15:26:07.650368Z',
     }
 
 
