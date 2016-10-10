@@ -374,57 +374,12 @@ def view_service_submission(framework_slug, lot_slug, service_id):
     ), 200
 
 
-@main.route('/frameworks/<framework_slug>/submissions/<lot_slug>/<service_id>/edit/<section_id>', methods=['GET'])
+@main.route('/frameworks/<framework_slug>/submissions/<lot_slug>/<service_id>/edit/<section_id>',
+            methods=('GET', 'POST',))
 @main.route('/frameworks/<framework_slug>/submissions/<lot_slug>/<service_id>/edit/<section_id>/<question_slug>',
-            methods=['GET'])
+            methods=('GET', 'POST',))
 @login_required
 def edit_service_submission(framework_slug, lot_slug, service_id, section_id, question_slug=None):
-    """
-        Also accepts URL parameter `return_to_summary` which will remove the option to continue to the next section
-        on submit
-    """
-    framework, lot = get_framework_and_lot(data_api_client, framework_slug, lot_slug, allowed_statuses=['open'])
-
-    force_return_to_summary = request.args.get('return_to_summary') or framework['framework'] == "dos"
-
-    try:
-        draft = data_api_client.get_draft_service(service_id)['services']
-    except HTTPError as e:
-        abort(e.status_code)
-
-    if draft['lotSlug'] != lot_slug or draft['frameworkSlug'] != framework_slug:
-        abort(404)
-
-    if not is_service_associated_with_supplier(draft):
-        abort(404)
-
-    content = content_loader.get_manifest(framework_slug, 'edit_submission').filter(draft)
-    section = content.get_section(section_id)
-    if section and (question_slug is not None):
-        section = section.get_question_as_section(question_slug)
-
-    if section is None or not section.editable:
-        abort(404)
-
-    draft = section.unformat_data(draft)
-
-    return render_template(
-        "services/edit_submission_section.html",
-        section=section,
-        framework=framework,
-        next_section_name=get_next_section_name(content, section.id),
-        service_data=draft,
-        service_id=service_id,
-        force_return_to_summary=force_return_to_summary,
-        one_service_limit=lot['oneServiceLimit']
-    )
-
-
-@main.route('/frameworks/<framework_slug>/submissions/<lot_slug>/<service_id>/edit/<section_id>', methods=['POST'])
-@main.route('/frameworks/<framework_slug>/submissions/<lot_slug>/<service_id>/edit/<section_id>/<question_slug>',
-            methods=['POST'])
-@login_required
-def update_section_submission(framework_slug, lot_slug, service_id, section_id, question_slug=None):
     """
         Also accepts URL parameter `return_to_summary` which will remove the ability to continue to the next section
         on submit
@@ -453,62 +408,67 @@ def update_section_submission(framework_slug, lot_slug, service_id, section_id, 
         abort(404)
 
     errors = None
-    update_data = section.get_data(request.form)
+    if request.method == "POST":
+        update_data = section.get_data(request.form)
 
-    uploader = s3.S3(current_app.config['DM_SUBMISSIONS_BUCKET'])
-    documents_url = url_for('.dashboard', _external=True) + '/assets/'
-    uploaded_documents, document_errors = upload_service_documents(
-        uploader, documents_url, draft, request.files, section,
-        public=False)
+        uploader = s3.S3(current_app.config['DM_SUBMISSIONS_BUCKET'])
+        documents_url = url_for('.dashboard', _external=True) + '/assets/'
+        uploaded_documents, document_errors = upload_service_documents(
+            uploader, documents_url, draft, request.files, section,
+            public=False)
 
-    if document_errors:
-        errors = section.get_error_messages(document_errors)
-    else:
-        update_data.update(uploaded_documents)
+        if document_errors:
+            errors = section.get_error_messages(document_errors)
+        else:
+            update_data.update(uploaded_documents)
 
-    if not errors and section.has_changes_to_save(draft, update_data):
-        try:
-            data_api_client.update_draft_service(
-                service_id,
-                update_data,
-                current_user.email_address,
-                page_questions=section.get_field_names()
-            )
-        except HTTPError as e:
-            update_data = section.unformat_data(update_data)
-            errors = section.get_error_messages(e.message)
+        if not errors and section.has_changes_to_save(draft, update_data):
+            try:
+                data_api_client.update_draft_service(
+                    service_id,
+                    update_data,
+                    current_user.email_address,
+                    page_questions=section.get_field_names()
+                )
+            except HTTPError as e:
+                update_data = section.unformat_data(update_data)
+                errors = section.get_error_messages(e.message)
 
-    if errors:
-        keys_required_for_template = ['serviceName', 'lot', 'lotName']
-        for k in keys_required_for_template:
-            if k in draft and k not in update_data:
-                update_data[k] = draft[k]
-        return render_template(
-            "services/edit_submission_section.html",
-            framework=framework,
-            section=section,
-            next_section_name=get_next_section_name(content, section.id),
-            service_data=update_data,
-            service_id=service_id,
-            one_service_limit=lot['oneServiceLimit'],
-            force_return_to_summary=force_return_to_summary,
-            errors=errors
+        if not errors:
+            next_section = content.get_next_editable_section_id(section_id)
+
+            if next_section and request.form.get('continue_to_next_section') and not force_return_to_summary:
+                return redirect(url_for(".edit_service_submission",
+                                        framework_slug=framework['slug'],
+                                        lot_slug=draft['lotSlug'],
+                                        service_id=service_id,
+                                        section_id=next_section))
+            else:
+                return redirect(url_for(".view_service_submission",
+                                        framework_slug=framework['slug'],
+                                        lot_slug=draft['lotSlug'],
+                                        service_id=service_id,
+                                        _anchor=section_id))
+
+        update_data.update(
+            (k, draft[k]) for k in ('serviceName', 'lot', 'lotName',) if k in draft and k not in update_data
         )
-
-    next_section = content.get_next_editable_section_id(section_id)
-
-    if next_section and request.form.get('continue_to_next_section') and not force_return_to_summary:
-        return redirect(url_for(".edit_service_submission",
-                                framework_slug=framework['slug'],
-                                lot_slug=draft['lotSlug'],
-                                service_id=service_id,
-                                section_id=next_section))
+        service_data = update_data
+        # fall through to regular GET path to display errors
     else:
-        return redirect(url_for(".view_service_submission",
-                                framework_slug=framework['slug'],
-                                lot_slug=draft['lotSlug'],
-                                service_id=service_id,
-                                _anchor=section_id))
+        service_data = section.unformat_data(draft)
+
+    return render_template(
+        "services/edit_submission_section.html",
+        section=section,
+        framework=framework,
+        next_section_name=get_next_section_name(content, section.id),
+        service_data=service_data,
+        service_id=service_id,
+        force_return_to_summary=force_return_to_summary,
+        one_service_limit=lot['oneServiceLimit'],
+        errors=errors,
+    )
 
 
 @main.route('/frameworks/<framework_slug>/submissions/<lot_slug>/<service_id>/remove/<section_id>/<question_slug>',
