@@ -906,6 +906,30 @@ class TestEditDraftService(BaseApplicationTest):
         assert_equal('http://localhost/suppliers/frameworks/g-cloud-7/submissions/scs/1/edit/service-type',
                      res.headers['Location'])
 
+    def test_update_refuses_to_redirect_to_next_editable_section_if_dos(self, data_api_client, s3):
+        s3.return_value.bucket_short_name = 'submissions'
+        data_api_client.get_framework.return_value = self.framework(
+            status='open',
+            slug='digital-outcomes-and-specialists',
+            name='Digital Outcomes and Specialists',
+        )
+        data_api_client.get_draft_service.return_value = self.multiquestion_draft
+        data_api_client.update_draft_service.return_value = None
+
+        res = self.client.post(
+            '/suppliers/frameworks/digital-outcomes-and-specialists/submissions/digital-specialists/1/'
+            'edit/individual-specialist-roles/product-manager',
+            data={
+                'continue_to_next_section': 'Save and continue'
+            })
+
+        assert_equal(302, res.status_code)
+        assert_equal(
+            'http://localhost/suppliers/frameworks/digital-outcomes-and-specialists/submissions/'
+            'digital-specialists/1#individual-specialist-roles',
+            res.headers['Location']
+        )
+
     def test_update_redirects_to_edit_submission_if_no_next_editable_section(self, data_api_client, s3):
         s3.return_value.bucket_short_name = 'submissions'
         data_api_client.get_framework.return_value = self.framework(status='open')
