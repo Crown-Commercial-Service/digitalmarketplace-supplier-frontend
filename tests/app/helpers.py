@@ -87,7 +87,7 @@ FULL_G7_SUBMISSION = {
 }
 
 
-def empty_g7_draft():
+def empty_g7_draft_service():
     return {
         'id': 1,
         'supplierId': 1234,
@@ -99,7 +99,7 @@ def empty_g7_draft():
         'lotName': 'Specialist Cloud Services',
         'status': 'not-submitted',
         'links': {},
-        'updatedAt': '2015-06-29T15:26:07.650368Z'
+        'updatedAt': '2015-06-29T15:26:07.650368Z',
     }
 
 
@@ -208,11 +208,13 @@ class BaseApplicationTest(object):
                 {'id': 4, 'slug': 'saas', 'name': 'Software as a Service', 'oneServiceLimit': False,
                  'unitSingular': 'service', 'unitPlural': 'service'},
             ]
+            metaframework = "g-cloud"
         elif slug == 'digital-outcomes-and-specialists':
             lots = [
                 {'id': 1, 'slug': 'digital-specialists', 'name': 'Digital specialists', 'oneServiceLimit': True,
                  'unitSingular': 'service', 'unitPlural': 'service'},
             ]
+            metaframework = "dos"
 
         return {
             'frameworks': {
@@ -221,7 +223,8 @@ class BaseApplicationTest(object):
                 'name': name,
                 'slug': slug,
                 'lots': lots,
-                'frameworkAgreementVersion': framework_agreement_version
+                'frameworkAgreementVersion': framework_agreement_version,
+                'framework': metaframework,
             }
         }
 

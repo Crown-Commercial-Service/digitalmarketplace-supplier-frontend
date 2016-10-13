@@ -12,7 +12,7 @@ from lxml import html
 from freezegun import freeze_time
 
 from nose.tools import assert_equal, assert_true, assert_false, assert_in, assert_not_in
-from tests.app.helpers import BaseApplicationTest, empty_g7_draft
+from tests.app.helpers import BaseApplicationTest, empty_g7_draft_service
 
 
 @pytest.fixture(params=["g-cloud-6", "g-cloud-7"])
@@ -532,7 +532,7 @@ class TestCreateDraftService(BaseApplicationTest):
 
     def _test_post_create_draft_service(self, data, if_error_expected, data_api_client):
         data_api_client.get_framework.return_value = self.framework(status='open')
-        data_api_client.create_new_draft_service.return_value = {"services": empty_g7_draft()}
+        data_api_client.create_new_draft_service.return_value = {"services": empty_g7_draft_service()}
 
         res = self.client.post(
             '/suppliers/frameworks/g-cloud-7/submissions/scs/create',
@@ -587,7 +587,7 @@ class TestCopyDraft(BaseApplicationTest):
         with self.app.test_client():
             self.login()
 
-        self.draft = empty_g7_draft()
+        self.draft = empty_g7_draft_service()
 
     def test_copy_draft(self, data_api_client):
         data_api_client.get_framework.return_value = self.framework(status='open')
@@ -619,7 +619,7 @@ class TestCompleteDraft(BaseApplicationTest):
         with self.app.test_client():
             self.login()
 
-        self.draft = empty_g7_draft()
+        self.draft = empty_g7_draft_service()
 
     def test_complete_draft(self, data_api_client):
         data_api_client.get_framework.return_value = self.framework(status='open')
@@ -652,7 +652,7 @@ class TestEditDraftService(BaseApplicationTest):
         with self.app.test_client():
             self.login()
 
-        self.empty_draft = {'services': empty_g7_draft()}
+        self.empty_draft = {'services': empty_g7_draft_service()}
 
         self.multiquestion_draft = {
             'services': {
@@ -906,6 +906,61 @@ class TestEditDraftService(BaseApplicationTest):
         assert_equal('http://localhost/suppliers/frameworks/g-cloud-7/submissions/scs/1/edit/service-type',
                      res.headers['Location'])
 
+    def test_page_offers_continue_to_next_editable_section(self, data_api_client, s3):
+        s3.return_value.bucket_short_name = 'submissions'
+        data_api_client.get_framework.return_value = self.framework(status='open')
+        data_api_client.get_draft_service.return_value = self.empty_draft
+
+        res = self.client.get(
+            '/suppliers/frameworks/g-cloud-7/submissions/scs/1/edit/service-description',
+        )
+
+        assert_equal(200, res.status_code)
+        document = html.fromstring(res.get_data(as_text=True))
+        assert len(document.xpath("//input[@type='submit'][@name='continue_to_next_section']")) > 0
+
+    def test_update_refuses_to_redirect_to_next_editable_section_if_dos(self, data_api_client, s3):
+        s3.return_value.bucket_short_name = 'submissions'
+        data_api_client.get_framework.return_value = self.framework(
+            status='open',
+            slug='digital-outcomes-and-specialists',
+            name='Digital Outcomes and Specialists',
+        )
+        data_api_client.get_draft_service.return_value = self.multiquestion_draft
+        data_api_client.update_draft_service.return_value = None
+
+        res = self.client.post(
+            '/suppliers/frameworks/digital-outcomes-and-specialists/submissions/digital-specialists/1/'
+            'edit/individual-specialist-roles/product-manager',
+            data={
+                'continue_to_next_section': 'Save and continue'
+            })
+
+        assert_equal(302, res.status_code)
+        assert_equal(
+            'http://localhost/suppliers/frameworks/digital-outcomes-and-specialists/submissions/'
+            'digital-specialists/1#individual-specialist-roles',
+            res.headers['Location']
+        )
+
+    def test_page_doesnt_offer_continue_to_next_editable_section_if_dos(self, data_api_client, s3):
+        s3.return_value.bucket_short_name = 'submissions'
+        data_api_client.get_framework.return_value = self.framework(
+            status='open',
+            slug='digital-outcomes-and-specialists',
+            name='Digital Outcomes and Specialists',
+        )
+        data_api_client.get_draft_service.return_value = self.multiquestion_draft
+
+        res = self.client.get(
+            '/suppliers/frameworks/digital-outcomes-and-specialists/submissions/digital-specialists/1/'
+            'edit/individual-specialist-roles/product-manager',
+        )
+
+        assert_equal(200, res.status_code)
+        document = html.fromstring(res.get_data(as_text=True))
+        assert len(document.xpath("//input[@type='submit'][@name='continue_to_next_section']")) == 0
+
     def test_update_redirects_to_edit_submission_if_no_next_editable_section(self, data_api_client, s3):
         s3.return_value.bucket_short_name = 'submissions'
         data_api_client.get_framework.return_value = self.framework(status='open')
@@ -922,6 +977,21 @@ class TestEditDraftService(BaseApplicationTest):
             res.headers['Location']
         )
 
+    def test_update_doesnt_offer_continue_to_next_editable_section_if_no_next_editable_section(self,
+                                                                                               data_api_client,
+                                                                                               s3):
+        s3.return_value.bucket_short_name = 'submissions'
+        data_api_client.get_framework.return_value = self.framework(status='open')
+        data_api_client.get_draft_service.return_value = self.empty_draft
+
+        res = self.client.get(
+            '/suppliers/frameworks/g-cloud-7/submissions/scs/1/edit/sfia-rate-card',
+        )
+
+        assert_equal(200, res.status_code)
+        document = html.fromstring(res.get_data(as_text=True))
+        assert len(document.xpath("//input[@type='submit'][@name='continue_to_next_section']")) == 0
+
     def test_update_redirects_to_edit_submission_if_return_to_summary(self, data_api_client, s3):
         s3.return_value.bucket_short_name = 'submissions'
         data_api_client.get_framework.return_value = self.framework(status='open')
@@ -937,6 +1007,19 @@ class TestEditDraftService(BaseApplicationTest):
             'http://localhost/suppliers/frameworks/g-cloud-7/submissions/scs/1#service-description',
             res.headers['Location']
         )
+
+    def test_update_doesnt_offer_continue_to_next_editable_section_if_return_to_summary(self, data_api_client, s3):
+        s3.return_value.bucket_short_name = 'submissions'
+        data_api_client.get_framework.return_value = self.framework(status='open')
+        data_api_client.get_draft_service.return_value = self.empty_draft
+
+        res = self.client.get(
+            '/suppliers/frameworks/g-cloud-7/submissions/scs/1/edit/service-description?return_to_summary=1',
+        )
+
+        assert_equal(200, res.status_code)
+        document = html.fromstring(res.get_data(as_text=True))
+        assert len(document.xpath("//input[@type='submit'][@name='continue_to_next_section']")) == 0
 
     def test_update_redirects_to_edit_submission_if_save_and_return_grey_button_clicked(self, data_api_client, s3):
         s3.return_value.bucket_short_name = 'submissions'
@@ -1167,7 +1250,7 @@ class TestEditDraftService(BaseApplicationTest):
 @mock.patch('app.main.views.services.data_api_client')
 class TestShowDraftService(BaseApplicationTest):
 
-    draft_service_data = empty_g7_draft()
+    draft_service_data = empty_g7_draft_service()
     draft_service_data.update({
         'priceMin': '12.50',
         'priceMax': '15',
@@ -1287,7 +1370,7 @@ class TestShowDraftService(BaseApplicationTest):
 @mock.patch('app.main.views.services.data_api_client')
 class TestDeleteDraftService(BaseApplicationTest):
 
-    draft_service_data = empty_g7_draft()
+    draft_service_data = empty_g7_draft_service()
     draft_service_data.update({
         'serviceName': 'My rubbish draft',
         'serviceSummary': 'This is the worst service ever',

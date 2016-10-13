@@ -35,7 +35,7 @@
 
 {% block save_button %}
 
-  {% if next_section_name and not return_to_summary %}
+  {% if next_section_name and not force_return_to_summary %}
     {%
       with
       label="Save and continue",
@@ -52,8 +52,7 @@
     {%
     with
       type = "secondary",
-      label = "Save and return to service overview",
-      name = "return_to_overview"
+      label = "Save and return to service overview"
     %}
       {% include "toolkit/button.html" %}
     {% endwith %}
@@ -62,8 +61,7 @@
     {%
       with
       label="Save and continue",
-      type="save",
-      name = "return_to_overview"
+      type="save"
     %}
       {% include "toolkit/button.html" %}
     {% endwith %}
