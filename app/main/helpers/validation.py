@@ -229,8 +229,13 @@ class G8Validator(DOSValidator):
     number_string_fields = [('dunsNumber', 9)]
 
 
+class DOS2Validator(G8Validator):
+    pass
+
+
 VALIDATORS = {
     "g-cloud-7": G7Validator,
     "g-cloud-8": G8Validator,
     "digital-outcomes-and-specialists": DOSValidator,
+    "digital-outcomes-and-specialists-2": DOS2Validator,
 }
