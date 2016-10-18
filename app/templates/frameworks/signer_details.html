@@ -43,7 +43,7 @@
       {% endwith %}
     {% endif %}
 
-    <form method="POST" action="{{ url_for('.signer_details', framework_slug=framework.slug) }}">
+    <form method="POST" action="{{ url_for('.signer_details', framework_slug=framework.slug, agreement_id=agreement['id']) }}">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
         {% for question_key in question_keys %}
           {%

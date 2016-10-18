@@ -62,7 +62,7 @@
       {% call summary.field() %}
         <p>{{ supplier_framework.agreementDetails.signerName }}</p><p>{{ supplier_framework.agreementDetails.signerRole }}</p>
       {% endcall %}
-      {{ summary.edit_link("Edit", url_for('.signer_details', framework_slug=framework.slug)) }}
+      {{ summary.edit_link("Edit", url_for('.signer_details', framework_slug=framework.slug, agreement_id=agreement_id)) }}
     {% endcall %}
     {% call summary.row() %}
       {{ summary.field_name('Signature page') }}

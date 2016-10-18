@@ -608,21 +608,25 @@ def upload_framework_agreement(framework_slug):
 @main.route('/frameworks/<framework_slug>/create-agreement', methods=['POST'])
 @login_required
 def create_framework_agreement(framework_slug):
-    framework = get_framework(data_api_client, framework_slug)
+    framework = get_framework(data_api_client, framework_slug, allowed_statuses=['standstill', 'live'])
     return_supplier_framework_info_if_on_framework_or_abort(data_api_client, framework_slug)
 
     agreement_id = data_api_client.create_framework_agreement(
-        current_user.supplier_id, framework_slug, current_user.email_address
+        current_user.supplier_id, framework["slug"], current_user.email_address
     )["agreement"]["id"]
 
     return redirect(url_for('.signer_details', framework_slug=framework_slug, agreement_id=agreement_id))
 
 
-@main.route('/frameworks/<framework_slug>/signer-details', methods=['GET', 'POST'])
+@main.route('/frameworks/<framework_slug>/<int:agreement_id>/signer-details', methods=['GET', 'POST'])
 @login_required
-def signer_details(framework_slug):
-    framework = get_framework(data_api_client, framework_slug)
+def signer_details(framework_slug, agreement_id):
+    framework = get_framework(data_api_client, framework_slug, allowed_statuses=['standstill', 'live'])
     supplier_framework = return_supplier_framework_info_if_on_framework_or_abort(data_api_client, framework_slug)
+    agreement = data_api_client.get_framework_agreement(agreement_id)['agreement']
+
+    if agreement['frameworkSlug'] != framework_slug or agreement['supplierId'] != supplier_framework['supplierId']:
+        abort(404)
 
     form = SignerDetailsForm()
 
@@ -632,18 +636,21 @@ def signer_details(framework_slug):
     if request.method == 'POST':
 
         if form.validate_on_submit():
-            agreement_details = {question_key: form[question_key].data for question_key in question_keys}
-
-            data_api_client.update_supplier_framework_agreement_details(
-                current_user.supplier_id, framework_slug, agreement_details, current_user.email_address
+            agreement_details = {
+                "signedAgreementDetails": {
+                    question_key: form[question_key].data for question_key in question_keys
+                }
+            }
+            data_api_client.update_framework_agreement(
+                agreement_id, agreement_details, current_user.email_address
             )
 
             # If they have already uploaded a file then let them go to straight to the contract review
             # page as they are likely editing their signer details
             if session.get('signature_page'):
-                return redirect(url_for(".contract_review", framework_slug=framework_slug))
+                return redirect(url_for(".contract_review", framework_slug=framework_slug, agreement_id=agreement_id))
 
-            return redirect(url_for(".signature_upload", framework_slug=framework_slug))
+            return redirect(url_for(".signature_upload", framework_slug=framework_slug, agreement_id=agreement_id))
         else:
             error_keys_in_order = [key for key in question_keys if key in form.errors.keys()]
             form_errors = [
@@ -651,25 +658,26 @@ def signer_details(framework_slug):
             ]
 
     # if the signer* keys exist, prefill them in the form
-    if supplier_framework['agreementDetails']:
+    if agreement.get('signedAgreementDetails'):
         for question_key in question_keys:
-            if question_key in supplier_framework['agreementDetails']:
-                form[question_key].data = supplier_framework['agreementDetails'][question_key]
+            if question_key in agreement['signedAgreementDetails']:
+                form[question_key].data = agreement['signedAgreementDetails'][question_key]
 
     return render_template(
         "frameworks/signer_details.html",
+        agreement=agreement,
         form=form,
         form_errors=form_errors,
         framework=framework,
         question_keys=question_keys,
-        supplier_framework=supplier_framework,
+        supplier_framework=supplier_framework
     ), 400 if form_errors else 200
 
 
-@main.route('/frameworks/<framework_slug>/signature-upload', methods=['GET', 'POST'])
+@main.route('/frameworks/<framework_slug>/<int:agreement_id>/signature-upload', methods=['GET', 'POST'])
 @login_required
-def signature_upload(framework_slug):
-    framework = get_framework(data_api_client, framework_slug)
+def signature_upload(framework_slug, agreement_id):
+    framework = get_framework(data_api_client, framework_slug, allowed_statuses=['standstill', 'live'])
     supplier_framework = return_supplier_framework_info_if_on_framework_or_abort(data_api_client, framework_slug)
     agreements_bucket = s3.S3(current_app.config['DM_AGREEMENTS_BUCKET'])
     signature_page = agreements_bucket.get_key(supplier_framework['agreementPath'])
@@ -678,7 +686,7 @@ def signature_upload(framework_slug):
     if request.method == 'POST':
         # No file chosen for upload and file already exists on s3 so can use existing and progress
         if not request.files['signature_page'].filename and signature_page:
-            return redirect(url_for(".contract_review", framework_slug=framework_slug))
+            return redirect(url_for(".contract_review", framework_slug=framework_slug, agreement_id=agreement_id))
 
         if not file_is_image(request.files['signature_page']) and not file_is_pdf(request.files['signature_page']):
             upload_error = "The file must be a PDF, JPG or PNG"
@@ -724,7 +732,7 @@ def signature_upload(framework_slug):
                     "upload_path": upload_path
                 })
 
-            return redirect(url_for(".contract_review", framework_slug=framework_slug))
+            return redirect(url_for(".contract_review", framework_slug=framework_slug, agreement_id=agreement_id))
 
     return render_template(
         "frameworks/signature_upload.html",
@@ -734,10 +742,10 @@ def signature_upload(framework_slug):
     ), 400 if upload_error else 200
 
 
-@main.route('/frameworks/<framework_slug>/contract-review', methods=['GET', 'POST'])
+@main.route('/frameworks/<framework_slug>/<int:agreement_id>/contract-review', methods=['GET', 'POST'])
 @login_required
-def contract_review(framework_slug):
-    framework = get_framework(data_api_client, framework_slug)
+def contract_review(framework_slug, agreement_id):
+    framework = get_framework(data_api_client, framework_slug, allowed_statuses=['standstill', 'live'])
     supplier_framework = return_supplier_framework_info_if_on_framework_or_abort(data_api_client, framework_slug)
     agreements_bucket = s3.S3(current_app.config['DM_AGREEMENTS_BUCKET'])
     signature_page = agreements_bucket.get_key(supplier_framework['agreementPath'])
@@ -831,7 +839,7 @@ def contract_review(framework_slug):
 @flask_featureflags.is_active_feature('CONTRACT_VARIATION')
 @login_required
 def view_contract_variation(framework_slug, variation_slug):
-    framework = get_framework(data_api_client, framework_slug)
+    framework = get_framework(data_api_client, framework_slug, allowed_statuses=['live'])
     supplier_framework = return_supplier_framework_info_if_on_framework_or_abort(data_api_client, framework_slug)
     variation_details = framework.get('variations', {}).get(variation_slug)
 

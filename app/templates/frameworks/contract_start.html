@@ -73,6 +73,7 @@
         <h2 class="page-subheading">What you need to do</h2>
 
         <form method="post" action="{{ url_for(".create_framework_agreement", framework_slug=framework.slug) }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
           {%
             with
             verbose = true,

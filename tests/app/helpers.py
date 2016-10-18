@@ -230,6 +230,7 @@ class BaseApplicationTest(object):
 
     @staticmethod
     def supplier_framework(
+        supplier_id=1234,
         declaration='default',
         status=None,
         on_framework=False,
@@ -250,6 +251,7 @@ class BaseApplicationTest(object):
             declaration['status'] = status
         return {
             'frameworkInterest': {
+                'supplierId': supplier_id,
                 'declaration': declaration,
                 'onFramework': on_framework,
                 'agreementReturned': agreement_returned,
@@ -262,6 +264,22 @@ class BaseApplicationTest(object):
                 'countersignedPath': countersigned_path,
                 'agreementId': agreement_id,
                 'agreedVariations': agreed_variations
+            }
+        }
+
+    @staticmethod
+    def framework_agreement(
+            id=234,
+            supplier_id=1234,
+            framework_slug="g-cloud-8",
+            signed_agreement_details=None
+    ):
+        return {
+            "agreement": {
+                "id": id,
+                "supplierId": supplier_id,
+                "frameworkSlug": framework_slug,
+                "signedAgreementDetails": signed_agreement_details
             }
         }
 
