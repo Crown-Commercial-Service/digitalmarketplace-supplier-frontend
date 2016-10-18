@@ -284,7 +284,6 @@ def framework_supplier_declaration(framework_slug, section_id=None):
                     all_answers,
                     current_user.email_address
                 )
-                saved_answers = all_answers
 
                 next_section = content.get_next_editable_section_id(section_id)
                 if next_section:
