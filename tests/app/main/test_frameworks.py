@@ -543,6 +543,35 @@ class TestFrameworksDashboard(BaseApplicationTest):
 
 
 @mock.patch('app.main.views.frameworks.data_api_client', autospec=True)
+class TestCreateFrameworkAgreement(BaseApplicationTest):
+    def test_creates_framework_agreement_and_redirects_to_signer_details_page(self, data_api_client):
+        with self.app.test_client():
+            self.login()
+
+            data_api_client.get_framework.return_value = self.framework(status='standstill')
+            data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
+                on_framework=True)
+            data_api_client.create_framework_agreement.return_value = {"agreement": {"id": 789}}
+
+            res = self.client.post("/suppliers/frameworks/g-cloud-8/create-agreement")
+
+            data_api_client.create_framework_agreement.assert_called_once_with(1234, 'g-cloud-8', 'email@email.com')
+            assert res.status_code == 302
+            assert res.location == 'http://localhost/suppliers/frameworks/g-cloud-8/789/signer-details'
+
+    def test_404_if_supplier_not_on_framework(self, data_api_client):
+        with self.app.test_client():
+            self.login()
+
+            data_api_client.get_framework.return_value = self.framework(status='standstill')
+            data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
+                on_framework=False)
+
+            res = self.client.post("/suppliers/frameworks/g-cloud-8/create-agreement")
+            assert res.status_code == 404
+
+
+@mock.patch('app.main.views.frameworks.data_api_client', autospec=True)
 class TestFrameworkAgreement(BaseApplicationTest):
     def test_page_renders_if_all_ok(self, data_api_client):
         with self.app.test_client():

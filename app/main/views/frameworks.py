@@ -605,6 +605,19 @@ def upload_framework_agreement(framework_slug):
     return redirect(url_for('.framework_agreement', framework_slug=framework_slug))
 
 
+@main.route('/frameworks/<framework_slug>/create-agreement', methods=['POST'])
+@login_required
+def create_framework_agreement(framework_slug):
+    framework = get_framework(data_api_client, framework_slug)
+    return_supplier_framework_info_if_on_framework_or_abort(data_api_client, framework_slug)
+
+    agreement_id = data_api_client.create_framework_agreement(
+        current_user.supplier_id, framework_slug, current_user.email_address
+    )["agreement"]["id"]
+
+    return redirect(url_for('.signer_details', framework_slug=framework_slug, agreement_id=agreement_id))
+
+
 @main.route('/frameworks/<framework_slug>/signer-details', methods=['GET', 'POST'])
 @login_required
 def signer_details(framework_slug):
