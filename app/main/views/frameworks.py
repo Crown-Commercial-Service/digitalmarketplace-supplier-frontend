@@ -679,8 +679,14 @@ def signer_details(framework_slug, agreement_id):
 def signature_upload(framework_slug, agreement_id):
     framework = get_framework(data_api_client, framework_slug, allowed_statuses=['standstill', 'live'])
     supplier_framework = return_supplier_framework_info_if_on_framework_or_abort(data_api_client, framework_slug)
+    agreement = data_api_client.get_framework_agreement(agreement_id)['agreement']
+
+    # Need to write a test for this and move this functionality into a helper?
+    if agreement['frameworkSlug'] != framework_slug or agreement['supplierId'] != supplier_framework['supplierId']:
+        abort(404)
+
     agreements_bucket = s3.S3(current_app.config['DM_AGREEMENTS_BUCKET'])
-    signature_page = agreements_bucket.get_key(supplier_framework['agreementPath'])
+    signature_page = agreements_bucket.get_key(agreement.get('signedAgreementPath'))
     upload_error = None
 
     if request.method == 'POST':
@@ -716,26 +722,16 @@ def signature_upload(framework_slug, agreement_id):
                 disposition_type='inline'  # Embeddeding PDFs in admin pages requires 'inline' and not 'attachment'
             )
 
-            agreement_id = supplier_framework.get("agreementId")
             data_api_client.update_framework_agreement(agreement_id, {"signedAgreementPath": upload_path},
                                                        current_user.email_address)
 
             session['signature_page'] = request.files['signature_page'].filename
 
-            data_api_client.create_audit_event(
-                audit_type=AuditTypes.upload_signed_agreement,
-                user=current_user.email_address,
-                object_type="suppliers",
-                object_id=current_user.supplier_id,
-                data={
-                    "upload_signed_agreement": request.files['signature_page'].filename,
-                    "upload_path": upload_path
-                })
-
             return redirect(url_for(".contract_review", framework_slug=framework_slug, agreement_id=agreement_id))
 
     return render_template(
         "frameworks/signature_upload.html",
+        agreement=agreement,
         framework=framework,
         signature_page=signature_page,
         upload_error=upload_error,

@@ -272,14 +272,16 @@ class BaseApplicationTest(object):
             id=234,
             supplier_id=1234,
             framework_slug="g-cloud-8",
-            signed_agreement_details=None
+            signed_agreement_details=None,
+            signed_agreement_path=None
     ):
         return {
             "agreement": {
                 "id": id,
                 "supplierId": supplier_id,
                 "frameworkSlug": framework_slug,
-                "signedAgreementDetails": signed_agreement_details
+                "signedAgreementDetails": signed_agreement_details,
+                "signedAgreementPath": signed_agreement_path
             }
         }
 
