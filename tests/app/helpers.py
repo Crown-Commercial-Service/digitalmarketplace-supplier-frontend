@@ -231,6 +231,7 @@ class BaseApplicationTest(object):
     @staticmethod
     def supplier_framework(
         supplier_id=1234,
+        framework_slug=None,
         declaration='default',
         status=None,
         on_framework=False,
@@ -252,6 +253,7 @@ class BaseApplicationTest(object):
         return {
             'frameworkInterest': {
                 'supplierId': supplier_id,
+                'frameworkSlug': framework_slug,
                 'declaration': declaration,
                 'onFramework': on_framework,
                 'agreementReturned': agreement_returned,

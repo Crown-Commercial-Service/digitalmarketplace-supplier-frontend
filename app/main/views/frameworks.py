@@ -27,7 +27,9 @@ from ..helpers.frameworks import (
     get_declaration_status, get_last_modified_from_first_matching_file, register_interest_in_framework,
     get_supplier_on_framework_from_info, get_declaration_status_from_info, get_supplier_framework_info,
     get_framework, get_framework_and_lot, count_drafts_by_lot, get_statuses_for_lot,
-    return_supplier_framework_info_if_on_framework_or_abort, returned_agreement_email_recipients)
+    return_supplier_framework_info_if_on_framework_or_abort, returned_agreement_email_recipients,
+    check_agreement_is_related_to_supplier_framework_or_abort
+)
 from ..helpers.validation import get_validator
 from ..helpers.services import (
     get_signed_document_url, get_drafts, get_lot_drafts, count_unanswered_questions
@@ -624,9 +626,7 @@ def signer_details(framework_slug, agreement_id):
     framework = get_framework(data_api_client, framework_slug, allowed_statuses=['standstill', 'live'])
     supplier_framework = return_supplier_framework_info_if_on_framework_or_abort(data_api_client, framework_slug)
     agreement = data_api_client.get_framework_agreement(agreement_id)['agreement']
-
-    if agreement['frameworkSlug'] != framework_slug or agreement['supplierId'] != supplier_framework['supplierId']:
-        abort(404)
+    check_agreement_is_related_to_supplier_framework_or_abort(agreement, supplier_framework)
 
     form = SignerDetailsForm()
 

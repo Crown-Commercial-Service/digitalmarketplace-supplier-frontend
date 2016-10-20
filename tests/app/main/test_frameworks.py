@@ -1845,7 +1845,7 @@ class TestSignerDetailsPage(BaseApplicationTest):
         self.login()
         data_api_client.get_framework.return_value = get_g_cloud_8()
         data_api_client.get_framework_agreement.return_value = self.framework_agreement()
-        supplier_framework = self.supplier_framework(on_framework=True)['frameworkInterest']
+        supplier_framework = self.supplier_framework(framework_slug='g-cloud-8', on_framework=True)['frameworkInterest']
         supplier_framework['declaration']['nameOfOrganisation'] = u'£unicodename'
         return_supplier_framework.return_value = supplier_framework
 
@@ -1863,7 +1863,7 @@ class TestSignerDetailsPage(BaseApplicationTest):
                 "signerRole": "Ex funny man"
             }
         )
-        supplier_framework = self.supplier_framework(on_framework=True)['frameworkInterest']
+        supplier_framework = self.supplier_framework(framework_slug='g-cloud-8', on_framework=True)['frameworkInterest']
         return_supplier_framework.return_value = supplier_framework
 
         res = self.client.get("/suppliers/frameworks/g-cloud-8/234/signer-details")
@@ -1873,40 +1873,38 @@ class TestSignerDetailsPage(BaseApplicationTest):
         assert "Ex funny man" in page
 
     def test_404_if_framework_in_wrong_state(self, return_supplier_framework, data_api_client):
-        with self.app.test_client():
-            self.login()
-            # Suppliers can only sign agreements in 'standstill' and 'live' lifecycle statuses
-            data_api_client.get_framework.return_value = self.framework(status='pending')
-            data_api_client.get_framework_agreement.return_value = self.framework_agreement()
-            supplier_framework = self.supplier_framework(on_framework=True)['frameworkInterest']
-            return_supplier_framework.return_value = supplier_framework
+        self.login()
+        # Suppliers can only sign agreements in 'standstill' and 'live' lifecycle statuses
+        data_api_client.get_framework.return_value = self.framework(status='pending')
+        data_api_client.get_framework_agreement.return_value = self.framework_agreement()
+        supplier_framework = self.supplier_framework(framework_slug='g-cloud-8', on_framework=True)['frameworkInterest']
+        return_supplier_framework.return_value = supplier_framework
 
-            res = self.client.get("/suppliers/frameworks/g-cloud-8/234/signer-details")
-            assert res.status_code == 404
+        res = self.client.get("/suppliers/frameworks/g-cloud-8/234/signer-details")
+        assert res.status_code == 404
 
-    def test_should_error_if_agreement_does_not_belong_to_supplier(self, return_supplier_framework, data_api_client):
+    @mock.patch('app.main.views.frameworks.check_agreement_is_related_to_supplier_framework_or_abort')
+    def test_we_abort_if_agreement_does_not_match_supplier_framework(
+        self, check_agreement_is_related_to_supplier_framework_or_abort, return_supplier_framework, data_api_client
+    ):
         self.login()
         data_api_client.get_framework.return_value = get_g_cloud_8()
         data_api_client.get_framework_agreement.return_value = self.framework_agreement(supplier_id=2345)
-        return_supplier_framework.return_value = self.supplier_framework(on_framework=True)['frameworkInterest']
+        supplier_framework = self.supplier_framework(framework_slug='g-cloud-8', on_framework=True)['frameworkInterest']
+        return_supplier_framework.return_value = supplier_framework
 
         res = self.client.get("/suppliers/frameworks/g-cloud-8/234/signer-details")
-        assert res.status_code == 404
-
-    def test_should_error_if_agreement_does_not_belong_to_framework(self, return_supplier_framework, data_api_client):
-        self.login()
-        data_api_client.get_framework.return_value = get_g_cloud_8()
-        data_api_client.get_framework_agreement.return_value = self.framework_agreement(framework_slug="g-cloud-7")
-        return_supplier_framework.return_value = self.supplier_framework(on_framework=True)['frameworkInterest']
-
-        res = self.client.get("/suppliers/frameworks/g-cloud-8/234/signer-details")
-        assert res.status_code == 404
+        check_agreement_is_related_to_supplier_framework_or_abort.assert_called_with(
+            self.framework_agreement(supplier_id=2345)['agreement'],
+            supplier_framework
+        )
 
     def test_should_be_an_error_if_no_full_name(self, return_supplier_framework, data_api_client):
         self.login()
         data_api_client.get_framework.return_value = get_g_cloud_8()
         data_api_client.get_framework_agreement.return_value = self.framework_agreement()
-        return_supplier_framework.return_value = self.supplier_framework(on_framework=True)['frameworkInterest']
+        supplier_framework = self.supplier_framework(framework_slug='g-cloud-8', on_framework=True)['frameworkInterest']
+        return_supplier_framework.return_value = supplier_framework
 
         res = self.client.post(
             "/suppliers/frameworks/g-cloud-8/234/signer-details",
@@ -1922,7 +1920,8 @@ class TestSignerDetailsPage(BaseApplicationTest):
         self.login()
         data_api_client.get_framework.return_value = get_g_cloud_8()
         data_api_client.get_framework_agreement.return_value = self.framework_agreement()
-        return_supplier_framework.return_value = self.supplier_framework(on_framework=True)['frameworkInterest']
+        supplier_framework = self.supplier_framework(framework_slug='g-cloud-8', on_framework=True)['frameworkInterest']
+        return_supplier_framework.return_value = supplier_framework
 
         res = self.client.post(
             "/suppliers/frameworks/g-cloud-8/234/signer-details",
@@ -1940,7 +1939,8 @@ class TestSignerDetailsPage(BaseApplicationTest):
         self.login()
         data_api_client.get_framework.return_value = get_g_cloud_8()
         data_api_client.get_framework_agreement.return_value = self.framework_agreement()
-        return_supplier_framework.return_value = self.supplier_framework(on_framework=True)['frameworkInterest']
+        supplier_framework = self.supplier_framework(framework_slug='g-cloud-8', on_framework=True)['frameworkInterest']
+        return_supplier_framework.return_value = supplier_framework
 
         # 255 characters should be fine
         res = self.client.post(
@@ -1973,7 +1973,8 @@ class TestSignerDetailsPage(BaseApplicationTest):
 
         data_api_client.get_framework.return_value = get_g_cloud_8()
         data_api_client.get_framework_agreement.return_value = self.framework_agreement()
-        return_supplier_framework.return_value = self.supplier_framework(on_framework=True)['frameworkInterest']
+        supplier_framework = self.supplier_framework(framework_slug='g-cloud-8', on_framework=True)['frameworkInterest']
+        return_supplier_framework.return_value = supplier_framework
 
         self.login()
         res = self.client.post(
@@ -1998,7 +1999,8 @@ class TestSignerDetailsPage(BaseApplicationTest):
 
         data_api_client.get_framework.return_value = get_g_cloud_8()
         data_api_client.get_framework_agreement.return_value = self.framework_agreement()
-        return_supplier_framework.return_value = self.supplier_framework(on_framework=True)['frameworkInterest']
+        supplier_framework = self.supplier_framework(framework_slug='g-cloud-8', on_framework=True)['frameworkInterest']
+        return_supplier_framework.return_value = supplier_framework
 
         with self.client as c:
             self.login()
@@ -2025,7 +2027,8 @@ class TestSignerDetailsPage(BaseApplicationTest):
 
         data_api_client.get_framework.return_value = get_g_cloud_8()
         data_api_client.get_framework_agreement.return_value = self.framework_agreement()
-        return_supplier_framework.return_value = self.supplier_framework(on_framework=True)['frameworkInterest']
+        supplier_framework = self.supplier_framework(framework_slug='g-cloud-8', on_framework=True)['frameworkInterest']
+        return_supplier_framework.return_value = supplier_framework
 
         with self.client as c:
             self.login()
