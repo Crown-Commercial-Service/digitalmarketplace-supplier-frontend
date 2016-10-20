@@ -680,10 +680,7 @@ def signature_upload(framework_slug, agreement_id):
     framework = get_framework(data_api_client, framework_slug, allowed_statuses=['standstill', 'live'])
     supplier_framework = return_supplier_framework_info_if_on_framework_or_abort(data_api_client, framework_slug)
     agreement = data_api_client.get_framework_agreement(agreement_id)['agreement']
-
-    # Need to write a test for this and move this functionality into a helper?
-    if agreement['frameworkSlug'] != framework_slug or agreement['supplierId'] != supplier_framework['supplierId']:
-        abort(404)
+    check_agreement_is_related_to_supplier_framework_or_abort(agreement, supplier_framework)
 
     agreements_bucket = s3.S3(current_app.config['DM_AGREEMENTS_BUCKET'])
     signature_page = agreements_bucket.get_key(agreement.get('signedAgreementPath'))
