@@ -2018,16 +2018,19 @@ class TestSignerDetailsPage(BaseApplicationTest):
                 'email@email.com'
             )
 
-    def test_provide_signer_details_form_with_valid_input_redirects_to_contract_review_page_if_filename_in_session(
+    def test_provide_signer_details_form_with_valid_input_redirects_to_contract_review_page_if_file_already_uploaded(
             self, return_supplier_framework, data_api_client
     ):
         signer_details = {
             'signerName': "Josh Moss",
-            'signerRole': "The Boss"
+            'signerRole': "The Boss",
         }
 
         data_api_client.get_framework.return_value = get_g_cloud_8()
-        data_api_client.get_framework_agreement.return_value = self.framework_agreement()
+        data_api_client.get_framework_agreement.return_value = self.framework_agreement(
+            signed_agreement_details={'signerName': 'existing name', 'signerRole': 'existing role'},
+            signed_agreement_path='existing/path.pdf'
+        )
         supplier_framework = self.supplier_framework(framework_slug='g-cloud-8', on_framework=True)['frameworkInterest']
         return_supplier_framework.return_value = supplier_framework
 
@@ -2035,6 +2038,7 @@ class TestSignerDetailsPage(BaseApplicationTest):
             self.login()
 
             with self.client.session_transaction() as sess:
+                # An already uploaded file will also have set a filename in the session
                 sess['signature_page'] = 'test.pdf'
 
             res = c.post(
@@ -2049,6 +2053,37 @@ class TestSignerDetailsPage(BaseApplicationTest):
                 {'signedAgreementDetails': {'signerName': 'Josh Moss', 'signerRole': 'The Boss'}},
                 'email@email.com'
             )
+
+    def test_signer_details_form_redirects_to_signature_upload_page_if_file_in_session_but_no_signed_agreement_path(
+            self, return_supplier_framework, data_api_client
+    ):
+        signer_details = {
+            'signerName': "Josh Moss",
+            'signerRole': "The Boss",
+        }
+
+        data_api_client.get_framework.return_value = get_g_cloud_8()
+        data_api_client.get_framework_agreement.return_value = self.framework_agreement(
+            signed_agreement_details={'signerName': 'existing name', 'signerRole': 'existing role'}
+        )
+        supplier_framework = self.supplier_framework(framework_slug='g-cloud-8', on_framework=True)['frameworkInterest']
+        return_supplier_framework.return_value = supplier_framework
+
+        with self.client as c:
+            self.login()
+
+            with self.client.session_transaction() as sess:
+                # We set a file name that could be from a previous framework agreement signing attempt but this
+                # agreement does not have a signedAgreementPath
+                sess['signature_page'] = 'test.pdf'
+
+            res = c.post(
+                "/suppliers/frameworks/g-cloud-8/234/signer-details",
+                data=signer_details
+            )
+
+            assert res.status_code == 302
+            assert "suppliers/frameworks/g-cloud-8/234/signature-upload" in res.location
 
 
 @mock.patch("app.main.views.frameworks.data_api_client", autospec=True)
