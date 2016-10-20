@@ -887,7 +887,7 @@ class TestFrameworkAgreementUpload(BaseApplicationTest):
             )
 
             assert res.status_code == 503
-            send_email.assert_called()
+            assert send_email.called
 
     @mock.patch('app.main.views.frameworks.generate_timestamped_document_upload_path')
     def test_upload_agreement_document(
