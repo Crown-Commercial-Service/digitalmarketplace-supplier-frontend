@@ -542,6 +542,145 @@ class TestFrameworksDashboard(BaseApplicationTest):
             assert 'Sign and return your framework agreement' not in data
             assert '<ahref="/suppliers/frameworks/g-cloud-7/agreements/countersigned-agreement.pdf"><span>Downloadyourcountersignedframeworkagreement(.pdf)</span></a>' in self.strip_all_whitespace(data)  # noqa
 
+    def test_framework_dashboard_shows_returned_agreement_details(
+            self, data_api_client, s3
+    ):
+        with self.app.test_client():
+            self.login()
+            data_api_client.get_framework.return_value = get_g_cloud_8()
+            data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
+                on_framework=True,
+                agreement_returned=True,
+                agreement_details={
+                    'frameworkAgreementVersion': 'v1.0',
+                    'signerName': 'signer name',
+                    'signerRole': 'signer role',
+                    'uploaderUserId': 123,
+                    'uploaderUserName': 'User',
+                    'uploaderUserEmail': 'email@email.com'
+                },
+                agreement_path='g-cloud-8/agreements/123-framework-agreement.pdf',
+                agreement_returned_at='2016-07-10T21:20:00.000000Z'
+            )
+
+            res = self.client.get("/suppliers/frameworks/g-cloud-8")
+            page = res.get_data(as_text=True)
+            assert res.status_code == 200
+            assert 'G-Cloud 8 documents' in page
+            page_without_whitespace = self.strip_all_whitespace(page)
+            assert '<a href="/suppliers/frameworks/g-cloud-8/agreements/framework-agreement.pdf" target="_blank">Download your framework agreement signature page, signed by your company</a>' in page  # noqa
+            assert '<tdclass="summary-item-field"><span><p>signername</p><p>signerrole</p></span></td>' in page_without_whitespace  # noqa
+            assert '<tdclass="summary-item-field"><span><p>User</p><p>email@email.com</p><p>Sunday10July2016at22:20</p></span></td>' in page_without_whitespace  # noqa
+            assert '<tdclass="summary-item-field-first"><span>WaitingforCCStocountersign</span></td>' in page_without_whitespace  # noqa
+
+    def test_framework_dashboard_shows_contract_variation_link_after_agreement_returned(
+            self, data_api_client, s3
+    ):
+        with self.app.test_client():
+            self.login()
+            g8_with_variation = get_g_cloud_8().copy()
+            g8_with_variation['frameworks']['variations'] = {"1": {"createdAt": "2018-08-16"}}
+            data_api_client.get_framework.return_value = g8_with_variation
+            data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
+                on_framework=True,
+                agreement_returned=True,
+                agreement_path='g-cloud-8/agreements/123-framework-agreement.pdf',
+                agreement_returned_at='2016-07-10T21:20:00.000000Z'
+            )
+
+            res = self.client.get("/suppliers/frameworks/g-cloud-8")
+            page = res.get_data(as_text=True)
+            assert res.status_code == 200
+            assert 'Read the proposed contract variation' in page
+
+    def test_framework_dashboard_does_not_show_contract_variation_link_if_feature_flagged_off(
+            self, data_api_client, s3
+    ):
+        with self.app.test_client():
+            self.app.config['FEATURE_FLAGS_CONTRACT_VARIATION'] = False
+            self.login()
+            g8_with_variation = get_g_cloud_8().copy()
+            g8_with_variation['frameworks']['variations'] = {"1": {"createdAt": "2018-08-16"}}
+            data_api_client.get_framework.return_value = g8_with_variation
+            data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
+                on_framework=True,
+                agreement_returned=True,
+                agreement_path='g-cloud-8/agreements/123-framework-agreement.pdf',
+                agreement_returned_at='2016-07-10T21:20:00.000000Z'
+            )
+
+            res = self.client.get("/suppliers/frameworks/g-cloud-8")
+            page = res.get_data(as_text=True)
+            assert res.status_code == 200
+            assert 'Read the proposed contract variation' not in page
+
+    def test_framework_dashboard_does_not_show_contract_variation_link_if_no_variation(
+            self, data_api_client, s3
+    ):
+        with self.app.test_client():
+            self.login()
+            data_api_client.get_framework.return_value = get_g_cloud_8()
+            data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
+                on_framework=True,
+                agreement_returned=True,
+                agreement_path='g-cloud-8/agreements/123-framework-agreement.pdf',
+                agreement_returned_at='2016-07-10T21:20:00.000000Z'
+            )
+
+            res = self.client.get("/suppliers/frameworks/g-cloud-8")
+            page = res.get_data(as_text=True)
+            assert res.status_code == 200
+            assert 'Read the proposed contract variation' not in page
+
+    def test_framework_dashboard_does_not_show_contract_variation_link_if_agreement_not_returned(
+            self, data_api_client, s3
+    ):
+        with self.app.test_client():
+            self.login()
+            g8_with_variation = get_g_cloud_8().copy()
+            g8_with_variation['frameworks']['variations'] = {"1": {"createdAt": "2018-08-16"}}
+            data_api_client.get_framework.return_value = g8_with_variation
+            data_api_client.get_supplier_framework_info.return_value = self.supplier_framework()
+
+            res = self.client.get("/suppliers/frameworks/g-cloud-8")
+            page = res.get_data(as_text=True)
+            assert res.status_code == 200
+            assert 'Read the proposed contract variation' not in page
+
+    def test_framework_dashboard_shows_contract_variation_alternate_link_text_after_agreed_by_ccs(
+            self, data_api_client, s3
+    ):
+        with self.app.test_client():
+            self.login()
+            g8_with_variation = get_g_cloud_8().copy()
+            g8_with_variation['frameworks']['variations'] = {"1": {
+                "createdAt": "2018-08-16",
+                "countersignedAt": "2018-10-01",
+                "countersignerName": "A.N. Other",
+                "countersignerRole": "Head honcho",
+            }
+            }
+            data_api_client.get_framework.return_value = g8_with_variation
+            data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
+                on_framework=True,
+                agreement_returned=True,
+                agreement_returned_at='2016-07-10T21:20:00.000000Z',
+                agreement_path='g-cloud-8/agreements/1234/1234-signed-agreement.pdf',
+                agreed_variations={
+                    "1": {
+                        "agreedAt": "2016-08-19T15:47:08.116613Z",
+                        "agreedUserId": 1,
+                        "agreedUserEmail": "agreed@email.com",
+                        "agreedUserName": u"William Drăyton",
+                    }}
+            )
+
+            res = self.client.get("/suppliers/frameworks/g-cloud-8")
+            page = res.get_data(as_text=True)
+            assert res.status_code == 200
+            assert 'Read the proposed contract variation' not in page
+            assert 'View the signed contract variation' in page
+
 
 @mock.patch('app.main.views.frameworks.data_api_client', autospec=True)
 class TestFrameworkAgreement(BaseApplicationTest):
@@ -2831,162 +2970,6 @@ class TestContractReviewPage(BaseApplicationTest):
 
             assert res.status_code == 302
             assert res.location == 'http://localhost/suppliers/frameworks/g-cloud-8'
-
-
-@mock.patch("app.main.views.frameworks.data_api_client")
-@mock.patch("app.main.views.frameworks.return_supplier_framework_info_if_on_framework_or_abort")
-class TestReturnSignedAgreement(BaseApplicationTest):
-
-    @mock.patch('dmutils.s3.S3')
-    @mock.patch('app.main.views.frameworks.get_supplier_framework_info')
-    def test_framework_dashboard_shows_returned_agreement_details(
-            self, get_supplier_framework_info, s3, return_supplier_framework, data_api_client
-    ):
-        with self.app.test_client():
-            self.login()
-            data_api_client.get_framework.return_value = get_g_cloud_8()
-            get_supplier_framework_info.return_value = self.supplier_framework(
-                on_framework=True,
-                agreement_returned=True,
-                agreement_details={
-                    'frameworkAgreementVersion': 'v1.0',
-                    'signerName': 'signer name',
-                    'signerRole': 'signer role',
-                    'uploaderUserId': 123,
-                    'uploaderUserName': 'User',
-                    'uploaderUserEmail': 'email@email.com'
-                },
-                agreement_path='g-cloud-8/agreements/123-framework-agreement.pdf',
-                agreement_returned_at='2016-07-10T21:20:00.000000Z'
-            )['frameworkInterest']
-
-            res = self.client.get("/suppliers/frameworks/g-cloud-8")
-            page = res.get_data(as_text=True)
-            assert res.status_code == 200
-            assert 'G-Cloud 8 documents' in page
-            page_without_whitespace = self.strip_all_whitespace(page)
-            assert '<a href="/suppliers/frameworks/g-cloud-8/agreements/framework-agreement.pdf" target="_blank">Download your framework agreement signature page, signed by your company</a>' in page  # noqa
-            assert '<tdclass="summary-item-field"><span><p>signername</p><p>signerrole</p></span></td>' in page_without_whitespace  # noqa
-            assert '<tdclass="summary-item-field"><span><p>User</p><p>email@email.com</p><p>Sunday10July2016at22:20</p></span></td>' in page_without_whitespace  # noqa
-            assert '<tdclass="summary-item-field-first"><span>WaitingforCCStocountersign</span></td>' in page_without_whitespace  # noqa
-
-    @mock.patch('dmutils.s3.S3')
-    @mock.patch('app.main.views.frameworks.get_supplier_framework_info')
-    def test_framework_dashboard_shows_contract_variation_link_after_agreement_returned(
-            self, get_supplier_framework_info, s3, return_supplier_framework, data_api_client
-    ):
-        with self.app.test_client():
-            self.login()
-            g8_with_variation = get_g_cloud_8().copy()
-            g8_with_variation['frameworks']['variations'] = {"1": {"createdAt": "2018-08-16"}}
-            data_api_client.get_framework.return_value = g8_with_variation
-            get_supplier_framework_info.return_value = self.supplier_framework(
-                on_framework=True,
-                agreement_returned=True,
-                agreement_path='g-cloud-8/agreements/123-framework-agreement.pdf',
-                agreement_returned_at='2016-07-10T21:20:00.000000Z'
-            )['frameworkInterest']
-
-            res = self.client.get("/suppliers/frameworks/g-cloud-8")
-            page = res.get_data(as_text=True)
-            assert res.status_code == 200
-            assert 'Read the proposed contract variation' in page
-
-    @mock.patch('dmutils.s3.S3')
-    @mock.patch('app.main.views.frameworks.get_supplier_framework_info')
-    def test_framework_dashboard_does_not_show_contract_variation_link_if_feature_flagged_off(
-            self, get_supplier_framework_info, s3, return_supplier_framework, data_api_client
-    ):
-        with self.app.test_client():
-            self.app.config['FEATURE_FLAGS_CONTRACT_VARIATION'] = False
-            self.login()
-            g8_with_variation = get_g_cloud_8().copy()
-            g8_with_variation['frameworks']['variations'] = {"1": {"createdAt": "2018-08-16"}}
-            data_api_client.get_framework.return_value = g8_with_variation
-            get_supplier_framework_info.return_value = self.supplier_framework(
-                on_framework=True,
-                agreement_returned=True,
-                agreement_path='g-cloud-8/agreements/123-framework-agreement.pdf',
-                agreement_returned_at='2016-07-10T21:20:00.000000Z'
-            )['frameworkInterest']
-
-            res = self.client.get("/suppliers/frameworks/g-cloud-8")
-            page = res.get_data(as_text=True)
-            assert res.status_code == 200
-            assert 'Read the proposed contract variation' not in page
-
-    @mock.patch('dmutils.s3.S3')
-    @mock.patch('app.main.views.frameworks.get_supplier_framework_info')
-    def test_framework_dashboard_does_not_show_contract_variation_link_if_no_variation(
-            self, get_supplier_framework_info, s3, return_supplier_framework, data_api_client
-    ):
-        with self.app.test_client():
-            self.login()
-            data_api_client.get_framework.return_value = get_g_cloud_8()
-            get_supplier_framework_info.return_value = self.supplier_framework(
-                on_framework=True,
-                agreement_returned=True,
-                agreement_path='g-cloud-8/agreements/123-framework-agreement.pdf',
-                agreement_returned_at='2016-07-10T21:20:00.000000Z'
-            )['frameworkInterest']
-
-            res = self.client.get("/suppliers/frameworks/g-cloud-8")
-            page = res.get_data(as_text=True)
-            assert res.status_code == 200
-            assert 'Read the proposed contract variation' not in page
-
-    @mock.patch('dmutils.s3.S3')
-    @mock.patch('app.main.views.frameworks.get_supplier_framework_info')
-    def test_framework_dashboard_does_not_show_contract_variation_link_if_agreement_not_returned(
-            self, get_supplier_framework_info, s3, return_supplier_framework, data_api_client
-    ):
-        with self.app.test_client():
-            self.login()
-            g8_with_variation = get_g_cloud_8().copy()
-            g8_with_variation['frameworks']['variations'] = {"1": {"createdAt": "2018-08-16"}}
-            data_api_client.get_framework.return_value = g8_with_variation
-            get_supplier_framework_info.return_value = self.supplier_framework()['frameworkInterest']
-
-            res = self.client.get("/suppliers/frameworks/g-cloud-8")
-            page = res.get_data(as_text=True)
-            assert res.status_code == 200
-            assert 'Read the proposed contract variation' not in page
-
-    @mock.patch('dmutils.s3.S3')
-    @mock.patch('app.main.views.frameworks.get_supplier_framework_info')
-    def test_framework_dashboard_shows_contract_variation_alternate_link_text_after_agreed_by_ccs(
-            self, get_supplier_framework_info, s3, return_supplier_framework, data_api_client
-    ):
-        with self.app.test_client():
-            self.login()
-            g8_with_variation = get_g_cloud_8().copy()
-            g8_with_variation['frameworks']['variations'] = {"1": {
-                "createdAt": "2018-08-16",
-                "countersignedAt": "2018-10-01",
-                "countersignerName": "A.N. Other",
-                "countersignerRole": "Head honcho",
-            }
-            }
-            data_api_client.get_framework.return_value = g8_with_variation
-            get_supplier_framework_info.return_value = self.supplier_framework(
-                on_framework=True,
-                agreement_returned=True,
-                agreement_returned_at='2016-07-10T21:20:00.000000Z',
-                agreement_path='g-cloud-8/agreements/1234/1234-signed-agreement.pdf',
-                agreed_variations={
-                    "1": {
-                        "agreedAt": "2016-08-19T15:47:08.116613Z",
-                        "agreedUserId": 1,
-                        "agreedUserEmail": "agreed@email.com",
-                        "agreedUserName": u"William Drăyton",
-                    }}
-            )['frameworkInterest']
-
-            res = self.client.get("/suppliers/frameworks/g-cloud-8")
-            page = res.get_data(as_text=True)
-            assert res.status_code == 200
-            assert 'Read the proposed contract variation' not in page
-            assert 'View the signed contract variation' in page
 
 
 @mock.patch('app.main.views.frameworks.data_api_client', autospec=True)
