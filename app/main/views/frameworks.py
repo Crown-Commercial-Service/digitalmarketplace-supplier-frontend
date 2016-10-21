@@ -740,25 +740,28 @@ def signature_upload(framework_slug, agreement_id):
 def contract_review(framework_slug, agreement_id):
     framework = get_framework(data_api_client, framework_slug, allowed_statuses=['standstill', 'live'])
     supplier_framework = return_supplier_framework_info_if_on_framework_or_abort(data_api_client, framework_slug)
-    agreements_bucket = s3.S3(current_app.config['DM_AGREEMENTS_BUCKET'])
-    signature_page = agreements_bucket.get_key(supplier_framework['agreementPath'])
+    agreement = data_api_client.get_framework_agreement(agreement_id)['agreement']
+    check_agreement_is_related_to_supplier_framework_or_abort(agreement, supplier_framework)
 
-    # if supplier_framework doesn't have a name or a role or the agreement file, then 404
+    # if framework agreement doesn't have a name or a role or the agreement file, then 404
     if not (
-        supplier_framework['agreementDetails'] and
-        supplier_framework['agreementDetails'].get('signerName') and
-        supplier_framework['agreementDetails'].get('signerRole') and
-        supplier_framework['agreementPath']
+        agreement.get('signedAgreementDetails') and
+        agreement['signedAgreementDetails'].get('signerName') and
+        agreement['signedAgreementDetails'].get('signerRole') and
+        agreement.get('signedAgreementPath')
     ):
         abort(404)
+
+    agreements_bucket = s3.S3(current_app.config['DM_AGREEMENTS_BUCKET'])
+    signature_page = agreements_bucket.get_key(agreement['signedAgreementPath'])
 
     form = ContractReviewForm()
     form_errors = None
 
     if request.method == 'POST':
         if form.validate_on_submit():
-            data_api_client.register_framework_agreement_returned(
-                current_user.supplier_id, framework_slug, current_user.email_address, current_user.id
+            data_api_client.sign_framework_agreement(
+                agreement_id, current_user.email_address, {'uploaderUserId': current_user.id}
             )
 
             try:
@@ -820,6 +823,7 @@ def contract_review(framework_slug, agreement_id):
 
     return render_template(
         "frameworks/contract_review.html",
+        agreement=agreement,
         form=form,
         form_errors=form_errors,
         framework=framework,

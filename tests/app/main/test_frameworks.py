@@ -2334,7 +2334,7 @@ class TestSignatureUploadPage(BaseApplicationTest):
 
 @mock.patch("app.main.views.frameworks.data_api_client")
 @mock.patch("app.main.views.frameworks.return_supplier_framework_info_if_on_framework_or_abort")
-class TestReturnSignedAgreement(BaseApplicationTest):
+class TestContractReviewPage(BaseApplicationTest):
 
     @mock.patch('dmutils.s3.S3')
     def test_contract_review_page_loads_with_correct_supplier_and_signer_details_and_filename(
@@ -2344,15 +2344,18 @@ class TestReturnSignedAgreement(BaseApplicationTest):
             self.login()
             data_api_client.get_framework.return_value = get_g_cloud_8()
             return_supplier_framework.return_value = self.supplier_framework(
+                framework_slug='g-cloud-8',
                 on_framework=True,
                 declaration={
                     "primaryContact": "contact name",
                     "primaryContactEmail": "email@email.com",
                     "nameOfOrganisation": u"£unicodename"
                 },
-                agreement_details={"signerName": "signer_name", "signerRole": "signer_role"},
-                agreement_path="I/have/returned/my/agreement.pdf"
             )['frameworkInterest']
+            data_api_client.get_framework_agreement.return_value = self.framework_agreement(
+                signed_agreement_details={"signerName": "signer_name", "signerRole": "signer_role"},
+                signed_agreement_path="I/have/returned/my/agreement.pdf"
+            )
             s3.return_value.get_key.return_value = {
                 'last_modified': '2016-07-10T21:18:00.000000Z'
             }
@@ -2361,9 +2364,10 @@ class TestReturnSignedAgreement(BaseApplicationTest):
                 sess['signature_page'] = 'test.pdf'
 
             res = self.client.get(
-                "/suppliers/frameworks/g-cloud-8/contract-review"
+                "/suppliers/frameworks/g-cloud-8/234/contract-review"
             )
             assert res.status_code == 200
+            s3.return_value.get_key.assert_called_with('I/have/returned/my/agreement.pdf')
             page = res.get_data(as_text=True)
             page_without_whitespace = self.strip_all_whitespace(page)
             assert u'Check the details you’ve given before returning the signature page for £unicodename' in page
@@ -2382,21 +2386,24 @@ class TestReturnSignedAgreement(BaseApplicationTest):
             self.login()
             data_api_client.get_framework.return_value = get_g_cloud_8()
             return_supplier_framework.return_value = self.supplier_framework(
+                framework_slug='g-cloud-8',
                 on_framework=True,
                 declaration={
                     "primaryContact": "contact name",
                     "primaryContactEmail": "email@email.com",
                     "nameOfOrganisation": u"£unicodename"
                 },
-                agreement_details={"signerName": "signer_name", "signerRole": "signer_role"},
-                agreement_path="I/have/returned/my/agreement.pdf"
             )['frameworkInterest']
+            data_api_client.get_framework_agreement.return_value = self.framework_agreement(
+                signed_agreement_details={"signerName": "signer_name", "signerRole": "signer_role"},
+                signed_agreement_path="I/have/returned/my/agreement.pdf"
+            )
             s3.return_value.get_key.return_value = {
                 'last_modified': '2016-07-10T21:18:00.000000Z'
             }
 
             res = self.client.get(
-                "/suppliers/frameworks/g-cloud-8/contract-review"
+                "/suppliers/frameworks/g-cloud-8/234/contract-review"
             )
             assert res.status_code == 200
             page = res.get_data(as_text=True)
@@ -2411,23 +2418,44 @@ class TestReturnSignedAgreement(BaseApplicationTest):
             self.login()
             data_api_client.get_framework.return_value = get_g_cloud_8()
             return_supplier_framework.return_value = self.supplier_framework(
+                framework_slug='g-cloud-8',
                 on_framework=True,
                 declaration={
                     "primaryContact": "contact name",
                     "primaryContactEmail": "email@email.com",
                     "nameOfOrganisation": u"£unicodename"
                 },
-                agreement_details={"signerName": "signer_name", "signerRole": "signer_role"},
-                agreement_path=None  # no file has been uploaded
             )['frameworkInterest']
+            data_api_client.get_framework_agreement.return_value = self.framework_agreement(
+                signed_agreement_details={"signerName": "signer_name", "signerRole": "signer_role"}
+                # No file has been uploaded
+            )
 
             # no file has been uploaded
             s3.return_value.get_key.return_value = None
 
             res = self.client.get(
-                "/suppliers/frameworks/g-cloud-8/contract-review"
+                "/suppliers/frameworks/g-cloud-8/234/contract-review"
             )
             assert res.status_code == 404
+
+    @mock.patch('app.main.views.frameworks.check_agreement_is_related_to_supplier_framework_or_abort')
+    @mock.patch('dmutils.s3.S3')
+    def test_we_abort_if_agreement_does_not_match_supplier_framework(
+        self, s3, check_agreement_is_related_to_supplier_framework_or_abort, return_supplier_framework, data_api_client
+    ):
+        self.login()
+        data_api_client.get_framework.return_value = get_g_cloud_8()
+        data_api_client.get_framework_agreement.return_value = self.framework_agreement(supplier_id=2345)
+        supplier_framework = self.supplier_framework(framework_slug='g-cloud-8', on_framework=True)['frameworkInterest']
+        return_supplier_framework.return_value = supplier_framework
+        s3.return_value.get_key.return_value = None
+
+        res = self.client.get("/suppliers/frameworks/g-cloud-8/234/contract-review")
+        check_agreement_is_related_to_supplier_framework_or_abort.assert_called_with(
+            self.framework_agreement(supplier_id=2345)['agreement'],
+            supplier_framework
+        )
 
     @mock.patch('dmutils.s3.S3')
     @mock.patch('app.main.views.frameworks.send_email')
@@ -2438,21 +2466,24 @@ class TestReturnSignedAgreement(BaseApplicationTest):
             self.login()
             data_api_client.get_framework.return_value = get_g_cloud_8()
             return_supplier_framework.return_value = self.supplier_framework(
+                framework_slug='g-cloud-8',
                 on_framework=True,
                 declaration={
                     "primaryContact": "contact name",
                     "primaryContactEmail": "email@email.com",
                     "nameOfOrganisation": u"£unicodename"
                 },
-                agreement_details={"signerName": "signer_name", "signerRole": "signer_role"},
-                agreement_path="I/have/returned/my/agreement.pdf"
             )['frameworkInterest']
+            data_api_client.get_framework_agreement.return_value = self.framework_agreement(
+                signed_agreement_details={"signerName": "signer_name", "signerRole": "signer_role"},
+                signed_agreement_path="I/have/returned/my/agreement.pdf"
+            )
             s3.return_value.get_key.return_value = {
                 'last_modified': '2016-07-10T21:18:00.000000Z'
             }
 
             res = self.client.post(
-                "/suppliers/frameworks/g-cloud-8/contract-review",
+                "/suppliers/frameworks/g-cloud-8/234/contract-review",
                 data={}
             )
             assert res.status_code == 400
@@ -2462,22 +2493,25 @@ class TestReturnSignedAgreement(BaseApplicationTest):
 
     @mock.patch('dmutils.s3.S3')
     @mock.patch('app.main.views.frameworks.send_email')
-    def test_valid_framework_agreement_returned_sends_confirmation_emails_and_unsets_session(
+    def test_valid_framework_agreement_returned_updates_api_and_sends_confirmation_emails_and_unsets_session(
         self, send_email, s3, return_supplier_framework, data_api_client
     ):
         with self.app.test_client():
             self.login()
             data_api_client.get_framework.return_value = get_g_cloud_8()
             return_supplier_framework.return_value = self.supplier_framework(
+                framework_slug='g-cloud-8',
                 on_framework=True,
                 declaration={
                     "primaryContact": "contact name",
                     "primaryContactEmail": "email2@email.com",
                     "nameOfOrganisation": u"£unicodename"
                 },
-                agreement_details={"signerName": "signer_name", "signerRole": "signer_role"},
-                agreement_path="I/have/returned/my/agreement.pdf"
             )['frameworkInterest']
+            data_api_client.get_framework_agreement.return_value = self.framework_agreement(
+                signed_agreement_details={"signerName": "signer_name", "signerRole": "signer_role"},
+                signed_agreement_path="I/have/returned/my/agreement.pdf"
+            )
             s3.return_value.get_key.return_value = {
                 'last_modified': '2016-07-10T21:18:00.000000Z'
             }
@@ -2486,10 +2520,16 @@ class TestReturnSignedAgreement(BaseApplicationTest):
                 sess['signature_page'] = 'test.pdf'
 
             res = self.client.post(
-                "/suppliers/frameworks/g-cloud-8/contract-review",
+                "/suppliers/frameworks/g-cloud-8/234/contract-review",
                 data={
                     'authorisation': 'I have the authority to return this agreement on behalf of company name'
                 }
+            )
+
+            data_api_client.sign_framework_agreement.assert_called_once_with(
+                234,
+                'email@email.com',
+                {'uploaderUserId': 123}
             )
 
             # Delcaration primaryContactEmail and current_user.email_address are different so expect two recipients
@@ -2516,21 +2556,24 @@ class TestReturnSignedAgreement(BaseApplicationTest):
             self.login()
             data_api_client.get_framework.return_value = get_g_cloud_8()
             return_supplier_framework.return_value = self.supplier_framework(
+                framework_slug='g-cloud-8',
                 on_framework=True,
                 declaration={
                     "primaryContact": "contact name",
                     "primaryContactEmail": "email@email.com",
                     "nameOfOrganisation": u"£unicodename"
                 },
-                agreement_details={"signerName": "signer_name", "signerRole": "signer_role"},
-                agreement_path="I/have/returned/my/agreement.pdf"
             )['frameworkInterest']
+            data_api_client.get_framework_agreement.return_value = self.framework_agreement(
+                signed_agreement_details={"signerName": "signer_name", "signerRole": "signer_role"},
+                signed_agreement_path="I/have/returned/my/agreement.pdf"
+            )
             s3.return_value.get_key.return_value = {
                 'last_modified': '2016-07-10T21:18:00.000000Z'
             }
 
             res = self.client.post(
-                "/suppliers/frameworks/g-cloud-8/contract-review",
+                "/suppliers/frameworks/g-cloud-8/234/contract-review",
                 data={
                     'authorisation': 'I have the authority to return this agreement on behalf of company name'
                 }
@@ -2555,15 +2598,18 @@ class TestReturnSignedAgreement(BaseApplicationTest):
             self.login()
             data_api_client.get_framework.return_value = get_g_cloud_8()
             return_supplier_framework.return_value = self.supplier_framework(
+                framework_slug='g-cloud-8',
                 on_framework=True,
                 declaration={
                     "primaryContact": "contact name",
                     "primaryContactEmail": "email@email.com",
                     "nameOfOrganisation": u"£unicodename"
                 },
-                agreement_details={"signerName": "signer_name", "signerRole": "signer_role"},
-                agreement_path="I/have/returned/my/agreement.pdf"
             )['frameworkInterest']
+            data_api_client.get_framework_agreement.return_value = self.framework_agreement(
+                signed_agreement_details={"signerName": "signer_name", "signerRole": "signer_role"},
+                signed_agreement_path="I/have/returned/my/agreement.pdf"
+            )
             s3.return_value.get_key.return_value = {
                 'last_modified': '2016-07-10T21:18:00.000000Z'
             }
@@ -2571,7 +2617,7 @@ class TestReturnSignedAgreement(BaseApplicationTest):
             send_email.side_effect = MandrillException()
 
             res = self.client.post(
-                "/suppliers/frameworks/g-cloud-8/contract-review",
+                "/suppliers/frameworks/g-cloud-8/234/contract-review",
                 data={
                     'authorisation': 'I have the authority to return this agreement on behalf of company name'
                 }
@@ -2587,28 +2633,32 @@ class TestReturnSignedAgreement(BaseApplicationTest):
         with self.app.test_client():
             self.login()
             data_api_client.get_framework.return_value = get_g_cloud_8()
-            data_api_client.register_framework_agreement_returned.side_effect = APIError(mock.Mock(status_code=500))
+            data_api_client.sign_framework_agreement.side_effect = APIError(mock.Mock(status_code=500))
             return_supplier_framework.return_value = self.supplier_framework(
+                framework_slug='g-cloud-8',
                 on_framework=True,
                 declaration={
                     "primaryContact": "contact name",
                     "primaryContactEmail": "email@email.com",
                     "nameOfOrganisation": u"£unicodename"
                 },
-                agreement_details={"signerName": "signer_name", "signerRole": "signer_role"},
-                agreement_path="I/have/returned/my/agreement.pdf"
             )['frameworkInterest']
+            data_api_client.get_framework_agreement.return_value = self.framework_agreement(
+                signed_agreement_details={"signerName": "signer_name", "signerRole": "signer_role"},
+                signed_agreement_path="I/have/returned/my/agreement.pdf"
+            )
             s3.return_value.get_key.return_value = {
                 'last_modified': '2016-07-10T21:18:00.000000Z'
             }
 
             res = self.client.post(
-                "/suppliers/frameworks/g-cloud-8/contract-review",
+                "/suppliers/frameworks/g-cloud-8/234/contract-review",
                 data={
                     'authorisation': 'I have the authority to return this agreement on behalf of company name'
                 }
             )
 
+            assert data_api_client.sign_framework_agreement.called
             assert res.status_code == 500
             assert not send_email.called
 
@@ -2626,14 +2676,13 @@ class TestReturnSignedAgreement(BaseApplicationTest):
             }
             data_api_client.get_framework.return_value = framework
             return_supplier_framework.return_value = self.supplier_framework(
+                framework_slug='g-cloud-8',
                 on_framework=True,
                 declaration={
                     "primaryContact": "contact name",
                     "primaryContactEmail": "email2@email.com",
                     "nameOfOrganisation": u"£unicodename"
                 },
-                agreement_details={"signerName": "signer_name", "signerRole": "signer_role"},
-                agreement_path="I/have/returned/my/agreement.pdf",
                 agreed_variations={
                     '1': {
                         "agreedUserId": 2,
@@ -2641,13 +2690,17 @@ class TestReturnSignedAgreement(BaseApplicationTest):
                     }
                 }
             )['frameworkInterest']
+            data_api_client.get_framework_agreement.return_value = self.framework_agreement(
+                signed_agreement_details={"signerName": "signer_name", "signerRole": "signer_role"},
+                signed_agreement_path="I/have/returned/my/agreement.pdf"
+            )
 
             s3.return_value.get_key.return_value = {
                 'last_modified': '2016-07-10T21:18:00.000000Z'
             }
 
             res = self.client.post(
-                "/suppliers/frameworks/g-cloud-8/contract-review",
+                "/suppliers/frameworks/g-cloud-8/234/contract-review",
                 data={
                     'authorisation': 'I have the authority to return this agreement on behalf of company name'
                 }
@@ -2671,22 +2724,25 @@ class TestReturnSignedAgreement(BaseApplicationTest):
             }
             data_api_client.get_framework.return_value = framework
             return_supplier_framework.return_value = self.supplier_framework(
+                framework_slug='g-cloud-8',
                 on_framework=True,
                 declaration={
                     "primaryContact": "contact name",
-                    "primaryContactEmail": "email2@email.com",
+                    "primaryContactEmail": "email@email.com",
                     "nameOfOrganisation": u"£unicodename"
                 },
-                agreement_details={"signerName": "signer_name", "signerRole": "signer_role"},
-                agreement_path="I/have/returned/my/agreement.pdf"
             )['frameworkInterest']
+            data_api_client.get_framework_agreement.return_value = self.framework_agreement(
+                signed_agreement_details={"signerName": "signer_name", "signerRole": "signer_role"},
+                signed_agreement_path="I/have/returned/my/agreement.pdf"
+            )
 
             s3.return_value.get_key.return_value = {
                 'last_modified': '2016-07-10T21:18:00.000000Z'
             }
 
             res = self.client.post(
-                "/suppliers/frameworks/g-cloud-8/contract-review",
+                "/suppliers/frameworks/g-cloud-8/234/contract-review",
                 data={
                     'authorisation': 'I have the authority to return this agreement on behalf of company name'
                 }
@@ -2709,23 +2765,26 @@ class TestReturnSignedAgreement(BaseApplicationTest):
             }
             data_api_client.get_framework.return_value = framework
             return_supplier_framework.return_value = self.supplier_framework(
+                framework_slug='g-cloud-8',
                 on_framework=True,
                 declaration={
                     "primaryContact": "contact name",
                     "primaryContactEmail": "email2@email.com",
                     "nameOfOrganisation": u"£unicodename"
                 },
-                agreement_details={"signerName": "signer_name", "signerRole": "signer_role"},
-                agreement_path="I/have/returned/my/agreement.pdf",
                 agreed_variations={}
             )['frameworkInterest']
+            data_api_client.get_framework_agreement.return_value = self.framework_agreement(
+                signed_agreement_details={"signerName": "signer_name", "signerRole": "signer_role"},
+                signed_agreement_path="I/have/returned/my/agreement.pdf"
+            )
 
             s3.return_value.get_key.return_value = {
                 'last_modified': '2016-07-10T21:18:00.000000Z'
             }
 
             res = self.client.post(
-                "/suppliers/frameworks/g-cloud-8/contract-review",
+                "/suppliers/frameworks/g-cloud-8/234/contract-review",
                 data={
                     'authorisation': 'I have the authority to return this agreement on behalf of company name'
                 }
@@ -2746,22 +2805,25 @@ class TestReturnSignedAgreement(BaseApplicationTest):
             data_api_client.get_framework.return_value = framework
 
             return_supplier_framework.return_value = self.supplier_framework(
+                framework_slug='g-cloud-8',
                 on_framework=True,
                 declaration={
                     "primaryContact": "contact name",
-                    "primaryContactEmail": "email2@email.com",
+                    "primaryContactEmail": "email@email.com",
                     "nameOfOrganisation": u"£unicodename"
                 },
-                agreement_details={"signerName": "signer_name", "signerRole": "signer_role"},
-                agreement_path="I/have/returned/my/agreement.pdf"
             )['frameworkInterest']
+            data_api_client.get_framework_agreement.return_value = self.framework_agreement(
+                signed_agreement_details={"signerName": "signer_name", "signerRole": "signer_role"},
+                signed_agreement_path="I/have/returned/my/agreement.pdf"
+            )
 
             s3.return_value.get_key.return_value = {
                 'last_modified': '2016-07-10T21:18:00.000000Z'
             }
 
             res = self.client.post(
-                "/suppliers/frameworks/g-cloud-8/contract-review",
+                "/suppliers/frameworks/g-cloud-8/234/contract-review",
                 data={
                     'authorisation': 'I have the authority to return this agreement on behalf of company name'
                 }
@@ -2769,6 +2831,11 @@ class TestReturnSignedAgreement(BaseApplicationTest):
 
             assert res.status_code == 302
             assert res.location == 'http://localhost/suppliers/frameworks/g-cloud-8'
+
+
+@mock.patch("app.main.views.frameworks.data_api_client")
+@mock.patch("app.main.views.frameworks.return_supplier_framework_info_if_on_framework_or_abort")
+class TestReturnSignedAgreement(BaseApplicationTest):
 
     @mock.patch('dmutils.s3.S3')
     @mock.patch('app.main.views.frameworks.get_supplier_framework_info')
