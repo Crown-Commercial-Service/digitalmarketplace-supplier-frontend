@@ -51,7 +51,7 @@ def framework_dashboard(framework_slug):
                 [user['emailAddress'] for user in supplier_users['users'] if user['active']],
                 email_body,
                 current_app.config['DM_MANDRILL_API_KEY'],
-                'You have started your {} application'.format(framework['name']),
+                'You started a {} application'.format(framework['name']),
                 current_app.config['CLARIFICATION_EMAIL_FROM'],
                 current_app.config['CLARIFICATION_EMAIL_NAME'],
                 ['{}-application-started'.format(framework_slug)]

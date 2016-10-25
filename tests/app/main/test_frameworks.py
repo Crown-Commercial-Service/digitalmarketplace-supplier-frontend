@@ -133,7 +133,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
                 ['email1', 'email2'],
                 mock.ANY,
                 'MANDRILL',
-                'You have started your G-Cloud 7 application',
+                'You started a G-Cloud 7 application',
                 'do-not-reply@digitalmarketplace.service.gov.uk',
                 'Digital Marketplace Admin',
                 ['digital-outcomes-and-specialists-application-started']
