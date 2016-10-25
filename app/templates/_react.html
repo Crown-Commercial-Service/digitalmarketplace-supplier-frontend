@@ -1,0 +1,11 @@
+{% extends "_base_page.html" %}
+
+{% block body_end %}
+  <script type="text/javascript" src="{{ component.get_vendor_bundle() }}"></script>
+  <script type="text/javascript" src="{{ component.get_bundle() }}"></script>
+{% endblock %}
+
+{% block main_content %}
+    <div id="react-bundle-{{component.get_slug()}}-state" style="display:none;">{{component.get_props()|safe}}</div>
+    <div id="react-bundle-{{component.get_slug()}}">{{component|safe}}</div>
+{% endblock %}

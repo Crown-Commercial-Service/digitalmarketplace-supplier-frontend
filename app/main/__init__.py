@@ -32,5 +32,5 @@ content_loader.load_manifest('g-cloud-8', 'declaration', 'declaration')
 content_loader.load_messages('g-cloud-8', ['dates'])
 
 
-from .views import services, suppliers, login, frameworks, users, briefs
+from .views import services, suppliers, login, frameworks, users, briefs, signup
 from . import errors

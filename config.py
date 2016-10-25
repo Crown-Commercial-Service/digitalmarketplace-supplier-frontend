@@ -78,6 +78,10 @@ class Config(object):
     DM_APP_NAME = 'supplier-frontend'
     DM_DOWNSTREAM_REQUEST_ID_HEADER = 'X-Amz-Cf-Id'
 
+    REACT_BUNDLE_URL = 'https://dm-dev-frontend.apps.staging.digital.gov.au/bundle/'
+    REACT_RENDER_URL = 'https://dm-dev-frontend.apps.staging.digital.gov.au/render'
+    REACT_RENDER = not DEBUG
+
 
 class Test(Config):
     DEBUG = True
