@@ -1969,12 +1969,13 @@ class TestCreateFrameworkAgreement(BaseApplicationTest):
         with self.app.test_client():
             self.login()
             # Suppliers can only sign agreements in 'standstill' and 'live' lifecycle statuses
-            data_api_client.get_framework.return_value = self.framework(status='pending')
-            data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
-                on_framework=True)
+            for status in ('coming', 'open', 'pending', 'expired'):
+                data_api_client.get_framework.return_value = self.framework(status=status)
+                data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
+                    on_framework=True)
 
-            res = self.client.post("/suppliers/frameworks/g-cloud-8/create-agreement")
-            assert res.status_code == 404
+                res = self.client.post("/suppliers/frameworks/g-cloud-8/create-agreement")
+                assert res.status_code == 404
 
 
 @mock.patch("app.main.views.frameworks.data_api_client", autospec=True)
@@ -2034,6 +2035,7 @@ class TestSignerDetailsPage(BaseApplicationTest):
         return_supplier_framework.return_value = supplier_framework
 
         res = self.client.get("/suppliers/frameworks/g-cloud-8/234/signer-details")
+        # This call will abort because supplier_framework has mismatched supplier_id 1234
         check_agreement_is_related_to_supplier_framework_or_abort.assert_called_with(
             self.framework_agreement(supplier_id=2345)['agreement'],
             supplier_framework
@@ -2248,6 +2250,7 @@ class TestSignatureUploadPage(BaseApplicationTest):
         s3.return_value.get_key.return_value = None
 
         res = self.client.get("/suppliers/frameworks/g-cloud-8/234/signature-upload")
+        # This call will abort because supplier_framework has mismatched supplier_id 1234
         check_agreement_is_related_to_supplier_framework_or_abort.assert_called_with(
             self.framework_agreement(supplier_id=2345)['agreement'],
             supplier_framework
@@ -2591,6 +2594,7 @@ class TestContractReviewPage(BaseApplicationTest):
         s3.return_value.get_key.return_value = None
 
         res = self.client.get("/suppliers/frameworks/g-cloud-8/234/contract-review")
+        # This call will abort because supplier_framework has mismatched supplier_id 1234
         check_agreement_is_related_to_supplier_framework_or_abort.assert_called_with(
             self.framework_agreement(supplier_id=2345)['agreement'],
             supplier_framework
