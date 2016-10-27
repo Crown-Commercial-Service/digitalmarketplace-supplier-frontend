@@ -18,6 +18,7 @@ $path: "/suppliers/static/images/";
 
 /* Blocks shared between multiple selectors */
 @import "shared_placeholders/_temporary-messages.scss";
+@import "shared_placeholders/_dm-typography.scss";
 
 #wrapper, .wrapper {
   @extend %site-width-container;
