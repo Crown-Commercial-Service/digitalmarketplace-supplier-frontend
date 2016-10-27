@@ -261,7 +261,7 @@ def framework_submission_services(framework_slug, lot_slug):
 def framework_supplier_declaration(framework_slug, section_id=None):
     framework = get_framework(data_api_client, framework_slug, allowed_statuses=['open'])
 
-    content = content_loader.get_manifest(framework_slug, 'declaration')
+    content = content_loader.get_manifest(framework_slug, 'declaration').filter({})
     status_code = 200
 
     if section_id is None:
