@@ -132,6 +132,8 @@ def submit_brief_response(brief_id):
         brief_response = data_api_client.create_brief_response(
             brief_id, current_user.supplier_id, response_data, current_user.email_address
         )['briefResponses']
+        data_api_client.submit_brief_response(brief_response['id'], current_user.email_address)
+
     except HTTPError as e:
         # replace generic 'Apply for opportunity' title with title including the name of the brief
         section.name = "Apply for ‘{}’".format(brief['title'])
