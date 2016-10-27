@@ -109,7 +109,7 @@ def brief_response(brief_id):
 # Add a create route
 @main.route('/opportunities/<int:brief_id>/responses/create', methods=['POST'])
 @login_required
-def submit_brief_response(brief_id):
+def create_brief_response(brief_id):
     """Hits up the data API to create a new brief response."""
 
     brief = get_brief(data_api_client, brief_id, allowed_statuses=['live'])
@@ -130,7 +130,11 @@ def submit_brief_response(brief_id):
 
     try:
         brief_response = data_api_client.create_brief_response(
-            brief_id, current_user.supplier_id, response_data, current_user.email_address
+            brief_id,
+            current_user.supplier_id,
+            response_data,
+            current_user.email_address,
+            page_questions=section.get_field_names()
         )['briefResponses']
         data_api_client.submit_brief_response(brief_response['id'], current_user.email_address)
 
