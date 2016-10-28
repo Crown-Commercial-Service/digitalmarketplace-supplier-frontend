@@ -1,0 +1,62 @@
+{% extends "_base_page.html" %}
+{% import "macros/toolkit_forms.html" as forms %}
+{% from "macros/assurance.html" import assurance_question %}
+
+{% block page_title %}{{ section.name }} – Digital Marketplace{% endblock %}
+
+{% block main_content %}
+  <div class="grid-row">
+    <div class="column-two-thirds">
+
+      {% with
+        heading = section.name,
+        smaller = true
+      %}
+        {% include 'toolkit/page-heading.html' %}
+      {% endwith %}
+
+      {% if section.description %}
+        <div class="section-description">
+          {{ section.get_description_for_lot(lot_slug)|markdown }}
+        </div>
+      {% endif %}
+    </div>
+  </div>
+
+{% set validation_errors = errors.values() if errors is defined else {} %}
+{% set errors = errors or {} %}
+
+{{ validation_errors|as('validation_box') }}
+  <form method="post" enctype="multipart/form-data" action="{{ request.path }}">
+    <div class="grid-row">
+      <div class="column-two-thirds">
+          {% for q in section.questions %}
+            {% if q.id in ('essentialRequirements',
+            'niceToHaveRequirements') %}
+            {{ q|as('textfield_list', service_data=service_data.get(q.id), error=errors) }}
+            {% else %}
+            {{ q|as(q.type, service_data=service_data, error=errors.get(q.id)) }}
+            {% endif %}
+            {% if q.assuranceApproach %}
+              <div class='assurance-question'>
+                {{ assurance_question(
+                  name=q.id,
+                  service_data=service_data,
+                  type=q.assuranceApproach,
+                  errors=errors if errors else {}
+                ) }}
+              </div>
+            {% endif %}
+          {% endfor %}
+
+          {{ form.csrf_token }}
+          {% block save_button %}{% endblock %}
+
+          {% block return_to_service_link %}
+            <a href="{% block return_to_service %}{% endblock %}">Return to service summary</a>
+          {% endblock %}
+
+      </div>
+    </div>
+  </form>
+{% endblock %}

@@ -54,4 +54,17 @@ def create_app(config_name):
             'generic_contact_email': application.config['GENERIC_CONTACT_EMAIL'],
         }
 
+    def component_filter(x, thing, *args, **kwargs):
+        from jinja2 import Markup  # , escape
+        from flask import current_app
+
+        COMPONENTS = 'components'
+        EXTENSION = '.html'
+
+        t = current_app.jinja_env.get_template(
+            COMPONENTS + '/' + thing + EXTENSION)
+        return Markup(t.render(x=x, **kwargs))
+
+    application.jinja_env.filters['as'] = component_filter
+
     return application

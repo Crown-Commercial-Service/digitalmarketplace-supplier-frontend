@@ -14,26 +14,26 @@ brief_form_submission = {
     'csrf_token': FakeCsrf.valid_token,
     "availability": "Next Tuesday",
     "dayRate": "£200",
-    "essentialRequirements-0": True,
-    "essentialRequirements-1": False,
-    "essentialRequirements-2": True,
-    "niceToHaveRequirements-0": False,
-    "niceToHaveRequirements-1": True,
-    "niceToHaveRequirements-2": False,
+    "essentialRequirements-0": 'ess0',
+    "essentialRequirements-1": 'ess1',
+    "essentialRequirements-2": 'ess2',
+    "niceToHaveRequirements-0": 'nth0',
+    "niceToHaveRequirements-1": 'nth1',
+    "niceToHaveRequirements-2": 'nth2',
 }
 
 processed_brief_submission = {
     "availability": "Next Tuesday",
     "dayRate": "£200",
     "essentialRequirements": [
-        True,
-        False,
-        True
+        'ess0',
+        'ess1',
+        'ess2'
     ],
     "niceToHaveRequirements": [
-        False,
-        True,
-        False
+        'nth0',
+        'nth1',
+        'nth2'
     ],
 }
 
@@ -457,7 +457,7 @@ class TestRespondToBrief(BaseApplicationTest):
 
         assert len(doc.xpath(
             '//*[@id="validation-masthead-heading"]'
-            '[contains(text(), "There was a problem with your answer to:")]')) == 1
+            '[contains(text(), "There was a problem with your answer to")]')) == 1
         assert doc.xpath(
             '//*[@id="content"]//a[@href="#essentialRequirements-2"]')[0].text_content() == 'Essential three'
         assert len(doc.xpath('//h1[contains(text(), "Apply for ‘I need a thing to do a thing’")]')) == 1

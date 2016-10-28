@@ -1,0 +1,28 @@
+<fieldset class="question question-textarea-list" id="{{ x.id }}">
+        <legend>
+          <span class="visually-hidden">{{x.name}}</span>
+        </legend>
+
+        <span class="question-heading">
+          <h2>{{x.question}}</h2>
+        </span>
+
+        <span class="question-advice" id="input--question-advice">
+          {{x.question_advice|markdown}}
+        </span>
+
+{% for q in x.boolean_list_questions %}
+{% set i = loop.index0 %}
+{% set field = '{}-{}'.format(x.id, loop.index0) %}
+{% set e = error.get(field) if error else None %}
+
+<legend>
+  <span class="question-heading ">{{q}}</span>
+  {% if e %}
+  <span class="validation-message invalid" style="color: #cc0000" id="error-{{field}}">{{e.message}}</span>
+  {% endif %}
+</legend>
+
+  <textarea style="margin-bottom: 2rem; {% if e %}outline: 2px solid #cc0000{% endif %}" classes="{% if e %}text-box-with-error invalid{% endif %}" style="" id="{{field}}" name="{{field}}">{{service_data[i] or ''}}</textarea>
+{% endfor %}
+</fieldset>
