@@ -4,7 +4,10 @@ import mock
 from nose.tools import assert_equal
 from werkzeug.exceptions import HTTPException
 
-from app.main.helpers.frameworks import get_statuses_for_lot, return_supplier_framework_info_if_on_framework_or_abort
+from app.main.helpers.frameworks import (
+    get_statuses_for_lot, return_supplier_framework_info_if_on_framework_or_abort,
+    check_agreement_is_related_to_supplier_framework_or_abort
+)
 
 
 def get_lot_status_examples():
@@ -331,3 +334,37 @@ def test_return_supplier_framework_info_if_on_framework_or_abort_returns_supplie
     data_api_client.get_supplier_framework_info.return_value = supplier_framework_response
     assert return_supplier_framework_info_if_on_framework_or_abort(data_api_client, 'g-cloud-8') == \
         supplier_framework_response['frameworkInterest']
+
+
+def test_check_agreement_is_related_to_supplier_framework_or_abort_does_abort_for_supplier_mismatch():
+    supplier_framework = {"supplierId": 200, "frameworkSlug": 'g-cloud-8'}
+    agreement = {"supplierId": 201, "frameworkSlug": 'g-cloud-8'}
+    with pytest.raises(HTTPException):
+        check_agreement_is_related_to_supplier_framework_or_abort(agreement, supplier_framework)
+
+
+def test_check_agreement_is_related_to_supplier_framework_or_abort_does_abort_for_framework_mismatch():
+    supplier_framework = {"supplierId": 200, "frameworkSlug": 'g-cloud-8'}
+    agreement = {"supplierId": 200, "frameworkSlug": 'g-cloud-7'}
+    with pytest.raises(HTTPException):
+        check_agreement_is_related_to_supplier_framework_or_abort(agreement, supplier_framework)
+
+
+def test_check_agreement_is_related_to_supplier_framework_or_abort_does_abort_if_supplier_ids_are_none():
+    supplier_framework = {"supplierId": None, "frameworkSlug": 'g-cloud-8'}
+    agreement = {"supplierId": None, "frameworkSlug": 'g-cloud-8'}
+    with pytest.raises(HTTPException):
+        check_agreement_is_related_to_supplier_framework_or_abort(agreement, supplier_framework)
+
+
+def test_check_agreement_is_related_to_supplier_framework_or_abort_does_abort_if_framework_slugs_are_none():
+    supplier_framework = {"supplierId": 212, "frameworkSlug": None}
+    agreement = {"supplierId": 212, "frameworkSlug": None}
+    with pytest.raises(HTTPException):
+        check_agreement_is_related_to_supplier_framework_or_abort(agreement, supplier_framework)
+
+
+def test_check_agreement_is_related_to_supplier_framework_or_abort_does_not_abort_for_match():
+    supplier_framework = {"supplierId": 212, "frameworkSlug": 'g-cloud-8'}
+    agreement = {"supplierId": 212, "frameworkSlug": 'g-cloud-8'}
+    check_agreement_is_related_to_supplier_framework_or_abort(agreement, supplier_framework)

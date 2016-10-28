@@ -268,3 +268,10 @@ def returned_agreement_email_recipients(supplier_framework):
     if supplier_framework['declaration']['primaryContactEmail'].lower() != current_user.email_address.lower():
         email_recipients.append(current_user.email_address)
     return email_recipients
+
+
+def check_agreement_is_related_to_supplier_framework_or_abort(agreement, supplier_framework):
+    if not agreement.get('supplierId') or agreement.get('supplierId') != supplier_framework.get('supplierId'):
+        abort(404)
+    if not agreement.get('frameworkSlug') or agreement.get('frameworkSlug') != supplier_framework.get('frameworkSlug'):
+        abort(404)
