@@ -1,0 +1,37 @@
+{{x}}
+<fieldset class="question question-boolean-list" id="{{ x.id }}">
+        <legend>
+          <span class="visually-hidden">{{x.name}}</span>
+        </legend>
+
+        <span class="question-heading">
+          <h2>{{x.question}}</h2>
+        </span>
+
+        <span class="question-advice" id="input--question-advice">
+          {{x.question_advice|markdown}}
+        </span>
+
+{% for q in x.boolean_list_questions %}
+{% set i = loop.index0 %}
+{% set field = '{}-{}'.format(x.id, loop.index0) %}
+  <fieldset id="{{field}}">
+    <legend>
+      <span class="question-heading ">{{q}}</span>
+      {% if error %}
+      <span class="validation-message invalid" id="error-{{field}}">
+          You need to answer all the essential requirement questions.
+        </span>
+      {% endif %}
+    </legend>
+      <input name="{{field}}" id="input-{{field}}-yes" value="true" type="radio">
+      <label for="input-{{field}}-yes">
+        Yes
+      </label>
+      <input name="{{field}}" id="input-{{field}}-no" value="false" type="radio">
+      <label for="input-{{field}}-no">
+        No
+      </label>
+  </fieldset>
+  {% endfor %}
+</fieldset>
