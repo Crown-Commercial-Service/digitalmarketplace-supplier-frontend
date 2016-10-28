@@ -114,7 +114,7 @@ def framework_dashboard(framework_slug):
             framework_live_date=content_loader.get_message(framework_slug, 'dates')['framework_live_date'],
             supplier_framework=supplier_framework_info,
             supplier_pack_filename=supplier_pack_filename,
-            last_modified=last_modified
+            last_modified=last_modified,
         ), 200
 
     return render_template(
@@ -136,7 +136,7 @@ def framework_dashboard(framework_slug):
         last_modified=last_modified,
         supplier_is_on_framework=supplier_is_on_framework,
         supplier_pack_filename=supplier_pack_filename,
-        result_letter_filename=result_letter_filename
+        result_letter_filename=result_letter_filename,
     ), 200
 
 
@@ -227,7 +227,7 @@ def framework_submission_services(framework_slug, lot_slug):
         drafts=list(reversed(drafts)),
         declaration_status=declaration_status,
         framework=framework,
-        lot=lot
+        lot=lot,
     ), 200
 
 
@@ -311,7 +311,7 @@ def framework_supplier_declaration(framework_slug, section_id=None):
         declaration_answers=all_answers,
         is_last_page=is_last_page,
         get_question=content.get_question,
-        errors=errors
+        errors=errors,
     ), status_code
 
 
@@ -372,7 +372,7 @@ def framework_updates(framework_slug, error_message=None, default_textbox_value=
         error_message=error_message,
         files=files,
         dates=content_loader.get_message(framework_slug, 'dates'),
-        agreement_countersigned=bool(supplier_framework_info and supplier_framework_info['countersignedPath'])
+        agreement_countersigned=bool(supplier_framework_info and supplier_framework_info['countersignedPath']),
     ), 200 if not error_message else 400
 
 
@@ -518,7 +518,7 @@ def framework_agreement(framework_slug):
         "frameworks/agreement.html",
         framework=framework,
         supplier_framework=supplier_framework,
-        agreement_filename=AGREEMENT_FILENAME
+        agreement_filename=AGREEMENT_FILENAME,
     ), 200
 
 
@@ -529,6 +529,10 @@ def upload_framework_agreement(framework_slug):
     This is the route used to upload agreements for pre-G-Cloud 8 frameworks
     """
     framework = get_framework(data_api_client, framework_slug, allowed_statuses=['standstill', 'live'])
+    # if there's a frameworkAgreementVersion key it means we're on G-Cloud 8 or higher and shouldn't be using this route
+    if framework.get('frameworkAgreementVersion'):
+        abort(404)
+
     supplier_framework = return_supplier_framework_info_if_on_framework_or_abort(data_api_client, framework_slug)
 
     upload_error = None
@@ -543,7 +547,7 @@ def upload_framework_agreement(framework_slug):
             framework=framework,
             supplier_framework=supplier_framework,
             upload_error=upload_error,
-            agreement_filename=AGREEMENT_FILENAME
+            agreement_filename=AGREEMENT_FILENAME,
         ), 400
 
     agreements_bucket = s3.S3(current_app.config['DM_AGREEMENTS_BUCKET'])
@@ -611,6 +615,9 @@ def upload_framework_agreement(framework_slug):
 @login_required
 def create_framework_agreement(framework_slug):
     framework = get_framework(data_api_client, framework_slug, allowed_statuses=['standstill', 'live'])
+    # if there's no frameworkAgreementVersion key it means we're pre-G-Cloud 8 and shouldn't be using this route
+    if not framework.get('frameworkAgreementVersion'):
+        abort(404)
     return_supplier_framework_info_if_on_framework_or_abort(data_api_client, framework_slug)
 
     agreement_id = data_api_client.create_framework_agreement(
@@ -624,6 +631,9 @@ def create_framework_agreement(framework_slug):
 @login_required
 def signer_details(framework_slug, agreement_id):
     framework = get_framework(data_api_client, framework_slug, allowed_statuses=['standstill', 'live'])
+    # if there's no frameworkAgreementVersion key it means we're pre-G-Cloud 8 and shouldn't be using this route
+    if not framework.get('frameworkAgreementVersion'):
+        abort(404)
     supplier_framework = return_supplier_framework_info_if_on_framework_or_abort(data_api_client, framework_slug)
     agreement = data_api_client.get_framework_agreement(agreement_id)['agreement']
     check_agreement_is_related_to_supplier_framework_or_abort(agreement, supplier_framework)
@@ -670,7 +680,7 @@ def signer_details(framework_slug, agreement_id):
         form_errors=form_errors,
         framework=framework,
         question_keys=question_keys,
-        supplier_framework=supplier_framework
+        supplier_framework=supplier_framework,
     ), 400 if form_errors else 200
 
 
@@ -678,6 +688,9 @@ def signer_details(framework_slug, agreement_id):
 @login_required
 def signature_upload(framework_slug, agreement_id):
     framework = get_framework(data_api_client, framework_slug, allowed_statuses=['standstill', 'live'])
+    # if there's no frameworkAgreementVersion key it means we're pre-G-Cloud 8 and shouldn't be using this route
+    if not framework.get('frameworkAgreementVersion'):
+        abort(404)
     supplier_framework = return_supplier_framework_info_if_on_framework_or_abort(data_api_client, framework_slug)
     agreement = data_api_client.get_framework_agreement(agreement_id)['agreement']
     check_agreement_is_related_to_supplier_framework_or_abort(agreement, supplier_framework)
@@ -739,6 +752,9 @@ def signature_upload(framework_slug, agreement_id):
 @login_required
 def contract_review(framework_slug, agreement_id):
     framework = get_framework(data_api_client, framework_slug, allowed_statuses=['standstill', 'live'])
+    # if there's no frameworkAgreementVersion key it means we're pre-G-Cloud 8 and shouldn't be using this route
+    if not framework.get('frameworkAgreementVersion'):
+        abort(404)
     supplier_framework = return_supplier_framework_info_if_on_framework_or_abort(data_api_client, framework_slug)
     agreement = data_api_client.get_framework_agreement(agreement_id)['agreement']
     check_agreement_is_related_to_supplier_framework_or_abort(agreement, supplier_framework)
@@ -904,5 +920,5 @@ def view_contract_variation(framework_slug, variation_slug):
         variation_details=variation_details,
         variation=content_loader.get_message(framework_slug, variation_content_name),
         agreed_details=agreed_details,
-        supplier_name=supplier_framework['declaration']['nameOfOrganisation']
+        supplier_name=supplier_framework['declaration']['nameOfOrganisation'],
     ), 400 if form_errors else 200

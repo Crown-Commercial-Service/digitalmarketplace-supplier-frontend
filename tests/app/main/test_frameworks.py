@@ -1943,7 +1943,9 @@ class TestCreateFrameworkAgreement(BaseApplicationTest):
         with self.app.test_client():
             self.login()
 
-            data_api_client.get_framework.return_value = self.framework(slug='g-cloud-8', status='standstill')
+            data_api_client.get_framework.return_value = self.framework(
+                slug='g-cloud-8', status='standstill', framework_agreement_version="1.0"
+            )
             data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
                 on_framework=True)
             data_api_client.create_framework_agreement.return_value = {"agreement": {"id": 789}}
