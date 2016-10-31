@@ -33,7 +33,9 @@
           {% for q in section.questions %}
             {% if q.id in ('essentialRequirements',
             'niceToHaveRequirements') %}
+            {% if q.boolean_list_questions %}
             {{ q|as('textfield_list', service_data=service_data.get(q.id), error=errors) }}
+            {% endif %}
             {% else %}
             {{ q|as(q.type, service_data=service_data, error=errors.get(q.id)) }}
             {% endif %}
