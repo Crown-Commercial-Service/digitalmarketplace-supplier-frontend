@@ -1,3 +1,12 @@
+{% set fields = x.fields %}
+{% set optional_fields = x.optional_fields %}
+{% set name = x.name %}
+{% set validations = x.validations %}
+{% set hint = x.hint %}
+{% set question = x.question %}
+{% set question_advice = x.question_advice %}
+{% set optional = x.optional %}
+
 {% macro _option(label, current) -%}
   {% if label == current %}
     <option value='{{ label }}' selected='selected'>{{ label }}</option>
@@ -16,14 +25,18 @@
 {% if error %}
   <div class="validation-wrapper validation-wrapper-pricing">
 {% endif %}
+
   <fieldset class="question first-question" id="{{ name }}">
     <legend>
-      <span class="question-heading {% if hint or question_advice %}question-heading-with-hint{% endif %}">
-        {{ question|striptags if question }}
-      </span>
+      <span class="visually-hidden">{{x.name}}</span>
+    </legend>
+
+    <span class="question-heading">
+      <h2>{{x.question}}</h2>
+    </span>
       {% if error %}
-        <span class="validation-message">
-          {{ error }}
+        <span class="validation-message invalid" style="color: #cc0000">
+          {{ error.message }}
         </span>
       {% endif %}
     </legend>
