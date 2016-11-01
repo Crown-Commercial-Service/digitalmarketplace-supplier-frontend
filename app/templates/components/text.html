@@ -8,14 +8,13 @@
     <span class="question-heading">
       <h2>{{x.question}}</h2>
     </span>
+
       {% if error %}
       <span class="validation-message invalid" style="color: #cc0000">{{ error.message }}</span>
       {% endif %}
   </label>
-
-  <input name="{{ x.id }}" id="input-{{ x.id }}" class="{{ error_classes }}" value="{{service_data[x.id] or ''}}" aria-describedby=" input-{{ x.id }}-answer-advice" type="text">
-
   <span class="hint word-count-counter" id="input-{{ x.id }}-answer-advice">
     <p>{{ x.hint }}</p>
   </span>
+  <input name="{{ x.id }}" id="input-{{ x.id }}" class="{{ error_classes }}" value="{{service_data[x.id] or ''}}" aria-describedby=" input-{{ x.id }}-answer-advice" type="text">
 </div>

@@ -23,6 +23,6 @@
   {% endif %}
 </legend>
 
-  <textarea style="margin-bottom: 2rem; {% if e %}outline: 2px solid #cc0000{% endif %}" classes="{% if e %}text-box-with-error invalid{% endif %}" style="" id="{{field}}" name="{{field}}">{{service_data[i] or ''}}</textarea>
+  <textarea data-max-length-in-words="150" style="height: 15rem; margin-bottom: 0.5rem; {% if e %}outline: 2px solid #cc0000{% endif %}" classes="{% if e %}text-box-with-error invalid{% endif %}" style="" id="{{field}}" name="{{field}}">{{service_data[i] or ''}}</textarea>
 {% endfor %}
 </fieldset>

@@ -34,6 +34,9 @@
     <span class="question-heading">
       <h2>{{x.question}}</h2>
     </span>
+    <span class="hint word-count-counter" id="input-{{ x.id }}-answer-advice">
+      <p>{{ x.hint }}</p>
+    </span>
       {% if error %}
         <span class="validation-message invalid" style="color: #cc0000">
           {{ error.message }}
@@ -206,9 +209,6 @@
       </div>
       {% endif %}
     </div>
-    <span class="hint word-count-counter" id="input-{{ x.id }}-answer-advice">
-      <p>{{ x.hint }}</p>
-    </span>
   </fieldset>
 {% if error %}
   </div>
