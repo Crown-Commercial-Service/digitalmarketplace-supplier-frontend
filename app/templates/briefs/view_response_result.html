@@ -21,7 +21,7 @@
     <div class="column-two-thirds">
     {% with
       heading = {
-                  "submitted_ok": "You've now applied for ‘{}’".format(brief.title),
+                  "submitted_ok": "Thanks for your application. You've now applied for ‘{}’".format(brief.title),
                   "submitted_unsuccessful": "You don’t meet all the essential requirements"
                 }[result_state],
       smaller = true %}
@@ -32,13 +32,8 @@
 
     {% if result_state == "submitted_ok" %}
     <h2 class="summary-item-heading">What happens next</h2>
-    <p>
-        {% if brief_summary.get_question('sellerSelector').value == "allSellers" %}
-            If you are shortlisted the buyer will contact you to request:
-        {% else %}
-            The buyer will contact you soon to request:
-        {% endif %}
-    </p>
+    <p>After the opportunity closes the buyer will assess all applications and choose a small number of applicants to evaluate further.</p>
+    <p>If you’re selected the buyer will contact you after the opportunity closes to request:</p>
 
     <ul class="list-bullet">
         <li>
@@ -62,7 +57,7 @@
         {% endwith %}
     </ul>
 
-    <p>All applicants, successful and unsuccessful, will be notified about the result by email.</p>
+    <p>If not, the buyer has been asked to let you know via email.</p>
     <p>Best of luck!</p>
 
     {% elif result_state == "submitted_unsuccessful" %}

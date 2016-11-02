@@ -600,7 +600,7 @@ class TestResponseResultPage(BaseApplicationTest):
         assert res.status_code == 200
         doc = html.fromstring(res.get_data(as_text=True))
         assert doc.xpath('//h1')[0].text.strip() == \
-            "You've now applied for ‘I need a thing to do a thing’"
+            "Thanks for your application. You've now applied for ‘I need a thing to do a thing’"
 
     def test_view_response_result_submitted_unsuccessful(self, data_api_client):
         data_api_client.get_brief.return_value = self.brief
