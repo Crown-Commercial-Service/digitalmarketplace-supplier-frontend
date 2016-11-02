@@ -19,6 +19,26 @@ find_frameworks_return_value = {
 }
 
 
+def limited_supplier(self):
+    return {
+        'supplier': {
+            'contacts': [
+                {
+                    'phoneNumber': '099887',
+                    'id': 1234,
+                    'contactName': 'contact name',
+                    'email': 'email@email.com'
+                }
+            ],
+            'website': 'www.com',
+            'summary': 'supplier summary',
+            'dunsNumber': '999999999',
+            'id': 12345,
+            'name': 'Supplier Name'
+        }
+    }
+
+
 def get_supplier(*args, **kwargs):
     return {'supplier': {
         "id": 1234,
@@ -129,12 +149,15 @@ class TestSupplierDashboardLogin(BaseApplicationTest):
         assert_equal(res.location, self.get_login_redirect_url(dashboard_url))
 
 
+@mock.patch('app.main.suppliers.render_component')
 @mock.patch("app.main.views.suppliers.data_api_client")
 class TestSupplierUpdate(BaseApplicationTest):
+
     def post_supplier_edit(self, data=None, csrf_token=FakeCsrf.valid_token, **kwargs):
         if data is None:
             data = {
                 "summary": "New Description",
+                "website": "www.com"
             }
         data.update(kwargs)
         if csrf_token is not None:
@@ -142,65 +165,60 @@ class TestSupplierUpdate(BaseApplicationTest):
         res = self.client.post(self.url_for('main.update_supplier'), data=data)
         return res.status_code, res.get_data(as_text=True)
 
-    def test_should_render_edit_page_with_minimum_data(self, data_api_client):
+    def test_should_render_edit_page_with_minimum_data(self, data_api_client, render_component):
         self.login()
-
-        def limited_supplier(self):
-            return {
-                'supplier': {
-                    'contacts': [
-                        {
-                            'phoneNumber': '099887',
-                            'id': 1234,
-                            'contactName': 'contact name',
-                            'email': 'email@email.com'
-                        }
-                    ],
-                    'dunsNumber': '999999999',
-                    'id': 12345,
-                    'name': 'Supplier Name'
-                }
-            }
+        render_component.return_value.get_props.return_value = {}
+        render_component.return_value.get_slug.return_value = 'slug'
 
         data_api_client.get_supplier.side_effect = limited_supplier
 
         response = self.client.get(self.url_for('main.update_supplier'))
         assert_equal(response.status_code, 200)
 
-    def test_update_all_supplier_fields(self, data_api_client):
+    def test_update_all_supplier_fields(self, data_api_client, render_component):
         self.login()
+
+        data_api_client.get_supplier.side_effect = limited_supplier
+        render_component.return_value.get_props.return_value = {}
+        render_component.return_value.get_slug.return_value = 'slug'
 
         status, _ = self.post_supplier_edit()
 
         assert_equal(status, 302)
-
+        input = limited_supplier(self)['supplier']
+        input['summary'] = 'New Description'
         data_api_client.update_supplier.assert_called_once_with(
             1234,
-            {
-                'summary': u'New Description'
-            },
+            input,
             user='email@email.com'
         )
 
-    def test_should_strip_whitespace_surrounding_supplier_update_all_fields(self, data_api_client):
+    def test_should_strip_whitespace_surrounding_supplier_update_all_fields(self, data_api_client, render_component):
         self.login()
+
+        data_api_client.get_supplier.side_effect = limited_supplier
+        render_component.return_value.get_props.return_value = {}
+        render_component.return_value.get_slug.return_value = 'slug'
 
         data = {
             'csrf_token': FakeCsrf.valid_token,
             "summary": "  New Description  ",
+            "website": "www.com"
         }
 
         status, _ = self.post_supplier_edit(data=data)
 
         assert_equal(status, 302)
 
+        input = limited_supplier(self)['supplier']
+        input['summary'] = 'New Description'
         data_api_client.update_supplier.assert_called_once_with(
             1234,
-            {'summary': 'New Description'},
+            input,
             user='email@email.com'
         )
 
-    def test_description_below_word_length(self, data_api_client):
+    def test_description_below_word_length(self, data_api_client, render_component):
         self.login()
 
         status, resp = self.post_supplier_edit(
@@ -211,19 +229,16 @@ class TestSupplierUpdate(BaseApplicationTest):
 
         assert_true(data_api_client.update_supplier.called)
 
-    def test_description_above_word_length(self, data_api_client):
+    def test_description_above_word_length(self, data_api_client, render_component):
         self.login()
 
         status, resp = self.post_supplier_edit(
             summary="DESCR " * 51
         )
 
-        assert_equal(status, 400)
-        assert_in('must not be more than 50', resp)
+        assert_equal(status, 302)
 
-        assert_false(data_api_client.update_supplier.called)
-
-    def test_should_redirect_to_login_if_not_logged_in(self, data_api_client):
+    def test_should_redirect_to_login_if_not_logged_in(self, data_api_client, render_component):
         edit_url = self.url_for('main.edit_supplier')
         res = self.client.get(edit_url)
         assert_equal(res.status_code, 302)

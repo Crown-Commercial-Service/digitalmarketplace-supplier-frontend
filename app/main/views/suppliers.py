@@ -23,6 +23,10 @@ from ..helpers.frameworks import get_frameworks_by_status
 from ..helpers import debug_only, hash_email, login_required
 from .users import get_current_suppliers_users
 
+from react.response import from_response, validate_form_data
+from react.render import render_component
+from dmutils.forms import DmForm
+
 
 @main.route('')
 @login_required
@@ -82,65 +86,73 @@ def dashboard():
 
 @main.route('/edit', methods=['GET'])
 @login_required
-def edit_supplier(supplier_form=None, contact_form=None, error=None):
-    try:
-        supplier = data_api_client.get_supplier(
-            current_user.supplier_code
-        )['supplier']
-    except APIError as e:
-        current_app.logger.error(e)
-        abort(e.status_code)
+def edit_supplier(supplier=None, errors=None):
+    if not supplier:
+        try:
+            supplier = data_api_client.get_supplier(
+                current_user.supplier_code
+            )['supplier']
+        except APIError as e:
+            current_app.logger.error(e)
+            abort(e.status_code)
 
-    if supplier_form is None:
-        supplier_form = EditSupplierForm(
-            summary=supplier.get('summary', None),
-            clients=supplier.get('clients', None)
-        )
-        contact_form = EditContactInformationForm(
-            prefix='contact_',
-            **supplier['contacts'][0]
-        )
-
-    return render_template_with_csrf(
-        "suppliers/edit_supplier.html",
-        error=error,
-        supplier_form=supplier_form,
-        contact_form=contact_form
+    businessDetails = supplier
+    for link in businessDetails.get('extraLinks', []):
+        if link['label'] == 'LinkedIn':
+            businessDetails['linkedin'] = link['url']
+    form = DmForm()
+    rendered_component = render_component('bundles/SellerRegistration/BusinessDetailsWidget.js',
+                                          {'form_options': {'csrf_token': form.csrf_token.current_token,
+                                                            'errors': errors},
+                                           'form': {'businessDetails': businessDetails}})
+    return render_template(
+        '_react.html',
+        component=rendered_component
     )
 
 
 @main.route('/edit', methods=['POST'])
 @login_required
 def update_supplier():
-    # FieldList expects post parameter keys to have number suffixes
-    # (eg client-0, client-1 ...), which is incompatible with how
-    # JS list-entry plugin generates input names. So instead of letting
-    # the form search for request keys we pass in the values directly as data
-    supplier_form = EditSupplierForm(
-        csrf_token=request.form['csrf_token'],
-        summary=request.form['summary'],
-        clients=filter(None, request.form.getlist('clients'))
-    )
+    try:
+        supplier = data_api_client.get_supplier(
+            current_user.supplier_code
+        )['supplier']
+        if supplier.get('creationTime'):
+            del supplier['creationTime']
+        if supplier.get('lastUpdateTime'):
+            del supplier['lastUpdateTime']
+    except APIError as e:
+        current_app.logger.error(e)
+        abort(e.status_code)
 
-    if not (supplier_form.validate()):
-        response = make_response(edit_supplier(supplier_form=supplier_form))
-        response.status_code = 400
-        return response
+    supplier_updates = from_response(request)
+    supplier['summary'] = supplier_updates.get('summary')
+    supplier['website'] = supplier_updates.get('website')
+    if supplier_updates.get('address'):
+        supplier['address'] = supplier_updates.get('address')
+    # add a linkedin link if there are no current links
+    if len(supplier.get('extraLinks', [])) == 0 and supplier_updates.get('linkedin'):
+        if not supplier.get('extraLinks'):
+            supplier['extraLinks'] = {}
+        supplier['extraLinks'].append({'label': 'LinkedIn', 'url': supplier_updates['linkedin']})
+    for link in supplier.get('extraLinks', []):
+            if link['label'] == 'LinkedIn':
+                link['url'] = supplier_updates['linkedin']
 
-    # This form data is passed as-is to the API backend.  We don't need to send the CSRF token.
-    del supplier_form.csrf_token
+    errors = validate_form_data(supplier, ['summary'])
+    if errors:
+        return edit_supplier(supplier, errors)
 
     try:
         data_api_client.update_supplier(
             current_user.supplier_code,
-            supplier_form.data,
+            supplier,
             user=current_user.email_address
         )
     except APIError as e:
-        response = make_response(edit_supplier(supplier_form=supplier_form,
-                                               error=e.message))
-        response.status_code = 500
-        return response
+        current_app.logger.error(e)
+        abort(e.status_code)
 
     return redirect('/supplier/{}'.format(current_user.supplier_code))
 
