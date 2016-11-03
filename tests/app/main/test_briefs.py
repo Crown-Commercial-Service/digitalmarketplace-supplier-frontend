@@ -565,7 +565,7 @@ class TestRespondToBrief(BaseApplicationTest):
         data_api_client.get_brief.return_value = self.brief
         data_api_client.get_framework.return_value = self.framework
         data_api_client.create_brief_response.return_value = {
-            'briefResponses': {"essentialRequirements": [True, True, True]}
+            'briefResponses': {"id": 6, "essentialRequirements": [True, True, True]}
         }
 
         res = self.client.post(
@@ -575,13 +575,22 @@ class TestRespondToBrief(BaseApplicationTest):
         assert res.status_code == 302
         assert res.location == "http://localhost/suppliers/opportunities/1234/responses/result?result=success"
         data_api_client.create_brief_response.assert_called_once_with(
-            1234, 1234, processed_brief_submission, 'email@email.com')
+            1234,
+            1234,
+            processed_brief_submission,
+            'email@email.com',
+            page_questions=[
+                'respondToEmailAddress', 'essentialRequirements', 'niceToHaveRequirements', 'availability', 'dayRate'
+            ]
+        )
+        data_api_client.submit_brief_response.assert_called_once_with(
+            6, 'email@email.com')
 
-    def test_create_new_brief_response_shows_result_page_for_not_all_essentials(self, data_api_client):
+    def test_create_new_brief_response_redirects_to_result_page_if_not_all_essentials_are_true(self, data_api_client):
         data_api_client.get_brief.return_value = self.brief
         data_api_client.get_framework.return_value = self.framework
         data_api_client.create_brief_response.return_value = {
-            'briefResponses': {"essentialRequirements": [True, False, True]}
+            'briefResponses': {"id": 6, "essentialRequirements": [True, False, True]}
         }
 
         res = self.client.post(
@@ -591,7 +600,14 @@ class TestRespondToBrief(BaseApplicationTest):
         assert res.status_code == 302
         assert res.location == "http://localhost/suppliers/opportunities/1234/responses/result?result=fail"
         data_api_client.create_brief_response.assert_called_once_with(
-            1234, 1234, processed_brief_submission, 'email@email.com')
+            1234,
+            1234,
+            processed_brief_submission,
+            'email@email.com',
+            page_questions=[
+                'respondToEmailAddress', 'essentialRequirements', 'niceToHaveRequirements', 'availability', 'dayRate'
+            ]
+        )
 
     def test_create_new_brief_response_error_message_for_boolean_list_question_empty(self, data_api_client):
         data_api_client.get_brief.return_value = self.brief
@@ -778,7 +794,14 @@ class TestRespondToBrief(BaseApplicationTest):
         assert res.status_code == 400
         assert "You need to answer this question." in res.get_data(as_text=True)
         data_api_client.create_brief_response.assert_called_once_with(
-            1234, 1234, processed_brief_submission, 'email@email.com')
+            1234,
+            1234,
+            processed_brief_submission,
+            'email@email.com',
+            page_questions=[
+                'respondToEmailAddress', 'essentialRequirements', 'niceToHaveRequirements', 'availability', 'dayRate'
+            ]
+        )
 
     def test_create_new_brief_response_redirects_to_login_for_buyer(self, data_api_client):
         data_api_client.get_brief.return_value = self.brief
