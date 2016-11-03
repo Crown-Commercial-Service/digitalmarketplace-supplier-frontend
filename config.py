@@ -140,6 +140,10 @@ class Live(Config):
         'EDIT_SECTIONS': False,
     }
 
+    REACT_BUNDLE_URL = 'https://dm-frontend.apps.platform.digital.gov.au/bundle/'
+    REACT_RENDER_URL = 'https://dm-frontend.apps.platform.digital.gov.au/render'
+    REACT_RENDER = True
+
 
 class Preview(Live):
     pass
