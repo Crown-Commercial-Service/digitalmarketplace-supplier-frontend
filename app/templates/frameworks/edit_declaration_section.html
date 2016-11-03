@@ -47,7 +47,7 @@
             {% endwith %}
             {% if section.description %}
               <div class="section-description">
-                {{ section.description|question_references(get_question)|markdown }}
+                {{ section.description|question_references(get_question) }}
               </div>
             {% endif %}
             {% for question in section.questions %}

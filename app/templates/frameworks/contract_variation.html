@@ -91,7 +91,7 @@
             ) %}
             {% call summary.row() %}
               {{ summary.field_name(item.clause) }}
-              {{ summary.text(item.change|markdown) }}
+              {{ summary.text(item.change) }}
             {% endcall %}
           {% endcall %}
 
@@ -108,7 +108,7 @@
             ) %}
             {% call summary.row() %}
               {{ summary.field_name(item.clause) }}
-              {{ summary.text(item.change|markdown) }}
+              {{ summary.text(item.change) }}
             {% endcall %}
           {% endcall %}
 
