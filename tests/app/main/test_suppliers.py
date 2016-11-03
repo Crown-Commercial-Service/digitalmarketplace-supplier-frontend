@@ -219,8 +219,7 @@ class TestSuppliersDashboard(BaseApplicationTest):
                       message[0].xpath('h3/text()')[0])
             assert_in(u"We’ll email you when you can apply to Digital Outcomes and Specialists",
                       message[0].xpath('p/text()')[0])
-            assert_in(u"Find out if your services are suitable",
-                      message[0].xpath('p/a/text()')[0])
+            assert u"Find out if your services are suitable" in message[0].xpath('p/a/text()')[0]
 
     @mock.patch("app.main.views.suppliers.data_api_client")
     @mock.patch("app.main.views.suppliers.get_current_suppliers_users")
