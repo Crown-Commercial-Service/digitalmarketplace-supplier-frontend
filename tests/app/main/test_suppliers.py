@@ -185,11 +185,10 @@ class TestSupplierUpdate(BaseApplicationTest):
         status, _ = self.post_supplier_edit()
 
         assert_equal(status, 302)
-        input = limited_supplier(self)['supplier']
-        input['summary'] = 'New Description'
+
         data_api_client.update_supplier.assert_called_once_with(
             1234,
-            input,
+            {'website': u'www.com', 'summary': u'New Description'},
             user='email@email.com'
         )
 
@@ -210,11 +209,9 @@ class TestSupplierUpdate(BaseApplicationTest):
 
         assert_equal(status, 302)
 
-        input = limited_supplier(self)['supplier']
-        input['summary'] = 'New Description'
         data_api_client.update_supplier.assert_called_once_with(
             1234,
-            input,
+            {'website': u'www.com', 'summary': u'New Description'},
             user='email@email.com'
         )
 

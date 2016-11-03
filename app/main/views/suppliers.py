@@ -15,8 +15,7 @@ from dmcontent.content_loader import ContentNotFoundError
 from ...main import main, content_loader
 from ... import data_api_client
 from ..forms.suppliers import (
-    EditSupplierForm, EditContactInformationForm, DunsNumberForm, CompaniesHouseNumberForm,
-    CompanyContactDetailsForm, CompanyNameForm, EmailAddressForm
+    DunsNumberForm, CompaniesHouseNumberForm, CompanyContactDetailsForm, CompanyNameForm, EmailAddressForm
 )
 from app.main.helpers.users import generate_supplier_invitation_token
 from ..helpers.frameworks import get_frameworks_by_status
@@ -96,15 +95,12 @@ def edit_supplier(supplier=None, errors=None):
             current_app.logger.error(e)
             abort(e.status_code)
 
-    businessDetails = supplier
-    for link in businessDetails.get('extraLinks', []):
-        if link['label'] == 'LinkedIn':
-            businessDetails['linkedin'] = link['url']
     form = DmForm()
     rendered_component = render_component('bundles/SellerRegistration/BusinessDetailsWidget.js',
                                           {'form_options': {'csrf_token': form.csrf_token.current_token,
+                                                            'mode': 'edit',
                                                             'errors': errors},
-                                           'form': {'businessDetails': businessDetails}})
+                                           'businessDetailsForm': supplier})
     return render_template(
         '_react.html',
         component=rendered_component
@@ -114,40 +110,17 @@ def edit_supplier(supplier=None, errors=None):
 @main.route('/edit', methods=['POST'])
 @login_required
 def update_supplier():
-    try:
-        supplier = data_api_client.get_supplier(
-            current_user.supplier_code
-        )['supplier']
-        if supplier.get('creationTime'):
-            del supplier['creationTime']
-        if supplier.get('lastUpdateTime'):
-            del supplier['lastUpdateTime']
-    except APIError as e:
-        current_app.logger.error(e)
-        abort(e.status_code)
+    allowed_keys = ['summary', 'website', 'linkedin', 'address']
+    supplier_updates = {k: v for (k, v) in from_response(request).iteritems() if k in allowed_keys}
 
-    supplier_updates = from_response(request)
-    supplier['summary'] = supplier_updates.get('summary')
-    supplier['website'] = supplier_updates.get('website')
-    if supplier_updates.get('address'):
-        supplier['address'] = supplier_updates.get('address')
-    # add a linkedin link if there are no current links
-    if len(supplier.get('extraLinks', [])) == 0 and supplier_updates.get('linkedin'):
-        if not supplier.get('extraLinks'):
-            supplier['extraLinks'] = {}
-        supplier['extraLinks'].append({'label': 'LinkedIn', 'url': supplier_updates['linkedin']})
-    for link in supplier.get('extraLinks', []):
-            if link['label'] == 'LinkedIn':
-                link['url'] = supplier_updates['linkedin']
-
-    errors = validate_form_data(supplier, ['summary'])
+    errors = validate_form_data(supplier_updates, ['summary'])
     if errors:
-        return edit_supplier(supplier, errors)
+        return edit_supplier(supplier_updates, errors)
 
     try:
         data_api_client.update_supplier(
             current_user.supplier_code,
-            supplier,
+            supplier_updates,
             user=current_user.email_address
         )
     except APIError as e:
