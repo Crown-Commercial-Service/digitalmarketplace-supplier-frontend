@@ -2,7 +2,19 @@
 $path: "/static/images/";
 
 // GOV.AU UI Kit
-@import 'gov-au-ui-kit/ui-kit';
+@import './vendor/bourbon/bourbon';
+@import './vendor/neat/neat';
+
+@import 'gov-au-ui-kit/grid-settings';
+@import 'gov-au-ui-kit/variables';
+@import 'gov-au-ui-kit/icons';
+@import 'gov-au-ui-kit/colours';
+@import 'gov-au-ui-kit/typography';
+@import 'gov-au-ui-kit/buttons';
+@import 'gov-au-ui-kit/links';
+@import 'gov-au-ui-kit/tables';
+@import 'gov-au-ui-kit/forms';
+@import 'gov-au-ui-kit/lists';
 
 @import 'grid-settings';
 @import 'variables';
@@ -11,15 +23,31 @@ $path: "/static/images/";
 @import 'typography';
 @import 'links';
 @import 'tables';
-@import 'block-elements';
 @import 'forms';
 @import 'buyerpages';
+@import 'print';
 
+button,
+.button,
+[role='button'],
+[type='button'],
 header[role="banner"],
 .global-breadcrumb,
 .skip-to,
 .visually-hidden,
 .visuallyhidden,
-footer {
+.summary-item-body tbody tr td:last-of-type a,
+footer,
+.m-t-1 a {
   display: none;
+}
+
+.content-main {
+  .signatures-section {
+    p {
+      &::before {
+        width: 90%;
+      }
+    }
+  }
 }
