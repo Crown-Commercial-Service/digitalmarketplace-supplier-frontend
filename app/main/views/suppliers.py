@@ -15,13 +15,16 @@ from dmcontent.content_loader import ContentNotFoundError
 from ...main import main, content_loader
 from ... import data_api_client
 from ..forms.suppliers import (
-    EditSupplierForm, EditContactInformationForm, DunsNumberForm, CompaniesHouseNumberForm,
-    CompanyContactDetailsForm, CompanyNameForm, EmailAddressForm
+    DunsNumberForm, CompaniesHouseNumberForm, CompanyContactDetailsForm, CompanyNameForm, EmailAddressForm
 )
 from app.main.helpers.users import generate_supplier_invitation_token
 from ..helpers.frameworks import get_frameworks_by_status
 from ..helpers import debug_only, hash_email, login_required
 from .users import get_current_suppliers_users
+
+from react.response import from_response, validate_form_data
+from react.render import render_component
+from dmutils.forms import DmForm
 
 
 @main.route('')
@@ -82,65 +85,47 @@ def dashboard():
 
 @main.route('/edit', methods=['GET'])
 @login_required
-def edit_supplier(supplier_form=None, contact_form=None, error=None):
-    try:
-        supplier = data_api_client.get_supplier(
-            current_user.supplier_code
-        )['supplier']
-    except APIError as e:
-        current_app.logger.error(e)
-        abort(e.status_code)
+def edit_supplier(supplier=None, errors=None):
+    if not supplier:
+        try:
+            supplier = data_api_client.get_supplier(
+                current_user.supplier_code
+            )['supplier']
+        except APIError as e:
+            current_app.logger.error(e)
+            abort(e.status_code)
 
-    if supplier_form is None:
-        supplier_form = EditSupplierForm(
-            summary=supplier.get('summary', None),
-            clients=supplier.get('clients', None)
-        )
-        contact_form = EditContactInformationForm(
-            prefix='contact_',
-            **supplier['contacts'][0]
-        )
-
-    return render_template_with_csrf(
-        "suppliers/edit_supplier.html",
-        error=error,
-        supplier_form=supplier_form,
-        contact_form=contact_form
+    form = DmForm()
+    rendered_component = render_component('bundles/SellerRegistration/BusinessDetailsWidget.js',
+                                          {'form_options': {'csrf_token': form.csrf_token.current_token,
+                                                            'mode': 'edit',
+                                                            'errors': errors},
+                                           'businessDetailsForm': supplier})
+    return render_template(
+        '_react.html',
+        component=rendered_component
     )
 
 
 @main.route('/edit', methods=['POST'])
 @login_required
 def update_supplier():
-    # FieldList expects post parameter keys to have number suffixes
-    # (eg client-0, client-1 ...), which is incompatible with how
-    # JS list-entry plugin generates input names. So instead of letting
-    # the form search for request keys we pass in the values directly as data
-    supplier_form = EditSupplierForm(
-        csrf_token=request.form['csrf_token'],
-        summary=request.form['summary'],
-        clients=filter(None, request.form.getlist('clients'))
-    )
+    allowed_keys = ['summary', 'website', 'linkedin', 'address']
+    supplier_updates = {k: v for (k, v) in from_response(request).iteritems() if k in allowed_keys}
 
-    if not (supplier_form.validate()):
-        response = make_response(edit_supplier(supplier_form=supplier_form))
-        response.status_code = 400
-        return response
-
-    # This form data is passed as-is to the API backend.  We don't need to send the CSRF token.
-    del supplier_form.csrf_token
+    errors = validate_form_data(supplier_updates, ['summary'])
+    if errors:
+        return edit_supplier(supplier_updates, errors)
 
     try:
         data_api_client.update_supplier(
             current_user.supplier_code,
-            supplier_form.data,
+            supplier_updates,
             user=current_user.email_address
         )
     except APIError as e:
-        response = make_response(edit_supplier(supplier_form=supplier_form,
-                                               error=e.message))
-        response.status_code = 500
-        return response
+        current_app.logger.error(e)
+        abort(e.status_code)
 
     return redirect('/supplier/{}'.format(current_user.supplier_code))
 
