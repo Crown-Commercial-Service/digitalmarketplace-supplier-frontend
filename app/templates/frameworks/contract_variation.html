@@ -66,18 +66,18 @@
               {% include 'toolkit/forms/validation.html' %}
             {% endwith %}
           {% endif %}
-          
+
           <div class="section-description">
           {% if variation_details.get('countersignedAt') and agreed_details %}
-            {{ variation.variation_description_in_place|replace("[[SUPPLIER_NAME]]", supplier_name)|markdown }}
+            {{ variation.variation_description_in_place }}
           {% else %}
-            {{ variation.variation_description_not_in_place|replace("[[SUPPLIER_NAME]]", supplier_name)|markdown }}
+            {{ variation.variation_description_not_in_place }}
             {% if not agreed_details and variation.variation_not_yet_agreed_extra %}
-              {{ variation.not_agreed_extra|replace("[[SUPPLIER_NAME]]", supplier_name)|markdown }}
+              {{ variation.not_agreed_extra }}
             {% endif %}
           {% endif %}
           </div>
-          
+
           {{ summary.heading("Framework agreement", id="framework_agreement_changes") }}
           {% call(item) summary.list_table(
             variation.framework_agreement_changes,
@@ -111,7 +111,7 @@
               {{ summary.text(item.change|markdown) }}
             {% endcall %}
           {% endcall %}
-          
+
           {% if not agreed_details %}
 
             <form method="post" class="supplier-declaration">
@@ -129,7 +129,7 @@
               %}
               {% include "toolkit/forms/selection-buttons.html" %}
               {% endwith %}
-              
+
               <p>We’ll tell you when CCS has countersigned the changes and they come into effect.</p>
                 {%
                   with
@@ -139,9 +139,9 @@
                   {% include "toolkit/button.html" %}
                 {% endwith %}
               </form>
-          
+
           {% else %}
-          
+
             {{ summary.heading("Contract variation status", id="contract_variation_status") }}
             {% call(item) summary.list_table(
               [
@@ -171,7 +171,7 @@
               {% include "toolkit/secondary-action-link.html" %}
             {% endwith %}
           {% endif %}
-          
+
           </div>
       </div>
 

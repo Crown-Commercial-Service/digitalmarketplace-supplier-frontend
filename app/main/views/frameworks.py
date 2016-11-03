@@ -935,6 +935,11 @@ def view_contract_variation(framework_slug, variation_slug):
                 {'question': form['accept_changes'].label.text, 'input_name': 'accept_changes'}
             ]
 
+    supplier_name = supplier_framework['declaration']['nameOfOrganisation']
+    variation_content = content_loader.get_message(framework_slug, variation_content_name).filter(
+        {'supplier_name': supplier_name}
+    )
+
     return render_template(
         "frameworks/contract_variation.html",
         form=form,
@@ -942,7 +947,7 @@ def view_contract_variation(framework_slug, variation_slug):
         framework=framework,
         supplier_framework=supplier_framework,
         variation_details=variation_details,
-        variation=content_loader.get_message(framework_slug, variation_content_name),
+        variation=variation_content,
         agreed_details=agreed_details,
-        supplier_name=supplier_framework['declaration']['nameOfOrganisation'],
+        supplier_name=supplier_name,
     ), 400 if form_errors else 200
