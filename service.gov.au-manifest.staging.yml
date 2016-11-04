@@ -1,10 +1,14 @@
+command: scripts/cf_run_app.sh
+buildpack: https://github.com/cloudfoundry/buildpack-python.git
+memory: 128M
+disk_quota: 1G
+instances: 1
+env:
+    NEW_RELIC_ENVIRONMENT: staging
+    DM_DATA_API_URL: https://dm-dev-api.apps.staging.digital.gov.au/
+routes:
+- route: dm-dev.apps.staging.digital.gov.au/sellers
+- route: dm-dev-supplier.apps.staging.digital.gov.au/
 applications:
-    - name: dm-dev-supplier
-      command: scripts/cf_run_app.sh
-      buildpack: https://github.com/cloudfoundry/buildpack-python.git
-      memory: 128M
-      disk_quota: 1G
-      instances: 1
-      env:
-          NEW_RELIC_ENVIRONMENT: staging
-          DM_DATA_API_URL: https://dm-dev-api.apps.staging.digital.gov.au/
+- name: dm-dev-supplier-blue
+- name: dm-dev-supplier-green
