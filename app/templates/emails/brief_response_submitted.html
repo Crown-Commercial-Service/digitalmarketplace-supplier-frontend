@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+</head>
+<body>
+
+<p>Your application for {{ brief.title }} has been submitted.</p>
+
+<h2>What happens next</h2>
+
+<p>Once the opportunity closes, the buyer will score your responses. If you're one of the top suppliers, you'll go through to the evalulation stage and the buyer will contact you.</p>
+
+<p>If you're not successful, the buyer has been asked to give you feedback.</p>
+
+<h2>Here's how you responded:</h2>
+
+{% if brief_response.availability %}
+<h3>Earliest start date</h3>
+<p>{{ brief_response.availability }}</p>
+{% endif %}
+
+{% if brief_response.dayRate %}
+<h3>Day rate</h3>
+<p>${{ brief_response.dayRate }}</p>
+{% endif %}
+
+<h3>Essential Requirements</h3>
+{% for req, response in essential_requirements %}
+
+<h4>{{ req }}</h4>
+<p>{{ response|striptags }}</p>
+
+{% endfor %}
+
+{% if nice_to_have_requirements %}
+<h3>Nice-to-have Requirements</h3>
+
+{% for req, response in nice_to_have_requirements %}
+
+<h4>{{ req }}</h4>
+<p>{{ response|striptags }}</p>
+
+{% endfor %}
+{% endif %}
+
+<p>Thank you and good luck,<br>
+The Digital Marketplace team</p>
+
+</body>
+</html>

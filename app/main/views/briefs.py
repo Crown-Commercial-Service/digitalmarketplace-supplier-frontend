@@ -3,11 +3,15 @@ from __future__ import unicode_literals
 
 import re
 
-from flask import abort, flash, redirect, render_template, request, url_for
+from flask import abort, flash, redirect, render_template, request, url_for, \
+    current_app
 from flask_login import current_user
 
 from dmapiclient import HTTPError
 from dmutils.forms import render_template_with_csrf
+
+from dmutils.email import send_email, EmailError
+from six import text_type
 
 from ..helpers import login_required
 from ..helpers.briefs import (
@@ -119,6 +123,41 @@ def brief_response(brief_id):
     )
 
 
+def send_thank_you_email_to_responders(brief, brief_response, brief_response_url):
+    ess = brief.get('essentialRequirements', [])
+    nth = brief.get('niceToHaveRequirements', [])
+
+    ess = zip(ess, brief_response.get('essentialRequirements', []))
+    nth = zip(nth, brief_response.get('niceToHaveRequirements', []))
+
+    to_email_address = brief_response['respondToEmailAddress']
+
+    email_body = render_template(
+        'emails/brief_response_submitted.html',
+        brief=brief,
+        essential_requirements=ess,
+        nice_to_have_requirements=nth,
+        brief_response=brief_response,
+        brief_response_url=brief_response_url
+    )
+
+    try:
+        send_email(
+            to_email_address,
+            email_body,
+            'Great success, high five',
+            current_app.config['DM_GENERIC_NOREPLY_EMAIL'],
+            current_app.config['DM_GENERIC_SUPPORT_NAME'],
+        )
+    except EmailError as e:
+        current_app.logger.error(
+            'seller new opportunity email failed to send. '
+            'error {error}',
+            extra={
+                'error': six.text_type(e), })
+        abort(503, response='Failed to send seller new opportunity email.')
+
+
 # Add a create route
 @main.route('/opportunities/<int:brief_id>/responses/create', methods=['POST'])
 @login_required
@@ -165,11 +204,10 @@ def submit_brief_response(brief_id):
             errors=errors,
         )
 
-    if all(brief_response['essentialRequirements']):
-        # "result" parameter is used to track brief applications by analytics
-        return redirect(url_for(".view_response_result", brief_id=brief_id, result='success'))
-    else:
-        return redirect(url_for(".view_response_result", brief_id=brief_id, result='fail'))
+    response_url = url_for(".view_response_result", brief_id=brief_id, result='success')
+    send_thank_you_email_to_responders(brief, brief_response, response_url)
+
+    return redirect(response_url)
 
 
 @main.route('/opportunities/<int:brief_id>/responses/result')

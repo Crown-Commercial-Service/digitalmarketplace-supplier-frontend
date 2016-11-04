@@ -408,7 +408,9 @@ class TestRespondToBrief(BaseApplicationTest):
         data_api_client.get_brief.return_value = self.brief
         data_api_client.get_framework.return_value = self.framework
         data_api_client.create_brief_response.return_value = {
-            'briefResponses': {"essentialRequirements": [True, True, True]}
+            'briefResponses': {
+                "essentialRequirements": [True, True, True],
+                'respondToEmailAddress': 'example@example.com'}
         }
 
         res = self.client.post(
@@ -425,7 +427,10 @@ class TestRespondToBrief(BaseApplicationTest):
         data_api_client.get_brief.return_value = self.brief
         data_api_client.get_framework.return_value = self.framework
         data_api_client.create_brief_response.return_value = {
-            'briefResponses': {"essentialRequirements": [True, False, True]}
+            'briefResponses': {
+                "essentialRequirements": [True, False, True],
+                'respondToEmailAddress': 'example@example.com'
+            }
         }
 
         res = self.client.post(
@@ -433,7 +438,12 @@ class TestRespondToBrief(BaseApplicationTest):
             data=brief_form_submission
         )
         assert res.status_code == 302
-        assert res.location == self.url_for('main.view_response_result', brief_id=1234, result='fail', _external=True)
+        assert res.location == self.url_for(
+            'main.view_response_result',
+            brief_id=1234,
+            result='success',
+            _external=True)
+
         data_api_client.create_brief_response.assert_called_once_with(
             1234, 1234, processed_brief_submission, 'email@email.com')
 

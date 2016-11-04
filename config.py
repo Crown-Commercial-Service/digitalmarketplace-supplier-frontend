@@ -42,6 +42,7 @@ class Config(object):
     GENERIC_CONTACT_EMAIL = 'marketplace@digital.gov.au'
     DM_GENERIC_NOREPLY_EMAIL = 'no-reply@marketplace.digital.gov.au'
     DM_GENERIC_ADMIN_NAME = 'Digital Marketplace Admin'
+    DM_GENERIC_SUPPORT_NAME = 'Digital Marketplace'
 
     RESET_PASSWORD_EMAIL_NAME = DM_GENERIC_ADMIN_NAME
     RESET_PASSWORD_EMAIL_FROM = 'no-reply@marketplace.digital.gov.au'
@@ -101,6 +102,8 @@ class Test(Config):
     SECRET_KEY = 'TestKeyTestKeyTestKeyTestKeyTestKeyTestKeyX='
     SHARED_EMAIL_KEY = SECRET_KEY
 
+    DM_SEND_EMAIL_TO_STDERR = True
+
     DM_SUBMISSIONS_BUCKET = 'digitalmarketplace-submissions-dev-dev'
     DM_COMMUNICATIONS_BUCKET = 'digitalmarketplace-communications-dev-dev'
     DM_ASSETS_URL = 'http://asset-host'
@@ -122,6 +125,8 @@ class Development(Config):
     DM_AGREEMENTS_BUCKET = "digitalmarketplace-agreements-dev-dev"
     DM_DOCUMENTS_BUCKET = "digitalmarketplace-documents-dev-dev"
     DM_ASSETS_URL = "https://{}.s3-eu-west-1.amazonaws.com".format(DM_SUBMISSIONS_BUCKET)
+
+    DM_SEND_EMAIL_TO_STDERR = True
 
     SECRET_KEY = 'DevKeyDevKeyDevKeyDevKeyDevKeyDevKeyDevKeyX='
     SHARED_EMAIL_KEY = SECRET_KEY
