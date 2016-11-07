@@ -25,13 +25,28 @@
   <div>
     <h2 class="heading-xmedium">Legal documents</h2>
 
-    {% if communications_files.proposed_agreement.last_modified %}
+    {% if communications_files.final_agreement.last_modified %}
+    <p>
+      <a href="{{ url_for('.download_supplier_file', filepath=communications_files.final_agreement.filename, framework_slug=framework.slug) }}">
+        Download the framework agreement
+      </a>
+      <br/>
+      Read the agreement between the Crown Commercial Service (<abbr title="Crown Commercial Service">CCS</abbr>) and suppliers.
+      <br/>
+      <span class="hint">
+        Last updated
+        <time datetime="{{ communications_files.final_agreement.last_modified }}">
+          {{ communications_files.final_agreement.last_modified|dateformat }}
+        </time>
+      </span>
+    </p>
+    {% elif communications_files.proposed_agreement.last_modified %}
     <p>
       <a href="{{ url_for('.download_supplier_file', filepath=communications_files.proposed_agreement.filename, framework_slug=framework.slug) }}">
         Download the proposed framework agreement
       </a>
       <br/>
-      Read the proposed agreement between the Crown Commercial Service (CCS) and suppliers.
+      Read the proposed agreement between the Crown Commercial Service (<abbr title="Crown Commercial Service">CCS</abbr>) and suppliers.
       <br/>
       <span class="hint">
         Last updated

@@ -327,8 +327,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
             ('', 'g-cloud-7-invitation', 'pdf', '2016-05-01T14:00:00.000Z'),
             ('', 'g-cloud-7-proposed-agreement', 'pdf', '2016-06-01T14:00:00.000Z'),
             ('', 'g-cloud-7-reporting-template', 'xlsx', '2016-06-06T14:00:00.000Z'),
-            # these are superfluous files that shouldn't be shown
-            ('', 'g-cloud-7-final-agreement', 'pdf', '2016-06-06T14:00:00.000Z'),
+            # superfluous file that shouldn't be shown
             ('', 'g-cloud-7-supplier-pack', 'zip', '2015-01-01T14:00:00.000Z'),
         ]
 
@@ -399,6 +398,96 @@ class TestFrameworksDashboard(BaseApplicationTest):
                 doc.xpath("//main//a[contains(@href, $href_part)]", href_part=href_part)
                 for href_part in (
                     "g-cloud-7-final-agreement.pdf",
+                    "g-cloud-7-supplier-pack.zip",
+                )
+            )
+            assert len(doc.xpath(
+                "//main//p[contains(normalize-space(string()), $a)]",
+                a="until 5pm BST, 22 September 2015",
+            )) == 1
+            assert not doc.xpath(
+                "//main//table[normalize-space(string(./caption))=$b]",
+                b="Agreement details",
+            )
+
+    def test_final_agreement_download_shown_open_framework(self, data_api_client, s3):
+        files = [
+            ('updates/communications/', 'file 1', 'odt', '2015-01-01T14:00:00.000Z'),
+            ('updates/clarifications/', 'file 2', 'odt', '2015-02-02T14:00:00.000Z'),
+            ('', 'g-cloud-7-call-off', 'pdf', '2016-05-01T14:00:00.000Z'),
+            ('', 'g-cloud-7-invitation', 'pdf', '2016-05-01T14:00:00.000Z'),
+            ('', 'g-cloud-7-proposed-agreement', 'pdf', '2016-06-11T14:00:00.000Z'),
+            ('', 'g-cloud-7-reporting-template', 'xlsx', '2016-06-06T14:00:00.000Z'),
+            ('', 'g-cloud-7-final-agreement', 'pdf', '2016-06-02T14:00:00.000Z'),
+        ]
+
+        s3.return_value.list.return_value = [
+            _return_fake_s3_file_dict(
+                'g-cloud-7/communications/{}'.format(section), filename, ext, last_modified=last_modified
+            ) for section, filename, ext, last_modified in files
+        ]
+
+        with self.app.test_client():
+            self.login()
+
+            data_api_client.get_framework.return_value = self.framework(status='open')
+            data_api_client.get_supplier_framework_info.return_value = self.supplier_framework()
+            res = self.client.get("/suppliers/frameworks/g-cloud-7")
+            assert res.status_code == 200
+
+            doc = html.fromstring(res.get_data(as_text=True))
+            extracted_guidance_links = self._extract_guidance_links(doc)
+
+            assert extracted_guidance_links == OrderedDict((
+                ("Guidance", (
+                    (
+                        "Download the invitation to apply",
+                        "/suppliers/frameworks/g-cloud-7/files/g-cloud-7-invitation.pdf",
+                        None,
+                        None,
+                    ),
+                    (
+                        "Read about how to apply",
+                        "https://www.gov.uk/guidance/g-cloud-suppliers-guide#how-to-apply",
+                        None,
+                        None,
+                    ),
+                )),
+                ("Legal documents", (
+                    (
+                        "Download the framework agreement",
+                        "/suppliers/frameworks/g-cloud-7/files/g-cloud-7-final-agreement.pdf",
+                        "Thursday 2 June 2016",
+                        "2016-06-02T14:00:00.000Z",
+                    ),
+                    (
+                        u"Download the proposed \u2018call-off\u2019 contract",
+                        "/suppliers/frameworks/g-cloud-7/files/g-cloud-7-call-off.pdf",
+                        "Sunday 1 May 2016",
+                        "2016-05-01T14:00:00.000Z",
+                    ),
+                )),
+                ("Communications", (
+                    (
+                        "View communications and ask clarification questions",
+                        "/suppliers/frameworks/g-cloud-7/updates",
+                        "Monday 2 February 2015",
+                        "2015-02-02T14:00:00.000Z",
+                    ),
+                )),
+                ("Reporting", (
+                    (
+                        "Download the reporting template",
+                        "/suppliers/frameworks/g-cloud-7/files/g-cloud-7-reporting-template.xlsx",
+                        None,
+                        None,
+                    ),
+                )),
+            ))
+            assert not any(
+                doc.xpath("//main//a[contains(@href, $href_part)]", href_part=href_part)
+                for href_part in (
+                    "g-cloud-7-proposed-agreement.pdf",
                     "g-cloud-7-supplier-pack.zip",
                 )
             )
