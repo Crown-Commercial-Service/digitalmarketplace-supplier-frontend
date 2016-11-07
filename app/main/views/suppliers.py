@@ -3,7 +3,8 @@
 from itertools import chain
 
 from flask import render_template, request, redirect, url_for, abort, session, Markup, make_response
-from flask_login import current_user, current_app
+from flask_login import current_user
+from flask import current_app
 import six
 
 from dmapiclient import APIError
