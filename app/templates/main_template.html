@@ -97,7 +97,9 @@
 
   {% block body_end %}{% endblock %} 
   
-  <script type="text/javascript" src="https://gov-au-ui-kit.apps.staging.digital.gov.au/latest/ui-kit.min.js"></script>
+  {% block uikit %}
+    <script type="text/javascript" src="https://gov-au-ui-kit.apps.staging.digital.gov.au/latest/ui-kit.min.js"></script>
+  {% endblock %}
 
 </body>
 </html>

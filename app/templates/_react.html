@@ -1,11 +1,22 @@
 {% extends "_base_page.html" %}
 
+{% block breadcrumb %}
+  {% if breadcrumb_items|count > 0 %}
+    {% with items = breadcrumb_items %}
+      {% include "toolkit/breadcrumb.html" %}
+    {% endwith %}
+  {% endif %}
+{% endblock %}
+
 {% block body_end %}
   <script type="text/javascript" src="{{ component.get_vendor_bundle() }}" defer></script>
   <script type="text/javascript" src="{{ component.get_bundle() }}" defer></script>
 {% endblock %}
 
-{% block main_content %}
+{% block content %}
     <div id="react-bundle-{{component.get_slug()}}-state" style="display:none;">{{component.get_props()|tojson|forceescape}}</div>
     <div id="react-bundle-{{component.get_slug()}}">{{component|safe}}</div>
 {% endblock %}
+
+{# We want to remove UI Kit JS from react pages, override with empty block #}
+{% block uikit %}{% endblock %}

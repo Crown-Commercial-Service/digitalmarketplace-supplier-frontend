@@ -85,46 +85,124 @@
   }
 }
 
+@mixin form-control {
+  list-style: none;
+  margin: $base-spacing 0;
+  padding: 0;
+  @content;
+
+  label:last-child  {
+    margin: 0;
+  }
+}
+
+main {
+  form {
+    a.validation-message {
+      display: inline-block;
+      border: 0;
+
+      span {
+        color: $error-colour;
+        font-size: rem(14);
+        font-weight: $base-font-weight;
+      }
+
+      &:hover, &:active, &:focus {
+        background: none;
+      }
+    }
+}
+
 form {
-
-  .question-heading {
-    font-weight: $bold-font-weight;
-  }
-
-  fieldset {
-    legend {
-      margin-bottom: 0.8em;
-    }
-  }
-
-  input[type='checkbox'] + label,
-  input[type='radio'] + label {
-    outline: 1px solid $light-grey;
-    margin: 0 0 8px;
-
-    >p {
-      font-size: rem(14);
-      font-weight: 400;
-      margin-bottom: 0.1em;
-      padding-right: 20px;
+  .form-control, .field {
+      @include form-control;
     }
 
-    &::before {
-      top: 12px;
+    .hint {
+      color: $grey;
+      margin-bottom: 0;
     }
 
-    &::after {
-      top: 17px;
+    textarea {
+      height: 14.375em;
     }
-  }
 
-  input[type='checkbox']:checked + label,
-  input[type='radio']:checked + label {
-    font-weight: 700;
-    outline: 2px solid $grey;
-
-    &::after {
-      top: 17px;
+    .word-count-counter {
+      color: $input-count-colour;
+      float: right;
     }
-  }
+
+    .question-heading, legend {
+      font-weight: $bold-font-weight;
+    }
+
+    fieldset {
+      legend {
+        margin-bottom: 0.8em;
+      }
+    }
+
+    .radio-list {
+      &.validation-error {
+        input[type='radio'] + label {
+          outline-color: #c00;
+        }
+      }
+    }
+
+    .filter-fieldset,
+    #location,
+    #culturalFitCriteria {
+      legend {
+        display: none !important;
+        visibility: hidden;
+      }
+    }
+
+    input[type='checkbox'] + label,
+    input[type='radio'] + label {
+      outline: 1px solid $light-grey;
+      margin: 0 0 8px;
+      padding: 12px 12px 12px 60px;
+
+      >p {
+        font-size: rem(14);
+        font-weight: 400;
+        margin-bottom: 0.1em;
+        padding-right: 20px;
+      }
+
+      &::before {
+        top: 12px;
+      }
+
+      &::after {
+        top: 17px;
+      }
+    }
+
+    input[type='checkbox']:checked + label,
+    input[type='radio']:checked + label {
+      font-weight: 700;
+      outline: 2px solid $grey;
+
+      &::after {
+        top: 17px;
+      }
+    }
+
+    .list-entry {
+      .button-secondary {
+        margin-top: 0.4em
+      }
+    }
+
+  }  
+}
+
+
+
+.validation-masthead-heading {
+    margin: 0 0 1.6rem;
 }
