@@ -1,6 +1,16 @@
 {% extends "_base_page.html" %}
 
-{% block page_title %}Apply to {{ framework.name }} – Digital Marketplace{% endblock %}
+{% block page_title %}
+  {% block page_title_inner %}
+    {% if framework.status == "open" %}
+      Apply to {{ framework.name }}
+    {% elif framework.status == "live" %}
+      {{ framework.name }} documents
+    {% else %}
+      Your {{ framework.name }} application
+    {% endif %}
+  {% endblock %} – Digital Marketplace
+{% endblock %}
 
 {% block breadcrumb %}
   {%
@@ -20,13 +30,20 @@
 {% endblock %}
 
 {% block main_content %}
-
   {% with messages = get_flashed_messages(with_categories=True) %}
     {% for category, message in messages %}
       {% if category == 'declaration_complete' %}
         <div data-analytics="trackPageView"
           data-url="{{message}}">
         </div>
+      {% else %}
+        {%
+          with
+          message = message,
+          type = "destructive" if category == 'error' else "success"
+        %}
+          {% include "toolkit/notification-banner.html" %}
+        {% endwith %}
       {% endif %}
     {% endfor %}
   {% endwith %}
@@ -34,11 +51,7 @@
   <div class="grid-row framework-dashboard">
     <div class="column-two-thirds">
       {% with
-         heading = (
-           "Apply to " + framework.name if framework.status == 'open' else
-           "Your " + framework.name + " documents" if framework.status == 'live' else
-           "Your " + framework.name + " application"
-         ),
+         heading = self.page_title_inner(),
          smaller = True
       %}
         {% include "toolkit/page-heading.html" %}
@@ -46,15 +59,11 @@
 
       {% include 'frameworks/_dashboard_lede.html' %}
 
-      <nav role="navigation">
-        <ul class="browse-list">
+      {% include 'frameworks/_framework_actions.html' %}
+      {% include 'frameworks/_submitted_services.html' %}
+      {% include 'frameworks/_agreement_returned_legal.html' %}
+      {% include 'frameworks/_guidance_links.html' %}
 
-          {% include 'frameworks/_framework_actions.html' %}
-          {% include 'frameworks/_submitted_services.html' %}
-          {% include 'frameworks/_guidance_links.html' %}
-
-        </ul>
-      </nav>
     </div>
   </div>
 
