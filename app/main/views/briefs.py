@@ -6,6 +6,7 @@ import re
 from flask import abort, flash, redirect, render_template, request, url_for, \
     current_app
 from flask_login import current_user
+import flask_featureflags as feature
 
 from dmapiclient import HTTPError
 from dmutils.forms import render_template_with_csrf
@@ -205,7 +206,9 @@ def submit_brief_response(brief_id):
         )
 
     response_url = url_for(".view_response_result", brief_id=brief_id, result='success')
-    send_thank_you_email_to_responders(brief, brief_response, response_url)
+
+    if feature.is_active('EMAIL_TO_BRIEF_RESPONDERS'):
+        send_thank_you_email_to_responders(brief, brief_response, response_url)
 
     return redirect(response_url)
 

@@ -71,6 +71,7 @@ class Config(object):
 
     FEATURE_FLAGS = {
         'EDIT_SECTIONS': True,
+        'EMAIL_TO_BRIEF_RESPONDERS': True
     }
 
     # Logging
@@ -141,6 +142,7 @@ class Live(Config):
 
     FEATURE_FLAGS = {
         'EDIT_SECTIONS': False,
+        'EMAIL_TO_BRIEF_RESPONDERS': False
     }
 
     REACT_BUNDLE_URL = 'https://dm-frontend.apps.platform.digital.gov.au/bundle/'
