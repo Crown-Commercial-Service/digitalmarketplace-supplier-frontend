@@ -78,7 +78,7 @@
   <div>
     <h2 class="heading-xmedium" class="heading-xmedium">Communications</h2>
 
-    {% if framework.status not in ['standstill', 'live'] %}
+    {% if framework.status == "open" %}
     <p>
       You can review and ask clarification questions about this
       framework until {{ framework_dates.clarifications_close_date }}.
@@ -88,7 +88,7 @@
     <p>
       <a href="{{ url_for('.framework_updates', framework_slug=framework.slug) }}">
         View communications and
-        {% if framework.status not in ['standstill', 'live'] %}ask{% endif %}
+        {% if framework.status == "open" %}ask{% endif %}
         clarification questions
       </a>
       {% if communications_files.supplier_updates.last_modified %}
