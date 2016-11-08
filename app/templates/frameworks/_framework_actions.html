@@ -13,7 +13,7 @@
   </li>
   {% endif %}
 
-  {% if supplier_is_on_framework %}
+  {% if supplier_is_on_framework and not supplier_framework.agreementReturned %}
   <li class="browse-list-item">
     <a class="browse-list-item-link" href="{{ url_for('.framework_agreement', framework_slug=framework.slug) }}">
       <span>Sign and return your framework agreement</span>

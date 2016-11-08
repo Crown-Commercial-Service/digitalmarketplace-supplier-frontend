@@ -807,9 +807,14 @@ class TestFrameworksDashboard(BaseApplicationTest):
             data = res.get_data(as_text=True)
 
             doc = html.fromstring(data)
-            extracted_guidance_links = self._extract_guidance_links(doc)
 
-            assert 'Sign and return your framework agreement' not in data
+            assert not doc.xpath(
+                "//main//a[@href=$href or normalize-space(string())=$label]",
+                href="/frameworks/g-cloud-7/agreement",
+                label="Sign and return your framework agreement",
+            )
+
+            extracted_guidance_links = self._extract_guidance_links(doc)
             assert extracted_guidance_links == OrderedDict((
                 ("Legal documents", (
                     (
@@ -925,9 +930,14 @@ class TestFrameworksDashboard(BaseApplicationTest):
             data = res.get_data(as_text=True)
 
             doc = html.fromstring(data)
-            extracted_guidance_links = self._extract_guidance_links(doc)
 
-            assert 'Sign and return your framework agreement' not in data
+            assert not doc.xpath(
+                "//main//a[@href=$href or normalize-space(string())=$label]",
+                href="/frameworks/g-cloud-7/agreement",
+                label="Sign and return your framework agreement",
+            )
+
+            extracted_guidance_links = self._extract_guidance_links(doc)
             assert extracted_guidance_links == OrderedDict((
                 ("Legal documents", (
                     (
@@ -1026,6 +1036,12 @@ class TestFrameworksDashboard(BaseApplicationTest):
             data = res.get_data(as_text=True)
             doc = html.fromstring(data)
 
+            assert not doc.xpath(
+                "//main//a[@href=$href or normalize-space(string())=$label]",
+                href="/frameworks/g-cloud-7/agreement",
+                label="Sign and return your framework agreement",
+            )
+
             extracted_guidance_links = self._extract_guidance_links(doc)
             assert extracted_guidance_links == OrderedDict((
                 ('Legal documents', (
@@ -1105,6 +1121,12 @@ class TestFrameworksDashboard(BaseApplicationTest):
             data = res.get_data(as_text=True)
             doc = html.fromstring(data)
 
+            assert not doc.xpath(
+                "//main//a[@href=$href or normalize-space(string())=$label]",
+                href="/frameworks/g-cloud-7/agreement",
+                label="Sign and return your framework agreement",
+            )
+
             extracted_guidance_links = self._extract_guidance_links(doc)
             assert extracted_guidance_links == OrderedDict((
                 ('Legal documents', (
@@ -1177,6 +1199,12 @@ class TestFrameworksDashboard(BaseApplicationTest):
 
             data = res.get_data(as_text=True)
             doc = html.fromstring(data)
+
+            assert not doc.xpath(
+                "//main//a[@href=$href or normalize-space(string())=$label]",
+                href="/frameworks/g-cloud-7/agreement",
+                label="Sign and return your framework agreement",
+            )
 
             extracted_guidance_links = self._extract_guidance_links(doc)
             assert extracted_guidance_links == OrderedDict((
@@ -1255,6 +1283,12 @@ class TestFrameworksDashboard(BaseApplicationTest):
             doc = html.fromstring(data)
 
             assert not doc.xpath(
+                "//main//a[@href=$href or normalize-space(string())=$label]",
+                href="/frameworks/g-cloud-7/agreement",
+                label="Sign and return your framework agreement",
+            )
+
+            assert not doc.xpath(
                 "//main//a[contains(@href, $href_part) or normalize-space(string())=$label]",
                 href_part="contract-variation/1",
                 label="Read the proposed contract variation",
@@ -1294,6 +1328,11 @@ class TestFrameworksDashboard(BaseApplicationTest):
             doc = html.fromstring(data)
 
             assert not doc.xpath(
+                "//main//a[@href=$href or normalize-space(string())=$label]",
+                href="/frameworks/g-cloud-7/agreement",
+                label="Sign and return your framework agreement",
+            )
+            assert not doc.xpath(
                 "//main//a[normalize-space(string())=$label]",
                 label="Read the proposed contract variation",
             )
@@ -1327,6 +1366,11 @@ class TestFrameworksDashboard(BaseApplicationTest):
             data = res.get_data(as_text=True)
             doc = html.fromstring(data)
 
+            assert not doc.xpath(
+                "//main//a[@href=$href or normalize-space(string())=$label]",
+                href="/frameworks/g-cloud-7/agreement",
+                label="Sign and return your framework agreement",
+            )
             assert not doc.xpath(
                 "//main//a[contains(@href, $href_part) or normalize-space(string())=$label]",
                 href_part="contract-variation/1",
@@ -1383,6 +1427,12 @@ class TestFrameworksDashboard(BaseApplicationTest):
 
             data = res.get_data(as_text=True)
             doc = html.fromstring(data)
+
+            assert not doc.xpath(
+                "//main//a[@href=$href or normalize-space(string())=$label]",
+                href="/frameworks/g-cloud-7/agreement",
+                label="Sign and return your framework agreement",
+            )
 
             extracted_guidance_links = self._extract_guidance_links(doc)
             assert extracted_guidance_links == OrderedDict((
