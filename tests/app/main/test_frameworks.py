@@ -87,6 +87,8 @@ class TestFrameworksDashboard(BaseApplicationTest):
             'uploaderUserEmail': 'email@email.com',
         }
 
+    _boring_agreement_returned_at = "2016-07-10T21:20:00.000000Z"
+
     @property
     def _boring_agreement_details_expected_table_results(self):
         # property so we always get a clean copy
@@ -767,7 +769,8 @@ class TestFrameworksDashboard(BaseApplicationTest):
         ]:
             assert_in(equivocal_message, data)
 
-    def test_link_to_countersigned_framework_agreement_shown_if_exists(self, data_api_client, s3):
+    def test_countersigned_framework_agreement_non_fav_framework(self, data_api_client, s3):
+        # "fav" being "frameworkAgreementVersion"
         files = [
             ('', 'g-cloud-7-call-off', 'pdf', '2016-05-01T14:00:00.000Z'),
             ('', 'g-cloud-7-invitation', 'pdf', '2016-05-01T14:00:00.000Z'),
@@ -873,6 +876,124 @@ class TestFrameworksDashboard(BaseApplicationTest):
                 "//main//p[contains(normalize-space(string()), $b)]",
                 b="You can start selling your",
             )
+            # neither of these should exist because it's a pre-frameworkAgreementVersion framework
+            assert not doc.xpath(
+                "//main//p[contains(normalize-space(string()), $b)]",
+                b="Your original and counterpart signature pages",
+            )
+            assert not doc.xpath(
+                "//main//p[contains(normalize-space(string()), $b)]",
+                b="Your framework agreement signature page has been sent to the Crown Commercial Service",
+            )
+
+    def test_countersigned_framework_agreement_fav_framework(self, data_api_client, s3):
+        # "fav" being "frameworkAgreementVersion"
+        files = [
+            ('', 'g-cloud-8-call-off', 'pdf', '2016-05-01T14:00:00.000Z'),
+            ('', 'g-cloud-8-invitation', 'pdf', '2016-05-01T14:00:00.000Z'),
+            ('', 'g-cloud-8-final-agreement', 'pdf', '2016-06-01T14:00:00.000Z'),
+            ('', 'g-cloud-8-reporting-template', 'xlsx', '2016-06-06T14:00:00.000Z'),
+        ]
+
+        s3.return_value.list.return_value = [
+            _return_fake_s3_file_dict(
+                'g-cloud-8/communications/{}'.format(section), filename, ext, last_modified=last_modified
+            ) for section, filename, ext, last_modified in files
+        ]
+
+        with self.app.test_client():
+            self.login()
+            data_api_client.get_framework.return_value = get_g_cloud_8()
+            data_api_client.find_draft_services.return_value = {
+                "services": [
+                    {'serviceName': 'A service', 'status': 'submitted', 'lotSlug': 'iaas'}
+                ]
+            }
+            data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
+                on_framework=True,
+                agreement_returned=True,
+                agreement_details=self._boring_agreement_details,
+                agreement_path='pathy/mc/path.face',
+                agreement_returned_at=self._boring_agreement_returned_at,
+                countersigned=True,
+                countersigned_path='g-cloud-8/agreements/1234/1234-countersigned-agreement.pdf',
+            )
+
+            res = self.client.get("/suppliers/frameworks/g-cloud-8")
+            assert res.status_code == 200
+
+            data = res.get_data(as_text=True)
+
+            doc = html.fromstring(data)
+            extracted_guidance_links = self._extract_guidance_links(doc)
+
+            assert 'Sign and return your framework agreement' not in data
+            assert extracted_guidance_links == OrderedDict((
+                ("Legal documents", (
+                    (
+                        'Read the standard framework agreement',
+                        'https://www.gov.uk/government/publications/g-cloud-8-framework-agreement',
+                        None,
+                        None,
+                    ),
+                    (
+                        u"Download your \u2018original\u2019 framework agreement signature page",
+                        "/suppliers/frameworks/g-cloud-8/agreements/pathy/mc/path.face",
+                        None,
+                        None,
+                    ),
+                    (
+                        u"Download your \u2018counterpart\u2019 framework agreement signature page",
+                        "/suppliers/frameworks/g-cloud-8/agreements/countersigned-agreement.pdf",
+                        None,
+                        None,
+                    ),
+                    (
+                        'Download the call-off contract template',
+                        '/suppliers/frameworks/g-cloud-8/files/g-cloud-8-call-off.pdf',
+                        None,
+                        None,
+                    ),
+                )),
+                ("Guidance", (
+                    (
+                        'Download the invitation to apply',
+                        '/suppliers/frameworks/g-cloud-8/files/g-cloud-8-invitation.pdf',
+                        None,
+                        None,
+                    ),
+                    (
+                        "Read about how to sell your services",
+                        "https://www.gov.uk/guidance/g-cloud-suppliers-guide#how-to-apply",
+                        None,
+                        None,
+                    ),
+                )),
+                ("Communications", (
+                    (
+                        "View communications and clarification questions",
+                        "/suppliers/frameworks/g-cloud-8/updates",
+                        None,
+                        None,
+                    ),
+                )),
+                ('Reporting', (
+                    (
+                        'Download the reporting template',
+                        '/suppliers/frameworks/g-cloud-8/files/g-cloud-8-reporting-template.xlsx',
+                        None,
+                        None,
+                    ),
+                )),
+            ))
+            assert not doc.xpath(
+                "//main//table[normalize-space(string(./caption))=$b]",
+                b="Agreement details",
+            )
+            assert not doc.xpath(
+                "//main//p[contains(normalize-space(string()), $b)]",
+                b="You can start selling your",
+            )
             assert doc.xpath(
                 "//main//p[contains(normalize-space(string()), $b)]",
                 b="Your original and counterpart signature pages",
@@ -896,7 +1017,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
                 agreement_returned=True,
                 agreement_details=self._boring_agreement_details,
                 agreement_path='g-cloud-8/agreements/123-framework-agreement.pdf',
-                agreement_returned_at='2016-07-10T21:20:00.000000Z',
+                agreement_returned_at=self._boring_agreement_returned_at,
             )
 
             res = self.client.get("/suppliers/frameworks/g-cloud-8")
@@ -969,7 +1090,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
                 agreement_returned=True,
                 agreement_details=self._boring_agreement_details,
                 agreement_path='g-cloud-8/agreements/123-framework-agreement.pdf',
-                agreement_returned_at='2016-07-10T21:20:00.000000Z',
+                agreement_returned_at=self._boring_agreement_returned_at,
             )
 
             res = self.client.get("/suppliers/frameworks/g-cloud-8")
@@ -1045,7 +1166,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
                 agreement_returned=True,
                 agreement_details=self._boring_agreement_details,
                 agreement_path='g-cloud-8/agreements/123-framework-agreement.pdf',
-                agreement_returned_at='2016-07-10T21:20:00.000000Z',
+                agreement_returned_at=self._boring_agreement_returned_at,
             )
 
             res = self.client.get("/suppliers/frameworks/g-cloud-8")
@@ -1084,7 +1205,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
                 agreement_returned=True,
                 agreement_details=self._boring_agreement_details,
                 agreement_path='g-cloud-8/agreements/123-framework-agreement.pdf',
-                agreement_returned_at='2016-07-10T21:20:00.000000Z',
+                agreement_returned_at=self._boring_agreement_returned_at,
             )
 
             res = self.client.get("/suppliers/frameworks/g-cloud-8")
@@ -1166,7 +1287,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
                 on_framework=True,
                 agreement_returned=True,
                 agreement_details=self._boring_agreement_details,
-                agreement_returned_at='2016-07-10T21:20:00.000000Z',
+                agreement_returned_at=self._boring_agreement_returned_at,
                 agreement_path='g-cloud-8/agreements/1234/1234-signed-agreement.pdf',
                 agreed_variations={
                     "1": {

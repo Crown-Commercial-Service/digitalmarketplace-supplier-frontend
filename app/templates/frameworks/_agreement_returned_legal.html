@@ -1,6 +1,8 @@
 {% if supplier_is_on_framework and framework.status in ['standstill', 'live'] and supplier_framework.agreementReturned %}
   <div>
     <h2 class="page-subheading">Legal documents</h2>
+
+  {% if framework.frameworkAgreementVersion %}
     <div class="dmspeak">
     {% if supplier_framework.countersigned %}
       <p>
@@ -18,7 +20,7 @@
     {% endif %}
     </div>
 
-  {% if framework.frameworkAgreementVersion %}
+    {% if not supplier_framework.countersignedPath %}
     {% import "toolkit/summary-table.html" as summary %}
     {% call(item) summary.mapping_table(
       caption='Agreement details',
@@ -48,6 +50,7 @@
         {{ summary.field_name('Waiting for CCS to countersign') }}
       {% endcall %}
     {% endcall %}
+    {% endif %}
   {% endif %}
 
     <div class="dmspeak">
