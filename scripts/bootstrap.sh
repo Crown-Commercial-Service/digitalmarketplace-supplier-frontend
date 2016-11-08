@@ -7,13 +7,5 @@
 
 set -o pipefail
 
-if [ ! $VIRTUAL_ENV ]; then
-  virtualenv ./venv
-  . ./venv/bin/activate
-fi
-
-# Install Python development dependencies
-pip install -r requirements_for_test.txt
-
-npm install
-npm run frontend-build:development
+# Install development dependencies
+make requirements_for_test npm_install frontend_build
