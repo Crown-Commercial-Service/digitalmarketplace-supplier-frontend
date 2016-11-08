@@ -15,6 +15,9 @@ requirements: virtualenv requirements.txt
 requirements_for_test: virtualenv requirements_for_test.txt
 	${VIRTUALENV_ROOT}/bin/pip install -r requirements_for_test.txt
 
+npm_install: package.json
+	npm install
+
 frontend_build:
 	npm run --silent frontend-build:production
 
@@ -33,4 +36,4 @@ show_environment:
 	@echo "Environment variables in use:"
 	@env | grep DM_ || true
 
-.PHONY: run_all run_app virtualenv requirements requirements_for_test frontend_build test test_pep8 test_python test_javascript show_environment
+.PHONY: run_all run_app virtualenv requirements requirements_for_test npm_build frontend_build test test_pep8 test_python test_javascript show_environment
