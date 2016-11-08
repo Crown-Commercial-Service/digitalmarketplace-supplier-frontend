@@ -416,9 +416,10 @@ class TestFrameworksDashboard(BaseApplicationTest):
             ('updates/clarifications/', 'file 2', 'odt', '2015-02-02T14:00:00.000Z'),
             ('', 'g-cloud-7-call-off', 'pdf', '2016-05-01T14:00:00.000Z'),
             ('', 'g-cloud-7-invitation', 'pdf', '2016-05-01T14:00:00.000Z'),
-            ('', 'g-cloud-7-proposed-agreement', 'pdf', '2016-06-11T14:00:00.000Z'),
             ('', 'g-cloud-7-reporting-template', 'xlsx', '2016-06-06T14:00:00.000Z'),
             ('', 'g-cloud-7-final-agreement', 'pdf', '2016-06-02T14:00:00.000Z'),
+            # present but should be overridden by final agreement file
+            ('', 'g-cloud-7-proposed-agreement', 'pdf', '2016-06-11T14:00:00.000Z'),
         ]
 
         s3.return_value.list.return_value = [
@@ -767,6 +768,19 @@ class TestFrameworksDashboard(BaseApplicationTest):
             assert_in(equivocal_message, data)
 
     def test_link_to_countersigned_framework_agreement_shown_if_exists(self, data_api_client, s3):
+        files = [
+            ('', 'g-cloud-7-call-off', 'pdf', '2016-05-01T14:00:00.000Z'),
+            ('', 'g-cloud-7-invitation', 'pdf', '2016-05-01T14:00:00.000Z'),
+            ('', 'g-cloud-7-final-agreement', 'pdf', '2016-06-01T14:00:00.000Z'),
+            ('', 'g-cloud-7-reporting-template', 'xlsx', '2016-06-06T14:00:00.000Z'),
+        ]
+
+        s3.return_value.list.return_value = [
+            _return_fake_s3_file_dict(
+                'g-cloud-7/communications/{}'.format(section), filename, ext, last_modified=last_modified
+            ) for section, filename, ext, last_modified in files
+        ]
+
         with self.app.test_client():
             self.login()
             data_api_client.get_framework.return_value = self.framework(status='standstill')
@@ -796,6 +810,12 @@ class TestFrameworksDashboard(BaseApplicationTest):
             assert extracted_guidance_links == OrderedDict((
                 ("Legal documents", (
                     (
+                        'Download the standard framework agreement',
+                        '/suppliers/frameworks/g-cloud-7/files/g-cloud-7-final-agreement.pdf',
+                        None,
+                        None,
+                    ),
+                    (
                         u"Download your \u2018original\u2019 framework agreement signature page",
                         "/suppliers/frameworks/g-cloud-7/agreements/pathy/mc/path.face",
                         None,
@@ -807,8 +827,20 @@ class TestFrameworksDashboard(BaseApplicationTest):
                         None,
                         None,
                     ),
+                    (
+                        'Download the call-off contract template',
+                        '/suppliers/frameworks/g-cloud-7/files/g-cloud-7-call-off.pdf',
+                        None,
+                        None,
+                    ),
                 )),
                 ("Guidance", (
+                    (
+                        'Download the invitation to apply',
+                        '/suppliers/frameworks/g-cloud-7/files/g-cloud-7-invitation.pdf',
+                        None,
+                        None,
+                    ),
                     (
                         "Read about how to sell your services",
                         "https://www.gov.uk/guidance/g-cloud-suppliers-guide#how-to-apply",
@@ -820,6 +852,14 @@ class TestFrameworksDashboard(BaseApplicationTest):
                     (
                         "View communications and clarification questions",
                         "/suppliers/frameworks/g-cloud-7/updates",
+                        None,
+                        None,
+                    ),
+                )),
+                ('Reporting', (
+                    (
+                        'Download the reporting template',
+                        '/suppliers/frameworks/g-cloud-7/files/g-cloud-7-reporting-template.xlsx',
                         None,
                         None,
                     ),
