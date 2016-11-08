@@ -1,9 +1,24 @@
 button,
 .button,
 [role='button'],
+[type='submit'],
+[type='reset'],
 [type='button'] {
   height: auto;
   margin: 0 $small-spacing $small-spacing 0;
+  background-color: $button-bg-colour;
+  color: $button-text-colour;
+  border-color: $button-bg-colour--hover;
+  border-width: 1px;
+
+  &:hover,
+  &:focus {
+    background-color: $button-bg-colour--hover;
+  }
+
+  &:active {
+    background-color: $button-bg-colour;
+  }
 
   .content--hero & {
     margin: $small-spacing*2 $small-spacing 0 0;
