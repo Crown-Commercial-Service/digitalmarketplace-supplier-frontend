@@ -126,8 +126,6 @@ class Development(Config):
     DM_DOCUMENTS_BUCKET = "digitalmarketplace-documents-dev-dev"
     DM_ASSETS_URL = "https://{}.s3-eu-west-1.amazonaws.com".format(DM_SUBMISSIONS_BUCKET)
 
-    DM_SEND_EMAIL_TO_STDERR = True
-
     SECRET_KEY = 'DevKeyDevKeyDevKeyDevKeyDevKeyDevKeyDevKeyX='
     SHARED_EMAIL_KEY = SECRET_KEY
 
