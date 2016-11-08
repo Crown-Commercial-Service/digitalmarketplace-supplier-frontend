@@ -1079,6 +1079,85 @@ class TestFrameworksDashboard(BaseApplicationTest):
                 b="Your framework agreement signature page has been sent to the Crown Commercial Service",
             )
 
+    def test_countersigned_but_no_countersigned_path(self, data_api_client, s3):
+        with self.app.test_client():
+            self.login()
+            data_api_client.get_framework.return_value = get_g_cloud_8()
+            data_api_client.find_draft_services.return_value = {
+                "services": [
+                    {'serviceName': 'A service', 'status': 'submitted', 'lotSlug': 'iaas'}
+                ]
+            }
+            data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
+                on_framework=True,
+                agreement_returned=True,
+                agreement_details=self._boring_agreement_details,
+                agreement_path='g-cloud-8/agreements/123-framework-agreement.pdf',
+                agreement_returned_at=self._boring_agreement_returned_at,
+                countersigned=True,
+                # note `countersigned_path` is not set: we're testing that the view behaves as though not countersigned
+                # i.e. is not depending on the `countersigned` property
+            )
+
+            res = self.client.get("/suppliers/frameworks/g-cloud-8")
+            assert res.status_code == 200
+
+            data = res.get_data(as_text=True)
+            doc = html.fromstring(data)
+
+            extracted_guidance_links = self._extract_guidance_links(doc)
+            assert extracted_guidance_links == OrderedDict((
+                ('Legal documents', (
+                    (
+                        'Read the standard framework agreement',
+                        'https://www.gov.uk/government/publications/g-cloud-8-framework-agreement',
+                        None,
+                        None,
+                    ),
+                    (
+                        u'Download your \u2018original\u2019 framework agreement signature page',
+                        '/suppliers/frameworks/g-cloud-8/agreements/framework-agreement.pdf',
+                        None,
+                        None,
+                    ),
+                )),
+                ('Guidance', (
+                    (
+                        'Read about how to sell your services',
+                        'https://www.gov.uk/guidance/g-cloud-suppliers-guide#how-to-apply',
+                        None,
+                        None,
+                    ),
+                )),
+                ('Communications', (
+                    (
+                        'View communications and clarification questions',
+                        '/suppliers/frameworks/g-cloud-8/updates',
+                        None,
+                        None,
+                    ),
+                )),
+            ))
+            extracted_signing_details_table_rows = self._extract_signing_details_table_rows(doc)
+            assert extracted_signing_details_table_rows == \
+                self._boring_agreement_details_expected_table_results
+            assert len(doc.xpath(
+                "//main//h1[normalize-space(string())=$b]",
+                b="Your G-Cloud 8 application",
+            )) == 1
+            assert doc.xpath(
+                "//main//p[contains(normalize-space(string()), $b)]",
+                b="You can start selling your",
+            )
+            assert not doc.xpath(
+                "//main//p[contains(normalize-space(string()), $b)]",
+                b="Your original and counterpart signature pages",
+            )
+            assert doc.xpath(
+                "//main//p[contains(normalize-space(string()), $b)]",
+                b="Your framework agreement signature page has been sent to the Crown Commercial Service",
+            )
+
     def test_shows_contract_variation_link_after_agreement_returned(self, data_api_client, s3):
         with self.app.test_client():
             self.login()

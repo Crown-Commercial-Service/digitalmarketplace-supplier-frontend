@@ -4,7 +4,7 @@
 
   {% if framework.frameworkAgreementVersion %}
     <div class="dmspeak">
-    {% if supplier_framework.countersigned %}
+    {% if countersigned_agreement_file %}
       <p>
         Your original and counterpart signature pages, and the standard framework
         agreement, form a complete, legal contract.
@@ -20,7 +20,7 @@
     {% endif %}
     </div>
 
-    {% if not supplier_framework.countersignedPath %}
+    {% if not countersigned_agreement_file %}
     {% import "toolkit/summary-table.html" as summary %}
     {% call(item) summary.mapping_table(
       caption='Agreement details',
@@ -99,7 +99,7 @@
         <a href="{{ url_for('.download_supplier_file', filepath=communications_files.call_off.filename, framework_slug=framework.slug) }}">Download the call-off contract template</a>
       </p>
     {% endif %}
-    {% if not supplier_framework.countersigned %}
+    {% if not countersigned_agreement_file %}
       <p>
         You can start selling your {{ framework.name }} services on the Digital Marketplace from {{ framework_dates.framework_live_date }}.
       </p>
