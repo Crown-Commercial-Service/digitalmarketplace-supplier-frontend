@@ -873,6 +873,14 @@ class TestFrameworksDashboard(BaseApplicationTest):
                 "//main//p[contains(normalize-space(string()), $b)]",
                 b="You can start selling your",
             )
+            assert doc.xpath(
+                "//main//p[contains(normalize-space(string()), $b)]",
+                b="Your original and counterpart signature pages",
+            )
+            assert not doc.xpath(
+                "//main//p[contains(normalize-space(string()), $b)]",
+                b="Your framework agreement signature page has been sent to the Crown Commercial Service",
+            )
 
     def test_shows_returned_agreement_details(self, data_api_client, s3):
         with self.app.test_client():
@@ -941,6 +949,14 @@ class TestFrameworksDashboard(BaseApplicationTest):
                 "//main//p[contains(normalize-space(string()), $b)]",
                 b="You can start selling your",
             )
+            assert not doc.xpath(
+                "//main//p[contains(normalize-space(string()), $b)]",
+                b="Your original and counterpart signature pages",
+            )
+            assert doc.xpath(
+                "//main//p[contains(normalize-space(string()), $b)]",
+                b="Your framework agreement signature page has been sent to the Crown Commercial Service",
+            )
 
     def test_shows_contract_variation_link_after_agreement_returned(self, data_api_client, s3):
         with self.app.test_client():
@@ -1008,6 +1024,14 @@ class TestFrameworksDashboard(BaseApplicationTest):
                 "//main//p[contains(normalize-space(string()), $b)]",
                 b="You can start selling your",
             )
+            assert not doc.xpath(
+                "//main//p[contains(normalize-space(string()), $b)]",
+                b="Your original and counterpart signature pages",
+            )
+            assert doc.xpath(
+                "//main//p[contains(normalize-space(string()), $b)]",
+                b="Your framework agreement signature page has been sent to the Crown Commercial Service",
+            )
 
     def test_does_not_show_contract_variation_link_if_feature_flagged_off(self, data_api_client, s3):
         with self.app.test_client():
@@ -1042,6 +1066,14 @@ class TestFrameworksDashboard(BaseApplicationTest):
                 "//main//p[contains(normalize-space(string()), $b)]",
                 b="You can start selling your",
             )
+            assert not doc.xpath(
+                "//main//p[contains(normalize-space(string()), $b)]",
+                b="Your original and counterpart signature pages",
+            )
+            assert doc.xpath(
+                "//main//p[contains(normalize-space(string()), $b)]",
+                b="Your framework agreement signature page has been sent to the Crown Commercial Service",
+            )
 
     def test_does_not_show_contract_variation_link_if_no_variation(self, data_api_client, s3):
         with self.app.test_client():
@@ -1072,6 +1104,14 @@ class TestFrameworksDashboard(BaseApplicationTest):
                 "//main//p[contains(normalize-space(string()), $b)]",
                 b="You can start selling your",
             )
+            assert not doc.xpath(
+                "//main//p[contains(normalize-space(string()), $b)]",
+                b="Your original and counterpart signature pages",
+            )
+            assert doc.xpath(
+                "//main//p[contains(normalize-space(string()), $b)]",
+                b="Your framework agreement signature page has been sent to the Crown Commercial Service",
+            )
 
     def test_does_not_show_contract_variation_link_if_agreement_not_returned(self, data_api_client, s3):
         with self.app.test_client():
@@ -1099,6 +1139,14 @@ class TestFrameworksDashboard(BaseApplicationTest):
             assert not doc.xpath(
                 "//main//p[contains(normalize-space(string()), $b)]",
                 b="You can start selling your",
+            )
+            assert not doc.xpath(
+                "//main//p[contains(normalize-space(string()), $b)]",
+                b="Your original and counterpart signature pages",
+            )
+            assert not doc.xpath(
+                "//main//p[contains(normalize-space(string()), $b)]",
+                b="Your framework agreement signature page has been sent to the Crown Commercial Service",
             )
 
     def test_shows_contract_variation_alternate_link_text_after_agreed_by_ccs(self, data_api_client, s3):
@@ -1182,6 +1230,14 @@ class TestFrameworksDashboard(BaseApplicationTest):
             assert doc.xpath(
                 "//main//p[contains(normalize-space(string()), $b)]",
                 b="You can start selling your",
+            )
+            assert not doc.xpath(
+                "//main//p[contains(normalize-space(string()), $b)]",
+                b="Your original and counterpart signature pages",
+            )
+            assert doc.xpath(
+                "//main//p[contains(normalize-space(string()), $b)]",
+                b="Your framework agreement signature page has been sent to the Crown Commercial Service",
             )
 
 
