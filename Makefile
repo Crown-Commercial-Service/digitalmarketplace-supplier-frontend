@@ -1,5 +1,12 @@
 SHELL := /bin/bash
 VIRTUALENV_ROOT := $(shell [ -z $$VIRTUAL_ENV ] && echo $$(pwd)/venv || echo $$VIRTUAL_ENV)
+DM_ENVIRONMENT ?= development
+
+ifeq ($(DM_ENVIRONMENT),development)
+	GULP_ENVIRONMENT := development
+else
+	GULP_ENVIRONMENT := production
+endif
 
 run_all: requirements frontend_build run_app
 
@@ -19,7 +26,7 @@ npm_install: package.json
 	npm install
 
 frontend_build:
-	npm run --silent frontend-build:production
+	npm run --silent frontend-build:${GULP_ENVIRONMENT}
 
 test: show_environment test_pep8 test_python test_javascript
 
