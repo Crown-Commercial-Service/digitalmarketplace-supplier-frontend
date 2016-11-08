@@ -8,7 +8,7 @@ else
 	GULP_ENVIRONMENT := production
 endif
 
-run_all: requirements frontend_build run_app
+run_all: requirements npm_install frontend_build run_app
 
 run_app: show_environment virtualenv
 	${VIRTUALENV_ROOT}/bin/python application.py runserver
