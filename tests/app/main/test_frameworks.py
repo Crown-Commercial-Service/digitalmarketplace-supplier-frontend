@@ -830,7 +830,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
                         None,
                     ),
                     (
-                        u"Download your \u2018counterpart\u2019 framework agreement signature page",
+                        u"Download your countersigned framework agreement",
                         "/suppliers/frameworks/g-cloud-7/agreements/countersigned-agreement.pdf",
                         None,
                         None,

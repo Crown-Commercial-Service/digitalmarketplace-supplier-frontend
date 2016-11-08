@@ -76,7 +76,13 @@
       </p>
     {% if countersigned_agreement_file %}
       <p>
-        <a href="{{ url_for('.download_agreement_file', framework_slug=framework.slug, document_name=countersigned_agreement_file) }}" target="_blank">Download your ‘counterpart’ framework agreement signature page</a>
+        <a href="{{ url_for('.download_agreement_file', framework_slug=framework.slug, document_name=countersigned_agreement_file) }}" target="_blank">
+          {% if framework.frameworkAgreementVersion %}
+            Download your ‘counterpart’ framework agreement signature page
+          {% else %}
+            Download your countersigned framework agreement
+          {% endif %}
+        </a>
         <br/>
         The agreement signed by the Crown Commercial Service
       </p>
