@@ -74,6 +74,36 @@ def ask_brief_clarification_question(brief_id):
     ), 200 if not error_message else 400
 
 
+@main.route('/opportunities/<int:brief_id>/responses/start', methods=['GET'])
+@login_required
+def start_brief_response(brief_id):
+    brief = get_brief(data_api_client, brief_id, allowed_statuses=['live'])
+
+    if not is_supplier_eligible_for_brief(data_api_client, current_user.supplier_id, brief):
+        return _render_not_eligible_for_brief_error_page(brief)
+
+    brief_response = data_api_client.find_brief_responses(
+        brief_id=brief_id,
+        supplier_id=current_user.supplier_id,
+        status='draft,submitted'
+    )['briefResponses']
+
+    if brief_response:
+        if brief_response[0].get('status') == 'submitted':
+            flash('already_applied', 'error')
+            return redirect(url_for(".view_response_result", brief_id=brief_id))
+        if brief_response[0].get('status') == 'draft':
+            existing_draft_response = True
+    else:
+        existing_draft_response = False
+
+    return render_template(
+        "briefs/start_brief_response.html",
+        brief=brief,
+        existing_draft_response=existing_draft_response
+    )
+
+
 @main.route('/opportunities/<int:brief_id>/responses/create', methods=['GET'])
 @login_required
 def brief_response(brief_id):
