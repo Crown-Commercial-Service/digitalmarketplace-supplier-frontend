@@ -1,0 +1,20 @@
+{% extends "_base_page.html" %}
+
+{% block page_title %}Account Activation Email Sent - Digital Marketplace{% endblock %}
+
+{% block phase_banner %}{% endblock %}
+
+{% block body_classes %} registration-pages form-page {% endblock %}
+{% block main_content %}
+{%
+  with
+    heading = "Account Activation Email Sent"
+%}
+{% include "toolkit/page-heading.html" %}
+{% endwith %}
+
+<p>Thanks for registering a seller account for the Digital Marketplace.</p>
+
+<p>An account activation email has been sent to {{ email_address }}.</p>
+{% endblock %}
+

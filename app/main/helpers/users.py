@@ -24,3 +24,8 @@ def decode_supplier_invitation_token(token):
     if not set(('name', 'emailAddress', 'supplierCode', 'supplierName')).issubset(set(data.keys())):
         raise InvalidToken
     return data
+
+
+def generate_applicant_invitation_token(data):
+    token = generate_token(data, current_app.config['SECRET_KEY'], current_app.config['SUPPLIER_INVITE_TOKEN_SALT'])
+    return token
