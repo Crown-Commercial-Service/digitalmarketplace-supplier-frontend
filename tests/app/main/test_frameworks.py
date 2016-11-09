@@ -828,7 +828,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
                         None,
                     ),
                     (
-                        u"Download your \u2018original\u2019 framework agreement signature page",
+                        "Download your signed framework agreement",
                         "/suppliers/frameworks/g-cloud-7/agreements/pathy/mc/path.face",
                         None,
                         None,

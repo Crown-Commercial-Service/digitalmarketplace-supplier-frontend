@@ -70,7 +70,13 @@
       </p>
     {% endif %}
       <p>
-        <a href="{{ url_for('.download_agreement_file', framework_slug=framework.slug, document_name=signed_agreement_document_name) }}" target="_blank">Download your ‘original’ framework agreement signature page</a>
+        <a href="{{ url_for('.download_agreement_file', framework_slug=framework.slug, document_name=signed_agreement_document_name) }}" target="_blank">
+          {% if framework.frameworkAgreementVersion %}
+            Download your ‘original’ framework agreement signature page
+          {% else %}
+            Download your signed framework agreement
+          {% endif %}
+        </a>
         <br/>
         The agreement signed by your company
       </p>
