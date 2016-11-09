@@ -74,52 +74,75 @@ def framework_dashboard(framework_slug):
     if declaration_status == 'unstarted' and framework['status'] == 'live':
         abort(404)
 
-    key_list = s3.S3(current_app.config['DM_COMMUNICATIONS_BUCKET']).list(framework_slug, load_timestamps=True)
-    key_list.reverse()
+    application_made = supplier_is_on_framework or (len(complete_drafts) > 0 and declaration_status == 'complete')
+    lots_with_completed_drafts = [lot for lot in framework['lots'] if count_drafts_by_lot(complete_drafts, lot['slug'])]
 
     first_page = content_loader.get_manifest(
         framework_slug, 'declaration'
     ).get_next_editable_section_id()
+    framework_dates = content_loader.get_message(framework_slug, 'dates')
+    framework_urls = content_loader.get_message(framework_slug, 'urls')
 
     # filenames
-    supplier_pack_filename = '{}-supplier-pack.zip'.format(framework_slug)
     result_letter_filename = RESULT_LETTER_FILENAME
+
     countersigned_agreement_file = None
     if supplier_framework_info and supplier_framework_info['countersignedPath']:
         countersigned_agreement_file = degenerate_document_path_and_return_doc_name(
             supplier_framework_info['countersignedPath']
         )
 
-    application_made = supplier_is_on_framework or (len(complete_drafts) > 0 and declaration_status == 'complete')
-    lots_with_completed_drafts = [lot for lot in framework['lots'] if count_drafts_by_lot(complete_drafts, lot['slug'])]
-
-    last_modified = {
-        'supplier_pack': get_last_modified_from_first_matching_file(
-            key_list, framework_slug, "communications/{}".format(supplier_pack_filename)
-        ),
-        'supplier_updates': get_last_modified_from_first_matching_file(
-            key_list, framework_slug, "communications/updates/"
-        )
-    }
-
-    # if supplier has returned agreement for framework with framework_agreement_version, show contract_submitted page
-    if supplier_is_on_framework and framework['frameworkAgreementVersion'] and supplier_framework_info['agreementReturned']:  # noqa
+    signed_agreement_document_name = None
+    if supplier_is_on_framework and supplier_framework_info['agreementReturned']:
         signed_agreement_document_name = degenerate_document_path_and_return_doc_name(
             supplier_framework_info['agreementPath']
         )
-        return render_template(
-            "frameworks/contract_submitted.html",
-            document_name=signed_agreement_document_name,
-            framework=framework,
-            framework_live_date=content_loader.get_message(framework_slug, 'dates')['framework_live_date'],
-            supplier_framework=supplier_framework_info,
-            supplier_pack_filename=supplier_pack_filename,
-            last_modified=last_modified,
-        ), 200
+
+    key_list = s3.S3(current_app.config['DM_COMMUNICATIONS_BUCKET']).list(framework_slug, load_timestamps=True)
+    key_list.reverse()
+
+    base_communications_files = {
+        "invitation": {
+            "path": "communications/",
+            "filename": "{}-invitation.pdf".format(framework_slug),
+        },
+        "proposed_agreement": {
+            "path": "communications/",
+            "filename": "{}-proposed-agreement.pdf".format(framework_slug),
+        },
+        "final_agreement": {
+            "path": "communications/",
+            "filename": "{}-final-agreement.pdf".format(framework_slug),
+        },
+        "call_off": {
+            "path": "communications/",
+            "filename": "{}-call-off.pdf".format(framework_slug),
+        },
+        "reporting_template": {
+            "path": "communications/",
+            "filename": "{}-reporting-template.xls".format(framework_slug),
+        },
+        "supplier_updates": {
+            "path": "communications/updates/",
+        },
+    }
+    # now we annotate these with last_modified information which also tells us whether the file exists
+    communications_files = {
+        label: dict(
+            d,
+            last_modified=get_last_modified_from_first_matching_file(
+                key_list,
+                framework_slug,
+                d["path"]+d.get("filename", ""),
+            ),
+        )
+        for label, d in six.iteritems(base_communications_files)
+    }
 
     return render_template(
         "frameworks/dashboard.html",
         application_made=application_made,
+        communications_files=communications_files,
         completed_lots=tuple(
             dict(lot, complete_count=count_drafts_by_lot(complete_drafts, lot['slug']))
             for lot in lots_with_completed_drafts
@@ -129,14 +152,15 @@ def framework_dashboard(framework_slug):
             "draft": len(drafts),
             "complete": len(complete_drafts)
         },
-        dates=content_loader.get_message(framework_slug, 'dates'),
         declaration_status=declaration_status,
+        signed_agreement_document_name=signed_agreement_document_name,
         first_page_of_declaration=first_page,
         framework=framework,
-        last_modified=last_modified,
-        supplier_is_on_framework=supplier_is_on_framework,
-        supplier_pack_filename=supplier_pack_filename,
+        framework_dates=framework_dates,
+        framework_urls=framework_urls,
         result_letter_filename=result_letter_filename,
+        supplier_framework=supplier_framework_info,
+        supplier_is_on_framework=supplier_is_on_framework,
     ), 200
 
 

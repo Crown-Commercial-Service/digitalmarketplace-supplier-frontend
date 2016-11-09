@@ -1,87 +1,117 @@
-<li class="browse-list-item">
-{% if framework.status in ['standstill', 'live'] and countersigned_agreement_file %}
-  <h2>
-    Documents, updates and questions
-  </h2>
-  <ul class="list-no-bullet">
-    <li>
-        <a href="{{ url_for('.download_agreement_file', framework_slug=framework.slug, document_name=countersigned_agreement_file) }}">
-        <span>Download your countersigned framework agreement (.pdf)</span>
-        </a>
-    </li>
+<div class="dmspeak">
+  <div>
+    <h2 class="heading-xmedium">Guidance</h2>
 
-    <li>
-        <a href="{{ url_for('.download_agreement_file', framework_slug=framework.slug, document_name=result_letter_filename) }}">
-        <span>Download your application result letter (.pdf)</span>
-        </a>
-    </li>
-
-    <li>
-        <a href="{{ url_for('.download_supplier_file', filepath=supplier_pack_filename, framework_slug=framework.slug) }}">
-        <span>Download guidance and legal documentation (.zip)</span>
-        </a>
-        {% if last_modified.supplier_pack %}
-        <div class="hint">
-        Last updated
-        <time datetime="{{ last_modified.supplier_pack }}">
-            {{ last_modified.supplier_pack|dateformat }}
-        </time>
-        </div>
-        {% endif %}
-    </li>
-
-    <li>
-        <a href="{{ url_for('.framework_updates', framework_slug=framework.slug) }}">
-        <span>Read updates and clarification question responses</span>
-        </a>
-        {% if last_modified.supplier_updates %}
-        <div class="hint">
-        Last updated
-        <time datetime="{{ last_modified.supplier_updates }}">
-            {{ last_modified.supplier_updates|dateformat }}
-        </time>
-        </div>
-        {% endif %}
-    </li>
-  </ul>
-{% else %}
-  <h2>
-    Guidance, updates and questions
-  </h2>
-  <ul class="list-no-bullet">
-    <li>
-      <a href="{{ url_for('.download_supplier_file', filepath=supplier_pack_filename, framework_slug=framework.slug) }}">
-        <span>Download guidance and legal documentation (.zip)</span>
+    {% if communications_files.invitation.last_modified %}
+    <p>
+      <a href="{{ url_for('.download_supplier_file', filepath=communications_files.invitation.filename, framework_slug=framework.slug) }}">
+        Download the invitation to apply
       </a>
-      {% if last_modified.supplier_pack %}
-      <div class="hint">
-        Last updated
-        <time datetime="{{ last_modified.supplier_pack }}">
-          {{ last_modified.supplier_pack|dateformat }}
-        </time>
-      </div>
-      {% endif %}
-    </li>
+    </p>
+    {% endif %}
 
-    <li>
-      <a href="{{ url_for('.framework_updates', framework_slug=framework.slug) }}">
-        <span>
-          {% if framework.clarificationQuestionsOpen %}
-            Read updates and ask clarification questions
-          {% else %}
-            Read updates and clarification question responses
-          {% endif %}
-        </span>
+    <p>
+      <a href="{{ framework_urls.supplier_guide_url }}">
+        Read about how to 
+        {% if supplier_framework.agreementReturned %}
+          sell your services
+        {% else %}
+          apply
+        {% endif %}
       </a>
-      {% if last_modified.supplier_updates %}
-      <div class="hint">
+    </p>
+  </div>
+{% if framework.status not in ['standstill', 'live'] and not supplier_framework.agreementReturned %}
+  <div>
+    <h2 class="heading-xmedium">Legal documents</h2>
+
+    {% if communications_files.final_agreement.last_modified %}
+    <p>
+      <a href="{{ url_for('.download_supplier_file', filepath=communications_files.final_agreement.filename, framework_slug=framework.slug) }}">
+        Download the framework agreement
+      </a>
+      <br/>
+      Read the agreement between the Crown Commercial Service (<abbr title="Crown Commercial Service">CCS</abbr>) and suppliers.
+      <br/>
+      <span class="hint">
         Last updated
-        <time datetime="{{ last_modified.supplier_updates }}">
-          {{ last_modified.supplier_updates|dateformat }}
+        <time datetime="{{ communications_files.final_agreement.last_modified }}">
+          {{ communications_files.final_agreement.last_modified|dateformat }}
         </time>
-      </div>
-      {% endif %}
-    </li>
-  </ul>
+      </span>
+    </p>
+    {% elif communications_files.proposed_agreement.last_modified %}
+    <p>
+      <a href="{{ url_for('.download_supplier_file', filepath=communications_files.proposed_agreement.filename, framework_slug=framework.slug) }}">
+        Download the proposed framework agreement
+      </a>
+      <br/>
+      Read the proposed agreement between the Crown Commercial Service (<abbr title="Crown Commercial Service">CCS</abbr>) and suppliers.
+      <br/>
+      <span class="hint">
+        Last updated
+        <time datetime="{{ communications_files.proposed_agreement.last_modified }}">
+          {{ communications_files.proposed_agreement.last_modified|dateformat }}
+        </time>
+      </span>
+    </p>
+    {% endif %}
+
+    {% if communications_files.call_off.last_modified %}
+    <p>
+      <a href="{{ url_for('.download_supplier_file', filepath=communications_files.call_off.filename, framework_slug=framework.slug) }}">
+        Download the proposed ‘call-off’ contract
+      </a>
+      <br/>
+      Read the proposed contract between a buyer and a supplier.
+      <br/>
+      <span class="hint">
+        Last updated
+        <time datetime="{{ communications_files.call_off.last_modified }}">
+          {{ communications_files.call_off.last_modified|dateformat }}
+        </time>
+      </span>
+    </p>
+    {% endif %}
+  </div>
 {% endif %}
-</li>
+  <div>
+    <h2 class="heading-xmedium" class="heading-xmedium">Communications</h2>
+
+    {% if framework.status == "open" %}
+    <p>
+      You can review and ask clarification questions about this
+      framework until {{ framework_dates.clarifications_close_date }}.
+    </p>
+    {% endif %}
+
+    <p>
+      <a href="{{ url_for('.framework_updates', framework_slug=framework.slug) }}">
+        View communications and
+        {% if framework.status == "open" %}ask{% endif %}
+        clarification questions
+      </a>
+      {% if communications_files.supplier_updates.last_modified %}
+      <span class="hint">
+        Last updated
+        <time datetime="{{ communications_files.supplier_updates.last_modified }}">
+          {{ communications_files.supplier_updates.last_modified|dateformat }}
+        </time>
+      </span>
+      {% endif %}
+    </p>
+  </div>
+{% if communications_files.reporting_template.last_modified %}
+  <div>
+  <h2 class="heading-xmedium">Reporting</h2>
+    <p>
+      <a href="{{ url_for('.download_supplier_file', filepath=communications_files.reporting_template.filename, framework_slug=framework.slug) }}">
+        Download the reporting template
+      </a>
+      <br/>
+      You’ll need to send monthly ‘management information’ about the contracts
+      you’ve been working on to CCS.
+    </p>
+  </div>
+{% endif %}
+</div>

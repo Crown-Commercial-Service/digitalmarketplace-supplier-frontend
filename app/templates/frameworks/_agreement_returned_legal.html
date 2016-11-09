@@ -1,0 +1,128 @@
+{% if supplier_is_on_framework and framework.status in ['standstill', 'live'] and supplier_framework.agreementReturned %}
+  <div>
+    <h2 class="page-subheading">Legal documents</h2>
+
+  {% if framework.frameworkAgreementVersion %}
+    <div class="dmspeak">
+    {% if countersigned_agreement_file %}
+      <p>
+        Your original and counterpart signature pages, and the standard framework
+        agreement, form a complete, legal contract.
+      </p>
+    {% else %}
+      <p>
+        Your framework agreement signature page has been sent to
+        the Crown Commercial Service (<abbr title="Crown Commercial Service">CCS</abbr>).
+        They’ll check and countersign the agreement, or contact you if there’s a
+        problem. You don’t need to wait for <abbr title="Crown Commercial Service">CCS</abbr> to
+        countersign your agreement before you start selling services.
+      <p/>
+    {% endif %}
+    </div>
+
+    {% if not countersigned_agreement_file %}
+    {% import "toolkit/summary-table.html" as summary %}
+    {% call(item) summary.mapping_table(
+      caption='Agreement details',
+      field_headings=[
+        'Label',
+        'Value'
+      ],
+      field_headings_visible=False
+    ) %}
+      {% call summary.row() %}
+        {{ summary.field_name('Person who signed') }}
+        {% call summary.field() %}
+          <p>{{ supplier_framework.agreementDetails.signerName }}</p>
+          <p>{{ supplier_framework.agreementDetails.signerRole }}</p>
+        {% endcall %}
+      {% endcall %}
+      {% call summary.row() %}
+        {{ summary.field_name('Submitted by') }}
+        {% call summary.field() %}
+          <p>{{ supplier_framework.agreementDetails.uploaderUserName }}</p>
+          <p>{{ supplier_framework.agreementDetails.uploaderUserEmail }}</p>
+          <p>{{ supplier_framework.agreementReturnedAt|datetimeformat }}</p>
+        {% endcall %}
+      {% endcall %}
+      {% call summary.row() %}
+        {{ summary.field_name('Countersignature') }}
+        {{ summary.field_name('Waiting for CCS to countersign') }}
+      {% endcall %}
+    {% endcall %}
+    {% endif %}
+  {% endif %}
+
+    <div class="dmspeak">
+    {% if framework_urls.framework_agreement_url %}
+      {# newer frameworks should have the final agreement published as a web page #}
+      <p>
+        <a href="{{ framework_urls.framework_agreement_url }}">
+          Read the standard framework agreement
+        </a>
+      </p>
+    {% elif communications_files.final_agreement.last_modified %}
+      {# older frameworks will still have to point to a file that came from the old supplier pack #}
+      <p>
+        <a href="{{ url_for('.download_supplier_file', filepath=communications_files.final_agreement.filename, framework_slug=framework.slug) }}">
+          Download the standard framework agreement
+        </a>
+      </p>
+    {% endif %}
+      <p>
+        <a href="{{ url_for('.download_agreement_file', framework_slug=framework.slug, document_name=signed_agreement_document_name) }}" target="_blank">
+          {% if framework.frameworkAgreementVersion %}
+            Download your ‘original’ framework agreement signature page
+          {% else %}
+            Download your signed framework agreement
+          {% endif %}
+        </a>
+        <br/>
+        The agreement signed by your company
+      </p>
+    {% if countersigned_agreement_file %}
+      <p>
+        <a href="{{ url_for('.download_agreement_file', framework_slug=framework.slug, document_name=countersigned_agreement_file) }}" target="_blank">
+          {% if framework.frameworkAgreementVersion %}
+            Download your ‘counterpart’ framework agreement signature page
+          {% else %}
+            Download your countersigned framework agreement
+          {% endif %}
+        </a>
+        <br/>
+        The agreement signed by the Crown Commercial Service
+      </p>
+    {% endif %}
+    {% if countersigned_agreement_file and not framework.frameworkAgreementVersion %}
+      <p>
+        <a href="{{ url_for('.download_agreement_file', framework_slug=framework.slug, document_name=result_letter_filename) }}" target="_blank">
+          Download your application result letter
+        </a>
+      </p>
+    {% endif %}
+    {% if 'CONTRACT_VARIATION' is active_feature %}
+      {% for variation in framework.variations %}
+      <p>
+        <a href="{{ url_for('.view_contract_variation', framework_slug=framework.slug, variation_slug=variation) }}">
+        {% if framework.variations[variation].get('countersignedAt') and supplier_framework.agreedVariations.get(variation).agreedAt %}
+          View the signed contract variation
+        {% else %}
+          Read the proposed contract variation
+        {% endif %}
+        </a>
+      </p>
+      {% endfor %}
+    {% endif %}
+    {% if communications_files.call_off.last_modified %}
+      <p>
+        <a href="{{ url_for('.download_supplier_file', filepath=communications_files.call_off.filename, framework_slug=framework.slug) }}">Download the call-off contract template</a>
+      </p>
+    {% endif %}
+    {% if not countersigned_agreement_file %}
+      <p>
+        You can start selling your {{ framework.name }} services on the Digital Marketplace from {{ framework_dates.framework_live_date }}.
+      </p>
+    {% endif %}
+    </div>
+  </div>
+{% endif %}
