@@ -1,7 +1,7 @@
 {% macro text(question_content, service_data, errors, question_number=None, get_question=None) -%}
   {%
     with
-    question=question_content.question|question_references(get_question)|markdown,
+    question=question_content.question|question_references(get_question),
     question_advice=question_content.question_advice,
     hint=(question_content.hint or '')|question_references(get_question),
     optional=question_content.optional,
@@ -20,7 +20,7 @@
 {% macro textbox_large(question_content, service_data, errors, question_number=None, get_question=None) -%}
   {%
     with
-    question=question_content.question|question_references(get_question)|markdown,
+    question=question_content.question|question_references(get_question),
     question_advice=question_content.question_advice,
     hint=(question_content.hint or '')|question_references(get_question),
     optional=question_content.optional,
@@ -39,7 +39,7 @@
     with
     name=question_content.id,
     number_of_items=10,
-    question=question_content.question|question_references(get_question)|markdown,
+    question=question_content.question|question_references(get_question),
     question_advice=question_content.question_advice,
     hint=(question_content.hint or '')|question_references(get_question),
     optional=question_content.optional,
@@ -55,7 +55,7 @@
   {%
     with
     name=question_content.id,
-    question=question_content.question|question_references(get_question)|markdown,
+    question=question_content.question|question_references(get_question),
     question_advice=question_content.question_advice,
     hint=(question_content.hint or '')|question_references(get_question),
     optional=question_content.optional,
@@ -74,7 +74,7 @@
   {%
     with
     name=question_content.id,
-    question=question_content.question|question_references(get_question)|markdown,
+    question=question_content.question|question_references(get_question),
     question_advice=question_content.question_advice,
     hint=(question_content.hint or '')|question_references(get_question),
     hint_underneath=(question_content.hint_underneath or False),
@@ -94,7 +94,7 @@
   {%
     with
     name=question_content.id,
-    question=question_content.question|question_references(get_question)|markdown,
+    question=question_content.question|question_references(get_question),
     question_advice=question_content.question_advice,
     hint=(question_content.hint or '')|question_references(get_question),
     optional=question_content.optional,
@@ -111,7 +111,7 @@
 {% macro upload(question_content, service_data, errors, question_number=None, get_question=None) -%}
   {%
     with
-    question=question_content.question|question_references(get_question)|markdown,
+    question=question_content.question|question_references(get_question),
     question_advice=question_content.question_advice,
     hint=(question_content.hint or '')|question_references(get_question),
     optional=question_content.optional,
@@ -156,7 +156,7 @@
     unit=question_content.unit,
     unit_in_full=question_content.unit_in_full,
     unit_position=question_content.unit_position,
-    question=question_content.question|question_references(get_question)|markdown,
+    question=question_content.question|question_references(get_question),
     question_advice=question_content.question_advice,
     hint=(question_content.hint or '')|question_references(get_question),
     optional=question_content.optional,
@@ -183,11 +183,11 @@
 
       {% if question_content.question_advice %}
         <span class="question-advice" id="input-{{ name }}-question-advice">
-          {{ question_content.question_advice|markdown }}
+          {{ question_content.question_advice }}
         </span>
       {% endif %}
       {% if question_content.hint %}
-        <span class="hint">{{ question_content.hint|markdown }}</span>
+        <span class="hint">{{ question_content.hint }}</span>
       {% endif %}
 
       {% for boolean_question in question_content.boolean_list_questions %}
@@ -228,12 +228,12 @@
 
     {% if question_content.question_advice %}
     <span class="question-advice" id="input-{{ name }}-question-advice">
-      {{ question_content.question_advice|markdown }}
+      {{ question_content.question_advice }}
     </span>
     {% endif %}
 
     {% if question_content.hint %}
-    <span class="hint">{{ question_content.hint|markdown }}</span>
+    <span class="hint">{{ question_content.hint }}</span>
     {% endif %}
 
     {% for child_question in question_content.questions %}

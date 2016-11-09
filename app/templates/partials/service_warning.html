@@ -1,7 +1,7 @@
 {% if true %}
   {%
     with
-    message = 'This service will not be submitted at the deadline because the <a href="' + url_for('.framework_supplier_declaration', framework_slug=framework.slug) + '">supplier&nbsp;declaration</a> hasn’t been made.',
+    message = 'This service will not be submitted at the deadline because the <a href="'|safe + url_for('.framework_supplier_declaration', framework_slug=framework.slug) + '">supplier&nbsp;declaration</a> hasn’t been made.' | safe,
     type = 'warning'
   %}
     {% include 'toolkit/notification-banner.html' %}

@@ -2493,7 +2493,7 @@ class TestSendClarificationQuestionEmail(BaseApplicationTest):
 
         assert_equal(response.status_code, 200)
         assert_in(
-            self.strip_all_whitespace('<p class="banner-message">Your question has been sent. You\'ll get a reply from the Crown Commercial Service soon.</p>'),  # noqa
+            self.strip_all_whitespace('<p class="banner-message">Your question has been sent. You&#39;ll get a reply from the Crown Commercial Service soon.</p>'),  # noqa
             self.strip_all_whitespace(response.get_data(as_text=True))
         )
 
@@ -4001,7 +4001,7 @@ class TestContractVariation(BaseApplicationTest):
         assert res.status_code == 200
         assert len(
             doc.xpath('//p[@class="banner-message"][contains(text(), "You have accepted the proposed changes.")]')
-        ) == 1
+        ) == 1, res.get_data(as_text=True)
 
     @mock.patch('app.main.views.frameworks.send_email')
     def test_api_is_not_called_and_no_email_sent_for_subsequent_posts(self, send_email, data_api_client):

@@ -537,9 +537,9 @@ class TestRespondToBrief(BaseApplicationTest):
         res = self.client.get('/suppliers/opportunities/1234/responses/create')
         doc = html.fromstring(res.get_data(as_text=True))
 
-        assert len(doc.xpath('//p[contains(text(), "Essential one")]')) == 1
-        assert len(doc.xpath('//p[contains(text(), "Essential two")]')) == 1
-        assert len(doc.xpath('//p[contains(text(), "Essential three")]')) == 1
+        assert len(doc.xpath('//span[contains(text(), "Essential one")]')) == 1
+        assert len(doc.xpath('//span[contains(text(), "Essential two")]')) == 1
+        assert len(doc.xpath('//span[contains(text(), "Essential three")]')) == 1
 
     def test_get_brief_response_page_includes_nice_to_have_requirements(self, data_api_client):
         data_api_client.get_brief.return_value = self.brief
@@ -547,9 +547,9 @@ class TestRespondToBrief(BaseApplicationTest):
         res = self.client.get('/suppliers/opportunities/1234/responses/create')
         doc = html.fromstring(res.get_data(as_text=True))
 
-        assert len(doc.xpath('//p[contains(text(), "Top one")]')) == 1
-        assert len(doc.xpath('//p[contains(text(), "Nice one")]')) == 1
-        assert len(doc.xpath('//p[contains(text(), "Get sorted")]')) == 1
+        assert len(doc.xpath('//span[contains(text(), "Top one")]')) == 1
+        assert len(doc.xpath('//span[contains(text(), "Nice one")]')) == 1
+        assert len(doc.xpath('//span[contains(text(), "Get sorted")]')) == 1
 
     def test_get_brief_response_page_redirects_to_login_for_buyer(self, data_api_client):
         data_api_client.get_brief.return_value = self.brief
