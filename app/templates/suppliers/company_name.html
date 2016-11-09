@@ -35,7 +35,7 @@
             value = form.company_name.data,
             error = form.company_name.errors[0],
             question_advice =
-            'This is how buyers will see your company’s name on the Digital&nbsp;Marketplace.'
+            'This is how buyers will see your company’s name on the Digital&nbsp;Marketplace.' | safe
         %}
         {% include "toolkit/forms/textbox.html" %}
 
