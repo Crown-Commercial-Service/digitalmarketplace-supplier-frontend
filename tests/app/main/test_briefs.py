@@ -947,6 +947,16 @@ class TestStartBriefResponseApplication(BaseApplicationTest):
 
         assert "provide the specialist's day rate" not in data
 
+    def test_start_page_is_hidden_by_feature_flag(self, data_api_client):
+        self.app.config['FEATURE_FLAGS_NEW_SUPPLIER_FLOW'] = False
+        data_api_client.get_brief.return_value = api_stubs.brief(status='live', lot_slug='digital-outcomes')
+        data_api_client.find_brief_responses.return_value = {
+            'briefResponses': []
+        }
+        res = self.client.get('/suppliers/opportunities/1234/responses/start')
+        assert res.status_code == 404
+
+
 @mock.patch("app.main.views.briefs.data_api_client")
 class TestPostStartBriefResponseApplication(BaseApplicationTest):
     def setup(self):
@@ -982,6 +992,12 @@ class TestPostStartBriefResponseApplication(BaseApplicationTest):
         data_api_client.create_brief_response.assert_called_once_with(1234, 1234, {}, "email@email.com")
         assert res.status_code == 302
         assert res.location == 'http://localhost/suppliers/opportunities/responses/10/edit'
+
+    def test_post_to_start_page_is_hidden_by_feature_flag(self, data_api_client):
+        self.app.config['FEATURE_FLAGS_NEW_SUPPLIER_FLOW'] = False
+        data_api_client.get_brief.return_value = api_stubs.brief(status='live', lot_slug='digital-outcomes')
+        res = self.client.post('/suppliers/opportunities/1234/responses/start')
+        assert res.status_code == 404
 
 
 @mock.patch("app.main.views.briefs.data_api_client")

@@ -5,6 +5,7 @@ import re
 
 from flask import abort, flash, redirect, render_template, request, url_for
 from flask_login import current_user
+import flask_featureflags as feature
 
 from dmapiclient import HTTPError
 
@@ -75,6 +76,7 @@ def ask_brief_clarification_question(brief_id):
 
 
 @main.route('/opportunities/<int:brief_id>/responses/start', methods=['GET', 'POST'])
+@feature.is_active_feature('NEW_SUPPLIER_FLOW')
 @login_required
 def start_brief_response(brief_id):
     brief = get_brief(data_api_client, brief_id, allowed_statuses=['live'])
