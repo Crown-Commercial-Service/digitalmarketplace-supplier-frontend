@@ -947,6 +947,42 @@ class TestStartBriefResponseApplication(BaseApplicationTest):
 
         assert "provide the specialist's day rate" not in data
 
+@mock.patch("app.main.views.briefs.data_api_client")
+class TestPostStartBriefResponseApplication(BaseApplicationTest):
+    def setup(self):
+        super(TestPostStartBriefResponseApplication, self).setup()
+
+        with self.app.test_client():
+            self.login()
+
+    @mock.patch("app.main.views.briefs.is_supplier_eligible_for_brief")
+    def test_will_show_not_eligible_response_if_supplier_is_not_eligible_for_brief(
+        self, is_supplier_eligible_for_brief, data_api_client
+    ):
+        brief = api_stubs.brief(status='live', lot_slug='digital-specialists')
+        data_api_client.get_brief.return_value = brief
+        is_supplier_eligible_for_brief.return_value = False
+
+        res = self.client.post('/suppliers/opportunities/2345/responses/start')
+        assert res.status_code == 400
+
+        doc = html.fromstring(res.get_data(as_text=True))
+        assert doc.xpath('//title')[0].text == 'Not eligible for opportunity – Digital Marketplace'
+
+    def test_valid_post_calls_api_and_redirects_to_edit_the_created_brief_response(self, data_api_client):
+        brief = api_stubs.brief(status='live', lot_slug='digital-specialists')
+        data_api_client.get_brief.return_value = brief
+        data_api_client.create_brief_response.return_value = {
+            'briefResponses': {
+                'id': 10
+            }
+        }
+
+        res = self.client.post('/suppliers/opportunities/1234/responses/start')
+        data_api_client.create_brief_response.assert_called_once_with(1234, 1234, {}, "email@email.com")
+        assert res.status_code == 302
+        assert res.location == 'http://localhost/suppliers/opportunities/responses/10/edit'
+
 
 @mock.patch("app.main.views.briefs.data_api_client")
 class TestResponseResultPage(BaseApplicationTest):
