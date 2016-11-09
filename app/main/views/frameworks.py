@@ -120,7 +120,7 @@ def framework_dashboard(framework_slug):
         },
         "reporting_template": {
             "path": "communications/",
-            "filename": "{}-reporting-template.xlsx".format(framework_slug),
+            "filename": "{}-reporting-template.xls".format(framework_slug),
         },
         "supplier_updates": {
             "path": "communications/updates/",

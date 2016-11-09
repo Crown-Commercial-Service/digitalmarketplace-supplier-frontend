@@ -328,7 +328,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
             ('', 'g-cloud-7-call-off', 'pdf', '2016-05-01T14:00:00.000Z'),
             ('', 'g-cloud-7-invitation', 'pdf', '2016-05-01T14:00:00.000Z'),
             ('', 'g-cloud-7-proposed-agreement', 'pdf', '2016-06-01T14:00:00.000Z'),
-            ('', 'g-cloud-7-reporting-template', 'xlsx', '2016-06-06T14:00:00.000Z'),
+            ('', 'g-cloud-7-reporting-template', 'xls', '2016-06-06T14:00:00.000Z'),
             # superfluous file that shouldn't be shown
             ('', 'g-cloud-7-supplier-pack', 'zip', '2015-01-01T14:00:00.000Z'),
         ]
@@ -390,7 +390,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
                 ("Reporting", (
                     (
                         "Download the reporting template",
-                        "/suppliers/frameworks/g-cloud-7/files/g-cloud-7-reporting-template.xlsx",
+                        "/suppliers/frameworks/g-cloud-7/files/g-cloud-7-reporting-template.xls",
                         None,
                         None,
                     ),
@@ -418,7 +418,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
             ('updates/clarifications/', 'file 2', 'odt', '2015-02-02T14:00:00.000Z'),
             ('', 'g-cloud-7-call-off', 'pdf', '2016-05-01T14:00:00.000Z'),
             ('', 'g-cloud-7-invitation', 'pdf', '2016-05-01T14:00:00.000Z'),
-            ('', 'g-cloud-7-reporting-template', 'xlsx', '2016-06-06T14:00:00.000Z'),
+            ('', 'g-cloud-7-reporting-template', 'xls', '2016-06-06T14:00:00.000Z'),
             ('', 'g-cloud-7-final-agreement', 'pdf', '2016-06-02T14:00:00.000Z'),
             # present but should be overridden by final agreement file
             ('', 'g-cloud-7-proposed-agreement', 'pdf', '2016-06-11T14:00:00.000Z'),
@@ -481,7 +481,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
                 ("Reporting", (
                     (
                         "Download the reporting template",
-                        "/suppliers/frameworks/g-cloud-7/files/g-cloud-7-reporting-template.xlsx",
+                        "/suppliers/frameworks/g-cloud-7/files/g-cloud-7-reporting-template.xls",
                         None,
                         None,
                     ),
@@ -508,7 +508,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
             ('', 'g-cloud-7-call-off', 'pdf', '2016-05-01T14:00:00.000Z'),
             ('', 'g-cloud-7-invitation', 'pdf', '2016-05-01T14:00:00.000Z'),
             ('', 'g-cloud-7-proposed-agreement', 'pdf', '2016-06-01T14:00:00.000Z'),
-            ('', 'g-cloud-7-reporting-template', 'xlsx', '2016-06-06T14:00:00.000Z'),
+            ('', 'g-cloud-7-reporting-template', 'xls', '2016-06-06T14:00:00.000Z'),
         ]
 
         s3.return_value.list.return_value = [
@@ -594,7 +594,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
                         u"Download the proposed \u2018call-off\u2019 contract",
                     ),
                     (
-                        "g-cloud-7-reporting-template.xlsx",
+                        "g-cloud-7-reporting-template.xls",
                         "Download the reporting template",
                     ),
                     (
@@ -779,7 +779,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
             ('', 'g-cloud-7-call-off', 'pdf', '2016-05-01T14:00:00.000Z'),
             ('', 'g-cloud-7-invitation', 'pdf', '2016-05-01T14:00:00.000Z'),
             ('', 'g-cloud-7-final-agreement', 'pdf', '2016-06-01T14:00:00.000Z'),
-            ('', 'g-cloud-7-reporting-template', 'xlsx', '2016-06-06T14:00:00.000Z'),
+            ('', 'g-cloud-7-reporting-template', 'xls', '2016-06-06T14:00:00.000Z'),
         ]
 
         s3.return_value.list.return_value = [
@@ -877,7 +877,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
                 ('Reporting', (
                     (
                         'Download the reporting template',
-                        '/suppliers/frameworks/g-cloud-7/files/g-cloud-7-reporting-template.xlsx',
+                        '/suppliers/frameworks/g-cloud-7/files/g-cloud-7-reporting-template.xls',
                         None,
                         None,
                     ),
@@ -907,7 +907,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
             ('', 'g-cloud-8-call-off', 'pdf', '2016-05-01T14:00:00.000Z'),
             ('', 'g-cloud-8-invitation', 'pdf', '2016-05-01T14:00:00.000Z'),
             ('', 'g-cloud-8-final-agreement', 'pdf', '2016-06-01T14:00:00.000Z'),
-            ('', 'g-cloud-8-reporting-template', 'xlsx', '2016-06-06T14:00:00.000Z'),
+            ('', 'g-cloud-8-reporting-template', 'xls', '2016-06-06T14:00:00.000Z'),
         ]
 
         s3.return_value.list.return_value = [
@@ -1005,7 +1005,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
                 ('Reporting', (
                     (
                         'Download the reporting template',
-                        '/suppliers/frameworks/g-cloud-8/files/g-cloud-8-reporting-template.xlsx',
+                        '/suppliers/frameworks/g-cloud-8/files/g-cloud-8-reporting-template.xls',
                         None,
                         None,
                     ),
