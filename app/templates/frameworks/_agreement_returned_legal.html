@@ -87,6 +87,13 @@
         The agreement signed by the Crown Commercial Service
       </p>
     {% endif %}
+    {% if countersigned_agreement_file and not framework.frameworkAgreementVersion %}
+      <p>
+        <a href="{{ url_for('.download_agreement_file', framework_slug=framework.slug, document_name=result_letter_filename) }}" target="_blank">
+          Download your application result letter
+        </a>
+      </p>
+    {% endif %}
     {% if 'CONTRACT_VARIATION' is active_feature %}
       {% for variation in framework.variations %}
       <p>

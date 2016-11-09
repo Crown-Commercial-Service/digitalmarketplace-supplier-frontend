@@ -597,6 +597,10 @@ class TestFrameworksDashboard(BaseApplicationTest):
                         "g-cloud-7-reporting-template.xlsx",
                         "Download the reporting template",
                     ),
+                    (
+                        "result-letter.pdf",
+                        "Download your application result letter",
+                    ),
                 )
             )
             assert len(doc.xpath(
@@ -836,6 +840,12 @@ class TestFrameworksDashboard(BaseApplicationTest):
                         None,
                     ),
                     (
+                        'Download your application result letter',
+                        '/suppliers/frameworks/g-cloud-7/agreements/result-letter.pdf',
+                        None,
+                        None,
+                    ),
+                    (
                         'Download the call-off contract template',
                         '/suppliers/frameworks/g-cloud-7/files/g-cloud-7-call-off.pdf',
                         None,
@@ -933,8 +943,13 @@ class TestFrameworksDashboard(BaseApplicationTest):
 
             assert not doc.xpath(
                 "//main//a[@href=$href or normalize-space(string())=$label]",
-                href="/frameworks/g-cloud-7/agreement",
+                href="/frameworks/g-cloud-8/agreement",
                 label="Sign and return your framework agreement",
+            )
+            assert not doc.xpath(
+                "//main//a[@href=$href or normalize-space(string())=$label]",
+                href="/suppliers/frameworks/g-cloud-7/agreements/result-letter.pdf",
+                label="Download your application result letter",
             )
 
             extracted_guidance_links = self._extract_guidance_links(doc)
@@ -1040,6 +1055,11 @@ class TestFrameworksDashboard(BaseApplicationTest):
                 "//main//a[@href=$href or normalize-space(string())=$label]",
                 href="/frameworks/g-cloud-7/agreement",
                 label="Sign and return your framework agreement",
+            )
+            assert not doc.xpath(
+                "//main//a[@href=$href or normalize-space(string())=$label]",
+                href="/suppliers/frameworks/g-cloud-7/agreements/result-letter.pdf",
+                label="Download your application result letter",
             )
 
             extracted_guidance_links = self._extract_guidance_links(doc)
