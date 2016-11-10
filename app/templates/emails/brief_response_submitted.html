@@ -2,18 +2,29 @@
 <html>
 <head lang="en">
     <meta charset="UTF-8">
+    <link href="https://fonts.googleapis.com/css?family=Open+Sans" rel="stylesheet">
 </head>
-<body>
+<body style="font-family: Open Sans, sans-serif;">
 
-<p>Your application for {{ brief.title }} has been submitted.</p>
+<div style="padding: 0rem; border: 2px solid #007554; font-size: 2rem;"><p style="background: white; margin: 0;"><span style="background: #007554; padding: 1rem; display: inline-block; line-height: 2rem; width: 3rem; margin-right: 1rem;"><span style="text-align: center; width: 2rem; background: white; padding: 0.5rem; display: inline-block; color: #007554; border-radius: 2rem;">✔</span></span>We've received your application.</p></div>
 
 <h2>What happens next</h2>
 
-<p>Once the opportunity closes, the buyer will score your responses. If you're one of the top suppliers, you'll go through to the evalulation stage and the buyer will contact you.</p>
+<p style="padding: 2rem; background: #def4f9;">Once the opportunity closes (on {{brief.dates.closing_time|datetimeformat }}) the buyer will review all responses.</p>
 
-<p>If you're not successful, the buyer has been asked to give you feedback.</p>
+<h3>If you're shortlisted for evaluation</h3>
+<p>
+  <ul>
+    <li>The buyer will be in touch to arrange your evaluation.</li>
+    <li>The evaluation methods are listed in the opportunity: <a href="{{ request.url_root }}{{ brief.frameworkSlug }}/opportunities/{{ brief.id }}">'{{ brief_name }}' page</a></li>
+  </ul>
 
-<h2>Here's how you responded:</h2>
+<h3>If you're not successful</h3>
+<ul>
+  <li>The buyer has been asked to give you feedback.</li>
+</ul>
+<hr>
+<h2>How you responded:</h2>
 
 {% if brief_response.availability %}
 <h3>Earliest start date</h3>
@@ -25,27 +36,27 @@
 <p>${{ brief_response.dayRate }}</p>
 {% endif %}
 
-<h3>Essential Requirements</h3>
+<h3>Essential requirements</h3>
 {% for req, response in essential_requirements %}
 
-<h4>{{ req }}</h4>
+<h4>• {{ req }}</h4>
 <p>{{ response|striptags }}</p>
 
 {% endfor %}
 
 {% if nice_to_have_requirements %}
-<h3>Nice-to-have Requirements</h3>
+<h3>Nice-to-have requirements</h3>
 
 {% for req, response in nice_to_have_requirements %}
 
-<h4>{{ req }}</h4>
+<h4>• {{ req }}</h4>
 <p>{{ response|striptags }}</p>
 
 {% endfor %}
 {% endif %}
 
-<p>Thank you and good luck,<br>
-The Digital Marketplace team</p>
+<p>Thanks and good luck,<br>
+The Marketplace team</p>
 
 </body>
 </html>

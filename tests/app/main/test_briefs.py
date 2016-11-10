@@ -278,6 +278,8 @@ class TestRespondToBrief(BaseApplicationTest):
         self.brief = api_stubs.brief(status='live', lot_slug='digital-specialists')
         self.brief['briefs']['essentialRequirements'] = ['Essential one', 'Essential two', 'Essential three']
         self.brief['briefs']['niceToHaveRequirements'] = ['Nice one', 'Top one', 'Get sorted']
+        self.brief['briefs']['dates'] = {}
+        self.brief['briefs']['dates']['closing_time'] = '2016-11-23T07:00:00+00:00'
 
         lots = [api_stubs.lot(slug="digital-specialists", allows_brief=True)]
         self.framework = api_stubs.framework(status="live", slug="digital-outcomes-and-specialists",
