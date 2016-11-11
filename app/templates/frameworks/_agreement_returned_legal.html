@@ -113,9 +113,9 @@
       </p>
       {% endfor %}
     {% endif %}
-    {% if communications_files.call_off.last_modified %}
+    {% if communications_files.final_call_off.last_modified %}
       <p>
-        <a href="{{ url_for('.download_supplier_file', filepath=communications_files.call_off.filename, framework_slug=framework.slug) }}">Download the call-off contract template</a>
+        <a href="{{ url_for('.download_supplier_file', filepath=communications_files.final_call_off.filename, framework_slug=framework.slug) }}">Download the call-off contract template</a>
       </p>
     {% endif %}
     {% if not countersigned_agreement_file %}

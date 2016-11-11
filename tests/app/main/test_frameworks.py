@@ -1,15 +1,12 @@
 # -*- coding: utf-8 -*-
 from collections import OrderedDict
 
-import pytest
 try:
     from StringIO import StringIO
 except ImportError:
     from io import BytesIO as StringIO
 from nose.tools import assert_equal, assert_true, assert_in, assert_not_in
 import mock
-from six import itervalues
-from itertools import chain
 
 from flask import session
 from lxml import html
@@ -325,9 +322,9 @@ class TestFrameworksDashboard(BaseApplicationTest):
         files = [
             ('updates/communications/', 'file 1', 'odt', '2015-01-01T14:00:00.000Z'),
             ('updates/clarifications/', 'file 2', 'odt', '2015-02-02T14:00:00.000Z'),
-            ('', 'g-cloud-7-call-off', 'pdf', '2016-05-01T14:00:00.000Z'),
+            ('', 'g-cloud-7-proposed-call-off', 'pdf', '2016-05-01T14:00:00.000Z'),
             ('', 'g-cloud-7-invitation', 'pdf', '2016-05-01T14:00:00.000Z'),
-            ('', 'g-cloud-7-proposed-agreement', 'pdf', '2016-06-01T14:00:00.000Z'),
+            ('', 'g-cloud-7-proposed-framework-agreement', 'pdf', '2016-06-01T14:00:00.000Z'),
             ('', 'g-cloud-7-reporting-template', 'xls', '2016-06-06T14:00:00.000Z'),
             # superfluous file that shouldn't be shown
             ('', 'g-cloud-7-supplier-pack', 'zip', '2015-01-01T14:00:00.000Z'),
@@ -368,13 +365,13 @@ class TestFrameworksDashboard(BaseApplicationTest):
                 ("Legal documents", (
                     (
                         "Download the proposed framework agreement",
-                        "/suppliers/frameworks/g-cloud-7/files/g-cloud-7-proposed-agreement.pdf",
+                        "/suppliers/frameworks/g-cloud-7/files/g-cloud-7-proposed-framework-agreement.pdf",
                         "Wednesday 1 June 2016",
                         "2016-06-01T14:00:00.000Z",
                     ),
                     (
                         u"Download the proposed \u2018call-off\u2019 contract",
-                        "/suppliers/frameworks/g-cloud-7/files/g-cloud-7-call-off.pdf",
+                        "/suppliers/frameworks/g-cloud-7/files/g-cloud-7-proposed-call-off.pdf",
                         "Sunday 1 May 2016",
                         "2016-05-01T14:00:00.000Z",
                     ),
@@ -399,7 +396,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
             assert not any(
                 doc.xpath("//main//a[contains(@href, $href_part)]", href_part=href_part)
                 for href_part in (
-                    "g-cloud-7-final-agreement.pdf",
+                    "g-cloud-7-final-framework-agreement.pdf",
                     "g-cloud-7-supplier-pack.zip",
                 )
             )
@@ -416,12 +413,12 @@ class TestFrameworksDashboard(BaseApplicationTest):
         files = [
             ('updates/communications/', 'file 1', 'odt', '2015-01-01T14:00:00.000Z'),
             ('updates/clarifications/', 'file 2', 'odt', '2015-02-02T14:00:00.000Z'),
-            ('', 'g-cloud-7-call-off', 'pdf', '2016-05-01T14:00:00.000Z'),
+            ('', 'g-cloud-7-proposed-call-off', 'pdf', '2016-05-01T14:00:00.000Z'),
             ('', 'g-cloud-7-invitation', 'pdf', '2016-05-01T14:00:00.000Z'),
             ('', 'g-cloud-7-reporting-template', 'xls', '2016-06-06T14:00:00.000Z'),
-            ('', 'g-cloud-7-final-agreement', 'pdf', '2016-06-02T14:00:00.000Z'),
+            ('', 'g-cloud-7-final-framework-agreement', 'pdf', '2016-06-02T14:00:00.000Z'),
             # present but should be overridden by final agreement file
-            ('', 'g-cloud-7-proposed-agreement', 'pdf', '2016-06-11T14:00:00.000Z'),
+            ('', 'g-cloud-7-proposed-framework-agreement', 'pdf', '2016-06-11T14:00:00.000Z'),
         ]
 
         s3.return_value.list.return_value = [
@@ -459,13 +456,13 @@ class TestFrameworksDashboard(BaseApplicationTest):
                 ("Legal documents", (
                     (
                         "Download the framework agreement",
-                        "/suppliers/frameworks/g-cloud-7/files/g-cloud-7-final-agreement.pdf",
+                        "/suppliers/frameworks/g-cloud-7/files/g-cloud-7-final-framework-agreement.pdf",
                         "Thursday 2 June 2016",
                         "2016-06-02T14:00:00.000Z",
                     ),
                     (
                         u"Download the proposed \u2018call-off\u2019 contract",
-                        "/suppliers/frameworks/g-cloud-7/files/g-cloud-7-call-off.pdf",
+                        "/suppliers/frameworks/g-cloud-7/files/g-cloud-7-proposed-call-off.pdf",
                         "Sunday 1 May 2016",
                         "2016-05-01T14:00:00.000Z",
                     ),
@@ -490,7 +487,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
             assert not any(
                 doc.xpath("//main//a[contains(@href, $href_part)]", href_part=href_part)
                 for href_part in (
-                    "g-cloud-7-proposed-agreement.pdf",
+                    "g-cloud-7-proposed-framework-agreement.pdf",
                     "g-cloud-7-supplier-pack.zip",
                 )
             )
@@ -507,7 +504,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
         files = [
             ('', 'g-cloud-7-call-off', 'pdf', '2016-05-01T14:00:00.000Z'),
             ('', 'g-cloud-7-invitation', 'pdf', '2016-05-01T14:00:00.000Z'),
-            ('', 'g-cloud-7-proposed-agreement', 'pdf', '2016-06-01T14:00:00.000Z'),
+            ('', 'g-cloud-7-proposed-framework-agreement', 'pdf', '2016-06-01T14:00:00.000Z'),
             ('', 'g-cloud-7-reporting-template', 'xls', '2016-06-06T14:00:00.000Z'),
         ]
 
@@ -586,7 +583,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
                         "Download the invitation to apply",
                     ),
                     (
-                        "g-cloud-7-proposed-agreement.pdf",
+                        "g-cloud-7-proposed-framework-agreement.pdf",
                         "Download the proposed framework agreement",
                     ),
                     (
@@ -776,9 +773,9 @@ class TestFrameworksDashboard(BaseApplicationTest):
     def test_countersigned_framework_agreement_non_fav_framework(self, data_api_client, s3):
         # "fav" being "frameworkAgreementVersion"
         files = [
-            ('', 'g-cloud-7-call-off', 'pdf', '2016-05-01T14:00:00.000Z'),
+            ('', 'g-cloud-7-final-call-off', 'pdf', '2016-05-01T14:00:00.000Z'),
             ('', 'g-cloud-7-invitation', 'pdf', '2016-05-01T14:00:00.000Z'),
-            ('', 'g-cloud-7-final-agreement', 'pdf', '2016-06-01T14:00:00.000Z'),
+            ('', 'g-cloud-7-final-framework-agreement', 'pdf', '2016-06-01T14:00:00.000Z'),
             ('', 'g-cloud-7-reporting-template', 'xls', '2016-06-06T14:00:00.000Z'),
         ]
 
@@ -819,11 +816,12 @@ class TestFrameworksDashboard(BaseApplicationTest):
             )
 
             extracted_guidance_links = self._extract_guidance_links(doc)
+
             assert extracted_guidance_links == OrderedDict((
                 ("Legal documents", (
                     (
                         'Download the standard framework agreement',
-                        '/suppliers/frameworks/g-cloud-7/files/g-cloud-7-final-agreement.pdf',
+                        '/suppliers/frameworks/g-cloud-7/files/g-cloud-7-final-framework-agreement.pdf',
                         None,
                         None,
                     ),
@@ -847,7 +845,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
                     ),
                     (
                         'Download the call-off contract template',
-                        '/suppliers/frameworks/g-cloud-7/files/g-cloud-7-call-off.pdf',
+                        '/suppliers/frameworks/g-cloud-7/files/g-cloud-7-final-call-off.pdf',
                         None,
                         None,
                     ),
@@ -904,9 +902,9 @@ class TestFrameworksDashboard(BaseApplicationTest):
     def test_countersigned_framework_agreement_fav_framework(self, data_api_client, s3):
         # "fav" being "frameworkAgreementVersion"
         files = [
-            ('', 'g-cloud-8-call-off', 'pdf', '2016-05-01T14:00:00.000Z'),
+            ('', 'g-cloud-8-final-call-off', 'pdf', '2016-05-01T14:00:00.000Z'),
             ('', 'g-cloud-8-invitation', 'pdf', '2016-05-01T14:00:00.000Z'),
-            ('', 'g-cloud-8-final-agreement', 'pdf', '2016-06-01T14:00:00.000Z'),
+            ('', 'g-cloud-8-final-framework-agreement', 'pdf', '2016-06-01T14:00:00.000Z'),
             ('', 'g-cloud-8-reporting-template', 'xls', '2016-06-06T14:00:00.000Z'),
         ]
 
@@ -953,6 +951,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
             )
 
             extracted_guidance_links = self._extract_guidance_links(doc)
+
             assert extracted_guidance_links == OrderedDict((
                 ("Legal documents", (
                     (
@@ -975,7 +974,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
                     ),
                     (
                         'Download the call-off contract template',
-                        '/suppliers/frameworks/g-cloud-8/files/g-cloud-8-call-off.pdf',
+                        '/suppliers/frameworks/g-cloud-8/files/g-cloud-8-final-call-off.pdf',
                         None,
                         None,
                     ),
