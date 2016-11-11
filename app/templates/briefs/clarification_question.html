@@ -81,7 +81,7 @@
            \n\nAll questions and answers will be posted on the Digital Marketplace. Your company name won’t be visible.
            \n\nYou shouldn’t include any confidential information in your question.
            \n\nRead more about <a href="https://www.gov.uk/guidance/how-to-answer-supplier-questions-about-your-digital-outcomes-and-specialists-requirements">how supplier questions are managed</a>.
-          '.format(brief.clarificationQuestionsPublishedBy|dateformat)
+          '.format(brief.clarificationQuestionsPublishedBy|dateformat)|safe
         %}
           {% include "toolkit/forms/textbox.html" %}
         {% endwith %}
