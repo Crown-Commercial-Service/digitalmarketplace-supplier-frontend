@@ -146,7 +146,7 @@ def send_thank_you_email_to_responders(brief, brief_response, brief_response_url
         send_email(
             to_email_address,
             email_body,
-            'Great success, high five',
+            'We\'ve received your application',
             current_app.config['DM_GENERIC_NOREPLY_EMAIL'],
             current_app.config['DM_GENERIC_SUPPORT_NAME'],
         )
