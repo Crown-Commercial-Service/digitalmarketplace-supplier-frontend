@@ -467,8 +467,6 @@ gulp.task(
     runSequence('sass',
       'split',
       'js',
-      'rename-1',
-      'rename-2',
       cb);
   }
 );
