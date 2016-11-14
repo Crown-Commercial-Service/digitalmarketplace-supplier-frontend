@@ -1,5 +1,6 @@
 import six
 from flask import render_template, request, url_for, current_app, abort, jsonify, redirect
+from flask_login import current_user, login_required
 from app.main import main
 from react.render import render_component
 from react.response import from_response, validate_form_data
@@ -7,6 +8,7 @@ from dmutils.forms import DmForm
 from dmutils.email import EmailError, send_email
 from app.main.helpers.users import generate_applicant_invitation_token
 from ... import data_api_client
+from ..helpers import login_required
 
 
 @main.route('/signup', methods=['GET'])
@@ -66,14 +68,19 @@ def send_seller_signup_email():
 
 @main.route('/application/<int:id>', methods=['GET'])
 @main.route('/application/<int:id>/<path:step>', methods=['GET'])
+@login_required
 def application(id, step=None):
 
-    form = DmForm()
-    basename = url_for('.application', id=id, step=None)
-    rendered_component = render_component('bundles/ApplicantSignup/ApplicantSignupWidget.js',
-                                          {'form_options': {'csrf_token': form.csrf_token.current_token,
-                                                            'mode': 'edit',
-                                                            }, 'basename': basename})
+    application = data_api_client.get_application(id)['application']
+
+    if not current_user.is_authenticated:
+        return current_app.login_manager.unauthorized()
+    if current_user.id != application['user_id']:
+        return current_app.login_manager.unauthorized()
+
+    application['basename'] = url_for('.application', id=id, step=None)
+
+    rendered_component = render_component('bundles/ApplicantSignup/ApplicantSignupWidget.js', application)
     return render_template(
         '_react.html',
         component=rendered_component
@@ -82,7 +89,13 @@ def application(id, step=None):
 
 @main.route('/application/<int:id>', methods=['POST'])
 @main.route('/application/<int:id>/<path:step>', methods=['POST'])
+@login_required
 def application_update(id, step=None):
+    old_application = data_api_client.get_application(id)
+
+    if not current_user.is_authenticated and current_user.id != old_application['application']['user_id']:
+        return current_app.login_manager.unauthorized()
+
     json = request.content_type == 'application/json'
     application = from_response(request)
 
