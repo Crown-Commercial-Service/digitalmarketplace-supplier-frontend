@@ -138,7 +138,7 @@ def brief_response(brief_id):
     framework, lot = get_framework_and_lot(
         data_api_client, brief['frameworkSlug'], brief['lotSlug'], allowed_statuses=['live'])
 
-    content = content_loader.get_manifest(framework['slug'], 'edit_brief_response').filter({'lot': lot['slug']})
+    content = content_loader.get_manifest(framework['slug'], 'legacy_edit_brief_response').filter({'lot': lot['slug']})
     section = content.get_section(content.get_next_editable_section_id())
 
     # replace generic 'Apply for opportunity' title with title including the name of the brief
@@ -172,7 +172,7 @@ def create_brief_response(brief_id):
     framework, lot = get_framework_and_lot(
         data_api_client, brief['frameworkSlug'], brief['lotSlug'], allowed_statuses=['live'])
 
-    content = content_loader.get_manifest(framework['slug'], 'edit_brief_response').filter({'lot': lot['slug']})
+    content = content_loader.get_manifest(framework['slug'], 'legacy_edit_brief_response').filter({'lot': lot['slug']})
     section = content.get_section(content.get_next_editable_section_id())
     response_data = section.get_data(request.form)
 
