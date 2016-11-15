@@ -818,6 +818,189 @@ class TestRespondToBrief(BaseApplicationTest):
 
 
 @mock.patch("app.main.views.briefs.data_api_client")
+class TestStartBriefResponseApplication(BaseApplicationTest):
+    def setup(self):
+        super(TestStartBriefResponseApplication, self).setup()
+
+        with self.app.test_client():
+            self.login()
+
+    @mock.patch("app.main.views.briefs.is_supplier_eligible_for_brief")
+    def test_will_show_not_eligible_response_if_supplier_is_not_eligible_for_brief(
+        self, is_supplier_eligible_for_brief, data_api_client
+    ):
+        brief = api_stubs.brief(status='live', lot_slug='digital-specialists')
+        data_api_client.get_brief.return_value = brief
+        data_api_client.find_brief_responses.return_value = {
+            'briefResponses': []
+        }
+        is_supplier_eligible_for_brief.return_value = False
+
+        res = self.client.get('/suppliers/opportunities/1234/responses/start')
+        assert res.status_code == 400
+
+        doc = html.fromstring(res.get_data(as_text=True))
+        assert doc.xpath('//title')[0].text == 'Not eligible for opportunity – Digital Marketplace'
+
+    def test_start_application_contains_brief_title(self, data_api_client):
+        data_api_client.get_brief.return_value = api_stubs.brief(status='live', lot_slug='digital-specialists')
+        data_api_client.find_brief_responses.return_value = {
+            'briefResponses': []
+        }
+        res = self.client.get('/suppliers/opportunities/1234/responses/start')
+        assert res.status_code == 200
+
+        doc = html.fromstring(res.get_data(as_text=True))
+        assert doc.xpath('//h1')[0].text.strip() == "Apply for ‘I need a thing to do a thing’"
+
+    def test_start_page_is_viewable_and_has_start_button_if_no_existing_brief_response(
+        self, data_api_client
+    ):
+        data_api_client.get_brief.return_value = api_stubs.brief(status='live', lot_slug='digital-specialists')
+        data_api_client.find_brief_responses.return_value = {
+            'briefResponses': []
+        }
+        res = self.client.get('/suppliers/opportunities/1234/responses/start')
+
+        doc = html.fromstring(res.get_data(as_text=True))
+        assert doc.xpath("//input[@class='button-save']/@value")[0] == 'Start application'
+
+    def test_start_page_is_viewable_and_has_continue_button_if_draft_brief_response_exists(
+        self, data_api_client
+    ):
+        data_api_client.get_brief.return_value = api_stubs.brief(status='live', lot_slug='digital-specialists')
+        data_api_client.find_brief_responses.return_value = {
+            'briefResponses': [
+                {
+                    "id": 2,
+                    "status": "draft",
+                }
+            ]
+        }
+        res = self.client.get('/suppliers/opportunities/1234/responses/start')
+
+        doc = html.fromstring(res.get_data(as_text=True))
+        assert doc.xpath("//input[@class='button-save']/@value")[0] == 'Continue application'
+
+    def test_will_show_not_eligible_response_if_supplier_has_already_submitted_application(self, data_api_client):
+        data_api_client.get_brief.return_value = api_stubs.brief(status='live', lot_slug='digital-specialists')
+        data_api_client.find_brief_responses.return_value = {
+            'briefResponses': [
+                {
+                    "id": 2,
+                    "status": "submitted",
+                    "submittedAt": "2016-07-20T10:34:08.993952Z",
+                }
+            ]
+        }
+        res = self.client.get('/suppliers/opportunities/1234/responses/start')
+        assert res.status_code == 302
+        assert res.location == 'http://localhost/suppliers/opportunities/1234/responses/result'
+
+    def test_start_page_for_specialist_brief_shows_specialist_content(self, data_api_client):
+        data_api_client.get_brief.return_value = api_stubs.brief(status='live', lot_slug='digital-specialists')
+        data_api_client.find_brief_responses.return_value = {
+            'briefResponses': []
+        }
+        res = self.client.get('/suppliers/opportunities/1234/responses/start')
+        assert res.status_code == 200
+
+        data = res.get_data(as_text=True)
+
+        assert 'give the date the specialist will be available to start work' in data
+        assert "provide the specialist's day rate" in data
+        assert "say which skills and experience the specialist has" in data
+        assert "give evidence for all the skills and experience the specialist has" in data
+        assert "the work the specialist did" in data
+
+    def test_start_page_for_outcomes_brief_shows_outcomes_content(self, data_api_client):
+        data_api_client.get_brief.return_value = api_stubs.brief(status='live', lot_slug='digital-outcomes')
+        data_api_client.find_brief_responses.return_value = {
+            'briefResponses': []
+        }
+        res = self.client.get('/suppliers/opportunities/1234/responses/start')
+        assert res.status_code == 200
+
+        data = res.get_data(as_text=True)
+
+        assert 'give the date the team will be available to start work' in data
+        assert "say which skills and experience the team have" in data
+        assert "give evidence for all the skills and experience the team have" in data
+        assert "the work the team did" in data
+
+        assert "provide the specialist's day rate" not in data
+
+    def test_start_page_for_user_research_participants_brief_shows_user_research_content(self, data_api_client):
+        data_api_client.get_brief.return_value = api_stubs.brief(status='live', lot_slug='user-research-participants')
+        data_api_client.find_brief_responses.return_value = {
+            'briefResponses': []
+        }
+        res = self.client.get('/suppliers/opportunities/1234/responses/start')
+        assert res.status_code == 200
+
+        data = res.get_data(as_text=True)
+
+        assert 'give the date you will be available to start work' in data
+        assert "say which skills and experience you have" in data
+        assert "give evidence for all the skills and experience you have" in data
+        assert "the work you did" in data
+
+        assert "provide the specialist's day rate" not in data
+
+    def test_start_page_is_hidden_by_feature_flag(self, data_api_client):
+        self.app.config['FEATURE_FLAGS_NEW_SUPPLIER_FLOW'] = False
+        data_api_client.get_brief.return_value = api_stubs.brief(status='live', lot_slug='digital-outcomes')
+        data_api_client.find_brief_responses.return_value = {
+            'briefResponses': []
+        }
+        res = self.client.get('/suppliers/opportunities/1234/responses/start')
+        assert res.status_code == 404
+
+
+@mock.patch("app.main.views.briefs.data_api_client")
+class TestPostStartBriefResponseApplication(BaseApplicationTest):
+    def setup(self):
+        super(TestPostStartBriefResponseApplication, self).setup()
+
+        with self.app.test_client():
+            self.login()
+
+    @mock.patch("app.main.views.briefs.is_supplier_eligible_for_brief")
+    def test_will_show_not_eligible_response_if_supplier_is_not_eligible_for_brief(
+        self, is_supplier_eligible_for_brief, data_api_client
+    ):
+        brief = api_stubs.brief(status='live', lot_slug='digital-specialists')
+        data_api_client.get_brief.return_value = brief
+        is_supplier_eligible_for_brief.return_value = False
+
+        res = self.client.post('/suppliers/opportunities/2345/responses/start')
+        assert res.status_code == 400
+
+        doc = html.fromstring(res.get_data(as_text=True))
+        assert doc.xpath('//title')[0].text == 'Not eligible for opportunity – Digital Marketplace'
+
+    def test_valid_post_calls_api_and_redirects_to_edit_the_created_brief_response(self, data_api_client):
+        brief = api_stubs.brief(status='live', lot_slug='digital-specialists')
+        data_api_client.get_brief.return_value = brief
+        data_api_client.create_brief_response.return_value = {
+            'briefResponses': {
+                'id': 10
+            }
+        }
+
+        res = self.client.post('/suppliers/opportunities/1234/responses/start')
+        data_api_client.create_brief_response.assert_called_once_with(1234, 1234, {}, "email@email.com")
+        assert res.status_code == 302
+        assert res.location == 'http://localhost/suppliers/opportunities/responses/10/edit'
+
+    def test_post_to_start_page_is_hidden_by_feature_flag(self, data_api_client):
+        self.app.config['FEATURE_FLAGS_NEW_SUPPLIER_FLOW'] = False
+        data_api_client.get_brief.return_value = api_stubs.brief(status='live', lot_slug='digital-outcomes')
+        res = self.client.post('/suppliers/opportunities/1234/responses/start')
+        assert res.status_code == 404
+
+
+@mock.patch("app.main.views.briefs.data_api_client")
 class TestResponseResultPage(BaseApplicationTest):
 
     def setup(self):

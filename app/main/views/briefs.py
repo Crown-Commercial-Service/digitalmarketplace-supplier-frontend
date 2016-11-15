@@ -5,6 +5,7 @@ import re
 
 from flask import abort, flash, redirect, render_template, request, url_for
 from flask_login import current_user
+import flask_featureflags as feature
 
 from dmapiclient import HTTPError
 
@@ -72,6 +73,53 @@ def ask_brief_clarification_question(brief_id):
         clarification_question_name='clarification-question',
         clarification_question_value=clarification_question_value
     ), 200 if not error_message else 400
+
+
+@main.route('/opportunities/<int:brief_id>/responses/start', methods=['GET', 'POST'])
+@feature.is_active_feature('NEW_SUPPLIER_FLOW')
+@login_required
+def start_brief_response(brief_id):
+    brief = get_brief(data_api_client, brief_id, allowed_statuses=['live'])
+
+    if not is_supplier_eligible_for_brief(data_api_client, current_user.supplier_id, brief):
+        return _render_not_eligible_for_brief_error_page(brief)
+
+    if request.method == 'POST':
+        brief_response = data_api_client.create_brief_response(
+            brief_id,
+            current_user.supplier_id,
+            {},
+            current_user.email_address,
+        )['briefResponses']
+        brief_response_id = brief_response['id']
+        return redirect(url_for('.edit_brief_response', brief_response_id=brief_response_id))
+
+    brief_response = data_api_client.find_brief_responses(
+        brief_id=brief_id,
+        supplier_id=current_user.supplier_id,
+        status='draft,submitted'
+    )['briefResponses']
+
+    if brief_response:
+        if brief_response[0].get('status') == 'submitted':
+            flash('already_applied', 'error')
+            return redirect(url_for(".view_response_result", brief_id=brief_id))
+        if brief_response[0].get('status') == 'draft':
+            existing_draft_response = True
+    else:
+        existing_draft_response = False
+
+    return render_template(
+        "briefs/start_brief_response.html",
+        brief=brief,
+        existing_draft_response=existing_draft_response
+    )
+
+
+@main.route('/opportunities/responses/<int:brief_response_id>/edit', methods=['GET'])
+@login_required
+def edit_brief_response(brief_response_id):
+    return 'Hello world'
 
 
 @main.route('/opportunities/<int:brief_id>/responses/create', methods=['GET'])

@@ -71,6 +71,7 @@ class Config(object):
 
     FEATURE_FLAGS_EDIT_SECTIONS = False
     FEATURE_FLAGS_CONTRACT_VARIATION = False
+    FEATURE_FLAGS_NEW_SUPPLIER_FLOW = False
 
     # Logging
     DM_LOG_LEVEL = 'DEBUG'
@@ -99,6 +100,7 @@ class Test(Config):
 
     FEATURE_FLAGS_EDIT_SECTIONS = enabled_since('2015-06-03')
     FEATURE_FLAGS_CONTRACT_VARIATION = enabled_since('2016-08-11')
+    FEATURE_FLAGS_NEW_SUPPLIER_FLOW = enabled_since('2016-11-09')
 
     DM_DATA_API_AUTH_TOKEN = 'myToken'
 
@@ -116,6 +118,7 @@ class Development(Config):
     # Dates not formatted like YYYY-(0)M-(0)D will fail
     FEATURE_FLAGS_EDIT_SECTIONS = enabled_since('2015-06-03')
     FEATURE_FLAGS_CONTRACT_VARIATION = enabled_since('2016-08-11')
+    FEATURE_FLAGS_NEW_SUPPLIER_FLOW = enabled_since('2016-11-09')
 
     DM_DATA_API_URL = "http://localhost:5000"
     DM_DATA_API_AUTH_TOKEN = "myToken"
@@ -144,6 +147,7 @@ class Live(Config):
 class Preview(Live):
     FEATURE_FLAGS_CONTRACT_VARIATION = enabled_since('2016-08-22')
     FEATURE_FLAGS_EDIT_SECTIONS = enabled_since('2016-09-14')
+    FEATURE_FLAGS_NEW_SUPPLIER_FLOW = enabled_since('2016-11-09')
 
 
 class Production(Live):
@@ -153,6 +157,7 @@ class Production(Live):
 class Staging(Production):
     FEATURE_FLAGS_CONTRACT_VARIATION = enabled_since('2016-08-22')
     FEATURE_FLAGS_EDIT_SECTIONS = enabled_since('2016-09-14')
+    FEATURE_FLAGS_NEW_SUPPLIER_FLOW = enabled_since('2016-11-09')
 
 configs = {
     'development': Development,
