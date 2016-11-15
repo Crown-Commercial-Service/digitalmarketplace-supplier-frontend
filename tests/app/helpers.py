@@ -287,6 +287,26 @@ class BaseApplicationTest(object):
             }
         }
 
+    @staticmethod
+    def brief_response(
+            id=5,
+            brief_id=1234,
+            supplier_id=1234,
+            data=None
+    ):
+        result = {
+            "briefResponses": {
+                "id": id,
+                "briefId": brief_id,
+                "supplierId": supplier_id
+            }
+        }
+
+        if data:
+            result['briefResponses'].update(data)
+
+        return result
+
     def teardown_login(self):
         if self.get_user_patch is not None:
             self.get_user_patch.stop()

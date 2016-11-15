@@ -329,11 +329,245 @@ class TestSubmitClarificationQuestions(BaseApplicationTest):
         assert "must be no more than 100 words" in res.get_data(as_text=True)
 
 
-@mock.patch("app.main.views.briefs.data_api_client")
-class TestRespondToBrief(BaseApplicationTest):
+class TestApplyToBrief(BaseApplicationTest):
+    """Tests requests for the new multipage flow for applying for a brief"""
 
     def setup(self):
-        super(TestRespondToBrief, self).setup()
+        super(TestApplyToBrief, self).setup()
+
+        self.brief = api_stubs.brief(status='live', lot_slug='digital-specialists')
+        self.brief['briefs']['essentialRequirements'] = ['Essential one', 'Essential two', 'Essential three']
+        self.brief['briefs']['niceToHaveRequirements'] = ['Nice one', 'Top one', 'Get sorted']
+
+        lots = [api_stubs.lot(slug="digital-specialists", allows_brief=True)]
+        self.framework = api_stubs.framework(
+            status="live", slug="digital-outcomes-and-specialists", clarification_questions_open=False, lots=lots
+        )
+
+        self.data_api_client_patch = mock.patch('app.main.views.briefs.data_api_client')
+        self.data_api_client = self.data_api_client_patch.start()
+        self.data_api_client.get_brief.return_value = self.brief
+        self.data_api_client.get_framework.return_value = self.framework
+        self.data_api_client.get_brief_response.return_value = self.brief_response()
+
+        with self.app.test_client():
+            self.login()
+
+    def teardown(self):
+        super(TestApplyToBrief, self).teardown()
+        self.data_api_client_patch.stop()
+
+    @mock.patch("app.main.views.briefs.content_loader")
+    def test_will_redirect_from_generic_brief_response_url_to_first_section(self, content_loader):
+        content_loader.get_manifest.return_value.filter.return_value.get_next_editable_section_id.return_value = 'first'
+
+        res = self.client.get('/suppliers/opportunities/1234/responses/5')
+        assert res.status_code == 302
+        assert res.location == 'http://localhost/suppliers/opportunities/1234/responses/5/first'
+
+    def test_404_if_brief_response_does_not_exist(self):
+        for method in ('get', 'post'):
+
+            self.data_api_client.get_brief_response = mock.MagicMock(side_effect=HTTPError(mock.Mock(status_code=404)))
+
+            res = self.client.open('/suppliers/opportunities/1234/responses/250/section-name', method=method)
+
+            assert res.status_code == 404
+            self.data_api_client.get_brief_response.assert_called_once_with(250)
+
+    def test_404_if_brief_response_does_not_relate_to_brief(self):
+        for method in ('get', 'post'):
+            self.data_api_client.get_brief_response.return_value = {
+                "briefResponses": {
+                    "briefId": 234,
+                    "supplierId": 1234
+                }
+            }
+
+            res = self.client.open('/suppliers/opportunities/1234/responses/5/section-name', method=method)
+            assert res.status_code == 404
+
+    @mock.patch("app.main.views.briefs.current_user")
+    def test_404_if_brief_response_does_not_relate_to_current_user(self, current_user):
+        for method in ('get', 'post'):
+            current_user.supplier_id = 789
+
+            res = self.client.open('/suppliers/opportunities/1234/responses/5/section-name', method=method)
+            assert res.status_code == 404
+
+    def test_404_for_not_live_brief(self):
+        for method in ('get', 'post'):
+            self.data_api_client.get_brief.return_value = api_stubs.brief(
+                status='closed', lot_slug='digital-specialists'
+            )
+
+            res = self.client.open('/suppliers/opportunities/1234/responses/5/section-name', method=method)
+            assert res.status_code == 404
+
+    def test_404_for_not_live_framework(self):
+        for method in ('get', 'post'):
+            self.data_api_client.get_framework.return_value = api_stubs.framework(
+                status="expired", slug="digital-outcomes-and-specialists", clarification_questions_open=False
+            )
+
+            res = self.client.open('/suppliers/opportunities/1234/responses/5/section-name', method=method)
+            assert res.status_code == 404
+
+    @mock.patch("app.main.views.briefs.is_supplier_eligible_for_brief")
+    def test_show_not_eligible_page_if_supplier_not_eligible_to_apply_for_brief(self, is_supplier_eligible_for_brief):
+        for method in ('get', 'post'):
+            is_supplier_eligible_for_brief.return_value = False
+
+            res = self.client.open('/suppliers/opportunities/1234/responses/5/section-name', method=method)
+            assert res.status_code == 400
+
+            doc = html.fromstring(res.get_data(as_text=True))
+            assert doc.xpath('//title')[0].text == 'Not eligible for opportunity – Digital Marketplace'
+
+    @mock.patch("app.main.views.briefs.supplier_has_a_brief_response")
+    def test_redirect_to_show_brief_response_if_already_applied_for_brief(self, supplier_has_a_brief_response):
+        for method in ('get', 'post'):
+            supplier_has_a_brief_response.return_value = True
+
+            res = self.client.open('/suppliers/opportunities/1234/responses/5/section-name', method=method)
+            assert res.status_code == 302
+            assert res.location == 'http://localhost/suppliers/opportunities/1234/responses/result'
+            self.assert_flashes("already_applied", "error")
+
+    @mock.patch("app.main.views.briefs.content_loader")
+    def test_should_404_for_non_existent_content_section(self, content_loader):
+        for method in ('get', 'post'):
+            content_loader.get_manifest.return_value.filter.return_value.get_section.return_value = None
+
+            res = self.client.open('/suppliers/opportunities/1234/responses/5/section-name', method=method)
+            assert res.status_code == 404
+
+    @mock.patch("app.main.views.briefs.content_loader")
+    def test_should_404_for_non_editable_content_section(self, content_loader):
+        for method in ('get', 'post'):
+            content_loader.get_manifest.return_value.filter.return_value.get_section.return_value.editable = False
+
+            res = self.client.open('/suppliers/opportunities/1234/responses/5/section-name', method=method)
+            assert res.status_code == 404
+
+    @mock.patch("app.main.views.briefs.content_loader")
+    def test_non_final_editable_section_shows_continue_button(self, content_loader):
+        content_loader.get_manifest.return_value.filter.return_value.sections = [
+            {'id': 'section-one'},
+            {'id': 'section-two'},
+            {'id': 'section-three'}
+        ]
+
+        res = self.client.get('/suppliers/opportunities/1234/responses/5/section-two')
+        assert res.status_code == 200
+
+        doc = html.fromstring(res.get_data(as_text=True))
+        assert doc.xpath("//input[@class='button-save']/@value")[0] == 'Continue'
+
+    @mock.patch("app.main.views.briefs.content_loader")
+    def test_final_editable_section_shows_submit_application_button(self, content_loader):
+        content_loader.get_manifest.return_value.filter.return_value.sections = [
+            {'id': 'section-one'},
+            {'id': 'section-two'},
+            {'id': 'section-three'}
+        ]
+
+        res = self.client.get('/suppliers/opportunities/1234/responses/5/section-three')
+        assert res.status_code == 200
+
+        doc = html.fromstring(res.get_data(as_text=True))
+        assert doc.xpath("//input[@class='button-save']/@value")[0] == 'Submit application'
+
+    def test_content_from_manifest_is_shown(self):
+        res = self.client.get('/suppliers/opportunities/1234/responses/5/respond-to-email-address')
+        assert res.status_code == 200
+
+        doc = html.fromstring(res.get_data(as_text=True))
+        assert doc.xpath("//h1/text()")[0].strip() == 'Respond to email address'
+        assert (doc.xpath("//span[@class=\"question-heading-with-hint\"]/text()")[0].strip() ==
+                'Email address the buyer should use to contact you')
+        assert (doc.xpath("//span[@class=\"hint\"]/text()")[0].strip() ==
+                'All communication about your application will be sent to this address.')
+
+    def test_existing_brief_response_data_is_prefilled(self):
+        self.data_api_client.get_brief_response.return_value = self.brief_response(
+            data={'respondToEmailAddress': 'test@example.com'}
+        )
+
+        res = self.client.get('/suppliers/opportunities/1234/responses/5/respond-to-email-address')
+        assert res.status_code == 200
+
+        doc = html.fromstring(res.get_data(as_text=True))
+        assert doc.xpath("//input[@type='text']/@value")[0] == 'test@example.com'
+
+    def test_error_message_shown_if_invalid_input(self):
+        self.data_api_client.update_brief_response.side_effect = HTTPError(
+            mock.Mock(status_code=400),
+            {'respondToEmailAddress': 'answer_required'}
+        )
+
+        res = self.client.post(
+            '/suppliers/opportunities/1234/responses/5/respond-to-email-address',
+            data={
+                "respondToEmailAddress": ""
+            }
+        )
+
+        assert res.status_code == 400
+        doc = html.fromstring(res.get_data(as_text=True))
+        assert (doc.xpath("//h1[@class=\"validation-masthead-heading\"]/text()")[0].strip() ==
+                'There was a problem with your answer to:')
+        assert (doc.xpath("//a[@class=\"validation-masthead-link\"]/text()")[0].strip() ==
+                'Email address')
+        assert (doc.xpath("//span[@class=\"validation-message\"]/text()")[0].strip() ==
+                'You need to answer this question.')
+
+    def test_post_form_updates_api_and_redirects_to_next_section(self):
+        data = {'dayRate': '500'}
+        res = self.client.post(
+            '/suppliers/opportunities/1234/responses/5/day-rate',
+            data=data
+        )
+        assert res.status_code == 302
+
+        self.data_api_client.update_brief_response.assert_called_once_with(
+            5,
+            data,
+            'email@email.com',
+            page_questions=['dayRate']
+        )
+
+        assert res.location == 'http://localhost/suppliers/opportunities/1234/responses/5/essential-requirements'
+
+    def test_post_final_section_submits_response_redirects_to_results(self):
+        data = {'respondToEmailAddress': 'bob@example.com'}
+        res = self.client.post(
+            '/suppliers/opportunities/1234/responses/5/respond-to-email-address',
+            data=data
+        )
+        assert res.status_code == 302
+
+        self.data_api_client.update_brief_response.assert_called_once_with(
+            5,
+            data,
+            'email@email.com',
+            page_questions=['respondToEmailAddress']
+        )
+
+        self.data_api_client.submit_brief_response.assert_called_once_with(
+            5,
+            'email@email.com',
+        )
+
+        assert res.location == 'http://localhost/suppliers/opportunities/1234/responses/result'
+
+
+@mock.patch("app.main.views.briefs.data_api_client")
+class TestLegacyRespondToBrief(BaseApplicationTest):
+    """Tests for the old single page flow for applying for a brief which is being phased out"""
+
+    def setup(self):
+        super(TestLegacyRespondToBrief, self).setup()
 
         self.brief = api_stubs.brief(status='live', lot_slug='digital-specialists')
         self.brief['briefs']['essentialRequirements'] = ['Essential one', 'Essential two', 'Essential three']
