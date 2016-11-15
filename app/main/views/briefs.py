@@ -92,7 +92,7 @@ def start_brief_response(brief_id):
             current_user.email_address,
         )['briefResponses']
         brief_response_id = brief_response['id']
-        return redirect(url_for('.edit_brief_response', brief_response_id=brief_response_id))
+        return redirect(url_for('.edit_brief_response', brief_id=brief_id, brief_response_id=brief_response_id))
 
     brief_response = data_api_client.find_brief_responses(
         brief_id=brief_id,
@@ -105,7 +105,7 @@ def start_brief_response(brief_id):
             flash('already_applied', 'error')
             return redirect(url_for(".view_response_result", brief_id=brief_id))
         if brief_response[0].get('status') == 'draft':
-            existing_draft_response = True
+            existing_draft_response = brief_response[0]
     else:
         existing_draft_response = False
 
