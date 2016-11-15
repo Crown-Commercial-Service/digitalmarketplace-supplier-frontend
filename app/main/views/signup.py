@@ -8,7 +8,7 @@ from dmutils.forms import DmForm
 from dmutils.email import EmailError, send_email
 from app.main.helpers.users import generate_applicant_invitation_token
 from ... import data_api_client
-from ..helpers import login_required
+from ..helpers import applicant_login_required
 
 
 @main.route('/signup', methods=['GET'])
@@ -68,7 +68,7 @@ def send_seller_signup_email():
 
 @main.route('/application/<int:id>', methods=['GET'])
 @main.route('/application/<int:id>/<path:step>', methods=['GET'])
-@login_required
+@applicant_login_required
 def application(id, step=None):
 
     application = data_api_client.get_application(id)['application']
@@ -89,7 +89,7 @@ def application(id, step=None):
 
 @main.route('/application/<int:id>', methods=['POST'])
 @main.route('/application/<int:id>/<path:step>', methods=['POST'])
-@login_required
+@applicant_login_required
 def application_update(id, step=None):
     old_application = data_api_client.get_application(id)
 

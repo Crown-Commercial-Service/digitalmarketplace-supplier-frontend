@@ -318,6 +318,22 @@ class BaseApplicationTest(object):
             response = self.client.get("/auto-buyer-login")
             assert response.status_code == 200
 
+    def login_as_applicant(self, **kwargs):
+        with patch('app.main.views.login.data_api_client') as login_api_client:
+
+            login_api_client.authenticate_user.return_value = self.user(
+                234, "applicant@email.com", None, None, 'Applicant', role='applicant')
+
+            self.get_user_patch = patch.object(
+                data_api_client,
+                'get_user',
+                return_value=self.user(234, "applicant@email.com", None, None, 'Applicant', role='applicant')
+            )
+            self.get_user_patch.start()
+
+            response = self.client.get("/auto-applicant-login")
+            assert response.status_code == 200
+
     def assert_in_strip_whitespace(self, needle, haystack):
         return assert_in(self.strip_all_whitespace(needle), self.strip_all_whitespace(haystack))
 
