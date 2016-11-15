@@ -108,15 +108,19 @@ def framework_dashboard(framework_slug):
         },
         "proposed_agreement": {
             "path": "communications/",
-            "filename": "{}-proposed-agreement.pdf".format(framework_slug),
+            "filename": "{}-proposed-framework-agreement.pdf".format(framework_slug),
         },
         "final_agreement": {
             "path": "communications/",
-            "filename": "{}-final-agreement.pdf".format(framework_slug),
+            "filename": "{}-final-framework-agreement.pdf".format(framework_slug),
         },
-        "call_off": {
+        "proposed_call_off": {
             "path": "communications/",
-            "filename": "{}-call-off.pdf".format(framework_slug),
+            "filename": "{}-proposed-call-off.pdf".format(framework_slug),
+        },
+        "final_call_off": {
+            "path": "communications/",
+            "filename": "{}-final-call-off.pdf".format(framework_slug),
         },
         "reporting_template": {
             "path": "communications/",
