@@ -9,7 +9,7 @@ def get_application(id):
     return {'application': {
         'id': 1,
         'data': {'a': 'b'},
-        'user_id': 123,
+        'user_id': 234,
         'created_at': '	2016-11-14 01:22:01.14119'
     }}
 
@@ -97,7 +97,7 @@ class TestApplicationPage(BaseApplicationTest):
         render_component.return_value.get_slug.return_value = 'slug'
 
         with self.app.test_client():
-            self.login()
+            self.login_as_applicant()
             data_api_client.get_application.side_effect = get_application
             res = self.client.get(self.expand_path('/application/1'))
 
@@ -124,7 +124,7 @@ class TestApplicationPage(BaseApplicationTest):
         render_component.return_value.get_slug.return_value = 'slug'
 
         with self.app.test_client():
-            self.login()
+            self.login_as_applicant()
             data_api_client.get_application.side_effect = get_application
             res = self.client.post(self.expand_path('/application/1'), {'a': 'b'})
 

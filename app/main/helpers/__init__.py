@@ -25,6 +25,17 @@ def login_required(func):
     return decorated_view
 
 
+def applicant_login_required(func):
+    @wraps(func)
+    @flask_login.login_required
+    def decorated_view(*args, **kwargs):
+        if current_user.is_authenticated and current_user.role != 'applicant':
+            flash('applicant-role-required', 'error')
+            return current_app.login_manager.unauthorized()
+        return func(*args, **kwargs)
+    return decorated_view
+
+
 def debug_only(func):
     """
     Allows a handler to be used in development and testing, without being made live.

@@ -39,3 +39,18 @@ def auto_buyer_login():
     user = User.from_json(user_json)
     login_user(user)
     return "OK"
+
+
+@login_for_tests.route('/auto-applicant-login')
+def auto_applicant_login():
+    user_json = {"users": {
+        'id': 234,
+        'name': 'Applicant',
+        'emailAddress': 'applicant@email.com',
+        'role': 'applicant',
+        'termsAcceptedAt': datetime(2000, 1, 1).strftime(DATETIME_FORMAT),
+    }
+    }
+    user = User.from_json(user_json)
+    login_user(user)
+    return "OK"
