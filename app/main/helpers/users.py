@@ -15,17 +15,22 @@ def generate_supplier_invitation_token(name, email_address, supplier_code, suppl
 
 
 def decode_supplier_invitation_token(token):
-    data = decode_token(
-        token,
-        current_app.config['SECRET_KEY'],
-        current_app.config['SUPPLIER_INVITE_TOKEN_SALT'],
-        7*ONE_DAY_IN_SECONDS
-    )
+    data = decode_user_token(token)
     if not set(('name', 'emailAddress', 'supplierCode', 'supplierName')).issubset(set(data.keys())):
         raise InvalidToken
     return data
 
 
-def generate_applicant_invitation_token(data):
+def decode_user_token(token):
+    data = decode_token(
+        token,
+        current_app.config['SECRET_KEY'],
+        current_app.config['SUPPLIER_INVITE_TOKEN_SALT'],
+        7 * ONE_DAY_IN_SECONDS
+    )
+    return data
+
+
+def generate_application_invitation_token(data):
     token = generate_token(data, current_app.config['SECRET_KEY'], current_app.config['SUPPLIER_INVITE_TOKEN_SALT'])
     return token
