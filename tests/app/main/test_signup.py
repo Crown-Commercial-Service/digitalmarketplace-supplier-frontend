@@ -16,6 +16,15 @@ def get_application(id):
     }}
 
 
+def get_another_application(id):
+    return {'application': {
+        'id': 1,
+        'data': {'a': 'b'},
+        'user_id': 456,
+        'created_at': '	2016-11-14 01:22:01.14119',
+    }}
+
+
 class TestSignupPage(BaseApplicationTest):
     test_application = {'csrf_token': FakeCsrf.valid_token, 'representative': 'matt', 'name': 'a company',
                         'abn': '123456',
@@ -244,7 +253,7 @@ class TestApplicationPage(BaseApplicationTest):
 
     @mock.patch("app.main.views.signup.data_api_client")
     @mock.patch('app.main.views.signup.render_component')
-    def test_application_page_denies_access(self, render_component, data_api_client):
+    def test_application_page_denies_role_access(self, render_component, data_api_client):
         render_component.return_value.get_props.return_value = {}
         render_component.return_value.get_slug.return_value = 'slug'
 
@@ -254,6 +263,19 @@ class TestApplicationPage(BaseApplicationTest):
             res = self.client.get(self.expand_path('/application/1'))
 
             assert res.status_code == 302
+
+    @mock.patch("app.main.views.signup.data_api_client")
+    @mock.patch('app.main.views.signup.render_component')
+    def test_application_page_denies_other_applicants_access(self, render_component, data_api_client):
+        render_component.return_value.get_props.return_value = {}
+        render_component.return_value.get_slug.return_value = 'slug'
+
+        with self.app.test_client():
+            self.login_as_applicant()
+            data_api_client.get_application.side_effect = get_another_application
+            res = self.client.get(self.expand_path('/application/1'))
+
+            assert res.status_code == 403
 
     @mock.patch("app.main.views.signup.data_api_client")
     @mock.patch('app.main.views.signup.render_component')
