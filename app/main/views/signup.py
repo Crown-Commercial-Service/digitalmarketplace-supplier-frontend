@@ -160,10 +160,12 @@ def application_update(id, step=None):
         return current_app.login_manager.unauthorized()
 
     json = request.content_type == 'application/json'
-    application = from_response(request)
+    form_data = from_response(request)
+    application = form_data['application'] if json else form_data
+
     result = data_api_client.update_application(id, application)
 
     if json:
         return jsonify(result)
     else:
-        return redirect(url_for('.render_application', id=id, step=application['next_step_slug']))
+        return redirect(url_for('.render_application', id=id, step=form_data['next_step_slug']))

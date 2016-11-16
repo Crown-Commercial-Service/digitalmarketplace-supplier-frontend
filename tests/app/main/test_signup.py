@@ -266,7 +266,7 @@ class TestApplicationPage(BaseApplicationTest):
             data_api_client.get_application.side_effect = get_application
             res = self.client.post(
                 self.expand_path('/application/1'),
-                data={'id': 999, 'next_step_slug': 'slug', 'csrf_token': FakeCsrf.valid_token}
+                data={'a': 'b', 'next_step_slug': 'slug', 'csrf_token': FakeCsrf.valid_token}
             )
 
             assert res.status_code == 302
