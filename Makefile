@@ -15,6 +15,11 @@ requirements: virtualenv requirements.txt
 requirements_for_test: virtualenv requirements_for_test.txt
 	${VIRTUALENV_ROOT}/bin/pip install -r requirements_for_test.txt
 
+requirements_freeze:
+	${VIRTUALENV_ROOT}/bin/pip install --upgrade pip
+	${VIRTUALENV_ROOT}/bin/pip install --upgrade -r requirements_for_test.txt
+	${VIRTUALENV_ROOT}/bin/pip freeze | grep -v supplier-frontend > requirements.txt
+
 frontend_build:
 	npm run --silent frontend-build:production
 
