@@ -21,7 +21,13 @@
       </a>
     </p>
   </div>
-{% if framework.status not in ['standstill', 'live'] and not supplier_framework.agreementReturned %}
+{#
+  For framework states prior to 'pending' 'supplier_is_on_framework' will be false for everyone so links will be shown.
+  Passes and fails are set some time during 'pending' but we want to continue to show the links to *all* suppliers
+  up until the start of standstill.
+  After that they are hidden from successful suppliers and replaced by '_agreement_returned_legal.html' content.
+#}
+{% if framework.status == 'pending' or not supplier_is_on_framework %}
   <div>
     <h2 class="heading-xmedium">Legal documents</h2>
 
