@@ -134,7 +134,7 @@ def render_application(id, step=None):
     if not current_user.is_authenticated:
         return current_app.login_manager.unauthorized()
     if current_user.id != application['application']['user_id']:
-        return current_app.login_manager.unauthorized()
+        abort(403, 'Not authorised to access application')
 
     props = dict(application)
     props['basename'] = url_for('.render_application', id=id, step=None)
@@ -156,8 +156,10 @@ def render_application(id, step=None):
 def application_update(id, step=None):
     old_application = data_api_client.get_application(id)
 
-    if not current_user.is_authenticated and current_user.id != old_application['application']['user_id']:
+    if not current_user.is_authenticated:
         return current_app.login_manager.unauthorized()
+    if current_user.id != old_application['application']['user_id']:
+        abort(403, 'Not authorised to access application')
 
     json = request.content_type == 'application/json'
     form_data = from_response(request)
