@@ -117,6 +117,19 @@ class TestBriefClarificationQuestions(BaseApplicationTest):
         res = self.client.get('/suppliers/opportunities/1/ask-a-question')
         assert res.status_code == 200
 
+    def test_clarification_question_form_escapes_brief_name(self, data_api_client):
+        self.login()
+        xss_brief = api_stubs.brief(status='live')
+        xss_brief['briefs']['title'] = '<script>alert(1)</script>'
+        data_api_client.get_brief.return_value = xss_brief
+
+        res = self.client.get('/suppliers/opportunities/1/ask-a-question')
+        html_string = res.get_data(as_text=True)
+        doc = html.fromstring(html_string)
+
+        assert '<script>alert(1)</script>' not in html_string
+        assert '<script>alert(1)</script>' in doc.xpath('//header/h1/text()')[0].strip()
+
     def test_clarification_question_form_requires_existing_brief_id(self, data_api_client):
         self.login()
         data_api_client.get_brief.side_effect = HTTPError(mock.Mock(status_code=404))
@@ -327,6 +340,23 @@ class TestSubmitClarificationQuestions(BaseApplicationTest):
         })
         assert res.status_code == 400
         assert "must be no more than 100 words" in res.get_data(as_text=True)
+
+    @mock.patch('app.main.helpers.briefs.send_email')
+    def test_submit_clarification_question_escapes_html(self, send_email, data_api_client):
+        self.login()
+        brief = api_stubs.brief(status="live")
+        data_api_client.get_brief.return_value = brief
+        brief['briefs']['frameworkName'] = 'Brief Framework Name'
+        brief['briefs']['clarificationQuestionsPublishedBy'] = '2016-03-29T10:11:13.000000Z'
+
+        res = self.client.post('/suppliers/opportunities/1234/ask-a-question', data={
+            'clarification-question': '<a href="malicious">friendly.url</a>',
+        })
+        assert res.status_code == 200
+
+        escaped_string = '&lt;a href=&#34;malicious&#34;&gt;friendly.url&lt;/a&gt;'
+        assert escaped_string in send_email.mock_calls[0][2]['email_body']
+        assert escaped_string in send_email.mock_calls[1][2]['email_body']
 
 
 @mock.patch("app.main.views.briefs.data_api_client")
