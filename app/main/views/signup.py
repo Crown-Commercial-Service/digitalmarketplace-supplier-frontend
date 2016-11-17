@@ -115,7 +115,10 @@ def create_application(token):
         })
 
         user = User.from_json(user)
+
+        application_data['status'] = 'saved'
         application = data_api_client.create_application(user.id, application_data)
+
         login_user(user)
         return redirect(url_for('main.render_application', id=application['application']['id'], step='start'))
 
