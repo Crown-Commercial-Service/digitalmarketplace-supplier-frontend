@@ -8,3 +8,5 @@ git+https://github.com/alphagov/digitalmarketplace-utils.git@22.0.0#egg=digitalm
 git+https://github.com/alphagov/digitalmarketplace-content-loader.git@2.0.1#egg=digitalmarketplace-content-loader==2.0.1
 git+https://github.com/alphagov/digitalmarketplace-apiclient.git@7.9.0#egg=digitalmarketplace-apiclient==7.9.0
 
+# For Cloud Foundry
+gunicorn==19.4.5
