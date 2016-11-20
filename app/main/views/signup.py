@@ -128,6 +128,16 @@ def create_application(token):
             token=None), 400
 
 
+@main.route('/application')
+@applicant_login_required
+def my_application():
+    applications = data_api_client.find_applications(user_id=current_user.id)
+    if applications['applications'][0]:
+        return redirect(url_for('.render_application', id=applications['applications'][0]['id'], step="start"))
+    else:
+        abort(404, "Application can not be found")
+
+
 @main.route('/application/<int:id>', methods=['GET'])
 @main.route('/application/<int:id>/<path:step>', methods=['GET'])
 @applicant_login_required

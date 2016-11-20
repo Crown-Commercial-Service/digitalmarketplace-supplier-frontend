@@ -244,6 +244,19 @@ class TestApplicationPage(BaseApplicationTest):
 
     @mock.patch("app.main.views.signup.data_api_client")
     @mock.patch('app.main.views.signup.render_component')
+    def test_application_entrypoint_redirects(self, render_component, data_api_client):
+        render_component.return_value.get_props.return_value = {}
+        render_component.return_value.get_slug.return_value = 'slug'
+
+        with self.app.test_client():
+            self.login_as_applicant()
+            data_api_client.get_application.side_effect = get_application
+            res = self.client.get(self.expand_path('/application'))
+
+            assert res.status_code == 302
+
+    @mock.patch("app.main.views.signup.data_api_client")
+    @mock.patch('app.main.views.signup.render_component')
     def test_application_page_renders(self, render_component, data_api_client):
         render_component.return_value.get_props.return_value = {}
         render_component.return_value.get_slug.return_value = 'slug'
