@@ -52,16 +52,32 @@
       <p>You should only provide one example for each essential or nice-to-have criteria (unless the buyer specifies otherwise).</p>
       <p>You can reuse examples across different essential or nice-to-have criteria if you need to.</p>
 
-      <form action="{{ url_for('.start_brief_response', brief_id=brief['id']) }}" method="post">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
-          {%
-            with
-            type = "save",
-            label = "Continue application" if existing_draft_response else "Start application"
-          %}
-            {% include "toolkit/button.html" %}
-          {% endwith %}
-      </form>
+      {% if not existing_draft_response %}
+        <form action="{{ url_for('.start_brief_response', brief_id=brief['id']) }}" method="post">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+            {%
+              with
+              type = "save",
+              label = "Start application"
+            %}
+              {% include "toolkit/button.html" %}
+            {% endwith %}
+        </form>
+      {% endif %}
     </div>
   </div>
+
+  {% if existing_draft_response %}
+    <div class="grid-row">
+      <div class="column-one-third">
+        {%
+          with
+          url = url_for('.edit_brief_response', brief_id=brief['id'], brief_response_id=existing_draft_response.id),
+          label = "Continue application"
+        %}
+          {% include "toolkit/link-button.html" %}
+        {% endwith %}
+      </div>
+    </div>
+  {% endif %}
 {% endblock %}
