@@ -15,7 +15,7 @@ from ..helpers import applicant_login_required
 @main.route('/signup', methods=['GET'])
 def start_seller_signup(applicant={}, errors=None):
     rendered_component = render_component(
-        'bundles/SellerRegistration/YourInfoWidget.js', {
+        'bundles/SellerRegistration/SignupWidget.js', {
             'form_options': {
                 'errors': errors
             },
@@ -31,14 +31,14 @@ def start_seller_signup(applicant={}, errors=None):
 
 @main.route('/signup', methods=['POST'])
 def send_seller_signup_email():
-    application = from_response(request)
+    user = from_response(request)
 
-    fields = ['representative', 'name', 'abn', 'phone', 'email']
-    errors = validate_form_data(application, fields)
+    fields = ['name', 'email']
+    errors = validate_form_data(user, fields)
     if errors:
-        return start_seller_signup(application, errors)
+        return start_seller_signup(user, errors)
 
-    token = generate_application_invitation_token(application)
+    token = generate_application_invitation_token(user)
     url = url_for('main.render_create_application', token=token, _external=True)
     email_body = render_template(
         'emails/create_seller_user_email.html',
@@ -47,7 +47,7 @@ def send_seller_signup_email():
 
     try:
         send_email(
-            application['email'],
+            user['email'],
             email_body,
             current_app.config['INVITE_EMAIL_SUBJECT'],
             current_app.config['INVITE_EMAIL_FROM'],
@@ -61,26 +61,25 @@ def send_seller_signup_email():
         )
         abort(503, 'Failed to send user invite reset')
 
-    return render_template('auth/seller-signup-email-sent.html', email_address=application['email'])
+    return render_template('auth/seller-signup-email-sent.html', email_address=user['email'])
 
 
 @main.route('/signup/create-user/<string:token>', methods=['GET'])
 def render_create_application(token, data={}, errors=None):
-    application = decode_user_token(token.encode())
+    token_data = decode_user_token(token.encode())
 
-    if not application.get('email'):
+    if not token_data.get('email'):
         abort(503, 'Invalid email address')
 
-    user_json = data_api_client.get_user(email_address=application['email'])
+    user_json = data_api_client.get_user(email_address=token_data['email'])
 
     if not user_json:
-        form_data = dict(application.items() + data.items())
         rendered_component = render_component(
             'bundles/SellerRegistration/EnterPasswordWidget.js', {
                 'form_options': {
                     'errors': errors
                 },
-                'enterPasswordForm': form_data,
+                'enterPasswordForm': dict(token_data.items() + data.items()),
             }
         )
 
@@ -92,37 +91,36 @@ def render_create_application(token, data={}, errors=None):
     user = User.from_json(user_json)
     return render_template(
         'auth/create_user_error.html',
-        data=application,
+        data=token_data,
         user=user), 400
 
 
 @main.route('/signup/create-user/<string:token>', methods=['POST'])
 def create_application(token):
-    application_data = decode_user_token(token.encode())
-    data = from_response(request)
+    token_data = decode_user_token(token.encode())
+    form_data = from_response(request)
 
     fields = [('password', 10)]
-    errors = validate_form_data(data, fields)
+    errors = validate_form_data(form_data, fields)
     if errors:
-        return render_create_application(token, data, errors)
+        return render_create_application(token, form_data, errors)
 
     try:
         user = data_api_client.create_user({
-            'name': application_data['name'],
-            'password': data['password'],
-            'emailAddress': application_data['email'],
+            'name': token_data['name'],
+            'password': form_data['password'],
+            'emailAddress': token_data['email'],
             'role': 'applicant',
         })
 
         user = User.from_json(user)
 
-        application_data['status'] = 'saved'
-        application = data_api_client.create_application(user.id, application_data)
+        application = data_api_client.create_application(user.id, {'status': 'saved'})
 
         login_user(user)
         return redirect(url_for('main.render_application', id=application['application']['id'], step='start'))
 
-    except HTTPError as e:
+    except HTTPError:
         return render_template(
             'auth/create_user_error.html',
             token=None), 400

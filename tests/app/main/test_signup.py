@@ -64,7 +64,7 @@ class TestSignupPage(BaseApplicationTest):
 
         seller_signup.return_value = 'test'
         data = dict(self.test_application)
-        data['representative'] = ''
+        data['name'] = ''
 
         res = self.client.post(
             self.expand_path('/signup'),
@@ -75,7 +75,7 @@ class TestSignupPage(BaseApplicationTest):
 
         seller_signup.assert_called_once_with(
             data,
-            {'representative': {'required': True}}
+            {'name': {'required': True}}
         )
 
     @mock.patch('app.main.views.signup.send_email')
@@ -150,7 +150,7 @@ class TestCreateApplicationPage(BaseApplicationTest):
     def test_render_create_application_with_errors(self, decode_user_token, data_api_client, render_component):
         with self.app.test_request_context():
             error = {'error': 'reason'}
-            decode_user_token.return_value = {'email': 'test@company.com'}
+            decode_user_token.return_value = {'email': 'test@company.com', 'name': 'a company'}
             data_api_client.get_user.return_value = None
             render_component.return_value.get_props.return_value = {}
 
@@ -160,7 +160,7 @@ class TestCreateApplicationPage(BaseApplicationTest):
                     'form_options': {
                         'errors': error
                     },
-                    'enterPasswordForm': {'key': 'value', 'email': 'test@company.com'}
+                    'enterPasswordForm': {'key': 'value', 'email': 'test@company.com', 'name': 'a company'}
                 }
             )
 
@@ -233,7 +233,7 @@ class TestCreateApplicationPage(BaseApplicationTest):
         assert res.location == self.url_for('main.render_application', id=999, step='start', _external=True)
         data_api_client.create_application.assert_called_once_with(
             123,
-            {'status': 'saved', 'name': 'joe', 'email': 'test@company.com'}
+            {'status': 'saved'}
         )
 
 
