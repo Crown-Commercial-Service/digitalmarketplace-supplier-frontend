@@ -10,18 +10,30 @@ import pytest
 def get_application(id):
     return {'application': {
         'id': 1,
+        'status': 'saved',
         'data': {'a': 'b'},
         'user_id': 234,
-        'created_at': '	2016-11-14 01:22:01.14119',
+        'created_at': '2016-11-14 01:22:01.14119',
+    }}
+
+
+def get_submitted_application(id):
+    return {'application': {
+        'id': 1,
+        'status': 'submitted',
+        'data': {'a': 'b'},
+        'user_id': 234,
+        'created_at': '2016-11-14 01:22:01.14119',
     }}
 
 
 def get_another_application(id):
     return {'application': {
         'id': 1,
+        'status': 'saved',
         'data': {'a': 'b'},
         'user_id': 456,
-        'created_at': '	2016-11-14 01:22:01.14119',
+        'created_at': '2016-11-14 01:22:01.14119',
     }}
 
 
@@ -326,3 +338,36 @@ class TestApplicationPage(BaseApplicationTest):
             )
 
             assert res.status_code == 302
+
+    @mock.patch("app.main.views.signup.data_api_client")
+    @mock.patch('app.main.views.signup.render_component')
+    def test_application_update_denies_edit_after_submit(self, render_component, data_api_client):
+        render_component.return_value.get_props.return_value = {}
+        render_component.return_value.get_slug.return_value = 'slug'
+
+        with self.app.test_client():
+            self.login_as_applicant()
+            data_api_client.get_application.side_effect = get_submitted_application
+            res = self.client.post(
+                self.expand_path('/application/1'),
+                data={'csrf_token': FakeCsrf.valid_token},
+            )
+
+            assert res.status_code == 302
+
+    @mock.patch("app.main.views.signup.data_api_client")
+    @mock.patch('app.main.views.signup.render_component')
+    def test_application_submit(self, render_component, data_api_client):
+        render_component.return_value.get_props.return_value = {}
+        render_component.return_value.get_slug.return_value = 'slug'
+
+        with self.app.test_client():
+            self.login_as_applicant()
+            data_api_client.get_application.side_effect = get_application
+            res = self.client.get(self.expand_path('/application/submit/1'))
+
+            assert res.status_code == 200
+
+            data_api_client.update_application.assert_called_once_with(
+                1, {'status': 'submitted'}
+            )

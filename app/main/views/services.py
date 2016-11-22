@@ -5,8 +5,8 @@ import flask_featureflags
 from ... import data_api_client
 from ...main import main, content_loader
 from ..helpers import login_required
-from ..helpers.services import is_service_associated_with_supplier, get_signed_document_url, count_unanswered_questions, \
-    get_next_section_name
+from ..helpers.services import is_service_associated_with_supplier, \
+    get_signed_document_url, count_unanswered_questions, get_next_section_name
 from ..helpers.frameworks import get_framework_and_lot, get_declaration_status
 
 from dmapiclient import HTTPError

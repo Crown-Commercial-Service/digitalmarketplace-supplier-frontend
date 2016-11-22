@@ -446,7 +446,7 @@ class TestEditService(BaseApplicationTest):
             })
 
         assert_equal(res.status_code, 302)
-        data_api_client.update_service.assert_called_one_with(
+        data_api_client.update_service.assert_called_once_with(
             '1', dict(), 'email@email.com')
 
     def test_edit_non_existent_service_returns_404(self, data_api_client):

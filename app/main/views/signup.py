@@ -131,9 +131,29 @@ def create_application(token):
 def my_application():
     applications = data_api_client.find_applications(user_id=current_user.id)
     if applications['applications'][0]:
-        return redirect(url_for('.render_application', id=applications['applications'][0]['id'], step="start"))
+        application = applications['applications'][0]
+        if application.get('status', 'saved') != 'saved':
+            return redirect(url_for('.submit_application', id=application['id']))
+        else:
+            return redirect(url_for('.render_application', id=application['id'], step="start"))
     else:
         abort(404, "Application can not be found")
+
+
+@main.route('/application/submit/<int:id>', methods=['GET'])
+@applicant_login_required
+def submit_application(id):
+    application = data_api_client.get_application(id)['application']
+
+    if not current_user.is_authenticated:
+        return current_app.login_manager.unauthorized()
+    if current_user.id != application['user_id']:
+        abort(403, 'Not authorised to access application')
+
+    if application.get('status', '') == 'saved':
+        data_api_client.update_application(id, {'status': 'submitted'})
+
+    return render_template('suppliers/application_submitted.html')
 
 
 @main.route('/application/<int:id>', methods=['GET'])
@@ -146,11 +166,14 @@ def render_application(id, step=None):
         return current_app.login_manager.unauthorized()
     if current_user.id != application['application']['user_id']:
         abort(403, 'Not authorised to access application')
+    if application['application'].get('status', 'saved') != 'saved':
+        return redirect(url_for('.submit_application', id=id))
 
     props = dict(application)
     props['basename'] = url_for('.render_application', id=id, step=None)
     props['form_options'] = {
         'action': url_for('.render_application', id=id, step=step),
+        'submit_url': url_for('.submit_application', id=id)
     }
 
     rendered_component = render_component('bundles/ApplicantSignup/ApplicantSignupWidget.js', props)
@@ -171,10 +194,15 @@ def application_update(id, step=None):
         return current_app.login_manager.unauthorized()
     if current_user.id != old_application['application']['user_id']:
         abort(403, 'Not authorised to access application')
+    if old_application['application'].get('status', 'saved') != 'saved':
+        return redirect(url_for('.submit_application', id=id))
 
     json = request.content_type == 'application/json'
     form_data = from_response(request)
     application = form_data['application'] if json else form_data
+
+    if application.get('status'):
+        del application['status']
 
     result = data_api_client.update_application(id, application)
 

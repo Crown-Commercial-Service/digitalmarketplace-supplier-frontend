@@ -14,8 +14,8 @@ from config import configs
 data_api_client = dmapiclient.DataAPIClient()
 login_manager = LoginManager()
 
-from app.main.helpers.services import parse_document_upload_time
-from app.main.helpers.frameworks import question_references
+from app.main.helpers.services import parse_document_upload_time  # noqa
+from app.main.helpers.frameworks import question_references  # noqa
 
 
 def create_app(config_name):

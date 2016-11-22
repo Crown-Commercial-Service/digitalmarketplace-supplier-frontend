@@ -67,7 +67,14 @@
             <li><a href="{{ config['BASE_PREFIX'] + '/buyers/create' }}">Sign up</a></li>
             <li><a href="{{ config['BASE_PREFIX'] + '/login' }}">Log in</a></li>
             {% else %}
-            <li><a href="{% if current_user.role == 'buyer' %}{{ config['BASE_PREFIX'] + '/sellers' }}{% else %}/sellers{% endif %}">Dashboard</a></li>
+            <li><a href="{% if current_user.role == 'buyer' %}
+                            {{ config['BASE_PREFIX'] + '/sellers' }}
+                       {% elif current_user.role == 'applicant'  %}
+                            /sellers/application
+                       {% else %}
+                            /sellers
+                       {% endif %}">Dashboard</a>
+            </li>
             <li><a href="{{ config['BASE_PREFIX'] + '/logout' }}">Log out</a></li>
             {% endif %}
           </ul>
