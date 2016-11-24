@@ -397,7 +397,6 @@ class TestApplyToBrief(BaseApplicationTest):
 
     def test_404_if_brief_response_does_not_exist(self):
         for method in ('get', 'post'):
-
             self.data_api_client.get_brief_response = mock.MagicMock(side_effect=HTTPError(mock.Mock(status_code=404)))
 
             res = self.client.open('/suppliers/opportunities/1234/responses/250/section-name', method=method)
@@ -520,6 +519,51 @@ class TestApplyToBrief(BaseApplicationTest):
                 'Email address the buyer should use to contact you')
         assert (doc.xpath("//span[@class=\"question-advice\"]/text()")[0].strip() ==
                 'All communication about your application will be sent to this address.')
+
+    def test_essential_requirements_met_question_replays_all_brief_requirements(self):
+        res = self.client.get(
+            '/suppliers/opportunities/1234/responses/5/do-you-have-all-the-essential-skills-and-experience'
+        )
+        assert res.status_code == 200
+
+        doc = html.fromstring(res.get_data(as_text=True))
+        list_items = doc.xpath("//*[@id='input-essentialRequirementsMet-question-advice']/ul/li/text()")
+        assert len(self.brief['briefs']['essentialRequirements']) == len(list_items)
+        for index, requirement in enumerate(self.brief['briefs']['essentialRequirements']):
+            assert requirement == list_items[index]
+
+    def test_day_rate_question_replays_buyers_budget_range_and_suppliers_max_day_rate(self):
+        self.brief['briefs']['budgetRange'] = '1 million dollars'
+        self.brief['briefs']['specialistRole'] = 'deliveryManager'
+        self.data_api_client.find_services.return_value = {"services": [{"deliveryManagerPriceMax": 600}]}
+
+        res = self.client.get(
+            '/suppliers/opportunities/1234/responses/5/how-much-you-charge-per-day'
+        )
+        assert res.status_code == 200
+
+        doc = html.fromstring(res.get_data(as_text=True))
+        day_rate_headings = doc.xpath("//*[@id='input-dayRate-question-advice']/h2/text()")
+        buyers_max_day_rate = doc.xpath(
+            "//*[@id='input-dayRate-question-advice']/descendant::h2[1]/following::p[1]/text()")[0]
+        suppliers_max_day_rate = doc.xpath(
+            "//*[@id='input-dayRate-question-advice']/descendant::h2[2]/following::p[1]/text()")[0]
+
+        assert day_rate_headings[0] == "Buyer's maximum day rate:"
+        assert buyers_max_day_rate == '1 million dollars'
+        assert day_rate_headings[1] == "Your maximum day rate:"
+        assert suppliers_max_day_rate == '£600'
+
+    def test_day_rate_question_does_not_replay_buyers_budget_range_if_not_provided(self):
+        self.brief['briefs']['specialistRole'] = 'deliveryManager'
+        self.data_api_client.find_services.return_value = {"services": [{"deliveryManagerPriceMax": 600}]}
+
+        res = self.client.get(
+            '/suppliers/opportunities/1234/responses/5/how-much-you-charge-per-day'
+        )
+        assert res.status_code == 200
+        data = res.get_data(as_text=True)
+        assert "Buyer's maximum day rate:" not in data
 
     def test_existing_brief_response_data_is_prefilled(self):
         self.data_api_client.get_brief_response.return_value = self.brief_response(
