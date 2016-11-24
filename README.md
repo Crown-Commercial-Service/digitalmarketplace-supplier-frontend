@@ -44,8 +44,17 @@ source ./venv/bin/activate
 
 Install new Python dependencies with pip
 
-```make requirements_for_test```
+```
+make requirements_for_test
+```
 
+## Freezing dependencies for deployment
+
+- `requirements_for_test.txt` defines the abstract (non-versioned) requirements.
+- `requirements.txt` contains the fixed/frozen requirements for deployment.
+- `make requirements_freeze` updates the `requirements.txt` to meet what is specified in requirements_for_test.
+
+It is important before running this to run it on a fresh virtualenv, or at least on one with no conflicting or unwanted requirements currently installed.
 
 ## Front-end
 
