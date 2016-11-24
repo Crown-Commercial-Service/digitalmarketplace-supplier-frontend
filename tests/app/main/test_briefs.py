@@ -538,7 +538,7 @@ class TestApplyToBrief(BaseApplicationTest):
         self.data_api_client.find_services.return_value = {"services": [{"deliveryManagerPriceMax": 600}]}
 
         res = self.client.get(
-            '/suppliers/opportunities/1234/responses/5/how-much-you-charge-per-day'
+            '/suppliers/opportunities/1234/responses/5/how-much-you-charge-each-day'
         )
         assert res.status_code == 200
 
@@ -559,7 +559,7 @@ class TestApplyToBrief(BaseApplicationTest):
         self.data_api_client.find_services.return_value = {"services": [{"deliveryManagerPriceMax": 600}]}
 
         res = self.client.get(
-            '/suppliers/opportunities/1234/responses/5/how-much-you-charge-per-day'
+            '/suppliers/opportunities/1234/responses/5/how-much-you-charge-each-day'
         )
         assert res.status_code == 200
         data = res.get_data(as_text=True)
@@ -603,7 +603,7 @@ class TestApplyToBrief(BaseApplicationTest):
     def test_post_form_updates_api_and_redirects_to_next_section(self):
         data = {'dayRate': '500'}
         res = self.client.post(
-            '/suppliers/opportunities/1234/responses/5/how-much-you-charge-per-day',
+            '/suppliers/opportunities/1234/responses/5/how-much-you-charge-each-day',
             data=data
         )
         assert res.status_code == 302
