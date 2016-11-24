@@ -1225,6 +1225,7 @@ class TestStartBriefResponseApplication(BaseApplicationTest):
         assert "provide the specialist's day rate" in data
         assert "say which skills and experience the specialist has" in data
         assert "give evidence for all the skills and experience the specialist has" in data
+        assert "The buyer will assess and score your evidence to shortlist the best specialists." in data
         assert "the work the specialist did" in data
 
     def test_start_page_for_outcomes_brief_shows_outcomes_content(self, data_api_client):
@@ -1240,6 +1241,7 @@ class TestStartBriefResponseApplication(BaseApplicationTest):
         assert 'give the date the team will be available to start work' in data
         assert "say which skills and experience the team have" in data
         assert "give evidence for all the skills and experience the team have" in data
+        assert "The buyer will assess and score your evidence to shortlist the best suppliers." in data
         assert "the work the team did" in data
 
         assert "provide the specialist's day rate" not in data
@@ -1257,6 +1259,7 @@ class TestStartBriefResponseApplication(BaseApplicationTest):
         assert 'give the date you will be available to start work' in data
         assert "say which skills and experience you have" in data
         assert "give evidence for all the skills and experience you have" in data
+        assert "The buyer will assess and score your evidence to shortlist the best suppliers." in data
         assert "the work you did" in data
 
         assert "provide the specialist's day rate" not in data
