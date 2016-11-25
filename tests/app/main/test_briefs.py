@@ -578,16 +578,16 @@ class TestApplyToBrief(BaseApplicationTest):
         doc = html.fromstring(res.get_data(as_text=True))
         assert doc.xpath("//input[@type='text']/@value")[0] == 'test@example.com'
 
-    def test_error_message_shown_if_invalid_input(self):
+    def test_error_message_shown_and_attempted_input_prefilled_if_invalid_input(self):
         self.data_api_client.update_brief_response.side_effect = HTTPError(
             mock.Mock(status_code=400),
-            {'respondToEmailAddress': 'answer_required'}
+            {'respondToEmailAddress': 'invalid_format'}
         )
 
         res = self.client.post(
             '/suppliers/opportunities/1234/responses/5/email-address-the-buyer-should-use-to-contact-you',
             data={
-                "respondToEmailAddress": ""
+                "respondToEmailAddress": "not-a-valid-email"
             }
         )
 
@@ -598,7 +598,8 @@ class TestApplyToBrief(BaseApplicationTest):
         assert (doc.xpath("//a[@class=\"validation-masthead-link\"]/text()")[0].strip() ==
                 'Email address')
         assert (doc.xpath("//span[@class=\"validation-message\"]/text()")[0].strip() ==
-                'You need to answer this question.')
+                'You must enter a valid email address.')
+        assert doc.xpath('//*[@id="input-respondToEmailAddress"]/@value')[0] == "not-a-valid-email"
 
     def test_post_form_updates_api_and_redirects_to_next_section(self):
         data = {'dayRate': '500'}

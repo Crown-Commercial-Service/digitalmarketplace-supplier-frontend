@@ -187,6 +187,7 @@ def edit_brief_response(brief_id, brief_response_id, section_id=None):
         except HTTPError as e:
             errors = section.get_error_messages(e.message)
             status_code = 400
+            brief_response.update(section.get_data(request.form))
 
         else:
             next_section = content.get_next_editable_section_id(section_id)
