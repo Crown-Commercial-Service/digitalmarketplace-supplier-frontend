@@ -84,6 +84,9 @@ class Config(object):
     REACT_RENDER_URL = 'https://dm-dev-frontend.apps.staging.digital.gov.au/render'
     REACT_RENDER = not DEBUG
 
+    ALLOWED_EXTENSIONS = ['pdf', 'jpg', 'png']
+    S3_BUCKET_NAME = None
+
 
 class Test(Config):
     DEBUG = True

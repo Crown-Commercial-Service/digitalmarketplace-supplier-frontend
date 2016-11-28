@@ -1,5 +1,5 @@
 import six
-from flask import render_template, request, url_for, current_app, abort, jsonify, redirect
+from flask import render_template, request, url_for, current_app, abort, jsonify, redirect, Response
 from flask_login import current_user, login_user
 from app.main import main
 from react.render import render_component
@@ -10,6 +10,20 @@ from dmutils.user import User
 from app.main.helpers.users import generate_application_invitation_token, decode_user_token
 from app import data_api_client
 from ..helpers import applicant_login_required
+import os
+from dmutils.file import s3_upload_file_from_request, s3_download_file
+import mimetypes
+
+
+S3_PATH = 'applications'
+
+
+def can_user_view_application(application):
+    return current_user.id == application['application']['user_id']
+
+
+def is_application_submitted(application):
+    return application['application'].get('status', 'saved') != 'saved'
 
 
 @main.route('/signup', methods=['GET'])
@@ -143,15 +157,13 @@ def my_application():
 @main.route('/application/submit/<int:id>', methods=['GET'])
 @applicant_login_required
 def submit_application(id):
-    application = data_api_client.get_application(id)['application']
-
-    if not current_user.is_authenticated:
-        return current_app.login_manager.unauthorized()
-    if current_user.id != application['user_id']:
+    application = data_api_client.get_application(id)
+    if not can_user_view_application(application):
         abort(403, 'Not authorised to access application')
+    if is_application_submitted(application):
+        return redirect(url_for('.submit_application', id=id))
 
-    if application.get('status', '') == 'saved':
-        data_api_client.update_application(id, {'status': 'submitted'})
+    data_api_client.update_application(id, {'status': 'submitted'})
 
     return render_template('suppliers/application_submitted.html')
 
@@ -161,12 +173,9 @@ def submit_application(id):
 @applicant_login_required
 def render_application(id, step=None):
     application = data_api_client.get_application(id)
-
-    if not current_user.is_authenticated:
-        return current_app.login_manager.unauthorized()
-    if current_user.id != application['application']['user_id']:
+    if not can_user_view_application(application):
         abort(403, 'Not authorised to access application')
-    if application['application'].get('status', 'saved') != 'saved':
+    if is_application_submitted(application):
         return redirect(url_for('.submit_application', id=id))
 
     props = dict(application)
@@ -189,12 +198,9 @@ def render_application(id, step=None):
 @applicant_login_required
 def application_update(id, step=None):
     old_application = data_api_client.get_application(id)
-
-    if not current_user.is_authenticated:
-        return current_app.login_manager.unauthorized()
-    if current_user.id != old_application['application']['user_id']:
+    if not can_user_view_application(old_application):
         abort(403, 'Not authorised to access application')
-    if old_application['application'].get('status', 'saved') != 'saved':
+    if is_application_submitted(old_application):
         return redirect(url_for('.submit_application', id=id))
 
     json = request.content_type == 'application/json'
@@ -210,3 +216,30 @@ def application_update(id, step=None):
         return jsonify(result)
     else:
         return redirect(url_for('.render_application', id=id, step=form_data['next_step_slug']))
+
+
+@main.route('/application/<int:id>/documents/<slug>', methods=['GET'])
+@applicant_login_required
+def download_single_file(id, slug):
+    application = data_api_client.get_application(id)
+    if not can_user_view_application(application):
+        abort(403, 'Not authorised to access application')
+    if is_application_submitted(application):
+        abort(400, 'Application already submitted')
+
+    file = s3_download_file(slug, os.path.join(S3_PATH, str(id)))
+
+    mimetype = mimetypes.guess_type(slug)[0] or 'binary/octet-stream'
+    return Response(file, mimetype=mimetype)
+
+
+@main.route('/application/<int:id>/documents/<slug>', methods=['POST'])
+@applicant_login_required
+def upload_single_file(id, slug):
+    application = data_api_client.get_application(id)
+    if not can_user_view_application(application):
+        abort(403, 'Not authorised to access application')
+    if is_application_submitted(application):
+        abort(400, 'Application already submitted')
+
+    return s3_upload_file_from_request(request, slug, os.path.join(S3_PATH, str(id)))

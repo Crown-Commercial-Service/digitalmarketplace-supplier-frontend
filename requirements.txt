@@ -2,17 +2,17 @@ argh==0.26.2
 backoff==1.0.7
 boto==2.43.0
 boto3==1.4.1
-botocore==1.4.73
+botocore==1.4.78
 cffi==1.9.1
 click==6.6
 contextlib2==0.5.4
 coverage==4.2
-cryptography==1.5.3
+cryptography==1.6
 cssselect==1.0.0
 docutils==0.12
 -e git+https://github.com/AusDTO/dto-digitalmarketplace-apiclient.git@0dbedecd14b15857facf0a6bf8b3e3c67e052759#egg=dto_digitalmarketplace_apiclient
 -e git+https://github.com/AusDTO/dto-digitalmarketplace-content-loader.git@3d5759bbc1e6071db5bd4ea0daab3987d458ac3d#egg=dto_digitalmarketplace_content_loader
--e git+https://github.com/AusDTO/dto-digitalmarketplace-utils.git@791c84e9c8ecb25d2d6aeb965735938e571fde24#egg=dto_digitalmarketplace_utils
+-e git+https://github.com/AusDTO/dto-digitalmarketplace-utils.git@73d4529043670b4205d6fa1a0e78fc767a2a1618#egg=dto_digitalmarketplace_utils
 enum34==1.1.2
 Flask==0.11.1
 Flask-Cache==0.13.1
