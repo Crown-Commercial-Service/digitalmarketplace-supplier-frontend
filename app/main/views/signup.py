@@ -160,8 +160,6 @@ def submit_application(id):
     application = data_api_client.get_application(id)
     if not can_user_view_application(application):
         abort(403, 'Not authorised to access application')
-    if is_application_submitted(application):
-        return redirect(url_for('.submit_application', id=id))
 
     data_api_client.update_application(id, {'status': 'submitted'})
 
