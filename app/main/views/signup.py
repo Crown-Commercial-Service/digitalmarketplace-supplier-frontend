@@ -176,7 +176,7 @@ def render_application(id, step=None):
         'submit_url': url_for('.submit_application', id=id)
     }
 
-    rendered_component = render_component('bundles/ApplicantSignup/ApplicantSignupWidget.js', props)
+    rendered_component = render_component('bundles/SellerRegistration/ApplicantSignupWidget.js', props)
 
     return render_template(
         '_react.html',

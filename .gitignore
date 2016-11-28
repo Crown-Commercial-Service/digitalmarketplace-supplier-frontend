@@ -75,3 +75,5 @@ app/static
 .idea/
 
 version_label
+*.sublime-project
+*.sublime-workspace
