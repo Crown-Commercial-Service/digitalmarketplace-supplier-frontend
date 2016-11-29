@@ -157,3 +157,54 @@
   }
   
 }
+
+.local-nav[aria-expanded='false'] {
+  height: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+@media screen and (min-width: $screen-sm) {
+  .local-nav[aria-expanded='false'] {
+    height: auto;
+    padding: 0 0 1.6em;
+  }
+  .local-nav-toggle {
+    display: none;
+  }
+}
+
+
+.local-nav-toggle {
+  position: relative;
+  width: 100%;
+  margin: 0;
+  text-align: left;
+  font-weight: 400;
+  border: 0;
+  background-color: #f0f3f5;
+  color: #115361;
+  padding: $small-spacing $medium-spacing;
+
+  &:hover {
+    background-color: #f0f3f5;
+    color: #115361;
+  }
+
+  &::before {
+    content: ' ';
+    position: absolute;
+    top: .5em;
+    bottom: .5em;
+    right: 0.8em;
+    width: 1.2em;
+    background-repeat: no-repeat;
+    background-size: 100% auto;
+    background-position: center center;
+    transition: transform 0.2s ease-in-out;
+  }
+
+  &[aria-expanded='true']::before {
+    transform: rotate(180deg);
+  }
+}

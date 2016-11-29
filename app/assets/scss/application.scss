@@ -15,7 +15,7 @@ $path: "/static/images/";
 @import 'tables';
 @import 'block-elements';
 @import 'forms';
-@import 'navigation';
+
 @import 'pagination';
 @import 'lists';
 @import 'accordions';
@@ -36,6 +36,7 @@ $path: "/static/images/";
 
 @import 'progress-bar';
 @import 'case-study';
+@import 'navigation';
 
 $fa-font-path: "../fonts";
 @import 'vendor/font-awesome/font-awesome';
