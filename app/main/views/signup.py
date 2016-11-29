@@ -174,7 +174,8 @@ def render_application(id, step=None):
     props['basename'] = url_for('.render_application', id=id, step=None)
     props['form_options'] = {
         'action': url_for('.render_application', id=id, step=step),
-        'submit_url': url_for('.submit_application', id=id)
+        'submit_url': url_for('.submit_application', id=id),
+        'document_url': url_for('.upload_single_file', id=id, slug='')
     }
 
     rendered_component = render_component('bundles/SellerRegistration/ApplicantSignupWidget.js', props)
