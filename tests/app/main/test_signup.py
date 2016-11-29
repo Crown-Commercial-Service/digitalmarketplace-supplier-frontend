@@ -213,7 +213,7 @@ class TestCreateApplicationPage(BaseApplicationTest):
             data={'csrf_token': FakeCsrf.valid_token, 'password': '12345678901'}
         )
 
-        assert res.status_code == 400
+        assert res.status_code == 503
 
     @mock.patch('app.main.views.signup.data_api_client')
     @mock.patch('app.main.views.signup.decode_user_token')
@@ -227,7 +227,7 @@ class TestCreateApplicationPage(BaseApplicationTest):
             data={'csrf_token': FakeCsrf.valid_token, 'password': '12345678901'}
         )
 
-        assert res.status_code == 400
+        assert res.status_code == 503
 
     @mock.patch('app.main.views.signup.data_api_client')
     @mock.patch('app.main.views.signup.decode_user_token')

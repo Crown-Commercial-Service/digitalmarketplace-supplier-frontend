@@ -119,25 +119,19 @@ def create_application(token):
     if errors:
         return render_create_application(token, form_data, errors)
 
-    try:
-        user = data_api_client.create_user({
-            'name': token_data['name'],
-            'password': form_data['password'],
-            'emailAddress': token_data['email'],
-            'role': 'applicant',
-        })
+    user = data_api_client.create_user({
+        'name': token_data['name'],
+        'password': form_data['password'],
+        'emailAddress': token_data['email'],
+        'role': 'applicant',
+    })
 
-        user = User.from_json(user)
+    user = User.from_json(user)
 
-        application = data_api_client.create_application(user.id, {'status': 'saved'})
+    application = data_api_client.create_application(user.id, {'status': 'saved'})
 
-        login_user(user)
-        return redirect(url_for('main.render_application', id=application['application']['id'], step='start'))
-
-    except HTTPError:
-        return render_template(
-            'auth/create_user_error.html',
-            token=None), 400
+    login_user(user)
+    return redirect(url_for('main.render_application', id=application['application']['id'], step='start'))
 
 
 @main.route('/application')
