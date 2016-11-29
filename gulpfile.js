@@ -374,6 +374,15 @@ gulp.task(
   )
 );
 
+gulp.task(
+  'copy:fonts',
+  copyFactory(
+    "fonts assets from app to static folder",
+    assetsFolder + '/fonts',
+    staticFolder + '/fonts'
+  )
+);
+
 gulp.task('ui-kit.img', function() {
   return gulp.src(paths.images)
     .pipe(gulp.dest(paths.outputAssets));
@@ -454,6 +463,7 @@ gulp.task(
     'copy:dm_toolkit_assets:images',
     'copy:dm_toolkit_assets:templates',
     'copy:images',
+    'copy:fonts',
     'copy:govuk_template'
   ]
 );

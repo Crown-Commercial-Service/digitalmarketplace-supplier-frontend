@@ -223,3 +223,20 @@
     border-bottom: 1px solid;
   }
 }
+
+.bordered-list {
+  margin: 0 0 1em;
+  padding: 0;
+  border-top: solid 1px $light-grey;
+
+  &__item {
+    list-style: none;
+    margin: 0;
+    border-bottom: solid 1px $light-grey;
+    padding: $small-spacing 0;
+
+    p {
+      margin: 0;
+    }
+  }
+}

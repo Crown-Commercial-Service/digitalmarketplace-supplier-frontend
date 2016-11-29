@@ -162,8 +162,9 @@ def submit_application(id):
 
 @main.route('/application/<int:id>', methods=['GET'])
 @main.route('/application/<int:id>/<path:step>', methods=['GET'])
+@main.route('/application/<int:id>/<path:step>/<path:substep>', methods=['GET'])
 @applicant_login_required
-def render_application(id, step=None):
+def render_application(id, step=None, substep=None):
     application = data_api_client.get_application(id)
     if not can_user_view_application(application):
         abort(403, 'Not authorised to access application')

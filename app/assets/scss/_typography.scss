@@ -191,6 +191,18 @@ span {
   }
 }
 
+.callout--calendar-event {
+  h3 {
+    margin: $small-spacing 0 0;
+  }
+}
+
+.callout--warning {
+  #validation-masthead-heading {
+    margin: 0;
+  }
+}
+
 // Validation
 .validation-masthead {
   background: rgba(red,0.1);

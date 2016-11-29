@@ -33,3 +33,9 @@ $path: "/static/images/";
 @import 'dashboard';
 
 @import 'neat-grid';
+
+@import 'progress-bar';
+@import 'case-study';
+
+$fa-font-path: "../fonts";
+@import 'vendor/font-awesome/font-awesome';

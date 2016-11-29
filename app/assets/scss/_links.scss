@@ -1,6 +1,29 @@
-.sidebar {
+@mixin button-secondary {
+  @include link-colours($non-black, $light-aqua, $non-black);
+  display: inline;
+  background: none;
+  border: 0;
+  border-bottom: 1px solid $light-aqua;
+  font-weight: 400;
+  width: auto;
+  padding: 0;
+
+  &:hover,
+  &:focus {
+    background-color: $light-aqua;
+    color: $non-black;
+  }
+}
+
+.sidebar,
+main article:first-of-type,
+main section:first-of-type {
   @include link-colours($non-black, $light-aqua, $non-black);
   @include button-colours($button-bg-colour, $button-bg-colour--hover, $button-bg-colour--active, $button-text-colour);
+
+  .button-secondary {
+    @include button-secondary;
+  }
 }
 
 .contributors {

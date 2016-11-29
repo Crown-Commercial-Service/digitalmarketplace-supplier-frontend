@@ -129,3 +129,27 @@
     transform: translateX(-50%);
   }
 }
+
+.step-navigation {
+  padding-top: 0;
+  a {
+    .fa {
+      font-size: 1.4rem;
+
+      &.complete {
+        color: $aqua;
+      }
+
+      &.incomplete {
+        color: $light-grey;
+      }
+    }
+
+    &.is-active {
+      .fa {
+        color: $aqua;
+      }
+    }
+  }
+  
+}
