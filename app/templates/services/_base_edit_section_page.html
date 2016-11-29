@@ -5,7 +5,6 @@
 {% block page_title %}{{ section.name }} – Digital Marketplace{% endblock %}
 
 {% block main_content %}
-
   <div class="grid-row">
     <div class="column-two-thirds">
 
@@ -31,38 +30,40 @@
     {% endwith %}
   {% endif %}
 
-  <form method="post" enctype="multipart/form-data" action="{{ request.path }}">
+  <div{% block form_wrapper_attributes %}{% endblock %}>
+    <form method="post" enctype="multipart/form-data" action="{{ request.path }}">
 
-    <div class="grid-row">
-      <div class="column-two-thirds">
+      <div class="grid-row">
+        <div class="column-two-thirds">
 
-          {% for question in section.questions %}
-            {% if errors and errors[question.id] %}
-              {{ forms[question.type](question, service_data, errors) }}
-            {% else %}
-              {{ forms[question.type](question, service_data, {}) }}
-            {% endif %}
-            {% if question.assuranceApproach %}
-              <div class='assurance-question'>
-                {{ assurance_question(
-                  name=question.id,
-                  service_data=service_data,
-                  type=question.assuranceApproach,
-                  errors=errors if errors else {}
-                ) }}
-              </div>
-            {% endif %}
-          {% endfor %}
+            {% for question in section.questions %}
+              {% if errors and errors[question.id] %}
+                {{ forms[question.type](question, service_data, errors) }}
+              {% else %}
+                {{ forms[question.type](question, service_data, {}) }}
+              {% endif %}
+              {% if question.assuranceApproach %}
+                <div class='assurance-question'>
+                  {{ assurance_question(
+                    name=question.id,
+                    service_data=service_data,
+                    type=question.assuranceApproach,
+                    errors=errors if errors else {}
+                  ) }}
+                </div>
+              {% endif %}
+            {% endfor %}
 
-          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
-          {% block save_button %}{% endblock %}
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+            {% block save_button %}{% endblock %}
 
-          {% block return_to_service_link %}
-            <a href="{% block return_to_service %}{% endblock %}">Return to service summary</a>
-          {% endblock %}
+            {% block return_to_service_link %}
+              <a href="{% block return_to_service %}{% endblock %}">Return to service summary</a>
+            {% endblock %}
 
+        </div>
       </div>
-    </div>
 
-  </form>
+    </form>
+  </div>
 {% endblock %}

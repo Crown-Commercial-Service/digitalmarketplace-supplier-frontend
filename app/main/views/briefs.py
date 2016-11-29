@@ -92,7 +92,7 @@ def start_brief_response(brief_id):
             current_user.email_address,
         )['briefResponses']
         brief_response_id = brief_response['id']
-        return redirect(url_for('.edit_brief_response', brief_response_id=brief_response_id))
+        return redirect(url_for('.edit_brief_response', brief_id=brief_id, brief_response_id=brief_response_id))
 
     brief_response = data_api_client.find_brief_responses(
         brief_id=brief_id,
@@ -105,7 +105,7 @@ def start_brief_response(brief_id):
             flash('already_applied', 'error')
             return redirect(url_for(".view_response_result", brief_id=brief_id))
         if brief_response[0].get('status') == 'draft':
-            existing_draft_response = True
+            existing_draft_response = brief_response[0]
     else:
         existing_draft_response = False
 
@@ -116,10 +116,107 @@ def start_brief_response(brief_id):
     )
 
 
-@main.route('/opportunities/responses/<int:brief_response_id>/edit', methods=['GET'])
+@main.route('/opportunities/<int:brief_id>/responses/<int:brief_response_id>', methods=['GET'])
+@main.route(
+    '/opportunities/<int:brief_id>/responses/<int:brief_response_id>/<string:section_id>',
+    methods=['GET', 'POST']
+)
+@feature.is_active_feature('NEW_SUPPLIER_FLOW')
 @login_required
-def edit_brief_response(brief_response_id):
-    return 'Hello world'
+def edit_brief_response(brief_id, brief_response_id, section_id=None):
+    brief = get_brief(data_api_client, brief_id, allowed_statuses=['live'])
+    brief_response = data_api_client.get_brief_response(brief_response_id)['briefResponses']
+
+    if brief_response['briefId'] != brief['id'] or brief_response['supplierId'] != current_user.supplier_id:
+        abort(404)
+
+    if not is_supplier_eligible_for_brief(data_api_client, current_user.supplier_id, brief):
+        return _render_not_eligible_for_brief_error_page(brief)
+
+    if supplier_has_a_brief_response(data_api_client, current_user.supplier_id, brief_id):
+        flash('already_applied', 'error')
+        return redirect(url_for(".view_response_result", brief_id=brief_id))
+
+    framework, lot = get_framework_and_lot(
+        data_api_client, brief['frameworkSlug'], brief['lotSlug'], allowed_statuses=['live'])
+
+    max_day_rate = None
+    role = brief.get('specialistRole')
+    if role:
+        brief_service = data_api_client.find_services(
+            supplier_id=current_user.supplier_id,
+            framework=brief['frameworkSlug'],
+            status="published",
+            lot=brief["lotSlug"],
+        )["services"][0]
+        max_day_rate = brief_service.get(role + "PriceMax")
+
+    content = content_loader.get_manifest(
+        brief['frameworkSlug'], 'edit_brief_response'
+    ).filter({'lot': lot['slug'], 'brief': brief, 'max_day_rate': max_day_rate})
+
+    if section_id is None:
+        return redirect(url_for(
+            '.edit_brief_response',
+            brief_id=brief_id,
+            brief_response_id=brief_response_id,
+            section_id=content.get_next_editable_section_id(),
+            )
+        )
+
+    section = content.get_section(section_id)
+    if section is None or not section.editable:
+        abort(404)
+
+    is_last_page = section_id == content.sections[-1]['id']
+
+    section.inject_brief_questions_into_boolean_list_question(brief)
+
+    status_code = 200
+    errors = {}
+
+    if request.method == 'POST':
+        try:
+            data_api_client.update_brief_response(
+                brief_response_id,
+                section.get_data(request.form),
+                current_user.email_address,
+                page_questions=section.get_field_names()
+            )
+
+        except HTTPError as e:
+            errors = section.get_error_messages(e.message)
+            status_code = 400
+            brief_response.update(section.get_data(request.form))
+
+        else:
+            next_section = content.get_next_editable_section_id(section_id)
+            if next_section:
+                return redirect(
+                    url_for(
+                        '.edit_brief_response',
+                        brief_id=brief_id,
+                        brief_response_id=brief_response_id,
+                        section_id=next_section
+                    )
+                )
+            else:
+                data_api_client.submit_brief_response(
+                    brief_response_id,
+                    current_user.email_address
+                )
+
+                return redirect(url_for('.view_response_result', brief_id=brief_id))
+
+    return render_template(
+        "briefs/edit_brief_response.html",
+        brief=brief,
+        errors=errors,
+        is_last_page=is_last_page,
+        service_data=brief_response,
+        section=section,
+        **dict(main.config['BASE_TEMPLATE_DATA'])
+    ), status_code
 
 
 @main.route('/opportunities/<int:brief_id>/responses/create', methods=['GET'])
