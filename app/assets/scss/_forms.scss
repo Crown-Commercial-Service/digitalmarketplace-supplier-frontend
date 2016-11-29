@@ -157,6 +157,10 @@ form {
 
     textarea {
       height: 14.375em;
+
+      &.under-50 {
+        height: 7.25em;
+      }
     }
 
     .word-count-counter {

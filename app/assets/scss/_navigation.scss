@@ -143,6 +143,10 @@
       &.incomplete {
         color: $light-grey;
       }
+
+      &.dirty {
+        color: $aqua;
+      }
     }
 
     &.is-active {
