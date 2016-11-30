@@ -5,6 +5,7 @@ from itertools import chain
 from flask import render_template, request, redirect, url_for, abort, session, Markup, make_response
 from flask_login import current_user
 from flask import current_app
+import flask_featureflags as feature
 import six
 
 from dmapiclient import APIError
@@ -98,7 +99,8 @@ def edit_supplier(supplier=None, errors=None):
 
     form = DmForm()
     rendered_component = render_component('bundles/SellerRegistration/BusinessDetailsWidget.js',
-                                          {'form_options': {'csrf_token': form.csrf_token.current_token,
+                                          {'options': {'seller_registration': feature.is_active('SELLER_REGISTRATION')},
+                                           'form_options': {'csrf_token': form.csrf_token.current_token,
                                                             'mode': 'edit',
                                                             'errors': errors},
                                            'businessDetailsForm': supplier})
