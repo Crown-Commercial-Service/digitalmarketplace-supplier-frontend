@@ -263,6 +263,7 @@ gulp.task('test', function () {
 gulp.task('watch', ['build:development'], function () {
   var jsWatcher = gulp.watch([ assetsFolder + '/**/*.js' ], ['js']);
   var cssWatcher = gulp.watch([ assetsFolder + '/**/*.scss' ], ['sass']);
+  var dmWatcher = gulp.watch([ bowerRoot + '/digitalmarketplace-frameworks/**' ], ['copy:frameworks']);
   var notice = function (event) {
     console.log('File ' + event.path + ' was ' + event.type + ' running tasks...');
   };
