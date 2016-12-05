@@ -146,7 +146,7 @@ class Live(Config):
 
     FEATURE_FLAGS = {
         'EDIT_SECTIONS': False,
-        'EMAIL_TO_BRIEF_RESPONDERS': False,
+        'EMAIL_TO_BRIEF_RESPONDERS': True,
         'SELLER_REGISTRATION': False
     }
 
