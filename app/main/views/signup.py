@@ -13,6 +13,7 @@ from ..helpers import applicant_login_required
 import os
 from dmutils.file import s3_upload_file_from_request, s3_download_file
 import mimetypes
+import flask_featureflags as feature
 
 
 S3_PATH = 'applications'
@@ -179,6 +180,7 @@ def render_application(id, step=None, substep=None):
         'submit_url': url_for('.submit_application', id=id),
         'document_url': url_for('.upload_single_file', id=id, slug='')
     }
+    props['options'] = {'seller_registration': feature.is_active('SELLER_REGISTRATION')}
 
     rendered_component = render_component('bundles/SellerRegistration/ApplicantSignupWidget.js', props)
 
