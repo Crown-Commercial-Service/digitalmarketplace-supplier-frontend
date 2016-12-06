@@ -57,6 +57,7 @@ def send_seller_signup_email():
     email_body = render_template(
         'emails/create_seller_user_email.html',
         url=url,
+        user=user,
     )
 
     try:
