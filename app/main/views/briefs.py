@@ -322,7 +322,7 @@ def view_response_result(brief_id):
 
     if len(brief_response) == 0:
         return redirect(url_for(".brief_response", brief_id=brief_id))
-    elif all(brief_response[0]['essentialRequirements']):
+    elif brief_response[0].get('essentialRequirementsMet') or all(brief_response[0]['essentialRequirements']):
         result_state = 'submitted_ok'
     else:
         result_state = 'submitted_unsuccessful'
