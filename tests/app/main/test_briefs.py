@@ -532,6 +532,23 @@ class TestApplyToBrief(BaseApplicationTest):
         for index, requirement in enumerate(self.brief['briefs']['essentialRequirements']):
             assert requirement == list_items[index]
 
+    def test_essential_requirements_met_question_escapes_brief_data(self):
+        self.brief['briefs']['essentialRequirements'] = [
+            '<h1>Essential one with xss</h1>',
+            '**Essential two with markdown**'
+        ]
+        self.data_api_client.get_brief.return_value = self.brief
+
+        res = self.client.get(
+            '/suppliers/opportunities/1234/responses/5/do-you-have-all-the-essential-skills-and-experience'
+        )
+        assert res.status_code == 200
+
+        doc = html.fromstring(res.get_data(as_text=True))
+        list_items = doc.xpath("//*[@id='input-essentialRequirementsMet-question-advice']/ul/li/text()")
+        assert list_items[0] == '<h1>Essential one with xss</h1>'
+        assert list_items[1] == '**Essential two with markdown**'
+
     def test_day_rate_question_replays_buyers_budget_range_and_suppliers_max_day_rate(self):
         self.brief['briefs']['budgetRange'] = '1 million dollars'
         self.brief['briefs']['specialistRole'] = 'deliveryManager'
@@ -554,6 +571,32 @@ class TestApplyToBrief(BaseApplicationTest):
         assert day_rate_headings[1] == "Your maximum day rate:"
         assert suppliers_max_day_rate == '£600'
 
+    def test_day_rate_question_escapes_brief_day_rate_markdown(self):
+        self.brief['briefs']['budgetRange'] = '**markdown**'
+
+        res = self.client.get(
+            '/suppliers/opportunities/1234/responses/5/how-much-you-charge-each-day'
+        )
+        assert res.status_code == 200
+
+        doc = html.fromstring(res.get_data(as_text=True))
+        buyers_max_day_rate = doc.xpath(
+            "//*[@id='input-dayRate-question-advice']/descendant::h2[1]/following::p[1]/text()")[0]
+        assert buyers_max_day_rate == '**markdown**'
+
+    def test_day_rate_question_escapes_brief_day_rate_html(self):
+        self.brief['briefs']['budgetRange'] = '<h1>xss</h1>'
+
+        res = self.client.get(
+            '/suppliers/opportunities/1234/responses/5/how-much-you-charge-each-day'
+        )
+        assert res.status_code == 200
+
+        doc = html.fromstring(res.get_data(as_text=True))
+        buyers_max_day_rate = doc.xpath(
+            "//*[@id='input-dayRate-question-advice']/descendant::h2[1]/following::p[1]/text()")[0]
+        assert buyers_max_day_rate == '<h1>xss</h1>'
+
     def test_day_rate_question_does_not_replay_buyers_budget_range_if_not_provided(self):
         self.brief['briefs']['specialistRole'] = 'deliveryManager'
         self.data_api_client.find_services.return_value = {"services": [{"deliveryManagerPriceMax": 600}]}
@@ -564,6 +607,32 @@ class TestApplyToBrief(BaseApplicationTest):
         assert res.status_code == 200
         data = res.get_data(as_text=True)
         assert "Buyer's maximum day rate:" not in data
+
+    def test_start_date_question_escapes_brief_start_date_markdown(self):
+        self.brief['briefs']['startDate'] = '**markdown**'
+
+        res = self.client.get(
+            '/suppliers/opportunities/1234/responses/5/the-earliest-the-specialist-can-start'
+        )
+        assert res.status_code == 200
+
+        doc = html.fromstring(res.get_data(as_text=True))
+        start_date = doc.xpath(
+            "//*[@id='input-availability-question-advice']/text()")[0].strip()
+        assert start_date == "The buyer needs the specialist to start by **markdown**."
+
+    def test_start_date_question_escapes_brief_start_date_html(self):
+        self.brief['briefs']['startDate'] = '<h1>xss</h1>'
+
+        res = self.client.get(
+            '/suppliers/opportunities/1234/responses/5/the-earliest-the-specialist-can-start'
+        )
+        assert res.status_code == 200
+
+        doc = html.fromstring(res.get_data(as_text=True))
+        start_date = doc.xpath(
+            "//*[@id='input-availability-question-advice']/text()")[0].strip()
+        assert start_date == "The buyer needs the specialist to start by <h1>xss</h1>."
 
     def test_existing_brief_response_data_is_prefilled(self):
         self.data_api_client.get_brief_response.return_value = self.brief_response(
