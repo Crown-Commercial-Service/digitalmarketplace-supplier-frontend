@@ -146,6 +146,11 @@ main {
 }
 
 form {
+
+  input[type="submit"] {
+    margin-top: 3em;
+  }
+
   .form-control, .field {
       @include form-control;
     }
@@ -197,7 +202,6 @@ form {
 
     input[type='checkbox'] + label,
     input[type='radio'] + label {
-      outline: 1px solid $light-grey;
       margin: 0 0 8px;
       padding: 12px 12px 12px 60px;
 
@@ -220,7 +224,6 @@ form {
     input[type='checkbox']:checked + label,
     input[type='radio']:checked + label {
       font-weight: 700;
-      outline: 2px solid $grey;
 
       &::after {
         top: 17px;
