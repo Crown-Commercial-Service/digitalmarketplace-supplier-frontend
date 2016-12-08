@@ -10,6 +10,7 @@ from flask_login import current_user
 import flask_featureflags as feature
 
 from dmapiclient import HTTPError
+from dmutils.formats import DATETIME_FORMAT
 
 from ..helpers import login_required
 from ..helpers.briefs import (
@@ -84,7 +85,7 @@ def start_brief_response(brief_id):
     brief = get_brief(data_api_client, brief_id, allowed_statuses=['live'])
 
     if not (datetime.strptime(current_app.config['FEATURE_FLAGS_NEW_SUPPLIER_FLOW'], "%Y-%m-%d")
-            <= datetime.strptime(brief['publishedAt'][0:10], "%Y-%m-%d")):
+            <= datetime.strptime(brief['publishedAt'], DATETIME_FORMAT)):
         return redirect(url_for('.brief_response', brief_id=brief['id']))
 
     if not is_supplier_eligible_for_brief(data_api_client, current_user.supplier_id, brief):
@@ -231,7 +232,7 @@ def brief_response(brief_id):
     brief = get_brief(data_api_client, brief_id, allowed_statuses=['live'])
 
     if (datetime.strptime(current_app.config['FEATURE_FLAGS_NEW_SUPPLIER_FLOW'], "%Y-%m-%d")
-            <= datetime.strptime(brief['publishedAt'][0:10], "%Y-%m-%d")):
+            <= datetime.strptime(brief['publishedAt'], DATETIME_FORMAT)):
         return redirect(url_for('.start_brief_response', brief_id=brief['id']))
 
     if not is_supplier_eligible_for_brief(data_api_client, current_user.supplier_id, brief):
