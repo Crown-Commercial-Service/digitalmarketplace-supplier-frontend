@@ -92,7 +92,7 @@ class TestBriefQuestionAndAnswerSession(BaseApplicationTest):
         self.login()
         data_api_client.get_brief.return_value = api_stubs.brief(status='live')
         data_api_client.get_brief.return_value['briefs']['sellerSelector'] = 'someSellers'
-        data_api_client.get_brief.return_value['briefs']['sellerEmailList'] = ['notyou@email.com']
+        data_api_client.get_brief.return_value['briefs']['sellerEmailList'] = ['notyou@notyou.com']
 
         res = self.client.get(self.url_for('main.question_and_answer_session', brief_id=1))
 
@@ -124,7 +124,7 @@ class TestBriefClarificationQuestions(BaseApplicationTest):
         self.login()
         data_api_client.get_brief.return_value = api_stubs.brief(status='live')
         data_api_client.get_brief.return_value['briefs']['sellerSelector'] = 'someSellers'
-        data_api_client.get_brief.return_value['briefs']['sellerEmailList'] = ['notyou@email.com']
+        data_api_client.get_brief.return_value['briefs']['sellerEmailList'] = ['notyou@notyou.com']
 
         res = self.client.get(self.url_for('main.ask_brief_clarification_question', brief_id=1))
         assert res.status_code == 400
@@ -332,10 +332,22 @@ class TestRespondToBrief(BaseApplicationTest):
         assert res.status_code == 200
         data_api_client.get_brief.assert_called_once_with(1234)
 
+    def test_get_select_brief_response_page_similar_email(self, data_api_client):
+        brief = self.brief.copy()
+        brief['briefs']['sellerSelector'] = 'oneSeller'
+        brief['briefs']['sellerEmail'] = 'differentemail@email.com'
+        data_api_client.get_brief.return_value = brief
+        data_api_client.get_framework.return_value = self.framework
+        res = self.client.get(self.url_for('main.brief_response', brief_id=1234))
+        doc = html.fromstring(res.get_data(as_text=True))
+
+        assert res.status_code == 200
+        data_api_client.get_brief.assert_called_once_with(1234)
+
     def test_get_brief_response_returns_400_for_select_brief(self, data_api_client):
         brief = self.brief.copy()
         brief['briefs']['sellerSelector'] = 'someSellers'
-        brief['briefs']['sellerEmailList'] = ['notyou@email.com']
+        brief['briefs']['sellerEmailList'] = ['notyou@notyou.com']
         data_api_client.get_brief.return_value = brief
         data_api_client.get_framework.return_value = self.framework
         res = self.client.get(self.url_for('main.brief_response', brief_id=1234))

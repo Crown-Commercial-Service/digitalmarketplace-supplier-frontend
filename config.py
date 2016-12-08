@@ -88,6 +88,8 @@ class Config(object):
     ALLOWED_EXTENSIONS = ['pdf', 'jpg', 'png']
     S3_BUCKET_NAME = None
 
+    GENERIC_EMAIL_DOMAINS = ['gmail.com', 'bigpond.com', 'outlook.com', 'hotmail.com', 'yahoo.com']
+
 
 class Test(Config):
     DEBUG = True

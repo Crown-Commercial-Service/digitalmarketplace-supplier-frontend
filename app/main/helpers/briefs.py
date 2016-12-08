@@ -23,12 +23,22 @@ def get_brief(data_api_client, brief_id, allowed_statuses=None):
 
 
 def is_supplier_selected_for_brief(data_api_client, current_user, brief):
+    def domain(email):
+        return email.split('@')[-1]
+
+    current_user_domain = domain(current_user.email_address) \
+        if domain(current_user.email_address) not in current_app.config.get('GENERIC_EMAIL_DOMAINS') \
+        else None
+
     if brief.get('sellerSelector', '') == 'allSellers':
         return True
     if brief.get('sellerSelector', '') == 'someSellers':
-        return current_user.email_address in brief['sellerEmailList']
+        seller_domain_list = [domain(x) for x in brief['sellerEmailList']]
+        return current_user.email_address in brief['sellerEmailList']\
+            or current_user_domain in seller_domain_list
     if brief.get('sellerSelector', '') == 'oneSeller':
-        return current_user.email_address == brief['sellerEmail']
+        return current_user.email_address == brief['sellerEmail'] \
+            or current_user_domain == domain(brief['sellerEmail'])
     return False
 
 
