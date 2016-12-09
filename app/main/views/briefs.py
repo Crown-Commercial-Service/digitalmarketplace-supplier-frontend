@@ -86,7 +86,7 @@ def start_brief_response(brief_id):
 
     if not (datetime.strptime(current_app.config['FEATURE_FLAGS_NEW_SUPPLIER_FLOW'], "%Y-%m-%d")
             <= datetime.strptime(brief['publishedAt'], DATETIME_FORMAT)):
-        return redirect(url_for('.brief_response', brief_id=brief['id']))
+        abort(404)
 
     if not is_supplier_eligible_for_brief(data_api_client, current_user.supplier_id, brief):
         return _render_not_eligible_for_brief_error_page(brief)
@@ -233,7 +233,7 @@ def brief_response(brief_id):
 
     if (datetime.strptime(current_app.config['FEATURE_FLAGS_NEW_SUPPLIER_FLOW'], "%Y-%m-%d")
             <= datetime.strptime(brief['publishedAt'], DATETIME_FORMAT)):
-        return redirect(url_for('.start_brief_response', brief_id=brief['id']))
+        abort(404)
 
     if not is_supplier_eligible_for_brief(data_api_client, current_user.supplier_id, brief):
         return _render_not_eligible_for_brief_error_page(brief)

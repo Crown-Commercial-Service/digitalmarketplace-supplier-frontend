@@ -758,17 +758,13 @@ class TestLegacyRespondToBrief(BaseApplicationTest):
             assert breadcrumbs[index].find('a').text_content().strip() == link[0]
             assert breadcrumbs[index].find('a').get('href').strip() == link[1]
 
-    @mock.patch("app.main.views.briefs.is_supplier_eligible_for_brief")
-    def test_will_redirect_to_start_route_if_brief_is_not_a_legacy_brief(
-        self, is_supplier_eligible_for_brief, data_api_client
-    ):
+    def test_will_404_if_brief_is_not_a_legacy_brief(self, data_api_client):
         self.brief['briefs']['publishedAt'] = '2016-12-25T12:00:00.000000Z'
         data_api_client.get_brief.return_value = self.brief
 
         res = self.client.get('/suppliers/opportunities/1234/responses/create')
 
-        assert res.status_code == 302
-        assert res.location == 'http://localhost/suppliers/opportunities/1234/responses/start'
+        assert res.status_code == 404
 
     def test_get_brief_response_page(self, data_api_client):
         data_api_client.get_brief.return_value = self.brief
@@ -1258,17 +1254,13 @@ class TestStartBriefResponseApplication(BaseApplicationTest):
         with self.app.test_client():
             self.login()
 
-    @mock.patch("app.main.views.briefs.is_supplier_eligible_for_brief")
-    def test_will_redirect_to_create_route_if_brief_is_a_legacy_brief(
-        self, is_supplier_eligible_for_brief, data_api_client
-    ):
+    def test_will_return_404_if_brief_is_a_legacy_brief(self, data_api_client):
         self.brief['briefs']['publishedAt'] = '2016-10-25T12:00:00.000000Z'
         data_api_client.get_brief.return_value = self.brief
 
         res = self.client.get('/suppliers/opportunities/1234/responses/start')
 
-        assert res.status_code == 302
-        assert res.location == 'http://localhost/suppliers/opportunities/1234/responses/create'
+        assert res.status_code == 404
 
     @mock.patch("app.main.views.briefs.is_supplier_eligible_for_brief")
     def test_will_show_not_eligible_response_if_supplier_is_not_eligible_for_brief(
