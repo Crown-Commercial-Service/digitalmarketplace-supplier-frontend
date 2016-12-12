@@ -90,6 +90,7 @@ class Config(object):
 
     GENERIC_EMAIL_DOMAINS = ['gmail.com', 'bigpond.com', 'outlook.com', 'hotmail.com', 'yahoo.com']
 
+    ROLLBAR_TOKEN = None
 
 class Test(Config):
     DEBUG = True
