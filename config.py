@@ -92,6 +92,7 @@ class Config(object):
 
     ROLLBAR_TOKEN = None
 
+
 class Test(Config):
     DEBUG = True
     CSRF_ENABLED = False
