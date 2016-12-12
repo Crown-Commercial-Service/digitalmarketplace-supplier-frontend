@@ -780,6 +780,15 @@ class TestLegacyRespondToBrief(BaseApplicationTest):
             '//h2[contains(text(), "Do you have any of the nice-to-have skills and experience?")]')) == 1
         self._test_breadcrumbs_on_brief_response_page(res)
 
+    def test_will_not_404_if_new_supplier_flow_flag_set_to_false(self, data_api_client):
+        self.app.config['FEATURE_FLAGS_NEW_SUPPLIER_FLOW'] = False
+
+        data_api_client.get_brief.return_value = self.brief
+        data_api_client.get_framework.return_value = self.framework
+        res = self.client.get('/suppliers/opportunities/1234/responses/create')
+
+        assert res.status_code == 200
+
     def test_get_brief_response_returns_404_for_not_live_brief(self, data_api_client):
         brief = self.brief.copy()
         brief['briefs']['status'] = 'draft'
@@ -1256,6 +1265,14 @@ class TestStartBriefResponseApplication(BaseApplicationTest):
 
     def test_will_return_404_if_brief_is_a_legacy_brief(self, data_api_client):
         self.brief['briefs']['publishedAt'] = '2016-10-25T12:00:00.000000Z'
+        data_api_client.get_brief.return_value = self.brief
+
+        res = self.client.get('/suppliers/opportunities/1234/responses/start')
+
+        assert res.status_code == 404
+
+    def test_will_return_404_if_new_supplier_flow_flag_set_to_false(self, data_api_client):
+        self.app.config['FEATURE_FLAGS_NEW_SUPPLIER_FLOW'] = False
         data_api_client.get_brief.return_value = self.brief
 
         res = self.client.get('/suppliers/opportunities/1234/responses/start')
