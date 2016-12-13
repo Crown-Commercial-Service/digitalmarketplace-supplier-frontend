@@ -4,7 +4,7 @@
         </legend>
 
         <span class="question-heading">
-          <h2>{{x.question}}</h2>
+          <h2 style="margin-bottom: 0">{{x.question}}</h2>
         </span>
 
         <span class="question-advice" id="input--question-advice">
@@ -16,13 +16,13 @@
 {% set field = '{}-{}'.format(x.id, loop.index0) %}
 {% set e = error.get(field) if error else None %}
 
-<legend>
-  <span class="question-heading ">{{q}}</span>
+<legend style="margin-bottom: 0; margin-top: 3rem; max-width: 100%">
+  <span class="question-heading" style="font-size: 1.2rem;">{{q}}</span>
   {% if e %}
   <span class="validation-message invalid" style="color: #cc0000" id="error-{{field}}">{{e.message}}</span>
   {% endif %}
 </legend>
 
-  <textarea data-max-length-in-words="150" style="height: 15rem; margin-bottom: 0.5rem; {% if e %}outline: 2px solid #cc0000{% endif %}" classes="{% if e %}text-box-with-error invalid{% endif %}" style="" id="{{field}}" name="{{field}}">{{service_data[i] or ''}}</textarea>
+  <textarea data-max-length-in-words="150" style="height: 15rem; margin-bottom: 0; {% if e %}outline: 2px solid #cc0000{% endif %}" classes="{% if e %}text-box-with-error invalid{% endif %}" style="" id="{{field}}" name="{{field}}">{{service_data[i] or ''}}</textarea>
 {% endfor %}
 </fieldset>

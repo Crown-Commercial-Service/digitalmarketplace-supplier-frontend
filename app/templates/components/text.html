@@ -1,12 +1,12 @@
 {% set error_classes = 'text-box-with-error invalid' if error else '' %}
-<div class="question" id="{{ x.id }}" style="margin-bottom: 3rem;">
+<div class="question" id="{{ x.id }}" style="margin-bottom: 4rem;">
   <label for="input-{{ x.id }}">
     <legend>
       <span class="visually-hidden">{{x.name}}</span>
     </legend>
 
     <span class="question-heading">
-      <h2>{{x.question}}</h2>
+      <h2 style="margin-bottom: 0">{{x.question}}</h2>
     </span>
 
       {% if error %}
@@ -14,7 +14,7 @@
       {% endif %}
   </label>
   <span class="hint word-count-counter" id="input-{{ x.id }}-answer-advice">
-    <p>{{ x.hint }}</p>
+    <p style="margin-bottom: 0;">{{ x.hint }}</p>
   </span>
   <input name="{{ x.id }}" id="input-{{ x.id }}" class="{{ error_classes }}" value="{{service_data[x.id] or ''}}" aria-describedby=" input-{{ x.id }}-answer-advice" type="text">
 </div>
