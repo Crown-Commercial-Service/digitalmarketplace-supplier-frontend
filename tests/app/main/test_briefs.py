@@ -545,9 +545,12 @@ class TestApplyToBrief(BaseApplicationTest):
         assert res.status_code == 200
 
         doc = html.fromstring(res.get_data(as_text=True))
-        list_items = doc.xpath("//*[@id='input-essentialRequirementsMet-question-advice']/ul/li/text()")
-        assert list_items[0] == '<h1>Essential one with xss</h1>'
-        assert list_items[1] == '**Essential two with markdown**'
+        list_items = doc.xpath("//*[@id='input-essentialRequirementsMet-question-advice']/ul/li")
+        # if item is excaped correctly it will appear as text rather than an element
+        assert list_items[0].find("h1") is None
+        assert list_items[0].text == '<h1>Essential one with xss</h1>'
+        assert list_items[1].find("strong") is None
+        assert list_items[1].text == '**Essential two with markdown**'
 
     def test_day_rate_question_replays_buyers_budget_range_and_suppliers_max_day_rate(self):
         self.brief['briefs']['budgetRange'] = '1 million dollars'
@@ -581,8 +584,10 @@ class TestApplyToBrief(BaseApplicationTest):
 
         doc = html.fromstring(res.get_data(as_text=True))
         buyers_max_day_rate = doc.xpath(
-            "//*[@id='input-dayRate-question-advice']/descendant::h2[1]/following::p[1]/text()")[0]
-        assert buyers_max_day_rate == '**markdown**'
+            "//*[@id='input-dayRate-question-advice']/descendant::h2[1]/following::p[1]")
+        # if item is excaped correctly it will appear as text rather than an element
+        assert buyers_max_day_rate[0].find('strong') is None
+        assert buyers_max_day_rate[0].text == '**markdown**'
 
     def test_day_rate_question_escapes_brief_day_rate_html(self):
         self.brief['briefs']['budgetRange'] = '<h1>xss</h1>'
@@ -594,8 +599,10 @@ class TestApplyToBrief(BaseApplicationTest):
 
         doc = html.fromstring(res.get_data(as_text=True))
         buyers_max_day_rate = doc.xpath(
-            "//*[@id='input-dayRate-question-advice']/descendant::h2[1]/following::p[1]/text()")[0]
-        assert buyers_max_day_rate == '<h1>xss</h1>'
+            "//*[@id='input-dayRate-question-advice']/descendant::h2[1]/following::p[1]")
+        # if item is excaped correctly it will appear as text rather than an element
+        assert buyers_max_day_rate[0].find('h1') is None
+        assert buyers_max_day_rate[0].text == '<h1>xss</h1>'
 
     def test_day_rate_question_does_not_replay_buyers_budget_range_if_not_provided(self):
         self.brief['briefs']['specialistRole'] = 'deliveryManager'
@@ -618,8 +625,10 @@ class TestApplyToBrief(BaseApplicationTest):
 
         doc = html.fromstring(res.get_data(as_text=True))
         start_date = doc.xpath(
-            "//*[@id='input-availability-question-advice']/text()")[0].strip()
-        assert start_date == "The buyer needs the specialist to start by **markdown**."
+            "//*[@id='input-availability-question-advice']")[0]
+        # if item is excaped correctly it will appear as text rather than an element
+        assert start_date.find('strong') is None
+        assert start_date.text.strip() == "The buyer needs the specialist to start by **markdown**."
 
     def test_start_date_question_escapes_brief_start_date_html(self):
         self.brief['briefs']['startDate'] = '<h1>xss</h1>'
@@ -631,8 +640,10 @@ class TestApplyToBrief(BaseApplicationTest):
 
         doc = html.fromstring(res.get_data(as_text=True))
         start_date = doc.xpath(
-            "//*[@id='input-availability-question-advice']/text()")[0].strip()
-        assert start_date == "The buyer needs the specialist to start by <h1>xss</h1>."
+            "//*[@id='input-availability-question-advice']")[0]
+        # if item is excaped correctly it will appear as text rather than an element
+        assert start_date.find('h1') is None
+        assert start_date.text.strip() == "The buyer needs the specialist to start by <h1>xss</h1>."
 
     def test_existing_brief_response_data_is_prefilled(self):
         self.data_api_client.get_brief_response.return_value = self.brief_response(
