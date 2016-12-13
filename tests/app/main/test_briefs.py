@@ -532,6 +532,26 @@ class TestApplyToBrief(BaseApplicationTest):
         for index, requirement in enumerate(self.brief['briefs']['essentialRequirements']):
             assert requirement == list_items[index]
 
+    def test_essential_requirements_met_question_escapes_brief_data(self):
+        self.brief['briefs']['essentialRequirements'] = [
+            '<h1>Essential one with xss</h1>',
+            '**Essential two with markdown**'
+        ]
+        self.data_api_client.get_brief.return_value = self.brief
+
+        res = self.client.get(
+            '/suppliers/opportunities/1234/responses/5/do-you-have-all-the-essential-skills-and-experience'
+        )
+        assert res.status_code == 200
+
+        doc = html.fromstring(res.get_data(as_text=True))
+        list_items = doc.xpath("//*[@id='input-essentialRequirementsMet-question-advice']/ul/li")
+        # if item is excaped correctly it will appear as text rather than an element
+        assert list_items[0].find("h1") is None
+        assert list_items[0].text == '<h1>Essential one with xss</h1>'
+        assert list_items[1].find("strong") is None
+        assert list_items[1].text == '**Essential two with markdown**'
+
     def test_day_rate_question_replays_buyers_budget_range_and_suppliers_max_day_rate(self):
         self.brief['briefs']['budgetRange'] = '1 million dollars'
         self.brief['briefs']['specialistRole'] = 'deliveryManager'
@@ -554,6 +574,36 @@ class TestApplyToBrief(BaseApplicationTest):
         assert day_rate_headings[1] == "Your maximum day rate:"
         assert suppliers_max_day_rate == '£600'
 
+    def test_day_rate_question_escapes_brief_day_rate_markdown(self):
+        self.brief['briefs']['budgetRange'] = '**markdown**'
+
+        res = self.client.get(
+            '/suppliers/opportunities/1234/responses/5/how-much-you-charge-each-day'
+        )
+        assert res.status_code == 200
+
+        doc = html.fromstring(res.get_data(as_text=True))
+        buyers_max_day_rate = doc.xpath(
+            "//*[@id='input-dayRate-question-advice']/descendant::h2[1]/following::p[1]")
+        # if item is excaped correctly it will appear as text rather than an element
+        assert buyers_max_day_rate[0].find('strong') is None
+        assert buyers_max_day_rate[0].text == '**markdown**'
+
+    def test_day_rate_question_escapes_brief_day_rate_html(self):
+        self.brief['briefs']['budgetRange'] = '<h1>xss</h1>'
+
+        res = self.client.get(
+            '/suppliers/opportunities/1234/responses/5/how-much-you-charge-each-day'
+        )
+        assert res.status_code == 200
+
+        doc = html.fromstring(res.get_data(as_text=True))
+        buyers_max_day_rate = doc.xpath(
+            "//*[@id='input-dayRate-question-advice']/descendant::h2[1]/following::p[1]")
+        # if item is excaped correctly it will appear as text rather than an element
+        assert buyers_max_day_rate[0].find('h1') is None
+        assert buyers_max_day_rate[0].text == '<h1>xss</h1>'
+
     def test_day_rate_question_does_not_replay_buyers_budget_range_if_not_provided(self):
         self.brief['briefs']['specialistRole'] = 'deliveryManager'
         self.data_api_client.find_services.return_value = {"services": [{"deliveryManagerPriceMax": 600}]}
@@ -564,6 +614,36 @@ class TestApplyToBrief(BaseApplicationTest):
         assert res.status_code == 200
         data = res.get_data(as_text=True)
         assert "Buyer's maximum day rate:" not in data
+
+    def test_start_date_question_escapes_brief_start_date_markdown(self):
+        self.brief['briefs']['startDate'] = '**markdown**'
+
+        res = self.client.get(
+            '/suppliers/opportunities/1234/responses/5/the-earliest-the-specialist-can-start'
+        )
+        assert res.status_code == 200
+
+        doc = html.fromstring(res.get_data(as_text=True))
+        start_date = doc.xpath(
+            "//*[@id='input-availability-question-advice']")[0]
+        # if item is excaped correctly it will appear as text rather than an element
+        assert start_date.find('strong') is None
+        assert start_date.text.strip() == "The buyer needs the specialist to start by **markdown**."
+
+    def test_start_date_question_escapes_brief_start_date_html(self):
+        self.brief['briefs']['startDate'] = '<h1>xss</h1>'
+
+        res = self.client.get(
+            '/suppliers/opportunities/1234/responses/5/the-earliest-the-specialist-can-start'
+        )
+        assert res.status_code == 200
+
+        doc = html.fromstring(res.get_data(as_text=True))
+        start_date = doc.xpath(
+            "//*[@id='input-availability-question-advice']")[0]
+        # if item is excaped correctly it will appear as text rather than an element
+        assert start_date.find('h1') is None
+        assert start_date.text.strip() == "The buyer needs the specialist to start by <h1>xss</h1>."
 
     def test_existing_brief_response_data_is_prefilled(self):
         self.data_api_client.get_brief_response.return_value = self.brief_response(
@@ -873,6 +953,31 @@ class TestLegacyRespondToBrief(BaseApplicationTest):
         assert res.status_code == 302
         assert res.location == "http://localhost/login?next=%2Fsuppliers%2Fopportunities%2F1234%2Fresponses%2Fcreate"
         self.assert_flashes("supplier-role-required", "error")
+
+    def test_get_brief_response_page_escapes_essential_and_nice_to_have_requirements(self, data_api_client):
+        self.brief['briefs']['essentialRequirements'] = [
+            '<h1>Essential one with xss</h1>',
+            '**Essential two with markdown**'
+        ]
+        self.brief['briefs']['niceToHaveRequirements'] = [
+            '<h1>n2h one with xss</h1>',
+            '**n2h two with markdown**'
+        ]
+
+        data_api_client.get_brief.return_value = self.brief
+        data_api_client.get_framework.return_value = self.framework
+        res = self.client.get('/suppliers/opportunities/1234/responses/create')
+        data = res.get_data(as_text=True)
+        doc = html.fromstring(data)
+
+        assert "&lt;h1&gt;Essential one with xss&lt;/h1&gt;" in data
+        assert "&lt;h1&gt;n2h one with xss&lt;/h1&gt;" in data
+        assert len(doc.xpath('//h1')) == 1
+
+        assert "**Essential two with markdown**" in data
+        assert "<strong>Essential two with markdown</strong>" not in data
+        assert "**n2h two with markdown**" in data
+        assert "<strong>n2h two with markdown</strong>" not in data
 
     def test_create_new_brief_response(self, data_api_client):
         data_api_client.get_brief.return_value = self.brief
@@ -1331,6 +1436,41 @@ class TestResponseResultPage(BaseApplicationTest):
         self.brief['briefs']['evaluationType'] = ['Interview']
         with self.app.test_client():
             self.login()
+
+    def test_view_response_result_page_escapes_essential_and_nice_to_have_requirements(self, data_api_client):
+        self.brief['briefs']['essentialRequirements'] = [
+            '<h1>Essential one with xss</h1>',
+            '**Essential two with markdown**'
+        ]
+        self.brief['briefs']['niceToHaveRequirements'] = [
+            '<h1>n2h one with xss</h1>',
+            '**n2h two with markdown**'
+        ]
+
+        data_api_client.get_brief.return_value = self.brief
+        data_api_client.get_framework.return_value = self.framework
+        data_api_client.is_supplier_eligible_for_brief.return_value = True
+        data_api_client.find_brief_responses.return_value = {
+            "briefResponses": [
+                {
+                    "essentialRequirements": [True, True],
+                    "niceToHaveRequirements": [True, False]
+                }
+            ]
+        }
+
+        res = self.client.get('/suppliers/opportunities/1234/responses/result')
+        data = res.get_data(as_text=True)
+        doc = html.fromstring(data)
+
+        assert "&lt;h1&gt;Essential one with xss&lt;/h1&gt;" in data
+        assert "&lt;h1&gt;n2h one with xss&lt;/h1&gt;" in data
+        assert len(doc.xpath('//h1')) == 1
+
+        assert "**Essential two with markdown**" in data
+        assert "<strong>Essential two with markdown</strong>" not in data
+        assert "**n2h two with markdown**" in data
+        assert "<strong>n2h two with markdown</strong>" not in data
 
     def test_view_response_result_submitted_ok(self, data_api_client):
         data_api_client.get_brief.return_value = self.brief
