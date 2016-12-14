@@ -9,7 +9,7 @@ from dmutils.email import EmailError, send_email
 from dmutils.user import User
 from app.main.helpers.users import generate_application_invitation_token, decode_user_token
 from app import data_api_client
-from ..helpers import applicant_login_required
+from ..helpers import applicant_login_required, role_required
 import os
 from dmutils.file import s3_upload_file_from_request, s3_download_file
 import mimetypes
@@ -216,12 +216,12 @@ def application_update(id, step=None):
 
 
 @main.route('/application/<int:id>/documents/<slug>', methods=['GET'])
-@applicant_login_required
+@role_required('admin', 'applicant')
 def download_single_file(id, slug):
     application = data_api_client.get_application(id)
-    if not can_user_view_application(application):
+    if not can_user_view_application(application) and not current_user.has_role('admin'):
         abort(403, 'Not authorised to access application')
-    if is_application_submitted(application):
+    if is_application_submitted(application) and not current_user.has_role('admin'):
         abort(400, 'Application already submitted')
 
     file = s3_download_file(slug, os.path.join(S3_PATH, str(id)))
