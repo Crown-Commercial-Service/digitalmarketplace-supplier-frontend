@@ -731,6 +731,7 @@ class TestLegacyRespondToBrief(BaseApplicationTest):
         self.brief = api_stubs.brief(status='live', lot_slug='digital-specialists')
         self.brief['briefs']['essentialRequirements'] = ['Essential one', 'Essential two', 'Essential three']
         self.brief['briefs']['niceToHaveRequirements'] = ['Nice one', 'Top one', 'Get sorted']
+        self.brief['briefs']['publishedAt'] = '2016-10-25T12:00:00.000000Z'  # Date is before the new flow feature flag
 
         lots = [api_stubs.lot(slug="digital-specialists", allows_brief=True)]
         self.framework = api_stubs.framework(status="live", slug="digital-outcomes-and-specialists",
@@ -757,6 +758,14 @@ class TestLegacyRespondToBrief(BaseApplicationTest):
             assert breadcrumbs[index].find('a').text_content().strip() == link[0]
             assert breadcrumbs[index].find('a').get('href').strip() == link[1]
 
+    def test_will_404_if_brief_is_not_a_legacy_brief(self, data_api_client):
+        self.brief['briefs']['publishedAt'] = '2016-12-25T12:00:00.000000Z'
+        data_api_client.get_brief.return_value = self.brief
+
+        res = self.client.get('/suppliers/opportunities/1234/responses/create')
+
+        assert res.status_code == 404
+
     def test_get_brief_response_page(self, data_api_client):
         data_api_client.get_brief.return_value = self.brief
         data_api_client.get_framework.return_value = self.framework
@@ -770,6 +779,15 @@ class TestLegacyRespondToBrief(BaseApplicationTest):
         assert len(doc.xpath(
             '//h2[contains(text(), "Do you have any of the nice-to-have skills and experience?")]')) == 1
         self._test_breadcrumbs_on_brief_response_page(res)
+
+    def test_will_not_404_if_new_supplier_flow_flag_set_to_false(self, data_api_client):
+        self.app.config['FEATURE_FLAGS_NEW_SUPPLIER_FLOW'] = False
+
+        data_api_client.get_brief.return_value = self.brief
+        data_api_client.get_framework.return_value = self.framework
+        res = self.client.get('/suppliers/opportunities/1234/responses/create')
+
+        assert res.status_code == 200
 
     def test_get_brief_response_returns_404_for_not_live_brief(self, data_api_client):
         brief = self.brief.copy()
@@ -1239,16 +1257,33 @@ class TestLegacyRespondToBrief(BaseApplicationTest):
 class TestStartBriefResponseApplication(BaseApplicationTest):
     def setup(self):
         super(TestStartBriefResponseApplication, self).setup()
+        self.brief = api_stubs.brief(status='live', lot_slug='digital-specialists')
+        self.brief['briefs']['publishedAt'] = '2016-12-25T12:00:00.000000Z'
 
         with self.app.test_client():
             self.login()
+
+    def test_will_return_404_if_brief_is_a_legacy_brief(self, data_api_client):
+        self.brief['briefs']['publishedAt'] = '2016-10-25T12:00:00.000000Z'
+        data_api_client.get_brief.return_value = self.brief
+
+        res = self.client.get('/suppliers/opportunities/1234/responses/start')
+
+        assert res.status_code == 404
+
+    def test_will_return_404_if_new_supplier_flow_flag_set_to_false(self, data_api_client):
+        self.app.config['FEATURE_FLAGS_NEW_SUPPLIER_FLOW'] = False
+        data_api_client.get_brief.return_value = self.brief
+
+        res = self.client.get('/suppliers/opportunities/1234/responses/start')
+
+        assert res.status_code == 404
 
     @mock.patch("app.main.views.briefs.is_supplier_eligible_for_brief")
     def test_will_show_not_eligible_response_if_supplier_is_not_eligible_for_brief(
         self, is_supplier_eligible_for_brief, data_api_client
     ):
-        brief = api_stubs.brief(status='live', lot_slug='digital-specialists')
-        data_api_client.get_brief.return_value = brief
+        data_api_client.get_brief.return_value = self.brief
         data_api_client.find_brief_responses.return_value = {
             'briefResponses': []
         }
@@ -1261,7 +1296,7 @@ class TestStartBriefResponseApplication(BaseApplicationTest):
         assert doc.xpath('//title')[0].text == 'Not eligible for opportunity – Digital Marketplace'
 
     def test_start_application_contains_brief_title(self, data_api_client):
-        data_api_client.get_brief.return_value = api_stubs.brief(status='live', lot_slug='digital-specialists')
+        data_api_client.get_brief.return_value = self.brief
         data_api_client.find_brief_responses.return_value = {
             'briefResponses': []
         }
@@ -1275,7 +1310,7 @@ class TestStartBriefResponseApplication(BaseApplicationTest):
     def test_start_page_is_viewable_and_has_start_button_if_no_existing_brief_response(
         self, data_api_client
     ):
-        data_api_client.get_brief.return_value = api_stubs.brief(status='live', lot_slug='digital-specialists')
+        data_api_client.get_brief.return_value = self.brief
         data_api_client.find_brief_responses.return_value = {
             'briefResponses': []
         }
@@ -1287,7 +1322,7 @@ class TestStartBriefResponseApplication(BaseApplicationTest):
     def test_start_page_is_viewable_and_has_continue_link_if_draft_brief_response_exists(
         self, data_api_client
     ):
-        data_api_client.get_brief.return_value = api_stubs.brief(status='live', lot_slug='digital-specialists')
+        data_api_client.get_brief.return_value = self.brief
         data_api_client.find_brief_responses.return_value = {
             'briefResponses': [
                 {
@@ -1303,7 +1338,7 @@ class TestStartBriefResponseApplication(BaseApplicationTest):
         assert doc.xpath("//a[@class='link-button']/@href")[0] == '/suppliers/opportunities/1234/responses/2'
 
     def test_will_show_not_eligible_response_if_supplier_has_already_submitted_application(self, data_api_client):
-        data_api_client.get_brief.return_value = api_stubs.brief(status='live', lot_slug='digital-specialists')
+        data_api_client.get_brief.return_value = self.brief
         data_api_client.find_brief_responses.return_value = {
             'briefResponses': [
                 {
@@ -1318,7 +1353,7 @@ class TestStartBriefResponseApplication(BaseApplicationTest):
         assert res.location == 'http://localhost/suppliers/opportunities/1234/responses/result'
 
     def test_start_page_for_specialist_brief_shows_specialist_content(self, data_api_client):
-        data_api_client.get_brief.return_value = api_stubs.brief(status='live', lot_slug='digital-specialists')
+        data_api_client.get_brief.return_value = self.brief
         data_api_client.find_brief_responses.return_value = {
             'briefResponses': []
         }
@@ -1335,7 +1370,8 @@ class TestStartBriefResponseApplication(BaseApplicationTest):
         assert "the work the specialist did" in data
 
     def test_start_page_for_outcomes_brief_shows_outcomes_content(self, data_api_client):
-        data_api_client.get_brief.return_value = api_stubs.brief(status='live', lot_slug='digital-outcomes')
+        self.brief['briefs']['lotSlug'] = 'digital-outcomes'
+        data_api_client.get_brief.return_value = self.brief
         data_api_client.find_brief_responses.return_value = {
             'briefResponses': []
         }
@@ -1353,7 +1389,8 @@ class TestStartBriefResponseApplication(BaseApplicationTest):
         assert "provide the specialist's day rate" not in data
 
     def test_start_page_for_user_research_participants_brief_shows_user_research_content(self, data_api_client):
-        data_api_client.get_brief.return_value = api_stubs.brief(status='live', lot_slug='user-research-participants')
+        self.brief['briefs']['lotSlug'] = 'user-research-participants'
+        data_api_client.get_brief.return_value = self.brief
         data_api_client.find_brief_responses.return_value = {
             'briefResponses': []
         }
@@ -1372,7 +1409,7 @@ class TestStartBriefResponseApplication(BaseApplicationTest):
 
     def test_start_page_is_hidden_by_feature_flag(self, data_api_client):
         self.app.config['FEATURE_FLAGS_NEW_SUPPLIER_FLOW'] = False
-        data_api_client.get_brief.return_value = api_stubs.brief(status='live', lot_slug='digital-outcomes')
+        data_api_client.get_brief.return_value = self.brief
         data_api_client.find_brief_responses.return_value = {
             'briefResponses': []
         }
@@ -1384,6 +1421,8 @@ class TestStartBriefResponseApplication(BaseApplicationTest):
 class TestPostStartBriefResponseApplication(BaseApplicationTest):
     def setup(self):
         super(TestPostStartBriefResponseApplication, self).setup()
+        self.brief = api_stubs.brief(status='live', lot_slug='digital-specialists')
+        self.brief['briefs']['publishedAt'] = '2016-12-25T12:00:00.000000Z'
 
         with self.app.test_client():
             self.login()
@@ -1392,8 +1431,7 @@ class TestPostStartBriefResponseApplication(BaseApplicationTest):
     def test_will_show_not_eligible_response_if_supplier_is_not_eligible_for_brief(
         self, is_supplier_eligible_for_brief, data_api_client
     ):
-        brief = api_stubs.brief(status='live', lot_slug='digital-specialists')
-        data_api_client.get_brief.return_value = brief
+        data_api_client.get_brief.return_value = self.brief
         is_supplier_eligible_for_brief.return_value = False
 
         res = self.client.post('/suppliers/opportunities/2345/responses/start')
@@ -1403,8 +1441,7 @@ class TestPostStartBriefResponseApplication(BaseApplicationTest):
         assert doc.xpath('//title')[0].text == 'Not eligible for opportunity – Digital Marketplace'
 
     def test_valid_post_calls_api_and_redirects_to_edit_the_created_brief_response(self, data_api_client):
-        brief = api_stubs.brief(status='live', lot_slug='digital-specialists')
-        data_api_client.get_brief.return_value = brief
+        data_api_client.get_brief.return_value = self.brief
         data_api_client.create_brief_response.return_value = {
             'briefResponses': {
                 'id': 10
@@ -1418,7 +1455,7 @@ class TestPostStartBriefResponseApplication(BaseApplicationTest):
 
     def test_post_to_start_page_is_hidden_by_feature_flag(self, data_api_client):
         self.app.config['FEATURE_FLAGS_NEW_SUPPLIER_FLOW'] = False
-        data_api_client.get_brief.return_value = api_stubs.brief(status='live', lot_slug='digital-outcomes')
+        data_api_client.get_brief.return_value = self.brief
         res = self.client.post('/suppliers/opportunities/1234/responses/start')
         assert res.status_code == 404
 

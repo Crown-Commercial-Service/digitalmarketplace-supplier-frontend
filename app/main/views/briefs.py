@@ -3,11 +3,14 @@ from __future__ import unicode_literals
 
 import re
 
-from flask import abort, flash, redirect, render_template, request, url_for
+from datetime import datetime
+
+from flask import abort, flash, redirect, render_template, request, url_for, current_app
 from flask_login import current_user
 import flask_featureflags as feature
 
 from dmapiclient import HTTPError
+from dmutils.formats import DATETIME_FORMAT
 
 from ..helpers import login_required
 from ..helpers.briefs import (
@@ -80,6 +83,10 @@ def ask_brief_clarification_question(brief_id):
 @login_required
 def start_brief_response(brief_id):
     brief = get_brief(data_api_client, brief_id, allowed_statuses=['live'])
+
+    if not (datetime.strptime(current_app.config['FEATURE_FLAGS_NEW_SUPPLIER_FLOW'], "%Y-%m-%d")
+            <= datetime.strptime(brief['publishedAt'], DATETIME_FORMAT)):
+        abort(404)
 
     if not is_supplier_eligible_for_brief(data_api_client, current_user.supplier_id, brief):
         return _render_not_eligible_for_brief_error_page(brief)
@@ -222,8 +229,12 @@ def edit_brief_response(brief_id, brief_response_id, section_id=None):
 @main.route('/opportunities/<int:brief_id>/responses/create', methods=['GET'])
 @login_required
 def brief_response(brief_id):
-
     brief = get_brief(data_api_client, brief_id, allowed_statuses=['live'])
+
+    if current_app.config['FEATURE_FLAGS_NEW_SUPPLIER_FLOW'] and \
+        (datetime.strptime(current_app.config['FEATURE_FLAGS_NEW_SUPPLIER_FLOW'], "%Y-%m-%d")
+            <= datetime.strptime(brief['publishedAt'], DATETIME_FORMAT)):
+        abort(404)
 
     if not is_supplier_eligible_for_brief(data_api_client, current_user.supplier_id, brief):
         return _render_not_eligible_for_brief_error_page(brief)
@@ -322,7 +333,7 @@ def view_response_result(brief_id):
 
     if len(brief_response) == 0:
         return redirect(url_for(".brief_response", brief_id=brief_id))
-    elif all(brief_response[0]['essentialRequirements']):
+    elif brief_response[0].get('essentialRequirementsMet') or all(brief_response[0]['essentialRequirements']):
         result_state = 'submitted_ok'
     else:
         result_state = 'submitted_unsuccessful'
