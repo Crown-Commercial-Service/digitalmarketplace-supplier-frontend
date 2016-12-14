@@ -731,7 +731,7 @@ class TestLegacyRespondToBrief(BaseApplicationTest):
         self.brief = api_stubs.brief(status='live', lot_slug='digital-specialists')
         self.brief['briefs']['essentialRequirements'] = ['Essential one', 'Essential two', 'Essential three']
         self.brief['briefs']['niceToHaveRequirements'] = ['Nice one', 'Top one', 'Get sorted']
-        self.brief['briefs']['publishedAt'] = '2016-10-25T12:00:00.000000Z'
+        self.brief['briefs']['publishedAt'] = '2016-10-25T12:00:00.000000Z'  # Date is before the new flow feature flag
 
         lots = [api_stubs.lot(slug="digital-specialists", allows_brief=True)]
         self.framework = api_stubs.framework(status="live", slug="digital-outcomes-and-specialists",
