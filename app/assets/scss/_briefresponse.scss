@@ -1,0 +1,29 @@
+.brief-response-pricing {
+  margin-bottom: 4rem;
+
+  legend {
+    display: none;
+  }
+
+  question-heading {
+    h2 {
+      margin-bottom: 0;
+      margin-top: 0;
+    }
+
+  }
+
+  .word-count-counter {
+    p {
+      margin-bottom: 0;
+    }
+  }
+
+  .pricing-column {
+    margin-bottom: 0;
+    
+    .input-price {
+      margin-bottom: 0;
+    }
+  }
+}

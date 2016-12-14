@@ -26,7 +26,7 @@
   <div class="validation-wrapper validation-wrapper-pricing">
 {% endif %}
 
-  <fieldset class="question first-question" id="{{ name }}" style="margin-bottom: 4rem;">
+  <fieldset class="brief-response-pricing question first-question" id="{{ name }}" style="margin-bottom: 4rem;">
     <legend style="display: none;">
       <span class="visually-hidden">{{x.name}}</span>
     </legend>
@@ -91,7 +91,7 @@
           Price in <span class="pricing-unit">$</span> (including GST)
         </label>
         <input
-           style="margin-top: 0"
+          style="margin-top: 0"
           type="text"
           class="text-box pricing-input-with-unit{% if error %} invalid{% endif %}"
           name="{{ fields.price }}"
