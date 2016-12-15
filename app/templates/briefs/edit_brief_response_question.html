@@ -1,0 +1,33 @@
+{% extends "briefs/_base_edit_question_page.html" %}
+
+{% block breadcrumb %}
+
+  {%
+    with items = [
+      {
+        "link": "/",
+        "label": "Digital Marketplace"
+      },
+      {
+        "link": "/{}/opportunities".format(brief.frameworkSlug),
+        "label": "Supplier opportunities"
+      },
+      {
+        "link": "/{}/opportunities/{}".format(brief.frameworkSlug, brief.id),
+        "label": brief.title
+      },
+    ]
+  %}
+    {% include "toolkit/breadcrumb.html" %}
+  {% endwith %}
+{% endblock %}
+
+{% block save_button %}
+  {%
+    with
+    label="Submit application" if is_last_page else "Continue",
+    type="save"
+  %}
+    {% include "toolkit/button.html" %}
+  {% endwith %}
+{% endblock %}

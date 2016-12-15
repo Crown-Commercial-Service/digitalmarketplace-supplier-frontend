@@ -388,8 +388,11 @@ class TestApplyToBrief(BaseApplicationTest):
         self.data_api_client_patch.stop()
 
     @mock.patch("app.main.views.briefs.content_loader")
-    def test_will_redirect_from_generic_brief_response_url_to_first_section(self, content_loader):
-        content_loader.get_manifest.return_value.filter.return_value.get_next_editable_section_id.return_value = 'first'
+    def test_will_redirect_from_generic_brief_response_url_to_first_question(self, content_loader):
+        content_loader.get_manifest.return_value \
+            .filter.return_value \
+            .get_section.return_value \
+            .get_next_question_id.return_value = 'first'
 
         res = self.client.get('/suppliers/opportunities/1234/responses/5')
         assert res.status_code == 302
@@ -399,7 +402,7 @@ class TestApplyToBrief(BaseApplicationTest):
         for method in ('get', 'post'):
             self.data_api_client.get_brief_response = mock.MagicMock(side_effect=HTTPError(mock.Mock(status_code=404)))
 
-            res = self.client.open('/suppliers/opportunities/1234/responses/250/section-name', method=method)
+            res = self.client.open('/suppliers/opportunities/1234/responses/250/question-id', method=method)
 
             assert res.status_code == 404
             self.data_api_client.get_brief_response.assert_called_once_with(250)
@@ -413,7 +416,7 @@ class TestApplyToBrief(BaseApplicationTest):
                 }
             }
 
-            res = self.client.open('/suppliers/opportunities/1234/responses/5/section-name', method=method)
+            res = self.client.open('/suppliers/opportunities/1234/responses/5/question-id', method=method)
             assert res.status_code == 404
 
     @mock.patch("app.main.views.briefs.current_user")
@@ -421,7 +424,7 @@ class TestApplyToBrief(BaseApplicationTest):
         for method in ('get', 'post'):
             current_user.supplier_id = 789
 
-            res = self.client.open('/suppliers/opportunities/1234/responses/5/section-name', method=method)
+            res = self.client.open('/suppliers/opportunities/1234/responses/5/question-id', method=method)
             assert res.status_code == 404
 
     def test_404_for_not_live_brief(self):
@@ -430,7 +433,7 @@ class TestApplyToBrief(BaseApplicationTest):
                 status='closed', lot_slug='digital-specialists'
             )
 
-            res = self.client.open('/suppliers/opportunities/1234/responses/5/section-name', method=method)
+            res = self.client.open('/suppliers/opportunities/1234/responses/5/question-id', method=method)
             assert res.status_code == 404
 
     def test_404_for_not_live_framework(self):
@@ -439,7 +442,7 @@ class TestApplyToBrief(BaseApplicationTest):
                 status="expired", slug="digital-outcomes-and-specialists", clarification_questions_open=False
             )
 
-            res = self.client.open('/suppliers/opportunities/1234/responses/5/section-name', method=method)
+            res = self.client.open('/suppliers/opportunities/1234/responses/5/question-id', method=method)
             assert res.status_code == 404
 
     @mock.patch("app.main.views.briefs.is_supplier_eligible_for_brief")
@@ -447,7 +450,7 @@ class TestApplyToBrief(BaseApplicationTest):
         for method in ('get', 'post'):
             is_supplier_eligible_for_brief.return_value = False
 
-            res = self.client.open('/suppliers/opportunities/1234/responses/5/section-name', method=method)
+            res = self.client.open('/suppliers/opportunities/1234/responses/5/question-id', method=method)
             assert res.status_code == 400
 
             doc = html.fromstring(res.get_data(as_text=True))
@@ -458,7 +461,7 @@ class TestApplyToBrief(BaseApplicationTest):
         for method in ('get', 'post'):
             supplier_has_a_brief_response.return_value = True
 
-            res = self.client.open('/suppliers/opportunities/1234/responses/5/section-name', method=method)
+            res = self.client.open('/suppliers/opportunities/1234/responses/5/question-id', method=method)
             assert res.status_code == 302
             assert res.location == 'http://localhost/suppliers/opportunities/1234/responses/result'
             self.assert_flashes("already_applied", "error")
@@ -468,7 +471,7 @@ class TestApplyToBrief(BaseApplicationTest):
         for method in ('get', 'post'):
             content_loader.get_manifest.return_value.filter.return_value.get_section.return_value = None
 
-            res = self.client.open('/suppliers/opportunities/1234/responses/5/section-name', method=method)
+            res = self.client.open('/suppliers/opportunities/1234/responses/5/question-id', method=method)
             assert res.status_code == 404
 
     @mock.patch("app.main.views.briefs.content_loader")
@@ -476,30 +479,55 @@ class TestApplyToBrief(BaseApplicationTest):
         for method in ('get', 'post'):
             content_loader.get_manifest.return_value.filter.return_value.get_section.return_value.editable = False
 
-            res = self.client.open('/suppliers/opportunities/1234/responses/5/section-name', method=method)
+            res = self.client.open('/suppliers/opportunities/1234/responses/5/question-id', method=method)
             assert res.status_code == 404
 
     @mock.patch("app.main.views.briefs.content_loader")
-    def test_non_final_editable_section_shows_continue_button(self, content_loader):
-        content_loader.get_manifest.return_value.filter.return_value.sections = [
-            {'id': 'section-one'},
-            {'id': 'section-two'},
-            {'id': 'section-three'}
-        ]
+    def test_should_404_for_non_existent_question(self, content_loader):
+        for method in ('get', 'post'):
+            content_loader.get_manifest.return_value \
+                .filter.return_value \
+                .get_section.return_value \
+                .get_question.return_value = None
 
-        res = self.client.get('/suppliers/opportunities/1234/responses/5/section-two')
+            res = self.client.open('/suppliers/opportunities/1234/responses/5/question-id', method=method)
+            assert res.status_code == 404
+
+    @mock.patch("app.main.views.briefs.content_loader")
+    def test_non_final_question_shows_continue_button(self, content_loader):
+        content_loader.get_manifest.return_value \
+            .filter.return_value \
+            .get_section.return_value \
+            .get_next_question_id.return_value = 'not-none'
+
+        content_loader.get_manifest.return_value \
+            .filter.return_value \
+            .get_section.return_value \
+            .get_question.return_value = {
+                'question': 'question',
+                'type': 'text'
+            }
+
+        res = self.client.get('/suppliers/opportunities/1234/responses/5/question-id')
         assert res.status_code == 200
 
         doc = html.fromstring(res.get_data(as_text=True))
         assert doc.xpath("//input[@class='button-save']/@value")[0] == 'Continue'
 
     @mock.patch("app.main.views.briefs.content_loader")
-    def test_final_editable_section_shows_submit_application_button(self, content_loader):
-        content_loader.get_manifest.return_value.filter.return_value.sections = [
-            {'id': 'section-one'},
-            {'id': 'section-two'},
-            {'id': 'section-three'}
-        ]
+    def test_final_question_shows_submit_application_button(self, content_loader):
+        content_loader.get_manifest.return_value \
+            .filter.return_value \
+            .get_section.return_value \
+            .get_next_question_id.return_value = None
+
+        content_loader.get_manifest.return_value \
+            .filter.return_value \
+            .get_section.return_value \
+            .get_question.return_value = {
+                'question': 'question',
+                'type': 'text'
+            }
 
         res = self.client.get('/suppliers/opportunities/1234/responses/5/section-three')
         assert res.status_code == 200
@@ -509,7 +537,7 @@ class TestApplyToBrief(BaseApplicationTest):
 
     def test_content_from_manifest_is_shown(self):
         res = self.client.get(
-            '/suppliers/opportunities/1234/responses/5/email-address-the-buyer-should-use-to-contact-you'
+            '/suppliers/opportunities/1234/responses/5/respondToEmailAddress'
         )
         assert res.status_code == 200
 
@@ -522,7 +550,7 @@ class TestApplyToBrief(BaseApplicationTest):
 
     def test_essential_requirements_met_question_replays_all_brief_requirements(self):
         res = self.client.get(
-            '/suppliers/opportunities/1234/responses/5/do-you-have-all-the-essential-skills-and-experience'
+            '/suppliers/opportunities/1234/responses/5/essentialRequirementsMet'
         )
         assert res.status_code == 200
 
@@ -540,7 +568,7 @@ class TestApplyToBrief(BaseApplicationTest):
         self.data_api_client.get_brief.return_value = self.brief
 
         res = self.client.get(
-            '/suppliers/opportunities/1234/responses/5/do-you-have-all-the-essential-skills-and-experience'
+            '/suppliers/opportunities/1234/responses/5/essentialRequirementsMet'
         )
         assert res.status_code == 200
 
@@ -558,7 +586,7 @@ class TestApplyToBrief(BaseApplicationTest):
         self.data_api_client.find_services.return_value = {"services": [{"deliveryManagerPriceMax": 600}]}
 
         res = self.client.get(
-            '/suppliers/opportunities/1234/responses/5/how-much-you-charge-each-day'
+            '/suppliers/opportunities/1234/responses/5/dayRate'
         )
         assert res.status_code == 200
 
@@ -578,7 +606,7 @@ class TestApplyToBrief(BaseApplicationTest):
         self.brief['briefs']['budgetRange'] = '**markdown**'
 
         res = self.client.get(
-            '/suppliers/opportunities/1234/responses/5/how-much-you-charge-each-day'
+            '/suppliers/opportunities/1234/responses/5/dayRate'
         )
         assert res.status_code == 200
 
@@ -593,7 +621,7 @@ class TestApplyToBrief(BaseApplicationTest):
         self.brief['briefs']['budgetRange'] = '<h1>xss</h1>'
 
         res = self.client.get(
-            '/suppliers/opportunities/1234/responses/5/how-much-you-charge-each-day'
+            '/suppliers/opportunities/1234/responses/5/dayRate'
         )
         assert res.status_code == 200
 
@@ -609,7 +637,7 @@ class TestApplyToBrief(BaseApplicationTest):
         self.data_api_client.find_services.return_value = {"services": [{"deliveryManagerPriceMax": 600}]}
 
         res = self.client.get(
-            '/suppliers/opportunities/1234/responses/5/how-much-you-charge-each-day'
+            '/suppliers/opportunities/1234/responses/5/dayRate'
         )
         assert res.status_code == 200
         data = res.get_data(as_text=True)
@@ -619,7 +647,7 @@ class TestApplyToBrief(BaseApplicationTest):
         self.brief['briefs']['startDate'] = '**markdown**'
 
         res = self.client.get(
-            '/suppliers/opportunities/1234/responses/5/the-earliest-the-specialist-can-start'
+            '/suppliers/opportunities/1234/responses/5/availability'
         )
         assert res.status_code == 200
 
@@ -634,7 +662,7 @@ class TestApplyToBrief(BaseApplicationTest):
         self.brief['briefs']['startDate'] = '<h1>xss</h1>'
 
         res = self.client.get(
-            '/suppliers/opportunities/1234/responses/5/the-earliest-the-specialist-can-start'
+            '/suppliers/opportunities/1234/responses/5/availability'
         )
         assert res.status_code == 200
 
@@ -651,7 +679,7 @@ class TestApplyToBrief(BaseApplicationTest):
         )
 
         res = self.client.get(
-            '/suppliers/opportunities/1234/responses/5/email-address-the-buyer-should-use-to-contact-you'
+            '/suppliers/opportunities/1234/responses/5/respondToEmailAddress'
         )
         assert res.status_code == 200
 
@@ -665,7 +693,7 @@ class TestApplyToBrief(BaseApplicationTest):
         )
 
         res = self.client.post(
-            '/suppliers/opportunities/1234/responses/5/email-address-the-buyer-should-use-to-contact-you',
+            '/suppliers/opportunities/1234/responses/5/respondToEmailAddress',
             data={
                 "respondToEmailAddress": "not-a-valid-email"
             }
@@ -684,7 +712,7 @@ class TestApplyToBrief(BaseApplicationTest):
     def test_post_form_updates_api_and_redirects_to_next_section(self):
         data = {'dayRate': '500'}
         res = self.client.post(
-            '/suppliers/opportunities/1234/responses/5/how-much-you-charge-each-day',
+            '/suppliers/opportunities/1234/responses/5/dayRate',
             data=data
         )
         assert res.status_code == 302
@@ -696,12 +724,12 @@ class TestApplyToBrief(BaseApplicationTest):
             page_questions=['dayRate']
         )
 
-        assert res.location == 'http://localhost/suppliers/opportunities/1234/responses/5/do-you-have-all-the-essential-skills-and-experience'  # NOQA
+        assert res.location == 'http://localhost/suppliers/opportunities/1234/responses/5/essentialRequirementsMet'
 
     def test_post_final_section_submits_response_redirects_to_results(self):
         data = {'respondToEmailAddress': 'bob@example.com'}
         res = self.client.post(
-            '/suppliers/opportunities/1234/responses/5/email-address-the-buyer-should-use-to-contact-you',
+            '/suppliers/opportunities/1234/responses/5/respondToEmailAddress',
             data=data
         )
         assert res.status_code == 302

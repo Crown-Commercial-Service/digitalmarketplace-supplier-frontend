@@ -125,12 +125,12 @@ def start_brief_response(brief_id):
 
 @main.route('/opportunities/<int:brief_id>/responses/<int:brief_response_id>', methods=['GET'])
 @main.route(
-    '/opportunities/<int:brief_id>/responses/<int:brief_response_id>/<string:section_id>',
+    '/opportunities/<int:brief_id>/responses/<int:brief_response_id>/<string:question_id>',
     methods=['GET', 'POST']
 )
 @feature.is_active_feature('NEW_SUPPLIER_FLOW')
 @login_required
-def edit_brief_response(brief_id, brief_response_id, section_id=None):
+def edit_brief_response(brief_id, brief_response_id, question_id=None):
     brief = get_brief(data_api_client, brief_id, allowed_statuses=['live'])
     brief_response = data_api_client.get_brief_response(brief_response_id)['briefResponses']
 
@@ -162,21 +162,27 @@ def edit_brief_response(brief_id, brief_response_id, section_id=None):
         brief['frameworkSlug'], 'edit_brief_response'
     ).filter({'lot': lot['slug'], 'brief': brief, 'max_day_rate': max_day_rate})
 
-    if section_id is None:
+    section = content.get_section(content.get_next_editable_section_id())
+    if section is None or not section.editable:
+        abort(404)
+
+    next_question_id = section.get_next_question_id(question_id)
+
+    # If no question_id in url then redirect to first question
+    if question_id is None:
         return redirect(url_for(
             '.edit_brief_response',
             brief_id=brief_id,
             brief_response_id=brief_response_id,
-            section_id=content.get_next_editable_section_id(),
+            question_id=next_question_id
             )
         )
 
-    section = content.get_section(section_id)
-    if section is None or not section.editable:
+    question = section.get_question(question_id)
+    if question is None:
         abort(404)
 
-    is_last_page = section_id == content.sections[-1]['id']
-
+    # This line can soon be removed when we no longer show boolean list questions as part of the new flow
     section.inject_brief_questions_into_boolean_list_question(brief)
 
     status_code = 200
@@ -186,25 +192,24 @@ def edit_brief_response(brief_id, brief_response_id, section_id=None):
         try:
             data_api_client.update_brief_response(
                 brief_response_id,
-                section.get_data(request.form),
+                question.get_data(request.form),
                 current_user.email_address,
-                page_questions=section.get_field_names()
+                page_questions=[question.id]
             )
 
         except HTTPError as e:
-            errors = section.get_error_messages(e.message)
+            errors = question.get_error_messages(e.message)
             status_code = 400
-            brief_response.update(section.get_data(request.form))
+            brief_response.update(question.get_data(request.form))
 
         else:
-            next_section = content.get_next_editable_section_id(section_id)
-            if next_section:
+            if next_question_id:
                 return redirect(
                     url_for(
                         '.edit_brief_response',
                         brief_id=brief_id,
                         brief_response_id=brief_response_id,
-                        section_id=next_section
+                        question_id=next_question_id
                     )
                 )
             else:
@@ -216,12 +221,12 @@ def edit_brief_response(brief_id, brief_response_id, section_id=None):
                 return redirect(url_for('.view_response_result', brief_id=brief_id))
 
     return render_template(
-        "briefs/edit_brief_response.html",
+        "briefs/edit_brief_response_question.html",
         brief=brief,
         errors=errors,
-        is_last_page=is_last_page,
+        is_last_page=False if next_question_id else True,
+        question=question,
         service_data=brief_response,
-        section=section,
         **dict(main.config['BASE_TEMPLATE_DATA'])
     ), status_code
 
