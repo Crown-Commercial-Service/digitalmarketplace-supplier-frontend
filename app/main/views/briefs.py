@@ -12,6 +12,7 @@ from dmapiclient import HTTPError
 from dmutils.forms import render_template_with_csrf
 
 from dmutils.email import send_email, EmailError
+import six
 from six import text_type
 
 from ..helpers import login_required
