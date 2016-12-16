@@ -1,4 +1,4 @@
-{% extends "services/_base_edit_section_page.html" %}
+{% extends "briefs/_base_edit_question_page.html" %}
 
 {% block breadcrumb %}
 
@@ -22,17 +22,12 @@
   {% endwith %}
 {% endblock %}
 
-{% block form_wrapper_attributes %} class="single-question-page"{% endblock %}
-
 {% block save_button %}
-
   {%
     with
-    label="Continue" if not is_last_page else "Submit application",
+    label="Submit application" if is_last_page else "Continue",
     type="save"
   %}
     {% include "toolkit/button.html" %}
   {% endwith %}
-
 {% endblock %}
-{% block return_to_service_link %}{% endblock %}
