@@ -16,10 +16,13 @@ run_app: show_environment virtualenv
 virtualenv:
 	[ -z $$VIRTUAL_ENV ] && [ ! -d venv ] && virtualenv venv || true
 
-requirements: virtualenv requirements.txt
+upgrade_pip: virtualenv
+	${VIRTUALENV_ROOT}/bin/pip install --upgrade pip
+
+requirements: virtualenv upgrade_pip requirements.txt
 	${VIRTUALENV_ROOT}/bin/pip install -r requirements.txt
 
-requirements_for_test: virtualenv requirements_for_test.txt
+requirements_for_test: virtualenv upgrade_pip requirements_for_test.txt
 	${VIRTUALENV_ROOT}/bin/pip install -r requirements_for_test.txt
 
 npm_install: package.json
