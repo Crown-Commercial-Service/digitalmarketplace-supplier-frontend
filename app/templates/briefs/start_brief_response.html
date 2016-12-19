@@ -37,7 +37,7 @@
 
       <h2 class="heading-xmedium">How to give evidence</h2>
       <p>The buyer will assess and score your evidence to shortlist the best {% if brief.lotSlug == 'digital-specialists' %}specialists{% else %}suppliers{% endif %}.</p>
-      <p>You’ll need to meet or exceed their essential criteria to get through to the next stage.</p>
+      <p>You’ll need to meet or exceed their essential requirements to get through to the next stage.</p>
 
       <h3 class="heading-small">Evidence structure</h3>
       <div class="explanation-list padding-bottom-small">
@@ -48,9 +48,9 @@
           <li>what the results were</li>
         </ul>
       </div>
-      <p>There’s a 100-word maximum for each essential or nice-to-have criteria.</p>
-      <p>You should only provide one example for each essential or nice-to-have criteria (unless the buyer specifies otherwise).</p>
-      <p>You can reuse examples across different essential or nice-to-have criteria if you need to.</p>
+      <p>There’s a 100-word maximum for each essential or nice-to-have requirement.</p>
+      <p>You should only provide one example for each essential or nice-to-have requirement (unless the buyer specifies otherwise).</p>
+      <p>You can reuse examples across different essential or nice-to-have requirements if you need to.</p>
 
       {% if not existing_draft_response %}
         <form action="{{ url_for('.start_brief_response', brief_id=brief['id']) }}" method="post">
