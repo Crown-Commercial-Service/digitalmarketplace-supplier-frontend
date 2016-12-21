@@ -144,9 +144,9 @@ def create_application(token):
 @main.route('/application')
 @applicant_login_required
 def my_application():
-    applications = data_api_client.find_applications(user_id=current_user.id)
-    if applications['applications'][0]:
-        application = applications['applications'][0]
+    application = data_api_client.get_application(current_user.application_id)
+    if application:
+        application = application['application']
         if application.get('status', 'saved') != 'saved':
             return redirect(url_for('.submit_application', id=application['id']))
         else:
