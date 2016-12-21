@@ -12,8 +12,22 @@ def get_application(id):
         'id': 1,
         'status': 'saved',
         'data': {'a': 'b'},
-        'user_id': 234,
         'created_at': '2016-11-14 01:22:01.14119',
+        'email': 'applicant@email.com',
+        'representative': 'Ms Authorised Rep',
+        'name': 'My Amazing Company'
+    }}
+
+
+def get_unauthorised_application(id):
+    return {'application': {
+        'id': 1,
+        'status': 'saved',
+        'data': {'a': 'b'},
+        'created_at': '2016-11-14 01:22:01.14119',
+        'email': 'test@email.com',
+        'representative': 'Ms Authorised Rep',
+        'name': 'My Amazing Company'
     }}
 
 
@@ -22,17 +36,15 @@ def get_submitted_application(id):
         'id': 1,
         'status': 'submitted',
         'data': {'a': 'b'},
-        'user_id': 234,
         'created_at': '2016-11-14 01:22:01.14119',
     }}
 
 
 def get_another_application(id):
     return {'application': {
-        'id': 1,
+        'id': 2,
         'status': 'saved',
         'data': {'a': 'b'},
-        'user_id': 456,
         'created_at': '2016-11-14 01:22:01.14119',
     }}
 
@@ -78,7 +90,7 @@ class TestSignupPage(BaseApplicationTest):
         data = dict(self.test_application)
         data['name'] = ''
 
-        res = self.client.post(
+        self.client.post(
             self.expand_path('/signup'),
             data=data
         )
@@ -182,7 +194,7 @@ class TestCreateApplicationPage(BaseApplicationTest):
         decode_user_token.return_value = {}
         render_create_application.return_value = 'abc'
 
-        res = self.client.post(
+        self.client.post(
             self.url_for('main.create_application', token='test'),
             data={'csrf_token': FakeCsrf.valid_token}
         )
@@ -195,7 +207,7 @@ class TestCreateApplicationPage(BaseApplicationTest):
         decode_user_token.return_value = {}
         render_create_application.return_value = 'abc'
 
-        res = self.client.post(
+        self.client.post(
             self.url_for('main.create_application', token='test'),
             data={'csrf_token': FakeCsrf.valid_token, 'password': '12345'}
         )
@@ -244,7 +256,6 @@ class TestCreateApplicationPage(BaseApplicationTest):
         assert res.status_code == 302
         assert res.location == self.url_for('main.render_application', id=999, step='start', _external=True)
         data_api_client.create_application.assert_called_once_with(
-            123,
             {'status': 'saved'}
         )
 
@@ -321,7 +332,7 @@ class TestApplicationPage(BaseApplicationTest):
             )
 
             assert res.status_code == 302
-            assert res.location == self.url_for('main.render_application', id=1, step='slug',  _external=True)
+            assert res.location == self.url_for('main.render_application', id=1, step='slug', _external=True)
 
     @mock.patch("app.main.views.signup.data_api_client")
     @mock.patch('app.main.views.signup.render_component')
@@ -364,12 +375,76 @@ class TestApplicationPage(BaseApplicationTest):
         with self.app.test_client():
             self.login_as_applicant()
             data_api_client.get_application.side_effect = get_application
-            res = self.client.get(self.expand_path('/application/submit/1'))
+            res = self.client.post(self.expand_path('/application/submit/1'), data={'csrf_token': FakeCsrf.valid_token})
 
             assert res.status_code == 200
 
             data_api_client.update_application.assert_called_once_with(
                 1, {'status': 'submitted'}
+            )
+
+    @mock.patch('app.main.views.signup.render_template')
+    @mock.patch('app.main.views.signup.send_email')
+    @mock.patch("app.main.views.signup.data_api_client")
+    @mock.patch('app.main.views.signup.render_component')
+    def test_application_authorise_has_account(self, render_component, data_api_client, send_email, render_template):
+        render_component.return_value.get_props.return_value = {}
+        render_component.return_value.get_slug.return_value = 'slug'
+        render_template.return_value = ''
+
+        with self.app.test_client():
+            self.login_as_applicant()
+            data_api_client.get_application.side_effect = get_application
+            res = self.client.post(self.expand_path('/application/1/authorise'),
+                                   data={'csrf_token': FakeCsrf.valid_token})
+
+            assert res.status_code == 200
+
+            render_template.called_with(
+                'emails/create_authorise_email_has_account.html',
+                business_name='My Amazing Company',
+                name='Ms Authorised Rep',
+                url='http://localhost/sellers/application/1/submit'
+            )
+
+            send_email.assert_called_once_with(
+                'applicant@email.com',
+                mock.ANY,
+                self.app.config['INVITE_EMAIL_SUBJECT'],
+                self.app.config['INVITE_EMAIL_FROM'],
+                self.app.config['INVITE_EMAIL_NAME']
+            )
+
+    @mock.patch('app.main.views.signup.render_template')
+    @mock.patch('app.main.views.signup.send_email')
+    @mock.patch("app.main.views.signup.data_api_client")
+    @mock.patch('app.main.views.signup.render_component')
+    def test_application_authorise_no_account(self, render_component, data_api_client, send_email, render_template):
+        render_component.return_value.get_props.return_value = {}
+        render_component.return_value.get_slug.return_value = 'slug'
+        render_template.return_value = ''
+
+        with self.app.test_client():
+            self.login_as_applicant()
+            data_api_client.get_application.side_effect = get_unauthorised_application
+            res = self.client.post(self.expand_path('/application/1/authorise'),
+                                   data={'csrf_token': FakeCsrf.valid_token})
+
+            assert res.status_code == 200
+
+            render_template.called_with(
+                'emails/create_authorise_email_no_account.html',
+                business_name='My Amazing Company',
+                name='Ms Authorised Rep',
+                url='http://localhost/sellers/application/1/submit'
+            )
+
+            send_email.assert_called_once_with(
+                'test@email.com',
+                mock.ANY,
+                self.app.config['INVITE_EMAIL_SUBJECT'],
+                self.app.config['INVITE_EMAIL_FROM'],
+                self.app.config['INVITE_EMAIL_NAME']
             )
 
 

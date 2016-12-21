@@ -4,7 +4,6 @@ from flask_login import current_user, login_user
 from app.main import main
 from react.render import render_component
 from react.response import from_response, validate_form_data
-from dmapiclient import HTTPError
 from dmutils.email import EmailError, send_email
 from dmutils.user import User
 from app.main.helpers.users import generate_application_invitation_token, decode_user_token
@@ -20,7 +19,7 @@ S3_PATH = 'applications'
 
 
 def can_user_view_application(application):
-    return current_user.id == application['application']['user_id']
+    return current_user.application_id == application['application']['id']
 
 
 def is_application_submitted(application):
@@ -81,7 +80,8 @@ def send_seller_signup_email():
 
 
 @main.route('/signup/create-user/<string:token>', methods=['GET'])
-def render_create_application(token, data={}, errors=None):
+def render_create_application(token, data=None, errors=None):
+    data = data or {}
     token_data = decode_user_token(token.encode())
 
     if not token_data.get('email'):
@@ -121,19 +121,24 @@ def create_application(token):
     if errors:
         return render_create_application(token, form_data, errors)
 
+    id = token_data.get('id')
+
+    if not id:
+        application = data_api_client.create_application({'status': 'saved'})
+        id = application['application']['id']
+
     user = data_api_client.create_user({
         'name': token_data['name'],
         'password': form_data['password'],
         'emailAddress': token_data['email'],
         'role': 'applicant',
+        'application_id': id
     })
 
     user = User.from_json(user)
 
-    application = data_api_client.create_application(user.id, {'status': 'saved'})
-
     login_user(user)
-    return redirect(url_for('main.render_application', id=application['application']['id'], step='start'))
+    return redirect(url_for('main.render_application', id=id, step='start'))
 
 
 @main.route('/application')
@@ -150,7 +155,7 @@ def my_application():
         abort(404, "Application can not be found")
 
 
-@main.route('/application/submit/<int:id>', methods=['GET'])
+@main.route('/application/submit/<int:id>', methods=['GET', 'POST'])
 @applicant_login_required
 def submit_application(id):
     application = data_api_client.get_application(id)
@@ -178,7 +183,9 @@ def render_application(id, step=None, substep=None):
     props['form_options'] = {
         'action': url_for('.render_application', id=id, step=step),
         'submit_url': url_for('.submit_application', id=id),
-        'document_url': url_for('.upload_single_file', id=id, slug='')
+        'document_url': url_for('.upload_single_file', id=id, slug=''),
+        'authorise_url': url_for('.authorise_application', id=id),
+        'user_email': current_user.email_address
     }
     props['options'] = {'seller_registration': feature.is_active('SELLER_REGISTRATION')}
 
@@ -240,3 +247,49 @@ def upload_single_file(id, slug):
         abort(400, 'Application already submitted')
 
     return s3_upload_file_from_request(request, slug, os.path.join(S3_PATH, str(id)))
+
+
+@main.route('/application/<int:id>/authorise', methods=['POST'])
+@applicant_login_required
+def authorise_application(id):
+    application = data_api_client.get_application(id)
+    if not can_user_view_application(application):
+        abort(403, 'Not authorised to access application')
+    if is_application_submitted(application):
+        return redirect(url_for('.submit_application', id=id))
+
+    application = application['application']
+    url = url_for('main.render_application', id=id, step='submit', _external=True)
+    user_json = data_api_client.get_user(email_address=application['email'])
+    template = 'emails/create_authorise_email_has_account.html'
+
+    if not user_json:
+        token_data = {'id': id, 'name': application['representative'], 'email': application['email']}
+        token = generate_application_invitation_token(token_data)
+        url = url_for('main.render_create_application', token=token, _external=True)
+        template = 'emails/create_authorise_email_no_account.html'
+
+    email_body = render_template(
+        template,
+        url=url,
+        name=application['representative'],
+        business_name=application['name'],
+    )
+
+    try:
+        send_email(
+            application['email'],
+            email_body,
+            current_app.config['INVITE_EMAIL_SUBJECT'],
+            current_app.config['INVITE_EMAIL_FROM'],
+            current_app.config['INVITE_EMAIL_NAME']
+        )
+    except EmailError as e:
+        current_app.logger.error(
+            'Authorisation email failed to send. '
+            'error {error}',
+            extra={'error': six.text_type(e)}
+        )
+        abort(503, 'Failed to send user invite reset')
+
+    return render_template('suppliers/authorisation_submitted.html', email=application['email'])

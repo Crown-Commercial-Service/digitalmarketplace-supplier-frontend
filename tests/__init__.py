@@ -49,6 +49,7 @@ def auto_applicant_login():
         'emailAddress': 'applicant@email.com',
         'role': 'applicant',
         'termsAcceptedAt': datetime(2000, 1, 1).strftime(DATETIME_FORMAT),
+        'application': {'id': 1}
     }
     }
     user = User.from_json(user_json)

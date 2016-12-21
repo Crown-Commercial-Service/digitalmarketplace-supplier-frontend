@@ -173,7 +173,7 @@ class BaseApplicationTest(object):
 
     @staticmethod
     def user(id, email_address, supplier_code, supplier_name, name, is_token_valid=True, locked=False, active=True,
-             role='buyer', terms_accepted_date=None):
+             role='buyer', terms_accepted_date=None, application_id=None):
 
         now = datetime.utcnow()
 
@@ -201,6 +201,10 @@ class BaseApplicationTest(object):
             }
             user['role'] = 'supplier'
             user['supplier'] = supplier
+
+        if application_id:
+            application = {'id': application_id}
+            user['application'] = application
         return {
             "users": user
         }
@@ -322,12 +326,13 @@ class BaseApplicationTest(object):
         with patch('app.main.views.login.data_api_client') as login_api_client:
 
             login_api_client.authenticate_user.return_value = self.user(
-                234, "applicant@email.com", None, None, 'Applicant', role='applicant')
+                234, "applicant@email.com", None, None, 'Applicant', role='applicant', application_id=1)
 
             self.get_user_patch = patch.object(
                 data_api_client,
                 'get_user',
-                return_value=self.user(234, "applicant@email.com", None, None, 'Applicant', role='applicant')
+                return_value=self.user(234, "applicant@email.com", None, None, 'Applicant', role='applicant',
+                                       application_id=1)
             )
             self.get_user_patch.start()
 
