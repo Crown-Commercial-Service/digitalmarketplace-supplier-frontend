@@ -2,7 +2,7 @@
 
 from itertools import chain
 
-from flask import render_template, request, redirect, url_for, abort, session, Markup, make_response, jsonify
+from flask import render_template, request, redirect, url_for, abort, session, Markup
 from flask_login import current_user
 from flask import current_app
 import flask_featureflags as feature
@@ -133,11 +133,9 @@ def update_supplier():
     return redirect('/supplier/{}'.format(current_user.supplier_code))
 
 
-@main.route('/update/<int:id>', methods=['GET'])
-@main.route('/update/<int:id>/<path:step>', methods=['GET'])
-@main.route('/update/<int:id>/<path:step>/<path:substep>', methods=['GET'])
+@main.route('/update', methods=['GET'])
 @login_required
-def supplier_update(id=None, step=None, substep=None):
+def supplier_update():
 
     try:
         supplier = data_api_client.get_supplier(
@@ -148,50 +146,37 @@ def supplier_update(id=None, step=None, substep=None):
         abort(e.status_code)
 
     if feature.is_active('SELLER_UPDATE'):
-        # add business/authorized representative contact details
-        if len(supplier['contacts']) > 0:
-            supplier['email'] = supplier['contacts'][0]['email']
-            supplier['phone'] = supplier['contacts'][0]['phone']
-            supplier['representative'] = supplier['contacts'][0]['name']
-        if len(supplier['address']) > 0:
-            supplier['address']['address_line'] = supplier['address']['addressLine']
-            supplier['address']['postal_code'] = supplier['address']['postalCode']
-        props = {"application": supplier}
-        props['basename'] = url_for('.supplier_update', id=current_user.supplier_code)
-        props['options'] = {'seller_update': feature.is_active('SELLER_UPDATE')}
-        props['form_options'] = {
-            'action': url_for('.supplier_update_save', id=current_user.supplier_code),
-            'submit_url':  url_for('.supplier_update_save', id=current_user.supplier_code),
-        }
-        rendered_component = render_component('bundles/SellerRegistration/ApplicantSignupWidget.js', props)
+        if not supplier.get('application_id'):
+            # add business/authorized representative contact details
+            if len(supplier.get('contacts', [])) > 0:
+                supplier['email'] = supplier['contacts'][0].get('email')
+                supplier['phone'] = supplier['contacts'][0].get('phone')
+                supplier['representative'] = supplier['contacts'][0].get('name')
+            if len(supplier.get('address', [])) > 0:
+                supplier['address']['address_line'] = supplier['address']['addressLine']
+                supplier['address']['postal_code'] = supplier['address']['postalCode']
+            del supplier['id']
+            supplier['status'] = 'saved'
 
-        return render_template(
-            '_react.html',
-            component=rendered_component
-        )
+            application = data_api_client.create_application(supplier)
+            supplier_updates = {'application_id': application['application']['id']}
 
+            try:
+                data_api_client.update_supplier(
+                    current_user.supplier_code,
+                    supplier_updates,
+                    user=current_user.email_address
+                )
 
-@main.route('/update/<int:id>', methods=['POST'])
-@main.route('/update/<int:id>/<path:step>', methods=['POST'])
-@main.route('/update/<int:id>/<path:step>/<path:substep>', methods=['POST'])
-@login_required
-def supplier_update_save(id=None, step=None, substep=None):
-    json = request.content_type == 'application/json'
-    form_data = from_response(request)
-    supplier_updates = form_data['application'] if json else form_data
+                users = get_current_suppliers_users()
+                for user in users:
+                    data_api_client.update_user(user['id'], fields={'application_id': application['application']['id']})
 
-    try:
-        result = data_api_client.update_supplier(
-            current_user.supplier_code,
-            supplier_updates,
-            user=current_user.email_address
-        )
-    except APIError as e:
-        current_app.logger.error(e)
-        abort(e.status_code)
+            except APIError as e:
+                current_app.logger.error(e)
+                abort(e.status_code)
 
-    if json:
-        return jsonify(result)
+        return redirect(url_for('.my_application'))
 
 
 @main.route('/create', methods=['GET'])

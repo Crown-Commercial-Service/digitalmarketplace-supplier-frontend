@@ -29,7 +29,7 @@ def applicant_login_required(func):
     @wraps(func)
     @flask_login.login_required
     def decorated_view(*args, **kwargs):
-        if current_user.is_authenticated and current_user.role != 'applicant':
+        if current_user.is_authenticated and current_user.role not in ['applicant', 'supplier']:
             flash('applicant-role-required', 'error')
             return current_app.login_manager.unauthorized()
         return func(*args, **kwargs)

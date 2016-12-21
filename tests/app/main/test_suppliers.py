@@ -149,6 +149,30 @@ class TestSupplierDashboardLogin(BaseApplicationTest):
         assert_equal(res.location, self.get_login_redirect_url(dashboard_url))
 
 
+@mock.patch('app.main.suppliers.get_current_suppliers_users')
+@mock.patch('app.main.suppliers.render_component')
+@mock.patch("app.main.views.suppliers.data_api_client")
+class TestSupplierApplication(BaseApplicationTest):
+    def test_update_create_application(self, data_api_client, render_component, get_current_suppliers_users):
+        self.login()
+
+        data_api_client.get_supplier.side_effect = limited_supplier
+        data_api_client.create_application.return_value = {'application': {'id': 1}}
+        render_component.return_value.get_props.return_value = {}
+        render_component.return_value.get_slug.return_value = 'slug'
+        get_current_suppliers_users.return_value = [{'id': 1}, {'id': 2}]
+
+        response = self.client.get(self.url_for('main.supplier_update', id=1234))
+        assert_equal(response.status_code, 302)
+
+        data_api_client.create_application.assert_called_once_with(
+            {'website': 'www.com', 'status': 'saved', 'name': 'Supplier Name',
+             'contacts': [{'phoneNumber': '099887', 'id': 1234, 'contactName': 'contact name',
+                           'email': 'email@email.com'}],
+             'dunsNumber': '999999999', 'phone': None, 'summary': 'supplier summary',
+             'email': 'email@email.com', 'representative': None})
+
+
 @mock.patch('app.main.suppliers.render_component')
 @mock.patch("app.main.views.suppliers.data_api_client")
 class TestSupplierUpdate(BaseApplicationTest):

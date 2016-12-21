@@ -280,6 +280,19 @@ class TestApplicationPage(BaseApplicationTest):
 
     @mock.patch("app.main.views.signup.data_api_client")
     @mock.patch('app.main.views.signup.render_component')
+    def test_application_entrypoint_redirects_for_supplier(self, render_component, data_api_client):
+        render_component.return_value.get_props.return_value = {}
+        render_component.return_value.get_slug.return_value = 'slug'
+
+        with self.app.test_client():
+            self.login()
+            data_api_client.get_application.side_effect = get_application
+            res = self.client.get(self.expand_path('/application'))
+
+            assert res.status_code == 302
+
+    @mock.patch("app.main.views.signup.data_api_client")
+    @mock.patch('app.main.views.signup.render_component')
     def test_application_page_renders(self, render_component, data_api_client):
         render_component.return_value.get_props.return_value = {}
         render_component.return_value.get_slug.return_value = 'slug'
@@ -379,9 +392,10 @@ class TestApplicationPage(BaseApplicationTest):
 
             assert res.status_code == 200
 
-            data_api_client.update_application.assert_called_once_with(
-                1, {'status': 'submitted'}
-            )
+            args, kwargs = data_api_client.update_application.call_args
+            assert args[0] == 1
+            assert 'submitted_at' in args[1]
+            assert args[1]['status'] == 'submitted'
 
     @mock.patch('app.main.views.signup.render_template')
     @mock.patch('app.main.views.signup.send_email')

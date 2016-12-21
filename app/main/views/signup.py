@@ -4,6 +4,7 @@ from flask_login import current_user, login_user
 from app.main import main
 from react.render import render_component
 from react.response import from_response, validate_form_data
+from dmapiclient import APIError
 from dmutils.email import EmailError, send_email
 from dmutils.user import User
 from app.main.helpers.users import generate_application_invitation_token, decode_user_token
@@ -13,7 +14,7 @@ import os
 from dmutils.file import s3_upload_file_from_request, s3_download_file
 import mimetypes
 import flask_featureflags as feature
-
+import pendulum
 
 S3_PATH = 'applications'
 
@@ -144,15 +145,16 @@ def create_application(token):
 @main.route('/application')
 @applicant_login_required
 def my_application():
-    application = data_api_client.get_application(current_user.application_id)
-    if application:
-        application = application['application']
-        if application.get('status', 'saved') != 'saved':
-            return redirect(url_for('.submit_application', id=application['id']))
-        else:
-            return redirect(url_for('.render_application', id=application['id'], step="start"))
+    try:
+        application = data_api_client.get_application(current_user.application_id)['application']
+    except APIError as e:
+        current_app.logger.error(e)
+        abort(e.status_code)
+
+    if application.get('status', 'saved') != 'saved':
+        return redirect(url_for('.submit_application', id=application['id']))
     else:
-        abort(404, "Application can not be found")
+        return redirect(url_for('.render_application', id=application['id'], step="start"))
 
 
 @main.route('/application/submit/<int:id>', methods=['GET', 'POST'])
@@ -162,7 +164,9 @@ def submit_application(id):
     if not can_user_view_application(application):
         abort(403, 'Not authorised to access application')
 
-    data_api_client.update_application(id, {'status': 'submitted'})
+    if application['application']['status'] in ['saved']:
+        data_api_client.update_application(id, {'status': 'submitted',
+                                                'submitted_at': pendulum.now('UTC').to_iso8601_string(extended=True)})
 
     return render_template('suppliers/application_submitted.html')
 
