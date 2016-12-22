@@ -147,18 +147,19 @@ def supplier_update():
 
     if feature.is_active('SELLER_UPDATE'):
         if not supplier.get('application_id'):
-            # add business/authorized representative contact details
+            data = dict(supplier)
             if len(supplier.get('contacts', [])) > 0:
-                supplier['email'] = supplier['contacts'][0].get('email')
-                supplier['phone'] = supplier['contacts'][0].get('phone')
-                supplier['representative'] = supplier['contacts'][0].get('name')
+                data['email'] = supplier['contacts'][0].get('email')
+                data['phone'] = supplier['contacts'][0].get('phone')
+                data['representative'] = supplier['contacts'][0].get('name')
             if len(supplier.get('address', [])) > 0:
-                supplier['address']['address_line'] = supplier['address']['addressLine']
-                supplier['address']['postal_code'] = supplier['address']['postalCode']
-            del supplier['id']
-            supplier['status'] = 'saved'
+                data['address']['address_line'] = supplier['address']['addressLine']
+                data['address']['postal_code'] = supplier['address']['postalCode']
 
-            application = data_api_client.create_application(supplier)
+            data['status'] = 'saved'
+            data = {key: data[key] for key in data if key not in ['id', 'contacts', 'domains', 'prices']}
+
+            application = data_api_client.create_application(data)
             supplier_updates = {'application_id': application['application']['id']}
 
             try:

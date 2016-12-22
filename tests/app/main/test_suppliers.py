@@ -34,7 +34,8 @@ def limited_supplier(self):
             'summary': 'supplier summary',
             'dunsNumber': '999999999',
             'id': 12345,
-            'name': 'Supplier Name'
+            'name': 'Supplier Name',
+            'prices': {}
         }
     }
 
@@ -167,8 +168,6 @@ class TestSupplierApplication(BaseApplicationTest):
 
         data_api_client.create_application.assert_called_once_with(
             {'website': 'www.com', 'status': 'saved', 'name': 'Supplier Name',
-             'contacts': [{'phoneNumber': '099887', 'id': 1234, 'contactName': 'contact name',
-                           'email': 'email@email.com'}],
              'dunsNumber': '999999999', 'phone': None, 'summary': 'supplier summary',
              'email': 'email@email.com', 'representative': None})
 
