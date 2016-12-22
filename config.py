@@ -72,7 +72,7 @@ class Config(object):
     FEATURE_FLAGS = {
         'EDIT_SECTIONS': True,
         'EMAIL_TO_BRIEF_RESPONDERS': True,
-        'SELLER_REGISTRATION': True,
+        'SELLER_REGISTRATION': False,
         'SELLER_UPDATE': True
     }
 
