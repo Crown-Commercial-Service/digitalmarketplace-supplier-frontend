@@ -153,7 +153,7 @@ class Live(Config):
         'EDIT_SECTIONS': False,
         'EMAIL_TO_BRIEF_RESPONDERS': True,
         'SELLER_REGISTRATION': False,
-        'SELLER_UPDATE': False
+        'SELLER_UPDATE': True
     }
 
     REACT_BUNDLE_URL = 'https://dm-frontend.apps.platform.digital.gov.au/bundle/'
