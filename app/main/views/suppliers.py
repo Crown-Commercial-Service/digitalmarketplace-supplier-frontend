@@ -35,7 +35,7 @@ def dashboard():
     supplier = data_api_client.get_supplier(
         current_user.supplier_code
     )['supplier']
-    supplier['contact'] = supplier['contacts'][0]
+    supplier['contact'] = supplier['contacts'][0] if supplier['contacts'] else None
 
     all_frameworks = sorted(
         data_api_client.find_frameworks()['frameworks'],
