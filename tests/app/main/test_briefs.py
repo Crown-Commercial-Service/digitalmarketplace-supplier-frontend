@@ -705,6 +705,88 @@ class TestApplyToBrief(BaseApplicationTest):
         assert "the work the team did" in data
         assert "the work the specialist did" not in data
 
+    def test_existing_essential_requirements_evidence_prefills_existing_data(self):
+        self.data_api_client.get_brief_response.return_value = self.brief_response(
+            data={
+                'essentialRequirements': [
+                    {'evidence': 'evidence0'}, {'evidence': 'evidence1'}, {'evidence': 'evidence2'}
+                ]
+            }
+        )
+
+        res = self.client.get(
+            '/suppliers/opportunities/1234/responses/5/essentialRequirements'
+        )
+        assert res.status_code == 200
+        doc = html.fromstring(res.get_data(as_text=True))
+        for i in range(3):
+            assert doc.xpath("//*[@id='input-evidence-" + str(i) + "']/text()")[0] == 'evidence' + str(i)
+
+    def test_submit_essential_requirements_evidence(self):
+        res = self.client.post(
+            '/suppliers/opportunities/1234/responses/5/essentialRequirements',
+            data={
+                "evidence-0": 'first evidence',
+                "evidence-1": 'second evidence',
+                "evidence-2": 'third evidence'
+            }
+        )
+
+        assert res.status_code == 302
+
+        self.data_api_client.update_brief_response.assert_called_once_with(
+            5,
+            {
+                "essentialRequirements": [
+                    {'evidence': 'first evidence'}, {'evidence': 'second evidence'}, {'evidence': 'third evidence'}
+                ]
+            },
+            'email@email.com',
+            page_questions=['essentialRequirements']
+        )
+
+    def test_error_message_shown_and_attempted_input_prefilled_if_invalid_essential_requirements_evidence(self):
+        self.data_api_client.update_brief_response.side_effect = HTTPError(
+            mock.Mock(status_code=400),
+            {
+                'essentialRequirements': [
+                    {'field': 'evidence', 'index': 0, 'error': 'under_100_words'},
+                    {'field': 'evidence', 'index': 2, 'error': 'answer_required'}
+                ]
+            }
+        )
+
+        res = self.client.post(
+            '/suppliers/opportunities/1234/responses/5/essentialRequirements',
+            data={
+                "evidence-0": "over100characters" * 10,
+                "evidence-1": "valid evidence",
+                "evidence-2": ""
+            }
+        )
+
+        assert res.status_code == 400
+        doc = html.fromstring(res.get_data(as_text=True))
+
+        # Test list of questions with errors at top of page
+        assert (doc.xpath("//h1[@class=\"validation-masthead-heading\"]/text()")[0].strip() ==
+                'There was a problem with your answer to:')
+        assert (doc.xpath("//a[@class=\"validation-masthead-link\"]/text()")[0].strip() ==
+                'Essential one')
+        assert (doc.xpath("//a[@class=\"validation-masthead-link\"]/text()")[1].strip() ==
+                'Essential three')
+
+        # Test individual questions errors and prefilled content
+        assert (doc.xpath("//span[@class=\"validation-message\"]/text()")[0].strip() ==
+                'Your answer must be no more than 100 words.')
+        assert doc.xpath("//*[@id='input-evidence-0']/text()")[0] == "over100characters" * 10
+
+        assert doc.xpath("//*[@id='input-evidence-1']/text()")[0] == "valid evidence"
+
+        assert (doc.xpath("//span[@class=\"validation-message\"]/text()")[1].strip() ==
+                'You need to answer this question.')
+        assert not doc.xpath("//*[@id='input-evidence-2']/text()") is None
+
     def test_existing_brief_response_data_is_prefilled(self):
         self.data_api_client.get_brief_response.return_value = self.brief_response(
             data={'respondToEmailAddress': 'test@example.com'}

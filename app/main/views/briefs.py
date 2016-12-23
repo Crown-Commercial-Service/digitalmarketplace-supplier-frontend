@@ -200,7 +200,7 @@ def edit_brief_response(brief_id, brief_response_id, question_id=None):
         except HTTPError as e:
             errors = question.get_error_messages(e.message)
             status_code = 400
-            brief_response.update(question.get_data(request.form))
+            brief_response.update(question.unformat_data(question.get_data(request.form)))
 
         else:
             if next_question_id:
@@ -226,7 +226,7 @@ def edit_brief_response(brief_id, brief_response_id, question_id=None):
         errors=errors,
         is_last_page=False if next_question_id else True,
         question=question,
-        service_data=brief_response,
+        service_data=question.unformat_data(brief_response),
         **dict(main.config['BASE_TEMPLATE_DATA'])
     ), status_code
 
