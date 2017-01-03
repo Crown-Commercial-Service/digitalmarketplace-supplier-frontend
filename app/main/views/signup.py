@@ -7,6 +7,7 @@ from react.response import from_response, validate_form_data
 from dmapiclient import APIError
 from dmutils.email import EmailError, send_email
 from dmutils.user import User
+from dmutils.logging import notify_team
 from app.main.helpers.users import generate_application_invitation_token, decode_user_token
 from app import data_api_client
 from ..helpers import applicant_login_required, role_required
@@ -137,8 +138,16 @@ def create_application(token):
     })
 
     user = User.from_json(user)
-
     login_user(user)
+
+    if not id:
+        notification_message = 'By: {} ({})'.format(
+            token_data['name'],
+            token_data['email']
+        )
+
+        notify_team('A new seller has started an application', notification_message)
+
     return redirect(url_for('main.render_application', id=id, step='start'))
 
 

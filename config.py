@@ -92,6 +92,7 @@ class Config(object):
     GENERIC_EMAIL_DOMAINS = ['gmail.com', 'bigpond.com', 'outlook.com', 'hotmail.com', 'yahoo.com']
 
     ROLLBAR_TOKEN = None
+    DM_TEAM_SLACK_WEBHOOK = None
 
 
 class Test(Config):

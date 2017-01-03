@@ -27,6 +27,7 @@ from .users import get_current_suppliers_users
 from react.response import from_response, validate_form_data
 from react.render import render_component
 from dmutils.forms import DmForm
+from dmutils.logging import notify_team
 
 
 @main.route('')
@@ -160,6 +161,14 @@ def supplier_update():
             data = {key: data[key] for key in data if key not in ['id', 'contacts', 'domains', 'prices']}
 
             application = data_api_client.create_application(data)
+
+            notification_message = '{}\nBy: {} ({})'.format(
+                data['name'],
+                current_user.name,
+                current_user.email_address
+            )
+            notify_team('An existing seller has started a new application', notification_message)
+
             supplier_updates = {'application_id': application['application']['id']}
 
             try:
