@@ -1,4 +1,5 @@
 import six
+import rollbar
 from flask import render_template, request, url_for, current_app, abort, jsonify, redirect, Response
 from flask_login import current_user, login_user
 from app.main import main
@@ -71,6 +72,7 @@ def send_seller_signup_email():
             current_app.config['INVITE_EMAIL_NAME']
         )
     except EmailError as e:
+        rollbar.report_exc_info()
         current_app.logger.error(
             'Invitation email failed to send. '
             'error {error}',
@@ -298,6 +300,7 @@ def authorise_application(id):
             current_app.config['INVITE_EMAIL_NAME']
         )
     except EmailError as e:
+        rollbar.report_exc_info()
         current_app.logger.error(
             'Authorisation email failed to send. '
             'error {error}',

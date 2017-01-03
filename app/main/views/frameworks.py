@@ -5,6 +5,7 @@ from dateutil.parser import parse as date_parse
 from flask import render_template, request, abort, flash, redirect, url_for, current_app, session
 from flask_login import current_user
 import six
+import rollbar
 
 from dmapiclient import APIError
 from dmapiclient.audit import AuditTypes
@@ -57,6 +58,7 @@ def framework_dashboard(framework_slug):
                 ['{}-application-started'.format(framework_slug)]
             )
         except EmailError as e:
+            rollbar.report_exc_info()
             current_app.logger.error(
                 "Application started email failed to send: {error}, supplier_code: {supplier_code}",
                 extra={'error': six.text_type(e), 'supplier_code': current_user.supplier_code}
@@ -431,6 +433,7 @@ def framework_updates_email_clarification_question(framework_slug):
             reply_to=from_address,
         )
     except EmailError as e:
+        rollbar.report_exc_info()
         current_app.logger.error(
             "{framework} clarification question email failed to send. "
             "error {error} supplier_code {supplier_code} email_hash {email_hash}",
@@ -462,6 +465,7 @@ def framework_updates_email_clarification_question(framework_slug):
                 tags
             )
         except EmailError as e:
+            rollbar.report_exc_info()
             current_app.logger.error(
                 "{framework} clarification question confirmation email failed to send. "
                 "error {error} supplier_code {supplier_code} email_hash {email_hash}",
@@ -586,6 +590,7 @@ def upload_framework_agreement(framework_slug):
             reply_to=current_user.email_address,
         )
     except EmailError as e:
+        rollbar.report_exc_info()
         current_app.logger.error(
             "Framework agreement email failed to send. "
             "error {error} supplier_code {supplier_code} email_hash {email_hash}",
@@ -750,6 +755,7 @@ def contract_review(framework_slug):
                     ['{}-framework-agreement'.format(framework_slug)],
                 )
             except EmailError as e:
+                rollbar.report_exc_info()
                 current_app.logger.error(
                     "Framework agreement email failed to send. "
                     "error {error} supplier_code {supplier_code} email_hash {email_hash}",

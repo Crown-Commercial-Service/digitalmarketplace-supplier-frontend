@@ -7,6 +7,7 @@ from flask_login import current_user
 from flask import current_app
 import flask_featureflags as feature
 import six
+import rollbar
 
 from dmapiclient import APIError
 from dmapiclient.audit import AuditTypes
@@ -419,6 +420,7 @@ def submit_company_summary():
             )
             session['email_sent_to'] = account_email_address
         except EmailError as e:
+            rollbar.report_exc_info()
             current_app.logger.error(
                 "suppliercreate.fail: Create user email failed to send. "
                 "error {error} supplier_code {supplier_code} email_hash {email_hash}",

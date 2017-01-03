@@ -10,10 +10,11 @@ import flask_featureflags as feature
 
 from dmapiclient import HTTPError
 from dmutils.forms import render_template_with_csrf
-
 from dmutils.email import send_email, EmailError
+
 import six
 from six import text_type
+import rollbar
 
 from ..helpers import login_required
 from ..helpers.briefs import (
@@ -152,12 +153,13 @@ def send_thank_you_email_to_responders(brief, brief_response, brief_response_url
             current_app.config['DM_GENERIC_SUPPORT_NAME'],
         )
     except EmailError as e:
+        rollbar.report_exc_info()
         current_app.logger.error(
-            'seller new opportunity email failed to send. '
+            'seller response received email failed to send. '
             'error {error}',
             extra={
                 'error': six.text_type(e), })
-        abort(503, response='Failed to send seller new opportunity email.')
+        abort(503, response='Failed to send seller response received email.')
 
 
 # Add a create route

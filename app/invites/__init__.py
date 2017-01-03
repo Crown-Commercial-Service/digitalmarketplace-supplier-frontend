@@ -3,6 +3,7 @@ import json
 import logging
 import requests
 import sys
+import rollbar
 
 from flask import current_app, render_template, url_for
 from flask_script import Manager
@@ -98,8 +99,10 @@ def send(source=sys.stdin):
         try:
             send_supplier_invite(name, email_address, int(supplier_code), supplier_name)
         except EmailError as e:
+            rollbar.report_exc_info()
             logging.error('Failed to send invitation email to {}'.format(supplier_record))
         except HTTPError as e:
+            rollbar.report_exc_info()
             logging.error('Failed to record invite for {}'.format(supplier_record))
 
 

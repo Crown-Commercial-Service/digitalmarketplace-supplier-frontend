@@ -1,5 +1,6 @@
 from __future__ import absolute_import
 import six
+import rollbar
 import flask_featureflags
 
 from flask_login import current_user, login_user
@@ -143,6 +144,7 @@ def send_invite_user():
                 current_app.config['INVITE_EMAIL_NAME']
             )
         except EmailError as e:
+            rollbar.report_exc_info()
             current_app.logger.error(
                 'Invitation email failed to send. '
                 'error {error} supplier_code {supplier_code} email_hash {email_hash}',
