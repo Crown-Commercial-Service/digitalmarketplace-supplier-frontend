@@ -126,8 +126,9 @@ def create_application(token):
         return render_create_application(token, form_data, errors)
 
     id = token_data.get('id')
+    create_app = not id
 
-    if not id:
+    if create_app:
         application = data_api_client.create_application({'status': 'saved'})
         id = application['application']['id']
 
@@ -142,8 +143,9 @@ def create_application(token):
     user = User.from_json(user)
     login_user(user)
 
-    if not id:
-        notification_message = 'By: {} ({})'.format(
+    if create_app:
+        notification_message = 'Application Id:{}\nBy: {} ({})'.format(
+            id,
             token_data['name'],
             token_data['email']
         )

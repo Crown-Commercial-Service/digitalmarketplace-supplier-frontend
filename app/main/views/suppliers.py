@@ -163,8 +163,9 @@ def supplier_update():
 
             application = data_api_client.create_application(data)
 
-            notification_message = '{}\nBy: {} ({})'.format(
+            notification_message = '{}\nApplication Id:{}\nBy: {} ({})'.format(
                 data['name'],
+                application['application']['id'],
                 current_user.name,
                 current_user.email_address
             )
