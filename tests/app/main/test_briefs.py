@@ -729,7 +729,7 @@ class TestApplyToBrief(BaseApplicationTest):
             page_questions=['essentialRequirements']
         )
 
-    def test_error_message_shown_and_attempted_input_prefilled_if_invalid_essential_requirements_evidence(self):
+    def test_essentials_evidence_page_shows_errors_messages_and_replays_user_input(self):
         self.data_api_client.update_brief_response.side_effect = HTTPError(
             mock.Mock(status_code=400),
             {
@@ -770,6 +770,38 @@ class TestApplyToBrief(BaseApplicationTest):
         assert (doc.xpath("//span[@class=\"validation-message\"]/text()")[1].strip() ==
                 'You need to answer this question.')
         assert not doc.xpath("//*[@id='input-evidence-2']/text()") is None
+
+    def test_essential_evidence_page_replays_user_input_instead_of_existing_brief_response_data(self):
+        self.data_api_client.get_brief_response.return_value = self.brief_response(
+            data={'essentialRequirements': [{'evidence': 'nice valid evidence'}] * 3}
+        )
+
+        self.data_api_client.update_brief_response.side_effect = HTTPError(
+            mock.Mock(status_code=400),
+            {
+                'essentialRequirements': [
+                    {'field': 'evidence', 'index': 0, 'error': 'under_100_words'}
+                ]
+            }
+        )
+
+        res = self.client.post(
+            '/suppliers/opportunities/1234/responses/5/essentialRequirements',
+            data={
+                "evidence-0": "over100characters" * 10,
+                "evidence-1": "valid evidence",
+                "evidence-2": "valid evidence 2"
+            }
+        )
+
+        assert res.status_code == 400
+        doc = html.fromstring(res.get_data(as_text=True))
+
+        assert (doc.xpath("//span[@class=\"validation-message\"]/text()")[0].strip() ==
+                'Your answer must be no more than 100 words.')
+        assert doc.xpath("//*[@id='input-evidence-0']/text()")[0] == "over100characters" * 10
+        assert doc.xpath("//*[@id='input-evidence-1']/text()")[0] == "valid evidence"
+        assert doc.xpath("//*[@id='input-evidence-2']/text()")[0] == "valid evidence 2"
 
     def test_existing_brief_response_data_is_prefilled(self):
         self.data_api_client.get_brief_response.return_value = self.brief_response(
