@@ -26,19 +26,19 @@
   <div class="validation-wrapper validation-wrapper-pricing">
 {% endif %}
 
-  <fieldset class="brief-response-pricing question first-question" id="{{ name }}" style="margin-bottom: 4rem;">
-    <legend style="display: none;">
+  <fieldset class="brief-response-pricing question first-question" id="{{ name }}">
+    <legend>
       <span class="visually-hidden">{{x.name}}</span>
     </legend>
 
     <span class="question-heading">
-      <h2 style="margin-bottom: 0; margin-top: 0;">{{x.question}}</h2>
+      <h2>{{x.question}}</h2>
     </span>
     <span class="hint word-count-counter" id="input-{{ x.id }}-answer-advice">
-      <p style="margin-bottom: 0">{{ x.hint }}</p>
+      <p>{{ x.hint }}</p>
     </span>
       {% if error %}
-        <span class="validation-message invalid" style="color: #cc0000">
+        <span class="validation-message invalid">
           {{ error.message }}
         </span>
       {% endif %}
@@ -86,12 +86,11 @@
       </div>
       {% endif %}
       {% if 'price' in fields %}
-      <div class="pricing-column" style="margin-bottom: 0">
-        <label for="input-price" style="margin-bottom: 0">
+      <div class="pricing-column">
+        <label for="input-price">
           Price in <span class="pricing-unit">$</span> (including GST)
         </label>
         <input
-          style="margin-top: 0"
           type="text"
           class="text-box pricing-input-with-unit{% if error %} invalid{% endif %}"
           name="{{ fields.price }}"

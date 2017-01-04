@@ -13,6 +13,10 @@
 
   }
 
+  .validation-message.invalid {
+    color: #cc0000;
+  }
+
   .word-count-counter {
     p {
       margin-bottom: 0;
@@ -21,9 +25,14 @@
 
   .pricing-column {
     margin-bottom: 0;
-    
+
     .input-price {
       margin-bottom: 0;
     }
+
+    .pricing-input-with-unit {
+      margin-top: 0;
+    }
+
   }
 }
