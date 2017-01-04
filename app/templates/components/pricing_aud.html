@@ -26,7 +26,7 @@
   <div class="validation-wrapper validation-wrapper-pricing">
 {% endif %}
 
-  <fieldset class="question first-question" id="{{ name }}">
+  <fieldset class="brief-response-pricing question first-question" id="{{ name }}">
     <legend>
       <span class="visually-hidden">{{x.name}}</span>
     </legend>
@@ -38,7 +38,7 @@
       <p>{{ x.hint }}</p>
     </span>
       {% if error %}
-        <span class="validation-message invalid" style="color: #cc0000">
+        <span class="validation-message invalid">
           {{ error.message }}
         </span>
       {% endif %}
@@ -88,9 +88,7 @@
       {% if 'price' in fields %}
       <div class="pricing-column">
         <label for="input-price">
-          Price
-          <span class="visually-hidden">in</span>
-          <span class="pricing-unit">$</span>
+          Price in <span class="pricing-unit">$</span> (including GST)
         </label>
         <input
           type="text"

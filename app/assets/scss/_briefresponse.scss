@@ -1,0 +1,54 @@
+.brief-response-pricing {
+  margin-bottom: 4rem;
+
+  legend {
+    display: none;
+  }
+
+  .question-heading {
+    h2 {
+      margin-bottom: 0;
+      margin-top: 0;
+    }
+
+  }
+
+  .validation-message.invalid {
+    color: #cc0000;
+  }
+
+  .word-count-counter {
+    p {
+      margin-bottom: 0;
+    }
+  }
+
+  .pricing-column {
+    margin-bottom: 0;
+
+    .input-price {
+      margin-bottom: 0;
+    }
+
+    .pricing-input-with-unit {
+      margin-top: 0;
+    }
+  }
+}
+
+fieldset.question-textarea-list {
+  legend {
+    margin-bottom: 0;
+    margin-top: 3rem;
+    max-width: 100%
+  }
+
+  .text-box-with-error {
+    outline: 2px solid #cc0000;
+  }
+
+  textarea {
+    height: 15rem;
+    margin-bottom: 0;
+  }
+}
