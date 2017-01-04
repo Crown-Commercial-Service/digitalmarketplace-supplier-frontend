@@ -240,7 +240,7 @@ def application_update(id, step=None):
 
 
 @main.route('/application/<int:id>/documents/<slug>', methods=['GET'])
-@role_required('admin', 'applicant')
+@role_required('admin', 'applicant', 'supplier')
 def download_single_file(id, slug):
     application = data_api_client.get_application(id)
     if not can_user_view_application(application) and not current_user.has_role('admin'):
