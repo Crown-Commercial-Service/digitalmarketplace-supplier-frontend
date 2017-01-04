@@ -585,12 +585,9 @@ class TestApplyToBrief(BaseApplicationTest):
         )
         assert res.status_code == 200
 
-        doc = html.fromstring(res.get_data(as_text=True))
-        buyers_max_day_rate = doc.xpath(
-            "//*[@id='input-dayRate-question-advice']/descendant::h2[1]/following::p[1]")
-        # if item is excaped correctly it will appear as text rather than an element
-        assert buyers_max_day_rate[0].find('strong') is None
-        assert buyers_max_day_rate[0].text == '**markdown**'
+        data = res.get_data(as_text=True)
+
+        assert '**markdown**' in data
 
     def test_day_rate_question_escapes_brief_day_rate_html(self):
         self.brief['briefs']['budgetRange'] = '<h1>xss</h1>'
@@ -600,12 +597,9 @@ class TestApplyToBrief(BaseApplicationTest):
         )
         assert res.status_code == 200
 
-        doc = html.fromstring(res.get_data(as_text=True))
-        buyers_max_day_rate = doc.xpath(
-            "//*[@id='input-dayRate-question-advice']/descendant::h2[1]/following::p[1]")
-        # if item is excaped correctly it will appear as text rather than an element
-        assert buyers_max_day_rate[0].find('h1') is None
-        assert buyers_max_day_rate[0].text == '<h1>xss</h1>'
+        data = res.get_data(as_text=True)
+
+        assert '&lt;h1&gt;xss&lt;/h1&gt;' in data
 
     def test_day_rate_question_does_not_replay_buyers_budget_range_if_not_provided(self):
         self.brief['briefs']['specialistRole'] = 'deliveryManager'
@@ -626,12 +620,9 @@ class TestApplyToBrief(BaseApplicationTest):
         )
         assert res.status_code == 200
 
-        doc = html.fromstring(res.get_data(as_text=True))
-        start_date = doc.xpath(
-            "//*[@id='input-availability-question-advice']")[0]
-        # if item is excaped correctly it will appear as text rather than an element
-        assert start_date.find('strong') is None
-        assert start_date.text.strip() == "The buyer needs the specialist to start by **markdown**."
+        data = res.get_data(as_text=True)
+
+        assert "The buyer needs the specialist to start by **markdown**." in data
 
     def test_start_date_question_escapes_brief_start_date_html(self):
         self.brief['briefs']['startDate'] = '<h1>xss</h1>'
@@ -641,12 +632,9 @@ class TestApplyToBrief(BaseApplicationTest):
         )
         assert res.status_code == 200
 
-        doc = html.fromstring(res.get_data(as_text=True))
-        start_date = doc.xpath(
-            "//*[@id='input-availability-question-advice']")[0]
-        # if item is excaped correctly it will appear as text rather than an element
-        assert start_date.find('h1') is None
-        assert start_date.text.strip() == "The buyer needs the specialist to start by <h1>xss</h1>."
+        data = res.get_data(as_text=True)
+
+        assert "The buyer needs the specialist to start by &lt;h1&gt;xss&lt;/h1&gt;." in data
 
     def test_essential_requirements_evidence_has_question_for_every_requirement(self):
         res = self.client.get(
@@ -656,7 +644,7 @@ class TestApplyToBrief(BaseApplicationTest):
         doc = html.fromstring(res.get_data(as_text=True))
         questions = doc.xpath(
             "//*[@class='question-heading']/text()")
-        questions = map(str.strip, questions)
+        questions = list(map(str.strip, questions))
         assert questions[0] == 'Essential one'
         assert questions[1] == 'Essential two'
         assert questions[2] == 'Essential three'
@@ -673,14 +661,10 @@ class TestApplyToBrief(BaseApplicationTest):
         )
         assert res.status_code == 200
 
-        doc = html.fromstring(res.get_data(as_text=True))
-        questions = doc.xpath(
-            "//*[@class='question-heading']")
-        # if item is excaped correctly it will appear as text rather than an element
-        assert questions[0].find("h1") is None
-        assert questions[0].text.strip() == '<h1>Essential one with xss</h1>'
-        assert questions[1].find("strong") is None
-        assert questions[1].text.strip() == '**Essential two with markdown**'
+        data = res.get_data(as_text=True)
+
+        assert '&lt;h1&gt;Essential one with xss&lt;/h1&gt;' in data
+        assert '**Essential two with markdown**' in data
 
     def test_specialist_brief_essential_requirements_evidence_shows_specialist_content(self):
         res = self.client.get(
