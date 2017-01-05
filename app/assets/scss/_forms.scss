@@ -240,18 +240,25 @@ form {
 }
 
 .datefield {
-  input {
+  .field {
     display: inline-block;
     width: 1.7rem;
+    margin-top: 0;
     margin-right: 0.5rem;
-    padding-left: 0.1rem;
-    padding-right: 0.1rem;
-  }
+    
+    input {
+      padding-left: 0.1rem;
+      padding-right: 0.1rem;
+    }
 
-  input:last-child {
-    width: 3.4rem;
-  }
+    &:last-child input {
+      width: 3.4rem;
+    }
 
+    .question-heading {
+      font-weight: normal;
+    }
+  }
 }
 
 .validation-masthead-heading {
