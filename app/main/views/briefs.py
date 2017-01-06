@@ -197,7 +197,10 @@ def submit_brief_response(brief_id):
         section.inject_brief_questions_into_boolean_list_question(brief)
         section_summary = section.summary(response_data)
 
-        errors = section_summary.get_error_messages(e.message)
+        if isinstance(e.message, dict):
+            errors = section_summary.get_error_messages(e.message)
+        else:
+            flash('already_applied', 'error')
 
         return render_template_with_csrf(
             "briefs/brief_response.html",
