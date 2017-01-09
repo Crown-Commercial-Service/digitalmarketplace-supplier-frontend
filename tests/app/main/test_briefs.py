@@ -645,49 +645,50 @@ class TestApplyToBrief(BaseApplicationTest):
         questions = doc.xpath(
             "//*[@class='question-heading']/text()")
         questions = list(map(str.strip, questions))
-        assert questions[0] == 'Essential one'
-        assert questions[1] == 'Essential two'
-        assert questions[2] == 'Essential three'
+        assert questions == ['Essential one', 'Essential two', 'Essential three']
 
-    def test_essential_requirements_evidence_escapes_brief_data(self):
-        self.brief['briefs']['essentialRequirements'] = [
-            '<h1>Essential one with xss</h1>',
-            '**Essential two with markdown**'
-        ]
-        self.data_api_client.get_brief.return_value = self.brief
+    def test_essential_and_nice_to_have_requirements_evidence_escapes_brief_data(self):
+        for question_slug in ('essentialRequirements', 'niceToHaveRequirements'):
+            self.brief['briefs'][question_slug] = [
+                '<h1>requirement with xss</h1>',
+                '**requirement with markdown**'
+            ]
+            self.data_api_client.get_brief.return_value = self.brief
 
-        res = self.client.get(
-            '/suppliers/opportunities/1234/responses/5/essentialRequirements'
-        )
-        assert res.status_code == 200
+            res = self.client.get(
+                '/suppliers/opportunities/1234/responses/5/{}'.format(question_slug)
+            )
+            assert res.status_code == 200
 
-        data = res.get_data(as_text=True)
+            data = res.get_data(as_text=True)
 
-        assert '&lt;h1&gt;Essential one with xss&lt;/h1&gt;' in data
-        assert '**Essential two with markdown**' in data
+            assert '&lt;h1&gt;requirement with xss&lt;/h1&gt;' in data
+            assert '**requirement with markdown**' in data
 
-    def test_specialist_brief_essential_requirements_evidence_shows_specialist_content(self):
-        res = self.client.get(
-            '/suppliers/opportunities/1234/responses/5/essentialRequirements'
-        )
-        assert res.status_code == 200
-        data = res.get_data(as_text=True)
+    def test_specialist_brief_essential_and_nice_to_have_requirements_evidence_shows_specialist_content(self):
+        for question_slug in ('essentialRequirements', 'niceToHaveRequirements'):
+            res = self.client.get(
+                '/suppliers/opportunities/1234/responses/5/{}'.format(question_slug)
+            )
+            assert res.status_code == 200
+            data = res.get_data(as_text=True)
 
-        assert "the work the specialist did" in data
-        assert "the work the team did" not in data
+            assert "the work the specialist did" in data
+            assert "the work the team did" not in data
 
-    def test_outcomes_brief_essential_requirements_evidence_shows_outcomes_content(self):
+    def test_outcomes_brief_essential_and_nice_to_have_requirements_evidence_shows_outcomes_content(self):
         self.brief['briefs']['lotSlug'] = 'digital-outcomes'
         self.data_api_client.get_brief.return_value = self.brief
 
-        res = self.client.get(
-            '/suppliers/opportunities/1234/responses/5/essentialRequirements'
-        )
-        assert res.status_code == 200
-        data = res.get_data(as_text=True)
+        for question_slug in ('essentialRequirements', 'niceToHaveRequirements'):
+            res = self.client.get(
+                '/suppliers/opportunities/1234/responses/5/{}'.format(question_slug)
+            )
+            assert res.status_code == 200
+            data = res.get_data(as_text=True)
 
-        assert "the work the team did" in data
-        assert "the work the specialist did" not in data
+            assert "the work the team did" in data
+            assert "the work the specialist did" not in data
 
     def test_existing_essential_requirements_evidence_prefills_existing_data(self):
         self.data_api_client.get_brief_response.return_value = self.brief_response(
@@ -802,6 +803,118 @@ class TestApplyToBrief(BaseApplicationTest):
         assert doc.xpath("//*[@id='input-evidence-0']/text()")[0] == "over100characters" * 10
         assert doc.xpath("//*[@id='input-evidence-1']/text()")[0] == "valid evidence"
         assert doc.xpath("//*[@id='input-evidence-2']/text()")[0] == "valid evidence 2"
+
+    def test_nice_to_have_requirements_evidence_has_question_for_every_requirement(self):
+        res = self.client.get(
+            '/suppliers/opportunities/1234/responses/5/niceToHaveRequirements'
+        )
+        assert res.status_code == 200
+        doc = html.fromstring(res.get_data(as_text=True))
+        questions = doc.xpath(
+            "//*[@class='question-heading']/text()")
+        questions = list(map(str.strip, questions))
+
+        assert questions == [
+            'Nice one', 'Nice one evidence', 'Top one', 'Top one evidence', 'Get sorted', 'Get sorted evidence'
+        ]
+
+    def test_existing_nice_to_have_requirements_evidence_prefills_existing_data(self):
+        self.data_api_client.get_brief_response.return_value = self.brief_response(
+            data={
+                'niceToHaveRequirements': [
+                    {'yesNo': True, 'evidence': 'evidence0'}, {'yesNo': False}, {'yesNo': True, 'evidence': 'evidence2'}
+                ]
+            }
+        )
+
+        res = self.client.get(
+            '/suppliers/opportunities/1234/responses/5/niceToHaveRequirements'
+        )
+        assert res.status_code == 200
+        doc = html.fromstring(res.get_data(as_text=True))
+
+        # Check yesno radio buttons
+        for i in (0, 2):
+            assert len(doc.xpath("//*[@id='input-yesNo-" + str(i) + "-yes' and @checked]")) == 1
+        assert len(doc.xpath("//*[@id='input-yesNo-1-no' and @checked]")) == 1
+
+        # Check evidence text
+        for i in (0, 2):
+            assert doc.xpath("//*[@id='input-evidence-" + str(i) + "']/text()")[0] == 'evidence' + str(i)
+
+    def test_submit_nice_to_have_requirements_evidence(self):
+        res = self.client.post(
+            '/suppliers/opportunities/1234/responses/5/niceToHaveRequirements',
+            data={
+                "yesNo-0": True,
+                "evidence-0": 'first evidence',
+                "yesNo-1": False,
+                "evidence-1": "",
+                "yesNo-2": True,
+                "evidence-2": 'third evidence'
+            }
+        )
+
+        assert res.status_code == 302
+
+        self.data_api_client.update_brief_response.assert_called_once_with(
+            5,
+            {
+                "niceToHaveRequirements": [
+                    {'yesNo': True, 'evidence': 'first evidence'},
+                    {'yesNo': False},
+                    {'yesNo': True, 'evidence': 'third evidence'}
+                ]
+            },
+            'email@email.com',
+            page_questions=['niceToHaveRequirements']
+        )
+
+    def test_nice_to_have_evidence_page_shows_errors_messages_and_replays_user_input(self):
+        self.data_api_client.update_brief_response.side_effect = HTTPError(
+            mock.Mock(status_code=400),
+            {
+                'niceToHaveRequirements': [
+                    {'field': 'yesNo', 'index': 0, 'error': 'answer_required'},
+                    {'field': 'evidence', 'index': 1, 'error': 'answer_required'},
+                    {'field': 'evidence', 'index': 2, 'error': 'under_100_words'}
+                ]
+            }
+        )
+
+        res = self.client.post(
+            '/suppliers/opportunities/1234/responses/5/niceToHaveRequirements',
+            data={
+                "evidence-0": "",
+                "yesNo-1": True,
+                "evidence-1": "",
+                "yesNo-2": True,
+                "evidence-2": "word " * 100
+            }
+        )
+
+        assert res.status_code == 400
+        doc = html.fromstring(res.get_data(as_text=True))
+
+        # Test list of questions with errors at top of page
+        assert (doc.xpath("//h1[@class=\"validation-masthead-heading\"]/text()")[0].strip() ==
+                'There was a problem with your answer to:')
+        masthead_errors = doc.xpath("//a[@class=\"validation-masthead-link\"]/text()")
+        masthead_errors = list(map(str.strip, masthead_errors))
+        assert masthead_errors == ['Nice one', 'Top one evidence', 'Get sorted evidence']
+
+        # Test individual questions errors and prefilled content
+        assert (doc.xpath("//span[@class=\"validation-message\"]/text()")[0].strip() ==
+                'You need to answer this question.')
+
+        assert (doc.xpath("//span[@class=\"validation-message\"]/text()")[1].strip() ==
+                'You need to answer this question.')
+        assert len(doc.xpath("//*[@id='input-yesNo-1-yes' and @checked]")) == 1
+
+        assert (doc.xpath("//span[@class=\"validation-message\"]/text()")[2].strip() ==
+                'Your answer must be no more than 100 words.')
+        assert len(doc.xpath("//*[@id='input-yesNo-2-yes' and @checked]")) == 1
+        assert doc.xpath("//*[@id='input-evidence-2']/text()")[0] == 'word ' * 100
 
     def test_existing_brief_response_data_is_prefilled(self):
         self.data_api_client.get_brief_response.return_value = self.brief_response(
