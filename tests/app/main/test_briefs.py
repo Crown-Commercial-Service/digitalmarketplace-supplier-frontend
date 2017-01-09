@@ -369,7 +369,10 @@ class TestApplyToBrief(BaseApplicationTest):
         self.brief['briefs']['essentialRequirements'] = ['Essential one', 'Essential two', 'Essential three']
         self.brief['briefs']['niceToHaveRequirements'] = ['Nice one', 'Top one', 'Get sorted']
 
-        lots = [api_stubs.lot(slug="digital-specialists", allows_brief=True)]
+        lots = [
+            api_stubs.lot(slug="digital-specialists", allows_brief=True),
+            api_stubs.lot(slug="digital-outcomes", allows_brief=True)
+        ]
         self.framework = api_stubs.framework(
             status="live", slug="digital-outcomes-and-specialists", clarification_questions_open=False, lots=lots
         )
@@ -493,43 +496,15 @@ class TestApplyToBrief(BaseApplicationTest):
             res = self.client.open('/suppliers/opportunities/1234/responses/5/question-id', method=method)
             assert res.status_code == 404
 
-    @mock.patch("app.main.views.briefs.content_loader")
-    def test_non_final_question_shows_continue_button(self, content_loader):
-        content_loader.get_manifest.return_value \
-            .filter.return_value \
-            .get_section.return_value \
-            .get_next_question_id.return_value = 'not-none'
-
-        content_loader.get_manifest.return_value \
-            .filter.return_value \
-            .get_section.return_value \
-            .get_question.return_value = {
-                'question': 'question',
-                'type': 'text'
-            }
-
-        res = self.client.get('/suppliers/opportunities/1234/responses/5/question-id')
+    def test_non_final_question_shows_continue_button(self):
+        res = self.client.get('/suppliers/opportunities/1234/responses/5/dayRate')
         assert res.status_code == 200
 
         doc = html.fromstring(res.get_data(as_text=True))
         assert doc.xpath("//input[@class='button-save']/@value")[0] == 'Continue'
 
-    @mock.patch("app.main.views.briefs.content_loader")
-    def test_final_question_shows_submit_application_button(self, content_loader):
-        content_loader.get_manifest.return_value \
-            .filter.return_value \
-            .get_section.return_value \
-            .get_next_question_id.return_value = None
-
-        content_loader.get_manifest.return_value \
-            .filter.return_value \
-            .get_section.return_value \
-            .get_question.return_value = {
-                'question': 'question',
-                'type': 'text'
-            }
-
-        res = self.client.get('/suppliers/opportunities/1234/responses/5/section-three')
+    def test_final_question_shows_submit_application_button(self):
+        res = self.client.get('/suppliers/opportunities/1234/responses/5/respondToEmailAddress')
         assert res.status_code == 200
 
         doc = html.fromstring(res.get_data(as_text=True))
@@ -610,12 +585,9 @@ class TestApplyToBrief(BaseApplicationTest):
         )
         assert res.status_code == 200
 
-        doc = html.fromstring(res.get_data(as_text=True))
-        buyers_max_day_rate = doc.xpath(
-            "//*[@id='input-dayRate-question-advice']/descendant::h2[1]/following::p[1]")
-        # if item is excaped correctly it will appear as text rather than an element
-        assert buyers_max_day_rate[0].find('strong') is None
-        assert buyers_max_day_rate[0].text == '**markdown**'
+        data = res.get_data(as_text=True)
+
+        assert '**markdown**' in data
 
     def test_day_rate_question_escapes_brief_day_rate_html(self):
         self.brief['briefs']['budgetRange'] = '<h1>xss</h1>'
@@ -625,12 +597,9 @@ class TestApplyToBrief(BaseApplicationTest):
         )
         assert res.status_code == 200
 
-        doc = html.fromstring(res.get_data(as_text=True))
-        buyers_max_day_rate = doc.xpath(
-            "//*[@id='input-dayRate-question-advice']/descendant::h2[1]/following::p[1]")
-        # if item is excaped correctly it will appear as text rather than an element
-        assert buyers_max_day_rate[0].find('h1') is None
-        assert buyers_max_day_rate[0].text == '<h1>xss</h1>'
+        data = res.get_data(as_text=True)
+
+        assert '&lt;h1&gt;xss&lt;/h1&gt;' in data
 
     def test_day_rate_question_does_not_replay_buyers_budget_range_if_not_provided(self):
         self.brief['briefs']['specialistRole'] = 'deliveryManager'
@@ -651,12 +620,9 @@ class TestApplyToBrief(BaseApplicationTest):
         )
         assert res.status_code == 200
 
-        doc = html.fromstring(res.get_data(as_text=True))
-        start_date = doc.xpath(
-            "//*[@id='input-availability-question-advice']")[0]
-        # if item is excaped correctly it will appear as text rather than an element
-        assert start_date.find('strong') is None
-        assert start_date.text.strip() == "The buyer needs the specialist to start by **markdown**."
+        data = res.get_data(as_text=True)
+
+        assert "The buyer needs the specialist to start by **markdown**." in data
 
     def test_start_date_question_escapes_brief_start_date_html(self):
         self.brief['briefs']['startDate'] = '<h1>xss</h1>'
@@ -666,12 +632,176 @@ class TestApplyToBrief(BaseApplicationTest):
         )
         assert res.status_code == 200
 
+        data = res.get_data(as_text=True)
+
+        assert "The buyer needs the specialist to start by &lt;h1&gt;xss&lt;/h1&gt;." in data
+
+    def test_essential_requirements_evidence_has_question_for_every_requirement(self):
+        res = self.client.get(
+            '/suppliers/opportunities/1234/responses/5/essentialRequirements'
+        )
+        assert res.status_code == 200
         doc = html.fromstring(res.get_data(as_text=True))
-        start_date = doc.xpath(
-            "//*[@id='input-availability-question-advice']")[0]
-        # if item is excaped correctly it will appear as text rather than an element
-        assert start_date.find('h1') is None
-        assert start_date.text.strip() == "The buyer needs the specialist to start by <h1>xss</h1>."
+        questions = doc.xpath(
+            "//*[@class='question-heading']/text()")
+        questions = list(map(str.strip, questions))
+        assert questions[0] == 'Essential one'
+        assert questions[1] == 'Essential two'
+        assert questions[2] == 'Essential three'
+
+    def test_essential_requirements_evidence_escapes_brief_data(self):
+        self.brief['briefs']['essentialRequirements'] = [
+            '<h1>Essential one with xss</h1>',
+            '**Essential two with markdown**'
+        ]
+        self.data_api_client.get_brief.return_value = self.brief
+
+        res = self.client.get(
+            '/suppliers/opportunities/1234/responses/5/essentialRequirements'
+        )
+        assert res.status_code == 200
+
+        data = res.get_data(as_text=True)
+
+        assert '&lt;h1&gt;Essential one with xss&lt;/h1&gt;' in data
+        assert '**Essential two with markdown**' in data
+
+    def test_specialist_brief_essential_requirements_evidence_shows_specialist_content(self):
+        res = self.client.get(
+            '/suppliers/opportunities/1234/responses/5/essentialRequirements'
+        )
+        assert res.status_code == 200
+        data = res.get_data(as_text=True)
+
+        assert "the work the specialist did" in data
+        assert "the work the team did" not in data
+
+    def test_outcomes_brief_essential_requirements_evidence_shows_outcomes_content(self):
+        self.brief['briefs']['lotSlug'] = 'digital-outcomes'
+        self.data_api_client.get_brief.return_value = self.brief
+
+        res = self.client.get(
+            '/suppliers/opportunities/1234/responses/5/essentialRequirements'
+        )
+        assert res.status_code == 200
+        data = res.get_data(as_text=True)
+
+        assert "the work the team did" in data
+        assert "the work the specialist did" not in data
+
+    def test_existing_essential_requirements_evidence_prefills_existing_data(self):
+        self.data_api_client.get_brief_response.return_value = self.brief_response(
+            data={
+                'essentialRequirements': [
+                    {'evidence': 'evidence0'}, {'evidence': 'evidence1'}, {'evidence': 'evidence2'}
+                ]
+            }
+        )
+
+        res = self.client.get(
+            '/suppliers/opportunities/1234/responses/5/essentialRequirements'
+        )
+        assert res.status_code == 200
+        doc = html.fromstring(res.get_data(as_text=True))
+        for i in range(3):
+            assert doc.xpath("//*[@id='input-evidence-" + str(i) + "']/text()")[0] == 'evidence' + str(i)
+
+    def test_submit_essential_requirements_evidence(self):
+        res = self.client.post(
+            '/suppliers/opportunities/1234/responses/5/essentialRequirements',
+            data={
+                "evidence-0": 'first evidence',
+                "evidence-1": 'second evidence',
+                "evidence-2": 'third evidence'
+            }
+        )
+
+        assert res.status_code == 302
+
+        self.data_api_client.update_brief_response.assert_called_once_with(
+            5,
+            {
+                "essentialRequirements": [
+                    {'evidence': 'first evidence'}, {'evidence': 'second evidence'}, {'evidence': 'third evidence'}
+                ]
+            },
+            'email@email.com',
+            page_questions=['essentialRequirements']
+        )
+
+    def test_essentials_evidence_page_shows_errors_messages_and_replays_user_input(self):
+        self.data_api_client.update_brief_response.side_effect = HTTPError(
+            mock.Mock(status_code=400),
+            {
+                'essentialRequirements': [
+                    {'field': 'evidence', 'index': 0, 'error': 'under_100_words'},
+                    {'field': 'evidence', 'index': 2, 'error': 'answer_required'}
+                ]
+            }
+        )
+
+        res = self.client.post(
+            '/suppliers/opportunities/1234/responses/5/essentialRequirements',
+            data={
+                "evidence-0": "over100characters" * 10,
+                "evidence-1": "valid evidence",
+                "evidence-2": ""
+            }
+        )
+
+        assert res.status_code == 400
+        doc = html.fromstring(res.get_data(as_text=True))
+
+        # Test list of questions with errors at top of page
+        assert (doc.xpath("//h1[@class=\"validation-masthead-heading\"]/text()")[0].strip() ==
+                'There was a problem with your answer to:')
+        assert (doc.xpath("//a[@class=\"validation-masthead-link\"]/text()")[0].strip() ==
+                'Essential one')
+        assert (doc.xpath("//a[@class=\"validation-masthead-link\"]/text()")[1].strip() ==
+                'Essential three')
+
+        # Test individual questions errors and prefilled content
+        assert (doc.xpath("//span[@class=\"validation-message\"]/text()")[0].strip() ==
+                'Your answer must be no more than 100 words.')
+        assert doc.xpath("//*[@id='input-evidence-0']/text()")[0] == "over100characters" * 10
+
+        assert doc.xpath("//*[@id='input-evidence-1']/text()")[0] == "valid evidence"
+
+        assert (doc.xpath("//span[@class=\"validation-message\"]/text()")[1].strip() ==
+                'You need to answer this question.')
+        assert not doc.xpath("//*[@id='input-evidence-2']/text()") is None
+
+    def test_essential_evidence_page_replays_user_input_instead_of_existing_brief_response_data(self):
+        self.data_api_client.get_brief_response.return_value = self.brief_response(
+            data={'essentialRequirements': [{'evidence': 'nice valid evidence'}] * 3}
+        )
+
+        self.data_api_client.update_brief_response.side_effect = HTTPError(
+            mock.Mock(status_code=400),
+            {
+                'essentialRequirements': [
+                    {'field': 'evidence', 'index': 0, 'error': 'under_100_words'}
+                ]
+            }
+        )
+
+        res = self.client.post(
+            '/suppliers/opportunities/1234/responses/5/essentialRequirements',
+            data={
+                "evidence-0": "over100characters" * 10,
+                "evidence-1": "valid evidence",
+                "evidence-2": "valid evidence 2"
+            }
+        )
+
+        assert res.status_code == 400
+        doc = html.fromstring(res.get_data(as_text=True))
+
+        assert (doc.xpath("//span[@class=\"validation-message\"]/text()")[0].strip() ==
+                'Your answer must be no more than 100 words.')
+        assert doc.xpath("//*[@id='input-evidence-0']/text()")[0] == "over100characters" * 10
+        assert doc.xpath("//*[@id='input-evidence-1']/text()")[0] == "valid evidence"
+        assert doc.xpath("//*[@id='input-evidence-2']/text()")[0] == "valid evidence 2"
 
     def test_existing_brief_response_data_is_prefilled(self):
         self.data_api_client.get_brief_response.return_value = self.brief_response(

@@ -182,6 +182,9 @@ def edit_brief_response(brief_id, brief_response_id, question_id=None):
     if question is None:
         abort(404)
 
+    # Unformat brief response into data for form
+    service_data = question.unformat_data(brief_response)
+
     # This line can soon be removed when we no longer show boolean list questions as part of the new flow
     section.inject_brief_questions_into_boolean_list_question(brief)
 
@@ -200,7 +203,7 @@ def edit_brief_response(brief_id, brief_response_id, question_id=None):
         except HTTPError as e:
             errors = question.get_error_messages(e.message)
             status_code = 400
-            brief_response.update(question.get_data(request.form))
+            service_data.update(question.unformat_data(question.get_data(request.form)))
 
         else:
             if next_question_id:
@@ -226,7 +229,7 @@ def edit_brief_response(brief_id, brief_response_id, question_id=None):
         errors=errors,
         is_last_page=False if next_question_id else True,
         question=question,
-        service_data=brief_response,
+        service_data=service_data,
         **dict(main.config['BASE_TEMPLATE_DATA'])
     ), status_code
 
