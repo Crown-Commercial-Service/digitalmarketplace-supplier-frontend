@@ -203,7 +203,7 @@ def edit_brief_response(brief_id, brief_response_id, question_id=None):
         except HTTPError as e:
             errors = question.get_error_messages(e.message)
             status_code = 400
-            service_data.update(question.unformat_data(question.get_data(request.form)))
+            service_data = question.unformat_data(question.get_data(request.form))
 
         else:
             if next_question_id:

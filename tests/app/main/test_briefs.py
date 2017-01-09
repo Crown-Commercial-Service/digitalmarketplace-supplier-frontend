@@ -791,7 +791,7 @@ class TestApplyToBrief(BaseApplicationTest):
             data={
                 "evidence-0": "over100characters" * 10,
                 "evidence-1": "valid evidence",
-                "evidence-2": "valid evidence 2"
+                "evidence-2": ""
             }
         )
 
@@ -802,7 +802,7 @@ class TestApplyToBrief(BaseApplicationTest):
                 'Your answer must be no more than 100 words.')
         assert doc.xpath("//*[@id='input-evidence-0']/text()")[0] == "over100characters" * 10
         assert doc.xpath("//*[@id='input-evidence-1']/text()")[0] == "valid evidence"
-        assert doc.xpath("//*[@id='input-evidence-2']/text()")[0] == "valid evidence 2"
+        assert not doc.xpath("//*[@id='input-evidence-2']/text()")
 
     def test_nice_to_have_requirements_evidence_has_question_for_every_requirement(self):
         res = self.client.get(
@@ -915,6 +915,44 @@ class TestApplyToBrief(BaseApplicationTest):
                 'Your answer must be no more than 100 words.')
         assert len(doc.xpath("//*[@id='input-yesNo-2-yes' and @checked]")) == 1
         assert doc.xpath("//*[@id='input-evidence-2']/text()")[0] == 'word ' * 100
+
+    def test_nice_to_have_evidence_page_replays_user_input_instead_of_existing_brief_response_data(self):
+        self.data_api_client.get_brief_response.return_value = self.brief_response(
+            data={'niceToHaveRequirements': [{'yesNo': True, 'evidence': 'nice valid evidence'}] * 3}
+        )
+
+        self.data_api_client.update_brief_response.side_effect = HTTPError(
+            mock.Mock(status_code=400),
+            {
+                'niceToHaveRequirements': [
+                    {'field': 'evidence', 'index': 0, 'error': 'under_100_words'}
+                ]
+            }
+        )
+
+        res = self.client.post(
+            '/suppliers/opportunities/1234/responses/5/niceToHaveRequirements',
+            data={
+                "yesNo-0": True,
+                "evidence-0": "over 100 words " * 100,
+                "yesNo-1": False,
+                "evidence-1": "",
+                "yesNo-2": True,
+                "evidence-2": ""
+            }
+        )
+
+        assert res.status_code == 400
+        doc = html.fromstring(res.get_data(as_text=True))
+
+        assert (doc.xpath("//span[@class=\"validation-message\"]/text()")[0].strip() ==
+                'Your answer must be no more than 100 words.')
+        assert doc.xpath("//*[@id='input-evidence-0']/text()")[0] == "over 100 words " * 100
+
+        assert len(doc.xpath("//*[@id='input-yesNo-1-no' and @checked]")) == 1
+        assert not doc.xpath("//*[@id='input-evidence-1']/text()")
+
+        assert not doc.xpath("//*[@id='input-evidence-2']/text()")
 
     def test_existing_brief_response_data_is_prefilled(self):
         self.data_api_client.get_brief_response.return_value = self.brief_response(
