@@ -358,6 +358,10 @@ class BaseApplicationTest(object):
             assert expected_message in message
             assert expected_category == category
 
+    def assert_no_flashes(self):
+        with self.client.session_transaction() as session:
+            assert not session.get("_flashes")
+
 
 class FakeMail(object):
     """An object that equals strings containing all of the given substrings

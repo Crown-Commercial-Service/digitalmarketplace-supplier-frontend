@@ -262,7 +262,7 @@ class TestSupplierEditService(_BaseTestSupplierEditRemoveService):
             res.get_data(as_text=True)
         )
 
-        # confirmation message should not have been triggered yet
+        # removal confirmation message should not have been triggered yet
         self.assert_not_in_strip_whitespace(
             'Are you sure you want to remove your service?',
             res.get_data(as_text=True)
@@ -274,9 +274,69 @@ class TestSupplierEditService(_BaseTestSupplierEditRemoveService):
             res.get_data(as_text=True)
         )
 
-        # service removed notification banner shouldn't be there either
+        # service removed notification banner shouldn't be there
         self.assert_not_in_strip_whitespace(
             '<h2>This service was removed on Monday 23 March 2015</h2>',
+            res.get_data(as_text=True)
+        )
+
+        # service updated message shouldn't be there either
+        self.assert_not_in_strip_whitespace(
+            "The changes are now live on the Digital Marketplace",
+            res.get_data(as_text=True)
+        )
+
+    def test_should_view_public_service_with_update_message(
+            self, data_api_client, supplier_service_editing_fw_params
+    ):
+        framework_slug, framework_name, framework_editable_services = supplier_service_editing_fw_params
+        self.login()
+        self._setup_service(data_api_client, framework_slug, framework_name, service_status='published')
+
+        # this is meant to emulate a "service updated" message
+        with self.client.session_transaction() as session:
+            session['_flashes'] = [
+                ('message', 'Foo Bar 123 321'),
+            ]
+
+        res = self.client.get('/suppliers/services/123')
+        if not framework_editable_services:
+            assert_equal(res.status_code, 404)
+            return
+
+        assert_equal(res.status_code, 200)
+
+        assert_true(
+            'Service name 123' in res.get_data(as_text=True)
+        )
+
+        # first message should be there
+        self.assert_in_strip_whitespace(
+            'Remove this service',
+            res.get_data(as_text=True)
+        )
+
+        # removal confirmation message should not have been triggered
+        self.assert_not_in_strip_whitespace(
+            'Are you sure you want to remove your service?',
+            res.get_data(as_text=True)
+        )
+
+        # service removed message should not have been triggered
+        self.assert_not_in_strip_whitespace(
+            'Service name 123 has been removed.',
+            res.get_data(as_text=True)
+        )
+
+        # service removed notification banner shouldn't be there
+        self.assert_not_in_strip_whitespace(
+            '<h2>This service was removed on Monday 23 March 2015</h2>',
+            res.get_data(as_text=True)
+        )
+
+        # dummy service updated message should be there
+        self.assert_in_strip_whitespace(
+            "Foo Bar 123 321",
             res.get_data(as_text=True)
         )
 
@@ -457,7 +517,7 @@ class TestSupplierRemoveService(_BaseTestSupplierEditRemoveService):
 
 
 @mock.patch('app.main.views.services.data_api_client')
-class TestEditService(BaseApplicationTest):
+class TestSupplierEditUpdateServiceSection(BaseApplicationTest):
 
     empty_service = {
         'services': {
@@ -475,7 +535,7 @@ class TestEditService(BaseApplicationTest):
     }
 
     def setup(self):
-        super(TestEditService, self).setup()
+        super(TestSupplierEditUpdateServiceSection, self).setup()
         with self.app.test_client():
             self.login()
 
@@ -502,6 +562,11 @@ class TestEditService(BaseApplicationTest):
             '1', {'serviceName': 'The service', 'serviceSummary': 'This is the service'},
             'email@email.com')
 
+        self.assert_flashes(
+            u"You\u2019ve edited your service. The changes are now live on the Digital Marketplace.",
+            "message",
+        )
+
     def test_editing_readonly_section_is_not_allowed(self, data_api_client):
         data_api_client.get_service.return_value = self.empty_service
 
@@ -515,6 +580,7 @@ class TestEditService(BaseApplicationTest):
                 'lotSlug': 'scs',
             })
         assert_equal(res.status_code, 404)
+        self.assert_no_flashes()
 
     def test_only_questions_for_this_service_section_can_be_changed(self, data_api_client):
         data_api_client.get_service.return_value = self.empty_service
@@ -525,8 +591,13 @@ class TestEditService(BaseApplicationTest):
             })
 
         assert_equal(res.status_code, 302)
-        data_api_client.update_service.assert_called_one_with(
+        data_api_client.update_service.assert_called_once_with(
             '1', dict(), 'email@email.com')
+
+        self.assert_flashes(
+            u"You\u2019ve edited your service. The changes are now live on the Digital Marketplace.",
+            "message",
+        )
 
     def test_edit_non_existent_service_returns_404(self, data_api_client):
         data_api_client.get_service.return_value = None
@@ -555,6 +626,7 @@ class TestEditService(BaseApplicationTest):
         assert_equal(
             "You need to answer this question.",
             document.xpath('//span[@class="validation-message"]/text()')[0].strip())
+        self.assert_no_flashes()
 
     def test_update_with_under_50_words_error(self, data_api_client):
         data_api_client.get_service.return_value = self.empty_service
@@ -570,12 +642,14 @@ class TestEditService(BaseApplicationTest):
         assert_equal(
             "Your description must be no more than 50 words.",
             document.xpath('//span[@class="validation-message"]/text()')[0].strip())
+        self.assert_no_flashes()
 
     def test_update_non_existent_service_returns_404(self, data_api_client):
         data_api_client.get_service.return_value = None
         res = self.client.post('/suppliers/services/1/edit/description')
 
         assert_equal(res.status_code, 404)
+        self.assert_no_flashes()
 
     def test_update_non_existent_section_returns_404(self, data_api_client):
         data_api_client.get_service.return_value = self.empty_service
@@ -583,6 +657,7 @@ class TestEditService(BaseApplicationTest):
             '/suppliers/services/1/edit/invalid_section'
         )
         assert_equal(404, res.status_code)
+        self.assert_no_flashes()
 
 
 @mock.patch('app.main.views.services.data_api_client', autospec=True)
