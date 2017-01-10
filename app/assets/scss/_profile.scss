@@ -18,13 +18,21 @@
   &__row {
     margin-bottom: 3em;
 
-    ul {
-      margin-top: 0;
+    hr {
+      margin-bottom: 3rem;
     }
 
     &:last-of-type {
       margin: 0;
     }
+
+    h4:first-of-type, ul {
+      margin-top: 0;
+    }
+  }
+
+  &__section-title {
+    margin-top: 0;
   }
 
   &__tile {
@@ -73,6 +81,7 @@
     span {
       display: inline-block;
       margin-right: 1em;
+      font-size: 14px;
 
       &:last-of-type {
         margin-right: 0;
