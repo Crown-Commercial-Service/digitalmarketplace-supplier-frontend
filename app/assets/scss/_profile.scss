@@ -90,6 +90,14 @@
   }
 
   &__review-header {
-    margin: 4em 0 5em;
+    margin: 2em 0 0;
+
+    h4:first-of-type, ul {
+      margin-top: 0;
+    }
+  }
+
+  &__meta-row {
+    margin: 0 0 2em;
   }
 }
