@@ -174,7 +174,7 @@ class TestSupplierApplication(BaseApplicationTest):
 
 @mock.patch('app.main.suppliers.render_component')
 @mock.patch("app.main.views.suppliers.data_api_client")
-class TestSupplierUpdate(BaseApplicationTest):
+class TestSupplierEdit(BaseApplicationTest):
 
     def post_supplier_edit(self, data=None, csrf_token=FakeCsrf.valid_token, **kwargs):
         if data is None:
@@ -185,7 +185,7 @@ class TestSupplierUpdate(BaseApplicationTest):
         data.update(kwargs)
         if csrf_token is not None:
             data['csrf_token'] = csrf_token
-        res = self.client.post(self.url_for('main.update_supplier'), data=data)
+        res = self.client.post(self.url_for('main.supplier_edit_save'), data=data)
         return res.status_code, res.get_data(as_text=True)
 
     def test_should_render_edit_page_with_minimum_data(self, data_api_client, render_component):
@@ -195,7 +195,7 @@ class TestSupplierUpdate(BaseApplicationTest):
 
         data_api_client.get_supplier.side_effect = limited_supplier
 
-        response = self.client.get(self.url_for('main.update_supplier'))
+        response = self.client.get(self.url_for('main.supplier_edit'))
         assert_equal(response.status_code, 200)
 
     def test_update_all_supplier_fields(self, data_api_client, render_component):
@@ -259,7 +259,7 @@ class TestSupplierUpdate(BaseApplicationTest):
         assert_equal(status, 302)
 
     def test_should_redirect_to_login_if_not_logged_in(self, data_api_client, render_component):
-        edit_url = self.url_for('main.edit_supplier')
+        edit_url = self.url_for('main.supplier_edit_save')
         res = self.client.get(edit_url)
         assert_equal(res.status_code, 302)
         assert_equal(res.location, self.get_login_redirect_url(edit_url))

@@ -2,7 +2,7 @@
 
 from itertools import chain
 
-from flask import render_template, request, redirect, url_for, abort, session, Markup
+from flask import render_template, request, redirect, url_for, abort, session, Markup, jsonify
 from flask_login import current_user
 from flask import current_app
 import flask_featureflags as feature
@@ -88,24 +88,34 @@ def dashboard():
 
 
 @main.route('/edit', methods=['GET'])
+@main.route('/edit/<path:step>', methods=['GET'])
+@main.route('/edit/<path:step>/<path:substep>', methods=['GET'])
 @login_required
-def edit_supplier(supplier=None, errors=None):
-    if not supplier:
-        try:
-            supplier = data_api_client.get_supplier(
-                current_user.supplier_code
-            )['supplier']
-        except APIError as e:
-            current_app.logger.error(e)
-            abort(e.status_code)
+@feature.is_active_feature('SELLER_EDIT')
+def supplier_edit(step=None, substep=None):
+    try:
+        supplier = data_api_client.get_supplier(
+            current_user.supplier_code
+        )['supplier']
+    except APIError as e:
+        current_app.logger.error(e)
+        abort(e.status_code)
 
-    form = DmForm()
-    rendered_component = render_component('bundles/SellerRegistration/BusinessDetailsWidget.js',
-                                          {'options': {'seller_registration': feature.is_active('SELLER_REGISTRATION')},
-                                           'form_options': {'csrf_token': form.csrf_token.current_token,
-                                                            'mode': 'edit',
-                                                            'errors': errors},
-                                           'businessDetailsForm': supplier})
+    if supplier:
+        supplier['services'] = {
+            d: True
+            for d in supplier.get('domains', {}).get('assessed', []) + supplier.get('domains', {}).get('unassessed', [])
+            }
+
+    props = {"application": supplier}
+    props['basename'] = url_for('.supplier_edit')
+    props['options'] = {'seller_edit': feature.is_active('SELLER_EDIT')}
+    props['form_options'] = {
+        'action': url_for('.supplier_edit_save'),
+        'submit_url':  url_for('.supplier_edit_save'),
+    }
+    rendered_component = render_component('bundles/SellerRegistration/ProfileEditWidget.js', props)
+
     return render_template(
         '_react.html',
         component=rendered_component
@@ -113,17 +123,17 @@ def edit_supplier(supplier=None, errors=None):
 
 
 @main.route('/edit', methods=['POST'])
+@main.route('/edit/<path:step>', methods=['POST'])
+@main.route('/edit/<path:step>/<path:substep>', methods=['POST'])
 @login_required
-def update_supplier():
-    allowed_keys = ['summary', 'website', 'linkedin', 'address']
-    supplier_updates = {k: v for (k, v) in from_response(request).iteritems() if k in allowed_keys}
-
-    errors = validate_form_data(supplier_updates, ['summary'])
-    if errors:
-        return edit_supplier(supplier_updates, errors)
+@feature.is_active_feature('SELLER_EDIT')
+def supplier_edit_save(step=None, substep=None):
+    json = request.content_type == 'application/json'
+    form_data = from_response(request)
+    supplier_updates = form_data['application'] if json else form_data
 
     try:
-        data_api_client.update_supplier(
+        result = data_api_client.update_supplier(
             current_user.supplier_code,
             supplier_updates,
             user=current_user.email_address
@@ -132,7 +142,10 @@ def update_supplier():
         current_app.logger.error(e)
         abort(e.status_code)
 
-    return redirect('/supplier/{}'.format(current_user.supplier_code))
+    if json:
+        return jsonify(result)
+    else:
+        return redirect(url_for('.supplier_edit', id=id, step=form_data.get('next_step_slug')))
 
 
 @main.route('/update', methods=['GET'])
