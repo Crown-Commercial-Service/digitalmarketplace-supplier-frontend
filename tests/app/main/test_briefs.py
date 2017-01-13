@@ -850,8 +850,8 @@ class TestApplyToBrief(BaseApplicationTest):
                 "evidence-0": 'first evidence',
                 "yesNo-1": False,
                 "evidence-1": "",
-                "yesNo-2": True,
-                "evidence-2": 'third evidence'
+                "yesNo-2": False,
+                "evidence-2": 'evidence we expect not to be sent'
             }
         )
 
@@ -863,7 +863,7 @@ class TestApplyToBrief(BaseApplicationTest):
                 "niceToHaveRequirements": [
                     {'yesNo': True, 'evidence': 'first evidence'},
                     {'yesNo': False},
-                    {'yesNo': True, 'evidence': 'third evidence'}
+                    {'yesNo': False}
                 ]
             },
             'email@email.com',
