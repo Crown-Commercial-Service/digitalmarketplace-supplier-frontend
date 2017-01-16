@@ -815,7 +815,7 @@ class TestApplyToBrief(BaseApplicationTest):
         questions = list(map(str.strip, questions))
 
         assert questions == [
-            'Nice one', 'Nice one evidence', 'Top one', 'Top one evidence', 'Get sorted', 'Get sorted evidence'
+            'Nice one', 'Evidence of Nice one', 'Top one', 'Evidence of Top one', 'Get sorted', 'Evidence of Get sorted'
         ]
 
     def test_existing_nice_to_have_requirements_evidence_prefills_existing_data(self):
@@ -901,14 +901,14 @@ class TestApplyToBrief(BaseApplicationTest):
                 'There was a problem with your answer to:')
         masthead_errors = doc.xpath("//a[@class=\"validation-masthead-link\"]/text()")
         masthead_errors = list(map(str.strip, masthead_errors))
-        assert masthead_errors == ['Nice one', 'Top one evidence', 'Get sorted evidence']
+        assert masthead_errors == ['Nice one', 'Evidence of Top one', 'Evidence of Get sorted']
 
         # Test individual questions errors and prefilled content
         assert (doc.xpath("//span[@class=\"validation-message\"]/text()")[0].strip() ==
-                'You need to answer this question.')
+                'You must answer ‘yes’ or ‘no’ to this question.')
 
         assert (doc.xpath("//span[@class=\"validation-message\"]/text()")[1].strip() ==
-                'You need to answer this question.')
+                'You must provide evidence if you answer ‘yes’ to this question.')
         assert len(doc.xpath("//*[@id='input-yesNo-1-yes' and @checked]")) == 1
 
         assert (doc.xpath("//span[@class=\"validation-message\"]/text()")[2].strip() ==
