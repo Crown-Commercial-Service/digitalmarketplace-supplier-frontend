@@ -535,6 +535,7 @@ def framework_agreement(framework_slug):
             'frameworks/contract_start.html',
             signature_page_filename=SIGNATURE_PAGE_FILENAME,
             framework=framework,
+            framework_urls=content_loader.get_message(framework_slug, 'urls'),
             lots=[{
                 'name': lot['name'],
                 'has_completed_draft': (lot in lots_with_completed_drafts)
