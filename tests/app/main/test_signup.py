@@ -5,6 +5,7 @@ from dmutils.email import EmailError
 from app.main.views.signup import render_create_application
 from dmapiclient import HTTPError
 from io import BytesIO
+import json
 
 
 def get_application(id):
@@ -358,7 +359,6 @@ class TestApplicationPage(BaseApplicationTest):
         with self.client.session_transaction() as sess:
             sess['_csrf_token'] = csrf
 
-        import json
         with self.app.test_client():
             self.login_as_applicant()
             data_api_client.get_application.side_effect = get_application
