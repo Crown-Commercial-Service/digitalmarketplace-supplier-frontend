@@ -371,7 +371,8 @@ class TestApplyToBrief(BaseApplicationTest):
 
         lots = [
             api_stubs.lot(slug="digital-specialists", allows_brief=True),
-            api_stubs.lot(slug="digital-outcomes", allows_brief=True)
+            api_stubs.lot(slug="digital-outcomes", allows_brief=True),
+            api_stubs.lot(slug="user-research-participants", allows_brief=True)
         ]
         self.framework = api_stubs.framework(
             status="live", slug="digital-outcomes-and-specialists", clarification_questions_open=False, lots=lots
@@ -612,7 +613,31 @@ class TestApplyToBrief(BaseApplicationTest):
         data = res.get_data(as_text=True)
         assert "Buyer's maximum day rate:" not in data
 
-    def test_start_date_question_escapes_brief_start_date_markdown(self):
+    def test_availability_question_shows_correct_content_for_lot(self):
+        self.brief['briefs']['startDate'] = '17/01/2017'
+        self.brief['briefs']['researchDates'] = '17/01/2017'
+        lot_slugs = ['digital-specialists', 'digital-outcomes', 'user-research-participants']
+        question_content = ['the specialist can start work?', 'the team can start?', 'you can recruit participants?']
+        hint_content = ['the specialist to start:', 'the team to start:', 'participants:']
+
+        for lot_slug, question, hint in zip(lot_slugs, question_content, hint_content):
+            self.brief['briefs']['lotSlug'] = lot_slug
+
+            res = self.client.get(
+                '/suppliers/opportunities/1234/responses/5/availability'
+            )
+            assert res.status_code == 200
+
+            doc = html.fromstring(res.get_data(as_text=True))
+            page_heading = doc.xpath("//h1/text()")
+            page_hint = doc.xpath("//span[@id='input-availability-question-advice']/p/text()")
+
+            assert len(page_heading) == 1
+            assert page_heading[0].strip() == 'When is the earliest {}'.format(question)
+            assert len(page_hint) == 1
+            assert page_hint[0] == 'The buyer needs {} 17/01/2017.'.format(hint)
+
+    def test_availability_question_escapes_brief_start_date_markdown(self):
         self.brief['briefs']['startDate'] = '**markdown**'
 
         res = self.client.get(
@@ -622,10 +647,11 @@ class TestApplyToBrief(BaseApplicationTest):
 
         data = res.get_data(as_text=True)
 
-        assert "The buyer needs the specialist to start by **markdown**." in data
+        assert "The buyer needs the specialist to start: **markdown**." in data
 
-    def test_start_date_question_escapes_brief_start_date_html(self):
+    def test_availability_question_escapes_brief_start_date_html(self):
         self.brief['briefs']['startDate'] = '<h1>xss</h1>'
+        self.brief['briefs']['lot'] = 'digital-specialists'
 
         res = self.client.get(
             '/suppliers/opportunities/1234/responses/5/availability'
@@ -634,7 +660,7 @@ class TestApplyToBrief(BaseApplicationTest):
 
         data = res.get_data(as_text=True)
 
-        assert "The buyer needs the specialist to start by &lt;h1&gt;xss&lt;/h1&gt;." in data
+        assert "The buyer needs the specialist to start: &lt;h1&gt;xss&lt;/h1&gt;." in data
 
     def test_essential_requirements_evidence_has_question_for_every_requirement(self):
         res = self.client.get(
