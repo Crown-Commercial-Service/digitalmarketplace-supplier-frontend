@@ -349,6 +349,42 @@ class TestApplicationPage(BaseApplicationTest):
 
     @mock.patch("app.main.views.signup.data_api_client")
     @mock.patch('app.main.views.signup.render_component')
+    def test_application_update_json(self, render_component, data_api_client):
+        render_component.return_value.get_props.return_value = {}
+        render_component.return_value.get_slug.return_value = 'slug'
+
+        csrf = 'abc123'
+
+        with self.client.session_transaction() as sess:
+            sess['_csrf_token'] = csrf
+
+        import json
+        with self.app.test_client():
+            self.login_as_applicant()
+            data_api_client.get_application.side_effect = get_application
+
+            data_api_client.update_application.return_value = {
+                'application': {
+                    'links': {
+                        'self': 'http://self'
+                    }
+                }
+            }
+
+            res = self.client.post(
+                self.expand_path('/application/1'),
+                data=json.dumps({'application': {'phone': '123'}, 'next_step_slug': 'slug'}),
+                headers={'X-CSRFToken': csrf},
+                content_type='application/json'
+            )
+
+            assert res.status_code == 200
+
+            data = json.loads(res.get_data(as_text=True))
+            assert 'links' not in data['application']
+
+    @mock.patch("app.main.views.signup.data_api_client")
+    @mock.patch('app.main.views.signup.render_component')
     def test_application_update_denies_access(self, render_component, data_api_client):
         render_component.return_value.get_props.return_value = {}
         render_component.return_value.get_slug.return_value = 'slug'

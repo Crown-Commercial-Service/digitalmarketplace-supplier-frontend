@@ -234,6 +234,7 @@ def application_update(id, step=None):
     result = data_api_client.update_application(id, application)
 
     if json:
+        result['application'].pop('links', None)
         return jsonify(result)
     else:
         return redirect(url_for('.render_application', id=id, step=form_data['next_step_slug']))
