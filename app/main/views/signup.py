@@ -228,12 +228,19 @@ def application_update(id, step=None):
     form_data = from_response(request)
     application = form_data['application'] if json else form_data
 
-    if application.get('status'):
+    try:
         del application['status']
+    except KeyError:
+        pass
 
     result = data_api_client.update_application(id, application)
 
     if json:
+        try:
+            appdata = result['application']
+            del appdata['links']
+        except KeyError:
+            pass
         return jsonify(result)
     else:
         return redirect(url_for('.render_application', id=id, step=form_data['next_step_slug']))
