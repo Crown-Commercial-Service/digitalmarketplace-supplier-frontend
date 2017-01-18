@@ -428,10 +428,8 @@ class TestApplicationPage(BaseApplicationTest):
 
             assert res.status_code == 200
 
-            args, kwargs = data_api_client.update_application.call_args
-            assert args[0] == 1
-            assert 'submitted_at' in args[1]
-            assert args[1]['status'] == 'submitted'
+            args, kwargs = data_api_client.req.applications().submit().post.call_args
+            assert kwargs['data']['user_id'] == 234
 
     @mock.patch('app.main.views.signup.render_template')
     @mock.patch('app.main.views.signup.send_email')

@@ -177,9 +177,7 @@ def submit_application(id):
     if not can_user_view_application(application):
         abort(403, 'Not authorised to access application')
 
-    if application['application']['status'] in ['saved']:
-        data_api_client.update_application(id, {'status': 'submitted',
-                                                'submitted_at': pendulum.now('UTC').to_iso8601_string(extended=True)})
+    data_api_client.req.applications(id).submit().post(data={'user_id': current_user.id})
 
     return render_template('suppliers/application_submitted.html')
 
