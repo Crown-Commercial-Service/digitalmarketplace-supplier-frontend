@@ -804,6 +804,31 @@ class TestApplyToBrief(BaseApplicationTest):
         assert doc.xpath("//*[@id='input-evidence-1']/text()")[0] == "valid evidence"
         assert not doc.xpath("//*[@id='input-evidence-2']/text()")
 
+    def test_essential_requirements_evidence_does_not_redirect_to_nice_to_haves_if_brief_has_no_nice_to_haves(self):
+        self.brief['briefs']['niceToHaveRequirements'] = []
+        self.data_api_client.get_brief.return_value = self.brief
+
+        res = self.client.post(
+            '/suppliers/opportunities/1234/responses/5/essentialRequirements',
+            data={
+                "evidence-0": "valid evidence",
+                "evidence-1": "valid evidence",
+                "evidence-2": "valid evidence"
+            }
+        )
+
+        assert res.status_code == 302
+        assert res.location == 'http://localhost/suppliers/opportunities/1234/responses/5/respondToEmailAddress'
+
+    def test_nice_to_have_requirements_url_404s_if_no_nice_to_have_requirements(self):
+        self.brief['briefs']['niceToHaveRequirements'] = []
+        self.data_api_client.get_brief.return_value = self.brief
+
+        res = self.client.get(
+            '/suppliers/opportunities/1234/responses/5/niceToHaveRequirements'
+        )
+        assert res.status_code == 404
+
     def test_nice_to_have_requirements_evidence_has_question_for_every_requirement(self):
         res = self.client.get(
             '/suppliers/opportunities/1234/responses/5/niceToHaveRequirements'
