@@ -170,12 +170,12 @@ def edit_brief_response(brief_id, brief_response_id, question_id=None):
     # data. The question will be skipped in the brief response flow (see below). If a user attempts to access the
     # question by directly visiting the url, this check will return a 404. It has been created specifically for nice to
     # have requirements, and works because briefs and responses share the same key for this question/response.
-    if question_id in list(brief.keys()) and not brief[question_id]:
+    if question_id in brief.keys() and not brief[question_id]:
         abort(404)
 
     # If a question is to be skipped in the normal flow (due to the reason above), we update the next_question_id.
     next_question_id = section.get_next_question_id(question_id)
-    if next_question_id in list(brief.keys()) and not brief[next_question_id]:
+    if next_question_id in brief.keys() and not brief[next_question_id]:
         next_question_id = section.get_next_question_id(next_question_id)
 
     def redirect_to_next_page():
