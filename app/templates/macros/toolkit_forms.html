@@ -11,6 +11,7 @@
     unit_position=question_content.unit_position,
     unit=question_content.unit,
     smaller=question_content.smaller,
+    hidden=question_content.hidden,
     error=errors.get(question_content.id)['message']|question_references(get_question)
   %}
     {% include "toolkit/forms/textbox.html" %}
@@ -28,6 +29,7 @@
     value=service_data[question_content.id],
     large=True,
     max_length_in_words=question_content.max_length_in_words,
+    hidden=question_content.hidden,
     error=errors.get(question_content.id)['message']|question_references(get_question)
   %}
     {% include "toolkit/forms/textbox.html" %}
@@ -101,6 +103,7 @@
     value=service_data[question_content.id],
     id=question_content.id,
     type='boolean',
+    followup=question_content.followup,
     error=errors.get(question_content.id)['message']|question_references(get_question),
     question_number=question_number
   %}

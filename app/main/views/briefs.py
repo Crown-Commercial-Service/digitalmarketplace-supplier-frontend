@@ -166,10 +166,19 @@ def edit_brief_response(brief_id, brief_response_id, question_id=None):
     if section is None or not section.editable:
         abort(404)
 
-    next_question_id = section.get_next_question_id(question_id)
+    # If a question in a brief is optional and is unanswered by the buyer, the brief will have the key but will have no
+    # data. The question will be skipped in the brief response flow (see below). If a user attempts to access the
+    # question by directly visiting the url, this check will return a 404. It has been created specifically for nice to
+    # have requirements, and works because briefs and responses share the same key for this question/response.
+    if question_id in brief.keys() and not brief[question_id]:
+        abort(404)
 
-    # If no question_id in url then redirect to first question
-    if question_id is None:
+    # If a question is to be skipped in the normal flow (due to the reason above), we update the next_question_id.
+    next_question_id = section.get_next_question_id(question_id)
+    if next_question_id in brief.keys() and not brief[next_question_id]:
+        next_question_id = section.get_next_question_id(next_question_id)
+
+    def redirect_to_next_page():
         return redirect(url_for(
             '.edit_brief_response',
             brief_id=brief_id,
@@ -177,6 +186,10 @@ def edit_brief_response(brief_id, brief_response_id, question_id=None):
             question_id=next_question_id
             )
         )
+
+    # If no question_id in url then redirect to first question
+    if question_id is None:
+        return redirect_to_next_page()
 
     question = section.get_question(question_id)
     if question is None:
@@ -203,18 +216,11 @@ def edit_brief_response(brief_id, brief_response_id, question_id=None):
         except HTTPError as e:
             errors = question.get_error_messages(e.message)
             status_code = 400
-            service_data.update(question.unformat_data(question.get_data(request.form)))
+            service_data = question.unformat_data(question.get_data(request.form))
 
         else:
             if next_question_id:
-                return redirect(
-                    url_for(
-                        '.edit_brief_response',
-                        brief_id=brief_id,
-                        brief_response_id=brief_response_id,
-                        question_id=next_question_id
-                    )
-                )
+                return redirect_to_next_page()
             else:
                 data_api_client.submit_brief_response(
                     brief_response_id,

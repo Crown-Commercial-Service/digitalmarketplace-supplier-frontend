@@ -13,6 +13,7 @@
 //= include ../../../bower_components/digitalmarketplace-frontend-toolkit/toolkit/javascripts/word-counter.js
 //= include ../../../bower_components/digitalmarketplace-frontend-toolkit/toolkit/javascripts/validation.js
 //= include ../../../node_modules/govuk_frontend_toolkit/javascripts/govuk/selection-buttons.js
+//= include ../../../node_modules/govuk_frontend_toolkit/javascripts/govuk/show-hide-content.js
 //= include _selection-buttons.js
 //= include _analytics.js
 
