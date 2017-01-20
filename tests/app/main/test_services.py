@@ -276,7 +276,7 @@ class TestSupplierEditService(_BaseTestSupplierEditRemoveService):
 
         # service removed notification banner shouldn't be there
         self.assert_not_in_strip_whitespace(
-            '<h2>This service was removed on Monday 23 March 2015</h2>',
+            'This service was removed',
             res.get_data(as_text=True)
         )
 
@@ -330,7 +330,7 @@ class TestSupplierEditService(_BaseTestSupplierEditRemoveService):
 
         # service removed notification banner shouldn't be there
         self.assert_not_in_strip_whitespace(
-            '<h2>This service was removed on Monday 23 March 2015</h2>',
+            'This service was removed',
             res.get_data(as_text=True)
         )
 
