@@ -1851,11 +1851,10 @@ class TestPostStartBriefResponseApplication(BaseApplicationTest):
         assert res.status_code == 404
 
 
-@mock.patch("app.main.views.briefs.data_api_client")
-class TestResponseResultPage(BaseApplicationTest):
+class ResponseResultPageBothFlows(BaseApplicationTest):
 
     def setup_method(self, method):
-        super(TestResponseResultPage, self).setup_method(method)
+        super(ResponseResultPageBothFlows, self).setup_method(method)
         lots = [api_stubs.lot(slug="digital-specialists", allows_brief=True)]
         self.framework = api_stubs.framework(status="live", slug="digital-outcomes-and-specialists",
                                              clarification_questions_open=False, lots=lots)
@@ -1864,6 +1863,22 @@ class TestResponseResultPage(BaseApplicationTest):
         self.brief['briefs']['evaluationType'] = ['Interview']
         with self.app.test_client():
             self.login()
+
+    def test_view_response_result_not_submitted_redirect_to_submit_page(self, data_api_client):
+        data_api_client.get_brief.return_value = self.brief
+        data_api_client.is_supplier_eligible_for_brief.return_value = True
+        data_api_client.find_brief_responses.return_value = {"briefResponses": []}
+        res = self.client.get('/suppliers/opportunities/1234/responses/result')
+
+        assert res.status_code == 302
+        assert res.location == 'http://localhost/suppliers/opportunities/1234/responses/create'
+
+
+@mock.patch("app.main.views.briefs.data_api_client")
+class TestResponseResultPageLegacyFlow(ResponseResultPageBothFlows):
+
+    def setup(self):
+        super(TestResponseResultPageLegacyFlow, self).setup()
 
     def test_view_response_result_page_escapes_essential_and_nice_to_have_requirements(self, data_api_client):
         self.brief['briefs']['essentialRequirements'] = [
@@ -1948,15 +1963,6 @@ class TestResponseResultPage(BaseApplicationTest):
         assert res.status_code == 200
         doc = html.fromstring(res.get_data(as_text=True))
         assert doc.xpath('//h1')[0].text.strip() == "You don’t meet all the essential requirements"
-
-    def test_view_response_result_not_submitted_redirect_to_submit_page(self, data_api_client):
-        data_api_client.get_brief.return_value = self.brief
-        data_api_client.is_supplier_eligible_for_brief.return_value = True
-        data_api_client.find_brief_responses.return_value = {"briefResponses": []}
-        res = self.client.get('/suppliers/opportunities/1234/responses/result')
-
-        assert res.status_code == 302
-        assert res.location == 'http://localhost/suppliers/opportunities/1234/responses/create'
 
     def test_essential_skills_shown_with_response(self, data_api_client):
         data_api_client.get_brief.return_value = self.brief
@@ -2082,6 +2088,265 @@ class TestResponseResultPage(BaseApplicationTest):
         data_api_client.find_brief_responses.return_value = {
             "briefResponses": [
                 {"essentialRequirements": [True, True, True]}
+            ]
+        }
+        res = self.client.get('/suppliers/opportunities/1234/responses/result')
+
+        assert res.status_code == 200
+        doc = html.fromstring(res.get_data(as_text=True))
+        assert len(doc.xpath('//li[contains(normalize-space(text()), "a work history")]')) == 1
+        assert len(doc.xpath('//li[contains(normalize-space(text()), "an interview")]')) == 1
+
+
+@mock.patch("app.main.views.briefs.data_api_client")
+class TestResponseResultPage(ResponseResultPageBothFlows):
+
+    def setup(self):
+        super(TestResponseResultPage, self).setup()
+
+    def test_view_response_result_page_escapes_essential_and_nice_to_have_requirements(self, data_api_client):
+        self.brief['briefs']['essentialRequirements'] = [
+            '<h1>Essential one with xss</h1>',
+            '**Essential two with markdown**'
+        ]
+        self.brief['briefs']['niceToHaveRequirements'] = [
+            '<h1>n2h one with xss</h1>',
+            '**n2h two with markdown**'
+        ]
+
+        data_api_client.get_brief.return_value = self.brief
+        data_api_client.get_framework.return_value = self.framework
+        data_api_client.is_supplier_eligible_for_brief.return_value = True
+        data_api_client.find_brief_responses.return_value = {
+            "briefResponses": [
+                {
+                    "essentialRequirementsMet": True,
+                    "essentialRequirements": [
+                        {"evidence": "Did a thing"},
+                        {"evidence": "Know a thing"}
+                    ],
+                    "niceToHaveRequirements": [
+                        {
+                            "yesNo": True,
+                            "evidence": "Did another thing"
+                        },
+                        {"yesNo": False}
+                    ]
+                }
+            ]
+        }
+
+        res = self.client.get('/suppliers/opportunities/1234/responses/result')
+        data = res.get_data(as_text=True)
+        doc = html.fromstring(data)
+
+        assert "&lt;h1&gt;Essential one with xss&lt;/h1&gt;" in data
+        assert "&lt;h1&gt;n2h one with xss&lt;/h1&gt;" in data
+        assert len(doc.xpath('//h1')) == 1
+
+        assert "**Essential two with markdown**" in data
+        assert "<strong>Essential two with markdown</strong>" not in data
+        assert "**n2h two with markdown**" in data
+        assert "<strong>n2h two with markdown</strong>" not in data
+
+    def test_view_response_result_submitted_ok(self, data_api_client):
+        data_api_client.get_brief.return_value = self.brief
+        data_api_client.get_framework.return_value = self.framework
+        data_api_client.is_supplier_eligible_for_brief.return_value = True
+        data_api_client.find_brief_responses.return_value = {
+            "briefResponses": [
+                {
+                    "essentialRequirementsMet": True,
+                    "essentialRequirements": [
+                        {"evidence": "Did a thing"},
+                        {"evidence": "Did a thing"},
+                        {"evidence": "Did a thing"}
+                    ]
+                }
+            ]
+        }
+        res = self.client.get('/suppliers/opportunities/1234/responses/result')
+
+        assert res.status_code == 200
+        doc = html.fromstring(res.get_data(as_text=True))
+        assert doc.xpath('//h1')[0].text.strip() == \
+            "Your response to ‘I need a thing to do a thing’ has been sent"
+
+    def test_view_response_result_submitted_ok_for_closed_brief(self, data_api_client):
+        closed_brief = self.brief.copy()
+        closed_brief['briefs']['status'] = 'closed'
+        data_api_client.get_brief.return_value = closed_brief
+        data_api_client.get_framework.return_value = self.framework
+        data_api_client.is_supplier_eligible_for_brief.return_value = True
+        data_api_client.find_brief_responses.return_value = {
+            "briefResponses": [
+                {
+                    "essentialRequirements": [
+                        {"evidence": "Did a thing"},
+                        {"evidence": "Did a thing"},
+                        {"evidence": "Did a thing"}
+                    ]
+                }
+            ]
+        }
+        res = self.client.get('/suppliers/opportunities/1234/responses/result')
+
+        assert res.status_code == 200
+        doc = html.fromstring(res.get_data(as_text=True))
+        assert doc.xpath('//h1')[0].text.strip() == \
+            "Your response to ‘I need a thing to do a thing’ has been sent"
+
+    def test_view_response_result_submitted_unsuccessful(self, data_api_client):
+        data_api_client.get_brief.return_value = self.brief
+        data_api_client.get_framework.return_value = self.framework
+        data_api_client.is_supplier_eligible_for_brief.return_value = True
+        data_api_client.find_brief_responses.return_value = {
+            "briefResponses": [
+                {
+                    "essentialRequirementsMet": False
+                }
+            ]
+        }
+        res = self.client.get('/suppliers/opportunities/1234/responses/result')
+
+        assert res.status_code == 200
+        doc = html.fromstring(res.get_data(as_text=True))
+        assert doc.xpath('//h1')[0].text.strip() == "You don’t meet all the essential requirements"
+
+    def test_essential_skills_shown_with_response(self, data_api_client):
+        data_api_client.get_brief.return_value = self.brief
+        data_api_client.get_framework.return_value = self.framework
+        data_api_client.is_supplier_eligible_for_brief.return_value = True
+        data_api_client.find_brief_responses.return_value = {
+            "briefResponses": [
+                {
+                    "essentialRequirementsMet": True,
+                    "essentialRequirements": [
+                        {"evidence": "Did a thing"},
+                        {"evidence": "Did a thing"},
+                        {"evidence": "Did a thing"}
+                    ]
+                }
+            ]
+        }
+        res = self.client.get('/suppliers/opportunities/1234/responses/result')
+
+        assert res.status_code == 200
+        doc = html.fromstring(res.get_data(as_text=True))
+        assert len(doc.xpath('//h2[contains(normalize-space(text()), "Your essential skills and experience")]')) == 1
+
+    def test_nice_to_haves_shown_with_response_when_they_exist(self, data_api_client):
+        brief_with_nice_to_haves = self.brief.copy()
+        brief_with_nice_to_haves['briefs']['niceToHaveRequirements'] = ['Nice one', 'Top one', 'Get sorted']
+        data_api_client.get_brief.return_value = brief_with_nice_to_haves
+        data_api_client.get_framework.return_value = self.framework
+        data_api_client.is_supplier_eligible_for_brief.return_value = True
+        data_api_client.find_brief_responses.return_value = {
+            "briefResponses": [
+                {
+                    "essentialRequirementsMet": True,
+                    "niceToHaveRequirements": [
+                        {"yesNo": False},
+                        {"yesNo": True, "evidence": "Did a thing"},
+                        {"yesNo": False}
+                    ]
+                }
+            ]
+        }
+        res = self.client.get('/suppliers/opportunities/1234/responses/result')
+
+        assert res.status_code == 200
+        doc = html.fromstring(res.get_data(as_text=True))
+        assert len(
+            doc.xpath('//h2[contains(normalize-space(text()), "Your nice-to-have skills and experience")]')
+        ) == 1
+
+    def test_nice_to_haves_heading_not_shown_when_there_are_none(self, data_api_client):
+        data_api_client.get_brief.return_value = self.brief
+        data_api_client.get_framework.return_value = self.framework
+        data_api_client.is_supplier_eligible_for_brief.return_value = True
+        data_api_client.find_brief_responses.return_value = {
+            "briefResponses": [
+                {"essentialRequirementsMet": True}
+            ]
+        }
+        res = self.client.get('/suppliers/opportunities/1234/responses/result')
+
+        assert res.status_code == 200
+        doc = html.fromstring(res.get_data(as_text=True))
+        assert len(
+            doc.xpath('//h2[contains(normalize-space(text()), "Your nice-to-have skills and experience")]')
+        ) == 0
+
+    def test_requirement_evidence_heading_shown_for_essential_requirements(self, data_api_client):
+        data_api_client.get_brief.return_value = self.brief
+        data_api_client.get_framework.return_value = self.framework
+        data_api_client.is_supplier_eligible_for_brief.return_value = True
+        data_api_client.find_brief_responses.return_value = {
+            "briefResponses": [
+                {"essentialRequirementsMet": True}
+            ]
+        }
+        res = self.client.get('/suppliers/opportunities/1234/responses/result')
+
+        assert res.status_code == 200
+        doc = html.fromstring(res.get_data(as_text=True))
+
+        # Checks if column headings are visible and contain the correct text
+        assert len(doc.xpath(
+            ''.join([
+                '//h2[contains(normalize-space(text()), "Your essential skills and experience")]',
+                '/following-sibling::table[1]/thead[@class="summary-item-field-headings-visible"]',
+                '/tr/th[contains(normalize-space(text()), "Requirement")]'  # noqa
+            ])
+        )) == 1
+        assert len(doc.xpath(
+            ''.join([
+                '//h2[contains(normalize-space(text()), "Your essential skills and experience")]',
+                '/following-sibling::table[1]/thead[@class="summary-item-field-headings-visible"]',
+                '/tr/th[contains(normalize-space(text()), "Evidence")]'  # noqa
+            ])
+        )) == 1
+
+    def test_supplier_details_shown(self, data_api_client):
+        data_api_client.get_brief.return_value = self.brief
+        data_api_client.get_framework.return_value = self.framework
+        data_api_client.is_supplier_eligible_for_brief.return_value = True
+        data_api_client.find_brief_responses.return_value = {
+            "briefResponses": [
+                {"essentialRequirementsMet": True}
+            ]
+        }
+        res = self.client.get('/suppliers/opportunities/1234/responses/result')
+
+        assert res.status_code == 200
+        doc = html.fromstring(res.get_data(as_text=True))
+        assert len(doc.xpath('//h2[contains(normalize-space(text()), "Your details")]')) == 1
+
+    def test_evaluation_methods_load_default_value(self, data_api_client):
+        no_extra_eval_brief = self.brief.copy()
+        no_extra_eval_brief['briefs'].pop('evaluationType')
+        data_api_client.get_brief.return_value = no_extra_eval_brief
+        data_api_client.get_framework.return_value = self.framework
+        data_api_client.is_supplier_eligible_for_brief.return_value = True
+        data_api_client.find_brief_responses.return_value = {
+            "briefResponses": [
+                {"essentialRequirementsMet": True}
+            ]
+        }
+        res = self.client.get('/suppliers/opportunities/1234/responses/result')
+
+        assert res.status_code == 200
+        doc = html.fromstring(res.get_data(as_text=True))
+        assert len(doc.xpath('//li[contains(normalize-space(text()), "a work history")]')) == 1
+
+    def test_evaluation_methods_shown_with_a_or_an(self, data_api_client):
+        data_api_client.get_brief.return_value = self.brief
+        data_api_client.get_framework.return_value = self.framework
+        data_api_client.is_supplier_eligible_for_brief.return_value = True
+        data_api_client.find_brief_responses.return_value = {
+            "briefResponses": [
+                {"essentialRequirementsMet": True}
             ]
         }
         res = self.client.get('/suppliers/opportunities/1234/responses/result')
