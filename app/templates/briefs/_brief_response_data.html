@@ -1,21 +1,33 @@
 {% import "toolkit/summary-table.html" as summary %}
 {% for section in response_content.summary(brief_response) %}
+    {% if section.id in ("your-nice-to-have-skills-and-experience", "your-essential-skills-and-experience") and ('essentialRequirementsMet' in brief_response) %}
+      {% set field_headings = ["Requirement", "Evidence"] %}
+      {% set field_headings_visible = True %}
+    {% else %}
+      {% set field_headings = ["Opportunity attribute name", "Opportunity attribute value"] %}
+      {% set field_headings_visible = False %}
+    {% endif %}
+
+    {# Don't have a table for nice-to-have requirements if none have been given #}
     {% if not (section.id == 'your-nice-to-have-skills-and-experience' and not section.get_question('niceToHaveRequirements').boolean_list_questions) %}
         {{ summary.heading(section.name, id="opportunity-attributes-{}".format(loop.index)) }}
         {% call(item) summary.list_table(
           section.questions,
           caption=section.name,
-          field_headings=[
-            "Opportunity attribute name",
-            "Opportunity attribute value"
-          ],
-          field_headings_visible=False
+          field_headings=field_headings,
+          field_headings_visible=field_headings_visible
         ) %}
             {% if item.type == "boolean_list" %}
               {% for question in item.boolean_list_questions %}
                 {% call summary.row() %}
                   {{ summary.field_name(question, two_thirds=True) }}
-                  {{ summary['boolean'](item.value[loop.index0]) }}
+                  {% set answer = item.value[loop.index0] -%}
+                  {# Legacy boolean_list response answers are just a list of booleans #}
+                  {% if answer is not mapping -%}
+                    {{ summary['boolean'](answer) }}
+                  {% else -%} 
+                    {{ summary.text(answer.evidence or '') }}
+                  {% endif -%}
                 {% endcall %}
               {% endfor %}
             {% else %}
