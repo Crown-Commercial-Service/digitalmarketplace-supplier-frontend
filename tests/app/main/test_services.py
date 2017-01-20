@@ -11,18 +11,37 @@ import pytest
 from lxml import html
 from freezegun import freeze_time
 
-from nose.tools import assert_equal, assert_true, assert_false, assert_in, assert_not_in
+from nose.tools import assert_equal, assert_true, assert_false, assert_in, assert_not_in, assert_is
 from tests.app.helpers import BaseApplicationTest, empty_g7_draft_service
 
 
-@pytest.fixture(params=["g-cloud-6", "g-cloud-7"])
+# this is mostly a workaround for pytest not being able to do parametrization with unittest-derived class methods
+# otherwise it doesn't get us much over function parametrization...
+@pytest.fixture(params=(
+    ("g-cloud-6", "G-Cloud 6",),
+    ("g-cloud-7", "G-Cloud 7",),
+))
 def fixture_framework_slug_and_name(request):
-    frameworks = {
-        'g-cloud-6': ('g-cloud-6', 'G-Cloud 6'),
-        'g-cloud-7': ('g-cloud-7', 'G-Cloud 7')
-    }
+    return request.param
 
-    return frameworks[request.param]
+
+# and these fixtures really are just a workaround to not being able to use plain function parametrization in unittest-
+# derived classes and should be replaced with that as soon as we're able to do so. hence the hence the oddly specific
+# long names
+@pytest.fixture(params=(
+    # a tuple of service status, service_belongs_to_user, expect_api_call_if_data, expected_status_code
+    ("published", True, True, 302,),
+    ("enabled", True, False, 400,),
+    ("disabled", True, False, 400,),
+    ("published", False, False, 404,),
+))
+def supplier_remove_service__service_status__expected_results(request):
+    return request.param
+
+
+@pytest.fixture(params=(False, True,))
+def supplier_remove_service__post_data(request):
+    return request.param
 
 
 class TestListServices(BaseApplicationTest):
@@ -179,13 +198,14 @@ class TestListServicesLogin(BaseApplicationTest):
                      'http://localhost/login?next=%2Fsuppliers%2Fservices')
 
 
-@mock.patch('app.main.views.services.data_api_client')
-class TestSupplierUpdateService(BaseApplicationTest):
-    def _get_service(self,
-                     data_api_client,
-                     framework_slug_and_name,
-                     service_status="published",
-                     service_belongs_to_user=True):
+class _BaseTestSupplierEditRemoveService(BaseApplicationTest):
+    def _setup_service(
+            self,
+            data_api_client,
+            framework_slug_and_name,
+            service_status="published",
+            service_belongs_to_user=True,
+            ):
 
         framework_slug, framework_name = framework_slug_and_name
 
@@ -196,7 +216,7 @@ class TestSupplierUpdateService(BaseApplicationTest):
                 'id': '123',
                 'frameworkName': framework_name,
                 'frameworkSlug': framework_slug,
-                'supplierId': 1234 if service_belongs_to_user else 1235
+                'supplierId': 1234 if service_belongs_to_user else 1235,
             }
         }
         if service_status == 'published':
@@ -210,23 +230,18 @@ class TestSupplierUpdateService(BaseApplicationTest):
             'frameworks': {
                 'name': framework_name,
                 'slug': framework_slug,
-                'status': 'live'
+                'status': 'live',
             }
         }
 
-    def _post_remove_service(self, service_should_be_modifiable, failing_status_code=400):
 
-        expected_status_code = \
-            302 if service_should_be_modifiable else failing_status_code
-
-        res = self.client.post('/suppliers/services/123/remove')
-        assert_equal(res.status_code, expected_status_code)
-
+@mock.patch('app.main.views.services.data_api_client')
+class TestSupplierEditService(_BaseTestSupplierEditRemoveService):
     def test_should_view_public_service_with_correct_message(
             self, data_api_client, fixture_framework_slug_and_name
     ):
         self.login()
-        self._get_service(data_api_client, fixture_framework_slug_and_name, service_status='published')
+        self._setup_service(data_api_client, fixture_framework_slug_and_name, service_status='published')
 
         res = self.client.get('/suppliers/services/123')
         assert_equal(res.status_code, 200)
@@ -259,13 +274,11 @@ class TestSupplierUpdateService(BaseApplicationTest):
             res.get_data(as_text=True)
         )
 
-        self._post_remove_service(service_should_be_modifiable=True)
-
     def test_should_view_private_service_with_correct_message(
             self, data_api_client, fixture_framework_slug_and_name
     ):
         self.login()
-        self._get_service(data_api_client, fixture_framework_slug_and_name, service_status='enabled')
+        self._setup_service(data_api_client, fixture_framework_slug_and_name, service_status='enabled')
 
         res = self.client.get('/suppliers/services/123')
         assert_equal(res.status_code, 200)
@@ -283,13 +296,11 @@ class TestSupplierUpdateService(BaseApplicationTest):
             res.get_data(as_text=True)
         )
 
-        self._post_remove_service(service_should_be_modifiable=False)
-
     def test_should_view_disabled_service_with_removed_message(
             self, data_api_client, fixture_framework_slug_and_name
     ):
         self.login()
-        self._get_service(data_api_client, fixture_framework_slug_and_name, service_status='disabled')
+        self._setup_service(data_api_client, fixture_framework_slug_and_name, service_status='disabled')
 
         res = self.client.get('/suppliers/services/123')
         assert_equal(res.status_code, 200)
@@ -303,14 +314,37 @@ class TestSupplierUpdateService(BaseApplicationTest):
             res.get_data(as_text=True)
         )
 
-        self._post_remove_service(service_should_be_modifiable=False)
+    def test_should_not_view_other_suppliers_services(
+            self, data_api_client, fixture_framework_slug_and_name
+    ):
+        self.login()
+        self._setup_service(
+            data_api_client, fixture_framework_slug_and_name, service_status='published', service_belongs_to_user=False)
 
+        res = self.client.get('/suppliers/services/123')
+        assert_equal(res.status_code, 404)
+
+    def test_should_redirect_to_login_if_not_logged_in(self, data_api_client):
+        res = self.client.get("/suppliers/services/123")
+        assert_equal(res.status_code, 302)
+        assert_equal(res.location,
+                     'http://localhost/login?next=%2Fsuppliers%2Fservices%2F123')
+
+
+@mock.patch('app.main.views.services.data_api_client')
+class TestSupplierRemoveServiceEditInterplay(_BaseTestSupplierEditRemoveService):
+    """
+        These tests actually test the *interplay* between the remove view and its subsequent (redirected)
+        views through using `follow_redirects` to perform both a POST to the remove view and a subsequent GET to the
+        following view. Chief thing we're asserting is the flash message throw/catch.
+    """
     def test_should_view_confirmation_message_if_first_remove_service_button_clicked(
             self, data_api_client, fixture_framework_slug_and_name
     ):
         self.login()
-        self._get_service(data_api_client, fixture_framework_slug_and_name, service_status='published')
+        self._setup_service(data_api_client, fixture_framework_slug_and_name, service_status='published')
 
+        # NOTE two http requests performed here
         res = self.client.post('/suppliers/services/123/remove', follow_redirects=True)
 
         assert_equal(res.status_code, 200)
@@ -337,8 +371,9 @@ class TestSupplierUpdateService(BaseApplicationTest):
             self, data_api_client, fixture_framework_slug_and_name
     ):
         self.login()
-        self._get_service(data_api_client, fixture_framework_slug_and_name, service_status='published')
+        self._setup_service(data_api_client, fixture_framework_slug_and_name, service_status='published')
 
+        # NOTE two http requests performed here
         res = self.client.post(
             '/suppliers/services/123/remove',
             data={'remove_confirmed': True},
@@ -356,24 +391,36 @@ class TestSupplierUpdateService(BaseApplicationTest):
             res.get_data(as_text=True)
         )
 
-    def test_should_not_view_other_suppliers_services(
-            self, data_api_client, fixture_framework_slug_and_name
-    ):
+
+@mock.patch('app.main.views.services.data_api_client')
+class TestSupplierRemoveService(_BaseTestSupplierEditRemoveService):
+    def test_remove_service(
+            self,
+            data_api_client,
+            fixture_framework_slug_and_name,
+            supplier_remove_service__service_status__expected_results,
+            supplier_remove_service__post_data,
+            ):
+        framework_slug, framework_name = fixture_framework_slug_and_name
+        service_status, service_belongs_to_user, expect_api_call_if_data, expected_status_code = \
+            supplier_remove_service__service_status__expected_results
+        post_data = supplier_remove_service__post_data
+
         self.login()
-        self._get_service(
-            data_api_client, fixture_framework_slug_and_name, service_status='published', service_belongs_to_user=False)
+        self._setup_service(
+            data_api_client,
+            fixture_framework_slug_and_name,
+            service_status=service_status,
+            service_belongs_to_user=service_belongs_to_user,
+        )
 
-        res = self.client.get('/suppliers/services/123')
-        assert_equal(res.status_code, 404)
+        response = self.client.post(
+            '/suppliers/services/123/remove',
+            data={'remove_confirmed': True} if post_data else {},
+        )
 
-        # Should all be 404 if service doesn't belong to supplier
-        self._post_remove_service(service_should_be_modifiable=False, failing_status_code=404)
-
-    def test_should_redirect_to_login_if_not_logged_in(self, data_api_client):
-        res = self.client.get("/suppliers/services/123")
-        assert_equal(res.status_code, 302)
-        assert_equal(res.location,
-                     'http://localhost/login?next=%2Fsuppliers%2Fservices%2F123')
+        assert_is(data_api_client.update_service_status.called, expect_api_call_if_data and post_data)
+        assert_equal(response.status_code, expected_status_code)
 
 
 @mock.patch('app.main.views.services.data_api_client')
