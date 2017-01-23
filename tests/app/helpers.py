@@ -8,6 +8,7 @@ from app import data_api_client
 from datetime import datetime, timedelta
 from dmutils.formats import DATETIME_FORMAT
 from nose.tools import assert_in, assert_not_in
+import pytest
 
 
 FULL_G7_SUBMISSION = {
@@ -355,7 +356,12 @@ class BaseApplicationTest(object):
                 category, message = session['_flashes'][0]
             except KeyError:
                 raise AssertionError('nothing flashed')
-            assert expected_message in message
+            try:
+                assert expected_message == message or expected_message in message
+            except TypeError:
+                # presumably this was raised from the "in" test being reached and fed types which don't support "in".
+                # either way, a failure.
+                pytest.fail("Flash message contents not found in _flashes")
             assert expected_category == category
 
     def assert_no_flashes(self):
