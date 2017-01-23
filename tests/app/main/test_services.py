@@ -1456,7 +1456,6 @@ class TestShowDraftService(BaseApplicationTest):
         assert_equal(res.status_code, 200)
         assert_in(u"$12.50 to $15 per person per second", res.get_data(as_text=True))
 
-
     @mock.patch('app.main.views.services.count_unanswered_questions')
     def test_unanswered_questions_count(self, count_unanswered, data_api_client):
         data_api_client.get_framework.return_value = self.framework(status='open')
