@@ -35,7 +35,7 @@
     <div class="wrapper">
       {%
         with
-        message = 'You need to <a href="' + url_for('.framework_supplier_declaration', framework_slug=framework.slug) + '">make the supplier&nbsp;declaration</a> before ' + service_data.get('serviceName', service_data['lotName'])|lower + ' can be submitted',
+        message = 'You need to make the supplier&nbsp;declaration at ' + url_for('.framework_supplier_declaration', framework_slug=framework.slug) + ' before ' + service_data.get('serviceName', service_data['lotName'])|lower + ' can be submitted',
         type = 'warning'
       %}
         {% include 'toolkit/notification-banner.html' %}

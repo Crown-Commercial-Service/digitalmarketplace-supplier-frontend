@@ -35,7 +35,7 @@
         {%
           with
           action = "<button class=\"button-destructive banner-action\" type=\"submit\">Yes &ndash; remove {}</button>".format(sections.get_question_by_slug(confirm_remove).label.lower() ) | safe,
-          message = "Are you sure you want to remove {}?".format(sections.get_question_by_slug(confirm_remove).label.lower() ) | safe,
+          message = "Are you sure you want to remove {}?".format(sections.get_question_by_slug(confirm_remove).label.lower() ) ,
           type = "destructive"
         %}
           {% include "toolkit/notification-banner.html" %}
