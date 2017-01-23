@@ -1453,14 +1453,9 @@ class TestShowDraftService(BaseApplicationTest):
             self.url_for('main.view_service_submission', framework_slug='g-cloud-7', lot_slug='scs', service_id=1)
         )
 
-        document = html.fromstring(res.get_data(as_text=True))
-
         assert_equal(res.status_code, 200)
-        service_price_row_xpath = '//tr[contains(.//span/text(), "Service price")]'
-        service_price_xpath = service_price_row_xpath + '/td[@class="summary-item-field"]/span/text()'
-        assert_equal(
-            document.xpath(service_price_xpath)[0].strip(),
-            u"$12.50 to $15 per person per second")
+        assert_in(u"$12.50 to $15 per person per second", res.get_data(as_text=True))
+
 
     @mock.patch('app.main.views.services.count_unanswered_questions')
     def test_unanswered_questions_count(self, count_unanswered, data_api_client):
