@@ -635,7 +635,7 @@ class TestApplyToBrief(BaseApplicationTest):
             assert len(page_heading) == 1
             assert page_heading[0].strip() == 'When is the earliest {}'.format(question)
             assert len(page_hint) == 1
-            assert page_hint[0] == 'The buyer needs {} 17/01/2017.'.format(hint)
+            assert page_hint[0] == 'The buyer needs {} 17/01/2017'.format(hint)
 
     def test_availability_question_escapes_brief_start_date_markdown(self):
         self.brief['briefs']['startDate'] = '**markdown**'
@@ -647,7 +647,7 @@ class TestApplyToBrief(BaseApplicationTest):
 
         data = res.get_data(as_text=True)
 
-        assert "The buyer needs the specialist to start: **markdown**." in data
+        assert "The buyer needs the specialist to start: **markdown**" in data
 
     def test_availability_question_escapes_brief_start_date_html(self):
         self.brief['briefs']['startDate'] = '<h1>xss</h1>'
@@ -660,7 +660,7 @@ class TestApplyToBrief(BaseApplicationTest):
 
         data = res.get_data(as_text=True)
 
-        assert "The buyer needs the specialist to start: &lt;h1&gt;xss&lt;/h1&gt;." in data
+        assert "The buyer needs the specialist to start: &lt;h1&gt;xss&lt;/h1&gt;" in data
 
     def test_essential_requirements_evidence_has_question_for_every_requirement(self):
         res = self.client.get(
