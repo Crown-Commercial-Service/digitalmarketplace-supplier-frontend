@@ -1483,7 +1483,7 @@ class TestSendClarificationQuestionEmail(BaseApplicationTest):
         self._assert_application_email(send_email)
 
         assert_in(
-            self.strip_all_whitespace('<p class="banner-message">Your question has been sent. You\'ll get a reply from the Crown Commercial Service soon.</p>'),  # noqa
+            self.strip_all_whitespace('<p class="banner-message">Your question has been sent. You&#39;ll get a reply from the Crown Commercial Service soon.</p>'),  # noqa
             self.strip_all_whitespace(response.get_data(as_text=True))
         )
 
@@ -1678,7 +1678,7 @@ class TestG7ServicesList(BaseApplicationTest):
 
         assert_true(u'Service can be moved to complete' not in lot_page.get_data(as_text=True))
         assert_in(u'1 optional question unanswered', lot_page.get_data(as_text=True))
-        assert_in(u'make the supplier&nbsp;declaration', lot_page.get_data(as_text=True))
+        assert_in(u'make the supplier declaration', lot_page.get_data(as_text=True))
 
         assert_in(u'1 service marked as complete', submissions.get_data(as_text=True))
         assert_true(u'draft service' not in submissions.get_data(as_text=True))
