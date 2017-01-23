@@ -563,8 +563,8 @@ class TestSupplierEditUpdateServiceSection(BaseApplicationTest):
             'email@email.com')
 
         self.assert_flashes(
-            u"You\u2019ve edited your service. The changes are now live on the Digital Marketplace.",
-            "message",
+            {"service_name": "The service"},
+            "service_updated",
         )
 
     def test_editing_readonly_section_is_not_allowed(self, data_api_client):
@@ -595,8 +595,8 @@ class TestSupplierEditUpdateServiceSection(BaseApplicationTest):
             '1', dict(), 'email@email.com')
 
         self.assert_flashes(
-            u"You\u2019ve edited your service. The changes are now live on the Digital Marketplace.",
-            "message",
+            {"service_name": "Service name 123"},
+            "service_updated",
         )
 
     def test_edit_non_existent_service_returns_404(self, data_api_client):
