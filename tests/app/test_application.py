@@ -8,8 +8,8 @@ from app.main.helpers.frameworks import question_references
 
 
 class TestApplication(BaseApplicationTest):
-    def setup(self):
-        super(TestApplication, self).setup()
+    def setup_method(self, method):
+        super(TestApplication, self).setup_method(method)
 
     def test_response_headers(self):
         response = self.client.get('/suppliers/create')

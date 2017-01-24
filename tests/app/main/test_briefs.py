@@ -362,8 +362,8 @@ class TestSubmitClarificationQuestions(BaseApplicationTest):
 class TestApplyToBrief(BaseApplicationTest):
     """Tests requests for the new multipage flow for applying for a brief"""
 
-    def setup(self):
-        super(TestApplyToBrief, self).setup()
+    def setup_method(self, method):
+        super(TestApplyToBrief, self).setup_method(method)
 
         self.brief = api_stubs.brief(status='live', lot_slug='digital-specialists')
         self.brief['briefs']['essentialRequirements'] = ['Essential one', 'Essential two', 'Essential three']
@@ -387,8 +387,8 @@ class TestApplyToBrief(BaseApplicationTest):
         with self.app.test_client():
             self.login()
 
-    def teardown(self):
-        super(TestApplyToBrief, self).teardown()
+    def teardown_method(self, method):
+        super(TestApplyToBrief, self).teardown_method(method)
         self.data_api_client_patch.stop()
 
     @mock.patch("app.main.views.briefs.content_loader")
@@ -1101,8 +1101,8 @@ class TestApplyToBrief(BaseApplicationTest):
 class TestLegacyRespondToBrief(BaseApplicationTest):
     """Tests for the old single page flow for applying for a brief which is being phased out"""
 
-    def setup(self):
-        super(TestLegacyRespondToBrief, self).setup()
+    def setup_method(self, method):
+        super(TestLegacyRespondToBrief, self).setup_method(method)
 
         self.brief = api_stubs.brief(status='live', lot_slug='digital-specialists')
         self.brief['briefs']['essentialRequirements'] = ['Essential one', 'Essential two', 'Essential three']
@@ -1631,8 +1631,8 @@ class TestLegacyRespondToBrief(BaseApplicationTest):
 
 @mock.patch("app.main.views.briefs.data_api_client")
 class TestStartBriefResponseApplication(BaseApplicationTest):
-    def setup(self):
-        super(TestStartBriefResponseApplication, self).setup()
+    def setup_method(self, method):
+        super(TestStartBriefResponseApplication, self).setup_method(method)
         self.brief = api_stubs.brief(status='live', lot_slug='digital-specialists')
         self.brief['briefs']['publishedAt'] = '2016-12-25T12:00:00.000000Z'
 
@@ -1795,8 +1795,8 @@ class TestStartBriefResponseApplication(BaseApplicationTest):
 
 @mock.patch("app.main.views.briefs.data_api_client")
 class TestPostStartBriefResponseApplication(BaseApplicationTest):
-    def setup(self):
-        super(TestPostStartBriefResponseApplication, self).setup()
+    def setup_method(self, method):
+        super(TestPostStartBriefResponseApplication, self).setup_method(method)
         self.brief = api_stubs.brief(status='live', lot_slug='digital-specialists')
         self.brief['briefs']['publishedAt'] = '2016-12-25T12:00:00.000000Z'
 
@@ -1839,8 +1839,8 @@ class TestPostStartBriefResponseApplication(BaseApplicationTest):
 @mock.patch("app.main.views.briefs.data_api_client")
 class TestResponseResultPage(BaseApplicationTest):
 
-    def setup(self):
-        super(TestResponseResultPage, self).setup()
+    def setup_method(self, method):
+        super(TestResponseResultPage, self).setup_method(method)
         lots = [api_stubs.lot(slug="digital-specialists", allows_brief=True)]
         self.framework = api_stubs.framework(status="live", slug="digital-outcomes-and-specialists",
                                              clarification_questions_open=False, lots=lots)

@@ -534,8 +534,8 @@ class TestSupplierEditUpdateServiceSection(BaseApplicationTest):
         }
     }
 
-    def setup(self):
-        super(TestSupplierEditUpdateServiceSection, self).setup()
+    def setup_method(self, method):
+        super(TestSupplierEditUpdateServiceSection, self).setup_method(method)
         with self.app.test_client():
             self.login()
 
@@ -662,8 +662,8 @@ class TestSupplierEditUpdateServiceSection(BaseApplicationTest):
 
 @mock.patch('app.main.views.services.data_api_client', autospec=True)
 class TestCreateDraftService(BaseApplicationTest):
-    def setup(self):
-        super(TestCreateDraftService, self).setup()
+    def setup_method(self, method):
+        super(TestCreateDraftService, self).setup_method(method)
         self._answer_required = 'Answer is required'
         self._validation_error = 'There was a problem with your answer to:'
 
@@ -736,8 +736,8 @@ class TestCreateDraftService(BaseApplicationTest):
 @mock.patch('app.main.views.services.data_api_client')
 class TestCopyDraft(BaseApplicationTest):
 
-    def setup(self):
-        super(TestCopyDraft, self).setup()
+    def setup_method(self, method):
+        super(TestCopyDraft, self).setup_method(method)
 
         with self.app.test_client():
             self.login()
@@ -768,8 +768,8 @@ class TestCopyDraft(BaseApplicationTest):
 @mock.patch('app.main.views.services.data_api_client')
 class TestCompleteDraft(BaseApplicationTest):
 
-    def setup(self):
-        super(TestCompleteDraft, self).setup()
+    def setup_method(self, method):
+        super(TestCompleteDraft, self).setup_method(method)
 
         with self.app.test_client():
             self.login()
@@ -802,8 +802,8 @@ class TestCompleteDraft(BaseApplicationTest):
 @mock.patch('app.main.views.services.data_api_client')
 class TestEditDraftService(BaseApplicationTest):
 
-    def setup(self):
-        super(TestEditDraftService, self).setup()
+    def setup_method(self, method):
+        super(TestEditDraftService, self).setup_method(method)
         with self.app.test_client():
             self.login()
 
@@ -1426,8 +1426,8 @@ class TestShowDraftService(BaseApplicationTest):
     complete_service['services']['status'] = 'submitted'
     complete_service['services']['id'] = 2
 
-    def setup(self):
-        super(TestShowDraftService, self).setup()
+    def setup_method(self, method):
+        super(TestShowDraftService, self).setup_method(method)
         with self.app.test_client():
             self.login()
 
@@ -1539,8 +1539,8 @@ class TestDeleteDraftService(BaseApplicationTest):
         'validationErrors': {}
     }
 
-    def setup(self):
-        super(TestDeleteDraftService, self).setup()
+    def setup_method(self, method):
+        super(TestDeleteDraftService, self).setup_method(method)
         with self.app.test_client():
             self.login()
 
@@ -1592,8 +1592,8 @@ class TestDeleteDraftService(BaseApplicationTest):
 
 @mock.patch('dmutils.s3.S3')
 class TestSubmissionDocuments(BaseApplicationTest):
-    def setup(self):
-        super(TestSubmissionDocuments, self).setup()
+    def setup_method(self, method):
+        super(TestSubmissionDocuments, self).setup_method(method)
         with self.app.test_client():
             self.login()
 

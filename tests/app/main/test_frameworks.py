@@ -3903,8 +3903,8 @@ class TestContractReviewPage(BaseApplicationTest):
 @mock.patch('app.main.views.frameworks.data_api_client', autospec=True)
 class TestContractVariation(BaseApplicationTest):
 
-    def setup(self):
-        super(TestContractVariation, self).setup()
+    def setup_method(self, method):
+        super(TestContractVariation, self).setup_method(method)
 
         self.good_supplier_framework = self.supplier_framework(
             declaration={'nameOfOrganisation': 'A.N. Supplier',

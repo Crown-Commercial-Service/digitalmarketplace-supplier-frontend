@@ -105,13 +105,13 @@ def empty_g7_draft_service():
 
 
 class BaseApplicationTest(object):
-    def setup(self):
+    def setup_method(self, method):
         self.app = create_app('test')
         self.app.register_blueprint(login_for_tests)
         self.client = self.app.test_client()
         self.get_user_patch = None
 
-    def teardown(self):
+    def teardown_method(self, method):
         self.teardown_login()
 
     @staticmethod
