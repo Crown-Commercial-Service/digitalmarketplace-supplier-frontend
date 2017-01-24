@@ -193,7 +193,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
             res = self.client.get("/suppliers/frameworks/digital-outcomes-and-specialists")
 
             assert res.status_code == 200
-            assert not data_api_client.register_framework_interest.called
+            assert data_api_client.register_framework_interest.called is False
 
     def test_interest_set_but_no_declaration(self, data_api_client, s3):
         with self.app.test_client():
@@ -1828,10 +1828,10 @@ class TestFrameworkAgreementUpload(BaseApplicationTest):
                 download_filename='Supplier_Nme-1234-signed-framework-agreement.pdf'
             )
 
-            assert not data_api_client.create_framework_agreement.called
-            assert not data_api_client.update_framework_agreement.called
-            assert not data_api_client.sign_framework_agreement.called
-            assert not send_email.called
+            assert data_api_client.create_framework_agreement.called is False
+            assert data_api_client.update_framework_agreement.called is False
+            assert data_api_client.sign_framework_agreement.called is False
+            assert send_email.called is False
 
     @mock.patch('app.main.views.frameworks.generate_timestamped_document_upload_path')
     def test_email_is_not_sent_if_api_create_framework_agreement_fails(
@@ -1854,10 +1854,10 @@ class TestFrameworkAgreementUpload(BaseApplicationTest):
             )
 
             assert res.status_code == 500
-            assert data_api_client.create_framework_agreement.called
-            assert not data_api_client.update_framework_agreement.called
-            assert not data_api_client.sign_framework_agreement.called
-            assert not send_email.called
+            assert data_api_client.create_framework_agreement.called is True
+            assert data_api_client.update_framework_agreement.called is False
+            assert data_api_client.sign_framework_agreement.called is False
+            assert send_email.called is False
 
     @mock.patch('app.main.views.frameworks.generate_timestamped_document_upload_path')
     def test_email_is_not_sent_if_api_update_framework_agreement_fails(
@@ -1880,10 +1880,10 @@ class TestFrameworkAgreementUpload(BaseApplicationTest):
             )
 
             assert res.status_code == 500
-            assert data_api_client.create_framework_agreement.called
-            assert data_api_client.update_framework_agreement.called
-            assert not data_api_client.sign_framework_agreement.called
-            assert not send_email.called
+            assert data_api_client.create_framework_agreement.called is True
+            assert data_api_client.update_framework_agreement.called is True
+            assert data_api_client.sign_framework_agreement.called is False
+            assert send_email.called is False
 
     @mock.patch('app.main.views.frameworks.generate_timestamped_document_upload_path')
     def test_email_is_not_sent_if_api_sign_framework_agreement_fails(
@@ -1906,10 +1906,10 @@ class TestFrameworkAgreementUpload(BaseApplicationTest):
             )
 
             assert res.status_code == 500
-            assert data_api_client.create_framework_agreement.called
-            assert data_api_client.update_framework_agreement.called
-            assert data_api_client.sign_framework_agreement.called
-            assert not send_email.called
+            assert data_api_client.create_framework_agreement.called is True
+            assert data_api_client.update_framework_agreement.called is True
+            assert data_api_client.sign_framework_agreement.called is True
+            assert send_email.called is False
 
     @mock.patch('app.main.views.frameworks.generate_timestamped_document_upload_path')
     def test_email_failure(
@@ -1932,7 +1932,7 @@ class TestFrameworkAgreementUpload(BaseApplicationTest):
             )
 
             assert res.status_code == 503
-            assert send_email.called
+            assert send_email.called is True
 
     @mock.patch('app.main.views.frameworks.generate_timestamped_document_upload_path')
     def test_upload_agreement_document(
@@ -2146,7 +2146,7 @@ class TestSupplierDeclaration(BaseApplicationTest):
                 data=FULL_G7_SUBMISSION)
 
             assert res.status_code == 302
-            assert data_api_client.set_supplier_declaration.called
+            assert data_api_client.set_supplier_declaration.called is True
 
     def test_post_valid_data_to_complete_declaration(self, data_api_client):
         with self.app.test_client():
@@ -2162,7 +2162,7 @@ class TestSupplierDeclaration(BaseApplicationTest):
 
             assert res.status_code == 302
             assert res.location == 'http://localhost/suppliers/frameworks/g-cloud-7'
-            assert data_api_client.set_supplier_declaration.called
+            assert data_api_client.set_supplier_declaration.called is True
             assert data_api_client.set_supplier_declaration.call_args[0][2]['status'] == 'complete'
 
     def test_post_valid_data_with_api_failure(self, data_api_client):
@@ -2198,7 +2198,7 @@ class TestSupplierDeclaration(BaseApplicationTest):
                 data=FULL_G7_SUBMISSION)
 
             assert res.status_code == 400
-            assert not data_api_client.set_supplier_declaration.called
+            assert data_api_client.set_supplier_declaration.called is False
 
             doc = html.fromstring(res.get_data(as_text=True))
             elems = doc.cssselect('#input-PR1-yes')
@@ -2219,7 +2219,7 @@ class TestSupplierDeclaration(BaseApplicationTest):
                 data=FULL_G7_SUBMISSION)
 
             assert res.status_code == 404
-            assert not data_api_client.set_supplier_declaration.called
+            assert data_api_client.set_supplier_declaration.called is False
 
 
 @mock.patch('app.main.views.frameworks.data_api_client')
@@ -3516,7 +3516,7 @@ class TestContractReviewPage(BaseApplicationTest):
             )
             assert res.status_code == 400
             page = res.get_data(as_text=True)
-            assert not send_email.called
+            assert send_email.called is False
             assert "You must confirm you have the authority to return the agreement" in page
 
     @mock.patch('dmutils.s3.S3')
@@ -3686,9 +3686,9 @@ class TestContractReviewPage(BaseApplicationTest):
                 }
             )
 
-            assert data_api_client.sign_framework_agreement.called
+            assert data_api_client.sign_framework_agreement.called is True
             assert res.status_code == 500
-            assert not send_email.called
+            assert send_email.called is False
 
     @mock.patch('dmutils.s3.S3')
     @mock.patch('app.main.views.frameworks.send_email')
@@ -4074,8 +4074,8 @@ class TestContractVariation(BaseApplicationTest):
                                data={"accept_changes": "Yes"}
                                )
         assert res.status_code == 200
-        assert not data_api_client.agree_framework_variation.called
-        assert not send_email.called
+        assert data_api_client.agree_framework_variation.called is False
+        assert send_email.called is False
 
     def test_error_if_box_not_ticked(self, data_api_client):
         data_api_client.get_framework.return_value = self.g8_framework

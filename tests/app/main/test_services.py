@@ -864,7 +864,7 @@ class TestEditDraftService(BaseApplicationTest):
             })
 
         assert res.status_code == 302
-        assert not uploader.save.called
+        assert uploader.save.called is False
 
     def test_editing_readonly_section_is_not_allowed(self, data_api_client, s3):
         data_api_client.get_draft_service.return_value = self.empty_draft
