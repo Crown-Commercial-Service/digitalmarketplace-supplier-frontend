@@ -358,7 +358,12 @@ def view_response_result(brief_id):
 
     if len(brief_response) == 0:
         return redirect(url_for(".brief_response", brief_id=brief_id))
-    elif brief_response[0].get('essentialRequirementsMet') or all(brief_response[0]['essentialRequirements']):
+
+    # The legacy brief response data format has a booleans for each essential requirement
+    # rather than a single flag
+    if ('essentialRequirementsMet' not in brief_response[0]
+        and all(brief_response[0]['essentialRequirements'])
+            or brief_response[0].get('essentialRequirementsMet')):
         result_state = 'submitted_ok'
     else:
         result_state = 'submitted_unsuccessful'
