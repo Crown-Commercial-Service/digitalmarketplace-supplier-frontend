@@ -8,6 +8,7 @@ from ..helpers.services import is_service_associated_with_supplier, get_signed_d
     get_next_section_name
 from ..helpers.frameworks import get_framework_and_lot, get_declaration_status
 
+from dmcontent.content_loader import ContentNotFoundError
 from dmapiclient import HTTPError
 from dmutils import s3
 from dmutils.documents import upload_service_documents
@@ -42,8 +43,11 @@ def edit_service(service_id):
 
     framework = data_api_client.get_framework(service['frameworkSlug'])['frameworks']
 
-    content = content_loader.get_manifest(framework['slug'], 'edit_service').filter(service)
-    remove_requested = True if request.args.get('remove_requested') else False
+    try:
+        content = content_loader.get_manifest(framework['slug'], 'edit_service').filter(service)
+    except ContentNotFoundError:
+        abort(404)
+    remove_requested = bool(request.args.get('remove_requested'))
 
     return render_template(
         "services/service.html",
@@ -52,7 +56,7 @@ def edit_service(service_id):
         service_unavailability_information=service_unavailability_information,
         framework=framework,
         sections=content.summary(service),
-        remove_requested=remove_requested
+        remove_requested=remove_requested,
     )
 
 
@@ -62,6 +66,13 @@ def remove_service(service_id):
     service = data_api_client.get_service(service_id).get('services')
 
     if not is_service_associated_with_supplier(service):
+        abort(404)
+
+    # we don't actually need the content here, we're just probing to see whether service editing should be allowed for
+    # this framework (signalled by the exsitence of the edit_service manifest
+    try:
+        content = content_loader.get_manifest(service["frameworkSlug"], 'edit_service')
+    except ContentNotFoundError:
         abort(404)
 
     # suppliers can't un-remove a service
@@ -101,7 +112,10 @@ def edit_section(service_id, section_id):
     if not is_service_associated_with_supplier(service):
         abort(404)
 
-    content = content_loader.get_manifest('g-cloud-6', 'edit_service').filter(service)
+    try:
+        content = content_loader.get_manifest(service["frameworkSlug"], 'edit_service').filter(service)
+    except ContentNotFoundError:
+        abort(404)
     section = content.get_section(section_id)
     if section is None or not section.editable:
         abort(404)
@@ -126,7 +140,10 @@ def update_section(service_id, section_id):
     if not is_service_associated_with_supplier(service):
         abort(404)
 
-    content = content_loader.get_manifest('g-cloud-6', 'edit_service').filter(service)
+    try:
+        content = content_loader.get_manifest(service["frameworkSlug"], 'edit_service').filter(service)
+    except ContentNotFoundError:
+        abort(404)
     section = content.get_section(section_id)
     if section is None or not section.editable:
         abort(404)

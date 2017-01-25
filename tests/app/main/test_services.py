@@ -18,10 +18,12 @@ from tests.app.helpers import BaseApplicationTest, empty_g7_draft_service
 # this is mostly a workaround for pytest not being able to do parametrization with unittest-derived class methods
 # otherwise it doesn't get us much over function parametrization...
 @pytest.fixture(params=(
-    ("g-cloud-6", "G-Cloud 6",),
-    ("g-cloud-7", "G-Cloud 7",),
+    # a tuple of framework_slug, framework_name, framework_editable_services
+    ("g-cloud-6", "G-Cloud 6", True,),
+    ("g-cloud-7", "G-Cloud 7", True,),
+    ("digital-outcomes-and-specialists", "Digital outcomes and specialists", False,),
 ))
-def fixture_framework_slug_and_name(request):
+def supplier_service_editing_fw_params(request):
     return request.param
 
 
@@ -202,12 +204,11 @@ class _BaseTestSupplierEditRemoveService(BaseApplicationTest):
     def _setup_service(
             self,
             data_api_client,
-            framework_slug_and_name,
+            framework_slug,
+            framework_name,
             service_status="published",
             service_belongs_to_user=True,
             ):
-
-        framework_slug, framework_name = framework_slug_and_name
 
         data_api_client.get_service.return_value = {
             'services': {
@@ -238,12 +239,17 @@ class _BaseTestSupplierEditRemoveService(BaseApplicationTest):
 @mock.patch('app.main.views.services.data_api_client')
 class TestSupplierEditService(_BaseTestSupplierEditRemoveService):
     def test_should_view_public_service_with_correct_message(
-            self, data_api_client, fixture_framework_slug_and_name
+            self, data_api_client, supplier_service_editing_fw_params
     ):
+        framework_slug, framework_name, framework_editable_services = supplier_service_editing_fw_params
         self.login()
-        self._setup_service(data_api_client, fixture_framework_slug_and_name, service_status='published')
+        self._setup_service(data_api_client, framework_slug, framework_name, service_status='published')
 
         res = self.client.get('/suppliers/services/123')
+        if not framework_editable_services:
+            assert_equal(res.status_code, 404)
+            return
+
         assert_equal(res.status_code, 200)
 
         assert_true(
@@ -275,12 +281,17 @@ class TestSupplierEditService(_BaseTestSupplierEditRemoveService):
         )
 
     def test_should_view_private_service_with_correct_message(
-            self, data_api_client, fixture_framework_slug_and_name
+            self, data_api_client, supplier_service_editing_fw_params
     ):
+        framework_slug, framework_name, framework_editable_services = supplier_service_editing_fw_params
         self.login()
-        self._setup_service(data_api_client, fixture_framework_slug_and_name, service_status='enabled')
+        self._setup_service(data_api_client, framework_slug, framework_name, service_status='enabled')
 
         res = self.client.get('/suppliers/services/123')
+        if not framework_editable_services:
+            assert_equal(res.status_code, 404)
+            return
+
         assert_equal(res.status_code, 200)
         assert_true(
             'Service name 123' in res.get_data(as_text=True)
@@ -297,12 +308,17 @@ class TestSupplierEditService(_BaseTestSupplierEditRemoveService):
         )
 
     def test_should_view_disabled_service_with_removed_message(
-            self, data_api_client, fixture_framework_slug_and_name
+            self, data_api_client, supplier_service_editing_fw_params
     ):
+        framework_slug, framework_name, framework_editable_services = supplier_service_editing_fw_params
         self.login()
-        self._setup_service(data_api_client, fixture_framework_slug_and_name, service_status='disabled')
+        self._setup_service(data_api_client, framework_slug, framework_name, service_status='disabled')
 
         res = self.client.get('/suppliers/services/123')
+        if not framework_editable_services:
+            assert_equal(res.status_code, 404)
+            return
+
         assert_equal(res.status_code, 200)
         self.assert_in_strip_whitespace(
             'Service name 123',
@@ -315,13 +331,15 @@ class TestSupplierEditService(_BaseTestSupplierEditRemoveService):
         )
 
     def test_should_not_view_other_suppliers_services(
-            self, data_api_client, fixture_framework_slug_and_name
+            self, data_api_client, supplier_service_editing_fw_params
     ):
+        framework_slug, framework_name, framework_editable_services = supplier_service_editing_fw_params
         self.login()
         self._setup_service(
-            data_api_client, fixture_framework_slug_and_name, service_status='published', service_belongs_to_user=False)
+            data_api_client, framework_slug, framework_name, service_status='published', service_belongs_to_user=False)
 
         res = self.client.get('/suppliers/services/123')
+
         assert_equal(res.status_code, 404)
 
     def test_should_redirect_to_login_if_not_logged_in(self, data_api_client):
@@ -339,13 +357,18 @@ class TestSupplierRemoveServiceEditInterplay(_BaseTestSupplierEditRemoveService)
         following view. Chief thing we're asserting is the flash message throw/catch.
     """
     def test_should_view_confirmation_message_if_first_remove_service_button_clicked(
-            self, data_api_client, fixture_framework_slug_and_name
+            self, data_api_client, supplier_service_editing_fw_params
     ):
+        framework_slug, framework_name, framework_editable_services = supplier_service_editing_fw_params
         self.login()
-        self._setup_service(data_api_client, fixture_framework_slug_and_name, service_status='published')
+        self._setup_service(data_api_client, framework_slug, framework_name, service_status='published')
 
         # NOTE two http requests performed here
         res = self.client.post('/suppliers/services/123/remove', follow_redirects=True)
+        if not framework_editable_services:
+            assert_equal(res.status_code, 404)
+            assert_is(data_api_client.update_service_status.called, False)
+            return
 
         assert_equal(res.status_code, 200)
 
@@ -368,16 +391,21 @@ class TestSupplierRemoveServiceEditInterplay(_BaseTestSupplierEditRemoveService)
         )
 
     def test_should_view_correct_notification_message_if_service_removed(
-            self, data_api_client, fixture_framework_slug_and_name
+            self, data_api_client, supplier_service_editing_fw_params
     ):
+        framework_slug, framework_name, framework_editable_services = supplier_service_editing_fw_params
         self.login()
-        self._setup_service(data_api_client, fixture_framework_slug_and_name, service_status='published')
+        self._setup_service(data_api_client, framework_slug, framework_name, service_status='published')
 
         # NOTE two http requests performed here
         res = self.client.post(
             '/suppliers/services/123/remove',
             data={'remove_confirmed': True},
             follow_redirects=True)
+        if not framework_editable_services:
+            assert_equal(res.status_code, 404)
+            assert_is(data_api_client.update_service_status.called, False)
+            return
 
         assert_equal(res.status_code, 200)
         self.assert_in_strip_whitespace(
@@ -397,11 +425,11 @@ class TestSupplierRemoveService(_BaseTestSupplierEditRemoveService):
     def test_remove_service(
             self,
             data_api_client,
-            fixture_framework_slug_and_name,
+            supplier_service_editing_fw_params,
             supplier_remove_service__service_status__expected_results,
             supplier_remove_service__post_data,
             ):
-        framework_slug, framework_name = fixture_framework_slug_and_name
+        framework_slug, framework_name, framework_editable_services = supplier_service_editing_fw_params
         service_status, service_belongs_to_user, expect_api_call_if_data, expected_status_code = \
             supplier_remove_service__service_status__expected_results
         post_data = supplier_remove_service__post_data
@@ -409,7 +437,8 @@ class TestSupplierRemoveService(_BaseTestSupplierEditRemoveService):
         self.login()
         self._setup_service(
             data_api_client,
-            fixture_framework_slug_and_name,
+            framework_slug,
+            framework_name,
             service_status=service_status,
             service_belongs_to_user=service_belongs_to_user,
         )
@@ -418,6 +447,10 @@ class TestSupplierRemoveService(_BaseTestSupplierEditRemoveService):
             '/suppliers/services/123/remove',
             data={'remove_confirmed': True} if post_data else {},
         )
+        if not framework_editable_services:
+            assert_equal(response.status_code, 404)
+            assert_is(data_api_client.update_service_status.called, False)
+            return
 
         assert_is(data_api_client.update_service_status.called, expect_api_call_if_data and post_data)
         assert_equal(response.status_code, expected_status_code)
