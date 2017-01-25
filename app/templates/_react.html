@@ -9,7 +9,6 @@
 {% endblock %}
 
 {% block body_end %}
-  <script type="text/javascript" src="{{ component.get_vendor_bundle() }}" defer></script>
   <script type="text/javascript" src="{{ component.get_bundle() }}" defer></script>
   {# May not be the best place to load this, time will tell. #}
   {% if component.get_file('stylesheet') %}

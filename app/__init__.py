@@ -10,6 +10,7 @@ from dmutils.user import User
 
 from config import configs
 
+from react.render import render_component
 
 data_api_client = dmapiclient.DataAPIClient()
 login_manager = LoginManager()
@@ -66,5 +67,6 @@ def create_app(config_name):
         return Markup(t.render(x=x, **kwargs))
 
     application.jinja_env.filters['as'] = component_filter
+    application.jinja_env.globals.update(render_component=render_component)
 
     return application

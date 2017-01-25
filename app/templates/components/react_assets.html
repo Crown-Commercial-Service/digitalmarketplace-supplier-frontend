@@ -1,0 +1,6 @@
+<script type="text/javascript" src="{{ x.get_vendor_bundle() }}" defer></script>
+<script type="text/javascript" src="{{ x.get_bundle() }}" defer></script>
+{# May not be the best place to load this, time will tell. #}
+{% if x.get_file('stylesheet') %}
+  <link type="text/css" rel="stylesheet" media="screen" href="{{ x.get_file('stylesheet') }}">
+{% endif %}
