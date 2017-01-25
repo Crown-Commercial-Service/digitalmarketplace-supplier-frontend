@@ -20,6 +20,8 @@
                 <span data-analytics="trackPageView" data-url="{{message.virtual_pageview_url}}"></span>
             {% elif category == 'service_deleted' %}
                 <strong>{{message.service_name}}</strong> was deleted
+            {% elif category == 'service_updated' %}
+                You&#x2019;ve edited your service. The changes are now live on the Digital Marketplace.
             {% else %}
                 {{ message }}
             {% endif %}

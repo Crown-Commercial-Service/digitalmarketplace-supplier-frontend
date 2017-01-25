@@ -167,6 +167,8 @@ def update_section(service_id, section_id):
             errors=errors
         )
 
+    flash({"service_name": posted_data.get("serviceName") or service.get("serviceName")}, 'service_updated')
+
     return redirect(url_for(".edit_service", service_id=service_id))
 
 
