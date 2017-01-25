@@ -30,4 +30,7 @@
   %}
     {% include "toolkit/button.html" %}
   {% endwith %}
+  {% if previous_question_url %}
+    <a href="{{ previous_question_url }}">Back to previous page</a>
+  {% endif %}
 {% endblock %}

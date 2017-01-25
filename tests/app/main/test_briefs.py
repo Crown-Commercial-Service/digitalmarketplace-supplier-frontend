@@ -511,6 +511,22 @@ class TestApplyToBrief(BaseApplicationTest):
         doc = html.fromstring(res.get_data(as_text=True))
         assert doc.xpath("//input[@class='button-save']/@value")[0] == 'Submit application'
 
+    def test_first_question_does_not_show_previous_page_link(self):
+        self.brief['briefs']['startDate'] = 'start date'
+        res = self.client.get('/suppliers/opportunities/1234/responses/5/availability')
+        assert res.status_code == 200
+
+        doc = html.fromstring(res.get_data(as_text=True))
+        assert len(doc.xpath("//a[text()='Back to previous page']")) == 0
+
+    def test_non_first_question_shows_previous_page_link(self):
+        res = self.client.get('/suppliers/opportunities/1234/responses/5/dayRate')
+        assert res.status_code == 200
+
+        doc = html.fromstring(res.get_data(as_text=True))
+        assert (doc.xpath("//a[text()='Back to previous page']/@href")[0] ==
+                '/suppliers/opportunities/1234/responses/5/availability')
+
     def test_content_from_manifest_is_shown(self):
         res = self.client.get(
             '/suppliers/opportunities/1234/responses/5/respondToEmailAddress'

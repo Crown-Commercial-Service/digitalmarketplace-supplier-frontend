@@ -198,12 +198,8 @@ def edit_brief_response(brief_id, brief_response_id, question_id=None):
     # Unformat brief response into data for form
     service_data = question.unformat_data(brief_response)
 
-    # This line can soon be removed when we no longer show boolean list questions as part of the new flow
-    section.inject_brief_questions_into_boolean_list_question(brief)
-
     status_code = 200
     errors = {}
-
     if request.method == 'POST':
         try:
             data_api_client.update_brief_response(
@@ -229,11 +225,22 @@ def edit_brief_response(brief_id, brief_response_id, question_id=None):
 
                 return redirect(url_for('.view_response_result', brief_id=brief_id))
 
+    previous_question_id = section.get_previous_question_id(question_id)
+    previous_question_url = None
+    if previous_question_id:
+        previous_question_url = url_for(
+            '.edit_brief_response',
+            brief_id=brief_id,
+            brief_response_id=brief_response_id,
+            question_id=previous_question_id
+        )
+
     return render_template(
         "briefs/edit_brief_response_question.html",
         brief=brief,
         errors=errors,
         is_last_page=False if next_question_id else True,
+        previous_question_url=previous_question_url,
         question=question,
         service_data=service_data,
         **dict(main.config['BASE_TEMPLATE_DATA'])
