@@ -277,7 +277,7 @@ class TestSuppliersDashboard(BaseApplicationTest):
             doc = html.fromstring(res.get_data(as_text=True))
 
             assert_equal(res.status_code, 200)
-            assert_equal(doc.xpath('//a[@href="/suppliers/frameworks/g-cloud-7"]/span/text()')[0],
+            assert_equal(doc.xpath('//a[@href="/suppliers/frameworks/g-cloud-7"]/text()')[0],
                          "Continue your G-Cloud 7 application")
 
     @mock.patch("app.main.views.suppliers.data_api_client")
@@ -753,7 +753,7 @@ class TestSuppliersDashboard(BaseApplicationTest):
 
             assert_equal(res.status_code, 200)
             assert_in("Continue your Digital Outcomes and Specialists application",
-                      doc.xpath('//a[@class="browse-list-item-link"]/span/text()')[0])
+                      doc.xpath('//a[@class="browse-list-item-link"]/text()')[0])
 
 
 class TestSupplierDashboardLogin(BaseApplicationTest):
