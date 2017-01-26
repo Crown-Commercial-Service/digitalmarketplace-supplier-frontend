@@ -2,7 +2,6 @@ import json
 from ..helpers import BaseApplicationTest
 
 import mock
-from nose.tools import assert_equal, assert_in, assert_false
 
 
 class TestStatus(BaseApplicationTest):
@@ -10,8 +9,8 @@ class TestStatus(BaseApplicationTest):
     @mock.patch('app.status.views.data_api_client')
     def test_should_return_200_from_elb_status_check(self, data_api_client):
         status_response = self.client.get('/suppliers/_status?ignore-dependencies')
-        assert_equal(200, status_response.status_code)
-        assert_false(data_api_client.called)
+        assert status_response.status_code == 200
+        assert data_api_client.called is False
 
     @mock.patch('app.status.views.data_api_client')
     def test_status_ok(self, data_api_client):
@@ -20,13 +19,11 @@ class TestStatus(BaseApplicationTest):
         }
 
         status_response = self.client.get('/suppliers/_status')
-        assert_equal(200, status_response.status_code)
+        assert status_response.status_code == 200
 
         json_data = json.loads(status_response.get_data().decode('utf-8'))
-        assert_equal(
-            "ok", "{}".format(json_data['status']))
-        assert_equal(
-            "ok", "{}".format(json_data['api_status']['status']))
+        assert "{}".format(json_data['status']) == "ok"
+        assert "{}".format(json_data['api_status']['status']) == "ok"
 
     @mock.patch('app.status.views.data_api_client')
     def test_status_error(self, data_api_client):
@@ -38,12 +35,9 @@ class TestStatus(BaseApplicationTest):
         }
 
         status_response = self.client.get('/suppliers/_status')
-        assert_equal(500, status_response.status_code)
+        assert status_response.status_code == 500
 
         json_data = json.loads(status_response.get_data().decode('utf-8'))
-        assert_equal(
-            "error", "{}".format(json_data['status']))
-        assert_equal(
-            "error", "{}".format(json_data['api_status']['status']))
-        assert_in(
-            "Error connecting to", "{}".format(json_data['message']))
+        assert "{}".format(json_data['status']) == "error"
+        assert "{}".format(json_data['api_status']['status']) == "error"
+        assert "Error connecting to" in "{}".format(json_data['message'])

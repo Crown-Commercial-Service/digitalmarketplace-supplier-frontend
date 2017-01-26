@@ -7,7 +7,6 @@ from werkzeug.http import parse_cookie
 from app import data_api_client
 from datetime import datetime, timedelta
 from dmutils.formats import DATETIME_FORMAT
-from nose.tools import assert_in, assert_not_in
 import pytest
 
 
@@ -105,13 +104,13 @@ def empty_g7_draft_service():
 
 
 class BaseApplicationTest(object):
-    def setup(self):
+    def setup_method(self, method):
         self.app = create_app('test')
         self.app.register_blueprint(login_for_tests)
         self.client = self.app.test_client()
         self.get_user_patch = None
 
-    def teardown(self):
+    def teardown_method(self, method):
         self.teardown_login()
 
     @staticmethod
@@ -344,10 +343,10 @@ class BaseApplicationTest(object):
             assert response.status_code == 200
 
     def assert_in_strip_whitespace(self, needle, haystack):
-        return assert_in(self.strip_all_whitespace(needle), self.strip_all_whitespace(haystack))
+        assert self.strip_all_whitespace(needle) in self.strip_all_whitespace(haystack)
 
     def assert_not_in_strip_whitespace(self, needle, haystack):
-        return assert_not_in(self.strip_all_whitespace(needle), self.strip_all_whitespace(haystack))
+        assert self.strip_all_whitespace(needle) not in self.strip_all_whitespace(haystack)
 
     # Method to test flashes taken from http://blog.paulopoiati.com/2013/02/22/testing-flash-messages-in-flask/
     def assert_flashes(self, expected_message, expected_category='message'):

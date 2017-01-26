@@ -127,8 +127,8 @@ class TestInviteUser(BaseApplicationTest):
                     'email_address': 'total rubbish'
                 })
             assert res.status_code == 400
-            assert not send_email.called
-            assert not generate_token.called
+            assert send_email.called is False
+            assert generate_token.called is False
 
     @mock.patch('app.main.views.login.send_email')
     def test_should_be_an_error_if_send_invitation_email_fails(self, send_email):

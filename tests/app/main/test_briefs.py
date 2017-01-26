@@ -262,7 +262,7 @@ class TestSubmitClarificationQuestions(BaseApplicationTest):
                 ERROR_MESSAGE_NO_SERVICE_ON_LOT_CLARIFICATION
             )
         )) == 1
-        assert not data_api_client.create_audit_event.called
+        assert data_api_client.create_audit_event.called is False
 
     @mock.patch('app.main.helpers.briefs.send_email')
     def test_submit_clarification_question_returns_error_page_if_supplier_has_no_services_on_framework(
@@ -285,7 +285,7 @@ class TestSubmitClarificationQuestions(BaseApplicationTest):
                 ERROR_MESSAGE_NO_SERVICE_ON_FRAMEWORK_CLARIFICATION
             )
         )) == 1
-        assert not data_api_client.create_audit_event.called
+        assert data_api_client.create_audit_event.called is False
 
     @mock.patch('app.main.helpers.briefs.send_email')
     def test_submit_clarification_question_returns_error_page_if_supplier_has_no_services_with_role(
@@ -308,7 +308,7 @@ class TestSubmitClarificationQuestions(BaseApplicationTest):
                 ERROR_MESSAGE_NO_SERVICE_WITH_ROLE_CLARIFICATION
             )
         )) == 1
-        assert not data_api_client.create_audit_event.called
+        assert data_api_client.create_audit_event.called is False
 
     def test_submit_empty_clarification_question_returns_validation_error(self, data_api_client):
         self.login()
@@ -362,8 +362,8 @@ class TestSubmitClarificationQuestions(BaseApplicationTest):
 class TestApplyToBrief(BaseApplicationTest):
     """Tests requests for the new multipage flow for applying for a brief"""
 
-    def setup(self):
-        super(TestApplyToBrief, self).setup()
+    def setup_method(self, method):
+        super(TestApplyToBrief, self).setup_method(method)
 
         self.brief = api_stubs.brief(status='live', lot_slug='digital-specialists')
         self.brief['briefs']['essentialRequirements'] = ['Essential one', 'Essential two', 'Essential three']
@@ -387,8 +387,8 @@ class TestApplyToBrief(BaseApplicationTest):
         with self.app.test_client():
             self.login()
 
-    def teardown(self):
-        super(TestApplyToBrief, self).teardown()
+    def teardown_method(self, method):
+        super(TestApplyToBrief, self).teardown_method(method)
         self.data_api_client_patch.stop()
 
     @mock.patch("app.main.views.briefs.content_loader")
@@ -1101,8 +1101,8 @@ class TestApplyToBrief(BaseApplicationTest):
 class TestLegacyRespondToBrief(BaseApplicationTest):
     """Tests for the old single page flow for applying for a brief which is being phased out"""
 
-    def setup(self):
-        super(TestLegacyRespondToBrief, self).setup()
+    def setup_method(self, method):
+        super(TestLegacyRespondToBrief, self).setup_method(method)
 
         self.brief = api_stubs.brief(status='live', lot_slug='digital-specialists')
         self.brief['briefs']['essentialRequirements'] = ['Essential one', 'Essential two', 'Essential three']
@@ -1203,7 +1203,7 @@ class TestLegacyRespondToBrief(BaseApplicationTest):
             )
         )) == 1
         assert len(doc.xpath('//*[@data-reason="supplier-not-on-lot"]')) == 1
-        assert not data_api_client.create_audit_event.called
+        assert data_api_client.create_audit_event.called is False
 
     def test_get_brief_response_returns_error_page_if_supplier_has_no_pub_services_on_lot(self, data_api_client):
         data_api_client.get_brief.return_value = self.brief
@@ -1228,7 +1228,7 @@ class TestLegacyRespondToBrief(BaseApplicationTest):
             )
         )) == 1
         assert len(doc.xpath('//*[@data-reason="supplier-not-on-lot"]')) == 1
-        assert not data_api_client.create_audit_event.called
+        assert data_api_client.create_audit_event.called is False
 
     def test_get_brief_response_returns_error_page_if_supplier_has_no_services_on_framework(self, data_api_client):
         data_api_client.get_brief.return_value = self.brief
@@ -1248,7 +1248,7 @@ class TestLegacyRespondToBrief(BaseApplicationTest):
             )
         )) == 1
         assert len(doc.xpath('//*[@data-reason="supplier-not-on-dos"]')) == 1
-        assert not data_api_client.create_audit_event.called
+        assert data_api_client.create_audit_event.called is False
 
     def test_get_brief_response_returns_error_page_if_supplier_has_no_pub_services_on_framework(self, data_api_client):
         data_api_client.get_brief.return_value = self.brief
@@ -1273,7 +1273,7 @@ class TestLegacyRespondToBrief(BaseApplicationTest):
             )
         )) == 1
         assert len(doc.xpath('//*[@data-reason="supplier-not-on-dos"]')) == 1
-        assert not data_api_client.create_audit_event.called
+        assert data_api_client.create_audit_event.called is False
 
     def test_get_brief_response_returns_error_page_if_supplier_has_no_services_with_role(self, data_api_client):
         data_api_client.get_brief.return_value = self.brief
@@ -1293,7 +1293,7 @@ class TestLegacyRespondToBrief(BaseApplicationTest):
             )
         )) == 1
         assert len(doc.xpath('//*[@data-reason="supplier-not-on-role"]')) == 1
-        assert not data_api_client.create_audit_event.called
+        assert data_api_client.create_audit_event.called is False
 
     def test_get_brief_response_does_not_contain_data_reason_if_supplier_is_eligible(self, data_api_client):
         data_api_client.get_brief.return_value = self.brief
@@ -1488,7 +1488,7 @@ class TestLegacyRespondToBrief(BaseApplicationTest):
             data=brief_form_submission
         )
         assert res.status_code == 404
-        assert not data_api_client.create_brief_response.called
+        assert data_api_client.create_brief_response.called is False
 
     def test_create_new_brief_response_404_if_not_live_framework(self, data_api_client):
         framework = self.framework.copy()
@@ -1501,7 +1501,7 @@ class TestLegacyRespondToBrief(BaseApplicationTest):
             data=brief_form_submission
         )
         assert res.status_code == 404
-        assert not data_api_client.create_brief_response.called
+        assert data_api_client.create_brief_response.called is False
 
     def test_create_new_brief_response_flashes_error_on_result_page_if_response_already_exists(self, data_api_client):
         data_api_client.get_brief.return_value = self.brief
@@ -1520,7 +1520,7 @@ class TestLegacyRespondToBrief(BaseApplicationTest):
         assert res.status_code == 302
         assert res.location == 'http://localhost/suppliers/opportunities/1234/responses/result'
         self.assert_flashes("already_applied", "error")
-        assert not data_api_client.create_brief_response.called
+        assert data_api_client.create_brief_response.called is False
 
     def test_create_new_brief_returns_error_page_if_supplier_has_no_services_on_lot(self, data_api_client):
         data_api_client.get_brief.return_value = self.brief
@@ -1544,7 +1544,7 @@ class TestLegacyRespondToBrief(BaseApplicationTest):
                 ERROR_MESSAGE_NO_SERVICE_ON_LOT_APPLICATION
             )
         )) == 1
-        assert not data_api_client.create_brief_response.called
+        assert data_api_client.create_brief_response.called is False
 
     def test_create_new_brief_returns_error_page_if_supplier_has_no_services_on_framework(self, data_api_client):
         data_api_client.get_brief.return_value = self.brief
@@ -1566,7 +1566,7 @@ class TestLegacyRespondToBrief(BaseApplicationTest):
                 ERROR_MESSAGE_NO_SERVICE_ON_FRAMEWORK_APPLICATION
             )
         )) == 1
-        assert not data_api_client.create_brief_response.called
+        assert data_api_client.create_brief_response.called is False
 
     def test_create_new_brief_returns_error_page_if_supplier_has_no_services_with_role(self, data_api_client):
         data_api_client.get_brief.return_value = self.brief
@@ -1588,7 +1588,7 @@ class TestLegacyRespondToBrief(BaseApplicationTest):
                 ERROR_MESSAGE_NO_SERVICE_WITH_ROLE_APPLICATION
             )
         )) == 1
-        assert not data_api_client.create_brief_response.called
+        assert data_api_client.create_brief_response.called is False
 
     def test_create_new_brief_response_with_api_error_fails(self, data_api_client):
         data_api_client.get_brief.return_value = self.brief
@@ -1626,13 +1626,13 @@ class TestLegacyRespondToBrief(BaseApplicationTest):
         assert res.status_code == 302
         assert res.location == "http://localhost/login"
         self.assert_flashes("supplier-role-required", "error")
-        assert not data_api_client.get_brief.called
+        assert data_api_client.get_brief.called is False
 
 
 @mock.patch("app.main.views.briefs.data_api_client")
 class TestStartBriefResponseApplication(BaseApplicationTest):
-    def setup(self):
-        super(TestStartBriefResponseApplication, self).setup()
+    def setup_method(self, method):
+        super(TestStartBriefResponseApplication, self).setup_method(method)
         self.brief = api_stubs.brief(status='live', lot_slug='digital-specialists')
         self.brief['briefs']['publishedAt'] = '2016-12-25T12:00:00.000000Z'
 
@@ -1795,8 +1795,8 @@ class TestStartBriefResponseApplication(BaseApplicationTest):
 
 @mock.patch("app.main.views.briefs.data_api_client")
 class TestPostStartBriefResponseApplication(BaseApplicationTest):
-    def setup(self):
-        super(TestPostStartBriefResponseApplication, self).setup()
+    def setup_method(self, method):
+        super(TestPostStartBriefResponseApplication, self).setup_method(method)
         self.brief = api_stubs.brief(status='live', lot_slug='digital-specialists')
         self.brief['briefs']['publishedAt'] = '2016-12-25T12:00:00.000000Z'
 
@@ -1839,8 +1839,8 @@ class TestPostStartBriefResponseApplication(BaseApplicationTest):
 @mock.patch("app.main.views.briefs.data_api_client")
 class TestResponseResultPage(BaseApplicationTest):
 
-    def setup(self):
-        super(TestResponseResultPage, self).setup()
+    def setup_method(self, method):
+        super(TestResponseResultPage, self).setup_method(method)
         lots = [api_stubs.lot(slug="digital-specialists", allows_brief=True)]
         self.framework = api_stubs.framework(status="live", slug="digital-outcomes-and-specialists",
                                              clarification_questions_open=False, lots=lots)
