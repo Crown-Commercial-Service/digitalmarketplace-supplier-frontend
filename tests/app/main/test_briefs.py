@@ -527,6 +527,17 @@ class TestApplyToBrief(BaseApplicationTest):
         assert (doc.xpath("//a[text()='Back to previous page']/@href")[0] ==
                 '/suppliers/opportunities/1234/responses/5/availability')
 
+    def test_respond_to_email_previous_page_link_skips_nice_to_have_requirements_if_no_nice_to_haves_for_brief(self):
+        self.brief['briefs']['niceToHaveRequirements'] = []
+        self.data_api_client.get_brief.return_value = self.brief
+
+        res = self.client.get('/suppliers/opportunities/1234/responses/5/respondToEmailAddress')
+        assert res.status_code == 200
+
+        doc = html.fromstring(res.get_data(as_text=True))
+        assert (doc.xpath("//a[text()='Back to previous page']/@href")[0] ==
+                '/suppliers/opportunities/1234/responses/5/essentialRequirements')
+
     def test_content_from_manifest_is_shown(self):
         res = self.client.get(
             '/suppliers/opportunities/1234/responses/5/respondToEmailAddress'
