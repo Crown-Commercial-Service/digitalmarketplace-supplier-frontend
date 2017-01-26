@@ -25,13 +25,15 @@
 
 {% if framework.status == 'open' %}
 <li class="browse-list-item">
-  <a class="browse-list-item-link" href="{{ url_for('.framework_supplier_declaration', framework_slug=framework.slug, section_id=first_page_of_declaration) }}">
-    {% if declaration_status == 'unstarted' %}
-      <span>Make supplier declaration</span>
-    {% else %}
-      <span>Edit supplier declaration</span>
-    {% endif %}
-  </a>
+  {% if declaration_status == 'unstarted' %}
+    <a class="browse-list-item-link" href="{{ url_for('.framework_start_supplier_declaration', framework_slug=framework.slug) }}">
+    <span>Make supplier declaration</span>
+    </a>
+  {% else %}
+    <a class="browse-list-item-link" href="{{ url_for('.framework_supplier_declaration', framework_slug=framework.slug, section_id=first_page_of_declaration) }}">
+    <span>Edit supplier declaration</span>
+    </a>
+  {% endif %}
   <p class="browse-list-item-body">
     Agree to the terms of the bid, provide supplier information and
     confirm&nbsp;eligibility.
