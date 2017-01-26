@@ -563,7 +563,7 @@ class TestSupplierEditUpdateServiceSection(BaseApplicationTest):
             'email@email.com')
 
         self.assert_flashes(
-            {"service_name": "The service"},
+            {"updated_service_name": "The service"},
             "service_updated",
         )
 
@@ -595,7 +595,7 @@ class TestSupplierEditUpdateServiceSection(BaseApplicationTest):
             '1', dict(), 'email@email.com')
 
         self.assert_flashes(
-            {"service_name": "Service name 123"},
+            {"updated_service_name": "Service name 123"},
             "service_updated",
         )
 
