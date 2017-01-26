@@ -1,7 +1,6 @@
 # coding=utf-8
 
 import mock
-from nose.tools import assert_equal, assert_true
 from .helpers import BaseApplicationTest
 from dmapiclient.errors import HTTPError
 from app.main.helpers.frameworks import question_references
@@ -14,7 +13,7 @@ class TestApplication(BaseApplicationTest):
     def test_response_headers(self):
         response = self.client.get('/suppliers/create')
 
-        assert 200 == response.status_code
+        assert response.status_code == 200
         assert (
             response.headers['cache-control'] ==
             "no-cache"
@@ -22,23 +21,19 @@ class TestApplication(BaseApplicationTest):
 
     def test_url_with_non_canonical_trailing_slash(self):
         response = self.client.get('/suppliers/')
-        assert 301 == response.status_code
+        assert response.status_code == 301
         assert "http://localhost/suppliers" == response.location
 
     def test_404(self):
         res = self.client.get('/service/1234')
-        assert_equal(404, res.status_code)
-        assert_true(
-            u"Check you’ve entered the correct web "
-            u"address or start again on the Digital Marketplace homepage."
-            in res.get_data(as_text=True))
-        assert_true(
-            u"If you can’t find what you’re looking for, contact us at "
-            u"<a href=\"mailto:enquiries@digitalmarketplace.service.gov.uk?"
-            u"subject=Digital%20Marketplace%20feedback\" title=\"Please "
-            u"send feedback to enquiries@digitalmarketplace.service.gov.uk\">"
-            u"enquiries@digitalmarketplace.service.gov.uk</a>"
-            in res.get_data(as_text=True))
+        assert res.status_code == 404
+        assert u"Check you’ve entered the correct web " \
+            u"address or start again on the Digital Marketplace homepage." in res.get_data(as_text=True)
+        assert u"If you can’t find what you’re looking for, contact us at " \
+            u"<a href=\"mailto:enquiries@digitalmarketplace.service.gov.uk?" \
+            u"subject=Digital%20Marketplace%20feedback\" title=\"Please " \
+            u"send feedback to enquiries@digitalmarketplace.service.gov.uk\">" \
+            u"enquiries@digitalmarketplace.service.gov.uk</a>" in res.get_data(as_text=True)
 
     @mock.patch('app.main.views.suppliers.data_api_client')
     def test_503(self, data_api_client):
@@ -49,26 +44,20 @@ class TestApplication(BaseApplicationTest):
             self.app.config['DEBUG'] = False
 
             res = self.client.get('/suppliers')
-            assert_equal(503, res.status_code)
-            assert_true(
-                u"Sorry, we’re experiencing technical difficulties"
-                in res.get_data(as_text=True))
-            assert_true(
-                "Try again later."
-                in res.get_data(as_text=True))
+            assert res.status_code == 503
+            assert u"Sorry, we’re experiencing technical difficulties" in res.get_data(as_text=True)
+            assert "Try again later." in res.get_data(as_text=True)
 
     def test_header_xframeoptions_set_to_deny(self):
         res = self.client.get('/suppliers/create')
-        assert 200 == res.status_code
+        assert res.status_code == 200
         assert 'DENY', res.headers['X-Frame-Options']
 
     def test_should_use_local_cookie_page_on_cookie_message(self):
         res = self.client.get('/suppliers/create')
-        assert_equal(200, res.status_code)
-        assert_true(
-            '<p>GOV.UK uses cookies to make the site simpler. <a href="/cookies">Find out more about cookies</a></p>'
-            in res.get_data(as_text=True)
-        )
+        assert res.status_code == 200
+        assert '<p>GOV.UK uses cookies to make the site simpler. <a href="/cookies">Find ' \
+            'out more about cookies</a></p>' in res.get_data(as_text=True)
 
 
 class TestQuestionReferences(object):

@@ -4,7 +4,6 @@ from dmapiclient import HTTPError
 from dmutils.email import MandrillException
 import mock
 from flask import session
-from nose.tools import assert_equal, assert_true, assert_in, assert_false, assert_not_in
 from tests.app.helpers import BaseApplicationTest
 from lxml import html
 
@@ -73,39 +72,30 @@ class TestSuppliersDashboard(BaseApplicationTest):
             self.login()
 
             res = self.client.get("/suppliers")
-            assert_equal(res.status_code, 200)
+            assert res.status_code == 200
 
             data_api_client.get_supplier.assert_called_once_with(1234)
 
             resp_data = res.get_data(as_text=True)
 
-            assert_in("Supplier Description", resp_data)
-            assert_in("Client One", resp_data)
-            assert_in("Client Two", resp_data)
+            assert "Supplier Description" in resp_data
+            assert "Client One" in resp_data
+            assert "Client Two" in resp_data
 
-            assert_in("1 Street", resp_data)
-            assert_in("2 Building", resp_data)
-            assert_in("supplier.dmdev", resp_data)
-            assert_in("supplier@user.dmdev", resp_data)
-            assert_in("Supplier Person", resp_data)
-            assert_in("0800123123", resp_data)
-            assert_in("Supplierville", resp_data)
-            assert_in("Supplierland", resp_data)
-            assert_in("11 AB", resp_data)
+            assert "1 Street" in resp_data
+            assert "2 Building" in resp_data
+            assert "supplier.dmdev" in resp_data
+            assert "supplier@user.dmdev" in resp_data
+            assert "Supplier Person" in resp_data
+            assert "0800123123" in resp_data
+            assert "Supplierville" in resp_data
+            assert "Supplierland" in resp_data
+            assert "11 AB" in resp_data
 
             # Check contributors table exists
-            assert_in(
-                self.strip_all_whitespace('Contributors</h2>'),
-                self.strip_all_whitespace(resp_data)
-            )
-            assert_in(
-                self.strip_all_whitespace('User Name</span></td>'),
-                self.strip_all_whitespace(resp_data)
-            )
-            assert_in(
-                self.strip_all_whitespace('email@email.com</span></td>'),
-                self.strip_all_whitespace(resp_data)
-            )
+            assert self.strip_all_whitespace('Contributors</h2>') in self.strip_all_whitespace(resp_data)
+            assert self.strip_all_whitespace('User Name</span></td>') in self.strip_all_whitespace(resp_data)
+            assert self.strip_all_whitespace('email@email.com</span></td>') in self.strip_all_whitespace(resp_data)
 
     @mock.patch("app.main.views.suppliers.data_api_client")
     @mock.patch("app.main.views.suppliers.get_current_suppliers_users")
@@ -179,10 +169,10 @@ class TestSuppliersDashboard(BaseApplicationTest):
             self.login()
 
             res = self.client.get("/suppliers")
-            assert_equal(res.status_code, 200)
+            assert res.status_code == 200
 
-            assert_in('<a href="/suppliers/edit" class="summary-change-link">Edit</a>', res.get_data(as_text=True))
-            assert_in('<a href="/suppliers/services" class="summary-change-link">View</a>', res.get_data(as_text=True))
+            assert '<a href="/suppliers/edit" class="summary-change-link">Edit</a>' in res.get_data(as_text=True)
+            assert '<a href="/suppliers/services" class="summary-change-link">View</a>' in res.get_data(as_text=True)
 
     @mock.patch("app.main.views.suppliers.data_api_client")
     @mock.patch("app.main.views.suppliers.get_current_suppliers_users")
@@ -214,11 +204,11 @@ class TestSuppliersDashboard(BaseApplicationTest):
             doc = html.fromstring(res.get_data(as_text=True))
 
             message = doc.xpath('//div[@class="temporary-message"]')
-            assert_equal(len(message), 1)
-            assert_in(u"Digital Outcomes and Specialists will be open for applications soon",
-                      message[0].xpath('h3/text()')[0])
-            assert_in(u"We’ll email you when you can apply to Digital Outcomes and Specialists",
-                      message[0].xpath('p/text()')[0])
+            assert len(message) == 1
+            assert u"Digital Outcomes and Specialists will be open for applications soon" in \
+                message[0].xpath('h3/text()')[0]
+            assert u"We’ll email you when you can apply to Digital Outcomes and Specialists" in \
+                message[0].xpath('p/text()')[0]
             assert u"Find out if your services are suitable" in message[0].xpath('p/a/text()')[0]
 
     @mock.patch("app.main.views.suppliers.data_api_client")
@@ -247,17 +237,9 @@ class TestSuppliersDashboard(BaseApplicationTest):
             res = self.client.get("/suppliers")
             doc = html.fromstring(res.get_data(as_text=True))
 
-            assert_equal(res.status_code, 200)
-
-            assert_in(
-                'Apply to G-Cloud 7',
-                doc.xpath('//h2[@class="summary-item-heading"]/text()')[0]
-            )
-
-            assert_equal(
-                'Start application',
-                doc.xpath('//input[@class="button-save"]/@value')[0]
-            )
+            assert res.status_code == 200
+            assert 'Apply to G-Cloud 7' in doc.xpath('//h2[@class="summary-item-heading"]/text()')[0]
+            assert doc.xpath('//input[@class="button-save"]/@value')[0] == 'Start application'
 
     @mock.patch("app.main.views.suppliers.data_api_client")
     @mock.patch("app.main.views.suppliers.get_current_suppliers_users")
@@ -276,9 +258,9 @@ class TestSuppliersDashboard(BaseApplicationTest):
             res = self.client.get("/suppliers")
             doc = html.fromstring(res.get_data(as_text=True))
 
-            assert_equal(res.status_code, 200)
-            assert_equal(doc.xpath('//a[@href="/suppliers/frameworks/g-cloud-7"]/text()')[0],
-                         "Continue your G-Cloud 7 application")
+            assert res.status_code == 200
+            assert doc.xpath('//a[@href="/suppliers/frameworks/g-cloud-7"]/text()')[0] == \
+                "Continue your G-Cloud 7 application"
 
     @mock.patch("app.main.views.suppliers.data_api_client")
     @mock.patch("app.main.views.suppliers.get_current_suppliers_users")
@@ -303,10 +285,9 @@ class TestSuppliersDashboard(BaseApplicationTest):
             doc = html.fromstring(res.get_data(as_text=True))
 
             message = doc.xpath('//aside[@class="temporary-message"]')
-            assert_true(len(message) > 0)
-            assert_in(u"G-Cloud 7 is closed for applications",
-                      message[0].xpath('h2/text()')[0])
-            assert_true(len(message[0].xpath('p[1]/a[@href="https://digitalmarketplace.blog.gov.uk/"]')) > 0)
+            assert len(message) > 0
+            assert u"G-Cloud 7 is closed for applications" in message[0].xpath('h2/text()')[0]
+            assert len(message[0].xpath('p[1]/a[@href="https://digitalmarketplace.blog.gov.uk/"]')) > 0
 
     @mock.patch("app.main.views.suppliers.data_api_client")
     @mock.patch("app.main.views.suppliers.get_current_suppliers_users")
@@ -340,12 +321,10 @@ class TestSuppliersDashboard(BaseApplicationTest):
             doc = html.fromstring(res.get_data(as_text=True))
 
             message = doc.xpath('//aside[@class="temporary-message"]')
-            assert_true(len(message) > 0)
-            assert_in(u"G-Cloud 7 is closed for applications",
-                      message[0].xpath('h2/text()')[0])
-            assert_in(u"You didn’t submit an application",
-                      message[0].xpath('p[1]/text()')[0])
-            assert_true(len(message[0].xpath('p[2]/a[contains(@href, "suppliers/frameworks/g-cloud-7")]')) > 0)
+            assert len(message) > 0
+            assert u"G-Cloud 7 is closed for applications" in message[0].xpath('h2/text()')[0]
+            assert u"You didn’t submit an application" in message[0].xpath('p[1]/text()')[0]
+            assert len(message[0].xpath('p[2]/a[contains(@href, "suppliers/frameworks/g-cloud-7")]')) > 0
 
     @mock.patch("app.main.views.suppliers.data_api_client")
     @mock.patch("app.main.views.suppliers.get_current_suppliers_users")
@@ -378,14 +357,11 @@ class TestSuppliersDashboard(BaseApplicationTest):
             res = self.client.get("/suppliers")
             doc = html.fromstring(res.get_data(as_text=True))
             headings = doc.xpath('//h2[@class="summary-item-heading"]')
-            assert_true(len(headings) > 0)
-            assert_in(u"G-Cloud 7 is closed for applications",
-                      headings[0].xpath('text()')[0])
-            assert_in(u"You submitted 99 services for consideration",
-                      headings[0].xpath('../p[1]/text()')[0])
-            assert_true(len(headings[0].xpath('../p[1]/a[contains(@href, "suppliers/frameworks/g-cloud-7")]')) > 0)
-            assert_in(u"View your submitted application",
-                      headings[0].xpath('../p[1]/a/text()')[0])
+            assert len(headings) > 0
+            assert u"G-Cloud 7 is closed for applications" in headings[0].xpath('text()')[0]
+            assert u"You submitted 99 services for consideration" in headings[0].xpath('../p[1]/text()')[0]
+            assert len(headings[0].xpath('../p[1]/a[contains(@href, "suppliers/frameworks/g-cloud-7")]')) > 0
+            assert u"View your submitted application" in headings[0].xpath('../p[1]/a/text()')[0]
 
     @mock.patch("app.main.views.suppliers.data_api_client")
     @mock.patch("app.main.views.suppliers.get_current_suppliers_users")
@@ -423,27 +399,20 @@ class TestSuppliersDashboard(BaseApplicationTest):
             doc = html.fromstring(res.get_data(as_text=True))
             headings = doc.xpath('//h2[@class="summary-item-heading"]')
 
-            assert_in(u"Pending services",
-                      headings[0].xpath('text()')[0])
+            assert u"Pending services" in headings[0].xpath('text()')[0]
 
             first_table = doc.xpath(
                 '//table[@class="summary-item-body"]'
             )
 
-            assert_in(u"Pending services",
-                      first_table[0].xpath('caption/text()')[0])
+            assert u"Pending services" in first_table[0].xpath('caption/text()')[0]
 
             first_row = "".join(first_table[0].xpath('tbody/descendant::*/text()'))
-            assert_in(u"G-Cloud 7",
-                      first_row)
-            assert_in(u"Live from 23 November 2015",
-                      first_row)
-            assert_in(u"99 services",
-                      first_row)
-            assert_in(u"99 services",
-                      first_row)
-            assert_in(u"You must sign the framework agreement to sell these services",
-                      first_row)
+            assert u"G-Cloud 7" in first_row
+            assert u"Live from 23 November 2015" in first_row
+            assert u"99 services" in first_row
+            assert u"99 services" in first_row
+            assert u"You must sign the framework agreement to sell these services" in first_row
 
     @mock.patch("app.main.views.suppliers.data_api_client")
     @mock.patch("app.main.views.suppliers.get_current_suppliers_users")
@@ -485,15 +454,11 @@ class TestSuppliersDashboard(BaseApplicationTest):
                 '//table[@class="summary-item-body"]'
             )
 
-            assert_in(u"Pending services",
-                      first_table[0].xpath('caption/text()')[0])
+            assert u"Pending services" in first_table[0].xpath('caption/text()')[0]
 
             first_row = "".join(first_table[0].xpath('tbody/descendant::*/text()'))
-            assert_in(u"G-Cloud 7",
-                      first_row)
-            assert_not_in(
-                u"Live from",
-                first_row)
+            assert u"G-Cloud 7" in first_row
+            assert u"Live from" not in first_row
 
     @mock.patch("app.main.views.suppliers.data_api_client")
     @mock.patch("app.main.views.suppliers.get_current_suppliers_users")
@@ -529,25 +494,19 @@ class TestSuppliersDashboard(BaseApplicationTest):
             doc = html.fromstring(res.get_data(as_text=True))
             headings = doc.xpath('//h2[@class="summary-item-heading"]')
 
-            assert_in(u"Pending services",
-                      headings[0].xpath('text()')[0])
+            assert u"Pending services" in headings[0].xpath('text()')[0]
 
             first_table = doc.xpath(
                 '//table[@class="summary-item-body"]'
             )
 
-            assert_in(u"Pending services",
-                      first_table[0].xpath('caption/text()')[0])
+            assert u"Pending services" in first_table[0].xpath('caption/text()')[0]
 
             first_row = "".join(first_table[0].xpath('tbody/descendant::*/text()'))
-            assert_in(u"G-Cloud 7",
-                      first_row)
-            assert_in(u"Live from 23 November 2015",
-                      first_row)
-            assert_in(u"99 services",
-                      first_row)
-            assert_not_in(u"You must sign the framework agreement to sell these services",
-                          first_row)
+            assert u"G-Cloud 7" in first_row
+            assert u"Live from 23 November 2015" in first_row
+            assert u"99 services" in first_row
+            assert u"You must sign the framework agreement to sell these services" not in first_row
 
     @mock.patch("app.main.views.suppliers.data_api_client")
     @mock.patch("app.main.views.suppliers.get_current_suppliers_users")
@@ -574,8 +533,7 @@ class TestSuppliersDashboard(BaseApplicationTest):
             doc = html.fromstring(res.get_data(as_text=True))
             headings = doc.xpath('//h2[@class="summary-item-heading"]')
 
-            assert_not_in(u"Pending services",
-                          headings[0].xpath('text()')[0])
+            assert u"Pending services" not in headings[0].xpath('text()')[0]
 
     @mock.patch("app.main.views.suppliers.data_api_client")
     @mock.patch("app.main.views.suppliers.get_current_suppliers_users")
@@ -611,27 +569,20 @@ class TestSuppliersDashboard(BaseApplicationTest):
             doc = html.fromstring(res.get_data(as_text=True))
             headings = doc.xpath('//h2[@class="summary-item-heading"]')
 
-            assert_in(u"Pending services",
-                      headings[0].xpath('text()')[0])
+            assert u"Pending services" in headings[0].xpath('text()')[0]
 
             first_table = doc.xpath(
                 '//table[@class="summary-item-body"]'
             )
 
-            assert_in(u"Pending services",
-                      first_table[0].xpath('caption/text()')[0])
+            assert u"Pending services" in first_table[0].xpath('caption/text()')[0]
 
             first_row = "".join(first_table[0].xpath('tbody/descendant::*/text()'))
-            assert_in(u"G-Cloud 7",
-                      first_row)
-            assert_not_in(u"Live from 23 November 2015",
-                          first_row)
-            assert_in(u"99 services submitted",
-                      first_row)
-            assert_not_in(u"You must sign the framework agreement to sell these services",
-                          first_row)
-            assert_in(u"View your documents",
-                      first_row)
+            assert u"G-Cloud 7" in first_row
+            assert u"Live from 23 November 2015" not in first_row
+            assert u"99 services submitted" in first_row
+            assert u"You must sign the framework agreement to sell these services" not in first_row
+            assert u"View your documents" in first_row
 
     @mock.patch("app.main.views.suppliers.data_api_client")
     @mock.patch("app.main.views.suppliers.get_current_suppliers_users")
@@ -667,27 +618,19 @@ class TestSuppliersDashboard(BaseApplicationTest):
             doc = html.fromstring(res.get_data(as_text=True))
             headings = doc.xpath('//h2[@class="summary-item-heading"]')
 
-            assert_in(u"Pending services",
-                      headings[0].xpath('text()')[0])
+            assert u"Pending services" in headings[0].xpath('text()')[0]
 
             first_table = doc.xpath(
                 '//table[@class="summary-item-body"]'
             )
 
-            assert_in(u"Pending services",
-                      first_table[0].xpath('caption/text()')[0])
+            assert u"Pending services" in first_table[0].xpath('caption/text()')[0]
 
             first_row = "".join(first_table[0].xpath('tbody/descendant::*/text()'))
-            assert_in(u"G-Cloud 7",
-                      first_row)
-            assert_in(u"Live from 23 November 2015",
-                      first_row)
-            assert_in(u"99 services",
-                      first_row)
-            assert_in(u"99 services",
-                      first_row)
-            assert_not_in(u"You must sign the framework agreement to sell these services",
-                          first_row)
+            assert u"G-Cloud 7" in first_row
+            assert u"Live from 23 November 2015" in first_row
+            assert u"99 services" in first_row
+            assert u"You must sign the framework agreement to sell these services" not in first_row
 
     @mock.patch("app.main.views.suppliers.data_api_client")
     @mock.patch("app.main.views.suppliers.get_current_suppliers_users")
@@ -715,11 +658,12 @@ class TestSuppliersDashboard(BaseApplicationTest):
             res = self.client.get("/suppliers")
             doc = html.fromstring(res.get_data(as_text=True))
 
-            assert_equal(res.status_code, 200)
+            assert res.status_code == 200
 
-            assert_in("Apply to Digital Outcomes and Specialists",
-                      doc.xpath('//div[@class="summary-item-lede"]//h2[@class="summary-item-heading"]/text()')[0])
-            assert_equal("Start application", doc.xpath('//div[@class="summary-item-lede"]//input/@value')[0])
+            assert "Apply to Digital Outcomes and Specialists" in doc.xpath(
+                '//div[@class="summary-item-lede"]//h2[@class="summary-item-heading"]/text()'
+            )[0]
+            assert doc.xpath('//div[@class="summary-item-lede"]//input/@value')[0] == "Start application"
 
     @mock.patch("app.main.views.suppliers.data_api_client")
     @mock.patch("app.main.views.suppliers.get_current_suppliers_users")
@@ -751,9 +695,10 @@ class TestSuppliersDashboard(BaseApplicationTest):
             res = self.client.get("/suppliers")
             doc = html.fromstring(res.get_data(as_text=True))
 
-            assert_equal(res.status_code, 200)
-            assert_in("Continue your Digital Outcomes and Specialists application",
-                      doc.xpath('//a[@class="browse-list-item-link"]/text()')[0])
+            assert res.status_code == 200
+            assert "Continue your Digital Outcomes and Specialists application" in doc.xpath(
+                '//a[@class="browse-list-item-link"]/text()'
+            )[0]
 
 
 class TestSupplierDashboardLogin(BaseApplicationTest):
@@ -777,22 +722,17 @@ class TestSupplierDashboardLogin(BaseApplicationTest):
 
             res = self.client.get("/suppliers")
 
-            assert_equal(res.status_code, 200)
+            assert res.status_code == 200
 
-            assert_in(
-                self.strip_all_whitespace(u"<h1>Supplier NĀme</h1>"),
+            assert self.strip_all_whitespace(u"<h1>Supplier NĀme</h1>") in \
                 self.strip_all_whitespace(res.get_data(as_text=True))
-            )
-            assert_in(
-                self.strip_all_whitespace("email@email.com"),
+            assert self.strip_all_whitespace("email@email.com") in \
                 self.strip_all_whitespace(res.get_data(as_text=True))
-            )
 
     def test_should_redirect_to_login_if_not_logged_in(self):
         res = self.client.get("/suppliers")
-        assert_equal(res.status_code, 302)
-        assert_equal(res.location,
-                     "http://localhost/login?next=%2Fsuppliers")
+        assert res.status_code == 302
+        assert res.location == "http://localhost/login?next=%2Fsuppliers"
 
 
 @mock.patch("app.main.views.suppliers.data_api_client")
@@ -840,14 +780,14 @@ class TestSupplierUpdate(BaseApplicationTest):
         data_api_client.get_supplier.side_effect = limited_supplier
 
         response = self.client.get("/suppliers/edit")
-        assert_equal(response.status_code, 200)
+        assert response.status_code == 200
 
     def test_update_all_supplier_fields(self, data_api_client):
         self.login()
 
         status, _ = self.post_supplier_edit()
 
-        assert_equal(status, 302)
+        assert status == 302
 
         data_api_client.update_supplier.assert_called_once_with(
             1234,
@@ -894,7 +834,7 @@ class TestSupplierUpdate(BaseApplicationTest):
 
         status, _ = self.post_supplier_edit(data=data)
 
-        assert_equal(status, 302)
+        assert status == 302
 
         data_api_client.update_supplier.assert_called_once_with(
             1234,
@@ -938,26 +878,24 @@ class TestSupplierUpdate(BaseApplicationTest):
             "contact_postcode": "11 AB",
         })
 
-        assert_equal(status, 200)
-        assert_in('You must provide an email address', resp)
+        assert status == 200
+        assert 'You must provide an email address' in resp
 
-        assert_false(data_api_client.update_supplier.called)
-        assert_false(
-            data_api_client.update_contact_information.called
-        )
+        assert data_api_client.update_supplier.called is False
+        assert data_api_client.update_contact_information.called is False
 
-        assert_in("New Description", resp)
-        assert_in('value="ClientA"', resp)
-        assert_in('value="ClientB"', resp)
-        assert_in('value="2"', resp)
-        assert_in('value="supplier.dmdev"', resp)
-        assert_in('value="Supplier Person"', resp)
-        assert_in('value="0800123123"', resp)
-        assert_in('value="1 Street"', resp)
-        assert_in('value="2 Building"', resp)
-        assert_in('value="Supplierville"', resp)
-        assert_in('value="Supplierland"', resp)
-        assert_in('value="11 AB"', resp)
+        assert "New Description" in resp
+        assert 'value="ClientA"' in resp
+        assert 'value="ClientB"' in resp
+        assert 'value="2"' in resp
+        assert 'value="supplier.dmdev"' in resp
+        assert 'value="Supplier Person"' in resp
+        assert 'value="0800123123"' in resp
+        assert 'value="1 Street"' in resp
+        assert 'value="2 Building"' in resp
+        assert 'value="Supplierville"' in resp
+        assert 'value="Supplierland"' in resp
+        assert 'value="11 AB"' in resp
 
     def test_description_below_word_length(self, data_api_client):
         self.login()
@@ -966,10 +904,10 @@ class TestSupplierUpdate(BaseApplicationTest):
             description="DESCR " * 49
         )
 
-        assert_equal(status, 302)
+        assert status == 302
 
-        assert_true(data_api_client.update_supplier.called)
-        assert_true(data_api_client.update_contact_information.called)
+        assert data_api_client.update_supplier.called is True
+        assert data_api_client.update_contact_information.called is True
 
     def test_description_above_word_length(self, data_api_client):
         self.login()
@@ -978,11 +916,11 @@ class TestSupplierUpdate(BaseApplicationTest):
             description="DESCR " * 51
         )
 
-        assert_equal(status, 200)
-        assert_in('must not be more than 50', resp)
+        assert status == 200
+        assert 'must not be more than 50' in resp
 
-        assert_false(data_api_client.update_supplier.called)
-        assert_false(data_api_client.update_contact_information.called)
+        assert data_api_client.update_supplier.called is False
+        assert data_api_client.update_contact_information.called is False
 
     def test_clients_above_limit(self, data_api_client):
         self.login()
@@ -991,16 +929,13 @@ class TestSupplierUpdate(BaseApplicationTest):
             clients=["", "A Client"] * 11
         )
 
-        assert_equal(status, 200)
-        assert_in('You must have 10 or fewer clients', resp)
+        assert status == 200
+        assert 'You must have 10 or fewer clients' in resp
 
     def test_should_redirect_to_login_if_not_logged_in(self, data_api_client):
         res = self.client.get("/suppliers/edit")
-        assert_equal(res.status_code, 302)
-        assert_equal(
-            res.location,
-            "http://localhost/login?next=%2Fsuppliers%2Fedit"
-        )
+        assert res.status_code == 302
+        assert res.location == "http://localhost/login?next=%2Fsuppliers%2Fedit"
 
 
 class TestCreateSupplier(BaseApplicationTest):
@@ -1009,8 +944,8 @@ class TestCreateSupplier(BaseApplicationTest):
             "/suppliers/duns-number",
             data={}
         )
-        assert_equal(res.status_code, 400)
-        assert_in("You must enter a DUNS number with 9 digits.", res.get_data(as_text=True))
+        assert res.status_code == 400
+        assert "You must enter a DUNS number with 9 digits." in res.get_data(as_text=True)
 
     def test_should_be_an_error_if_no_duns_number_is_letters(self):
         res = self.client.post(
@@ -1019,8 +954,8 @@ class TestCreateSupplier(BaseApplicationTest):
                 'duns_number': "invalid"
             }
         )
-        assert_equal(res.status_code, 400)
-        assert_in("You must enter a DUNS number with 9 digits.", res.get_data(as_text=True))
+        assert res.status_code == 400
+        assert "You must enter a DUNS number with 9 digits." in res.get_data(as_text=True)
 
     def test_should_be_an_error_if_no_duns_number_is_less_than_nine_digits(self):
         res = self.client.post(
@@ -1029,8 +964,8 @@ class TestCreateSupplier(BaseApplicationTest):
                 'duns_number': "12345678"
             }
         )
-        assert_equal(res.status_code, 400)
-        assert_in("You must enter a DUNS number with 9 digits.", res.get_data(as_text=True))
+        assert res.status_code == 400
+        assert "You must enter a DUNS number with 9 digits." in res.get_data(as_text=True)
 
     def test_should_be_an_error_if_no_duns_number_is_more_than_nine_digits(self):
         res = self.client.post(
@@ -1039,8 +974,8 @@ class TestCreateSupplier(BaseApplicationTest):
                 'duns_number': "1234567890"
             }
         )
-        assert_equal(res.status_code, 400)
-        assert_in("You must enter a DUNS number with 9 digits.", res.get_data(as_text=True))
+        assert res.status_code == 400
+        assert "You must enter a DUNS number with 9 digits." in res.get_data(as_text=True)
 
     @mock.patch("app.main.suppliers.data_api_client")
     def test_should_be_an_error_if_duns_number_in_use(self, data_api_client):
@@ -1055,10 +990,10 @@ class TestCreateSupplier(BaseApplicationTest):
                 'duns_number': "123456789"
             }
         )
-        assert_equal(res.status_code, 400)
+        assert res.status_code == 400
         page = res.get_data(as_text=True)
-        assert_in("A supplier account already exists with that DUNS number", page)
-        assert_in("DUNS number already used", page)
+        assert "A supplier account already exists with that DUNS number" in page
+        assert "DUNS number already used" in page
 
     @mock.patch("app.main.suppliers.data_api_client")
     def test_should_allow_nine_digit_duns_number(self, data_api_client):
@@ -1069,8 +1004,8 @@ class TestCreateSupplier(BaseApplicationTest):
                 'duns_number': "123456789"
             }
         )
-        assert_equal(res.status_code, 302)
-        assert_equal(res.location, 'http://localhost/suppliers/companies-house-number')
+        assert res.status_code == 302
+        assert res.location == 'http://localhost/suppliers/companies-house-number'
 
     @mock.patch("app.main.suppliers.data_api_client")
     def test_should_allow_duns_numbers_that_start_with_zero(self, data_api_client):
@@ -1081,8 +1016,8 @@ class TestCreateSupplier(BaseApplicationTest):
                 'duns_number': "012345678"
             }
         )
-        assert_equal(res.status_code, 302)
-        assert_equal(res.location, 'http://localhost/suppliers/companies-house-number')
+        assert res.status_code == 302
+        assert res.location == 'http://localhost/suppliers/companies-house-number'
 
     @mock.patch("app.main.suppliers.data_api_client")
     def test_should_strip_whitespace_surrounding_duns_number_field(self, data_api_client):
@@ -1094,16 +1029,16 @@ class TestCreateSupplier(BaseApplicationTest):
                     'duns_number': "  012345678  "
                 }
             )
-            assert_true("duns_number" in session)
-            assert_equal(session.get("duns_number"), "012345678")
+            assert "duns_number" in session
+            assert session.get("duns_number") == "012345678"
 
     def test_should_not_be_an_error_if_no_companies_house_number(self):
         res = self.client.post(
             "/suppliers/companies-house-number",
             data={}
         )
-        assert_equal(res.status_code, 302)
-        assert_equal(res.location, 'http://localhost/suppliers/company-name')
+        assert res.status_code == 302
+        assert res.location == 'http://localhost/suppliers/company-name'
 
     def test_should_be_an_error_if_companies_house_number_is_not_8_characters_short(self):
         res = self.client.post(
@@ -1112,8 +1047,8 @@ class TestCreateSupplier(BaseApplicationTest):
                 'companies_house_number': "short"
             }
         )
-        assert_equal(res.status_code, 400)
-        assert_in("Companies House numbers must have 8 characters.", res.get_data(as_text=True))
+        assert res.status_code == 400
+        assert "Companies House numbers must have 8 characters." in res.get_data(as_text=True)
 
     def test_should_be_an_error_if_companies_house_number_is_not_8_characters_long(self):
         res = self.client.post(
@@ -1122,8 +1057,8 @@ class TestCreateSupplier(BaseApplicationTest):
                 'companies_house_number': "muchtoolongtobecompanieshouse"
             }
         )
-        assert_equal(res.status_code, 400)
-        assert_in("Companies House numbers must have 8 characters.", res.get_data(as_text=True))
+        assert res.status_code == 400
+        assert "Companies House numbers must have 8 characters." in res.get_data(as_text=True)
 
     def test_should_allow_valid_companies_house_number(self):
         with self.client as c:
@@ -1133,8 +1068,8 @@ class TestCreateSupplier(BaseApplicationTest):
                     'companies_house_number': "SC001122"
                 }
             )
-            assert_equal(res.status_code, 302)
-            assert_equal(res.location, 'http://localhost/suppliers/company-name')
+            assert res.status_code == 302
+            assert res.location == 'http://localhost/suppliers/company-name'
 
     def test_should_strip_whitespace_surrounding_companies_house_number_field(self):
         with self.client as c:
@@ -1144,8 +1079,8 @@ class TestCreateSupplier(BaseApplicationTest):
                     'companies_house_number': "  SC001122  "
                 }
             )
-            assert_true("companies_house_number" in session)
-            assert_equal(session.get("companies_house_number"), "SC001122")
+            assert "companies_house_number" in session
+            assert session.get("companies_house_number") == "SC001122"
 
     def test_should_wipe_companies_house_number_if_not_supplied(self):
         with self.client as c:
@@ -1155,9 +1090,9 @@ class TestCreateSupplier(BaseApplicationTest):
                     'companies_house_number': ""
                 }
             )
-            assert_equal(res.status_code, 302)
-            assert_equal(res.location, 'http://localhost/suppliers/company-name')
-            assert_false("companies_house_number" in session)
+            assert res.status_code == 302
+            assert res.location == 'http://localhost/suppliers/company-name'
+            assert "companies_house_number" not in session
 
     def test_should_allow_valid_company_name(self):
         res = self.client.post(
@@ -1166,8 +1101,8 @@ class TestCreateSupplier(BaseApplicationTest):
                 'company_name': "My Company"
             }
         )
-        assert_equal(res.status_code, 302)
-        assert_equal(res.location, 'http://localhost/suppliers/company-contact-details')
+        assert res.status_code == 302
+        assert res.location == 'http://localhost/suppliers/company-contact-details'
 
     def test_should_strip_whitespace_surrounding_company_name_field(self):
         with self.client as c:
@@ -1177,16 +1112,16 @@ class TestCreateSupplier(BaseApplicationTest):
                     'company_name': "  My Company  "
                 }
             )
-            assert_true("company_name" in session)
-            assert_equal(session.get("company_name"), "My Company")
+            assert "company_name" in session
+            assert session.get("company_name") == "My Company"
 
     def test_should_be_an_error_if_no_company_name(self):
         res = self.client.post(
             "/suppliers/company-name",
             data={}
         )
-        assert_equal(res.status_code, 400)
-        assert_in("You must provide a company name.", res.get_data(as_text=True))
+        assert res.status_code == 400
+        assert "You must provide a company name." in res.get_data(as_text=True)
 
     def test_should_be_an_error_if_company_name_too_long(self):
         twofiftysix = "a" * 256
@@ -1196,8 +1131,8 @@ class TestCreateSupplier(BaseApplicationTest):
                 'company_name': twofiftysix
             }
         )
-        assert_equal(res.status_code, 400)
-        assert_in("You must provide a company name under 256 characters.", res.get_data(as_text=True))
+        assert res.status_code == 400
+        assert "You must provide a company name under 256 characters." in res.get_data(as_text=True)
 
     def test_should_allow_valid_company_contact_details(self):
         res = self.client.post(
@@ -1208,8 +1143,8 @@ class TestCreateSupplier(BaseApplicationTest):
                 'phone_number': "999"
             }
         )
-        assert_equal(res.status_code, 302)
-        assert_equal(res.location, 'http://localhost/suppliers/create-your-account')
+        assert res.status_code == 302
+        assert res.location == 'http://localhost/suppliers/create-your-account'
 
     def test_should_strip_whitespace_surrounding_contact_details_fields(self):
         contact_details = {
@@ -1225,8 +1160,8 @@ class TestCreateSupplier(BaseApplicationTest):
             )
 
             for key, value in contact_details.items():
-                assert_true(key in session)
-                assert_equal(session.get(key), value.strip())
+                assert key in session
+                assert session.get(key) == value.strip()
 
     def test_should_not_allow_contact_details_without_name(self):
         res = self.client.post(
@@ -1236,8 +1171,8 @@ class TestCreateSupplier(BaseApplicationTest):
                 'phone_number': "999"
             }
         )
-        assert_equal(res.status_code, 400)
-        assert_true("You must provide a contact name." in res.get_data(as_text=True))
+        assert res.status_code == 400
+        assert "You must provide a contact name." in res.get_data(as_text=True)
 
     def test_should_not_allow_contact_details_with_too_long_name(self):
         twofiftysix = "a" * 256
@@ -1249,8 +1184,8 @@ class TestCreateSupplier(BaseApplicationTest):
                 'phone_number': "999"
             }
         )
-        assert_equal(res.status_code, 400)
-        assert_true("You must provide a contact name under 256 characters." in res.get_data(as_text=True))
+        assert res.status_code == 400
+        assert "You must provide a contact name under 256 characters." in res.get_data(as_text=True)
 
     def test_should_not_allow_contact_details_without_email(self):
         res = self.client.post(
@@ -1260,8 +1195,8 @@ class TestCreateSupplier(BaseApplicationTest):
                 'phone_number': "999"
             }
         )
-        assert_equal(res.status_code, 400)
-        assert_true("You must provide a email address." in res.get_data(as_text=True))
+        assert res.status_code == 400
+        assert "You must provide a email address." in res.get_data(as_text=True)
 
     def test_should_not_allow_contact_details_with_invalid_email(self):
         res = self.client.post(
@@ -1272,8 +1207,8 @@ class TestCreateSupplier(BaseApplicationTest):
                 'phone_number': "999"
             }
         )
-        assert_equal(res.status_code, 400)
-        assert_true("You must provide a valid email address." in res.get_data(as_text=True))
+        assert res.status_code == 400
+        assert "You must provide a valid email address." in res.get_data(as_text=True)
 
     def test_should_not_allow_contact_details_without_phone_number(self):
         res = self.client.post(
@@ -1283,8 +1218,8 @@ class TestCreateSupplier(BaseApplicationTest):
                 'email_address': "name@email.com"
             }
         )
-        assert_equal(res.status_code, 400)
-        assert_true("You must provide a phone number." in res.get_data(as_text=True))
+        assert res.status_code == 400
+        assert "You must provide a phone number." in res.get_data(as_text=True)
 
     def test_should_not_allow_contact_details_with_invalid_phone_number(self):
         twentyone = "a" * 21
@@ -1296,18 +1231,18 @@ class TestCreateSupplier(BaseApplicationTest):
                 'phone_number': twentyone
             }
         )
-        assert_equal(res.status_code, 400)
-        assert_true("You must provide a phone number under 20 characters." in res.get_data(as_text=True))
+        assert res.status_code == 400
+        assert "You must provide a phone number under 20 characters." in res.get_data(as_text=True)
 
     def test_should_show_multiple_errors(self):
         res = self.client.post(
             "/suppliers/company-contact-details",
             data={}
         )
-        assert_equal(res.status_code, 400)
-        assert_true("You must provide a phone number." in res.get_data(as_text=True))
-        assert_true("You must provide a email address." in res.get_data(as_text=True))
-        assert_true("You must provide a contact name." in res.get_data(as_text=True))
+        assert res.status_code == 400
+        assert "You must provide a phone number." in res.get_data(as_text=True)
+        assert "You must provide a email address." in res.get_data(as_text=True)
+        assert "You must provide a contact name." in res.get_data(as_text=True)
 
     def test_should_populate_duns_from_session(self):
         with self.client.session_transaction() as sess:
@@ -1371,8 +1306,8 @@ class TestCreateSupplier(BaseApplicationTest):
 
             data_api_client.create_supplier.return_value = self.supplier()
             res = c.post("/suppliers/company-summary")
-            assert_equal(res.status_code, 302)
-            assert_equal(res.location, "http://localhost/suppliers/create-your-account-complete")
+            assert res.status_code == 302
+            assert res.location == "http://localhost/suppliers/create-your-account-complete"
             data_api_client.create_supplier.assert_called_once_with({
                 "contactInformation": [{
                     "email": "email_address",
@@ -1383,14 +1318,14 @@ class TestCreateSupplier(BaseApplicationTest):
                 "name": "company_name",
                 "companiesHouseNumber": "companies_house_number",
             })
-            assert_false('email_address' in session)
-            assert_false('phone_number' in session)
-            assert_false('contact_name' in session)
-            assert_false('duns_number' in session)
-            assert_false('company_name' in session)
-            assert_false('companies_house_number' in session)
-            assert_equal(session['email_supplier_id'], 12345)
-            assert_equal(session['email_company_name'], 'Supplier Name')
+            assert 'email_address' not in session
+            assert 'phone_number' not in session
+            assert 'contact_name' not in session
+            assert 'duns_number' not in session
+            assert 'company_name' not in session
+            assert 'companies_house_number' not in session
+            assert session['email_supplier_id'] == 12345
+            assert session['email_company_name'] == 'Supplier Name'
 
     @mock.patch("app.main.suppliers.data_api_client")
     @mock.patch("app.main.suppliers.send_email")
@@ -1411,8 +1346,8 @@ class TestCreateSupplier(BaseApplicationTest):
                 'email_address': 'valid@email.com'
             }
         )
-        assert_equal(res.status_code, 302)
-        assert_equal(res.location, "http://localhost/suppliers/create-your-account-complete")
+        assert res.status_code == 302
+        assert res.location == "http://localhost/suppliers/create-your-account-complete"
         data_api_client.create_supplier.assert_called_once_with({
             "contactInformation": [{
                 "email": "email_address",
@@ -1433,11 +1368,9 @@ class TestCreateSupplier(BaseApplicationTest):
 
         data_api_client.create_supplier.return_value = True
         res = self.client.post("/suppliers/company-summary")
-        assert_equal(res.status_code, 400)
-        assert_equal(data_api_client.create_supplier.called, False)
-        assert_equal(
-            'You must answer all the questions' in res.get_data(as_text=True),
-            True)
+        assert res.status_code == 400
+        assert data_api_client.create_supplier.called is False
+        assert 'You must answer all the questions' in res.get_data(as_text=True)
 
     @mock.patch("app.main.suppliers.data_api_client")
     def test_should_return_503_if_api_error(self, data_api_client):
@@ -1451,7 +1384,7 @@ class TestCreateSupplier(BaseApplicationTest):
 
         data_api_client.create_supplier.side_effect = HTTPError("gone bad")
         res = self.client.post("/suppliers/company-summary")
-        assert_equal(res.status_code, 503)
+        assert res.status_code == 503
 
     def test_should_require_an_email_address(self):
         with self.client.session_transaction() as sess:
@@ -1461,8 +1394,8 @@ class TestCreateSupplier(BaseApplicationTest):
             "/suppliers/create-your-account",
             data={}
         )
-        assert_equal(res.status_code, 400)
-        assert_true("You must provide a email address." in res.get_data(as_text=True))
+        assert res.status_code == 400
+        assert "You must provide a email address." in res.get_data(as_text=True)
 
     def test_should_not_allow_incorrect_email_address(self):
         with self.client.session_transaction() as sess:
@@ -1474,8 +1407,8 @@ class TestCreateSupplier(BaseApplicationTest):
                 'email_address': "bademail"
             }
         )
-        assert_equal(res.status_code, 400)
-        assert_true("You must provide a valid email address." in res.get_data(as_text=True))
+        assert res.status_code == 400
+        assert "You must provide a valid email address." in res.get_data(as_text=True)
 
     @mock.patch("app.main.suppliers.data_api_client")
     @mock.patch("app.main.suppliers.send_email")
@@ -1514,9 +1447,9 @@ class TestCreateSupplier(BaseApplicationTest):
                 ["user-creation"]
             )
 
-            assert_equal(res.status_code, 302)
-            assert_equal(res.location, 'http://localhost/suppliers/create-your-account-complete')
-            assert_equal(session['email_sent_to'], 'valid@email.com')
+            assert res.status_code == 302
+            assert res.location == 'http://localhost/suppliers/create-your-account-complete'
+            assert session['email_sent_to'] == 'valid@email.com'
 
     @mock.patch("app.main.suppliers.send_email")
     @mock.patch("app.main.suppliers.generate_token")
@@ -1525,9 +1458,9 @@ class TestCreateSupplier(BaseApplicationTest):
             "/suppliers/company-summary"
         )
 
-        assert_false(generate_token.called)
-        assert_false(send_email.called)
-        assert_equal(res.status_code, 400)
+        assert generate_token.called is False
+        assert send_email.called is False
+        assert res.status_code == 400
 
     @mock.patch("app.main.suppliers.data_api_client")
     @mock.patch("app.main.suppliers.send_email")
@@ -1568,7 +1501,7 @@ class TestCreateSupplier(BaseApplicationTest):
             ["user-creation"]
         )
 
-        assert_equal(res.status_code, 503)
+        assert res.status_code == 503
 
     def test_should_show_email_address_on_create_account_complete(self):
         with self.client as c:
@@ -1578,9 +1511,9 @@ class TestCreateSupplier(BaseApplicationTest):
 
             res = c.get("/suppliers/create-your-account-complete")
 
-            assert_equal(res.status_code, 200)
-            assert_true('An email has been sent to my@email.com' in res.get_data(as_text=True))
-            assert_false('other_stuff' in session)
+            assert res.status_code == 200
+            assert 'An email has been sent to my@email.com' in res.get_data(as_text=True)
+            assert 'other_stuff' not in session
 
     def test_should_show_email_address_even_when_refreshed(self):
         with self.client as c:
@@ -1589,10 +1522,10 @@ class TestCreateSupplier(BaseApplicationTest):
 
             res = c.get('/suppliers/create-your-account-complete')
 
-            assert_equal(res.status_code, 200)
-            assert_true('An email has been sent to my-email@example.com' in res.get_data(as_text=True))
+            assert res.status_code == 200
+            assert 'An email has been sent to my-email@example.com' in res.get_data(as_text=True)
 
             res = c.get('/suppliers/create-your-account-complete')
 
-            assert_equal(res.status_code, 200)
-            assert_true('An email has been sent to my-email@example.com' in res.get_data(as_text=True))
+            assert res.status_code == 200
+            assert 'An email has been sent to my-email@example.com' in res.get_data(as_text=True)

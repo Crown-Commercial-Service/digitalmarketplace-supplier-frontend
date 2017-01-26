@@ -1,5 +1,4 @@
 import mock
-from nose.tools import assert_equal, assert_in, assert_not_in
 from tests.app.helpers import BaseApplicationTest
 
 
@@ -64,7 +63,7 @@ class TestListUsers(BaseApplicationTest):
             data_api_client.find_users.return_value = get_users()
 
             res = self.client.get('/suppliers/users')
-            assert_equal(res.status_code, 200)
+            assert res.status_code == 200
             data_api_client.find_users.assert_called_once_with(supplier_id=1234)
 
             # strings we would expect to find in the output
@@ -76,12 +75,8 @@ class TestListUsers(BaseApplicationTest):
                 # deactivate button for Don
                 "<form method=\"post\" action=\"/suppliers/users/1/deactivate\">"
             ]:
-                assert_in(
-                    self.strip_all_whitespace(
-                        '{}'.format(string)
-                    ),
+                assert self.strip_all_whitespace('{}'.format(string)) in \
                     self.strip_all_whitespace(res.get_data(as_text=True))
-                )
 
             # strings we would hope not to find in the output
             for string in [
@@ -90,12 +85,8 @@ class TestListUsers(BaseApplicationTest):
                 # deactivate button for logged-in user
                 "<form method=\"post\" action=\"/suppliers/users/123/deactivate\">"
             ]:
-                assert_not_in(
-                    self.strip_all_whitespace(
-                        '{}'.format(string)
-                    ),
+                assert self.strip_all_whitespace('{}'.format(string)) not in \
                     self.strip_all_whitespace(res.get_data(as_text=True))
-                )
 
 
 class TestPostUsers(BaseApplicationTest):
@@ -104,15 +95,15 @@ class TestPostUsers(BaseApplicationTest):
         res = self.client.post(
             '/suppliers/users/123/deactivate'
         )
-        assert_equal(res.status_code, 302)
-        assert_equal(res.location, 'http://localhost/login')
+        assert res.status_code == 302
+        assert res.location == 'http://localhost/login'
 
     def test_cannot_deactivate_self(self):
         with self.app.test_client():
             self.login()
 
             res = self.client.post('/suppliers/users/123/deactivate')
-            assert_equal(res.status_code, 404)
+            assert res.status_code == 404
 
     @mock.patch('app.main.views.users.data_api_client')
     def test_cannot_deactivate_nonexistent_id(self, data_api_client):
@@ -122,7 +113,7 @@ class TestPostUsers(BaseApplicationTest):
             data_api_client.find_users.return_value = get_users()
 
             res = self.client.post('/suppliers/users/1231231231231/deactivate')
-            assert_equal(res.status_code, 404)
+            assert res.status_code == 404
 
     @mock.patch('app.main.views.users.data_api_client')
     def test_cannot_deactivate_a_user_without_supplier_role(self, data_api_client):
@@ -144,7 +135,7 @@ class TestPostUsers(BaseApplicationTest):
             data_api_client.get_user.return_value = get_users(additional_users, index=3)
 
             res = self.client.post('/suppliers/users/3/deactivate')
-            assert_equal(res.status_code, 404)
+            assert res.status_code == 404
 
     @mock.patch('app.main.views.users.data_api_client')
     def test_cannot_deactivate_another_suppliers_user(self, data_api_client):
@@ -170,7 +161,7 @@ class TestPostUsers(BaseApplicationTest):
             data_api_client.get_user.return_value = get_users(additional_users, index=3)
 
             res = self.client.post('/suppliers/users/4/deactivate')
-            assert_equal(res.status_code, 404)
+            assert res.status_code == 404
 
     @mock.patch('app.main.views.users.data_api_client')
     def can_deactivate_a_user(self, data_api_client):
@@ -183,8 +174,6 @@ class TestPostUsers(BaseApplicationTest):
 
             res = self.client.post(
                 '/suppliers/users/1/deactivate', follow_redirects=True)
-            assert_equal(res.status_code, 200)
-            assert_in(
-                self.strip_all_whitespace('Don Draper (don@scdp.com) has been removed as a contributor'),
+            assert res.status_code == 200
+            assert self.strip_all_whitespace('Don Draper (don@scdp.com) has been removed as a contributor') in \
                 self.strip_all_whitespace(res.get_data(as_text=True))
-            )

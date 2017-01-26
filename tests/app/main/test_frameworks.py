@@ -5,7 +5,6 @@ try:
     from StringIO import StringIO
 except ImportError:
     from io import BytesIO as StringIO
-from nose.tools import assert_equal, assert_true, assert_in, assert_not_in
 import mock
 
 from flask import session
@@ -112,7 +111,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
         data_api_client.get_supplier_framework_info.return_value = self.supplier_framework()
         res = self.client.get("/suppliers/frameworks/g-cloud-7")
 
-        assert_equal(res.status_code, 200)
+        assert res.status_code == 200
         doc = html.fromstring(res.get_data(as_text=True))
         assert len(doc.xpath(
             "//h1[normalize-space(string())=$b]",
@@ -127,7 +126,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
         data_api_client.get_supplier_framework_info.return_value = self.supplier_framework()
         res = self.client.get("/suppliers/frameworks/g-cloud-7")
 
-        assert_equal(res.status_code, 200)
+        assert res.status_code == 200
         doc = html.fromstring(res.get_data(as_text=True))
         assert len(doc.xpath(
             "//h1[normalize-space(string())=$b]",
@@ -142,7 +141,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
         data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(declaration=None)
         res = self.client.get("/suppliers/frameworks/g-cloud-7")
 
-        assert_equal(res.status_code, 404)
+        assert res.status_code == 404
 
     @mock.patch('app.main.views.frameworks.send_email')
     def test_interest_registered_in_framework_on_post(self, send_email, data_api_client, s3):
@@ -153,7 +152,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
             data_api_client.get_supplier_framework_info.return_value = self.supplier_framework()
             res = self.client.post("/suppliers/frameworks/digital-outcomes-and-specialists")
 
-            assert_equal(res.status_code, 200)
+            assert res.status_code == 200
             data_api_client.register_framework_interest.assert_called_once_with(
                 1234,
                 "digital-outcomes-and-specialists",
@@ -174,7 +173,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
             ]}
             res = self.client.post("/suppliers/frameworks/digital-outcomes-and-specialists")
 
-            assert_equal(res.status_code, 200)
+            assert res.status_code == 200
             send_email.assert_called_once_with(
                 ['email1', 'email2'],
                 mock.ANY,
@@ -193,7 +192,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
             data_api_client.get_supplier_framework_info.return_value = self.supplier_framework()
             res = self.client.get("/suppliers/frameworks/digital-outcomes-and-specialists")
 
-            assert_equal(res.status_code, 200)
+            assert res.status_code == 200
             assert not data_api_client.register_framework_interest.called
 
     def test_interest_set_but_no_declaration(self, data_api_client, s3):
@@ -211,7 +210,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
 
             res = self.client.get("/suppliers/frameworks/g-cloud-7")
 
-            assert_equal(res.status_code, 200)
+            assert res.status_code == 200
 
     def test_shows_gcloud_7_closed_message_if_pending_and_no_application_done(self, data_api_client, s3):
         with self.app.test_client():
@@ -232,11 +231,9 @@ class TestFrameworksDashboard(BaseApplicationTest):
             doc = html.fromstring(res.get_data(as_text=True))
 
             heading = doc.xpath('//div[@class="summary-item-lede"]//h2[@class="summary-item-heading"]')
-            assert_true(len(heading) > 0)
-            assert_in(u"G-Cloud 7 is closed for applications",
-                      heading[0].xpath('text()')[0])
-            assert_in(u"You didn't submit an application.",
-                      heading[0].xpath('../p[1]/text()')[0])
+            assert len(heading) > 0
+            assert u"G-Cloud 7 is closed for applications" in heading[0].xpath('text()')[0]
+            assert u"You didn't submit an application." in heading[0].xpath('../p[1]/text()')[0]
 
     def test_shows_gcloud_7_closed_message_if_pending_and_application(self, data_api_client, s3):
         with self.app.test_client():
@@ -256,14 +253,13 @@ class TestFrameworksDashboard(BaseApplicationTest):
 
             doc = html.fromstring(res.get_data(as_text=True))
             heading = doc.xpath('//div[@class="summary-item-lede"]//h2[@class="summary-item-heading"]')
-            assert_true(len(heading) > 0)
-            assert_in(u"G-Cloud 7 is closed for applications",
-                      heading[0].xpath('text()')[0])
+            assert len(heading) > 0
+            assert u"G-Cloud 7 is closed for applications" in heading[0].xpath('text()')[0]
             lede = doc.xpath('//div[@class="summary-item-lede"]')
-            assert_in(u"You made your supplier declaration and submitted 1 service for consideration.",
-                      lede[0].xpath('./p[1]/text()')[0])
-            assert_in(u"We’ll let you know the result of your application by ",  # noqa
-                      lede[0].xpath('./p[2]/text()')[0])  # noqa
+            assert u"You made your supplier declaration and submitted 1 service for consideration." in \
+                lede[0].xpath('./p[1]/text()')[0]
+            assert u"We’ll let you know the result of your application by " in \
+                lede[0].xpath('./p[2]/text()')[0]
 
     def test_declaration_status_when_complete(self, data_api_client, s3):
         with self.app.test_client():
@@ -276,9 +272,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
             assert res.status_code == 200
 
             doc = html.fromstring(res.get_data(as_text=True))
-            assert_equal(
-                len(doc.xpath(u'//p/strong[contains(text(), "You’ve made the supplier declaration")]')),
-                1)
+            assert len(doc.xpath(u'//p/strong[contains(text(), "You’ve made the supplier declaration")]')) == 1
 
     def test_declaration_status_when_started(self, data_api_client, s3):
         with self.app.test_client():
@@ -299,9 +293,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
             assert res.status_code == 200
 
             doc = html.fromstring(res.get_data(as_text=True))
-            assert_equal(
-                len(doc.xpath('//p[contains(text(), "You need to finish making the supplier declaration")]')),  # noqa
-                1)
+            assert len(doc.xpath('//p[contains(text(), "You need to finish making the supplier declaration")]')) == 1
 
     def test_declaration_status_when_not_complete(self, data_api_client, s3):
         with self.app.test_client():
@@ -314,9 +306,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
             assert res.status_code == 200
 
             doc = html.fromstring(res.get_data(as_text=True))
-            assert_equal(
-                len(doc.xpath('//p[contains(text(), "You need to make the supplier declaration")]')),
-                1)
+            assert len(doc.xpath('//p[contains(text(), "You need to make the supplier declaration")]')) == 1
 
     def test_downloads_shown_open_framework(self, data_api_client, s3):
         files = [
@@ -710,7 +700,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
 
             res = self.client.get('/suppliers/frameworks/does-not-exist')
 
-            assert_equal(res.status_code, 404)
+            assert res.status_code == 404
 
     def test_result_letter_is_shown_when_is_in_standstill(self, data_api_client, s3):
         with self.app.test_client():
@@ -728,7 +718,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
 
             data = res.get_data(as_text=True)
 
-            assert_in(u'Download your application result letter', data)
+            assert u'Download your application result letter' in data
 
     def test_result_letter_is_not_shown_when_not_in_standstill(self, data_api_client, s3):
         with self.app.test_client():
@@ -746,7 +736,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
 
             data = res.get_data(as_text=True)
 
-            assert_not_in(u'Download your application result letter', data)
+            assert u'Download your application result letter' not in data
 
     def test_result_letter_is_not_shown_when_no_application(self, data_api_client, s3):
         with self.app.test_client():
@@ -763,7 +753,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
 
             data = res.get_data(as_text=True)
 
-            assert_not_in(u'Download your application result letter', data)
+            assert u'Download your application result letter' not in data
 
     def test_link_to_unsigned_framework_agreement_is_shown_if_supplier_is_on_framework(self, data_api_client, s3):
         with self.app.test_client():
@@ -781,8 +771,8 @@ class TestFrameworksDashboard(BaseApplicationTest):
 
             data = res.get_data(as_text=True)
 
-            assert_in(u'Sign and return your framework agreement', data)
-            assert_not_in(u'Download your countersigned framework agreement', data)
+            assert u'Sign and return your framework agreement' in data
+            assert u'Download your countersigned framework agreement' not in data
 
     def test_pending_success_message_is_explicit_if_supplier_is_on_framework(self, data_api_client, s3):
         with self.app.test_client():
@@ -796,7 +786,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
         }
         data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(on_framework=True)
         res = self.client.get("/suppliers/frameworks/g-cloud-7")
-        assert_equal(res.status_code, 200)
+        assert res.status_code == 200
 
         data = res.get_data(as_text=True)
 
@@ -807,14 +797,14 @@ class TestFrameworksDashboard(BaseApplicationTest):
             u'Download your application award letter (.pdf)',
             u'This letter is a record of your successful G-Cloud 7 application.'
         ]:
-            assert_in(success_message, data)
+            assert success_message in data
 
         for equivocal_message in [
             u'You made your supplier declaration and submitted 1 service.',
             u'Download your application result letter (.pdf)',
             u'This letter informs you if your G-Cloud 7 application has been successful.'
         ]:
-            assert_not_in(equivocal_message, data)
+            assert equivocal_message not in data
 
     def test_link_to_framework_agreement_is_not_shown_if_supplier_is_not_on_framework(self, data_api_client, s3):
         with self.app.test_client():
@@ -832,7 +822,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
 
             data = res.get_data(as_text=True)
 
-            assert_not_in(u'Sign and return your framework agreement', data)
+            assert u'Sign and return your framework agreement' not in data
 
     def test_pending_success_message_is_equivocal_if_supplier_is_on_framework(self, data_api_client, s3):
         with self.app.test_client():
@@ -846,7 +836,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
         }
         data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(on_framework=False)
         res = self.client.get("/suppliers/frameworks/g-cloud-7")
-        assert_equal(res.status_code, 200)
+        assert res.status_code == 200
 
         data = res.get_data(as_text=True)
 
@@ -855,14 +845,14 @@ class TestFrameworksDashboard(BaseApplicationTest):
             u'Download your application award letter (.pdf)',
             u'This letter is a record of your successful G-Cloud 7 application.'
         ]:
-            assert_not_in(success_message, data)
+            assert success_message not in data
 
         for equivocal_message in [
             u'You made your supplier declaration and submitted 1 service.',
             u'Download your application result letter (.pdf)',
             u'This letter informs you if your G-Cloud 7 application has been successful.'
         ]:
-            assert_in(equivocal_message, data)
+            assert equivocal_message in data
 
     def test_countersigned_framework_agreement_non_fav_framework(self, data_api_client, s3):
         # "fav" being "frameworkAgreementVersion"
@@ -1617,9 +1607,9 @@ class TestFrameworkAgreement(BaseApplicationTest):
             res = self.client.get("/suppliers/frameworks/g-cloud-7/agreement")
             data = res.get_data(as_text=True)
 
-            assert_equal(res.status_code, 200)
-            assert_in(u'Send document to CCS', data)
-            assert_not_in(u'Return your signed signature page', data)
+            assert res.status_code == 200
+            assert u'Send document to CCS' in data
+            assert u'Return your signed signature page' not in data
 
     def test_page_returns_404_if_framework_in_wrong_state(self, data_api_client):
         with self.app.test_client():
@@ -1631,7 +1621,7 @@ class TestFrameworkAgreement(BaseApplicationTest):
 
             res = self.client.get("/suppliers/frameworks/g-cloud-7/agreement")
 
-            assert_equal(res.status_code, 404)
+            assert res.status_code == 404
 
     def test_page_returns_404_if_supplier_not_on_framework(self, data_api_client):
         with self.app.test_client():
@@ -1643,7 +1633,7 @@ class TestFrameworkAgreement(BaseApplicationTest):
 
             res = self.client.get("/suppliers/frameworks/g-cloud-7/agreement")
 
-            assert_equal(res.status_code, 404)
+            assert res.status_code == 404
 
     @mock.patch('dmutils.s3.S3')
     def test_upload_message_if_agreement_is_returned(self, s3, data_api_client):
@@ -1659,13 +1649,10 @@ class TestFrameworkAgreement(BaseApplicationTest):
             data = res.get_data(as_text=True)
             doc = html.fromstring(data)
 
-            assert_equal(res.status_code, 200)
-            assert_equal(
-                u'/suppliers/frameworks/g-cloud-7/agreement',
-                doc.xpath('//form')[0].action
-            )
-            assert_in(u'Document uploaded Monday 2 November 2015 at 15:25', data)
-            assert_in(u'Your document has been uploaded', data)
+            assert res.status_code == 200
+            assert u'/suppliers/frameworks/g-cloud-7/agreement' == doc.xpath('//form')[0].action
+            assert u'Document uploaded Monday 2 November 2015 at 15:25' in data
+            assert u'Your document has been uploaded' in data
 
     def test_upload_message_if_agreement_is_not_returned(self, data_api_client):
         with self.app.test_client():
@@ -1679,13 +1666,10 @@ class TestFrameworkAgreement(BaseApplicationTest):
             data = res.get_data(as_text=True)
             doc = html.fromstring(data)
 
-            assert_equal(res.status_code, 200)
-            assert_equal(
-                u'/suppliers/frameworks/g-cloud-7/agreement',
-                doc.xpath('//form')[0].action
-            )
-            assert_not_in(u'Document uploaded', data)
-            assert_not_in(u'Your document has been uploaded', data)
+            assert res.status_code == 200
+            assert u'/suppliers/frameworks/g-cloud-7/agreement' == doc.xpath('//form')[0].action
+            assert u'Document uploaded' not in data
+            assert u'Your document has been uploaded' not in data
 
     def test_loads_contract_start_page_if_framework_agreement_version_exists(self, data_api_client):
         with self.app.test_client():
@@ -1757,7 +1741,7 @@ class TestFrameworkAgreementUpload(BaseApplicationTest):
                 }
             )
 
-            assert_equal(res.status_code, 404)
+            assert res.status_code == 404
 
     def test_page_returns_404_if_supplier_not_on_framework(self, data_api_client, send_email, s3):
         with self.app.test_client():
@@ -1774,7 +1758,7 @@ class TestFrameworkAgreementUpload(BaseApplicationTest):
                 }
             )
 
-            assert_equal(res.status_code, 404)
+            assert res.status_code == 404
 
     @mock.patch('app.main.views.frameworks.file_is_less_than_5mb')
     def test_page_returns_400_if_file_is_too_large(self, file_is_less_than_5mb, data_api_client, send_email, s3):
@@ -1813,8 +1797,8 @@ class TestFrameworkAgreementUpload(BaseApplicationTest):
                 }
             )
 
-            assert_equal(res.status_code, 400)
-            assert_in(u'Document must not be empty', res.get_data(as_text=True))
+            assert res.status_code == 400
+            assert u'Document must not be empty' in res.get_data(as_text=True)
 
     @mock.patch('app.main.views.frameworks.generate_timestamped_document_upload_path')
     def test_api_is_not_updated_and_email_not_sent_if_upload_fails(
@@ -1836,7 +1820,7 @@ class TestFrameworkAgreementUpload(BaseApplicationTest):
                 }
             )
 
-            assert_equal(res.status_code, 503)
+            assert res.status_code == 503
             s3.return_value.save.assert_called_with(
                 'my/path.pdf',
                 mock.ANY,
@@ -2024,8 +2008,8 @@ class TestFrameworkAgreementUpload(BaseApplicationTest):
                 acl='private',
                 download_filename='Supplier_Nme-1234-signed-framework-agreement.jpg'
             )
-            assert_equal(res.status_code, 302)
-            assert_equal(res.location, 'http://localhost/suppliers/frameworks/g-cloud-7/agreement')
+            assert res.status_code == 302
+            assert res.location == 'http://localhost/suppliers/frameworks/g-cloud-7/agreement'
 
 
 @mock.patch('app.main.views.frameworks.data_api_client', autospec=True)
@@ -2039,7 +2023,7 @@ class TestFrameworkAgreementDocumentDownload(BaseApplicationTest):
 
             res = self.client.get('/suppliers/frameworks/g-cloud-7/agreements/example.pdf')
 
-            assert_equal(res.status_code, 404)
+            assert res.status_code == 404
 
     def test_download_document_fails_if_no_supplier_declaration(self, S3, data_api_client):
         data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(declaration=None)
@@ -2049,7 +2033,7 @@ class TestFrameworkAgreementDocumentDownload(BaseApplicationTest):
 
             res = self.client.get('/suppliers/frameworks/g-cloud-7/agreements/example.pdf')
 
-            assert_equal(res.status_code, 404)
+            assert res.status_code == 404
 
     def test_download_document(self, S3, data_api_client):
         data_api_client.get_supplier_framework_info.return_value = self.supplier_framework()
@@ -2063,8 +2047,8 @@ class TestFrameworkAgreementDocumentDownload(BaseApplicationTest):
 
             res = self.client.get('/suppliers/frameworks/g-cloud-7/agreements/example.pdf')
 
-            assert_equal(res.status_code, 302)
-            assert_equal(res.location, 'http://asset-host/path?param=value')
+            assert res.status_code == 302
+            assert res.location == 'http://asset-host/path?param=value'
             uploader.get_signed_url.assert_called_with(
                 'g-cloud-7/agreements/1234/1234-example.pdf')
 
@@ -2081,8 +2065,8 @@ class TestFrameworkAgreementDocumentDownload(BaseApplicationTest):
 
             res = self.client.get('/suppliers/frameworks/g-cloud-7/agreements/example.pdf')
 
-            assert_equal(res.status_code, 302)
-            assert_equal(res.location, 'https://example/path?param=value')
+            assert res.status_code == 302
+            assert res.location == 'https://example/path?param=value'
             uploader.get_signed_url.assert_called_with(
                 'g-cloud-7/agreements/1234/1234-example.pdf')
 
@@ -2099,8 +2083,8 @@ class TestFrameworkDocumentDownload(BaseApplicationTest):
 
             res = self.client.get('/suppliers/frameworks/g-cloud-7/files/example.pdf')
 
-            assert_equal(res.status_code, 302)
-            assert_equal(res.location, 'http://asset-host/path?param=value')
+            assert res.status_code == 302
+            assert res.location == 'http://asset-host/path?param=value'
             uploader.get_signed_url.assert_called_with('g-cloud-7/communications/example.pdf')
 
     def test_download_document_returns_404_if_url_is_None(self, S3):
@@ -2113,7 +2097,7 @@ class TestFrameworkDocumentDownload(BaseApplicationTest):
 
             res = self.client.get('/suppliers/frameworks/g-cloud-7/files/example.pdf')
 
-            assert_equal(res.status_code, 404)
+            assert res.status_code == 404
 
 
 @mock.patch('app.main.views.frameworks.data_api_client', autospec=True)
@@ -2128,12 +2112,10 @@ class TestSupplierDeclaration(BaseApplicationTest):
             res = self.client.get(
                 '/suppliers/frameworks/g-cloud-7/declaration/g-cloud-7-essentials')
 
-            assert_equal(res.status_code, 200)
+            assert res.status_code == 200
             doc = html.fromstring(res.get_data(as_text=True))
-            assert_equal(
-                doc.xpath('//input[@id="PR-1-yes"]/@checked'), [])
-            assert_equal(
-                doc.xpath('//input[@id="PR-1-no"]/@checked'), [])
+            assert doc.xpath('//input[@id="PR-1-yes"]/@checked') == []
+            assert doc.xpath('//input[@id="PR-1-no"]/@checked') == []
 
     def test_get_with_with_previous_answers(self, data_api_client):
         with self.app.test_client():
@@ -2147,10 +2129,9 @@ class TestSupplierDeclaration(BaseApplicationTest):
             res = self.client.get(
                 '/suppliers/frameworks/g-cloud-7/declaration/g-cloud-7-essentials')
 
-            assert_equal(res.status_code, 200)
+            assert res.status_code == 200
             doc = html.fromstring(res.get_data(as_text=True))
-            assert_equal(
-                len(doc.xpath('//input[@id="input-PR1-no"]/@checked')), 1)
+            assert len(doc.xpath('//input[@id="input-PR1-no"]/@checked')) == 1
 
     def test_post_valid_data(self, data_api_client):
         with self.app.test_client():
@@ -2164,7 +2145,7 @@ class TestSupplierDeclaration(BaseApplicationTest):
                 '/suppliers/frameworks/g-cloud-7/declaration/g-cloud-7-essentials',
                 data=FULL_G7_SUBMISSION)
 
-            assert_equal(res.status_code, 302)
+            assert res.status_code == 302
             assert data_api_client.set_supplier_declaration.called
 
     def test_post_valid_data_to_complete_declaration(self, data_api_client):
@@ -2179,8 +2160,8 @@ class TestSupplierDeclaration(BaseApplicationTest):
                 '/suppliers/frameworks/g-cloud-7/declaration/grounds-for-discretionary-exclusion',
                 data=FULL_G7_SUBMISSION)
 
-            assert_equal(res.status_code, 302)
-            assert_equal(res.location, 'http://localhost/suppliers/frameworks/g-cloud-7')
+            assert res.status_code == 302
+            assert res.location == 'http://localhost/suppliers/frameworks/g-cloud-7'
             assert data_api_client.set_supplier_declaration.called
             assert data_api_client.set_supplier_declaration.call_args[0][2]['status'] == 'complete'
 
@@ -2198,7 +2179,7 @@ class TestSupplierDeclaration(BaseApplicationTest):
                 '/suppliers/frameworks/g-cloud-7/declaration/g-cloud-7-essentials',
                 data=FULL_G7_SUBMISSION)
 
-            assert_equal(res.status_code, 400)
+            assert res.status_code == 400
 
     @mock.patch('app.main.helpers.validation.G7Validator.get_error_messages_for_page')
     def test_post_with_validation_errors(self, get_error_messages_for_page, data_api_client):
@@ -2216,7 +2197,7 @@ class TestSupplierDeclaration(BaseApplicationTest):
                 '/suppliers/frameworks/g-cloud-7/declaration/g-cloud-7-essentials',
                 data=FULL_G7_SUBMISSION)
 
-            assert_equal(res.status_code, 400)
+            assert res.status_code == 400
             assert not data_api_client.set_supplier_declaration.called
 
             doc = html.fromstring(res.get_data(as_text=True))
@@ -2237,7 +2218,7 @@ class TestSupplierDeclaration(BaseApplicationTest):
                 '/suppliers/frameworks/g-cloud-7/declaration/g-cloud-7-essentials',
                 data=FULL_G7_SUBMISSION)
 
-            assert_equal(res.status_code, 404)
+            assert res.status_code == 404
             assert not data_api_client.set_supplier_declaration.called
 
 
@@ -2247,10 +2228,7 @@ class TestFrameworkUpdatesPage(BaseApplicationTest):
 
     def _assert_page_title_and_table_headings(self, doc, tables_exist=True):
 
-        assert_true(
-            self.strip_all_whitespace('G-Cloud 7 updates')
-            in self.strip_all_whitespace(doc.xpath('//h1')[0].text)
-        )
+        assert self.strip_all_whitespace('G-Cloud 7 updates') in self.strip_all_whitespace(doc.xpath('//h1')[0].text)
 
         section_names = [
             'Communications',
@@ -2258,21 +2236,15 @@ class TestFrameworkUpdatesPage(BaseApplicationTest):
         ]
 
         headers = doc.xpath('//div[contains(@class, "updates-document-tables")]/h2[@class="summary-item-heading"]')
-        assert_equal(len(headers), 2)
+        assert len(headers) == 2
         for index, section_name in enumerate(section_names):
-            assert_true(
-                self.strip_all_whitespace(section_name)
-                in self.strip_all_whitespace(headers[index].text)
-            )
+            assert self.strip_all_whitespace(section_name) in self.strip_all_whitespace(headers[index].text)
 
         if tables_exist:
             table_captions = doc.xpath('//div[contains(@class, "updates-document-tables")]/table/caption')
-            assert_equal(len(table_captions), 2)
+            assert len(table_captions) == 2
             for index, section_name in enumerate(section_names):
-                assert_true(
-                    self.strip_all_whitespace(section_name)
-                    in self.strip_all_whitespace(table_captions[index].text)
-                )
+                assert self.strip_all_whitespace(section_name) in self.strip_all_whitespace(table_captions[index].text)
 
     def test_should_be_a_503_if_connecting_to_amazon_fails(self, s3, data_api_client):
         data_api_client.get_framework.return_value = self.framework('open')
@@ -2286,11 +2258,9 @@ class TestFrameworkUpdatesPage(BaseApplicationTest):
                 '/suppliers/frameworks/g-cloud-7/updates'
             )
 
-            assert_equal(response.status_code, 503)
-            assert_true(
-                self.strip_all_whitespace(u"<h1>Sorry, we’re experiencing technical difficulties</h1>")
-                in self.strip_all_whitespace(response.get_data(as_text=True))
-            )
+            assert response.status_code == 503
+            assert self.strip_all_whitespace(u"<h1>Sorry, we’re experiencing technical difficulties</h1>") in \
+                self.strip_all_whitespace(response.get_data(as_text=True))
 
     def test_empty_messages_exist_if_no_files_returned(self, s3, data_api_client):
         data_api_client.get_framework.return_value = self.framework('open')
@@ -2302,7 +2272,7 @@ class TestFrameworkUpdatesPage(BaseApplicationTest):
                 '/suppliers/frameworks/g-cloud-7/updates'
             )
 
-            assert_equal(response.status_code, 200)
+            assert response.status_code == 200
             doc = html.fromstring(response.get_data(as_text=True))
             self._assert_page_title_and_table_headings(doc, tables_exist=False)
 
@@ -2310,10 +2280,8 @@ class TestFrameworkUpdatesPage(BaseApplicationTest):
                 '<p class="summary-item-no-content">No communications have been sent out.</p>',
                 '<p class="summary-item-no-content">No clarification questions and answers have been posted yet.</p>',
             ]:
-                assert_true(
-                    self.strip_all_whitespace(empty_message)
-                    in self.strip_all_whitespace(response.get_data(as_text=True))
-                )
+                assert self.strip_all_whitespace(empty_message) in \
+                    self.strip_all_whitespace(response.get_data(as_text=True))
 
     def test_dates_for_open_framework_closed_for_questions(self, s3, data_api_client):
         data_api_client.get_framework.return_value = self.framework('open', clarification_questions_open=False)
@@ -2373,19 +2341,18 @@ class TestFrameworkUpdatesPage(BaseApplicationTest):
             # test that for each table, we have the right number of rows
             for table in tables:
                 item_rows = table.findall('.//tr[@class="summary-item-row"]')
-                assert_equal(len(item_rows), 2)
+                assert len(item_rows) == 2
 
                 # test that the file names and urls are right
                 for row in item_rows:
                     section, filename, ext = files.pop(0)
                     filename_link = row.find('.//a[@class="document-link-with-icon"]')
 
-                    assert_true(filename in filename_link.text_content())
-                    assert_equal(
-                        filename_link.get('href'),
-                        '/suppliers/frameworks/g-cloud-7/files/{}{}.{}'.format(
-                            section, filename.replace(' ', '%20'), ext
-                        )
+                    assert filename in filename_link.text_content()
+                    assert filename_link.get('href') == '/suppliers/frameworks/g-cloud-7/files/{}{}.{}'.format(
+                        section,
+                        filename.replace(' ', '%20'),
+                        ext,
                     )
 
     def test_names_with_the_section_name_in_them_will_display_correctly(self, s3, data_api_client):
@@ -2417,19 +2384,18 @@ class TestFrameworkUpdatesPage(BaseApplicationTest):
             # test that for each table, we have the right number of rows
             for table in tables:
                 item_rows = table.findall('.//tr[@class="summary-item-row"]')
-                assert_equal(len(item_rows), 1)
+                assert len(item_rows) == 1
 
                 # test that the file names and urls are right
                 for row in item_rows:
                     section, filename, ext = files.pop(0)
                     filename_link = row.find('.//a[@class="document-link-with-icon"]')
 
-                    assert_true(filename in filename_link.text_content())
-                    assert_equal(
-                        filename_link.get('href'),
-                        '/suppliers/frameworks/g-cloud-7/files/{}{}.{}'.format(
-                            section, filename.replace(' ', '%20'), ext
-                        )
+                    assert filename in filename_link.text_content()
+                    assert filename_link.get('href') == '/suppliers/frameworks/g-cloud-7/files/{}{}.{}'.format(
+                        section,
+                        filename.replace(' ', '%20'),
+                        ext,
                     )
 
     def test_question_box_is_shown_if_countersigned_agreement_is_not_yet_returned(self, s3, data_api_client):
@@ -2443,7 +2409,7 @@ class TestFrameworkUpdatesPage(BaseApplicationTest):
             data = response.get_data(as_text=True)
 
             assert response.status_code == 200
-            assert_in(u'Ask a question about your G-Cloud 7 application', data)
+            assert u'Ask a question about your G-Cloud 7 application' in data
 
     def test_no_question_box_shown_if_countersigned_agreement_is_returned(self, s3, data_api_client):
         data_api_client.get_framework.return_value = self.framework('live', clarification_questions_open=False)
@@ -2456,7 +2422,7 @@ class TestFrameworkUpdatesPage(BaseApplicationTest):
             data = response.get_data(as_text=True)
 
             assert response.status_code == 200
-            assert_not_in(u'Ask a question about your G-Cloud 7 application', data)
+            assert u'Ask a question about your G-Cloud 7 application' not in data
 
 
 class TestSendClarificationQuestionEmail(BaseApplicationTest):
@@ -2475,11 +2441,11 @@ class TestSendClarificationQuestionEmail(BaseApplicationTest):
     def _assert_clarification_email(self, send_email, is_called=True, succeeds=True):
 
         if succeeds:
-            assert_equal(2, send_email.call_count)
+            assert send_email.call_count == 2
         elif is_called:
-            assert_equal(1, send_email.call_count)
+            assert send_email.call_count == 1
         else:
-            assert_equal(0, send_email.call_count)
+            assert send_email.call_count == 0
 
         if is_called:
             send_email.assert_any_call(
@@ -2506,9 +2472,9 @@ class TestSendClarificationQuestionEmail(BaseApplicationTest):
     def _assert_application_email(self, send_email, succeeds=True):
 
         if succeeds:
-            assert_equal(1, send_email.call_count)
+            assert send_email.call_count == 1
         else:
-            assert_equal(0, send_email.call_count)
+            assert send_email.call_count == 0
 
         if succeeds:
             send_email.assert_called_with(
@@ -2546,15 +2512,11 @@ class TestSendClarificationQuestionEmail(BaseApplicationTest):
             response = self._send_email(invalid_clarification_question['question'])
             self._assert_clarification_email(send_email, is_called=False, succeeds=False)
 
-            assert_equal(response.status_code, 400)
-            assert_true(
-                self.strip_all_whitespace('There was a problem with your submitted question')
-                in self.strip_all_whitespace(response.get_data(as_text=True))
-            )
-            assert_true(
-                self.strip_all_whitespace(invalid_clarification_question['error_message'])
-                in self.strip_all_whitespace(response.get_data(as_text=True))
-            )
+            assert response.status_code == 400
+            assert self.strip_all_whitespace('There was a problem with your submitted question') in \
+                self.strip_all_whitespace(response.get_data(as_text=True))
+            assert self.strip_all_whitespace(invalid_clarification_question['error_message']) in \
+                self.strip_all_whitespace(response.get_data(as_text=True))
 
     @mock.patch('dmutils.s3.S3')
     @mock.patch('app.main.views.frameworks.data_api_client')
@@ -2567,11 +2529,11 @@ class TestSendClarificationQuestionEmail(BaseApplicationTest):
 
         self._assert_clarification_email(send_email)
 
-        assert_equal(response.status_code, 200)
-        assert_true(
-            self.strip_all_whitespace('<p class="banner-message">Your clarification question has been sent. Answers to all clarification questions will be published on this page.</p>')  # noqa
-            in self.strip_all_whitespace(response.get_data(as_text=True))
-        )
+        assert response.status_code == 200
+        assert self.strip_all_whitespace(
+            '<p class="banner-message">Your clarification question has been sent. Answers to all ' +
+            'clarification questions will be published on this page.</p>'
+        ) in self.strip_all_whitespace(response.get_data(as_text=True))
 
     @mock.patch('dmutils.s3.S3')
     @mock.patch('app.main.views.frameworks.data_api_client')
@@ -2584,11 +2546,11 @@ class TestSendClarificationQuestionEmail(BaseApplicationTest):
 
         self._assert_application_email(send_email)
 
-        assert_equal(response.status_code, 200)
-        assert_in(
-            self.strip_all_whitespace('<p class="banner-message">Your question has been sent. You&#39;ll get a reply from the Crown Commercial Service soon.</p>'),  # noqa
-            self.strip_all_whitespace(response.get_data(as_text=True))
-        )
+        assert response.status_code == 200
+        assert self.strip_all_whitespace(
+            '<p class="banner-message">Your question has been sent. You&#39;ll get a reply from ' +
+            'the Crown Commercial Service soon.</p>'
+        ) in self.strip_all_whitespace(response.get_data(as_text=True))
 
     @mock.patch('dmutils.s3.S3')
     @mock.patch('app.main.views.frameworks.data_api_client')
@@ -2600,7 +2562,7 @@ class TestSendClarificationQuestionEmail(BaseApplicationTest):
 
         self._assert_clarification_email(send_email)
 
-        assert_equal(response.status_code, 200)
+        assert response.status_code == 200
         data_api_client.create_audit_event.assert_called_with(
             audit_type=AuditTypes.send_clarification_question,
             user="email@email.com",
@@ -2619,7 +2581,7 @@ class TestSendClarificationQuestionEmail(BaseApplicationTest):
 
         self._assert_application_email(send_email)
 
-        assert_equal(response.status_code, 200)
+        assert response.status_code == 200
         data_api_client.create_audit_event.assert_called_with(
             audit_type=AuditTypes.send_application_question,
             user="email@email.com",
@@ -2637,7 +2599,7 @@ class TestSendClarificationQuestionEmail(BaseApplicationTest):
         response = self._send_email(clarification_question)
         self._assert_clarification_email(send_email, succeeds=False)
 
-        assert_equal(response.status_code, 503)
+        assert response.status_code == 503
 
 
 @mock.patch('app.main.views.frameworks.data_api_client', autospec=True)
@@ -2651,7 +2613,7 @@ class TestG7ServicesList(BaseApplicationTest):
         data_api_client.find_draft_services.return_value = {'services': []}
         count_unanswered.return_value = 0
         response = self.client.get('/suppliers/frameworks/g-cloud-7/submissions/iaas')
-        assert_equal(response.status_code, 404)
+        assert response.status_code == 404
 
     def test_404_when_g7_pending_and_no_declaration(self, count_unanswered, data_api_client):
         with self.app.test_client():
@@ -2661,7 +2623,7 @@ class TestG7ServicesList(BaseApplicationTest):
             "declaration": {"status": "started"}
         }
         response = self.client.get('/suppliers/frameworks/g-cloud-7/submissions/iaas')
-        assert_equal(response.status_code, 404)
+        assert response.status_code == 404
 
     def test_no_404_when_g7_open_and_no_complete_services(self, count_unanswered, data_api_client):
         with self.app.test_client():
@@ -2670,7 +2632,7 @@ class TestG7ServicesList(BaseApplicationTest):
         data_api_client.find_draft_services.return_value = {'services': []}
         count_unanswered.return_value = 0
         response = self.client.get('/suppliers/frameworks/g-cloud-7/submissions/iaas')
-        assert_equal(response.status_code, 200)
+        assert response.status_code == 200
 
     def test_no_404_when_g7_open_and_no_declaration(self, count_unanswered, data_api_client):
         with self.app.test_client():
@@ -2681,7 +2643,7 @@ class TestG7ServicesList(BaseApplicationTest):
             "declaration": {"status": "started"}
         }
         response = self.client.get('/suppliers/frameworks/g-cloud-7/submissions/iaas')
-        assert_equal(response.status_code, 200)
+        assert response.status_code == 200
 
     def test_shows_g7_message_if_pending_and_application_made(self, count_unanswered, data_api_client):
         with self.app.test_client():
@@ -2698,13 +2660,12 @@ class TestG7ServicesList(BaseApplicationTest):
         response = self.client.get('/suppliers/frameworks/g-cloud-7/submissions/scs')
         doc = html.fromstring(response.get_data(as_text=True))
 
-        assert_equal(response.status_code, 200)
+        assert response.status_code == 200
         heading = doc.xpath('//div[@class="summary-item-lede"]//h2[@class="summary-item-heading"]')
-        assert_true(len(heading) > 0)
-        assert_in(u"G-Cloud 7 is closed for applications",
-                  heading[0].xpath('text()')[0])
-        assert_in(u"You made your supplier declaration and submitted 1 complete service.",
-                  heading[0].xpath('../p[1]/text()')[0])
+        assert len(heading) > 0
+        assert u"G-Cloud 7 is closed for applications" in heading[0].xpath('text()')[0]
+        assert u"You made your supplier declaration and submitted 1 complete service." in \
+            heading[0].xpath('../p[1]/text()')[0]
 
     def test_drafts_list_progress_count(self, count_unanswered, data_api_client):
         with self.app.test_client():
@@ -2721,11 +2682,11 @@ class TestG7ServicesList(BaseApplicationTest):
         submissions = self.client.get('/suppliers/frameworks/g-cloud-7/submissions')
         lot_page = self.client.get('/suppliers/frameworks/g-cloud-7/submissions/scs')
 
-        assert_true(u'Service can be moved to complete' not in lot_page.get_data(as_text=True))
-        assert_in(u'4 unanswered questions', lot_page.get_data(as_text=True))
+        assert u'Service can be moved to complete' not in lot_page.get_data(as_text=True)
+        assert u'4 unanswered questions' in lot_page.get_data(as_text=True)
 
-        assert_in(u'1 draft service', submissions.get_data(as_text=True))
-        assert_true(u'complete service' not in submissions.get_data(as_text=True))
+        assert u'1 draft service' in submissions.get_data(as_text=True)
+        assert u'complete service' not in submissions.get_data(as_text=True)
 
     def test_drafts_list_can_be_completed(self, count_unanswered, data_api_client):
         with self.app.test_client():
@@ -2742,8 +2703,8 @@ class TestG7ServicesList(BaseApplicationTest):
 
         res = self.client.get('/suppliers/frameworks/g-cloud-7/submissions/scs')
 
-        assert_in(u'Service can be marked as complete', res.get_data(as_text=True))
-        assert_in(u'1 optional question unanswered', res.get_data(as_text=True))
+        assert u'Service can be marked as complete' in res.get_data(as_text=True)
+        assert u'1 optional question unanswered' in res.get_data(as_text=True)
 
     def test_drafts_list_completed(self, count_unanswered, data_api_client):
         with self.app.test_client():
@@ -2761,12 +2722,12 @@ class TestG7ServicesList(BaseApplicationTest):
         submissions = self.client.get('/suppliers/frameworks/g-cloud-7/submissions')
         lot_page = self.client.get('/suppliers/frameworks/g-cloud-7/submissions/scs')
 
-        assert_true(u'Service can be moved to complete' not in lot_page.get_data(as_text=True))
-        assert_in(u'1 optional question unanswered', lot_page.get_data(as_text=True))
-        assert_in(u'make the supplier&nbsp;declaration', lot_page.get_data(as_text=True))
+        assert u'Service can be moved to complete' not in lot_page.get_data(as_text=True)
+        assert u'1 optional question unanswered' in lot_page.get_data(as_text=True)
+        assert u'make the supplier&nbsp;declaration' in lot_page.get_data(as_text=True)
 
-        assert_in(u'1 service marked as complete', submissions.get_data(as_text=True))
-        assert_true(u'draft service' not in submissions.get_data(as_text=True))
+        assert u'1 service marked as complete' in submissions.get_data(as_text=True)
+        assert u'draft service' not in submissions.get_data(as_text=True)
 
     def test_drafts_list_completed_with_declaration_status(self, count_unanswered, data_api_client):
         with self.app.test_client():
@@ -2786,9 +2747,9 @@ class TestG7ServicesList(BaseApplicationTest):
 
         submissions = self.client.get('/suppliers/frameworks/g-cloud-7/submissions')
 
-        assert_in(u'1 service will be submitted', submissions.get_data(as_text=True))
-        assert_not_in(u'1 complete service was submitted', submissions.get_data(as_text=True))
-        assert_in(u'browse-list-item-status-happy', submissions.get_data(as_text=True))
+        assert u'1 service will be submitted' in submissions.get_data(as_text=True)
+        assert u'1 complete service was submitted' not in submissions.get_data(as_text=True)
+        assert u'browse-list-item-status-happy' in submissions.get_data(as_text=True)
 
     def test_drafts_list_services_were_submitted(self, count_unanswered, data_api_client):
         with self.app.test_client():
@@ -2809,7 +2770,7 @@ class TestG7ServicesList(BaseApplicationTest):
 
         submissions = self.client.get('/suppliers/frameworks/g-cloud-7/submissions')
 
-        assert_in(u'1 complete service was submitted', submissions.get_data(as_text=True))
+        assert u'1 complete service was submitted' in submissions.get_data(as_text=True)
 
     def test_dos_drafts_list_with_open_framework(self, count_unanswered, data_api_client):
         with self.app.test_client():
@@ -2830,9 +2791,9 @@ class TestG7ServicesList(BaseApplicationTest):
 
         submissions = self.client.get('/suppliers/frameworks/digital-outcomes-and-specialists/submissions')
 
-        assert_in(u'This will be submitted', submissions.get_data(as_text=True))
-        assert_in(u'browse-list-item-status-happy', submissions.get_data(as_text=True))
-        assert_in(u'Apply to provide', submissions.get_data(as_text=True))
+        assert u'This will be submitted' in submissions.get_data(as_text=True)
+        assert u'browse-list-item-status-happy' in submissions.get_data(as_text=True)
+        assert u'Apply to provide' in submissions.get_data(as_text=True)
 
     def test_dos_drafts_list_with_closed_framework(self, count_unanswered, data_api_client):
         with self.app.test_client():
@@ -2855,8 +2816,8 @@ class TestG7ServicesList(BaseApplicationTest):
         submissions = self.client.get('/suppliers/frameworks/digital-outcomes-and-specialists/submissions')
 
         assert submissions.status_code == 200
-        assert_in(u'Submitted', submissions.get_data(as_text=True))
-        assert_not_in(u'Apply to provide', submissions.get_data(as_text=True))
+        assert u'Submitted' in submissions.get_data(as_text=True)
+        assert u'Apply to provide' not in submissions.get_data(as_text=True)
 
 
 @mock.patch('app.main.views.frameworks.data_api_client', autospec=True)

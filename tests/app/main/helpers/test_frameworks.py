@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 import pytest
 import mock
-from nose.tools import assert_equal
 from werkzeug.exceptions import HTTPException
 
 from app.main.helpers.frameworks import (
@@ -298,14 +297,11 @@ def test_get_status_for_lot(parameters, expected_result):
     ]):
         print(label, parameters[index])
 
-    assert_equal(
-        expected_result,
-        get_statuses_for_lot(
-            *parameters,
-            lot_name='user research studios',
-            unit='lab',
-            unit_plural='labs'
-        )
+    assert expected_result == get_statuses_for_lot(
+        *parameters,
+        lot_name='user research studios',
+        unit='lab',
+        unit_plural='labs'
     )
 
 
