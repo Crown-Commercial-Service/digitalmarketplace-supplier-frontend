@@ -27,8 +27,10 @@
             {% elif item.type == "dynamic_list" %}
               {% for question in item.questions %}
                 {% call summary.row() %}
-                  {{ summary.field_name(question.question, two_thirds=True) }}
-                  {{ summary.text(item.unformat_data(brief_response)[question.id]) }}
+                  {% if question.type != "boolean" %}
+                    {{ summary.field_name(question.question, two_thirds=True) }}
+                    {{ summary.text(item.unformat_data(brief_response)[question.id]) }}
+                  {% endif %}
                 {% endcall %}
               {% endfor %}
             {% else %}
