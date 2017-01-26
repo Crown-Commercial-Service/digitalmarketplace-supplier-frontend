@@ -9,7 +9,7 @@
     {% endif %}
 
     {# Don't have a table for nice-to-have requirements if none have been given #}
-    {% if not (section.id == 'your-nice-to-have-skills-and-experience' and not section.get_question('niceToHaveRequirements').boolean_list_questions) %}
+    {% if not (section.id == 'your-nice-to-have-skills-and-experience' and not brief['niceToHaveRequirements']|length) %}
         {{ summary.heading(section.name, id="opportunity-attributes-{}".format(loop.index)) }}
         {% call(item) summary.list_table(
           section.questions,
@@ -21,13 +21,14 @@
               {% for question in item.boolean_list_questions %}
                 {% call summary.row() %}
                   {{ summary.field_name(question, two_thirds=True) }}
-                  {% set answer = item.value[loop.index0] -%}
-                  {# Legacy boolean_list response answers are just a list of booleans #}
-                  {% if answer is not mapping -%}
-                    {{ summary['boolean'](answer) }}
-                  {% else -%} 
-                    {{ summary.text(answer.evidence or '') }}
-                  {% endif -%}
+                  {{ summary['boolean'](item.value[loop.index0]) }}
+                {% endcall %}
+              {% endfor %}
+            {% elif item.type == "dynamic_list" %}
+              {% for question in item.questions %}
+                {% call summary.row() %}
+                  {{ summary.field_name(question.question, two_thirds=True) }}
+                  {{ summary.text(item.unformat_data(brief_response)[question.id]) }}
                 {% endcall %}
               {% endfor %}
             {% else %}
