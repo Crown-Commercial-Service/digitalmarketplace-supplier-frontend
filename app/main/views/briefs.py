@@ -226,6 +226,10 @@ def edit_brief_response(brief_id, brief_response_id, question_id=None):
                 return redirect(url_for('.view_response_result', brief_id=brief_id))
 
     previous_question_id = section.get_previous_question_id(question_id)
+    # Skip previous question if the brief has no nice to have requirements
+    if previous_question_id in brief.keys() and not brief[previous_question_id]:
+        previous_question_id = section.get_previous_question_id(previous_question_id)
+
     previous_question_url = None
     if previous_question_id:
         previous_question_url = url_for(
