@@ -360,6 +360,7 @@ def view_response_result(brief_id):
         return redirect(url_for(".brief_response", brief_id=brief_id))
     elif brief_response[0].get('essentialRequirementsMet') or all(brief_response[0]['essentialRequirements']):
         result_state = 'submitted_ok'
+        flash('submitted_ok', 'success')
     else:
         result_state = 'submitted_unsuccessful'
 

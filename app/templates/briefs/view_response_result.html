@@ -32,7 +32,8 @@
     with
     message = {
       "already_applied": "You’ve already applied for ‘{}’ so you can’t apply again".format(brief.title) if result_state == "submitted_ok"
-                    else "You already applied for ‘{}’ but you didn’t meet the essential requirements".format(brief.title)
+                    else "You already applied for ‘{}’ but you didn’t meet the essential requirements".format(brief.title),
+      "submitted_ok": "Your application for ‘{}’ has been submitted.".format(brief.title)
     }[message] or message,
     type = "destructive" if category == "error" else "success"
     %}
@@ -44,10 +45,7 @@
 <div class="grid-row">
   <div class="column-two-thirds">
     {% with
-      heading = {
-                  "submitted_ok": "Your response to ‘{}’ has been sent".format(brief.title),
-                  "submitted_unsuccessful": "You don’t meet all the essential requirements"
-                }[result_state],
+      heading = "You don’t meet all the essential requirements" if result_state == "submitted_unsuccessful" else "Your application",
       smaller = true
       %}
         {% include 'toolkit/page-heading.html' %}
