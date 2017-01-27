@@ -46,7 +46,11 @@ with
 			<li>buyers can award work to your business</li>
 		</ul>
 		<br/>
-		<a href="/digital-service-professionals/opportunities" role="button">View opportunities</a>
+      {% if 'DM_FRAMEWORK' is active_feature %}
+        <a href="/digital-marketplace/opportunities" role="button">View opportunities</a>
+      {% else %}
+        <a href="/digital-service-professionals/opportunities" role="button">View opportunities</a>
+      {% endif %}
     </div>
 </div>
 

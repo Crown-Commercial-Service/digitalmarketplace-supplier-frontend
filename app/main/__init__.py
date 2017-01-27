@@ -26,6 +26,13 @@ content_loader.load_manifest('digital-service-professionals', 'brief-responses',
 content_loader.load_manifest('digital-service-professionals', 'brief-responses', 'display_brief_response')
 content_loader.load_messages('digital-service-professionals', ['dates'])
 
+content_loader.load_manifest('digital-marketplace', 'declaration', 'declaration')
+content_loader.load_manifest('digital-marketplace', 'services', 'edit_submission')
+content_loader.load_manifest('digital-marketplace', 'briefs', 'edit_brief')
+content_loader.load_manifest('digital-marketplace', 'brief-responses', 'edit_brief_response')
+content_loader.load_manifest('digital-marketplace', 'brief-responses', 'display_brief_response')
+content_loader.load_messages('digital-marketplace', ['dates'])
+
 content_loader.load_manifest('g-cloud-8', 'services', 'edit_service')
 content_loader.load_manifest('g-cloud-8', 'services', 'edit_submission')
 content_loader.load_manifest('g-cloud-8', 'declaration', 'declaration')
