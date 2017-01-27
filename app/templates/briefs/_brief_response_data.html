@@ -28,7 +28,7 @@
               {% for question in item.questions %}
                 {% call summary.row() %}
                   {% if question.type != "boolean" %}
-                    {{ summary.field_name(question.question, two_thirds=True) }}
+                    {{ summary.field_name(question.question) }}
                     {{ summary.text(item.unformat_data(brief_response)[question.id]) }}
                   {% endif %}
                 {% endcall %}
