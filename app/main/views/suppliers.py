@@ -150,58 +150,15 @@ def supplier_edit_save(step=None, substep=None):
 
 @main.route('/update', methods=['GET'])
 @login_required
+@feature.is_active_feature('SELLER_UPDATE')
 def supplier_update():
-
-    try:
-        supplier = data_api_client.get_supplier(
-            current_user.supplier_code
-        )['supplier']
-    except APIError as e:
-        current_app.logger.error(e)
-        abort(e.status_code)
-
-    if feature.is_active('SELLER_UPDATE'):
-        if not supplier.get('application_id'):
-            data = dict(supplier)
-            if len(supplier.get('contacts', [])) > 0:
-                data['email'] = supplier['contacts'][0].get('email')
-                data['phone'] = supplier['contacts'][0].get('phone')
-                data['representative'] = supplier['contacts'][0].get('name')
-            if len(supplier.get('address', [])) > 0:
-                data['address']['address_line'] = supplier['address']['addressLine']
-                data['address']['postal_code'] = supplier['address']['postalCode']
-
-            data['status'] = 'saved'
-            data = {key: data[key] for key in data if key not in ['id', 'contacts', 'domains', 'prices']}
-
-            application = data_api_client.create_application(data)
-
-            notification_message = '{}\nApplication Id:{}\nBy: {} ({})'.format(
-                data['name'],
-                application['application']['id'],
-                current_user.name,
-                current_user.email_address
-            )
-            notify_team('An existing seller has started a new application', notification_message)
-
-            supplier_updates = {'application_id': application['application']['id']}
-
-            try:
-                data_api_client.update_supplier(
-                    current_user.supplier_code,
-                    supplier_updates,
-                    user=current_user.email_address
-                )
-
-                users = get_current_suppliers_users()
-                for user in users:
-                    data_api_client.update_user(user['id'], fields={'application_id': application['application']['id']})
-
-            except APIError as e:
-                current_app.logger.error(e)
-                abort(e.status_code)
-
-        return redirect(url_for('.my_application'))
+    data_api_client.req.suppliers(current_user.supplier_code).application().post(data={
+        'current_user': {
+            'name': current_user.name,
+            'email_address': current_user.email_address
+        }
+    })
+    return redirect(url_for('.my_application'))
 
 
 @main.route('/create', methods=['GET'])
