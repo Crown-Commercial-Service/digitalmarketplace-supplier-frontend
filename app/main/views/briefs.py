@@ -368,7 +368,7 @@ def view_response_result(brief_id):
         data_api_client, brief['frameworkSlug'], brief['lotSlug'], allowed_statuses=['live'])
 
     response_content = content_loader.get_manifest(
-        framework['slug'], 'display_brief_response').filter({'lot': lot['slug']})
+        framework['slug'], 'legacy_display_brief_response').filter({'lot': lot['slug']})
     for section in response_content:
         section.inject_brief_questions_into_boolean_list_question(brief)
 
