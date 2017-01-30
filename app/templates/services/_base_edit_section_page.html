@@ -37,7 +37,7 @@
         <div class="column-two-thirds">
 
             {% for question in section.questions %}
-              {% if errors and errors[question.id] %}
+              {% if errors and (errors[question.id] or question.type == 'multiquestion') %}
                 {{ forms[question.type](question, service_data, errors) }}
               {% else %}
                 {{ forms[question.type](question, service_data, {}) }}

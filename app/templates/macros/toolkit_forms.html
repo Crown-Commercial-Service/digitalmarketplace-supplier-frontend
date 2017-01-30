@@ -223,9 +223,11 @@
     </legend>
 
     <span class="question-heading{% if question_content.hint %}-with-hint{% endif %}">
+      {% if question_number is not none %}
         <span class="question-number">
           {{ question_number }}
         </span>
+      {% endif %}
         {{ question_content.question }}
     </span>
 
@@ -240,10 +242,10 @@
     {% endif %}
 
     {% for child_question in question_content.questions %}
-      {% if errors and errors[child_question.id] %}
-        {{ text(child_question, service_data, errors) }}
+      {% if child_question.type == 'list' %}
+        {{ list(child_question, service_data, errors if errors and errors[child_question.id] else {}) }}
       {% else %}
-        {{ text(child_question, service_data, {}) }}
+        {{ text(child_question, service_data, errors if errors and errors[child_question.id] else {}) }}
       {% endif %}
     {% endfor %}
   </fieldset>

@@ -238,4 +238,5 @@ VALIDATORS = {
     "g-cloud-8": G8Validator,
     "digital-outcomes-and-specialists": DOSValidator,
     "digital-outcomes-and-specialists-2": DOS2Validator,
+    "g-cloud-9": DOS2Validator,
 }
