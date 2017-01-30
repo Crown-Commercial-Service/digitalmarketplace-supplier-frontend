@@ -223,9 +223,11 @@
     </legend>
 
     <span class="question-heading{% if question_content.hint %}-with-hint{% endif %}">
+      {% if question_number is not none %}
         <span class="question-number">
           {{ question_number }}
         </span>
+      {% endif %}
         {{ question_content.question }}
     </span>
 
