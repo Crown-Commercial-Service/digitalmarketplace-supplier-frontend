@@ -1877,8 +1877,8 @@ class ResponseResultPageBothFlows(BaseApplicationTest):
 @mock.patch("app.main.views.briefs.data_api_client")
 class TestResponseResultPageLegacyFlow(ResponseResultPageBothFlows):
 
-    def setup(self):
-        super(TestResponseResultPageLegacyFlow, self).setup()
+    def setup_method(self, method):
+        super(TestResponseResultPageLegacyFlow, self).setup_method(method)
 
     def test_view_response_result_page_escapes_essential_and_nice_to_have_requirements(self, data_api_client):
         self.brief['briefs']['essentialRequirements'] = [
@@ -2101,8 +2101,22 @@ class TestResponseResultPageLegacyFlow(ResponseResultPageBothFlows):
 @mock.patch("app.main.views.briefs.data_api_client")
 class TestResponseResultPage(ResponseResultPageBothFlows):
 
-    def setup(self):
-        super(TestResponseResultPage, self).setup()
+    def setup_method(self, method):
+        super(TestResponseResultPage, self).setup_method(method)
+        self.brief['briefs']['niceToHaveRequirements'] = []
+        self.brief['briefs']['dayRate'] = []
+        self.brief_responses = {
+            'briefResponses': [
+                {
+                    'essentialRequirementsMet': True,
+                    'essentialRequirements': [
+                        {'evidence': 'Did a thing'},
+                        {'evidence': 'Produced a thing'},
+                        {'evidence': 'Did a thing'}
+                    ]
+                }
+            ]
+        }
 
     def test_view_response_result_page_escapes_essential_and_nice_to_have_requirements(self, data_api_client):
         self.brief['briefs']['essentialRequirements'] = [
@@ -2113,28 +2127,20 @@ class TestResponseResultPage(ResponseResultPageBothFlows):
             '<h1>n2h one with xss</h1>',
             '**n2h two with markdown**'
         ]
+        self.brief_responses['briefResponses'][0]['niceToHaveRequirements'] = [
+            {
+                'yesNo': True,
+                'evidence': 'Did a thing'
+            },
+            {
+                'yesNo': False
+            }
+        ]
 
         data_api_client.get_brief.return_value = self.brief
         data_api_client.get_framework.return_value = self.framework
         data_api_client.is_supplier_eligible_for_brief.return_value = True
-        data_api_client.find_brief_responses.return_value = {
-            "briefResponses": [
-                {
-                    "essentialRequirementsMet": True,
-                    "essentialRequirements": [
-                        {"evidence": "Did a thing"},
-                        {"evidence": "Know a thing"}
-                    ],
-                    "niceToHaveRequirements": [
-                        {
-                            "yesNo": True,
-                            "evidence": "Did another thing"
-                        },
-                        {"yesNo": False}
-                    ]
-                }
-            ]
-        }
+        data_api_client.find_brief_responses.return_value = self.brief_responses
 
         res = self.client.get('/suppliers/opportunities/1234/responses/result')
         data = res.get_data(as_text=True)
@@ -2153,18 +2159,7 @@ class TestResponseResultPage(ResponseResultPageBothFlows):
         data_api_client.get_brief.return_value = self.brief
         data_api_client.get_framework.return_value = self.framework
         data_api_client.is_supplier_eligible_for_brief.return_value = True
-        data_api_client.find_brief_responses.return_value = {
-            "briefResponses": [
-                {
-                    "essentialRequirementsMet": True,
-                    "essentialRequirements": [
-                        {"evidence": "Did a thing"},
-                        {"evidence": "Did a thing"},
-                        {"evidence": "Did a thing"}
-                    ]
-                }
-            ]
-        }
+        data_api_client.find_brief_responses.return_value = self.brief_responses
         res = self.client.get('/suppliers/opportunities/1234/responses/result')
 
         assert res.status_code == 200
@@ -2178,17 +2173,7 @@ class TestResponseResultPage(ResponseResultPageBothFlows):
         data_api_client.get_brief.return_value = closed_brief
         data_api_client.get_framework.return_value = self.framework
         data_api_client.is_supplier_eligible_for_brief.return_value = True
-        data_api_client.find_brief_responses.return_value = {
-            "briefResponses": [
-                {
-                    "essentialRequirements": [
-                        {"evidence": "Did a thing"},
-                        {"evidence": "Did a thing"},
-                        {"evidence": "Did a thing"}
-                    ]
-                }
-            ]
-        }
+        data_api_client.find_brief_responses.return_value = self.brief_responses
         res = self.client.get('/suppliers/opportunities/1234/responses/result')
 
         assert res.status_code == 200
@@ -2197,16 +2182,12 @@ class TestResponseResultPage(ResponseResultPageBothFlows):
             "Your response to ‘I need a thing to do a thing’ has been sent"
 
     def test_view_response_result_submitted_unsuccessful(self, data_api_client):
+        self.brief_responses['briefResponses'][0]['essentialRequirementsMet'] = False
+
         data_api_client.get_brief.return_value = self.brief
         data_api_client.get_framework.return_value = self.framework
         data_api_client.is_supplier_eligible_for_brief.return_value = True
-        data_api_client.find_brief_responses.return_value = {
-            "briefResponses": [
-                {
-                    "essentialRequirementsMet": False
-                }
-            ]
-        }
+        data_api_client.find_brief_responses.return_value = self.brief_responses
         res = self.client.get('/suppliers/opportunities/1234/responses/result')
 
         assert res.status_code == 200
@@ -2217,18 +2198,7 @@ class TestResponseResultPage(ResponseResultPageBothFlows):
         data_api_client.get_brief.return_value = self.brief
         data_api_client.get_framework.return_value = self.framework
         data_api_client.is_supplier_eligible_for_brief.return_value = True
-        data_api_client.find_brief_responses.return_value = {
-            "briefResponses": [
-                {
-                    "essentialRequirementsMet": True,
-                    "essentialRequirements": [
-                        {"evidence": "Did a thing"},
-                        {"evidence": "Did a thing"},
-                        {"evidence": "Did a thing"}
-                    ]
-                }
-            ]
-        }
+        data_api_client.find_brief_responses.return_value = self.brief_responses
         res = self.client.get('/suppliers/opportunities/1234/responses/result')
 
         assert res.status_code == 200
@@ -2238,21 +2208,23 @@ class TestResponseResultPage(ResponseResultPageBothFlows):
     def test_nice_to_haves_shown_with_response_when_they_exist(self, data_api_client):
         brief_with_nice_to_haves = self.brief.copy()
         brief_with_nice_to_haves['briefs']['niceToHaveRequirements'] = ['Nice one', 'Top one', 'Get sorted']
+        self.brief_responses['briefResponses'][0]['niceToHaveRequirements'] = [
+            {
+                'yesNo': True,
+                'evidence': 'Did a thing'
+            },
+            {
+                'yesNo': False
+            },
+            {
+                'yesNo': False
+            }
+        ]
+
         data_api_client.get_brief.return_value = brief_with_nice_to_haves
         data_api_client.get_framework.return_value = self.framework
         data_api_client.is_supplier_eligible_for_brief.return_value = True
-        data_api_client.find_brief_responses.return_value = {
-            "briefResponses": [
-                {
-                    "essentialRequirementsMet": True,
-                    "niceToHaveRequirements": [
-                        {"yesNo": False},
-                        {"yesNo": True, "evidence": "Did a thing"},
-                        {"yesNo": False}
-                    ]
-                }
-            ]
-        }
+        data_api_client.find_brief_responses.return_value = self.brief_responses
         res = self.client.get('/suppliers/opportunities/1234/responses/result')
 
         assert res.status_code == 200
@@ -2262,14 +2234,12 @@ class TestResponseResultPage(ResponseResultPageBothFlows):
         ) == 1
 
     def test_nice_to_haves_heading_not_shown_when_there_are_none(self, data_api_client):
+        self.brief["briefs"]["niceToHaveRequirements"] = []
+
         data_api_client.get_brief.return_value = self.brief
         data_api_client.get_framework.return_value = self.framework
         data_api_client.is_supplier_eligible_for_brief.return_value = True
-        data_api_client.find_brief_responses.return_value = {
-            "briefResponses": [
-                {"essentialRequirementsMet": True}
-            ]
-        }
+        data_api_client.find_brief_responses.return_value = self.brief_responses
         res = self.client.get('/suppliers/opportunities/1234/responses/result')
 
         assert res.status_code == 200
@@ -2282,11 +2252,7 @@ class TestResponseResultPage(ResponseResultPageBothFlows):
         data_api_client.get_brief.return_value = self.brief
         data_api_client.get_framework.return_value = self.framework
         data_api_client.is_supplier_eligible_for_brief.return_value = True
-        data_api_client.find_brief_responses.return_value = {
-            "briefResponses": [
-                {"essentialRequirementsMet": True}
-            ]
-        }
+        data_api_client.find_brief_responses.return_value = self.brief_responses
         res = self.client.get('/suppliers/opportunities/1234/responses/result')
 
         assert res.status_code == 200
@@ -2312,11 +2278,7 @@ class TestResponseResultPage(ResponseResultPageBothFlows):
         data_api_client.get_brief.return_value = self.brief
         data_api_client.get_framework.return_value = self.framework
         data_api_client.is_supplier_eligible_for_brief.return_value = True
-        data_api_client.find_brief_responses.return_value = {
-            "briefResponses": [
-                {"essentialRequirementsMet": True}
-            ]
-        }
+        data_api_client.find_brief_responses.return_value = self.brief_responses
         res = self.client.get('/suppliers/opportunities/1234/responses/result')
 
         assert res.status_code == 200
@@ -2329,11 +2291,7 @@ class TestResponseResultPage(ResponseResultPageBothFlows):
         data_api_client.get_brief.return_value = no_extra_eval_brief
         data_api_client.get_framework.return_value = self.framework
         data_api_client.is_supplier_eligible_for_brief.return_value = True
-        data_api_client.find_brief_responses.return_value = {
-            "briefResponses": [
-                {"essentialRequirementsMet": True}
-            ]
-        }
+        data_api_client.find_brief_responses.return_value = self.brief_responses
         res = self.client.get('/suppliers/opportunities/1234/responses/result')
 
         assert res.status_code == 200
@@ -2344,11 +2302,7 @@ class TestResponseResultPage(ResponseResultPageBothFlows):
         data_api_client.get_brief.return_value = self.brief
         data_api_client.get_framework.return_value = self.framework
         data_api_client.is_supplier_eligible_for_brief.return_value = True
-        data_api_client.find_brief_responses.return_value = {
-            "briefResponses": [
-                {"essentialRequirementsMet": True}
-            ]
-        }
+        data_api_client.find_brief_responses.return_value = self.brief_responses
         res = self.client.get('/suppliers/opportunities/1234/responses/result')
 
         assert res.status_code == 200
