@@ -159,7 +159,8 @@ class TestSupplierApplication(BaseApplicationTest):
         assert_equal(response.status_code, 302)
 
         args, kwargs = data_api_client.req.suppliers().application().post.call_args
-        assert kwargs == {'data': {'current_user': {'email_address': 'email@email.com', 'name': 'Name'}}}
+        assert kwargs == {'data': {'current_user': {'email_address': 'email@email.com', 'name': 'Name'},
+                                   'framework': 'digital-marketplace'}}
 
 
 @mock.patch('app.main.suppliers.render_component')

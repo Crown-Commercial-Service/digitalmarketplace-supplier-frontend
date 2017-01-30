@@ -257,7 +257,7 @@ class TestCreateApplicationPage(BaseApplicationTest):
         assert res.status_code == 302
         assert res.location == self.url_for('main.render_application', id=999, step='start', _external=True)
         data_api_client.create_application.assert_called_once_with(
-            {'status': 'saved'}
+            {'status': 'saved', 'framework': 'digital-marketplace'}
         )
 
 

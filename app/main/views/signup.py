@@ -129,7 +129,7 @@ def create_application(token):
     create_app = not id
 
     if create_app:
-        application = data_api_client.create_application({'status': 'saved'})
+        application = data_api_client.create_application({'status': 'saved', 'framework': 'digital-marketplace'})
         id = application['application']['id']
 
     user = data_api_client.create_user({
