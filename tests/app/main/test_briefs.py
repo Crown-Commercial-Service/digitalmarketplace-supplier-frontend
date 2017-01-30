@@ -1108,25 +1108,7 @@ class TestApplyToBrief(BaseApplicationTest):
         assert res.location == 'http://localhost/suppliers/opportunities/1234/responses/result'
 
 
-@mock.patch("app.main.views.briefs.data_api_client")
-class TestLegacyRespondToBrief(BaseApplicationTest):
-    """Tests for the old single page flow for applying for a brief which is being phased out"""
-
-    def setup_method(self, method):
-        super(TestLegacyRespondToBrief, self).setup_method(method)
-
-        self.brief = api_stubs.brief(status='live', lot_slug='digital-specialists')
-        self.brief['briefs']['essentialRequirements'] = ['Essential one', 'Essential two', 'Essential three']
-        self.brief['briefs']['niceToHaveRequirements'] = ['Nice one', 'Top one', 'Get sorted']
-        self.brief['briefs']['publishedAt'] = '2016-10-25T12:00:00.000000Z'  # Date is before the new flow feature flag
-
-        lots = [api_stubs.lot(slug="digital-specialists", allows_brief=True)]
-        self.framework = api_stubs.framework(status="live", slug="digital-outcomes-and-specialists",
-                                             clarification_questions_open=False, lots=lots)
-
-        with self.app.test_client():
-            self.login()
-
+class BriefResponseTestHelpers():
     def _test_breadcrumbs_on_brief_response_page(self, response):
         breadcrumbs = html.fromstring(response.get_data(as_text=True)).xpath(
             '//*[@id="global-breadcrumb"]/nav/ol/li'
@@ -1144,6 +1126,26 @@ class TestLegacyRespondToBrief(BaseApplicationTest):
         for index, link in enumerate(breadcrumbs_we_expect):
             assert breadcrumbs[index].find('a').text_content().strip() == link[0]
             assert breadcrumbs[index].find('a').get('href').strip() == link[1]
+
+
+@mock.patch("app.main.views.briefs.data_api_client")
+class TestLegacyRespondToBrief(BaseApplicationTest, BriefResponseTestHelpers):
+    """Tests for the old single page flow for applying for a brief which is being phased out"""
+
+    def setup_method(self, method):
+        super(TestLegacyRespondToBrief, self).setup_method(method)
+
+        self.brief = api_stubs.brief(status='live', lot_slug='digital-specialists')
+        self.brief['briefs']['essentialRequirements'] = ['Essential one', 'Essential two', 'Essential three']
+        self.brief['briefs']['niceToHaveRequirements'] = ['Nice one', 'Top one', 'Get sorted']
+        self.brief['briefs']['publishedAt'] = '2016-10-25T12:00:00.000000Z'  # Date is before the new flow feature flag
+
+        lots = [api_stubs.lot(slug="digital-specialists", allows_brief=True)]
+        self.framework = api_stubs.framework(status="live", slug="digital-outcomes-and-specialists",
+                                             clarification_questions_open=False, lots=lots)
+
+        with self.app.test_client():
+            self.login()
 
     def test_will_404_if_brief_is_not_a_legacy_brief(self, data_api_client):
         self.brief['briefs']['publishedAt'] = '2016-12-25T12:00:00.000000Z'
@@ -1641,7 +1643,7 @@ class TestLegacyRespondToBrief(BaseApplicationTest):
 
 
 @mock.patch("app.main.views.briefs.data_api_client")
-class TestStartBriefResponseApplication(BaseApplicationTest):
+class TestStartBriefResponseApplication(BaseApplicationTest, BriefResponseTestHelpers):
     def setup_method(self, method):
         super(TestStartBriefResponseApplication, self).setup_method(method)
         self.brief = api_stubs.brief(status='live', lot_slug='digital-specialists')
@@ -1682,7 +1684,7 @@ class TestStartBriefResponseApplication(BaseApplicationTest):
         doc = html.fromstring(res.get_data(as_text=True))
         assert doc.xpath('//title')[0].text == 'Not eligible for opportunity – Digital Marketplace'
 
-    def test_start_application_contains_brief_title(self, data_api_client):
+    def test_start_application_contains_brief_title_and_breadcrumbs(self, data_api_client):
         data_api_client.get_brief.return_value = self.brief
         data_api_client.find_brief_responses.return_value = {
             'briefResponses': []
@@ -1693,6 +1695,8 @@ class TestStartBriefResponseApplication(BaseApplicationTest):
         doc = html.fromstring(res.get_data(as_text=True))
         assert doc.xpath('//h1')[0].text.strip() == "Apply for ‘I need a thing to do a thing’"
         assert doc.xpath("//input[@class='button-save']/@value")[0] == 'Start application'
+
+        self._test_breadcrumbs_on_brief_response_page(res)
 
     def test_start_page_is_viewable_and_has_start_button_if_no_existing_brief_response(
         self, data_api_client
