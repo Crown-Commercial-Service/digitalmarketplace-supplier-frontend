@@ -822,7 +822,7 @@ class TestApplyToBrief(BaseApplicationTest):
         assert doc.xpath("//*[@id='input-evidence-1']/text()")[0] == "valid evidence"
 
         assert (doc.xpath("//span[@class=\"validation-message\"]/text()")[1].strip() ==
-                'You need to answer this question.')
+                'You need to provide evidence.')
         assert not doc.xpath("//*[@id='input-evidence-2']/text()") is None
 
     def test_essential_evidence_page_replays_user_input_instead_of_existing_brief_response_data(self):
