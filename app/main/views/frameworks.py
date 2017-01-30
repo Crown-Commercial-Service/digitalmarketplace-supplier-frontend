@@ -259,6 +259,19 @@ def framework_submission_services(framework_slug, lot_slug):
     ), 200
 
 
+@main.route('/frameworks/<framework_slug>/start-declaration', methods=['GET'])
+@login_required
+def framework_start_supplier_declaration(framework_slug):
+    framework = get_framework(data_api_client, framework_slug, allowed_statuses=['open'])
+    first_page = content_loader.get_manifest(framework_slug, 'declaration').get_next_editable_section_id()
+    framework_close_date = content_loader.get_message(framework_slug, 'dates', 'framework_close_date')
+
+    return render_template("frameworks/start_declaration.html",
+                           framework=framework,
+                           first_page_of_declaration=first_page,
+                           framework_close_date=framework_close_date), 200
+
+
 @main.route('/frameworks/<framework_slug>/declaration', methods=['GET'])
 @main.route('/frameworks/<framework_slug>/declaration/<string:section_id>', methods=['GET', 'POST'])
 @login_required

@@ -6,6 +6,7 @@ try:
 except ImportError:
     from io import BytesIO as StringIO
 import mock
+import pytest
 
 from flask import session
 from lxml import html
@@ -1593,6 +1594,25 @@ class TestFrameworksDashboard(BaseApplicationTest):
                 b="Your framework agreement signature page has been sent to the Crown Commercial Service",
             )
 
+    @pytest.mark.parametrize('supplier_framework_kwargs,link_label,link_href', (
+        ({'declaration': None}, 'Make supplier declaration', '/suppliers/frameworks/g-cloud-7/start-declaration'),
+        ({}, 'Edit supplier declaration', '/suppliers/frameworks/g-cloud-7/declaration/g-cloud-7-essentials'),
+    ))
+    def test_make_or_edit_supplier_declaration_shows_correct_page(self, data_api_client, s3, supplier_framework_kwargs,
+                                                                  link_label, link_href):
+        with self.app.test_client():
+            self.login()
+
+            data_api_client.get_framework.return_value = self.framework(status='open')
+            data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
+                **supplier_framework_kwargs)
+
+            response = self.client.get('/suppliers/frameworks/g-cloud-7')
+            document = html.fromstring(response.get_data(as_text=True))
+
+            assert document.xpath("//a[normalize-space(string())=$link_label]/@href", link_label=link_label)[0] \
+                == link_href
+
 
 @mock.patch('app.main.views.frameworks.data_api_client', autospec=True)
 class TestFrameworkAgreement(BaseApplicationTest):
@@ -2098,6 +2118,22 @@ class TestFrameworkDocumentDownload(BaseApplicationTest):
             res = self.client.get('/suppliers/frameworks/g-cloud-7/files/example.pdf')
 
             assert res.status_code == 404
+
+
+@mock.patch('app.main.views.frameworks.data_api_client', autospec=True)
+class TestStartSupplierDeclaration(BaseApplicationTest):
+    def test_start_declaration_goes_to_first_questions_page(self, data_api_client):
+        with self.app.test_client():
+            self.login()
+
+            data_api_client.get_framework.return_value = self.framework(status='open')
+            data_api_client.get_supplier_framework_info.return_value = self.supplier_framework()
+
+            response = self.client.get('/suppliers/frameworks/g-cloud-7/start-declaration')
+            document = html.fromstring(response.get_data(as_text=True))
+
+            assert document.xpath("//a[normalize-space(string(.))='Start your declaration']/@href")[0] \
+                == '/suppliers/frameworks/g-cloud-7/declaration/g-cloud-7-essentials'
 
 
 @mock.patch('app.main.views.frameworks.data_api_client', autospec=True)
