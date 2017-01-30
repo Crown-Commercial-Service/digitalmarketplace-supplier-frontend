@@ -32,6 +32,11 @@ content_loader.load_manifest('g-cloud-8', 'services', 'edit_submission')
 content_loader.load_manifest('g-cloud-8', 'declaration', 'declaration')
 content_loader.load_messages('g-cloud-8', ['dates', 'urls'])
 
+content_loader.load_manifest('g-cloud-9', 'services', 'edit_service')
+content_loader.load_manifest('g-cloud-9', 'services', 'edit_submission')
+content_loader.load_manifest('g-cloud-9', 'declaration', 'declaration')
+content_loader.load_messages('g-cloud-9', ['dates', 'urls'])
+
 
 @main.after_request
 def add_cache_control(response):
