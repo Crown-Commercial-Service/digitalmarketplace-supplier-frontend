@@ -1128,6 +1128,43 @@ class BriefResponseTestHelpers():
             assert breadcrumbs[index].find('a').text_content().strip() == link[0]
             assert breadcrumbs[index].find('a').get('href').strip() == link[1]
 
+    def _get_data_from_table(self, doc, table_name):
+        class Table(object):
+            def __init__(self, doc, name):
+                self._data = []
+                self._row_index = None
+                query = doc.xpath(
+                    ''.join([
+                        '//h2[contains(normalize-space(text()), "{}")]',
+                        '/following-sibling::table[1]/tbody/tr'
+                    ]).format(table_name)
+                )
+                if len(query):
+                    for row_element in query:
+                        self._data.append(
+                            [
+                                element.find('span').text if element.find('span') is not None
+                                else '' for element in row_element.findall('td')]
+                        )
+
+            def exists(self):
+                return len(self._data) > 0
+
+            def row(self, idx):
+                self._row_index = idx
+                return self
+
+            def cell(self, idx):
+                if self._row_index is None:
+                    raise KeyError("no row selected")
+                else:
+                    try:
+                        return self._data[self._row_index][idx]
+                    except IndexError as e:
+                        raise IndexError("{}. Contents of table: {}".format(e, self._data))
+
+        return Table(doc, table_name)
+
 
 @mock.patch("app.main.views.briefs.data_api_client")
 class TestLegacyRespondToBrief(BaseApplicationTest, BriefResponseTestHelpers):
@@ -1852,7 +1889,7 @@ class TestPostStartBriefResponseApplication(BaseApplicationTest):
         assert res.status_code == 404
 
 
-class ResponseResultPageBothFlows(BaseApplicationTest):
+class ResponseResultPageBothFlows(BaseApplicationTest, BriefResponseTestHelpers):
 
     def setup_method(self, method):
         super(ResponseResultPageBothFlows, self).setup_method(method)
@@ -1965,7 +2002,12 @@ class TestResponseResultPageLegacyFlow(ResponseResultPageBothFlows):
 
         assert res.status_code == 200
         doc = html.fromstring(res.get_data(as_text=True))
-        assert len(doc.xpath('//h2[contains(normalize-space(text()), "Your essential skills and experience")]')) == 1
+
+        requirements_data = self._get_data_from_table(doc, "Your essential skills and experience")
+        assert requirements_data.exists()
+        assert requirements_data.row(0).cell(1) == "Yes"
+        assert requirements_data.row(1).cell(1) == "Yes"
+        assert requirements_data.row(2).cell(1) == "Yes"
 
     def test_nice_to_haves_shown_with_response_when_they_exist(self, data_api_client):
         brief_with_nice_to_haves = self.brief.copy()
@@ -1985,9 +2027,12 @@ class TestResponseResultPageLegacyFlow(ResponseResultPageBothFlows):
 
         assert res.status_code == 200
         doc = html.fromstring(res.get_data(as_text=True))
-        assert len(
-            doc.xpath('//h2[contains(normalize-space(text()), "Your nice-to-have skills and experience")]')
-        ) == 1
+
+        requirements_data = self._get_data_from_table(doc, "Your nice-to-have skills and experience")
+        assert requirements_data.exists()
+        assert requirements_data.row(0).cell(1) == "No"
+        assert requirements_data.row(1).cell(1) == "Yes"
+        assert requirements_data.row(2).cell(1) == "No"
 
     def test_nice_to_haves_heading_not_shown_when_there_are_none(self, data_api_client):
         self.set_framework_and_eligibility_for_api_client(data_api_client)
@@ -2083,7 +2128,7 @@ class TestResponseResultPageLegacyFlow(ResponseResultPageBothFlows):
 
 
 @mock.patch("app.main.views.briefs.data_api_client")
-class TestResponseResultPage(ResponseResultPageBothFlows):
+class TestResponseResultPage(ResponseResultPageBothFlows, BriefResponseTestHelpers):
 
     def setup_method(self, method):
         super(TestResponseResultPage, self).setup_method(method)
@@ -2174,7 +2219,15 @@ class TestResponseResultPage(ResponseResultPageBothFlows):
 
         assert res.status_code == 200
         doc = html.fromstring(res.get_data(as_text=True))
-        assert len(doc.xpath('//h2[contains(normalize-space(text()), "Your essential skills and experience")]')) == 1
+
+        requirements_data = self._get_data_from_table(doc, "Your essential skills and experience")
+        assert requirements_data.exists()
+        assert requirements_data.row(0).cell(0) == "Must one"
+        assert requirements_data.row(0).cell(1) == "Did a thing"
+        assert requirements_data.row(1).cell(0) == "Must two"
+        assert requirements_data.row(1).cell(1) == "Produced a thing"
+        assert requirements_data.row(2).cell(0) == "Must three"
+        assert requirements_data.row(2).cell(1) == "Did a thing"
 
     def test_nice_to_haves_shown_with_response_when_they_exist(self, data_api_client):
         brief_with_nice_to_haves = self.brief.copy()
@@ -2199,9 +2252,15 @@ class TestResponseResultPage(ResponseResultPageBothFlows):
 
         assert res.status_code == 200
         doc = html.fromstring(res.get_data(as_text=True))
-        assert len(
-            doc.xpath('//h2[contains(normalize-space(text()), "Your nice-to-have skills and experience")]')
-        ) == 1
+
+        requirements_data = self._get_data_from_table(doc, "Your nice-to-have skills and experience")
+        assert requirements_data.exists()
+        assert requirements_data.row(0).cell(0) == "Nice one"
+        assert requirements_data.row(0).cell(1) == "Did a thing"
+        assert requirements_data.row(1).cell(0) == "Top one"
+        assert requirements_data.row(1).cell(1) == ""
+        assert requirements_data.row(2).cell(0) == "Get sorted"
+        assert requirements_data.row(2).cell(1) == ""
 
     def test_nice_to_haves_heading_not_shown_when_there_are_none(self, data_api_client):
         self.brief["briefs"]["niceToHaveRequirements"] = []
