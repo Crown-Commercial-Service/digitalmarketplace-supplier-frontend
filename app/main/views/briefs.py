@@ -356,8 +356,17 @@ def view_response_result(brief_id):
         supplier_id=current_user.supplier_id
     )['briefResponses']
 
+    legacy_brief = True
+    if current_app.config['FEATURE_FLAGS_NEW_SUPPLIER_FLOW']:
+        legacy_brief = (
+            datetime.strptime(current_app.config['FEATURE_FLAGS_NEW_SUPPLIER_FLOW'], "%Y-%m-%d")
+            > datetime.strptime(brief['publishedAt'], DATETIME_FORMAT))
+
     if len(brief_response) == 0:
-        return redirect(url_for(".brief_response", brief_id=brief_id))
+        if legacy_brief:
+            return redirect(url_for(".brief_response", brief_id=brief_id))
+        else:
+            return redirect(url_for(".start_brief_response", brief_id=brief_id))
     elif brief_response[0].get('essentialRequirementsMet') or all(brief_response[0]['essentialRequirements']):
         result_state = 'submitted_ok'
         flash('submitted_ok', 'success')
