@@ -74,7 +74,8 @@ class Config(object):
         'SELLER_REGISTRATION': False,
         'SELLER_UPDATE': True,
         'SELLER_EDIT': True,
-        'DM_FRAMEWORK': False
+        'DM_FRAMEWORK': False,
+        'SUBMIT_REGISTRATION': True
     }
 
     # Logging
@@ -156,7 +157,8 @@ class Live(Config):
         'SELLER_REGISTRATION': False,
         'SELLER_UPDATE': True,
         'SELLER_EDIT': False,
-        'DM_FRAMEWORK': False
+        'DM_FRAMEWORK': False,
+        'SUBMIT_REGISTRATION': False
     }
 
     REACT_BUNDLE_URL = 'https://dm-frontend.apps.platform.digital.gov.au/bundle/'

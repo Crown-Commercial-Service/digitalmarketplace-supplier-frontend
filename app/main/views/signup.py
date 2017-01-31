@@ -202,7 +202,10 @@ def render_application(id, step=None, substep=None):
         'authorise_url': url_for('.authorise_application', id=id),
         'user_email': current_user.email_address
     }
-    props['options'] = {'seller_registration': feature.is_active('SELLER_REGISTRATION')}
+    props['options'] = {
+        'seller_registration': feature.is_active('SELLER_REGISTRATION'),
+        'submit_registration': feature.is_active('SUBMIT_REGISTRATION')
+    }
 
     rendered_component = render_component('bundles/SellerRegistration/ApplicantSignupWidget.js', props)
 
