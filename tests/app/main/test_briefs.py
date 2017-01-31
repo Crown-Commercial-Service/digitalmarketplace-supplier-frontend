@@ -1906,6 +1906,28 @@ class ResponseResultPageBothFlows(BaseApplicationTest, BriefResponseTestHelpers)
         data_api_client.get_framework.return_value = self.framework
         data_api_client.is_supplier_eligible_for_brief.return_value = True
 
+    def test_supplier_details_shown(self, data_api_client):
+        self.brief_responses['briefResponses'][0]['dayRate'] = "300"
+        self.brief_responses['briefResponses'][0]['availability'] = "02/02/2017"
+        self.brief_responses['briefResponses'][0]['respondToEmailAddress'] = "contact@big.com"
+
+        self.set_framework_and_eligibility_for_api_client(data_api_client)
+        data_api_client.get_brief.return_value = self.brief
+        data_api_client.find_brief_responses.return_value = self.brief_responses
+        res = self.client.get('/suppliers/opportunities/1234/responses/result')
+
+        assert res.status_code == 200
+        doc = html.fromstring(res.get_data(as_text=True))
+
+        requirements_data = self._get_data_from_table(doc, "Your details")
+        assert requirements_data.exists()
+        assert requirements_data.row(0).cell(0) == "Day rate"
+        assert requirements_data.row(0).cell(1) == "£300"
+        assert requirements_data.row(1).cell(0) == "Earliest start date"
+        assert requirements_data.row(1).cell(1) == "02/02/2017"
+        assert requirements_data.row(2).cell(0) == "Email address"
+        assert requirements_data.row(2).cell(1) == "contact@big.com"
+
 
 @mock.patch("app.main.views.briefs.data_api_client")
 class TestResponseResultPageLegacyFlow(ResponseResultPageBothFlows):
@@ -2300,16 +2322,6 @@ class TestResponseResultPage(ResponseResultPageBothFlows, BriefResponseTestHelpe
                 '/tr/th[contains(normalize-space(text()), "Evidence")]'  # noqa
             ])
         )) == 1
-
-    def test_supplier_details_shown(self, data_api_client):
-        self.set_framework_and_eligibility_for_api_client(data_api_client)
-        data_api_client.get_brief.return_value = self.brief
-        data_api_client.find_brief_responses.return_value = self.brief_responses
-        res = self.client.get('/suppliers/opportunities/1234/responses/result')
-
-        assert res.status_code == 200
-        doc = html.fromstring(res.get_data(as_text=True))
-        assert len(doc.xpath('//h2[contains(normalize-space(text()), "Your details")]')) == 1
 
     def test_evaluation_methods_load_default_value(self, data_api_client):
         no_extra_eval_brief = self.brief.copy()
