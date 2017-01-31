@@ -7,6 +7,7 @@ from dmapiclient.audit import AuditTypes
 from dmutils.email import MandrillException
 from ..helpers import BaseApplicationTest, FakeMail
 from lxml import html
+from datetime import datetime, timedelta
 
 
 brief_form_submission = {
@@ -1864,14 +1865,9 @@ class ResponseResultPageBothFlows(BaseApplicationTest):
         with self.app.test_client():
             self.login()
 
-    def test_view_response_result_not_submitted_redirect_to_submit_page(self, data_api_client):
-        data_api_client.get_brief.return_value = self.brief
+    def set_framework_and_eligibility_for_api_client(self, data_api_client):
+        data_api_client.get_framework.return_value = self.framework
         data_api_client.is_supplier_eligible_for_brief.return_value = True
-        data_api_client.find_brief_responses.return_value = {"briefResponses": []}
-        res = self.client.get('/suppliers/opportunities/1234/responses/result')
-
-        assert res.status_code == 302
-        assert res.location == 'http://localhost/suppliers/opportunities/1234/responses/create'
 
 
 @mock.patch("app.main.views.briefs.data_api_client")
@@ -1879,6 +1875,15 @@ class TestResponseResultPageLegacyFlow(ResponseResultPageBothFlows):
 
     def setup_method(self, method):
         super(TestResponseResultPageLegacyFlow, self).setup_method(method)
+
+    def test_view_response_result_not_submitted_redirect_to_submit_page(self, data_api_client):
+        self.set_framework_and_eligibility_for_api_client(data_api_client)
+        data_api_client.get_brief.return_value = self.brief
+        data_api_client.find_brief_responses.return_value = {"briefResponses": []}
+        res = self.client.get('/suppliers/opportunities/1234/responses/result')
+
+        assert res.status_code == 302
+        assert res.location == 'http://localhost/suppliers/opportunities/1234/responses/create'
 
     def test_view_response_result_page_escapes_essential_and_nice_to_have_requirements(self, data_api_client):
         self.brief['briefs']['essentialRequirements'] = [
@@ -1890,9 +1895,8 @@ class TestResponseResultPageLegacyFlow(ResponseResultPageBothFlows):
             '**n2h two with markdown**'
         ]
 
+        self.set_framework_and_eligibility_for_api_client(data_api_client)
         data_api_client.get_brief.return_value = self.brief
-        data_api_client.get_framework.return_value = self.framework
-        data_api_client.is_supplier_eligible_for_brief.return_value = True
         data_api_client.find_brief_responses.return_value = {
             "briefResponses": [
                 {
@@ -1915,44 +1919,29 @@ class TestResponseResultPageLegacyFlow(ResponseResultPageBothFlows):
         assert "**n2h two with markdown**" in data
         assert "<strong>n2h two with markdown</strong>" not in data
 
-    def test_view_response_result_submitted_ok(self, data_api_client):
-        data_api_client.get_brief.return_value = self.brief
-        data_api_client.get_framework.return_value = self.framework
-        data_api_client.is_supplier_eligible_for_brief.return_value = True
+    def test_view_response_result_submitted_ok_if_live_or_closed(self, data_api_client):
+        self.set_framework_and_eligibility_for_api_client(data_api_client)
         data_api_client.find_brief_responses.return_value = {
             "briefResponses": [
                 {"essentialRequirements": [True, True, True]}
             ]
         }
-        res = self.client.get('/suppliers/opportunities/1234/responses/result')
+        brief_copy = self.brief.copy()
 
-        assert res.status_code == 200
-        doc = html.fromstring(res.get_data(as_text=True))
-        assert doc.xpath('//p[contains(@class, "banner-message")]')[0].text.strip() == \
-            "Your application for ‘I need a thing to do a thing’ has been submitted."
+        for status in ('live', 'closed'):
+            brief_copy['briefs']['status'] = status
+            data_api_client.get_brief.return_value = brief_copy
 
-    def test_view_response_result_submitted_ok_for_closed_brief(self, data_api_client):
-        closed_brief = self.brief.copy()
-        closed_brief['briefs']['status'] = 'closed'
-        data_api_client.get_brief.return_value = closed_brief
-        data_api_client.get_framework.return_value = self.framework
-        data_api_client.is_supplier_eligible_for_brief.return_value = True
-        data_api_client.find_brief_responses.return_value = {
-            "briefResponses": [
-                {"essentialRequirements": [True, True, True]}
-            ]
-        }
-        res = self.client.get('/suppliers/opportunities/1234/responses/result')
+            res = self.client.get('/suppliers/opportunities/1234/responses/result')
 
-        assert res.status_code == 200
-        doc = html.fromstring(res.get_data(as_text=True))
-        assert doc.xpath('//p[contains(@class, "banner-message")]')[0].text.strip() == \
-            "Your application for ‘I need a thing to do a thing’ has been submitted."
+            assert res.status_code == 200
+            doc = html.fromstring(res.get_data(as_text=True))
+            assert doc.xpath('//p[contains(@class, "banner-message")]')[0].text.strip() == \
+                "Your application for ‘I need a thing to do a thing’ has been submitted."
 
     def test_view_response_result_submitted_unsuccessful(self, data_api_client):
+        self.set_framework_and_eligibility_for_api_client(data_api_client)
         data_api_client.get_brief.return_value = self.brief
-        data_api_client.get_framework.return_value = self.framework
-        data_api_client.is_supplier_eligible_for_brief.return_value = True
         data_api_client.find_brief_responses.return_value = {
             "briefResponses": [
                 {"essentialRequirements": [True, False, True]}
@@ -1965,9 +1954,8 @@ class TestResponseResultPageLegacyFlow(ResponseResultPageBothFlows):
         assert doc.xpath('//h1')[0].text.strip() == "You don’t meet all the essential requirements"
 
     def test_essential_skills_shown_with_response(self, data_api_client):
+        self.set_framework_and_eligibility_for_api_client(data_api_client)
         data_api_client.get_brief.return_value = self.brief
-        data_api_client.get_framework.return_value = self.framework
-        data_api_client.is_supplier_eligible_for_brief.return_value = True
         data_api_client.find_brief_responses.return_value = {
             "briefResponses": [
                 {"essentialRequirements": [True, True, True]}
@@ -1982,9 +1970,9 @@ class TestResponseResultPageLegacyFlow(ResponseResultPageBothFlows):
     def test_nice_to_haves_shown_with_response_when_they_exist(self, data_api_client):
         brief_with_nice_to_haves = self.brief.copy()
         brief_with_nice_to_haves['briefs']['niceToHaveRequirements'] = ['Nice one', 'Top one', 'Get sorted']
+
+        self.set_framework_and_eligibility_for_api_client(data_api_client)
         data_api_client.get_brief.return_value = brief_with_nice_to_haves
-        data_api_client.get_framework.return_value = self.framework
-        data_api_client.is_supplier_eligible_for_brief.return_value = True
         data_api_client.find_brief_responses.return_value = {
             "briefResponses": [
                 {
@@ -2002,9 +1990,8 @@ class TestResponseResultPageLegacyFlow(ResponseResultPageBothFlows):
         ) == 1
 
     def test_nice_to_haves_heading_not_shown_when_there_are_none(self, data_api_client):
+        self.set_framework_and_eligibility_for_api_client(data_api_client)
         data_api_client.get_brief.return_value = self.brief
-        data_api_client.get_framework.return_value = self.framework
-        data_api_client.is_supplier_eligible_for_brief.return_value = True
         data_api_client.find_brief_responses.return_value = {
             "briefResponses": [
                 {"essentialRequirements": [True, True, True]}
@@ -2019,9 +2006,8 @@ class TestResponseResultPageLegacyFlow(ResponseResultPageBothFlows):
         ) == 0
 
     def test_supplier_details_shown(self, data_api_client):
+        self.set_framework_and_eligibility_for_api_client(data_api_client)
         data_api_client.get_brief.return_value = self.brief
-        data_api_client.get_framework.return_value = self.framework
-        data_api_client.is_supplier_eligible_for_brief.return_value = True
         data_api_client.find_brief_responses.return_value = {
             "briefResponses": [
                 {"essentialRequirements": [True, True, True]}
@@ -2036,9 +2022,9 @@ class TestResponseResultPageLegacyFlow(ResponseResultPageBothFlows):
     def test_budget_message_shown_if_budget_is_set_for_specialists(self, data_api_client):
         brief_with_budget_range = self.brief.copy()
         brief_with_budget_range['briefs']['budgetRange'] = 'Up to £200 per day'
+
+        self.set_framework_and_eligibility_for_api_client(data_api_client)
         data_api_client.get_brief.return_value = brief_with_budget_range
-        data_api_client.get_framework.return_value = self.framework
-        data_api_client.is_supplier_eligible_for_brief.return_value = True
         data_api_client.find_brief_responses.return_value = {
             "briefResponses": [
                 {"essentialRequirements": [True, True, True]}
@@ -2050,9 +2036,8 @@ class TestResponseResultPageLegacyFlow(ResponseResultPageBothFlows):
         assert len(doc.xpath('//li[contains(normalize-space(text()), "your day rate exceeds their budget")]')) == 1
 
     def test_budget_message_not_shown_if_budget_is_not_set_for_specialists(self, data_api_client):
+        self.set_framework_and_eligibility_for_api_client(data_api_client)
         data_api_client.get_brief.return_value = self.brief
-        data_api_client.get_framework.return_value = self.framework
-        data_api_client.is_supplier_eligible_for_brief.return_value = True
         data_api_client.find_brief_responses.return_value = {
             "briefResponses": [
                 {"essentialRequirements": [True, True, True]}
@@ -2067,9 +2052,9 @@ class TestResponseResultPageLegacyFlow(ResponseResultPageBothFlows):
     def test_evaluation_methods_load_default_value(self, data_api_client):
         no_extra_eval_brief = self.brief.copy()
         no_extra_eval_brief['briefs'].pop('evaluationType')
+
+        self.set_framework_and_eligibility_for_api_client(data_api_client)
         data_api_client.get_brief.return_value = no_extra_eval_brief
-        data_api_client.get_framework.return_value = self.framework
-        data_api_client.is_supplier_eligible_for_brief.return_value = True
         data_api_client.find_brief_responses.return_value = {
             "briefResponses": [
                 {"essentialRequirements": [True, True, True]}
@@ -2082,9 +2067,8 @@ class TestResponseResultPageLegacyFlow(ResponseResultPageBothFlows):
         assert len(doc.xpath('//li[contains(normalize-space(text()), "a work history")]')) == 1
 
     def test_evaluation_methods_shown_with_a_or_an(self, data_api_client):
+        self.set_framework_and_eligibility_for_api_client(data_api_client)
         data_api_client.get_brief.return_value = self.brief
-        data_api_client.get_framework.return_value = self.framework
-        data_api_client.is_supplier_eligible_for_brief.return_value = True
         data_api_client.find_brief_responses.return_value = {
             "briefResponses": [
                 {"essentialRequirements": [True, True, True]}
@@ -2104,7 +2088,7 @@ class TestResponseResultPage(ResponseResultPageBothFlows):
     def setup_method(self, method):
         super(TestResponseResultPage, self).setup_method(method)
         self.brief['briefs']['niceToHaveRequirements'] = []
-        self.brief['briefs']['dayRate'] = []
+        self.brief['briefs']['dayRate'] = '300'
         self.brief_responses = {
             'briefResponses': [
                 {
@@ -2117,6 +2101,19 @@ class TestResponseResultPage(ResponseResultPageBothFlows):
                 }
             ]
         }
+
+    def test_view_response_result_not_submitted_redirect_to_start_page(self, data_api_client):
+        # the new flow has a different start page and the redirection logic uses the feature flag
+        self.brief['briefs']['publishedAt'] = '2016-12-25T12:00:00.000000Z'
+        self.app.config['FEATURE_FLAGS_NEW_SUPPLIER_FLOW'] = '2016-11-25'
+
+        self.set_framework_and_eligibility_for_api_client(data_api_client)
+        data_api_client.get_brief.return_value = self.brief
+        data_api_client.find_brief_responses.return_value = {"briefResponses": []}
+        res = self.client.get('/suppliers/opportunities/1234/responses/result')
+
+        assert res.status_code == 302
+        assert res.location == 'http://localhost/suppliers/opportunities/1234/responses/start'
 
     def test_view_response_result_page_escapes_essential_and_nice_to_have_requirements(self, data_api_client):
         self.brief['briefs']['essentialRequirements'] = [
@@ -2137,9 +2134,8 @@ class TestResponseResultPage(ResponseResultPageBothFlows):
             }
         ]
 
+        self.set_framework_and_eligibility_for_api_client(data_api_client)
         data_api_client.get_brief.return_value = self.brief
-        data_api_client.get_framework.return_value = self.framework
-        data_api_client.is_supplier_eligible_for_brief.return_value = True
         data_api_client.find_brief_responses.return_value = self.brief_responses
 
         res = self.client.get('/suppliers/opportunities/1234/responses/result')
@@ -2155,36 +2151,24 @@ class TestResponseResultPage(ResponseResultPageBothFlows):
         assert "**n2h two with markdown**" in data
         assert "<strong>n2h two with markdown</strong>" not in data
 
-    def test_view_response_result_submitted_ok(self, data_api_client):
+    def test_view_response_result_submitted_ok_if_status_is_live_or_closed(self, data_api_client):
+        self.set_framework_and_eligibility_for_api_client(data_api_client)
         data_api_client.get_brief.return_value = self.brief
-        data_api_client.get_framework.return_value = self.framework
-        data_api_client.is_supplier_eligible_for_brief.return_value = True
         data_api_client.find_brief_responses.return_value = self.brief_responses
-        res = self.client.get('/suppliers/opportunities/1234/responses/result')
+        brief_copy = self.brief.copy()
 
-        assert res.status_code == 200
-        doc = html.fromstring(res.get_data(as_text=True))
-        assert doc.xpath('//p[contains(@class, "banner-message")]')[0].text.strip() == \
-            "Your application for ‘I need a thing to do a thing’ has been submitted."
+        for status in ('live', 'closed'):
+            brief_copy['briefs']['status'] = status
+            res = self.client.get('/suppliers/opportunities/1234/responses/result')
 
-    def test_view_response_result_submitted_ok_for_closed_brief(self, data_api_client):
-        closed_brief = self.brief.copy()
-        closed_brief['briefs']['status'] = 'closed'
-        data_api_client.get_brief.return_value = closed_brief
-        data_api_client.get_framework.return_value = self.framework
-        data_api_client.is_supplier_eligible_for_brief.return_value = True
-        data_api_client.find_brief_responses.return_value = self.brief_responses
-        res = self.client.get('/suppliers/opportunities/1234/responses/result')
-
-        assert res.status_code == 200
-        doc = html.fromstring(res.get_data(as_text=True))
-        assert doc.xpath('//p[contains(@class, "banner-message")]')[0].text.strip() == \
-            "Your application for ‘I need a thing to do a thing’ has been submitted."
+            assert res.status_code == 200
+            doc = html.fromstring(res.get_data(as_text=True))
+            assert doc.xpath('//p[contains(@class, "banner-message")]')[0].text.strip() == \
+                "Your application for ‘I need a thing to do a thing’ has been submitted."
 
     def test_essential_skills_shown_with_response(self, data_api_client):
+        self.set_framework_and_eligibility_for_api_client(data_api_client)
         data_api_client.get_brief.return_value = self.brief
-        data_api_client.get_framework.return_value = self.framework
-        data_api_client.is_supplier_eligible_for_brief.return_value = True
         data_api_client.find_brief_responses.return_value = self.brief_responses
         res = self.client.get('/suppliers/opportunities/1234/responses/result')
 
@@ -2208,9 +2192,8 @@ class TestResponseResultPage(ResponseResultPageBothFlows):
             }
         ]
 
+        self.set_framework_and_eligibility_for_api_client(data_api_client)
         data_api_client.get_brief.return_value = brief_with_nice_to_haves
-        data_api_client.get_framework.return_value = self.framework
-        data_api_client.is_supplier_eligible_for_brief.return_value = True
         data_api_client.find_brief_responses.return_value = self.brief_responses
         res = self.client.get('/suppliers/opportunities/1234/responses/result')
 
@@ -2223,9 +2206,8 @@ class TestResponseResultPage(ResponseResultPageBothFlows):
     def test_nice_to_haves_heading_not_shown_when_there_are_none(self, data_api_client):
         self.brief["briefs"]["niceToHaveRequirements"] = []
 
+        self.set_framework_and_eligibility_for_api_client(data_api_client)
         data_api_client.get_brief.return_value = self.brief
-        data_api_client.get_framework.return_value = self.framework
-        data_api_client.is_supplier_eligible_for_brief.return_value = True
         data_api_client.find_brief_responses.return_value = self.brief_responses
         res = self.client.get('/suppliers/opportunities/1234/responses/result')
 
@@ -2236,9 +2218,8 @@ class TestResponseResultPage(ResponseResultPageBothFlows):
         ) == 0
 
     def test_requirement_evidence_heading_shown_for_essential_requirements(self, data_api_client):
+        self.set_framework_and_eligibility_for_api_client(data_api_client)
         data_api_client.get_brief.return_value = self.brief
-        data_api_client.get_framework.return_value = self.framework
-        data_api_client.is_supplier_eligible_for_brief.return_value = True
         data_api_client.find_brief_responses.return_value = self.brief_responses
         res = self.client.get('/suppliers/opportunities/1234/responses/result')
 
@@ -2262,9 +2243,8 @@ class TestResponseResultPage(ResponseResultPageBothFlows):
         )) == 1
 
     def test_supplier_details_shown(self, data_api_client):
+        self.set_framework_and_eligibility_for_api_client(data_api_client)
         data_api_client.get_brief.return_value = self.brief
-        data_api_client.get_framework.return_value = self.framework
-        data_api_client.is_supplier_eligible_for_brief.return_value = True
         data_api_client.find_brief_responses.return_value = self.brief_responses
         res = self.client.get('/suppliers/opportunities/1234/responses/result')
 
@@ -2275,9 +2255,9 @@ class TestResponseResultPage(ResponseResultPageBothFlows):
     def test_evaluation_methods_load_default_value(self, data_api_client):
         no_extra_eval_brief = self.brief.copy()
         no_extra_eval_brief['briefs'].pop('evaluationType')
+
+        self.set_framework_and_eligibility_for_api_client(data_api_client)
         data_api_client.get_brief.return_value = no_extra_eval_brief
-        data_api_client.get_framework.return_value = self.framework
-        data_api_client.is_supplier_eligible_for_brief.return_value = True
         data_api_client.find_brief_responses.return_value = self.brief_responses
         res = self.client.get('/suppliers/opportunities/1234/responses/result')
 
@@ -2286,9 +2266,8 @@ class TestResponseResultPage(ResponseResultPageBothFlows):
         assert len(doc.xpath('//li[contains(normalize-space(text()), "a work history")]')) == 1
 
     def test_evaluation_methods_shown_with_a_or_an(self, data_api_client):
+        self.set_framework_and_eligibility_for_api_client(data_api_client)
         data_api_client.get_brief.return_value = self.brief
-        data_api_client.get_framework.return_value = self.framework
-        data_api_client.is_supplier_eligible_for_brief.return_value = True
         data_api_client.find_brief_responses.return_value = self.brief_responses
         res = self.client.get('/suppliers/opportunities/1234/responses/result')
 
