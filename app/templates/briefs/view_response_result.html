@@ -27,25 +27,34 @@
 {% block main_content %}
 
 {% with messages = get_flashed_messages(with_categories=True) %}
-  {% for category, message in messages %}
+  {% if ("error", "already_applied") in messages %}
     {%
     with
-    message = {
-      "already_applied": "You’ve already applied for ‘{}’ so you can’t apply again".format(brief.title) if result_state == "submitted_ok"
-                    else "You already applied for ‘{}’ but you didn’t meet the essential requirements".format(brief.title),
-      "submitted_ok": "Your application for ‘{}’ has been submitted.".format(brief.title)
-    }[message] or message,
-    type = "destructive" if category == "error" else "success"
+    message = "You’ve already applied so you can’t apply again".format(brief.title) if result_state == "submitted_ok"
+                    else "You already applied but you didn’t meet the essential requirements".format(brief.title),
+    type = "destructive"
     %}
-      {% include "toolkit/notification-banner.html" %}
+    {% include "toolkit/notification-banner.html" %}
     {% endwith %}
-  {% endfor %}
+  {% else %}
+    {% for category, message in messages %}
+      {%
+      with
+      message = {
+        "submitted_ok": "Your application has been submitted.".format(brief.title)
+      }[message] or message,
+      type = "destructive" if category == "error" else "success"
+      %}
+        {% include "toolkit/notification-banner.html" %}
+      {% endwith %}
+    {% endfor %}
+  {% endif %}
 {% endwith %}
 
 <div class="grid-row">
   <div class="column-two-thirds">
     {% with
-      heading = "You don’t meet all the essential requirements" if result_state == "submitted_unsuccessful" else "Your application",
+      heading = "Your application for ‘{}’".format(brief.title),
       smaller = true
       %}
         {% include 'toolkit/page-heading.html' %}

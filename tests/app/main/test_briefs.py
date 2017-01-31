@@ -1974,7 +1974,7 @@ class TestResponseResultPageLegacyFlow(ResponseResultPageBothFlows):
             assert res.status_code == 200
             doc = html.fromstring(res.get_data(as_text=True))
             assert doc.xpath('//p[contains(@class, "banner-message")]')[0].text.strip() == \
-                "Your application for ‘I need a thing to do a thing’ has been submitted."
+                "Your application has been submitted."
 
     def test_view_response_result_submitted_unsuccessful(self, data_api_client):
         self.set_framework_and_eligibility_for_api_client(data_api_client)
@@ -1988,7 +1988,7 @@ class TestResponseResultPageLegacyFlow(ResponseResultPageBothFlows):
 
         assert res.status_code == 200
         doc = html.fromstring(res.get_data(as_text=True))
-        assert doc.xpath('//h1')[0].text.strip() == "You don’t meet all the essential requirements"
+        assert doc.xpath('//h1')[0].text.strip() == "Your application for ‘I need a thing to do a thing’"
 
     def test_essential_skills_shown_with_response(self, data_api_client):
         self.set_framework_and_eligibility_for_api_client(data_api_client)
@@ -2209,7 +2209,7 @@ class TestResponseResultPage(ResponseResultPageBothFlows, BriefResponseTestHelpe
             assert res.status_code == 200
             doc = html.fromstring(res.get_data(as_text=True))
             assert doc.xpath('//p[contains(@class, "banner-message")]')[0].text.strip() == \
-                "Your application for ‘I need a thing to do a thing’ has been submitted."
+                "Your application has been submitted."
 
     def test_essential_skills_shown_with_response(self, data_api_client):
         self.set_framework_and_eligibility_for_api_client(data_api_client)
