@@ -372,6 +372,7 @@ def view_response_result(brief_id):
         flash('submitted_ok', 'success')
     else:
         result_state = 'submitted_unsuccessful'
+        flash('submitted_unsuccessful', 'error')
 
     brief_response = brief_response[0]
     framework, lot = get_framework_and_lot(

@@ -30,8 +30,8 @@
   {% if ("error", "already_applied") in messages %}
     {%
     with
-    message = "You’ve already applied so you can’t apply again".format(brief.title) if result_state == "submitted_ok"
-                    else "You already applied but you didn’t meet the essential requirements".format(brief.title),
+    message = "You’ve already applied so you can’t apply again.".format(brief.title) if result_state == "submitted_ok"
+                    else "You already applied but you didn’t meet the essential requirements.".format(brief.title),
     type = "destructive"
     %}
     {% include "toolkit/notification-banner.html" %}
@@ -41,7 +41,8 @@
       {%
       with
       message = {
-        "submitted_ok": "Your application has been submitted.".format(brief.title)
+        "submitted_ok": "Your application has been submitted.".format(brief.title),
+        "submitted_unsuccessful": "You don’t meet all the essential requirements.".format(brief.title)
       }[message] or message,
       type = "destructive" if category == "error" else "success"
       %}

@@ -1906,6 +1906,30 @@ class ResponseResultPageBothFlows(BaseApplicationTest, BriefResponseTestHelpers)
         data_api_client.get_framework.return_value = self.framework
         data_api_client.is_supplier_eligible_for_brief.return_value = True
 
+    def test_evaluation_methods_load_default_value(self, data_api_client):
+        no_extra_eval_brief = self.brief.copy()
+        no_extra_eval_brief['briefs'].pop('evaluationType')
+
+        self.set_framework_and_eligibility_for_api_client(data_api_client)
+        data_api_client.get_brief.return_value = no_extra_eval_brief
+        data_api_client.find_brief_responses.return_value = self.brief_responses
+        res = self.client.get('/suppliers/opportunities/1234/responses/result')
+
+        assert res.status_code == 200
+        doc = html.fromstring(res.get_data(as_text=True))
+        assert len(doc.xpath('//li[contains(normalize-space(text()), "a work history")]')) == 1
+
+    def test_evaluation_methods_shown_with_a_or_an(self, data_api_client):
+        self.set_framework_and_eligibility_for_api_client(data_api_client)
+        data_api_client.get_brief.return_value = self.brief
+        data_api_client.find_brief_responses.return_value = self.brief_responses
+        res = self.client.get('/suppliers/opportunities/1234/responses/result')
+
+        assert res.status_code == 200
+        doc = html.fromstring(res.get_data(as_text=True))
+        assert len(doc.xpath('//li[contains(normalize-space(text()), "a work history")]')) == 1
+        assert len(doc.xpath('//li[contains(normalize-space(text()), "an interview")]')) == 1
+
 
 @mock.patch("app.main.views.briefs.data_api_client")
 class TestResponseResultPageLegacyFlow(ResponseResultPageBothFlows):
@@ -1984,6 +2008,8 @@ class TestResponseResultPageLegacyFlow(ResponseResultPageBothFlows):
         assert res.status_code == 200
         doc = html.fromstring(res.get_data(as_text=True))
         assert doc.xpath('//h1')[0].text.strip() == "Your application for ‘I need a thing to do a thing’"
+        assert doc.xpath('//p[contains(@class, "banner-message")]')[0].text.strip() == \
+            "You don’t meet all the essential requirements."
 
     def test_essential_skills_shown_with_response(self, data_api_client):
         self.set_framework_and_eligibility_for_api_client(data_api_client)
@@ -2074,30 +2100,6 @@ class TestResponseResultPageLegacyFlow(ResponseResultPageBothFlows):
         assert res.status_code == 200
         doc = html.fromstring(res.get_data(as_text=True))
         assert len(doc.xpath('//li[contains(normalize-space(text()), "your day rate exceeds their budget")]')) == 0
-
-    def test_evaluation_methods_load_default_value(self, data_api_client):
-        no_extra_eval_brief = self.brief.copy()
-        no_extra_eval_brief['briefs'].pop('evaluationType')
-
-        self.set_framework_and_eligibility_for_api_client(data_api_client)
-        data_api_client.get_brief.return_value = no_extra_eval_brief
-        data_api_client.find_brief_responses.return_value = self.brief_responses
-        res = self.client.get('/suppliers/opportunities/1234/responses/result')
-
-        assert res.status_code == 200
-        doc = html.fromstring(res.get_data(as_text=True))
-        assert len(doc.xpath('//li[contains(normalize-space(text()), "a work history")]')) == 1
-
-    def test_evaluation_methods_shown_with_a_or_an(self, data_api_client):
-        self.set_framework_and_eligibility_for_api_client(data_api_client)
-        data_api_client.get_brief.return_value = self.brief
-        data_api_client.find_brief_responses.return_value = self.brief_responses
-        res = self.client.get('/suppliers/opportunities/1234/responses/result')
-
-        assert res.status_code == 200
-        doc = html.fromstring(res.get_data(as_text=True))
-        assert len(doc.xpath('//li[contains(normalize-space(text()), "a work history")]')) == 1
-        assert len(doc.xpath('//li[contains(normalize-space(text()), "an interview")]')) == 1
 
 
 @mock.patch("app.main.views.briefs.data_api_client")
@@ -2295,27 +2297,3 @@ class TestResponseResultPage(ResponseResultPageBothFlows, BriefResponseTestHelpe
         assert requirements_data.row(1).cell(1) == "02/02/2017"
         assert requirements_data.row(2).cell(0) == "Email address"
         assert requirements_data.row(2).cell(1) == "contact@big.com"
-
-    def test_evaluation_methods_load_default_value(self, data_api_client):
-        no_extra_eval_brief = self.brief.copy()
-        no_extra_eval_brief['briefs'].pop('evaluationType')
-
-        self.set_framework_and_eligibility_for_api_client(data_api_client)
-        data_api_client.get_brief.return_value = no_extra_eval_brief
-        data_api_client.find_brief_responses.return_value = self.brief_responses
-        res = self.client.get('/suppliers/opportunities/1234/responses/result')
-
-        assert res.status_code == 200
-        doc = html.fromstring(res.get_data(as_text=True))
-        assert len(doc.xpath('//li[contains(normalize-space(text()), "a work history")]')) == 1
-
-    def test_evaluation_methods_shown_with_a_or_an(self, data_api_client):
-        self.set_framework_and_eligibility_for_api_client(data_api_client)
-        data_api_client.get_brief.return_value = self.brief
-        data_api_client.find_brief_responses.return_value = self.brief_responses
-        res = self.client.get('/suppliers/opportunities/1234/responses/result')
-
-        assert res.status_code == 200
-        doc = html.fromstring(res.get_data(as_text=True))
-        assert len(doc.xpath('//li[contains(normalize-space(text()), "a work history")]')) == 1
-        assert len(doc.xpath('//li[contains(normalize-space(text()), "an interview")]')) == 1
