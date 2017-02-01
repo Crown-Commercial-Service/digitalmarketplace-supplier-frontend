@@ -1906,6 +1906,25 @@ class ResponseResultPageBothFlows(BaseApplicationTest, BriefResponseTestHelpers)
         data_api_client.get_framework.return_value = self.framework
         data_api_client.is_supplier_eligible_for_brief.return_value = True
 
+    def test_already_applied_flash_message_appears_in_result_page(self, data_api_client):
+        # Requests to either the start page of a response or any of its question pages
+        # will redirect to the results page with 'already applied' a flash message.
+        # Test this message is rendered when present.
+
+        self.set_framework_and_eligibility_for_api_client(data_api_client)
+        data_api_client.get_brief.return_value = self.brief
+        data_api_client.find_brief_responses.return_value = self.brief_responses
+        with self.client.session_transaction() as session:
+            session['_flashes'] = [(u'error', u'already_applied')]
+
+        res = self.client.get('/suppliers/opportunities/1234/responses/result')
+
+        assert res.status_code == 200
+        doc = html.fromstring(res.get_data(as_text=True))
+        assert doc.xpath('//h1')[0].text.strip() == "Your application for ‘I need a thing to do a thing’"
+        assert doc.xpath('//p[contains(@class, "banner-message")]')[0].text.strip() == \
+            "You’ve already applied so you can’t apply again."
+
     def test_evaluation_methods_load_default_value(self, data_api_client):
         no_extra_eval_brief = self.brief.copy()
         no_extra_eval_brief['briefs'].pop('evaluationType')
@@ -2010,6 +2029,27 @@ class TestResponseResultPageLegacyFlow(ResponseResultPageBothFlows):
         assert doc.xpath('//h1')[0].text.strip() == "Your application for ‘I need a thing to do a thing’"
         assert doc.xpath('//p[contains(@class, "banner-message")]')[0].text.strip() == \
             "You don’t meet all the essential requirements."
+
+    def test_correct_already_applied_flash_message_appears_in_result_page_if_no_essential_requirements(self, data_api_client):  # noqa
+        # Requests to either the start page of a response or any of its question pages
+        # will redirect to the results page with 'already applied' a flash message.
+        # Test this message is rendered when present.
+
+        self.brief_responses['briefResponses'][0]['essentialRequirements'][1] = False
+
+        self.set_framework_and_eligibility_for_api_client(data_api_client)
+        data_api_client.get_brief.return_value = self.brief
+        data_api_client.find_brief_responses.return_value = self.brief_responses
+        with self.client.session_transaction() as session:
+            session['_flashes'] = [(u'error', u'already_applied')]
+
+        res = self.client.get('/suppliers/opportunities/1234/responses/result')
+
+        assert res.status_code == 200
+        doc = html.fromstring(res.get_data(as_text=True))
+        assert doc.xpath('//h1')[0].text.strip() == "Your application for ‘I need a thing to do a thing’"
+        assert doc.xpath('//p[contains(@class, "banner-message")]')[0].text.strip() == \
+            "You already applied but you didn’t meet the essential requirements."
 
     def test_essential_skills_shown_with_response(self, data_api_client):
         self.set_framework_and_eligibility_for_api_client(data_api_client)
@@ -2297,3 +2337,20 @@ class TestResponseResultPage(ResponseResultPageBothFlows, BriefResponseTestHelpe
         assert requirements_data.row(1).cell(1) == "02/02/2017"
         assert requirements_data.row(2).cell(0) == "Email address"
         assert requirements_data.row(2).cell(1) == "contact@big.com"
+
+    def test_visit_to_start_page_redirects_to_result_page(self, data_api_client):
+        self.set_framework_and_eligibility_for_api_client(data_api_client)
+        data_api_client.get_brief.return_value = self.brief
+        data_api_client.find_brief_responses.return_value = self.brief_responses
+        res = self.client.get('/suppliers/opportunities/1234/responses/create')
+
+        assert res.status_code == 302
+        assert res.location == 'http://localhost/suppliers/opportunities/1234/responses/result'
+
+        res = self.client.get(res.location)
+
+        assert res.status_code == 200
+        doc = html.fromstring(res.get_data(as_text=True))
+        assert doc.xpath('//h1')[0].text.strip() == "Your application for ‘I need a thing to do a thing’"
+        assert doc.xpath('//p[contains(@class, "banner-message")]')[0].text.strip() == \
+            "You’ve already applied so you can’t apply again."
