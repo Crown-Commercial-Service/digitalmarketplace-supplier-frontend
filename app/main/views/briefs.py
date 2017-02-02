@@ -356,19 +356,35 @@ def view_response_result(brief_id):
         supplier_id=current_user.supplier_id
     )['briefResponses']
 
+    legacy_brief = True
+    if current_app.config['FEATURE_FLAGS_NEW_SUPPLIER_FLOW']:
+        legacy_brief = (
+            datetime.strptime(current_app.config['FEATURE_FLAGS_NEW_SUPPLIER_FLOW'], "%Y-%m-%d")
+            > datetime.strptime(brief['publishedAt'], DATETIME_FORMAT))
+
     if len(brief_response) == 0:
-        return redirect(url_for(".brief_response", brief_id=brief_id))
+        if legacy_brief:
+            return redirect(url_for(".brief_response", brief_id=brief_id))
+        else:
+            return redirect(url_for(".start_brief_response", brief_id=brief_id))
     elif brief_response[0].get('essentialRequirementsMet') or all(brief_response[0]['essentialRequirements']):
         result_state = 'submitted_ok'
+        flash('submitted_ok', 'success')
     else:
         result_state = 'submitted_unsuccessful'
+        flash('submitted_unsuccessful', 'error')
 
     brief_response = brief_response[0]
     framework, lot = get_framework_and_lot(
         data_api_client, brief['frameworkSlug'], brief['lotSlug'], allowed_statuses=['live'])
 
+    if brief_response.get('essentialRequirementsMet'):
+        brief_response_display_manifest = 'display_brief_response'
+    else:
+        brief_response_display_manifest = 'legacy_display_brief_response'
+
     response_content = content_loader.get_manifest(
-        framework['slug'], 'legacy_display_brief_response').filter({'lot': lot['slug']})
+        framework['slug'], brief_response_display_manifest).filter({'lot': lot['slug'], 'brief': brief})
     for section in response_content:
         section.inject_brief_questions_into_boolean_list_question(brief)
 
