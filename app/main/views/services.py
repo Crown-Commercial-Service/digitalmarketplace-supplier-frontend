@@ -405,7 +405,9 @@ def edit_service_submission(framework_slug, lot_slug, service_id, section_id, qu
     """
     framework, lot = get_framework_and_lot(data_api_client, framework_slug, lot_slug, allowed_statuses=['open'])
 
-    force_return_to_summary = request.args.get('return_to_summary') or framework['framework'] == "dos"
+    force_return_to_summary = (request.args.get('return_to_summary') or
+                               framework['framework'] == "dos" or
+                               framework['framework'] == "digital-outcomes-and-specialists")
 
     try:
         draft = data_api_client.get_draft_service(service_id)['services']
