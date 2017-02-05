@@ -71,7 +71,7 @@ class Config(object):
 
     FEATURE_FLAGS = {
         'EDIT_SECTIONS': True,
-        'SELLER_REGISTRATION': False,
+        'SELLER_REGISTRATION': True,
         'SELLER_UPDATE': True,
         'SELLER_EDIT': True,
         'DM_FRAMEWORK': False,
