@@ -407,6 +407,7 @@ def edit_service_submission(framework_slug, lot_slug, service_id, section_id, qu
 
     force_return_to_summary = (request.args.get('return_to_summary') or
                                framework['framework'] == "digital-outcomes-and-specialists")
+    next_question = None
 
     try:
         draft = data_api_client.get_draft_service(service_id)['services']
@@ -422,6 +423,7 @@ def edit_service_submission(framework_slug, lot_slug, service_id, section_id, qu
     content = content_loader.get_manifest(framework_slug, 'edit_submission').filter(draft)
     section = content.get_section(section_id)
     if section and (question_slug is not None):
+        next_question = section.get_question_by_slug(section.get_next_question_slug(question_slug))
         section = section.get_question_as_section(question_slug)
 
     if section is None or not section.editable:
@@ -456,14 +458,13 @@ def edit_service_submission(framework_slug, lot_slug, service_id, section_id, qu
                 errors = section.get_error_messages(e.message)
 
         if not errors:
-            next_section = content.get_next_editable_section_id(section_id)
-
-            if next_section and request.form.get('continue_to_next_section') and not force_return_to_summary:
+            if next_question and not force_return_to_summary:
                 return redirect(url_for(".edit_service_submission",
                                         framework_slug=framework['slug'],
                                         lot_slug=draft['lotSlug'],
                                         service_id=service_id,
-                                        section_id=next_section))
+                                        section_id=section_id,
+                                        question_slug=next_question.slug))
             else:
                 return redirect(url_for(".view_service_submission",
                                         framework_slug=framework['slug'],
@@ -483,7 +484,7 @@ def edit_service_submission(framework_slug, lot_slug, service_id, section_id, qu
         "services/edit_submission_section.html",
         section=section,
         framework=framework,
-        next_section_name=get_next_section_name(content, section.id),
+        next_question=next_question,
         service_data=service_data,
         service_id=service_id,
         force_return_to_summary=force_return_to_summary,

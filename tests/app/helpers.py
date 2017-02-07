@@ -103,6 +103,22 @@ def empty_g7_draft_service():
     }
 
 
+def empty_g9_draft_service():
+    return {
+        'id': 1,
+        'supplierId': 1234,
+        'supplierName': 'supplierName',
+        'frameworkName': 'G-Cloud 9',
+        'frameworkSlug': 'g-cloud-9',
+        'lot': 'cloud-hosting',
+        'lotSlug': 'cloud-hosting',
+        'lotName': 'Cloud hosting',
+        'status': 'not-submitted',
+        'links': {},
+        'updatedAt': '2017-02-01T15:26:07.650368Z',
+    }
+
+
 class BaseApplicationTest(object):
     def setup_method(self, method):
         self.app = create_app('test')
@@ -198,16 +214,26 @@ class BaseApplicationTest(object):
             framework_agreement_version=None
     ):
         if 'g-cloud-' in slug:
-            lots = [
-                {'id': 1, 'slug': 'iaas', 'name': 'Infrastructure as a Service', 'oneServiceLimit': False,
-                 'unitSingular': 'service', 'unitPlural': 'service'},
-                {'id': 2, 'slug': 'scs', 'name': 'Specialist Cloud Services', 'oneServiceLimit': False,
-                 'unitSingular': 'service', 'unitPlural': 'service'},
-                {'id': 3, 'slug': 'paas', 'name': 'Platform as a Service', 'oneServiceLimit': False,
-                 'unitSingular': 'service', 'unitPlural': 'service'},
-                {'id': 4, 'slug': 'saas', 'name': 'Software as a Service', 'oneServiceLimit': False,
-                 'unitSingular': 'service', 'unitPlural': 'service'},
-            ]
+            if slug == 'g-cloud-9':
+                lots = [
+                    {'id': 1, 'slug': 'cloud-hosting', 'name': 'Cloud hosting', 'oneServiceLimit': False,
+                     'unitSingular': 'service', 'unitPlural': 'service'},
+                    {'id': 2, 'slug': 'cloud-software', 'name': 'Cloud software', 'oneServiceLimit': False,
+                     'unitSingular': 'service', 'unitPlural': 'service'},
+                    {'id': 3, 'slug': 'cloud-support', 'name': 'Cloud support', 'oneServiceLimit': False,
+                     'unitSingular': 'service', 'unitPlural': 'service'},
+                ]
+            else:
+                lots = [
+                    {'id': 1, 'slug': 'iaas', 'name': 'Infrastructure as a Service', 'oneServiceLimit': False,
+                     'unitSingular': 'service', 'unitPlural': 'service'},
+                    {'id': 2, 'slug': 'scs', 'name': 'Specialist Cloud Services', 'oneServiceLimit': False,
+                     'unitSingular': 'service', 'unitPlural': 'service'},
+                    {'id': 3, 'slug': 'paas', 'name': 'Platform as a Service', 'oneServiceLimit': False,
+                     'unitSingular': 'service', 'unitPlural': 'service'},
+                    {'id': 4, 'slug': 'saas', 'name': 'Software as a Service', 'oneServiceLimit': False,
+                     'unitSingular': 'service', 'unitPlural': 'service'},
+                ]
             metaframework = "g-cloud"
         elif slug == 'digital-outcomes-and-specialists':
             lots = [
