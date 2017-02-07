@@ -1,6 +1,6 @@
 {% extends "_base_page.html" %}
 
-{% block page_title %}Account Activation Email Sent - Digital Marketplace{% endblock %}
+{% block page_title %}We’ve sent an activation email - Digital Marketplace{% endblock %}
 
 {% block phase_banner %}{% endblock %}
 
@@ -8,13 +8,14 @@
 {% block main_content %}
 {%
   with
-    heading = "Account Activation Email Sent"
+    heading = "We’ve sent an activation email"
 %}
 {% include "toolkit/page-heading.html" %}
 {% endwith %}
 
-<p>Thanks for registering a seller account for the Digital Marketplace.</p>
-
-<p>An account activation email has been sent to {{ email_address }}.</p>
+<p>An email has been sent to {{  email_address }}. Click on the link in the email to activate your account. </p>
+<p>If you don’t receive the email within the next 5 minutes or so, check to see if it’s been classified as
+  spam or email us for assistance at <a href="mailto:marketplace@digital.gov.au">marketplace@digital.gov.au.</a>
+</p>
 {% endblock %}
 
