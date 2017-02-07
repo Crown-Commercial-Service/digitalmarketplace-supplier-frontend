@@ -241,12 +241,10 @@
     <span class="hint">{{ question_content.hint }}</span>
     {% endif %}
 
+    {% import "macros/toolkit_forms.html" as forms %}
+
     {% for child_question in question_content.questions %}
-      {% if child_question.type == 'list' %}
-        {{ list(child_question, service_data, errors if errors and errors[child_question.id] else {}) }}
-      {% else %}
-        {{ text(child_question, service_data, errors if errors and errors[child_question.id] else {}) }}
-      {% endif %}
+      {{ forms[child_question.type](child_question, service_data, errors if errors and errors[child_question.id] else {}) }}
     {% endfor %}
   </fieldset>
 {%- endmacro %}
