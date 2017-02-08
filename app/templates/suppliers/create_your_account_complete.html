@@ -19,17 +19,17 @@
 
   {%
     with
-      heading = "Activate your account"
+      heading = "We’ve sent an activation email"
   %}
   {% include "toolkit/page-heading.html" %}
   {% endwith %}
 
   <div class="grid-row">
     <div class="column-two-thirds">
-      <p>
-        An email has been sent to {{ email_address }}.
-        You need to click on the link in the email to activate your account.
-      </p>
+      <p>An email has been sent to {{ email_address }}. Click on the link in the email to activate your account.</p>
+
+      <p>If you don’t receive the email within the next 5 minutes, check your spam folder
+        or email us for help at <A href="mailto:marketplace@digital.gov.au"marketplace@digital.gov.au</a>.</p>
     </div>
   </div>
 
