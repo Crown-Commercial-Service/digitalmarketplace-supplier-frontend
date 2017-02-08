@@ -152,7 +152,7 @@ def create_application(token):
 
         notify_team('A new seller has started an application', notification_message)
 
-    return redirect(url_for('main.render_application', id=id, step='start'))
+    return redirect(url_for('main.render_application', id=id, step=('start' if create_app else 'submit')))
 
 
 @main.route('/application')
