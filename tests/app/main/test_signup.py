@@ -431,6 +431,20 @@ class TestApplicationPage(BaseApplicationTest):
             args, kwargs = data_api_client.req.applications().submit().post.call_args
             assert kwargs['data']['user_id'] == 234
 
+    @mock.patch("app.main.views.signup.data_api_client")
+    @mock.patch('app.main.views.signup.render_component')
+    def test_application_already_submitted(self, render_component, data_api_client):
+        render_component.return_value.get_props.return_value = {}
+        render_component.return_value.get_slug.return_value = 'slug'
+
+        with self.app.test_client():
+            self.login_as_applicant()
+            data_api_client.get_application.side_effect = get_submitted_application
+            res = self.client.post(self.expand_path('/application/submit/1'), data={'csrf_token': FakeCsrf.valid_token})
+
+            assert res.status_code == 200
+            data_api_client.req.applications().submit().post. assert_not_called()
+
     @mock.patch('app.main.views.signup.render_template')
     @mock.patch('app.main.views.signup.send_email')
     @mock.patch("app.main.views.signup.data_api_client")
