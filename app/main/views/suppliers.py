@@ -8,7 +8,8 @@ import six
 
 from dmapiclient import APIError
 from dmapiclient.audit import AuditTypes
-from dmutils.email import send_email, generate_token, MandrillException
+from dmutils.email import send_email, generate_token
+from dmutils.email.exceptions import EmailError
 from dmcontent.content_loader import ContentNotFoundError
 
 from ...main import main, content_loader
@@ -410,7 +411,7 @@ def submit_company_summary():
                 ["user-creation"]
             )
             session['email_sent_to'] = account_email_address
-        except MandrillException as e:
+        except EmailError as e:
             current_app.logger.error(
                 "suppliercreate.fail: Create user email failed to send. "
                 "error {error} supplier_id {supplier_id} email_hash {email_hash}",

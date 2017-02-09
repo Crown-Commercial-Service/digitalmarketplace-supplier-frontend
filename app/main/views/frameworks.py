@@ -9,7 +9,8 @@ import six
 
 from dmapiclient import APIError
 from dmapiclient.audit import AuditTypes
-from dmutils.email import send_email, MandrillException
+from dmutils.email import send_email
+from dmutils.email.exceptions import EmailError
 from dmcontent.formats import format_service_price
 from dmutils.formats import datetimeformat
 from dmutils import s3
@@ -58,7 +59,7 @@ def framework_dashboard(framework_slug):
                 current_app.config['CLARIFICATION_EMAIL_NAME'],
                 ['{}-application-started'.format(framework_slug)]
             )
-        except MandrillException as e:
+        except EmailError as e:
             current_app.logger.error(
                 "Application started email failed to send: {error}, supplier_id: {supplier_id}",
                 extra={'error': six.text_type(e), 'supplier_id': current_user.supplier_id}
@@ -470,7 +471,7 @@ def framework_updates_email_clarification_question(framework_slug):
             tags,
             reply_to=from_address,
         )
-    except MandrillException as e:
+    except EmailError as e:
         current_app.logger.error(
             "{framework} clarification question email failed to send. "
             "error {error} supplier_id {supplier_id} email_hash {email_hash}",
@@ -502,7 +503,7 @@ def framework_updates_email_clarification_question(framework_slug):
                 current_app.config['CLARIFICATION_EMAIL_NAME'],
                 tags
             )
-        except MandrillException as e:
+        except EmailError as e:
             current_app.logger.error(
                 "{framework} clarification question confirmation email failed to send. "
                 "error {error} supplier_id {supplier_id} email_hash {email_hash}",
@@ -641,7 +642,7 @@ def upload_framework_agreement(framework_slug):
             ['{}-framework-agreement'.format(framework_slug)],
             reply_to=current_user.email_address,
         )
-    except MandrillException as e:
+    except EmailError as e:
         current_app.logger.error(
             "Framework agreement email failed to send. "
             "error {error} supplier_id {supplier_id} email_hash {email_hash}",
@@ -839,7 +840,7 @@ def contract_review(framework_slug, agreement_id):
                     current_app.config["FRAMEWORK_AGREEMENT_RETURNED_NAME"],
                     ['{}-framework-agreement'.format(framework_slug)],
                 )
-            except MandrillException as e:
+            except EmailError as e:
                 current_app.logger.error(
                     "Framework agreement email failed to send. "
                     "error {error} supplier_id {supplier_id} email_hash {email_hash}",
@@ -938,7 +939,7 @@ def view_contract_variation(framework_slug, variation_slug):
                     current_app.config['CLARIFICATION_EMAIL_NAME'],
                     ['{}-variation-accepted'.format(framework_slug)]
                 )
-            except MandrillException as e:
+            except EmailError as e:
                 current_app.logger.error(
                     "Variation agreed email failed to send: {error}, supplier_id: {supplier_id}",
                     extra={'error': six.text_type(e), 'supplier_id': current_user.supplier_id}

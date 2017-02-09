@@ -7,7 +7,8 @@ from flask_login import login_user
 from dmapiclient import HTTPError
 from dmapiclient.audit import AuditTypes
 from dmutils.user import User
-from dmutils.email import decode_invitation_token, generate_token, send_email, MandrillException
+from dmutils.email import decode_invitation_token, generate_token, send_email
+from dmutils.email.exceptions import EmailError
 
 from .. import main
 from ..forms.auth_forms import EmailAddressForm, CreateUserForm
@@ -136,7 +137,7 @@ def send_invite_user():
                 current_app.config['INVITE_EMAIL_NAME'],
                 ["user-invite"]
             )
-        except MandrillException as e:
+        except EmailError as e:
             current_app.logger.error(
                 "Invitation email failed to send. "
                 "error {error} supplier_id {supplier_id} email_hash {email_hash}",

@@ -3,7 +3,9 @@ from __future__ import unicode_literals
 
 from dmapiclient import HTTPError
 from dmapiclient.audit import AuditTypes
-from dmutils.email import generate_token, MandrillException
+from dmutils.email import generate_token
+from dmutils.email.exceptions import EmailError
+
 from ..helpers import BaseApplicationTest
 import mock
 import pytest
@@ -135,7 +137,7 @@ class TestInviteUser(BaseApplicationTest):
         with self.app.app_context():
             self.login()
 
-            send_email.side_effect = MandrillException(Exception('API is down'))
+            send_email.side_effect = EmailError(Exception('API is down'))
 
             res = self.client.post(
                 '/suppliers/invite-user',
