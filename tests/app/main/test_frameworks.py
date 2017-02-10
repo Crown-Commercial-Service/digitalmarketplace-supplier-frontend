@@ -12,7 +12,7 @@ from flask import session
 from lxml import html
 from dmapiclient import APIError
 from dmapiclient.audit import AuditTypes
-from dmutils.email import MandrillException
+from dmutils.email.exceptions import EmailError
 from dmutils.s3 import S3ResponseError
 
 from ..helpers import BaseApplicationTest, FULL_G7_SUBMISSION, FakeMail
@@ -1942,7 +1942,7 @@ class TestFrameworkAgreementUpload(BaseApplicationTest):
             data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
                 on_framework=True)
             generate_timestamped_document_upload_path.return_value = 'my/path.pdf'
-            send_email.side_effect = MandrillException()
+            send_email.side_effect = EmailError()
 
             res = self.client.post(
                 '/suppliers/frameworks/g-cloud-7/agreement',
@@ -2629,7 +2629,7 @@ class TestSendClarificationQuestionEmail(BaseApplicationTest):
     @mock.patch('app.main.views.frameworks.send_email')
     def test_should_be_a_503_if_email_fails(self, send_email, data_api_client):
         data_api_client.get_framework.return_value = self.framework('open', name='Test Framework')
-        send_email.side_effect = MandrillException("Arrrgh")
+        send_email.side_effect = EmailError("Arrrgh")
 
         clarification_question = 'This is a clarification question.'
         response = self._send_email(clarification_question)
@@ -3678,7 +3678,7 @@ class TestContractReviewPage(BaseApplicationTest):
                 'last_modified': '2016-07-10T21:18:00.000000Z'
             }
 
-            send_email.side_effect = MandrillException()
+            send_email.side_effect = EmailError()
 
             res = self.client.post(
                 "/suppliers/frameworks/g-cloud-8/234/contract-review",

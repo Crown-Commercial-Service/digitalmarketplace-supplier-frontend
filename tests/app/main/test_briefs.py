@@ -4,7 +4,7 @@ from __future__ import unicode_literals
 import mock
 from dmapiclient import api_stubs, HTTPError
 from dmapiclient.audit import AuditTypes
-from dmutils.email import MandrillException
+from dmutils.email.exceptions import EmailError
 from ..helpers import BaseApplicationTest, FakeMail
 from lxml import html
 from datetime import datetime, timedelta
@@ -219,7 +219,7 @@ class TestSubmitClarificationQuestions(BaseApplicationTest):
         brief['briefs']['clarificationQuestionsPublishedBy'] = '2016-03-29T10:11:13.000000Z'
         data_api_client.get_brief.return_value = brief
 
-        send_email.side_effect = MandrillException
+        send_email.side_effect = EmailError
 
         res = self.client.post('/suppliers/opportunities/1234/ask-a-question', data={
             'clarification-question': "important question",

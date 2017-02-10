@@ -1,12 +1,13 @@
 # coding=utf-8
 
-from dmapiclient import HTTPError
-from dmutils.email import MandrillException
 import mock
 from flask import session
-from tests.app.helpers import BaseApplicationTest
 from lxml import html
 
+from dmapiclient import HTTPError
+from dmutils.email.exceptions import EmailError
+
+from tests.app.helpers import BaseApplicationTest
 
 find_frameworks_return_value = {
     "frameworks": [
@@ -1474,7 +1475,7 @@ class TestCreateSupplier(BaseApplicationTest):
             sess['company_name'] = "company_name"
             sess['account_email_address'] = "valid@email.com"
 
-        send_email.side_effect = MandrillException("Failed")
+        send_email.side_effect = EmailError("Failed")
         data_api_client.create_supplier.return_value = self.supplier()
 
         res = self.client.post(

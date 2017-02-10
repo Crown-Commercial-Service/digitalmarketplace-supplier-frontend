@@ -7,7 +7,8 @@ from flask import abort, current_app, render_template
 from flask_login import current_user
 
 from dmapiclient.audit import AuditTypes
-from dmutils.email import send_email, MandrillException
+from dmutils.email import send_email
+from dmutils.email.exceptions import EmailError
 
 
 def get_brief(data_api_client, brief_id, allowed_statuses=None):
@@ -52,7 +53,7 @@ def send_brief_clarification_question(data_api_client, brief, clarification_ques
             from_name="{} Supplier".format(brief['frameworkName']),
             tags=["brief-clarification-question"]
         )
-    except MandrillException as e:
+    except EmailError as e:
         current_app.logger.error(
             "Brief question email failed to send. error={error} supplier_id={supplier_id} brief_id={brief_id}",
             extra={'error': six.text_type(e), 'supplier_id': current_user.supplier_id, 'brief_id': brief['id']}
@@ -85,7 +86,7 @@ def send_brief_clarification_question(data_api_client, brief, clarification_ques
             from_name=current_app.config['CLARIFICATION_EMAIL_NAME'],
             tags=["brief-clarification-question-confirmation"]
         )
-    except MandrillException as e:
+    except EmailError as e:
         current_app.logger.error(
             "Brief question supplier email failed to send. error={error} supplier_id={supplier_id} brief_id={brief_id}",
             extra={'error': six.text_type(e), 'supplier_id': current_user.supplier_id, 'brief_id': brief['id']}
