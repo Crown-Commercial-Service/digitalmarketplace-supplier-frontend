@@ -12,7 +12,7 @@ from dmapiclient.audit import AuditTypes
 from dmutils.email import send_email
 from dmutils.email.exceptions import EmailError
 from dmcontent.formats import format_service_price
-from dmutils.formats import datetimeformat
+from dmutils.formats import datetimeformat, DATETIME_FORMAT
 from dmutils import s3
 from dmutils.documents import (
     RESULT_LETTER_FILENAME, AGREEMENT_FILENAME, SIGNED_AGREEMENT_PREFIX, SIGNED_SIGNATURE_PAGE_PREFIX,
@@ -271,6 +271,40 @@ def framework_start_supplier_declaration(framework_slug):
                            framework=framework,
                            first_page_of_declaration=first_page,
                            framework_close_date=framework_close_date), 200
+
+def order_frameworks(frameworks):
+    try:
+        yield sorted(
+            filter(lambda i: i['allow_declaration_reuse'], frameworks),
+            key=lambda i: i['application_close_date'].strptime(DATETIME_FORMAT)
+        )
+    except KeyError:
+        pass
+
+def get_reusable_declaration(declarations, frameworks):
+    declarations = {i['frameworkSlug']: i for i in declarations}
+    for framework in order_frameworks(frameworks):
+        if framework['slug'] in declarations:
+            return declarations[framework['slug']]
+
+@main.route('/frameworks/<framework_slug>/declaration/reuse', methods=['GET', 'POST'])
+@login_required
+def reusable_framework_supplier_declaration(framework_slug):
+    reusable_declaration_framework_slug = request.args('reusable_declaration_framework_slug', None)
+    supplier_id = current_user.supplier_id
+    if reusable_declaration_framework_slug:
+        try:
+            declaration = data_api_client.get_supplier_declaration(supplier_id, framework_slug)
+        except APIError as e:
+            abort(404)
+    else:
+        frameworks = data_api_client.find_frameworks()['frameworks']
+        declarations = data_api_client.find_supplier_declarations(current_user.supplier_id)['declarations']
+        declaration = get_reusable_declaration(frameworks, declarations)
+        if not declaration:
+            return redirect(url_for('.framework_supplier_declaration', framework_slug=framework_slug), 200)
+
+
 
 
 @main.route('/frameworks/<framework_slug>/declaration', methods=['GET'])
