@@ -35,16 +35,7 @@
 
 {% block save_button %}
 
-  {% if not next_question or force_return_to_summary %}
-    {%
-      with
-      label="Save and return to service overview",
-      name="save_and_return",
-      type="save"
-    %}
-      {% include "toolkit/button.html" %}
-    {% endwith %}
-  {% else %}
+  {% if force_continue_button or (next_question and not force_return_to_summary) %}
     {%
       with
       label="Save and continue",
@@ -54,9 +45,20 @@
       {% include "toolkit/button.html" %}
     {% endwith %}
 
-    <p class="next-page-message">
-      Next: {{ next_question.name }}
-    </p>
+    {% if next_question %}
+      <p class="next-page-message">
+        Next: {{ next_question.name }}
+      </p>
+    {% endif %}
+  {% else %}
+    {%
+      with
+      label=("Save and return to " + lot.unitSingular + " summary") if lot else "Save and return to summary",
+      name="save_and_return",
+      type="save"
+    %}
+      {% include "toolkit/button.html" %}
+    {% endwith %}
   {% endif %}
 
 {% endblock %}

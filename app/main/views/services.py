@@ -175,7 +175,7 @@ def update_section(service_id, section_id):
 #  ####################  CREATING NEW DRAFT SERVICES ##########################
 
 
-@main.route('/frameworks/<framework_slug>/submissions/<lot_slug>/create', methods=['GET'])
+@main.route('/frameworks/<framework_slug>/submissions/<lot_slug>/create', methods=['GET', 'POST'])
 @login_required
 def start_new_draft_service(framework_slug, lot_slug):
     """Page to kick off creation of a new service."""
@@ -187,55 +187,51 @@ def start_new_draft_service(framework_slug, lot_slug):
     )
 
     section = content.get_section(content.get_next_editable_section_id())
+    if section is None:
+        section = content.get_section(content.get_next_edit_questions_section_id(None))
+        if section is None:
+            abort(404)
+
+        section = section.get_question_as_section(section.get_next_question_slug())
+
+    if request.method == 'POST':
+        update_data = section.get_data(request.form)
+
+        try:
+            draft_service = data_api_client.create_new_draft_service(
+                framework_slug, lot['slug'], current_user.supplier_id, update_data,
+                current_user.email_address, page_questions=section.get_field_names()
+            )['services']
+        except HTTPError as e:
+            update_data = section.unformat_data(update_data)
+            errors = section.get_error_messages(e.message)
+
+            return render_template(
+                "services/edit_submission_section.html",
+                framework=framework,
+                section=section,
+                service_data=update_data,
+                errors=errors
+            ), 400
+
+        return redirect(
+            url_for(
+                ".view_service_submission",
+                framework_slug=framework['slug'],
+                lot_slug=draft_service['lotSlug'],
+                service_id=draft_service['id'],
+            )
+        )
 
     return render_template(
         "services/edit_submission_section.html",
         framework=framework,
+        lot=lot,
+        one_service_limit=lot['oneServiceLimit'],
         service_data={},
-        section=section
+        section=section,
+        force_continue_button=True,
     ), 200
-
-
-@main.route('/frameworks/<framework_slug>/submissions/<lot_slug>/create', methods=['POST'])
-@login_required
-def create_new_draft_service(framework_slug, lot_slug):
-    """Hits up the data API to create a new draft service."""
-
-    framework, lot = get_framework_and_lot(data_api_client, framework_slug, lot_slug, allowed_statuses=['open'])
-
-    content = content_loader.get_manifest(framework_slug, 'edit_submission').filter(
-        {'lot': lot['slug']}
-    )
-
-    section = content.get_section(content.get_next_editable_section_id())
-
-    update_data = section.get_data(request.form)
-
-    try:
-        draft_service = data_api_client.create_new_draft_service(
-            framework_slug, lot['slug'], current_user.supplier_id, update_data,
-            current_user.email_address, page_questions=section.get_field_names()
-        )['services']
-    except HTTPError as e:
-        update_data = section.unformat_data(update_data)
-        errors = section.get_error_messages(e.message)
-
-        return render_template(
-            "services/edit_submission_section.html",
-            framework=framework,
-            section=section,
-            service_data=update_data,
-            errors=errors
-        ), 400
-
-    return redirect(
-        url_for(
-            ".view_service_submission",
-            framework_slug=framework['slug'],
-            lot_slug=draft_service['lotSlug'],
-            service_id=draft_service['id'],
-        )
-    )
 
 
 @main.route('/frameworks/<framework_slug>/submissions/<lot_slug>/<service_id>/copy', methods=['POST'])
@@ -379,6 +375,7 @@ def view_service_submission(framework_slug, lot_slug, service_id):
         "services/service_submission.html",
         framework=framework,
         lot=lot,
+        one_service_limit=lot['oneServiceLimit'],
         confirm_remove=request.args.get("confirm_remove", None),
         service_id=service_id,
         service_data=draft,
@@ -484,6 +481,7 @@ def edit_service_submission(framework_slug, lot_slug, service_id, section_id, qu
         "services/edit_submission_section.html",
         section=section,
         framework=framework,
+        lot=lot,
         next_question=next_question,
         service_data=service_data,
         service_id=service_id,

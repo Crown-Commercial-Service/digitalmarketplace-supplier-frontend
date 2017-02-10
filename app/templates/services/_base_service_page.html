@@ -59,6 +59,9 @@
       {% import "toolkit/summary-table.html" as summary %}
       {% for section in sections %}
         {{ summary.heading(section.name, id=section.slug) }}
+        {% if section.editable %}
+          {% block edit_link scoped %}{% endblock %}
+        {% endif %}
         {% if section.summary_page_description %}
           {{ summary.description(section.summary_page_description) }}
         {% endif %}
@@ -79,18 +82,31 @@
             {{ summary.field_name(question.label) }}
             {% if question.is_empty %}
               {% if framework and framework.status == 'open' and section.edit_questions %}
-                {% if question.is_empty %}
-                  {{ summary.link('Answer question', url_for(".edit_service_submission", framework_slug=framework.slug, lot_slug=service_data.lot, service_id=service_id, section_id=section.id, question_slug=question.slug)) }}
+                {% if one_service_limit %}
+                  {% if question.empty_message %}
+                    {% call summary.field() %}
+                      <span class="summary-item-field-answer-required">{{ question.empty_message }}</span>
+                    {% endcall %}
+                  {% endif %}
                 {% else %}
-                  {{ summary.field("Not answered") }}
+                  {{ summary.link('Answer question', url_for(".edit_service_submission", framework_slug=framework.slug, lot_slug=service_data.lot, service_id=service_id, section_id=section.id, question_slug=question.slug)) }}
                 {% endif %}
               {% endif %}
             {% else %}
               {{ summary[question.type](question.value, question.assurance) }}
             {% endif %}
             {% if framework.status == 'open' %}
-              {% if not question.is_empty and section.edit_questions %}
+              {% if section.edit_questions and not question.is_empty %}
+                {% if one_service_limit %}
+                  {{ summary.remove_link('Remove', url_for(".remove_subsection", framework_slug=framework.slug, lot_slug=service_data.lot, service_id=service_id, section_id=section.id, question_slug=question.slug)) }}
+                {% endif %}
                 {{ summary.edit_link('Edit', url_for(".edit_service_submission", framework_slug=framework.slug, lot_slug=service_data.lot, service_id=service_id, section_id=section.id, question_slug=question.slug)) }}
+              {% elif section.edit_questions and one_service_limit %}
+                {% if one_service_limit %}
+                  {% call summary.field() %}
+                  {% endcall %}
+                {% endif %}
+                {{ summary.edit_link('Add', url_for(".edit_service_submission", framework_slug=framework.slug, lot_slug=service_data.lot, service_id=service_id, section_id=section.id, question_slug=question.slug)) }}
               {% else %}
                 {% call summary.field(action=True) %}
                   {{ 'Optional' if question.get('optional') else '' }}
