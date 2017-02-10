@@ -270,7 +270,6 @@ class TestSubmitClarificationQuestions(BaseApplicationTest):
             self, send_email, data_api_client):
         self.login()
         data_api_client.get_brief.return_value = api_stubs.brief(status='live', lot_slug='digital-specialists')
-        data_api_client.get_brief.return_value['briefs']['frameworkFramework'] = 'dos'
         data_api_client.is_supplier_eligible_for_brief.return_value = False
         data_api_client.find_services.return_value = {"services": []}
 
@@ -1283,7 +1282,6 @@ class TestLegacyRespondToBrief(BaseApplicationTest, BriefResponseTestHelpers):
 
     def test_get_brief_response_returns_error_page_if_supplier_has_no_services_on_framework(self, data_api_client):
         data_api_client.get_brief.return_value = self.brief
-        data_api_client.get_brief.return_value['briefs']['frameworkFramework'] = 'dos'
         data_api_client.get_framework.return_value = self.framework
         data_api_client.is_supplier_eligible_for_brief.return_value = False
         data_api_client.find_services.return_value = {"services": []}
@@ -1298,12 +1296,11 @@ class TestLegacyRespondToBrief(BaseApplicationTest, BriefResponseTestHelpers):
                 ERROR_MESSAGE_NO_SERVICE_ON_FRAMEWORK_APPLICATION
             )
         )) == 1
-        assert len(doc.xpath('//*[@data-reason="supplier-not-on-dos"]')) == 1
+        assert len(doc.xpath('//*[@data-reason="supplier-not-on-digital-outcomes-and-specialists"]')) == 1
         assert data_api_client.create_audit_event.called is False
 
     def test_get_brief_response_returns_error_page_if_supplier_has_no_pub_services_on_framework(self, data_api_client):
         data_api_client.get_brief.return_value = self.brief
-        data_api_client.get_brief.return_value['briefs']['frameworkFramework'] = 'dos'
         data_api_client.get_framework.return_value = self.framework
         data_api_client.is_supplier_eligible_for_brief.return_value = False
         # simulating the case where we have non-"published", but on-framework, services
@@ -1323,7 +1320,7 @@ class TestLegacyRespondToBrief(BaseApplicationTest, BriefResponseTestHelpers):
                 ERROR_MESSAGE_NO_SERVICE_ON_FRAMEWORK_APPLICATION
             )
         )) == 1
-        assert len(doc.xpath('//*[@data-reason="supplier-not-on-dos"]')) == 1
+        assert len(doc.xpath('//*[@data-reason="supplier-not-on-digital-outcomes-and-specialists"]')) == 1
         assert data_api_client.create_audit_event.called is False
 
     def test_get_brief_response_returns_error_page_if_supplier_has_no_services_with_role(self, data_api_client):
@@ -1599,7 +1596,6 @@ class TestLegacyRespondToBrief(BaseApplicationTest, BriefResponseTestHelpers):
 
     def test_create_new_brief_returns_error_page_if_supplier_has_no_services_on_framework(self, data_api_client):
         data_api_client.get_brief.return_value = self.brief
-        data_api_client.get_brief.return_value['briefs']['frameworkFramework'] = 'dos'
         data_api_client.get_framework.return_value = self.framework
         data_api_client.is_supplier_eligible_for_brief.return_value = False
         data_api_client.find_services.return_value = {"services": []}
