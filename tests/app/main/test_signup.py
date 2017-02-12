@@ -51,9 +51,7 @@ def get_another_application(id):
 
 
 class TestSignupPage(BaseApplicationTest):
-    test_application = {'csrf_token': FakeCsrf.valid_token, 'representative': 'matt', 'name': 'a company',
-                        'abn': '123456',
-                        'phone': '55555555', 'email': 'email@company.com'}
+    test_user = {'csrf_token': FakeCsrf.valid_token, 'name': 'matt', 'email_address': 'email@company.com'}
 
     def setup(self):
         super(TestSignupPage, self).setup()
@@ -72,12 +70,12 @@ class TestSignupPage(BaseApplicationTest):
 
         res = self.client.post(
             self.expand_path('/signup'),
-            data=self.test_application
+            data=self.test_user
         )
 
         assert res.status_code == 200
         send_email.assert_called_once_with(
-            self.test_application['email'],
+            self.test_user['email_address'],
             mock.ANY,
             self.app.config['INVITE_EMAIL_SUBJECT'],
             self.app.config['INVITE_EMAIL_FROM'],
@@ -88,7 +86,7 @@ class TestSignupPage(BaseApplicationTest):
     def test_invalid_application(self, seller_signup):
 
         seller_signup.return_value = 'test'
-        data = dict(self.test_application)
+        data = dict(self.test_user)
         data['name'] = ''
 
         self.client.post(
@@ -109,11 +107,11 @@ class TestSignupPage(BaseApplicationTest):
 
         res = self.client.post(
             self.expand_path('/signup'),
-            data=self.test_application
+            data=self.test_user
         )
 
         send_email.assert_called_once_with(
-            self.test_application['email'],
+            self.test_user['email_address'],
             mock.ANY,
             self.app.config['INVITE_EMAIL_SUBJECT'],
             self.app.config['INVITE_EMAIL_FROM'],
@@ -138,7 +136,7 @@ class TestCreateApplicationPage(BaseApplicationTest):
     @mock.patch('app.main.views.signup.data_api_client')
     @mock.patch('app.main.views.signup.decode_user_token')
     def test_existing_user(self, decode_user_token, data_api_client):
-        decode_user_token.return_value = {'email': 'test@company.com'}
+        decode_user_token.return_value = {'email_address': 'test@company.com'}
         data_api_client.get_user.return_value = self.user(123, 'test@email.com', None, None, 'Users name')
 
         res = self.client.get(
@@ -150,7 +148,7 @@ class TestCreateApplicationPage(BaseApplicationTest):
     @mock.patch('app.main.views.signup.data_api_client')
     @mock.patch('app.main.views.signup.decode_user_token')
     def test_render_create_application(self, decode_user_token, data_api_client, render_component):
-        token_data = {'email': 'test@company.com'}
+        token_data = {'email_address': 'test@company.com'}
         decode_user_token.return_value = token_data
         data_api_client.get_user.return_value = None
         render_component.return_value.get_props.return_value = {}
@@ -175,7 +173,7 @@ class TestCreateApplicationPage(BaseApplicationTest):
     def test_render_create_application_with_errors(self, decode_user_token, data_api_client, render_component):
         with self.app.test_request_context():
             error = {'error': 'reason'}
-            decode_user_token.return_value = {'email': 'test@company.com', 'name': 'a company'}
+            decode_user_token.return_value = {'email_address': 'test@company.com', 'name': 'a company'}
             data_api_client.get_user.return_value = None
             render_component.return_value.get_props.return_value = {}
 
@@ -185,7 +183,7 @@ class TestCreateApplicationPage(BaseApplicationTest):
                     'form_options': {
                         'errors': error
                     },
-                    'enterPasswordForm': {'key': 'value', 'email': 'test@company.com', 'name': 'a company'}
+                    'enterPasswordForm': {'key': 'value', 'email_address': 'test@company.com', 'name': 'a company'}
                 }
             )
 
@@ -218,7 +216,7 @@ class TestCreateApplicationPage(BaseApplicationTest):
     @mock.patch('app.main.views.signup.data_api_client')
     @mock.patch('app.main.views.signup.decode_user_token')
     def test_create_user_fails(self, decode_user_token, data_api_client):
-        decode_user_token.return_value = {'name': 'joe', 'email': 'test@company.com'}
+        decode_user_token.return_value = {'name': 'joe', 'email_address': 'test@company.com'}
         data_api_client.create_user.side_effect = HTTPError('fail')
 
         res = self.client.post(
@@ -231,7 +229,7 @@ class TestCreateApplicationPage(BaseApplicationTest):
     @mock.patch('app.main.views.signup.data_api_client')
     @mock.patch('app.main.views.signup.decode_user_token')
     def test_create_application_fails(self, decode_user_token, data_api_client):
-        decode_user_token.return_value = {'name': 'joe', 'email': 'test@company.com'}
+        decode_user_token.return_value = {'name': 'joe', 'email_address': 'test@company.com'}
         data_api_client.create_user.return_value = self.user(123, 'test@email.com', None, None, 'Users name')
         data_api_client.create_user.side_effect = HTTPError('fail')
 
@@ -245,7 +243,7 @@ class TestCreateApplicationPage(BaseApplicationTest):
     @mock.patch('app.main.views.signup.data_api_client')
     @mock.patch('app.main.views.signup.decode_user_token')
     def test_create_application_success(self, decode_user_token, data_api_client):
-        decode_user_token.return_value = {'name': 'joe', 'email': 'test@company.com'}
+        decode_user_token.return_value = {'name': 'joe', 'email_address': 'test@company.com'}
         data_api_client.create_user.return_value = self.user(123, 'test@email.com', None, None, 'Users name')
         data_api_client.create_application.return_value = {'application': {'id': 999}}
 

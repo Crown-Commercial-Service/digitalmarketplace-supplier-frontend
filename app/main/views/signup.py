@@ -50,7 +50,7 @@ def start_seller_signup(applicant={}, errors=None):
 def send_seller_signup_email():
     user = from_response(request)
 
-    fields = ['name', 'email']
+    fields = ['name', 'email_address']
     errors = validate_form_data(user, fields)
     if errors:
         return start_seller_signup(user, errors)
@@ -65,7 +65,7 @@ def send_seller_signup_email():
 
     try:
         send_email(
-            user['email'],
+            user['email_address'],
             email_body,
             current_app.config['INVITE_EMAIL_SUBJECT'],
             current_app.config['INVITE_EMAIL_FROM'],
@@ -80,7 +80,7 @@ def send_seller_signup_email():
         )
         abort(503, 'Failed to send user invite reset')
 
-    return render_template('auth/seller-signup-email-sent.html', email_address=user['email'])
+    return render_template('auth/seller-signup-email-sent.html', email_address=user['email_address'])
 
 
 @main.route('/signup/create-user/<string:token>', methods=['GET'])
@@ -88,10 +88,10 @@ def render_create_application(token, data=None, errors=None):
     data = data or {}
     token_data = decode_user_token(token.encode())
 
-    if not token_data.get('email'):
+    if not token_data.get('email_address'):
         abort(503, 'Invalid email address')
 
-    user_json = data_api_client.get_user(email_address=token_data['email'])
+    user_json = data_api_client.get_user(email_address=token_data['email_address'])
 
     if not user_json:
         rendered_component = render_component(
@@ -135,7 +135,7 @@ def create_application(token):
     user = data_api_client.create_user({
         'name': token_data['name'],
         'password': form_data['password'],
-        'emailAddress': token_data['email'],
+        'emailAddress': token_data['email_address'],
         'role': 'applicant',
         'application_id': id
     })
@@ -147,7 +147,7 @@ def create_application(token):
         notification_message = 'Application Id:{}\nBy: {} ({})'.format(
             id,
             token_data['name'],
-            token_data['email']
+            token_data['email_address']
         )
 
         notify_team('A new seller has started an application', notification_message)
