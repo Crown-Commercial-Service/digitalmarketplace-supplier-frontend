@@ -82,7 +82,7 @@
             {{ summary.field_name(question.label) }}
             {% if question.is_empty %}
               {% if framework and framework.status == 'open' and section.edit_questions %}
-                {% if one_service_limit %}
+                {% if lot['oneServiceLimit'] %}
                   {% if question.empty_message %}
                     {% call summary.field() %}
                       <span class="summary-item-field-answer-required">{{ question.empty_message }}</span>
@@ -97,12 +97,12 @@
             {% endif %}
             {% if framework.status == 'open' %}
               {% if section.edit_questions and not question.is_empty %}
-                {% if one_service_limit %}
+                {% if lot['oneServiceLimit'] %}
                   {{ summary.remove_link('Remove', url_for(".remove_subsection", framework_slug=framework.slug, lot_slug=service_data.lot, service_id=service_id, section_id=section.id, question_slug=question.slug)) }}
                 {% endif %}
                 {{ summary.edit_link('Edit', url_for(".edit_service_submission", framework_slug=framework.slug, lot_slug=service_data.lot, service_id=service_id, section_id=section.id, question_slug=question.slug)) }}
-              {% elif section.edit_questions and one_service_limit %}
-                {% if one_service_limit %}
+              {% elif section.edit_questions and lot['oneServiceLimit'] %}
+                {% if lot['oneServiceLimit'] %}
                   {% call summary.field() %}
                   {% endcall %}
                 {% endif %}

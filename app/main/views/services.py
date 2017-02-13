@@ -227,7 +227,6 @@ def start_new_draft_service(framework_slug, lot_slug):
         "services/edit_submission_section.html",
         framework=framework,
         lot=lot,
-        one_service_limit=lot['oneServiceLimit'],
         service_data={},
         section=section,
         force_continue_button=True,
@@ -375,7 +374,6 @@ def view_service_submission(framework_slug, lot_slug, service_id):
         "services/service_submission.html",
         framework=framework,
         lot=lot,
-        one_service_limit=lot['oneServiceLimit'],
         confirm_remove=request.args.get("confirm_remove", None),
         service_id=service_id,
         service_data=draft,
@@ -486,7 +484,6 @@ def edit_service_submission(framework_slug, lot_slug, service_id, section_id, qu
         service_data=service_data,
         service_id=service_id,
         force_return_to_summary=force_return_to_summary,
-        one_service_limit=lot['oneServiceLimit'],
         errors=errors,
     )
 
