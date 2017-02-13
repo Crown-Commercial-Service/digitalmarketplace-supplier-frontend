@@ -273,8 +273,6 @@ def framework_start_supplier_declaration(framework_slug):
                            framework_close_date=framework_close_date), 200
 
 
-
-
 @main.route('/frameworks/<framework_slug>/declaration/reuse', methods=['GET', 'POST'])
 @login_required
 def reuse_framework_supplier_declaration(framework_slug):
@@ -302,9 +300,8 @@ def reuse_framework_supplier_declaration(framework_slug):
         declaration=declaration,
         framework=framework,
         framework_application_close_date=date_parse(framework['application_close_date']).strftime('%B, %Y'),
-        first_page = content_loader.get_manifest(framework['slug'], 'declaration').get_next_editable_section_id()
+        first_page=content_loader.get_manifest(framework['slug'], 'declaration').get_next_editable_section_id()
     ), 200
-
 
 
 @main.route('/frameworks/<framework_slug>/declaration', methods=['GET'])

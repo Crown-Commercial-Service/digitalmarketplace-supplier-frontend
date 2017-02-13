@@ -421,6 +421,7 @@ def test_order_frameworks_for_reuse_none():
 
     assert ordered == []
 
+
 def test_order_frameworks_for_reuse_one():
     """Test that the function returns a list of 1 when given a single suitable framework."""
     t09 = datetime(2009, 03, 03, 01, 01, 01)
@@ -434,7 +435,8 @@ def test_order_frameworks_for_reuse_one():
     ]
     ordered = order_frameworks_for_reuse(fake_frameworks)
 
-    assert ordered == [{'allow_declaration_reuse': True, 'application_close_date': t07, 'extraneous_field': 'foo'},]
+    assert ordered == [{'allow_declaration_reuse': True, 'application_close_date': t07, 'extraneous_field': 'foo'}]
+
 
 def test_order_frameworks_for_reuse_unordered():
     """Test crazy order passed in is ordered correctly."""
