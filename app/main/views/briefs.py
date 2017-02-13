@@ -2,18 +2,17 @@
 from __future__ import unicode_literals
 
 import re
+import json
 
 from flask import abort, flash, redirect, render_template, request, url_for, \
     current_app
 from flask_login import current_user
-import flask_featureflags as feature
 
 from dmapiclient import HTTPError
 from dmutils.forms import render_template_with_csrf
 from dmutils.email import send_email, EmailError
 
 import six
-from six import text_type
 import rollbar
 
 from ..helpers import login_required
@@ -95,7 +94,12 @@ def ask_brief_clarification_question(brief_id):
 @login_required
 def brief_response(brief_id):
 
-    brief = get_brief(data_api_client, brief_id, allowed_statuses=['live'])
+    brief = get_brief(data_api_client, brief_id)
+
+    if brief['status'] != 'live':
+        return render_template(
+            "briefs/brief_closed_error.html"
+        ), 400
 
     if not is_supplier_selected_for_brief(data_api_client, current_user, brief):
         return _render_not_selected_for_brief_error_page()
@@ -168,7 +172,12 @@ def send_thank_you_email_to_responders(brief, brief_response, brief_response_url
 def submit_brief_response(brief_id):
     """Hits up the data API to create a new brief response."""
 
-    brief = get_brief(data_api_client, brief_id, allowed_statuses=['live'])
+    brief = get_brief(data_api_client, brief_id)
+
+    if brief['status'] != 'live':
+        return render_template(
+            "briefs/brief_closed_error.html"
+        ), 400
 
     if not is_supplier_selected_for_brief(data_api_client, current_user, brief):
         return _render_not_selected_for_brief_error_page()
@@ -197,8 +206,10 @@ def submit_brief_response(brief_id):
         section.inject_brief_questions_into_boolean_list_question(brief)
         section_summary = section.summary(response_data)
 
+        errors = {}
         if isinstance(e.message, dict):
             errors = section_summary.get_error_messages(e.message)
+            rollbar.report_message(json.dumps(errors), 'error', request)
         else:
             flash('already_applied', 'error')
 

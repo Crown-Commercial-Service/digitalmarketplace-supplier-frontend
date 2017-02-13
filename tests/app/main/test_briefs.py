@@ -354,14 +354,14 @@ class TestRespondToBrief(BaseApplicationTest):
 
         assert res.status_code == 400
 
-    def test_get_brief_response_returns_404_for_not_live_brief(self, data_api_client):
+    def test_get_brief_response_returns_400_for_not_live_brief(self, data_api_client):
         brief = self.brief.copy()
         brief['briefs']['status'] = 'draft'
         data_api_client.get_brief.return_value = brief
         data_api_client.get_framework.return_value = self.framework
         res = self.client.get(self.url_for('main.brief_response', brief_id=1234))
 
-        assert res.status_code == 404
+        assert res.status_code == 400
 
     def test_get_brief_response_returns_404_for_not_live_framework(self, data_api_client):
         framework = self.framework.copy()
@@ -518,7 +518,7 @@ class TestRespondToBrief(BaseApplicationTest):
             '//h2[contains(text(), "Do you have any of the nice-to-have skills and experience?")]')) == 1
         # self._test_breadcrumbs_on_brief_response_page(res)
 
-    def test_create_new_brief_response_404_if_not_live_brief(self, data_api_client):
+    def test_create_new_brief_response_400_if_not_live_brief(self, data_api_client):
         brief = self.brief.copy()
         brief['briefs']['status'] = 'draft'
         data_api_client.get_brief.return_value = brief
@@ -528,7 +528,7 @@ class TestRespondToBrief(BaseApplicationTest):
             self.url_for('main.brief_response', brief_id=1234),
             data=brief_form_submission
         )
-        assert res.status_code == 404
+        assert res.status_code == 400
         assert not data_api_client.create_brief_response.called
 
     def test_create_new_brief_response_404_if_not_live_framework(self, data_api_client):
