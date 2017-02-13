@@ -301,7 +301,7 @@ def reuse_framework_supplier_declaration(framework_slug):
             abort(404)
     else:
         frameworks = data_api_client.find_frameworks()['frameworks']
-        declarations = data_api_client.find_supplier_declarations(supplier_id)['declarations']
+        declarations = data_api_client.find_supplier_declarations(supplier_id)['frameworkInterest']
         framework, declaration = get_reusable_declaration(declarations, frameworks)
         if not declaration:
             return redirect(url_for('.framework_supplier_declaration', framework_slug=framework_slug), 200)
