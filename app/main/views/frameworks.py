@@ -293,7 +293,6 @@ def reuse_framework_supplier_declaration(framework_slug):
         except APIError:
             abort(404)
     else:
-
         declarations = data_api_client.find_supplier_declarations(supplier_id)['frameworkInterest']
         declaration, framework = get_reusable_declaration(data_api_client, declarations)
         if not declaration:

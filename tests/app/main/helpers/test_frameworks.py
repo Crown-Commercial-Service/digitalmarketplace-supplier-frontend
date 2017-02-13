@@ -10,8 +10,8 @@ from werkzeug.exceptions import HTTPException
 from app.main.helpers.frameworks import (
     get_statuses_for_lot, return_supplier_framework_info_if_on_framework_or_abort,
     check_agreement_is_related_to_supplier_framework_or_abort,
-    order_frameworks_for_reuse
-)
+    order_frameworks_for_reuse,
+    get_reusable_declaration)
 
 
 def get_lot_status_examples():
@@ -460,4 +460,56 @@ def test_order_frameworks_for_reuse_unordered():
 
 
 def test_get_reusable_declaration():
-    pass
+    """Test happy path, should return the framework and declaration where
+    allow_declaration_reuse == True
+    application_close_date is closest to today
+    and declaration exists for that framework
+    """
+
+    t09 = datetime(2009, 03, 03, 01, 01, 01)
+    t07 = datetime(2007, 12, 03, 01, 01, 01)
+    t11 = datetime(2012, 05, 03, 01, 01, 01)
+    t12 = datetime(2012, 05, 03, 01, 01, 01)
+    t13 = datetime(2012, 05, 03, 01, 01, 01)
+    t14 = datetime(2012, 05, 03, 01, 01, 01)
+
+    frameworks = [
+        {'x_field': 'foo', 'allow_declaration_reuse': True, 'application_close_date': t07, 'slug': 'ben-cloud-1'},
+        {'x_field': 'foo', 'allow_declaration_reuse': True, 'application_close_date': t09, 'slug': 'ben-cloud-2'},
+        {'x_field': 'foo', 'allow_declaration_reuse': True, 'application_close_date': t11, 'slug': 'ben-cloud-3'},
+        {'x_field': 'foo', 'allow_declaration_reuse': True, 'application_close_date': t12, 'slug': 'ben-cloud-4'},
+        {'x_field': 'foo', 'allow_declaration_reuse': True, 'application_close_date': t13, 'slug': 'ben-cloud-5'},
+        {'x_field': 'foo', 'allow_declaration_reuse': False, 'application_close_date': t14, 'slug': 'ben-cloud-alpha'},
+    ]
+    declarations = [
+        {'x_field': 'foo', 'frameworkSlug': 'ben-cloud-4'},
+        {'x_field': 'foo', 'frameworkSlug': 'ben-cloud-1000000'},
+        {'x_field': 'foo', 'frameworkSlug': 'ben-cloud-2'},
+        {'x_field': 'foo', 'frameworkSlug': 'ben-cloud-alpha'}
+    ]
+    with mock.patch('dmapiclient.DataAPIClient') as client_mock:
+        client_mock.find_frameworks.return_value = {'frameworks': frameworks}
+        declaration, framework = get_reusable_declaration(client_mock, declarations)
+
+    assert declaration == {'x_field': 'foo', 'frameworkSlug': 'ben-cloud-4'}
+    assert framework == {
+        'x_field': 'foo', 'allow_declaration_reuse': True, 'application_close_date': t12, 'slug': 'ben-cloud-4'
+    }
+
+def test_get_reusable_declaration_none():
+    """Test returning None.
+    """
+    t14 = datetime(2012, 05, 03, 01, 01, 01)
+
+    frameworks = [
+        {'x_field': 'foo', 'allow_declaration_reuse': True, 'application_close_date': t14, 'slug': 'ben-cloud-5'},
+    ]
+    declarations = [
+        {'x_field': 'foo', 'frameworkSlug': 'ben-cloud-4'},
+    ]
+    with mock.patch('dmapiclient.DataAPIClient') as client_mock:
+        client_mock.find_frameworks.return_value = {'frameworks': frameworks}
+        declaration, framework = get_reusable_declaration(client_mock, declarations)
+
+    assert declaration is None
+    assert framework is None
