@@ -1,11 +1,16 @@
 # -*- coding: utf-8 -*-
-import pytest
+"""Test for app/main/helpers/frameworks.py"""
+
+from datetime import datetime
+
 import mock
+import pytest
 from werkzeug.exceptions import HTTPException
 
 from app.main.helpers.frameworks import (
     get_statuses_for_lot, return_supplier_framework_info_if_on_framework_or_abort,
-    check_agreement_is_related_to_supplier_framework_or_abort
+    check_agreement_is_related_to_supplier_framework_or_abort,
+    order_frameworks_for_reuse
 )
 
 
@@ -364,3 +369,95 @@ def test_check_agreement_is_related_to_supplier_framework_or_abort_does_not_abor
     supplier_framework = {"supplierId": 212, "frameworkSlug": 'g-cloud-8'}
     agreement = {"supplierId": 212, "frameworkSlug": 'g-cloud-8'}
     check_agreement_is_related_to_supplier_framework_or_abort(agreement, supplier_framework)
+
+
+def test_order_frameworks_for_reuse():
+    """Test happy path. Should return 2 frameworks, closest date first."""
+    t09 = datetime(2009, 03, 03, 01, 01, 01)
+    t07 = datetime(2007, 12, 03, 01, 01, 01)
+    t12 = datetime(2012, 05, 03, 01, 01, 01)
+
+    fake_frameworks = [
+        {'allow_declaration_reuse': True, 'application_close_date': t12, 'extraneous_field': 'foo'},
+        {'allow_declaration_reuse': False, 'application_close_date': t09, 'extraneous_field': 'foo'},
+        {'allow_declaration_reuse': True, 'application_close_date': t07, 'extraneous_field': 'foo'},
+    ]
+    ordered = order_frameworks_for_reuse(fake_frameworks)
+
+    assert ordered == [
+        {'allow_declaration_reuse': True, 'application_close_date': t12, 'extraneous_field': 'foo'},
+        {'allow_declaration_reuse': True, 'application_close_date': t07, 'extraneous_field': 'foo'}
+    ]
+
+
+def test_order_frameworks_for_reuse_filters():
+    """Test that this filters out anything with `allow_declaration_reuse == False`."""
+    t09 = datetime(2009, 03, 03, 01, 01, 01)
+    t07 = datetime(2007, 12, 03, 01, 01, 01)
+    t12 = datetime(2012, 05, 03, 01, 01, 01)
+
+    fake_frameworks = [
+        {'allow_declaration_reuse': True, 'application_close_date': t12, 'extraneous_field': 'foo'},
+        {'allow_declaration_reuse': False, 'application_close_date': t09, 'extraneous_field': 'foo'},
+        {'allow_declaration_reuse': True, 'application_close_date': t07, 'extraneous_field': 'foo'},
+    ]
+    ordered = order_frameworks_for_reuse(fake_frameworks)
+
+    assert len(ordered) == 2
+
+
+def test_order_frameworks_for_reuse_none():
+    """Test no suitable frameworks returns an empty list."""
+    t09 = datetime(2009, 03, 03, 01, 01, 01)
+    t07 = datetime(2007, 12, 03, 01, 01, 01)
+    t12 = datetime(2012, 05, 03, 01, 01, 01)
+
+    fake_frameworks = [
+        {'allow_declaration_reuse': False, 'application_close_date': t12, 'extraneous_field': 'foo'},
+        {'allow_declaration_reuse': False, 'application_close_date': t09, 'extraneous_field': 'foo'},
+        {'allow_declaration_reuse': False, 'application_close_date': t07, 'extraneous_field': 'foo'},
+    ]
+    ordered = order_frameworks_for_reuse(fake_frameworks)
+
+    assert ordered == []
+
+def test_order_frameworks_for_reuse_one():
+    """Test that the function returns a list of 1 when given a single suitable framework."""
+    t09 = datetime(2009, 03, 03, 01, 01, 01)
+    t07 = datetime(2007, 12, 03, 01, 01, 01)
+    t12 = datetime(2012, 05, 03, 01, 01, 01)
+
+    fake_frameworks = [
+        {'allow_declaration_reuse': False, 'application_close_date': t12, 'extraneous_field': 'foo'},
+        {'allow_declaration_reuse': False, 'application_close_date': t09, 'extraneous_field': 'foo'},
+        {'allow_declaration_reuse': True, 'application_close_date': t07, 'extraneous_field': 'foo'},
+    ]
+    ordered = order_frameworks_for_reuse(fake_frameworks)
+
+    assert ordered == [{'allow_declaration_reuse': True, 'application_close_date': t07, 'extraneous_field': 'foo'},]
+
+def test_order_frameworks_for_reuse_unordered():
+    """Test crazy order passed in is ordered correctly."""
+    t09 = datetime(2009, 03, 03, 01, 01, 01)
+    t07 = datetime(2007, 12, 03, 01, 01, 01)
+    t11 = datetime(2012, 05, 03, 01, 01, 01)
+    t12 = datetime(2012, 05, 03, 01, 01, 01)
+    t13 = datetime(2012, 05, 03, 01, 01, 01)
+    t14 = datetime(2012, 05, 03, 01, 01, 01)
+
+    fake_frameworks = [
+        {'allow_declaration_reuse': True, 'application_close_date': t07, 'extraneous_field': 'foo'},
+        {'allow_declaration_reuse': True, 'application_close_date': t13, 'extraneous_field': 'foo'},
+        {'allow_declaration_reuse': True, 'application_close_date': t09, 'extraneous_field': 'foo'},
+        {'allow_declaration_reuse': True, 'application_close_date': t14, 'extraneous_field': 'foo'},
+        {'allow_declaration_reuse': True, 'application_close_date': t12, 'extraneous_field': 'foo'},
+        {'allow_declaration_reuse': True, 'application_close_date': t11, 'extraneous_field': 'foo'},
+    ]
+    ordered = order_frameworks_for_reuse(fake_frameworks)
+
+    assert ordered[0] == {'allow_declaration_reuse': True, 'application_close_date': t14, 'extraneous_field': 'foo'}
+    assert ordered[-1] == {'allow_declaration_reuse': True, 'application_close_date': t07, 'extraneous_field': 'foo'}
+
+
+def test_get_reusable_declaration():
+    pass

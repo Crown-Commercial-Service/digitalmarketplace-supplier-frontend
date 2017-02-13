@@ -38,6 +38,18 @@ def get_framework_lot(framework, lot_slug):
         abort(404)
 
 
+def order_frameworks_for_reuse(frameworks):
+    """Sort frameworks by reuse suitability.
+
+    If a declaration has the reuse flag set and is the most recently closed framework then that's our framework.
+    """
+    return sorted(
+        filter(lambda i: i['allow_declaration_reuse'] and i['application_close_date'], frameworks),
+        key=lambda i: i['application_close_date'],
+        reverse=True
+    )
+
+
 def register_interest_in_framework(client, framework_slug):
     client.register_framework_interest(current_user.supplier_id, framework_slug, current_user.email_address)
 
@@ -79,6 +91,20 @@ def get_declaration_status(data_api_client, framework_slug):
         return 'unstarted'
     else:
         return declaration.get('status', 'unstarted')
+
+
+def get_reusable_declaration(client, declarations):
+    """Given a list of declarations attempt to find one suitable for reuse.
+
+    :param declarations: list of supplier's previous declarations
+    :return: (declaration, framework)
+    """
+    frameworks = client.find_frameworks()['frameworks']
+    declarations = {i['frameworkSlug']: i for i in declarations}
+    for framework in order_frameworks_for_reuse(frameworks):
+        if framework['slug'] in declarations:
+            return declarations[framework['slug']], framework
+    return None, None
 
 
 def get_supplier_framework_info(data_api_client, framework_slug):
