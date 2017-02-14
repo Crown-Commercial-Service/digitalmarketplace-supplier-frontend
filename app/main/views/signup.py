@@ -201,6 +201,7 @@ def render_application(id, step=None, substep=None):
         'submit_url': url_for('.submit_application', id=id),
         'document_url': url_for('.upload_single_file', id=id, slug=''),
         'authorise_url': url_for('.authorise_application', id=id),
+        'user_name': current_user.name,
         'user_email': current_user.email_address
     }
     props['options'] = {
@@ -319,4 +320,4 @@ def authorise_application(id):
         )
         abort(503, 'Failed to send user invite reset')
 
-    return render_template('suppliers/authorisation_submitted.html', email=application['email'])
+    return render_template('suppliers/authorisation_submitted.html', name=application['representative'])

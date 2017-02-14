@@ -1,6 +1,6 @@
 {% extends "_base_page.html" %}
 
-{% block page_title %}Application submitted – Digital Marketplace{% endblock %}
+{% block page_title %}Authorisation email sent – Digital Marketplace{% endblock %}
 
 {% block breadcrumb %}
 {%
@@ -20,7 +20,7 @@ with items = [
 
 {%
 with
-    heading = "Authorisation email sent."
+    heading = "It’s on its way"
 %}
 {% include "toolkit/page-heading.html" %}
 {% endwith %}
@@ -28,8 +28,10 @@ with
 <div class="grid-row">
     <div class="column-two-thirds">
     	<p>
-        Email was sent to {{ email }}.
-    	</p>
+        We sent an email to {{ name }} with instructions on completing the declaration.
+        If the email doesn’t come through within 5 minutes, check spam folders
+        or email us at <a href="mailto:marketplace@digital.gov.au">marketplace@digital.gov.au</a>
+      </p>
     </div>
 </div>
 
