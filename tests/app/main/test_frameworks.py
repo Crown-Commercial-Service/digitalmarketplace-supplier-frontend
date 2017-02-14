@@ -4143,7 +4143,7 @@ class TestReuseFrameworkSupplierDeclaration(BaseApplicationTest):
         """Ensure that when using the param to specify declaration we collect the correct declaration."""
 
         # Modify the data client.
-        t07 = datetime(2007, 12, 03, 01, 01, 01)
+        t07 = datetime(2007, 12, 3, 1, 1, 1)
         framework = {
             'x_field': 'foo',
             'allow_declaration_reuse': True,
@@ -4201,7 +4201,7 @@ class TestReuseFrameworkSupplierDeclaration(BaseApplicationTest):
         """Redirect if a reuasable declaration is not found."""
 
         # Modify the data client.
-        t09 = datetime(2009, 03, 03, 01, 01, 01)
+        t09 = datetime(2009, 3, 3, 1, 1, 1)
 
         frameworks = [
             {'x_field': 'foo', 'allow_declaration_reuse': True, 'application_close_date': t09, 'slug': 'ben-cloud-2'},
@@ -4230,9 +4230,9 @@ class TestReuseFrameworkSupplierDeclaration(BaseApplicationTest):
         """Test success path."""
 
         # Modify the data client.
-        t09 = datetime(2009, 03, 03, 01, 01, 01)
-        t10 = datetime(2009, 03, 03, 01, 01, 01)
-        t11 = datetime(2009, 03, 03, 01, 01, 01)
+        t09 = datetime(2009, 3, 3, 1, 1, 1)
+        t10 = datetime(2009, 3, 3, 1, 1, 1)
+        t11 = datetime(2009, 3, 3, 1, 1, 1)
 
         frameworks = [
             {'x_field': 'foo', 'allow_declaration_reuse': True, 'application_close_date': t11, 'slug': 'g-cloud-7'},
