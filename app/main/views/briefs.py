@@ -417,7 +417,7 @@ def _render_not_eligible_for_brief_error_page(brief, clarification_question=Fals
             reason = data_reason_slug = "supplier-not-on-lot"
     else:
         reason = "supplier-not-on-framework"
-        data_reason_slug = "supplier-not-on-{}".format(brief['frameworkFramework'])
+        data_reason_slug = "supplier-not-on-{}".format(brief['frameworkSlug'])
 
     return render_template(
         "briefs/not_is_supplier_eligible_for_brief_error.html",
