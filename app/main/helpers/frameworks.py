@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 import re
+from datetime import datetime
 
+from dmutils.formats import DATETIME_FORMAT
 from flask import abort
 from flask_login import current_user
 from dmapiclient import APIError
@@ -36,6 +38,18 @@ def get_framework_lot(framework, lot_slug):
         return next(lot for lot in framework['lots'] if lot['slug'] == lot_slug)
     except StopIteration:
         abort(404)
+
+
+def order_frameworks_for_reuse(frameworks):
+    """Sort frameworks by reuse suitability.
+
+    If a declaration has the reuse flag set and is the most recently closed framework then that's our framework.
+    """
+    return sorted(
+        filter(lambda i: i['allow_declaration_reuse'] and i['application_close_date'], frameworks),
+        key=lambda i: datetime.strptime(i['application_close_date'], DATETIME_FORMAT),
+        reverse=True
+    )
 
 
 def register_interest_in_framework(client, framework_slug):
@@ -79,6 +93,23 @@ def get_declaration_status(data_api_client, framework_slug):
         return 'unstarted'
     else:
         return declaration.get('status', 'unstarted')
+
+
+def get_reusable_declaration(declarations, client=None, exclude_framework_slugs=None):
+    """Given a list of declarations attempt to find one suitable for reuse.
+
+    :param declarations: list of supplier's previous declarations
+    :param frameworks: list viable frameworks
+    :param client: data client if not frameworks
+    :return: (declaration, framework)
+    """
+    exclude_framework_slugs = exclude_framework_slugs or []
+    frameworks = client.find_frameworks()['frameworks']
+    declarations = {i['frameworkSlug']: i for i in declarations}
+    for framework in order_frameworks_for_reuse(frameworks):
+        if framework['slug'] in declarations and framework['slug'] not in exclude_framework_slugs:
+            return framework, declarations[framework['slug']]
+    return None, None
 
 
 def get_supplier_framework_info(data_api_client, framework_slug):

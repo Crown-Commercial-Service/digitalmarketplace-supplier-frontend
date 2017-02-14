@@ -29,8 +29,8 @@ from ..helpers.frameworks import (
     get_supplier_on_framework_from_info, get_declaration_status_from_info, get_supplier_framework_info,
     get_framework, get_framework_and_lot, count_drafts_by_lot, get_statuses_for_lot,
     return_supplier_framework_info_if_on_framework_or_abort, returned_agreement_email_recipients,
-    check_agreement_is_related_to_supplier_framework_or_abort
-)
+    check_agreement_is_related_to_supplier_framework_or_abort,
+    get_reusable_declaration)
 from ..helpers.validation import get_validator
 from ..helpers.services import (
     get_signed_document_url, get_drafts, get_lot_drafts, count_unanswered_questions
@@ -271,6 +271,46 @@ def framework_start_supplier_declaration(framework_slug):
                            framework=framework,
                            first_page_of_declaration=first_page,
                            framework_close_date=framework_close_date), 200
+
+
+@main.route('/frameworks/<framework_slug>/declaration/reuse', methods=['GET', 'POST'])
+@login_required
+def reuse_framework_supplier_declaration(framework_slug):
+    """Attempt to find a supplier framework declaration that we can reuse.
+
+    :param: framework_slug
+    :query_param: reusable_declaration_framework_slug
+    :return: 404, redirect or reuse page (frameworks/reuse_declaration.html)
+    """
+    reusable_declaration_framework_slug = request.args.get('reusable_declaration_framework_slug', None)
+    supplier_id = current_user.supplier_id
+    # Get the current framework.
+    current_framework = data_api_client.get_framework(framework_slug)['frameworks']
+
+    if reusable_declaration_framework_slug:
+        try:
+            # Get their old declaration.
+            declaration = data_api_client.get_supplier_declaration(supplier_id, reusable_declaration_framework_slug)
+            old_framework = data_api_client.get_framework(reusable_declaration_framework_slug)['frameworks']
+        except APIError:
+            abort(404)
+    else:
+        declarations = data_api_client.find_supplier_declarations(supplier_id)['frameworkInterest']
+        old_framework, declaration = get_reusable_declaration(
+            declarations,
+            client=data_api_client,
+            exclude_framework_slugs=[framework_slug]
+        )
+        if not declaration:
+            return redirect(url_for('.framework_supplier_declaration', framework_slug=framework_slug), 200)
+    return render_template(
+        "frameworks/reuse_declaration.html",
+        declaration=declaration,
+        current_framework=current_framework,
+        old_framework=old_framework,
+        old_framework_application_close_date=date_parse(old_framework['application_close_date']).strftime('%B, %Y'),
+        first_page=content_loader.get_manifest(current_framework['slug'], 'declaration').get_next_editable_section_id()
+    ), 200
 
 
 @main.route('/frameworks/<framework_slug>/declaration', methods=['GET'])
