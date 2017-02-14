@@ -3,6 +3,7 @@ from collections import OrderedDict
 from itertools import chain
 
 from dateutil.parser import parse as date_parse
+from dmapiclient import HTTPError
 from flask import render_template, request, abort, flash, redirect, url_for, current_app, session
 from flask_login import current_user
 import flask_featureflags as feature
@@ -30,7 +31,7 @@ from ..helpers.frameworks import (
     get_supplier_on_framework_from_info, get_declaration_status_from_info, get_supplier_framework_info,
     get_framework, get_framework_and_lot, count_drafts_by_lot, get_statuses_for_lot,
     return_supplier_framework_info_if_on_framework_or_abort, returned_agreement_email_recipients,
-    check_agreement_is_related_to_supplier_framework_or_abort
+    check_agreement_is_related_to_supplier_framework_or_abort, get_reusable_declaration
 )
 from ..helpers.validation import get_validator
 from ..helpers.services import (
@@ -266,6 +267,90 @@ def framework_start_supplier_declaration(framework_slug):
     return render_template("frameworks/start_declaration.html",
                            framework=framework,
                            framework_close_date=framework_close_date), 200
+
+
+@main.route('/frameworks/<framework_slug>/declaration/reuse', methods=['GET'])
+@login_required
+def reuse_framework_supplier_declaration(framework_slug):
+    """Attempt to find a supplier framework declaration that we can reuse.
+
+    :param: framework_slug
+    :query_param: reusable_declaration_framework_slug
+    :return: 404, redirect or reuse page (frameworks/reuse_declaration.html)
+    """
+    reusable_declaration_framework_slug = request.args.get('reusable_declaration_framework_slug', None)
+    supplier_id = current_user.supplier_id
+    # Get the current framework.
+    current_framework = data_api_client.get_framework(framework_slug)['frameworks']
+    if reusable_declaration_framework_slug:
+        # If a framework slug is supplied in this URL parameter then use this for pre-filling if possible,
+        # overriding the default framework selection logic.
+        try:
+            # Get their old declaration. The api will raise if it doesn't exist.
+            declaration = data_api_client.get_supplier_declaration(supplier_id, reusable_declaration_framework_slug)
+            old_framework = data_api_client.get_framework(reusable_declaration_framework_slug)['frameworks']
+        except APIError:
+            abort(404)
+    else:
+        # Otherwise then attempt to determine if they have a declaration we can offer for reuse.
+        old_framework, declaration = get_reusable_declaration(
+            supplier_id,
+            data_api_client,
+            exclude_framework_slugs=[framework_slug]
+        )
+        if not declaration:
+            # If not then redirect to the overview. They do not have a suitable reuse candidate.
+            return redirect(url_for('.framework_supplier_declaration_overview', framework_slug=framework_slug))
+
+    # Otherwise offer to prefill the declaration.
+    return render_template(
+        "frameworks/reuse_declaration.html",
+        current_framework=current_framework,
+        old_framework=old_framework,
+        old_framework_application_close_date=date_parse(old_framework['application_close_date']).strftime('%B, %Y'),
+    ), 200
+
+
+@main.route('/frameworks/<framework_slug>/declaration/reuse', methods=['POST'])
+@login_required
+def reuse_framework_supplier_declaration_post(framework_slug):
+    try:
+        reuse_framework_slug = bool(int(request.form.get('reuse', 0))) or None
+    except ValueError:
+        reuse_framework_slug = request.form.get('reuse')
+
+    supplier_id = current_user.supplier_id
+
+    if reuse_framework_slug:
+        # Check.
+        try:
+            framework_ok = data_api_client.get_framework(reuse_framework_slug)['frameworks']['allow_declaration_reuse']
+            declaration_ok = (
+                data_api_client.get_supplier_declaration(supplier_id, reuse_framework_slug) if framework_ok else False
+            )
+        except HTTPError:
+            framework_ok = False
+            declaration_ok = False
+        if framework_ok and declaration_ok:
+            # Set reuse on supplier framework.
+            data_api_client.set_supplier_framework_prefill_declaration(
+                supplier_id,
+                framework_slug,
+                reuse_framework_slug,
+                current_user
+            )
+        else:
+            # Or fail out.
+            abort(404)
+    else:
+        # If they use the back button to change their mind.
+        data_api_client.set_supplier_framework_prefill_declaration(
+            supplier_id,
+            framework_slug,
+            None,
+            current_user
+        )
+    return redirect(url_for('.framework_supplier_declaration_overview', framework_slug=framework_slug))
 
 
 @main.route('/frameworks/<framework_slug>/declaration', methods=['GET'])
