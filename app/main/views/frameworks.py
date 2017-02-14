@@ -285,25 +285,31 @@ def reuse_framework_supplier_declaration(framework_slug):
     reusable_declaration_framework_slug = request.args.get('reusable_declaration_framework_slug', None)
     supplier_id = current_user.supplier_id
     # Get the current framework.
-    framework = data_api_client.get_framework(framework_slug)['frameworks']
+    current_framework = data_api_client.get_framework(framework_slug)['frameworks']
 
     if reusable_declaration_framework_slug:
         try:
             # Get their old declaration.
             declaration = data_api_client.get_supplier_declaration(supplier_id, reusable_declaration_framework_slug)
+            old_framework = data_api_client.get_framework(reusable_declaration_framework_slug)['frameworks']
         except APIError:
             abort(404)
     else:
         declarations = data_api_client.find_supplier_declarations(supplier_id)['frameworkInterest']
-        declaration = get_reusable_declaration(declarations, client=data_api_client)
+        old_framework, declaration = get_reusable_declaration(
+            declarations,
+            client=data_api_client,
+            exclude_framework_slugs=[framework_slug]
+        )
         if not declaration:
             return redirect(url_for('.framework_supplier_declaration', framework_slug=framework_slug), 200)
     return render_template(
         "frameworks/reuse_declaration.html",
         declaration=declaration,
-        framework=framework,
-        framework_application_close_date=date_parse(framework['application_close_date']).strftime('%B, %Y'),
-        first_page=content_loader.get_manifest(framework['slug'], 'declaration').get_next_editable_section_id()
+        current_framework=current_framework,
+        old_framework=old_framework,
+        old_framework_application_close_date=date_parse(old_framework['application_close_date']).strftime('%B, %Y'),
+        first_page=content_loader.get_manifest(current_framework['slug'], 'declaration').get_next_editable_section_id()
     ), 200
 
 

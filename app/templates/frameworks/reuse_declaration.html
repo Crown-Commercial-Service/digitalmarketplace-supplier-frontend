@@ -18,8 +18,8 @@
         "label": "Your account",
       },
       {
-        "link": url_for(".framework_dashboard", framework_slug=framework.slug),
-        "label": "Apply to " + framework.name,
+        "link": url_for(".framework_dashboard", framework_slug=current_framework.slug),
+        "label": "Apply to " + current_framework.name,
       }
     ]
   %}
@@ -36,7 +36,7 @@
       %}
         {% include "toolkit/page-heading.html" %}
       {% endwith %}
-      <p>In {{ framework_application_close_date }}, your organisation completed a declaration for {{ framework.name }}.</p>
+      <p>In {{ old_framework_application_close_date }}, your organisation completed a declaration for {{ old_framework.name }}.</p>
       <p>You can reuse some of the answers from that declaration.</p>
       <br>
       <p>You’ll need to:</p>
@@ -59,7 +59,7 @@
       %}
         {% include "toolkit/forms/selection-buttons.html" %}
       {% endwith %}
-      <a href='{{ url_for(".framework_supplier_declaration", framework_slug=framework.slug, section_id=first_page_of_declaration) }}' class="button-save" role="button">Continue</a>
+      <a href='{{ url_for(".framework_supplier_declaration", framework_slug=current_framework.slug, section_id=first_page_of_declaration) }}' class="button-save" role="button">Continue</a>
     </div>
   </div>
 

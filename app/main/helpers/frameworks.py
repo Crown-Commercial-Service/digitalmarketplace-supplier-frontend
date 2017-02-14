@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 import re
+from datetime import datetime
 
+from dmutils.formats import DATETIME_FORMAT
 from flask import abort
 from flask_login import current_user
 from dmapiclient import APIError
@@ -45,7 +47,7 @@ def order_frameworks_for_reuse(frameworks):
     """
     return sorted(
         filter(lambda i: i['allow_declaration_reuse'] and i['application_close_date'], frameworks),
-        key=lambda i: i['application_close_date'],
+        key=lambda i: datetime.strptime(i['application_close_date'], DATETIME_FORMAT),
         reverse=True
     )
 
@@ -93,7 +95,7 @@ def get_declaration_status(data_api_client, framework_slug):
         return declaration.get('status', 'unstarted')
 
 
-def get_reusable_declaration(declarations, frameworks=None, client=None):
+def get_reusable_declaration(declarations, client=None, exclude_framework_slugs=None):
     """Given a list of declarations attempt to find one suitable for reuse.
 
     :param declarations: list of supplier's previous declarations
@@ -101,13 +103,13 @@ def get_reusable_declaration(declarations, frameworks=None, client=None):
     :param client: data client if not frameworks
     :return: (declaration, framework)
     """
-    assert frameworks or client, "Either supply a list of viable frameworks or a data client"
-    frameworks = frameworks or client.find_frameworks()['frameworks']
+    exclude_framework_slugs = exclude_framework_slugs or []
+    frameworks = client.find_frameworks()['frameworks']
     declarations = {i['frameworkSlug']: i for i in declarations}
     for framework in order_frameworks_for_reuse(frameworks):
-        if framework['slug'] in declarations:
-            return declarations[framework['slug']]
-    return None
+        if framework['slug'] in declarations and framework['slug'] not in exclude_framework_slugs:
+            return framework, declarations[framework['slug']]
+    return None, None
 
 
 def get_supplier_framework_info(data_api_client, framework_slug):
