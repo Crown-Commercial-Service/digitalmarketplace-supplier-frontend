@@ -461,7 +461,7 @@ def test_order_frameworks_for_reuse_unordered():
     assert ordered[-1] == {'allow_declaration_reuse': True, 'application_close_date': t07, 'extraneous_field': 'foo'}
 
 
-def test_get_reusable_declaration():
+def test_get_reusable_declaration(data_api_client):
     """Test happy path, should return the framework and declaration where
     allow_declaration_reuse == True
     application_close_date is closest to today
@@ -489,16 +489,14 @@ def test_get_reusable_declaration():
         {'x_field': 'foo', 'frameworkSlug': 'ben-cloud-2'},
         {'x_field': 'foo', 'frameworkSlug': 'ben-cloud-alpha'}
     ]
-    with mock.patch('dmapiclient.DataAPIClient') as client_mock:
-        client_mock.find_frameworks.return_value = {'frameworks': frameworks}
-        declaration, framework = get_reusable_declaration(client_mock, declarations)
+
+    data_api_client.find_frameworks.return_value = {'frameworks': frameworks}
+    declaration = get_reusable_declaration(declarations, client=data_api_client)
 
     assert declaration == {'x_field': 'foo', 'frameworkSlug': 'ben-cloud-4'}
-    assert framework == {
-        'x_field': 'foo', 'allow_declaration_reuse': True, 'application_close_date': t12, 'slug': 'ben-cloud-4'
-    }
 
-def test_get_reusable_declaration_none():
+
+def test_get_reusable_declaration_none(data_api_client):
     """Test returning None.
     """
     t14 = datetime(2012, 05, 03, 01, 01, 01)
@@ -509,9 +507,8 @@ def test_get_reusable_declaration_none():
     declarations = [
         {'x_field': 'foo', 'frameworkSlug': 'ben-cloud-4'},
     ]
-    with mock.patch('dmapiclient.DataAPIClient') as client_mock:
-        client_mock.find_frameworks.return_value = {'frameworks': frameworks}
-        declaration, framework = get_reusable_declaration(client_mock, declarations)
+
+    data_api_client.find_frameworks.return_value = {'frameworks': frameworks}
+    declaration = get_reusable_declaration(declarations, client=data_api_client)
 
     assert declaration is None
-    assert framework is None

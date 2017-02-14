@@ -12,7 +12,7 @@ from dmapiclient.audit import AuditTypes
 from dmutils.email import send_email
 from dmutils.email.exceptions import EmailError
 from dmcontent.formats import format_service_price
-from dmutils.formats import datetimeformat, DATETIME_FORMAT
+from dmutils.formats import datetimeformat
 from dmutils import s3
 from dmutils.documents import (
     RESULT_LETTER_FILENAME, AGREEMENT_FILENAME, SIGNED_AGREEMENT_PREFIX, SIGNED_SIGNATURE_PAGE_PREFIX,
@@ -284,15 +284,18 @@ def reuse_framework_supplier_declaration(framework_slug):
     """
     reusable_declaration_framework_slug = request.args.get('reusable_declaration_framework_slug', None)
     supplier_id = current_user.supplier_id
+    # Get the current framework.
+    framework = data_api_client.get_framework(framework_slug)['frameworks']
+
     if reusable_declaration_framework_slug:
         try:
-            declaration = data_api_client.get_supplier_declaration(supplier_id, framework_slug)
-            framework = data_api_client.get_framework(reusable_declaration_framework_slug)['frameworks']
+            # Get their old declaration.
+            declaration = data_api_client.get_supplier_declaration(supplier_id, reusable_declaration_framework_slug)
         except APIError:
             abort(404)
     else:
         declarations = data_api_client.find_supplier_declarations(supplier_id)['frameworkInterest']
-        declaration, framework = get_reusable_declaration(data_api_client, declarations)
+        declaration = get_reusable_declaration(declarations, client=data_api_client)
         if not declaration:
             return redirect(url_for('.framework_supplier_declaration', framework_slug=framework_slug), 200)
     return render_template(
