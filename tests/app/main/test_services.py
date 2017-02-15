@@ -155,7 +155,8 @@ class TestListServices(BaseApplicationTest):
                     'lotName': 'Special Lot Name',
                     'status': 'published',
                     'id': '123',
-                    'frameworkSlug': 'digital-outcomes-and-specialists'
+                    'frameworkSlug': 'digital-outcomes-and-specialists-2',
+                    'frameworkFramework': 'digital-outcomes-and-specialists',
                 }]
             }
 
