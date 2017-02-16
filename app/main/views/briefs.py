@@ -376,7 +376,7 @@ def view_response_result(brief_id):
 
     brief_response = brief_response[0]
     framework, lot = get_framework_and_lot(
-        data_api_client, brief['frameworkSlug'], brief['lotSlug'], allowed_statuses=['live'])
+        data_api_client, brief['frameworkSlug'], brief['lotSlug'], allowed_statuses=['live', 'expired'])
 
     if brief_response.get('essentialRequirementsMet'):
         brief_response_display_manifest = 'display_brief_response'

@@ -483,13 +483,17 @@ class TestApplyToBrief(BaseApplicationTest):
 
     @mock.patch("app.main.views.briefs.supplier_has_a_brief_response")
     def test_redirect_to_show_brief_response_if_already_applied_for_brief(self, supplier_has_a_brief_response):
-        for method in ('get', 'post'):
-            supplier_has_a_brief_response.return_value = True
+        framework = self.framework.copy()
+        for framework_status in ['live', 'expired']:
+            framework.update({'status': framework_status})
+            self.data_api_client.get_framework.return_value = framework
+            for method in ('get', 'post'):
+                supplier_has_a_brief_response.return_value = True
 
-            res = self.client.open('/suppliers/opportunities/1234/responses/5/question-id', method=method)
-            assert res.status_code == 302
-            assert res.location == 'http://localhost/suppliers/opportunities/1234/responses/result'
-            self.assert_flashes("already_applied", "error")
+                res = self.client.open('/suppliers/opportunities/1234/responses/5/question-id', method=method)
+                assert res.status_code == 302
+                assert res.location == 'http://localhost/suppliers/opportunities/1234/responses/result'
+                self.assert_flashes("already_applied", "error")
 
     @mock.patch("app.main.views.briefs.content_loader")
     def test_should_404_for_non_existent_content_section(self, content_loader):
