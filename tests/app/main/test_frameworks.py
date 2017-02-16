@@ -2833,7 +2833,7 @@ class TestSupplierDeclaration(BaseApplicationTest):
                 data=FULL_G7_SUBMISSION)
 
             assert res.status_code == 302
-            assert res.location == 'http://localhost/suppliers/frameworks/g-cloud-7'
+            assert res.location == 'http://localhost/suppliers/frameworks/g-cloud-7/declaration'
             assert data_api_client.set_supplier_declaration.called is True
             assert data_api_client.set_supplier_declaration.call_args[0][2]['status'] == 'complete'
 

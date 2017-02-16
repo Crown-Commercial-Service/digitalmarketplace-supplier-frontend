@@ -443,11 +443,13 @@ def framework_supplier_declaration(framework_slug, section_id=None):
                     framework_slug=framework_slug,
                     section_id=content.get_next_editable_section_id()))
 
+    # Get and check the current section.
     section = content.get_section(section_id)
     if section is None or not section.editable:
         abort(404)
+    # Do the same for the next section. This also implies whether or not we are on the last page of the declaration.
+    next_section = content.get_section(content.get_next_section_id(section_id=section.id, only_editable=True))
 
-    is_last_page = section_id == content.sections[-1]['id']
     saved_answers = {}
 
     try:
@@ -457,7 +459,6 @@ def framework_supplier_declaration(framework_slug, section_id=None):
     except APIError as e:
         if e.status_code != 404:
             abort(e.status_code)
-
     if request.method == 'GET':
         errors = {}
         all_answers = saved_answers
@@ -484,31 +485,28 @@ def framework_supplier_declaration(framework_slug, section_id=None):
                     current_user.email_address
                 )
 
-                next_section = content.get_next_editable_section_id(section_id)
-                if next_section:
-                    return redirect(
-                        url_for('.framework_supplier_declaration',
-                                framework_slug=framework['slug'],
-                                section_id=next_section))
+                if next_section and not request.form.get('save_and_return_to_overview', False):
+                    # Go to the next section.
+                    return redirect(url_for(
+                        '.framework_supplier_declaration',
+                        framework_slug=framework['slug'],
+                        section_id=next_section.id
+                    ))
                 else:
-                    url = "{}/declaration_complete".format(
-                        url_for('.framework_dashboard',
-                                framework_slug=framework['slug']))
-                    flash(url, 'declaration_complete')
-                    return redirect(
-                        url_for('.framework_dashboard',
-                                framework_slug=framework['slug']))
+                    # Otherwise they have reached the last page of their declaration.
+                    # Return to the overview.
+                    return redirect(url_for('.framework_supplier_declaration_overview', framework_slug=framework_slug))
             except APIError as e:
                 abort(e.status_code)
 
     return render_template(
         "frameworks/edit_declaration_section.html",
         framework=framework,
+        next_section=next_section,
         section=section,
         declaration_answers=all_answers,
-        is_last_page=is_last_page,
         get_question=content.get_question,
-        errors=errors,
+        errors=errors
     ), status_code
 
 
