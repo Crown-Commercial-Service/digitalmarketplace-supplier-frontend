@@ -11,7 +11,7 @@ import pytest
 from lxml import html
 from freezegun import freeze_time
 
-from tests.app.helpers import BaseApplicationTest, empty_g7_draft_service, BaseApplicationTestLoggedIn
+from tests.app.helpers import BaseApplicationTest, BaseApplicationTestLoggedIn, empty_g7_draft_service, empty_g9_draft_service
 
 
 # this is mostly a workaround for pytest not being able to do parametrization with unittest-derived class methods
@@ -34,7 +34,7 @@ def supplier_service_editing_fw_params(request):
     ("published", True, True, 302,),
     ("enabled", True, False, 400,),
     ("disabled", True, False, 400,),
-    ("published", False, False, 404,),
+    ("published", False, False, 404,),\
 ))
 def supplier_remove_service__service_status__expected_results(request):
     return request.param
@@ -775,6 +775,7 @@ class TestEditDraftService(BaseApplicationTestLoggedIn):
         super(TestEditDraftService, self).setup_method(method)
 
         self.empty_draft = {'services': empty_g7_draft_service()}
+        self.empty_g9_draft = {'services': empty_g9_draft_service()}
 
         self.multiquestion_draft = {
             'services': {
@@ -1012,34 +1013,37 @@ class TestEditDraftService(BaseApplicationTestLoggedIn):
         )
         assert res.status_code == 404
 
-    def test_update_redirects_to_next_editable_section(self, data_api_client, s3):
+    def test_update_in_section_with_more_questions_redirects_to_next_question_in_section(self, data_api_client, s3):
         s3.return_value.bucket_short_name = 'submissions'
-        data_api_client.get_framework.return_value = self.framework(status='open')
-        data_api_client.get_draft_service.return_value = self.empty_draft
+        data_api_client.get_framework.return_value = self.framework(slug='g-cloud-9', status='open')
+        data_api_client.get_draft_service.return_value = self.empty_g9_draft
         data_api_client.update_draft_service.return_value = None
 
         res = self.client.post(
-            '/suppliers/frameworks/g-cloud-7/submissions/scs/1/edit/service-description',
+            '/suppliers/frameworks/g-cloud-9/submissions/cloud-hosting/1/edit/pricing/price',
             data={
                 'continue_to_next_section': 'Save and continue'
             })
 
         assert res.status_code == 302
-        assert 'http://localhost/suppliers/frameworks/g-cloud-7/submissions/scs/1/edit/service-type' == \
-            res.headers['Location']
+        assert res.headers['Location'] == \
+            'http://localhost/suppliers/frameworks/g-cloud-9/submissions/cloud-hosting/1/edit/pricing/education-pricing'
 
-    def test_page_offers_continue_to_next_editable_section(self, data_api_client, s3):
+    def test_update_at_end_of_section_redirects_to_summary(self, data_api_client, s3):
         s3.return_value.bucket_short_name = 'submissions'
-        data_api_client.get_framework.return_value = self.framework(status='open')
-        data_api_client.get_draft_service.return_value = self.empty_draft
+        data_api_client.get_framework.return_value = self.framework(slug='g-cloud-9', status='open')
+        data_api_client.get_draft_service.return_value = self.empty_g9_draft
+        data_api_client.update_draft_service.return_value = None
 
-        res = self.client.get(
-            '/suppliers/frameworks/g-cloud-7/submissions/scs/1/edit/service-description',
-        )
+        res = self.client.post(
+            '/suppliers/frameworks/g-cloud-9/submissions/cloud-hosting/1/edit/pricing/free-or-trial-versions',
+            data={
+                'continue_to_next_section': 'Save and continue'
+            })
 
-        assert res.status_code == 200
-        document = html.fromstring(res.get_data(as_text=True))
-        assert len(document.xpath("//input[@type='submit'][@name='continue_to_next_section']")) > 0
+        assert res.status_code == 302
+        assert res.headers['Location'] == \
+            'http://localhost/suppliers/frameworks/g-cloud-9/submissions/cloud-hosting/1#pricing'
 
     def test_update_refuses_to_redirect_to_next_editable_section_if_dos(self, data_api_client, s3):
         s3.return_value.bucket_short_name = 'submissions'
