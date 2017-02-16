@@ -240,7 +240,7 @@ class BaseApplicationTest(object):
                 {'id': 1, 'slug': 'digital-specialists', 'name': 'Digital specialists', 'oneServiceLimit': True,
                  'unitSingular': 'service', 'unitPlural': 'service'},
             ]
-            metaframework = "dos"
+            metaframework = "digital-outcomes-and-specialists"
 
         return {
             'frameworks': {
