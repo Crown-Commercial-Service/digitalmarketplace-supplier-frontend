@@ -11,7 +11,9 @@ import pytest
 from lxml import html
 from freezegun import freeze_time
 
-from tests.app.helpers import BaseApplicationTest, BaseApplicationTestLoggedIn, empty_g7_draft_service, empty_g9_draft_service
+from tests.app.helpers import (
+    BaseApplicationTest, BaseApplicationTestLoggedIn, empty_g7_draft_service, empty_g9_draft_service
+)
 
 
 # this is mostly a workaround for pytest not being able to do parametrization with unittest-derived class methods
@@ -34,7 +36,7 @@ def supplier_service_editing_fw_params(request):
     ("published", True, True, 302,),
     ("enabled", True, False, 400,),
     ("disabled", True, False, 400,),
-    ("published", False, False, 404,),\
+    ("published", False, False, 404,),
 ))
 def supplier_remove_service__service_status__expected_results(request):
     return request.param

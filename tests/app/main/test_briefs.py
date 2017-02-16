@@ -384,7 +384,6 @@ class TestApplyToBrief(BaseApplicationTestLoggedIn):
         self.data_api_client.get_framework.return_value = self.framework
         self.data_api_client.get_brief_response.return_value = self.brief_response()
 
-
     def teardown_method(self, method):
         super(TestApplyToBrief, self).teardown_method(method)
         self.data_api_client_patch.stop()
