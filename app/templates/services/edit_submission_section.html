@@ -35,32 +35,26 @@
 
 {% block save_button %}
 
-  {% if next_section_name and not force_return_to_summary %}
+  {% if force_continue_button or (next_question and not force_return_to_summary) %}
     {%
       with
       label="Save and continue",
-      name = "continue_to_next_section",
+      name="save_and_continue",
       type="save"
     %}
       {% include "toolkit/button.html" %}
     {% endwith %}
 
-    <p class="next-page-message">
-      Next: {{ next_section_name }}
-    </p>
-
-    {%
-    with
-      type = "secondary",
-      label = "Save and return to service overview"
-    %}
-      {% include "toolkit/button.html" %}
-    {% endwith %}
-
+    {% if next_question %}
+      <p class="next-page-message">
+        Next: {{ next_question.name }}
+      </p>
+    {% endif %}
   {% else %}
     {%
       with
-      label="Save and continue",
+      label=("Save and return to " + lot.unitSingular + " summary") if lot else "Save and return to summary",
+      name="save_and_return",
       type="save"
     %}
       {% include "toolkit/button.html" %}
