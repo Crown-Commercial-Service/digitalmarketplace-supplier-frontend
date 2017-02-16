@@ -5,7 +5,7 @@ import mock
 from dmapiclient import api_stubs, HTTPError
 from dmapiclient.audit import AuditTypes
 from dmutils.email.exceptions import EmailError
-from ..helpers import BaseApplicationTest, FakeMail
+from ..helpers import BaseApplicationTest, FakeMail, BaseApplicationTestLoggedIn
 from lxml import html
 from datetime import datetime, timedelta
 
@@ -359,7 +359,7 @@ class TestSubmitClarificationQuestions(BaseApplicationTest):
         assert escaped_string in send_email.mock_calls[1][2]['email_body']
 
 
-class TestApplyToBrief(BaseApplicationTest):
+class TestApplyToBrief(BaseApplicationTestLoggedIn):
     """Tests requests for the new multipage flow for applying for a brief"""
 
     def setup_method(self, method):
@@ -384,8 +384,6 @@ class TestApplyToBrief(BaseApplicationTest):
         self.data_api_client.get_framework.return_value = self.framework
         self.data_api_client.get_brief_response.return_value = self.brief_response()
 
-        with self.app.test_client():
-            self.login()
 
     def teardown_method(self, method):
         super(TestApplyToBrief, self).teardown_method(method)
@@ -1166,7 +1164,7 @@ class BriefResponseTestHelpers():
 
 
 @mock.patch("app.main.views.briefs.data_api_client")
-class TestLegacyRespondToBrief(BaseApplicationTest, BriefResponseTestHelpers):
+class TestLegacyRespondToBrief(BaseApplicationTestLoggedIn, BriefResponseTestHelpers):
     """Tests for the old single page flow for applying for a brief which is being phased out"""
 
     def setup_method(self, method):
@@ -1180,9 +1178,6 @@ class TestLegacyRespondToBrief(BaseApplicationTest, BriefResponseTestHelpers):
         lots = [api_stubs.lot(slug="digital-specialists", allows_brief=True)]
         self.framework = api_stubs.framework(status="live", slug="digital-outcomes-and-specialists",
                                              clarification_questions_open=False, lots=lots)
-
-        with self.app.test_client():
-            self.login()
 
     def test_will_404_if_brief_is_not_a_legacy_brief(self, data_api_client):
         self.brief['briefs']['publishedAt'] = '2016-12-25T12:00:00.000000Z'
@@ -1677,14 +1672,11 @@ class TestLegacyRespondToBrief(BaseApplicationTest, BriefResponseTestHelpers):
 
 
 @mock.patch("app.main.views.briefs.data_api_client")
-class TestStartBriefResponseApplication(BaseApplicationTest, BriefResponseTestHelpers):
+class TestStartBriefResponseApplication(BaseApplicationTestLoggedIn, BriefResponseTestHelpers):
     def setup_method(self, method):
         super(TestStartBriefResponseApplication, self).setup_method(method)
         self.brief = api_stubs.brief(status='live', lot_slug='digital-specialists')
         self.brief['briefs']['publishedAt'] = '2016-12-25T12:00:00.000000Z'
-
-        with self.app.test_client():
-            self.login()
 
     def test_will_return_404_if_brief_is_a_legacy_brief(self, data_api_client):
         self.brief['briefs']['publishedAt'] = '2016-10-25T12:00:00.000000Z'
@@ -1843,14 +1835,12 @@ class TestStartBriefResponseApplication(BaseApplicationTest, BriefResponseTestHe
 
 
 @mock.patch("app.main.views.briefs.data_api_client")
-class TestPostStartBriefResponseApplication(BaseApplicationTest):
+class TestPostStartBriefResponseApplication(BaseApplicationTestLoggedIn):
+
     def setup_method(self, method):
         super(TestPostStartBriefResponseApplication, self).setup_method(method)
         self.brief = api_stubs.brief(status='live', lot_slug='digital-specialists')
         self.brief['briefs']['publishedAt'] = '2016-12-25T12:00:00.000000Z'
-
-        with self.app.test_client():
-            self.login()
 
     @mock.patch("app.main.views.briefs.is_supplier_eligible_for_brief")
     def test_will_show_not_eligible_response_if_supplier_is_not_eligible_for_brief(
@@ -1885,7 +1875,7 @@ class TestPostStartBriefResponseApplication(BaseApplicationTest):
         assert res.status_code == 404
 
 
-class ResponseResultPageBothFlows(BaseApplicationTest, BriefResponseTestHelpers):
+class ResponseResultPageBothFlows(BaseApplicationTestLoggedIn, BriefResponseTestHelpers):
 
     def setup_method(self, method):
         super(ResponseResultPageBothFlows, self).setup_method(method)
@@ -1895,8 +1885,6 @@ class ResponseResultPageBothFlows(BaseApplicationTest, BriefResponseTestHelpers)
         self.brief = api_stubs.brief(status='live')
         self.brief['briefs']['essentialRequirements'] = ['Must one', 'Must two', 'Must three']
         self.brief['briefs']['evaluationType'] = ['Interview']
-        with self.app.test_client():
-            self.login()
 
     def set_framework_and_eligibility_for_api_client(self, data_api_client):
         data_api_client.get_framework.return_value = self.framework
