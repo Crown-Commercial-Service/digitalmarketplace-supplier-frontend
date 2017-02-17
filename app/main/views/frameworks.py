@@ -309,7 +309,7 @@ def framework_supplier_declaration_overview(framework_slug):
         sections_errors=sections_errors,
         validates=not any(errors for section, errors in sections_errors.values()),
         framework_dates=content_loader.get_message(framework_slug, "dates"),
-    )
+    ), 200
 
 
 @main.route('/frameworks/<framework_slug>/declaration', methods=['POST'])
