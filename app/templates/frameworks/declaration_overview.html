@@ -30,6 +30,7 @@
   {% if validates %}
     {% if supplier_framework.declaration.status != "complete" %}
     <form method="POST" action="">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
       {%
         with
         advice = true,

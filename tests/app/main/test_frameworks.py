@@ -2665,7 +2665,7 @@ class TestDeclarationOverview(BaseApplicationTest):
 
             if decl_valid and declaration.get("status") != "complete":
                 mdf_actions = doc.xpath(
-                    "//form[@method='POST'][.//input[@value=$t][@type='submit']]/@action",
+                    "//form[@method='POST'][.//input[@value=$t][@type='submit']][.//input[@name='csrf_token']]/@action",
                     t="Make declaration",
                 )
                 assert len(mdf_actions) == 2
