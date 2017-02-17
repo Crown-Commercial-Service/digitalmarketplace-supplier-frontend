@@ -285,6 +285,7 @@ def framework_supplier_declaration_overview(framework_slug):
 
     content = content_loader.get_manifest(framework_slug, 'declaration').filter(sf["declaration"])
 
+    # generate an (ordered) dict of the form {section_slug: (section, section_errors)}.
     # we must perform an actual validation for each section rather than rely on .answer_required as the latter won't
     # take into account declarations custom question dependencies
     sections_errors = OrderedDict(
