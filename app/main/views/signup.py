@@ -49,6 +49,8 @@ def start_seller_signup(applicant={}, errors=None):
 @main.route('/signup', methods=['POST'])
 def send_seller_signup_email():
     user = from_response(request)
+    if user.get('user_type') != 'seller':
+        return abort(400)
 
     fields = ['name', 'email_address']
     errors = validate_form_data(user, fields)

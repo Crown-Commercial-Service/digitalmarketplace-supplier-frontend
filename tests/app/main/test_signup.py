@@ -51,7 +51,8 @@ def get_another_application(id):
 
 
 class TestSignupPage(BaseApplicationTest):
-    test_user = {'csrf_token': FakeCsrf.valid_token, 'name': 'matt', 'email_address': 'email@company.com'}
+    test_user = {'csrf_token': FakeCsrf.valid_token, 'name': 'matt',
+                 'email_address': 'email@company.com', 'user_type': 'seller'}
 
     def setup(self):
         super(TestSignupPage, self).setup()
