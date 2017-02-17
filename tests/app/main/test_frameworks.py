@@ -2728,7 +2728,8 @@ class TestDeclarationSubmit(BaseApplicationTest):
 
     @pytest.mark.parametrize("prefill_fw_slug", (None, "some-previous-framework",))
     @pytest.mark.parametrize("declaration_status", ("started", "complete",))
-    def test_valid_declaration(self, data_api_client, prefill_fw_slug, declaration_status):
+    @mock.patch("dmutils.s3.S3")  # needed by the framework dashboard which our request gets redirected to
+    def test_valid_declaration(self, s3, data_api_client, prefill_fw_slug, declaration_status):
         with self.app.test_client():
             self.login()
 
