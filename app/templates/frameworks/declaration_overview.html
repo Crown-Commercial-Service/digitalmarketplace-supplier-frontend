@@ -92,7 +92,7 @@
           ],
           field_headings_visible=False
         ) %}
-          {% call summary.row(complete=not section_errors) %}
+          {% call summary.row() %}
             {{ summary.field_name(question.label|question_references(section.get_question)) }}
             {% if section.editable %}
               {% if section_errors %}
