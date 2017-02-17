@@ -2162,7 +2162,7 @@ class TestStartSupplierDeclaration(BaseApplicationTest):
 @mock.patch('app.main.views.frameworks.data_api_client', autospec=True)
 class TestDeclarationOverviewSubmit(BaseApplicationTest):
     """
-        Behaviour common to both GET and POST views
+        Behaviour common to both GET and POST views on path /suppliers/frameworks/g-cloud-7/declaration
     """
     def test_supplier_not_interested(self, data_api_client, get_or_post):
         with self.app.test_client():
@@ -2624,13 +2624,24 @@ class TestDeclarationOverview(BaseApplicationTest):
 
             assert bool(doc.xpath(
                 "//p[contains(normalize-space(string()), $t)][contains(normalize-space(string()), $f)]",
-                t="You must review or answer all questions and make your declaration before",
+                t="You must answer all questions and make your declaration before",
                 f="G-Cloud 9",
-            )) is (not (declaration and declaration.get("status") == "complete"))
+            )) is (not decl_valid)
             assert bool(doc.xpath(
+                "//p[contains(normalize-space(string()), $t)][contains(normalize-space(string()), $f)]",
+                t="You must make your declaration before",
+                f="G-Cloud 9",
+            )) is (decl_valid and declaration.get("status") != "complete")
+
+            assert len(doc.xpath(
                 "//p[contains(normalize-space(string()), $t)]",
-                t="You can come back and change your answers",
-            )) is bool(declaration and declaration.get("status") == "complete")
+                t="You can come back and edit your answers at any time before the deadline.",
+            )) == (2 if decl_valid and declaration.get("status") != "complete" else 0)
+            assert len(doc.xpath(
+                "//p[contains(normalize-space(string()), $t)][not(contains(normalize-space(string()), $d))]",
+                t="You can come back and edit your answers at any time",
+                d="deadline",
+            )) == (2 if decl_valid and declaration.get("status") == "complete" else 0)
 
             if prefill_fw_slug is None:
                 assert not doc.xpath("//a[normalize-space(string())=$t]", t="Review answer")
@@ -2641,6 +2652,8 @@ class TestDeclarationOverview(BaseApplicationTest):
                 b="Review answer",
             )) is (not decl_valid)
             if not decl_valid:
+                # assert that all links with the label "Answer required" or "Review answer" link to some subpage (by
+                # asserting that there are none that don't, having previously determined that such-labelled links exist)
                 assert not doc.xpath(
                     # we want the href to *contain* $u but not *be* $u
                     "//a[normalize-space(string())=$a or normalize-space(string())=$b]"

@@ -26,8 +26,9 @@
 {% endblock %}
 
 
-{% macro make_declaration_button() %}
+{% macro make_declaration_button_block() %}
   {% if validates %}
+    {% if supplier_framework.declaration.status != "complete" %}
     <form method="POST" action="">
       {%
         with
@@ -38,6 +39,15 @@
         {% include "toolkit/button.html" %}
       {% endwith %}
     </form>
+    {% endif %}
+    <p>
+      You can come back and edit your answers at any time before
+      {%- if supplier_framework.declaration.status == "complete" -%}
+        &nbsp;{{ framework_dates.framework_close_date }}.
+      {% else %}
+        the deadline.
+      {% endif %}
+    </p>
   {% endif %}
 {% endmacro %}
 
@@ -53,17 +63,13 @@
       {% endwith %}
     </div>
     <div class="column-two-thirds">
-      {% if supplier_framework.declaration.status == "complete" %}
+      {% if supplier_framework.declaration.status != "complete" %}
         <p>
-          You can come back and change your answers at any time before&nbsp;{{ framework_dates.framework_close_date }}.
-        </p>
-      {% else %}
-        {{ make_declaration_button() }}
-        <p>
-          You must review or answer all questions and make your declaration 
+          You must {% if not validates %}answer all questions and{% endif %} make your declaration 
           before&nbsp;{{ framework_dates.framework_close_date }} to apply to {{ framework.name }}.
         </p>
       {% endif %}
+      {{ make_declaration_button_block() }}
     </div>
     <div class="column-one-whole">
       {% import "toolkit/summary-table.html" as summary %}
@@ -108,9 +114,7 @@
       {% endfor %}
     </div>
     <div class="column-two-thirds">
-    {% if supplier_framework.declaration.status != "complete" %}
-      {{ make_declaration_button() }}
-    {% endif %}
+      {{ make_declaration_button_block() }}
       <p>
         <a href="{{ url_for(".framework_dashboard", framework_slug=framework.slug) }}">Return to application</a>
       </p>
