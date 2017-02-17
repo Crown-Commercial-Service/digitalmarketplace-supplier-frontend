@@ -145,7 +145,7 @@ def edit_brief_response(brief_id, brief_response_id, question_id=None):
         return redirect(url_for(".view_response_result", brief_id=brief_id))
 
     framework, lot = get_framework_and_lot(
-        data_api_client, brief['frameworkSlug'], brief['lotSlug'], allowed_statuses=['live'])
+        data_api_client, brief['frameworkSlug'], brief['lotSlug'], allowed_statuses=['live', 'expired'])
 
     max_day_rate = None
     role = brief.get('specialistRole')
@@ -376,7 +376,7 @@ def view_response_result(brief_id):
 
     brief_response = brief_response[0]
     framework, lot = get_framework_and_lot(
-        data_api_client, brief['frameworkSlug'], brief['lotSlug'], allowed_statuses=['live'])
+        data_api_client, brief['frameworkSlug'], brief['lotSlug'], allowed_statuses=['live', 'expired'])
 
     if brief_response.get('essentialRequirementsMet'):
         brief_response_display_manifest = 'display_brief_response'

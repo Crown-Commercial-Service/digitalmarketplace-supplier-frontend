@@ -402,6 +402,27 @@ class TestApplyToBrief(BaseApplicationTest):
         assert res.status_code == 302
         assert res.location == 'http://localhost/suppliers/opportunities/1234/responses/5/first'
 
+    def test_can_get_question_page_for_live_and_expired_framework(self):
+        for framework_status in ['live', 'expired']:
+            framework = self.framework.copy()
+            framework.update({'status': framework_status})
+            self.data_api_client.get_framework.return_value = framework
+
+            res = self.client.get('/suppliers/opportunities/1234/responses/5/respondToEmailAddress')
+
+            assert res.status_code == 200
+
+    def test_can_post_question_page_for_live_and_expired_framework(self):
+        for framework_status in ['live', 'expired']:
+            framework = self.framework.copy()
+            framework.update({'status': framework_status})
+            self.data_api_client.get_framework.return_value = framework
+
+            res = self.client.post('/suppliers/opportunities/1234/responses/5/respondToEmailAddress')
+
+            assert res.status_code == 302
+            assert res.location == 'http://localhost/suppliers/opportunities/1234/responses/result'
+
     def test_404_if_brief_response_does_not_exist(self):
         for method in ('get', 'post'):
             self.data_api_client.get_brief_response = mock.MagicMock(side_effect=HTTPError(mock.Mock(status_code=404)))
@@ -440,14 +461,14 @@ class TestApplyToBrief(BaseApplicationTest):
             res = self.client.open('/suppliers/opportunities/1234/responses/5/question-id', method=method)
             assert res.status_code == 404
 
-    def test_404_for_not_live_framework(self):
-        for method in ('get', 'post'):
-            self.data_api_client.get_framework.return_value = api_stubs.framework(
-                status="expired", slug="digital-outcomes-and-specialists", clarification_questions_open=False
-            )
-
-            res = self.client.open('/suppliers/opportunities/1234/responses/5/question-id', method=method)
-            assert res.status_code == 404
+    def test_404_for_not_live_or_expired_framework(self):
+        for framework_status in ['coming', 'open', 'pending', 'standstill']:
+            for method in ('get', 'post'):
+                framework = self.framework.copy()
+                framework.update({'status': framework_status})
+                self.data_api_client.get_framework.return_value = framework
+                res = self.client.open('/suppliers/opportunities/1234/responses/5/question-id', method=method)
+                assert res.status_code == 404
 
     @mock.patch("app.main.views.briefs.is_supplier_eligible_for_brief")
     def test_show_not_eligible_page_if_supplier_not_eligible_to_apply_for_brief(self, is_supplier_eligible_for_brief):
@@ -462,13 +483,17 @@ class TestApplyToBrief(BaseApplicationTest):
 
     @mock.patch("app.main.views.briefs.supplier_has_a_brief_response")
     def test_redirect_to_show_brief_response_if_already_applied_for_brief(self, supplier_has_a_brief_response):
-        for method in ('get', 'post'):
-            supplier_has_a_brief_response.return_value = True
+        framework = self.framework.copy()
+        for framework_status in ['live', 'expired']:
+            framework.update({'status': framework_status})
+            self.data_api_client.get_framework.return_value = framework
+            for method in ('get', 'post'):
+                supplier_has_a_brief_response.return_value = True
 
-            res = self.client.open('/suppliers/opportunities/1234/responses/5/question-id', method=method)
-            assert res.status_code == 302
-            assert res.location == 'http://localhost/suppliers/opportunities/1234/responses/result'
-            self.assert_flashes("already_applied", "error")
+                res = self.client.open('/suppliers/opportunities/1234/responses/5/question-id', method=method)
+                assert res.status_code == 302
+                assert res.location == 'http://localhost/suppliers/opportunities/1234/responses/result'
+                self.assert_flashes("already_applied", "error")
 
     @mock.patch("app.main.views.briefs.content_loader")
     def test_should_404_for_non_existent_content_section(self, content_loader):
