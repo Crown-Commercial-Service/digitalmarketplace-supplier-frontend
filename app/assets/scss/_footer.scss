@@ -102,25 +102,4 @@
       font-size: 16px;
     }
   }
-
-  .footer-categories a[rel="external"],
-  .footer-meta .footer-meta-inner a[rel="external"] {
-    /* There is no mixin for a 16px black link with a font weight of normal in the govuk toolkit hence the variant below */
-    &:after {
-      content: "\A0\A0\A0\A0\A0";
-      background-position: right 3px;
-      background-image: file-url("external-links/external-link-black-12x12.png");
-      background-repeat: no-repeat;
-
-      @include device-pixel-ratio() {
-        background-image: file-url("external-links/external-link-black-24x24.png");
-        background-size: 12px 12px;
-      }
-    }
-
-    &:hover:after {
-      background-position: right 3px;
-    }
-  }
-
 }

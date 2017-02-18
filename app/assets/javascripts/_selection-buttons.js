@@ -1,13 +1,10 @@
-;(function(GOVUK, GDM) {
+(function(GOVUK, GDM) {
 
   GDM.selectionButtons = function() {
 
     if (!GOVUK.SelectionButtons) return;
 
-    new GOVUK.SelectionButtons('.selection-button input', {
-      'focusedClass' : 'selection-button-focused',
-      'selectedClass' : 'selection-button-selected'
-    });
+    new GOVUK.SelectionButtons('.selection-button input');
 
     new GOVUK.ShowHideContent().init();
 
