@@ -571,7 +571,7 @@ class TestApplyToBrief(BaseApplicationTest):
 
         doc = html.fromstring(res.get_data(as_text=True))
         assert doc.xpath("//h1/text()")[0].strip() == 'Email address the buyer should use to contact you'
-        assert (doc.xpath("//span[@class=\"question-heading-with-hint\"]/text()")[0].strip() ==
+        assert (doc.xpath("//span[@class=\"question-heading\"]/text()")[0].strip() ==
                 'Email address the buyer should use to contact you')
         assert (doc.xpath("//span[@class=\"question-advice\"]/text()")[0].strip() ==
                 'All communication about your application will be sent to this address.')
