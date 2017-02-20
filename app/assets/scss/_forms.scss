@@ -146,11 +146,6 @@ main {
 }
 
 form {
-
-  input[type="submit"] {
-    margin-top: 3em;
-  }
-
   .form-control, .field {
       @include form-control;
     }
@@ -245,7 +240,7 @@ form {
     width: 1.7rem;
     margin-top: 0;
     margin-right: 0.5rem;
-    
+
     input {
       padding-left: 0.1rem;
       padding-right: 0.1rem;

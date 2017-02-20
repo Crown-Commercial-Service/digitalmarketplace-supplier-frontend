@@ -5,7 +5,7 @@ button,
 [type='reset'],
 [type='button'] {
   height: auto;
-  margin: 0 $small-spacing $small-spacing 0;
+  margin: $medium-spacing $small-spacing $small-spacing 0;
   background-color: $button-bg-colour;
   color: $button-text-colour;
   border-color: $button-bg-colour--hover;
