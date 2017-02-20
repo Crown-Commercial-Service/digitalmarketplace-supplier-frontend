@@ -66,7 +66,7 @@
           {% if current_user.role == 'buyer' %}
             {% set dashboardUrl = config['BASE_PREFIX'] + '/sellers' %}
           {% elif current_user.role == 'applicant'  %}
-            {% set dashboardText = 'Become a seller' %}
+            {% set dashboardText = 'Continue application' %}
             {% set dashboardUrl = '/sellers/application' %}
           {% else %}
             {% set dashboardUrl = '/sellers' %}
