@@ -17,12 +17,14 @@ with items = [
 
 {% block main_content %}
 
-{%
-with
-    heading = "All done!"
-%}
-{% include "toolkit/page-heading.html" %}
-{% endwith %}
+<header class="page-heading page-heading-without-breadcrumb">
+  <h1>
+    <img alt=" " src="{{ asset_path }}images/tick.svg" style="
+    height: 1em;
+    padding-right: 0.3em;
+"> All done!
+  </h1>
+</header>
 
 <div class="grid-row">
     <div class="column-two-thirds">

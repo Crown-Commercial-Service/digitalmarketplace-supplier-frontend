@@ -77,3 +77,4 @@ app/static
 version_label
 *.sublime-project
 *.sublime-workspace
+.DS_Store
