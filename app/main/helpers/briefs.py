@@ -73,7 +73,7 @@ def send_brief_clarification_question(data_api_client, brief, clarification_ques
         "emails/brief_clarification_question_confirmation.html",
         brief_id=brief['id'],
         brief_name=brief['title'],
-        framework_slug=brief['frameworkSlug'],
+        framework_framework=brief['frameworkFramework'],
         message=clarification_question
     )
     try:
