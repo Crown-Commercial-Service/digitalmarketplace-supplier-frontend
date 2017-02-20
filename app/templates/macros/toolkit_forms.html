@@ -47,6 +47,7 @@
     optional=question_content.optional,
     values=service_data[question_content.id],
     id=question_content.id,
+    hidden=question_content.hidden,
     error=errors.get(question_content.id)['message']|question_references(get_question)
   %}
     {% include "toolkit/forms/list-entry.html" %}
@@ -66,7 +67,9 @@
     options=question_content.options,
     type='checkbox',
     error=errors.get(question_content.id)['message']|question_references(get_question),
-    question_number=question_number
+    question_number=question_number,
+    hidden=question_content.hidden,
+    followup=question_content.values_followup
   %}
     {% include "toolkit/forms/selection-buttons.html" %}
   {% endwith %}
@@ -86,7 +89,9 @@
     options=question_content.options,
     type='radio',
     error=errors.get(question_content.id)['message']|question_references(get_question),
-    question_number=question_number
+    question_number=question_number,
+    hidden=question_content.hidden,
+    followup=question_content.values_followup
   %}
     {% include "toolkit/forms/selection-buttons.html" %}
   {% endwith %}
@@ -103,7 +108,8 @@
     value=service_data[question_content.id],
     id=question_content.id,
     type='boolean',
-    followup=question_content.followup,
+    hidden=question_content.hidden,
+    followup=question_content.values_followup,
     error=errors.get(question_content.id)['message']|question_references(get_question),
     question_number=question_number
   %}
