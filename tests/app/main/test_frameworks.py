@@ -1619,7 +1619,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
 
     @pytest.mark.parametrize('supplier_framework_kwargs,link_label,link_href', (
         ({'declaration': None}, 'Make supplier declaration', '/suppliers/frameworks/g-cloud-7/start-declaration'),
-        ({}, 'Edit supplier declaration', '/suppliers/frameworks/g-cloud-7/declaration/g-cloud-7-essentials'),
+        ({}, 'Edit supplier declaration', '/suppliers/frameworks/g-cloud-7/declaration'),
     ))
     def test_make_or_edit_supplier_declaration_shows_correct_page(self, data_api_client, s3, supplier_framework_kwargs,
                                                                   link_label, link_href):
@@ -2145,7 +2145,7 @@ class TestFrameworkDocumentDownload(BaseApplicationTest):
 
 @mock.patch('app.main.views.frameworks.data_api_client', autospec=True)
 class TestStartSupplierDeclaration(BaseApplicationTest):
-    def test_start_declaration_goes_to_first_questions_page(self, data_api_client):
+    def test_start_declaration_goes_to_declaration_overview_page(self, data_api_client):
         with self.app.test_client():
             self.login()
 
@@ -2156,7 +2156,7 @@ class TestStartSupplierDeclaration(BaseApplicationTest):
             document = html.fromstring(response.get_data(as_text=True))
 
             assert document.xpath("//a[normalize-space(string(.))='Start your declaration']/@href")[0] \
-                == '/suppliers/frameworks/g-cloud-7/declaration/g-cloud-7-essentials'
+                == '/suppliers/frameworks/g-cloud-7/declaration'
 
 
 @mock.patch('app.main.views.frameworks.data_api_client', autospec=True)

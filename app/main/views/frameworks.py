@@ -79,9 +79,6 @@ def framework_dashboard(framework_slug):
     application_made = supplier_is_on_framework or (len(complete_drafts) > 0 and declaration_status == 'complete')
     lots_with_completed_drafts = [lot for lot in framework['lots'] if count_drafts_by_lot(complete_drafts, lot['slug'])]
 
-    first_page = content_loader.get_manifest(
-        framework_slug, 'declaration'
-    ).get_next_editable_section_id()
     framework_dates = content_loader.get_message(framework_slug, 'dates')
     framework_urls = content_loader.get_message(framework_slug, 'urls')
 
@@ -160,7 +157,6 @@ def framework_dashboard(framework_slug):
         },
         declaration_status=declaration_status,
         signed_agreement_document_name=signed_agreement_document_name,
-        first_page_of_declaration=first_page,
         framework=framework,
         framework_dates=framework_dates,
         framework_urls=framework_urls,
@@ -265,12 +261,10 @@ def framework_submission_services(framework_slug, lot_slug):
 @login_required
 def framework_start_supplier_declaration(framework_slug):
     framework = get_framework(data_api_client, framework_slug, allowed_statuses=['open'])
-    first_page = content_loader.get_manifest(framework_slug, 'declaration').get_next_editable_section_id()
     framework_close_date = content_loader.get_message(framework_slug, 'dates', 'framework_close_date')
 
     return render_template("frameworks/start_declaration.html",
                            framework=framework,
-                           first_page_of_declaration=first_page,
                            framework_close_date=framework_close_date), 200
 
 
@@ -280,7 +274,7 @@ def framework_supplier_declaration_overview(framework_slug):
     framework = get_framework(data_api_client, framework_slug, allowed_statuses=['open'])
 
     sf = data_api_client.get_supplier_framework_info(current_user.supplier_id, framework_slug)["frameworkInterest"]
-    # ensure our declaration is at least (probably) a dict
+    # ensure our declaration is a a dict
     sf["declaration"] = sf.get("declaration") or {}
 
     content = content_loader.get_manifest(framework_slug, 'declaration').filter(sf["declaration"])
