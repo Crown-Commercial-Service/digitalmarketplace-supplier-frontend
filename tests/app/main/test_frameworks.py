@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from collections import OrderedDict
+from itertools import chain
 
 try:
     from StringIO import StringIO
@@ -7,6 +8,7 @@ except ImportError:
     from io import BytesIO as StringIO
 import mock
 import pytest
+from six.moves.urllib.parse import urljoin
 
 from flask import session
 from lxml import html
@@ -15,7 +17,7 @@ from dmapiclient.audit import AuditTypes
 from dmutils.email.exceptions import EmailError
 from dmutils.s3 import S3ResponseError
 
-from ..helpers import BaseApplicationTest, FULL_G7_SUBMISSION, FakeMail
+from ..helpers import BaseApplicationTest, FULL_G7_SUBMISSION, FakeMail, valid_g9_declaration_base
 
 
 def _return_fake_s3_file_dict(directory, filename, ext, last_modified=None, size=None):
@@ -36,6 +38,27 @@ def get_g_cloud_8():
         slug='g-cloud-8',
         framework_agreement_version='v1.0'
     )
+
+
+def _assert_args_and_raise(e, *args, **kwargs):
+    def _inner(*inner_args, **inner_kwargs):
+        assert args == inner_args
+        assert kwargs == inner_kwargs
+        raise e
+    return _inner
+
+
+def _assert_args_and_return(retval, *args, **kwargs):
+    def _inner(*inner_args, **inner_kwargs):
+        assert args == inner_args
+        assert kwargs == inner_kwargs
+        return retval
+    return _inner
+
+
+@pytest.fixture(params=("GET", "POST"))
+def get_or_post(request):
+    return request.param
 
 
 @mock.patch('dmutils.s3.S3')
@@ -1596,7 +1619,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
 
     @pytest.mark.parametrize('supplier_framework_kwargs,link_label,link_href', (
         ({'declaration': None}, 'Make supplier declaration', '/suppliers/frameworks/g-cloud-7/start-declaration'),
-        ({}, 'Edit supplier declaration', '/suppliers/frameworks/g-cloud-7/declaration/g-cloud-7-essentials'),
+        ({}, 'Edit supplier declaration', '/suppliers/frameworks/g-cloud-7/declaration'),
     ))
     def test_make_or_edit_supplier_declaration_shows_correct_page(self, data_api_client, s3, supplier_framework_kwargs,
                                                                   link_label, link_href):
@@ -2122,7 +2145,7 @@ class TestFrameworkDocumentDownload(BaseApplicationTest):
 
 @mock.patch('app.main.views.frameworks.data_api_client', autospec=True)
 class TestStartSupplierDeclaration(BaseApplicationTest):
-    def test_start_declaration_goes_to_first_questions_page(self, data_api_client):
+    def test_start_declaration_goes_to_declaration_overview_page(self, data_api_client):
         with self.app.test_client():
             self.login()
 
@@ -2133,7 +2156,617 @@ class TestStartSupplierDeclaration(BaseApplicationTest):
             document = html.fromstring(response.get_data(as_text=True))
 
             assert document.xpath("//a[normalize-space(string(.))='Start your declaration']/@href")[0] \
-                == '/suppliers/frameworks/g-cloud-7/declaration/g-cloud-7-essentials'
+                == '/suppliers/frameworks/g-cloud-7/declaration'
+
+
+@mock.patch('app.main.views.frameworks.data_api_client', autospec=True)
+class TestDeclarationOverviewSubmit(BaseApplicationTest):
+    """
+        Behaviour common to both GET and POST views on path /suppliers/frameworks/g-cloud-7/declaration
+    """
+    def test_supplier_not_interested(self, data_api_client, get_or_post):
+        with self.app.test_client():
+            self.login()
+
+            data_api_client.get_framework.side_effect = _assert_args_and_return(
+                self.framework(status="open"),
+                "g-cloud-7",
+            )
+            data_api_client.get_supplier_framework_info.side_effect = _assert_args_and_raise(
+                APIError(mock.Mock(status_code=404)),
+                1234,
+                "g-cloud-7",
+            )
+            data_api_client.set_supplier_declaration.side_effect = AssertionError("This shouldn't be called")
+
+            response = getattr(self.client, get_or_post.lower())("/suppliers/frameworks/g-cloud-7/declaration")
+
+            assert response.status_code == 404
+
+    def test_framework_standstill(self, data_api_client, get_or_post):
+        with self.app.test_client():
+            self.login()
+
+            data_api_client.get_framework.side_effect = _assert_args_and_return(
+                self.framework(status="standstill"),
+                "g-cloud-7",
+            )
+            data_api_client.get_supplier_framework_info.side_effect = _assert_args_and_return(
+                self.supplier_framework(framework_slug="g-cloud-7"),
+                1234,
+                "g-cloud-7",
+            )
+            data_api_client.set_supplier_declaration.side_effect = AssertionError("This shouldn't be called")
+
+            response = getattr(self.client, get_or_post.lower())("/suppliers/frameworks/g-cloud-7/declaration")
+
+            assert response.status_code == 404
+
+    def test_framework_unknown(self, data_api_client, get_or_post):
+        with self.app.test_client():
+            self.login()
+
+            data_api_client.get_framework.side_effect = _assert_args_and_raise(
+                APIError(mock.Mock(status_code=404)),
+                "muttoning-clouds",
+            )
+            data_api_client.get_supplier_framework_info.side_effect = _assert_args_and_raise(
+                APIError(mock.Mock(status_code=404)),
+                1234,
+                "muttoning-clouds",
+            )
+            data_api_client.set_supplier_declaration.side_effect = AssertionError("This shouldn't be called")
+
+            response = getattr(self.client, get_or_post.lower())("/suppliers/frameworks/muttoning-clouds/declaration")
+
+            assert response.status_code == 404
+
+
+@mock.patch('app.main.views.frameworks.data_api_client', autospec=True)
+class TestDeclarationOverview(BaseApplicationTest):
+    @staticmethod
+    def _extract_section_information(doc, section_title):
+        """
+            given a section (full text) name, returns that section's relevant information in a tuple (format described
+            in comments)
+        """
+        tables = doc.xpath(
+            "//table[preceding::h2[1][normalize-space(string())=$section_title]]",
+            section_title=section_title,
+        )
+        assert len(tables) == 1
+        table = tables[0]
+
+        edit_as = doc.xpath(
+            "//a[@class='summary-change-link'][preceding::h2[1][normalize-space(string())=$section_title]]",
+            section_title=section_title,
+        )
+        assert [a.xpath("normalize-space(string())") for a in edit_as] == ["Edit"]
+        edit_a = edit_as[0]
+
+        return (
+            # table caption text
+            table.xpath("normalize-space(string(./caption))"),
+            # "Edit" link href
+            edit_a.xpath("@href")[0],
+            tuple(
+                (
+                    # contents of row heading
+                    row.xpath("normalize-space(string(./td[@class='summary-item-field-first']))"),
+                    # full text contents of row "value"
+                    row.xpath("normalize-space(string(./td[@class='summary-item-field']))"),
+                    # full text contents of each a element in row value
+                    tuple(a.xpath("normalize-space(string())") for a in row.xpath(
+                        "./td[@class='summary-item-field']//a"
+                    )),
+                    # href of each a element in row value
+                    tuple(row.xpath("./td[@class='summary-item-field']//a/@href")),
+                    # full text contents of each li element in row value
+                    tuple(li.xpath("normalize-space(string())") for li in row.xpath(
+                        "./td[@class='summary-item-field']//li"
+                    )),
+                ) for row in table.xpath(".//tr[contains(@class,'summary-item-row')]")
+            )
+        )
+
+    @pytest.mark.parametrize("declaration,decl_valid,prefill_fw_slug,expected_pss,expected_gme,expected_dys", tuple(
+        chain.from_iterable(chain(
+        ((
+            empty_declaration,  # noqa
+            False,
+            prefill_fw_slug,
+            (
+                "Providing suitable services",
+                "/suppliers/frameworks/g-cloud-9/declaration/providing-suitable-services",
+                (
+                    (
+                        "No unfair access to information",
+                        "Answer required",
+                        ("Answer required",),
+                        ("/suppliers/frameworks/g-cloud-9/declaration/providing-suitable-services#unfairCompetition",),
+                        (),
+                    ),
+                    (
+                        "Required skills and resources",
+                        "Answer required",
+                        ("Answer required",),
+                        ("/suppliers/frameworks/g-cloud-9/declaration/providing-suitable-services#skillsAndResources",),
+                        (),
+                    ),
+                    (
+                        "What your team will deliver",
+                        "Answer required",
+                        ("Answer required",),
+                        ("/suppliers/frameworks/g-cloud-9/declaration/providing-suitable-"
+                            "services#offerServicesYourselves",),
+                        (),
+                    ),
+                    (
+                        "Contractual responsibility and accountability",
+                        "Answer required",
+                        ("Answer required",),
+                        ("/suppliers/frameworks/g-cloud-9/declaration/providing-suitable-services#fullAccountability",),
+                        (),
+                    ),
+                ),
+            ),
+            (
+                "Grounds for mandatory exclusion",
+                "/suppliers/frameworks/g-cloud-9/declaration/grounds-for-mandatory-exclusion",
+                (
+                    (
+                        "Organised crime or conspiracy convictions",
+                        q_link_text_prefillable_section,
+                        (q_link_text_prefillable_section,),
+                        ("/suppliers/frameworks/g-cloud-9/declaration/grounds-for-mandatory-exclusion#conspiracy",),
+                        (),
+                    ),
+                    (
+                        "Bribery or corruption convictions",
+                        q_link_text_prefillable_section,
+                        (q_link_text_prefillable_section,),
+                        ("/suppliers/frameworks/g-cloud-9/declaration/grounds-for-mandatory-"
+                            "exclusion#corruptionBribery",),
+                        (),
+                    ),
+                    (
+                        "Fraud convictions",
+                        q_link_text_prefillable_section,
+                        (q_link_text_prefillable_section,),
+                        ("/suppliers/frameworks/g-cloud-9/declaration/grounds-for-mandatory-"
+                            "exclusion#fraudAndTheft",),
+                        (),
+                    ),
+                    (
+                        "Terrorism convictions",
+                        q_link_text_prefillable_section,
+                        (q_link_text_prefillable_section,),
+                        ("/suppliers/frameworks/g-cloud-9/declaration/grounds-for-mandatory-exclusion#terrorism",),
+                        (),
+                    ),
+                    (
+                        "Organised crime convictions",
+                        q_link_text_prefillable_section,
+                        (q_link_text_prefillable_section,),
+                        ("/suppliers/frameworks/g-cloud-9/declaration/grounds-for-mandatory-"
+                            "exclusion#organisedCrime",),
+                        (),
+                    ),
+                ),
+            ),
+            (
+                u"How you’ll deliver your services",
+                "/suppliers/frameworks/g-cloud-9/declaration/how-youll-deliver-your-services",
+                (
+                    (
+                        "Subcontractors or consortia",
+                        q_link_text_prefillable_section,
+                        (q_link_text_prefillable_section,),
+                        ("/suppliers/frameworks/g-cloud-9/declaration/how-youll-deliver-your-"
+                            "services#subcontracting",),
+                        (),
+                    ),
+                ),
+            ),
+        ) for empty_declaration in (None, {})),
+        ((
+            {
+                "status": "started",
+                "conspiracy": True,
+                "corruptionBribery": False,
+                "fraudAndTheft": True,
+                "terrorism": False,
+                "organisedCrime": True,
+                "subcontracting": [
+                    "yourself without the use of third parties (subcontractors)",
+                    "as a prime contractor, using third parties (subcontractors) to provide all services",
+                ],
+            },
+            False,
+            prefill_fw_slug,
+            (
+                "Providing suitable services",
+                "/suppliers/frameworks/g-cloud-9/declaration/providing-suitable-services",
+                (
+                    (
+                        "No unfair access to information",
+                        "Answer required",
+                        ("Answer required",),
+                        ("/suppliers/frameworks/g-cloud-9/declaration/providing-suitable-services#unfairCompetition",),
+                        (),
+                    ),
+                    (
+                        "Required skills and resources",
+                        "Answer required",
+                        ("Answer required",),
+                        ("/suppliers/frameworks/g-cloud-9/declaration/providing-suitable-services#skillsAndResources",),
+                        (),
+                    ),
+                    (
+                        "What your team will deliver",
+                        "Answer required",
+                        ("Answer required",),
+                        ("/suppliers/frameworks/g-cloud-9/declaration/providing-suitable-"
+                            "services#offerServicesYourselves",),
+                        (),
+                    ),
+                    (
+                        "Contractual responsibility and accountability",
+                        "Answer required",
+                        ("Answer required",),
+                        ("/suppliers/frameworks/g-cloud-9/declaration/providing-suitable-services#fullAccountability",),
+                        (),
+                    ),
+                ),
+            ),
+            (
+                "Grounds for mandatory exclusion",
+                "/suppliers/frameworks/g-cloud-9/declaration/grounds-for-mandatory-exclusion",
+                (
+                    (
+                        "Organised crime or conspiracy convictions",
+                        "Yes",
+                        (),
+                        (),
+                        (),
+                    ),
+                    (
+                        "Bribery or corruption convictions",
+                        "No",
+                        (),
+                        (),
+                        (),
+                    ),
+                    (
+                        "Fraud convictions",
+                        "Yes",
+                        (),
+                        (),
+                        (),
+                    ),
+                    (
+                        "Terrorism convictions",
+                        "No",
+                        (),
+                        (),
+                        (),
+                    ),
+                    (
+                        "Organised crime convictions",
+                        "Yes",
+                        (),
+                        (),
+                        (),
+                    ),
+                ),
+            ),
+            (
+                u"How you’ll deliver your services",
+                "/suppliers/frameworks/g-cloud-9/declaration/how-youll-deliver-your-services",
+                (
+                    (
+                        "Subcontractors or consortia",
+                        "yourself without the use of third parties (subcontractors) as a prime contractor, using "
+                            "third parties (subcontractors) to provide all services",
+                        (),
+                        (),
+                        (
+                            "yourself without the use of third parties (subcontractors)",
+                            "as a prime contractor, using third parties (subcontractors) to provide all services",
+                        ),
+                    ),
+                ),
+            ),
+        ),),
+        ((
+            dict(status=declaration_status, **(valid_g9_declaration_base())),
+            True,
+            prefill_fw_slug,
+            (
+                "Providing suitable services",
+                "/suppliers/frameworks/g-cloud-9/declaration/providing-suitable-services",
+                (
+                    (
+                        "No unfair access to information",
+                        "No",
+                        (),
+                        (),
+                        (),
+                    ),
+                    (
+                        "Required skills and resources",
+                        "No",
+                        (),
+                        (),
+                        (),
+                    ),
+                    (
+                        "What your team will deliver",
+                        "No",
+                        (),
+                        (),
+                        (),
+                    ),
+                    (
+                        "Contractual responsibility and accountability",
+                        "Yes",
+                        (),
+                        (),
+                        (),
+                    ),
+                ),
+            ),
+            (
+                "Grounds for mandatory exclusion",
+                "/suppliers/frameworks/g-cloud-9/declaration/grounds-for-mandatory-exclusion",
+                (
+                    (
+                        "Organised crime or conspiracy convictions",
+                        "No",
+                        (),
+                        (),
+                        (),
+                    ),
+                    (
+                        "Bribery or corruption convictions",
+                        "Yes",
+                        (),
+                        (),
+                        (),
+                    ),
+                    (
+                        "Fraud convictions",
+                        "No",
+                        (),
+                        (),
+                        (),
+                    ),
+                    (
+                        "Terrorism convictions",
+                        "Yes",
+                        (),
+                        (),
+                        (),
+                    ),
+                    (
+                        "Organised crime convictions",
+                        "No",
+                        (),
+                        (),
+                        (),
+                    ),
+                ),
+            ),
+            (
+                u"How you’ll deliver your services",
+                "/suppliers/frameworks/g-cloud-9/declaration/how-youll-deliver-your-services",
+                (
+                    (
+                        "Subcontractors or consortia",
+                        "yourself without the use of third parties (subcontractors)",
+                        (),
+                        (),
+                        (),
+                    ),
+                ),
+            ),
+        ) for declaration_status in ("started", "complete",)),
+    ) for prefill_fw_slug, q_link_text_prefillable_section in (
+        (None, "Answer required",),
+        ("some-previous-framework", "Review answer",),
+    ))))
+    def test_display(
+            self,
+            data_api_client,
+            declaration,
+            decl_valid,
+            prefill_fw_slug,
+            expected_pss,
+            expected_gme,
+            expected_dys,
+            ):
+        with self.app.test_client():
+            self.login()
+
+            data_api_client.get_framework.side_effect = _assert_args_and_return(
+                self.framework(slug="g-cloud-9", name="G-Cloud 9", status="open"),
+                "g-cloud-9",
+            )
+            data_api_client.get_supplier_framework_info.side_effect = _assert_args_and_return(
+                self.supplier_framework(
+                    framework_slug="g-cloud-9",
+                    declaration=declaration,
+                    prefill_declaration_from_framework_slug=prefill_fw_slug,
+                ),
+                1234,
+                "g-cloud-9",
+            )
+            data_api_client.set_supplier_declaration.side_effect = AssertionError("This shouldn't be called")
+
+            response = self.client.get("/suppliers/frameworks/g-cloud-9/declaration")
+            assert response.status_code == 200
+            doc = html.fromstring(response.get_data(as_text=True))
+
+            assert [e.xpath("normalize-space(string())") for e in doc.xpath(
+                "//nav//*[@role='breadcrumbs']//a",
+            )] == [
+                "Digital Marketplace",
+                "Your account",
+                "Apply to G-Cloud 9",
+            ]
+            assert doc.xpath(
+                "//nav//*[@role='breadcrumbs']//a/@href",
+            ) == [
+                "/",
+                "/suppliers",
+                "/suppliers/frameworks/g-cloud-9",
+            ]
+
+            assert bool(doc.xpath(
+                "//p[contains(normalize-space(string()), $t)][contains(normalize-space(string()), $f)]",
+                t="You must answer all questions and make your declaration before",
+                f="G-Cloud 9",
+            )) is (not decl_valid)
+            assert bool(doc.xpath(
+                "//p[contains(normalize-space(string()), $t)][contains(normalize-space(string()), $f)]",
+                t="You must make your declaration before",
+                f="G-Cloud 9",
+            )) is (decl_valid and declaration.get("status") != "complete")
+
+            assert len(doc.xpath(
+                "//p[contains(normalize-space(string()), $t)]",
+                t="You can come back and edit your answers at any time before the deadline.",
+            )) == (2 if decl_valid and declaration.get("status") != "complete" else 0)
+            assert len(doc.xpath(
+                "//p[contains(normalize-space(string()), $t)][not(contains(normalize-space(string()), $d))]",
+                t="You can come back and edit your answers at any time",
+                d="deadline",
+            )) == (2 if decl_valid and declaration.get("status") == "complete" else 0)
+
+            if prefill_fw_slug is None:
+                assert not doc.xpath("//a[normalize-space(string())=$t]", t="Review answer")
+
+            assert bool(doc.xpath(
+                "//a[normalize-space(string())=$a or normalize-space(string())=$b]",
+                a="Answer required",
+                b="Review answer",
+            )) is (not decl_valid)
+            if not decl_valid:
+                # assert that all links with the label "Answer required" or "Review answer" link to some subpage (by
+                # asserting that there are none that don't, having previously determined that such-labelled links exist)
+                assert not doc.xpath(
+                    # we want the href to *contain* $u but not *be* $u
+                    "//a[normalize-space(string())=$a or normalize-space(string())=$b]"
+                    "[not(starts-with(@href, $u)) or @href=$u]",
+                    a="Answer required",
+                    b="Review answer",
+                    u="/suppliers/frameworks/g-cloud-9/declaration/",
+                )
+
+            if decl_valid and declaration.get("status") != "complete":
+                mdf_actions = doc.xpath(
+                    "//form[@method='POST'][.//input[@value=$t][@type='submit']][.//input[@name='csrf_token']]/@action",
+                    t="Make declaration",
+                )
+                assert len(mdf_actions) == 2
+                assert all(
+                    urljoin("/suppliers/frameworks/g-cloud-9/declaration", action) ==
+                    "/suppliers/frameworks/g-cloud-9/declaration"
+                    for action in mdf_actions
+                )
+            else:
+                assert not doc.xpath("//input[@value=$t]", t="Make declaration")
+
+            assert doc.xpath(
+                "//a[normalize-space(string())=$t][@href=$u]",
+                t="Return to application",
+                u="/suppliers/frameworks/g-cloud-9",
+            )
+
+            assert self._extract_section_information(doc, "Providing suitable services") == expected_pss
+            assert self._extract_section_information(doc, "Grounds for mandatory exclusion") == expected_gme
+            assert self._extract_section_information(doc, u"How you’ll deliver your services") == expected_dys
+
+
+@mock.patch('app.main.views.frameworks.data_api_client', autospec=True)
+class TestDeclarationSubmit(BaseApplicationTest):
+    @pytest.mark.parametrize("prefill_fw_slug", (None, "some-previous-framework",))
+    @pytest.mark.parametrize("invalid_declaration", (
+        None,
+        {},
+        {
+            # not actually complete - only first section is
+            "status": "complete",
+            "unfairCompetition": False,
+            "skillsAndResources": False,
+            "offerServicesYourselves": False,
+            "fullAccountability": True,
+        },
+    ))
+    def test_invalid_declaration(self, data_api_client, invalid_declaration, prefill_fw_slug):
+        with self.app.test_client():
+            self.login()
+
+            data_api_client.get_framework.side_effect = _assert_args_and_return(
+                self.framework(slug="g-cloud-9", name="G-Cloud 9", status="open"),
+                "g-cloud-9",
+            )
+            data_api_client.get_supplier_framework_info.side_effect = _assert_args_and_return(
+                self.supplier_framework(
+                    framework_slug="g-cloud-9",
+                    declaration=invalid_declaration,
+                    prefill_declaration_from_framework_slug=prefill_fw_slug,  # should have zero effect
+                ),
+                1234,
+                "g-cloud-9",
+            )
+            data_api_client.set_supplier_declaration.side_effect = AssertionError("This shouldn't be called")
+
+            response = self.client.post("/suppliers/frameworks/g-cloud-9/declaration")
+
+            assert response.status_code == 400
+
+    @pytest.mark.parametrize("prefill_fw_slug", (None, "some-previous-framework",))
+    @pytest.mark.parametrize("declaration_status", ("started", "complete",))
+    @mock.patch("dmutils.s3.S3")  # needed by the framework dashboard which our request gets redirected to
+    def test_valid_declaration(self, s3, data_api_client, prefill_fw_slug, declaration_status):
+        with self.app.test_client():
+            self.login()
+
+            data_api_client.get_framework.side_effect = _assert_args_and_return(
+                self.framework(slug="g-cloud-9", name="G-Cloud 9", status="open"),
+                "g-cloud-9",
+            )
+            data_api_client.get_supplier_framework_info.side_effect = _assert_args_and_return(
+                self.supplier_framework(
+                    framework_slug="g-cloud-9",
+                    declaration=dict(status=declaration_status, **(valid_g9_declaration_base())),
+                    prefill_declaration_from_framework_slug=prefill_fw_slug,  # should have zero effect
+                ),
+                1234,
+                "g-cloud-9",
+            )
+            data_api_client.set_supplier_declaration.side_effect = _assert_args_and_return(
+                dict(status="complete", **(valid_g9_declaration_base())),
+                1234,
+                "g-cloud-9",
+                dict(status="complete", **(valid_g9_declaration_base())),
+                "email@email.com",
+            )
+
+            response = self.client.post("/suppliers/frameworks/g-cloud-9/declaration", follow_redirects=True)
+
+            # args of call are asserted by mock's side_effect
+            assert data_api_client.set_supplier_declaration.called is True
+
+            # this will be the response from the redirected-to view
+            assert response.status_code == 200
+            doc = html.fromstring(response.get_data(as_text=True))
+
+            assert doc.xpath(
+                "//*[@data-analytics='trackPageView'][@data-url=$k]",
+                k="/suppliers/frameworks/g-cloud-9/declaration_complete",
+            )
 
 
 @mock.patch('app.main.views.frameworks.data_api_client', autospec=True)

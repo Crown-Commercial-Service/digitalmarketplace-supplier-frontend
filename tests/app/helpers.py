@@ -87,6 +87,80 @@ FULL_G7_SUBMISSION = {
 }
 
 
+# a lambda so we can be sure we get a fresh copy every time. missing "status" field.
+valid_g9_declaration_base = lambda: {
+    "unfairCompetition": False,
+    "skillsAndResources": False,
+    "offerServicesYourselves": False,
+    "fullAccountability": True,
+    "termsOfParticipation": True,
+    "termsAndConditions": True,
+    "canProvideFromDayOne": True,
+    "10WorkingDays": True,
+    "MI": True,
+    "conspiracy": False,
+    "corruptionBribery": True,
+    "fraudAndTheft": False,
+    "terrorism": True,
+    "organisedCrime": False,
+    "taxEvasion": False,
+    "environmentalSocialLabourLaw": False,
+    "bankrupt": False,
+    "graveProfessionalMisconduct": False,
+    "distortingCompetition": False,
+    "conflictOfInterest": False,
+    "distortedCompetition": True,
+    "significantOrPersistentDeficiencies": True,
+    "seriousMisrepresentation": True,
+    "witheldSupportingDocuments": True,
+    "influencedContractingAuthority": True,
+    "confidentialInformation": True,
+    "misleadingInformation": True,
+    "mitigatingFactors": "Money is no object",
+    "unspentTaxConvictions": True,
+    "GAAR": True,
+    "mitigatingFactors2": "Project favourably entertained by auditors",
+    "environmentallyFriendly": False,
+    "equalityAndDiversity": False,
+    "employersInsurance": u"Not applicable - your organisation does not need employer’s liability "
+                          "insurance because your organisation employs only the owner or close family members. ",
+    "transparentContracting": False,
+    "publishContracts": False,
+    "readUnderstoodGuidance": True,
+    "understandTool": True,
+    "understandHowToAskQuestions": True,
+    "accurateInformation": True,
+    "informationChanges": True,
+    "accuratelyDescribed": True,
+    "proofOfClaims": True,
+    "nameOfOrganisation": "Mr Malachi Mulligan. Fertiliser and Incubator.",
+    "tradingNames": "Omphalos dutiful yeoman services",
+    "registeredAddressBuilding": "Omphalos",
+    "registeredAddressTown": "Lambay Island",
+    "registeredAddressPostcode": "N/A",
+    "firstRegistered": "5/6/1904",
+    "currentRegisteredCountry": u"Éire",
+    "companyRegistrationNumber": "00000014",
+    "dunsNumber": "987654321",
+    "registeredVATNumber": "123456789",
+    "establishedInTheUK": False,
+    "appropriateTradeRegisters": True,
+    "appropriateTradeRegistersNumber": "242#353",
+    "licenceOrMemberRequired": "none of the above",
+    "licenceOrMemberRequiredDetails": "",
+    "subcontracting": [
+        "yourself without the use of third parties (subcontractors)",
+    ],
+    "organisationSize": "small",
+    "tradingStatus": "other (please specify)",
+    "tradingStatusOther": "Proposed",
+    "primaryContact": "B. Mulligan",
+    "primaryContactEmail": "buck@example.com",
+    "contactNameContractNotice": "Malachi Mulligan",
+    "contactEmailContractNotice": "malachi@example.com",
+}
+
+
 def empty_g7_draft_service():
     return {
         'id': 1,
@@ -270,7 +344,8 @@ class BaseApplicationTest(object):
         countersigned_details=None,
         countersigned_path=None,
         agreed_variations={},
-        agreement_id=None
+        agreement_id=None,
+        prefill_declaration_from_framework_slug=None,
     ):
         if declaration == 'default':
             declaration = FULL_G7_SUBMISSION.copy()
@@ -291,7 +366,8 @@ class BaseApplicationTest(object):
                 'countersignedDetails': countersigned_details,
                 'countersignedPath': countersigned_path,
                 'agreementId': agreement_id,
-                'agreedVariations': agreed_variations
+                'agreedVariations': agreed_variations,
+                'prefillDeclarationFromFrameworkSlug': prefill_declaration_from_framework_slug,
             }
         }
 
