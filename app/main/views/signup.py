@@ -293,7 +293,7 @@ def authorise_application(id):
     template = 'emails/create_authorise_email_has_account.html'
 
     if not user_json:
-        token_data = {'id': id, 'name': application['representative'], 'email': application['email']}
+        token_data = {'id': id, 'name': application['representative'], 'email_address': application['email']}
         token = generate_application_invitation_token(token_data)
         url = url_for('main.render_create_application', token=token, _external=True)
         template = 'emails/create_authorise_email_no_account.html'
