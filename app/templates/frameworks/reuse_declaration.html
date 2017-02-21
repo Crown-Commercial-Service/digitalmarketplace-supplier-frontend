@@ -47,7 +47,7 @@
       <br>
       <br>
 
-      <form method="POST" action="{{ url_for(".reuse_framework_supplier_declaration_post", framework_slug=current_framework.slug, old_framework_slug=old_framework.slug) }}">
+      <form method="POST" action="{{ url_for(".reuse_framework_supplier_declaration_post", framework_slug=current_framework.slug) }}">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
         {%
           with
@@ -55,9 +55,10 @@
           question = "Do you want to reuse the answers from your earlier declaration?",
           inline = true,
           type = "radio",
+          value = old_framework.slug,
           options = [
             {"label": "Yes", "value": old_framework.slug},
-            {"label": "No", "value": 0}
+            {"label": "No", "value": "no-reuse"}
           ]
         %}
           {% include "toolkit/forms/selection-buttons.html" %}

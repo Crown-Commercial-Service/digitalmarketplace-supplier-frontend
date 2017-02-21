@@ -95,22 +95,26 @@ def get_declaration_status(data_api_client, framework_slug):
         return declaration.get('status', 'unstarted')
 
 
-def get_reusable_declaration(supplier_id, client, exclude_framework_slugs=None):
+def get_framework_for_reuse(supplier_id, client, exclude_framework_slugs=None):
     """Given a list of declarations find the most suitable for reuse.
 
      :param supplier_id: supplier whose declarations we are inspecting
      :param client: data client if not frameworks
      :param exclude_framework_slugs: list of framework slugs to exclude from results
-     :return: (declaration, framework)
+     :return: framework
      """
     exclude_framework_slugs = exclude_framework_slugs or []
-    declarations = {i['frameworkSlug']: i for i in client.find_supplier_declarations(supplier_id)['frameworkInterest']}
+    supplier_frameworks = client.find_supplier_declarations(supplier_id)['frameworkInterest']
+    supplier_frameworks_on_framework = filter(
+        lambda i: i['onFramework'],
+        supplier_frameworks
+    )
+    declarations = {i['frameworkSlug']: i for i in supplier_frameworks_on_framework}
     frameworks = client.find_frameworks()['frameworks']
-
     for framework in order_frameworks_for_reuse(frameworks):
         if framework['slug'] in declarations and framework['slug'] not in exclude_framework_slugs:
-            return framework, declarations[framework['slug']]
-    return None, None
+            return framework
+    return None
 
 
 def get_supplier_framework_info(data_api_client, framework_slug):

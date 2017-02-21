@@ -31,7 +31,7 @@ from ..helpers.frameworks import (
     get_supplier_on_framework_from_info, get_declaration_status_from_info, get_supplier_framework_info,
     get_framework, get_framework_and_lot, count_drafts_by_lot, get_statuses_for_lot,
     return_supplier_framework_info_if_on_framework_or_abort, returned_agreement_email_recipients,
-    check_agreement_is_related_to_supplier_framework_or_abort, get_reusable_declaration
+    check_agreement_is_related_to_supplier_framework_or_abort, get_framework_for_reuse,
 )
 from ..helpers.validation import get_validator
 from ..helpers.services import (
@@ -287,18 +287,20 @@ def reuse_framework_supplier_declaration(framework_slug):
         # overriding the default framework selection logic.
         try:
             # Get their old declaration. The api will raise if it doesn't exist.
-            declaration = data_api_client.get_supplier_declaration(supplier_id, reusable_declaration_framework_slug)
+            declaration_ok = data_api_client.get_supplier_framework_info(
+                supplier_id, reusable_declaration_framework_slug
+            )['frameworkInterest']['onFramework']
             old_framework = data_api_client.get_framework(reusable_declaration_framework_slug)['frameworks']
         except APIError:
             abort(404)
     else:
         # Otherwise then attempt to determine if they have a declaration we can offer for reuse.
-        old_framework, declaration = get_reusable_declaration(
+        old_framework = get_framework_for_reuse(
             supplier_id,
             data_api_client,
             exclude_framework_slugs=[framework_slug]
         )
-        if not declaration:
+        if not old_framework:
             # If not then redirect to the overview. They do not have a suitable reuse candidate.
             return redirect(url_for('.framework_supplier_declaration_overview', framework_slug=framework_slug))
 
@@ -314,20 +316,19 @@ def reuse_framework_supplier_declaration(framework_slug):
 @main.route('/frameworks/<framework_slug>/declaration/reuse', methods=['POST'])
 @login_required
 def reuse_framework_supplier_declaration_post(framework_slug):
-    try:
-        reuse_framework_slug = bool(int(request.form.get('reuse', 0))) or None
-    except ValueError:
-        reuse_framework_slug = request.form.get('reuse')
-
+    """Set the prefill preference if a reusable framework slug is provided and redirect to declaration."""
+    reuse_framework_slug = request.form.get('reuse') if request.form.get('reuse') != 'no-reuse' else False
     supplier_id = current_user.supplier_id
 
     if reuse_framework_slug:
         # Check.
         try:
             framework_ok = data_api_client.get_framework(reuse_framework_slug)['frameworks']['allow_declaration_reuse']
-            declaration_ok = (
-                data_api_client.get_supplier_declaration(supplier_id, reuse_framework_slug) if framework_ok else False
-            )
+            declaration_ok = False  # Default value
+            if framework_ok:
+                declaration_ok = data_api_client.get_supplier_framework_info(
+                    supplier_id, reuse_framework_slug
+                )['frameworkInterest']['onFramework']
         except HTTPError:
             framework_ok = False
             declaration_ok = False
@@ -337,7 +338,7 @@ def reuse_framework_supplier_declaration_post(framework_slug):
                 supplier_id,
                 framework_slug,
                 reuse_framework_slug,
-                current_user
+                current_user.email_address
             )
         else:
             # Or fail out.
@@ -348,7 +349,7 @@ def reuse_framework_supplier_declaration_post(framework_slug):
             supplier_id,
             framework_slug,
             None,
-            current_user
+            current_user.email_address
         )
     return redirect(url_for('.framework_supplier_declaration_overview', framework_slug=framework_slug))
 
