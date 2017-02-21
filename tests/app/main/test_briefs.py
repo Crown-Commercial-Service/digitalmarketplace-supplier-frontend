@@ -1890,8 +1890,13 @@ class TestPostStartBriefResponseApplication(BaseApplicationTest):
         doc = html.fromstring(res.get_data(as_text=True))
         assert doc.xpath('//title')[0].text == 'Not eligible for opportunity – Digital Marketplace'
 
-    def test_valid_post_calls_api_and_redirects_to_edit_the_created_brief_response(self, data_api_client):
+    def test_valid_post_calls_api_and_redirects_to_edit_the_created_brief_response_if_no_application_started(
+        self, data_api_client
+    ):
         data_api_client.get_brief.return_value = self.brief
+        data_api_client.find_brief_responses.return_value = {
+            'briefResponses': []
+        }
         data_api_client.create_brief_response.return_value = {
             'briefResponses': {
                 'id': 10
@@ -1902,6 +1907,44 @@ class TestPostStartBriefResponseApplication(BaseApplicationTest):
         data_api_client.create_brief_response.assert_called_once_with(1234, 1234, {}, "email@email.com")
         assert res.status_code == 302
         assert res.location == 'http://localhost/suppliers/opportunities/1234/responses/10'
+
+    @mock.patch("app.main.views.briefs.supplier_has_a_brief_response")
+    def test_redirects_to_beginning_of_ongoing_application_if_application_in_progress_but_not_submitted(
+        self, supplier_has_a_brief_response, data_api_client
+    ):
+        data_api_client.get_brief.return_value = self.brief
+        data_api_client.find_brief_responses.return_value = {
+            'briefResponses': [
+                {
+                    'id': 11,
+                    'status': 'draft'
+                }
+            ]
+        }
+
+        res = self.client.post('/suppliers/opportunities/1234/responses/start')
+        data_api_client.create_brief_response.assert_not_called()
+        assert res.status_code == 302
+        assert res.location == 'http://localhost/suppliers/opportunities/1234/responses/11'
+
+    @mock.patch("app.main.views.briefs.supplier_has_a_brief_response")
+    def test_redirects_to_response_page_with_flash_message_if_application_already_submitted(
+        self, supplier_has_a_brief_response, data_api_client
+    ):
+        data_api_client.get_brief.return_value = self.brief
+        data_api_client.find_brief_responses.return_value = {
+            'briefResponses': [
+                {
+                    'status': 'submitted'
+                }
+            ]
+        }
+
+        res = self.client.post('/suppliers/opportunities/1234/responses/start')
+        data_api_client.create_brief_response.assert_not_called()
+        self.assert_flashes("already_applied", "error")
+        assert res.status_code == 302
+        assert res.location == 'http://localhost/suppliers/opportunities/1234/responses/result'
 
     def test_post_to_start_page_is_hidden_by_feature_flag(self, data_api_client):
         self.app.config['FEATURE_FLAGS_NEW_SUPPLIER_FLOW'] = False
