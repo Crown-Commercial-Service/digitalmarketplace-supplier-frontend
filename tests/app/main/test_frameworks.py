@@ -2,6 +2,9 @@
 from collections import OrderedDict
 from itertools import chain
 
+from dmapiclient import HTTPError
+from flask import request
+
 try:
     from StringIO import StringIO
 except ImportError:
@@ -2156,7 +2159,7 @@ class TestStartSupplierDeclaration(BaseApplicationTest):
             document = html.fromstring(response.get_data(as_text=True))
 
             assert document.xpath("//a[normalize-space(string(.))='Start your declaration']/@href")[0] \
-                == '/suppliers/frameworks/g-cloud-7/declaration'
+                == '/suppliers/frameworks/g-cloud-7/declaration/reuse'
 
 
 @mock.patch('app.main.views.frameworks.data_api_client', autospec=True)
@@ -4757,3 +4760,286 @@ class TestContractVariation(BaseApplicationTest):
         assert len(
             doc.xpath('//span[@class="validation-message"][contains(text(), "You can only save and continue if you agree to the proposed changes")]')  # noqa
         ) == 1
+
+
+@mock.patch('app.main.views.frameworks.data_api_client', autospec=True)
+class TestReuseFrameworkSupplierDeclaration(BaseApplicationTest):
+    """Tests for frameworks/<framework_slug>/declaration/reuse view."""
+
+    def setup_method(self, method):
+        super(TestReuseFrameworkSupplierDeclaration, self).setup_method(method)
+        with self.app.test_client():
+            self.login()
+
+    def test_reusable_declaration_framework_slug_param(self, data_api_client):
+        """Ensure that when using the param to specify declaration we collect the correct declaration."""
+
+        # Modify the data client.
+        t07 = '2009-12-03T01:01:01.000000Z'
+        framework = {
+            'x_field': 'foo',
+            'allow_declaration_reuse': True,
+            'application_close_date': t07,
+            'slug': 'g-cloud-8',
+            'name': 'g-cloud-8'
+        }
+        declaration = {'status': 'complete'}
+
+        data_api_client.get_framework.return_value = {'frameworks': framework}
+        data_api_client.get_supplier_declaration.return_value = {'declaration': declaration}
+
+        # Do the get.
+        with self.client as cont:
+            resp = cont.get(
+                '/suppliers/frameworks/g-cloud-9/declaration/reuse?reusable_declaration_framework_slug=g-cloud-8'
+            )
+
+            # Assert request arg inside context manager.
+            assert request.args['reusable_declaration_framework_slug'] == 'g-cloud-8'
+
+        # Assert response OK.
+        assert resp.status_code == 200
+
+        # Assert expected api calls.
+        data_api_client.get_framework.assert_has_calls([mock.call('g-cloud-9'), mock.call('g-cloud-8')])
+        data_api_client.get_supplier_declaration.assert_called_once_with(1234, 'g-cloud-8')
+
+    def test_404_when_specified_declaration_not_found(self, data_api_client):
+        """Fail on a 404 if declaration is specified but not found."""
+
+        # Modify the data client.
+        framework = {}
+        data_api_client.get_framework.return_value = {'frameworks': framework}
+        data_api_client.get_supplier_declaration.side_effect = APIError(mock.Mock(status_code=404))
+
+        # Do the get.
+        resp = self.client.get(
+            '/suppliers/frameworks/g-cloud-9/declaration/reuse?reusable_declaration_framework_slug=g-cloud-8'
+        )
+
+        # Assert the 404
+        assert resp.status_code == 404
+
+        # Assert expected api calls.
+        data_api_client.get_framework.assert_called_once_with('g-cloud-9')
+        data_api_client.get_supplier_declaration.assert_called_once_with(1234, 'g-cloud-8')
+
+    def test_redirect_when_declaration_not_found(self, data_api_client):
+        """Redirect if a reusable declaration is not found."""
+
+        # Modify the data client.
+        t09 = '2009-03-03T01:01:01.000000Z'
+
+        frameworks = [
+            {'x_field': 'foo', 'allow_declaration_reuse': True, 'application_close_date': t09, 'slug': 'ben-cloud-2'},
+        ]
+        supplier_declarations = []
+        data_api_client.find_frameworks.return_value = {'frameworks': frameworks}
+        data_api_client.find_supplier_declarations.return_value = dict(
+            frameworkInterest=supplier_declarations
+        )
+
+        # Do the get.
+        with self.client:
+            resp = self.client.get(
+                '/suppliers/frameworks/g-cloud-9/declaration/reuse',
+            )
+
+            # Assert the redirect
+            assert resp.location.endswith('/suppliers/frameworks/g-cloud-9/declaration')
+
+        # Assert expected api calls.
+        data_api_client.get_framework.assert_called_once_with('g-cloud-9')
+        data_api_client.find_supplier_declarations.assert_called_once_with(1234)
+
+    def test_success_reuse_g_cloud_7_for_8(self, data_api_client):
+        """Test success path."""
+
+        # Modify the data client.
+        t09 = '2009-03-03T01:01:01.000000Z'
+        t10 = '2010-03-03T01:01:01.000000Z'
+        t11 = '2011-03-03T01:01:01.000000Z'
+        t12 = '2012-03-03T01:01:01.000000Z'
+
+        frameworks_response = [
+            {
+                'x_field': 'foo',
+                'allow_declaration_reuse': True,
+                'application_close_date': t12,
+                'slug': 'g-cloud-8',
+                'name': 'G-cloud 8'
+            }, {
+                'x_field': 'foo',
+                'allow_declaration_reuse': True,
+                'application_close_date': t11,
+                'slug': 'g-cloud-7',
+                'name': 'G-cloud 7'
+            }, {
+                'x_field': 'foo',
+                'allow_declaration_reuse': True,
+                'application_close_date': t10,
+                'slug': 'dos',
+                'name': 'Digital'
+            }, {
+                'x_field': 'foo',
+                'allow_declaration_reuse': False,
+                'application_close_date': t09,
+                'slug': 'g-cloud-6',
+                'name': 'G-cloud 6'
+            },
+        ]
+        framework_response = {
+            'x_field': 'foo',
+            'allow_declaration_reuse': True,
+            'application_close_date': t09,
+            'slug': 'g-cloud-8',
+            'name': 'G-cloud 8'
+        }
+        supplier_declarations_response = [
+            {'x_field': 'foo', 'frameworkSlug': 'g-cloud-6'},
+            {'x_field': 'foo', 'frameworkSlug': 'g-cloud-7'},
+            {'x_field': 'foo', 'frameworkSlug': 'dos'},
+        ]
+        data_api_client.find_frameworks.return_value = {'frameworks': frameworks_response}
+        data_api_client.get_framework.return_value = {'frameworks': framework_response}
+        data_api_client.find_supplier_declarations.return_value = {'frameworkInterest': supplier_declarations_response}
+
+        # Do the get.
+        resp = self.client.get(
+            '/suppliers/frameworks/g-cloud-8/declaration/reuse',
+        )
+
+        # Assert the success.
+        assert resp.status_code == 200
+        expected = 'In March, 2011, your organisation completed a declaration for G-cloud 7.'
+        assert expected in ''.join(map(str, resp.response))
+
+        # Assert expected api calls.
+        data_api_client.get_framework.assert_called_once_with('g-cloud-8')
+        data_api_client.find_supplier_declarations.assert_called_once_with(1234)
+
+
+@mock.patch('app.main.views.frameworks.data_api_client', autospec=True)
+class TestReuseFrameworkSupplierDeclarationPost(BaseApplicationTest):
+    """Tests for frameworks/<framework_slug>/declaration/reuse POST view."""
+
+    def setup_method(self, method):
+        super(TestReuseFrameworkSupplierDeclarationPost, self).setup_method(method)
+        with self.app.test_client():
+            self.login()
+
+    def test_reuse_false(self, data_api_client):
+        """Assert that the redirect happens and the client sets the prefill pref to None."""
+        data = {'reuse': 0}
+        with self.client:
+            resp = self.client.post(
+                '/suppliers/frameworks/g-cloud-9/declaration/reuse',
+                data=data
+            )
+
+            # Assert the redirect
+            assert resp.location.endswith('/suppliers/frameworks/g-cloud-9/declaration')
+
+        data_api_client.set_supplier_framework_prefill_declaration.assert_called_once_with(
+            1234,
+            'g-cloud-9',
+            None,
+            mock.ANY
+        )
+
+    def test_reuse_true(self, data_api_client):
+        """Assert that the redirect happens and the client sets the prefill pref to the desired framework slug."""
+        data = {'reuse': 'digital-outcomes-and-specialists-2'}
+        data_api_client.get_supplier_declaration.return_value = {
+            'x_field': 'foo', 'frameworkSlug': 'digital-outcomes-and-specialists-2'
+        }
+        framework_response = {'frameworks': {'x_field': 'foo', 'allow_declaration_reuse': True}}
+        data_api_client.get_framework.return_value = framework_response
+
+        with self.client:
+            resp = self.client.post(
+                '/suppliers/frameworks/g-cloud-9/declaration/reuse',
+                data=data
+            )
+
+            # Assert the redirect
+            assert resp.location.endswith('/suppliers/frameworks/g-cloud-9/declaration')
+
+        # These api calls need to be made so that we can verify the declaration.
+        data_api_client.get_framework.assert_called_once_with('digital-outcomes-and-specialists-2')
+        data_api_client.get_supplier_declaration.assert_called_once_with(
+            1234,
+            'digital-outcomes-and-specialists-2'
+        )
+
+        # This end point sets the prefill preference.
+        data_api_client.set_supplier_framework_prefill_declaration.assert_called_once_with(
+            1234,
+            'g-cloud-9',
+            'digital-outcomes-and-specialists-2',
+            mock.ANY
+        )
+
+    def test_reuse_invalid_framework_post(self, data_api_client):
+        """Assert 404 for non reusable framework."""
+        data = {'reuse': 'digital-outcomes-and-specialists'}
+
+        # A framework with allow_declaration_reuse as False
+        data_api_client.get_framework.return_value = {
+            'frameworks': {'x_field': 'foo', 'allow_declaration_reuse': False}
+        }
+
+        # Do the post.
+        resp = self.client.post(
+            '/suppliers/frameworks/g-cloud-9/declaration/reuse',
+            data=data
+        )
+
+        # Should get the framework and error on allow_declaration_reuse as False.
+        data_api_client.get_framework.assert_called_once_with('digital-outcomes-and-specialists')
+        # Should not do the declaration call if the framework is invalid
+        assert not data_api_client.get_supplier_declaration.called
+        # Should 404
+        assert resp.status_code == 404
+
+    def test_reuse_non_existent_framework_post(self, data_api_client):
+        """Assert 404 for non existent framework."""
+        data = {'reuse': 'foo'}
+
+        # Attach does not exist.
+        data_api_client.get_framework.side_effect = HTTPError()
+
+        # Do the post.
+        resp = self.client.post(
+            '/suppliers/frameworks/g-cloud-9/declaration/reuse',
+            data=data
+        )
+
+        # Should error on get.
+        data_api_client.get_framework.assert_called_once_with('foo')
+        # Should not do the declaration call if the framework is invalid.
+        assert not data_api_client.get_supplier_declaration.called
+        # Should 404.
+        assert resp.status_code == 404
+
+    def test_reuse_non_existent_declaration_post(self, data_api_client):
+        """Assert 404 for non existent declaration."""
+        data = {'reuse': 'digital-outcomes-and-specialists-2'}
+        framework_response = {'frameworks': {'x_field': 'foo', 'allow_declaration_reuse': True}}
+        data_api_client.get_framework.return_value = framework_response
+
+        # Attach does not exist.
+        data_api_client.get_supplier_declaration.side_effect = HTTPError()
+
+        # Do the post.
+        resp = self.client.post(
+            '/suppliers/frameworks/g-cloud-9/declaration/reuse',
+            data=data
+        )
+
+        # Should get the framework
+        data_api_client.get_framework.assert_called_once_with('digital-outcomes-and-specialists-2')
+        # Should error getting declaration.
+        data_api_client.get_supplier_declaration.assert_called_once_with(1234, 'digital-outcomes-and-specialists-2')
+        # Should 404.
+        assert resp.status_code == 404
