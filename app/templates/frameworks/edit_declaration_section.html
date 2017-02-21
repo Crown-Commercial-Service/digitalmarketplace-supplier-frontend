@@ -19,7 +19,8 @@
         "label": "Apply to " + framework.name
       },
       {
-        "label": "Supplier declaration"
+        "link": url_for(".framework_supplier_declaration_overview", framework_slug=framework.slug),
+        "label": "Your declaration"
       }
     ]
   %}
@@ -59,19 +60,9 @@
             {% endfor %}
 
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
-            {% if is_last_page %}
-              {%
-                with
-                label="Make declaration",
-                type="save"
-              %}
-                {% include "toolkit/button.html" %}
-              {% endwith %}
-              <p class="last-edited move-to-complete-hint">
-                You can edit the declaration until the application deadline.
-              </p>
 
-            {% else %}
+            {% if next_section %}
+              {# If there is a next page show the 'continue' button' #}
               {%
                 with
                 label="Save and continue",
@@ -79,9 +70,23 @@
               %}
                 {% include "toolkit/button.html" %}
               {% endwith %}
+
+              {# If there is a next page show the 'next page' info #}
+              <p class="next-page-message">
+                Next: {{ next_section.name }}
+              </p>
+
             {% endif %}
 
-            <a href="{{ url_for('.framework_dashboard', framework_slug=framework.slug) }}">Return to {{ framework.name }} application</a>
+            {# Always show the 'save and return' button but if there is a next page make it secondary #}
+            {% with
+              type="secondary" if next_section else "save",
+              name = 'save_and_return_to_overview',
+              label = "Save and return to declaration overview"
+            %}
+              {% include "toolkit/button.html" %}
+            {% endwith %}
+
           </div>
       </div>
   </form>
