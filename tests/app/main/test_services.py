@@ -11,7 +11,9 @@ import pytest
 from lxml import html
 from freezegun import freeze_time
 
-from tests.app.helpers import BaseApplicationTest, empty_g7_draft_service, empty_g9_draft_service
+from tests.app.helpers import (
+    BaseApplicationTest, BaseApplicationTestLoggedIn, empty_g7_draft_service, empty_g9_draft_service
+)
 
 
 # this is mostly a workaround for pytest not being able to do parametrization with unittest-derived class methods
@@ -503,7 +505,7 @@ class TestSupplierRemoveService(_BaseTestSupplierEditRemoveService):
 
 
 @mock.patch('app.main.views.services.data_api_client')
-class TestSupplierEditUpdateServiceSection(BaseApplicationTest):
+class TestSupplierEditUpdateServiceSection(BaseApplicationTestLoggedIn):
 
     empty_service = {
         'services': {
@@ -519,11 +521,6 @@ class TestSupplierEditUpdateServiceSection(BaseApplicationTest):
             'lotName': "Specialist Cloud Services",
         }
     }
-
-    def setup_method(self, method):
-        super(TestSupplierEditUpdateServiceSection, self).setup_method(method)
-        with self.app.test_client():
-            self.login()
 
     def test_return_to_service_summary_link_present(self, data_api_client):
         data_api_client.get_service.return_value = self.empty_service
@@ -646,14 +643,11 @@ class TestSupplierEditUpdateServiceSection(BaseApplicationTest):
 
 
 @mock.patch('app.main.views.services.data_api_client', autospec=True)
-class TestCreateDraftService(BaseApplicationTest):
+class TestCreateDraftService(BaseApplicationTestLoggedIn):
     def setup_method(self, method):
         super(TestCreateDraftService, self).setup_method(method)
         self._answer_required = 'Answer is required'
         self._validation_error = 'There was a problem with your answer to:'
-
-        with self.app.test_client():
-            self.login()
 
     def test_get_create_draft_service_page_if_open(self, data_api_client):
         data_api_client.get_framework.return_value = self.framework(status='open')
@@ -719,14 +713,10 @@ class TestCreateDraftService(BaseApplicationTest):
 
 
 @mock.patch('app.main.views.services.data_api_client')
-class TestCopyDraft(BaseApplicationTest):
+class TestCopyDraft(BaseApplicationTestLoggedIn):
 
     def setup_method(self, method):
         super(TestCopyDraft, self).setup_method(method)
-
-        with self.app.test_client():
-            self.login()
-
         self.draft = empty_g7_draft_service()
 
     def test_copy_draft(self, data_api_client):
@@ -751,14 +741,10 @@ class TestCopyDraft(BaseApplicationTest):
 
 
 @mock.patch('app.main.views.services.data_api_client')
-class TestCompleteDraft(BaseApplicationTest):
+class TestCompleteDraft(BaseApplicationTestLoggedIn):
 
     def setup_method(self, method):
         super(TestCompleteDraft, self).setup_method(method)
-
-        with self.app.test_client():
-            self.login()
-
         self.draft = empty_g7_draft_service()
 
     def test_complete_draft(self, data_api_client):
@@ -785,12 +771,10 @@ class TestCompleteDraft(BaseApplicationTest):
 
 @mock.patch('dmutils.s3.S3')
 @mock.patch('app.main.views.services.data_api_client')
-class TestEditDraftService(BaseApplicationTest):
+class TestEditDraftService(BaseApplicationTestLoggedIn):
 
     def setup_method(self, method):
         super(TestEditDraftService, self).setup_method(method)
-        with self.app.test_client():
-            self.login()
 
         self.empty_draft = {'services': empty_g7_draft_service()}
         self.empty_g9_draft = {'services': empty_g9_draft_service()}
@@ -1381,7 +1365,7 @@ class TestEditDraftService(BaseApplicationTest):
 
 
 @mock.patch('app.main.views.services.data_api_client')
-class TestShowDraftService(BaseApplicationTest):
+class TestShowDraftService(BaseApplicationTestLoggedIn):
 
     draft_service_data = empty_g7_draft_service()
     draft_service_data.update({
@@ -1403,11 +1387,6 @@ class TestShowDraftService(BaseApplicationTest):
     complete_service = copy.deepcopy(draft_service)
     complete_service['services']['status'] = 'submitted'
     complete_service['services']['id'] = 2
-
-    def setup_method(self, method):
-        super(TestShowDraftService, self).setup_method(method)
-        with self.app.test_client():
-            self.login()
 
     def test_service_price_is_correctly_formatted(self, data_api_client):
         data_api_client.get_framework.return_value = self.framework('open')
@@ -1499,7 +1478,7 @@ class TestShowDraftService(BaseApplicationTest):
 
 
 @mock.patch('app.main.views.services.data_api_client')
-class TestDeleteDraftService(BaseApplicationTest):
+class TestDeleteDraftService(BaseApplicationTestLoggedIn):
 
     draft_service_data = empty_g7_draft_service()
     draft_service_data.update({
@@ -1514,11 +1493,6 @@ class TestDeleteDraftService(BaseApplicationTest):
         },
         'validationErrors': {}
     }
-
-    def setup_method(self, method):
-        super(TestDeleteDraftService, self).setup_method(method)
-        with self.app.test_client():
-            self.login()
 
     def test_delete_button_redirects_with_are_you_sure(self, data_api_client):
         data_api_client.get_framework.return_value = self.framework(status='open')
@@ -1562,11 +1536,7 @@ class TestDeleteDraftService(BaseApplicationTest):
 
 
 @mock.patch('dmutils.s3.S3')
-class TestSubmissionDocuments(BaseApplicationTest):
-    def setup_method(self, method):
-        super(TestSubmissionDocuments, self).setup_method(method)
-        with self.app.test_client():
-            self.login()
+class TestSubmissionDocuments(BaseApplicationTestLoggedIn):
 
     def test_document_url(self, s3):
         s3.return_value.bucket_short_name = 'submissions'

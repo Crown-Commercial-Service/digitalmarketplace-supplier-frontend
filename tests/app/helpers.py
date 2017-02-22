@@ -470,6 +470,16 @@ class BaseApplicationTest(object):
             assert not session.get("_flashes")
 
 
+class BaseApplicationTestLoggedIn(BaseApplicationTest):
+    """Extended base for tests that require a logged in client."""
+
+    def setup_method(self, method):
+        """Super setup and log in test client."""
+        super(BaseApplicationTestLoggedIn, self).setup_method(method)
+        with self.app.test_client():
+            self.login()
+
+
 class FakeMail(object):
     """An object that equals strings containing all of the given substrings
 
