@@ -1,17 +1,14 @@
 # -*- coding: utf-8 -*-
 """Test for app/main/helpers/frameworks.py"""
 
-from datetime import datetime
-
 import mock
 import pytest
 from werkzeug.exceptions import HTTPException
 
 from app.main.helpers.frameworks import (
-    get_statuses_for_lot, return_supplier_framework_info_if_on_framework_or_abort,
-    check_agreement_is_related_to_supplier_framework_or_abort,
-    order_frameworks_for_reuse,
-    get_reusable_declaration)
+    check_agreement_is_related_to_supplier_framework_or_abort, get_framework_for_reuse, get_statuses_for_lot,
+    return_supplier_framework_info_if_on_framework_or_abort, order_frameworks_for_reuse
+)
 
 
 def get_lot_status_examples():
@@ -459,6 +456,7 @@ def test_get_reusable_declaration(data_api_client):
     allow_declaration_reuse == True
     application_close_date is closest to today
     and declaration exists for that framework
+    and declaration status is completed
     """
     t09 = '2009-03-03T01:01:01.000000Z'
     t07 = '2007-03-03T01:01:01.000000Z'
@@ -476,17 +474,17 @@ def test_get_reusable_declaration(data_api_client):
         {'x_field': 'foo', 'allow_declaration_reuse': False, 'application_close_date': t14, 'slug': 'ben-cloud-alpha'},
     ]
     declarations = [
-        {'x_field': 'foo', 'frameworkSlug': 'ben-cloud-4'},
-        {'x_field': 'foo', 'frameworkSlug': 'ben-cloud-1000000'},
-        {'x_field': 'foo', 'frameworkSlug': 'ben-cloud-2'},
-        {'x_field': 'foo', 'frameworkSlug': 'ben-cloud-alpha'}
+        {'x_field': 'foo', 'frameworkSlug': 'ben-cloud-4', 'onFramework': True},
+        {'x_field': 'foo', 'frameworkSlug': 'ben-cloud-1000000', 'onFramework': True},
+        {'x_field': 'foo', 'frameworkSlug': 'ben-cloud-2', 'onFramework': True},
+        {'x_field': 'foo', 'frameworkSlug': 'ben-cloud-alpha', 'onFramework': True},
     ]
 
     data_api_client.find_frameworks.return_value = {'frameworks': frameworks}
     data_api_client.find_supplier_declarations.return_value = {'frameworkInterest': declarations}
-    framework, declaration = get_reusable_declaration(declarations, data_api_client)
+    framework = get_framework_for_reuse(declarations, data_api_client)
 
-    assert declaration == {'x_field': 'foo', 'frameworkSlug': 'ben-cloud-4'}
+    assert framework['slug'] == 'ben-cloud-4'
 
 
 @mock.patch('app.main.views.frameworks.data_api_client', autospec=True)
@@ -499,11 +497,10 @@ def test_get_reusable_declaration_none(data_api_client):
         {'x_field': 'foo', 'allow_declaration_reuse': True, 'application_close_date': t14, 'slug': 'ben-cloud-5'},
     ]
     declarations = [
-        {'x_field': 'foo', 'frameworkSlug': 'ben-cloud-4'},
+        {'x_field': 'foo', 'frameworkSlug': 'ben-cloud-4', 'onFramework': True},
     ]
 
     data_api_client.find_frameworks.return_value = {'frameworks': frameworks}
-    framework, declaration = get_reusable_declaration(declarations, client=data_api_client)
+    framework = get_framework_for_reuse(declarations, client=data_api_client)
 
     assert framework is None
-    assert declaration is None

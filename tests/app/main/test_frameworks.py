@@ -4783,10 +4783,14 @@ class TestReuseFrameworkSupplierDeclaration(BaseApplicationTest):
             'slug': 'g-cloud-8',
             'name': 'g-cloud-8'
         }
-        declaration = {'status': 'complete'}
 
         data_api_client.get_framework.return_value = {'frameworks': framework}
-        data_api_client.get_supplier_declaration.return_value = {'declaration': declaration}
+        data_api_client.get_supplier_framework_info.return_value = {
+            'frameworkInterest': {
+                'declaration': {'status': 'complete'},
+                'onFramework': True
+            }
+        }
 
         # Do the get.
         with self.client as cont:
@@ -4802,7 +4806,7 @@ class TestReuseFrameworkSupplierDeclaration(BaseApplicationTest):
 
         # Assert expected api calls.
         data_api_client.get_framework.assert_has_calls([mock.call('g-cloud-9'), mock.call('g-cloud-8')])
-        data_api_client.get_supplier_declaration.assert_called_once_with(1234, 'g-cloud-8')
+        data_api_client.get_supplier_framework_info.assert_called_once_with(1234, 'g-cloud-8')
 
     def test_404_when_specified_declaration_not_found(self, data_api_client):
         """Fail on a 404 if declaration is specified but not found."""
@@ -4810,7 +4814,7 @@ class TestReuseFrameworkSupplierDeclaration(BaseApplicationTest):
         # Modify the data client.
         framework = {}
         data_api_client.get_framework.return_value = {'frameworks': framework}
-        data_api_client.get_supplier_declaration.side_effect = APIError(mock.Mock(status_code=404))
+        data_api_client.get_supplier_framework_info.side_effect = APIError(mock.Mock(status_code=404))
 
         # Do the get.
         resp = self.client.get(
@@ -4822,7 +4826,7 @@ class TestReuseFrameworkSupplierDeclaration(BaseApplicationTest):
 
         # Assert expected api calls.
         data_api_client.get_framework.assert_called_once_with('g-cloud-9')
-        data_api_client.get_supplier_declaration.assert_called_once_with(1234, 'g-cloud-8')
+        data_api_client.get_supplier_framework_info.assert_called_once_with(1234, 'g-cloud-8')
 
     def test_redirect_when_declaration_not_found(self, data_api_client):
         """Redirect if a reusable declaration is not found."""
@@ -4896,9 +4900,9 @@ class TestReuseFrameworkSupplierDeclaration(BaseApplicationTest):
             'name': 'G-cloud 8'
         }
         supplier_declarations_response = [
-            {'x_field': 'foo', 'frameworkSlug': 'g-cloud-6'},
-            {'x_field': 'foo', 'frameworkSlug': 'g-cloud-7'},
-            {'x_field': 'foo', 'frameworkSlug': 'dos'},
+            {'x': 'foo', 'frameworkSlug': 'g-cloud-6', 'declaration': {'status': 'complete'}, 'onFramework': True},
+            {'x': 'foo', 'frameworkSlug': 'g-cloud-7', 'declaration': {'status': 'complete'}, 'onFramework': True},
+            {'x': 'foo', 'frameworkSlug': 'dos', 'declaration': {'status': 'complete'}, 'onFramework': True}
         ]
         data_api_client.find_frameworks.return_value = {'frameworks': frameworks_response}
         data_api_client.get_framework.return_value = {'frameworks': framework_response}
@@ -4930,7 +4934,7 @@ class TestReuseFrameworkSupplierDeclarationPost(BaseApplicationTest):
 
     def test_reuse_false(self, data_api_client):
         """Assert that the redirect happens and the client sets the prefill pref to None."""
-        data = {'reuse': 0}
+        data = {'reuse': 'no-reuse'}
         with self.client:
             resp = self.client.post(
                 '/suppliers/frameworks/g-cloud-9/declaration/reuse',
@@ -4944,14 +4948,19 @@ class TestReuseFrameworkSupplierDeclarationPost(BaseApplicationTest):
             1234,
             'g-cloud-9',
             None,
-            mock.ANY
+            'email@email.com'
         )
 
     def test_reuse_true(self, data_api_client):
         """Assert that the redirect happens and the client sets the prefill pref to the desired framework slug."""
         data = {'reuse': 'digital-outcomes-and-specialists-2'}
-        data_api_client.get_supplier_declaration.return_value = {
-            'x_field': 'foo', 'frameworkSlug': 'digital-outcomes-and-specialists-2'
+        data_api_client.get_supplier_framework_info.return_value = {
+            'frameworkInterest': {
+                'x_field': 'foo',
+                'frameworkSlug': 'digital-outcomes-and-specialists-2',
+                'declaration': {'status': 'complete'},
+                'onFramework': True
+            }
         }
         framework_response = {'frameworks': {'x_field': 'foo', 'allow_declaration_reuse': True}}
         data_api_client.get_framework.return_value = framework_response
@@ -4967,7 +4976,7 @@ class TestReuseFrameworkSupplierDeclarationPost(BaseApplicationTest):
 
         # These api calls need to be made so that we can verify the declaration.
         data_api_client.get_framework.assert_called_once_with('digital-outcomes-and-specialists-2')
-        data_api_client.get_supplier_declaration.assert_called_once_with(
+        data_api_client.get_supplier_framework_info.assert_called_once_with(
             1234,
             'digital-outcomes-and-specialists-2'
         )
@@ -4977,7 +4986,7 @@ class TestReuseFrameworkSupplierDeclarationPost(BaseApplicationTest):
             1234,
             'g-cloud-9',
             'digital-outcomes-and-specialists-2',
-            mock.ANY
+            'email@email.com'
         )
 
     def test_reuse_invalid_framework_post(self, data_api_client):
@@ -4998,7 +5007,7 @@ class TestReuseFrameworkSupplierDeclarationPost(BaseApplicationTest):
         # Should get the framework and error on allow_declaration_reuse as False.
         data_api_client.get_framework.assert_called_once_with('digital-outcomes-and-specialists')
         # Should not do the declaration call if the framework is invalid
-        assert not data_api_client.get_supplier_declaration.called
+        assert not data_api_client.get_supplier_framework_info.called
         # Should 404
         assert resp.status_code == 404
 
@@ -5018,7 +5027,7 @@ class TestReuseFrameworkSupplierDeclarationPost(BaseApplicationTest):
         # Should error on get.
         data_api_client.get_framework.assert_called_once_with('foo')
         # Should not do the declaration call if the framework is invalid.
-        assert not data_api_client.get_supplier_declaration.called
+        assert not data_api_client.get_supplier_framework_info.called
         # Should 404.
         assert resp.status_code == 404
 
@@ -5029,7 +5038,7 @@ class TestReuseFrameworkSupplierDeclarationPost(BaseApplicationTest):
         data_api_client.get_framework.return_value = framework_response
 
         # Attach does not exist.
-        data_api_client.get_supplier_declaration.side_effect = HTTPError()
+        data_api_client.get_supplier_framework_info.side_effect = HTTPError()
 
         # Do the post.
         resp = self.client.post(
@@ -5040,6 +5049,6 @@ class TestReuseFrameworkSupplierDeclarationPost(BaseApplicationTest):
         # Should get the framework
         data_api_client.get_framework.assert_called_once_with('digital-outcomes-and-specialists-2')
         # Should error getting declaration.
-        data_api_client.get_supplier_declaration.assert_called_once_with(1234, 'digital-outcomes-and-specialists-2')
+        data_api_client.get_supplier_framework_info.assert_called_once_with(1234, 'digital-outcomes-and-specialists-2')
         # Should 404.
         assert resp.status_code == 404
