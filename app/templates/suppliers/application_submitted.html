@@ -5,10 +5,10 @@
 {% block breadcrumb %}
 {%
 with items = [
-{
-"link": "/",
-"label": "Digital Marketplace"
-}
+    {
+        "link": "/",
+        "label": "Digital Marketplace"
+    }
 ]
 %}
 {% include "toolkit/breadcrumb.html" %}
@@ -17,26 +17,28 @@ with items = [
 
 {% block main_content %}
 
-  <header class="page-heading page-heading-without-breadcrumb">
-    <h1>
-      <img alt=" " src="{{ asset_path }}images/tick.svg" style="
+<header class="page-heading page-heading-without-breadcrumb">
+  <h1>
+    <img alt=" " src="{{ asset_path }}images/tick.svg" style="
     height: 1em;
     padding-right: 0.3em;
 "> Application complete
-    </h1>
-  </header>
+  </h1>
+</header>
 
-  <div class="grid-row">
+<div class="grid-row">
     <div class="column-two-thirds">
-      <p>
-        We’ll now review your information to ensure you’re suitable to become a registered seller in the Digital
-        Marketplace.
-      </p>
-      <p> We will send you an email to let you know once your profile is live. </p>
+      {% if current_user.role == 'applicant' %}
+    	<p>
+        We will now review your information to ensure you’re suitable to become a registered seller in the Digital Marketplace.
+
+        We will send you an email to let you know once your profile is live.       </p>
+      {%  else  %}
+      <p>Your updated business profile will appear in the seller catalogue soon. We will send you an email to let you know when it goes live.</p>
+      {%  endif %}
       <h2>While you wait</h2>
 
-      <p>We recommend reading the Digital Marketplace <a href="/sellers-guide" target="_blank" rel="external">seller
-        guide</a>.</p>
+      <p>We recommend reading the Digital Marketplace <a href="/sellers-guide" target="_blank" rel="external">seller guide</a>.</p>
 
       <p>It explains:</p>
       <ul>
@@ -44,7 +46,11 @@ with items = [
         <li>how to offer new services</li>
         <li>the assessment process</li>
       </ul>
+
+      <h2>Your feedback shapes the Marketplace</h2>
+      If you have any questions or comments, or you’d like to help make sure the Marketplace meets your needs by
+      taking part in user research, email us at <a href="mailto:marketplace@digital.gov.au">marketplace@digital.gov.au</a>.
     </div>
-  </div>
+</div>
 
 {% endblock %}
