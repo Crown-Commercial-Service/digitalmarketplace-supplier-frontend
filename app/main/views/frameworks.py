@@ -37,7 +37,7 @@ from ..helpers.validation import get_validator
 from ..helpers.services import (
     get_signed_document_url, get_drafts, get_lot_drafts, count_unanswered_questions
 )
-from ..forms.frameworks import SignerDetailsForm, ContractReviewForm, AcceptAgreementVariationForm
+from ..forms.frameworks import SignerDetailsForm, ContractReviewForm, AcceptAgreementVariationForm, ReuseDeclarationForm
 
 CLARIFICATION_QUESTION_NAME = 'clarification_question'
 
@@ -308,6 +308,7 @@ def reuse_framework_supplier_declaration(framework_slug):
     return render_template(
         "frameworks/reuse_declaration.html",
         current_framework=current_framework,
+        form=ReuseDeclarationForm(),
         old_framework=old_framework,
         old_framework_application_close_date=date_parse(old_framework['application_close_date']).strftime('%B, %Y'),
     ), 200
@@ -317,36 +318,55 @@ def reuse_framework_supplier_declaration(framework_slug):
 @login_required
 def reuse_framework_supplier_declaration_post(framework_slug):
     """Set the prefill preference if a reusable framework slug is provided and redirect to declaration."""
-    reuse_framework_slug = request.form.get('reuse') if request.form.get('reuse') != 'no-reuse' else False
-    supplier_id = current_user.supplier_id
 
-    if reuse_framework_slug:
-        # Check.
+    form = ReuseDeclarationForm(request.form)
+
+    # If the form isn't valid they likely didn't select either way.
+    if not form.validate_on_submit():
+        # Bail and re-render form with errors.
+        current_framework = data_api_client.get_framework(framework_slug)['frameworks']
+        old_framework = data_api_client.get_framework(form.old_framework_slug.data)['frameworks']
+        form_errors = [{'question': form[key].label.text, 'input_name': key} for key in form.errors]
+        return render_template(
+            "frameworks/reuse_declaration.html",
+            current_framework=current_framework,
+            form=form,
+            form_errors=form_errors,
+            old_framework=old_framework,
+            old_framework_application_close_date=date_parse(old_framework['application_close_date']).strftime('%B, %Y')
+        )
+    if form.reuse.data:
+        # They clicked OK! Check the POST data.
         try:
-            framework_ok = data_api_client.get_framework(reuse_framework_slug)['frameworks']['allow_declaration_reuse']
+            framework_ok = data_api_client.get_framework(
+                form.old_framework_slug.data
+            )['frameworks']['allow_declaration_reuse']
             declaration_ok = False  # Default value
+
             if framework_ok:
                 declaration_ok = data_api_client.get_supplier_framework_info(
-                    supplier_id, reuse_framework_slug
+                    current_user.supplier_id, form.old_framework_slug.data
                 )['frameworkInterest']['onFramework']
+
         except HTTPError:
             framework_ok = False
             declaration_ok = False
+
         if framework_ok and declaration_ok:
-            # Set reuse on supplier framework.
+            # If it's OK then Set reuse on supplier framework.
             data_api_client.set_supplier_framework_prefill_declaration(
-                supplier_id,
+                current_user.supplier_id,
                 framework_slug,
-                reuse_framework_slug,
+                form.old_framework_slug.data,
                 current_user.email_address
             )
         else:
-            # Or fail out.
+            # If it's not then fail out.
             abort(404)
     else:
-        # If they use the back button to change their mind.
+        # If they use the back button to change their mind we need to set this.
         data_api_client.set_supplier_framework_prefill_declaration(
-            supplier_id,
+            current_user.supplier_id,
             framework_slug,
             None,
             current_user.email_address
