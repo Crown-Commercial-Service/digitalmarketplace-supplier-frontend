@@ -59,21 +59,19 @@
               </div>
             {% endif %}
             {% for question in section.questions %}
-              {% if errors and (errors[question.id] or question.type == 'multiquestion') %}
-                {{ forms[question.type](question, declaration_answers, errors, question_number=question.number, get_question=get_question) }}
-              {% else %}
                 {{ forms[question.type](
                     question,
                     declaration_answers,
-                    {},
+                    errors if errors and (errors[question.id] or question.type == 'multiquestion') else {},
                     question_number=question.number,
                     get_question=get_question,
                     message="This answer is from your {} declaration".format(section_has_been_prefilled_from)
-                            if (section_has_been_prefilled_from and declaration_answers.get(question.id) is not none)
+                            if section_has_been_prefilled_from and
+                                (declaration_answers.get(question.id) is not none or question.type == 'multiquestion')
                             else None
                     )
                 }}
-              {% endif %}
+
             {% endfor %}
 
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
