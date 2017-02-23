@@ -471,21 +471,38 @@ def framework_supplier_declaration(framework_slug, section_id=None):
     # Do the same for the next section. This also implies whether or not we are on the last page of the declaration.
     next_section = content.get_section(content.get_next_section_id(section_id=section.id, only_editable=True))
 
-    saved_answers = {}
+    supplier_framework = data_api_client.get_supplier_framework_info(
+        current_user.supplier_id, framework_slug)['frameworkInterest']
+    saved_declaration = supplier_framework.get('declaration', {})
+    section_has_been_prefilled = False
 
-    try:
-        response = data_api_client.get_supplier_declaration(current_user.supplier_id, framework_slug)
-        if response['declaration']:
-            saved_answers = response['declaration']
-    except APIError as e:
-        if e.status_code != 404:
-            abort(e.status_code)
     if request.method == 'GET':
         errors = {}
-        all_answers = saved_answers
+
+        section_errors = get_validator(
+            framework,
+            content,
+            saved_declaration,
+        ).get_error_messages_for_page(section)
+
+        # If there are section_errors it means that this section has not previously been completed
+        if section_errors and section.prefill and supplier_framework['prefillDeclarationFromFrameworkSlug']:
+            # Fetch the old declaration to pre-fill from and pass it through
+            try:
+                declaration_to_reuse = data_api_client.get_supplier_declaration(
+                    current_user.supplier_id,
+                    supplier_framework['prefillDeclarationFromFrameworkSlug']
+                )['declaration']
+                all_answers = declaration_to_reuse
+                section_has_been_prefilled = True
+            except APIError as e:
+                if e.status_code != 404:
+                    abort(e.status_code)
+        else:
+            all_answers = saved_declaration
     else:
         submitted_answers = section.get_data(request.form)
-        all_answers = dict(saved_answers, **submitted_answers)
+        all_answers = dict(saved_declaration, **submitted_answers)
 
         validator = get_validator(framework, content, submitted_answers)
         errors = validator.get_error_messages_for_page(section)
@@ -525,6 +542,7 @@ def framework_supplier_declaration(framework_slug, section_id=None):
         framework=framework,
         next_section=next_section,
         section=section,
+        section_has_been_prefilled=section_has_been_prefilled,
         declaration_answers=all_answers,
         get_question=content.get_question,
         errors=errors
