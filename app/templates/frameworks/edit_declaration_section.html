@@ -34,6 +34,13 @@
     {% with errors = errors.values() %}
       {% include 'toolkit/forms/validation.html' %}
     {% endwith %}
+  {% elif section_has_been_prefilled_from %}
+    {% with
+       message = "Answers on this page are from an earlier declaration and need review.",
+       type = "information"
+    %}
+      {% include "toolkit/notification-banner.html" %}
+    {% endwith %}
   {% endif %}
 
   <form method="post" class="supplier-declaration">
