@@ -2255,7 +2255,7 @@ class TestDeclarationOverview(BaseApplicationTest):
             tuple(
                 (
                     # contents of row heading
-                    row.xpath("normalize-space(string(./td[@class='summary-item-field-first']))"),
+                    row.xpath("normalize-space(string(./td[@class='summary-item-field-first-two-thirds']))"),
                     # full text contents of row "value"
                     row.xpath("normalize-space(string(./td[@class='summary-item-field']))"),
                     # full text contents of each a element in row value
@@ -2284,30 +2284,30 @@ class TestDeclarationOverview(BaseApplicationTest):
                 (
                     (
                         "No unfair access to information",
-                        "Answer required",
-                        ("Answer required",),
+                        "Answer question",
+                        ("Answer question",),
                         ("/suppliers/frameworks/g-cloud-9/declaration/providing-suitable-services#unfairCompetition",),
                         (),
                     ),
                     (
                         "Required skills and resources",
-                        "Answer required",
-                        ("Answer required",),
+                        "Answer question",
+                        ("Answer question",),
                         ("/suppliers/frameworks/g-cloud-9/declaration/providing-suitable-services#skillsAndResources",),
                         (),
                     ),
                     (
                         "What your team will deliver",
-                        "Answer required",
-                        ("Answer required",),
+                        "Answer question",
+                        ("Answer question",),
                         ("/suppliers/frameworks/g-cloud-9/declaration/providing-suitable-"
                             "services#offerServicesYourselves",),
                         (),
                     ),
                     (
                         "Contractual responsibility and accountability",
-                        "Answer required",
-                        ("Answer required",),
+                        "Answer question",
+                        ("Answer question",),
                         ("/suppliers/frameworks/g-cloud-9/declaration/providing-suitable-services#fullAccountability",),
                         (),
                     ),
@@ -2393,30 +2393,30 @@ class TestDeclarationOverview(BaseApplicationTest):
                 (
                     (
                         "No unfair access to information",
-                        "Answer required",
-                        ("Answer required",),
+                        "Answer question",
+                        ("Answer question",),
                         ("/suppliers/frameworks/g-cloud-9/declaration/providing-suitable-services#unfairCompetition",),
                         (),
                     ),
                     (
                         "Required skills and resources",
-                        "Answer required",
-                        ("Answer required",),
+                        "Answer question",
+                        ("Answer question",),
                         ("/suppliers/frameworks/g-cloud-9/declaration/providing-suitable-services#skillsAndResources",),
                         (),
                     ),
                     (
                         "What your team will deliver",
-                        "Answer required",
-                        ("Answer required",),
+                        "Answer question",
+                        ("Answer question",),
                         ("/suppliers/frameworks/g-cloud-9/declaration/providing-suitable-"
                             "services#offerServicesYourselves",),
                         (),
                     ),
                     (
                         "Contractual responsibility and accountability",
-                        "Answer required",
-                        ("Answer required",),
+                        "Answer question",
+                        ("Answer question",),
                         ("/suppliers/frameworks/g-cloud-9/declaration/providing-suitable-services#fullAccountability",),
                         (),
                     ),
@@ -2575,7 +2575,7 @@ class TestDeclarationOverview(BaseApplicationTest):
             ),
         ) for declaration_status in ("started", "complete",)),
     ) for prefill_fw_slug, q_link_text_prefillable_section in (
-        (None, "Answer required",),
+        (None, "Answer question",),
         ("some-previous-framework", "Review answer",),
     ))))
     def test_display(
@@ -2651,17 +2651,17 @@ class TestDeclarationOverview(BaseApplicationTest):
 
             assert bool(doc.xpath(
                 "//a[normalize-space(string())=$a or normalize-space(string())=$b]",
-                a="Answer required",
+                a="Answer question",
                 b="Review answer",
             )) is (not decl_valid)
             if not decl_valid:
-                # assert that all links with the label "Answer required" or "Review answer" link to some subpage (by
+                # assert that all links with the label "Answer question" or "Review answer" link to some subpage (by
                 # asserting that there are none that don't, having previously determined that such-labelled links exist)
                 assert not doc.xpath(
                     # we want the href to *contain* $u but not *be* $u
                     "//a[normalize-space(string())=$a or normalize-space(string())=$b]"
                     "[not(starts-with(@href, $u)) or @href=$u]",
-                    a="Answer required",
+                    a="Answer question",
                     b="Review answer",
                     u="/suppliers/frameworks/g-cloud-9/declaration/",
                 )
