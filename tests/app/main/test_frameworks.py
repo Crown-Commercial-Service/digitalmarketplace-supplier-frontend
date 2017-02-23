@@ -2804,6 +2804,10 @@ class TestSupplierDeclaration(BaseApplicationTest):
             self.login()
 
             data_api_client.get_framework.return_value = self.framework(status='open')
+            data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
+                framework_slug="g-cloud-9",
+                declaration={}
+            )
             data_api_client.get_supplier_declaration.side_effect = APIError(mock.Mock(status_code=404))
 
             res = self.client.get(
@@ -2819,9 +2823,10 @@ class TestSupplierDeclaration(BaseApplicationTest):
             self.login()
 
             data_api_client.get_framework.return_value = self.framework(status='open')
-            data_api_client.get_supplier_declaration.return_value = {
-                "declaration": {"status": "started", "PR1": False}
-            }
+            data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
+                framework_slug="g-cloud-9",
+                declaration={"status": "started", "PR1": False}
+            )
 
             res = self.client.get(
                 '/suppliers/frameworks/g-cloud-7/declaration/g-cloud-7-essentials')
@@ -2835,9 +2840,10 @@ class TestSupplierDeclaration(BaseApplicationTest):
             self.login()
 
             data_api_client.get_framework.return_value = self.framework(status='open')
-            data_api_client.get_supplier_declaration.return_value = {
-                "declaration": {"status": "started"}
-            }
+            data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
+                framework_slug="g-cloud-7",
+                declaration={"status": "started"}
+            )
             res = self.client.post(
                 '/suppliers/frameworks/g-cloud-7/declaration/g-cloud-7-essentials',
                 data=FULL_G7_SUBMISSION)
@@ -2850,9 +2856,10 @@ class TestSupplierDeclaration(BaseApplicationTest):
             self.login()
 
             data_api_client.get_framework.return_value = self.framework(status='open')
-            data_api_client.get_supplier_declaration.return_value = {
-                "declaration": FULL_G7_SUBMISSION
-            }
+            data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
+                framework_slug="g-cloud-7",
+                declaration=FULL_G7_SUBMISSION
+            )
             res = self.client.post(
                 '/suppliers/frameworks/g-cloud-7/declaration/grounds-for-discretionary-exclusion',
                 data=FULL_G7_SUBMISSION)
@@ -2867,9 +2874,10 @@ class TestSupplierDeclaration(BaseApplicationTest):
             self.login()
 
             data_api_client.get_framework.return_value = self.framework(status='open')
-            data_api_client.get_supplier_declaration.return_value = {
-                "declaration": {"status": "started"}
-            }
+            data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
+                framework_slug="g-cloud-7",
+                declaration={"status": "started"}
+            )
             data_api_client.set_supplier_declaration.side_effect = APIError(mock.Mock(status_code=400))
 
             res = self.client.post(
