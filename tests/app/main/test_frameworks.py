@@ -4934,7 +4934,7 @@ class TestReuseFrameworkSupplierDeclarationPost(BaseApplicationTest):
 
     def test_reuse_false(self, data_api_client):
         """Assert that the redirect happens and the client sets the prefill pref to None."""
-        data = {'reuse': 'no-reuse'}
+        data = {'reuse': 'false', 'old_framework_slug': 'should-not-be-used'}
         with self.client:
             resp = self.client.post(
                 '/suppliers/frameworks/g-cloud-9/declaration/reuse',
@@ -4953,7 +4953,7 @@ class TestReuseFrameworkSupplierDeclarationPost(BaseApplicationTest):
 
     def test_reuse_true(self, data_api_client):
         """Assert that the redirect happens and the client sets the prefill pref to the desired framework slug."""
-        data = {'reuse': 'digital-outcomes-and-specialists-2'}
+        data = {'reuse': True, 'old_framework_slug': 'digital-outcomes-and-specialists-2'}
         data_api_client.get_supplier_framework_info.return_value = {
             'frameworkInterest': {
                 'x_field': 'foo',
@@ -4991,7 +4991,7 @@ class TestReuseFrameworkSupplierDeclarationPost(BaseApplicationTest):
 
     def test_reuse_invalid_framework_post(self, data_api_client):
         """Assert 404 for non reusable framework."""
-        data = {'reuse': 'digital-outcomes-and-specialists'}
+        data = {'reuse': 'true', 'old_framework_slug': 'digital-outcomes-and-specialists'}
 
         # A framework with allow_declaration_reuse as False
         data_api_client.get_framework.return_value = {
@@ -5013,7 +5013,7 @@ class TestReuseFrameworkSupplierDeclarationPost(BaseApplicationTest):
 
     def test_reuse_non_existent_framework_post(self, data_api_client):
         """Assert 404 for non existent framework."""
-        data = {'reuse': 'foo'}
+        data = {'reuse': 'true', 'old_framework_slug': 'digital-outcomes-and-specialists-1000000'}
 
         # Attach does not exist.
         data_api_client.get_framework.side_effect = HTTPError()
@@ -5025,7 +5025,7 @@ class TestReuseFrameworkSupplierDeclarationPost(BaseApplicationTest):
         )
 
         # Should error on get.
-        data_api_client.get_framework.assert_called_once_with('foo')
+        data_api_client.get_framework.assert_called_once_with('digital-outcomes-and-specialists-1000000')
         # Should not do the declaration call if the framework is invalid.
         assert not data_api_client.get_supplier_framework_info.called
         # Should 404.
@@ -5033,7 +5033,7 @@ class TestReuseFrameworkSupplierDeclarationPost(BaseApplicationTest):
 
     def test_reuse_non_existent_declaration_post(self, data_api_client):
         """Assert 404 for non existent declaration."""
-        data = {'reuse': 'digital-outcomes-and-specialists-2'}
+        data = {'reuse': 'true', 'old_framework_slug': 'digital-outcomes-and-specialists-2'}
         framework_response = {'frameworks': {'x_field': 'foo', 'allow_declaration_reuse': True}}
         data_api_client.get_framework.return_value = framework_response
 

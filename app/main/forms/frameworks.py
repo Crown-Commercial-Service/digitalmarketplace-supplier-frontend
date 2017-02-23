@@ -1,6 +1,6 @@
 from flask.ext.wtf import Form
-from wtforms import BooleanField
-from wtforms.validators import DataRequired, Length
+from wtforms import BooleanField, HiddenField
+from wtforms.validators import DataRequired, InputRequired, Length
 from dmutils.forms import StripWhitespaceStringField
 
 
@@ -34,3 +34,17 @@ class AcceptAgreementVariationForm(Form):
             DataRequired(message="You can only save and continue if you agree to the proposed changes.")
         ]
     )
+
+
+class ReuseDeclarationForm(Form):
+    """Form for the reuse declaration page. One yes no question.
+
+    `reuse` is a yes no whether they want to reuse a framework.
+    `old_framework` is a hidden field allowing us to pass back the framework slug of the framework they are choosing to
+    reuse.
+    """
+    reuse = BooleanField(
+        'Do you want to reuse the answers from your earlier declaration?',
+        validators=[InputRequired(message='You must answer this question.')]
+    )
+    old_framework_slug = HiddenField()
