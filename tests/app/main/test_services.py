@@ -727,18 +727,41 @@ class TestCopyDraft(BaseApplicationTest):
         with self.app.test_client():
             self.login()
 
-        self.draft = empty_g7_draft_service()
+        self.g7_draft = empty_g7_draft_service()
+        self.g9_draft = empty_g9_draft_service()
 
-    def test_copy_draft(self, data_api_client):
+    def test_copy_draft_with_editable_sections(self, data_api_client):
+        # G7 drafts use editable=True, edit_questions=False on every section, which should emit a URL without
+        # a question-slug parameter.
         data_api_client.get_framework.return_value = self.framework(status='open')
-        data_api_client.get_draft_service.return_value = {'services': self.draft}
+        data_api_client.get_draft_service.return_value = {'services': self.g7_draft}
+
+        copy_of_draft = empty_g7_draft_service()
+        copy_of_draft.update({'id': 2})
+        data_api_client.copy_draft_service.return_value = {'services': copy_of_draft}
 
         res = self.client.post('/suppliers/frameworks/g-cloud-7/submissions/scs/1/copy')
         assert res.status_code == 302
+        assert '/suppliers/frameworks/g-cloud-7/submissions/scs/2/edit/service-name?return_to_summary=1' in res.location
+
+    def test_copy_draft_with_edit_questions_sections(self, data_api_client):
+        # G9 drafts use editable=False, edit_questions=True on every section, which means a different URL
+        # needs to be emitted by the draft service copy.
+        data_api_client.get_framework.return_value = self.framework(slug='g-cloud-9', status='open')
+        data_api_client.get_draft_service.return_value = {'services': self.g9_draft}
+
+        copy_of_draft = empty_g9_draft_service()
+        copy_of_draft.update({'id': 2})
+        data_api_client.copy_draft_service.return_value = {'services': copy_of_draft}
+
+        res = self.client.post('/suppliers/frameworks/g-cloud-9/submissions/cloud-hosting/1/copy')
+        assert res.status_code == 302
+        assert '/suppliers/frameworks/g-cloud-9/submissions/cloud-hosting/2/edit/service-name/' \
+               'service-name?return_to_summary=1' in res.location
 
     def test_copy_draft_checks_supplier_id(self, data_api_client):
-        self.draft['supplierId'] = 2
-        data_api_client.get_draft_service.return_value = {'services': self.draft}
+        self.g7_draft['supplierId'] = 2
+        data_api_client.get_draft_service.return_value = {'services': self.g7_draft}
 
         res = self.client.post('/suppliers/frameworks/g-cloud-7/submissions/scs/1/copy')
         assert res.status_code == 404

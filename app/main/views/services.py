@@ -254,11 +254,22 @@ def copy_draft_service(framework_slug, lot_slug, service_id):
         current_user.email_address
     )['services']
 
+    # Get the first section or question to edit.
+    section_id_to_edit = content.get_next_editable_section_id()
+    if section_id_to_edit is None:
+        section_id_to_edit = content.get_next_edit_questions_section_id()
+        question_slug_to_edit = content.get_section(section_id_to_edit).get_next_question_slug()
+        if question_slug_to_edit is None:
+            abort(404)
+    else:
+        question_slug_to_edit = None
+
     return redirect(url_for(".edit_service_submission",
                             framework_slug=framework['slug'],
                             lot_slug=draft['lotSlug'],
                             service_id=draft_copy['id'],
-                            section_id=content.get_next_editable_section_id(),
+                            section_id=section_id_to_edit,
+                            question_slug=question_slug_to_edit,
                             return_to_summary=1
                             ))
 
