@@ -99,10 +99,10 @@ def start_brief_response(brief_id):
 
     if request.method == 'POST':
         if brief_response:
-            if brief_response[0].get('status') == 'submitted':
+            if brief_response[0]['status'] == 'submitted':
                 flash('already_applied', 'error')
                 return redirect(url_for(".view_response_result", brief_id=brief_id))
-            if brief_response[0].get('status') == 'draft':
+            if brief_response[0]['status'] == 'draft':
                 return redirect(
                     url_for('.edit_brief_response', brief_id=brief_id, brief_response_id=brief_response[0]['id'])
                 )
@@ -117,10 +117,10 @@ def start_brief_response(brief_id):
             return redirect(url_for('.edit_brief_response', brief_id=brief_id, brief_response_id=brief_response_id))
 
     if brief_response:
-        if brief_response[0].get('status') == 'submitted':
+        if brief_response[0]['status'] == 'submitted':
             flash('already_applied', 'error')
             return redirect(url_for(".view_response_result", brief_id=brief_id))
-        if brief_response[0].get('status') == 'draft':
+        if brief_response[0]['status'] == 'draft':
             existing_draft_response = brief_response[0]
     else:
         existing_draft_response = False
