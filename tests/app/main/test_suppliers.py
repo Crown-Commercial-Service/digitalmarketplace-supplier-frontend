@@ -134,10 +134,9 @@ class TestSupplierDashboardLogin(BaseApplicationTest):
 
             assert_equal(res.status_code, 200)
 
-            assert_in(
-                self.strip_all_whitespace("<h1>Supplier Name</h1>"),
+            assert self.strip_all_whitespace('>Supplier Name</h1>') in \
                 self.strip_all_whitespace(res.get_data(as_text=True))
-            )
+
             assert_in(
                 self.strip_all_whitespace("email@email.com"),
                 self.strip_all_whitespace(res.get_data(as_text=True))

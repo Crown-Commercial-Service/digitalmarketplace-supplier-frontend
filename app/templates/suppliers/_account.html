@@ -1,9 +1,8 @@
 {% import "toolkit/summary-table.html" as summary %}
 
 {{ summary.heading("Account information") }}
-{{ summary.top_link("View your profile", '/supplier/{}'.format(current_user.supplier_code)) }}
 {% if 'SELLER_EDIT' is active_feature %}
-  {{ summary.top_link("Edit your profile	 ", '/sellers/edit/business-details'.format(current_user.supplier_code)) }}
+  {{ summary.top_link("Update your profile	 ", '/sellers/edit/business-details') }}
 {% endif %}
 {% call(item) summary.table(
   [

@@ -46,12 +46,13 @@
 
     <div class="column-two-thirds">
       {% with
-        context = current_user.email_address,
+        context = '',
         heading = current_user.supplier_name
       %}
-        {% include 'toolkit/page-heading.html' %}
+        {% include 'suppliers/page-heading.html' %}
       {% endwith %}
     </div>
+
   </div>
 
   {% include 'suppliers/_contributors.html' %}
