@@ -62,7 +62,17 @@
               {% if errors and (errors[question.id] or question.type == 'multiquestion') %}
                 {{ forms[question.type](question, declaration_answers, errors, question_number=question.number, get_question=get_question) }}
               {% else %}
-                {{ forms[question.type](question, declaration_answers, {}, question_number=question.number, get_question=get_question) }}
+                {{ forms[question.type](
+                    question,
+                    declaration_answers,
+                    {},
+                    question_number=question.number,
+                    get_question=get_question,
+                    message="This answer is from your {} declaration".format(section_has_been_prefilled_from)
+                            if (section_has_been_prefilled_from and declaration_answers.get(question.id) is not none)
+                            else None
+                    )
+                }}
               {% endif %}
             {% endfor %}
 
