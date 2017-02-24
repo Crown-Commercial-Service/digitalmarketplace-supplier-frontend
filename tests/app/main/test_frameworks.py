@@ -2272,7 +2272,6 @@ class TestDeclarationOverview(BaseApplicationTest):
             )
         )
 
-    @pytest.mark.xfail
     @pytest.mark.parametrize("declaration,decl_valid,prefill_fw_slug,expected_pss,expected_gme,expected_dys", tuple(
         chain.from_iterable(chain(
         ((
@@ -2284,17 +2283,26 @@ class TestDeclarationOverview(BaseApplicationTest):
                 "/suppliers/frameworks/g-cloud-9/declaration/providing-suitable-services",
                 (
                     (
-                        "No unfair access to information",
+                        "Services are cloud-related",
                         "Answer question",
                         ("Answer question",),
-                        ("/suppliers/frameworks/g-cloud-9/declaration/providing-suitable-services#unfairCompetition",),
+                        ("/suppliers/frameworks/g-cloud-9/declaration/providing-suitable-services#"
+                         "servicesHaveOrSupport",),
                         (),
                     ),
                     (
-                        "Required skills and resources",
+                        "Services in scope for G-Cloud",
                         "Answer question",
                         ("Answer question",),
-                        ("/suppliers/frameworks/g-cloud-9/declaration/providing-suitable-services#skillsAndResources",),
+                        ("/suppliers/frameworks/g-cloud-9/declaration/providing-suitable-services#"
+                         "servicesDoNotInclude",),
+                        (),
+                    ),
+                    (
+                        "Buyers pay for what they use",
+                        "Answer question",
+                        ("Answer question",),
+                        ("/suppliers/frameworks/g-cloud-9/declaration/providing-suitable-services#payForWhatUse",),
                         (),
                     ),
                     (
@@ -2393,17 +2401,26 @@ class TestDeclarationOverview(BaseApplicationTest):
                 "/suppliers/frameworks/g-cloud-9/declaration/providing-suitable-services",
                 (
                     (
-                        "No unfair access to information",
+                        "Services are cloud-related",
                         "Answer question",
                         ("Answer question",),
-                        ("/suppliers/frameworks/g-cloud-9/declaration/providing-suitable-services#unfairCompetition",),
+                        ("/suppliers/frameworks/g-cloud-9/declaration/providing-suitable-services#"
+                         "servicesHaveOrSupport",),
                         (),
                     ),
                     (
-                        "Required skills and resources",
+                        "Services in scope for G-Cloud",
                         "Answer question",
                         ("Answer question",),
-                        ("/suppliers/frameworks/g-cloud-9/declaration/providing-suitable-services#skillsAndResources",),
+                        ("/suppliers/frameworks/g-cloud-9/declaration/providing-suitable-services#"
+                         "servicesDoNotInclude",),
+                        (),
+                    ),
+                    (
+                        "Buyers pay for what they use",
+                        "Answer question",
+                        ("Answer question",),
+                        ("/suppliers/frameworks/g-cloud-9/declaration/providing-suitable-services#payForWhatUse",),
                         (),
                     ),
                     (
@@ -2491,15 +2508,22 @@ class TestDeclarationOverview(BaseApplicationTest):
                 "/suppliers/frameworks/g-cloud-9/declaration/providing-suitable-services",
                 (
                     (
-                        "No unfair access to information",
-                        "No",
+                        "Services are cloud-related",
+                        "Yes",
                         (),
                         (),
                         (),
                     ),
                     (
-                        "Required skills and resources",
-                        "No",
+                        "Services in scope for G-Cloud",
+                        "Yes",
+                        (),
+                        (),
+                        (),
+                    ),
+                    (
+                        "Buyers pay for what they use",
+                        "Yes",
                         (),
                         (),
                         (),
