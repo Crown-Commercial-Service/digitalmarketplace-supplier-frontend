@@ -5195,8 +5195,8 @@ class TestReuseFrameworkSupplierDeclaration(BaseApplicationTest):
 
         # Assert the success.
         assert resp.status_code == 200
-        expected = 'In March, 2011, your organisation completed a declaration for G-cloud 7.'
-        assert expected in ''.join(map(str, resp.response))
+        expected = 'In March&nbsp;2011, your organisation completed a declaration for G-cloud 7.'
+        assert expected in str(resp.data)
 
         # Assert expected api calls.
         data_api_client.get_framework.assert_called_once_with('g-cloud-8')

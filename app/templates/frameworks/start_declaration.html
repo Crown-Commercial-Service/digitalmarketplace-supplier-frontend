@@ -37,11 +37,11 @@
         {% include "toolkit/page-heading.html" %}
       {% endwith %}
 
-      <p>You must answer all questions in the declaration to confirm you meet the minimum standards for providing digital services to government.</p>
+      <p>You must make the supplier declaration to confirm you’re eligible to provide services through {{ framework.name }}.</p>
       <br>
-      <p>The Crown Commercial Service will review your answers. If you don’t meet the minimum standards, your application won’t be successful.</p>
+      <p>You can come back and change your answers before the application deadline at {{ framework_close_date }}.</p>
       <br>
-      <p>You can come back and change your answers at any time before the framework application deadline, {{ framework_close_date }}.</p>
+      <p>After the application deadline, the Crown Commercial Service will review your answers and let you know if your application has been successful.</p>
       <br><br>
       <a href='{{ url_for(".reuse_framework_supplier_declaration", framework_slug=framework.slug) }}' class="button-save" role="button">Start your declaration</a>
 
