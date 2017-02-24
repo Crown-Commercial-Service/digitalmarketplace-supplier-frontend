@@ -25,17 +25,20 @@
                 {% endcall %}
               {% endfor %}
             {% elif item.type == "dynamic_list" %}
+              {% set processed_followups = [] %}
               {% for question in item.questions %}
                   {% if question.type == "boolean" %}
-                    {% if question._data['followup'] %}
-                      {% call summary.row() %}
-                        {{ summary.field_name(question.question) }}
-                        {{ summary.text(item.unformat_data(brief_response)[question._data['followup']]) }}
-                      {% endcall %}
+                    {% if question._data['followup'] is defined %}
+                      {% for followup_question in question._data['followup'] %}
+                        {% call summary.row() %}
+                          {% set processed_followups = processed_followups.extend([followup_question]) %}
+                          {{ summary.field_name(question.question) }}
+                          {{ summary.text(item.unformat_data(brief_response)[followup_question]) }}
+                        {% endcall %}
+                      {% endfor %}
                     {% endif %}
                   {% else %}
-                    {% set followup = item.questions[loop.index0 - 1]._data['followup'] %}
-                    {% if not followup or followup != question.id %}
+                    {% if question.id not in processed_followups %}
                       {% call summary.row() %}
                         {{ summary.field_name(question.question) }}
                         {{ summary.text(item.unformat_data(brief_response)[question.id]) }}
