@@ -312,7 +312,7 @@ class BaseApplicationTest(object):
                      'unitSingular': 'service', 'unitPlural': 'service'},
                 ]
             metaframework = "g-cloud"
-        elif slug == 'digital-outcomes-and-specialists':
+        elif 'digital-outcomes-and-specialists' in slug:
             lots = [
                 {'id': 1, 'slug': 'digital-specialists', 'name': 'Digital specialists', 'oneServiceLimit': True,
                  'unitSingular': 'service', 'unitPlural': 'service'},
