@@ -488,6 +488,8 @@ def framework_supplier_declaration(framework_slug, section_id=None):
         # If there are section_errors it means that this section has not previously been completed
         if section_errors and section.prefill and supplier_framework['prefillDeclarationFromFrameworkSlug']:
             # Fetch the old declaration to pre-fill from and pass it through
+            # For now we pre-fill a whole section or none of the section
+            # TODO: In future we may need to pre-fill individual questions and add a 'prefilled' flag to the questions
             try:
                 prefill_from_slug = supplier_framework['prefillDeclarationFromFrameworkSlug']
                 framework_to_reuse = data_api_client.get_framework(prefill_from_slug)['frameworks']
