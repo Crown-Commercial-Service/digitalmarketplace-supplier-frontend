@@ -474,7 +474,7 @@ def framework_supplier_declaration(framework_slug, section_id=None):
     supplier_framework = data_api_client.get_supplier_framework_info(
         current_user.supplier_id, framework_slug)['frameworkInterest']
     saved_declaration = supplier_framework.get('declaration', {})
-    section_has_been_prefilled_from = ""
+    name_of_framework_that_section_has_been_prefilled_from = ""
 
     if request.method == 'GET':
         errors = {}
@@ -498,7 +498,7 @@ def framework_supplier_declaration(framework_slug, section_id=None):
                     prefill_from_slug
                 )['declaration']
                 all_answers = declaration_to_reuse
-                section_has_been_prefilled_from = framework_to_reuse['name']
+                name_of_framework_that_section_has_been_prefilled_from = framework_to_reuse['name']
             except APIError as e:
                 if e.status_code != 404:
                     abort(e.status_code)
@@ -546,7 +546,7 @@ def framework_supplier_declaration(framework_slug, section_id=None):
         framework=framework,
         next_section=next_section,
         section=section,
-        section_has_been_prefilled_from=section_has_been_prefilled_from,
+        name_of_framework_that_section_has_been_prefilled_from=name_of_framework_that_section_has_been_prefilled_from,
         declaration_answers=all_answers,
         get_question=content.get_question,
         errors=errors

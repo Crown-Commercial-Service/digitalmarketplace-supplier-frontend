@@ -2838,17 +2838,20 @@ class TestSupplierDeclaration(BaseApplicationTest):
     def test_get_with_with_prefilled_answers(self, data_api_client):
         with self.app.test_client():
             self.login()
-            # First call is for the current framework; second call for the framework to pre-fill from
-            data_api_client.get_framework.side_effect = [
-                self.framework(slug='g-cloud-9', name='G-Cloud 9', status='open'),
-                self.framework(slug='digital-outcomes-and-specialists-2', name='Digital Stuff 2', status='live'),
-            ]
+            # Handle calls for both the current framework and for the framework to pre-fill from
+            data_api_client.get_framework.side_effect = lambda framework_slug: {
+                "g-cloud-9": self.framework(slug='g-cloud-9', name='G-Cloud 9', status='open'),
+                "digital-outcomes-and-specialists-2": self.framework(slug='digital-outcomes-and-specialists-2',
+                                                                     name='Digital Stuff 2', status='live'),
+            }[framework_slug]
+
             # Current framework application information
             data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
                 framework_slug="g-cloud-9",
                 declaration={"status": "started"},
                 prefill_declaration_from_framework_slug="digital-outcomes-and-specialists-2"
             )
+
             # The previous declaration to prefill from
             data_api_client.get_supplier_declaration.return_value = {
                 'declaration': self.supplier_framework(
@@ -2868,6 +2871,7 @@ class TestSupplierDeclaration(BaseApplicationTest):
                 '/suppliers/frameworks/g-cloud-9/declaration/grounds-for-mandatory-exclusion')
 
             assert res.status_code == 200
+            data_api_client.get_supplier_declaration.assert_called_once_with(1234, "digital-outcomes-and-specialists-2")
             doc = html.fromstring(res.get_data(as_text=True))
 
             # Radio buttons have been pre-filled with the correct answers
@@ -2878,7 +2882,7 @@ class TestSupplierDeclaration(BaseApplicationTest):
             assert len(doc.xpath('//input[@id="input-organisedCrime-no"]/@checked')) == 1
 
             # Blue banner message is shown at top of page
-            assert doc.xpath('normalize-space(//div[@class="banner-information-without-action"]/p/text())') == \
+            assert doc.xpath('normalize-space(string(//div[@class="banner-information-without-action"]))') == \
                 "Answers on this page are from an earlier declaration and need review."
 
             # Blue information messages are shown next to each question
@@ -2889,14 +2893,78 @@ class TestSupplierDeclaration(BaseApplicationTest):
                     "This answer is from your Digital Stuff 2 declaration"
                 )
 
+    def test_get_with_with_partially_prefilled_answers(self, data_api_client):
+        with self.app.test_client():
+            self.login()
+            # Handle calls for both the current framework and for the framework to pre-fill from
+            data_api_client.get_framework.side_effect = lambda framework_slug: {
+                "g-cloud-9": self.framework(slug='g-cloud-9', name='G-Cloud 9', status='open'),
+                "digital-outcomes-and-specialists-2": self.framework(slug='digital-outcomes-and-specialists-2',
+                                                                     name='Digital Stuff 2', status='live'),
+            }[framework_slug]
+
+            # Current framework application information
+            data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
+                framework_slug="g-cloud-9",
+                declaration={"status": "started"},
+                prefill_declaration_from_framework_slug="digital-outcomes-and-specialists-2"
+            )
+
+            # The previous declaration to prefill from - missing "corruptionBribery" and "terrorism" keys
+            data_api_client.get_supplier_declaration.return_value = {
+                'declaration': self.supplier_framework(
+                    framework_slug="digital-outcomes-and-specialists-2",
+                    declaration={"status": "complete",
+                                 "conspiracy": True,
+                                 "fraudAndTheft": True,
+                                 "organisedCrime": False,
+                                 },
+                )["frameworkInterest"]["declaration"]
+            }
+
+            # The grounds-for-mandatory-exclusion section has "prefill: True" in the declaration manifest
+            res = self.client.get(
+                '/suppliers/frameworks/g-cloud-9/declaration/grounds-for-mandatory-exclusion')
+
+            assert res.status_code == 200
+            data_api_client.get_supplier_declaration.assert_called_once_with(1234, "digital-outcomes-and-specialists-2")
+            doc = html.fromstring(res.get_data(as_text=True))
+
+            # Radio buttons have been pre-filled with the correct answers
+            assert len(doc.xpath('//input[@id="input-conspiracy-yes"]/@checked')) == 1
+            assert len(doc.xpath('//input[@id="input-fraudAndTheft-yes"]/@checked')) == 1
+            assert len(doc.xpath('//input[@id="input-organisedCrime-no"]/@checked')) == 1
+
+            # Radio buttons for missing keys exist but have not been pre-filled
+            assert len(doc.xpath('//input[@id="input-corruptionBribery-no"]')) == 1
+            assert len(doc.xpath('//input[@id="input-corruptionBribery-no"]/@checked')) == 0
+            assert len(doc.xpath('//input[@id="input-corruptionBribery-yes"]/@checked')) == 0
+            assert len(doc.xpath('//input[@id="input-terrorism-no"]')) == 1
+            assert len(doc.xpath('//input[@id="input-terrorism-no"]/@checked')) == 0
+            assert len(doc.xpath('//input[@id="input-terrorism-yes"]/@checked')) == 0
+
+            # Blue banner message is shown at top of page
+            assert doc.xpath('normalize-space(string(//div[@class="banner-information-without-action"]))') == \
+                "Answers on this page are from an earlier declaration and need review."
+
+            # Blue information messages are shown next to pre-filled questions only
+            info_messages = doc.xpath('//div[@class="message-wrapper"]//span[@class="message-content"]')
+            assert len(info_messages) == 3
+            for message in info_messages:
+                assert self.strip_all_whitespace(message.text) == self.strip_all_whitespace(
+                    "This answer is from your Digital Stuff 2 declaration"
+                )
+
     def test_answers_not_prefilled_if_section_has_already_been_saved(self, data_api_client):
         with self.app.test_client():
             self.login()
-            # First call is for the current framework; second call for the framework to pre-fill from should not happen
-            data_api_client.get_framework.side_effect = [
-                self.framework(slug='g-cloud-9', name='G-Cloud 9', status='open'),
-                self.framework(slug='digital-outcomes-and-specialists-2', name='Digital Stuff 2', status='live'),
-            ]
+            # Handle calls for both the current framework and for the framework to pre-fill from
+            data_api_client.get_framework.side_effect = lambda framework_slug: {
+                "g-cloud-9": self.framework(slug='g-cloud-9', name='G-Cloud 9', status='open'),
+                "digital-outcomes-and-specialists-2": self.framework(slug='digital-outcomes-and-specialists-2',
+                                                                     name='Digital Stuff 2', status='live'),
+            }[framework_slug]
+
             # Current framework application information with the grounds-for-mandatory-exclusion section complete
             data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
                 framework_slug="g-cloud-9",
@@ -2909,6 +2977,7 @@ class TestSupplierDeclaration(BaseApplicationTest):
                              },
                 prefill_declaration_from_framework_slug="digital-outcomes-and-specialists-2"
             )
+
             # The previous declaration to prefill from - has relevant answers but should not ever be called
             data_api_client.get_supplier_declaration.return_value = {
                 'declaration': self.supplier_framework(
@@ -2951,17 +3020,20 @@ class TestSupplierDeclaration(BaseApplicationTest):
     def test_answers_not_prefilled_if_section_marked_as_prefill_false(self, data_api_client):
         with self.app.test_client():
             self.login()
-            # First call is for the current framework; second call for the framework to pre-fill from should not happen
-            data_api_client.get_framework.side_effect = [
-                self.framework(slug='g-cloud-9', name='G-Cloud 9', status='open'),
-                self.framework(slug='digital-outcomes-and-specialists-2', name='Digital Stuff 2', status='live'),
-            ]
+            # Handle calls for both the current framework and for the framework to pre-fill from
+            data_api_client.get_framework.side_effect = lambda framework_slug: {
+                "g-cloud-9": self.framework(slug='g-cloud-9', name='G-Cloud 9', status='open'),
+                "digital-outcomes-and-specialists-2": self.framework(slug='digital-outcomes-and-specialists-2',
+                                                                     name='Digital Stuff 2', status='live'),
+            }[framework_slug]
+
             # Current framework application information
             data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
                 framework_slug="g-cloud-9",
                 declaration={"status": "started"},
                 prefill_declaration_from_framework_slug="digital-outcomes-and-specialists-2"
             )
+
             # The previous declaration to prefill from - has relevant answers but should not ever be called
             data_api_client.get_supplier_declaration.return_value = {
                 'declaration': self.supplier_framework(

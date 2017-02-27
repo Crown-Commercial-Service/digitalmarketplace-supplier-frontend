@@ -34,7 +34,7 @@
     {% with errors = errors.values() %}
       {% include 'toolkit/forms/validation.html' %}
     {% endwith %}
-  {% elif section_has_been_prefilled_from %}
+  {% elif name_of_framework_that_section_has_been_prefilled_from %}
     {% with
        message = "Answers on this page are from an earlier declaration and need review.",
        type = "information"
@@ -65,11 +65,14 @@
                     errors if errors and (errors[question.id] or question.type == 'multiquestion') else {},
                     question_number=question.number,
                     get_question=get_question,
-                    message="This answer is from your {} declaration".format(section_has_been_prefilled_from)
-                            if section_has_been_prefilled_from and
-                                (declaration_answers.get(question.id) is not none or question.type == 'multiquestion')
-                            else None
-                    )
+                    message=(
+                            "This answer is from your {} declaration".format(name_of_framework_that_section_has_been_prefilled_from)
+                        if
+                            name_of_framework_that_section_has_been_prefilled_from and (declaration_answers.get(question.id) is not none or question.type == 'multiquestion')
+                        else
+                            None
+                            )
+                   )
                 }}
 
             {% endfor %}
