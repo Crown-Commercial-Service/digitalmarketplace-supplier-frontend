@@ -180,15 +180,16 @@ def framework_submission_lots(framework_slug):
     if framework['status'] == 'pending' and not application_made:
         abort(404)
 
-    lots = [
-        dict(lot,
-             draft_count=count_drafts_by_lot(drafts, lot['slug']),
-             complete_count=count_drafts_by_lot(complete_drafts, lot['slug']))
-        for lot in framework['lots']]
     lot_question = {
         option["value"]: option
         for option in content_loader.get_question(framework_slug, 'services', 'lot')['options']
     }
+    lots = [
+        dict(lot,
+             draft_count=count_drafts_by_lot(drafts, lot['slug']),
+             complete_count=count_drafts_by_lot(complete_drafts, lot['slug']))
+        for lot in framework['lots'] if lot['slug'] in lot_question.keys()]
+
     lots = [{
         "title": lot_question[lot['slug']]['label'] if framework["status"] == "open" else lot["name"],
         'body': lot_question[lot['slug']]['description'],
