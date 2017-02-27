@@ -1,164 +1,165 @@
 # -*- coding: utf-8 -*-
 import re
-from mock import patch
-from app import create_app
-from tests import login_for_tests
-from werkzeug.http import parse_cookie
-from app import data_api_client
 from datetime import datetime, timedelta
-from dmutils.formats import DATETIME_FORMAT
-import pytest
 
+import pytest
+from dmutils.formats import DATETIME_FORMAT
+from mock import patch
+from werkzeug.http import parse_cookie
+
+from app import create_app
+from app import data_api_client
+from tests import login_for_tests
 
 FULL_G7_SUBMISSION = {
-    "status": "complete",
-    "PR1": "true",
-    "PR2": "true",
-    "PR3": "true",
-    "PR4": "true",
-    "PR5": "true",
-    "SQ1-1i-i": "true",
-    "SQ2-1abcd": "true",
-    "SQ2-1e": "true",
-    "SQ2-1f": "true",
-    "SQ2-1ghijklmn": "true",
-    "SQ2-2a": "true",
-    "SQ3-1a": "true",
-    "SQ3-1b": "true",
-    "SQ3-1c": "true",
-    "SQ3-1d": "true",
-    "SQ3-1e": "true",
-    "SQ3-1f": "true",
-    "SQ3-1g": "true",
-    "SQ3-1h-i": "true",
-    "SQ3-1h-ii": "true",
-    "SQ3-1i-i": "true",
-    "SQ3-1i-ii": "true",
-    "SQ3-1j": "true",
-    "SQ3-1k": "Blah",
-    "SQ4-1a": "true",
-    "SQ4-1b": "true",
-    "SQ5-2a": "true",
-    "SQD2b": "true",
-    "SQD2d": "true",
-    "SQ1-1a": "Legal Supplier Name",
-    "SQ1-1b": "Blah",
-    "SQ1-1cii": "Blah",
-    "SQ1-1d": "Blah",
-    "SQ1-1d-i": "Blah",
-    "SQ1-1d-ii": "Blah",
-    "SQ1-1e": "Blah",
-    "SQ1-1h": "999999999",
-    "SQ1-1i-ii": "Blah",
-    "SQ1-1j-ii": "Blah",
-    "SQ1-1k": "Blah",
-    "SQ1-1n": "Blah",
-    "SQ1-1o": "Blah@example.com",
-    "SQ1-2a": "Blah",
-    "SQ1-2b": "Blah@example.com",
-    "SQ2-2b": "Blah",
-    "SQ4-1c": "Blah",
-    "SQD2c": "Blah",
-    "SQD2e": "Blah",
-    "SQ1-1ci": "public limited company",
-    "SQ1-1j-i": "licensed?",
-    "SQ1-1m": "micro",
-    "SQ1-3": "on-demand self-service. blah blah",
-    "SQ5-1a": u"Yes – your organisation has, blah blah",
-    "SQC2": [
-        "race?",
-        "sexual orientation?",
-        "disability?",
-        "age equality?",
-        "religion or belief?",
-        "gender (sex)?",
-        "gender reassignment?",
-        "marriage or civil partnership?",
-        "pregnancy or maternity?",
-        "human rights?"
+    'status': 'complete',
+    'PR1': 'true',
+    'PR2': 'true',
+    'PR3': 'true',
+    'PR4': 'true',
+    'PR5': 'true',
+    'SQ1-1i-i': 'true',
+    'SQ2-1abcd': 'true',
+    'SQ2-1e': 'true',
+    'SQ2-1f': 'true',
+    'SQ2-1ghijklmn': 'true',
+    'SQ2-2a': 'true',
+    'SQ3-1a': 'true',
+    'SQ3-1b': 'true',
+    'SQ3-1c': 'true',
+    'SQ3-1d': 'true',
+    'SQ3-1e': 'true',
+    'SQ3-1f': 'true',
+    'SQ3-1g': 'true',
+    'SQ3-1h-i': 'true',
+    'SQ3-1h-ii': 'true',
+    'SQ3-1i-i': 'true',
+    'SQ3-1i-ii': 'true',
+    'SQ3-1j': 'true',
+    'SQ3-1k': 'Blah',
+    'SQ4-1a': 'true',
+    'SQ4-1b': 'true',
+    'SQ5-2a': 'true',
+    'SQD2b': 'true',
+    'SQD2d': 'true',
+    'SQ1-1a': 'Legal Supplier Name',
+    'SQ1-1b': 'Blah',
+    'SQ1-1cii': 'Blah',
+    'SQ1-1d': 'Blah',
+    'SQ1-1d-i': 'Blah',
+    'SQ1-1d-ii': 'Blah',
+    'SQ1-1e': 'Blah',
+    'SQ1-1h': '999999999',
+    'SQ1-1i-ii': 'Blah',
+    'SQ1-1j-ii': 'Blah',
+    'SQ1-1k': 'Blah',
+    'SQ1-1n': 'Blah',
+    'SQ1-1o': 'Blah@example.com',
+    'SQ1-2a': 'Blah',
+    'SQ1-2b': 'Blah@example.com',
+    'SQ2-2b': 'Blah',
+    'SQ4-1c': 'Blah',
+    'SQD2c': 'Blah',
+    'SQD2e': 'Blah',
+    'SQ1-1ci': 'public limited company',
+    'SQ1-1j-i': 'licensed?',
+    'SQ1-1m': 'micro',
+    'SQ1-3': 'on-demand self-service. blah blah',
+    'SQ5-1a': u'Yes – your organisation has, blah blah',
+    'SQC2': [
+        'race?',
+        'sexual orientation?',
+        'disability?',
+        'age equality?',
+        'religion or belief?',
+        'gender (sex)?',
+        'gender reassignment?',
+        'marriage or civil partnership?',
+        'pregnancy or maternity?',
+        'human rights?'
     ],
-    "SQC3": "true",
-    "SQA2": "true",
-    "SQA3": "true",
-    "SQA4": "true",
-    "SQA5": "true",
-    "AQA3": "true",
-    "SQE2a": ["as a prime contractor, using third parties (subcontractors) to provide some services"]
+    'SQC3': 'true',
+    'SQA2': 'true',
+    'SQA3': 'true',
+    'SQA4': 'true',
+    'SQA5': 'true',
+    'AQA3': 'true',
+    'SQE2a': ['as a prime contractor, using third parties (subcontractors) to provide some services']
 }
 
 
-# a lambda so we can be sure we get a fresh copy every time. missing "status" field.
-valid_g9_declaration_base = lambda: {
-    "unfairCompetition": False,
-    "skillsAndResources": False,
-    "offerServicesYourselves": False,
-    "fullAccountability": True,
-    "termsOfParticipation": True,
-    "termsAndConditions": True,
-    "canProvideFromDayOne": True,
-    "10WorkingDays": True,
-    "MI": True,
-    "conspiracy": False,
-    "corruptionBribery": True,
-    "fraudAndTheft": False,
-    "terrorism": True,
-    "organisedCrime": False,
-    "taxEvasion": False,
-    "environmentalSocialLabourLaw": False,
-    "bankrupt": False,
-    "graveProfessionalMisconduct": False,
-    "distortingCompetition": False,
-    "conflictOfInterest": False,
-    "distortedCompetition": True,
-    "significantOrPersistentDeficiencies": True,
-    "seriousMisrepresentation": True,
-    "witheldSupportingDocuments": True,
-    "influencedContractingAuthority": True,
-    "confidentialInformation": True,
-    "misleadingInformation": True,
-    "mitigatingFactors": "Money is no object",
-    "unspentTaxConvictions": True,
-    "GAAR": True,
-    "mitigatingFactors2": "Project favourably entertained by auditors",
-    "environmentallyFriendly": False,
-    "equalityAndDiversity": False,
-    "employersInsurance": u"Not applicable - your organisation does not need employer’s liability "
-                          "insurance because your organisation employs only the owner or close family members. ",
-    "transparentContracting": False,
-    "publishContracts": False,
-    "readUnderstoodGuidance": True,
-    "understandTool": True,
-    "understandHowToAskQuestions": True,
-    "accurateInformation": True,
-    "informationChanges": True,
-    "accuratelyDescribed": True,
-    "proofOfClaims": True,
-    "nameOfOrganisation": "Mr Malachi Mulligan. Fertiliser and Incubator.",
-    "tradingNames": "Omphalos dutiful yeoman services",
-    "registeredAddressBuilding": "Omphalos",
-    "registeredAddressTown": "Lambay Island",
-    "registeredAddressPostcode": "N/A",
-    "firstRegistered": "5/6/1904",
-    "currentRegisteredCountry": u"Éire",
-    "companyRegistrationNumber": "00000014",
-    "dunsNumber": "987654321",
-    "registeredVATNumber": "123456789",
-    "establishedInTheUK": False,
-    "appropriateTradeRegisters": True,
-    "appropriateTradeRegistersNumber": "242#353",
-    "licenceOrMemberRequired": "none of the above",
-    "licenceOrMemberRequiredDetails": "",
-    "subcontracting": [
-        "yourself without the use of third parties (subcontractors)",
-    ],
-    "organisationSize": "small",
-    "tradingStatus": "other (please specify)",
-    "tradingStatusOther": "Proposed",
-    "primaryContact": "B. Mulligan",
-    "primaryContactEmail": "buck@example.com",
-    "contactNameContractNotice": "Malachi Mulligan",
-    "contactEmailContractNotice": "malachi@example.com",
-}
+def valid_g9_declaration_base():
+    return {
+        'unfairCompetition': False,
+        'skillsAndResources': False,
+        'offerServicesYourselves': False,
+        'fullAccountability': True,
+        'termsOfParticipation': True,
+        'termsAndConditions': True,
+        'canProvideFromDayOne': True,
+        '10WorkingDays': True,
+        'MI': True,
+        'conspiracy': False,
+        'corruptionBribery': True,
+        'fraudAndTheft': False,
+        'terrorism': True,
+        'organisedCrime': False,
+        'taxEvasion': False,
+        'environmentalSocialLabourLaw': False,
+        'bankrupt': False,
+        'graveProfessionalMisconduct': False,
+        'distortingCompetition': False,
+        'conflictOfInterest': False,
+        'distortedCompetition': True,
+        'significantOrPersistentDeficiencies': True,
+        'seriousMisrepresentation': True,
+        'witheldSupportingDocuments': True,
+        'influencedContractingAuthority': True,
+        'confidentialInformation': True,
+        'misleadingInformation': True,
+        'mitigatingFactors': 'Money is no object',
+        'unspentTaxConvictions': True,
+        'GAAR': True,
+        'mitigatingFactors2': 'Project favourably entertained by auditors',
+        'environmentallyFriendly': False,
+        'equalityAndDiversity': False,
+        'employersInsurance': u'Not applicable - your organisation does not need employer’s liability '
+                              'insurance because your organisation employs only the owner or close family members. ',
+        'transparentContracting': False,
+        'publishContracts': False,
+        'readUnderstoodGuidance': True,
+        'understandTool': True,
+        'understandHowToAskQuestions': True,
+        'accurateInformation': True,
+        'informationChanges': True,
+        'accuratelyDescribed': True,
+        'proofOfClaims': True,
+        'nameOfOrganisation': 'Mr Malachi Mulligan. Fertiliser and Incubator.',
+        'tradingNames': 'Omphalos dutiful yeoman services',
+        'registeredAddressBuilding': 'Omphalos',
+        'registeredAddressTown': 'Lambay Island',
+        'registeredAddressPostcode': 'N/A',
+        'firstRegistered': '5/6/1904',
+        'currentRegisteredCountry': u'Éire',
+        'companyRegistrationNumber': '00000014',
+        'dunsNumber': '987654321',
+        'registeredVATNumber': '123456789',
+        'establishedInTheUK': False,
+        'appropriateTradeRegisters': True,
+        'appropriateTradeRegistersNumber': '242#353',
+        'licenceOrMemberRequired': 'none of the above',
+        'licenceOrMemberRequiredDetails': '',
+        'subcontracting': [
+            'yourself without the use of third parties (subcontractors)',
+        ],
+        'organisationSize': 'small',
+        'tradingStatus': 'other (please specify)',
+        'tradingStatusOther': 'Proposed',
+        'primaryContact': 'B. Mulligan',
+        'primaryContactEmail': 'buck@example.com',
+        'contactNameContractNotice': 'Malachi Mulligan',
+        'contactEmailContractNotice': 'malachi@example.com',
+    }
 
 
 def empty_g7_draft_service():
@@ -214,9 +215,9 @@ class BaseApplicationTest(object):
     @staticmethod
     def supplier():
         return {
-            "suppliers": {
-                "id": 12345,
-                "name": "Supplier Name",
+            'suppliers': {
+                'id': 12345,
+                'name': 'Supplier Name',
                 'description': 'Supplier Description',
                 'dunsNumber': '999999999',
                 'companiesHouseId': 'SC009988',
@@ -232,7 +233,7 @@ class BaseApplicationTest(object):
         }
 
     @staticmethod
-    def user(id, email_address, supplier_id, supplier_name, name,
+    def user(user_id, email_address, supplier_id, supplier_name, name,
              is_token_valid=True, locked=False, active=True, role='buyer'):
 
         hours_offset = -1 if is_token_valid else 1
@@ -240,24 +241,24 @@ class BaseApplicationTest(object):
         password_changed_at = date.strftime(DATETIME_FORMAT)
 
         user = {
-            "id": id,
-            "emailAddress": email_address,
-            "name": name,
-            "role": role,
-            "locked": locked,
+            'id': user_id,
+            'emailAddress': email_address,
+            'name': name,
+            'role': role,
+            'locked': locked,
             'active': active,
             'passwordChangedAt': password_changed_at
         }
 
         if supplier_id:
             supplier = {
-                "supplierId": supplier_id,
-                "name": supplier_name,
+                'supplierId': supplier_id,
+                'name': supplier_name,
             }
             user['role'] = 'supplier'
             user['supplier'] = supplier
         return {
-            "users": user
+            'users': user
         }
 
     @staticmethod
@@ -308,13 +309,13 @@ class BaseApplicationTest(object):
                     {'id': 4, 'slug': 'saas', 'name': 'Software as a Service', 'oneServiceLimit': False,
                      'unitSingular': 'service', 'unitPlural': 'service'},
                 ]
-            metaframework = "g-cloud"
+            metaframework = 'g-cloud'
         elif slug == 'digital-outcomes-and-specialists':
             lots = [
                 {'id': 1, 'slug': 'digital-specialists', 'name': 'Digital specialists', 'oneServiceLimit': True,
                  'unitSingular': 'service', 'unitPlural': 'service'},
             ]
-            metaframework = "digital-outcomes-and-specialists"
+            metaframework = 'digital-outcomes-and-specialists'
 
         return {
             'frameworks': {
@@ -329,85 +330,54 @@ class BaseApplicationTest(object):
         }
 
     @staticmethod
-    def supplier_framework(
-        supplier_id=1234,
-        framework_slug=None,
-        declaration='default',
-        status=None,
-        on_framework=False,
-        agreement_returned=False,
-        agreement_returned_at=None,
-        agreement_details=None,
-        agreement_path=None,
-        countersigned=False,
-        countersigned_at=None,
-        countersigned_details=None,
-        countersigned_path=None,
-        agreed_variations={},
-        agreement_id=None,
-        prefill_declaration_from_framework_slug=None,
-    ):
-        if declaration == 'default':
-            declaration = FULL_G7_SUBMISSION.copy()
+    def supplier_framework(status=None, **kwargs):
+        response = {
+            'supplier_id': 1234,
+            'framework_slug': None,
+            'declaration': 'default',
+            'status': None,
+            'on_framework': False,
+            'agreement_returned': False,
+            'agreement_returned_at': None,
+            'agreement_details': None,
+            'agreement_path': None,
+            'countersigned': False,
+            'countersigned_at': None,
+            'countersigned_details': None,
+            'countersigned_path': None,
+            'agreed_variations': {},
+            'agreement_id': None,
+            'prefill_declaration_from_framework_slug': None
+        }
+        response.update(**kwargs)
+        if response['declaration'] == 'default':
+            response['declaration'] = FULL_G7_SUBMISSION.copy()
         if status is not None:
-            declaration['status'] = status
-        return {
-            'frameworkInterest': {
-                'supplierId': supplier_id,
-                'frameworkSlug': framework_slug,
-                'declaration': declaration,
-                'onFramework': on_framework,
-                'agreementReturned': agreement_returned,
-                'agreementReturnedAt': agreement_returned_at,
-                'agreementDetails': agreement_details,
-                'agreementPath': agreement_path,
-                'countersigned': countersigned,
-                'countersignedAt': countersigned_at,
-                'countersignedDetails': countersigned_details,
-                'countersignedPath': countersigned_path,
-                'agreementId': agreement_id,
-                'agreedVariations': agreed_variations,
-                'prefillDeclarationFromFrameworkSlug': prefill_declaration_from_framework_slug,
-            }
-        }
+            response['status'] = status
+        return {'frameworkInterest': response}
 
     @staticmethod
-    def framework_agreement(
-            id=234,
-            supplier_id=1234,
-            framework_slug="g-cloud-8",
-            signed_agreement_details=None,
-            signed_agreement_path=None
-    ):
-        return {
-            "agreement": {
-                "id": id,
-                "supplierId": supplier_id,
-                "frameworkSlug": framework_slug,
-                "signedAgreementDetails": signed_agreement_details,
-                "signedAgreementPath": signed_agreement_path
-            }
+    def framework_agreement(**kwargs):
+        response = {
+            'id': 234,
+            'supplier_id': 1234,
+            'framework_slug': 'g-cloud-8',
+            'signed_agreement_details': None,
+            'signed_agreement_path': None
         }
+        response.update(**kwargs)
+        return response
 
     @staticmethod
-    def brief_response(
-            id=5,
-            brief_id=1234,
-            supplier_id=1234,
-            data=None
-    ):
-        result = {
-            "briefResponses": {
-                "id": id,
-                "briefId": brief_id,
-                "supplierId": supplier_id
-            }
+    def brief_response(brief_responses_data=None, **kwargs):
+        response = {
+            'id': 5,
+            'briefId': 1234,
+            'supplierId': 1234
         }
-
-        if data:
-            result['briefResponses'].update(data)
-
-        return result
+        if brief_responses_data:
+            response['briefResponses'].update(brief_responses_data)
+        return {'briefResponses': response}
 
     def teardown_login(self):
         if self.get_user_patch is not None:
@@ -416,32 +386,31 @@ class BaseApplicationTest(object):
     def login(self):
         with patch('app.main.views.login.data_api_client') as login_api_client:
             login_api_client.authenticate_user.return_value = self.user(
-                123, "email@email.com", 1234, u'Supplier NĀme', u'Năme')
+                123, 'email@email.com', 1234, u'Supplier NĀme', u'Năme')
 
             self.get_user_patch = patch.object(
                 data_api_client,
                 'get_user',
-                return_value=self.user(123, "email@email.com", 1234, u'Supplier NĀme', u'Năme')
+                return_value=self.user(123, 'email@email.com', 1234, u'Supplier NĀme', u'Năme')
             )
             self.get_user_patch.start()
 
-            response = self.client.get("/auto-login")
+            response = self.client.get('/auto-login')
             assert response.status_code == 200
 
     def login_as_buyer(self):
         with patch('app.main.views.login.data_api_client') as login_api_client:
-
             login_api_client.authenticate_user.return_value = self.user(
-                234, "buyer@email.com", None, None, 'Ā Buyer', role='buyer')
+                234, 'buyer@email.com', None, None, 'Ā Buyer', role='buyer')
 
             self.get_user_patch = patch.object(
                 data_api_client,
                 'get_user',
-                return_value=self.user(234, "buyer@email.com", None, None, 'Buyer', role='buyer')
+                return_value=self.user(234, 'buyer@email.com', None, None, 'Buyer', role='buyer')
             )
             self.get_user_patch.start()
 
-            response = self.client.get("/auto-buyer-login")
+            response = self.client.get('/auto-buyer-login')
             assert response.status_code == 200
 
     def assert_in_strip_whitespace(self, needle, haystack):
@@ -460,14 +429,14 @@ class BaseApplicationTest(object):
             try:
                 assert expected_message == message or expected_message in message
             except TypeError:
-                # presumably this was raised from the "in" test being reached and fed types which don't support "in".
+                # presumably this was raised from the 'in' test being reached and fed types which don't support 'in'.
                 # either way, a failure.
-                pytest.fail("Flash message contents not found in _flashes")
+                pytest.fail('Flash message contents not found in _flashes')
             assert expected_category == category
 
     def assert_no_flashes(self):
         with self.client.session_transaction() as session:
-            assert not session.get("_flashes")
+            assert not session.get('_flashes')
 
 
 class FakeMail(object):
@@ -476,6 +445,7 @@ class FakeMail(object):
     Can be used in mock.call comparisons (eg to verify email templates).
 
     """
+
     def __init__(self, *substrings):
         self.substrings = substrings
 
@@ -483,4 +453,4 @@ class FakeMail(object):
         return all(substring in other for substring in self.substrings)
 
     def __repr__(self):
-        return "<FakeMail: {}>".format(self.substrings)
+        return '<FakeMail: {}>'.format(self.substrings)
