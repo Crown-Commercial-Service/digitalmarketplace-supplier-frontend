@@ -37,6 +37,11 @@
           data-url="{{message}}">
         </div>
       {% else %}
+        {% if message == 'submission_confidence' %}
+          {% set
+            message = "Your application will be submitted at %s. <br> You can edit your declaration and services at any time before the deadline."|safe % framework_dates.framework_close_date
+          %}
+        {% endif %}
         {%
           with
           message = message,

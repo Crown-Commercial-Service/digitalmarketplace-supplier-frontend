@@ -288,7 +288,8 @@ class BaseApplicationTest(object):
             name='G-Cloud 7',
             slug='g-cloud-7',
             clarification_questions_open=True,
-            framework_agreement_version=None
+            framework_agreement_version=None,
+            application_close_date='2017-01-16T17:00:00.000000Z'
     ):
         if 'g-cloud-' in slug:
             if slug == 'g-cloud-9':
@@ -328,6 +329,7 @@ class BaseApplicationTest(object):
                 'lots': lots,
                 'frameworkAgreementVersion': framework_agreement_version,
                 'framework': metaframework,
+                'application_close_date': application_close_date
             }
         }
 

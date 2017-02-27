@@ -2,19 +2,17 @@
 from collections import OrderedDict
 from itertools import chain
 
+import mock
+import pytest
 from dmapiclient import HTTPError
-from flask import request
-
+from flask import request, session
+from lxml import html
 try:
     from StringIO import StringIO
 except ImportError:
     from io import BytesIO as StringIO
-import mock
-import pytest
 from six.moves.urllib.parse import urljoin
 
-from flask import session
-from lxml import html
 from dmapiclient import APIError
 from dmapiclient.audit import AuditTypes
 from dmutils.email.exceptions import EmailError
@@ -116,18 +114,9 @@ class TestFrameworksDashboard(BaseApplicationTest):
     def _boring_agreement_details_expected_table_results(self):
         # property so we always get a clean copy
         return (
-            (
-                'Person who signed',
-                'Martin Cunningham Foreman'
-            ),
-            (
-                'Submitted by',
-                'User email@email.com Sunday 10 July 2016 at 22:20'
-            ),
-            (
-                'Countersignature',
-                'Waiting for CCS to countersign'
-            ),
+            ('Person who signed', 'Martin Cunningham Foreman'),
+            ('Submitted by', 'User email@email.com Sunday 10 July 2016 at 22:20'),
+            ('Countersignature', 'Waiting for CCS to countersign'),
         )
 
     def test_framework_dashboard_shows_for_pending_if_declaration_exists(self, data_api_client, s3):
@@ -1638,6 +1627,137 @@ class TestFrameworksDashboard(BaseApplicationTest):
 
             assert document.xpath("//a[normalize-space(string())=$link_label]/@href", link_label=link_label)[0] \
                 == link_href
+
+
+@mock.patch('dmutils.s3.S3')
+@mock.patch('app.main.views.frameworks.data_api_client', autospec=True)
+class TestFrameworksDashboardConfidenceBannerOnPage(BaseApplicationTest):
+    """Tests for the confidence banner on the declaration page."""
+
+    expected = (
+        'Your application will be submitted at 5pm BST, 23 June 2016. <br> '
+        'You can edit your declaration and services at any time before the deadline.'
+    )
+
+    def test_confidence_banner_on_page(self, data_api_client, _):
+        """Test confidence banner appears on page happy path."""
+        data_api_client.get_framework.return_value = self.framework(status='open')
+        data_api_client.find_draft_services.return_value = {
+            "services": [
+                {'serviceName': 'A service', 'status': 'submitted', 'lotSlug': 'foo'}
+            ]
+        }
+        data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(status='complete')
+
+        with self.app.test_client():
+            self.login()
+            res = self.client.get("/suppliers/frameworks/g-cloud-8")
+        assert res.status_code == 200
+        assert self.expected in str(res.data)
+
+    def test_confidence_banner_not_on_page(self, data_api_client, _):
+        """Change value and assertt that confidence banner is not displayed."""
+        data_api_client.get_framework.return_value = self.framework(status='open')
+        data_api_client.find_draft_services.return_value = {
+            "services": [
+                {'serviceName': 'A service', 'status': 'not-submitted', 'lotSlug': 'foo'}
+            ]
+        }
+        data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(status='complete')
+
+        with self.app.test_client():
+            self.login()
+            res = self.client.get("/suppliers/frameworks/g-cloud-8")
+        assert res.status_code == 200
+        assert self.expected not in str(res.data)
+
+
+@mock.patch('dmutils.s3.S3')
+@mock.patch('app.main.views.frameworks.flash', autospec=True)
+@mock.patch('app.main.views.frameworks.data_api_client', autospec=True)
+class TestFrameworksDashboardConfidenceBannerFlashes(BaseApplicationTest):
+    """Tests for the confidence banner on the declaration page."""
+
+    def test_confidence_banner_flash(self, data_api_client, flash_mock, _):
+        """Test confidence banner happy path."""
+        data_api_client.get_framework.return_value = self.framework(status='open')
+        data_api_client.find_draft_services.return_value = {
+            "services": [
+                {'serviceName': 'A service', 'status': 'submitted', 'lotSlug': 'foo'}
+            ]
+        }
+        data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(status='complete')
+
+        with self.app.test_client():
+            self.login()
+            resp = self.client.get("/suppliers/frameworks/g-cloud-8")
+
+        assert resp.status_code == 200
+        # Assert mock.
+        flash_mock.assert_called_once_with('submission_confidence', 'success')
+
+    @pytest.mark.parametrize('framework_status', ('pending', 'standstill', 'live'))
+    def test_confidence_banner_vs_framework_status(self, data_api_client, flash_mock, _, framework_status):
+        """Test confidence banner with non applicable framework statuses.
+
+        See allowed statuses in app.main.helpers.frameworks.get_framework
+        """
+        data_api_client.get_framework.return_value = self.framework(status=framework_status)
+        data_api_client.find_draft_services.return_value = {
+            "services": [
+                {'serviceName': 'A service', 'status': 'submitted', 'lotSlug': 'foo'}
+            ]
+        }
+        data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(status='complete')
+        with self.app.test_client():
+            self.login()
+            resp = self.client.get("/suppliers/frameworks/g-cloud-9")
+
+        assert resp.status_code == 200
+        # Assert mocks.
+        assert not mock.call(['submission_confidence', 'success']) in flash_mock.mock_calls
+        # For this view there are no other flash messages yet so we can do:
+        assert not flash_mock.called
+
+    @pytest.mark.parametrize('service_status', ('foo', 'not-submitted'))
+    def test_confidence_banner_vs_service_status(self, data_api_client, flash_mock, _, service_status):
+        """Test confidence banner with non applicable service statuses."""
+        data_api_client.get_framework.return_value = self.framework(status='open')
+        data_api_client.find_draft_services.return_value = {
+            "services": [
+                {'serviceName': 'A service', 'status': service_status, 'lotSlug': 'foo'}
+            ]
+        }
+        data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(status='complete')
+        with self.app.test_client():
+            self.login()
+            resp = self.client.get("/suppliers/frameworks/g-cloud-9")
+
+        assert resp.status_code == 200
+        # Assert mocks.
+        assert not mock.call(['submission_confidence', 'success']) in flash_mock.mock_calls
+        # For this view there are no other flash messages yet so we can do:
+        assert not flash_mock.called
+
+    @pytest.mark.parametrize('declaration_status', ('foo', 'incomplete'))
+    def test_confidence_banner_vs_declaration_status(self, data_api_client, flash_mock, _, declaration_status):
+        """Test confidence banner with non applicable declaration statuses."""
+        data_api_client.get_framework.return_value = self.framework(status='open')
+        data_api_client.find_draft_services.return_value = {
+            "services": [
+                {'serviceName': 'A service', 'status': 'submitted', 'lotSlug': 'foo'}
+            ]
+        }
+        data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(status=declaration_status)
+        with self.app.test_client():
+            self.login()
+            resp = self.client.get("/suppliers/frameworks/g-cloud-9")
+
+        assert resp.status_code == 200
+        # Assert mocks.
+        assert not mock.call(['submission_confidence', 'success']) in flash_mock.mock_calls
+        # For this view there are no other flash messages yet so we can do:
+        assert not flash_mock.called
 
 
 @mock.patch('app.main.views.frameworks.data_api_client', autospec=True)
