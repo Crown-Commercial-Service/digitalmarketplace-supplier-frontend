@@ -514,11 +514,8 @@ def framework_supplier_declaration(framework_slug, section_id=None):
         if len(errors) > 0:
             status_code = 400
         else:
-            validator = get_validator(framework, content, all_answers)
-            if validator.get_error_messages():
+            if not all_answers.get("status"):
                 all_answers.update({"status": "started"})
-            else:
-                all_answers.update({"status": "complete"})
             try:
                 data_api_client.set_supplier_declaration(
                     current_user.supplier_id,
