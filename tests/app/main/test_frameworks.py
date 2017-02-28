@@ -2875,11 +2875,11 @@ class TestSupplierDeclaration(BaseApplicationTest):
             doc = html.fromstring(res.get_data(as_text=True))
 
             # Radio buttons have been pre-filled with the correct answers
-            assert len(doc.xpath('//input[@id="input-conspiracy-yes"]/@checked')) == 1
-            assert len(doc.xpath('//input[@id="input-corruptionBribery-no"]/@checked')) == 1
-            assert len(doc.xpath('//input[@id="input-fraudAndTheft-yes"]/@checked')) == 1
-            assert len(doc.xpath('//input[@id="input-terrorism-no"]/@checked')) == 1
-            assert len(doc.xpath('//input[@id="input-organisedCrime-no"]/@checked')) == 1
+            assert len(doc.xpath('//input[@id="input-conspiracy-1"][@value="True"]/@checked')) == 1
+            assert len(doc.xpath('//input[@id="input-corruptionBribery-2"][@value="False"]/@checked')) == 1
+            assert len(doc.xpath('//input[@id="input-fraudAndTheft-1"][@value="True"]/@checked')) == 1
+            assert len(doc.xpath('//input[@id="input-terrorism-2"][@value="False"]/@checked')) == 1
+            assert len(doc.xpath('//input[@id="input-organisedCrime-2"][@value="False"]/@checked')) == 1
 
             # Blue banner message is shown at top of page
             assert doc.xpath('normalize-space(string(//div[@class="banner-information-without-action"]))') == \
@@ -2931,17 +2931,19 @@ class TestSupplierDeclaration(BaseApplicationTest):
             doc = html.fromstring(res.get_data(as_text=True))
 
             # Radio buttons have been pre-filled with the correct answers
-            assert len(doc.xpath('//input[@id="input-conspiracy-yes"]/@checked')) == 1
-            assert len(doc.xpath('//input[@id="input-fraudAndTheft-yes"]/@checked')) == 1
-            assert len(doc.xpath('//input[@id="input-organisedCrime-no"]/@checked')) == 1
+            assert len(doc.xpath('//input[@id="input-conspiracy-1"][@value="True"]/@checked')) == 1
+            assert len(doc.xpath('//input[@id="input-fraudAndTheft-1"][@value="True"]/@checked')) == 1
+            assert len(doc.xpath('//input[@id="input-organisedCrime-2"][@value="False"]/@checked')) == 1
 
             # Radio buttons for missing keys exist but have not been pre-filled
-            assert len(doc.xpath('//input[@id="input-corruptionBribery-no"]')) == 1
-            assert len(doc.xpath('//input[@id="input-corruptionBribery-no"]/@checked')) == 0
-            assert len(doc.xpath('//input[@id="input-corruptionBribery-yes"]/@checked')) == 0
-            assert len(doc.xpath('//input[@id="input-terrorism-no"]')) == 1
-            assert len(doc.xpath('//input[@id="input-terrorism-no"]/@checked')) == 0
-            assert len(doc.xpath('//input[@id="input-terrorism-yes"]/@checked')) == 0
+            assert len(doc.xpath('//input[@id="input-corruptionBribery-1"]')) == 1
+            assert len(doc.xpath('//input[@id="input-corruptionBribery-2"]')) == 1
+            assert len(doc.xpath('//input[@id="input-corruptionBribery-1"]/@checked')) == 0
+            assert len(doc.xpath('//input[@id="input-corruptionBribery-2"]/@checked')) == 0
+            assert len(doc.xpath('//input[@id="input-terrorism-1"]')) == 1
+            assert len(doc.xpath('//input[@id="input-terrorism-2"]')) == 1
+            assert len(doc.xpath('//input[@id="input-terrorism-1"]/@checked')) == 0
+            assert len(doc.xpath('//input[@id="input-terrorism-2"]/@checked')) == 0
 
             # Blue banner message is shown at top of page
             assert doc.xpath('normalize-space(string(//div[@class="banner-information-without-action"]))') == \
@@ -3004,11 +3006,11 @@ class TestSupplierDeclaration(BaseApplicationTest):
             assert data_api_client.get_supplier_declaration.called is False
 
             # Radio buttons have been filled with the current answers; not those from previous declaration
-            assert len(doc.xpath('//input[@id="input-conspiracy-no"]/@checked')) == 1
-            assert len(doc.xpath('//input[@id="input-corruptionBribery-yes"]/@checked')) == 1
-            assert len(doc.xpath('//input[@id="input-fraudAndTheft-no"]/@checked')) == 1
-            assert len(doc.xpath('//input[@id="input-terrorism-yes"]/@checked')) == 1
-            assert len(doc.xpath('//input[@id="input-organisedCrime-no"]/@checked')) == 1
+            assert len(doc.xpath('//input[@id="input-conspiracy-2"][@value="False"]/@checked')) == 1
+            assert len(doc.xpath('//input[@id="input-corruptionBribery-1"][@value="True"]/@checked')) == 1
+            assert len(doc.xpath('//input[@id="input-fraudAndTheft-2"][@value="False"]/@checked')) == 1
+            assert len(doc.xpath('//input[@id="input-terrorism-1"][@value="True"]/@checked')) == 1
+            assert len(doc.xpath('//input[@id="input-organisedCrime-2"][@value="False"]/@checked')) == 1
 
             # No blue banner message is shown at top of page
             assert len(doc.xpath('//div[@class="banner-information-without-action"]')) == 0
@@ -3058,20 +3060,20 @@ class TestSupplierDeclaration(BaseApplicationTest):
             assert data_api_client.get_supplier_declaration.called is False
 
             # Radio buttons exist on page but have not been populated at all
-            assert len(doc.xpath('//input[@id="input-readUnderstoodGuidance-no"]')) == 1
-            assert len(doc.xpath('//input[@id="input-readUnderstoodGuidance-yes"]')) == 1
-            assert len(doc.xpath('//input[@id="input-readUnderstoodGuidance-no"]/@checked')) == 0
-            assert len(doc.xpath('//input[@id="input-readUnderstoodGuidance-yes"]/@checked')) == 0
+            assert len(doc.xpath('//input[@id="input-readUnderstoodGuidance-1"]')) == 1
+            assert len(doc.xpath('//input[@id="input-readUnderstoodGuidance-2"]')) == 1
+            assert len(doc.xpath('//input[@id="input-readUnderstoodGuidance-1"]/@checked')) == 0
+            assert len(doc.xpath('//input[@id="input-readUnderstoodGuidance-2"]/@checked')) == 0
 
-            assert len(doc.xpath('//input[@id="input-understandTool-no"]')) == 1
-            assert len(doc.xpath('//input[@id="input-understandTool-yes"]')) == 1
-            assert len(doc.xpath('//input[@id="input-understandTool-no"]/@checked')) == 0
-            assert len(doc.xpath('//input[@id="input-understandTool-yes"]/@checked')) == 0
+            assert len(doc.xpath('//input[@id="input-understandTool-1"]')) == 1
+            assert len(doc.xpath('//input[@id="input-understandTool-2"]')) == 1
+            assert len(doc.xpath('//input[@id="input-understandTool-1"]/@checked')) == 0
+            assert len(doc.xpath('//input[@id="input-understandTool-2"]/@checked')) == 0
 
-            assert len(doc.xpath('//input[@id="input-understandHowToAskQuestions-no"]')) == 1
-            assert len(doc.xpath('//input[@id="input-understandHowToAskQuestions-yes"]')) == 1
-            assert len(doc.xpath('//input[@id="input-understandHowToAskQuestions-no"]/@checked')) == 0
-            assert len(doc.xpath('//input[@id="input-understandHowToAskQuestions-yes"]/@checked')) == 0
+            assert len(doc.xpath('//input[@id="input-understandHowToAskQuestions-1"]')) == 1
+            assert len(doc.xpath('//input[@id="input-understandHowToAskQuestions-2"]')) == 1
+            assert len(doc.xpath('//input[@id="input-understandHowToAskQuestions-1"]/@checked')) == 0
+            assert len(doc.xpath('//input[@id="input-understandHowToAskQuestions-2"]/@checked')) == 0
 
             # No blue banner message is shown at top of page
             assert len(doc.xpath('//div[@class="banner-information-without-action"]')) == 0
