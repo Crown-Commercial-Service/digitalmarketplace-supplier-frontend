@@ -938,8 +938,8 @@ class TestApplyToBrief(BaseApplicationTest):
 
         # Check yesno radio buttons
         for i in (0, 2):
-            assert len(doc.xpath("//*[@id='input-yesNo-" + str(i) + "-yes' and @checked]")) == 1
-        assert len(doc.xpath("//*[@id='input-yesNo-1-no' and @checked]")) == 1
+            assert len(doc.xpath("//*[@id='input-yesNo-" + str(i) + "-1' and @checked]")) == 1
+        assert len(doc.xpath("//*[@id='input-yesNo-1-2' and @checked]")) == 1
 
         # Check evidence text
         for i in (0, 2):
@@ -1012,11 +1012,11 @@ class TestApplyToBrief(BaseApplicationTest):
 
         assert (doc.xpath("//span[@class=\"validation-message\"]/text()")[1].strip() ==
                 'You must provide evidence if you answer ‘yes’ to this question.')
-        assert len(doc.xpath("//*[@id='input-yesNo-1-yes' and @checked]")) == 1
+        assert len(doc.xpath("//*[@id='input-yesNo-1-1' and @checked]")) == 1
 
         assert (doc.xpath("//span[@class=\"validation-message\"]/text()")[2].strip() ==
                 'Your answer must be no more than 100 words.')
-        assert len(doc.xpath("//*[@id='input-yesNo-2-yes' and @checked]")) == 1
+        assert len(doc.xpath("//*[@id='input-yesNo-2-1' and @checked]")) == 1
         assert doc.xpath("//*[@id='input-evidence-2']/text()")[0] == 'word ' * 100
 
     def test_nice_to_have_evidence_page_replays_user_input_instead_of_existing_brief_response_data(self):
@@ -1052,7 +1052,7 @@ class TestApplyToBrief(BaseApplicationTest):
                 'Your answer must be no more than 100 words.')
         assert doc.xpath("//*[@id='input-evidence-0']/text()")[0] == "over 100 words " * 100
 
-        assert len(doc.xpath("//*[@id='input-yesNo-1-no' and @checked]")) == 1
+        assert len(doc.xpath("//*[@id='input-yesNo-1-2' and @checked]")) == 1
         assert not doc.xpath("//*[@id='input-evidence-1']/text()")
 
         assert not doc.xpath("//*[@id='input-evidence-2']/text()")

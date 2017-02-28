@@ -158,6 +158,9 @@ valid_g9_declaration_base = lambda: {
     "primaryContactEmail": "buck@example.com",
     "contactNameContractNotice": "Malachi Mulligan",
     "contactEmailContractNotice": "malachi@example.com",
+    "servicesHaveOrSupport": True,
+    "servicesDoNotInclude": True,
+    "payForWhatUse": True
 }
 
 
