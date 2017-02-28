@@ -25,20 +25,24 @@
                 {% endcall %}
               {% endfor %}
             {% elif item.type == "dynamic_list" %}
-              {% set processed_followups = [] %}
+              {% set followup_questions_already_displayed = [] %}
               {% for question in item.questions %}
                   {% if question.type == "boolean" %}
                     {% if question._data['followup'] is defined %}
                       {% for followup_question in question._data['followup'] %}
                         {% call summary.row() %}
-                          {% set processed_followups = processed_followups.extend([followup_question]) %}
+                          {# Keep track of the questions we are displaying here, so we know to skip them as we
+                              continue to loop through item.questions #}
+                          {% set followup_questions_already_displayed = followup_questions_already_displayed.extend([followup_question]) %}
+
                           {{ summary.field_name(question.question) }}
                           {{ summary.text(item.unformat_data(brief_response)[followup_question]) }}
                         {% endcall %}
                       {% endfor %}
                     {% endif %}
                   {% else %}
-                    {% if question.id not in processed_followups %}
+                    {# If we have seen this question before, let's not display it again. #}
+                    {% if question.id not in followup_questions_already_displayed %}
                       {% call summary.row() %}
                         {{ summary.field_name(question.question) }}
                         {{ summary.text(item.unformat_data(brief_response)[question.id]) }}
