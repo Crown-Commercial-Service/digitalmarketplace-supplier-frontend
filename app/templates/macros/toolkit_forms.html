@@ -72,7 +72,7 @@
     error=errors.get(question_content.id)['message']|question_references(kwargs.get_question),
     question_number=kwargs.question_number,
     hidden=question_content.hidden,
-    followup=question_content.values_followup
+    followup=question_content.values_followup,
     message=kwargs.message
   %}
     {% include "toolkit/forms/selection-buttons.html" %}
@@ -95,7 +95,7 @@
     error=errors.get(question_content.id)['message']|question_references(kwargs.get_question),
     question_number=kwargs.question_number,
     hidden=question_content.hidden,
-    followup=question_content.values_followup
+    followup=question_content.values_followup,
     message=kwargs.message
   %}
     {% include "toolkit/forms/selection-buttons.html" %}
