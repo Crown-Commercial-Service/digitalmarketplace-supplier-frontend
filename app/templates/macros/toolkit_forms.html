@@ -259,7 +259,19 @@
     {% import "macros/toolkit_forms.html" as forms %}
 
     {% for child_question in question_content.questions %}
-      {{ forms[child_question.type](child_question, service_data, errors if errors and errors[child_question.id] else {}, message=kwargs.message) }}
+      {{ forms[child_question.type](
+            child_question,
+            service_data,
+            errors if errors and errors[child_question.id] else {},
+            message=(
+                    kwargs.message
+                  if
+                    service_data.get(child_question.id) is not none
+                  else
+                    None
+                    )
+          )
+      }}
     {% endfor %}
   </fieldset>
 {%- endmacro %}
