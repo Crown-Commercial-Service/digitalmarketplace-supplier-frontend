@@ -249,8 +249,7 @@ def edit_brief_response(brief_id, brief_response_id, question_id=None):
         is_last_page=False if next_question_id else True,
         previous_question_url=previous_question_url,
         question=question,
-        service_data=service_data,
-        **dict(main.config['BASE_TEMPLATE_DATA'])
+        service_data=service_data
     ), status_code
 
 
@@ -284,8 +283,7 @@ def brief_response(brief_id):
         "briefs/brief_response.html",
         brief=brief,
         service_data={},
-        section=section,
-        **dict(main.config['BASE_TEMPLATE_DATA'])
+        section=section
     ), 200
 
 
@@ -334,8 +332,7 @@ def create_brief_response(brief_id):
             brief=brief,
             service_data=response_data,
             section=section,
-            errors=errors,
-            **dict(main.config['BASE_TEMPLATE_DATA'])
+            errors=errors
         ), 400
 
     if all(brief_response['essentialRequirements']):
@@ -422,6 +419,5 @@ def _render_not_eligible_for_brief_error_page(brief, clarification_question=Fals
         framework_name=brief['frameworkName'],
         lot=brief['lotSlug'],
         reason=reason,
-        data_reason_slug=data_reason_slug,
-        **dict(main.config['BASE_TEMPLATE_DATA'])
+        data_reason_slug=data_reason_slug
     ), 400
