@@ -124,7 +124,6 @@ valid_g9_declaration_base = lambda: {
     "equalityAndDiversity": False,
     "employersInsurance": u"Not applicable - your organisation does not need employer’s liability "
                           "insurance because your organisation employs only the owner or close family members. ",
-    "transparentContracting": False,
     "publishContracts": False,
     "readUnderstoodGuidance": True,
     "understandTool": True,
@@ -160,7 +159,8 @@ valid_g9_declaration_base = lambda: {
     "contactEmailContractNotice": "malachi@example.com",
     "servicesHaveOrSupport": True,
     "servicesDoNotInclude": True,
-    "payForWhatUse": True
+    "payForWhatUse": True,
+    "helpBuyersComplyTechnologyCodesOfPractice": True
 }
 
 
