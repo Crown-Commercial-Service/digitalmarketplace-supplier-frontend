@@ -3377,7 +3377,7 @@ class TestFrameworkUpdatesPage(BaseApplicationTest):
             assert u'Ask a question about your G-Cloud 7 application' not in data
 
 
-class TestSendClarificationQuestionEmail(BaseApplicationTest):
+class ClarificationQuestionEmailBase(BaseApplicationTest):
 
     def _send_email(self, clarification_question):
         with self.app.test_client():
@@ -3440,10 +3440,13 @@ class TestSendClarificationQuestionEmail(BaseApplicationTest):
                 reply_to="email@email.com",
             )
 
-    @mock.patch('app.main.views.frameworks.data_api_client')
-    @mock.patch('dmutils.s3.S3')
-    @mock.patch('app.main.views.frameworks.send_email')
-    def test_should_not_send_email_if_invalid_clarification_question(self, send_email, s3, data_api_client):
+
+@mock.patch('dmutils.s3.S3')
+@mock.patch('app.main.views.frameworks.data_api_client')
+@mock.patch('app.main.views.frameworks.send_email')
+class TestSendClarificationQuestionEmailSuccess(ClarificationQuestionEmailBase):
+
+    def test_should_not_send_email_if_invalid_clarification_question(self, send_email, data_api_client, _):
         data_api_client.get_framework.return_value = self.framework('open')
         data_api_client.get_supplier_framework_info.return_value = self.supplier_framework()
 
@@ -3470,10 +3473,7 @@ class TestSendClarificationQuestionEmail(BaseApplicationTest):
             assert self.strip_all_whitespace(invalid_clarification_question['error_message']) in \
                 self.strip_all_whitespace(response.get_data(as_text=True))
 
-    @mock.patch('dmutils.s3.S3')
-    @mock.patch('app.main.views.frameworks.data_api_client')
-    @mock.patch('app.main.views.frameworks.send_email')
-    def test_should_call_send_email_with_correct_params(self, send_email, data_api_client, s3):
+    def test_should_call_send_email_with_correct_params(self, send_email, data_api_client, _):
         data_api_client.get_framework.return_value = self.framework('open', name='Test Framework')
 
         clarification_question = 'This is a clarification question.'
@@ -3487,10 +3487,34 @@ class TestSendClarificationQuestionEmail(BaseApplicationTest):
             'clarification questions will be published on this page.</p>'
         ) in self.strip_all_whitespace(response.get_data(as_text=True))
 
-    @mock.patch('dmutils.s3.S3')
-    @mock.patch('app.main.views.frameworks.data_api_client')
-    @mock.patch('app.main.views.frameworks.send_email')
-    def test_should_call_send_g7_email_with_correct_params(self, send_email, data_api_client, s3):
+    @mock.patch('app.main.views.frameworks.current_user', autospec=True)
+    def test_email_should_not_contain_supplier_name(self, current_user, send_email, data_api_client, _):
+        """All framework suppliers can see these questions therefore we should not show individual supplier name."""
+        # Set up supplier.
+        current_user.supplier_name = 'My awesome supplier'
+        current_user.supplier_id = '123212321'
+        current_user.name = 'Some name'
+        current_user.email_address = 'some@name.com'
+        current_user.id = 1
+
+        # Valid framework
+        data_api_client.get_framework.return_value = self.framework('open', name='Test Framework')
+
+        # Zendesk email address and a fake question
+        clarification_question_email = self.app.config['DM_CLARIFICATION_QUESTION_EMAIL']
+        clarification_question = 'My awesome question.'
+
+        # Send the email.
+        self._send_email(clarification_question)
+
+        # Get calls to `send_email` which were sent to Zendesk.
+        zendesk_email_calls = filter(lambda i: i[0][0] == clarification_question_email, send_email.call_args_list)
+        for email_body in [i[1] for i in zendesk_email_calls]:
+            # Make assertions.
+            assert clarification_question in email_body
+            assert current_user.supplier_name not in email_body
+
+    def test_should_call_send_g7_email_with_correct_params(self, send_email, data_api_client, _):
         data_api_client.get_framework.return_value = self.framework('open', name='Test Framework',
                                                                     clarification_questions_open=False)
         clarification_question = 'This is a G7 question.'
@@ -3504,10 +3528,7 @@ class TestSendClarificationQuestionEmail(BaseApplicationTest):
             'the Crown Commercial Service soon.</p>'
         ) in self.strip_all_whitespace(response.get_data(as_text=True))
 
-    @mock.patch('dmutils.s3.S3')
-    @mock.patch('app.main.views.frameworks.data_api_client')
-    @mock.patch('app.main.views.frameworks.send_email')
-    def test_should_create_audit_event(self, send_email, data_api_client, s3):
+    def test_should_create_audit_event(self, send_email, data_api_client, _):
         data_api_client.get_framework.return_value = self.framework('open', name='Test Framework')
         clarification_question = 'This is a clarification question'
         response = self._send_email(clarification_question)
@@ -3522,10 +3543,7 @@ class TestSendClarificationQuestionEmail(BaseApplicationTest):
             object_id=1234,
             data={"question": clarification_question, 'framework': 'g-cloud-7'})
 
-    @mock.patch('dmutils.s3.S3')
-    @mock.patch('app.main.views.frameworks.data_api_client')
-    @mock.patch('app.main.views.frameworks.send_email')
-    def test_should_create_g7_question_audit_event(self, send_email, data_api_client, s3):
+    def test_should_create_g7_question_audit_event(self, send_email, data_api_client, _):
         data_api_client.get_framework.return_value = self.framework('open', name='Test Framework',
                                                                     clarification_questions_open=False)
         clarification_question = 'This is a G7 question'
@@ -3541,8 +3559,11 @@ class TestSendClarificationQuestionEmail(BaseApplicationTest):
             object_id=1234,
             data={"question": clarification_question, 'framework': 'g-cloud-7'})
 
-    @mock.patch('app.main.views.frameworks.data_api_client')
-    @mock.patch('app.main.views.frameworks.send_email')
+
+@mock.patch('app.main.views.frameworks.data_api_client')
+@mock.patch('app.main.views.frameworks.send_email')
+class TestSendClarificationQuestionEmailFailure(ClarificationQuestionEmailBase):
+
     def test_should_be_a_503_if_email_fails(self, send_email, data_api_client):
         data_api_client.get_framework.return_value = self.framework('open', name='Test Framework')
         send_email.side_effect = EmailError("Arrrgh")
