@@ -636,7 +636,7 @@ def framework_updates_email_clarification_question(framework_slug):
         from_address = "suppliers+{}@digitalmarketplace.service.gov.uk".format(framework['slug'])
         email_body = render_template(
             "emails/clarification_question.html",
-            supplier_name=current_user.supplier_name,
+            supplier_id=current_user.supplier_id,
             user_name=current_user.name,
             message=clarification_question
         )
