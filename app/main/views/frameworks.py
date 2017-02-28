@@ -471,21 +471,42 @@ def framework_supplier_declaration(framework_slug, section_id=None):
     # Do the same for the next section. This also implies whether or not we are on the last page of the declaration.
     next_section = content.get_section(content.get_next_section_id(section_id=section.id, only_editable=True))
 
-    saved_answers = {}
+    supplier_framework = data_api_client.get_supplier_framework_info(
+        current_user.supplier_id, framework_slug)['frameworkInterest']
+    saved_declaration = supplier_framework.get('declaration', {})
+    name_of_framework_that_section_has_been_prefilled_from = ""
 
-    try:
-        response = data_api_client.get_supplier_declaration(current_user.supplier_id, framework_slug)
-        if response['declaration']:
-            saved_answers = response['declaration']
-    except APIError as e:
-        if e.status_code != 404:
-            abort(e.status_code)
     if request.method == 'GET':
         errors = {}
-        all_answers = saved_answers
+
+        section_errors = get_validator(
+            framework,
+            content,
+            saved_declaration,
+        ).get_error_messages_for_page(section)
+
+        # If there are section_errors it means that this section has not previously been completed
+        if section_errors and section.prefill and supplier_framework['prefillDeclarationFromFrameworkSlug']:
+            # Fetch the old declaration to pre-fill from and pass it through
+            # For now we pre-fill a whole section or none of the section
+            # TODO: In future we may need to pre-fill individual questions and add a 'prefilled' flag to the questions
+            try:
+                prefill_from_slug = supplier_framework['prefillDeclarationFromFrameworkSlug']
+                framework_to_reuse = data_api_client.get_framework(prefill_from_slug)['frameworks']
+                declaration_to_reuse = data_api_client.get_supplier_declaration(
+                    current_user.supplier_id,
+                    prefill_from_slug
+                )['declaration']
+                all_answers = declaration_to_reuse
+                name_of_framework_that_section_has_been_prefilled_from = framework_to_reuse['name']
+            except APIError as e:
+                if e.status_code != 404:
+                    abort(e.status_code)
+        else:
+            all_answers = saved_declaration
     else:
         submitted_answers = section.get_data(request.form)
-        all_answers = dict(saved_answers, **submitted_answers)
+        all_answers = dict(saved_declaration, **submitted_answers)
 
         validator = get_validator(framework, content, submitted_answers)
         errors = validator.get_error_messages_for_page(section)
@@ -493,11 +514,8 @@ def framework_supplier_declaration(framework_slug, section_id=None):
         if len(errors) > 0:
             status_code = 400
         else:
-            validator = get_validator(framework, content, all_answers)
-            if validator.get_error_messages():
+            if not all_answers.get("status"):
                 all_answers.update({"status": "started"})
-            else:
-                all_answers.update({"status": "complete"})
             try:
                 data_api_client.set_supplier_declaration(
                     current_user.supplier_id,
@@ -525,6 +543,7 @@ def framework_supplier_declaration(framework_slug, section_id=None):
         framework=framework,
         next_section=next_section,
         section=section,
+        name_of_framework_that_section_has_been_prefilled_from=name_of_framework_that_section_has_been_prefilled_from,
         declaration_answers=all_answers,
         get_question=content.get_question,
         errors=errors

@@ -2804,6 +2804,10 @@ class TestSupplierDeclaration(BaseApplicationTest):
             self.login()
 
             data_api_client.get_framework.return_value = self.framework(status='open')
+            data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
+                framework_slug="g-cloud-7",
+                declaration={}
+            )
             data_api_client.get_supplier_declaration.side_effect = APIError(mock.Mock(status_code=404))
 
             res = self.client.get(
@@ -2819,9 +2823,10 @@ class TestSupplierDeclaration(BaseApplicationTest):
             self.login()
 
             data_api_client.get_framework.return_value = self.framework(status='open')
-            data_api_client.get_supplier_declaration.return_value = {
-                "declaration": {"status": "started", "PR1": False}
-            }
+            data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
+                framework_slug="g-cloud-7",
+                declaration={"status": "started", "PR1": False}
+            )
 
             res = self.client.get(
                 '/suppliers/frameworks/g-cloud-7/declaration/g-cloud-7-essentials')
@@ -2830,14 +2835,262 @@ class TestSupplierDeclaration(BaseApplicationTest):
             doc = html.fromstring(res.get_data(as_text=True))
             assert len(doc.xpath('//input[@id="input-PR1-2"]/@checked')) == 1
 
+    def test_get_with_with_prefilled_answers(self, data_api_client):
+        with self.app.test_client():
+            self.login()
+            # Handle calls for both the current framework and for the framework to pre-fill from
+            data_api_client.get_framework.side_effect = lambda framework_slug: {
+                "g-cloud-9": self.framework(slug='g-cloud-9', name='G-Cloud 9', status='open'),
+                "digital-outcomes-and-specialists-2": self.framework(slug='digital-outcomes-and-specialists-2',
+                                                                     name='Digital Stuff 2', status='live'),
+            }[framework_slug]
+
+            # Current framework application information
+            data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
+                framework_slug="g-cloud-9",
+                declaration={"status": "started"},
+                prefill_declaration_from_framework_slug="digital-outcomes-and-specialists-2"
+            )
+
+            # The previous declaration to prefill from
+            data_api_client.get_supplier_declaration.return_value = {
+                'declaration': self.supplier_framework(
+                    framework_slug="digital-outcomes-and-specialists-2",
+                    declaration={"status": "complete",
+                                 "conspiracy": True,
+                                 "corruptionBribery": False,
+                                 "fraudAndTheft": True,
+                                 "terrorism": False,
+                                 "organisedCrime": False,
+                                 },
+                )["frameworkInterest"]["declaration"]
+            }
+
+            # The grounds-for-mandatory-exclusion section has "prefill: True" in the declaration manifest
+            res = self.client.get(
+                '/suppliers/frameworks/g-cloud-9/declaration/grounds-for-mandatory-exclusion')
+
+            assert res.status_code == 200
+            data_api_client.get_supplier_declaration.assert_called_once_with(1234, "digital-outcomes-and-specialists-2")
+            doc = html.fromstring(res.get_data(as_text=True))
+
+            # Radio buttons have been pre-filled with the correct answers
+            assert len(doc.xpath('//input[@id="input-conspiracy-1"][@value="True"]/@checked')) == 1
+            assert len(doc.xpath('//input[@id="input-corruptionBribery-2"][@value="False"]/@checked')) == 1
+            assert len(doc.xpath('//input[@id="input-fraudAndTheft-1"][@value="True"]/@checked')) == 1
+            assert len(doc.xpath('//input[@id="input-terrorism-2"][@value="False"]/@checked')) == 1
+            assert len(doc.xpath('//input[@id="input-organisedCrime-2"][@value="False"]/@checked')) == 1
+
+            # Blue banner message is shown at top of page
+            assert doc.xpath('normalize-space(string(//div[@class="banner-information-without-action"]))') == \
+                "Answers on this page are from an earlier declaration and need review."
+
+            # Blue information messages are shown next to each question
+            info_messages = doc.xpath('//div[@class="message-wrapper"]//span[@class="message-content"]')
+            assert len(info_messages) == 5
+            for message in info_messages:
+                assert self.strip_all_whitespace(message.text) == self.strip_all_whitespace(
+                    "This answer is from your Digital Stuff 2 declaration"
+                )
+
+    def test_get_with_with_partially_prefilled_answers(self, data_api_client):
+        with self.app.test_client():
+            self.login()
+            # Handle calls for both the current framework and for the framework to pre-fill from
+            data_api_client.get_framework.side_effect = lambda framework_slug: {
+                "g-cloud-9": self.framework(slug='g-cloud-9', name='G-Cloud 9', status='open'),
+                "digital-outcomes-and-specialists-2": self.framework(slug='digital-outcomes-and-specialists-2',
+                                                                     name='Digital Stuff 2', status='live'),
+            }[framework_slug]
+
+            # Current framework application information
+            data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
+                framework_slug="g-cloud-9",
+                declaration={"status": "started"},
+                prefill_declaration_from_framework_slug="digital-outcomes-and-specialists-2"
+            )
+
+            # The previous declaration to prefill from - missing "corruptionBribery" and "terrorism" keys
+            data_api_client.get_supplier_declaration.return_value = {
+                'declaration': self.supplier_framework(
+                    framework_slug="digital-outcomes-and-specialists-2",
+                    declaration={"status": "complete",
+                                 "conspiracy": True,
+                                 "fraudAndTheft": True,
+                                 "organisedCrime": False,
+                                 },
+                )["frameworkInterest"]["declaration"]
+            }
+
+            # The grounds-for-mandatory-exclusion section has "prefill: True" in the declaration manifest
+            res = self.client.get(
+                '/suppliers/frameworks/g-cloud-9/declaration/grounds-for-mandatory-exclusion')
+
+            assert res.status_code == 200
+            data_api_client.get_supplier_declaration.assert_called_once_with(1234, "digital-outcomes-and-specialists-2")
+            doc = html.fromstring(res.get_data(as_text=True))
+
+            # Radio buttons have been pre-filled with the correct answers
+            assert len(doc.xpath('//input[@id="input-conspiracy-1"][@value="True"]/@checked')) == 1
+            assert len(doc.xpath('//input[@id="input-fraudAndTheft-1"][@value="True"]/@checked')) == 1
+            assert len(doc.xpath('//input[@id="input-organisedCrime-2"][@value="False"]/@checked')) == 1
+
+            # Radio buttons for missing keys exist but have not been pre-filled
+            assert len(doc.xpath('//input[@id="input-corruptionBribery-1"]')) == 1
+            assert len(doc.xpath('//input[@id="input-corruptionBribery-2"]')) == 1
+            assert len(doc.xpath('//input[@id="input-corruptionBribery-1"]/@checked')) == 0
+            assert len(doc.xpath('//input[@id="input-corruptionBribery-2"]/@checked')) == 0
+            assert len(doc.xpath('//input[@id="input-terrorism-1"]')) == 1
+            assert len(doc.xpath('//input[@id="input-terrorism-2"]')) == 1
+            assert len(doc.xpath('//input[@id="input-terrorism-1"]/@checked')) == 0
+            assert len(doc.xpath('//input[@id="input-terrorism-2"]/@checked')) == 0
+
+            # Blue banner message is shown at top of page
+            assert doc.xpath('normalize-space(string(//div[@class="banner-information-without-action"]))') == \
+                "Answers on this page are from an earlier declaration and need review."
+
+            # Blue information messages are shown next to pre-filled questions only
+            info_messages = doc.xpath('//div[@class="message-wrapper"]//span[@class="message-content"]')
+            assert len(info_messages) == 3
+            for message in info_messages:
+                assert self.strip_all_whitespace(message.text) == self.strip_all_whitespace(
+                    "This answer is from your Digital Stuff 2 declaration"
+                )
+
+    def test_answers_not_prefilled_if_section_has_already_been_saved(self, data_api_client):
+        with self.app.test_client():
+            self.login()
+            # Handle calls for both the current framework and for the framework to pre-fill from
+            data_api_client.get_framework.side_effect = lambda framework_slug: {
+                "g-cloud-9": self.framework(slug='g-cloud-9', name='G-Cloud 9', status='open'),
+                "digital-outcomes-and-specialists-2": self.framework(slug='digital-outcomes-and-specialists-2',
+                                                                     name='Digital Stuff 2', status='live'),
+            }[framework_slug]
+
+            # Current framework application information with the grounds-for-mandatory-exclusion section complete
+            data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
+                framework_slug="g-cloud-9",
+                declaration={"status": "started",
+                             "conspiracy": False,
+                             "corruptionBribery": True,
+                             "fraudAndTheft": False,
+                             "terrorism": True,
+                             "organisedCrime": False,
+                             },
+                prefill_declaration_from_framework_slug="digital-outcomes-and-specialists-2"
+            )
+
+            # The previous declaration to prefill from - has relevant answers but should not ever be called
+            data_api_client.get_supplier_declaration.return_value = {
+                'declaration': self.supplier_framework(
+                    framework_slug="digital-outcomes-and-specialists-2",
+                    declaration={"status": "complete",
+                                 "conspiracy": True,
+                                 "corruptionBribery": False,
+                                 "fraudAndTheft": True,
+                                 "terrorism": False,
+                                 "organisedCrime": False,
+                                 },
+                )["frameworkInterest"]["declaration"]
+            }
+
+            # The grounds-for-mandatory-exclusion section has "prefill: True" in the declaration manifest
+            res = self.client.get(
+                '/suppliers/frameworks/g-cloud-9/declaration/grounds-for-mandatory-exclusion')
+
+            assert res.status_code == 200
+            doc = html.fromstring(res.get_data(as_text=True))
+
+            # Previous framework and declaration have not been fetched
+            data_api_client.get_framework.assert_called_once_with('g-cloud-9')
+            assert data_api_client.get_supplier_declaration.called is False
+
+            # Radio buttons have been filled with the current answers; not those from previous declaration
+            assert len(doc.xpath('//input[@id="input-conspiracy-2"][@value="False"]/@checked')) == 1
+            assert len(doc.xpath('//input[@id="input-corruptionBribery-1"][@value="True"]/@checked')) == 1
+            assert len(doc.xpath('//input[@id="input-fraudAndTheft-2"][@value="False"]/@checked')) == 1
+            assert len(doc.xpath('//input[@id="input-terrorism-1"][@value="True"]/@checked')) == 1
+            assert len(doc.xpath('//input[@id="input-organisedCrime-2"][@value="False"]/@checked')) == 1
+
+            # No blue banner message is shown at top of page
+            assert len(doc.xpath('//div[@class="banner-information-without-action"]')) == 0
+
+            # No blue information messages are shown next to each question
+            info_messages = doc.xpath('//div[@class="message-wrapper"]//span[@class="message-content"]')
+            assert len(info_messages) == 0
+
+    def test_answers_not_prefilled_if_section_marked_as_prefill_false(self, data_api_client):
+        with self.app.test_client():
+            self.login()
+            # Handle calls for both the current framework and for the framework to pre-fill from
+            data_api_client.get_framework.side_effect = lambda framework_slug: {
+                "g-cloud-9": self.framework(slug='g-cloud-9', name='G-Cloud 9', status='open'),
+                "digital-outcomes-and-specialists-2": self.framework(slug='digital-outcomes-and-specialists-2',
+                                                                     name='Digital Stuff 2', status='live'),
+            }[framework_slug]
+
+            # Current framework application information
+            data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
+                framework_slug="g-cloud-9",
+                declaration={"status": "started"},
+                prefill_declaration_from_framework_slug="digital-outcomes-and-specialists-2"
+            )
+
+            # The previous declaration to prefill from - has relevant answers but should not ever be called
+            data_api_client.get_supplier_declaration.return_value = {
+                'declaration': self.supplier_framework(
+                    framework_slug="digital-outcomes-and-specialists-2",
+                    declaration={"status": "complete",
+                                 "readUnderstoodGuidance": True,
+                                 "understandTool": True,
+                                 "understandHowToAskQuestions": False,
+                                 },
+                )["frameworkInterest"]["declaration"]
+            }
+
+            # The how-you-apply section has "prefill: False" in the declaration manifest
+            res = self.client.get(
+                '/suppliers/frameworks/g-cloud-9/declaration/how-you-apply')
+
+            assert res.status_code == 200
+            doc = html.fromstring(res.get_data(as_text=True))
+
+            # Previous framework and declaration have not been fetched
+            data_api_client.get_framework.assert_called_once_with('g-cloud-9')
+            assert data_api_client.get_supplier_declaration.called is False
+
+            # Radio buttons exist on page but have not been populated at all
+            assert len(doc.xpath('//input[@id="input-readUnderstoodGuidance-1"]')) == 1
+            assert len(doc.xpath('//input[@id="input-readUnderstoodGuidance-2"]')) == 1
+            assert len(doc.xpath('//input[@id="input-readUnderstoodGuidance-1"]/@checked')) == 0
+            assert len(doc.xpath('//input[@id="input-readUnderstoodGuidance-2"]/@checked')) == 0
+
+            assert len(doc.xpath('//input[@id="input-understandTool-1"]')) == 1
+            assert len(doc.xpath('//input[@id="input-understandTool-2"]')) == 1
+            assert len(doc.xpath('//input[@id="input-understandTool-1"]/@checked')) == 0
+            assert len(doc.xpath('//input[@id="input-understandTool-2"]/@checked')) == 0
+
+            assert len(doc.xpath('//input[@id="input-understandHowToAskQuestions-1"]')) == 1
+            assert len(doc.xpath('//input[@id="input-understandHowToAskQuestions-2"]')) == 1
+            assert len(doc.xpath('//input[@id="input-understandHowToAskQuestions-1"]/@checked')) == 0
+            assert len(doc.xpath('//input[@id="input-understandHowToAskQuestions-2"]/@checked')) == 0
+
+            # No blue banner message is shown at top of page
+            assert len(doc.xpath('//div[@class="banner-information-without-action"]')) == 0
+
+            # No blue information messages are shown next to each question
+            info_messages = doc.xpath('//div[@class="message-wrapper"]//span[@class="message-content"]')
+            assert len(info_messages) == 0
+
     def test_post_valid_data(self, data_api_client):
         with self.app.test_client():
             self.login()
 
             data_api_client.get_framework.return_value = self.framework(status='open')
-            data_api_client.get_supplier_declaration.return_value = {
-                "declaration": {"status": "started"}
-            }
+            data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
+                framework_slug="g-cloud-7",
+                declaration={"status": "started"}
+            )
             res = self.client.post(
                 '/suppliers/frameworks/g-cloud-7/declaration/g-cloud-7-essentials',
                 data=FULL_G7_SUBMISSION)
@@ -2850,9 +3103,10 @@ class TestSupplierDeclaration(BaseApplicationTest):
             self.login()
 
             data_api_client.get_framework.return_value = self.framework(status='open')
-            data_api_client.get_supplier_declaration.return_value = {
-                "declaration": FULL_G7_SUBMISSION
-            }
+            data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
+                framework_slug="g-cloud-7",
+                declaration=FULL_G7_SUBMISSION
+            )
             res = self.client.post(
                 '/suppliers/frameworks/g-cloud-7/declaration/grounds-for-discretionary-exclusion',
                 data=FULL_G7_SUBMISSION)
@@ -2867,9 +3121,10 @@ class TestSupplierDeclaration(BaseApplicationTest):
             self.login()
 
             data_api_client.get_framework.return_value = self.framework(status='open')
-            data_api_client.get_supplier_declaration.return_value = {
-                "declaration": {"status": "started"}
-            }
+            data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
+                framework_slug="g-cloud-7",
+                declaration={"status": "started"}
+            )
             data_api_client.set_supplier_declaration.side_effect = APIError(mock.Mock(status_code=400))
 
             res = self.client.post(

@@ -34,6 +34,13 @@
     {% with errors = errors.values() %}
       {% include 'toolkit/forms/validation.html' %}
     {% endwith %}
+  {% elif name_of_framework_that_section_has_been_prefilled_from %}
+    {% with
+       message = "Answers on this page are from an earlier declaration and need review.",
+       type = "information"
+    %}
+      {% include "toolkit/notification-banner.html" %}
+    {% endwith %}
   {% endif %}
 
   <form method="post" class="supplier-declaration">
@@ -52,11 +59,22 @@
               </div>
             {% endif %}
             {% for question in section.questions %}
-              {% if errors and (errors[question.id] or question.type == 'multiquestion') %}
-                {{ forms[question.type](question, declaration_answers, errors, question_number=question.number, get_question=get_question) }}
-              {% else %}
-                {{ forms[question.type](question, declaration_answers, {}, question_number=question.number, get_question=get_question) }}
-              {% endif %}
+                {{ forms[question.type](
+                    question,
+                    declaration_answers,
+                    errors if errors and (errors[question.id] or question.type == 'multiquestion') else {},
+                    question_number=question.number,
+                    get_question=get_question,
+                    message=(
+                            "This answer is from your {} declaration".format(name_of_framework_that_section_has_been_prefilled_from)
+                        if
+                            name_of_framework_that_section_has_been_prefilled_from and (declaration_answers.get(question.id) is not none or question.type == 'multiquestion')
+                        else
+                            None
+                            )
+                   )
+                }}
+
             {% endfor %}
 
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
