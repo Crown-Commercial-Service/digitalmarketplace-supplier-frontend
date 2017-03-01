@@ -310,7 +310,7 @@ def reuse_framework_supplier_declaration(framework_slug):
         current_framework=current_framework,
         form=ReuseDeclarationForm(),
         old_framework=old_framework,
-        old_framework_application_close_date=date_parse(old_framework['application_close_date']).strftime('%B, %Y'),
+        old_framework_application_close_date=date_parse(old_framework['application_close_date']).strftime('%B %Y'),
     ), 200
 
 
@@ -333,7 +333,7 @@ def reuse_framework_supplier_declaration_post(framework_slug):
             form=form,
             form_errors=form_errors,
             old_framework=old_framework,
-            old_framework_application_close_date=date_parse(old_framework['application_close_date']).strftime('%B, %Y')
+            old_framework_application_close_date=date_parse(old_framework['application_close_date']).strftime('%B %Y')
         )
     if form.reuse.data:
         # They clicked OK! Check the POST data.
