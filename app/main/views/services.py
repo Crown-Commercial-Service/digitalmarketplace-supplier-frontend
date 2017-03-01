@@ -4,9 +4,8 @@ from flask import render_template, request, redirect, url_for, abort, flash, cur
 from ... import data_api_client, flask_featureflags
 from ...main import main, content_loader
 from ..helpers import login_required
-from ..helpers.services import is_service_associated_with_supplier, get_signed_document_url, count_unanswered_questions, \
-    get_next_section_name
-from ..helpers.frameworks import get_framework_and_lot, get_declaration_status
+from ..helpers.services import is_service_associated_with_supplier, get_signed_document_url, count_unanswered_questions
+from ..helpers.frameworks import get_framework_and_lot, get_declaration_status, get_supplier_framework_info
 
 from dmcontent.content_loader import ContentNotFoundError
 from dmapiclient import HTTPError
@@ -182,6 +181,10 @@ def start_new_draft_service(framework_slug, lot_slug):
 
     framework, lot = get_framework_and_lot(data_api_client, framework_slug, lot_slug, allowed_statuses=['open'])
 
+    # Suppliers must have registered interest in a framework before they can create draft services
+    if not get_supplier_framework_info(data_api_client, framework_slug):
+        abort(404)
+
     content = content_loader.get_manifest(framework_slug, 'edit_submission').filter(
         {'lot': lot['slug']}
     )
@@ -237,6 +240,11 @@ def start_new_draft_service(framework_slug, lot_slug):
 @login_required
 def copy_draft_service(framework_slug, lot_slug, service_id):
     framework, lot = get_framework_and_lot(data_api_client, framework_slug, lot_slug, allowed_statuses=['open'])
+
+    # Suppliers must have registered interest in a framework before they can edit draft services
+    if not get_supplier_framework_info(data_api_client, framework_slug):
+        abort(404)
+
     draft = data_api_client.get_draft_service(service_id).get('services')
 
     if draft['lotSlug'] != lot_slug or draft['frameworkSlug'] != framework_slug:
@@ -278,6 +286,11 @@ def copy_draft_service(framework_slug, lot_slug, service_id):
 @login_required
 def complete_draft_service(framework_slug, lot_slug, service_id):
     framework, lot = get_framework_and_lot(data_api_client, framework_slug, lot_slug, allowed_statuses=['open'])
+
+    # Suppliers must have registered interest in a framework before they can complete draft services
+    if not get_supplier_framework_info(data_api_client, framework_slug):
+        abort(404)
+
     draft = data_api_client.get_draft_service(service_id).get('services')
 
     if draft['lotSlug'] != lot_slug or draft['frameworkSlug'] != framework_slug:
@@ -313,6 +326,11 @@ def complete_draft_service(framework_slug, lot_slug, service_id):
 @login_required
 def delete_draft_service(framework_slug, lot_slug, service_id):
     framework, lot = get_framework_and_lot(data_api_client, framework_slug, lot_slug, allowed_statuses=['open'])
+
+    # Suppliers must have registered interest in a framework before they can delete draft services
+    if not get_supplier_framework_info(data_api_client, framework_slug):
+        abort(404)
+
     draft = data_api_client.get_draft_service(service_id).get('services')
 
     if draft['lotSlug'] != lot_slug or draft['frameworkSlug'] != framework_slug:
@@ -411,6 +429,10 @@ def edit_service_submission(framework_slug, lot_slug, service_id, section_id, qu
     """
     framework, lot = get_framework_and_lot(data_api_client, framework_slug, lot_slug, allowed_statuses=['open'])
 
+    # Suppliers must have registered interest in a framework before they can edit draft services
+    if not get_supplier_framework_info(data_api_client, framework_slug):
+        abort(404)
+
     force_return_to_summary = (request.args.get('return_to_summary') or
                                framework['framework'] == "digital-outcomes-and-specialists")
     next_question = None
@@ -503,6 +525,10 @@ def edit_service_submission(framework_slug, lot_slug, service_id, section_id, qu
             methods=['GET', 'POST'])
 @login_required
 def remove_subsection(framework_slug, lot_slug, service_id, section_id, question_slug):
+    # Suppliers must have registered interest in a framework before they can edit draft services
+    if not get_supplier_framework_info(data_api_client, framework_slug):
+        abort(404)
+
     try:
         draft = data_api_client.get_draft_service(service_id)['services']
     except HTTPError as e:
