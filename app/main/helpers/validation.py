@@ -194,7 +194,7 @@ class DOSValidator(DeclarationValidator):
             "mitigatingFactors": [
                 'misleadingInformation', 'confidentialInformation', 'influencedContractingAuthority',
                 'witheldSupportingDocuments', 'seriousMisrepresentation', 'significantOrPersistentDeficiencies',
-                'distortedCompetition', 'conflictOfInterest', 'distortedCompetition', 'graveProfessionalMisconduct',
+                'distortedCompetition', 'conflictOfInterest', 'distortingCompetition', 'graveProfessionalMisconduct',
                 'bankrupt', 'environmentalSocialLabourLaw', 'taxEvasion'
             ],
             # If you responded yes to either 36 or 37
