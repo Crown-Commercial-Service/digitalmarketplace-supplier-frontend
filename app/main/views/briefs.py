@@ -91,30 +91,34 @@ def start_brief_response(brief_id):
     if not is_supplier_eligible_for_brief(data_api_client, current_user.supplier_id, brief):
         return _render_not_eligible_for_brief_error_page(brief)
 
-    if request.method == 'POST':
-        brief_response = data_api_client.create_brief_response(
-            brief_id,
-            current_user.supplier_id,
-            {},
-            current_user.email_address,
-        )['briefResponses']
-        brief_response_id = brief_response['id']
-        return redirect(url_for('.edit_brief_response', brief_id=brief_id, brief_response_id=brief_response_id))
-
     brief_response = data_api_client.find_brief_responses(
         brief_id=brief_id,
         supplier_id=current_user.supplier_id,
         status='draft,submitted'
     )['briefResponses']
 
-    if brief_response:
-        if brief_response[0].get('status') == 'submitted':
-            flash('already_applied', 'error')
-            return redirect(url_for(".view_response_result", brief_id=brief_id))
-        if brief_response[0].get('status') == 'draft':
-            existing_draft_response = brief_response[0]
-    else:
-        existing_draft_response = False
+    if brief_response and brief_response[0]['status'] == 'submitted':
+        flash('already_applied', 'error')
+        return redirect(url_for(".view_response_result", brief_id=brief_id))
+
+    if request.method == 'POST':
+        if brief_response and brief_response[0]['status'] == 'draft':
+            return redirect(
+                url_for('.edit_brief_response', brief_id=brief_id, brief_response_id=brief_response[0]['id'])
+            )
+        else:
+            brief_response = data_api_client.create_brief_response(
+                brief_id,
+                current_user.supplier_id,
+                {},
+                current_user.email_address,
+            )['briefResponses']
+            brief_response_id = brief_response['id']
+            return redirect(url_for('.edit_brief_response', brief_id=brief_id, brief_response_id=brief_response_id))
+
+    existing_draft_response = False
+    if brief_response and brief_response[0]['status'] == 'draft':
+        existing_draft_response = brief_response[0]
 
     return render_template(
         "briefs/start_brief_response.html",
