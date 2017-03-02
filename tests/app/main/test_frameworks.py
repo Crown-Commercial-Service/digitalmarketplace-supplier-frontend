@@ -1640,6 +1640,49 @@ class TestFrameworksDashboard(BaseApplicationTest):
                 == link_href
 
 
+@mock.patch('dmutils.s3.S3')
+@mock.patch('app.main.views.frameworks.data_api_client', autospec=True)
+class TestFrameworksDashboardConfidenceBannerOnPage(BaseApplicationTest):
+    """Tests for the confidence banner on the declaration page."""
+
+    expected = (
+        'Your application will be submitted at 5pm&nbsp;BST,&nbsp;23&nbsp;June&nbsp;2016. <br> '
+        'You can edit your declaration and services at any time before the deadline.'
+    )
+
+    def test_confidence_banner_on_page(self, data_api_client, _):
+        """Test confidence banner appears on page happy path."""
+        data_api_client.get_framework.return_value = self.framework(status='open')
+        data_api_client.find_draft_services.return_value = {
+            "services": [
+                {'serviceName': 'A service', 'status': 'submitted', 'lotSlug': 'foo'}
+            ]
+        }
+        data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(status='complete')
+
+        with self.app.test_client():
+            self.login()
+            res = self.client.get("/suppliers/frameworks/g-cloud-8")
+        assert res.status_code == 200
+        assert self.expected in str(res.data)
+
+    def test_confidence_banner_not_on_page(self, data_api_client, _):
+        """Change value and assertt that confidence banner is not displayed."""
+        data_api_client.get_framework.return_value = self.framework(status='open')
+        data_api_client.find_draft_services.return_value = {
+            "services": [
+                {'serviceName': 'A service', 'status': 'not-submitted', 'lotSlug': 'foo'}
+            ]
+        }
+        data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(status='complete')
+
+        with self.app.test_client():
+            self.login()
+            res = self.client.get("/suppliers/frameworks/g-cloud-8")
+        assert res.status_code == 200
+        assert self.expected not in str(res.data)
+
+
 @mock.patch('app.main.views.frameworks.data_api_client', autospec=True)
 class TestFrameworkAgreement(BaseApplicationTest):
     def test_page_renders_if_all_ok(self, data_api_client):
