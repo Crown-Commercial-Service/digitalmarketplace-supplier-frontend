@@ -43,13 +43,7 @@
   {% endwith %}
 
   {% if complete_drafts and declaration_status != 'complete' and framework.status == 'open' %}
-    {%
-      with
-      message = 'You need to <a href="'|safe + url_for('.framework_supplier_declaration_overview', framework_slug=framework.slug) + '">make the supplier&nbsp;declaration</a> before any services can be submitted' | safe,
-      type = 'destructive'
-    %}
-      {% include 'toolkit/notification-banner.html' %}
-    {% endwith %}
+    {% include "partials/service_warning.html" %}
   {% endif %}
 
   <div class="grid-row">

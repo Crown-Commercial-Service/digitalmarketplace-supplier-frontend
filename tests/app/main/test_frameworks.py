@@ -3663,6 +3663,11 @@ class TestG7ServicesList(BaseApplicationTest):
         assert u"You made your supplier declaration and submitted 1 complete service." in \
             heading[0].xpath('../p[1]/text()')[0]
 
+        assert not doc.xpath(
+            "//*[contains(@class,'banner')][contains(normalize-space(string()),$t)]",
+            t="declaration before any services can be submitted",
+        )
+
     def test_drafts_list_progress_count(self, count_unanswered, data_api_client):
         with self.app.test_client():
             self.login()
@@ -3702,13 +3707,17 @@ class TestG7ServicesList(BaseApplicationTest):
         assert u'Service can be marked as complete' in res.get_data(as_text=True)
         assert u'1 optional question unanswered' in res.get_data(as_text=True)
 
-    def test_drafts_list_completed(self, count_unanswered, data_api_client):
+    @pytest.mark.parametrize("incomplete_declaration", ({}, {"status": "started"},))
+    def test_drafts_list_completed(self, count_unanswered, data_api_client, incomplete_declaration):
         with self.app.test_client():
             self.login()
 
         count_unanswered.return_value = 0, 1
 
         data_api_client.get_framework.return_value = self.framework(status='open')
+        data_api_client.get_supplier_declaration.return_value = {
+            'declaration': incomplete_declaration,
+        }
         data_api_client.find_draft_services.return_value = {
             'services': [
                 {'serviceName': 'draft', 'lotSlug': 'scs', 'status': 'submitted'},
@@ -3717,13 +3726,24 @@ class TestG7ServicesList(BaseApplicationTest):
 
         submissions = self.client.get('/suppliers/frameworks/g-cloud-7/submissions')
         lot_page = self.client.get('/suppliers/frameworks/g-cloud-7/submissions/scs')
+        submissions_doc, lot_page_doc = (html.fromstring(r.get_data(as_text=True)) for r in (submissions, lot_page))
 
         assert u'Service can be moved to complete' not in lot_page.get_data(as_text=True)
         assert u'1 optional question unanswered' in lot_page.get_data(as_text=True)
-        assert u'make the supplier&nbsp;declaration' in lot_page.get_data(as_text=True)
 
         assert u'1 service marked as complete' in submissions.get_data(as_text=True)
         assert u'draft service' not in submissions.get_data(as_text=True)
+
+        for doc in (submissions_doc, lot_page_doc,):
+            assert doc.xpath(
+                "//*[@class='banner-warning-without-action'][normalize-space(string())=$t][.//a[@href=$u]]",
+                t=u"You need to make the supplier\u00a0declaration before any services can be submitted",
+                u=(
+                    "/suppliers/frameworks/g-cloud-7/declaration"
+                    if incomplete_declaration.get("status") == "started" else
+                    "/suppliers/frameworks/g-cloud-7/start-declaration"
+                ),
+            )
 
     def test_drafts_list_completed_with_declaration_status(self, count_unanswered, data_api_client):
         with self.app.test_client():
@@ -3742,10 +3762,16 @@ class TestG7ServicesList(BaseApplicationTest):
         }
 
         submissions = self.client.get('/suppliers/frameworks/g-cloud-7/submissions')
+        doc = html.fromstring(submissions.get_data(as_text=True))
 
         assert u'1 service will be submitted' in submissions.get_data(as_text=True)
         assert u'1 complete service was submitted' not in submissions.get_data(as_text=True)
         assert u'browse-list-item-status-happy' in submissions.get_data(as_text=True)
+
+        assert not doc.xpath(
+            "//*[contains(@class,'banner')][contains(normalize-space(string()),$t)]",
+            t="declaration before any services can be submitted",
+        )
 
     def test_drafts_list_services_were_submitted(self, count_unanswered, data_api_client):
         with self.app.test_client():
@@ -3786,10 +3812,16 @@ class TestG7ServicesList(BaseApplicationTest):
         }
 
         submissions = self.client.get('/suppliers/frameworks/digital-outcomes-and-specialists/submissions')
+        doc = html.fromstring(submissions.get_data(as_text=True))
 
         assert u'This will be submitted' in submissions.get_data(as_text=True)
         assert u'browse-list-item-status-happy' in submissions.get_data(as_text=True)
         assert u'Apply to provide' in submissions.get_data(as_text=True)
+
+        assert not doc.xpath(
+            "//*[contains(@class,'banner')][contains(normalize-space(string()),$t)]",
+            t="declaration before any services can be submitted",
+        )
 
     def test_dos_drafts_list_with_closed_framework(self, count_unanswered, data_api_client):
         with self.app.test_client():
