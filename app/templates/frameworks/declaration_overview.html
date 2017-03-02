@@ -44,7 +44,7 @@
     <p>
       You can come back and edit your answers at any time before
       {%- if supplier_framework.declaration.status == "complete" -%}
-        &nbsp;{{ framework_dates.framework_close_date }}.
+        {{ framework_dates.framework_close_date|nbsp }}.
       {% else %}
         the deadline.
       {% endif %}
@@ -67,7 +67,7 @@
       {% if supplier_framework.declaration.status != "complete" %}
         <p>
           You must {% if not validates %}answer all questions and{% endif %} make your declaration 
-          before&nbsp;{{ framework_dates.framework_close_date }} to apply to {{ framework.name }}.
+          before {{ framework_dates.framework_close_date|nbsp }} to apply to {{ framework.name }}.
         </p>
       {% endif %}
       {{ make_declaration_button_block() }}
