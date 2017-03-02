@@ -48,6 +48,16 @@
     {% endfor %}
   {% endwith %}
 
+  {# Confidence Banner #}
+  {% if application_made and framework.status == 'open' %}
+    {% with 
+      message = "Your application will be submitted at %s. <br> You can edit your declaration and services at any time before the deadline."|safe % framework_dates.framework_close_date|nbsp,
+      type="success"
+    %}
+      {% include "toolkit/notification-banner.html" %}
+    {% endwith %}
+  {% endif %}
+
   <div class="grid-row framework-dashboard">
     <div class="column-two-thirds">
       {% with
