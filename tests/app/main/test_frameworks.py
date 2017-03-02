@@ -4,6 +4,9 @@ from itertools import chain
 
 from dmapiclient import HTTPError
 from flask import request
+from werkzeug.datastructures import MultiDict
+
+from app.main.forms.frameworks import ReuseDeclarationForm
 
 try:
     from StringIO import StringIO
@@ -5255,7 +5258,7 @@ class TestReuseFrameworkSupplierDeclarationPost(BaseApplicationTest):
 
     def test_reuse_false(self, data_api_client):
         """Assert that the redirect happens and the client sets the prefill pref to None."""
-        data = {'reuse': 'false', 'old_framework_slug': 'should-not-be-used'}
+        data = {'reuse': 'False', 'old_framework_slug': 'should-not-be-used'}
         with self.client:
             resp = self.client.post(
                 '/suppliers/frameworks/g-cloud-9/declaration/reuse',
@@ -5373,3 +5376,14 @@ class TestReuseFrameworkSupplierDeclarationPost(BaseApplicationTest):
         data_api_client.get_supplier_framework_info.assert_called_once_with(1234, 'digital-outcomes-and-specialists-2')
         # Should 404.
         assert resp.status_code == 404
+
+
+class TestReuseFrameworkSupplierDeclarationForm(BaseApplicationTest):
+    """Tests for app.main.forms.frameworks.ReuseDeclarationForm form."""
+
+    @pytest.mark.parametrize('falsey_value', ('False', '', 'false'))
+    def test_false_values(self, falsey_value):
+        with self.app.test_request_context():
+            data = MultiDict({'framework_slug': 'digital-outcomes-and-specialists', 'reuse': falsey_value})
+            form = ReuseDeclarationForm(data)
+            assert form.reuse.data is False

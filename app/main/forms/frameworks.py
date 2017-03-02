@@ -45,6 +45,7 @@ class ReuseDeclarationForm(Form):
     """
     reuse = BooleanField(
         'Do you want to reuse the answers from your earlier declaration?',
+        false_values={'False', 'false', ''},
         validators=[InputRequired(message='You must answer this question.')]
     )
     old_framework_slug = HiddenField()
