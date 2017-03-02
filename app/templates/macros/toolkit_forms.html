@@ -126,6 +126,26 @@
   {% endwith %}
 {%- endmacro %}
 
+{% macro checkbox_tree(question_content, service_data, errors) -%}
+  {%
+    with
+    name=question_content.id,
+    question=question_content.question|question_references(kwargs.get_question),
+    question_advice=question_content.question_advice,
+    hint=(question_content.hint or '')|question_references(kwargs.get_question),
+    value=service_data[question_content.id],
+    id=question_content.id,
+    options=question_content.options,
+    type='checkbox_tree',
+    number_of_items=question_content.number_of_items,
+    question_number=kwargs.question_number,
+    hidden=question_content.hidden,
+    error=errors.get(question_content.id)['message']|question_references(kwargs.get_question)
+  %}
+    {% include "toolkit/forms/checkbox-tree.html" %}
+  {% endwith %}
+{%- endmacro %}
+
 {% macro upload(question_content, service_data, errors) -%}
   {%
     with
