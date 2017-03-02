@@ -452,17 +452,11 @@ def framework_supplier_declaration_submit(framework_slug):
 
 @main.route('/frameworks/<framework_slug>/declaration/edit/<string:section_id>', methods=['GET', 'POST'])
 @login_required
-def framework_supplier_declaration(framework_slug, section_id=None):
+def framework_supplier_declaration(framework_slug, section_id):
     framework = get_framework(data_api_client, framework_slug, allowed_statuses=['open'])
 
     content = content_loader.get_manifest(framework_slug, 'declaration').filter({})
     status_code = 200
-
-    if section_id is None:
-        return redirect(
-            url_for('.framework_supplier_declaration',
-                    framework_slug=framework_slug,
-                    section_id=content.get_next_editable_section_id()))
 
     # Get and check the current section.
     section = content.get_section(section_id)
