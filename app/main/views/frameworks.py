@@ -258,7 +258,7 @@ def framework_submission_services(framework_slug, lot_slug):
     ), 200
 
 
-@main.route('/frameworks/<framework_slug>/start-declaration', methods=['GET'])
+@main.route('/frameworks/<framework_slug>/declaration/start', methods=['GET'])
 @login_required
 def framework_start_supplier_declaration(framework_slug):
     framework = get_framework(data_api_client, framework_slug, allowed_statuses=['open'])

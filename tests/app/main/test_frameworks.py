@@ -1624,7 +1624,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
             )
 
     @pytest.mark.parametrize('supplier_framework_kwargs,link_label,link_href', (
-        ({'declaration': None}, 'Make supplier declaration', '/suppliers/frameworks/g-cloud-7/start-declaration'),
+        ({'declaration': None}, 'Make supplier declaration', '/suppliers/frameworks/g-cloud-7/declaration/start'),
         ({}, 'Edit supplier declaration', '/suppliers/frameworks/g-cloud-7/declaration'),
     ))
     def test_make_or_edit_supplier_declaration_shows_correct_page(self, data_api_client, s3, supplier_framework_kwargs,
@@ -2201,7 +2201,7 @@ class TestStartSupplierDeclaration(BaseApplicationTest):
             data_api_client.get_framework.return_value = self.framework(status='open')
             data_api_client.get_supplier_framework_info.return_value = self.supplier_framework()
 
-            response = self.client.get('/suppliers/frameworks/g-cloud-7/start-declaration')
+            response = self.client.get('/suppliers/frameworks/g-cloud-7/declaration/start')
             document = html.fromstring(response.get_data(as_text=True))
 
             assert document.xpath("//a[normalize-space(string(.))='Start your declaration']/@href")[0] \
@@ -3741,7 +3741,7 @@ class TestG7ServicesList(BaseApplicationTest):
                 u=(
                     "/suppliers/frameworks/g-cloud-7/declaration"
                     if incomplete_declaration.get("status") == "started" else
-                    "/suppliers/frameworks/g-cloud-7/start-declaration"
+                    "/suppliers/frameworks/g-cloud-7/declaration/start"
                 ),
             )
 
