@@ -258,7 +258,7 @@ def framework_submission_services(framework_slug, lot_slug):
     ), 200
 
 
-@main.route('/frameworks/<framework_slug>/start-declaration', methods=['GET'])
+@main.route('/frameworks/<framework_slug>/declaration/start', methods=['GET'])
 @login_required
 def framework_start_supplier_declaration(framework_slug):
     framework = get_framework(data_api_client, framework_slug, allowed_statuses=['open'])
@@ -450,19 +450,13 @@ def framework_supplier_declaration_submit(framework_slug):
     return redirect(url_for('.framework_dashboard', framework_slug=framework['slug']))
 
 
-@main.route('/frameworks/<framework_slug>/declaration/<string:section_id>', methods=['GET', 'POST'])
+@main.route('/frameworks/<framework_slug>/declaration/edit/<string:section_id>', methods=['GET', 'POST'])
 @login_required
-def framework_supplier_declaration(framework_slug, section_id=None):
+def framework_supplier_declaration_edit(framework_slug, section_id):
     framework = get_framework(data_api_client, framework_slug, allowed_statuses=['open'])
 
     content = content_loader.get_manifest(framework_slug, 'declaration').filter({})
     status_code = 200
-
-    if section_id is None:
-        return redirect(
-            url_for('.framework_supplier_declaration',
-                    framework_slug=framework_slug,
-                    section_id=content.get_next_editable_section_id()))
 
     # Get and check the current section.
     section = content.get_section(section_id)
@@ -527,7 +521,7 @@ def framework_supplier_declaration(framework_slug, section_id=None):
                 if next_section and not request.form.get('save_and_return_to_overview', False):
                     # Go to the next section.
                     return redirect(url_for(
-                        '.framework_supplier_declaration',
+                        '.framework_supplier_declaration_edit',
                         framework_slug=framework['slug'],
                         section_id=next_section.id
                     ))
