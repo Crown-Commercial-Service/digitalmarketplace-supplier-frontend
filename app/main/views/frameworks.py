@@ -2,6 +2,7 @@
 from collections import OrderedDict
 from itertools import chain
 
+from datetime import datetime
 from dateutil.parser import parse as date_parse
 from dmapiclient import HTTPError
 from flask import render_template, request, abort, flash, redirect, url_for, current_app, session
@@ -22,7 +23,6 @@ from dmutils.documents import (
     degenerate_document_path_and_return_doc_name, get_signed_url, get_extension, file_is_less_than_5mb,
     file_is_empty, file_is_image, file_is_pdf, sanitise_supplier_name
 )
-
 from ... import data_api_client, flask_featureflags
 from ...main import main, content_loader
 from ..helpers import hash_email, login_required
@@ -68,20 +68,22 @@ def framework_dashboard(framework_slug):
             )
 
     drafts, complete_drafts = get_drafts(data_api_client, framework_slug)
-
     supplier_framework_info = get_supplier_framework_info(data_api_client, framework_slug)
     declaration_status = get_declaration_status_from_info(supplier_framework_info)
-    supplier_is_on_framework = get_supplier_on_framework_from_info(supplier_framework_info)
-
     # Do not show a framework dashboard for earlier G-Cloud iterations
     if declaration_status == 'unstarted' and framework['status'] == 'live':
         abort(404)
 
-    application_made = supplier_is_on_framework or (len(complete_drafts) > 0 and declaration_status == 'complete')
+    supplier_is_on_framework = get_supplier_on_framework_from_info(supplier_framework_info)
+    application_made = complete_drafts and declaration_status == 'complete'
     lots_with_completed_drafts = [lot for lot in framework['lots'] if count_drafts_by_lot(complete_drafts, lot['slug'])]
 
     framework_dates = content_loader.get_message(framework_slug, 'dates')
     framework_urls = content_loader.get_message(framework_slug, 'urls')
+
+    # Confidence banner.
+    if application_made and framework['status'] == 'open':
+        flash('submission_confidence', 'success')
 
     # filenames
     result_letter_filename = RESULT_LETTER_FILENAME
@@ -97,10 +99,8 @@ def framework_dashboard(framework_slug):
         signed_agreement_document_name = degenerate_document_path_and_return_doc_name(
             supplier_framework_info['agreementPath']
         )
-
     key_list = s3.S3(current_app.config['DM_COMMUNICATIONS_BUCKET']).list(framework_slug, load_timestamps=True)
     key_list.reverse()
-
     base_communications_files = {
         "invitation": {
             "path": "communications/",
@@ -145,7 +145,7 @@ def framework_dashboard(framework_slug):
 
     return render_template(
         "frameworks/dashboard.html",
-        application_made=application_made,
+        application_made=application_made or supplier_is_on_framework,
         communications_files=communications_files,
         completed_lots=tuple(
             dict(lot, complete_count=count_drafts_by_lot(complete_drafts, lot['slug']))
