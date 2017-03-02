@@ -2329,8 +2329,7 @@ class TestDeclarationOverview(BaseApplicationTest):
                         "Services are cloud-related",
                         "Answer question",
                         ("Answer question",),
-                        ("/suppliers/frameworks/g-cloud-9/declaration/providing-suitable-services#"
-                         "servicesHaveOrSupport",),
+                        ("/suppliers/frameworks/g-cloud-9/declaration/providing-suitable-services",),
                         (),
                     ),
                     (
@@ -2373,7 +2372,7 @@ class TestDeclarationOverview(BaseApplicationTest):
                         "Organised crime or conspiracy convictions",
                         q_link_text_prefillable_section,
                         (q_link_text_prefillable_section,),
-                        ("/suppliers/frameworks/g-cloud-9/declaration/grounds-for-mandatory-exclusion#conspiracy",),
+                        ("/suppliers/frameworks/g-cloud-9/declaration/grounds-for-mandatory-exclusion",),
                         (),
                     ),
                     (
@@ -2418,7 +2417,7 @@ class TestDeclarationOverview(BaseApplicationTest):
                         q_link_text_prefillable_section,
                         (q_link_text_prefillable_section,),
                         ("/suppliers/frameworks/g-cloud-9/declaration/how-youll-deliver-your-"
-                            "services#subcontracting",),
+                            "services",),
                         (),
                     ),
                 ),
@@ -2447,8 +2446,7 @@ class TestDeclarationOverview(BaseApplicationTest):
                         "Services are cloud-related",
                         "Answer question",
                         ("Answer question",),
-                        ("/suppliers/frameworks/g-cloud-9/declaration/providing-suitable-services#"
-                         "servicesHaveOrSupport",),
+                        ("/suppliers/frameworks/g-cloud-9/declaration/providing-suitable-services",),
                         (),
                     ),
                     (
