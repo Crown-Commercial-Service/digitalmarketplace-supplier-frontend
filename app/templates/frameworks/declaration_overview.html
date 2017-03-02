@@ -78,7 +78,7 @@
         {{ summary.heading(section.name, id=section.slug) }}
         {% if section.editable %}
           {% if framework.status == 'open' %}
-            {{ summary.top_link("Edit", url_for(".framework_supplier_declaration", framework_slug=framework.slug, section_id=section.id)) }}
+            {{ summary.top_link("Edit", url_for(".framework_supplier_declaration_edit", framework_slug=framework.slug, section_id=section.id)) }}
           {% endif %}
         {% endif %}
         {% if section.summary_page_description %}
@@ -101,9 +101,9 @@
                   {# We don't want a question anchor on the first question of each section; it should take them
                      to the top of the page so all content is visible #}
                   {% if section.questions[0].id == question.id -%}
-                    <a href="{{ url_for(".framework_supplier_declaration", framework_slug=framework.slug, section_id=section.id) }}">
+                    <a href="{{ url_for(".framework_supplier_declaration_edit", framework_slug=framework.slug, section_id=section.id) }}">
                   {% else -%}
-                    <a href="{{ url_for(".framework_supplier_declaration", framework_slug=framework.slug, section_id=section.id, _anchor=question.id) }}">
+                    <a href="{{ url_for(".framework_supplier_declaration_edit", framework_slug=framework.slug, section_id=section.id, _anchor=question.id) }}">
                   {%- endif -%}
                   {% if supplier_framework.prefillDeclarationFromFrameworkSlug and section.prefill %}
                     Review answer
