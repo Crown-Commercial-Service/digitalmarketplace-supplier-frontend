@@ -450,7 +450,7 @@ def framework_supplier_declaration_submit(framework_slug):
     return redirect(url_for('.framework_dashboard', framework_slug=framework['slug']))
 
 
-@main.route('/frameworks/<framework_slug>/declaration/<string:section_id>', methods=['GET', 'POST'])
+@main.route('/frameworks/<framework_slug>/declaration/edit/<string:section_id>', methods=['GET', 'POST'])
 @login_required
 def framework_supplier_declaration(framework_slug, section_id=None):
     framework = get_framework(data_api_client, framework_slug, allowed_statuses=['open'])
