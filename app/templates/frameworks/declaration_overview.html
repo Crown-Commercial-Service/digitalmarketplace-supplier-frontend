@@ -108,6 +108,11 @@
                 {% endcall %}
               {% elif not question.is_empty %}
                 {{ summary[question.type](question.value, question.assurance) }}
+              {% else %}
+                {# We need to call this (even if with nothing) to add the final column to the row, otherwise the row
+                   terminates early and the line separators between rows do not span the entire width of the table. #}
+                {% call summary.field(action=True) %}
+                {% endcall %}
               {% endif %}
             {% endif %}
           {% endcall %}
