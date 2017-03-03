@@ -15,7 +15,7 @@
       {% if reason == "supplier-not-on-role" or reason == "supplier-not-on-lot" %}
         you didn’t say you could provide
         {{ "this specialist role" if reason == "supplier-not-on-role" else "services in this category" }}
-        when you applied to the Digital Outcomes and Specialists framework.
+        when you applied to the {{ framework_name }} framework.
       {% elif reason == "supplier-not-on-framework" %}
         you’re not a {{ framework_name }} supplier.
       {% endif %}
