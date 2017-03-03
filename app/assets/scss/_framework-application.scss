@@ -93,3 +93,14 @@
     }
   }
 }
+
+.framework-lots-table {
+  ul ul {
+    list-style: disc;
+    margin: 0px 0 10px 40px;
+  }
+
+  p + p {
+    margin-top: 10px;
+  }
+}
