@@ -43,7 +43,7 @@
     {% endif %}
     <p>
       You can come back and edit your answers at any time before
-      {%- if supplier_framework.declaration.status == "complete" -%}
+      {% if supplier_framework.declaration.status == "complete" %}
         {{ framework_dates.framework_close_date|nbsp }}.
       {% else %}
         the deadline.
