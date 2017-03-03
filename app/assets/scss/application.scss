@@ -16,9 +16,10 @@ $path: "/suppliers/static/images/";
 @import "shared_scss/_dmspeak.scss";
 
 /* Blocks shared between multiple selectors */
-@import "toolkit/shared_placeholders/_temporary-messages.scss";
-@import "toolkit/shared_placeholders/_placeholders.scss";
 @import "toolkit/shared_placeholders/_dm-typography.scss";
+@import "toolkit/shared_placeholders/_mixins.scss";
+@import "toolkit/shared_placeholders/_placeholders.scss";
+@import "toolkit/shared_placeholders/_temporary-messages.scss";
 
 #wrapper, .wrapper {
   @extend %site-width-container;
@@ -55,6 +56,7 @@ $path: "/suppliers/static/images/";
 @import "toolkit/forms/_upload.scss";
 @import "toolkit/forms/_validation.scss";
 @import "toolkit/forms/_combinations.scss";
+@import "toolkit/forms/_checkbox-tree.scss";
 @import "toolkit/search/_search-result.scss";
 
 
