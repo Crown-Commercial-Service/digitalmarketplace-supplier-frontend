@@ -4,6 +4,9 @@ from itertools import chain
 
 from dmapiclient import HTTPError
 from flask import request
+from werkzeug.datastructures import MultiDict
+
+from app.main.forms.frameworks import ReuseDeclarationForm
 
 try:
     from StringIO import StringIO
@@ -1621,7 +1624,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
             )
 
     @pytest.mark.parametrize('supplier_framework_kwargs,link_label,link_href', (
-        ({'declaration': None}, 'Make supplier declaration', '/suppliers/frameworks/g-cloud-7/start-declaration'),
+        ({'declaration': None}, 'Make supplier declaration', '/suppliers/frameworks/g-cloud-7/declaration/start'),
         ({}, 'Edit supplier declaration', '/suppliers/frameworks/g-cloud-7/declaration'),
     ))
     def test_make_or_edit_supplier_declaration_shows_correct_page(self, data_api_client, s3, supplier_framework_kwargs,
@@ -1638,6 +1641,49 @@ class TestFrameworksDashboard(BaseApplicationTest):
 
             assert document.xpath("//a[normalize-space(string())=$link_label]/@href", link_label=link_label)[0] \
                 == link_href
+
+
+@mock.patch('dmutils.s3.S3')
+@mock.patch('app.main.views.frameworks.data_api_client', autospec=True)
+class TestFrameworksDashboardConfidenceBannerOnPage(BaseApplicationTest):
+    """Tests for the confidence banner on the declaration page."""
+
+    expected = (
+        'Your application will be submitted at 5pm&nbsp;BST,&nbsp;23&nbsp;June&nbsp;2016. <br> '
+        'You can edit your declaration and services at any time before the deadline.'
+    )
+
+    def test_confidence_banner_on_page(self, data_api_client, _):
+        """Test confidence banner appears on page happy path."""
+        data_api_client.get_framework.return_value = self.framework(status='open')
+        data_api_client.find_draft_services.return_value = {
+            "services": [
+                {'serviceName': 'A service', 'status': 'submitted', 'lotSlug': 'foo'}
+            ]
+        }
+        data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(status='complete')
+
+        with self.app.test_client():
+            self.login()
+            res = self.client.get("/suppliers/frameworks/g-cloud-8")
+        assert res.status_code == 200
+        assert self.expected in str(res.data)
+
+    def test_confidence_banner_not_on_page(self, data_api_client, _):
+        """Change value and assertt that confidence banner is not displayed."""
+        data_api_client.get_framework.return_value = self.framework(status='open')
+        data_api_client.find_draft_services.return_value = {
+            "services": [
+                {'serviceName': 'A service', 'status': 'not-submitted', 'lotSlug': 'foo'}
+            ]
+        }
+        data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(status='complete')
+
+        with self.app.test_client():
+            self.login()
+            res = self.client.get("/suppliers/frameworks/g-cloud-8")
+        assert res.status_code == 200
+        assert self.expected not in str(res.data)
 
 
 @mock.patch('app.main.views.frameworks.data_api_client', autospec=True)
@@ -2155,7 +2201,7 @@ class TestStartSupplierDeclaration(BaseApplicationTest):
             data_api_client.get_framework.return_value = self.framework(status='open')
             data_api_client.get_supplier_framework_info.return_value = self.supplier_framework()
 
-            response = self.client.get('/suppliers/frameworks/g-cloud-7/start-declaration')
+            response = self.client.get('/suppliers/frameworks/g-cloud-7/declaration/start')
             document = html.fromstring(response.get_data(as_text=True))
 
             assert document.xpath("//a[normalize-space(string(.))='Start your declaration']/@href")[0] \
@@ -2278,23 +2324,22 @@ class TestDeclarationOverview(BaseApplicationTest):
             empty_declaration,  # noqa
             False,
             prefill_fw_slug,
-            (
+            (   # expected result for "Providing suitable services" section as returned by _extract_section_information
                 "Providing suitable services",
-                "/suppliers/frameworks/g-cloud-9/declaration/providing-suitable-services",
+                "/suppliers/frameworks/g-cloud-9/declaration/edit/providing-suitable-services",
                 (
                     (
                         "Services are cloud-related",
                         "Answer question",
                         ("Answer question",),
-                        ("/suppliers/frameworks/g-cloud-9/declaration/providing-suitable-services#"
-                         "servicesHaveOrSupport",),
+                        ("/suppliers/frameworks/g-cloud-9/declaration/edit/providing-suitable-services",),
                         (),
                     ),
                     (
                         "Services in scope for G-Cloud",
                         "Answer question",
                         ("Answer question",),
-                        ("/suppliers/frameworks/g-cloud-9/declaration/providing-suitable-services#"
+                        ("/suppliers/frameworks/g-cloud-9/declaration/edit/providing-suitable-services#"
                          "servicesDoNotInclude",),
                         (),
                     ),
@@ -2302,14 +2347,14 @@ class TestDeclarationOverview(BaseApplicationTest):
                         "Buyers pay for what they use",
                         "Answer question",
                         ("Answer question",),
-                        ("/suppliers/frameworks/g-cloud-9/declaration/providing-suitable-services#payForWhatUse",),
+                        ("/suppliers/frameworks/g-cloud-9/declaration/edit/providing-suitable-services#payForWhatUse",),
                         (),
                     ),
                     (
                         "What your team will deliver",
                         "Answer question",
                         ("Answer question",),
-                        ("/suppliers/frameworks/g-cloud-9/declaration/providing-suitable-"
+                        ("/suppliers/frameworks/g-cloud-9/declaration/edit/providing-suitable-"
                             "services#offerServicesYourselves",),
                         (),
                     ),
@@ -2317,27 +2362,29 @@ class TestDeclarationOverview(BaseApplicationTest):
                         "Contractual responsibility and accountability",
                         "Answer question",
                         ("Answer question",),
-                        ("/suppliers/frameworks/g-cloud-9/declaration/providing-suitable-services#fullAccountability",),
+                        ("/suppliers/frameworks/g-cloud-9/declaration/edit/providing-suitable-"
+                            "services#fullAccountability",),
                         (),
                     ),
                 ),
             ),
-            (
+            (   # expected result for "Grounds for mandatory exclusion" section as returned by
+                # _extract_section_information
                 "Grounds for mandatory exclusion",
-                "/suppliers/frameworks/g-cloud-9/declaration/grounds-for-mandatory-exclusion",
+                "/suppliers/frameworks/g-cloud-9/declaration/edit/grounds-for-mandatory-exclusion",
                 (
                     (
                         "Organised crime or conspiracy convictions",
                         q_link_text_prefillable_section,
                         (q_link_text_prefillable_section,),
-                        ("/suppliers/frameworks/g-cloud-9/declaration/grounds-for-mandatory-exclusion#conspiracy",),
+                        ("/suppliers/frameworks/g-cloud-9/declaration/edit/grounds-for-mandatory-exclusion",),
                         (),
                     ),
                     (
                         "Bribery or corruption convictions",
                         q_link_text_prefillable_section,
                         (q_link_text_prefillable_section,),
-                        ("/suppliers/frameworks/g-cloud-9/declaration/grounds-for-mandatory-"
+                        ("/suppliers/frameworks/g-cloud-9/declaration/edit/grounds-for-mandatory-"
                             "exclusion#corruptionBribery",),
                         (),
                     ),
@@ -2345,7 +2392,7 @@ class TestDeclarationOverview(BaseApplicationTest):
                         "Fraud convictions",
                         q_link_text_prefillable_section,
                         (q_link_text_prefillable_section,),
-                        ("/suppliers/frameworks/g-cloud-9/declaration/grounds-for-mandatory-"
+                        ("/suppliers/frameworks/g-cloud-9/declaration/edit/grounds-for-mandatory-"
                             "exclusion#fraudAndTheft",),
                         (),
                     ),
@@ -2353,34 +2400,35 @@ class TestDeclarationOverview(BaseApplicationTest):
                         "Terrorism convictions",
                         q_link_text_prefillable_section,
                         (q_link_text_prefillable_section,),
-                        ("/suppliers/frameworks/g-cloud-9/declaration/grounds-for-mandatory-exclusion#terrorism",),
+                        ("/suppliers/frameworks/g-cloud-9/declaration/edit/grounds-for-mandatory-exclusion#terrorism",),
                         (),
                     ),
                     (
                         "Organised crime convictions",
                         q_link_text_prefillable_section,
                         (q_link_text_prefillable_section,),
-                        ("/suppliers/frameworks/g-cloud-9/declaration/grounds-for-mandatory-"
+                        ("/suppliers/frameworks/g-cloud-9/declaration/edit/grounds-for-mandatory-"
                             "exclusion#organisedCrime",),
                         (),
                     ),
                 ),
             ),
-            (
+            (   # expected result for "How you’ll deliver your services" section as returned by
+                # _extract_section_information
                 u"How you’ll deliver your services",
-                "/suppliers/frameworks/g-cloud-9/declaration/how-youll-deliver-your-services",
+                "/suppliers/frameworks/g-cloud-9/declaration/edit/how-youll-deliver-your-services",
                 (
                     (
                         "Subcontractors or consortia",
                         q_link_text_prefillable_section,
                         (q_link_text_prefillable_section,),
-                        ("/suppliers/frameworks/g-cloud-9/declaration/how-youll-deliver-your-"
-                            "services#subcontracting",),
+                        ("/suppliers/frameworks/g-cloud-9/declaration/edit/how-youll-deliver-your-"
+                            "services",),
                         (),
                     ),
                 ),
             ),
-        ) for empty_declaration in (None, {})),
+        ) for empty_declaration in (None, {})),  # two possible ways of specifying a "empty" declaration - test both
         ((
             {
                 "status": "started",
@@ -2396,23 +2444,22 @@ class TestDeclarationOverview(BaseApplicationTest):
             },
             False,
             prefill_fw_slug,
-            (
+            (   # expected result for "Providing suitable services" section as returned by _extract_section_information
                 "Providing suitable services",
-                "/suppliers/frameworks/g-cloud-9/declaration/providing-suitable-services",
+                "/suppliers/frameworks/g-cloud-9/declaration/edit/providing-suitable-services",
                 (
                     (
                         "Services are cloud-related",
                         "Answer question",
                         ("Answer question",),
-                        ("/suppliers/frameworks/g-cloud-9/declaration/providing-suitable-services#"
-                         "servicesHaveOrSupport",),
+                        ("/suppliers/frameworks/g-cloud-9/declaration/edit/providing-suitable-services",),
                         (),
                     ),
                     (
                         "Services in scope for G-Cloud",
                         "Answer question",
                         ("Answer question",),
-                        ("/suppliers/frameworks/g-cloud-9/declaration/providing-suitable-services#"
+                        ("/suppliers/frameworks/g-cloud-9/declaration/edit/providing-suitable-services#"
                          "servicesDoNotInclude",),
                         (),
                     ),
@@ -2420,14 +2467,14 @@ class TestDeclarationOverview(BaseApplicationTest):
                         "Buyers pay for what they use",
                         "Answer question",
                         ("Answer question",),
-                        ("/suppliers/frameworks/g-cloud-9/declaration/providing-suitable-services#payForWhatUse",),
+                        ("/suppliers/frameworks/g-cloud-9/declaration/edit/providing-suitable-services#payForWhatUse",),
                         (),
                     ),
                     (
                         "What your team will deliver",
                         "Answer question",
                         ("Answer question",),
-                        ("/suppliers/frameworks/g-cloud-9/declaration/providing-suitable-"
+                        ("/suppliers/frameworks/g-cloud-9/declaration/edit/providing-suitable-"
                             "services#offerServicesYourselves",),
                         (),
                     ),
@@ -2435,14 +2482,16 @@ class TestDeclarationOverview(BaseApplicationTest):
                         "Contractual responsibility and accountability",
                         "Answer question",
                         ("Answer question",),
-                        ("/suppliers/frameworks/g-cloud-9/declaration/providing-suitable-services#fullAccountability",),
+                        ("/suppliers/frameworks/g-cloud-9/declaration/edit/providing-suitable-"
+                            "services#fullAccountability",),
                         (),
                     ),
                 ),
             ),
-            (
+            (   # expected result for "Grounds for mandatory exclusion" section as returned by
+                # _extract_section_information
                 "Grounds for mandatory exclusion",
-                "/suppliers/frameworks/g-cloud-9/declaration/grounds-for-mandatory-exclusion",
+                "/suppliers/frameworks/g-cloud-9/declaration/edit/grounds-for-mandatory-exclusion",
                 (
                     (
                         "Organised crime or conspiracy convictions",
@@ -2481,9 +2530,10 @@ class TestDeclarationOverview(BaseApplicationTest):
                     ),
                 ),
             ),
-            (
+            (   # expected result for "How you’ll deliver your services" section as returned by
+                # _extract_section_information
                 u"How you’ll deliver your services",
-                "/suppliers/frameworks/g-cloud-9/declaration/how-youll-deliver-your-services",
+                "/suppliers/frameworks/g-cloud-9/declaration/edit/how-youll-deliver-your-services",
                 (
                     (
                         "Subcontractors or consortia",
@@ -2503,9 +2553,9 @@ class TestDeclarationOverview(BaseApplicationTest):
             dict(status=declaration_status, **(valid_g9_declaration_base())),
             True,
             prefill_fw_slug,
-            (
+            (   # expected result for "Providing suitable services" section as returned by _extract_section_information
                 "Providing suitable services",
-                "/suppliers/frameworks/g-cloud-9/declaration/providing-suitable-services",
+                "/suppliers/frameworks/g-cloud-9/declaration/edit/providing-suitable-services",
                 (
                     (
                         "Services are cloud-related",
@@ -2544,9 +2594,10 @@ class TestDeclarationOverview(BaseApplicationTest):
                     ),
                 ),
             ),
-            (
+            (   # expected result for "Grounds for mandatory exclusion" section as returned by
+                # _extract_section_information
                 "Grounds for mandatory exclusion",
-                "/suppliers/frameworks/g-cloud-9/declaration/grounds-for-mandatory-exclusion",
+                "/suppliers/frameworks/g-cloud-9/declaration/edit/grounds-for-mandatory-exclusion",
                 (
                     (
                         "Organised crime or conspiracy convictions",
@@ -2585,9 +2636,10 @@ class TestDeclarationOverview(BaseApplicationTest):
                     ),
                 ),
             ),
-            (
+            (   # expected result for "How you’ll deliver your services" section as returned by
+                # _extract_section_information
                 u"How you’ll deliver your services",
-                "/suppliers/frameworks/g-cloud-9/declaration/how-youll-deliver-your-services",
+                "/suppliers/frameworks/g-cloud-9/declaration/edit/how-youll-deliver-your-services",
                 (
                     (
                         "Subcontractors or consortia",
@@ -2600,6 +2652,7 @@ class TestDeclarationOverview(BaseApplicationTest):
             ),
         ) for declaration_status in ("started", "complete",)),
     ) for prefill_fw_slug, q_link_text_prefillable_section in (
+        # test all of the previous combinations with two possible values of prefill_fw_slug
         (None, "Answer question",),
         ("some-previous-framework", "Review answer",),
     ))))
@@ -2811,7 +2864,7 @@ class TestSupplierDeclaration(BaseApplicationTest):
             data_api_client.get_supplier_declaration.side_effect = APIError(mock.Mock(status_code=404))
 
             res = self.client.get(
-                '/suppliers/frameworks/g-cloud-7/declaration/g-cloud-7-essentials')
+                '/suppliers/frameworks/g-cloud-7/declaration/edit/g-cloud-7-essentials')
 
             assert res.status_code == 200
             doc = html.fromstring(res.get_data(as_text=True))
@@ -2829,7 +2882,7 @@ class TestSupplierDeclaration(BaseApplicationTest):
             )
 
             res = self.client.get(
-                '/suppliers/frameworks/g-cloud-7/declaration/g-cloud-7-essentials')
+                '/suppliers/frameworks/g-cloud-7/declaration/edit/g-cloud-7-essentials')
 
             assert res.status_code == 200
             doc = html.fromstring(res.get_data(as_text=True))
@@ -2868,7 +2921,7 @@ class TestSupplierDeclaration(BaseApplicationTest):
 
             # The grounds-for-mandatory-exclusion section has "prefill: True" in the declaration manifest
             res = self.client.get(
-                '/suppliers/frameworks/g-cloud-9/declaration/grounds-for-mandatory-exclusion')
+                '/suppliers/frameworks/g-cloud-9/declaration/edit/grounds-for-mandatory-exclusion')
 
             assert res.status_code == 200
             data_api_client.get_supplier_declaration.assert_called_once_with(1234, "digital-outcomes-and-specialists-2")
@@ -2924,7 +2977,7 @@ class TestSupplierDeclaration(BaseApplicationTest):
 
             # The grounds-for-mandatory-exclusion section has "prefill: True" in the declaration manifest
             res = self.client.get(
-                '/suppliers/frameworks/g-cloud-9/declaration/grounds-for-mandatory-exclusion')
+                '/suppliers/frameworks/g-cloud-9/declaration/edit/grounds-for-mandatory-exclusion')
 
             assert res.status_code == 200
             data_api_client.get_supplier_declaration.assert_called_once_with(1234, "digital-outcomes-and-specialists-2")
@@ -2996,7 +3049,7 @@ class TestSupplierDeclaration(BaseApplicationTest):
 
             # The grounds-for-mandatory-exclusion section has "prefill: True" in the declaration manifest
             res = self.client.get(
-                '/suppliers/frameworks/g-cloud-9/declaration/grounds-for-mandatory-exclusion')
+                '/suppliers/frameworks/g-cloud-9/declaration/edit/grounds-for-mandatory-exclusion')
 
             assert res.status_code == 200
             doc = html.fromstring(res.get_data(as_text=True))
@@ -3050,7 +3103,7 @@ class TestSupplierDeclaration(BaseApplicationTest):
 
             # The how-you-apply section has "prefill: False" in the declaration manifest
             res = self.client.get(
-                '/suppliers/frameworks/g-cloud-9/declaration/how-you-apply')
+                '/suppliers/frameworks/g-cloud-9/declaration/edit/how-you-apply')
 
             assert res.status_code == 200
             doc = html.fromstring(res.get_data(as_text=True))
@@ -3092,7 +3145,7 @@ class TestSupplierDeclaration(BaseApplicationTest):
                 declaration={"status": "started"}
             )
             res = self.client.post(
-                '/suppliers/frameworks/g-cloud-7/declaration/g-cloud-7-essentials',
+                '/suppliers/frameworks/g-cloud-7/declaration/edit/g-cloud-7-essentials',
                 data=FULL_G7_SUBMISSION)
 
             assert res.status_code == 302
@@ -3108,7 +3161,7 @@ class TestSupplierDeclaration(BaseApplicationTest):
                 declaration=FULL_G7_SUBMISSION
             )
             res = self.client.post(
-                '/suppliers/frameworks/g-cloud-7/declaration/grounds-for-discretionary-exclusion',
+                '/suppliers/frameworks/g-cloud-7/declaration/edit/grounds-for-discretionary-exclusion',
                 data=FULL_G7_SUBMISSION)
 
             assert res.status_code == 302
@@ -3128,7 +3181,7 @@ class TestSupplierDeclaration(BaseApplicationTest):
             data_api_client.set_supplier_declaration.side_effect = APIError(mock.Mock(status_code=400))
 
             res = self.client.post(
-                '/suppliers/frameworks/g-cloud-7/declaration/g-cloud-7-essentials',
+                '/suppliers/frameworks/g-cloud-7/declaration/edit/g-cloud-7-essentials',
                 data=FULL_G7_SUBMISSION)
 
             assert res.status_code == 400
@@ -3146,7 +3199,7 @@ class TestSupplierDeclaration(BaseApplicationTest):
             get_error_messages_for_page.return_value = {'PR1': {'input_name': 'PR1', 'message': 'this is invalid'}}
 
             res = self.client.post(
-                '/suppliers/frameworks/g-cloud-7/declaration/g-cloud-7-essentials',
+                '/suppliers/frameworks/g-cloud-7/declaration/edit/g-cloud-7-essentials',
                 data=FULL_G7_SUBMISSION)
 
             assert res.status_code == 400
@@ -3167,7 +3220,7 @@ class TestSupplierDeclaration(BaseApplicationTest):
                 "declaration": {"status": "started"}
             }
             res = self.client.post(
-                '/suppliers/frameworks/g-cloud-7/declaration/g-cloud-7-essentials',
+                '/suppliers/frameworks/g-cloud-7/declaration/edit/g-cloud-7-essentials',
                 data=FULL_G7_SUBMISSION)
 
             assert res.status_code == 404
@@ -3402,7 +3455,7 @@ class TestSendClarificationQuestionEmail(BaseApplicationTest):
         if is_called:
             send_email.assert_any_call(
                 "digitalmarketplace@mailinator.com",
-                FakeMail('Supplier name:', 'User name:'),
+                FakeMail('Supplier ID:', 'User name:'),
                 "MANDRILL",
                 "Test Framework clarification question",
                 "do-not-reply@digitalmarketplace.service.gov.uk",
@@ -3619,6 +3672,11 @@ class TestG7ServicesList(BaseApplicationTest):
         assert u"You made your supplier declaration and submitted 1 complete service." in \
             heading[0].xpath('../p[1]/text()')[0]
 
+        assert not doc.xpath(
+            "//*[contains(@class,'banner')][contains(normalize-space(string()),$t)]",
+            t="declaration before any services can be submitted",
+        )
+
     def test_drafts_list_progress_count(self, count_unanswered, data_api_client):
         with self.app.test_client():
             self.login()
@@ -3658,13 +3716,17 @@ class TestG7ServicesList(BaseApplicationTest):
         assert u'Service can be marked as complete' in res.get_data(as_text=True)
         assert u'1 optional question unanswered' in res.get_data(as_text=True)
 
-    def test_drafts_list_completed(self, count_unanswered, data_api_client):
+    @pytest.mark.parametrize("incomplete_declaration", ({}, {"status": "started"},))
+    def test_drafts_list_completed(self, count_unanswered, data_api_client, incomplete_declaration):
         with self.app.test_client():
             self.login()
 
         count_unanswered.return_value = 0, 1
 
         data_api_client.get_framework.return_value = self.framework(status='open')
+        data_api_client.get_supplier_declaration.return_value = {
+            'declaration': incomplete_declaration,
+        }
         data_api_client.find_draft_services.return_value = {
             'services': [
                 {'serviceName': 'draft', 'lotSlug': 'scs', 'status': 'submitted'},
@@ -3673,13 +3735,24 @@ class TestG7ServicesList(BaseApplicationTest):
 
         submissions = self.client.get('/suppliers/frameworks/g-cloud-7/submissions')
         lot_page = self.client.get('/suppliers/frameworks/g-cloud-7/submissions/scs')
+        submissions_doc, lot_page_doc = (html.fromstring(r.get_data(as_text=True)) for r in (submissions, lot_page))
 
         assert u'Service can be moved to complete' not in lot_page.get_data(as_text=True)
         assert u'1 optional question unanswered' in lot_page.get_data(as_text=True)
-        assert u'make the supplier&nbsp;declaration' in lot_page.get_data(as_text=True)
 
         assert u'1 service marked as complete' in submissions.get_data(as_text=True)
         assert u'draft service' not in submissions.get_data(as_text=True)
+
+        for doc in (submissions_doc, lot_page_doc,):
+            assert doc.xpath(
+                "//*[@class='banner-warning-without-action'][normalize-space(string())=$t][.//a[@href=$u]]",
+                t=u"You need to make the supplier\u00a0declaration before any services can be submitted",
+                u=(
+                    "/suppliers/frameworks/g-cloud-7/declaration"
+                    if incomplete_declaration.get("status") == "started" else
+                    "/suppliers/frameworks/g-cloud-7/declaration/start"
+                ),
+            )
 
     def test_drafts_list_completed_with_declaration_status(self, count_unanswered, data_api_client):
         with self.app.test_client():
@@ -3698,10 +3771,16 @@ class TestG7ServicesList(BaseApplicationTest):
         }
 
         submissions = self.client.get('/suppliers/frameworks/g-cloud-7/submissions')
+        doc = html.fromstring(submissions.get_data(as_text=True))
 
         assert u'1 service will be submitted' in submissions.get_data(as_text=True)
         assert u'1 complete service was submitted' not in submissions.get_data(as_text=True)
         assert u'browse-list-item-status-happy' in submissions.get_data(as_text=True)
+
+        assert not doc.xpath(
+            "//*[contains(@class,'banner')][contains(normalize-space(string()),$t)]",
+            t="declaration before any services can be submitted",
+        )
 
     def test_drafts_list_services_were_submitted(self, count_unanswered, data_api_client):
         with self.app.test_client():
@@ -3742,10 +3821,16 @@ class TestG7ServicesList(BaseApplicationTest):
         }
 
         submissions = self.client.get('/suppliers/frameworks/digital-outcomes-and-specialists/submissions')
+        doc = html.fromstring(submissions.get_data(as_text=True))
 
         assert u'This will be submitted' in submissions.get_data(as_text=True)
         assert u'browse-list-item-status-happy' in submissions.get_data(as_text=True)
         assert u'Apply to provide' in submissions.get_data(as_text=True)
+
+        assert not doc.xpath(
+            "//*[contains(@class,'banner')][contains(normalize-space(string()),$t)]",
+            t="declaration before any services can be submitted",
+        )
 
     def test_dos_drafts_list_with_closed_framework(self, count_unanswered, data_api_client):
         with self.app.test_client():
@@ -5195,8 +5280,8 @@ class TestReuseFrameworkSupplierDeclaration(BaseApplicationTest):
 
         # Assert the success.
         assert resp.status_code == 200
-        expected = 'In March, 2011, your organisation completed a declaration for G-cloud 7.'
-        assert expected in ''.join(map(str, resp.response))
+        expected = 'In March&nbsp;2011, your organisation completed a declaration for G-cloud 7.'
+        assert expected in str(resp.data)
 
         # Assert expected api calls.
         data_api_client.get_framework.assert_called_once_with('g-cloud-8')
@@ -5214,7 +5299,7 @@ class TestReuseFrameworkSupplierDeclarationPost(BaseApplicationTest):
 
     def test_reuse_false(self, data_api_client):
         """Assert that the redirect happens and the client sets the prefill pref to None."""
-        data = {'reuse': 'false', 'old_framework_slug': 'should-not-be-used'}
+        data = {'reuse': 'False', 'old_framework_slug': 'should-not-be-used'}
         with self.client:
             resp = self.client.post(
                 '/suppliers/frameworks/g-cloud-9/declaration/reuse',
@@ -5332,3 +5417,14 @@ class TestReuseFrameworkSupplierDeclarationPost(BaseApplicationTest):
         data_api_client.get_supplier_framework_info.assert_called_once_with(1234, 'digital-outcomes-and-specialists-2')
         # Should 404.
         assert resp.status_code == 404
+
+
+class TestReuseFrameworkSupplierDeclarationForm(BaseApplicationTest):
+    """Tests for app.main.forms.frameworks.ReuseDeclarationForm form."""
+
+    @pytest.mark.parametrize('falsey_value', ('False', '', 'false'))
+    def test_false_values(self, falsey_value):
+        with self.app.test_request_context():
+            data = MultiDict({'framework_slug': 'digital-outcomes-and-specialists', 'reuse': falsey_value})
+            form = ReuseDeclarationForm(data)
+            assert form.reuse.data is False

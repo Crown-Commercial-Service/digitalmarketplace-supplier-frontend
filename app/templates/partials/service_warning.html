@@ -1,9 +1,9 @@
-{% if true %}
+{% with declaration_url = url_for('.framework_start_supplier_declaration' if declaration_status == 'unstarted' else '.framework_supplier_declaration_overview', framework_slug=framework.slug) %}
   {%
     with
-    message = 'This service will not be submitted at the deadline because the <a href="'|safe + url_for('.framework_supplier_declaration', framework_slug=framework.slug) + '">supplier&nbsp;declaration</a> hasn’t been made.' | safe,
+    message = 'You need to <a href="'|safe + declaration_url + '">make the supplier&nbsp;declaration</a> before any services can be submitted'|safe,
     type = 'warning'
   %}
     {% include 'toolkit/notification-banner.html' %}
   {% endwith %}
-{% endif %}
+{% endwith %}

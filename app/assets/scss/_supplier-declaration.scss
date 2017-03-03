@@ -9,13 +9,21 @@
   .question-heading li,
   .hint li {
 
+
     margin: 10px 0 10px 20px;
     list-style: disc;
 
-    @include media(1080px) {
-      margin-left: 0;
-    }
+    > ul {
+        li {
+          list-style: none;
+        } 
+      }
 
+    > ul li:before {
+      content: '\2013';
+      position: absolute;
+      margin-left: -20px;
+    }
   }
 
   .validation-wrapper li {

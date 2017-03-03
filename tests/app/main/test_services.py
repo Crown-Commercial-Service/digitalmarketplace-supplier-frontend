@@ -670,6 +670,12 @@ class TestCreateDraftService(BaseApplicationTest):
         res = self.client.get('/suppliers/frameworks/g-cloud-7/submissions/scs/create')
         assert res.status_code == 404
 
+    def test_can_not_get_create_draft_service_page_if_no_supplier_framework(self, data_api_client):
+        data_api_client.get_framework.return_value = self.framework(status='open')
+        data_api_client.get_supplier_framework_info.return_value = {'frameworkInterest': {}}
+        res = self.client.get('/suppliers/frameworks/g-cloud-7/submissions/scs/create')
+        assert res.status_code == 404
+
     def _test_post_create_draft_service(self, data, if_error_expected, data_api_client):
         data_api_client.get_framework.return_value = self.framework(status='open')
         data_api_client.create_new_draft_service.return_value = {"services": empty_g7_draft_service()}
@@ -772,6 +778,13 @@ class TestCopyDraft(BaseApplicationTest):
         res = self.client.post('/suppliers/frameworks/g-cloud-7/submissions/scs/1/copy')
         assert res.status_code == 404
 
+    def test_cannot_copy_draft_if_no_supplier_framework(self, data_api_client):
+        data_api_client.get_framework.return_value = self.framework(status='open')
+        data_api_client.get_supplier_framework_info.return_value = {'frameworkInterest': {}}
+
+        res = self.client.post('/suppliers/frameworks/g-cloud-7/submissions/scs/1/copy')
+        assert res.status_code == 404
+
 
 @mock.patch('app.main.views.services.data_api_client')
 class TestCompleteDraft(BaseApplicationTest):
@@ -801,6 +814,13 @@ class TestCompleteDraft(BaseApplicationTest):
 
     def test_cannot_complete_draft_if_not_open(self, data_api_client):
         data_api_client.get_framework.return_value = self.framework(status='other')
+
+        res = self.client.post('/suppliers/frameworks/g-cloud-7/submissions/scs/1/complete')
+        assert res.status_code == 404
+
+    def test_cannot_complete_draft_if_no_supplier_framework(self, data_api_client):
+        data_api_client.get_framework.return_value = self.framework(status='open')
+        data_api_client.get_supplier_framework_info.return_value = {'frameworkInterest': {}}
 
         res = self.client.post('/suppliers/frameworks/g-cloud-7/submissions/scs/1/complete')
         assert res.status_code == 404
@@ -908,6 +928,16 @@ class TestEditDraftService(BaseApplicationTest):
     def test_draft_section_cannot_be_edited_if_not_open(self, data_api_client, s3):
         data_api_client.get_framework.return_value = self.framework(status='other')
         data_api_client.get_draft_service.return_value = self.empty_draft
+        res = self.client.post(
+            '/suppliers/frameworks/g-cloud-7/submissions/scs/1/edit/service-description',
+            data={
+                'serviceSummary': 'This is the service',
+            })
+        assert res.status_code == 404
+
+    def test_draft_section_cannot_be_edited_if_no_supplier_framework(self, data_api_client, s3):
+        data_api_client.get_framework.return_value = self.framework(status='open')
+        data_api_client.get_supplier_framework_info.return_value = {'frameworkInterest': {}}
         res = self.client.post(
             '/suppliers/frameworks/g-cloud-7/submissions/scs/1/edit/service-description',
             data={
@@ -1051,6 +1081,16 @@ class TestEditDraftService(BaseApplicationTest):
         data_api_client.get_draft_service.return_value = self.empty_draft
         res = self.client.get(
             '/suppliers/frameworks/g-cloud-7/submissions/scs/1/edit/invalid_section'
+        )
+        assert res.status_code == 404
+
+    def test_edit_draft_section_with_no_supplier_framework_404(self, data_api_client, s3):
+        data_api_client.get_framework.return_value = self.framework(status='open')
+        data_api_client.get_draft_service.return_value = self.empty_draft
+        data_api_client.get_supplier_framework_info.return_value = {'frameworkInterest': {}}
+
+        res = self.client.get(
+            '/suppliers/frameworks/g-cloud-7/submissions/scs/1/edit/service-definition'
         )
         assert res.status_code == 404
 
@@ -1387,6 +1427,20 @@ class TestEditDraftService(BaseApplicationTest):
         assert res.status_code == 404
         assert data_api_client.update_draft_service.called is False
 
+    def test_can_not_remove_subsection_if_no_supplier_framework(self, data_api_client, s3):
+        s3.return_value.bucket_short_name = 'submissions'
+        data_api_client.get_framework.return_value = self.framework(
+            status='open', slug='digital-outcomes-and-specialists'
+        )
+        data_api_client.get_draft_service.return_value = self.multiquestion_draft
+        data_api_client.get_supplier_framework_info.return_value = {'frameworkInterest': {}}
+
+        res = self.client.get(
+            '/suppliers/frameworks/digital-outcomes-and-specialists/submissions/' +
+            'digital-specialists/1/remove/individual-specialist-roles/agile-coach'
+        )
+        assert res.status_code == 404
+
     def test_fails_if_api_get_fails(self, data_api_client, s3):
         data_api_client.get_draft_service.side_effect = HTTPError(mock.Mock(status_code=504))
         res = self.client.post(
@@ -1546,6 +1600,7 @@ class TestDeleteDraftService(BaseApplicationTest):
     def test_delete_button_redirects_with_are_you_sure(self, data_api_client):
         data_api_client.get_framework.return_value = self.framework(status='open')
         data_api_client.get_draft_service.return_value = self.draft_to_delete
+
         res = self.client.post(
             '/suppliers/frameworks/g-cloud-7/submissions/scs/1/delete',
             data={})
@@ -1557,9 +1612,17 @@ class TestDeleteDraftService(BaseApplicationTest):
     def test_cannot_delete_if_not_open(self, data_api_client):
         data_api_client.get_framework.return_value = self.framework(status='other')
         data_api_client.get_draft_service.return_value = self.draft_to_delete
+
         res = self.client.post(
             '/suppliers/frameworks/g-cloud-7/submissions/scs/1/delete',
             data={})
+        assert res.status_code == 404
+
+    def test_cannot_delete_draft_if_no_supplier_framework(self, data_api_client):
+        data_api_client.get_framework.return_value = self.framework(status='open')
+        data_api_client.get_supplier_framework_info.return_value = {'frameworkInterest': {}}
+
+        res = self.client.post('/suppliers/frameworks/g-cloud-7/submissions/scs/1/delete')
         assert res.status_code == 404
 
     def test_confirm_delete_button_deletes_and_redirects_to_dashboard(self, data_api_client):
