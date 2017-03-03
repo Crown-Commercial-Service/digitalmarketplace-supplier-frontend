@@ -2324,7 +2324,7 @@ class TestDeclarationOverview(BaseApplicationTest):
             empty_declaration,  # noqa
             False,
             prefill_fw_slug,
-            (
+            (   # expected result for "Providing suitable services" section as returned by _extract_section_information
                 "Providing suitable services",
                 "/suppliers/frameworks/g-cloud-9/declaration/edit/providing-suitable-services",
                 (
@@ -2368,7 +2368,8 @@ class TestDeclarationOverview(BaseApplicationTest):
                     ),
                 ),
             ),
-            (
+            (   # expected result for "Grounds for mandatory exclusion" section as returned by
+                # _extract_section_information
                 "Grounds for mandatory exclusion",
                 "/suppliers/frameworks/g-cloud-9/declaration/edit/grounds-for-mandatory-exclusion",
                 (
@@ -2412,7 +2413,8 @@ class TestDeclarationOverview(BaseApplicationTest):
                     ),
                 ),
             ),
-            (
+            (   # expected result for "How you’ll deliver your services" section as returned by
+                # _extract_section_information
                 u"How you’ll deliver your services",
                 "/suppliers/frameworks/g-cloud-9/declaration/edit/how-youll-deliver-your-services",
                 (
@@ -2426,7 +2428,7 @@ class TestDeclarationOverview(BaseApplicationTest):
                     ),
                 ),
             ),
-        ) for empty_declaration in (None, {})),
+        ) for empty_declaration in (None, {})),  # two possible ways of specifying a "empty" declaration - test both
         ((
             {
                 "status": "started",
@@ -2442,7 +2444,7 @@ class TestDeclarationOverview(BaseApplicationTest):
             },
             False,
             prefill_fw_slug,
-            (
+            (   # expected result for "Providing suitable services" section as returned by _extract_section_information
                 "Providing suitable services",
                 "/suppliers/frameworks/g-cloud-9/declaration/edit/providing-suitable-services",
                 (
@@ -2486,7 +2488,8 @@ class TestDeclarationOverview(BaseApplicationTest):
                     ),
                 ),
             ),
-            (
+            (   # expected result for "Grounds for mandatory exclusion" section as returned by
+                # _extract_section_information
                 "Grounds for mandatory exclusion",
                 "/suppliers/frameworks/g-cloud-9/declaration/edit/grounds-for-mandatory-exclusion",
                 (
@@ -2527,7 +2530,8 @@ class TestDeclarationOverview(BaseApplicationTest):
                     ),
                 ),
             ),
-            (
+            (   # expected result for "How you’ll deliver your services" section as returned by
+                # _extract_section_information
                 u"How you’ll deliver your services",
                 "/suppliers/frameworks/g-cloud-9/declaration/edit/how-youll-deliver-your-services",
                 (
@@ -2549,7 +2553,7 @@ class TestDeclarationOverview(BaseApplicationTest):
             dict(status=declaration_status, **(valid_g9_declaration_base())),
             True,
             prefill_fw_slug,
-            (
+            (   # expected result for "Providing suitable services" section as returned by _extract_section_information
                 "Providing suitable services",
                 "/suppliers/frameworks/g-cloud-9/declaration/edit/providing-suitable-services",
                 (
@@ -2590,7 +2594,8 @@ class TestDeclarationOverview(BaseApplicationTest):
                     ),
                 ),
             ),
-            (
+            (   # expected result for "Grounds for mandatory exclusion" section as returned by
+                # _extract_section_information
                 "Grounds for mandatory exclusion",
                 "/suppliers/frameworks/g-cloud-9/declaration/edit/grounds-for-mandatory-exclusion",
                 (
@@ -2631,7 +2636,8 @@ class TestDeclarationOverview(BaseApplicationTest):
                     ),
                 ),
             ),
-            (
+            (   # expected result for "How you’ll deliver your services" section as returned by
+                # _extract_section_information
                 u"How you’ll deliver your services",
                 "/suppliers/frameworks/g-cloud-9/declaration/edit/how-youll-deliver-your-services",
                 (
@@ -2646,6 +2652,7 @@ class TestDeclarationOverview(BaseApplicationTest):
             ),
         ) for declaration_status in ("started", "complete",)),
     ) for prefill_fw_slug, q_link_text_prefillable_section in (
+        # test all of the previous combinations with two possible values of prefill_fw_slug
         (None, "Answer question",),
         ("some-previous-framework", "Review answer",),
     ))))
