@@ -1269,29 +1269,37 @@ class TestEditDraftService(BaseApplicationTest):
             '//span[@class="validation-message"]/text()'
         )[0].strip()
 
-    def test_update_with_pricing_errors(self, data_api_client, s3):
+    @pytest.mark.parametrize("field,error,expected_message", (
+        ('priceMin', 'answer_required', 'Minimum price requires an answer.',),
+        ('priceUnit', 'answer_required',
+            u"Pricing unit requires an answer. If none of the provided units apply, please choose ‘Unit’."),
+        ('priceMin', 'not_money_format', 'Minimum price must be a number, without units, eg 99.95',),
+        ('priceMax', 'not_money_format', 'Maximum price must be a number, without units, eg 99.95',),
+        ('priceMax', 'max_less_than_min', 'Minimum price must be less than maximum price.',),
+    ))
+    def test_update_with_pricing_errors(
+            self,
+            data_api_client,
+            s3,
+            field,
+            error,
+            expected_message,
+            ):
         s3.return_value.bucket_short_name = 'submissions'
-        cases = [
-            ('priceMin', 'answer_required', 'Minimum price requires an answer.'),
-            ('priceUnit', 'answer_required', "Pricing unit requires an answer. If none of the provided units apply, please choose 'Unit'."),  # noqa
-            ('priceMin', 'not_money_format', 'Minimum price must be a number, without units, eg 99.95'),
-            ('priceMax', 'not_money_format', 'Maximum price must be a number, without units, eg 99.95'),
-            ('priceMax', 'max_less_than_min', 'Minimum price must be less than maximum price'),
-        ]
+        data_api_client.get_framework.return_value = self.framework(slug='g-cloud-9', status='open')
+        data_api_client.get_draft_service.return_value = self.empty_g9_draft
+        data_api_client.update_draft_service.side_effect = HTTPError(
+            mock.Mock(status_code=400),
+            {field: error})
+        res = self.client.post(
+            '/suppliers/frameworks/g-cloud-9/submissions/cloud-hosting/1/edit/pricing/price',
+            data={})
 
-        for field, error, message in cases:
-            data_api_client.get_framework.return_value = self.framework(status='open')
-            data_api_client.get_draft_service.return_value = self.empty_draft
-            data_api_client.update_draft_service.side_effect = HTTPError(
-                mock.Mock(status_code=400),
-                {field: error})
-            res = self.client.post(
-                '/suppliers/frameworks/g-cloud-7/submissions/scs/1/edit/pricing',
-                data={})
-
-            assert res.status_code == 200
-            document = html.fromstring(res.get_data(as_text=True))
-            assert message == document.xpath('//span[@class="validation-message"]/text()')[0].strip()
+        assert res.status_code == 200
+        document = html.fromstring(res.get_data(as_text=True))
+        assert document.xpath("normalize-space(string(//*[@class='validation-message']))") == expected_message
+        assert document.xpath("normalize-space(string(//*[@class='validation-masthead']//a))") == \
+            "How much does the service cost (excluding VAT)?"
 
     def test_update_non_existent_draft_service_returns_404(self, data_api_client, s3):
         data_api_client.get_draft_service.side_effect = HTTPError(mock.Mock(status_code=404))
