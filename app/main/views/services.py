@@ -469,7 +469,7 @@ def edit_service_submission(framework_slug, lot_slug, service_id, section_id, qu
                 public=False)
 
             if document_errors:
-                errors = section.get_error_messages(document_errors)
+                errors = section.get_error_messages(document_errors, question_descriptor_from="question")
             else:
                 update_data.update(uploaded_documents)
 
@@ -483,7 +483,7 @@ def edit_service_submission(framework_slug, lot_slug, service_id, section_id, qu
                 )
             except HTTPError as e:
                 update_data = section.unformat_data(update_data)
-                errors = section.get_error_messages(e.message)
+                errors = section.get_error_messages(e.message, question_descriptor_from="question")
 
         if not errors:
             if next_question and not force_return_to_summary:
