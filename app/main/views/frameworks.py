@@ -14,6 +14,7 @@ from dmapiclient.audit import AuditTypes
 from dmutils.email import send_email
 from dmutils.email.exceptions import EmailError
 from dmcontent.formats import format_service_price
+from dmcontent.questions import ContentQuestion
 from dmutils.formats import datetimeformat
 from dmutils import s3
 from dmutils.documents import (
@@ -185,10 +186,12 @@ def framework_submission_lots(framework_slug):
              draft_count=count_drafts_by_lot(drafts, lot['slug']),
              complete_count=count_drafts_by_lot(complete_drafts, lot['slug']))
         for lot in framework['lots']]
+
     lot_question = {
         option["value"]: option
-        for option in content_loader.get_question(framework_slug, 'services', 'lot')['options']
+        for option in ContentQuestion(content_loader.get_question(framework_slug, 'services', 'lot')).get('options')
     }
+
     lots = [{
         "title": lot_question[lot['slug']]['label'] if framework["status"] == "open" else lot["name"],
         'body': lot_question[lot['slug']]['description'],
