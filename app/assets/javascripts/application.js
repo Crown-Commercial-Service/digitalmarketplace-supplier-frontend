@@ -29,7 +29,7 @@
 
   var module;
 
-  if(typeof console === 'undefined') {
+  if((typeof console === 'undefined') || (typeof console.time === 'undefined') || (typeof console.timeEnd === 'undefined')) {
     console = {
       log: function () {},
       time: function () {},
