@@ -10,3 +10,6 @@ git+https://github.com/alphagov/digitalmarketplace-apiclient.git@8.5.0#egg=digit
 
 # For Cloud Foundry
 gunicorn==19.4.5
+
+# Pinned requirements
+Jinja2==2.9.5
