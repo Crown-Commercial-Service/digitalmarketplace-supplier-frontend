@@ -21,6 +21,7 @@
 //= include _selection-buttons.js
 //= include _shim-links-with-button-role.js
 //= include _stick-at-top-when-scrolling.js
+//= include category-picker.js
 
 (function(GOVUK, GDM) {
 
