@@ -1,7 +1,16 @@
 .seller-profile {
 
+
   h1 {
     margin: 0;
+  }
+
+  h3 {
+    font-size: 20px;
+  }
+
+  .list-vertical > li p {
+    min-height: 0;
   }
 
   &__badges {
