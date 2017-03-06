@@ -101,13 +101,27 @@
     })
     var globalCategories = new Categories(categories_data)
 
+    function appendCounter(id) {
+       var $_counter = $('#' + id)
+
+       if(!$_counter.length) {
+         $('.checkbox-tree__counter')
+           .find('div')
+           .append($("<p>", {"id": id, "role": "status", "aria-live": "polite"}))
+
+         $_counter = $('#' + id)
+       }
+
+       return $_counter
+    }
+
     function setCounter () {
       var checked = globalCategories.get_checked(true).length
       var suffix = (checked === 1) ? 'category' : 'categories'
       $counter.html('<strong>' + checked + '</strong> ' + suffix + ' selected.')
     }
 
-    var $counter = $('#counter')
+    var $counter = appendCounter('counter')
 
     function renderCategories () {
       var updatedCategories = globalCategories.get_changes()
