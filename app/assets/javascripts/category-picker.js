@@ -13,7 +13,6 @@
   // wrapper around the categories data
   var Categories = function (_categories) {
     var primaries = []
-    var self = this
 
     this._containers = []
     this._categories = _categories
@@ -23,7 +22,6 @@
     this._lastState = $.extend(true, {}, this._categories)
   }
   Categories.prototype.tick_by_name = function (category_names) {
-    var self = this
 
     this.save_last_state()
     $(this._categories).each(function () {
