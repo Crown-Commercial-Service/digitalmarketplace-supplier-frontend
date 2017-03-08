@@ -634,7 +634,6 @@ def framework_updates_email_clarification_question(framework_slug):
         email_body = render_template(
             "emails/clarification_question.html",
             supplier_id=current_user.supplier_id,
-            user_name=current_user.name,
             message=clarification_question
         )
         tags = ["clarification-question"]
