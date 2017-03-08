@@ -75,8 +75,8 @@
   Categories.prototype.diff = function (oldState, newState) {
     var diff = []
 
-    oldState.each(function (idx) {
-      var newCategory = newState[idx]
+    oldState.each(function (index) {
+      var newCategory = newState[index]
       if (this.checked !== newCategory.checked) {
         diff.push(newCategory)
       }
@@ -164,8 +164,8 @@
 
     // make clicks on checkboxes update the categories state
     // TODO: looks like the event is triggered four times
-    $('#checkbox-tree__inputs').on('click', 'label', function (evt) {
-      var target = evt.target
+    $('#checkbox-tree__inputs').on('click', 'label', function (event) {
+      var target = event.target
       var targetNodeName = target.nodeName.toLowerCase()
       var categoryName
 
