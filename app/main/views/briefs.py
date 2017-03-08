@@ -5,14 +5,14 @@ import re
 
 from datetime import datetime
 
-from flask import abort, flash, redirect, render_template, request, url_for, current_app
+from flask import abort, flash, redirect, render_template, request, url_for
 from flask_login import current_user
 import flask_featureflags as feature
 
 from dmapiclient import HTTPError
 from dmutils.formats import DATETIME_FORMAT
 
-from ..helpers import login_required
+from ..helpers import login_required, new_supplier_flow_active_for_datetime
 from ..helpers.briefs import (
     get_brief,
     is_supplier_eligible_for_brief,
@@ -83,9 +83,9 @@ def ask_brief_clarification_question(brief_id):
 @login_required
 def start_brief_response(brief_id):
     brief = get_brief(data_api_client, brief_id, allowed_statuses=['live'])
+    brief_published_at = datetime.strptime(brief['publishedAt'], DATETIME_FORMAT)
 
-    if not (datetime.strptime(current_app.config['FEATURE_FLAGS_NEW_SUPPLIER_FLOW'], "%Y-%m-%d")
-            <= datetime.strptime(brief['publishedAt'], DATETIME_FORMAT)):
+    if not new_supplier_flow_active_for_datetime(brief_published_at):
         abort(404)
 
     if not is_supplier_eligible_for_brief(data_api_client, current_user.supplier_id, brief):
@@ -188,8 +188,7 @@ def edit_brief_response(brief_id, brief_response_id, question_id=None):
             brief_id=brief_id,
             brief_response_id=brief_response_id,
             question_id=next_question_id
-            )
-        )
+        ))
 
     # If no question_id in url then redirect to first question
     if question_id is None:
@@ -259,11 +258,10 @@ def edit_brief_response(brief_id, brief_response_id, question_id=None):
 @login_required
 def brief_response(brief_id):
     brief = get_brief(data_api_client, brief_id, allowed_statuses=['live'])
+    brief_published_at = datetime.strptime(brief['publishedAt'], DATETIME_FORMAT)
 
-    if current_app.config['FEATURE_FLAGS_NEW_SUPPLIER_FLOW'] and \
-        (datetime.strptime(current_app.config['FEATURE_FLAGS_NEW_SUPPLIER_FLOW'], "%Y-%m-%d")
-            <= datetime.strptime(brief['publishedAt'], DATETIME_FORMAT)):
-        abort(404)
+    if new_supplier_flow_active_for_datetime(brief_published_at):
+            abort(404)
 
     if not is_supplier_eligible_for_brief(data_api_client, current_user.supplier_id, brief):
         return _render_not_eligible_for_brief_error_page(brief)
@@ -351,7 +349,7 @@ def create_brief_response(brief_id):
 @login_required
 def view_response_result(brief_id):
     brief = get_brief(data_api_client, brief_id, allowed_statuses=['live', 'closed'])
-
+    brief_published_at = datetime.strptime(brief['publishedAt'], DATETIME_FORMAT)
     if not is_supplier_eligible_for_brief(data_api_client, current_user.supplier_id, brief):
         return _render_not_eligible_for_brief_error_page(brief)
 
@@ -360,12 +358,7 @@ def view_response_result(brief_id):
         supplier_id=current_user.supplier_id
     )['briefResponses']
 
-    legacy_brief = True
-    if current_app.config['FEATURE_FLAGS_NEW_SUPPLIER_FLOW']:
-        legacy_brief = (
-            datetime.strptime(current_app.config['FEATURE_FLAGS_NEW_SUPPLIER_FLOW'], "%Y-%m-%d")
-            > datetime.strptime(brief['publishedAt'], DATETIME_FORMAT))
-
+    legacy_brief = not new_supplier_flow_active_for_datetime(brief_published_at)
     if len(brief_response) == 0:
         if legacy_brief:
             return redirect(url_for(".brief_response", brief_id=brief_id))

@@ -138,7 +138,7 @@ def framework_dashboard(framework_slug):
             last_modified=get_last_modified_from_first_matching_file(
                 key_list,
                 framework_slug,
-                d["path"]+d.get("filename", ""),
+                d["path"] + d.get("filename", ""),
             ),
         )
         for label, d in six.iteritems(base_communications_files)
@@ -289,8 +289,8 @@ def reuse_framework_supplier_declaration(framework_slug):
         # If a framework slug is supplied in this URL parameter then use this for pre-filling if possible,
         # overriding the default framework selection logic.
         try:
-            # Get their old declaration. The api will raise if it doesn't exist.
-            declaration_ok = data_api_client.get_supplier_framework_info(
+            # Get their old declaration to make sure it exists. The api will raise if it doesn't exist.
+            data_api_client.get_supplier_framework_info(
                 supplier_id, reusable_declaration_framework_slug
             )['frameworkInterest']['onFramework']
             old_framework = data_api_client.get_framework(reusable_declaration_framework_slug)['frameworks']

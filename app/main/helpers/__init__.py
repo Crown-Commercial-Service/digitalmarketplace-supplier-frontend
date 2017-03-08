@@ -1,10 +1,10 @@
-import hashlib
 import base64
+import hashlib
 import flask_login
-import six
+
+from datetime import datetime
 from functools import wraps
 from flask import current_app, flash
-from flask_login import current_user
 
 
 def hash_email(email):
@@ -18,8 +18,15 @@ def login_required(func):
     @wraps(func)
     @flask_login.login_required
     def decorated_view(*args, **kwargs):
-        if current_user.is_authenticated() and current_user.role != 'supplier':
+        if flask_login.current_user.is_authenticated() and flask_login.current_user.role != 'supplier':
             flash('supplier-role-required', 'error')
             return current_app.login_manager.unauthorized()
         return func(*args, **kwargs)
     return decorated_view
+
+
+def new_supplier_flow_active_for_datetime(dt):
+    if not current_app.config['FEATURE_FLAGS_NEW_SUPPLIER_FLOW']:
+        return False
+    nsf_on = datetime.strptime(current_app.config['FEATURE_FLAGS_NEW_SUPPLIER_FLOW'], "%Y-%m-%d")
+    return nsf_on <= dt
