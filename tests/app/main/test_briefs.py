@@ -7,7 +7,6 @@ from dmapiclient.audit import AuditTypes
 from dmutils.email.exceptions import EmailError
 from ..helpers import BaseApplicationTest, FakeMail
 from lxml import html
-from datetime import datetime, timedelta
 
 
 brief_form_submission = {
@@ -55,6 +54,41 @@ ERROR_MESSAGE_NO_SERVICE_ON_FRAMEWORK_CLARIFICATION = \
 ERROR_MESSAGE_NO_SERVICE_WITH_ROLE_CLARIFICATION = \
     'You can’t ask a question about this opportunity because you didn’t say you'\
     ' could provide this specialist role when you applied to the Digital Outcomes and Specialists framework.'
+
+
+class Table(object):
+    def __init__(self, doc, table_name):
+        self._data = []
+        self._row_index = None
+        query = doc.xpath(
+            ''.join([
+                '//h2[contains(normalize-space(text()), "{}")]',
+                '/following-sibling::table[1]/tbody/tr'
+            ]).format(table_name)
+        )
+        if len(query):
+            for row_element in query:
+                self._data.append(
+                    [
+                        element.find('span').text if element.find('span') is not None
+                        else '' for element in row_element.findall('td')]
+                )
+
+    def exists(self):
+        return len(self._data) > 0
+
+    def row(self, idx):
+        self._row_index = idx
+        return self
+
+    def cell(self, idx):
+        if self._row_index is None:
+            raise KeyError("no row selected")
+        else:
+            try:
+                return self._data[self._row_index][idx]
+            except IndexError as e:
+                raise IndexError("{}. Contents of table: {}".format(e, self._data))
 
 
 @mock.patch('app.main.views.briefs.data_api_client', autospec=True)
@@ -1153,40 +1187,6 @@ class BriefResponseTestHelpers():
             assert breadcrumbs[index].find('a').get('href').strip() == link[1]
 
     def _get_data_from_table(self, doc, table_name):
-        class Table(object):
-            def __init__(self, doc, name):
-                self._data = []
-                self._row_index = None
-                query = doc.xpath(
-                    ''.join([
-                        '//h2[contains(normalize-space(text()), "{}")]',
-                        '/following-sibling::table[1]/tbody/tr'
-                    ]).format(table_name)
-                )
-                if len(query):
-                    for row_element in query:
-                        self._data.append(
-                            [
-                                element.find('span').text if element.find('span') is not None
-                                else '' for element in row_element.findall('td')]
-                        )
-
-            def exists(self):
-                return len(self._data) > 0
-
-            def row(self, idx):
-                self._row_index = idx
-                return self
-
-            def cell(self, idx):
-                if self._row_index is None:
-                    raise KeyError("no row selected")
-                else:
-                    try:
-                        return self._data[self._row_index][idx]
-                    except IndexError as e:
-                        raise IndexError("{}. Contents of table: {}".format(e, self._data))
-
         return Table(doc, table_name)
 
 
