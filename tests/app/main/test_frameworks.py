@@ -3492,7 +3492,7 @@ class TestSendClarificationQuestionEmail(BaseApplicationTest):
         if is_called:
             send_email.assert_any_call(
                 "digitalmarketplace@mailinator.com",
-                FakeMail('Supplier ID:', 'User name:'),
+                FakeMail('Supplier ID:'),
                 "MANDRILL",
                 "Test Framework clarification question",
                 "do-not-reply@digitalmarketplace.service.gov.uk",
