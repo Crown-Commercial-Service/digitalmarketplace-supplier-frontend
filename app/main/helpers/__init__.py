@@ -1,7 +1,6 @@
 import hashlib
 import base64
 import flask_login
-import six
 from functools import wraps
 from flask import current_app, flash
 from flask_login import current_user

@@ -16,7 +16,7 @@ class Config(object):
     SESSION_COOKIE_HTTPONLY = True
     SESSION_COOKIE_SECURE = True
 
-    PERMANENT_SESSION_LIFETIME = 4*3600
+    PERMANENT_SESSION_LIFETIME = 4 * 3600
 
     WTF_CSRF_ENABLED = True
     WTF_CSRF_TIME_LIMIT = None
@@ -159,6 +159,7 @@ class Staging(Production):
     FEATURE_FLAGS_CONTRACT_VARIATION = enabled_since('2016-08-22')
     FEATURE_FLAGS_EDIT_SECTIONS = enabled_since('2016-09-14')
     FEATURE_FLAGS_NEW_SUPPLIER_FLOW = enabled_since('2017-02-07')
+
 
 configs = {
     'development': Development,

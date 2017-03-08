@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
 import os
-import re
 from app import create_app
 from dmutils import init_manager
 
