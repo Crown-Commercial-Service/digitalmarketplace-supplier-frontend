@@ -3209,6 +3209,43 @@ class TestSupplierDeclaration(BaseApplicationTest):
             elems = doc.cssselect('#input-PR1-1')
             assert elems[0].value == 'True'
 
+    def test_post_invalidating_previously_valid_page(self, data_api_client):
+        with self.app.test_client():
+            self.login()
+
+            data_api_client.get_framework.return_value = self.framework(slug='g-cloud-9', status='open')
+
+            mock_supplier_framework = self.supplier_framework(
+                framework_slug="g-cloud-9",
+                declaration={
+                    "status": "started",
+                    "establishedInTheUK": False,
+                    "appropriateTradeRegisters": True,
+                    "appropriateTradeRegistersNumber": "242#353",
+                    "licenceOrMemberRequired": "licensed",
+                    "licenceOrMemberRequiredDetails": "Foo Bar",
+                },
+            )
+            data_api_client.get_supplier_framework_info.return_value = mock_supplier_framework
+            data_api_client.get_supplier_declaration.return_value = {
+                "declaration": mock_supplier_framework["frameworkInterest"]["declaration"],
+            }
+
+            res = self.client.post(
+                '/suppliers/frameworks/g-cloud-9/declaration/edit/established-outside-the-uk',
+                data={
+                    "establishedInTheUK": "False",
+                    "appropriateTradeRegisters": "True",
+                    "appropriateTradeRegistersNumber": "242#353",
+                    "licenceOrMemberRequired": "licensed",
+                    # deliberately missing:
+                    "licenceOrMemberRequiredDetails": "",
+                },
+            )
+
+            assert res.status_code == 400
+            assert data_api_client.set_supplier_declaration.called is False
+
     def test_cannot_post_data_if_not_open(self, data_api_client):
         with self.app.test_client():
             self.login()
