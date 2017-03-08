@@ -2664,8 +2664,8 @@ class TestDeclarationOverview(BaseApplicationTest):
             prefill_fw_slug,
             expected_pss,
             expected_gme,
-            expected_dys,
-            ):
+            expected_dys
+    ):
         with self.app.test_client():
             self.login()
 
@@ -3993,7 +3993,7 @@ class TestSignerDetailsPage(BaseApplicationTest):
         supplier_framework = self.supplier_framework(framework_slug='g-cloud-8', on_framework=True)['frameworkInterest']
         return_supplier_framework.return_value = supplier_framework
 
-        res = self.client.get("/suppliers/frameworks/g-cloud-8/234/signer-details")
+        self.client.get("/suppliers/frameworks/g-cloud-8/234/signer-details")
         # This call will abort because supplier_framework has mismatched supplier_id 1234
         check_agreement_is_related_to_supplier_framework_or_abort.assert_called_with(
             self.framework_agreement(supplier_id=2345)['agreement'],
@@ -4208,7 +4208,7 @@ class TestSignatureUploadPage(BaseApplicationTest):
         return_supplier_framework.return_value = supplier_framework
         s3.return_value.get_key.return_value = None
 
-        res = self.client.get("/suppliers/frameworks/g-cloud-8/234/signature-upload")
+        self.client.get("/suppliers/frameworks/g-cloud-8/234/signature-upload")
         # This call will abort because supplier_framework has mismatched supplier_id 1234
         check_agreement_is_related_to_supplier_framework_or_abort.assert_called_with(
             self.framework_agreement(supplier_id=2345)['agreement'],
@@ -4552,7 +4552,7 @@ class TestContractReviewPage(BaseApplicationTest):
         return_supplier_framework.return_value = supplier_framework
         s3.return_value.get_key.return_value = None
 
-        res = self.client.get("/suppliers/frameworks/g-cloud-8/234/contract-review")
+        self.client.get("/suppliers/frameworks/g-cloud-8/234/contract-review")
         # This call will abort because supplier_framework has mismatched supplier_id 1234
         check_agreement_is_related_to_supplier_framework_or_abort.assert_called_with(
             self.framework_agreement(supplier_id=2345)['agreement'],
@@ -4621,7 +4621,7 @@ class TestContractReviewPage(BaseApplicationTest):
             with self.client.session_transaction() as sess:
                 sess['signature_page'] = 'test.pdf'
 
-            res = self.client.post(
+            self.client.post(
                 "/suppliers/frameworks/g-cloud-8/234/contract-review",
                 data={
                     'authorisation': 'I have the authority to return this agreement on behalf of company name'
@@ -4674,7 +4674,7 @@ class TestContractReviewPage(BaseApplicationTest):
                 'last_modified': '2016-07-10T21:18:00.000000Z'
             }
 
-            res = self.client.post(
+            self.client.post(
                 "/suppliers/frameworks/g-cloud-8/234/contract-review",
                 data={
                     'authorisation': 'I have the authority to return this agreement on behalf of company name'

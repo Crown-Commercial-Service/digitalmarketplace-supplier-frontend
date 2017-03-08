@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 
 import six
-import datetime
 
 from flask import abort, current_app, render_template
 from flask_login import current_user

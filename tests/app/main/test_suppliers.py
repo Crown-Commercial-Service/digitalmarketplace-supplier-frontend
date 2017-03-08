@@ -367,7 +367,7 @@ class TestSuppliersDashboard(BaseApplicationTest):
     @mock.patch("app.main.views.suppliers.data_api_client")
     @mock.patch("app.main.views.suppliers.get_current_suppliers_users")
     @mock.patch("app.main.views.suppliers.content_loader")
-    def test_shows_gcloud_7_in_standstill_application_passed(
+    def test_shows_gcloud_7_in_standstill_application_passed_with_message(
         self, content_loader, get_current_suppliers_users, data_api_client
     ):
         content_loader.get_message.return_value = {'framework_live_date': '23 November 2015'}

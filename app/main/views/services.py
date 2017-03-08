@@ -70,7 +70,7 @@ def remove_service(service_id):
     # we don't actually need the content here, we're just probing to see whether service editing should be allowed for
     # this framework (signalled by the exsitence of the edit_service manifest
     try:
-        content = content_loader.get_manifest(service["frameworkSlug"], 'edit_service')
+        content_loader.get_manifest(service["frameworkSlug"], 'edit_service')
     except ContentNotFoundError:
         abort(404)
 

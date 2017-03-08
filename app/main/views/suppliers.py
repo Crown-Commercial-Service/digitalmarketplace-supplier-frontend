@@ -385,7 +385,7 @@ def submit_company_summary():
 
         token = generate_token(
             {
-                "email_address":  account_email_address,
+                "email_address": account_email_address,
                 "supplier_id": session['email_supplier_id'],
                 "supplier_name": session['email_company_name']
             },
