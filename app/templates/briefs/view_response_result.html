@@ -26,27 +26,50 @@
 
 {% block main_content %}
 
+{# Messages #}
 {% with messages = get_flashed_messages(with_categories=True) %}
+  {# Already applied #}
   {% if ("error", "already_applied") in messages %}
     {%
     with
     message = "You’ve already applied so you can’t apply again.".format(brief.title) if result_state == "submitted_ok"
-                    else "You already applied but you didn’t meet the essential requirements.".format(brief.title),
+      else "You already applied but you didn’t meet the essential requirements.".format(brief.title),
     type = "destructive"
     %}
-    {% include "toolkit/notification-banner.html" %}
+      {% include "toolkit/notification-banner.html" %}
     {% endwith %}
   {% else %}
+    {# Successful application #}
+    {% if result_state == "submitted_ok"  %}
+      {%
+      with
+      message = "Your application has been submitted.".format(brief.title),
+      type = "success"
+      %}
+        {% include "toolkit/notification-banner.html" %}
+      {% endwith %}
+    {# Unsuccessful application #}
+    {% elif result_state == "submitted_unsuccessful" %}
+      {%
+      with
+      message = "You don’t meet all the essential requirements.".format(brief.title),
+      type = "destructive"
+      %}
+        {% include "toolkit/notification-banner.html" %}
+      {% endwith %}
+    {% endif %}
+    {# Flash messages/ first success handling/ default #}
     {% for category, message in messages %}
       {%
       with
-      message = {
-        "submitted_ok": "Your application has been submitted.".format(brief.title),
-        "submitted_unsuccessful": "You don’t meet all the essential requirements.".format(brief.title)
-      }[message] or message,
-      type = "destructive" if category == "error" else "success"
+      message = message,
+      type = "destructive" if category == "error" else category
       %}
-        {% include "toolkit/notification-banner.html" %}
+        {% if message == "submitted_first" %}
+          <span data-analytics="trackPageView" data-url={{ "/opportunities/{}/responses/result?result=success".format(brief.id) }}></span>
+        {% else %}
+          {% include "toolkit/notification-banner.html" %}
+        {% endif %}
       {% endwith %}
     {% endfor %}
   {% endif %}
@@ -68,7 +91,7 @@
 
       {% if 'essentialRequirementsMet' in brief_response %}
         <h3>Shortlist</h3>
-        
+
         <p>When the opportunity closes, the buyer will score your evidence. If you’re one of the top {{ brief.get('numberOfSuppliers') }} suppliers, you'll go through to the evaluation stage.</p>
         <p>The buyer will tell you if you're not successful.</p>
 

@@ -1912,6 +1912,43 @@ class TestResponseResultPage(ResponseResultPageBothFlows, BriefResponseTestHelpe
         assert requirements_data.row(2).cell(0) == "Email address"
         assert requirements_data.row(2).cell(1) == "contact@big.com"
 
+    def test_analytics_and_messages_applied_on_first_submission(self, data_api_client):
+        """Go through submitting to edit_brief_response and the redirect to view_response_result. Assert messages."""
+        self.set_framework_and_eligibility_for_api_client(data_api_client)
+        data_api_client.get_brief.return_value = self.brief
+        data_api_client.get_brief_response.return_value = self.brief_response()
+        data_api_client.update_brief_response.return_value = {'success': True}
+        data_api_client.find_brief_responses.side_effect = [
+            {'briefResponses': []},
+            {'briefResponses': [self.brief_response(data={'essentialRequirementsMet': True})['briefResponses']]}
+        ]
+        data_api_client.is_supplier_eligible_for_brief.return_value = True
+
+        res = self.client.post(
+            '/suppliers/opportunities/{brief_id}/responses/{brief_response_id}/{question_slug}'.format(
+                brief_id=self.brief['briefs']['id'],
+                brief_response_id=self.brief_response()['briefResponses']['id'],
+                question_slug='respondToEmailAddress'
+            ),
+            data={},
+            follow_redirects=True
+        )
+        assert res.status_code == 200
+        data = res.get_data(as_text=True)
+
+        # Assert the analytics exists
+        assert (
+            '<span data-analytics="trackPageView" '
+            'data-url=/opportunities/1234/responses/result?result=success></span>' in data
+        )
+        assert data.count('data-analytics') == 1
+        # Assert we get the correct banner message (and only the correct one).
+        assert 'Your application has been submitted.' in data
+
+        assert 'You don’t meet all the essential requirements.' not in data
+        assert 'You’ve already applied so you can’t apply again.' not in data
+        assert 'You already applied but you didn’t meet the essential requirements.' not in data
+
 
 @mock.patch("app.main.views.briefs.data_api_client", autospec=True)
 @mock.patch("app.main.views.briefs.current_user")

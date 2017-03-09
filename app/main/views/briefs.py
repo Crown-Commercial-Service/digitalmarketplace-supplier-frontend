@@ -225,7 +225,7 @@ def edit_brief_response(brief_id, brief_response_id, question_id=None):
                     brief_response_id,
                     current_user.email_address
                 )
-
+                flash('submitted_first', 'success')
                 return redirect(url_for('.view_response_result', brief_id=brief_id))
 
     previous_question_id = section.get_previous_question_id(question_id)
@@ -274,11 +274,8 @@ def view_response_result(brief_id):
             return redirect(url_for(".start_brief_response", brief_id=brief_id))
     elif brief_response[0].get('essentialRequirementsMet') or all(brief_response[0]['essentialRequirements']):
         result_state = 'submitted_ok'
-        flash('submitted_ok', 'success')
     else:
         result_state = 'submitted_unsuccessful'
-        flash('submitted_unsuccessful', 'error')
-
     brief_response = brief_response[0]
     framework, lot = get_framework_and_lot(
         data_api_client, brief['frameworkSlug'], brief['lotSlug'], allowed_statuses=['live', 'expired'])
