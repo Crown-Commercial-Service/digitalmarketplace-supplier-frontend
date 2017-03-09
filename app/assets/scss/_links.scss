@@ -50,3 +50,12 @@ main section:first-of-type {
     }
   }
 }
+
+.save-button {
+   background-color: $white !important;
+   color: #313131 !important;
+    &:hover,
+    &:focus {
+      background-color: #f0f3f5 !important;
+    }
+}
