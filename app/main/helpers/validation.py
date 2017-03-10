@@ -62,9 +62,6 @@ class DeclarationValidator(object):
         return default_messages.get(
             message_key, 'There was a problem with the answer to this question')
 
-    def errors(self):
-        raise NotImplementedError("only a subclass should be used")
-
     def all_fields(self):
         return reduce(add, (section.get_question_ids() for section in self.content))
 

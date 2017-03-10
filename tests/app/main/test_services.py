@@ -53,7 +53,7 @@ class TestListServices(BaseApplicationTest):
 
             data_api_client.find_services.return_value = {
                 "services": []
-                }
+            }
 
             res = self.client.get('/suppliers/services')
             assert res.status_code == 200
@@ -201,7 +201,7 @@ class _BaseTestSupplierEditRemoveService(BaseApplicationTest):
             framework_name,
             service_status="published",
             service_belongs_to_user=True,
-            ):
+    ):
 
         data_api_client.get_service.return_value = {
             'services': {
@@ -474,7 +474,7 @@ class TestSupplierRemoveService(_BaseTestSupplierEditRemoveService):
             supplier_service_editing_fw_params,
             supplier_remove_service__service_status__expected_results,
             supplier_remove_service__post_data,
-            ):
+    ):
         framework_slug, framework_name, framework_editable_services = supplier_service_editing_fw_params
         service_status, service_belongs_to_user, expect_api_call_if_data, expected_status_code = \
             supplier_remove_service__service_status__expected_results
@@ -1284,7 +1284,7 @@ class TestEditDraftService(BaseApplicationTest):
             field,
             error,
             expected_message,
-            ):
+    ):
         s3.return_value.bucket_short_name = 'submissions'
         data_api_client.get_framework.return_value = self.framework(slug='g-cloud-9', status='open')
         data_api_client.get_draft_service.return_value = self.empty_g9_draft
