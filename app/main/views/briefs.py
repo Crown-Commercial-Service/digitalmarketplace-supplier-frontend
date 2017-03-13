@@ -249,100 +249,8 @@ def edit_brief_response(brief_id, brief_response_id, question_id=None):
         is_last_page=False if next_question_id else True,
         previous_question_url=previous_question_url,
         question=question,
-        service_data=service_data,
-        **dict(main.config['BASE_TEMPLATE_DATA'])
+        service_data=service_data
     ), status_code
-
-
-@main.route('/opportunities/<int:brief_id>/responses/create', methods=['GET'])
-@login_required
-def brief_response(brief_id):
-    brief = get_brief(data_api_client, brief_id, allowed_statuses=['live'])
-    brief_published_at = datetime.strptime(brief['publishedAt'], DATETIME_FORMAT)
-
-    if new_supplier_flow_active_for_datetime(brief_published_at):
-            abort(404)
-
-    if not is_supplier_eligible_for_brief(data_api_client, current_user.supplier_id, brief):
-        return _render_not_eligible_for_brief_error_page(brief)
-
-    if supplier_has_a_brief_response(data_api_client, current_user.supplier_id, brief_id):
-        flash('already_applied', 'error')
-        return redirect(url_for(".view_response_result", brief_id=brief_id))
-
-    framework, lot = get_framework_and_lot(
-        data_api_client, brief['frameworkSlug'], brief['lotSlug'], allowed_statuses=['live'])
-
-    content = content_loader.get_manifest(framework['slug'], 'legacy_edit_brief_response').filter({'lot': lot['slug']})
-    section = content.get_section(content.get_next_editable_section_id())
-
-    # replace generic 'Apply for opportunity' title with title including the name of the brief
-    section.name = "Apply for ‘{}’".format(brief['title'])
-    section.inject_brief_questions_into_boolean_list_question(brief)
-
-    return render_template(
-        "briefs/brief_response.html",
-        brief=brief,
-        service_data={},
-        section=section,
-        **dict(main.config['BASE_TEMPLATE_DATA'])
-    ), 200
-
-
-# Add a create route
-@main.route('/opportunities/<int:brief_id>/responses/create', methods=['POST'])
-@login_required
-def create_brief_response(brief_id):
-    """Hits up the data API to create a new brief response."""
-
-    brief = get_brief(data_api_client, brief_id, allowed_statuses=['live'])
-
-    if not is_supplier_eligible_for_brief(data_api_client, current_user.supplier_id, brief):
-        return _render_not_eligible_for_brief_error_page(brief)
-
-    if supplier_has_a_brief_response(data_api_client, current_user.supplier_id, brief_id):
-        flash('already_applied', 'error')
-        return redirect(url_for(".view_response_result", brief_id=brief_id))
-
-    framework, lot = get_framework_and_lot(
-        data_api_client, brief['frameworkSlug'], brief['lotSlug'], allowed_statuses=['live'])
-
-    content = content_loader.get_manifest(framework['slug'], 'legacy_edit_brief_response').filter({'lot': lot['slug']})
-    section = content.get_section(content.get_next_editable_section_id())
-    response_data = section.get_data(request.form)
-
-    try:
-        brief_response = data_api_client.create_brief_response(
-            brief_id,
-            current_user.supplier_id,
-            response_data,
-            current_user.email_address,
-            page_questions=section.get_field_names()
-        )['briefResponses']
-        data_api_client.submit_brief_response(brief_response['id'], current_user.email_address)
-
-    except HTTPError as e:
-        # replace generic 'Apply for opportunity' title with title including the name of the brief
-        section.name = "Apply for ‘{}’".format(brief['title'])
-        section.inject_brief_questions_into_boolean_list_question(brief)
-        section_summary = section.summary(response_data)
-
-        errors = section_summary.get_error_messages(e.message)
-
-        return render_template(
-            "briefs/brief_response.html",
-            brief=brief,
-            service_data=response_data,
-            section=section,
-            errors=errors,
-            **dict(main.config['BASE_TEMPLATE_DATA'])
-        ), 400
-
-    if all(brief_response['essentialRequirements']):
-        # "result" parameter is used to track brief applications by analytics
-        return redirect(url_for(".view_response_result", brief_id=brief_id, result='success'))
-    else:
-        return redirect(url_for(".view_response_result", brief_id=brief_id, result='fail'))
 
 
 @main.route('/opportunities/<int:brief_id>/responses/result')
@@ -361,7 +269,7 @@ def view_response_result(brief_id):
     legacy_brief = not new_supplier_flow_active_for_datetime(brief_published_at)
     if len(brief_response) == 0:
         if legacy_brief:
-            return redirect(url_for(".brief_response", brief_id=brief_id))
+            abort(404)
         else:
             return redirect(url_for(".start_brief_response", brief_id=brief_id))
     elif brief_response[0].get('essentialRequirementsMet') or all(brief_response[0]['essentialRequirements']):
@@ -422,6 +330,5 @@ def _render_not_eligible_for_brief_error_page(brief, clarification_question=Fals
         framework_name=brief['frameworkName'],
         lot=brief['lotSlug'],
         reason=reason,
-        data_reason_slug=data_reason_slug,
-        **dict(main.config['BASE_TEMPLATE_DATA'])
+        data_reason_slug=data_reason_slug
     ), 400

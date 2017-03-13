@@ -8,6 +8,8 @@ from dmutils.email.exceptions import EmailError
 from ..helpers import BaseApplicationTest, FakeMail
 from lxml import html
 
+from app.main.views.briefs import _render_not_eligible_for_brief_error_page
+
 
 brief_form_submission = {
     "availability": "Next Tuesday",
@@ -34,16 +36,6 @@ processed_brief_submission = {
         False
     ],
 }
-
-ERROR_MESSAGE_PAGE_HEADING_APPLICATION = 'You can’t apply for this opportunity'
-ERROR_MESSAGE_NO_SERVICE_ON_LOT_APPLICATION = \
-    'You can’t apply for this opportunity because you didn’t say you'\
-    ' could provide services in this category when you applied to the Digital Outcomes and Specialists framework.'
-ERROR_MESSAGE_NO_SERVICE_ON_FRAMEWORK_APPLICATION = \
-    'You can’t apply for this opportunity because you’re not a Digital Outcomes and Specialists supplier.'
-ERROR_MESSAGE_NO_SERVICE_WITH_ROLE_APPLICATION = \
-    'You can’t apply for this opportunity because you didn’t say you'\
-    ' could provide this specialist role when you applied to the Digital Outcomes and Specialists framework.'
 
 ERROR_MESSAGE_PAGE_HEADING_CLARIFICATION = 'You can’t ask a question about this opportunity'
 ERROR_MESSAGE_NO_SERVICE_ON_LOT_CLARIFICATION = \
@@ -394,7 +386,7 @@ class TestSubmitClarificationQuestions(BaseApplicationTest):
 
 
 class TestApplyToBrief(BaseApplicationTest):
-    """Tests requests for the new multipage flow for applying for a brief"""
+    """Tests requests for the multipage flow for applying for a brief"""
 
     def setup_method(self, method):
         super(TestApplyToBrief, self).setup_method(method)
@@ -505,15 +497,17 @@ class TestApplyToBrief(BaseApplicationTest):
                 assert res.status_code == 404
 
     @mock.patch("app.main.views.briefs.is_supplier_eligible_for_brief")
-    def test_show_not_eligible_page_if_supplier_not_eligible_to_apply_for_brief(self, is_supplier_eligible_for_brief):
-        for method in ('get', 'post'):
-            is_supplier_eligible_for_brief.return_value = False
+    @mock.patch("app.main.views.briefs._render_not_eligible_for_brief_error_page", autospec=True)
+    def test_show_not_eligible_page_if_supplier_not_eligible_to_apply_for_brief(
+        self, _render_not_eligible_for_brief_error_page, is_supplier_eligible_for_brief
+    ):
+        is_supplier_eligible_for_brief.return_value = False
+        _render_not_eligible_for_brief_error_page.return_value = 'dummy response', 400
 
+        for method in ('get', 'post'):
             res = self.client.open('/suppliers/opportunities/1234/responses/5/question-id', method=method)
             assert res.status_code == 400
-
-            doc = html.fromstring(res.get_data(as_text=True))
-            assert doc.xpath('//title')[0].text == 'Not eligible for opportunity – Digital Marketplace'
+            _render_not_eligible_for_brief_error_page.assert_called_with(self.brief['briefs'])
 
     @mock.patch("app.main.views.briefs.supplier_has_a_brief_response")
     def test_redirect_to_show_brief_response_if_already_applied_for_brief(self, supplier_has_a_brief_response):
@@ -1191,517 +1185,6 @@ class BriefResponseTestHelpers():
 
 
 @mock.patch("app.main.views.briefs.data_api_client")
-class TestLegacyRespondToBrief(BaseApplicationTest, BriefResponseTestHelpers):
-    """Tests for the old single page flow for applying for a brief which is being phased out"""
-
-    def setup_method(self, method):
-        super(TestLegacyRespondToBrief, self).setup_method(method)
-
-        self.brief = api_stubs.brief(status='live', lot_slug='digital-specialists')
-        self.brief['briefs']['essentialRequirements'] = ['Essential one', 'Essential two', 'Essential three']
-        self.brief['briefs']['niceToHaveRequirements'] = ['Nice one', 'Top one', 'Get sorted']
-        self.brief['briefs']['publishedAt'] = '2016-10-25T12:00:00.000000Z'  # Date is before the new flow feature flag
-
-        lots = [api_stubs.lot(slug="digital-specialists", allows_brief=True)]
-        self.framework = api_stubs.framework(status="live", slug="digital-outcomes-and-specialists",
-                                             clarification_questions_open=False, lots=lots)
-
-        with self.app.test_client():
-            self.login()
-
-    def test_will_404_if_brief_is_not_a_legacy_brief(self, data_api_client):
-        self.brief['briefs']['publishedAt'] = '2016-12-25T12:00:00.000000Z'
-        data_api_client.get_brief.return_value = self.brief
-
-        res = self.client.get('/suppliers/opportunities/1234/responses/create')
-
-        assert res.status_code == 404
-
-    def test_get_brief_response_page(self, data_api_client):
-        data_api_client.get_brief.return_value = self.brief
-        data_api_client.get_framework.return_value = self.framework
-        res = self.client.get('/suppliers/opportunities/1234/responses/create')
-        doc = html.fromstring(res.get_data(as_text=True))
-
-        assert res.status_code == 200
-        data_api_client.get_brief.assert_called_once_with(1234)
-        assert len(doc.xpath('//h1[contains(text(), "Apply for ‘I need a thing to do a thing’")]')) == 1
-        assert len(doc.xpath('//h2[contains(text(), "Do you have the essential skills and experience?")]')) == 1
-        assert len(doc.xpath(
-            '//h2[contains(text(), "Do you have any of the nice-to-have skills and experience?")]')) == 1
-        self._test_breadcrumbs_on_brief_response_page(res)
-
-    def test_will_not_404_if_new_supplier_flow_flag_set_to_false(self, data_api_client):
-        self.app.config['FEATURE_FLAGS_NEW_SUPPLIER_FLOW'] = False
-
-        data_api_client.get_brief.return_value = self.brief
-        data_api_client.get_framework.return_value = self.framework
-        res = self.client.get('/suppliers/opportunities/1234/responses/create')
-
-        assert res.status_code == 200
-
-    def test_get_brief_response_returns_404_for_not_live_brief(self, data_api_client):
-        brief = self.brief.copy()
-        brief['briefs']['status'] = 'draft'
-        data_api_client.get_brief.return_value = brief
-        data_api_client.get_framework.return_value = self.framework
-        res = self.client.get('/suppliers/opportunities/1234/responses/create')
-
-        assert res.status_code == 404
-
-    def test_get_brief_response_returns_404_for_not_live_framework(self, data_api_client):
-        framework = self.framework.copy()
-        framework['frameworks']['status'] = 'standstill'
-        data_api_client.get_brief.return_value = self.brief
-        data_api_client.get_framework.return_value = framework
-        res = self.client.get('/suppliers/opportunities/1234/responses/create')
-
-        assert res.status_code == 404
-
-    def test_get_brief_response_returns_error_page_if_supplier_has_no_services_on_lot(self, data_api_client):
-        data_api_client.get_brief.return_value = self.brief
-        data_api_client.get_brief.return_value['briefs']['frameworkName'] = 'Digital Outcomes and Specialists'
-        data_api_client.get_framework.return_value = self.framework
-        data_api_client.is_supplier_eligible_for_brief.return_value = False
-        data_api_client.find_services.side_effect = lambda *args, **kwargs: (
-            {"services": [{"something": "nonempty"}]} if kwargs.get("lot") is None else {"services": []}
-        )
-
-        res = self.client.get('/suppliers/opportunities/1234/responses/create')
-        doc = html.fromstring(res.get_data(as_text=True))
-
-        assert res.status_code == 400
-        assert doc.xpath('normalize-space(//h1/text())') == ERROR_MESSAGE_PAGE_HEADING_APPLICATION
-        assert len(doc.xpath(
-            '//*[contains(normalize-space(text()), normalize-space("{}"))]'.format(
-                ERROR_MESSAGE_NO_SERVICE_ON_LOT_APPLICATION
-            )
-        )) == 1
-        assert len(doc.xpath('//*[@data-reason="supplier-not-on-lot"]')) == 1
-        assert data_api_client.create_audit_event.called is False
-
-    def test_get_brief_response_returns_error_page_if_supplier_has_no_pub_services_on_lot(self, data_api_client):
-        data_api_client.get_brief.return_value = self.brief
-        data_api_client.get_brief.return_value['briefs']['frameworkName'] = 'Digital Outcomes and Specialists'
-        data_api_client.get_framework.return_value = self.framework
-        data_api_client.is_supplier_eligible_for_brief.return_value = False
-        # simulating the case where we have non-"published", but matching, services
-        data_api_client.find_services.side_effect = lambda *args, **kwargs: (
-            {"services": [{"something": "nonempty"}]}
-            if kwargs.get("lot") is None or kwargs.get("status") is None else
-            {"services": []}
-        )
-
-        res = self.client.get('/suppliers/opportunities/1234/responses/create')
-        doc = html.fromstring(res.get_data(as_text=True))
-
-        assert res.status_code == 400
-        assert doc.xpath('normalize-space(//h1/text())') == ERROR_MESSAGE_PAGE_HEADING_APPLICATION
-        assert len(doc.xpath(
-            '//*[contains(normalize-space(text()), normalize-space("{}"))]'.format(
-                ERROR_MESSAGE_NO_SERVICE_ON_LOT_APPLICATION
-            )
-        )) == 1
-        assert len(doc.xpath('//*[@data-reason="supplier-not-on-lot"]')) == 1
-        assert data_api_client.create_audit_event.called is False
-
-    def test_get_brief_response_returns_error_page_if_supplier_has_no_services_on_framework(self, data_api_client):
-        data_api_client.get_brief.return_value = self.brief
-        data_api_client.get_framework.return_value = self.framework
-        data_api_client.is_supplier_eligible_for_brief.return_value = False
-        data_api_client.find_services.return_value = {"services": []}
-
-        res = self.client.get('/suppliers/opportunities/1234/responses/create')
-        doc = html.fromstring(res.get_data(as_text=True))
-
-        assert res.status_code == 400
-        assert doc.xpath('normalize-space(//h1/text())') == ERROR_MESSAGE_PAGE_HEADING_APPLICATION
-        assert len(doc.xpath(
-            '//*[contains(normalize-space(text()), normalize-space("{}"))]'.format(
-                ERROR_MESSAGE_NO_SERVICE_ON_FRAMEWORK_APPLICATION
-            )
-        )) == 1
-        assert len(doc.xpath('//*[@data-reason="supplier-not-on-digital-outcomes-and-specialists"]')) == 1
-        assert data_api_client.create_audit_event.called is False
-
-    def test_get_brief_response_returns_error_page_if_supplier_has_no_pub_services_on_framework(self, data_api_client):
-        data_api_client.get_brief.return_value = self.brief
-        data_api_client.get_framework.return_value = self.framework
-        data_api_client.is_supplier_eligible_for_brief.return_value = False
-        # simulating the case where we have non-"published", but on-framework, services
-        data_api_client.find_services.side_effect = lambda *args, **kwargs: (
-            {"services": [{"something": "nonempty"}]}
-            if kwargs.get("status") is None else
-            {"services": []}
-        )
-
-        res = self.client.get('/suppliers/opportunities/1234/responses/create')
-        doc = html.fromstring(res.get_data(as_text=True))
-
-        assert res.status_code == 400
-        assert doc.xpath('normalize-space(//h1/text())') == ERROR_MESSAGE_PAGE_HEADING_APPLICATION
-        assert len(doc.xpath(
-            '//*[contains(normalize-space(text()), normalize-space("{}"))]'.format(
-                ERROR_MESSAGE_NO_SERVICE_ON_FRAMEWORK_APPLICATION
-            )
-        )) == 1
-        assert len(doc.xpath('//*[@data-reason="supplier-not-on-digital-outcomes-and-specialists"]')) == 1
-        assert data_api_client.create_audit_event.called is False
-
-    def test_get_brief_response_returns_error_page_if_supplier_has_no_services_with_role(self, data_api_client):
-        data_api_client.get_brief.return_value = self.brief
-        data_api_client.get_brief.return_value['briefs']['frameworkName'] = 'Digital Outcomes and Specialists'
-        data_api_client.get_framework.return_value = self.framework
-        data_api_client.is_supplier_eligible_for_brief.return_value = False
-        data_api_client.find_services.return_value = {"services": [{"something": "nonempty"}]}
-
-        res = self.client.get('/suppliers/opportunities/1234/responses/create')
-        doc = html.fromstring(res.get_data(as_text=True))
-
-        assert res.status_code == 400
-        assert doc.xpath('normalize-space(//h1/text())') == ERROR_MESSAGE_PAGE_HEADING_APPLICATION
-        assert len(doc.xpath(
-            '//*[contains(normalize-space(text()), normalize-space("{}"))]'.format(
-                ERROR_MESSAGE_NO_SERVICE_WITH_ROLE_APPLICATION
-            )
-        )) == 1
-        assert len(doc.xpath('//*[@data-reason="supplier-not-on-role"]')) == 1
-        assert data_api_client.create_audit_event.called is False
-
-    def test_get_brief_response_does_not_contain_data_reason_if_supplier_is_eligible(self, data_api_client):
-        data_api_client.get_brief.return_value = self.brief
-        data_api_client.get_framework.return_value = self.framework
-        res = self.client.get('/suppliers/opportunities/1234/responses/create')
-
-        assert res.status_code == 200
-        assert 'data-reason='not in res.get_data(as_text=True)
-
-    def test_get_brief_response_flashes_error_on_result_page_if_response_already_exists(self, data_api_client):
-        data_api_client.get_brief.return_value = self.brief
-        data_api_client.get_framework.return_value = self.framework
-        data_api_client.find_brief_responses.return_value = {
-            'briefResponses': [{
-                'briefId': self.brief['briefs']['id'],
-                'supplierId': 1234
-            }]
-        }
-
-        res = self.client.get('/suppliers/opportunities/1234/responses/create')
-        assert res.status_code == 302
-        assert res.location == 'http://localhost/suppliers/opportunities/1234/responses/result'
-        self.assert_flashes("already_applied", "error")
-
-    def test_get_brief_response_page_includes_essential_requirements(self, data_api_client):
-        data_api_client.get_brief.return_value = self.brief
-        data_api_client.get_framework.return_value = self.framework
-        res = self.client.get('/suppliers/opportunities/1234/responses/create')
-        doc = html.fromstring(res.get_data(as_text=True))
-
-        assert len(doc.xpath('//span[contains(text(), "Essential one")]')) == 1
-        assert len(doc.xpath('//span[contains(text(), "Essential two")]')) == 1
-        assert len(doc.xpath('//span[contains(text(), "Essential three")]')) == 1
-
-    def test_get_brief_response_page_includes_nice_to_have_requirements(self, data_api_client):
-        data_api_client.get_brief.return_value = self.brief
-        data_api_client.get_framework.return_value = self.framework
-        res = self.client.get('/suppliers/opportunities/1234/responses/create')
-        doc = html.fromstring(res.get_data(as_text=True))
-
-        assert len(doc.xpath('//span[contains(text(), "Top one")]')) == 1
-        assert len(doc.xpath('//span[contains(text(), "Nice one")]')) == 1
-        assert len(doc.xpath('//span[contains(text(), "Get sorted")]')) == 1
-
-    def test_get_brief_response_page_redirects_to_login_for_buyer(self, data_api_client):
-        data_api_client.get_brief.return_value = self.brief
-        data_api_client.get_framework.return_value = self.framework
-        self.login_as_buyer()
-        res = self.client.get('/suppliers/opportunities/1234/responses/create')
-
-        assert res.status_code == 302
-        assert res.location == "http://localhost/login?next=%2Fsuppliers%2Fopportunities%2F1234%2Fresponses%2Fcreate"
-        self.assert_flashes("supplier-role-required", "error")
-
-    def test_get_brief_response_page_escapes_essential_and_nice_to_have_requirements(self, data_api_client):
-        self.brief['briefs']['essentialRequirements'] = [
-            '<h1>Essential one with xss</h1>',
-            '**Essential two with markdown**'
-        ]
-        self.brief['briefs']['niceToHaveRequirements'] = [
-            '<h1>n2h one with xss</h1>',
-            '**n2h two with markdown**'
-        ]
-
-        data_api_client.get_brief.return_value = self.brief
-        data_api_client.get_framework.return_value = self.framework
-        res = self.client.get('/suppliers/opportunities/1234/responses/create')
-        data = res.get_data(as_text=True)
-        doc = html.fromstring(data)
-
-        assert "&lt;h1&gt;Essential one with xss&lt;/h1&gt;" in data
-        assert "&lt;h1&gt;n2h one with xss&lt;/h1&gt;" in data
-        assert len(doc.xpath('//h1')) == 1
-
-        assert "**Essential two with markdown**" in data
-        assert "<strong>Essential two with markdown</strong>" not in data
-        assert "**n2h two with markdown**" in data
-        assert "<strong>n2h two with markdown</strong>" not in data
-
-    def test_create_new_brief_response(self, data_api_client):
-        data_api_client.get_brief.return_value = self.brief
-        data_api_client.get_framework.return_value = self.framework
-        data_api_client.create_brief_response.return_value = {
-            'briefResponses': {"id": 6, "essentialRequirements": [True, True, True]}
-        }
-
-        res = self.client.post(
-            '/suppliers/opportunities/1234/responses/create',
-            data=brief_form_submission
-        )
-        assert res.status_code == 302
-        assert res.location == "http://localhost/suppliers/opportunities/1234/responses/result?result=success"
-        data_api_client.create_brief_response.assert_called_once_with(
-            1234,
-            1234,
-            processed_brief_submission,
-            'email@email.com',
-            page_questions=[
-                'respondToEmailAddress', 'essentialRequirements', 'niceToHaveRequirements', 'availability', 'dayRate'
-            ]
-        )
-        data_api_client.submit_brief_response.assert_called_once_with(
-            6, 'email@email.com')
-
-    def test_create_new_brief_response_redirects_to_result_page_if_not_all_essentials_are_true(self, data_api_client):
-        data_api_client.get_brief.return_value = self.brief
-        data_api_client.get_framework.return_value = self.framework
-        data_api_client.create_brief_response.return_value = {
-            'briefResponses': {"id": 6, "essentialRequirements": [True, False, True]}
-        }
-
-        res = self.client.post(
-            '/suppliers/opportunities/1234/responses/create',
-            data=brief_form_submission
-        )
-        assert res.status_code == 302
-        assert res.location == "http://localhost/suppliers/opportunities/1234/responses/result?result=fail"
-        data_api_client.create_brief_response.assert_called_once_with(
-            1234,
-            1234,
-            processed_brief_submission,
-            'email@email.com',
-            page_questions=[
-                'respondToEmailAddress', 'essentialRequirements', 'niceToHaveRequirements', 'availability', 'dayRate'
-            ]
-        )
-
-    def test_create_new_brief_response_error_message_for_boolean_list_question_empty(self, data_api_client):
-        data_api_client.get_brief.return_value = self.brief
-        data_api_client.get_framework.return_value = self.framework
-        data_api_client.create_brief_response.side_effect = HTTPError(
-            mock.Mock(status_code=400),
-            {'essentialRequirements': 'answer_required'}
-        )
-        incomplete_brief_form_submission = brief_form_submission.copy()
-        incomplete_brief_form_submission.pop('essentialRequirements-2')
-
-        res = self.client.post(
-            '/suppliers/opportunities/1234/responses/create',
-            data=incomplete_brief_form_submission,
-            follow_redirects=True
-        )
-        doc = html.fromstring(res.get_data(as_text=True))
-
-        assert len(doc.xpath(
-            '//*[@id="validation-masthead-heading"]'
-            '[contains(text(), "There was a problem with your answer to:")]')) == 1
-        assert doc.xpath(
-            '//*[@id="content"]//a[@href="#essentialRequirements-2"]')[0].text_content() == 'Essential three'
-        assert len(doc.xpath('//h1[contains(text(), "Apply for ‘I need a thing to do a thing’")]')) == 1
-        assert len(doc.xpath('//h2[contains(text(), "Do you have the essential skills and experience?")]')) == 1
-        assert len(doc.xpath(
-            '//h2[contains(text(), "Do you have any of the nice-to-have skills and experience?")]')) == 1
-        self._test_breadcrumbs_on_brief_response_page(res)
-
-    def test_create_new_brief_response_error_message_for_normal_question_empty(self, data_api_client):
-        data_api_client.get_brief.return_value = self.brief
-        data_api_client.get_framework.return_value = self.framework
-        data_api_client.create_brief_response.side_effect = HTTPError(
-            mock.Mock(status_code=400),
-            {'availability': 'answer_required'}
-        )
-        incomplete_brief_form_submission = brief_form_submission.copy()
-        incomplete_brief_form_submission.pop('availability')
-
-        res = self.client.post(
-            '/suppliers/opportunities/1234/responses/create',
-            data=incomplete_brief_form_submission,
-            follow_redirects=True
-        )
-        doc = html.fromstring(res.get_data(as_text=True))
-
-        assert len(doc.xpath(
-            '//*[@id="validation-masthead-heading"]'
-            '[contains(text(), "There was a problem with your answer to:")]')) == 1
-        assert doc.xpath(
-            '//*[@id="content"]//a[@href="#availability"]')[0].text_content() == 'Date the specialist can start work'
-        assert len(doc.xpath('//h1[contains(text(), "Apply for ‘I need a thing to do a thing’")]')) == 1
-        assert len(doc.xpath('//h2[contains(text(), "Do you have the essential skills and experience?")]')) == 1
-        assert len(doc.xpath(
-            '//h2[contains(text(), "Do you have any of the nice-to-have skills and experience?")]')) == 1
-        self._test_breadcrumbs_on_brief_response_page(res)
-
-    def test_create_new_brief_response_404_if_not_live_brief(self, data_api_client):
-        brief = self.brief.copy()
-        brief['briefs']['status'] = 'draft'
-        data_api_client.get_brief.return_value = brief
-        data_api_client.get_framework.return_value = self.framework
-
-        res = self.client.post(
-            '/suppliers/opportunities/1234/responses/create',
-            data=brief_form_submission
-        )
-        assert res.status_code == 404
-        assert data_api_client.create_brief_response.called is False
-
-    def test_create_new_brief_response_404_if_not_live_framework(self, data_api_client):
-        framework = self.framework.copy()
-        framework['frameworks']['status'] = 'standstill'
-        data_api_client.get_brief.return_value = self.brief
-        data_api_client.get_framework.return_value = framework
-
-        res = self.client.post(
-            '/suppliers/opportunities/1234/responses/create',
-            data=brief_form_submission
-        )
-        assert res.status_code == 404
-        assert data_api_client.create_brief_response.called is False
-
-    def test_create_new_brief_response_flashes_error_on_result_page_if_response_already_exists(self, data_api_client):
-        data_api_client.get_brief.return_value = self.brief
-        data_api_client.get_framework.return_value = self.framework
-        data_api_client.find_brief_responses.return_value = {
-            'briefResponses': [{
-                'briefId': self.brief['briefs']['id'],
-                'supplierId': 1234
-            }]
-        }
-
-        res = self.client.post(
-            '/suppliers/opportunities/1234/responses/create',
-            data=brief_form_submission
-        )
-        assert res.status_code == 302
-        assert res.location == 'http://localhost/suppliers/opportunities/1234/responses/result'
-        self.assert_flashes("already_applied", "error")
-        assert data_api_client.create_brief_response.called is False
-
-    def test_create_new_brief_returns_error_page_if_supplier_has_no_services_on_lot(self, data_api_client):
-        data_api_client.get_brief.return_value = self.brief
-        data_api_client.get_brief.return_value['briefs']['frameworkName'] = 'Digital Outcomes and Specialists'
-        data_api_client.get_framework.return_value = self.framework
-        data_api_client.is_supplier_eligible_for_brief.return_value = False
-        data_api_client.find_services.side_effect = lambda *args, **kwargs: (
-            {"services": [{"something": "nonempty"}]} if kwargs.get("lot") is None else {"services": []}
-        )
-
-        res = self.client.post(
-            '/suppliers/opportunities/1234/responses/create',
-            data=brief_form_submission
-        )
-        doc = html.fromstring(res.get_data(as_text=True))
-
-        assert res.status_code == 400
-        assert doc.xpath('normalize-space(//h1/text())') == ERROR_MESSAGE_PAGE_HEADING_APPLICATION
-        assert len(doc.xpath(
-            '//*[contains(normalize-space(text()), normalize-space("{}"))]'.format(
-                ERROR_MESSAGE_NO_SERVICE_ON_LOT_APPLICATION
-            )
-        )) == 1
-        assert data_api_client.create_brief_response.called is False
-
-    def test_create_new_brief_returns_error_page_if_supplier_has_no_services_on_framework(self, data_api_client):
-        data_api_client.get_brief.return_value = self.brief
-        data_api_client.get_framework.return_value = self.framework
-        data_api_client.is_supplier_eligible_for_brief.return_value = False
-        data_api_client.find_services.return_value = {"services": []}
-
-        res = self.client.post(
-            '/suppliers/opportunities/1234/responses/create',
-            data=brief_form_submission
-        )
-        doc = html.fromstring(res.get_data(as_text=True))
-
-        assert res.status_code == 400
-        assert doc.xpath('normalize-space(//h1/text())') == ERROR_MESSAGE_PAGE_HEADING_APPLICATION
-        assert len(doc.xpath(
-            '//*[contains(normalize-space(text()), normalize-space("{}"))]'.format(
-                ERROR_MESSAGE_NO_SERVICE_ON_FRAMEWORK_APPLICATION
-            )
-        )) == 1
-        assert data_api_client.create_brief_response.called is False
-
-    def test_create_new_brief_returns_error_page_if_supplier_has_no_services_with_role(self, data_api_client):
-        data_api_client.get_brief.return_value = self.brief
-        data_api_client.get_brief.return_value['briefs']['frameworkName'] = 'Digital Outcomes and Specialists'
-        data_api_client.get_framework.return_value = self.framework
-        data_api_client.is_supplier_eligible_for_brief.return_value = False
-        data_api_client.find_services.return_value = {"services": [{"something": "nonempty"}]}
-
-        res = self.client.post(
-            '/suppliers/opportunities/1234/responses/create',
-            data=brief_form_submission
-        )
-        doc = html.fromstring(res.get_data(as_text=True))
-
-        assert res.status_code == 400
-        assert doc.xpath('normalize-space(//h1/text())') == ERROR_MESSAGE_PAGE_HEADING_APPLICATION
-        assert len(doc.xpath(
-            '//*[contains(normalize-space(text()), normalize-space("{}"))]'.format(
-                ERROR_MESSAGE_NO_SERVICE_WITH_ROLE_APPLICATION
-            )
-        )) == 1
-        assert data_api_client.create_brief_response.called is False
-
-    def test_create_new_brief_response_with_api_error_fails(self, data_api_client):
-        data_api_client.get_brief.return_value = self.brief
-        data_api_client.get_framework.return_value = self.framework
-        data_api_client.create_brief_response.side_effect = HTTPError(
-            mock.Mock(status_code=400),
-            {'availability': 'answer_required'}
-        )
-
-        res = self.client.post(
-            '/suppliers/opportunities/1234/responses/create',
-            data=brief_form_submission
-        )
-
-        assert res.status_code == 400
-        assert "You need to answer this question." in res.get_data(as_text=True)
-        data_api_client.create_brief_response.assert_called_once_with(
-            1234,
-            1234,
-            processed_brief_submission,
-            'email@email.com',
-            page_questions=[
-                'respondToEmailAddress', 'essentialRequirements', 'niceToHaveRequirements', 'availability', 'dayRate'
-            ]
-        )
-
-    def test_create_new_brief_response_redirects_to_login_for_buyer(self, data_api_client):
-        data_api_client.get_brief.return_value = self.brief
-        data_api_client.get_framework.return_value = self.framework
-        self.login_as_buyer()
-        res = self.client.post(
-            '/suppliers/opportunities/1234/responses/create',
-            data=brief_form_submission
-        )
-        assert res.status_code == 302
-        assert res.location == "http://localhost/login"
-        self.assert_flashes("supplier-role-required", "error")
-        assert data_api_client.get_brief.called is False
-
-
-@mock.patch("app.main.views.briefs.data_api_client")
 class TestStartBriefResponseApplication(BaseApplicationTest, BriefResponseTestHelpers):
     def setup_method(self, method):
         super(TestStartBriefResponseApplication, self).setup_method(method)
@@ -1728,20 +1211,20 @@ class TestStartBriefResponseApplication(BaseApplicationTest, BriefResponseTestHe
         assert res.status_code == 404
 
     @mock.patch("app.main.views.briefs.is_supplier_eligible_for_brief")
+    @mock.patch("app.main.views.briefs._render_not_eligible_for_brief_error_page", autospec=True)
     def test_will_show_not_eligible_response_if_supplier_is_not_eligible_for_brief(
-        self, is_supplier_eligible_for_brief, data_api_client
+        self, _render_not_eligible_for_brief_error_page, is_supplier_eligible_for_brief, data_api_client
     ):
         data_api_client.get_brief.return_value = self.brief
         data_api_client.find_brief_responses.return_value = {
             'briefResponses': []
         }
         is_supplier_eligible_for_brief.return_value = False
+        _render_not_eligible_for_brief_error_page.return_value = 'dummy response', 400
 
         res = self.client.get('/suppliers/opportunities/1234/responses/start')
         assert res.status_code == 400
-
-        doc = html.fromstring(res.get_data(as_text=True))
-        assert doc.xpath('//title')[0].text == 'Not eligible for opportunity – Digital Marketplace'
+        _render_not_eligible_for_brief_error_page.assert_called_once_with(self.brief['briefs'])
 
     def test_start_application_contains_brief_title_and_breadcrumbs(self, data_api_client):
         data_api_client.get_brief.return_value = self.brief
@@ -1878,17 +1361,17 @@ class TestPostStartBriefResponseApplication(BaseApplicationTest):
             self.login()
 
     @mock.patch("app.main.views.briefs.is_supplier_eligible_for_brief")
+    @mock.patch("app.main.views.briefs._render_not_eligible_for_brief_error_page", autospec=True)
     def test_will_show_not_eligible_response_if_supplier_is_not_eligible_for_brief(
-        self, is_supplier_eligible_for_brief, data_api_client
+        self, _render_not_eligible_for_brief_error_page, is_supplier_eligible_for_brief, data_api_client
     ):
         data_api_client.get_brief.return_value = self.brief
         is_supplier_eligible_for_brief.return_value = False
+        _render_not_eligible_for_brief_error_page.return_value = 'dummy response', 400
 
         res = self.client.post('/suppliers/opportunities/2345/responses/start')
         assert res.status_code == 400
-
-        doc = html.fromstring(res.get_data(as_text=True))
-        assert doc.xpath('//title')[0].text == 'Not eligible for opportunity – Digital Marketplace'
+        _render_not_eligible_for_brief_error_page.assert_called_once_with(self.brief['briefs'])
 
     def test_valid_post_calls_api_and_redirects_to_edit_the_created_brief_response_if_no_application_started(
         self, data_api_client
@@ -2025,16 +1508,28 @@ class TestResponseResultPageLegacyFlow(ResponseResultPageBothFlows):
             ]
         }
 
-    def test_view_response_result_not_submitted_redirect_to_submit_page(self, data_api_client):
-        empty_brief_responses = {"briefResponses": []}
-
+    def test_view_response_result_if_no_response_submitted_will_404(self, data_api_client):
         self.set_framework_and_eligibility_for_api_client(data_api_client)
         data_api_client.get_brief.return_value = self.brief
-        data_api_client.find_brief_responses.return_value = empty_brief_responses
-        res = self.client.get('/suppliers/opportunities/1234/responses/result')
+        data_api_client.find_brief_responses.return_value = {"briefResponses": []}
 
-        assert res.status_code == 302
-        assert res.location == 'http://localhost/suppliers/opportunities/1234/responses/create'
+        res = self.client.get('/suppliers/opportunities/1234/responses/result')
+        assert res.status_code == 404
+
+    @mock.patch("app.main.views.briefs.is_supplier_eligible_for_brief")
+    @mock.patch("app.main.views.briefs._render_not_eligible_for_brief_error_page", autospec=True)
+    def test_will_show_not_eligible_response_if_supplier_is_not_eligible_for_brief(
+        self, _render_not_eligible_for_brief_error_page, is_supplier_eligible_for_brief, data_api_client
+    ):
+        self.set_framework_and_eligibility_for_api_client(data_api_client)
+        data_api_client.get_brief.return_value = self.brief
+        data_api_client.find_brief_responses.return_value = self.brief_responses
+        is_supplier_eligible_for_brief.return_value = False
+        _render_not_eligible_for_brief_error_page.return_value = 'dummy response', 400
+
+        res = self.client.get('/suppliers/opportunities/1234/responses/result')
+        assert res.status_code == 400
+        _render_not_eligible_for_brief_error_page.assert_called_once_with(self.brief['briefs'])
 
     def test_view_response_result_page_escapes_essential_and_nice_to_have_requirements(self, data_api_client):
         self.brief['briefs']['essentialRequirements'] = [
@@ -2239,6 +1734,21 @@ class TestResponseResultPage(ResponseResultPageBothFlows, BriefResponseTestHelpe
         assert res.status_code == 302
         assert res.location == 'http://localhost/suppliers/opportunities/1234/responses/start'
 
+    @mock.patch("app.main.views.briefs.is_supplier_eligible_for_brief")
+    @mock.patch("app.main.views.briefs._render_not_eligible_for_brief_error_page", autospec=True)
+    def test_will_show_not_eligible_response_if_supplier_is_not_eligible_for_brief(
+        self, _render_not_eligible_for_brief_error_page, is_supplier_eligible_for_brief, data_api_client
+    ):
+        self.set_framework_and_eligibility_for_api_client(data_api_client)
+        data_api_client.get_brief.return_value = self.brief
+        data_api_client.find_brief_responses.return_value = self.brief_responses
+        is_supplier_eligible_for_brief.return_value = False
+        _render_not_eligible_for_brief_error_page.return_value = 'dummy response', 400
+
+        res = self.client.get('/suppliers/opportunities/1234/responses/result')
+        assert res.status_code == 400
+        _render_not_eligible_for_brief_error_page.assert_called_once_with(self.brief['briefs'])
+
     def test_view_response_result_page_escapes_essential_and_nice_to_have_requirements(self, data_api_client):
         self.brief['briefs']['essentialRequirements'] = [
             '<h1>Essential one with xss</h1>',
@@ -2402,19 +1912,107 @@ class TestResponseResultPage(ResponseResultPageBothFlows, BriefResponseTestHelpe
         assert requirements_data.row(2).cell(0) == "Email address"
         assert requirements_data.row(2).cell(1) == "contact@big.com"
 
-    def test_visit_to_start_page_redirects_to_result_page(self, data_api_client):
-        self.set_framework_and_eligibility_for_api_client(data_api_client)
-        data_api_client.get_brief.return_value = self.brief
-        data_api_client.find_brief_responses.return_value = self.brief_responses
-        res = self.client.get('/suppliers/opportunities/1234/responses/create')
 
-        assert res.status_code == 302
-        assert res.location == 'http://localhost/suppliers/opportunities/1234/responses/result'
+@mock.patch("app.main.views.briefs.data_api_client", autospec=True)
+@mock.patch("app.main.views.briefs.current_user")
+@mock.patch("app.main.views.briefs.render_template", autospec=True)
+class TestRenderNotEligibleForBriefErrorPage(BaseApplicationTest):
+    def setup_method(self, method):
+        super(TestRenderNotEligibleForBriefErrorPage, self).setup_method(method)
+        self.brief = api_stubs.brief(status='live')["briefs"]
 
-        res = self.client.get(res.location)
+    def test_clarification_question_true(self, render_template, current_user, data_api_client):
+        _render_not_eligible_for_brief_error_page(self.brief, True)
 
-        assert res.status_code == 200
-        doc = html.fromstring(res.get_data(as_text=True))
-        assert doc.xpath('//h1')[0].text.strip() == "Your application for ‘I need a thing to do a thing’"
-        assert doc.xpath('//p[contains(@class, "banner-message")]')[0].text.strip() == \
-            "You’ve already applied so you can’t apply again."
+        render_template.assert_called_with(
+            "briefs/not_is_supplier_eligible_for_brief_error.html",
+            clarification_question=True,
+            framework_name='Digital Outcomes and Specialists',
+            lot=mock.ANY,
+            reason=mock.ANY,
+            data_reason_slug=mock.ANY,
+        )
+
+    def test_not_on_framework(self, render_template, current_user, data_api_client):
+        current_user.supplier_id = 100
+        data_api_client.find_services.return_value = {"services": []}
+
+        _render_not_eligible_for_brief_error_page(self.brief)
+
+        data_api_client.find_services.assert_called_once_with(
+            supplier_id=100,
+            framework='digital-outcomes-and-specialists',
+            status='published'
+        )
+        render_template.assert_called_with(
+            "briefs/not_is_supplier_eligible_for_brief_error.html",
+            clarification_question=False,
+            framework_name='Digital Outcomes and Specialists',
+            lot='digital-specialists',
+            reason='supplier-not-on-framework',
+            data_reason_slug='supplier-not-on-digital-outcomes-and-specialists',
+        )
+
+    def test_not_on_lot(self, render_template, current_user, data_api_client):
+        current_user.supplier_id = 100
+        data_api_client.find_services.side_effect = lambda *args, **kwargs: (
+            {"services": [{"something": "nonempty"}]} if kwargs.get("lot") is None else {"services": []}
+        )
+
+        _render_not_eligible_for_brief_error_page(self.brief)
+
+        data_api_client.find_services.assert_has_calls(
+            [
+                mock.call(
+                    supplier_id=100,
+                    framework='digital-outcomes-and-specialists',
+                    status='published'
+                ),
+                mock.call(
+                    supplier_id=100,
+                    framework='digital-outcomes-and-specialists',
+                    status='published',
+                    lot='digital-specialists'
+                ),
+            ],
+            any_order=True
+        )
+        render_template.assert_called_with(
+            "briefs/not_is_supplier_eligible_for_brief_error.html",
+            clarification_question=False,
+            framework_name='Digital Outcomes and Specialists',
+            lot='digital-specialists',
+            reason='supplier-not-on-lot',
+            data_reason_slug='supplier-not-on-lot',
+        )
+
+    def test_not_on_role(self, render_template, current_user, data_api_client):
+        current_user.supplier_id = 100
+        data_api_client.find_services.return_value = {"services": [{"service": "data"}]}
+
+        _render_not_eligible_for_brief_error_page(self.brief)
+
+        data_api_client.find_services.assert_has_calls(
+            [
+                mock.call(
+                    supplier_id=100,
+                    framework='digital-outcomes-and-specialists',
+                    status='published'
+                ),
+                mock.call(
+                    supplier_id=100,
+                    framework='digital-outcomes-and-specialists',
+                    status='published',
+                    lot='digital-specialists'
+                ),
+            ],
+            any_order=True
+        )
+        render_template.assert_called_with(
+            "briefs/not_is_supplier_eligible_for_brief_error.html",
+            clarification_question=False,
+            framework_name='Digital Outcomes and Specialists',
+            lot='digital-specialists',
+            reason='supplier-not-on-role',
+            data_reason_slug='supplier-not-on-role',
+        )
