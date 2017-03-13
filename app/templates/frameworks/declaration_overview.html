@@ -94,7 +94,7 @@
           field_headings_visible=False
         ) %}
           {% call summary.row() %}
-            {{ summary.field_name(question.label|question_references(section.get_question), two_thirds=true) }}
+            {{ summary.field_name(question.label|question_references(section.get_question)) }}
             {% if section.editable %}
               {% if section_errors %}
                 {% call summary.field() %}
