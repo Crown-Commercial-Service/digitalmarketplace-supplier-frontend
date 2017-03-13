@@ -2301,7 +2301,7 @@ class TestDeclarationOverview(BaseApplicationTest):
             tuple(
                 (
                     # contents of row heading
-                    row.xpath("normalize-space(string(./td[@class='summary-item-field-first-two-thirds']))"),
+                    row.xpath("normalize-space(string(./td[@class='summary-item-field-first']))"),
                     # full text contents of row "value"
                     row.xpath("normalize-space(string(./td[@class='summary-item-field']))"),
                     # full text contents of each a element in row value
