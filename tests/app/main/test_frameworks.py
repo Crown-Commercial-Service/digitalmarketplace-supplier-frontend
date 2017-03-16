@@ -3540,10 +3540,10 @@ class TestSendClarificationQuestionEmail(BaseApplicationTest):
         for invalid_clarification_question in [
             {
                 'question': '',  # empty question
-                'error_message': 'Question cannot be empty'
+                'error_message': 'Add text if you want to ask a question.'
             }, {
                 'question': '\t   \n\n\n',  # whitespace-only question
-                'error_message': 'Question cannot be empty'
+                'error_message': 'Add text if you want to ask a question.'
             },
             {
                 'question': ('ten__chars' * 500) + '1',  # 5000+ char question

@@ -617,7 +617,7 @@ def framework_updates_email_clarification_question(framework_slug):
     clarification_question = request.form.get(CLARIFICATION_QUESTION_NAME, '').strip()
 
     if not clarification_question:
-        return framework_updates(framework_slug, "Question cannot be empty")
+        return framework_updates(framework_slug, "Add text if you want to ask a question.")
     elif len(clarification_question) > 5000:
         return framework_updates(
             framework_slug,
