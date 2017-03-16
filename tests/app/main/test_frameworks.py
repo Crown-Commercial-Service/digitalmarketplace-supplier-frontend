@@ -1642,6 +1642,43 @@ class TestFrameworksDashboard(BaseApplicationTest):
             assert document.xpath("//a[normalize-space(string())=$link_label]/@href", link_label=link_label)[0] \
                 == link_href
 
+    def test_dashboard_does_not_show_use_of_service_data_if_not_available(self, data_api_client, s3):
+        with self.app.test_client():
+            self.login()
+
+            data_api_client.get_framework.return_value = self.framework(slug="g-cloud-8", name="G-Cloud 8",
+                                                                        status="open")
+            data_api_client.get_supplier_framework_info.return_value = self.supplier_framework()
+
+            res = self.client.get("/suppliers/frameworks/g-cloud-8")
+            assert res.status_code == 200
+
+            doc = html.fromstring(res.get_data(as_text=True))
+
+            add_edit_complete_services = doc.xpath('//div[contains(@class, "framework-dashboard")]/div/li')[1]
+            use_of_data = add_edit_complete_services.xpath('//div[@class="browse-list-item-body"]')
+
+            assert len(use_of_data) == 0
+
+    def test_dashboard_shows_use_of_service_data_if_available(self, data_api_client, s3):
+        with self.app.test_client():
+            self.login()
+
+            data_api_client.get_framework.return_value = self.framework(slug="g-cloud-9", name="G-Cloud 9",
+                                                                        status="open")
+            data_api_client.get_supplier_framework_info.return_value = self.supplier_framework()
+
+            res = self.client.get("/suppliers/frameworks/g-cloud-9")
+            assert res.status_code == 200
+
+            doc = html.fromstring(res.get_data(as_text=True))
+
+            add_edit_complete_services = doc.xpath('//div[contains(@class, "framework-dashboard")]/div/li')[1]
+            use_of_data = add_edit_complete_services.xpath('//div[@class="browse-list-item-body"]')
+
+            assert len(use_of_data) == 1
+            assert 'The service information you provide here:' in use_of_data[0].text_content()
+
 
 @mock.patch('dmutils.s3.S3')
 @mock.patch('app.main.views.frameworks.data_api_client', autospec=True)

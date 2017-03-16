@@ -72,6 +72,11 @@
   <a class="browse-list-item-link" href="{{ url_for('.framework_submission_lots', framework_slug=framework.slug) }}">
     <span>Add, edit and complete services</span>
   </a>
+  {% if framework_advice.use_of_service_data %}
+    <div class="browse-list-item-body">
+      {{ framework_advice.use_of_service_data }}
+    </div>
+  {% endif %}
   {% if not counts.complete and not counts.draft %}
   <div class="browse-list-item-status-quiet">
     <p class="browse-list-item-status-title">You need to add and complete services</p>

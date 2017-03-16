@@ -15,6 +15,7 @@ from dmutils.email import send_email
 from dmutils.email.exceptions import EmailError
 from dmcontent.formats import format_service_price
 from dmcontent.questions import ContentQuestion
+from dmcontent.errors import ContentNotFoundError
 from dmutils.formats import datetimeformat
 from dmutils import s3
 from dmutils.documents import (
@@ -83,6 +84,11 @@ def framework_dashboard(framework_slug):
 
     framework_dates = content_loader.get_message(framework_slug, 'dates')
     framework_urls = content_loader.get_message(framework_slug, 'urls')
+
+    try:
+        framework_advice = content_loader.get_message(framework_slug, 'advice')
+    except ContentNotFoundError:
+        framework_advice = None
 
     # filenames
     result_letter_filename = RESULT_LETTER_FILENAME
@@ -165,6 +171,7 @@ def framework_dashboard(framework_slug):
         result_letter_filename=result_letter_filename,
         supplier_framework=supplier_framework_info,
         supplier_is_on_framework=supplier_is_on_framework,
+        framework_advice=framework_advice,
     ), 200
 
 
