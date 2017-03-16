@@ -59,3 +59,27 @@ main section:first-of-type {
       background-color: #f0f3f5 !important;
     }
 }
+
+.button-no-margin{
+  margin:0;
+}
+.button-width {
+  width:100%;
+  @include media($tablet) {
+    width:49%;
+  }
+
+}
+
+.button-width-left{
+  margin: 1.2em 0 0.8em 0;
+  @include media($tablet) {
+  margin: 1.2em 1% 0.8em 0;
+  }
+}
+.button-width-right{
+  margin: 1.2em 0 0.8em 0;
+  @include media($tablet) {
+  margin: 1.2em 0 0.8em 1%;
+  }
+}
