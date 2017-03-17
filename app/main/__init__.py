@@ -36,7 +36,7 @@ content_loader.load_messages('g-cloud-8', ['dates', 'urls'])
 content_loader.load_manifest('g-cloud-9', 'services', 'edit_service')
 content_loader.load_manifest('g-cloud-9', 'services', 'edit_submission')
 content_loader.load_manifest('g-cloud-9', 'declaration', 'declaration')
-content_loader.load_messages('g-cloud-9', ['dates', 'urls'])
+content_loader.load_messages('g-cloud-9', ['dates', 'urls', 'advice'])
 
 
 @main.after_request

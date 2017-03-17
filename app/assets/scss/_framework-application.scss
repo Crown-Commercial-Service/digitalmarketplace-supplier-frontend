@@ -16,15 +16,18 @@
 }
 
 .framework-dashboard {
-
   .browse-list-item {
-
     border-top: 1px solid $border-colour;
     padding-top: $gutter * 2/3;
 
     h2 {
       @include bold-24;
       margin-bottom: 5px;
+    }
+
+    ul {
+      list-style: disc;
+      margin: 0px 0 10px 20px;
     }
   }
 }
