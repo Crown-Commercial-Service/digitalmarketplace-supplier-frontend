@@ -88,7 +88,7 @@ class Config(object):
     REACT_RENDER_URL = 'https://dm-dev-frontend.apps.staging.digital.gov.au/render'
     REACT_RENDER = not DEBUG
 
-    ALLOWED_EXTENSIONS = ['pdf', 'jpg', 'png']
+    ALLOWED_EXTENSIONS = ['pdf', 'jpg', 'jpeg', 'png']
     S3_BUCKET_NAME = None
 
     GENERIC_EMAIL_DOMAINS = ['gmail.com', 'bigpond.com', 'outlook.com', 'hotmail.com', 'yahoo.com']
