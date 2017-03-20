@@ -375,15 +375,15 @@ def test_order_frameworks_for_reuse():
     t12 = '2012-03-03T01:01:01.000000Z'
 
     fake_frameworks = [
-        {'allow_declaration_reuse': False, 'application_close_date': t09, 'extraneous_field': 'foo'},
-        {'allow_declaration_reuse': True, 'application_close_date': t12, 'extraneous_field': 'foo'},
-        {'allow_declaration_reuse': True, 'application_close_date': t07, 'extraneous_field': 'foo'},
+        {'allowDeclarationReuse': False, 'applicationCloseDate': t09, 'extraneousField': 'foo'},
+        {'allowDeclarationReuse': True, 'applicationCloseDate': t12, 'extraneousField': 'foo'},
+        {'allowDeclarationReuse': True, 'applicationCloseDate': t07, 'extraneousField': 'foo'},
     ]
     ordered = order_frameworks_for_reuse(fake_frameworks)
     assert len(ordered) == 2, "order_frameworks_for_reuse should only filter out inappropriate frameworks."
     assert ordered == [
-        {'allow_declaration_reuse': True, 'application_close_date': t12, 'extraneous_field': 'foo'},
-        {'allow_declaration_reuse': True, 'application_close_date': t07, 'extraneous_field': 'foo'}
+        {'allowDeclarationReuse': True, 'applicationCloseDate': t12, 'extraneousField': 'foo'},
+        {'allowDeclarationReuse': True, 'applicationCloseDate': t07, 'extraneousField': 'foo'}
     ], "order_frameworks_for_reuse should return appropriate frameworks."
 
 
@@ -394,9 +394,9 @@ def test_order_frameworks_for_reuse_none():
     t12 = '2012-03-03T01:01:01.000000Z'
 
     fake_frameworks = [
-        {'allow_declaration_reuse': False, 'application_close_date': t12, 'extraneous_field': 'foo'},
-        {'allow_declaration_reuse': False, 'application_close_date': t09, 'extraneous_field': 'foo'},
-        {'allow_declaration_reuse': False, 'application_close_date': t07, 'extraneous_field': 'foo'},
+        {'allowDeclarationReuse': False, 'applicationCloseDate': t12, 'extraneousField': 'foo'},
+        {'allowDeclarationReuse': False, 'applicationCloseDate': t09, 'extraneousField': 'foo'},
+        {'allowDeclarationReuse': False, 'applicationCloseDate': t07, 'extraneousField': 'foo'},
     ]
     ordered = order_frameworks_for_reuse(fake_frameworks)
 
@@ -410,13 +410,13 @@ def test_order_frameworks_for_reuse_one():
     t12 = '2012-03-03T01:01:01.000000Z'
 
     fake_frameworks = [
-        {'allow_declaration_reuse': False, 'application_close_date': t12, 'extraneous_field': 'foo'},
-        {'allow_declaration_reuse': False, 'application_close_date': t09, 'extraneous_field': 'foo'},
-        {'allow_declaration_reuse': True, 'application_close_date': t07, 'extraneous_field': 'foo'},
+        {'allowDeclarationReuse': False, 'applicationCloseDate': t12, 'extraneousField': 'foo'},
+        {'allowDeclarationReuse': False, 'applicationCloseDate': t09, 'extraneousField': 'foo'},
+        {'allowDeclarationReuse': True, 'applicationCloseDate': t07, 'extraneousField': 'foo'},
     ]
     ordered = order_frameworks_for_reuse(fake_frameworks)
 
-    assert ordered == [{'allow_declaration_reuse': True, 'application_close_date': t07, 'extraneous_field': 'foo'}]
+    assert ordered == [{'allowDeclarationReuse': True, 'applicationCloseDate': t07, 'extraneousField': 'foo'}]
 
 
 def test_order_frameworks_for_reuse_unordered():
@@ -429,22 +429,22 @@ def test_order_frameworks_for_reuse_unordered():
     t14 = '2014-03-03T01:01:01.000000Z'
 
     fake_frameworks = [
-        {'allow_declaration_reuse': True, 'application_close_date': t07, 'extraneous_field': 'foo'},
-        {'allow_declaration_reuse': True, 'application_close_date': t13, 'extraneous_field': 'foo'},
-        {'allow_declaration_reuse': True, 'application_close_date': t09, 'extraneous_field': 'foo'},
-        {'allow_declaration_reuse': True, 'application_close_date': t14, 'extraneous_field': 'foo'},
-        {'allow_declaration_reuse': True, 'application_close_date': t12, 'extraneous_field': 'foo'},
-        {'allow_declaration_reuse': True, 'application_close_date': t11, 'extraneous_field': 'foo'},
+        {'allowDeclarationReuse': True, 'applicationCloseDate': t07, 'extraneousField': 'foo'},
+        {'allowDeclarationReuse': True, 'applicationCloseDate': t13, 'extraneousField': 'foo'},
+        {'allowDeclarationReuse': True, 'applicationCloseDate': t09, 'extraneousField': 'foo'},
+        {'allowDeclarationReuse': True, 'applicationCloseDate': t14, 'extraneousField': 'foo'},
+        {'allowDeclarationReuse': True, 'applicationCloseDate': t12, 'extraneousField': 'foo'},
+        {'allowDeclarationReuse': True, 'applicationCloseDate': t11, 'extraneousField': 'foo'},
     ]
     ordered = order_frameworks_for_reuse(fake_frameworks)
 
     expected = [
-        {'allow_declaration_reuse': True, 'application_close_date': t14, 'extraneous_field': 'foo'},
-        {'allow_declaration_reuse': True, 'application_close_date': t13, 'extraneous_field': 'foo'},
-        {'allow_declaration_reuse': True, 'application_close_date': t12, 'extraneous_field': 'foo'},
-        {'allow_declaration_reuse': True, 'application_close_date': t11, 'extraneous_field': 'foo'},
-        {'allow_declaration_reuse': True, 'application_close_date': t09, 'extraneous_field': 'foo'},
-        {'allow_declaration_reuse': True, 'application_close_date': t07, 'extraneous_field': 'foo'}
+        {'allowDeclarationReuse': True, 'applicationCloseDate': t14, 'extraneousField': 'foo'},
+        {'allowDeclarationReuse': True, 'applicationCloseDate': t13, 'extraneousField': 'foo'},
+        {'allowDeclarationReuse': True, 'applicationCloseDate': t12, 'extraneousField': 'foo'},
+        {'allowDeclarationReuse': True, 'applicationCloseDate': t11, 'extraneousField': 'foo'},
+        {'allowDeclarationReuse': True, 'applicationCloseDate': t09, 'extraneousField': 'foo'},
+        {'allowDeclarationReuse': True, 'applicationCloseDate': t07, 'extraneousField': 'foo'}
     ]
 
     assert ordered == expected
@@ -453,8 +453,8 @@ def test_order_frameworks_for_reuse_unordered():
 @mock.patch('app.main.views.frameworks.data_api_client', autospec=True)
 def test_get_reusable_declaration(data_api_client):
     """Test happy path, should return the framework and declaration where
-    allow_declaration_reuse == True
-    application_close_date is closest to today
+    allowDeclarationReuse == True
+    applicationCloseDate is closest to today
     and declaration exists for that framework
     and declaration status is completed
     """
@@ -466,12 +466,12 @@ def test_get_reusable_declaration(data_api_client):
     t14 = '2014-03-03T01:01:01.000000Z'
 
     frameworks = [
-        {'x_field': 'foo', 'allow_declaration_reuse': True, 'application_close_date': t07, 'slug': 'ben-cloud-1'},
-        {'x_field': 'foo', 'allow_declaration_reuse': True, 'application_close_date': t09, 'slug': 'ben-cloud-2'},
-        {'x_field': 'foo', 'allow_declaration_reuse': True, 'application_close_date': t11, 'slug': 'ben-cloud-3'},
-        {'x_field': 'foo', 'allow_declaration_reuse': True, 'application_close_date': t12, 'slug': 'ben-cloud-4'},
-        {'x_field': 'foo', 'allow_declaration_reuse': True, 'application_close_date': t13, 'slug': 'ben-cloud-5'},
-        {'x_field': 'foo', 'allow_declaration_reuse': False, 'application_close_date': t14, 'slug': 'ben-cloud-alpha'},
+        {'x_field': 'foo', 'allowDeclarationReuse': True, 'applicationCloseDate': t07, 'slug': 'ben-cloud-1'},
+        {'x_field': 'foo', 'allowDeclarationReuse': True, 'applicationCloseDate': t09, 'slug': 'ben-cloud-2'},
+        {'x_field': 'foo', 'allowDeclarationReuse': True, 'applicationCloseDate': t11, 'slug': 'ben-cloud-3'},
+        {'x_field': 'foo', 'allowDeclarationReuse': True, 'applicationCloseDate': t12, 'slug': 'ben-cloud-4'},
+        {'x_field': 'foo', 'allowDeclarationReuse': True, 'applicationCloseDate': t13, 'slug': 'ben-cloud-5'},
+        {'x_field': 'foo', 'allowDeclarationReuse': False, 'applicationCloseDate': t14, 'slug': 'ben-cloud-alpha'},
     ]
     declarations = [
         {'x_field': 'foo', 'frameworkSlug': 'ben-cloud-4', 'onFramework': True},
@@ -494,7 +494,7 @@ def test_get_reusable_declaration_none(data_api_client):
     t14 = '2014-03-05T01:01:01.000000Z'
 
     frameworks = [
-        {'x_field': 'foo', 'allow_declaration_reuse': True, 'application_close_date': t14, 'slug': 'ben-cloud-5'},
+        {'x_field': 'foo', 'allowDeclarationReuse': True, 'applicationCloseDate': t14, 'slug': 'ben-cloud-5'},
     ]
     declarations = [
         {'x_field': 'foo', 'frameworkSlug': 'ben-cloud-4', 'onFramework': True},

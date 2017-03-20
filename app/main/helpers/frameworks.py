@@ -46,8 +46,8 @@ def order_frameworks_for_reuse(frameworks):
     If a declaration has the reuse flag set and is the most recently closed framework then that's our framework.
     """
     return sorted(
-        filter(lambda i: i['allow_declaration_reuse'] and i['application_close_date'], frameworks),
-        key=lambda i: datetime.strptime(i['application_close_date'], DATETIME_FORMAT),
+        filter(lambda i: i['allowDeclarationReuse'] and i['applicationCloseDate'], frameworks),
+        key=lambda i: datetime.strptime(i['applicationCloseDate'], DATETIME_FORMAT),
         reverse=True
     )
 

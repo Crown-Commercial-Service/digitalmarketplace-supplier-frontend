@@ -5217,8 +5217,8 @@ class TestReuseFrameworkSupplierDeclaration(BaseApplicationTest):
         t07 = '2009-12-03T01:01:01.000000Z'
         framework = {
             'x_field': 'foo',
-            'allow_declaration_reuse': True,
-            'application_close_date': t07,
+            'allowDeclarationReuse': True,
+            'applicationCloseDate': t07,
             'slug': 'g-cloud-8',
             'name': 'g-cloud-8'
         }
@@ -5274,7 +5274,7 @@ class TestReuseFrameworkSupplierDeclaration(BaseApplicationTest):
         t09 = '2009-03-03T01:01:01.000000Z'
 
         frameworks = [
-            {'x_field': 'foo', 'allow_declaration_reuse': True, 'application_close_date': t09, 'slug': 'ben-cloud-2'},
+            {'x_field': 'foo', 'allowDeclarationReuse': True, 'applicationCloseDate': t09, 'slug': 'ben-cloud-2'},
         ]
         supplier_declarations = []
         data_api_client.find_frameworks.return_value = {'frameworks': frameworks}
@@ -5307,34 +5307,34 @@ class TestReuseFrameworkSupplierDeclaration(BaseApplicationTest):
         frameworks_response = [
             {
                 'x_field': 'foo',
-                'allow_declaration_reuse': True,
-                'application_close_date': t12,
+                'allowDeclarationReuse': True,
+                'applicationCloseDate': t12,
                 'slug': 'g-cloud-8',
                 'name': 'G-cloud 8'
             }, {
                 'x_field': 'foo',
-                'allow_declaration_reuse': True,
-                'application_close_date': t11,
+                'allowDeclarationReuse': True,
+                'applicationCloseDate': t11,
                 'slug': 'g-cloud-7',
                 'name': 'G-cloud 7'
             }, {
                 'x_field': 'foo',
-                'allow_declaration_reuse': True,
-                'application_close_date': t10,
+                'allowDeclarationReuse': True,
+                'applicationCloseDate': t10,
                 'slug': 'dos',
                 'name': 'Digital'
             }, {
                 'x_field': 'foo',
-                'allow_declaration_reuse': False,
-                'application_close_date': t09,
+                'allowDeclarationReuse': False,
+                'applicationCloseDate': t09,
                 'slug': 'g-cloud-6',
                 'name': 'G-cloud 6'
             },
         ]
         framework_response = {
             'x_field': 'foo',
-            'allow_declaration_reuse': True,
-            'application_close_date': t09,
+            'allowDeclarationReuse': True,
+            'applicationCloseDate': t09,
             'slug': 'g-cloud-8',
             'name': 'G-cloud 8'
         }
@@ -5401,7 +5401,7 @@ class TestReuseFrameworkSupplierDeclarationPost(BaseApplicationTest):
                 'onFramework': True
             }
         }
-        framework_response = {'frameworks': {'x_field': 'foo', 'allow_declaration_reuse': True}}
+        framework_response = {'frameworks': {'x_field': 'foo', 'allowDeclarationReuse': True}}
         data_api_client.get_framework.return_value = framework_response
 
         with self.client:
@@ -5432,9 +5432,9 @@ class TestReuseFrameworkSupplierDeclarationPost(BaseApplicationTest):
         """Assert 404 for non reusable framework."""
         data = {'reuse': 'true', 'old_framework_slug': 'digital-outcomes-and-specialists'}
 
-        # A framework with allow_declaration_reuse as False
+        # A framework with allowDeclarationReuse as False
         data_api_client.get_framework.return_value = {
-            'frameworks': {'x_field': 'foo', 'allow_declaration_reuse': False}
+            'frameworks': {'x_field': 'foo', 'allowDeclarationReuse': False}
         }
 
         # Do the post.
@@ -5443,7 +5443,7 @@ class TestReuseFrameworkSupplierDeclarationPost(BaseApplicationTest):
             data=data
         )
 
-        # Should get the framework and error on allow_declaration_reuse as False.
+        # Should get the framework and error on allowDeclarationReuse as False.
         data_api_client.get_framework.assert_called_once_with('digital-outcomes-and-specialists')
         # Should not do the declaration call if the framework is invalid
         assert not data_api_client.get_supplier_framework_info.called
@@ -5473,7 +5473,7 @@ class TestReuseFrameworkSupplierDeclarationPost(BaseApplicationTest):
     def test_reuse_non_existent_declaration_post(self, data_api_client):
         """Assert 404 for non existent declaration."""
         data = {'reuse': 'true', 'old_framework_slug': 'digital-outcomes-and-specialists-2'}
-        framework_response = {'frameworks': {'x_field': 'foo', 'allow_declaration_reuse': True}}
+        framework_response = {'frameworks': {'x_field': 'foo', 'allowDeclarationReuse': True}}
         data_api_client.get_framework.return_value = framework_response
 
         # Attach does not exist.
