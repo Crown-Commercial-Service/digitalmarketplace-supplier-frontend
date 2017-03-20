@@ -66,7 +66,7 @@
       type = "destructive" if category == "error" else category
       %}
         {% if message == "submitted_first" %}
-          <span data-analytics="trackPageView" data-url={{ "/opportunities/{}/responses/result?result=success".format(brief.id) }}></span>
+          <span data-analytics="trackPageView" data-url={{ "{}?result=success".format(request.path) }}></span>
         {% else %}
           {% include "toolkit/notification-banner.html" %}
         {% endif %}

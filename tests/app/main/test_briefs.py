@@ -1939,7 +1939,7 @@ class TestResponseResultPage(ResponseResultPageBothFlows, BriefResponseTestHelpe
         # Assert the analytics exists
         assert (
             '<span data-analytics="trackPageView" '
-            'data-url=/opportunities/1234/responses/result?result=success></span>' in data
+            'data-url=/suppliers/opportunities/1234/responses/result?result=success></span>' in data
         )
         assert data.count('data-analytics') == 1
         # Assert we get the correct banner message (and only the correct one).
