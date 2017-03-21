@@ -320,7 +320,7 @@ def reuse_framework_supplier_declaration(framework_slug):
         current_framework=current_framework,
         form=ReuseDeclarationForm(),
         old_framework=old_framework,
-        old_framework_application_close_date=date_parse(old_framework['application_close_date']).strftime('%B %Y'),
+        old_framework_application_close_date=date_parse(old_framework['applicationCloseDate']).strftime('%B %Y'),
     ), 200
 
 
@@ -343,14 +343,14 @@ def reuse_framework_supplier_declaration_post(framework_slug):
             form=form,
             form_errors=form_errors,
             old_framework=old_framework,
-            old_framework_application_close_date=date_parse(old_framework['application_close_date']).strftime('%B %Y')
-        )
+            old_framework_application_close_date=date_parse(old_framework['applicationCloseDate']).strftime('%B %Y')
+        ), 400
     if form.reuse.data:
         # They clicked OK! Check the POST data.
         try:
             framework_ok = data_api_client.get_framework(
                 form.old_framework_slug.data
-            )['frameworks']['allow_declaration_reuse']
+            )['frameworks']['allowDeclarationReuse']
             declaration_ok = False  # Default value
 
             if framework_ok:
