@@ -95,6 +95,7 @@ class Config(object):
 
     ROLLBAR_TOKEN = None
     DM_TEAM_SLACK_WEBHOOK = None
+    DM_GA_CODE = 'UA-72722909-6'
 
 
 class Test(Config):
@@ -147,6 +148,7 @@ class Live(Config):
     """Base config for deployed environments"""
     DEBUG = False
     DM_HTTP_PROTO = 'https'
+    DM_GA_CODE = 'UA-72722909-5'
     DM_CACHE_TYPE = 'prod'
     SERVER_NAME = 'marketplace.service.gov.au'
 

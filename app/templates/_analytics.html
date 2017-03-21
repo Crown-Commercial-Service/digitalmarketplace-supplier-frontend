@@ -1,0 +1,29 @@
+<!-- Google Analytics -->
+<script>
+    window.ga = window.ga || function () {
+            (ga.q = ga.q || []).push(arguments)
+        };
+    ga.l = +new Date;
+    ga('create', '{{ config['DM_GA_CODE'] }}', 'auto');
+    ga('send', 'pageview');
+
+    // treat file downloads as external links https://github.com/googleanalytics/autotrack/issues/58
+    ga('require', 'outboundLinkTracker', {
+        shouldTrackOutboundLink: function (link, parseUrl) {
+            var href = link.getAttribute('href') || link.getAttribute('xlink:href');
+            var url = parseUrl(href);
+            var isExternal = (url.hostname != location.hostname && url.protocol.slice(0, 4) == 'http');
+
+            // treat downloads as external links
+            var exts = 'doc*|xls*|ppt*|pdf|zip|rar|exe|mp3';
+            var regExt = new RegExp(".*\\.(" + exts + ")(\\?.*)?$");
+            var isDownload = url.pathname.match(regExt);
+
+            return isDownload || isExternal;
+        }
+    });
+    ga('require', 'urlChangeTracker');
+</script>
+<script async src='//www.google-analytics.com/analytics.js'></script>
+<script async src="{{ asset_fingerprinter.get_url('javascripts/autotrack.js') }}"></script>
+<!-- End Google Analytics -->
