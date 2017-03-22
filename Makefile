@@ -31,10 +31,10 @@ npm_install: package.json
 frontend_build:
 	npm run --silent frontend-build:${GULP_ENVIRONMENT}
 
-test: show_environment test_pep8 test_python test_javascript
+test: show_environment test_flake8 test_python test_javascript
 
-test_pep8: virtualenv
-	${VIRTUALENV_ROOT}/bin/pep8 .
+test_flake8: virtualenv
+	${VIRTUALENV_ROOT}/bin/flake8 .
 
 test_python: virtualenv
 	${VIRTUALENV_ROOT}/bin/py.test ${PYTEST_ARGS}
@@ -46,4 +46,4 @@ show_environment:
 	@echo "Environment variables in use:"
 	@env | grep DM_ || true
 
-.PHONY: run_all run_app virtualenv requirements requirements_for_test npm_install frontend_build test test_pep8 test_python test_javascript show_environment
+.PHONY: run_all run_app virtualenv requirements requirements_for_test npm_install frontend_build test test_flake8 test_python test_javascript show_environment
