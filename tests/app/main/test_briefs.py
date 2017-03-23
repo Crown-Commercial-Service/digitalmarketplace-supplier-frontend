@@ -418,7 +418,30 @@ class TestRespondToBrief(BaseApplicationTest):
         assert res.location == self.get_login_redirect_url(create_url)
         self.assert_flashes("supplier-role-required", "error")
 
-    def test_create_new_brief_response(self, data_api_client):
+
+@mock.patch("app.main.views.briefs.S3")
+@mock.patch("app.main.views.briefs.upload_service_documents")
+@mock.patch("app.main.views.briefs.data_api_client")
+class TestCreateResponseToBrief(BaseApplicationTest):
+
+    def setup(self):
+        super(TestCreateResponseToBrief, self).setup()
+
+        self.brief = api_stubs.brief(status='live', lot_slug='digital-specialists')
+        self.brief['briefs']['essentialRequirements'] = ['Essential one', 'Essential two', 'Essential three']
+        self.brief['briefs']['niceToHaveRequirements'] = ['Nice one', 'Top one', 'Get sorted']
+        self.brief['briefs']['dates'] = {}
+        self.brief['briefs']['dates']['closing_time'] = '2016-11-23T07:00:00+00:00'
+
+        lots = [api_stubs.lot(slug="digital-specialists", allows_brief=True)]
+        self.framework = api_stubs.framework(status="live", slug="digital-outcomes-and-specialists",
+                                             clarification_questions_open=False, lots=lots)
+
+        with self.app.test_client():
+            self.login()
+
+    def test_create_new_brief_response(self, data_api_client, upload_service_documents, S3):
+        upload_service_documents.return_value = ({}, None)
         data_api_client.get_brief.return_value = self.brief
         data_api_client.get_framework.return_value = self.framework
         data_api_client.create_brief_response.return_value = {
@@ -437,7 +460,9 @@ class TestRespondToBrief(BaseApplicationTest):
         data_api_client.create_brief_response.assert_called_once_with(
             1234, 1234, processed_brief_submission, 'email@email.com')
 
-    def test_create_new_brief_response_shows_result_page_for_not_all_essentials(self, data_api_client):
+    def test_create_new_brief_response_shows_result_page_for_not_all_essentials(self, data_api_client,
+                                                                                upload_service_documents, S3):
+        upload_service_documents.return_value = ({}, None)
         data_api_client.get_brief.return_value = self.brief
         data_api_client.get_framework.return_value = self.framework
         data_api_client.create_brief_response.return_value = {
@@ -461,7 +486,9 @@ class TestRespondToBrief(BaseApplicationTest):
         data_api_client.create_brief_response.assert_called_once_with(
             1234, 1234, processed_brief_submission, 'email@email.com')
 
-    def test_create_new_brief_response_error_message_for_boolean_list_question_empty(self, data_api_client):
+    def test_create_new_brief_response_error_message_for_boolean_list_question_empty(self, data_api_client,
+                                                                                     upload_service_documents, S3):
+        upload_service_documents.return_value = ({}, None)
         data_api_client.get_brief.return_value = self.brief
         data_api_client.get_framework.return_value = self.framework
         data_api_client.create_brief_response.side_effect = HTTPError(
@@ -490,7 +517,9 @@ class TestRespondToBrief(BaseApplicationTest):
             '//h2[contains(text(), "Do you have any of the nice-to-have skills and experience?")]')) == 1
         # self._test_breadcrumbs_on_brief_response_page(res)
 
-    def test_create_new_brief_response_error_message_for_normal_question_empty(self, data_api_client):
+    def test_create_new_brief_response_error_message_for_normal_question_empty(self, data_api_client,
+                                                                               upload_service_documents, S3):
+        upload_service_documents.return_value = ({}, None)
         data_api_client.get_brief.return_value = self.brief
         data_api_client.get_framework.return_value = self.framework
         data_api_client.create_brief_response.side_effect = HTTPError(
@@ -518,7 +547,7 @@ class TestRespondToBrief(BaseApplicationTest):
             '//h2[contains(text(), "Do you have any of the nice-to-have skills and experience?")]')) == 1
         # self._test_breadcrumbs_on_brief_response_page(res)
 
-    def test_create_new_brief_response_400_if_not_live_brief(self, data_api_client):
+    def test_create_new_brief_response_400_if_not_live_brief(self, data_api_client, upload_service_documents, S3):
         brief = self.brief.copy()
         brief['briefs']['status'] = 'draft'
         data_api_client.get_brief.return_value = brief
@@ -531,7 +560,7 @@ class TestRespondToBrief(BaseApplicationTest):
         assert res.status_code == 400
         assert not data_api_client.create_brief_response.called
 
-    def test_create_new_brief_response_404_if_not_live_framework(self, data_api_client):
+    def test_create_new_brief_response_404_if_not_live_framework(self, data_api_client, upload_service_documents, S3):
         framework = self.framework.copy()
         framework['frameworks']['status'] = 'standstill'
         data_api_client.get_brief.return_value = self.brief
@@ -544,7 +573,9 @@ class TestRespondToBrief(BaseApplicationTest):
         assert res.status_code == 404
         assert not data_api_client.create_brief_response.called
 
-    def test_create_new_brief_response_flashes_error_on_result_page_if_response_already_exists(self, data_api_client):
+    def test_create_new_brief_response_flashes_error_on_result_page_if_response_already_exists(self, data_api_client,
+                                                                                               upload_service_documents,
+                                                                                               S3):
         data_api_client.get_brief.return_value = self.brief
         data_api_client.get_framework.return_value = self.framework
         data_api_client.find_brief_responses.return_value = {
@@ -563,7 +594,9 @@ class TestRespondToBrief(BaseApplicationTest):
         self.assert_flashes("already_applied", "error")
         assert not data_api_client.create_brief_response.called
 
-    def test_create_new_brief_response_with_api_error_fails(self, data_api_client):
+    def test_create_new_brief_response_with_api_error_fails(self, data_api_client, upload_service_documents, S3):
+        upload_service_documents.return_value = ({}, None)
+        S3.return_value = None
         data_api_client.get_brief.return_value = self.brief
         data_api_client.get_framework.return_value = self.framework
         data_api_client.create_brief_response.side_effect = HTTPError(
@@ -581,7 +614,8 @@ class TestRespondToBrief(BaseApplicationTest):
         data_api_client.create_brief_response.assert_called_once_with(
             1234, 1234, processed_brief_submission, 'email@email.com')
 
-    def test_create_new_brief_response_redirects_to_login_for_buyer(self, data_api_client):
+    def test_create_new_brief_response_redirects_to_login_for_buyer(self, data_api_client,
+                                                                    upload_service_documents, S3):
         data_api_client.get_brief.return_value = self.brief
         data_api_client.get_framework.return_value = self.framework
         self.login_as_buyer()

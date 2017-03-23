@@ -1,0 +1,87 @@
+{% set error_classes = 'file-upload-input file-upload-input-with-error invalid' if error else 'file-upload-input' %}
+{% if x.hint %}
+  {% set answer_advice_id="input-" + x.name + "-answer-advice" %}
+{% endif %}
+{% if x.question_advice %}
+  {% set question_advice_id="input-" + x.name + "-question-advice" %}
+{% endif %}
+
+{% if x.error %}
+  <div class="validation-wrapper">
+{% elif x.message %}
+  <div class="message-wrapper">
+{% endif %}
+<div class="question" id="{{ x.name }}">
+  <label for="input-{{ x.name }}">
+    {% if x.question %}
+      <span class="question-heading">
+        <h2>
+          {% if x.question_number %}
+            <span class="question-number">
+              {{ x.question_number }}
+            </span>
+          {% endif %}
+        {{ x.question }}
+        </h2>
+      </span>
+    {% endif %}
+    {% if error %}
+      <span class="validation-message invalid" style="color: #cc0000">
+          {{ error.message }}
+        </span>
+    {% elif x.message %}
+      <span class="message-content">
+          {{ x.message }}
+        </span>
+    {% endif %}
+  </label>
+  {% if x.hidden and not x.error %}
+    <noscript>
+        <span class="hint">
+          You may not need to answer this question depending on how you answered an earlier question.
+        </span>
+    </noscript>
+  {% endif %}
+  {% if x.optional %}
+    <span class="question-optional">
+        <strong>Optional</strong>
+      </span>
+  {% endif %}
+  {% if x.question_advice %}
+    <span class="question-advice" id="{{ x.question_advice_id }}">
+        {{ x.question_advice }}
+      </span>
+  {% endif %}
+  {% if x.hint %}
+    <span class="hint" id="{{ x.answer_advice_id }}">
+        {{ x.hint }}
+      </span>
+  {% endif %}
+  {% if x.value %}
+    <p class="file-upload-existing-value">
+      {% if x.link %}
+        <a href="{{ x.link }}" class='document-link-with-narrow-icon'>
+      {% else %}
+        <span class='document-link-with-narrow-icon'>
+      {% endif %}
+      <span class='document-icon-blank'></span>
+      {{ value }}
+      {% if x.link %}
+        </a>
+      {% else %}
+        </span>
+      {% endif %}
+    </p>
+  {% endif %}
+  <input
+      type="file"
+      name="{{ x.name }}"
+      id="input-{{ x.name }}"
+      class="{{ error_classes }}"
+      {% if x.question_advice or hint %}aria-describedby="
+          {{ [x.question_advice_id, x.answer_advice_id]|join(' ') }}"{% endif %}
+  />
+</div>
+{% if x.error or x.message %}
+  </div>
+{% endif %}

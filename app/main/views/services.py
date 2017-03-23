@@ -445,6 +445,7 @@ def update_section_submission(framework_slug, lot_slug, service_id, section_id, 
         abort(404)
 
     errors = None
+    document_errors = None
     update_data = section.get_data(request.form)
 
     uploader = s3.S3(current_app.config['DM_SUBMISSIONS_BUCKET'])

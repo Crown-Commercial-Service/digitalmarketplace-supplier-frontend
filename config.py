@@ -89,7 +89,8 @@ class Config(object):
     REACT_RENDER = not DEBUG
 
     ALLOWED_EXTENSIONS = ['pdf', 'jpg', 'jpeg', 'png']
-    S3_BUCKET_NAME = None
+    S3_BUCKET_NAME = ''
+    AWS_DEFAULT_REGION = ''
 
     GENERIC_EMAIL_DOMAINS = ['gmail.com', 'bigpond.com', 'outlook.com', 'hotmail.com', 'yahoo.com']
 

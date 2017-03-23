@@ -11,6 +11,8 @@ from flask_login import current_user
 from dmapiclient import HTTPError
 from dmutils.forms import render_template_with_csrf
 from dmutils.email import send_email, EmailError
+from dmutils.documents import upload_service_documents
+from dmutils.s3 import S3
 
 import six
 import rollbar
@@ -195,6 +197,31 @@ def submit_brief_response(brief_id):
     content = content_loader.get_manifest(framework['slug'], 'edit_brief_response').filter({'lot': lot['slug']})
     section = content.get_section(content.get_next_editable_section_id())
     response_data = section.get_data(request.form)
+
+    service = {'frameworkSlug': brief['frameworkSlug'], 'supplierCode': current_user.supplier_code, 'id': brief_id}
+    uploaded_documents, document_errors = upload_service_documents(
+        S3(current_app.config['S3_BUCKET_NAME'], "s3-"+current_app.config['AWS_DEFAULT_REGION']+".amazonaws.com"),
+        "",
+        service, request.files, section)
+
+    if document_errors:
+        # replace generic 'Apply for opportunity' title with title including the name of the brief
+        section.name = "Apply for ‘{}’".format(brief['title'])
+        section.inject_brief_questions_into_boolean_list_question(brief)
+        section_summary = section.summary(response_data)
+        errors = section_summary.get_error_messages(document_errors)
+        if errors.get('attachedDocumentURL', {}).get('question'):
+            errors['attachedDocumentURL']['question'] = "Attached document"
+        return render_template_with_csrf(
+            "briefs/brief_response.html",
+            status_code=400,
+            brief=brief,
+            service_data=response_data,
+            section=section,
+            errors=errors,
+        )
+    else:
+        response_data.update(uploaded_documents)
 
     try:
         brief_response = data_api_client.create_brief_response(
