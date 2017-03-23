@@ -17,7 +17,6 @@ class Config(object):
     CSRF_ENABLED = True
     CSRF_TIME_LIMIT = 8*3600
 
-    PERMANENT_SESSION_LIFETIME = 4*3600
     DM_DEFAULT_CACHE_MAX_AGE = 48*3600
 
     DM_TIMEZONE = 'Australia/Sydney'
