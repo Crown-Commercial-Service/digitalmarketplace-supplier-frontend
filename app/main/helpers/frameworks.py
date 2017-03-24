@@ -165,7 +165,9 @@ def question_references(data, get_question):
 
 
 def get_frameworks_by_status(frameworks, status, extra_condition=False):
-    return filter(lambda i: i['status'] == status and (i.get(extra_condition) if extra_condition else True), frameworks)
+    return list(
+        filter(lambda i: i['status'] == status and (i.get(extra_condition) if extra_condition else True), frameworks)
+    )
 
 
 def count_drafts_by_lot(drafts, lotSlug):

@@ -1054,7 +1054,7 @@ def contract_review(framework_slug, agreement_id):
 
             if feature.is_active('CONTRACT_VARIATION'):
                 # Redirect to contract variation if it has not been signed
-                if (framework.get('variations')and not supplier_framework['agreedVariations']):
+                if (framework.get('variations') and not supplier_framework['agreedVariations']):
                     variation_slug = list(framework['variations'].keys())[0]
                     return redirect(url_for(
                         '.view_contract_variation',
