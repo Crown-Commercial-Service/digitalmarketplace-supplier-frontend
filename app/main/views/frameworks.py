@@ -1000,10 +1000,10 @@ def contract_review(framework_slug, agreement_id):
 
     # if framework agreement doesn't have a name or a role or the agreement file, then 404
     if not (
-        agreement.get('signedAgreementDetails') and
-        agreement['signedAgreementDetails'].get('signerName') and
-        agreement['signedAgreementDetails'].get('signerRole') and
-        agreement.get('signedAgreementPath')
+        agreement.get('signedAgreementDetails')
+        and agreement['signedAgreementDetails'].get('signerName')
+        and agreement['signedAgreementDetails'].get('signerRole')
+        and agreement.get('signedAgreementPath')
     ):
         abort(404)
 
@@ -1054,10 +1054,7 @@ def contract_review(framework_slug, agreement_id):
 
             if feature.is_active('CONTRACT_VARIATION'):
                 # Redirect to contract variation if it has not been signed
-                if (
-                    framework.get('variations') and
-                    not supplier_framework['agreedVariations']
-                ):
+                if (framework.get('variations')and not supplier_framework['agreedVariations']):
                     variation_slug = list(framework['variations'].keys())[0]
                     return redirect(url_for(
                         '.view_contract_variation',
