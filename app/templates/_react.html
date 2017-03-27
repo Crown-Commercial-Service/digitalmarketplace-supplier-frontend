@@ -19,6 +19,7 @@
 {% block content %}
     <div id="react-bundle-{{component.get_slug()}}-state" style="display:none;">{{component.get_props()|tojson|forceescape}}</div>
     <div id="react-bundle-{{component.get_slug()}}">{{component|safe}}</div>
+    <noscript><img src="/nojs"/ alt=""></noscript>
 {% endblock %}
 
 {# We want to remove UI Kit JS from react pages, override with empty block #}

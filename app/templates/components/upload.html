@@ -53,7 +53,7 @@
       </span>
   {% endif %}
   {% if x.hint %}
-    <span class="hint" id="{{ x.answer_advice_id }}">
+    <span  id="{{ x.answer_advice_id }}">
         {{ x.hint }}
       </span>
   {% endif %}
@@ -73,6 +73,10 @@
       {% endif %}
     </p>
   {% endif %}
+  <br/>
+  <div class="hint">You can only submit one application per opportunity, however you can upload a maximum of
+       3 candidate CV’s in this application in response to the opportunity requirements.</div>
+  <br/>
   <input
       type="file"
       name="{{ x.name }}"
@@ -80,7 +84,23 @@
       class="{{ error_classes }}"
       {% if x.question_advice or hint %}aria-describedby="
           {{ [x.question_advice_id, x.answer_advice_id]|join(' ') }}"{% endif %}
-  />
+  /><br/><br/>
+  <input
+    type="file"
+    name="{{ x.name }}"
+    id="input-{{ x.name }}"
+    class="{{ error_classes }}"
+    {% if x.question_advice or hint %}aria-describedby="
+          {{ [x.question_advice_id, x.answer_advice_id]|join(' ') }}"{% endif %}
+/><br/><br/>
+  <input
+      type="file"
+      name="{{ x.name }}"
+      id="input-{{ x.name }}"
+      class="{{ error_classes }}"
+      {% if x.question_advice or hint %}aria-describedby="
+          {{ [x.question_advice_id, x.answer_advice_id]|join(' ') }}"{% endif %}
+  /><br/>
 </div>
 {% if x.error or x.message %}
   </div>
