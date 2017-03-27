@@ -433,8 +433,9 @@ def edit_service_submission(framework_slug, lot_slug, service_id, section_id, qu
     if not get_supplier_framework_info(data_api_client, framework_slug):
         abort(404)
 
-    force_return_to_summary = (request.args.get('return_to_summary') or
-                               framework['framework'] == "digital-outcomes-and-specialists")
+    force_return_to_summary = (
+        request.args.get('return_to_summary') or framework['framework'] == "digital-outcomes-and-specialists"
+    )
     next_question = None
 
     try:
