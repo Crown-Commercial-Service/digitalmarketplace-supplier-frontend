@@ -1262,7 +1262,7 @@ class TestCreateSupplier(BaseApplicationTest):
             }
         )
         assert_equal(res.status_code, 400)
-        assert_true("You must provide a email address." in res.get_data(as_text=True))
+        assert_true("You must provide an email address." in res.get_data(as_text=True))
 
     def test_should_not_allow_contact_details_with_invalid_email(self):
         res = self.client.post(
@@ -1307,7 +1307,7 @@ class TestCreateSupplier(BaseApplicationTest):
         )
         assert_equal(res.status_code, 400)
         assert_true("You must provide a phone number." in res.get_data(as_text=True))
-        assert_true("You must provide a email address." in res.get_data(as_text=True))
+        assert_true("You must provide an email address." in res.get_data(as_text=True))
         assert_true("You must provide a contact name." in res.get_data(as_text=True))
 
     def test_should_populate_duns_from_session(self):
@@ -1463,7 +1463,7 @@ class TestCreateSupplier(BaseApplicationTest):
             data={}
         )
         assert_equal(res.status_code, 400)
-        assert_true("You must provide a email address." in res.get_data(as_text=True))
+        assert_true("You must provide an email address." in res.get_data(as_text=True))
 
     def test_should_not_allow_incorrect_email_address(self):
         with self.client.session_transaction() as sess:
