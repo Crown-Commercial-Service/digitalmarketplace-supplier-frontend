@@ -14,7 +14,7 @@ cssselect==1.0.1
 docutils==0.13.1
 git+https://github.com/AusDTO/dto-digitalmarketplace-apiclient.git@f128e346db262119363693b86e54f439d07867d6#egg=dto_digitalmarketplace_apiclient==whatever
 git+https://github.com/AusDTO/dto-digitalmarketplace-content-loader.git@3d5759bbc1e6071db5bd4ea0daab3987d458ac3d#egg=dto_digitalmarketplace_content_loader==whatever
-git+https://github.com/AusDTO/dto-digitalmarketplace-utils.git@d700576b5bc21fd4b6ca6e0b1f5bb9b47718f23c#egg=dto_digitalmarketplace_utils==whatever
+git+https://github.com/AusDTO/dto-digitalmarketplace-utils.git@a623925f9f4fdb2e63bc1c5e76925a52f25fcc8a#egg=dto_digitalmarketplace_utils==whatever
 enum34==1.1.6
 Flask==0.12
 Flask-Cache==0.13.1

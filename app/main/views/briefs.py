@@ -199,10 +199,8 @@ def submit_brief_response(brief_id):
     response_data = section.get_data(request.form)
 
     service = {'frameworkSlug': brief['frameworkSlug'], 'supplierCode': current_user.supplier_code, 'id': brief_id}
-    uploaded_documents, document_errors = upload_service_documents(
-        S3(current_app.config['S3_BUCKET_NAME'], current_app.config['S3_ENDPOINT_URL']),
-        "",
-        service, request.files, section)
+    uploaded_documents, document_errors = upload_service_documents(current_app.config.get('S3_BUCKET_NAME'),
+                                                                   "", service, request.files, section)
 
     if document_errors:
         # replace generic 'Apply for opportunity' title with title including the name of the brief
