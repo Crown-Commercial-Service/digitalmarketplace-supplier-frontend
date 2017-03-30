@@ -74,7 +74,7 @@ class CompanyContactDetailsForm(Form):
         Length(max=255, message="You must provide a contact name under 256 characters.")
     ])
     email_address = StripWhitespaceStringField('Email address', validators=[
-        DataRequired(message="You must provide a email address."),
+        DataRequired(message="You must provide an email address."),
         Email(message="You must provide a valid email address.")
     ])
     phone_number = StripWhitespaceStringField('Phone number', validators=[
@@ -85,6 +85,6 @@ class CompanyContactDetailsForm(Form):
 
 class EmailAddressForm(Form):
     email_address = StripWhitespaceStringField('Email address', validators=[
-        DataRequired(message="You must provide a email address."),
+        DataRequired(message="You must provide an email address."),
         Email(message="You must provide a valid email address.")
     ])
