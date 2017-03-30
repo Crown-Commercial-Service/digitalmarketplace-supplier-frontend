@@ -91,6 +91,7 @@ class Config(object):
 
     ALLOWED_EXTENSIONS = ['pdf', 'jpg', 'jpeg', 'png']
     S3_BUCKET_NAME = ''
+    S3_ENDPOINT_URL = 's3-ap-southeast-2.amazonaws.com'
     AWS_DEFAULT_REGION = ''
 
     GENERIC_EMAIL_DOMAINS = ['gmail.com', 'bigpond.com', 'outlook.com', 'hotmail.com', 'yahoo.com']

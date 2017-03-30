@@ -200,7 +200,7 @@ def submit_brief_response(brief_id):
 
     service = {'frameworkSlug': brief['frameworkSlug'], 'supplierCode': current_user.supplier_code, 'id': brief_id}
     uploaded_documents, document_errors = upload_service_documents(
-        S3(current_app.config['S3_BUCKET_NAME'], "s3-"+current_app.config['AWS_DEFAULT_REGION']+".amazonaws.com"),
+        S3(current_app.config['S3_BUCKET_NAME'], current_app.config['S3_ENDPOINT_URL']),
         "",
         service, request.files, section)
 
