@@ -8,7 +8,8 @@ import six
 
 from dmapiclient import APIError
 from dmapiclient.audit import AuditTypes
-from dmutils.email import send_email, generate_token, MandrillException
+from dmutils.email import send_email, generate_token
+from dmutils.email.exceptions import EmailError
 from dmcontent.content_loader import ContentNotFoundError
 
 from ...main import main, content_loader
@@ -54,13 +55,12 @@ def dashboard():
             'deadline': Markup("Deadline: {}".format(dates.get('framework_close_date', ''))),
             'registered_interest': (framework['slug'] in supplier_frameworks),
             'made_application': (
-                framework.get('declaration') and
-                framework['declaration'].get('status') == 'complete' and
-                framework.get('complete_drafts_count') > 0
+                framework.get('declaration')
+                and framework['declaration'].get('status') == 'complete'
+                and framework.get('complete_drafts_count') > 0
             ),
             'needs_to_complete_declaration': (
-                framework.get('onFramework') and
-                framework.get('agreementReturned') is False
+                framework.get('onFramework') and framework.get('agreementReturned') is False
             )
         })
 
@@ -121,10 +121,8 @@ def update_supplier():
 
     contact_form = EditContactInformationForm(prefix='contact_')
 
-    if not (supplier_form.validate_on_submit() and
-            contact_form.validate_on_submit()):
-        return edit_supplier(supplier_form=supplier_form,
-                             contact_form=contact_form)
+    if not (supplier_form.validate_on_submit() and contact_form.validate_on_submit()):
+        return edit_supplier(supplier_form=supplier_form, contact_form=contact_form)
 
     try:
         data_api_client.update_supplier(
@@ -384,7 +382,7 @@ def submit_company_summary():
 
         token = generate_token(
             {
-                "email_address":  account_email_address,
+                "email_address": account_email_address,
                 "supplier_id": session['email_supplier_id'],
                 "supplier_name": session['email_company_name']
             },
@@ -410,7 +408,7 @@ def submit_company_summary():
                 ["user-creation"]
             )
             session['email_sent_to'] = account_email_address
-        except MandrillException as e:
+        except EmailError as e:
             current_app.logger.error(
                 "suppliercreate.fail: Create user email failed to send. "
                 "error {error} supplier_id {supplier_id} email_hash {email_hash}",

@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-from nose.tools import assert_equal
-
 from app.main.helpers.validation import G7Validator, get_validator
 from app.main import content_loader
 
@@ -88,7 +86,7 @@ def test_error_if_required_field_is_missing():
     del submission['SQ3-1i-i']
     validator = G7Validator(content, submission)
 
-    assert_equal(validator.errors(), {'SQ3-1i-i': 'answer_required'})
+    assert validator.errors() == {'SQ3-1i-i': 'answer_required'}
 
 
 def test_error_if_required_text_field_is_empty():
@@ -97,7 +95,7 @@ def test_error_if_required_text_field_is_empty():
     submission['SQ1-2b'] = ""
     validator = G7Validator(content, submission)
 
-    assert_equal(validator.errors(), {'SQ1-2b': 'answer_required'})
+    assert validator.errors() == {'SQ1-2b': 'answer_required'}
 
 
 def test_no_error_if_optional_field_is_missing():
@@ -106,7 +104,7 @@ def test_no_error_if_optional_field_is_missing():
     del submission['SQ1-1p-i']
     validator = G7Validator(content, submission)
 
-    assert_equal(validator.errors(), {})
+    assert validator.errors() == {}
 
 
 def test_trading_status_details_error_depends_on_trading_status():
@@ -117,11 +115,11 @@ def test_trading_status_details_error_depends_on_trading_status():
 
     submission['SQ1-1ci'] = "something"
     validator = G7Validator(content, submission)
-    assert_equal(validator.errors(), {})
+    assert validator.errors() == {}
 
     submission['SQ1-1ci'] = "other (please specify)"
     validator = G7Validator(content, submission)
-    assert_equal(validator.errors(), {'SQ1-1cii': 'answer_required'})
+    assert validator.errors() == {'SQ1-1cii': 'answer_required'}
 
 
 def test_trade_registers_details_error_depends_on_trade_registers():
@@ -131,11 +129,11 @@ def test_trade_registers_details_error_depends_on_trade_registers():
 
     submission['SQ1-1i-i'] = False
     validator = G7Validator(content, submission)
-    assert_equal(validator.errors(), {})
+    assert validator.errors() == {}
 
     submission['SQ1-1i-i'] = True
     validator = G7Validator(content, submission)
-    assert_equal(validator.errors(), {'SQ1-1i-ii': 'answer_required'})
+    assert validator.errors() == {'SQ1-1i-ii': 'answer_required'}
 
 
 def test_licenced_details_error_depends_on_licenced():
@@ -145,11 +143,11 @@ def test_licenced_details_error_depends_on_licenced():
 
     del submission['SQ1-1j-i']
     validator = G7Validator(content, submission)
-    assert_equal(validator.errors(), {})
+    assert validator.errors() == {}
 
     submission['SQ1-1j-i'] = ["licensed"]
     validator = G7Validator(content, submission)
-    assert_equal(validator.errors(), {'SQ1-1j-ii': 'answer_required'})
+    assert validator.errors() == {'SQ1-1j-ii': 'answer_required'}
 
 
 def test_no_error_if_no_tax_issues_and_no_details():
@@ -161,7 +159,7 @@ def test_no_error_if_no_tax_issues_and_no_details():
     del submission['SQ4-1c']
 
     validator = G7Validator(content, submission)
-    assert_equal(validator.errors(), {})
+    assert validator.errors() == {}
 
 
 def test_error_if_tax_issues_and_no_details():
@@ -173,12 +171,12 @@ def test_error_if_tax_issues_and_no_details():
     submission['SQ4-1a'] = True
     submission['SQ4-1b'] = False
     validator = G7Validator(content, submission)
-    assert_equal(validator.errors(), {'SQ4-1c': 'answer_required'})
+    assert validator.errors() == {'SQ4-1c': 'answer_required'}
 
     submission['SQ4-1a'] = False
     submission['SQ4-1b'] = True
     validator = G7Validator(content, submission)
-    assert_equal(validator.errors(), {'SQ4-1c': 'answer_required'})
+    assert validator.errors() == {'SQ4-1c': 'answer_required'}
 
 
 def test_error_if_mitigation_factors_not_provided_when_required():
@@ -198,7 +196,7 @@ def test_error_if_mitigation_factors_not_provided_when_required():
         submission[field] = True
 
         validator = G7Validator(content, submission)
-        assert_equal(validator.errors(), {'SQ3-1k': 'answer_required'})
+        assert validator.errors() == {'SQ3-1k': 'answer_required'}
 
 
 def test_mitigation_factors_not_required():
@@ -214,7 +212,7 @@ def test_mitigation_factors_not_required():
     for field in dependent_fields:
         submission[field] = False
     validator = G7Validator(content, submission)
-    assert_equal(validator.errors(), {})
+    assert validator.errors() == {}
 
 
 def test_fields_only_relevant_to_non_uk():
@@ -225,7 +223,7 @@ def test_fields_only_relevant_to_non_uk():
     del submission['SQ1-1i-i']
 
     validator = G7Validator(content, submission)
-    assert_equal(validator.errors(), {'SQ1-1i-i': 'answer_required'})
+    assert validator.errors() == {'SQ1-1i-i': 'answer_required'}
 
 
 def test_invalid_email_addresses_cause_errors():
@@ -236,10 +234,10 @@ def test_invalid_email_addresses_cause_errors():
     submission['SQ1-2b'] = 'some.user.missed.their.at.com'
 
     validator = G7Validator(content, submission)
-    assert_equal(validator.errors(),
-                 {'SQ1-1o': 'invalid_format',
-                  'SQ1-2b': 'invalid_format'}
-                 )
+    assert validator.errors() == {
+        'SQ1-1o': 'invalid_format',
+        'SQ1-2b': 'invalid_format',
+    }
 
 
 def test_character_limit_errors():
@@ -257,13 +255,13 @@ def test_character_limit_errors():
     for field, limit in cases:
         submission[field] = "a" * (limit + 1)
         validator = G7Validator(content, submission)
-        assert_equal(validator.errors(), {field: 'under_character_limit'})
+        assert validator.errors() == {field: 'under_character_limit'}
 
         submission[field] = "a" * limit
         validator = G7Validator(content, submission)
-        assert_equal(validator.errors(), {})
+        assert validator.errors() == {}
 
 
 def test_get_validator():
     validator = get_validator({"slug": "g-cloud-7"}, None, None)
-    assert_equal(type(validator), G7Validator)
+    assert type(validator) is G7Validator

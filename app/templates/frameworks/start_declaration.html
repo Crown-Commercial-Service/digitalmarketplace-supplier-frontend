@@ -1,0 +1,51 @@
+{% extends "_base_page.html" %}
+
+{% block page_title %}
+  {% block page_title_inner %}
+    Make your supplier declaration
+  {% endblock %} – Digital Marketplace
+{% endblock %}
+
+{% block breadcrumb %}
+  {%
+    with items = [
+      {
+        "link": "/",
+        "label": "Digital Marketplace",
+      },
+      {
+        "link": url_for(".dashboard"),
+        "label": "Your account",
+      },
+      {
+        "link": url_for(".framework_dashboard", framework_slug=framework.slug),
+        "label": "Apply to " + framework.name,
+      }
+    ]
+  %}
+    {% include "toolkit/breadcrumb.html" %}
+  {% endwith %}
+{% endblock %}
+
+{% block main_content %}
+  <div class="grid-row framework-dashboard">
+    <div class="column-two-thirds">
+      {% with
+         heading = self.page_title_inner(),
+         smaller = True
+      %}
+        {% include "toolkit/page-heading.html" %}
+      {% endwith %}
+
+      <p>You must make the supplier declaration to confirm you’re eligible to provide services through {{ framework.name }}.</p>
+      <br>
+      <p>You can come back and change your answers before the application deadline at {{ framework_close_date }}.</p>
+      <br>
+      <p>After the application deadline, the Crown Commercial Service will review your answers and let you know if your application has been successful.</p>
+      <br><br>
+      <a href='{{ url_for(".reuse_framework_supplier_declaration", framework_slug=framework.slug) }}' class="button-save" role="button">Start your declaration</a>
+
+    </div>
+  </div>
+
+{% endblock %}

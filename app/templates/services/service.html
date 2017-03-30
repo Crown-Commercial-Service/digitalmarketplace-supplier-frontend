@@ -26,7 +26,7 @@
     {% if service_data.status != 'published' and service_unavailability_information %}
       {%
         with
-        message = "If you don’t know why this service was removed or you want to reinstate it, contact <a href='mailto:enquiries@digitalmarketplace.service.gov.uk'>enquiries@digitalmarketplace.service.gov.uk</a>.",
+        message = "If you don’t know why this service was removed or you want to reinstate it, contact <a href='mailto:enquiries@digitalmarketplace.service.gov.uk'>enquiries@digitalmarketplace.service.gov.uk</a>." | safe,
         type = "temporary-message",
         heading = "This service was removed on {}".format(service_unavailability_information.createdAt|dateformat)
       %}

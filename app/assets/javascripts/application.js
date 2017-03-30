@@ -4,17 +4,24 @@
   Sprockets-style (https://github.com/sstephenson/sprockets)
   directives to concatenate multiple Javascript files into one.
 */
-//= include ../../../node_modules/govuk_frontend_toolkit/javascripts/govuk/analytics/analytics.js
-//= include ../../../node_modules/govuk_frontend_toolkit/javascripts/govuk/analytics/google-analytics-universal-tracker.js
 //= include ../../../node_modules/govuk_frontend_toolkit/javascripts/vendor/polyfills/bind.js
+//= include _details.polyfill.js
+
 //= include ../../../bower_components/jquery/dist/jquery.js
 //= include ../../../bower_components/hogan/web/builds/3.0.2/hogan-3.0.2.js
 //= include ../../../bower_components/digitalmarketplace-frontend-toolkit/toolkit/javascripts/list-entry.js
 //= include ../../../bower_components/digitalmarketplace-frontend-toolkit/toolkit/javascripts/word-counter.js
 //= include ../../../bower_components/digitalmarketplace-frontend-toolkit/toolkit/javascripts/validation.js
 //= include ../../../node_modules/govuk_frontend_toolkit/javascripts/govuk/selection-buttons.js
-//= include _selection-buttons.js
+//= include ../../../node_modules/govuk_frontend_toolkit/javascripts/govuk/shim-links-with-button-role.js
+//= include ../../../node_modules/govuk_frontend_toolkit/javascripts/govuk/stick-at-top-when-scrolling.js
+//= include ../../../node_modules/govuk_frontend_toolkit/javascripts/govuk/stop-scrolling-at-footer.js
+//= include ../../../bower_components/digitalmarketplace-frontend-toolkit/toolkit/javascripts/show-hide-content.js
 //= include _analytics.js
+//= include _selection-buttons.js
+//= include _shim-links-with-button-role.js
+//= include _stick-at-top-when-scrolling.js
+//= include category-picker.js
 
 (function(GOVUK, GDM) {
 
@@ -22,7 +29,7 @@
 
   var module;
 
-  if(typeof console === 'undefined') {
+  if((typeof console === 'undefined') || (typeof console.time === 'undefined') || (typeof console.timeEnd === 'undefined')) {
     console = {
       log: function () {},
       time: function () {},

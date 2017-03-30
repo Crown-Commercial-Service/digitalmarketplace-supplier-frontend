@@ -1,0 +1,140 @@
+{% extends "_base_page.html" %}
+
+
+{% block page_title %}Your {{ framework.name }} declaration – Digital Marketplace{% endblock %}
+
+
+{% block breadcrumb %}
+  {%
+    with items = [
+      {
+        "link": "/",
+        "label": "Digital Marketplace"
+      },
+      {
+        "link": url_for(".dashboard"),
+        "label": "Your account"
+      },
+      {
+        "link": url_for(".framework_dashboard", framework_slug=framework.slug),
+        "label": "Apply to " + framework.name
+      }
+    ]
+  %}
+    {% include "toolkit/breadcrumb.html" %}
+  {% endwith %}
+{% endblock %}
+
+
+{% macro make_declaration_button_block() %}
+  {% if validates %}
+    {% if supplier_framework.declaration.status != "complete" %}
+    <form method="POST" action="">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+      {%
+        with
+        advice = true,
+        type = "save",
+        label = "Make declaration"
+      %}
+        {% include "toolkit/button.html" %}
+      {% endwith %}
+    </form>
+    {% endif %}
+    <p>
+      You can come back and edit your answers at any time before
+      {% if supplier_framework.declaration.status == "complete" %}
+        {{ framework_dates.framework_close_date|nbsp }}.
+      {% else %}
+        the deadline.
+      {% endif %}
+    </p>
+  {% endif %}
+{% endmacro %}
+
+
+{% block main_content %}
+  <div class="grid-row">
+    <div class="column-two-thirds">
+      {% with
+        heading = "Your declaration overview",
+        smaller = true
+      %}
+        {% include "toolkit/page-heading.html" %}
+      {% endwith %}
+    </div>
+    <div class="column-two-thirds">
+      {% if supplier_framework.declaration.status != "complete" %}
+        <p>
+          You must {% if not validates %}answer all questions and{% endif %} make your declaration 
+          before {{ framework_dates.framework_close_date|nbsp }} to apply to {{ framework.name }}.
+        </p>
+      {% endif %}
+      {{ make_declaration_button_block() }}
+    </div>
+    <div class="column-one-whole">
+      {% import "toolkit/summary-table.html" as summary %}
+      {% for section_slug, (section, section_errors) in sections_errors.items() %}
+        {{ summary.heading(section.name, id=section.slug) }}
+        {% if section.editable %}
+          {% if framework.status == 'open' %}
+            {{ summary.top_link("Edit", url_for(".framework_supplier_declaration_edit", framework_slug=framework.slug, section_id=section.id)) }}
+          {% endif %}
+        {% endif %}
+        {% if section.summary_page_description %}
+          {{ summary.description(section.summary_page_description) }}
+        {% endif %}
+        {% call(question) summary.list_table(
+          section.questions,
+          caption=section.name,
+          field_headings=[
+            "Question",
+            "Answer",
+          ],
+          field_headings_visible=False
+        ) %}
+          {% call summary.row() %}
+            {{ summary.field_name(question.label|question_references(section.get_question)) }}
+            {% if section.editable %}
+              {% if section_errors %}
+                {% call summary.field() %}
+                  {# We don't want a question anchor on the first question of each section; it should take them
+                     to the top of the page so all content is visible #}
+                  {% if section.questions[0].id == question.id -%}
+                    <a href="{{ url_for(".framework_supplier_declaration_edit", framework_slug=framework.slug, section_id=section.id) }}">
+                  {% else -%}
+                    <a href="{{ url_for(".framework_supplier_declaration_edit", framework_slug=framework.slug, section_id=section.id, _anchor=question.id) }}">
+                  {%- endif -%}
+                  {% if supplier_framework.prefillDeclarationFromFrameworkSlug and section.prefill %}
+                    Review answer
+                  {% else %}
+                    Answer question
+                  {% endif %}
+                  </a>
+                {% endcall %}
+              {% elif not question.is_empty %}
+                {{ summary[question.type](question.value, question.assurance) }}
+              {% else %}
+                {# We need to call this (even if with nothing) to add the final column to the row, otherwise the row
+                   terminates early and the line separators between rows do not span the entire width of the table. #}
+                {% call summary.field(action=True) %}
+                {% endcall %}
+              {% endif %}
+            {% endif %}
+          {% endcall %}
+        {% endcall %}
+      {% endfor %}
+    </div>
+    <div class="column-two-thirds">
+      {{ make_declaration_button_block() }}
+    </div>
+  </div>
+
+  {%
+    with
+    url = url_for(".framework_dashboard", framework_slug=framework.slug),
+    text = "Return to application"
+  %}
+    {% include "toolkit/secondary-action-link.html" %}
+  {% endwith %}
+{% endblock %}

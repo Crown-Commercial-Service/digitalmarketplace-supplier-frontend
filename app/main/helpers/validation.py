@@ -62,9 +62,6 @@ class DeclarationValidator(object):
         return default_messages.get(
             message_key, 'There was a problem with the answer to this question')
 
-    def errors(self):
-        raise NotImplementedError("only a subclass should be used")
-
     def all_fields(self):
         return reduce(add, (section.get_question_ids() for section in self.content))
 
@@ -194,7 +191,7 @@ class DOSValidator(DeclarationValidator):
             "mitigatingFactors": [
                 'misleadingInformation', 'confidentialInformation', 'influencedContractingAuthority',
                 'witheldSupportingDocuments', 'seriousMisrepresentation', 'significantOrPersistentDeficiencies',
-                'distortedCompetition', 'conflictOfInterest', 'distortedCompetition', 'graveProfessionalMisconduct',
+                'distortedCompetition', 'conflictOfInterest', 'distortingCompetition', 'graveProfessionalMisconduct',
                 'bankrupt', 'environmentalSocialLabourLaw', 'taxEvasion'
             ],
             # If you responded yes to either 36 or 37
@@ -238,4 +235,5 @@ VALIDATORS = {
     "g-cloud-8": G8Validator,
     "digital-outcomes-and-specialists": DOSValidator,
     "digital-outcomes-and-specialists-2": DOS2Validator,
+    "g-cloud-9": DOS2Validator,
 }

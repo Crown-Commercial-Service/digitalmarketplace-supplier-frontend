@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 import re
+from datetime import datetime
 
+from dmutils.formats import DATETIME_FORMAT
 from flask import abort
 from flask_login import current_user
 from dmapiclient import APIError
@@ -36,6 +38,18 @@ def get_framework_lot(framework, lot_slug):
         return next(lot for lot in framework['lots'] if lot['slug'] == lot_slug)
     except StopIteration:
         abort(404)
+
+
+def order_frameworks_for_reuse(frameworks):
+    """Sort frameworks by reuse suitability.
+
+    If a declaration has the reuse flag set and is the most recently closed framework then that's our framework.
+    """
+    return sorted(
+        filter(lambda i: i['allowDeclarationReuse'] and i['applicationCloseDate'], frameworks),
+        key=lambda i: datetime.strptime(i['applicationCloseDate'], DATETIME_FORMAT),
+        reverse=True
+    )
 
 
 def register_interest_in_framework(client, framework_slug):
@@ -81,6 +95,28 @@ def get_declaration_status(data_api_client, framework_slug):
         return declaration.get('status', 'unstarted')
 
 
+def get_framework_for_reuse(supplier_id, client, exclude_framework_slugs=None):
+    """Given a list of declarations find the most suitable for reuse.
+
+     :param supplier_id: supplier whose declarations we are inspecting
+     :param client: data client if not frameworks
+     :param exclude_framework_slugs: list of framework slugs to exclude from results
+     :return: framework
+     """
+    exclude_framework_slugs = exclude_framework_slugs or []
+    supplier_frameworks = client.find_supplier_declarations(supplier_id)['frameworkInterest']
+    supplier_frameworks_on_framework = filter(
+        lambda i: i['onFramework'],
+        supplier_frameworks
+    )
+    declarations = {i['frameworkSlug']: i for i in supplier_frameworks_on_framework}
+    frameworks = client.find_frameworks()['frameworks']
+    for framework in order_frameworks_for_reuse(frameworks):
+        if framework['slug'] in declarations and framework['slug'] not in exclude_framework_slugs:
+            return framework
+    return None
+
+
 def get_supplier_framework_info(data_api_client, framework_slug):
     try:
         return data_api_client.get_supplier_framework_info(
@@ -119,19 +155,19 @@ def return_supplier_framework_info_if_on_framework_or_abort(data_api_client, fra
 def question_references(data, get_question):
     if not data:
         return data
-    return re.sub(
+    references = re.sub(
         r"\[\[([^\]]+)\]\]",  # anything that looks like [[nameOfQuestion]]
         lambda question_id: str(get_question(question_id.group(1))['number']),
         data
     )
 
+    return data.__class__(references)
+
 
 def get_frameworks_by_status(frameworks, status, extra_condition=False):
-    return [
-        framework for framework in frameworks
-        if framework['status'] == status and
-        (framework.get(extra_condition) if extra_condition else True)
-    ]
+    return list(
+        filter(lambda i: i['status'] == status and (i.get(extra_condition) if extra_condition else True), frameworks)
+    )
 
 
 def count_drafts_by_lot(drafts, lotSlug):

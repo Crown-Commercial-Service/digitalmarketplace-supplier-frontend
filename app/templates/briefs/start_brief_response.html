@@ -1,0 +1,104 @@
+{% extends "_base_page.html" %}
+
+{% block page_title %}Apply for {{ brief.title }} – Digital Marketplace{% endblock %}
+
+{% block breadcrumb %}
+  {%
+    with items = [
+      {
+        "link": "/",
+        "label": "Digital Marketplace"
+      },
+      {
+        "link": "/{}/opportunities".format(brief.frameworkFramework),
+        "label": "Supplier opportunities"
+      },
+      {
+        "link": "/{}/opportunities/{}".format(brief.frameworkFramework, brief.id),
+        "label": brief.title
+      },
+    ]
+  %}
+    {% include "toolkit/breadcrumb.html" %}
+  {% endwith %}
+{% endblock %}
+
+{% block main_content %}
+
+  {%
+    set lot_content = {
+      'digital-specialists': ('the specialist', 'has'),
+      'digital-outcomes': ('the team', 'have'),
+      'user-research-participants': ('you', 'have')
+    }
+  %}
+
+  <div class="grid-row">
+    <div class="column-two-thirds dmspeak">
+
+      {%
+        with
+        smaller = true,
+        heading = "Apply for ‘{}’".format(brief.title)
+      %}
+        {% include "toolkit/page-heading.html" %}
+      {% endwith %}
+      
+      <div class="explanation-list">
+        <p class="lead">To apply for this opportunity, you’ll need to:</p>
+        <ul class="list-bullet">
+          <li>give the date {{ lot_content[brief.lotSlug][0] }} will be available to start work</li>
+          {% if brief.lotSlug == "digital-specialists" %}
+            <li>provide the specialist's day rate</li>
+          {% endif %}
+          <li>say which skills and experience {{ lot_content[brief.lotSlug][0] }} {{ lot_content[brief.lotSlug][1] }}</li>
+          <li>give evidence for all the skills and experience {{ lot_content[brief.lotSlug][0] }} {{ lot_content[brief.lotSlug][1] }}</li>
+        </ul>
+      </div>
+
+      <h2 class="heading-xmedium">How to give evidence</h2>
+      <p>The buyer will assess and score your evidence to shortlist the best {% if brief.lotSlug == 'digital-specialists' %}specialists{% else %}suppliers{% endif %}.</p>
+      <p>You’ll need to meet or exceed their essential requirements to get through to the next stage.</p>
+
+      <h3 class="heading-small">Evidence structure</h3>
+      <div class="explanation-list padding-bottom-small">
+        <p class="lead">When you write your evidence, you should be specific about:</p>
+        <ul class="list-bullet">
+          <li>what the situation was</li>
+          <li>the work {{ lot_content[brief.lotSlug][0] }} did</li>
+          <li>what the results were</li>
+        </ul>
+      </div>
+      <p>There’s a 100-word maximum for each essential or nice-to-have requirement.</p>
+      <p>You should only provide one example for each essential or nice-to-have requirement (unless the buyer specifies otherwise).</p>
+      <p>You can reuse examples across different essential or nice-to-have requirements if you need to.</p>
+
+      {% if not existing_draft_response %}
+        <form action="{{ url_for('.start_brief_response', brief_id=brief['id']) }}" method="post">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+            {%
+              with
+              type = "save",
+              label = "Start application"
+            %}
+              {% include "toolkit/button.html" %}
+            {% endwith %}
+        </form>
+      {% endif %}
+    </div>
+  </div>
+
+  {% if existing_draft_response %}
+    <div class="grid-row">
+      <div class="column-one-third">
+        {%
+          with
+          url = url_for('.edit_brief_response', brief_id=brief['id'], brief_response_id=existing_draft_response.id),
+          label = "Continue application"
+        %}
+          {% include "toolkit/link-button.html" %}
+        {% endwith %}
+      </div>
+    </div>
+  {% endif %}
+{% endblock %}

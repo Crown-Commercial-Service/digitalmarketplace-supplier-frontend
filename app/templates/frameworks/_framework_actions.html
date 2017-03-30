@@ -1,5 +1,5 @@
 {% if framework.status in ['standstill', 'live'] and application_made and not countersigned_agreement_file %}
-  {% if not framework.frameworkAgreementVersion %}
+  {% if not (framework.frameworkAgreementVersion and supplier_is_on_framework) %}
   <li class="browse-list-item">
     <a class="browse-list-item-link" href="{{ url_for('.download_agreement_file', framework_slug=framework.slug, document_name='result-letter.pdf') }}" download>
       <span>Download your application {% if supplier_is_on_framework %}award{% else %}result{% endif %} letter (.pdf)</span>
@@ -13,7 +13,7 @@
   </li>
   {% endif %}
 
-  {% if supplier_is_on_framework %}
+  {% if supplier_is_on_framework and not supplier_framework.agreementReturned %}
   <li class="browse-list-item">
     <a class="browse-list-item-link" href="{{ url_for('.framework_agreement', framework_slug=framework.slug) }}">
       <span>Sign and return your framework agreement</span>
@@ -25,16 +25,17 @@
 
 {% if framework.status == 'open' %}
 <li class="browse-list-item">
-  <a class="browse-list-item-link" href="{{ url_for('.framework_supplier_declaration', framework_slug=framework.slug, section_id=first_page_of_declaration) }}">
-    {% if declaration_status == 'unstarted' %}
-      <span>Make supplier declaration</span>
-    {% else %}
-      <span>Edit supplier declaration</span>
-    {% endif %}
-  </a>
+  {% if declaration_status == 'unstarted' %}
+    <a class="browse-list-item-link" href="{{ url_for('.framework_start_supplier_declaration', framework_slug=framework.slug) }}">
+    <span>Make supplier declaration</span>
+    </a>
+  {% else %}
+    <a class="browse-list-item-link" href="{{ url_for('.framework_supplier_declaration_overview', framework_slug=framework.slug) }}">
+    <span>Edit supplier declaration</span>
+    </a>
+  {% endif %}
   <p class="browse-list-item-body">
-    Agree to the terms of the bid, provide supplier information and
-    confirm&nbsp;eligibility.
+    Confirm eligibility, agree to the application terms and provide supplier&nbsp;information.
   </p>
   {% if declaration_status == 'unstarted' and not counts.complete %}
   <div class="browse-list-item-status-quiet">
@@ -64,13 +65,16 @@
   </div>
   {% endif %}
 </li>
-{% endif %}
 
-{% if framework.status == 'open' %}
 <li class="browse-list-item">
   <a class="browse-list-item-link" href="{{ url_for('.framework_submission_lots', framework_slug=framework.slug) }}">
     <span>Add, edit and complete services</span>
   </a>
+  {% if framework_advice.use_of_service_data %}
+    <div class="browse-list-item-body">
+      {{ framework_advice.use_of_service_data }}
+    </div>
+  {% endif %}
   {% if not counts.complete and not counts.draft %}
   <div class="browse-list-item-status-quiet">
     <p class="browse-list-item-status-title">You need to add and complete services</p>

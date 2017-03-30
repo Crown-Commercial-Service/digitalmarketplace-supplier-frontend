@@ -7,7 +7,8 @@ from flask_login import login_user
 from dmapiclient import HTTPError
 from dmapiclient.audit import AuditTypes
 from dmutils.user import User
-from dmutils.email import decode_invitation_token, generate_token, send_email, MandrillException
+from dmutils.email import decode_invitation_token, generate_token, send_email
+from dmutils.email.exceptions import EmailError
 
 from .. import main
 from ..forms.auth_forms import EmailAddressForm, CreateUserForm
@@ -19,7 +20,7 @@ from ... import data_api_client
 def create_user(encoded_token):
     form = CreateUserForm()
 
-    token = decode_invitation_token(encoded_token, role='supplier')
+    token = decode_invitation_token(encoded_token)
 
     if token is None:
         current_app.logger.warning(
@@ -29,7 +30,7 @@ def create_user(encoded_token):
             "auth/create_user_error.html",
             token=None), 400
 
-    user_json = data_api_client.get_user(email_address=token.get("email_address"))
+    user_json = data_api_client.get_user(email_address=token["email_address"])
 
     if not user_json:
         return render_template(
@@ -50,7 +51,7 @@ def create_user(encoded_token):
 def submit_create_user(encoded_token):
     form = CreateUserForm()
 
-    token = decode_invitation_token(encoded_token, role='supplier')
+    token = decode_invitation_token(encoded_token)
     if token is None:
         current_app.logger.warning("createuser.token_invalid: {encoded_token}",
                                    extra={'encoded_token': encoded_token})
@@ -67,16 +68,16 @@ def submit_create_user(encoded_token):
                 "auth/create_user.html",
                 form=form,
                 token=encoded_token,
-                email_address=token.get('email_address'),
-                supplier_name=token.get('supplier_name')), 400
+                email_address=token['email_address'],
+                supplier_name=token['supplier_name']), 400
 
         try:
             user = data_api_client.create_user({
                 'name': form.name.data,
                 'password': form.password.data,
-                'emailAddress': token.get('email_address'),
+                'emailAddress': token['email_address'],
                 'role': 'supplier',
-                'supplierId': token.get('supplier_id')
+                'supplierId': token['supplier_id']
             })
 
             user = User.from_json(user)
@@ -136,7 +137,7 @@ def send_invite_user():
                 current_app.config['INVITE_EMAIL_NAME'],
                 ["user-invite"]
             )
-        except MandrillException as e:
+        except EmailError as e:
             current_app.logger.error(
                 "Invitation email failed to send. "
                 "error {error} supplier_id {supplier_id} email_hash {email_hash}",

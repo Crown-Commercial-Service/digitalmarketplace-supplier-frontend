@@ -1,20 +1,29 @@
 # -*- coding: utf-8 -*-
-import pytest
+from collections import OrderedDict
+from itertools import chain
+
+from dmapiclient import HTTPError
+from flask import request
+from werkzeug.datastructures import MultiDict
+
+from app.main.forms.frameworks import ReuseDeclarationForm
+
 try:
     from StringIO import StringIO
 except ImportError:
     from io import BytesIO as StringIO
-from nose.tools import assert_equal, assert_true, assert_in, assert_not_in
 import mock
+import pytest
+from six.moves.urllib.parse import urljoin
 
 from flask import session
 from lxml import html
 from dmapiclient import APIError
 from dmapiclient.audit import AuditTypes
-from dmutils.email import MandrillException
+from dmutils.email.exceptions import EmailError
 from dmutils.s3 import S3ResponseError
 
-from ..helpers import BaseApplicationTest, FULL_G7_SUBMISSION, FakeMail
+from ..helpers import BaseApplicationTest, FULL_G7_SUBMISSION, FakeMail, valid_g9_declaration_base
 
 
 def _return_fake_s3_file_dict(directory, filename, ext, last_modified=None, size=None):
@@ -37,31 +46,92 @@ def get_g_cloud_8():
     )
 
 
+def _assert_args_and_raise(e, *args, **kwargs):
+    def _inner(*inner_args, **inner_kwargs):
+        assert args == inner_args
+        assert kwargs == inner_kwargs
+        raise e
+    return _inner
+
+
+def _assert_args_and_return(retval, *args, **kwargs):
+    def _inner(*inner_args, **inner_kwargs):
+        assert args == inner_args
+        assert kwargs == inner_kwargs
+        return retval
+    return _inner
+
+
+@pytest.fixture(params=("GET", "POST"))
+def get_or_post(request):
+    return request.param
+
+
 @mock.patch('dmutils.s3.S3')
 @mock.patch('app.main.views.frameworks.data_api_client', autospec=True)
 class TestFrameworksDashboard(BaseApplicationTest):
     @staticmethod
-    def _assert_last_updated_times(doc, last_updateds):
-
-        for last_updated in last_updateds:
-            hint = doc.xpath(
-                '//li[contains(@class, "browse-list-item")]'
-                '//span[contains(text(), "{}")]'
-                '/../..'
-                '/div[@class="hint"]'.format(last_updated['text'])
+    def _extract_guidance_links(doc):
+        return OrderedDict(
+            (
+                section_li.xpath("normalize-space(string(.//h2))"),
+                tuple(
+                    (
+                        item_li.xpath("normalize-space(string(.//a))") or None,
+                        item_li.xpath("string(.//a/@href)") or None,
+                        item_li.xpath("normalize-space(string(.//time))") or None,
+                        item_li.xpath("string(.//time/@datetime)") or None,
+                    )
+                    for item_li in section_li.xpath(".//p[.//a]")
+                ),
             )
+            for section_li in doc.xpath("//main//*[./h2][.//p//a]")
+        )
 
-            if last_updated.get('time'):
-                time = hint[0].find('./time')
-                assert_equal(
-                    BaseApplicationTest.strip_all_whitespace(last_updated['time']['text']),
-                    BaseApplicationTest.strip_all_whitespace(time.text))
-                assert_equal(
-                    BaseApplicationTest.strip_all_whitespace(last_updated['time']['datetime']),
-                    BaseApplicationTest.strip_all_whitespace(time.get('datetime')))
+    @staticmethod
+    def _extract_signing_details_table_rows(doc):
+        return tuple(
+            tuple(
+                td_th_elem.xpath("normalize-space(string())")
+                for td_th_elem in tr_elem.xpath("td|th")
+            )
+            for tr_elem in doc.xpath(
+                "//main//table[normalize-space(string(./caption))=$b]/tbody/tr",
+                b="Agreement details",
+            )
+        )
 
-            else:
-                assert_equal(len(hint), 0)
+    @property
+    def _boring_agreement_details(self):
+        # property so we always get a clean copy
+        return {
+            'frameworkAgreementVersion': 'v1.0',
+            'signerName': 'Martin Cunningham',
+            'signerRole': 'Foreman',
+            'uploaderUserId': 123,
+            'uploaderUserName': 'User',
+            'uploaderUserEmail': 'email@email.com',
+        }
+
+    _boring_agreement_returned_at = "2016-07-10T21:20:00.000000Z"
+
+    @property
+    def _boring_agreement_details_expected_table_results(self):
+        # property so we always get a clean copy
+        return (
+            (
+                'Person who signed',
+                'Martin Cunningham Foreman'
+            ),
+            (
+                'Submitted by',
+                'User email@email.com Sunday 10 July 2016 at 22:20'
+            ),
+            (
+                'Countersignature',
+                'Waiting for CCS to countersign'
+            ),
+        )
 
     def test_framework_dashboard_shows_for_pending_if_declaration_exists(self, data_api_client, s3):
         with self.app.test_client():
@@ -71,10 +141,12 @@ class TestFrameworksDashboard(BaseApplicationTest):
         data_api_client.get_supplier_framework_info.return_value = self.supplier_framework()
         res = self.client.get("/suppliers/frameworks/g-cloud-7")
 
-        assert_equal(res.status_code, 200)
+        assert res.status_code == 200
         doc = html.fromstring(res.get_data(as_text=True))
-        assert_equal(
-            len(doc.xpath('//h1[contains(text(), "Your G-Cloud 7 application")]')), 1)
+        assert len(doc.xpath(
+            "//h1[normalize-space(string())=$b]",
+            b="Your G-Cloud 7 application",
+        )) == 1
 
     def test_framework_dashboard_shows_for_live_if_declaration_exists(self, data_api_client, s3):
         with self.app.test_client():
@@ -84,10 +156,12 @@ class TestFrameworksDashboard(BaseApplicationTest):
         data_api_client.get_supplier_framework_info.return_value = self.supplier_framework()
         res = self.client.get("/suppliers/frameworks/g-cloud-7")
 
-        assert_equal(res.status_code, 200)
+        assert res.status_code == 200
         doc = html.fromstring(res.get_data(as_text=True))
-        assert_equal(
-            len(doc.xpath('//h1[contains(text(), "Your G-Cloud 7 documents")]')), 1)
+        assert len(doc.xpath(
+            "//h1[normalize-space(string())=$b]",
+            b="G-Cloud 7 documents",
+        )) == 1
 
     def test_does_not_show_for_live_if_no_declaration(self, data_api_client, s3):
         with self.app.test_client():
@@ -97,7 +171,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
         data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(declaration=None)
         res = self.client.get("/suppliers/frameworks/g-cloud-7")
 
-        assert_equal(res.status_code, 404)
+        assert res.status_code == 404
 
     @mock.patch('app.main.views.frameworks.send_email')
     def test_interest_registered_in_framework_on_post(self, send_email, data_api_client, s3):
@@ -108,7 +182,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
             data_api_client.get_supplier_framework_info.return_value = self.supplier_framework()
             res = self.client.post("/suppliers/frameworks/digital-outcomes-and-specialists")
 
-            assert_equal(res.status_code, 200)
+            assert res.status_code == 200
             data_api_client.register_framework_interest.assert_called_once_with(
                 1234,
                 "digital-outcomes-and-specialists",
@@ -129,7 +203,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
             ]}
             res = self.client.post("/suppliers/frameworks/digital-outcomes-and-specialists")
 
-            assert_equal(res.status_code, 200)
+            assert res.status_code == 200
             send_email.assert_called_once_with(
                 ['email1', 'email2'],
                 mock.ANY,
@@ -148,8 +222,8 @@ class TestFrameworksDashboard(BaseApplicationTest):
             data_api_client.get_supplier_framework_info.return_value = self.supplier_framework()
             res = self.client.get("/suppliers/frameworks/digital-outcomes-and-specialists")
 
-            assert_equal(res.status_code, 200)
-            assert not data_api_client.register_framework_interest.called
+            assert res.status_code == 200
+            assert data_api_client.register_framework_interest.called is False
 
     def test_interest_set_but_no_declaration(self, data_api_client, s3):
         with self.app.test_client():
@@ -166,7 +240,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
 
             res = self.client.get("/suppliers/frameworks/g-cloud-7")
 
-            assert_equal(res.status_code, 200)
+            assert res.status_code == 200
 
     def test_shows_gcloud_7_closed_message_if_pending_and_no_application_done(self, data_api_client, s3):
         with self.app.test_client():
@@ -182,15 +256,14 @@ class TestFrameworksDashboard(BaseApplicationTest):
             data_api_client.get_supplier_framework_info.return_value = self.supplier_framework()
 
             res = self.client.get("/suppliers/frameworks/g-cloud-7")
+            assert res.status_code == 200
 
             doc = html.fromstring(res.get_data(as_text=True))
 
             heading = doc.xpath('//div[@class="summary-item-lede"]//h2[@class="summary-item-heading"]')
-            assert_true(len(heading) > 0)
-            assert_in(u"G-Cloud 7 is closed for applications",
-                      heading[0].xpath('text()')[0])
-            assert_in(u"You didn't submit an application.",
-                      heading[0].xpath('../p[1]/text()')[0])
+            assert len(heading) > 0
+            assert u"G-Cloud 7 is closed for applications" in heading[0].xpath('text()')[0]
+            assert u"You didn't submit an application." in heading[0].xpath('../p[1]/text()')[0]
 
     def test_shows_gcloud_7_closed_message_if_pending_and_application(self, data_api_client, s3):
         with self.app.test_client():
@@ -206,17 +279,17 @@ class TestFrameworksDashboard(BaseApplicationTest):
             data_api_client.get_supplier_framework_info.return_value = self.supplier_framework()
 
             res = self.client.get("/suppliers/frameworks/g-cloud-7")
+            assert res.status_code == 200
 
             doc = html.fromstring(res.get_data(as_text=True))
             heading = doc.xpath('//div[@class="summary-item-lede"]//h2[@class="summary-item-heading"]')
-            assert_true(len(heading) > 0)
-            assert_in(u"G-Cloud 7 is closed for applications",
-                      heading[0].xpath('text()')[0])
+            assert len(heading) > 0
+            assert u"G-Cloud 7 is closed for applications" in heading[0].xpath('text()')[0]
             lede = doc.xpath('//div[@class="summary-item-lede"]')
-            assert_in(u"You made your supplier declaration and submitted 1 service for consideration.",
-                      lede[0].xpath('./p[1]/text()')[0])
-            assert_in(u"We’ll let you know the result of your application by ",  # noqa
-                      lede[0].xpath('./p[2]/text()')[0])  # noqa
+            assert u"You made your supplier declaration and submitted 1 service for consideration." in \
+                lede[0].xpath('./p[1]/text()')[0]
+            assert u"We’ll let you know the result of your application by " in \
+                lede[0].xpath('./p[2]/text()')[0]
 
     def test_declaration_status_when_complete(self, data_api_client, s3):
         with self.app.test_client():
@@ -226,11 +299,10 @@ class TestFrameworksDashboard(BaseApplicationTest):
             data_api_client.get_supplier_framework_info.return_value = self.supplier_framework()
 
             res = self.client.get("/suppliers/frameworks/g-cloud-7")
+            assert res.status_code == 200
 
             doc = html.fromstring(res.get_data(as_text=True))
-            assert_equal(
-                len(doc.xpath(u'//p/strong[contains(text(), "You’ve made the supplier declaration")]')),
-                1)
+            assert len(doc.xpath(u'//p/strong[contains(text(), "You’ve made the supplier declaration")]')) == 1
 
     def test_declaration_status_when_started(self, data_api_client, s3):
         with self.app.test_client():
@@ -248,11 +320,10 @@ class TestFrameworksDashboard(BaseApplicationTest):
                 declaration=submission, status='started')
 
             res = self.client.get("/suppliers/frameworks/g-cloud-7")
+            assert res.status_code == 200
 
             doc = html.fromstring(res.get_data(as_text=True))
-            assert_equal(
-                len(doc.xpath('//p[contains(text(), "You need to finish making the supplier declaration")]')),  # noqa
-                1)
+            assert len(doc.xpath('//p[contains(text(), "You need to finish making the supplier declaration")]')) == 1
 
     def test_declaration_status_when_not_complete(self, data_api_client, s3):
         with self.app.test_client():
@@ -262,16 +333,20 @@ class TestFrameworksDashboard(BaseApplicationTest):
             data_api_client.get_supplier_framework_info.side_effect = APIError(mock.Mock(status_code=404))
 
             res = self.client.get("/suppliers/frameworks/g-cloud-7")
+            assert res.status_code == 200
 
             doc = html.fromstring(res.get_data(as_text=True))
-            assert_equal(
-                len(doc.xpath('//p[contains(text(), "You need to make the supplier declaration")]')),
-                1)
+            assert len(doc.xpath('//p[contains(text(), "You need to make the supplier declaration")]')) == 1
 
-    def test_last_updated_exists_for_both_sections(self, data_api_client, s3):
+    def test_downloads_shown_open_framework(self, data_api_client, s3):
         files = [
             ('updates/communications/', 'file 1', 'odt', '2015-01-01T14:00:00.000Z'),
             ('updates/clarifications/', 'file 2', 'odt', '2015-02-02T14:00:00.000Z'),
+            ('', 'g-cloud-7-proposed-call-off', 'pdf', '2016-05-01T14:00:00.000Z'),
+            ('', 'g-cloud-7-invitation', 'pdf', '2016-05-01T14:00:00.000Z'),
+            ('', 'g-cloud-7-proposed-framework-agreement', 'pdf', '2016-06-01T14:00:00.000Z'),
+            ('', 'g-cloud-7-reporting-template', 'xls', '2016-06-06T14:00:00.000Z'),
+            # superfluous file that shouldn't be shown
             ('', 'g-cloud-7-supplier-pack', 'zip', '2015-01-01T14:00:00.000Z'),
         ]
 
@@ -287,29 +362,177 @@ class TestFrameworksDashboard(BaseApplicationTest):
             data_api_client.get_framework.return_value = self.framework(status='open')
             data_api_client.get_supplier_framework_info.return_value = self.supplier_framework()
             res = self.client.get("/suppliers/frameworks/g-cloud-7")
+            assert res.status_code == 200
+
             doc = html.fromstring(res.get_data(as_text=True))
-            last_updateds = [
-                {
-                    'text': "Download guidance and legal documentation (.zip)",
-                    'time': {
-                        'text': 'Thursday 1 January 2015',
-                        'datetime': '2015-01-01T14:00:00.000Z'
-                    }
-                },
-                {
-                    'text': "Read updates and ask clarification questions",
-                    'time': {
-                        'text': 'Monday 2 February 2015',
-                        'datetime': '2015-02-02T14:00:00.000Z'
-                    }
-                }
-            ]
+            extracted_guidance_links = self._extract_guidance_links(doc)
 
-            self._assert_last_updated_times(doc, last_updateds)
+            assert extracted_guidance_links == OrderedDict((
+                ("Guidance", (
+                    (
+                        "Download the invitation to apply",
+                        "/suppliers/frameworks/g-cloud-7/files/g-cloud-7-invitation.pdf",
+                        None,
+                        None,
+                    ),
+                    (
+                        "Read about how to apply",
+                        "https://www.gov.uk/guidance/g-cloud-suppliers-guide#how-to-apply",
+                        None,
+                        None,
+                    ),
+                )),
+                ("Legal documents", (
+                    (
+                        "Download the proposed framework agreement",
+                        "/suppliers/frameworks/g-cloud-7/files/g-cloud-7-proposed-framework-agreement.pdf",
+                        "Wednesday 1 June 2016",
+                        "2016-06-01T14:00:00.000Z",
+                    ),
+                    (
+                        u"Download the proposed \u2018call-off\u2019 contract",
+                        "/suppliers/frameworks/g-cloud-7/files/g-cloud-7-proposed-call-off.pdf",
+                        "Sunday 1 May 2016",
+                        "2016-05-01T14:00:00.000Z",
+                    ),
+                )),
+                ("Communications", (
+                    (
+                        "View communications and ask clarification questions",
+                        "/suppliers/frameworks/g-cloud-7/updates",
+                        "Monday 2 February 2015",
+                        "2015-02-02T14:00:00.000Z",
+                    ),
+                )),
+                ("Reporting", (
+                    (
+                        "Download the reporting template",
+                        "/suppliers/frameworks/g-cloud-7/files/g-cloud-7-reporting-template.xls",
+                        None,
+                        None,
+                    ),
+                )),
+            ))
+            assert not any(
+                doc.xpath("//main//a[contains(@href, $href_part)]", href_part=href_part)
+                for href_part in (
+                    "g-cloud-7-final-framework-agreement.pdf",
+                    "g-cloud-7-supplier-pack.zip",
+                )
+            )
+            assert len(doc.xpath(
+                "//main//p[contains(normalize-space(string()), $a)]",
+                a="until 5pm BST, 22 September 2015",
+            )) == 1
+            assert not doc.xpath(
+                "//main//table[normalize-space(string(./caption))=$b]",
+                b="Agreement details",
+            )
 
-    def test_last_updated_exists_for_one_section(self, data_api_client, s3):
+    def test_downloads_shown_open_framework_clarification_questions_closed(self, data_api_client, s3):
         files = [
+            ('updates/communications/', 'file 1', 'odt', '2015-01-01T14:00:00.000Z'),
+            ('updates/clarifications/', 'file 2', 'odt', '2015-02-02T14:00:00.000Z'),
+            ('', 'g-cloud-7-proposed-call-off', 'pdf', '2016-05-01T14:00:00.000Z'),
+            ('', 'g-cloud-7-invitation', 'pdf', '2016-05-01T14:00:00.000Z'),
+            ('', 'g-cloud-7-proposed-framework-agreement', 'pdf', '2016-06-01T14:00:00.000Z'),
+            ('', 'g-cloud-7-reporting-template', 'xls', '2016-06-06T14:00:00.000Z'),
+            # superfluous file that shouldn't be shown
             ('', 'g-cloud-7-supplier-pack', 'zip', '2015-01-01T14:00:00.000Z'),
+        ]
+
+        s3.return_value.list.return_value = [
+            _return_fake_s3_file_dict(
+                'g-cloud-7/communications/{}'.format(section), filename, ext, last_modified=last_modified
+            ) for section, filename, ext, last_modified in files
+        ]
+
+        with self.app.test_client():
+            self.login()
+
+            data_api_client.get_framework.return_value = self.framework(
+                status="open",
+                clarification_questions_open=False,
+            )
+            data_api_client.get_supplier_framework_info.return_value = self.supplier_framework()
+            res = self.client.get("/suppliers/frameworks/g-cloud-7")
+            assert res.status_code == 200
+
+            doc = html.fromstring(res.get_data(as_text=True))
+            extracted_guidance_links = self._extract_guidance_links(doc)
+
+            assert extracted_guidance_links == OrderedDict((
+                ("Guidance", (
+                    (
+                        "Download the invitation to apply",
+                        "/suppliers/frameworks/g-cloud-7/files/g-cloud-7-invitation.pdf",
+                        None,
+                        None,
+                    ),
+                    (
+                        "Read about how to apply",
+                        "https://www.gov.uk/guidance/g-cloud-suppliers-guide#how-to-apply",
+                        None,
+                        None,
+                    ),
+                )),
+                ("Legal documents", (
+                    (
+                        "Download the proposed framework agreement",
+                        "/suppliers/frameworks/g-cloud-7/files/g-cloud-7-proposed-framework-agreement.pdf",
+                        "Wednesday 1 June 2016",
+                        "2016-06-01T14:00:00.000Z",
+                    ),
+                    (
+                        u"Download the proposed \u2018call-off\u2019 contract",
+                        "/suppliers/frameworks/g-cloud-7/files/g-cloud-7-proposed-call-off.pdf",
+                        "Sunday 1 May 2016",
+                        "2016-05-01T14:00:00.000Z",
+                    ),
+                )),
+                ("Communications", (
+                    (
+                        "View communications and clarification questions",
+                        "/suppliers/frameworks/g-cloud-7/updates",
+                        "Monday 2 February 2015",
+                        "2015-02-02T14:00:00.000Z",
+                    ),
+                )),
+                ("Reporting", (
+                    (
+                        "Download the reporting template",
+                        "/suppliers/frameworks/g-cloud-7/files/g-cloud-7-reporting-template.xls",
+                        None,
+                        None,
+                    ),
+                )),
+            ))
+            assert not any(
+                doc.xpath("//main//a[contains(@href, $href_part)]", href_part=href_part)
+                for href_part in (
+                    "g-cloud-7-final-framework-agreement.pdf",
+                    "g-cloud-7-supplier-pack.zip",
+                )
+            )
+            assert not doc.xpath(
+                "//main[contains(normalize-space(string()), $a)]",
+                a="until 5pm BST, 22 September 2015",
+            )
+            assert not doc.xpath(
+                "//main//table[normalize-space(string(./caption))=$b]",
+                b="Agreement details",
+            )
+
+    def test_final_agreement_download_shown_open_framework(self, data_api_client, s3):
+        files = [
+            ('updates/communications/', 'file 1', 'odt', '2015-01-01T14:00:00.000Z'),
+            ('updates/clarifications/', 'file 2', 'odt', '2015-02-02T14:00:00.000Z'),
+            ('', 'g-cloud-7-proposed-call-off', 'pdf', '2016-05-01T14:00:00.000Z'),
+            ('', 'g-cloud-7-invitation', 'pdf', '2016-05-01T14:00:00.000Z'),
+            ('', 'g-cloud-7-reporting-template', 'xls', '2016-06-06T14:00:00.000Z'),
+            ('', 'g-cloud-7-final-framework-agreement', 'pdf', '2016-06-02T14:00:00.000Z'),
+            # present but should be overridden by final agreement file
+            ('', 'g-cloud-7-proposed-framework-agreement', 'pdf', '2016-06-11T14:00:00.000Z'),
         ]
 
         s3.return_value.list.return_value = [
@@ -324,23 +547,114 @@ class TestFrameworksDashboard(BaseApplicationTest):
             data_api_client.get_framework.return_value = self.framework(status='open')
             data_api_client.get_supplier_framework_info.return_value = self.supplier_framework()
             res = self.client.get("/suppliers/frameworks/g-cloud-7")
+            assert res.status_code == 200
+
             doc = html.fromstring(res.get_data(as_text=True))
-            last_updateds = [
-                {
-                    'text': "Download guidance and legal documentation (.zip)",
-                    'time': {
-                        'text': 'Thursday 1 January 2015',
-                        'datetime': '2015-01-01T14:00:00.000Z'
-                    }
-                },
-                {
-                    'text': "Read updates and ask clarification questions"
-                }
-            ]
+            extracted_guidance_links = self._extract_guidance_links(doc)
 
-            self._assert_last_updated_times(doc, last_updateds)
+            assert extracted_guidance_links == OrderedDict((
+                ("Guidance", (
+                    (
+                        "Download the invitation to apply",
+                        "/suppliers/frameworks/g-cloud-7/files/g-cloud-7-invitation.pdf",
+                        None,
+                        None,
+                    ),
+                    (
+                        "Read about how to apply",
+                        "https://www.gov.uk/guidance/g-cloud-suppliers-guide#how-to-apply",
+                        None,
+                        None,
+                    ),
+                )),
+                ("Legal documents", (
+                    (
+                        "Download the framework agreement",
+                        "/suppliers/frameworks/g-cloud-7/files/g-cloud-7-final-framework-agreement.pdf",
+                        "Thursday 2 June 2016",
+                        "2016-06-02T14:00:00.000Z",
+                    ),
+                    (
+                        u"Download the proposed \u2018call-off\u2019 contract",
+                        "/suppliers/frameworks/g-cloud-7/files/g-cloud-7-proposed-call-off.pdf",
+                        "Sunday 1 May 2016",
+                        "2016-05-01T14:00:00.000Z",
+                    ),
+                )),
+                ("Communications", (
+                    (
+                        "View communications and ask clarification questions",
+                        "/suppliers/frameworks/g-cloud-7/updates",
+                        "Monday 2 February 2015",
+                        "2015-02-02T14:00:00.000Z",
+                    ),
+                )),
+                ("Reporting", (
+                    (
+                        "Download the reporting template",
+                        "/suppliers/frameworks/g-cloud-7/files/g-cloud-7-reporting-template.xls",
+                        None,
+                        None,
+                    ),
+                )),
+            ))
+            assert not any(
+                doc.xpath("//main//a[contains(@href, $href_part)]", href_part=href_part)
+                for href_part in (
+                    "g-cloud-7-proposed-framework-agreement.pdf",
+                    "g-cloud-7-supplier-pack.zip",
+                )
+            )
+            assert len(doc.xpath(
+                "//main//p[contains(normalize-space(string()), $a)]",
+                a="until 5pm BST, 22 September 2015",
+            )) == 1
+            assert not doc.xpath(
+                "//main//table[normalize-space(string(./caption))=$b]",
+                b="Agreement details",
+            )
 
-    def test_last_updated_does_not_exist(self, data_api_client, s3):
+    def test_no_updates_open_framework(self, data_api_client, s3):
+        files = [
+            ('', 'g-cloud-7-call-off', 'pdf', '2016-05-01T14:00:00.000Z'),
+            ('', 'g-cloud-7-invitation', 'pdf', '2016-05-01T14:00:00.000Z'),
+            ('', 'g-cloud-7-proposed-framework-agreement', 'pdf', '2016-06-01T14:00:00.000Z'),
+            ('', 'g-cloud-7-reporting-template', 'xls', '2016-06-06T14:00:00.000Z'),
+        ]
+
+        s3.return_value.list.return_value = [
+            _return_fake_s3_file_dict(
+                'g-cloud-7/communications/{}'.format(section), filename, ext, last_modified=last_modified
+            ) for section, filename, ext, last_modified in files
+        ]
+
+        with self.app.test_client():
+            self.login()
+
+            data_api_client.get_framework.return_value = self.framework(status='open')
+            data_api_client.get_supplier_framework_info.return_value = self.supplier_framework()
+            res = self.client.get("/suppliers/frameworks/g-cloud-7")
+            assert res.status_code == 200
+
+            doc = html.fromstring(res.get_data(as_text=True))
+            extracted_guidance_links = self._extract_guidance_links(doc)
+
+            assert (
+                "View communications and ask clarification questions",
+                "/suppliers/frameworks/g-cloud-7/updates",
+                None,
+                None,
+            ) in extracted_guidance_links["Communications"]
+            assert len(doc.xpath(
+                "//main//p[contains(normalize-space(string()), $a)]",
+                a="until 5pm BST, 22 September 2015",
+            )) == 1
+            assert not doc.xpath(
+                "//main//table[normalize-space(string(./caption))=$b]",
+                b="Agreement details",
+            )
+
+    def test_no_files_exist_open_framework(self, data_api_client, s3):
         s3.return_value.list.return_value = []
 
         with self.app.test_client():
@@ -349,13 +663,65 @@ class TestFrameworksDashboard(BaseApplicationTest):
             data_api_client.get_framework.return_value = self.framework(status='open')
             data_api_client.get_supplier_framework_info.return_value = self.supplier_framework()
             res = self.client.get("/suppliers/frameworks/g-cloud-7")
-            doc = html.fromstring(res.get_data(as_text=True))
-            last_updateds = [
-                {'text': "Download guidance and legal documentation (.zip)"},
-                {'text': "Read updates and ask clarification questions"}
-            ]
+            assert res.status_code == 200
 
-            self._assert_last_updated_times(doc, last_updateds)
+            doc = html.fromstring(res.get_data(as_text=True))
+            extracted_guidance_links = self._extract_guidance_links(doc)
+
+            assert extracted_guidance_links == OrderedDict((
+                ("Guidance", (
+                    (
+                        "Read about how to apply",
+                        "https://www.gov.uk/guidance/g-cloud-suppliers-guide#how-to-apply",
+                        None,
+                        None,
+                    ),
+                )),
+                ("Communications", (
+                    (
+                        "View communications and ask clarification questions",
+                        "/suppliers/frameworks/g-cloud-7/updates",
+                        None,
+                        None,
+                    ),
+                )),
+            ))
+            assert not any(
+                doc.xpath(
+                    "//a[contains(@href, $href_part) or normalize-space(string())=$label]",
+                    href_part=href_part,
+                    label=label,
+                ) for href_part, label in (
+                    (
+                        "g-cloud-7-invitation.pdf",
+                        "Download the invitation to apply",
+                    ),
+                    (
+                        "g-cloud-7-proposed-framework-agreement.pdf",
+                        "Download the proposed framework agreement",
+                    ),
+                    (
+                        "g-cloud-7-call-off.pdf",
+                        u"Download the proposed \u2018call-off\u2019 contract",
+                    ),
+                    (
+                        "g-cloud-7-reporting-template.xls",
+                        "Download the reporting template",
+                    ),
+                    (
+                        "result-letter.pdf",
+                        "Download your application result letter",
+                    ),
+                )
+            )
+            assert len(doc.xpath(
+                "//main//p[contains(normalize-space(string()), $a)]",
+                a="until 5pm BST, 22 September 2015",
+            )) == 1
+            assert not doc.xpath(
+                "//main//table[normalize-space(string(./caption))=$b]",
+                b="Agreement details",
+            )
 
     def test_returns_404_if_framework_does_not_exist(self, data_api_client, s3):
         with self.app.test_client():
@@ -364,7 +730,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
 
             res = self.client.get('/suppliers/frameworks/does-not-exist')
 
-            assert_equal(res.status_code, 404)
+            assert res.status_code == 404
 
     def test_result_letter_is_shown_when_is_in_standstill(self, data_api_client, s3):
         with self.app.test_client():
@@ -382,7 +748,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
 
             data = res.get_data(as_text=True)
 
-            assert_in(u'Download your application result letter', data)
+            assert u'Download your application result letter' in data
 
     def test_result_letter_is_not_shown_when_not_in_standstill(self, data_api_client, s3):
         with self.app.test_client():
@@ -400,7 +766,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
 
             data = res.get_data(as_text=True)
 
-            assert_not_in(u'Download your application result letter', data)
+            assert u'Download your application result letter' not in data
 
     def test_result_letter_is_not_shown_when_no_application(self, data_api_client, s3):
         with self.app.test_client():
@@ -417,7 +783,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
 
             data = res.get_data(as_text=True)
 
-            assert_not_in(u'Download your application result letter', data)
+            assert u'Download your application result letter' not in data
 
     def test_link_to_unsigned_framework_agreement_is_shown_if_supplier_is_on_framework(self, data_api_client, s3):
         with self.app.test_client():
@@ -435,8 +801,8 @@ class TestFrameworksDashboard(BaseApplicationTest):
 
             data = res.get_data(as_text=True)
 
-            assert_in(u'Sign and return your framework agreement', data)
-            assert_not_in(u'Download your countersigned framework agreement', data)
+            assert u'Sign and return your framework agreement' in data
+            assert u'Download your countersigned framework agreement' not in data
 
     def test_pending_success_message_is_explicit_if_supplier_is_on_framework(self, data_api_client, s3):
         with self.app.test_client():
@@ -450,7 +816,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
         }
         data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(on_framework=True)
         res = self.client.get("/suppliers/frameworks/g-cloud-7")
-        assert_equal(res.status_code, 200)
+        assert res.status_code == 200
 
         data = res.get_data(as_text=True)
 
@@ -461,14 +827,14 @@ class TestFrameworksDashboard(BaseApplicationTest):
             u'Download your application award letter (.pdf)',
             u'This letter is a record of your successful G-Cloud 7 application.'
         ]:
-            assert_in(success_message, data)
+            assert success_message in data
 
         for equivocal_message in [
             u'You made your supplier declaration and submitted 1 service.',
             u'Download your application result letter (.pdf)',
             u'This letter informs you if your G-Cloud 7 application has been successful.'
         ]:
-            assert_not_in(equivocal_message, data)
+            assert equivocal_message not in data
 
     def test_link_to_framework_agreement_is_not_shown_if_supplier_is_not_on_framework(self, data_api_client, s3):
         with self.app.test_client():
@@ -486,7 +852,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
 
             data = res.get_data(as_text=True)
 
-            assert_not_in(u'Sign and return your framework agreement', data)
+            assert u'Sign and return your framework agreement' not in data
 
     def test_pending_success_message_is_equivocal_if_supplier_is_on_framework(self, data_api_client, s3):
         with self.app.test_client():
@@ -500,7 +866,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
         }
         data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(on_framework=False)
         res = self.client.get("/suppliers/frameworks/g-cloud-7")
-        assert_equal(res.status_code, 200)
+        assert res.status_code == 200
 
         data = res.get_data(as_text=True)
 
@@ -509,16 +875,30 @@ class TestFrameworksDashboard(BaseApplicationTest):
             u'Download your application award letter (.pdf)',
             u'This letter is a record of your successful G-Cloud 7 application.'
         ]:
-            assert_not_in(success_message, data)
+            assert success_message not in data
 
         for equivocal_message in [
             u'You made your supplier declaration and submitted 1 service.',
             u'Download your application result letter (.pdf)',
             u'This letter informs you if your G-Cloud 7 application has been successful.'
         ]:
-            assert_in(equivocal_message, data)
+            assert equivocal_message in data
 
-    def test_link_to_countersigned_framework_agreement_is_shown_if_it_exists(self, data_api_client, s3):
+    def test_countersigned_framework_agreement_non_fav_framework(self, data_api_client, s3):
+        # "fav" being "frameworkAgreementVersion"
+        files = [
+            ('', 'g-cloud-7-final-call-off', 'pdf', '2016-05-01T14:00:00.000Z'),
+            ('', 'g-cloud-7-invitation', 'pdf', '2016-05-01T14:00:00.000Z'),
+            ('', 'g-cloud-7-final-framework-agreement', 'pdf', '2016-06-01T14:00:00.000Z'),
+            ('', 'g-cloud-7-reporting-template', 'xls', '2016-06-06T14:00:00.000Z'),
+        ]
+
+        s3.return_value.list.return_value = [
+            _return_fake_s3_file_dict(
+                'g-cloud-7/communications/{}'.format(section), filename, ext, last_modified=last_modified
+            ) for section, filename, ext, last_modified in files
+        ]
+
         with self.app.test_client():
             self.login()
             data_api_client.get_framework.return_value = self.framework(status='standstill')
@@ -530,141 +910,640 @@ class TestFrameworksDashboard(BaseApplicationTest):
             data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
                 on_framework=True,
                 agreement_returned=True,
-                agreement_path='path',
+                agreement_details=self._boring_agreement_details,
+                agreement_path='pathy/mc/path.face',
                 countersigned=True,
-                countersigned_path='g-cloud-7/agreements/1234/1234-countersigned-agreement.pdf'
+                countersigned_path='g-cloud-7/agreements/1234/1234-countersigned-agreement.pdf',
             )
 
             res = self.client.get("/suppliers/frameworks/g-cloud-7")
+            assert res.status_code == 200
 
             data = res.get_data(as_text=True)
 
-            assert 'Sign and return your framework agreement' not in data
-            assert '<ahref="/suppliers/frameworks/g-cloud-7/agreements/countersigned-agreement.pdf"><span>Downloadyourcountersignedframeworkagreement(.pdf)</span></a>' in self.strip_all_whitespace(data)  # noqa
+            doc = html.fromstring(data)
 
-    def test_framework_dashboard_shows_returned_agreement_details(
-            self, data_api_client, s3
-    ):
+            assert not doc.xpath(
+                "//main//a[@href=$href or normalize-space(string())=$label]",
+                href="/frameworks/g-cloud-7/agreement",
+                label="Sign and return your framework agreement",
+            )
+
+            extracted_guidance_links = self._extract_guidance_links(doc)
+
+            assert extracted_guidance_links == OrderedDict((
+                ("Legal documents", (
+                    (
+                        'Download the standard framework agreement',
+                        '/suppliers/frameworks/g-cloud-7/files/g-cloud-7-final-framework-agreement.pdf',
+                        None,
+                        None,
+                    ),
+                    (
+                        "Download your signed framework agreement",
+                        "/suppliers/frameworks/g-cloud-7/agreements/pathy/mc/path.face",
+                        None,
+                        None,
+                    ),
+                    (
+                        u"Download your countersigned framework agreement",
+                        "/suppliers/frameworks/g-cloud-7/agreements/countersigned-agreement.pdf",
+                        None,
+                        None,
+                    ),
+                    (
+                        'Download your application result letter',
+                        '/suppliers/frameworks/g-cloud-7/agreements/result-letter.pdf',
+                        None,
+                        None,
+                    ),
+                    (
+                        'Download the call-off contract template',
+                        '/suppliers/frameworks/g-cloud-7/files/g-cloud-7-final-call-off.pdf',
+                        None,
+                        None,
+                    ),
+                )),
+                ("Guidance", (
+                    (
+                        'Download the invitation to apply',
+                        '/suppliers/frameworks/g-cloud-7/files/g-cloud-7-invitation.pdf',
+                        None,
+                        None,
+                    ),
+                    (
+                        "Read about how to sell your services",
+                        "https://www.gov.uk/guidance/g-cloud-suppliers-guide#how-to-apply",
+                        None,
+                        None,
+                    ),
+                )),
+                ("Communications", (
+                    (
+                        "View communications and clarification questions",
+                        "/suppliers/frameworks/g-cloud-7/updates",
+                        None,
+                        None,
+                    ),
+                )),
+                ('Reporting', (
+                    (
+                        'Download the reporting template',
+                        '/suppliers/frameworks/g-cloud-7/files/g-cloud-7-reporting-template.xls',
+                        None,
+                        None,
+                    ),
+                )),
+            ))
+            assert not doc.xpath(
+                "//main//table[normalize-space(string(./caption))=$b]",
+                b="Agreement details",
+            )
+            assert not doc.xpath(
+                "//main//p[contains(normalize-space(string()), $b)]",
+                b="You can start selling your",
+            )
+            # neither of these should exist because it's a pre-frameworkAgreementVersion framework
+            assert not doc.xpath(
+                "//main//p[contains(normalize-space(string()), $b)]",
+                b="Your original and counterpart signature pages",
+            )
+            assert not doc.xpath(
+                "//main//p[contains(normalize-space(string()), $b)]",
+                b="Your framework agreement signature page has been sent to the Crown Commercial Service",
+            )
+
+    def test_countersigned_framework_agreement_fav_framework(self, data_api_client, s3):
+        # "fav" being "frameworkAgreementVersion"
+        files = [
+            ('', 'g-cloud-8-final-call-off', 'pdf', '2016-05-01T14:00:00.000Z'),
+            ('', 'g-cloud-8-invitation', 'pdf', '2016-05-01T14:00:00.000Z'),
+            ('', 'g-cloud-8-final-framework-agreement', 'pdf', '2016-06-01T14:00:00.000Z'),
+            ('', 'g-cloud-8-reporting-template', 'xls', '2016-06-06T14:00:00.000Z'),
+        ]
+
+        s3.return_value.list.return_value = [
+            _return_fake_s3_file_dict(
+                'g-cloud-8/communications/{}'.format(section), filename, ext, last_modified=last_modified
+            ) for section, filename, ext, last_modified in files
+        ]
+
         with self.app.test_client():
             self.login()
             data_api_client.get_framework.return_value = get_g_cloud_8()
+            data_api_client.find_draft_services.return_value = {
+                "services": [
+                    {'serviceName': 'A service', 'status': 'submitted', 'lotSlug': 'iaas'}
+                ]
+            }
             data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
                 on_framework=True,
                 agreement_returned=True,
-                agreement_details={
-                    'frameworkAgreementVersion': 'v1.0',
-                    'signerName': 'signer name',
-                    'signerRole': 'signer role',
-                    'uploaderUserId': 123,
-                    'uploaderUserName': 'User',
-                    'uploaderUserEmail': 'email@email.com'
-                },
-                agreement_path='g-cloud-8/agreements/123-framework-agreement.pdf',
-                agreement_returned_at='2016-07-10T21:20:00.000000Z'
+                agreement_details=self._boring_agreement_details,
+                agreement_path='pathy/mc/path.face',
+                agreement_returned_at=self._boring_agreement_returned_at,
+                countersigned=True,
+                countersigned_path='g-cloud-8/agreements/1234/1234-countersigned-agreement.pdf',
             )
 
             res = self.client.get("/suppliers/frameworks/g-cloud-8")
-            page = res.get_data(as_text=True)
             assert res.status_code == 200
-            assert 'G-Cloud 8 documents' in page
-            page_without_whitespace = self.strip_all_whitespace(page)
-            assert '<a href="/suppliers/frameworks/g-cloud-8/agreements/framework-agreement.pdf" target="_blank">Download your framework agreement signature page, signed by your company</a>' in page  # noqa
-            assert '<tdclass="summary-item-field"><span><p>signername</p><p>signerrole</p></span></td>' in page_without_whitespace  # noqa
-            assert '<tdclass="summary-item-field"><span><p>User</p><p>email@email.com</p><p>Sunday10July2016at22:20</p></span></td>' in page_without_whitespace  # noqa
-            assert '<tdclass="summary-item-field-first"><span>WaitingforCCStocountersign</span></td>' in page_without_whitespace  # noqa
 
-    def test_framework_dashboard_shows_contract_variation_link_after_agreement_returned(
-            self, data_api_client, s3
-    ):
+            data = res.get_data(as_text=True)
+
+            doc = html.fromstring(data)
+
+            assert not doc.xpath(
+                "//main//a[@href=$href or normalize-space(string())=$label]",
+                href="/frameworks/g-cloud-8/agreement",
+                label="Sign and return your framework agreement",
+            )
+            assert not doc.xpath(
+                "//main//a[@href=$href or normalize-space(string())=$label]",
+                href="/suppliers/frameworks/g-cloud-7/agreements/result-letter.pdf",
+                label="Download your application result letter",
+            )
+
+            extracted_guidance_links = self._extract_guidance_links(doc)
+
+            assert extracted_guidance_links == OrderedDict((
+                ("Legal documents", (
+                    (
+                        'Read the standard framework agreement',
+                        'https://www.gov.uk/government/publications/g-cloud-8-framework-agreement',
+                        None,
+                        None,
+                    ),
+                    (
+                        u"Download your \u2018original\u2019 framework agreement signature page",
+                        "/suppliers/frameworks/g-cloud-8/agreements/pathy/mc/path.face",
+                        None,
+                        None,
+                    ),
+                    (
+                        u"Download your \u2018counterpart\u2019 framework agreement signature page",
+                        "/suppliers/frameworks/g-cloud-8/agreements/countersigned-agreement.pdf",
+                        None,
+                        None,
+                    ),
+                    (
+                        'Download the call-off contract template',
+                        '/suppliers/frameworks/g-cloud-8/files/g-cloud-8-final-call-off.pdf',
+                        None,
+                        None,
+                    ),
+                )),
+                ("Guidance", (
+                    (
+                        'Download the invitation to apply',
+                        '/suppliers/frameworks/g-cloud-8/files/g-cloud-8-invitation.pdf',
+                        None,
+                        None,
+                    ),
+                    (
+                        "Read about how to sell your services",
+                        "https://www.gov.uk/guidance/g-cloud-suppliers-guide#how-to-apply",
+                        None,
+                        None,
+                    ),
+                )),
+                ("Communications", (
+                    (
+                        "View communications and clarification questions",
+                        "/suppliers/frameworks/g-cloud-8/updates",
+                        None,
+                        None,
+                    ),
+                )),
+                ('Reporting', (
+                    (
+                        'Download the reporting template',
+                        '/suppliers/frameworks/g-cloud-8/files/g-cloud-8-reporting-template.xls',
+                        None,
+                        None,
+                    ),
+                )),
+            ))
+            assert not doc.xpath(
+                "//main//table[normalize-space(string(./caption))=$b]",
+                b="Agreement details",
+            )
+            assert not doc.xpath(
+                "//main//p[contains(normalize-space(string()), $b)]",
+                b="You can start selling your",
+            )
+            assert doc.xpath(
+                "//main//p[contains(normalize-space(string()), $b)]",
+                b="Your original and counterpart signature pages",
+            )
+            assert not doc.xpath(
+                "//main//p[contains(normalize-space(string()), $b)]",
+                b="Your framework agreement signature page has been sent to the Crown Commercial Service",
+            )
+
+    def test_shows_returned_agreement_details(self, data_api_client, s3):
         with self.app.test_client():
             self.login()
-            g8_with_variation = get_g_cloud_8().copy()
+            data_api_client.get_framework.return_value = get_g_cloud_8()
+            data_api_client.find_draft_services.return_value = {
+                "services": [
+                    {'serviceName': 'A service', 'status': 'submitted', 'lotSlug': 'iaas'}
+                ]
+            }
+            data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
+                on_framework=True,
+                agreement_returned=True,
+                agreement_details=self._boring_agreement_details,
+                agreement_path='g-cloud-8/agreements/123-framework-agreement.pdf',
+                agreement_returned_at=self._boring_agreement_returned_at,
+            )
+
+            res = self.client.get("/suppliers/frameworks/g-cloud-8")
+            assert res.status_code == 200
+
+            data = res.get_data(as_text=True)
+            doc = html.fromstring(data)
+
+            assert not doc.xpath(
+                "//main//a[@href=$href or normalize-space(string())=$label]",
+                href="/frameworks/g-cloud-7/agreement",
+                label="Sign and return your framework agreement",
+            )
+            assert not doc.xpath(
+                "//main//a[@href=$href or normalize-space(string())=$label]",
+                href="/suppliers/frameworks/g-cloud-7/agreements/result-letter.pdf",
+                label="Download your application result letter",
+            )
+
+            extracted_guidance_links = self._extract_guidance_links(doc)
+            assert extracted_guidance_links == OrderedDict((
+                ('Legal documents', (
+                    (
+                        'Read the standard framework agreement',
+                        'https://www.gov.uk/government/publications/g-cloud-8-framework-agreement',
+                        None,
+                        None,
+                    ),
+                    (
+                        u'Download your \u2018original\u2019 framework agreement signature page',
+                        '/suppliers/frameworks/g-cloud-8/agreements/framework-agreement.pdf',
+                        None,
+                        None,
+                    ),
+                )),
+                ('Guidance', (
+                    (
+                        'Read about how to sell your services',
+                        'https://www.gov.uk/guidance/g-cloud-suppliers-guide#how-to-apply',
+                        None,
+                        None,
+                    ),
+                )),
+                ('Communications', (
+                    (
+                        'View communications and clarification questions',
+                        '/suppliers/frameworks/g-cloud-8/updates',
+                        None,
+                        None,
+                    ),
+                )),
+            ))
+            extracted_signing_details_table_rows = self._extract_signing_details_table_rows(doc)
+            assert extracted_signing_details_table_rows == \
+                self._boring_agreement_details_expected_table_results
+            assert len(doc.xpath(
+                "//main//h1[normalize-space(string())=$b]",
+                b="Your G-Cloud 8 application",
+            )) == 1
+            assert doc.xpath(
+                "//main//p[contains(normalize-space(string()), $b)]",
+                b="You can start selling your",
+            )
+            assert not doc.xpath(
+                "//main//p[contains(normalize-space(string()), $b)]",
+                b="Your original and counterpart signature pages",
+            )
+            assert doc.xpath(
+                "//main//p[contains(normalize-space(string()), $b)]",
+                b="Your framework agreement signature page has been sent to the Crown Commercial Service",
+            )
+
+    def test_countersigned_but_no_countersigned_path(self, data_api_client, s3):
+        with self.app.test_client():
+            self.login()
+            data_api_client.get_framework.return_value = get_g_cloud_8()
+            data_api_client.find_draft_services.return_value = {
+                "services": [
+                    {'serviceName': 'A service', 'status': 'submitted', 'lotSlug': 'iaas'}
+                ]
+            }
+            data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
+                on_framework=True,
+                agreement_returned=True,
+                agreement_details=self._boring_agreement_details,
+                agreement_path='g-cloud-8/agreements/123-framework-agreement.pdf',
+                agreement_returned_at=self._boring_agreement_returned_at,
+                countersigned=True,
+                # note `countersigned_path` is not set: we're testing that the view behaves as though not countersigned
+                # i.e. is not depending on the `countersigned` property
+            )
+
+            res = self.client.get("/suppliers/frameworks/g-cloud-8")
+            assert res.status_code == 200
+
+            data = res.get_data(as_text=True)
+            doc = html.fromstring(data)
+
+            assert not doc.xpath(
+                "//main//a[@href=$href or normalize-space(string())=$label]",
+                href="/frameworks/g-cloud-7/agreement",
+                label="Sign and return your framework agreement",
+            )
+
+            extracted_guidance_links = self._extract_guidance_links(doc)
+            assert extracted_guidance_links == OrderedDict((
+                ('Legal documents', (
+                    (
+                        'Read the standard framework agreement',
+                        'https://www.gov.uk/government/publications/g-cloud-8-framework-agreement',
+                        None,
+                        None,
+                    ),
+                    (
+                        u'Download your \u2018original\u2019 framework agreement signature page',
+                        '/suppliers/frameworks/g-cloud-8/agreements/framework-agreement.pdf',
+                        None,
+                        None,
+                    ),
+                )),
+                ('Guidance', (
+                    (
+                        'Read about how to sell your services',
+                        'https://www.gov.uk/guidance/g-cloud-suppliers-guide#how-to-apply',
+                        None,
+                        None,
+                    ),
+                )),
+                ('Communications', (
+                    (
+                        'View communications and clarification questions',
+                        '/suppliers/frameworks/g-cloud-8/updates',
+                        None,
+                        None,
+                    ),
+                )),
+            ))
+            extracted_signing_details_table_rows = self._extract_signing_details_table_rows(doc)
+            assert extracted_signing_details_table_rows == \
+                self._boring_agreement_details_expected_table_results
+            assert len(doc.xpath(
+                "//main//h1[normalize-space(string())=$b]",
+                b="Your G-Cloud 8 application",
+            )) == 1
+            assert doc.xpath(
+                "//main//p[contains(normalize-space(string()), $b)]",
+                b="You can start selling your",
+            )
+            assert not doc.xpath(
+                "//main//p[contains(normalize-space(string()), $b)]",
+                b="Your original and counterpart signature pages",
+            )
+            assert doc.xpath(
+                "//main//p[contains(normalize-space(string()), $b)]",
+                b="Your framework agreement signature page has been sent to the Crown Commercial Service",
+            )
+
+    def test_shows_contract_variation_link_after_agreement_returned(self, data_api_client, s3):
+        with self.app.test_client():
+            self.login()
+            g8_with_variation = get_g_cloud_8()
             g8_with_variation['frameworks']['variations'] = {"1": {"createdAt": "2018-08-16"}}
             data_api_client.get_framework.return_value = g8_with_variation
             data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
                 on_framework=True,
                 agreement_returned=True,
+                agreement_details=self._boring_agreement_details,
                 agreement_path='g-cloud-8/agreements/123-framework-agreement.pdf',
-                agreement_returned_at='2016-07-10T21:20:00.000000Z'
+                agreement_returned_at=self._boring_agreement_returned_at,
             )
 
             res = self.client.get("/suppliers/frameworks/g-cloud-8")
-            page = res.get_data(as_text=True)
             assert res.status_code == 200
-            assert 'Read the proposed contract variation' in page
 
-    def test_framework_dashboard_does_not_show_contract_variation_link_if_feature_flagged_off(
-            self, data_api_client, s3
-    ):
+            data = res.get_data(as_text=True)
+            doc = html.fromstring(data)
+
+            assert not doc.xpath(
+                "//main//a[@href=$href or normalize-space(string())=$label]",
+                href="/frameworks/g-cloud-7/agreement",
+                label="Sign and return your framework agreement",
+            )
+
+            extracted_guidance_links = self._extract_guidance_links(doc)
+            assert extracted_guidance_links == OrderedDict((
+                ('Legal documents', (
+                    (
+                        'Read the standard framework agreement',
+                        'https://www.gov.uk/government/publications/g-cloud-8-framework-agreement',
+                        None,
+                        None,
+                    ),
+                    (
+                        u'Download your \u2018original\u2019 framework agreement signature page',
+                        '/suppliers/frameworks/g-cloud-8/agreements/framework-agreement.pdf',
+                        None,
+                        None,
+                    ),
+                    (
+                        'Read the proposed contract variation',
+                        '/suppliers/frameworks/g-cloud-8/contract-variation/1',
+                        None,
+                        None,
+                    ),
+                )),
+                ('Guidance', (
+                    (
+                        'Read about how to sell your services',
+                        'https://www.gov.uk/guidance/g-cloud-suppliers-guide#how-to-apply',
+                        None,
+                        None,
+                    ),
+                )),
+                ('Communications', (
+                    (
+                        'View communications and clarification questions',
+                        '/suppliers/frameworks/g-cloud-8/updates',
+                        None,
+                        None,
+                    ),
+                )),
+            ))
+            extracted_signing_details_table_rows = self._extract_signing_details_table_rows(doc)
+            assert extracted_signing_details_table_rows == \
+                self._boring_agreement_details_expected_table_results
+            assert doc.xpath(
+                "//main//p[contains(normalize-space(string()), $b)]",
+                b="You can start selling your",
+            )
+            assert not doc.xpath(
+                "//main//p[contains(normalize-space(string()), $b)]",
+                b="Your original and counterpart signature pages",
+            )
+            assert doc.xpath(
+                "//main//p[contains(normalize-space(string()), $b)]",
+                b="Your framework agreement signature page has been sent to the Crown Commercial Service",
+            )
+
+    def test_does_not_show_contract_variation_link_if_feature_flagged_off(self, data_api_client, s3):
         with self.app.test_client():
             self.app.config['FEATURE_FLAGS_CONTRACT_VARIATION'] = False
             self.login()
-            g8_with_variation = get_g_cloud_8().copy()
+            g8_with_variation = get_g_cloud_8()
             g8_with_variation['frameworks']['variations'] = {"1": {"createdAt": "2018-08-16"}}
             data_api_client.get_framework.return_value = g8_with_variation
             data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
                 on_framework=True,
                 agreement_returned=True,
+                agreement_details=self._boring_agreement_details,
                 agreement_path='g-cloud-8/agreements/123-framework-agreement.pdf',
-                agreement_returned_at='2016-07-10T21:20:00.000000Z'
+                agreement_returned_at=self._boring_agreement_returned_at,
             )
 
             res = self.client.get("/suppliers/frameworks/g-cloud-8")
-            page = res.get_data(as_text=True)
             assert res.status_code == 200
-            assert 'Read the proposed contract variation' not in page
 
-    def test_framework_dashboard_does_not_show_contract_variation_link_if_no_variation(
-            self, data_api_client, s3
-    ):
+            data = res.get_data(as_text=True)
+            doc = html.fromstring(data)
+
+            assert not doc.xpath(
+                "//main//a[@href=$href or normalize-space(string())=$label]",
+                href="/frameworks/g-cloud-7/agreement",
+                label="Sign and return your framework agreement",
+            )
+
+            assert not doc.xpath(
+                "//main//a[contains(@href, $href_part) or normalize-space(string())=$label]",
+                href_part="contract-variation/1",
+                label="Read the proposed contract variation",
+            )
+            extracted_signing_details_table_rows = self._extract_signing_details_table_rows(doc)
+            assert extracted_signing_details_table_rows == \
+                self._boring_agreement_details_expected_table_results
+            assert doc.xpath(
+                "//main//p[contains(normalize-space(string()), $b)]",
+                b="You can start selling your",
+            )
+            assert not doc.xpath(
+                "//main//p[contains(normalize-space(string()), $b)]",
+                b="Your original and counterpart signature pages",
+            )
+            assert doc.xpath(
+                "//main//p[contains(normalize-space(string()), $b)]",
+                b="Your framework agreement signature page has been sent to the Crown Commercial Service",
+            )
+
+    def test_does_not_show_contract_variation_link_if_no_variation(self, data_api_client, s3):
         with self.app.test_client():
             self.login()
             data_api_client.get_framework.return_value = get_g_cloud_8()
             data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
                 on_framework=True,
                 agreement_returned=True,
+                agreement_details=self._boring_agreement_details,
                 agreement_path='g-cloud-8/agreements/123-framework-agreement.pdf',
-                agreement_returned_at='2016-07-10T21:20:00.000000Z'
+                agreement_returned_at=self._boring_agreement_returned_at,
             )
 
             res = self.client.get("/suppliers/frameworks/g-cloud-8")
-            page = res.get_data(as_text=True)
             assert res.status_code == 200
-            assert 'Read the proposed contract variation' not in page
 
-    def test_framework_dashboard_does_not_show_contract_variation_link_if_agreement_not_returned(
-            self, data_api_client, s3
-    ):
+            data = res.get_data(as_text=True)
+            doc = html.fromstring(data)
+
+            assert not doc.xpath(
+                "//main//a[@href=$href or normalize-space(string())=$label]",
+                href="/frameworks/g-cloud-7/agreement",
+                label="Sign and return your framework agreement",
+            )
+            assert not doc.xpath(
+                "//main//a[normalize-space(string())=$label]",
+                label="Read the proposed contract variation",
+            )
+            extracted_signing_details_table_rows = self._extract_signing_details_table_rows(doc)
+            assert extracted_signing_details_table_rows == \
+                self._boring_agreement_details_expected_table_results
+            assert doc.xpath(
+                "//main//p[contains(normalize-space(string()), $b)]",
+                b="You can start selling your",
+            )
+            assert not doc.xpath(
+                "//main//p[contains(normalize-space(string()), $b)]",
+                b="Your original and counterpart signature pages",
+            )
+            assert doc.xpath(
+                "//main//p[contains(normalize-space(string()), $b)]",
+                b="Your framework agreement signature page has been sent to the Crown Commercial Service",
+            )
+
+    def test_does_not_show_contract_variation_link_if_agreement_not_returned(self, data_api_client, s3):
         with self.app.test_client():
             self.login()
-            g8_with_variation = get_g_cloud_8().copy()
+            g8_with_variation = get_g_cloud_8()
             g8_with_variation['frameworks']['variations'] = {"1": {"createdAt": "2018-08-16"}}
             data_api_client.get_framework.return_value = g8_with_variation
             data_api_client.get_supplier_framework_info.return_value = self.supplier_framework()
 
             res = self.client.get("/suppliers/frameworks/g-cloud-8")
-            page = res.get_data(as_text=True)
             assert res.status_code == 200
-            assert 'Read the proposed contract variation' not in page
 
-    def test_framework_dashboard_shows_contract_variation_alternate_link_text_after_agreed_by_ccs(
-            self, data_api_client, s3
-    ):
+            data = res.get_data(as_text=True)
+            doc = html.fromstring(data)
+
+            assert not doc.xpath(
+                "//main//a[@href=$href or normalize-space(string())=$label]",
+                href="/frameworks/g-cloud-7/agreement",
+                label="Sign and return your framework agreement",
+            )
+            assert not doc.xpath(
+                "//main//a[contains(@href, $href_part) or normalize-space(string())=$label]",
+                href_part="contract-variation/1",
+                label="Read the proposed contract variation",
+            )
+            assert not doc.xpath(
+                "//main//table[normalize-space(string(./caption))=$b]",
+                b="Agreement details",
+            )
+            assert not doc.xpath(
+                "//main//p[contains(normalize-space(string()), $b)]",
+                b="You can start selling your",
+            )
+            assert not doc.xpath(
+                "//main//p[contains(normalize-space(string()), $b)]",
+                b="Your original and counterpart signature pages",
+            )
+            assert not doc.xpath(
+                "//main//p[contains(normalize-space(string()), $b)]",
+                b="Your framework agreement signature page has been sent to the Crown Commercial Service",
+            )
+
+    def test_shows_contract_variation_alternate_link_text_after_agreed_by_ccs(self, data_api_client, s3):
         with self.app.test_client():
             self.login()
-            g8_with_variation = get_g_cloud_8().copy()
-            g8_with_variation['frameworks']['variations'] = {"1": {
-                "createdAt": "2018-08-16",
-                "countersignedAt": "2018-10-01",
-                "countersignerName": "A.N. Other",
-                "countersignerRole": "Head honcho",
-            }
+            g8_with_variation = get_g_cloud_8()
+            g8_with_variation['frameworks']['variations'] = {
+                "1": {
+                    "createdAt": "2018-08-16",
+                    "countersignedAt": "2018-10-01",
+                    "countersignerName": "A.N. Other",
+                    "countersignerRole": "Head honcho",
+                },
             }
             data_api_client.get_framework.return_value = g8_with_variation
             data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
                 on_framework=True,
                 agreement_returned=True,
-                agreement_returned_at='2016-07-10T21:20:00.000000Z',
+                agreement_details=self._boring_agreement_details,
+                agreement_returned_at=self._boring_agreement_returned_at,
                 agreement_path='g-cloud-8/agreements/1234/1234-signed-agreement.pdf',
                 agreed_variations={
                     "1": {
@@ -672,14 +1551,176 @@ class TestFrameworksDashboard(BaseApplicationTest):
                         "agreedUserId": 1,
                         "agreedUserEmail": "agreed@email.com",
                         "agreedUserName": u"William Drăyton",
-                    }}
+                    },
+                },
             )
 
             res = self.client.get("/suppliers/frameworks/g-cloud-8")
-            page = res.get_data(as_text=True)
             assert res.status_code == 200
-            assert 'Read the proposed contract variation' not in page
-            assert 'View the signed contract variation' in page
+
+            data = res.get_data(as_text=True)
+            doc = html.fromstring(data)
+
+            assert not doc.xpath(
+                "//main//a[@href=$href or normalize-space(string())=$label]",
+                href="/frameworks/g-cloud-7/agreement",
+                label="Sign and return your framework agreement",
+            )
+
+            extracted_guidance_links = self._extract_guidance_links(doc)
+            assert extracted_guidance_links == OrderedDict((
+                ('Legal documents', (
+                    (
+                        'Read the standard framework agreement',
+                        'https://www.gov.uk/government/publications/g-cloud-8-framework-agreement',
+                        None,
+                        None,
+                    ),
+                    (
+                        u'Download your \u2018original\u2019 framework agreement signature page',
+                        '/suppliers/frameworks/g-cloud-8/agreements/signed-agreement.pdf',
+                        None,
+                        None,
+                    ),
+                    (
+                        'View the signed contract variation',
+                        '/suppliers/frameworks/g-cloud-8/contract-variation/1',
+                        None,
+                        None,
+                    ),
+                )),
+                ('Guidance', (
+                    (
+                        'Read about how to sell your services',
+                        'https://www.gov.uk/guidance/g-cloud-suppliers-guide#how-to-apply',
+                        None,
+                        None,
+                    ),
+                )),
+                ('Communications', (
+                    (
+                        'View communications and clarification questions',
+                        '/suppliers/frameworks/g-cloud-8/updates',
+                        None,
+                        None,
+                    ),
+                )),
+            ))
+            assert not doc.xpath(
+                "//main//a[normalize-space(string())=$label]",
+                label="Read the proposed contract variation",
+            )
+            assert doc.xpath(
+                "//main//p[contains(normalize-space(string()), $b)]",
+                b="You can start selling your",
+            )
+            assert not doc.xpath(
+                "//main//p[contains(normalize-space(string()), $b)]",
+                b="Your original and counterpart signature pages",
+            )
+            assert doc.xpath(
+                "//main//p[contains(normalize-space(string()), $b)]",
+                b="Your framework agreement signature page has been sent to the Crown Commercial Service",
+            )
+
+    @pytest.mark.parametrize('supplier_framework_kwargs,link_label,link_href', (
+        ({'declaration': None}, 'Make supplier declaration', '/suppliers/frameworks/g-cloud-7/declaration/start'),
+        ({}, 'Edit supplier declaration', '/suppliers/frameworks/g-cloud-7/declaration'),
+    ))
+    def test_make_or_edit_supplier_declaration_shows_correct_page(self, data_api_client, s3, supplier_framework_kwargs,
+                                                                  link_label, link_href):
+        with self.app.test_client():
+            self.login()
+
+            data_api_client.get_framework.return_value = self.framework(status='open')
+            data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
+                **supplier_framework_kwargs)
+
+            response = self.client.get('/suppliers/frameworks/g-cloud-7')
+            document = html.fromstring(response.get_data(as_text=True))
+
+            assert document.xpath("//a[normalize-space(string())=$link_label]/@href", link_label=link_label)[0] \
+                == link_href
+
+    def test_dashboard_does_not_show_use_of_service_data_if_not_available(self, data_api_client, s3):
+        with self.app.test_client():
+            self.login()
+
+            data_api_client.get_framework.return_value = self.framework(slug="g-cloud-8", name="G-Cloud 8",
+                                                                        status="open")
+            data_api_client.get_supplier_framework_info.return_value = self.supplier_framework()
+
+            res = self.client.get("/suppliers/frameworks/g-cloud-8")
+            assert res.status_code == 200
+
+            doc = html.fromstring(res.get_data(as_text=True))
+
+            add_edit_complete_services = doc.xpath('//div[contains(@class, "framework-dashboard")]/div/li')[1]
+            use_of_data = add_edit_complete_services.xpath('//div[@class="browse-list-item-body"]')
+
+            assert len(use_of_data) == 0
+
+    def test_dashboard_shows_use_of_service_data_if_available(self, data_api_client, s3):
+        with self.app.test_client():
+            self.login()
+
+            data_api_client.get_framework.return_value = self.framework(slug="g-cloud-9", name="G-Cloud 9",
+                                                                        status="open")
+            data_api_client.get_supplier_framework_info.return_value = self.supplier_framework()
+
+            res = self.client.get("/suppliers/frameworks/g-cloud-9")
+            assert res.status_code == 200
+
+            doc = html.fromstring(res.get_data(as_text=True))
+
+            add_edit_complete_services = doc.xpath('//div[contains(@class, "framework-dashboard")]/div/li')[1]
+            use_of_data = add_edit_complete_services.xpath('//div[@class="browse-list-item-body"]')
+
+            assert len(use_of_data) == 1
+            assert 'The service information you provide here:' in use_of_data[0].text_content()
+
+
+@mock.patch('dmutils.s3.S3')
+@mock.patch('app.main.views.frameworks.data_api_client', autospec=True)
+class TestFrameworksDashboardConfidenceBannerOnPage(BaseApplicationTest):
+    """Tests for the confidence banner on the declaration page."""
+
+    expected = (
+        'Your application will be submitted at 5pm&nbsp;BST,&nbsp;23&nbsp;June&nbsp;2016. <br> '
+        'You can edit your declaration and services at any time before the deadline.'
+    )
+
+    def test_confidence_banner_on_page(self, data_api_client, _):
+        """Test confidence banner appears on page happy path."""
+        data_api_client.get_framework.return_value = self.framework(status='open')
+        data_api_client.find_draft_services.return_value = {
+            "services": [
+                {'serviceName': 'A service', 'status': 'submitted', 'lotSlug': 'foo'}
+            ]
+        }
+        data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(status='complete')
+
+        with self.app.test_client():
+            self.login()
+            res = self.client.get("/suppliers/frameworks/g-cloud-8")
+        assert res.status_code == 200
+        assert self.expected in str(res.data)
+
+    def test_confidence_banner_not_on_page(self, data_api_client, _):
+        """Change value and assertt that confidence banner is not displayed."""
+        data_api_client.get_framework.return_value = self.framework(status='open')
+        data_api_client.find_draft_services.return_value = {
+            "services": [
+                {'serviceName': 'A service', 'status': 'not-submitted', 'lotSlug': 'foo'}
+            ]
+        }
+        data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(status='complete')
+
+        with self.app.test_client():
+            self.login()
+            res = self.client.get("/suppliers/frameworks/g-cloud-8")
+        assert res.status_code == 200
+        assert self.expected not in str(res.data)
 
 
 @mock.patch('app.main.views.frameworks.data_api_client', autospec=True)
@@ -695,9 +1736,9 @@ class TestFrameworkAgreement(BaseApplicationTest):
             res = self.client.get("/suppliers/frameworks/g-cloud-7/agreement")
             data = res.get_data(as_text=True)
 
-            assert_equal(res.status_code, 200)
-            assert_in(u'Send document to CCS', data)
-            assert_not_in(u'Return your signed signature page', data)
+            assert res.status_code == 200
+            assert u'Send document to CCS' in data
+            assert u'Return your signed signature page' not in data
 
     def test_page_returns_404_if_framework_in_wrong_state(self, data_api_client):
         with self.app.test_client():
@@ -709,7 +1750,7 @@ class TestFrameworkAgreement(BaseApplicationTest):
 
             res = self.client.get("/suppliers/frameworks/g-cloud-7/agreement")
 
-            assert_equal(res.status_code, 404)
+            assert res.status_code == 404
 
     def test_page_returns_404_if_supplier_not_on_framework(self, data_api_client):
         with self.app.test_client():
@@ -721,7 +1762,7 @@ class TestFrameworkAgreement(BaseApplicationTest):
 
             res = self.client.get("/suppliers/frameworks/g-cloud-7/agreement")
 
-            assert_equal(res.status_code, 404)
+            assert res.status_code == 404
 
     @mock.patch('dmutils.s3.S3')
     def test_upload_message_if_agreement_is_returned(self, s3, data_api_client):
@@ -737,13 +1778,10 @@ class TestFrameworkAgreement(BaseApplicationTest):
             data = res.get_data(as_text=True)
             doc = html.fromstring(data)
 
-            assert_equal(res.status_code, 200)
-            assert_equal(
-                u'/suppliers/frameworks/g-cloud-7/agreement',
-                doc.xpath('//form')[0].action
-            )
-            assert_in(u'Document uploaded Monday 2 November 2015 at 15:25', data)
-            assert_in(u'Your document has been uploaded', data)
+            assert res.status_code == 200
+            assert u'/suppliers/frameworks/g-cloud-7/agreement' == doc.xpath('//form')[0].action
+            assert u'Document uploaded Monday 2 November 2015 at 15:25' in data
+            assert u'Your document has been uploaded' in data
 
     def test_upload_message_if_agreement_is_not_returned(self, data_api_client):
         with self.app.test_client():
@@ -757,13 +1795,10 @@ class TestFrameworkAgreement(BaseApplicationTest):
             data = res.get_data(as_text=True)
             doc = html.fromstring(data)
 
-            assert_equal(res.status_code, 200)
-            assert_equal(
-                u'/suppliers/frameworks/g-cloud-7/agreement',
-                doc.xpath('//form')[0].action
-            )
-            assert_not_in(u'Document uploaded', data)
-            assert_not_in(u'Your document has been uploaded', data)
+            assert res.status_code == 200
+            assert u'/suppliers/frameworks/g-cloud-7/agreement' == doc.xpath('//form')[0].action
+            assert u'Document uploaded' not in data
+            assert u'Your document has been uploaded' not in data
 
     def test_loads_contract_start_page_if_framework_agreement_version_exists(self, data_api_client):
         with self.app.test_client():
@@ -835,7 +1870,7 @@ class TestFrameworkAgreementUpload(BaseApplicationTest):
                 }
             )
 
-            assert_equal(res.status_code, 404)
+            assert res.status_code == 404
 
     def test_page_returns_404_if_supplier_not_on_framework(self, data_api_client, send_email, s3):
         with self.app.test_client():
@@ -852,7 +1887,7 @@ class TestFrameworkAgreementUpload(BaseApplicationTest):
                 }
             )
 
-            assert_equal(res.status_code, 404)
+            assert res.status_code == 404
 
     @mock.patch('app.main.views.frameworks.file_is_less_than_5mb')
     def test_page_returns_400_if_file_is_too_large(self, file_is_less_than_5mb, data_api_client, send_email, s3):
@@ -891,8 +1926,8 @@ class TestFrameworkAgreementUpload(BaseApplicationTest):
                 }
             )
 
-            assert_equal(res.status_code, 400)
-            assert_in(u'Document must not be empty', res.get_data(as_text=True))
+            assert res.status_code == 400
+            assert u'Document must not be empty' in res.get_data(as_text=True)
 
     @mock.patch('app.main.views.frameworks.generate_timestamped_document_upload_path')
     def test_api_is_not_updated_and_email_not_sent_if_upload_fails(
@@ -914,7 +1949,7 @@ class TestFrameworkAgreementUpload(BaseApplicationTest):
                 }
             )
 
-            assert_equal(res.status_code, 503)
+            assert res.status_code == 503
             s3.return_value.save.assert_called_with(
                 'my/path.pdf',
                 mock.ANY,
@@ -922,10 +1957,10 @@ class TestFrameworkAgreementUpload(BaseApplicationTest):
                 download_filename='Supplier_Nme-1234-signed-framework-agreement.pdf'
             )
 
-            assert not data_api_client.create_framework_agreement.called
-            assert not data_api_client.update_framework_agreement.called
-            assert not data_api_client.sign_framework_agreement.called
-            assert not send_email.called
+            assert data_api_client.create_framework_agreement.called is False
+            assert data_api_client.update_framework_agreement.called is False
+            assert data_api_client.sign_framework_agreement.called is False
+            assert send_email.called is False
 
     @mock.patch('app.main.views.frameworks.generate_timestamped_document_upload_path')
     def test_email_is_not_sent_if_api_create_framework_agreement_fails(
@@ -948,10 +1983,10 @@ class TestFrameworkAgreementUpload(BaseApplicationTest):
             )
 
             assert res.status_code == 500
-            assert data_api_client.create_framework_agreement.called
-            assert not data_api_client.update_framework_agreement.called
-            assert not data_api_client.sign_framework_agreement.called
-            assert not send_email.called
+            assert data_api_client.create_framework_agreement.called is True
+            assert data_api_client.update_framework_agreement.called is False
+            assert data_api_client.sign_framework_agreement.called is False
+            assert send_email.called is False
 
     @mock.patch('app.main.views.frameworks.generate_timestamped_document_upload_path')
     def test_email_is_not_sent_if_api_update_framework_agreement_fails(
@@ -974,10 +2009,10 @@ class TestFrameworkAgreementUpload(BaseApplicationTest):
             )
 
             assert res.status_code == 500
-            assert data_api_client.create_framework_agreement.called
-            assert data_api_client.update_framework_agreement.called
-            assert not data_api_client.sign_framework_agreement.called
-            assert not send_email.called
+            assert data_api_client.create_framework_agreement.called is True
+            assert data_api_client.update_framework_agreement.called is True
+            assert data_api_client.sign_framework_agreement.called is False
+            assert send_email.called is False
 
     @mock.patch('app.main.views.frameworks.generate_timestamped_document_upload_path')
     def test_email_is_not_sent_if_api_sign_framework_agreement_fails(
@@ -1000,10 +2035,10 @@ class TestFrameworkAgreementUpload(BaseApplicationTest):
             )
 
             assert res.status_code == 500
-            assert data_api_client.create_framework_agreement.called
-            assert data_api_client.update_framework_agreement.called
-            assert data_api_client.sign_framework_agreement.called
-            assert not send_email.called
+            assert data_api_client.create_framework_agreement.called is True
+            assert data_api_client.update_framework_agreement.called is True
+            assert data_api_client.sign_framework_agreement.called is True
+            assert send_email.called is False
 
     @mock.patch('app.main.views.frameworks.generate_timestamped_document_upload_path')
     def test_email_failure(
@@ -1016,7 +2051,7 @@ class TestFrameworkAgreementUpload(BaseApplicationTest):
             data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
                 on_framework=True)
             generate_timestamped_document_upload_path.return_value = 'my/path.pdf'
-            send_email.side_effect = MandrillException()
+            send_email.side_effect = EmailError()
 
             res = self.client.post(
                 '/suppliers/frameworks/g-cloud-7/agreement',
@@ -1026,7 +2061,7 @@ class TestFrameworkAgreementUpload(BaseApplicationTest):
             )
 
             assert res.status_code == 503
-            assert send_email.called
+            assert send_email.called is True
 
     @mock.patch('app.main.views.frameworks.generate_timestamped_document_upload_path')
     def test_upload_agreement_document(
@@ -1102,8 +2137,8 @@ class TestFrameworkAgreementUpload(BaseApplicationTest):
                 acl='private',
                 download_filename='Supplier_Nme-1234-signed-framework-agreement.jpg'
             )
-            assert_equal(res.status_code, 302)
-            assert_equal(res.location, 'http://localhost/suppliers/frameworks/g-cloud-7/agreement')
+            assert res.status_code == 302
+            assert res.location == 'http://localhost/suppliers/frameworks/g-cloud-7/agreement'
 
 
 @mock.patch('app.main.views.frameworks.data_api_client', autospec=True)
@@ -1117,7 +2152,7 @@ class TestFrameworkAgreementDocumentDownload(BaseApplicationTest):
 
             res = self.client.get('/suppliers/frameworks/g-cloud-7/agreements/example.pdf')
 
-            assert_equal(res.status_code, 404)
+            assert res.status_code == 404
 
     def test_download_document_fails_if_no_supplier_declaration(self, S3, data_api_client):
         data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(declaration=None)
@@ -1127,7 +2162,7 @@ class TestFrameworkAgreementDocumentDownload(BaseApplicationTest):
 
             res = self.client.get('/suppliers/frameworks/g-cloud-7/agreements/example.pdf')
 
-            assert_equal(res.status_code, 404)
+            assert res.status_code == 404
 
     def test_download_document(self, S3, data_api_client):
         data_api_client.get_supplier_framework_info.return_value = self.supplier_framework()
@@ -1141,8 +2176,8 @@ class TestFrameworkAgreementDocumentDownload(BaseApplicationTest):
 
             res = self.client.get('/suppliers/frameworks/g-cloud-7/agreements/example.pdf')
 
-            assert_equal(res.status_code, 302)
-            assert_equal(res.location, 'http://asset-host/path?param=value')
+            assert res.status_code == 302
+            assert res.location == 'http://asset-host/path?param=value'
             uploader.get_signed_url.assert_called_with(
                 'g-cloud-7/agreements/1234/1234-example.pdf')
 
@@ -1159,8 +2194,8 @@ class TestFrameworkAgreementDocumentDownload(BaseApplicationTest):
 
             res = self.client.get('/suppliers/frameworks/g-cloud-7/agreements/example.pdf')
 
-            assert_equal(res.status_code, 302)
-            assert_equal(res.location, 'https://example/path?param=value')
+            assert res.status_code == 302
+            assert res.location == 'https://example/path?param=value'
             uploader.get_signed_url.assert_called_with(
                 'g-cloud-7/agreements/1234/1234-example.pdf')
 
@@ -1177,8 +2212,8 @@ class TestFrameworkDocumentDownload(BaseApplicationTest):
 
             res = self.client.get('/suppliers/frameworks/g-cloud-7/files/example.pdf')
 
-            assert_equal(res.status_code, 302)
-            assert_equal(res.location, 'http://asset-host/path?param=value')
+            assert res.status_code == 302
+            assert res.location == 'http://asset-host/path?param=value'
             uploader.get_signed_url.assert_called_with('g-cloud-7/communications/example.pdf')
 
     def test_download_document_returns_404_if_url_is_None(self, S3):
@@ -1191,7 +2226,665 @@ class TestFrameworkDocumentDownload(BaseApplicationTest):
 
             res = self.client.get('/suppliers/frameworks/g-cloud-7/files/example.pdf')
 
-            assert_equal(res.status_code, 404)
+            assert res.status_code == 404
+
+
+@mock.patch('app.main.views.frameworks.data_api_client', autospec=True)
+class TestStartSupplierDeclaration(BaseApplicationTest):
+    def test_start_declaration_goes_to_declaration_overview_page(self, data_api_client):
+        with self.app.test_client():
+            self.login()
+
+            data_api_client.get_framework.return_value = self.framework(status='open')
+            data_api_client.get_supplier_framework_info.return_value = self.supplier_framework()
+
+            response = self.client.get('/suppliers/frameworks/g-cloud-7/declaration/start')
+            document = html.fromstring(response.get_data(as_text=True))
+
+            assert document.xpath("//a[normalize-space(string(.))='Start your declaration']/@href")[0] \
+                == '/suppliers/frameworks/g-cloud-7/declaration/reuse'
+
+
+@mock.patch('app.main.views.frameworks.data_api_client', autospec=True)
+class TestDeclarationOverviewSubmit(BaseApplicationTest):
+    """
+        Behaviour common to both GET and POST views on path /suppliers/frameworks/g-cloud-7/declaration
+    """
+    def test_supplier_not_interested(self, data_api_client, get_or_post):
+        with self.app.test_client():
+            self.login()
+
+            data_api_client.get_framework.side_effect = _assert_args_and_return(
+                self.framework(status="open"),
+                "g-cloud-7",
+            )
+            data_api_client.get_supplier_framework_info.side_effect = _assert_args_and_raise(
+                APIError(mock.Mock(status_code=404)),
+                1234,
+                "g-cloud-7",
+            )
+            data_api_client.set_supplier_declaration.side_effect = AssertionError("This shouldn't be called")
+
+            response = getattr(self.client, get_or_post.lower())("/suppliers/frameworks/g-cloud-7/declaration")
+
+            assert response.status_code == 404
+
+    def test_framework_standstill(self, data_api_client, get_or_post):
+        with self.app.test_client():
+            self.login()
+
+            data_api_client.get_framework.side_effect = _assert_args_and_return(
+                self.framework(status="standstill"),
+                "g-cloud-7",
+            )
+            data_api_client.get_supplier_framework_info.side_effect = _assert_args_and_return(
+                self.supplier_framework(framework_slug="g-cloud-7"),
+                1234,
+                "g-cloud-7",
+            )
+            data_api_client.set_supplier_declaration.side_effect = AssertionError("This shouldn't be called")
+
+            response = getattr(self.client, get_or_post.lower())("/suppliers/frameworks/g-cloud-7/declaration")
+
+            assert response.status_code == 404
+
+    def test_framework_unknown(self, data_api_client, get_or_post):
+        with self.app.test_client():
+            self.login()
+
+            data_api_client.get_framework.side_effect = _assert_args_and_raise(
+                APIError(mock.Mock(status_code=404)),
+                "muttoning-clouds",
+            )
+            data_api_client.get_supplier_framework_info.side_effect = _assert_args_and_raise(
+                APIError(mock.Mock(status_code=404)),
+                1234,
+                "muttoning-clouds",
+            )
+            data_api_client.set_supplier_declaration.side_effect = AssertionError("This shouldn't be called")
+
+            response = getattr(self.client, get_or_post.lower())("/suppliers/frameworks/muttoning-clouds/declaration")
+
+            assert response.status_code == 404
+
+
+@mock.patch('app.main.views.frameworks.data_api_client', autospec=True)
+class TestDeclarationOverview(BaseApplicationTest):
+    @staticmethod
+    def _extract_section_information(doc, section_title):
+        """
+            given a section (full text) name, returns that section's relevant information in a tuple (format described
+            in comments)
+        """
+        tables = doc.xpath(
+            "//table[preceding::h2[1][normalize-space(string())=$section_title]]",
+            section_title=section_title,
+        )
+        assert len(tables) == 1
+        table = tables[0]
+
+        edit_as = doc.xpath(
+            "//a[@class='summary-change-link'][preceding::h2[1][normalize-space(string())=$section_title]]",
+            section_title=section_title,
+        )
+        assert [a.xpath("normalize-space(string())") for a in edit_as] == ["Edit"]
+        edit_a = edit_as[0]
+
+        return (
+            # table caption text
+            table.xpath("normalize-space(string(./caption))"),
+            # "Edit" link href
+            edit_a.xpath("@href")[0],
+            tuple(
+                (
+                    # contents of row heading
+                    row.xpath("normalize-space(string(./td[@class='summary-item-field-first']))"),
+                    # full text contents of row "value"
+                    row.xpath("normalize-space(string(./td[@class='summary-item-field']))"),
+                    # full text contents of each a element in row value
+                    tuple(a.xpath("normalize-space(string())") for a in row.xpath(
+                        "./td[@class='summary-item-field']//a"
+                    )),
+                    # href of each a element in row value
+                    tuple(row.xpath("./td[@class='summary-item-field']//a/@href")),
+                    # full text contents of each li element in row value
+                    tuple(li.xpath("normalize-space(string())") for li in row.xpath(
+                        "./td[@class='summary-item-field']//li"
+                    )),
+                ) for row in table.xpath(".//tr[contains(@class,'summary-item-row')]")
+            )
+        )
+
+    @pytest.mark.parametrize("declaration,decl_valid,prefill_fw_slug,expected_pss,expected_gme,expected_dys", tuple(
+        chain.from_iterable(chain(
+        ((
+            empty_declaration,  # noqa
+            False,
+            prefill_fw_slug,
+            (   # expected result for "Providing suitable services" section as returned by _extract_section_information
+                "Providing suitable services",
+                "/suppliers/frameworks/g-cloud-9/declaration/edit/providing-suitable-services",
+                (
+                    (
+                        "Services are cloud-related",
+                        "Answer question",
+                        ("Answer question",),
+                        ("/suppliers/frameworks/g-cloud-9/declaration/edit/providing-suitable-services",),
+                        (),
+                    ),
+                    (
+                        "Services in scope for G-Cloud",
+                        "Answer question",
+                        ("Answer question",),
+                        ("/suppliers/frameworks/g-cloud-9/declaration/edit/providing-suitable-services#"
+                         "servicesDoNotInclude",),
+                        (),
+                    ),
+                    (
+                        "Buyers pay for what they use",
+                        "Answer question",
+                        ("Answer question",),
+                        ("/suppliers/frameworks/g-cloud-9/declaration/edit/providing-suitable-services#payForWhatUse",),
+                        (),
+                    ),
+                    (
+                        "What your team will deliver",
+                        "Answer question",
+                        ("Answer question",),
+                        ("/suppliers/frameworks/g-cloud-9/declaration/edit/providing-suitable-"
+                            "services#offerServicesYourselves",),
+                        (),
+                    ),
+                    (
+                        "Contractual responsibility and accountability",
+                        "Answer question",
+                        ("Answer question",),
+                        ("/suppliers/frameworks/g-cloud-9/declaration/edit/providing-suitable-"
+                            "services#fullAccountability",),
+                        (),
+                    ),
+                ),
+            ),
+            (   # expected result for "Grounds for mandatory exclusion" section as returned by
+                # _extract_section_information
+                "Grounds for mandatory exclusion",
+                "/suppliers/frameworks/g-cloud-9/declaration/edit/grounds-for-mandatory-exclusion",
+                (
+                    (
+                        "Organised crime or conspiracy convictions",
+                        q_link_text_prefillable_section,
+                        (q_link_text_prefillable_section,),
+                        ("/suppliers/frameworks/g-cloud-9/declaration/edit/grounds-for-mandatory-exclusion",),
+                        (),
+                    ),
+                    (
+                        "Bribery or corruption convictions",
+                        q_link_text_prefillable_section,
+                        (q_link_text_prefillable_section,),
+                        ("/suppliers/frameworks/g-cloud-9/declaration/edit/grounds-for-mandatory-"
+                            "exclusion#corruptionBribery",),
+                        (),
+                    ),
+                    (
+                        "Fraud convictions",
+                        q_link_text_prefillable_section,
+                        (q_link_text_prefillable_section,),
+                        ("/suppliers/frameworks/g-cloud-9/declaration/edit/grounds-for-mandatory-"
+                            "exclusion#fraudAndTheft",),
+                        (),
+                    ),
+                    (
+                        "Terrorism convictions",
+                        q_link_text_prefillable_section,
+                        (q_link_text_prefillable_section,),
+                        ("/suppliers/frameworks/g-cloud-9/declaration/edit/grounds-for-mandatory-exclusion#terrorism",),
+                        (),
+                    ),
+                    (
+                        "Organised crime convictions",
+                        q_link_text_prefillable_section,
+                        (q_link_text_prefillable_section,),
+                        ("/suppliers/frameworks/g-cloud-9/declaration/edit/grounds-for-mandatory-"
+                            "exclusion#organisedCrime",),
+                        (),
+                    ),
+                ),
+            ),
+            (   # expected result for "How you’ll deliver your services" section as returned by
+                # _extract_section_information
+                u"How you’ll deliver your services",
+                "/suppliers/frameworks/g-cloud-9/declaration/edit/how-youll-deliver-your-services",
+                (
+                    (
+                        "Subcontractors or consortia",
+                        q_link_text_prefillable_section,
+                        (q_link_text_prefillable_section,),
+                        ("/suppliers/frameworks/g-cloud-9/declaration/edit/how-youll-deliver-your-"
+                            "services",),
+                        (),
+                    ),
+                ),
+            ),
+        ) for empty_declaration in (None, {})),  # two possible ways of specifying a "empty" declaration - test both
+        ((
+            {
+                "status": "started",
+                "conspiracy": True,
+                "corruptionBribery": False,
+                "fraudAndTheft": True,
+                "terrorism": False,
+                "organisedCrime": True,
+                "subcontracting": [
+                    "yourself without the use of third parties (subcontractors)",
+                    "as a prime contractor, using third parties (subcontractors) to provide all services",
+                ],
+            },
+            False,
+            prefill_fw_slug,
+            (   # expected result for "Providing suitable services" section as returned by _extract_section_information
+                "Providing suitable services",
+                "/suppliers/frameworks/g-cloud-9/declaration/edit/providing-suitable-services",
+                (
+                    (
+                        "Services are cloud-related",
+                        "Answer question",
+                        ("Answer question",),
+                        ("/suppliers/frameworks/g-cloud-9/declaration/edit/providing-suitable-services",),
+                        (),
+                    ),
+                    (
+                        "Services in scope for G-Cloud",
+                        "Answer question",
+                        ("Answer question",),
+                        ("/suppliers/frameworks/g-cloud-9/declaration/edit/providing-suitable-services#"
+                         "servicesDoNotInclude",),
+                        (),
+                    ),
+                    (
+                        "Buyers pay for what they use",
+                        "Answer question",
+                        ("Answer question",),
+                        ("/suppliers/frameworks/g-cloud-9/declaration/edit/providing-suitable-services#payForWhatUse",),
+                        (),
+                    ),
+                    (
+                        "What your team will deliver",
+                        "Answer question",
+                        ("Answer question",),
+                        ("/suppliers/frameworks/g-cloud-9/declaration/edit/providing-suitable-"
+                            "services#offerServicesYourselves",),
+                        (),
+                    ),
+                    (
+                        "Contractual responsibility and accountability",
+                        "Answer question",
+                        ("Answer question",),
+                        ("/suppliers/frameworks/g-cloud-9/declaration/edit/providing-suitable-"
+                            "services#fullAccountability",),
+                        (),
+                    ),
+                ),
+            ),
+            (   # expected result for "Grounds for mandatory exclusion" section as returned by
+                # _extract_section_information
+                "Grounds for mandatory exclusion",
+                "/suppliers/frameworks/g-cloud-9/declaration/edit/grounds-for-mandatory-exclusion",
+                (
+                    (
+                        "Organised crime or conspiracy convictions",
+                        "Yes",
+                        (),
+                        (),
+                        (),
+                    ),
+                    (
+                        "Bribery or corruption convictions",
+                        "No",
+                        (),
+                        (),
+                        (),
+                    ),
+                    (
+                        "Fraud convictions",
+                        "Yes",
+                        (),
+                        (),
+                        (),
+                    ),
+                    (
+                        "Terrorism convictions",
+                        "No",
+                        (),
+                        (),
+                        (),
+                    ),
+                    (
+                        "Organised crime convictions",
+                        "Yes",
+                        (),
+                        (),
+                        (),
+                    ),
+                ),
+            ),
+            (   # expected result for "How you’ll deliver your services" section as returned by
+                # _extract_section_information
+                u"How you’ll deliver your services",
+                "/suppliers/frameworks/g-cloud-9/declaration/edit/how-youll-deliver-your-services",
+                (
+                    (
+                        "Subcontractors or consortia",
+                        "yourself without the use of third parties (subcontractors) as a prime contractor, using "
+                            "third parties (subcontractors) to provide all services",
+                        (),
+                        (),
+                        (
+                            "yourself without the use of third parties (subcontractors)",
+                            "as a prime contractor, using third parties (subcontractors) to provide all services",
+                        ),
+                    ),
+                ),
+            ),
+        ),),
+        ((
+            dict(status=declaration_status, **(valid_g9_declaration_base())),
+            True,
+            prefill_fw_slug,
+            (   # expected result for "Providing suitable services" section as returned by _extract_section_information
+                "Providing suitable services",
+                "/suppliers/frameworks/g-cloud-9/declaration/edit/providing-suitable-services",
+                (
+                    (
+                        "Services are cloud-related",
+                        "Yes",
+                        (),
+                        (),
+                        (),
+                    ),
+                    (
+                        "Services in scope for G-Cloud",
+                        "Yes",
+                        (),
+                        (),
+                        (),
+                    ),
+                    (
+                        "Buyers pay for what they use",
+                        "Yes",
+                        (),
+                        (),
+                        (),
+                    ),
+                    (
+                        "What your team will deliver",
+                        "No",
+                        (),
+                        (),
+                        (),
+                    ),
+                    (
+                        "Contractual responsibility and accountability",
+                        "Yes",
+                        (),
+                        (),
+                        (),
+                    ),
+                ),
+            ),
+            (   # expected result for "Grounds for mandatory exclusion" section as returned by
+                # _extract_section_information
+                "Grounds for mandatory exclusion",
+                "/suppliers/frameworks/g-cloud-9/declaration/edit/grounds-for-mandatory-exclusion",
+                (
+                    (
+                        "Organised crime or conspiracy convictions",
+                        "No",
+                        (),
+                        (),
+                        (),
+                    ),
+                    (
+                        "Bribery or corruption convictions",
+                        "Yes",
+                        (),
+                        (),
+                        (),
+                    ),
+                    (
+                        "Fraud convictions",
+                        "No",
+                        (),
+                        (),
+                        (),
+                    ),
+                    (
+                        "Terrorism convictions",
+                        "Yes",
+                        (),
+                        (),
+                        (),
+                    ),
+                    (
+                        "Organised crime convictions",
+                        "No",
+                        (),
+                        (),
+                        (),
+                    ),
+                ),
+            ),
+            (   # expected result for "How you’ll deliver your services" section as returned by
+                # _extract_section_information
+                u"How you’ll deliver your services",
+                "/suppliers/frameworks/g-cloud-9/declaration/edit/how-youll-deliver-your-services",
+                (
+                    (
+                        "Subcontractors or consortia",
+                        "yourself without the use of third parties (subcontractors)",
+                        (),
+                        (),
+                        (),
+                    ),
+                ),
+            ),
+        ) for declaration_status in ("started", "complete",)),
+    ) for prefill_fw_slug, q_link_text_prefillable_section in (
+        # test all of the previous combinations with two possible values of prefill_fw_slug
+        (None, "Answer question",),
+        ("some-previous-framework", "Review answer",),
+    ))))
+    def test_display(
+            self,
+            data_api_client,
+            declaration,
+            decl_valid,
+            prefill_fw_slug,
+            expected_pss,
+            expected_gme,
+            expected_dys
+    ):
+        with self.app.test_client():
+            self.login()
+
+            data_api_client.get_framework.side_effect = _assert_args_and_return(
+                self.framework(slug="g-cloud-9", name="G-Cloud 9", status="open"),
+                "g-cloud-9",
+            )
+            data_api_client.get_supplier_framework_info.side_effect = _assert_args_and_return(
+                self.supplier_framework(
+                    framework_slug="g-cloud-9",
+                    declaration=declaration,
+                    prefill_declaration_from_framework_slug=prefill_fw_slug,
+                ),
+                1234,
+                "g-cloud-9",
+            )
+            data_api_client.set_supplier_declaration.side_effect = AssertionError("This shouldn't be called")
+
+            response = self.client.get("/suppliers/frameworks/g-cloud-9/declaration")
+            assert response.status_code == 200
+            doc = html.fromstring(response.get_data(as_text=True))
+
+            assert [e.xpath("normalize-space(string())") for e in doc.xpath(
+                "//nav//*[@role='breadcrumbs']//a",
+            )] == [
+                "Digital Marketplace",
+                "Your account",
+                "Apply to G-Cloud 9",
+            ]
+            assert doc.xpath(
+                "//nav//*[@role='breadcrumbs']//a/@href",
+            ) == [
+                "/",
+                "/suppliers",
+                "/suppliers/frameworks/g-cloud-9",
+            ]
+
+            assert bool(doc.xpath(
+                "//p[contains(normalize-space(string()), $t)][contains(normalize-space(string()), $f)]",
+                t="You must answer all questions and make your declaration before",
+                f="G-Cloud 9",
+            )) is (not decl_valid)
+            assert bool(doc.xpath(
+                "//p[contains(normalize-space(string()), $t)][contains(normalize-space(string()), $f)]",
+                t="You must make your declaration before",
+                f="G-Cloud 9",
+            )) is (decl_valid and declaration.get("status") != "complete")
+
+            assert len(doc.xpath(
+                "//p[contains(normalize-space(string()), $t)]",
+                t="You can come back and edit your answers at any time before the deadline.",
+            )) == (2 if decl_valid and declaration.get("status") != "complete" else 0)
+            assert len(doc.xpath(
+                "//p[contains(normalize-space(string()), $t)][not(contains(normalize-space(string()), $d))]",
+                t="You can come back and edit your answers at any time",
+                d="deadline",
+            )) == (2 if decl_valid and declaration.get("status") == "complete" else 0)
+
+            if prefill_fw_slug is None:
+                assert not doc.xpath("//a[normalize-space(string())=$t]", t="Review answer")
+
+            assert bool(doc.xpath(
+                "//a[normalize-space(string())=$a or normalize-space(string())=$b]",
+                a="Answer question",
+                b="Review answer",
+            )) is (not decl_valid)
+            if not decl_valid:
+                # assert that all links with the label "Answer question" or "Review answer" link to some subpage (by
+                # asserting that there are none that don't, having previously determined that such-labelled links exist)
+                assert not doc.xpath(
+                    # we want the href to *contain* $u but not *be* $u
+                    "//a[normalize-space(string())=$a or normalize-space(string())=$b]"
+                    "[not(starts-with(@href, $u)) or @href=$u]",
+                    a="Answer question",
+                    b="Review answer",
+                    u="/suppliers/frameworks/g-cloud-9/declaration/",
+                )
+
+            if decl_valid and declaration.get("status") != "complete":
+                mdf_actions = doc.xpath(
+                    "//form[@method='POST'][.//input[@value=$t][@type='submit']][.//input[@name='csrf_token']]/@action",
+                    t="Make declaration",
+                )
+                assert len(mdf_actions) == 2
+                assert all(
+                    urljoin("/suppliers/frameworks/g-cloud-9/declaration", action) ==
+                    "/suppliers/frameworks/g-cloud-9/declaration"
+                    for action in mdf_actions
+                )
+            else:
+                assert not doc.xpath("//input[@value=$t]", t="Make declaration")
+
+            assert doc.xpath(
+                "//a[normalize-space(string())=$t][@href=$u]",
+                t="Return to application",
+                u="/suppliers/frameworks/g-cloud-9",
+            )
+
+            assert self._extract_section_information(doc, "Providing suitable services") == expected_pss
+            assert self._extract_section_information(doc, "Grounds for mandatory exclusion") == expected_gme
+            assert self._extract_section_information(doc, u"How you’ll deliver your services") == expected_dys
+
+
+@mock.patch('app.main.views.frameworks.data_api_client', autospec=True)
+class TestDeclarationSubmit(BaseApplicationTest):
+    @pytest.mark.parametrize("prefill_fw_slug", (None, "some-previous-framework",))
+    @pytest.mark.parametrize("invalid_declaration", (
+        None,
+        {},
+        {
+            # not actually complete - only first section is
+            "status": "complete",
+            "unfairCompetition": False,
+            "skillsAndResources": False,
+            "offerServicesYourselves": False,
+            "fullAccountability": True,
+        },
+    ))
+    def test_invalid_declaration(self, data_api_client, invalid_declaration, prefill_fw_slug):
+        with self.app.test_client():
+            self.login()
+
+            data_api_client.get_framework.side_effect = _assert_args_and_return(
+                self.framework(slug="g-cloud-9", name="G-Cloud 9", status="open"),
+                "g-cloud-9",
+            )
+            data_api_client.get_supplier_framework_info.side_effect = _assert_args_and_return(
+                self.supplier_framework(
+                    framework_slug="g-cloud-9",
+                    declaration=invalid_declaration,
+                    prefill_declaration_from_framework_slug=prefill_fw_slug,  # should have zero effect
+                ),
+                1234,
+                "g-cloud-9",
+            )
+            data_api_client.set_supplier_declaration.side_effect = AssertionError("This shouldn't be called")
+
+            response = self.client.post("/suppliers/frameworks/g-cloud-9/declaration")
+
+            assert response.status_code == 400
+
+    @pytest.mark.parametrize("prefill_fw_slug", (None, "some-previous-framework",))
+    @pytest.mark.parametrize("declaration_status", ("started", "complete",))
+    @mock.patch("dmutils.s3.S3")  # needed by the framework dashboard which our request gets redirected to
+    def test_valid_declaration(self, s3, data_api_client, prefill_fw_slug, declaration_status):
+        with self.app.test_client():
+            self.login()
+
+            data_api_client.get_framework.side_effect = _assert_args_and_return(
+                self.framework(slug="g-cloud-9", name="G-Cloud 9", status="open"),
+                "g-cloud-9",
+            )
+            data_api_client.get_supplier_framework_info.side_effect = _assert_args_and_return(
+                self.supplier_framework(
+                    framework_slug="g-cloud-9",
+                    declaration=dict(status=declaration_status, **(valid_g9_declaration_base())),
+                    prefill_declaration_from_framework_slug=prefill_fw_slug,  # should have zero effect
+                ),
+                1234,
+                "g-cloud-9",
+            )
+            data_api_client.set_supplier_declaration.side_effect = _assert_args_and_return(
+                dict(status="complete", **(valid_g9_declaration_base())),
+                1234,
+                "g-cloud-9",
+                dict(status="complete", **(valid_g9_declaration_base())),
+                "email@email.com",
+            )
+
+            response = self.client.post("/suppliers/frameworks/g-cloud-9/declaration", follow_redirects=True)
+
+            # args of call are asserted by mock's side_effect
+            assert data_api_client.set_supplier_declaration.called is True
+
+            # this will be the response from the redirected-to view
+            assert response.status_code == 200
+            doc = html.fromstring(response.get_data(as_text=True))
+
+            assert doc.xpath(
+                "//*[@data-analytics='trackPageView'][@data-url=$k]",
+                k="/suppliers/frameworks/g-cloud-9/declaration_complete",
+            )
 
 
 @mock.patch('app.main.views.frameworks.data_api_client', autospec=True)
@@ -1201,65 +2894,316 @@ class TestSupplierDeclaration(BaseApplicationTest):
             self.login()
 
             data_api_client.get_framework.return_value = self.framework(status='open')
+            data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
+                framework_slug="g-cloud-7",
+                declaration={}
+            )
             data_api_client.get_supplier_declaration.side_effect = APIError(mock.Mock(status_code=404))
 
             res = self.client.get(
-                '/suppliers/frameworks/g-cloud-7/declaration/g-cloud-7-essentials')
+                '/suppliers/frameworks/g-cloud-7/declaration/edit/g-cloud-7-essentials')
 
-            assert_equal(res.status_code, 200)
+            assert res.status_code == 200
             doc = html.fromstring(res.get_data(as_text=True))
-            assert_equal(
-                doc.xpath('//input[@id="PR-1-yes"]/@checked'), [])
-            assert_equal(
-                doc.xpath('//input[@id="PR-1-no"]/@checked'), [])
+            assert doc.xpath('//input[@id="PR-1-yes"]/@checked') == []
+            assert doc.xpath('//input[@id="PR-1-no"]/@checked') == []
 
     def test_get_with_with_previous_answers(self, data_api_client):
         with self.app.test_client():
             self.login()
 
             data_api_client.get_framework.return_value = self.framework(status='open')
-            data_api_client.get_supplier_declaration.return_value = {
-                "declaration": {"status": "started", "PR1": False}
-            }
+            data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
+                framework_slug="g-cloud-7",
+                declaration={"status": "started", "PR1": False}
+            )
 
             res = self.client.get(
-                '/suppliers/frameworks/g-cloud-7/declaration/g-cloud-7-essentials')
+                '/suppliers/frameworks/g-cloud-7/declaration/edit/g-cloud-7-essentials')
 
-            assert_equal(res.status_code, 200)
+            assert res.status_code == 200
             doc = html.fromstring(res.get_data(as_text=True))
-            assert_equal(
-                len(doc.xpath('//input[@id="input-PR1-no"]/@checked')), 1)
+            assert len(doc.xpath('//input[@id="input-PR1-2"]/@checked')) == 1
+
+    def test_get_with_with_prefilled_answers(self, data_api_client):
+        with self.app.test_client():
+            self.login()
+            # Handle calls for both the current framework and for the framework to pre-fill from
+            data_api_client.get_framework.side_effect = lambda framework_slug: {
+                "g-cloud-9": self.framework(slug='g-cloud-9', name='G-Cloud 9', status='open'),
+                "digital-outcomes-and-specialists-2": self.framework(slug='digital-outcomes-and-specialists-2',
+                                                                     name='Digital Stuff 2', status='live'),
+            }[framework_slug]
+
+            # Current framework application information
+            data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
+                framework_slug="g-cloud-9",
+                declaration={"status": "started"},
+                prefill_declaration_from_framework_slug="digital-outcomes-and-specialists-2"
+            )
+
+            # The previous declaration to prefill from
+            data_api_client.get_supplier_declaration.return_value = {
+                'declaration': self.supplier_framework(
+                    framework_slug="digital-outcomes-and-specialists-2",
+                    declaration={"status": "complete",
+                                 "conspiracy": True,
+                                 "corruptionBribery": False,
+                                 "fraudAndTheft": True,
+                                 "terrorism": False,
+                                 "organisedCrime": False,
+                                 },
+                )["frameworkInterest"]["declaration"]
+            }
+
+            # The grounds-for-mandatory-exclusion section has "prefill: True" in the declaration manifest
+            res = self.client.get(
+                '/suppliers/frameworks/g-cloud-9/declaration/edit/grounds-for-mandatory-exclusion')
+
+            assert res.status_code == 200
+            data_api_client.get_supplier_declaration.assert_called_once_with(1234, "digital-outcomes-and-specialists-2")
+            doc = html.fromstring(res.get_data(as_text=True))
+
+            # Radio buttons have been pre-filled with the correct answers
+            assert len(doc.xpath('//input[@id="input-conspiracy-1"][@value="True"]/@checked')) == 1
+            assert len(doc.xpath('//input[@id="input-corruptionBribery-2"][@value="False"]/@checked')) == 1
+            assert len(doc.xpath('//input[@id="input-fraudAndTheft-1"][@value="True"]/@checked')) == 1
+            assert len(doc.xpath('//input[@id="input-terrorism-2"][@value="False"]/@checked')) == 1
+            assert len(doc.xpath('//input[@id="input-organisedCrime-2"][@value="False"]/@checked')) == 1
+
+            # Blue banner message is shown at top of page
+            assert doc.xpath('normalize-space(string(//div[@class="banner-information-without-action"]))') == \
+                "Answers on this page are from an earlier declaration and need review."
+
+            # Blue information messages are shown next to each question
+            info_messages = doc.xpath('//div[@class="message-wrapper"]//span[@class="message-content"]')
+            assert len(info_messages) == 5
+            for message in info_messages:
+                assert self.strip_all_whitespace(message.text) == self.strip_all_whitespace(
+                    "This answer is from your Digital Stuff 2 declaration"
+                )
+
+    def test_get_with_with_partially_prefilled_answers(self, data_api_client):
+        with self.app.test_client():
+            self.login()
+            # Handle calls for both the current framework and for the framework to pre-fill from
+            data_api_client.get_framework.side_effect = lambda framework_slug: {
+                "g-cloud-9": self.framework(slug='g-cloud-9', name='G-Cloud 9', status='open'),
+                "digital-outcomes-and-specialists-2": self.framework(slug='digital-outcomes-and-specialists-2',
+                                                                     name='Digital Stuff 2', status='live'),
+            }[framework_slug]
+
+            # Current framework application information
+            data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
+                framework_slug="g-cloud-9",
+                declaration={"status": "started"},
+                prefill_declaration_from_framework_slug="digital-outcomes-and-specialists-2"
+            )
+
+            # The previous declaration to prefill from - missing "corruptionBribery" and "terrorism" keys
+            data_api_client.get_supplier_declaration.return_value = {
+                'declaration': self.supplier_framework(
+                    framework_slug="digital-outcomes-and-specialists-2",
+                    declaration={"status": "complete",
+                                 "conspiracy": True,
+                                 "fraudAndTheft": True,
+                                 "organisedCrime": False,
+                                 },
+                )["frameworkInterest"]["declaration"]
+            }
+
+            # The grounds-for-mandatory-exclusion section has "prefill: True" in the declaration manifest
+            res = self.client.get(
+                '/suppliers/frameworks/g-cloud-9/declaration/edit/grounds-for-mandatory-exclusion')
+
+            assert res.status_code == 200
+            data_api_client.get_supplier_declaration.assert_called_once_with(1234, "digital-outcomes-and-specialists-2")
+            doc = html.fromstring(res.get_data(as_text=True))
+
+            # Radio buttons have been pre-filled with the correct answers
+            assert len(doc.xpath('//input[@id="input-conspiracy-1"][@value="True"]/@checked')) == 1
+            assert len(doc.xpath('//input[@id="input-fraudAndTheft-1"][@value="True"]/@checked')) == 1
+            assert len(doc.xpath('//input[@id="input-organisedCrime-2"][@value="False"]/@checked')) == 1
+
+            # Radio buttons for missing keys exist but have not been pre-filled
+            assert len(doc.xpath('//input[@id="input-corruptionBribery-1"]')) == 1
+            assert len(doc.xpath('//input[@id="input-corruptionBribery-2"]')) == 1
+            assert len(doc.xpath('//input[@id="input-corruptionBribery-1"]/@checked')) == 0
+            assert len(doc.xpath('//input[@id="input-corruptionBribery-2"]/@checked')) == 0
+            assert len(doc.xpath('//input[@id="input-terrorism-1"]')) == 1
+            assert len(doc.xpath('//input[@id="input-terrorism-2"]')) == 1
+            assert len(doc.xpath('//input[@id="input-terrorism-1"]/@checked')) == 0
+            assert len(doc.xpath('//input[@id="input-terrorism-2"]/@checked')) == 0
+
+            # Blue banner message is shown at top of page
+            assert doc.xpath('normalize-space(string(//div[@class="banner-information-without-action"]))') == \
+                "Answers on this page are from an earlier declaration and need review."
+
+            # Blue information messages are shown next to pre-filled questions only
+            info_messages = doc.xpath('//div[@class="message-wrapper"]//span[@class="message-content"]')
+            assert len(info_messages) == 3
+            for message in info_messages:
+                assert self.strip_all_whitespace(message.text) == self.strip_all_whitespace(
+                    "This answer is from your Digital Stuff 2 declaration"
+                )
+
+    def test_answers_not_prefilled_if_section_has_already_been_saved(self, data_api_client):
+        with self.app.test_client():
+            self.login()
+            # Handle calls for both the current framework and for the framework to pre-fill from
+            data_api_client.get_framework.side_effect = lambda framework_slug: {
+                "g-cloud-9": self.framework(slug='g-cloud-9', name='G-Cloud 9', status='open'),
+                "digital-outcomes-and-specialists-2": self.framework(slug='digital-outcomes-and-specialists-2',
+                                                                     name='Digital Stuff 2', status='live'),
+            }[framework_slug]
+
+            # Current framework application information with the grounds-for-mandatory-exclusion section complete
+            data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
+                framework_slug="g-cloud-9",
+                declaration={"status": "started",
+                             "conspiracy": False,
+                             "corruptionBribery": True,
+                             "fraudAndTheft": False,
+                             "terrorism": True,
+                             "organisedCrime": False,
+                             },
+                prefill_declaration_from_framework_slug="digital-outcomes-and-specialists-2"
+            )
+
+            # The previous declaration to prefill from - has relevant answers but should not ever be called
+            data_api_client.get_supplier_declaration.return_value = {
+                'declaration': self.supplier_framework(
+                    framework_slug="digital-outcomes-and-specialists-2",
+                    declaration={"status": "complete",
+                                 "conspiracy": True,
+                                 "corruptionBribery": False,
+                                 "fraudAndTheft": True,
+                                 "terrorism": False,
+                                 "organisedCrime": False,
+                                 },
+                )["frameworkInterest"]["declaration"]
+            }
+
+            # The grounds-for-mandatory-exclusion section has "prefill: True" in the declaration manifest
+            res = self.client.get(
+                '/suppliers/frameworks/g-cloud-9/declaration/edit/grounds-for-mandatory-exclusion')
+
+            assert res.status_code == 200
+            doc = html.fromstring(res.get_data(as_text=True))
+
+            # Previous framework and declaration have not been fetched
+            data_api_client.get_framework.assert_called_once_with('g-cloud-9')
+            assert data_api_client.get_supplier_declaration.called is False
+
+            # Radio buttons have been filled with the current answers; not those from previous declaration
+            assert len(doc.xpath('//input[@id="input-conspiracy-2"][@value="False"]/@checked')) == 1
+            assert len(doc.xpath('//input[@id="input-corruptionBribery-1"][@value="True"]/@checked')) == 1
+            assert len(doc.xpath('//input[@id="input-fraudAndTheft-2"][@value="False"]/@checked')) == 1
+            assert len(doc.xpath('//input[@id="input-terrorism-1"][@value="True"]/@checked')) == 1
+            assert len(doc.xpath('//input[@id="input-organisedCrime-2"][@value="False"]/@checked')) == 1
+
+            # No blue banner message is shown at top of page
+            assert len(doc.xpath('//div[@class="banner-information-without-action"]')) == 0
+
+            # No blue information messages are shown next to each question
+            info_messages = doc.xpath('//div[@class="message-wrapper"]//span[@class="message-content"]')
+            assert len(info_messages) == 0
+
+    def test_answers_not_prefilled_if_section_marked_as_prefill_false(self, data_api_client):
+        with self.app.test_client():
+            self.login()
+            # Handle calls for both the current framework and for the framework to pre-fill from
+            data_api_client.get_framework.side_effect = lambda framework_slug: {
+                "g-cloud-9": self.framework(slug='g-cloud-9', name='G-Cloud 9', status='open'),
+                "digital-outcomes-and-specialists-2": self.framework(slug='digital-outcomes-and-specialists-2',
+                                                                     name='Digital Stuff 2', status='live'),
+            }[framework_slug]
+
+            # Current framework application information
+            data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
+                framework_slug="g-cloud-9",
+                declaration={"status": "started"},
+                prefill_declaration_from_framework_slug="digital-outcomes-and-specialists-2"
+            )
+
+            # The previous declaration to prefill from - has relevant answers but should not ever be called
+            data_api_client.get_supplier_declaration.return_value = {
+                'declaration': self.supplier_framework(
+                    framework_slug="digital-outcomes-and-specialists-2",
+                    declaration={"status": "complete",
+                                 "readUnderstoodGuidance": True,
+                                 "understandTool": True,
+                                 "understandHowToAskQuestions": False,
+                                 },
+                )["frameworkInterest"]["declaration"]
+            }
+
+            # The how-you-apply section has "prefill: False" in the declaration manifest
+            res = self.client.get(
+                '/suppliers/frameworks/g-cloud-9/declaration/edit/how-you-apply')
+
+            assert res.status_code == 200
+            doc = html.fromstring(res.get_data(as_text=True))
+
+            # Previous framework and declaration have not been fetched
+            data_api_client.get_framework.assert_called_once_with('g-cloud-9')
+            assert data_api_client.get_supplier_declaration.called is False
+
+            # Radio buttons exist on page but have not been populated at all
+            assert len(doc.xpath('//input[@id="input-readUnderstoodGuidance-1"]')) == 1
+            assert len(doc.xpath('//input[@id="input-readUnderstoodGuidance-2"]')) == 1
+            assert len(doc.xpath('//input[@id="input-readUnderstoodGuidance-1"]/@checked')) == 0
+            assert len(doc.xpath('//input[@id="input-readUnderstoodGuidance-2"]/@checked')) == 0
+
+            assert len(doc.xpath('//input[@id="input-understandTool-1"]')) == 1
+            assert len(doc.xpath('//input[@id="input-understandTool-2"]')) == 1
+            assert len(doc.xpath('//input[@id="input-understandTool-1"]/@checked')) == 0
+            assert len(doc.xpath('//input[@id="input-understandTool-2"]/@checked')) == 0
+
+            assert len(doc.xpath('//input[@id="input-understandHowToAskQuestions-1"]')) == 1
+            assert len(doc.xpath('//input[@id="input-understandHowToAskQuestions-2"]')) == 1
+            assert len(doc.xpath('//input[@id="input-understandHowToAskQuestions-1"]/@checked')) == 0
+            assert len(doc.xpath('//input[@id="input-understandHowToAskQuestions-2"]/@checked')) == 0
+
+            # No blue banner message is shown at top of page
+            assert len(doc.xpath('//div[@class="banner-information-without-action"]')) == 0
+
+            # No blue information messages are shown next to each question
+            info_messages = doc.xpath('//div[@class="message-wrapper"]//span[@class="message-content"]')
+            assert len(info_messages) == 0
 
     def test_post_valid_data(self, data_api_client):
         with self.app.test_client():
             self.login()
 
             data_api_client.get_framework.return_value = self.framework(status='open')
-            data_api_client.get_supplier_declaration.return_value = {
-                "declaration": {"status": "started"}
-            }
+            data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
+                framework_slug="g-cloud-7",
+                declaration={"status": "started"}
+            )
             res = self.client.post(
-                '/suppliers/frameworks/g-cloud-7/declaration/g-cloud-7-essentials',
+                '/suppliers/frameworks/g-cloud-7/declaration/edit/g-cloud-7-essentials',
                 data=FULL_G7_SUBMISSION)
 
-            assert_equal(res.status_code, 302)
-            assert data_api_client.set_supplier_declaration.called
+            assert res.status_code == 302
+            assert data_api_client.set_supplier_declaration.called is True
 
     def test_post_valid_data_to_complete_declaration(self, data_api_client):
         with self.app.test_client():
             self.login()
 
             data_api_client.get_framework.return_value = self.framework(status='open')
-            data_api_client.get_supplier_declaration.return_value = {
-                "declaration": FULL_G7_SUBMISSION
-            }
+            data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
+                framework_slug="g-cloud-7",
+                declaration=FULL_G7_SUBMISSION
+            )
             res = self.client.post(
-                '/suppliers/frameworks/g-cloud-7/declaration/grounds-for-discretionary-exclusion',
+                '/suppliers/frameworks/g-cloud-7/declaration/edit/grounds-for-discretionary-exclusion',
                 data=FULL_G7_SUBMISSION)
 
-            assert_equal(res.status_code, 302)
-            assert_equal(res.location, 'http://localhost/suppliers/frameworks/g-cloud-7')
-            assert data_api_client.set_supplier_declaration.called
+            assert res.status_code == 302
+            assert res.location == 'http://localhost/suppliers/frameworks/g-cloud-7/declaration'
+            assert data_api_client.set_supplier_declaration.called is True
             assert data_api_client.set_supplier_declaration.call_args[0][2]['status'] == 'complete'
 
     def test_post_valid_data_with_api_failure(self, data_api_client):
@@ -1267,16 +3211,17 @@ class TestSupplierDeclaration(BaseApplicationTest):
             self.login()
 
             data_api_client.get_framework.return_value = self.framework(status='open')
-            data_api_client.get_supplier_declaration.return_value = {
-                "declaration": {"status": "started"}
-            }
+            data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
+                framework_slug="g-cloud-7",
+                declaration={"status": "started"}
+            )
             data_api_client.set_supplier_declaration.side_effect = APIError(mock.Mock(status_code=400))
 
             res = self.client.post(
-                '/suppliers/frameworks/g-cloud-7/declaration/g-cloud-7-essentials',
+                '/suppliers/frameworks/g-cloud-7/declaration/edit/g-cloud-7-essentials',
                 data=FULL_G7_SUBMISSION)
 
-            assert_equal(res.status_code, 400)
+            assert res.status_code == 400
 
     @mock.patch('app.main.helpers.validation.G7Validator.get_error_messages_for_page')
     def test_post_with_validation_errors(self, get_error_messages_for_page, data_api_client):
@@ -1291,15 +3236,52 @@ class TestSupplierDeclaration(BaseApplicationTest):
             get_error_messages_for_page.return_value = {'PR1': {'input_name': 'PR1', 'message': 'this is invalid'}}
 
             res = self.client.post(
-                '/suppliers/frameworks/g-cloud-7/declaration/g-cloud-7-essentials',
+                '/suppliers/frameworks/g-cloud-7/declaration/edit/g-cloud-7-essentials',
                 data=FULL_G7_SUBMISSION)
 
-            assert_equal(res.status_code, 400)
-            assert not data_api_client.set_supplier_declaration.called
+            assert res.status_code == 400
+            assert data_api_client.set_supplier_declaration.called is False
 
             doc = html.fromstring(res.get_data(as_text=True))
-            elems = doc.cssselect('#input-PR1-yes')
-            assert elems[0].value == 'true'
+            elems = doc.cssselect('#input-PR1-1')
+            assert elems[0].value == 'True'
+
+    def test_post_invalidating_previously_valid_page(self, data_api_client):
+        with self.app.test_client():
+            self.login()
+
+            data_api_client.get_framework.return_value = self.framework(slug='g-cloud-9', status='open')
+
+            mock_supplier_framework = self.supplier_framework(
+                framework_slug="g-cloud-9",
+                declaration={
+                    "status": "started",
+                    "establishedInTheUK": False,
+                    "appropriateTradeRegisters": True,
+                    "appropriateTradeRegistersNumber": "242#353",
+                    "licenceOrMemberRequired": "licensed",
+                    "licenceOrMemberRequiredDetails": "Foo Bar",
+                },
+            )
+            data_api_client.get_supplier_framework_info.return_value = mock_supplier_framework
+            data_api_client.get_supplier_declaration.return_value = {
+                "declaration": mock_supplier_framework["frameworkInterest"]["declaration"],
+            }
+
+            res = self.client.post(
+                '/suppliers/frameworks/g-cloud-9/declaration/edit/established-outside-the-uk',
+                data={
+                    "establishedInTheUK": "False",
+                    "appropriateTradeRegisters": "True",
+                    "appropriateTradeRegistersNumber": "242#353",
+                    "licenceOrMemberRequired": "licensed",
+                    # deliberately missing:
+                    "licenceOrMemberRequiredDetails": "",
+                },
+            )
+
+            assert res.status_code == 400
+            assert data_api_client.set_supplier_declaration.called is False
 
     def test_cannot_post_data_if_not_open(self, data_api_client):
         with self.app.test_client():
@@ -1312,11 +3294,11 @@ class TestSupplierDeclaration(BaseApplicationTest):
                 "declaration": {"status": "started"}
             }
             res = self.client.post(
-                '/suppliers/frameworks/g-cloud-7/declaration/g-cloud-7-essentials',
+                '/suppliers/frameworks/g-cloud-7/declaration/edit/g-cloud-7-essentials',
                 data=FULL_G7_SUBMISSION)
 
-            assert_equal(res.status_code, 404)
-            assert not data_api_client.set_supplier_declaration.called
+            assert res.status_code == 404
+            assert data_api_client.set_supplier_declaration.called is False
 
 
 @mock.patch('app.main.views.frameworks.data_api_client')
@@ -1325,10 +3307,7 @@ class TestFrameworkUpdatesPage(BaseApplicationTest):
 
     def _assert_page_title_and_table_headings(self, doc, tables_exist=True):
 
-        assert_true(
-            self.strip_all_whitespace('G-Cloud 7 updates')
-            in self.strip_all_whitespace(doc.xpath('//h1')[0].text)
-        )
+        assert self.strip_all_whitespace('G-Cloud 7 updates') in self.strip_all_whitespace(doc.xpath('//h1')[0].text)
 
         section_names = [
             'Communications',
@@ -1336,21 +3315,15 @@ class TestFrameworkUpdatesPage(BaseApplicationTest):
         ]
 
         headers = doc.xpath('//div[contains(@class, "updates-document-tables")]/h2[@class="summary-item-heading"]')
-        assert_equal(len(headers), 2)
+        assert len(headers) == 2
         for index, section_name in enumerate(section_names):
-            assert_true(
-                self.strip_all_whitespace(section_name)
-                in self.strip_all_whitespace(headers[index].text)
-            )
+            assert self.strip_all_whitespace(section_name) in self.strip_all_whitespace(headers[index].text)
 
         if tables_exist:
             table_captions = doc.xpath('//div[contains(@class, "updates-document-tables")]/table/caption')
-            assert_equal(len(table_captions), 2)
+            assert len(table_captions) == 2
             for index, section_name in enumerate(section_names):
-                assert_true(
-                    self.strip_all_whitespace(section_name)
-                    in self.strip_all_whitespace(table_captions[index].text)
-                )
+                assert self.strip_all_whitespace(section_name) in self.strip_all_whitespace(table_captions[index].text)
 
     def test_should_be_a_503_if_connecting_to_amazon_fails(self, s3, data_api_client):
         data_api_client.get_framework.return_value = self.framework('open')
@@ -1364,11 +3337,9 @@ class TestFrameworkUpdatesPage(BaseApplicationTest):
                 '/suppliers/frameworks/g-cloud-7/updates'
             )
 
-            assert_equal(response.status_code, 503)
-            assert_true(
-                self.strip_all_whitespace(u"<h1>Sorry, we’re experiencing technical difficulties</h1>")
-                in self.strip_all_whitespace(response.get_data(as_text=True))
-            )
+            assert response.status_code == 503
+            assert self.strip_all_whitespace(u"<h1>Sorry, we’re experiencing technical difficulties</h1>") in \
+                self.strip_all_whitespace(response.get_data(as_text=True))
 
     def test_empty_messages_exist_if_no_files_returned(self, s3, data_api_client):
         data_api_client.get_framework.return_value = self.framework('open')
@@ -1380,7 +3351,7 @@ class TestFrameworkUpdatesPage(BaseApplicationTest):
                 '/suppliers/frameworks/g-cloud-7/updates'
             )
 
-            assert_equal(response.status_code, 200)
+            assert response.status_code == 200
             doc = html.fromstring(response.get_data(as_text=True))
             self._assert_page_title_and_table_headings(doc, tables_exist=False)
 
@@ -1388,10 +3359,8 @@ class TestFrameworkUpdatesPage(BaseApplicationTest):
                 '<p class="summary-item-no-content">No communications have been sent out.</p>',
                 '<p class="summary-item-no-content">No clarification questions and answers have been posted yet.</p>',
             ]:
-                assert_true(
-                    self.strip_all_whitespace(empty_message)
-                    in self.strip_all_whitespace(response.get_data(as_text=True))
-                )
+                assert self.strip_all_whitespace(empty_message) in \
+                    self.strip_all_whitespace(response.get_data(as_text=True))
 
     def test_dates_for_open_framework_closed_for_questions(self, s3, data_api_client):
         data_api_client.get_framework.return_value = self.framework('open', clarification_questions_open=False)
@@ -1451,19 +3420,18 @@ class TestFrameworkUpdatesPage(BaseApplicationTest):
             # test that for each table, we have the right number of rows
             for table in tables:
                 item_rows = table.findall('.//tr[@class="summary-item-row"]')
-                assert_equal(len(item_rows), 2)
+                assert len(item_rows) == 2
 
                 # test that the file names and urls are right
                 for row in item_rows:
                     section, filename, ext = files.pop(0)
                     filename_link = row.find('.//a[@class="document-link-with-icon"]')
 
-                    assert_true(filename in filename_link.text_content())
-                    assert_equal(
-                        filename_link.get('href'),
-                        '/suppliers/frameworks/g-cloud-7/files/{}{}.{}'.format(
-                            section, filename.replace(' ', '%20'), ext
-                        )
+                    assert filename in filename_link.text_content()
+                    assert filename_link.get('href') == '/suppliers/frameworks/g-cloud-7/files/{}{}.{}'.format(
+                        section,
+                        filename.replace(' ', '%20'),
+                        ext,
                     )
 
     def test_names_with_the_section_name_in_them_will_display_correctly(self, s3, data_api_client):
@@ -1495,19 +3463,18 @@ class TestFrameworkUpdatesPage(BaseApplicationTest):
             # test that for each table, we have the right number of rows
             for table in tables:
                 item_rows = table.findall('.//tr[@class="summary-item-row"]')
-                assert_equal(len(item_rows), 1)
+                assert len(item_rows) == 1
 
                 # test that the file names and urls are right
                 for row in item_rows:
                     section, filename, ext = files.pop(0)
                     filename_link = row.find('.//a[@class="document-link-with-icon"]')
 
-                    assert_true(filename in filename_link.text_content())
-                    assert_equal(
-                        filename_link.get('href'),
-                        '/suppliers/frameworks/g-cloud-7/files/{}{}.{}'.format(
-                            section, filename.replace(' ', '%20'), ext
-                        )
+                    assert filename in filename_link.text_content()
+                    assert filename_link.get('href') == '/suppliers/frameworks/g-cloud-7/files/{}{}.{}'.format(
+                        section,
+                        filename.replace(' ', '%20'),
+                        ext,
                     )
 
     def test_question_box_is_shown_if_countersigned_agreement_is_not_yet_returned(self, s3, data_api_client):
@@ -1521,7 +3488,7 @@ class TestFrameworkUpdatesPage(BaseApplicationTest):
             data = response.get_data(as_text=True)
 
             assert response.status_code == 200
-            assert_in(u'Ask a question about your G-Cloud 7 application', data)
+            assert u'Ask a question about your G-Cloud 7 application' in data
 
     def test_no_question_box_shown_if_countersigned_agreement_is_returned(self, s3, data_api_client):
         data_api_client.get_framework.return_value = self.framework('live', clarification_questions_open=False)
@@ -1534,7 +3501,7 @@ class TestFrameworkUpdatesPage(BaseApplicationTest):
             data = response.get_data(as_text=True)
 
             assert response.status_code == 200
-            assert_not_in(u'Ask a question about your G-Cloud 7 application', data)
+            assert u'Ask a question about your G-Cloud 7 application' not in data
 
 
 class TestSendClarificationQuestionEmail(BaseApplicationTest):
@@ -1553,16 +3520,16 @@ class TestSendClarificationQuestionEmail(BaseApplicationTest):
     def _assert_clarification_email(self, send_email, is_called=True, succeeds=True):
 
         if succeeds:
-            assert_equal(2, send_email.call_count)
+            assert send_email.call_count == 2
         elif is_called:
-            assert_equal(1, send_email.call_count)
+            assert send_email.call_count == 1
         else:
-            assert_equal(0, send_email.call_count)
+            assert send_email.call_count == 0
 
         if is_called:
             send_email.assert_any_call(
                 "digitalmarketplace@mailinator.com",
-                FakeMail('Supplier name:', 'User name:'),
+                FakeMail('Supplier ID:'),
                 "MANDRILL",
                 "Test Framework clarification question",
                 "do-not-reply@digitalmarketplace.service.gov.uk",
@@ -1584,9 +3551,9 @@ class TestSendClarificationQuestionEmail(BaseApplicationTest):
     def _assert_application_email(self, send_email, succeeds=True):
 
         if succeeds:
-            assert_equal(1, send_email.call_count)
+            assert send_email.call_count == 1
         else:
-            assert_equal(0, send_email.call_count)
+            assert send_email.call_count == 0
 
         if succeeds:
             send_email.assert_called_with(
@@ -1610,10 +3577,10 @@ class TestSendClarificationQuestionEmail(BaseApplicationTest):
         for invalid_clarification_question in [
             {
                 'question': '',  # empty question
-                'error_message': 'Question cannot be empty'
+                'error_message': 'Add text if you want to ask a question.'
             }, {
                 'question': '\t   \n\n\n',  # whitespace-only question
-                'error_message': 'Question cannot be empty'
+                'error_message': 'Add text if you want to ask a question.'
             },
             {
                 'question': ('ten__chars' * 500) + '1',  # 5000+ char question
@@ -1624,15 +3591,11 @@ class TestSendClarificationQuestionEmail(BaseApplicationTest):
             response = self._send_email(invalid_clarification_question['question'])
             self._assert_clarification_email(send_email, is_called=False, succeeds=False)
 
-            assert_equal(response.status_code, 400)
-            assert_true(
-                self.strip_all_whitespace('There was a problem with your submitted question')
-                in self.strip_all_whitespace(response.get_data(as_text=True))
-            )
-            assert_true(
-                self.strip_all_whitespace(invalid_clarification_question['error_message'])
-                in self.strip_all_whitespace(response.get_data(as_text=True))
-            )
+            assert response.status_code == 400
+            assert self.strip_all_whitespace('There was a problem with your submitted question') in \
+                self.strip_all_whitespace(response.get_data(as_text=True))
+            assert self.strip_all_whitespace(invalid_clarification_question['error_message']) in \
+                self.strip_all_whitespace(response.get_data(as_text=True))
 
     @mock.patch('dmutils.s3.S3')
     @mock.patch('app.main.views.frameworks.data_api_client')
@@ -1645,11 +3608,11 @@ class TestSendClarificationQuestionEmail(BaseApplicationTest):
 
         self._assert_clarification_email(send_email)
 
-        assert_equal(response.status_code, 200)
-        assert_true(
-            self.strip_all_whitespace('<p class="banner-message">Your clarification question has been sent. Answers to all clarification questions will be published on this page.</p>')  # noqa
-            in self.strip_all_whitespace(response.get_data(as_text=True))
-        )
+        assert response.status_code == 200
+        assert self.strip_all_whitespace(
+            '<p class="banner-message">Your clarification question has been sent. Answers to all ' +
+            'clarification questions will be published on this page.</p>'
+        ) in self.strip_all_whitespace(response.get_data(as_text=True))
 
     @mock.patch('dmutils.s3.S3')
     @mock.patch('app.main.views.frameworks.data_api_client')
@@ -1662,11 +3625,11 @@ class TestSendClarificationQuestionEmail(BaseApplicationTest):
 
         self._assert_application_email(send_email)
 
-        assert_equal(response.status_code, 200)
-        assert_in(
-            self.strip_all_whitespace('<p class="banner-message">Your question has been sent. You\'ll get a reply from the Crown Commercial Service soon.</p>'),  # noqa
-            self.strip_all_whitespace(response.get_data(as_text=True))
-        )
+        assert response.status_code == 200
+        assert self.strip_all_whitespace(
+            '<p class="banner-message">Your question has been sent. You&#39;ll get a reply from ' +
+            'the Crown Commercial Service soon.</p>'
+        ) in self.strip_all_whitespace(response.get_data(as_text=True))
 
     @mock.patch('dmutils.s3.S3')
     @mock.patch('app.main.views.frameworks.data_api_client')
@@ -1678,7 +3641,7 @@ class TestSendClarificationQuestionEmail(BaseApplicationTest):
 
         self._assert_clarification_email(send_email)
 
-        assert_equal(response.status_code, 200)
+        assert response.status_code == 200
         data_api_client.create_audit_event.assert_called_with(
             audit_type=AuditTypes.send_clarification_question,
             user="email@email.com",
@@ -1697,7 +3660,7 @@ class TestSendClarificationQuestionEmail(BaseApplicationTest):
 
         self._assert_application_email(send_email)
 
-        assert_equal(response.status_code, 200)
+        assert response.status_code == 200
         data_api_client.create_audit_event.assert_called_with(
             audit_type=AuditTypes.send_application_question,
             user="email@email.com",
@@ -1709,13 +3672,13 @@ class TestSendClarificationQuestionEmail(BaseApplicationTest):
     @mock.patch('app.main.views.frameworks.send_email')
     def test_should_be_a_503_if_email_fails(self, send_email, data_api_client):
         data_api_client.get_framework.return_value = self.framework('open', name='Test Framework')
-        send_email.side_effect = MandrillException("Arrrgh")
+        send_email.side_effect = EmailError("Arrrgh")
 
         clarification_question = 'This is a clarification question.'
         response = self._send_email(clarification_question)
         self._assert_clarification_email(send_email, succeeds=False)
 
-        assert_equal(response.status_code, 503)
+        assert response.status_code == 503
 
 
 @mock.patch('app.main.views.frameworks.data_api_client', autospec=True)
@@ -1729,7 +3692,7 @@ class TestG7ServicesList(BaseApplicationTest):
         data_api_client.find_draft_services.return_value = {'services': []}
         count_unanswered.return_value = 0
         response = self.client.get('/suppliers/frameworks/g-cloud-7/submissions/iaas')
-        assert_equal(response.status_code, 404)
+        assert response.status_code == 404
 
     def test_404_when_g7_pending_and_no_declaration(self, count_unanswered, data_api_client):
         with self.app.test_client():
@@ -1739,7 +3702,7 @@ class TestG7ServicesList(BaseApplicationTest):
             "declaration": {"status": "started"}
         }
         response = self.client.get('/suppliers/frameworks/g-cloud-7/submissions/iaas')
-        assert_equal(response.status_code, 404)
+        assert response.status_code == 404
 
     def test_no_404_when_g7_open_and_no_complete_services(self, count_unanswered, data_api_client):
         with self.app.test_client():
@@ -1748,7 +3711,7 @@ class TestG7ServicesList(BaseApplicationTest):
         data_api_client.find_draft_services.return_value = {'services': []}
         count_unanswered.return_value = 0
         response = self.client.get('/suppliers/frameworks/g-cloud-7/submissions/iaas')
-        assert_equal(response.status_code, 200)
+        assert response.status_code == 200
 
     def test_no_404_when_g7_open_and_no_declaration(self, count_unanswered, data_api_client):
         with self.app.test_client():
@@ -1759,7 +3722,7 @@ class TestG7ServicesList(BaseApplicationTest):
             "declaration": {"status": "started"}
         }
         response = self.client.get('/suppliers/frameworks/g-cloud-7/submissions/iaas')
-        assert_equal(response.status_code, 200)
+        assert response.status_code == 200
 
     def test_shows_g7_message_if_pending_and_application_made(self, count_unanswered, data_api_client):
         with self.app.test_client():
@@ -1776,13 +3739,17 @@ class TestG7ServicesList(BaseApplicationTest):
         response = self.client.get('/suppliers/frameworks/g-cloud-7/submissions/scs')
         doc = html.fromstring(response.get_data(as_text=True))
 
-        assert_equal(response.status_code, 200)
+        assert response.status_code == 200
         heading = doc.xpath('//div[@class="summary-item-lede"]//h2[@class="summary-item-heading"]')
-        assert_true(len(heading) > 0)
-        assert_in(u"G-Cloud 7 is closed for applications",
-                  heading[0].xpath('text()')[0])
-        assert_in(u"You made your supplier declaration and submitted 1 complete service.",
-                  heading[0].xpath('../p[1]/text()')[0])
+        assert len(heading) > 0
+        assert u"G-Cloud 7 is closed for applications" in heading[0].xpath('text()')[0]
+        assert u"You made your supplier declaration and submitted 1 complete service." in \
+            heading[0].xpath('../p[1]/text()')[0]
+
+        assert not doc.xpath(
+            "//*[contains(@class,'banner')][contains(normalize-space(string()),$t)]",
+            t="declaration before any services can be submitted",
+        )
 
     def test_drafts_list_progress_count(self, count_unanswered, data_api_client):
         with self.app.test_client():
@@ -1799,11 +3766,11 @@ class TestG7ServicesList(BaseApplicationTest):
         submissions = self.client.get('/suppliers/frameworks/g-cloud-7/submissions')
         lot_page = self.client.get('/suppliers/frameworks/g-cloud-7/submissions/scs')
 
-        assert_true(u'Service can be moved to complete' not in lot_page.get_data(as_text=True))
-        assert_in(u'4 unanswered questions', lot_page.get_data(as_text=True))
+        assert u'Service can be moved to complete' not in lot_page.get_data(as_text=True)
+        assert u'4 unanswered questions' in lot_page.get_data(as_text=True)
 
-        assert_in(u'1 draft service', submissions.get_data(as_text=True))
-        assert_true(u'complete service' not in submissions.get_data(as_text=True))
+        assert u'1 draft service' in submissions.get_data(as_text=True)
+        assert u'complete service' not in submissions.get_data(as_text=True)
 
     def test_drafts_list_can_be_completed(self, count_unanswered, data_api_client):
         with self.app.test_client():
@@ -1820,16 +3787,20 @@ class TestG7ServicesList(BaseApplicationTest):
 
         res = self.client.get('/suppliers/frameworks/g-cloud-7/submissions/scs')
 
-        assert_in(u'Service can be marked as complete', res.get_data(as_text=True))
-        assert_in(u'1 optional question unanswered', res.get_data(as_text=True))
+        assert u'Service can be marked as complete' in res.get_data(as_text=True)
+        assert u'1 optional question unanswered' in res.get_data(as_text=True)
 
-    def test_drafts_list_completed(self, count_unanswered, data_api_client):
+    @pytest.mark.parametrize("incomplete_declaration", ({}, {"status": "started"},))
+    def test_drafts_list_completed(self, count_unanswered, data_api_client, incomplete_declaration):
         with self.app.test_client():
             self.login()
 
         count_unanswered.return_value = 0, 1
 
         data_api_client.get_framework.return_value = self.framework(status='open')
+        data_api_client.get_supplier_declaration.return_value = {
+            'declaration': incomplete_declaration,
+        }
         data_api_client.find_draft_services.return_value = {
             'services': [
                 {'serviceName': 'draft', 'lotSlug': 'scs', 'status': 'submitted'},
@@ -1838,13 +3809,24 @@ class TestG7ServicesList(BaseApplicationTest):
 
         submissions = self.client.get('/suppliers/frameworks/g-cloud-7/submissions')
         lot_page = self.client.get('/suppliers/frameworks/g-cloud-7/submissions/scs')
+        submissions_doc, lot_page_doc = (html.fromstring(r.get_data(as_text=True)) for r in (submissions, lot_page))
 
-        assert_true(u'Service can be moved to complete' not in lot_page.get_data(as_text=True))
-        assert_in(u'1 optional question unanswered', lot_page.get_data(as_text=True))
-        assert_in(u'make the supplier&nbsp;declaration', lot_page.get_data(as_text=True))
+        assert u'Service can be moved to complete' not in lot_page.get_data(as_text=True)
+        assert u'1 optional question unanswered' in lot_page.get_data(as_text=True)
 
-        assert_in(u'1 service marked as complete', submissions.get_data(as_text=True))
-        assert_true(u'draft service' not in submissions.get_data(as_text=True))
+        assert u'1 service marked as complete' in submissions.get_data(as_text=True)
+        assert u'draft service' not in submissions.get_data(as_text=True)
+
+        for doc in (submissions_doc, lot_page_doc,):
+            assert doc.xpath(
+                "//*[@class='banner-warning-without-action'][normalize-space(string())=$t][.//a[@href=$u]]",
+                t=u"You need to make the supplier\u00a0declaration before any services can be submitted",
+                u=(
+                    "/suppliers/frameworks/g-cloud-7/declaration"
+                    if incomplete_declaration.get("status") == "started" else
+                    "/suppliers/frameworks/g-cloud-7/declaration/start"
+                ),
+            )
 
     def test_drafts_list_completed_with_declaration_status(self, count_unanswered, data_api_client):
         with self.app.test_client():
@@ -1863,10 +3845,16 @@ class TestG7ServicesList(BaseApplicationTest):
         }
 
         submissions = self.client.get('/suppliers/frameworks/g-cloud-7/submissions')
+        doc = html.fromstring(submissions.get_data(as_text=True))
 
-        assert_in(u'1 service will be submitted', submissions.get_data(as_text=True))
-        assert_not_in(u'1 complete service was submitted', submissions.get_data(as_text=True))
-        assert_in(u'browse-list-item-status-happy', submissions.get_data(as_text=True))
+        assert u'1 service will be submitted' in submissions.get_data(as_text=True)
+        assert u'1 complete service was submitted' not in submissions.get_data(as_text=True)
+        assert u'browse-list-item-status-happy' in submissions.get_data(as_text=True)
+
+        assert not doc.xpath(
+            "//*[contains(@class,'banner')][contains(normalize-space(string()),$t)]",
+            t="declaration before any services can be submitted",
+        )
 
     def test_drafts_list_services_were_submitted(self, count_unanswered, data_api_client):
         with self.app.test_client():
@@ -1887,7 +3875,7 @@ class TestG7ServicesList(BaseApplicationTest):
 
         submissions = self.client.get('/suppliers/frameworks/g-cloud-7/submissions')
 
-        assert_in(u'1 complete service was submitted', submissions.get_data(as_text=True))
+        assert u'1 complete service was submitted' in submissions.get_data(as_text=True)
 
     def test_dos_drafts_list_with_open_framework(self, count_unanswered, data_api_client):
         with self.app.test_client():
@@ -1907,10 +3895,16 @@ class TestG7ServicesList(BaseApplicationTest):
         }
 
         submissions = self.client.get('/suppliers/frameworks/digital-outcomes-and-specialists/submissions')
+        doc = html.fromstring(submissions.get_data(as_text=True))
 
-        assert_in(u'This will be submitted', submissions.get_data(as_text=True))
-        assert_in(u'browse-list-item-status-happy', submissions.get_data(as_text=True))
-        assert_in(u'Apply to provide', submissions.get_data(as_text=True))
+        assert u'This will be submitted' in submissions.get_data(as_text=True)
+        assert u'browse-list-item-status-happy' in submissions.get_data(as_text=True)
+        assert u'Apply to provide' in submissions.get_data(as_text=True)
+
+        assert not doc.xpath(
+            "//*[contains(@class,'banner')][contains(normalize-space(string()),$t)]",
+            t="declaration before any services can be submitted",
+        )
 
     def test_dos_drafts_list_with_closed_framework(self, count_unanswered, data_api_client):
         with self.app.test_client():
@@ -1933,8 +3927,8 @@ class TestG7ServicesList(BaseApplicationTest):
         submissions = self.client.get('/suppliers/frameworks/digital-outcomes-and-specialists/submissions')
 
         assert submissions.status_code == 200
-        assert_in(u'Submitted', submissions.get_data(as_text=True))
-        assert_not_in(u'Apply to provide', submissions.get_data(as_text=True))
+        assert u'Submitted' in submissions.get_data(as_text=True)
+        assert u'Apply to provide' not in submissions.get_data(as_text=True)
 
 
 @mock.patch('app.main.views.frameworks.data_api_client', autospec=True)
@@ -2036,7 +4030,7 @@ class TestSignerDetailsPage(BaseApplicationTest):
         supplier_framework = self.supplier_framework(framework_slug='g-cloud-8', on_framework=True)['frameworkInterest']
         return_supplier_framework.return_value = supplier_framework
 
-        res = self.client.get("/suppliers/frameworks/g-cloud-8/234/signer-details")
+        self.client.get("/suppliers/frameworks/g-cloud-8/234/signer-details")
         # This call will abort because supplier_framework has mismatched supplier_id 1234
         check_agreement_is_related_to_supplier_framework_or_abort.assert_called_with(
             self.framework_agreement(supplier_id=2345)['agreement'],
@@ -2251,7 +4245,7 @@ class TestSignatureUploadPage(BaseApplicationTest):
         return_supplier_framework.return_value = supplier_framework
         s3.return_value.get_key.return_value = None
 
-        res = self.client.get("/suppliers/frameworks/g-cloud-8/234/signature-upload")
+        self.client.get("/suppliers/frameworks/g-cloud-8/234/signature-upload")
         # This call will abort because supplier_framework has mismatched supplier_id 1234
         check_agreement_is_related_to_supplier_framework_or_abort.assert_called_with(
             self.framework_agreement(supplier_id=2345)['agreement'],
@@ -2595,7 +4589,7 @@ class TestContractReviewPage(BaseApplicationTest):
         return_supplier_framework.return_value = supplier_framework
         s3.return_value.get_key.return_value = None
 
-        res = self.client.get("/suppliers/frameworks/g-cloud-8/234/contract-review")
+        self.client.get("/suppliers/frameworks/g-cloud-8/234/contract-review")
         # This call will abort because supplier_framework has mismatched supplier_id 1234
         check_agreement_is_related_to_supplier_framework_or_abort.assert_called_with(
             self.framework_agreement(supplier_id=2345)['agreement'],
@@ -2633,7 +4627,7 @@ class TestContractReviewPage(BaseApplicationTest):
             )
             assert res.status_code == 400
             page = res.get_data(as_text=True)
-            assert not send_email.called
+            assert send_email.called is False
             assert "You must confirm you have the authority to return the agreement" in page
 
     @mock.patch('dmutils.s3.S3')
@@ -2664,7 +4658,7 @@ class TestContractReviewPage(BaseApplicationTest):
             with self.client.session_transaction() as sess:
                 sess['signature_page'] = 'test.pdf'
 
-            res = self.client.post(
+            self.client.post(
                 "/suppliers/frameworks/g-cloud-8/234/contract-review",
                 data={
                     'authorisation': 'I have the authority to return this agreement on behalf of company name'
@@ -2717,7 +4711,7 @@ class TestContractReviewPage(BaseApplicationTest):
                 'last_modified': '2016-07-10T21:18:00.000000Z'
             }
 
-            res = self.client.post(
+            self.client.post(
                 "/suppliers/frameworks/g-cloud-8/234/contract-review",
                 data={
                     'authorisation': 'I have the authority to return this agreement on behalf of company name'
@@ -2759,7 +4753,7 @@ class TestContractReviewPage(BaseApplicationTest):
                 'last_modified': '2016-07-10T21:18:00.000000Z'
             }
 
-            send_email.side_effect = MandrillException()
+            send_email.side_effect = EmailError()
 
             res = self.client.post(
                 "/suppliers/frameworks/g-cloud-8/234/contract-review",
@@ -2803,9 +4797,9 @@ class TestContractReviewPage(BaseApplicationTest):
                 }
             )
 
-            assert data_api_client.sign_framework_agreement.called
+            assert data_api_client.sign_framework_agreement.called is True
             assert res.status_code == 500
-            assert not send_email.called
+            assert send_email.called is False
 
     @mock.patch('dmutils.s3.S3')
     @mock.patch('app.main.views.frameworks.send_email')
@@ -2981,8 +4975,8 @@ class TestContractReviewPage(BaseApplicationTest):
 @mock.patch('app.main.views.frameworks.data_api_client', autospec=True)
 class TestContractVariation(BaseApplicationTest):
 
-    def setup(self):
-        super(TestContractVariation, self).setup()
+    def setup_method(self, method):
+        super(TestContractVariation, self).setup_method(method)
 
         self.good_supplier_framework = self.supplier_framework(
             declaration={'nameOfOrganisation': 'A.N. Supplier',
@@ -3172,7 +5166,7 @@ class TestContractVariation(BaseApplicationTest):
         assert res.status_code == 200
         assert len(
             doc.xpath('//p[@class="banner-message"][contains(text(), "You have accepted the proposed changes.")]')
-        ) == 1
+        ) == 1, res.get_data(as_text=True)
 
     @mock.patch('app.main.views.frameworks.send_email')
     def test_api_is_not_called_and_no_email_sent_for_subsequent_posts(self, send_email, data_api_client):
@@ -3191,8 +5185,8 @@ class TestContractVariation(BaseApplicationTest):
                                data={"accept_changes": "Yes"}
                                )
         assert res.status_code == 200
-        assert not data_api_client.agree_framework_variation.called
-        assert not send_email.called
+        assert data_api_client.agree_framework_variation.called is False
+        assert send_email.called is False
 
     def test_error_if_box_not_ticked(self, data_api_client):
         data_api_client.get_framework.return_value = self.g8_framework
@@ -3205,3 +5199,306 @@ class TestContractVariation(BaseApplicationTest):
         assert len(
             doc.xpath('//span[@class="validation-message"][contains(text(), "You can only save and continue if you agree to the proposed changes")]')  # noqa
         ) == 1
+
+
+@mock.patch('app.main.views.frameworks.data_api_client', autospec=True)
+class TestReuseFrameworkSupplierDeclaration(BaseApplicationTest):
+    """Tests for frameworks/<framework_slug>/declaration/reuse view."""
+
+    def setup_method(self, method):
+        super(TestReuseFrameworkSupplierDeclaration, self).setup_method(method)
+        with self.app.test_client():
+            self.login()
+
+    def test_reusable_declaration_framework_slug_param(self, data_api_client):
+        """Ensure that when using the param to specify declaration we collect the correct declaration."""
+
+        # Modify the data client.
+        t07 = '2009-12-03T01:01:01.000000Z'
+        framework = {
+            'x_field': 'foo',
+            'allowDeclarationReuse': True,
+            'applicationCloseDate': t07,
+            'slug': 'g-cloud-8',
+            'name': 'g-cloud-8'
+        }
+
+        data_api_client.get_framework.return_value = {'frameworks': framework}
+        data_api_client.get_supplier_framework_info.return_value = {
+            'frameworkInterest': {
+                'declaration': {'status': 'complete'},
+                'onFramework': True
+            }
+        }
+
+        # Do the get.
+        with self.client as cont:
+            resp = cont.get(
+                '/suppliers/frameworks/g-cloud-9/declaration/reuse?reusable_declaration_framework_slug=g-cloud-8'
+            )
+
+            # Assert request arg inside context manager.
+            assert request.args['reusable_declaration_framework_slug'] == 'g-cloud-8'
+
+        # Assert response OK.
+        assert resp.status_code == 200
+
+        # Assert expected api calls.
+        data_api_client.get_framework.assert_has_calls([mock.call('g-cloud-9'), mock.call('g-cloud-8')])
+        data_api_client.get_supplier_framework_info.assert_called_once_with(1234, 'g-cloud-8')
+
+    def test_404_when_specified_declaration_not_found(self, data_api_client):
+        """Fail on a 404 if declaration is specified but not found."""
+
+        # Modify the data client.
+        framework = {}
+        data_api_client.get_framework.return_value = {'frameworks': framework}
+        data_api_client.get_supplier_framework_info.side_effect = APIError(mock.Mock(status_code=404))
+
+        # Do the get.
+        resp = self.client.get(
+            '/suppliers/frameworks/g-cloud-9/declaration/reuse?reusable_declaration_framework_slug=g-cloud-8'
+        )
+
+        # Assert the 404
+        assert resp.status_code == 404
+
+        # Assert expected api calls.
+        data_api_client.get_framework.assert_called_once_with('g-cloud-9')
+        data_api_client.get_supplier_framework_info.assert_called_once_with(1234, 'g-cloud-8')
+
+    def test_redirect_when_declaration_not_found(self, data_api_client):
+        """Redirect if a reusable declaration is not found."""
+
+        # Modify the data client.
+        t09 = '2009-03-03T01:01:01.000000Z'
+
+        frameworks = [
+            {'x_field': 'foo', 'allowDeclarationReuse': True, 'applicationCloseDate': t09, 'slug': 'ben-cloud-2'},
+        ]
+        supplier_declarations = []
+        data_api_client.find_frameworks.return_value = {'frameworks': frameworks}
+        data_api_client.find_supplier_declarations.return_value = dict(
+            frameworkInterest=supplier_declarations
+        )
+
+        # Do the get.
+        with self.client:
+            resp = self.client.get(
+                '/suppliers/frameworks/g-cloud-9/declaration/reuse',
+            )
+
+            # Assert the redirect
+            assert resp.location.endswith('/suppliers/frameworks/g-cloud-9/declaration')
+
+        # Assert expected api calls.
+        data_api_client.get_framework.assert_called_once_with('g-cloud-9')
+        data_api_client.find_supplier_declarations.assert_called_once_with(1234)
+
+    def test_success_reuse_g_cloud_7_for_8(self, data_api_client):
+        """Test success path."""
+
+        # Modify the data client.
+        t09 = '2009-03-03T01:01:01.000000Z'
+        t10 = '2010-03-03T01:01:01.000000Z'
+        t11 = '2011-03-03T01:01:01.000000Z'
+        t12 = '2012-03-03T01:01:01.000000Z'
+
+        frameworks_response = [
+            {
+                'x_field': 'foo',
+                'allowDeclarationReuse': True,
+                'applicationCloseDate': t12,
+                'slug': 'g-cloud-8',
+                'name': 'G-cloud 8'
+            }, {
+                'x_field': 'foo',
+                'allowDeclarationReuse': True,
+                'applicationCloseDate': t11,
+                'slug': 'g-cloud-7',
+                'name': 'G-cloud 7'
+            }, {
+                'x_field': 'foo',
+                'allowDeclarationReuse': True,
+                'applicationCloseDate': t10,
+                'slug': 'dos',
+                'name': 'Digital'
+            }, {
+                'x_field': 'foo',
+                'allowDeclarationReuse': False,
+                'applicationCloseDate': t09,
+                'slug': 'g-cloud-6',
+                'name': 'G-cloud 6'
+            },
+        ]
+        framework_response = {
+            'x_field': 'foo',
+            'allowDeclarationReuse': True,
+            'applicationCloseDate': t09,
+            'slug': 'g-cloud-8',
+            'name': 'G-cloud 8'
+        }
+        supplier_declarations_response = [
+            {'x': 'foo', 'frameworkSlug': 'g-cloud-6', 'declaration': {'status': 'complete'}, 'onFramework': True},
+            {'x': 'foo', 'frameworkSlug': 'g-cloud-7', 'declaration': {'status': 'complete'}, 'onFramework': True},
+            {'x': 'foo', 'frameworkSlug': 'dos', 'declaration': {'status': 'complete'}, 'onFramework': True}
+        ]
+        data_api_client.find_frameworks.return_value = {'frameworks': frameworks_response}
+        data_api_client.get_framework.return_value = {'frameworks': framework_response}
+        data_api_client.find_supplier_declarations.return_value = {'frameworkInterest': supplier_declarations_response}
+
+        # Do the get.
+        resp = self.client.get(
+            '/suppliers/frameworks/g-cloud-8/declaration/reuse',
+        )
+
+        # Assert the success.
+        assert resp.status_code == 200
+        expected = 'In March&nbsp;2011, your organisation completed a declaration for G-cloud 7.'
+        assert expected in str(resp.data)
+
+        # Assert expected api calls.
+        data_api_client.get_framework.assert_called_once_with('g-cloud-8')
+        data_api_client.find_supplier_declarations.assert_called_once_with(1234)
+
+
+@mock.patch('app.main.views.frameworks.data_api_client', autospec=True)
+class TestReuseFrameworkSupplierDeclarationPost(BaseApplicationTest):
+    """Tests for frameworks/<framework_slug>/declaration/reuse POST view."""
+
+    def setup_method(self, method):
+        super(TestReuseFrameworkSupplierDeclarationPost, self).setup_method(method)
+        with self.app.test_client():
+            self.login()
+
+    def test_reuse_false(self, data_api_client):
+        """Assert that the redirect happens and the client sets the prefill pref to None."""
+        data = {'reuse': 'False', 'old_framework_slug': 'should-not-be-used'}
+        with self.client:
+            resp = self.client.post(
+                '/suppliers/frameworks/g-cloud-9/declaration/reuse',
+                data=data
+            )
+
+            # Assert the redirect
+            assert resp.location.endswith('/suppliers/frameworks/g-cloud-9/declaration')
+
+        data_api_client.set_supplier_framework_prefill_declaration.assert_called_once_with(
+            1234,
+            'g-cloud-9',
+            None,
+            'email@email.com'
+        )
+
+    def test_reuse_true(self, data_api_client):
+        """Assert that the redirect happens and the client sets the prefill pref to the desired framework slug."""
+        data = {'reuse': True, 'old_framework_slug': 'digital-outcomes-and-specialists-2'}
+        data_api_client.get_supplier_framework_info.return_value = {
+            'frameworkInterest': {
+                'x_field': 'foo',
+                'frameworkSlug': 'digital-outcomes-and-specialists-2',
+                'declaration': {'status': 'complete'},
+                'onFramework': True
+            }
+        }
+        framework_response = {'frameworks': {'x_field': 'foo', 'allowDeclarationReuse': True}}
+        data_api_client.get_framework.return_value = framework_response
+
+        with self.client:
+            resp = self.client.post(
+                '/suppliers/frameworks/g-cloud-9/declaration/reuse',
+                data=data
+            )
+
+            # Assert the redirect
+            assert resp.location.endswith('/suppliers/frameworks/g-cloud-9/declaration')
+
+        # These api calls need to be made so that we can verify the declaration.
+        data_api_client.get_framework.assert_called_once_with('digital-outcomes-and-specialists-2')
+        data_api_client.get_supplier_framework_info.assert_called_once_with(
+            1234,
+            'digital-outcomes-and-specialists-2'
+        )
+
+        # This end point sets the prefill preference.
+        data_api_client.set_supplier_framework_prefill_declaration.assert_called_once_with(
+            1234,
+            'g-cloud-9',
+            'digital-outcomes-and-specialists-2',
+            'email@email.com'
+        )
+
+    def test_reuse_invalid_framework_post(self, data_api_client):
+        """Assert 404 for non reusable framework."""
+        data = {'reuse': 'true', 'old_framework_slug': 'digital-outcomes-and-specialists'}
+
+        # A framework with allowDeclarationReuse as False
+        data_api_client.get_framework.return_value = {
+            'frameworks': {'x_field': 'foo', 'allowDeclarationReuse': False}
+        }
+
+        # Do the post.
+        resp = self.client.post(
+            '/suppliers/frameworks/g-cloud-9/declaration/reuse',
+            data=data
+        )
+
+        # Should get the framework and error on allowDeclarationReuse as False.
+        data_api_client.get_framework.assert_called_once_with('digital-outcomes-and-specialists')
+        # Should not do the declaration call if the framework is invalid
+        assert not data_api_client.get_supplier_framework_info.called
+        # Should 404
+        assert resp.status_code == 404
+
+    def test_reuse_non_existent_framework_post(self, data_api_client):
+        """Assert 404 for non existent framework."""
+        data = {'reuse': 'true', 'old_framework_slug': 'digital-outcomes-and-specialists-1000000'}
+
+        # Attach does not exist.
+        data_api_client.get_framework.side_effect = HTTPError()
+
+        # Do the post.
+        resp = self.client.post(
+            '/suppliers/frameworks/g-cloud-9/declaration/reuse',
+            data=data
+        )
+
+        # Should error on get.
+        data_api_client.get_framework.assert_called_once_with('digital-outcomes-and-specialists-1000000')
+        # Should not do the declaration call if the framework is invalid.
+        assert not data_api_client.get_supplier_framework_info.called
+        # Should 404.
+        assert resp.status_code == 404
+
+    def test_reuse_non_existent_declaration_post(self, data_api_client):
+        """Assert 404 for non existent declaration."""
+        data = {'reuse': 'true', 'old_framework_slug': 'digital-outcomes-and-specialists-2'}
+        framework_response = {'frameworks': {'x_field': 'foo', 'allowDeclarationReuse': True}}
+        data_api_client.get_framework.return_value = framework_response
+
+        # Attach does not exist.
+        data_api_client.get_supplier_framework_info.side_effect = HTTPError()
+
+        # Do the post.
+        resp = self.client.post(
+            '/suppliers/frameworks/g-cloud-9/declaration/reuse',
+            data=data
+        )
+
+        # Should get the framework
+        data_api_client.get_framework.assert_called_once_with('digital-outcomes-and-specialists-2')
+        # Should error getting declaration.
+        data_api_client.get_supplier_framework_info.assert_called_once_with(1234, 'digital-outcomes-and-specialists-2')
+        # Should 404.
+        assert resp.status_code == 404
+
+
+class TestReuseFrameworkSupplierDeclarationForm(BaseApplicationTest):
+    """Tests for app.main.forms.frameworks.ReuseDeclarationForm form."""
+
+    @pytest.mark.parametrize('falsey_value', ('False', '', 'false'))
+    def test_false_values(self, falsey_value):
+        with self.app.test_request_context():
+            data = MultiDict({'framework_slug': 'digital-outcomes-and-specialists', 'reuse': falsey_value})
+            form = ReuseDeclarationForm(data)
+            assert form.reuse.data is False

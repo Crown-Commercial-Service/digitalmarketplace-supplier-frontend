@@ -20,6 +20,8 @@
                 <span data-analytics="trackPageView" data-url="{{message.virtual_pageview_url}}"></span>
             {% elif category == 'service_deleted' %}
                 <strong>{{message.service_name}}</strong> was deleted
+            {% elif category == 'service_updated' %}
+                You&#x2019;ve edited your service. The changes are now live on the Digital Marketplace.
             {% else %}
                 {{ message }}
             {% endif %}
@@ -76,30 +78,40 @@
           ],
           field_headings_visible=False
         ) %}
-          {% call summary.row(complete=not question.answer_required) %}
+          {% call summary.row() %}
             {{ summary.field_name(question.label) }}
-            {% if question.answer_required %}
-              {% call summary.field() %}
-                {% if framework and framework.status == 'open' %}
-                    <a href="{{ url_for(".edit_service_submission", framework_slug=framework.slug, lot_slug=service_data.lot, service_id=service_id, section_id=section.id, _anchor=question.id) }}">Answer required</a>
+            {% if question.is_empty %}
+              {% if framework and framework.status == 'open' and section.edit_questions %}
+                {% if lot.oneServiceLimit %}
+                  {% if question.empty_message %}
+                    {% call summary.field() %}
+                      <span class="summary-item-field-answer-required">{{ question.empty_message }}</span>
+                    {% endcall %}
+                  {% endif %}
                 {% else %}
-                  Not answered
+                  {{ summary.link('Answer question', url_for(".edit_service_submission", framework_slug=framework.slug, lot_slug=service_data.lot, service_id=service_id, section_id=section.id, question_slug=question.slug)) }}
                 {% endif %}
-              {% endcall %}
-            {% elif question.is_empty %}
-              {% call summary.field() %}
-                <span class="summary-item-field-answer-required">{{ question.empty_message }}</span>
-              {% endcall %}
+              {% endif %}
             {% else %}
               {{ summary[question.type](question.value, question.assurance) }}
             {% endif %}
-            {% if section.edit_questions and framework.status == 'open' %}
-              {% if not question.is_empty %}
-                {{ summary.remove_link('Remove', url_for(".remove_subsection", framework_slug=framework.slug, lot_slug=service_data.lot, service_id=service_id, section_id=section.id, question_slug=question.slug)) }}
+            {% if framework.status == 'open' %}
+              {% if section.edit_questions and not question.is_empty %}
+                {% if lot.oneServiceLimit %}
+                  {{ summary.remove_link('Remove', url_for(".remove_subsection", framework_slug=framework.slug, lot_slug=service_data.lot, service_id=service_id, section_id=section.id, question_slug=question.slug)) }}
+                {% endif %}
+                {{ summary.edit_link('Edit', url_for(".edit_service_submission", framework_slug=framework.slug, lot_slug=service_data.lot, service_id=service_id, section_id=section.id, question_slug=question.slug)) }}
+              {% elif section.edit_questions and lot.oneServiceLimit %}
+                {% if lot.oneServiceLimit %}
+                  {% call summary.field() %}
+                  {% endcall %}
+                {% endif %}
+                {{ summary.edit_link('Add', url_for(".edit_service_submission", framework_slug=framework.slug, lot_slug=service_data.lot, service_id=service_id, section_id=section.id, question_slug=question.slug)) }}
               {% else %}
-                {{ summary.text("") }}
+                {% call summary.field(action=True) %}
+                  {{ 'Optional' if question.get('optional') else '' }}
+                {% endcall %}
               {% endif %}
-              {{ summary.edit_link('Add' if question.is_empty else 'Edit', url_for(".edit_service_submission", framework_slug=framework.slug, lot_slug=service_data.lot, service_id=service_id, section_id=section.id, question_slug=question.slug)) }}
             {% endif %}
           {% endcall %}
         {% endcall %}

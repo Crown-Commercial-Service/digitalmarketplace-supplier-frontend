@@ -19,7 +19,8 @@
         "label": "Apply to " + framework.name
       },
       {
-        "label": "Supplier declaration"
+        "link": url_for(".framework_supplier_declaration_overview", framework_slug=framework.slug),
+        "label": "Your declaration"
       }
     ]
   %}
@@ -33,9 +34,16 @@
     {% with errors = errors.values() %}
       {% include 'toolkit/forms/validation.html' %}
     {% endwith %}
+  {% elif name_of_framework_that_section_has_been_prefilled_from %}
+    {% with
+       message = "Answers on this page are from an earlier declaration and need review.",
+       type = "information"
+    %}
+      {% include "toolkit/notification-banner.html" %}
+    {% endwith %}
   {% endif %}
 
-  <form method="post" class="supplier-declaration">
+  <form method="post" class="supplier-declaration" action="#" {# remove any fragment identifier as validation messages are at the top #}>
 
     <div class="grid-row">
         <div class="column-two-thirds">
@@ -47,31 +55,32 @@
             {% endwith %}
             {% if section.description %}
               <div class="section-description">
-                {{ section.description|question_references(get_question)|markdown }}
+                {{ section.description|question_references(get_question) }}
               </div>
             {% endif %}
             {% for question in section.questions %}
-              {% if errors and (errors[question.id] or question.type == 'multiquestion') %}
-                {{ forms[question.type](question, declaration_answers, errors, question_number=question.number, get_question=get_question) }}
-              {% else %}
-                {{ forms[question.type](question, declaration_answers, {}, question_number=question.number, get_question=get_question) }}
-              {% endif %}
+                {{ forms[question.type](
+                    question,
+                    declaration_answers,
+                    errors if errors and (errors[question.id] or question.type == 'multiquestion') else {},
+                    question_number=question.number,
+                    get_question=get_question,
+                    message=(
+                            "This answer is from your {} declaration".format(name_of_framework_that_section_has_been_prefilled_from)
+                        if
+                            name_of_framework_that_section_has_been_prefilled_from and (declaration_answers.get(question.id) is not none or question.type == 'multiquestion')
+                        else
+                            None
+                            )
+                   )
+                }}
+
             {% endfor %}
 
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
-            {% if is_last_page %}
-              {%
-                with
-                label="Make declaration",
-                type="save"
-              %}
-                {% include "toolkit/button.html" %}
-              {% endwith %}
-              <p class="last-edited move-to-complete-hint">
-                You can edit the declaration until the application deadline.
-              </p>
 
-            {% else %}
+            {% if next_section %}
+              {# If there is a next page show the 'continue' button' #}
               {%
                 with
                 label="Save and continue",
@@ -79,9 +88,23 @@
               %}
                 {% include "toolkit/button.html" %}
               {% endwith %}
+
+              {# If there is a next page show the 'next page' info #}
+              <p class="next-page-message">
+                Next: {{ next_section.name }}
+              </p>
+
             {% endif %}
 
-            <a href="{{ url_for('.framework_dashboard', framework_slug=framework.slug) }}">Return to {{ framework.name }} application</a>
+            {# Always show the 'save and return' button but if there is a next page make it secondary #}
+            {% with
+              type="secondary" if next_section else "save",
+              name = 'save_and_return_to_overview',
+              label = "Save and return to declaration overview"
+            %}
+              {% include "toolkit/button.html" %}
+            {% endwith %}
+
           </div>
       </div>
   </form>

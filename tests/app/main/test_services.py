@@ -11,18 +11,38 @@ import pytest
 from lxml import html
 from freezegun import freeze_time
 
-from nose.tools import assert_equal, assert_true, assert_false, assert_in, assert_not_in
-from tests.app.helpers import BaseApplicationTest, empty_g7_draft_service
+from tests.app.helpers import BaseApplicationTest, empty_g7_draft_service, empty_g9_draft_service
 
 
-@pytest.fixture(params=["g-cloud-6", "g-cloud-7"])
-def fixture_framework_slug_and_name(request):
-    frameworks = {
-        'g-cloud-6': ('g-cloud-6', 'G-Cloud 6'),
-        'g-cloud-7': ('g-cloud-7', 'G-Cloud 7')
-    }
+# this is mostly a workaround for pytest not being able to do parametrization with unittest-derived class methods
+# otherwise it doesn't get us much over function parametrization...
+@pytest.fixture(params=(
+    # a tuple of framework_slug, framework_name, framework_editable_services
+    ("g-cloud-6", "G-Cloud 6", True,),
+    ("g-cloud-7", "G-Cloud 7", True,),
+    ("digital-outcomes-and-specialists", "Digital outcomes and specialists", False,),
+))
+def supplier_service_editing_fw_params(request):
+    return request.param
 
-    return frameworks[request.param]
+
+# and these fixtures really are just a workaround to not being able to use plain function parametrization in unittest-
+# derived classes and should be replaced with that as soon as we're able to do so. hence the hence the oddly specific
+# long names
+@pytest.fixture(params=(
+    # a tuple of service status, service_belongs_to_user, expect_api_call_if_data, expected_status_code
+    ("published", True, True, 302,),
+    ("enabled", True, False, 400,),
+    ("disabled", True, False, 400,),
+    ("published", False, False, 404,),
+))
+def supplier_remove_service__service_status__expected_results(request):
+    return request.param
+
+
+@pytest.fixture(params=(False, True,))
+def supplier_remove_service__post_data(request):
+    return request.param
 
 
 class TestListServices(BaseApplicationTest):
@@ -33,16 +53,13 @@ class TestListServices(BaseApplicationTest):
 
             data_api_client.find_services.return_value = {
                 "services": []
-                }
+            }
 
             res = self.client.get('/suppliers/services')
-            assert_equal(res.status_code, 200)
+            assert res.status_code == 200
             data_api_client.find_services.assert_called_once_with(
                 supplier_id=1234)
-            assert_in(
-                "You don&#39;t have any services on the Digital Marketplace",
-                res.get_data(as_text=True)
-            )
+            assert "You don&#39;t have any services on the Digital Marketplace" in res.get_data(as_text=True)
 
     @mock.patch('app.main.views.services.data_api_client')
     def test_shows_services_list(self, data_api_client):
@@ -62,12 +79,12 @@ class TestListServices(BaseApplicationTest):
             }
 
             res = self.client.get('/suppliers/services')
-            assert_equal(res.status_code, 200)
+            assert res.status_code == 200
             data_api_client.find_services.assert_called_once_with(
                 supplier_id=1234)
-            assert_true("Service name 123" in res.get_data(as_text=True))
-            assert_true("Software as a Service" in res.get_data(as_text=True))
-            assert_true("G-Cloud 1" in res.get_data(as_text=True))
+            assert "Service name 123" in res.get_data(as_text=True)
+            assert "Software as a Service" in res.get_data(as_text=True)
+            assert "G-Cloud 1" in res.get_data(as_text=True)
 
     @mock.patch('app.data_api_client')
     def test_should_not_be_able_to_see_page_if_made_inactive(self, services_data_api_client):
@@ -84,8 +101,8 @@ class TestListServices(BaseApplicationTest):
             )
 
             res = self.client.get('/suppliers/services')
-            assert_equal(res.status_code, 302)
-            assert_equal(res.location, 'http://localhost/login?next=%2Fsuppliers%2Fservices')
+            assert res.status_code == 302
+            assert res.location == 'http://localhost/login?next=%2Fsuppliers%2Fservices'
 
     @mock.patch('app.main.views.services.data_api_client')
     def test_shows_service_edit_link_with_id(self, data_api_client):
@@ -102,11 +119,10 @@ class TestListServices(BaseApplicationTest):
             }
 
             res = self.client.get('/suppliers/services')
-            assert_equal(res.status_code, 200)
+            assert res.status_code == 200
             data_api_client.find_services.assert_called_once_with(
                 supplier_id=1234)
-            assert_true(
-                "/suppliers/services/123" in res.get_data(as_text=True))
+            assert "/suppliers/services/123" in res.get_data(as_text=True)
 
     @mock.patch('app.main.views.services.data_api_client')
     def test_services_without_service_name_show_lot_instead(self, data_api_client):
@@ -123,7 +139,7 @@ class TestListServices(BaseApplicationTest):
             }
 
             res = self.client.get('/suppliers/services')
-            assert_equal(res.status_code, 200)
+            assert res.status_code == 200
             data_api_client.find_services.assert_called_once_with(supplier_id=1234)
 
             assert "Special Lot Name" in res.get_data(as_text=True)
@@ -139,12 +155,13 @@ class TestListServices(BaseApplicationTest):
                     'lotName': 'Special Lot Name',
                     'status': 'published',
                     'id': '123',
-                    'frameworkSlug': 'digital-outcomes-and-specialists'
+                    'frameworkSlug': 'digital-outcomes-and-specialists-2',
+                    'frameworkFramework': 'digital-outcomes-and-specialists',
                 }]
             }
 
             res = self.client.get('/suppliers/services')
-            assert_equal(res.status_code, 200)
+            assert res.status_code == 200
             data_api_client.find_services.assert_called_once_with(supplier_id=1234)
 
             assert "Service name 123" in res.get_data(as_text=True)
@@ -165,29 +182,26 @@ class TestListServicesLogin(BaseApplicationTest):
 
             res = self.client.get('/suppliers/services')
 
-            assert_equal(res.status_code, 200)
+            assert res.status_code == 200
 
-            assert_true(
-                self.strip_all_whitespace('<h1>Current services</h1>')
-                in self.strip_all_whitespace(res.get_data(as_text=True))
-            )
+            assert self.strip_all_whitespace('<h1>Current services</h1>') in \
+                self.strip_all_whitespace(res.get_data(as_text=True))
 
     def test_should_redirect_to_login_if_not_logged_in(self):
         res = self.client.get("/suppliers/services")
-        assert_equal(res.status_code, 302)
-        assert_equal(res.location,
-                     'http://localhost/login?next=%2Fsuppliers%2Fservices')
+        assert res.status_code == 302
+        assert res.location == 'http://localhost/login?next=%2Fsuppliers%2Fservices'
 
 
-@mock.patch('app.main.views.services.data_api_client')
-class TestSupplierUpdateService(BaseApplicationTest):
-    def _get_service(self,
-                     data_api_client,
-                     framework_slug_and_name,
-                     service_status="published",
-                     service_belongs_to_user=True):
-
-        framework_slug, framework_name = framework_slug_and_name
+class _BaseTestSupplierEditRemoveService(BaseApplicationTest):
+    def _setup_service(
+            self,
+            data_api_client,
+            framework_slug,
+            framework_name,
+            service_status="published",
+            service_belongs_to_user=True,
+    ):
 
         data_api_client.get_service.return_value = {
             'services': {
@@ -196,7 +210,7 @@ class TestSupplierUpdateService(BaseApplicationTest):
                 'id': '123',
                 'frameworkName': framework_name,
                 'frameworkSlug': framework_slug,
-                'supplierId': 1234 if service_belongs_to_user else 1235
+                'supplierId': 1234 if service_belongs_to_user else 1235,
             }
         }
         if service_status == 'published':
@@ -210,30 +224,28 @@ class TestSupplierUpdateService(BaseApplicationTest):
             'frameworks': {
                 'name': framework_name,
                 'slug': framework_slug,
-                'status': 'live'
+                'status': 'live',
             }
         }
 
-    def _post_remove_service(self, service_should_be_modifiable, failing_status_code=400):
 
-        expected_status_code = \
-            302 if service_should_be_modifiable else failing_status_code
-
-        res = self.client.post('/suppliers/services/123/remove')
-        assert_equal(res.status_code, expected_status_code)
-
+@mock.patch('app.main.views.services.data_api_client')
+class TestSupplierEditService(_BaseTestSupplierEditRemoveService):
     def test_should_view_public_service_with_correct_message(
-            self, data_api_client, fixture_framework_slug_and_name
+            self, data_api_client, supplier_service_editing_fw_params
     ):
+        framework_slug, framework_name, framework_editable_services = supplier_service_editing_fw_params
         self.login()
-        self._get_service(data_api_client, fixture_framework_slug_and_name, service_status='published')
+        self._setup_service(data_api_client, framework_slug, framework_name, service_status='published')
 
         res = self.client.get('/suppliers/services/123')
-        assert_equal(res.status_code, 200)
+        if not framework_editable_services:
+            assert res.status_code == 404
+            return
 
-        assert_true(
-            'Service name 123' in res.get_data(as_text=True)
-        )
+        assert res.status_code == 200
+
+        assert 'Service name 123' in res.get_data(as_text=True)
 
         # first message should be there
         self.assert_in_strip_whitespace(
@@ -241,7 +253,7 @@ class TestSupplierUpdateService(BaseApplicationTest):
             res.get_data(as_text=True)
         )
 
-        # confirmation message should not have been triggered yet
+        # removal confirmation message should not have been triggered yet
         self.assert_not_in_strip_whitespace(
             'Are you sure you want to remove your service?',
             res.get_data(as_text=True)
@@ -253,25 +265,84 @@ class TestSupplierUpdateService(BaseApplicationTest):
             res.get_data(as_text=True)
         )
 
-        # service removed notification banner shouldn't be there either
+        # service removed notification banner shouldn't be there
         self.assert_not_in_strip_whitespace(
-            '<h2>This service was removed on Monday 23 March 2015</h2>',
+            'This service was removed',
             res.get_data(as_text=True)
         )
 
-        self._post_remove_service(service_should_be_modifiable=True)
+        # service updated message shouldn't be there either
+        self.assert_not_in_strip_whitespace(
+            "The changes are now live on the Digital Marketplace",
+            res.get_data(as_text=True)
+        )
 
-    def test_should_view_private_service_with_correct_message(
-            self, data_api_client, fixture_framework_slug_and_name
+    def test_should_view_public_service_with_update_message(
+            self, data_api_client, supplier_service_editing_fw_params
     ):
+        framework_slug, framework_name, framework_editable_services = supplier_service_editing_fw_params
         self.login()
-        self._get_service(data_api_client, fixture_framework_slug_and_name, service_status='enabled')
+        self._setup_service(data_api_client, framework_slug, framework_name, service_status='published')
+
+        # this is meant to emulate a "service updated" message
+        with self.client.session_transaction() as session:
+            session['_flashes'] = [
+                ('message', 'Foo Bar 123 321'),
+            ]
 
         res = self.client.get('/suppliers/services/123')
-        assert_equal(res.status_code, 200)
-        assert_true(
-            'Service name 123' in res.get_data(as_text=True)
+        if not framework_editable_services:
+            assert res.status_code == 404
+            return
+
+        assert res.status_code == 200
+
+        assert 'Service name 123' in res.get_data(as_text=True)
+
+        # first message should be there
+        self.assert_in_strip_whitespace(
+            'Remove this service',
+            res.get_data(as_text=True)
         )
+
+        # removal confirmation message should not have been triggered
+        self.assert_not_in_strip_whitespace(
+            'Are you sure you want to remove your service?',
+            res.get_data(as_text=True)
+        )
+
+        # service removed message should not have been triggered
+        self.assert_not_in_strip_whitespace(
+            'Service name 123 has been removed.',
+            res.get_data(as_text=True)
+        )
+
+        # service removed notification banner shouldn't be there
+        self.assert_not_in_strip_whitespace(
+            'This service was removed',
+            res.get_data(as_text=True)
+        )
+
+        # dummy service updated message should be there
+        self.assert_in_strip_whitespace(
+            "Foo Bar 123 321",
+            res.get_data(as_text=True)
+        )
+
+    def test_should_view_private_service_with_correct_message(
+            self, data_api_client, supplier_service_editing_fw_params
+    ):
+        framework_slug, framework_name, framework_editable_services = supplier_service_editing_fw_params
+        self.login()
+        self._setup_service(data_api_client, framework_slug, framework_name, service_status='enabled')
+
+        res = self.client.get('/suppliers/services/123')
+        if not framework_editable_services:
+            assert res.status_code == 404
+            return
+
+        assert res.status_code == 200
+        assert 'Service name 123' in res.get_data(as_text=True)
 
         self.assert_in_strip_whitespace(
             '<h2>This service was removed on Monday 23 March 2015</h2>',
@@ -283,16 +354,19 @@ class TestSupplierUpdateService(BaseApplicationTest):
             res.get_data(as_text=True)
         )
 
-        self._post_remove_service(service_should_be_modifiable=False)
-
     def test_should_view_disabled_service_with_removed_message(
-            self, data_api_client, fixture_framework_slug_and_name
+            self, data_api_client, supplier_service_editing_fw_params
     ):
+        framework_slug, framework_name, framework_editable_services = supplier_service_editing_fw_params
         self.login()
-        self._get_service(data_api_client, fixture_framework_slug_and_name, service_status='disabled')
+        self._setup_service(data_api_client, framework_slug, framework_name, service_status='disabled')
 
         res = self.client.get('/suppliers/services/123')
-        assert_equal(res.status_code, 200)
+        if not framework_editable_services:
+            assert res.status_code == 404
+            return
+
+        assert res.status_code == 200
         self.assert_in_strip_whitespace(
             'Service name 123',
             res.get_data(as_text=True)
@@ -303,17 +377,46 @@ class TestSupplierUpdateService(BaseApplicationTest):
             res.get_data(as_text=True)
         )
 
-        self._post_remove_service(service_should_be_modifiable=False)
-
-    def test_should_view_confirmation_message_if_first_remove_service_button_clicked(
-            self, data_api_client, fixture_framework_slug_and_name
+    def test_should_not_view_other_suppliers_services(
+            self, data_api_client, supplier_service_editing_fw_params
     ):
+        framework_slug, framework_name, framework_editable_services = supplier_service_editing_fw_params
         self.login()
-        self._get_service(data_api_client, fixture_framework_slug_and_name, service_status='published')
+        self._setup_service(
+            data_api_client, framework_slug, framework_name, service_status='published', service_belongs_to_user=False)
 
+        res = self.client.get('/suppliers/services/123')
+
+        assert res.status_code == 404
+
+    def test_should_redirect_to_login_if_not_logged_in(self, data_api_client):
+        res = self.client.get("/suppliers/services/123")
+        assert res.status_code == 302
+        assert res.location == 'http://localhost/login?next=%2Fsuppliers%2Fservices%2F123'
+
+
+@mock.patch('app.main.views.services.data_api_client')
+class TestSupplierRemoveServiceEditInterplay(_BaseTestSupplierEditRemoveService):
+    """
+        These tests actually test the *interplay* between the remove view and its subsequent (redirected)
+        views through using `follow_redirects` to perform both a POST to the remove view and a subsequent GET to the
+        following view. Chief thing we're asserting is the flash message throw/catch.
+    """
+    def test_should_view_confirmation_message_if_first_remove_service_button_clicked(
+            self, data_api_client, supplier_service_editing_fw_params
+    ):
+        framework_slug, framework_name, framework_editable_services = supplier_service_editing_fw_params
+        self.login()
+        self._setup_service(data_api_client, framework_slug, framework_name, service_status='published')
+
+        # NOTE two http requests performed here
         res = self.client.post('/suppliers/services/123/remove', follow_redirects=True)
+        if not framework_editable_services:
+            assert res.status_code == 404
+            assert data_api_client.update_service_status.called is False
+            return
 
-        assert_equal(res.status_code, 200)
+        assert res.status_code == 200
 
         # first message should be gone
         self.assert_not_in_strip_whitespace(
@@ -334,17 +437,23 @@ class TestSupplierUpdateService(BaseApplicationTest):
         )
 
     def test_should_view_correct_notification_message_if_service_removed(
-            self, data_api_client, fixture_framework_slug_and_name
+            self, data_api_client, supplier_service_editing_fw_params
     ):
+        framework_slug, framework_name, framework_editable_services = supplier_service_editing_fw_params
         self.login()
-        self._get_service(data_api_client, fixture_framework_slug_and_name, service_status='published')
+        self._setup_service(data_api_client, framework_slug, framework_name, service_status='published')
 
+        # NOTE two http requests performed here
         res = self.client.post(
             '/suppliers/services/123/remove',
             data={'remove_confirmed': True},
             follow_redirects=True)
+        if not framework_editable_services:
+            assert res.status_code == 404
+            assert data_api_client.update_service_status.called is False
+            return
 
-        assert_equal(res.status_code, 200)
+        assert res.status_code == 200
         self.assert_in_strip_whitespace(
             'Service name 123 has been removed.',
             res.get_data(as_text=True)
@@ -356,28 +465,45 @@ class TestSupplierUpdateService(BaseApplicationTest):
             res.get_data(as_text=True)
         )
 
-    def test_should_not_view_other_suppliers_services(
-            self, data_api_client, fixture_framework_slug_and_name
+
+@mock.patch('app.main.views.services.data_api_client')
+class TestSupplierRemoveService(_BaseTestSupplierEditRemoveService):
+    def test_remove_service(
+            self,
+            data_api_client,
+            supplier_service_editing_fw_params,
+            supplier_remove_service__service_status__expected_results,
+            supplier_remove_service__post_data,
     ):
+        framework_slug, framework_name, framework_editable_services = supplier_service_editing_fw_params
+        service_status, service_belongs_to_user, expect_api_call_if_data, expected_status_code = \
+            supplier_remove_service__service_status__expected_results
+        post_data = supplier_remove_service__post_data
+
         self.login()
-        self._get_service(
-            data_api_client, fixture_framework_slug_and_name, service_status='published', service_belongs_to_user=False)
+        self._setup_service(
+            data_api_client,
+            framework_slug,
+            framework_name,
+            service_status=service_status,
+            service_belongs_to_user=service_belongs_to_user,
+        )
 
-        res = self.client.get('/suppliers/services/123')
-        assert_equal(res.status_code, 404)
+        response = self.client.post(
+            '/suppliers/services/123/remove',
+            data={'remove_confirmed': True} if post_data else {},
+        )
+        if not framework_editable_services:
+            assert response.status_code == 404
+            assert data_api_client.update_service_status.called is False
+            return
 
-        # Should all be 404 if service doesn't belong to supplier
-        self._post_remove_service(service_should_be_modifiable=False, failing_status_code=404)
-
-    def test_should_redirect_to_login_if_not_logged_in(self, data_api_client):
-        res = self.client.get("/suppliers/services/123")
-        assert_equal(res.status_code, 302)
-        assert_equal(res.location,
-                     'http://localhost/login?next=%2Fsuppliers%2Fservices%2F123')
+        assert data_api_client.update_service_status.called is (expect_api_call_if_data and post_data)
+        assert response.status_code == expected_status_code
 
 
 @mock.patch('app.main.views.services.data_api_client')
-class TestEditService(BaseApplicationTest):
+class TestSupplierEditUpdateServiceSection(BaseApplicationTest):
 
     empty_service = {
         'services': {
@@ -394,19 +520,17 @@ class TestEditService(BaseApplicationTest):
         }
     }
 
-    def setup(self):
-        super(TestEditService, self).setup()
+    def setup_method(self, method):
+        super(TestSupplierEditUpdateServiceSection, self).setup_method(method)
         with self.app.test_client():
             self.login()
 
     def test_return_to_service_summary_link_present(self, data_api_client):
         data_api_client.get_service.return_value = self.empty_service
         res = self.client.get('/suppliers/services/1/edit/description')
-        assert_equal(res.status_code, 200)
-        assert_in(
-            self.strip_all_whitespace('<a href="/suppliers/services/1">Return to service summary</a>'),
+        assert res.status_code == 200
+        assert self.strip_all_whitespace('<a href="/suppliers/services/1">Return to service summary</a>') in \
             self.strip_all_whitespace(res.get_data(as_text=True))
-        )
 
     def test_questions_for_this_service_section_can_be_changed(self, data_api_client):
         data_api_client.get_service.return_value = self.empty_service
@@ -417,16 +541,21 @@ class TestEditService(BaseApplicationTest):
                 'serviceSummary': 'This is the service',
             })
 
-        assert_equal(res.status_code, 302)
+        assert res.status_code == 302
         data_api_client.update_service.assert_called_once_with(
             '1', {'serviceName': 'The service', 'serviceSummary': 'This is the service'},
             'email@email.com')
+
+        self.assert_flashes(
+            {"updated_service_name": "The service"},
+            "service_updated",
+        )
 
     def test_editing_readonly_section_is_not_allowed(self, data_api_client):
         data_api_client.get_service.return_value = self.empty_service
 
         res = self.client.get('/suppliers/services/1/edit/service-attributes')
-        assert_equal(res.status_code, 404)
+        assert res.status_code == 404
 
         data_api_client.get_draft_service.return_value = self.empty_service
         res = self.client.post(
@@ -434,7 +563,9 @@ class TestEditService(BaseApplicationTest):
             data={
                 'lotSlug': 'scs',
             })
-        assert_equal(res.status_code, 404)
+
+        assert res.status_code == 404
+        self.assert_no_flashes()
 
     def test_only_questions_for_this_service_section_can_be_changed(self, data_api_client):
         data_api_client.get_service.return_value = self.empty_service
@@ -444,22 +575,27 @@ class TestEditService(BaseApplicationTest):
                 'serviceFeatures': '',
             })
 
-        assert_equal(res.status_code, 302)
-        data_api_client.update_service.assert_called_one_with(
+        assert res.status_code == 302
+        data_api_client.update_service.assert_called_once_with(
             '1', dict(), 'email@email.com')
+
+        self.assert_flashes(
+            {"updated_service_name": "Service name 123"},
+            "service_updated",
+        )
 
     def test_edit_non_existent_service_returns_404(self, data_api_client):
         data_api_client.get_service.return_value = None
         res = self.client.get('/suppliers/services/1/edit/description')
 
-        assert_equal(res.status_code, 404)
+        assert res.status_code == 404
 
     def test_edit_non_existent_section_returns_404(self, data_api_client):
         data_api_client.get_service.return_value = self.empty_service
         res = self.client.get(
             '/suppliers/services/1/edit/invalid-section'
         )
-        assert_equal(404, res.status_code)
+        assert res.status_code == 404
 
     def test_update_with_answer_required_error(self, data_api_client):
         data_api_client.get_service.return_value = self.empty_service
@@ -470,11 +606,12 @@ class TestEditService(BaseApplicationTest):
             '/suppliers/services/1/edit/description',
             data={})
 
-        assert_equal(res.status_code, 200)
+        assert res.status_code == 200
         document = html.fromstring(res.get_data(as_text=True))
-        assert_equal(
-            "You need to answer this question.",
-            document.xpath('//span[@class="validation-message"]/text()')[0].strip())
+        assert document.xpath(
+            '//span[@class="validation-message"]/text()'
+        )[0].strip() == "You need to answer this question."
+        self.assert_no_flashes()
 
     def test_update_with_under_50_words_error(self, data_api_client):
         data_api_client.get_service.return_value = self.empty_service
@@ -485,30 +622,33 @@ class TestEditService(BaseApplicationTest):
             '/suppliers/services/1/edit/description',
             data={})
 
-        assert_equal(res.status_code, 200)
+        assert res.status_code == 200
         document = html.fromstring(res.get_data(as_text=True))
-        assert_equal(
-            "Your description must be no more than 50 words.",
-            document.xpath('//span[@class="validation-message"]/text()')[0].strip())
+        assert document.xpath(
+            '//span[@class="validation-message"]/text()'
+        )[0].strip() == "Your description must be no more than 50 words."
+        self.assert_no_flashes()
 
     def test_update_non_existent_service_returns_404(self, data_api_client):
         data_api_client.get_service.return_value = None
         res = self.client.post('/suppliers/services/1/edit/description')
 
-        assert_equal(res.status_code, 404)
+        assert res.status_code == 404
+        self.assert_no_flashes()
 
     def test_update_non_existent_section_returns_404(self, data_api_client):
         data_api_client.get_service.return_value = self.empty_service
         res = self.client.post(
             '/suppliers/services/1/edit/invalid_section'
         )
-        assert_equal(404, res.status_code)
+        assert res.status_code == 404
+        self.assert_no_flashes()
 
 
 @mock.patch('app.main.views.services.data_api_client', autospec=True)
 class TestCreateDraftService(BaseApplicationTest):
-    def setup(self):
-        super(TestCreateDraftService, self).setup()
+    def setup_method(self, method):
+        super(TestCreateDraftService, self).setup_method(method)
         self._answer_required = 'Answer is required'
         self._validation_error = 'There was a problem with your answer to:'
 
@@ -519,16 +659,22 @@ class TestCreateDraftService(BaseApplicationTest):
         data_api_client.get_framework.return_value = self.framework(status='open')
 
         res = self.client.get('/suppliers/frameworks/g-cloud-7/submissions/scs/create')
-        assert_equal(res.status_code, 200)
-        assert_in(u'Service name', res.get_data(as_text=True))
+        assert res.status_code == 200
+        assert u'Service name' in res.get_data(as_text=True)
 
-        assert_not_in(self._validation_error, res.get_data(as_text=True))
+        assert self._validation_error not in res.get_data(as_text=True)
 
     def test_can_not_get_create_draft_service_page_if_not_open(self, data_api_client):
         data_api_client.get_framework.return_value = self.framework(status='other')
 
         res = self.client.get('/suppliers/frameworks/g-cloud-7/submissions/scs/create')
-        assert_equal(res.status_code, 404)
+        assert res.status_code == 404
+
+    def test_can_not_get_create_draft_service_page_if_no_supplier_framework(self, data_api_client):
+        data_api_client.get_framework.return_value = self.framework(status='open')
+        data_api_client.get_supplier_framework_info.return_value = {'frameworkInterest': {}}
+        res = self.client.get('/suppliers/frameworks/g-cloud-7/submissions/scs/create')
+        assert res.status_code == 404
 
     def _test_post_create_draft_service(self, data, if_error_expected, data_api_client):
         data_api_client.get_framework.return_value = self.framework(status='open')
@@ -540,10 +686,10 @@ class TestCreateDraftService(BaseApplicationTest):
         )
 
         if if_error_expected:
-            assert_equal(res.status_code, 400)
-            assert_in(self._validation_error, res.get_data(as_text=True))
+            assert res.status_code == 400
+            assert self._validation_error in res.get_data(as_text=True)
         else:
-            assert_equal(res.status_code, 302)
+            assert res.status_code == 302
 
     def test_post_create_draft_service_succeeds(self, data_api_client):
         self._test_post_create_draft_service(
@@ -567,54 +713,84 @@ class TestCreateDraftService(BaseApplicationTest):
             data={}
         )
 
-        assert_equal(res.status_code, 400)
-        assert_in(self._validation_error, res.get_data(as_text=True))
+        assert res.status_code == 400
+        assert self._validation_error in res.get_data(as_text=True)
 
     def test_cannot_post_if_not_open(self, data_api_client):
         data_api_client.get_framework.return_value = self.framework(status='other')
         res = self.client.post(
             '/suppliers/submission/g-cloud-7/submissions/scs/create'
         )
-        assert_equal(res.status_code, 404)
+        assert res.status_code == 404
 
 
 @mock.patch('app.main.views.services.data_api_client')
 class TestCopyDraft(BaseApplicationTest):
 
-    def setup(self):
-        super(TestCopyDraft, self).setup()
+    def setup_method(self, method):
+        super(TestCopyDraft, self).setup_method(method)
 
         with self.app.test_client():
             self.login()
 
-        self.draft = empty_g7_draft_service()
+        self.g7_draft = empty_g7_draft_service()
+        self.g9_draft = empty_g9_draft_service()
 
-    def test_copy_draft(self, data_api_client):
+    def test_copy_draft_with_editable_sections(self, data_api_client):
+        # G7 drafts use editable=True, edit_questions=False on every section, which should emit a URL without
+        # a question-slug parameter.
         data_api_client.get_framework.return_value = self.framework(status='open')
-        data_api_client.get_draft_service.return_value = {'services': self.draft}
+        data_api_client.get_draft_service.return_value = {'services': self.g7_draft}
+
+        copy_of_draft = empty_g7_draft_service()
+        copy_of_draft.update({'id': 2})
+        data_api_client.copy_draft_service.return_value = {'services': copy_of_draft}
 
         res = self.client.post('/suppliers/frameworks/g-cloud-7/submissions/scs/1/copy')
-        assert_equal(res.status_code, 302)
+        assert res.status_code == 302
+        assert '/suppliers/frameworks/g-cloud-7/submissions/scs/2/edit/service-name?return_to_summary=1' in res.location
+
+    def test_copy_draft_with_edit_questions_sections(self, data_api_client):
+        # G9 drafts use editable=False, edit_questions=True on every section, which means a different URL
+        # needs to be emitted by the draft service copy.
+        data_api_client.get_framework.return_value = self.framework(slug='g-cloud-9', status='open')
+        data_api_client.get_draft_service.return_value = {'services': self.g9_draft}
+
+        copy_of_draft = empty_g9_draft_service()
+        copy_of_draft.update({'id': 2})
+        data_api_client.copy_draft_service.return_value = {'services': copy_of_draft}
+
+        res = self.client.post('/suppliers/frameworks/g-cloud-9/submissions/cloud-hosting/1/copy')
+        assert res.status_code == 302
+        assert '/suppliers/frameworks/g-cloud-9/submissions/cloud-hosting/2/edit/service-name/' \
+               'service-name?return_to_summary=1' in res.location
 
     def test_copy_draft_checks_supplier_id(self, data_api_client):
-        self.draft['supplierId'] = 2
-        data_api_client.get_draft_service.return_value = {'services': self.draft}
+        self.g7_draft['supplierId'] = 2
+        data_api_client.get_draft_service.return_value = {'services': self.g7_draft}
 
         res = self.client.post('/suppliers/frameworks/g-cloud-7/submissions/scs/1/copy')
-        assert_equal(res.status_code, 404)
+        assert res.status_code == 404
 
     def test_cannot_copy_draft_if_not_open(self, data_api_client):
         data_api_client.get_framework.return_value = self.framework(status='other')
 
         res = self.client.post('/suppliers/frameworks/g-cloud-7/submissions/scs/1/copy')
-        assert_equal(res.status_code, 404)
+        assert res.status_code == 404
+
+    def test_cannot_copy_draft_if_no_supplier_framework(self, data_api_client):
+        data_api_client.get_framework.return_value = self.framework(status='open')
+        data_api_client.get_supplier_framework_info.return_value = {'frameworkInterest': {}}
+
+        res = self.client.post('/suppliers/frameworks/g-cloud-7/submissions/scs/1/copy')
+        assert res.status_code == 404
 
 
 @mock.patch('app.main.views.services.data_api_client')
 class TestCompleteDraft(BaseApplicationTest):
 
-    def setup(self):
-        super(TestCompleteDraft, self).setup()
+    def setup_method(self, method):
+        super(TestCompleteDraft, self).setup_method(method)
 
         with self.app.test_client():
             self.login()
@@ -625,34 +801,42 @@ class TestCompleteDraft(BaseApplicationTest):
         data_api_client.get_framework.return_value = self.framework(status='open')
         data_api_client.get_draft_service.return_value = {'services': self.draft}
         res = self.client.post('/suppliers/frameworks/g-cloud-7/submissions/scs/1/complete')
-        assert_equal(res.status_code, 302)
-        assert_true('lot=scs' in res.location)
-        assert_in('/suppliers/frameworks/g-cloud-7/submissions', res.location)
+        assert res.status_code == 302
+        assert 'lot=scs' in res.location
+        assert '/suppliers/frameworks/g-cloud-7/submissions' in res.location
 
     def test_complete_draft_checks_supplier_id(self, data_api_client):
         self.draft['supplierId'] = 2
         data_api_client.get_draft_service.return_value = {'services': self.draft}
 
         res = self.client.post('/suppliers/frameworks/g-cloud-7/submissions/scs/1/complete')
-        assert_equal(res.status_code, 404)
+        assert res.status_code == 404
 
     def test_cannot_complete_draft_if_not_open(self, data_api_client):
         data_api_client.get_framework.return_value = self.framework(status='other')
 
         res = self.client.post('/suppliers/frameworks/g-cloud-7/submissions/scs/1/complete')
-        assert_equal(res.status_code, 404)
+        assert res.status_code == 404
+
+    def test_cannot_complete_draft_if_no_supplier_framework(self, data_api_client):
+        data_api_client.get_framework.return_value = self.framework(status='open')
+        data_api_client.get_supplier_framework_info.return_value = {'frameworkInterest': {}}
+
+        res = self.client.post('/suppliers/frameworks/g-cloud-7/submissions/scs/1/complete')
+        assert res.status_code == 404
 
 
 @mock.patch('dmutils.s3.S3')
 @mock.patch('app.main.views.services.data_api_client')
 class TestEditDraftService(BaseApplicationTest):
 
-    def setup(self):
-        super(TestEditDraftService, self).setup()
+    def setup_method(self, method):
+        super(TestEditDraftService, self).setup_method(method)
         with self.app.test_client():
             self.login()
 
         self.empty_draft = {'services': empty_g7_draft_service()}
+        self.empty_g9_draft = {'services': empty_g9_draft_service()}
 
         self.multiquestion_draft = {
             'services': {
@@ -688,7 +872,7 @@ class TestEditDraftService(BaseApplicationTest):
                 'serviceSummary': 'This is the service',
             })
 
-        assert_equal(res.status_code, 302)
+        assert res.status_code == 302
         data_api_client.update_draft_service.assert_called_once_with(
             '1',
             {'serviceSummary': 'This is the service'},
@@ -709,8 +893,8 @@ class TestEditDraftService(BaseApplicationTest):
                 'serviceSummary': u"summary",
             })
 
-        assert_equal(res.status_code, 302)
-        assert_false(data_api_client.update_draft_service.called)
+        assert res.status_code == 302
+        assert data_api_client.update_draft_service.called is False
 
     def test_S3_should_not_be_called_if_there_are_no_files(self, data_api_client, s3):
         uploader = mock.Mock()
@@ -724,14 +908,14 @@ class TestEditDraftService(BaseApplicationTest):
                 'serviceSummary': 'This is the service',
             })
 
-        assert_equal(res.status_code, 302)
-        assert not uploader.save.called
+        assert res.status_code == 302
+        assert uploader.save.called is False
 
     def test_editing_readonly_section_is_not_allowed(self, data_api_client, s3):
         data_api_client.get_draft_service.return_value = self.empty_draft
 
         res = self.client.get('/suppliers/frameworks/g-cloud-7/submissions/scs/1/edit/service-attributes')
-        assert_equal(res.status_code, 404)
+        assert res.status_code == 404
 
         data_api_client.get_draft_service.return_value = self.empty_draft
         res = self.client.post(
@@ -739,7 +923,7 @@ class TestEditDraftService(BaseApplicationTest):
             data={
                 'lotSlug': 'scs',
             })
-        assert_equal(res.status_code, 404)
+        assert res.status_code == 404
 
     def test_draft_section_cannot_be_edited_if_not_open(self, data_api_client, s3):
         data_api_client.get_framework.return_value = self.framework(status='other')
@@ -749,7 +933,17 @@ class TestEditDraftService(BaseApplicationTest):
             data={
                 'serviceSummary': 'This is the service',
             })
-        assert_equal(res.status_code, 404)
+        assert res.status_code == 404
+
+    def test_draft_section_cannot_be_edited_if_no_supplier_framework(self, data_api_client, s3):
+        data_api_client.get_framework.return_value = self.framework(status='open')
+        data_api_client.get_supplier_framework_info.return_value = {'frameworkInterest': {}}
+        res = self.client.post(
+            '/suppliers/frameworks/g-cloud-7/submissions/scs/1/edit/service-description',
+            data={
+                'serviceSummary': 'This is the service',
+            })
+        assert res.status_code == 404
 
     def test_only_questions_for_this_draft_section_can_be_changed(self, data_api_client, s3):
         s3.return_value.bucket_short_name = 'submissions'
@@ -761,7 +955,7 @@ class TestEditDraftService(BaseApplicationTest):
                 'serviceFeatures': '',
             })
 
-        assert_equal(res.status_code, 302)
+        assert res.status_code == 302
         data_api_client.update_draft_service.assert_called_once_with(
             '1', {}, 'email@email.com',
             page_questions=['serviceSummary']
@@ -777,8 +971,8 @@ class TestEditDraftService(BaseApplicationTest):
         )
         document = html.fromstring(response.get_data(as_text=True))
 
-        assert_equal(response.status_code, 200)
-        assert_equal(len(document.cssselect('p.file-upload-existing-value')), 1)
+        assert response.status_code == 200
+        assert len(document.cssselect('p.file-upload-existing-value')) == 1
 
     def test_display_file_upload_with_no_existing_file(self, data_api_client, s3):
         data_api_client.get_framework.return_value = self.framework(status='open')
@@ -788,8 +982,8 @@ class TestEditDraftService(BaseApplicationTest):
         )
         document = html.fromstring(response.get_data(as_text=True))
 
-        assert_equal(response.status_code, 200)
-        assert_equal(len(document.cssselect('p.file-upload-existing-value')), 0)
+        assert response.status_code == 200
+        assert len(document.cssselect('p.file-upload-existing-value')) == 0
 
     def test_file_upload(self, data_api_client, s3):
         s3.return_value.bucket_short_name = 'submissions'
@@ -803,7 +997,7 @@ class TestEditDraftService(BaseApplicationTest):
                 }
             )
 
-        assert_equal(res.status_code, 302)
+        assert res.status_code == 302
         data_api_client.update_draft_service.assert_called_once_with(
             '1', {
                 'serviceDefinitionDocumentURL': 'http://localhost/suppliers/assets/g-cloud-7/submissions/1234/1-service-definition-document-2015-01-02-0304.pdf'  # noqa
@@ -828,13 +1022,13 @@ class TestEditDraftService(BaseApplicationTest):
                 'pricingDocumentURL': (StringIO(b'doc'), 'document.pdf'),
             })
 
-        assert_equal(res.status_code, 302)
+        assert res.status_code == 302
         data_api_client.update_draft_service.assert_called_once_with(
             '1', {}, 'email@email.com',
             page_questions=['serviceDefinitionDocumentURL']
         )
 
-        assert_false(s3.return_value.save.called)
+        assert s3.return_value.save.called is False
 
     def test_upload_question_not_accepted_as_form_data(self, data_api_client, s3):
         s3.return_value.bucket_short_name = 'submissions'
@@ -846,7 +1040,7 @@ class TestEditDraftService(BaseApplicationTest):
                 'serviceDefinitionDocumentURL': 'http://example.com/document.pdf',
             })
 
-        assert_equal(res.status_code, 302)
+        assert res.status_code == 302
         data_api_client.update_draft_service.assert_called_once_with(
             '1', {}, 'email@email.com',
             page_questions=['serviceDefinitionDocumentURL']
@@ -865,7 +1059,7 @@ class TestEditDraftService(BaseApplicationTest):
                 'priceInterval': "Second",
             })
 
-        assert_equal(res.status_code, 302)
+        assert res.status_code == 302
         data_api_client.update_draft_service.assert_called_once_with(
             '1',
             {
@@ -881,43 +1075,56 @@ class TestEditDraftService(BaseApplicationTest):
         data_api_client.get_draft_service.side_effect = HTTPError(mock.Mock(status_code=404))
         res = self.client.get('/suppliers/frameworks/g-cloud-7/submissions/scs/1/edit/service-description')
 
-        assert_equal(res.status_code, 404)
+        assert res.status_code == 404
 
     def test_edit_non_existent_draft_section_returns_404(self, data_api_client, s3):
         data_api_client.get_draft_service.return_value = self.empty_draft
         res = self.client.get(
             '/suppliers/frameworks/g-cloud-7/submissions/scs/1/edit/invalid_section'
         )
-        assert_equal(404, res.status_code)
+        assert res.status_code == 404
 
-    def test_update_redirects_to_next_editable_section(self, data_api_client, s3):
-        s3.return_value.bucket_short_name = 'submissions'
+    def test_edit_draft_section_with_no_supplier_framework_404(self, data_api_client, s3):
         data_api_client.get_framework.return_value = self.framework(status='open')
         data_api_client.get_draft_service.return_value = self.empty_draft
+        data_api_client.get_supplier_framework_info.return_value = {'frameworkInterest': {}}
+
+        res = self.client.get(
+            '/suppliers/frameworks/g-cloud-7/submissions/scs/1/edit/service-definition'
+        )
+        assert res.status_code == 404
+
+    def test_update_in_section_with_more_questions_redirects_to_next_question_in_section(self, data_api_client, s3):
+        s3.return_value.bucket_short_name = 'submissions'
+        data_api_client.get_framework.return_value = self.framework(slug='g-cloud-9', status='open')
+        data_api_client.get_draft_service.return_value = self.empty_g9_draft
         data_api_client.update_draft_service.return_value = None
 
         res = self.client.post(
-            '/suppliers/frameworks/g-cloud-7/submissions/scs/1/edit/service-description',
+            '/suppliers/frameworks/g-cloud-9/submissions/cloud-hosting/1/edit/pricing/price',
             data={
                 'continue_to_next_section': 'Save and continue'
             })
 
-        assert_equal(302, res.status_code)
-        assert_equal('http://localhost/suppliers/frameworks/g-cloud-7/submissions/scs/1/edit/service-type',
-                     res.headers['Location'])
+        assert res.status_code == 302
+        assert res.headers['Location'] == \
+            'http://localhost/suppliers/frameworks/g-cloud-9/submissions/cloud-hosting/1/edit/pricing/education-pricing'
 
-    def test_page_offers_continue_to_next_editable_section(self, data_api_client, s3):
+    def test_update_at_end_of_section_redirects_to_summary(self, data_api_client, s3):
         s3.return_value.bucket_short_name = 'submissions'
-        data_api_client.get_framework.return_value = self.framework(status='open')
-        data_api_client.get_draft_service.return_value = self.empty_draft
+        data_api_client.get_framework.return_value = self.framework(slug='g-cloud-9', status='open')
+        data_api_client.get_draft_service.return_value = self.empty_g9_draft
+        data_api_client.update_draft_service.return_value = None
 
-        res = self.client.get(
-            '/suppliers/frameworks/g-cloud-7/submissions/scs/1/edit/service-description',
-        )
+        res = self.client.post(
+            '/suppliers/frameworks/g-cloud-9/submissions/cloud-hosting/1/edit/pricing/free-or-trial-versions',
+            data={
+                'continue_to_next_section': 'Save and continue'
+            })
 
-        assert_equal(200, res.status_code)
-        document = html.fromstring(res.get_data(as_text=True))
-        assert len(document.xpath("//input[@type='submit'][@name='continue_to_next_section']")) > 0
+        assert res.status_code == 302
+        assert res.headers['Location'] == \
+            'http://localhost/suppliers/frameworks/g-cloud-9/submissions/cloud-hosting/1#pricing'
 
     def test_update_refuses_to_redirect_to_next_editable_section_if_dos(self, data_api_client, s3):
         s3.return_value.bucket_short_name = 'submissions'
@@ -936,12 +1143,9 @@ class TestEditDraftService(BaseApplicationTest):
                 'continue_to_next_section': 'Save and continue'
             })
 
-        assert_equal(302, res.status_code)
-        assert_equal(
-            'http://localhost/suppliers/frameworks/digital-outcomes-and-specialists/submissions/'
-            'digital-specialists/1#individual-specialist-roles',
-            res.headers['Location']
-        )
+        assert res.status_code == 302
+        assert 'http://localhost/suppliers/frameworks/digital-outcomes-and-specialists/submissions/' \
+            'digital-specialists/1#individual-specialist-roles' == res.headers['Location']
 
     def test_page_doesnt_offer_continue_to_next_editable_section_if_dos(self, data_api_client, s3):
         s3.return_value.bucket_short_name = 'submissions'
@@ -957,7 +1161,7 @@ class TestEditDraftService(BaseApplicationTest):
             'edit/individual-specialist-roles/product-manager',
         )
 
-        assert_equal(200, res.status_code)
+        assert res.status_code == 200
         document = html.fromstring(res.get_data(as_text=True))
         assert len(document.xpath("//input[@type='submit'][@name='continue_to_next_section']")) == 0
 
@@ -971,11 +1175,9 @@ class TestEditDraftService(BaseApplicationTest):
             '/suppliers/frameworks/g-cloud-7/submissions/scs/1/edit/sfia-rate-card',
             data={})
 
-        assert_equal(302, res.status_code)
-        assert_equal(
-            'http://localhost/suppliers/frameworks/g-cloud-7/submissions/scs/1#sfia-rate-card',
+        assert res.status_code == 302
+        assert 'http://localhost/suppliers/frameworks/g-cloud-7/submissions/scs/1#sfia-rate-card' == \
             res.headers['Location']
-        )
 
     def test_update_doesnt_offer_continue_to_next_editable_section_if_no_next_editable_section(self,
                                                                                                data_api_client,
@@ -988,7 +1190,7 @@ class TestEditDraftService(BaseApplicationTest):
             '/suppliers/frameworks/g-cloud-7/submissions/scs/1/edit/sfia-rate-card',
         )
 
-        assert_equal(200, res.status_code)
+        assert res.status_code == 200
         document = html.fromstring(res.get_data(as_text=True))
         assert len(document.xpath("//input[@type='submit'][@name='continue_to_next_section']")) == 0
 
@@ -1002,11 +1204,9 @@ class TestEditDraftService(BaseApplicationTest):
             '/suppliers/frameworks/g-cloud-7/submissions/scs/1/edit/service-description?return_to_summary=1',
             data={})
 
-        assert_equal(302, res.status_code)
-        assert_equal(
-            'http://localhost/suppliers/frameworks/g-cloud-7/submissions/scs/1#service-description',
+        assert res.status_code == 302
+        assert 'http://localhost/suppliers/frameworks/g-cloud-7/submissions/scs/1#service-description' == \
             res.headers['Location']
-        )
 
     def test_update_doesnt_offer_continue_to_next_editable_section_if_return_to_summary(self, data_api_client, s3):
         s3.return_value.bucket_short_name = 'submissions'
@@ -1017,7 +1217,7 @@ class TestEditDraftService(BaseApplicationTest):
             '/suppliers/frameworks/g-cloud-7/submissions/scs/1/edit/service-description?return_to_summary=1',
         )
 
-        assert_equal(200, res.status_code)
+        assert res.status_code == 200
         document = html.fromstring(res.get_data(as_text=True))
         assert len(document.xpath("//input[@type='submit'][@name='continue_to_next_section']")) == 0
 
@@ -1031,11 +1231,9 @@ class TestEditDraftService(BaseApplicationTest):
             '/suppliers/frameworks/g-cloud-7/submissions/scs/1/edit/service-description',
             data={})
 
-        assert_equal(302, res.status_code)
-        assert_equal(
-            'http://localhost/suppliers/frameworks/g-cloud-7/submissions/scs/1#service-description',
+        assert res.status_code == 302
+        assert 'http://localhost/suppliers/frameworks/g-cloud-7/submissions/scs/1#service-description' == \
             res.headers['Location']
-        )
 
     def test_update_with_answer_required_error(self, data_api_client, s3):
         s3.return_value.bucket_short_name = 'submissions'
@@ -1048,11 +1246,11 @@ class TestEditDraftService(BaseApplicationTest):
             '/suppliers/frameworks/g-cloud-7/submissions/scs/1/edit/service-description',
             data={})
 
-        assert_equal(res.status_code, 200)
+        assert res.status_code == 200
         document = html.fromstring(res.get_data(as_text=True))
-        assert_equal(
-            "You need to answer this question.",
-            document.xpath('//span[@class="validation-message"]/text()')[0].strip())
+        assert "You need to answer this question." == document.xpath(
+            '//span[@class="validation-message"]/text()'
+        )[0].strip()
 
     def test_update_with_under_50_words_error(self, data_api_client, s3):
         s3.return_value.bucket_short_name = 'submissions'
@@ -1065,49 +1263,56 @@ class TestEditDraftService(BaseApplicationTest):
             '/suppliers/frameworks/g-cloud-7/submissions/scs/1/edit/service-description',
             data={})
 
-        assert_equal(res.status_code, 200)
+        assert res.status_code == 200
         document = html.fromstring(res.get_data(as_text=True))
-        assert_equal(
-            "Your description must be no more than 50 words.",
-            document.xpath('//span[@class="validation-message"]/text()')[0].strip())
+        assert "Your description must be no more than 50 words." == document.xpath(
+            '//span[@class="validation-message"]/text()'
+        )[0].strip()
 
-    def test_update_with_pricing_errors(self, data_api_client, s3):
+    @pytest.mark.parametrize("field,error,expected_message", (
+        ('priceMin', 'answer_required', 'Minimum price requires an answer.',),
+        ('priceUnit', 'answer_required',
+            u"Pricing unit requires an answer. If none of the provided units apply, please choose ‘Unit’."),
+        ('priceMin', 'not_money_format', 'Minimum price must be a number, without units, eg 99.95',),
+        ('priceMax', 'not_money_format', 'Maximum price must be a number, without units, eg 99.95',),
+        ('priceMax', 'max_less_than_min', 'Minimum price must be less than maximum price.',),
+    ))
+    def test_update_with_pricing_errors(
+            self,
+            data_api_client,
+            s3,
+            field,
+            error,
+            expected_message,
+    ):
         s3.return_value.bucket_short_name = 'submissions'
-        cases = [
-            ('priceMin', 'answer_required', 'Minimum price requires an answer.'),
-            ('priceUnit', 'answer_required', "Pricing unit requires an answer. If none of the provided units apply, please choose 'Unit'."),  # noqa
-            ('priceMin', 'not_money_format', 'Minimum price must be a number, without units, eg 99.95'),
-            ('priceMax', 'not_money_format', 'Maximum price must be a number, without units, eg 99.95'),
-            ('priceMax', 'max_less_than_min', 'Minimum price must be less than maximum price'),
-        ]
+        data_api_client.get_framework.return_value = self.framework(slug='g-cloud-9', status='open')
+        data_api_client.get_draft_service.return_value = self.empty_g9_draft
+        data_api_client.update_draft_service.side_effect = HTTPError(
+            mock.Mock(status_code=400),
+            {field: error})
+        res = self.client.post(
+            '/suppliers/frameworks/g-cloud-9/submissions/cloud-hosting/1/edit/pricing/price',
+            data={})
 
-        for field, error, message in cases:
-            data_api_client.get_framework.return_value = self.framework(status='open')
-            data_api_client.get_draft_service.return_value = self.empty_draft
-            data_api_client.update_draft_service.side_effect = HTTPError(
-                mock.Mock(status_code=400),
-                {field: error})
-            res = self.client.post(
-                '/suppliers/frameworks/g-cloud-7/submissions/scs/1/edit/pricing',
-                data={})
-
-            assert_equal(res.status_code, 200)
-            document = html.fromstring(res.get_data(as_text=True))
-            assert_equal(
-                message, document.xpath('//span[@class="validation-message"]/text()')[0].strip())
+        assert res.status_code == 200
+        document = html.fromstring(res.get_data(as_text=True))
+        assert document.xpath("normalize-space(string(//*[@class='validation-message']))") == expected_message
+        assert document.xpath("normalize-space(string(//*[@class='validation-masthead']//a))") == \
+            "How much does the service cost (excluding VAT)?"
 
     def test_update_non_existent_draft_service_returns_404(self, data_api_client, s3):
         data_api_client.get_draft_service.side_effect = HTTPError(mock.Mock(status_code=404))
         res = self.client.post('/suppliers/frameworks/g-cloud-7/submissions/scs/1/edit/service-description')
 
-        assert_equal(res.status_code, 404)
+        assert res.status_code == 404
 
     def test_update_non_existent_draft_section_returns_404(self, data_api_client, s3):
         data_api_client.get_draft_service.return_value = self.empty_draft
         res = self.client.post(
             '/suppliers/frameworks/g-cloud-7/submissions/scs/1/edit/invalid-section'
         )
-        assert_equal(404, res.status_code)
+        assert res.status_code == 404
 
     def test_update_multiquestion(self, data_api_client, s3):
         s3.return_value.bucket_short_name = 'submissions'
@@ -1125,7 +1330,7 @@ class TestEditDraftService(BaseApplicationTest):
             'digital-specialists/1/edit/individual-specialist-roles/agile-coach'
         )
 
-        assert_equal(res.status_code, 200)
+        assert res.status_code == 200
 
         res = self.client.post(
             '/suppliers/frameworks/digital-outcomes-and-specialists/submissions/' +
@@ -1134,7 +1339,7 @@ class TestEditDraftService(BaseApplicationTest):
                 'agileCoachLocations': ['Scotland'],
             })
 
-        assert_equal(res.status_code, 302)
+        assert res.status_code == 302
         data_api_client.update_draft_service.assert_called_once_with(
             '1',
             {'agileCoachLocations': ['Scotland']},
@@ -1155,7 +1360,7 @@ class TestEditDraftService(BaseApplicationTest):
             'digital-specialists/1/remove/individual-specialist-roles/agile-coach'
         )
 
-        assert_equal(res.status_code, 302)
+        assert res.status_code == 302
         assert(
             '/suppliers/frameworks/digital-outcomes-and-specialists/submissions/digital-specialists/1?' in res.location
         )
@@ -1166,14 +1371,14 @@ class TestEditDraftService(BaseApplicationTest):
             '/suppliers/frameworks/digital-outcomes-and-specialists/submissions/' +
             'digital-specialists/1?section_id=specialists&confirm_remove=agile-coach'
         )
-        assert_equal(res2.status_code, 200)
-        assert_in(u'Are you sure you want to remove agile coach?', res2.get_data(as_text=True))
+        assert res2.status_code == 200
+        assert u'Are you sure you want to remove agile coach?' in res2.get_data(as_text=True)
 
         res3 = self.client.post(
             '/suppliers/frameworks/digital-outcomes-and-specialists/submissions/' +
             'digital-specialists/1/remove/individual-specialist-roles/agile-coach?confirm=True')
 
-        assert_equal(res3.status_code, 302)
+        assert res3.status_code == 302
         assert(res3.location.endswith(
             '/suppliers/frameworks/digital-outcomes-and-specialists/submissions/digital-specialists/1')
         )
@@ -1206,19 +1411,18 @@ class TestEditDraftService(BaseApplicationTest):
             'digital-specialists/1/remove/individual-specialist-roles/agile-coach'
         )
 
-        assert_equal(res.status_code, 302)
-        assert(res.location.endswith(
-            '/suppliers/frameworks/digital-outcomes-and-specialists/submissions/digital-specialists/1')
+        assert res.status_code == 302
+        assert res.location.endswith(
+            '/suppliers/frameworks/digital-outcomes-and-specialists/submissions/digital-specialists/1'
         )
 
         res2 = self.client.get(
             '/suppliers/frameworks/digital-outcomes-and-specialists/submissions/digital-specialists/1'
         )
-        assert_equal(res2.status_code, 200)
-        assert_in("You must offer one of the individual specialist roles to be eligible.",
-                  res2.get_data(as_text=True))
+        assert res2.status_code == 200
+        assert "You must offer one of the individual specialist roles to be eligible." in res2.get_data(as_text=True)
 
-        data_api_client.update_draft_service.assert_not_called()
+        assert data_api_client.update_draft_service.called is False
 
     def test_can_not_remove_other_suppliers_subsection(self, data_api_client, s3):
         draft_service = copy.deepcopy(self.multiquestion_draft)
@@ -1228,15 +1432,29 @@ class TestEditDraftService(BaseApplicationTest):
             '/suppliers/frameworks/digital-outcomes-and-specialists/submissions/' +
             'digital-specialists/1/remove/individual-specialist-roles/agile-coach?confirm=True')
 
-        assert_equal(res.status_code, 404)
-        data_api_client.update_draft_service.assert_not_called()
+        assert res.status_code == 404
+        assert data_api_client.update_draft_service.called is False
+
+    def test_can_not_remove_subsection_if_no_supplier_framework(self, data_api_client, s3):
+        s3.return_value.bucket_short_name = 'submissions'
+        data_api_client.get_framework.return_value = self.framework(
+            status='open', slug='digital-outcomes-and-specialists'
+        )
+        data_api_client.get_draft_service.return_value = self.multiquestion_draft
+        data_api_client.get_supplier_framework_info.return_value = {'frameworkInterest': {}}
+
+        res = self.client.get(
+            '/suppliers/frameworks/digital-outcomes-and-specialists/submissions/' +
+            'digital-specialists/1/remove/individual-specialist-roles/agile-coach'
+        )
+        assert res.status_code == 404
 
     def test_fails_if_api_get_fails(self, data_api_client, s3):
         data_api_client.get_draft_service.side_effect = HTTPError(mock.Mock(status_code=504))
         res = self.client.post(
             '/suppliers/frameworks/digital-outcomes-and-specialists/submissions/' +
             'digital-specialists/1/remove/individual-specialist-roles/agile-coach?confirm=True')
-        assert_equal(res.status_code, 504)
+        assert res.status_code == 504
 
     def test_fails_if_api_update_fails(self, data_api_client, s3):
         data_api_client.get_draft_service.return_value = self.multiquestion_draft
@@ -1244,7 +1462,7 @@ class TestEditDraftService(BaseApplicationTest):
         res = self.client.post(
             '/suppliers/frameworks/digital-outcomes-and-specialists/submissions/' +
             'digital-specialists/1/remove/individual-specialist-roles/agile-coach?confirm=True')
-        assert_equal(res.status_code, 504)
+        assert res.status_code == 504
 
 
 @mock.patch('app.main.views.services.data_api_client')
@@ -1271,8 +1489,8 @@ class TestShowDraftService(BaseApplicationTest):
     complete_service['services']['status'] = 'submitted'
     complete_service['services']['id'] = 2
 
-    def setup(self):
-        super(TestShowDraftService, self).setup()
+    def setup_method(self, method):
+        super(TestShowDraftService, self).setup_method(method)
         with self.app.test_client():
             self.login()
 
@@ -1282,12 +1500,10 @@ class TestShowDraftService(BaseApplicationTest):
         res = self.client.get('/suppliers/frameworks/g-cloud-7/submissions/scs/1')
         document = html.fromstring(res.get_data(as_text=True))
 
-        assert_equal(res.status_code, 200)
+        assert res.status_code == 200
         service_price_row_xpath = '//tr[contains(.//span/text(), "Service price")]'
         service_price_xpath = service_price_row_xpath + '/td[@class="summary-item-field"]/span/text()'
-        assert_equal(
-            document.xpath(service_price_xpath)[0].strip(),
-            u"£12.50 to £15 per person per second")
+        assert document.xpath(service_price_xpath)[0].strip() == u"£12.50 to £15 per person per second"
 
     @mock.patch('app.main.views.services.count_unanswered_questions')
     def test_unanswered_questions_count(self, count_unanswered, data_api_client):
@@ -1296,8 +1512,8 @@ class TestShowDraftService(BaseApplicationTest):
         count_unanswered.return_value = 1, 2
         res = self.client.get('/suppliers/frameworks/g-cloud-7/submissions/scs/1')
 
-        assert_true(u'3 unanswered questions' in res.get_data(as_text=True),
-                    "'3 unanswered questions' not found in html")
+        assert u'3 unanswered questions' in res.get_data(as_text=True), \
+            "'3 unanswered questions' not found in html"
 
     @mock.patch('app.main.views.services.count_unanswered_questions')
     def test_move_to_complete_button(self, count_unanswered, data_api_client):
@@ -1306,9 +1522,8 @@ class TestShowDraftService(BaseApplicationTest):
         count_unanswered.return_value = 0, 1
         res = self.client.get('/suppliers/frameworks/g-cloud-7/submissions/scs/1')
 
-        assert_in(u'1 optional question unanswered', res.get_data(as_text=True))
-        assert_in(u'<input type="submit" class="button-save"  value="Mark as complete" />',
-                  res.get_data(as_text=True))
+        assert u'1 optional question unanswered' in res.get_data(as_text=True)
+        assert u'<input type="submit" class="button-save"  value="Mark as complete" />' in res.get_data(as_text=True)
 
     @mock.patch('app.main.views.services.count_unanswered_questions')
     def test_no_move_to_complete_button_if_not_open(self, count_unanswered, data_api_client):
@@ -1317,8 +1532,8 @@ class TestShowDraftService(BaseApplicationTest):
         count_unanswered.return_value = 0, 1
         res = self.client.get('/suppliers/frameworks/g-cloud-7/submissions/scs/1')
 
-        assert_not_in(u'<input type="submit" class="button-save"  value="Mark as complete" />',
-                      res.get_data(as_text=True))
+        assert u'<input type="submit" class="button-save"  value="Mark as complete" />' not in \
+            res.get_data(as_text=True)
 
     @mock.patch('app.main.views.services.count_unanswered_questions')
     def test_no_move_to_complete_button_if_validation_errors(self, count_unanswered, data_api_client):
@@ -1331,8 +1546,8 @@ class TestShowDraftService(BaseApplicationTest):
 
         res = self.client.get('/suppliers/frameworks/g-cloud-7/submissions/scs/1')
 
-        assert_not_in(u'<input type="submit" class="button-save"  value="Mark as complete" />',
-                      res.get_data(as_text=True))
+        assert u'<input type="submit" class="button-save"  value="Mark as complete" />' not in \
+            res.get_data(as_text=True)
 
     @mock.patch('app.main.views.services.count_unanswered_questions')
     def test_shows_g7_message_if_pending_and_service_is_in_draft(self, count_unanswered, data_api_client):
@@ -1344,11 +1559,13 @@ class TestShowDraftService(BaseApplicationTest):
         doc = html.fromstring(res.get_data(as_text=True))
         message = doc.xpath('//aside[@class="temporary-message"]')
 
-        assert_true(len(message) > 0)
-        assert_in(u"This service was not submitted",
-                  message[0].xpath('h2[@class="temporary-message-heading"]/text()')[0])
-        assert_in(u"It wasn't marked as complete at the deadline.",
-                  message[0].xpath('p[@class="temporary-message-message"]/text()')[0])
+        assert len(message) > 0
+        assert u"This service was not submitted" in message[0].xpath(
+            'h2[@class="temporary-message-heading"]/text()'
+        )[0]
+        assert u"It wasn't marked as complete at the deadline." in message[0].xpath(
+            'p[@class="temporary-message-message"]/text()'
+        )[0]
 
     @mock.patch('app.main.views.services.count_unanswered_questions')
     def test_shows_g7_message_if_pending_and_service_is_complete(self, count_unanswered, data_api_client):
@@ -1360,11 +1577,10 @@ class TestShowDraftService(BaseApplicationTest):
         doc = html.fromstring(res.get_data(as_text=True))
         message = doc.xpath('//aside[@class="temporary-message"]')
 
-        assert_true(len(message) > 0)
-        assert_in(u"This service was submitted",
-                  message[0].xpath('h2[@class="temporary-message-heading"]/text()')[0])
-        assert_in(u"If your application is successful, it will be available on the Digital Marketplace when G-Cloud 7 goes live.",  # noqa
-                  message[0].xpath('p[@class="temporary-message-message"]/text()')[0])
+        assert len(message) > 0
+        assert u"This service was submitted" in message[0].xpath('h2[@class="temporary-message-heading"]/text()')[0]
+        assert u"If your application is successful, it will be available on the Digital Marketplace when " \
+            u"G-Cloud 7 goes live." in message[0].xpath('p[@class="temporary-message-message"]/text()')[0]
 
 
 @mock.patch('app.main.views.services.data_api_client')
@@ -1384,31 +1600,38 @@ class TestDeleteDraftService(BaseApplicationTest):
         'validationErrors': {}
     }
 
-    def setup(self):
-        super(TestDeleteDraftService, self).setup()
+    def setup_method(self, method):
+        super(TestDeleteDraftService, self).setup_method(method)
         with self.app.test_client():
             self.login()
 
     def test_delete_button_redirects_with_are_you_sure(self, data_api_client):
         data_api_client.get_framework.return_value = self.framework(status='open')
         data_api_client.get_draft_service.return_value = self.draft_to_delete
+
         res = self.client.post(
             '/suppliers/frameworks/g-cloud-7/submissions/scs/1/delete',
             data={})
-        assert_equal(res.status_code, 302)
-        assert_in('/frameworks/g-cloud-7/submissions/scs/1?delete_requested=True', res.location)
+        assert res.status_code == 302
+        assert '/frameworks/g-cloud-7/submissions/scs/1?delete_requested=True' in res.location
         res2 = self.client.get('/suppliers/frameworks/g-cloud-7/submissions/scs/1?delete_requested=True')
-        assert_in(
-            b"Are you sure you want to delete this service?", res2.get_data()
-        )
+        assert b"Are you sure you want to delete this service?" in res2.get_data()
 
     def test_cannot_delete_if_not_open(self, data_api_client):
         data_api_client.get_framework.return_value = self.framework(status='other')
         data_api_client.get_draft_service.return_value = self.draft_to_delete
+
         res = self.client.post(
             '/suppliers/frameworks/g-cloud-7/submissions/scs/1/delete',
             data={})
-        assert_equal(res.status_code, 404)
+        assert res.status_code == 404
+
+    def test_cannot_delete_draft_if_no_supplier_framework(self, data_api_client):
+        data_api_client.get_framework.return_value = self.framework(status='open')
+        data_api_client.get_supplier_framework_info.return_value = {'frameworkInterest': {}}
+
+        res = self.client.post('/suppliers/frameworks/g-cloud-7/submissions/scs/1/delete')
+        assert res.status_code == 404
 
     def test_confirm_delete_button_deletes_and_redirects_to_dashboard(self, data_api_client):
         data_api_client.get_framework.return_value = self.framework(status='open')
@@ -1418,11 +1641,8 @@ class TestDeleteDraftService(BaseApplicationTest):
             data={'delete_confirmed': 'true'})
 
         data_api_client.delete_draft_service.assert_called_with('1', 'email@email.com')
-        assert_equal(res.status_code, 302)
-        assert_equal(
-            res.location,
-            'http://localhost/suppliers/frameworks/g-cloud-7/submissions/scs'
-        )
+        assert res.status_code == 302
+        assert res.location == 'http://localhost/suppliers/frameworks/g-cloud-7/submissions/scs'
 
     def test_cannot_delete_other_suppliers_draft(self, data_api_client):
         other_draft = copy.deepcopy(self.draft_to_delete)
@@ -1432,13 +1652,13 @@ class TestDeleteDraftService(BaseApplicationTest):
             '/suppliers/frameworks/g-cloud-7/submissions/scs/1/delete',
             data={'delete_confirmed': 'true'})
 
-        assert_equal(res.status_code, 404)
+        assert res.status_code == 404
 
 
 @mock.patch('dmutils.s3.S3')
 class TestSubmissionDocuments(BaseApplicationTest):
-    def setup(self):
-        super(TestSubmissionDocuments, self).setup()
+    def setup_method(self, method):
+        super(TestSubmissionDocuments, self).setup_method(method)
         with self.app.test_client():
             self.login()
 
@@ -1450,11 +1670,8 @@ class TestSubmissionDocuments(BaseApplicationTest):
             '/suppliers/assets/g-cloud-7/submissions/1234/document.pdf'
         )
 
-        assert_equal(res.status_code, 302)
-        assert_equal(
-            res.headers['Location'],
-            'http://asset-host/document.pdf'
-        )
+        assert res.status_code == 302
+        assert res.headers['Location'] == 'http://asset-host/document.pdf'
 
     def test_missing_document_url(self, s3):
         s3.return_value.bucket_short_name = 'submissions'
@@ -1464,11 +1681,11 @@ class TestSubmissionDocuments(BaseApplicationTest):
             '/suppliers/frameworks/g-cloud-7/submissions/documents/1234/document.pdf'
         )
 
-        assert_equal(res.status_code, 404)
+        assert res.status_code == 404
 
     def test_document_url_not_matching_user_supplier(self, s3):
         res = self.client.get(
             '/suppliers/frameworks/g-cloud-7/submissions/documents/999/document.pdf'
         )
 
-        assert_equal(res.status_code, 404)
+        assert res.status_code == 404

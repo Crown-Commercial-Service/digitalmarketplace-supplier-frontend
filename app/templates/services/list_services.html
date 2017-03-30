@@ -61,7 +61,7 @@
      {# TODO this should be removed once we have a manifests for DOS services
         and a public DOS service page on the buyer frontend (or a way to hide
         the "View service" link from the supplier service page) #}
-      {% if item.frameworkSlug == 'digital-outcomes-and-specialists' %}
+      {% if item.frameworkFramework == 'digital-outcomes-and-specialists' %}
         {% call summary.field(first=True, wide=wide) -%}
           {{ item.serviceName or item.lotName }}
         {%- endcall %}

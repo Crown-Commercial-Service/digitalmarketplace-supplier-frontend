@@ -1,7 +1,9 @@
 # -*- coding: utf-8 -*-
+from collections import OrderedDict
 from itertools import chain
 
 from dateutil.parser import parse as date_parse
+from dmapiclient import HTTPError
 from flask import render_template, request, abort, flash, redirect, url_for, current_app, session
 from flask_login import current_user
 import flask_featureflags as feature
@@ -9,8 +11,11 @@ import six
 
 from dmapiclient import APIError
 from dmapiclient.audit import AuditTypes
-from dmutils.email import send_email, MandrillException
+from dmutils.email import send_email
+from dmutils.email.exceptions import EmailError
 from dmcontent.formats import format_service_price
+from dmcontent.questions import ContentQuestion
+from dmcontent.errors import ContentNotFoundError
 from dmutils.formats import datetimeformat
 from dmutils import s3
 from dmutils.documents import (
@@ -28,13 +33,13 @@ from ..helpers.frameworks import (
     get_supplier_on_framework_from_info, get_declaration_status_from_info, get_supplier_framework_info,
     get_framework, get_framework_and_lot, count_drafts_by_lot, get_statuses_for_lot,
     return_supplier_framework_info_if_on_framework_or_abort, returned_agreement_email_recipients,
-    check_agreement_is_related_to_supplier_framework_or_abort
+    check_agreement_is_related_to_supplier_framework_or_abort, get_framework_for_reuse,
 )
 from ..helpers.validation import get_validator
 from ..helpers.services import (
     get_signed_document_url, get_drafts, get_lot_drafts, count_unanswered_questions
 )
-from ..forms.frameworks import SignerDetailsForm, ContractReviewForm, AcceptAgreementVariationForm
+from ..forms.frameworks import SignerDetailsForm, ContractReviewForm, AcceptAgreementVariationForm, ReuseDeclarationForm
 
 CLARIFICATION_QUESTION_NAME = 'clarification_question'
 
@@ -58,7 +63,7 @@ def framework_dashboard(framework_slug):
                 current_app.config['CLARIFICATION_EMAIL_NAME'],
                 ['{}-application-started'.format(framework_slug)]
             )
-        except MandrillException as e:
+        except EmailError as e:
             current_app.logger.error(
                 "Application started email failed to send: {error}, supplier_id: {supplier_id}",
                 extra={'error': six.text_type(e), 'supplier_id': current_user.supplier_id}
@@ -74,52 +79,81 @@ def framework_dashboard(framework_slug):
     if declaration_status == 'unstarted' and framework['status'] == 'live':
         abort(404)
 
-    key_list = s3.S3(current_app.config['DM_COMMUNICATIONS_BUCKET']).list(framework_slug, load_timestamps=True)
-    key_list.reverse()
+    application_made = supplier_is_on_framework or (len(complete_drafts) > 0 and declaration_status == 'complete')
+    lots_with_completed_drafts = [lot for lot in framework['lots'] if count_drafts_by_lot(complete_drafts, lot['slug'])]
 
-    first_page = content_loader.get_manifest(
-        framework_slug, 'declaration'
-    ).get_next_editable_section_id()
+    framework_dates = content_loader.get_message(framework_slug, 'dates')
+    framework_urls = content_loader.get_message(framework_slug, 'urls')
+
+    try:
+        framework_advice = content_loader.get_message(framework_slug, 'advice')
+    except ContentNotFoundError:
+        framework_advice = None
 
     # filenames
-    supplier_pack_filename = '{}-supplier-pack.zip'.format(framework_slug)
     result_letter_filename = RESULT_LETTER_FILENAME
+
     countersigned_agreement_file = None
     if supplier_framework_info and supplier_framework_info['countersignedPath']:
         countersigned_agreement_file = degenerate_document_path_and_return_doc_name(
             supplier_framework_info['countersignedPath']
         )
 
-    application_made = supplier_is_on_framework or (len(complete_drafts) > 0 and declaration_status == 'complete')
-    lots_with_completed_drafts = [lot for lot in framework['lots'] if count_drafts_by_lot(complete_drafts, lot['slug'])]
-
-    last_modified = {
-        'supplier_pack': get_last_modified_from_first_matching_file(
-            key_list, framework_slug, "communications/{}".format(supplier_pack_filename)
-        ),
-        'supplier_updates': get_last_modified_from_first_matching_file(
-            key_list, framework_slug, "communications/updates/"
-        )
-    }
-
-    # if supplier has returned agreement for framework with framework_agreement_version, show contract_submitted page
-    if supplier_is_on_framework and framework['frameworkAgreementVersion'] and supplier_framework_info['agreementReturned']:  # noqa
+    signed_agreement_document_name = None
+    if supplier_is_on_framework and supplier_framework_info['agreementReturned']:
         signed_agreement_document_name = degenerate_document_path_and_return_doc_name(
             supplier_framework_info['agreementPath']
         )
-        return render_template(
-            "frameworks/contract_submitted.html",
-            document_name=signed_agreement_document_name,
-            framework=framework,
-            framework_live_date=content_loader.get_message(framework_slug, 'dates')['framework_live_date'],
-            supplier_framework=supplier_framework_info,
-            supplier_pack_filename=supplier_pack_filename,
-            last_modified=last_modified,
-        ), 200
+
+    key_list = s3.S3(current_app.config['DM_COMMUNICATIONS_BUCKET']).list(framework_slug, load_timestamps=True)
+    key_list.reverse()
+
+    base_communications_files = {
+        "invitation": {
+            "path": "communications/",
+            "filename": "{}-invitation.pdf".format(framework_slug),
+        },
+        "proposed_agreement": {
+            "path": "communications/",
+            "filename": "{}-proposed-framework-agreement.pdf".format(framework_slug),
+        },
+        "final_agreement": {
+            "path": "communications/",
+            "filename": "{}-final-framework-agreement.pdf".format(framework_slug),
+        },
+        "proposed_call_off": {
+            "path": "communications/",
+            "filename": "{}-proposed-call-off.pdf".format(framework_slug),
+        },
+        "final_call_off": {
+            "path": "communications/",
+            "filename": "{}-final-call-off.pdf".format(framework_slug),
+        },
+        "reporting_template": {
+            "path": "communications/",
+            "filename": "{}-reporting-template.xls".format(framework_slug),
+        },
+        "supplier_updates": {
+            "path": "communications/updates/",
+        },
+    }
+    # now we annotate these with last_modified information which also tells us whether the file exists
+    communications_files = {
+        label: dict(
+            d,
+            last_modified=get_last_modified_from_first_matching_file(
+                key_list,
+                framework_slug,
+                d["path"] + d.get("filename", ""),
+            ),
+        )
+        for label, d in six.iteritems(base_communications_files)
+    }
 
     return render_template(
         "frameworks/dashboard.html",
         application_made=application_made,
+        communications_files=communications_files,
         completed_lots=tuple(
             dict(lot, complete_count=count_drafts_by_lot(complete_drafts, lot['slug']))
             for lot in lots_with_completed_drafts
@@ -129,14 +163,15 @@ def framework_dashboard(framework_slug):
             "draft": len(drafts),
             "complete": len(complete_drafts)
         },
-        dates=content_loader.get_message(framework_slug, 'dates'),
         declaration_status=declaration_status,
-        first_page_of_declaration=first_page,
+        signed_agreement_document_name=signed_agreement_document_name,
         framework=framework,
-        last_modified=last_modified,
-        supplier_is_on_framework=supplier_is_on_framework,
-        supplier_pack_filename=supplier_pack_filename,
+        framework_dates=framework_dates,
+        framework_urls=framework_urls,
         result_letter_filename=result_letter_filename,
+        supplier_framework=supplier_framework_info,
+        supplier_is_on_framework=supplier_is_on_framework,
+        framework_advice=framework_advice,
     ), 200
 
 
@@ -158,10 +193,12 @@ def framework_submission_lots(framework_slug):
              draft_count=count_drafts_by_lot(drafts, lot['slug']),
              complete_count=count_drafts_by_lot(complete_drafts, lot['slug']))
         for lot in framework['lots']]
+
     lot_question = {
         option["value"]: option
-        for option in content_loader.get_question(framework_slug, 'services', 'lot')['options']
+        for option in ContentQuestion(content_loader.get_question(framework_slug, 'services', 'lot')).get('options')
     }
+
     lots = [{
         "title": lot_question[lot['slug']]['label'] if framework["status"] == "open" else lot["name"],
         'body': lot_question[lot['slug']]['description'],
@@ -231,42 +268,249 @@ def framework_submission_services(framework_slug, lot_slug):
     ), 200
 
 
-@main.route('/frameworks/<framework_slug>/declaration', methods=['GET'])
-@main.route('/frameworks/<framework_slug>/declaration/<string:section_id>', methods=['GET', 'POST'])
+@main.route('/frameworks/<framework_slug>/declaration/start', methods=['GET'])
 @login_required
-def framework_supplier_declaration(framework_slug, section_id=None):
+def framework_start_supplier_declaration(framework_slug):
+    framework = get_framework(data_api_client, framework_slug, allowed_statuses=['open'])
+    framework_close_date = content_loader.get_message(framework_slug, 'dates', 'framework_close_date')
+
+    return render_template("frameworks/start_declaration.html",
+                           framework=framework,
+                           framework_close_date=framework_close_date), 200
+
+
+@main.route('/frameworks/<framework_slug>/declaration/reuse', methods=['GET'])
+@login_required
+def reuse_framework_supplier_declaration(framework_slug):
+    """Attempt to find a supplier framework declaration that we can reuse.
+
+    :param: framework_slug
+    :query_param: reusable_declaration_framework_slug
+    :return: 404, redirect or reuse page (frameworks/reuse_declaration.html)
+    """
+    reusable_declaration_framework_slug = request.args.get('reusable_declaration_framework_slug', None)
+    supplier_id = current_user.supplier_id
+    # Get the current framework.
+    current_framework = data_api_client.get_framework(framework_slug)['frameworks']
+    if reusable_declaration_framework_slug:
+        # If a framework slug is supplied in this URL parameter then use this for pre-filling if possible,
+        # overriding the default framework selection logic.
+        try:
+            # Get their old declaration to make sure it exists. The api will raise if it doesn't exist.
+            data_api_client.get_supplier_framework_info(
+                supplier_id, reusable_declaration_framework_slug
+            )['frameworkInterest']['onFramework']
+            old_framework = data_api_client.get_framework(reusable_declaration_framework_slug)['frameworks']
+        except APIError:
+            abort(404)
+    else:
+        # Otherwise then attempt to determine if they have a declaration we can offer for reuse.
+        old_framework = get_framework_for_reuse(
+            supplier_id,
+            data_api_client,
+            exclude_framework_slugs=[framework_slug]
+        )
+        if not old_framework:
+            # If not then redirect to the overview. They do not have a suitable reuse candidate.
+            return redirect(url_for('.framework_supplier_declaration_overview', framework_slug=framework_slug))
+
+    # Otherwise offer to prefill the declaration.
+    return render_template(
+        "frameworks/reuse_declaration.html",
+        current_framework=current_framework,
+        form=ReuseDeclarationForm(),
+        old_framework=old_framework,
+        old_framework_application_close_date=date_parse(old_framework['applicationCloseDate']).strftime('%B %Y'),
+    ), 200
+
+
+@main.route('/frameworks/<framework_slug>/declaration/reuse', methods=['POST'])
+@login_required
+def reuse_framework_supplier_declaration_post(framework_slug):
+    """Set the prefill preference if a reusable framework slug is provided and redirect to declaration."""
+
+    form = ReuseDeclarationForm(request.form)
+
+    # If the form isn't valid they likely didn't select either way.
+    if not form.validate_on_submit():
+        # Bail and re-render form with errors.
+        current_framework = data_api_client.get_framework(framework_slug)['frameworks']
+        old_framework = data_api_client.get_framework(form.old_framework_slug.data)['frameworks']
+        form_errors = [{'question': form[key].label.text, 'input_name': key} for key in form.errors]
+        return render_template(
+            "frameworks/reuse_declaration.html",
+            current_framework=current_framework,
+            form=form,
+            form_errors=form_errors,
+            old_framework=old_framework,
+            old_framework_application_close_date=date_parse(old_framework['applicationCloseDate']).strftime('%B %Y')
+        ), 400
+    if form.reuse.data:
+        # They clicked OK! Check the POST data.
+        try:
+            framework_ok = data_api_client.get_framework(
+                form.old_framework_slug.data
+            )['frameworks']['allowDeclarationReuse']
+            declaration_ok = False  # Default value
+
+            if framework_ok:
+                declaration_ok = data_api_client.get_supplier_framework_info(
+                    current_user.supplier_id, form.old_framework_slug.data
+                )['frameworkInterest']['onFramework']
+
+        except HTTPError:
+            framework_ok = False
+            declaration_ok = False
+
+        if framework_ok and declaration_ok:
+            # If it's OK then Set reuse on supplier framework.
+            data_api_client.set_supplier_framework_prefill_declaration(
+                current_user.supplier_id,
+                framework_slug,
+                form.old_framework_slug.data,
+                current_user.email_address
+            )
+        else:
+            # If it's not then fail out.
+            abort(404)
+    else:
+        # If they use the back button to change their mind we need to set this.
+        data_api_client.set_supplier_framework_prefill_declaration(
+            current_user.supplier_id,
+            framework_slug,
+            None,
+            current_user.email_address
+        )
+    return redirect(url_for('.framework_supplier_declaration_overview', framework_slug=framework_slug))
+
+
+@main.route('/frameworks/<framework_slug>/declaration', methods=['GET'])
+@login_required
+def framework_supplier_declaration_overview(framework_slug):
     framework = get_framework(data_api_client, framework_slug, allowed_statuses=['open'])
 
-    content = content_loader.get_manifest(framework_slug, 'declaration')
+    sf = data_api_client.get_supplier_framework_info(current_user.supplier_id, framework_slug)["frameworkInterest"]
+    # ensure our declaration is a a dict
+    sf["declaration"] = sf.get("declaration") or {}
+
+    content = content_loader.get_manifest(framework_slug, 'declaration').filter(sf["declaration"])
+
+    # generate an (ordered) dict of the form {section_slug: (section, section_errors)}.
+    # we must perform an actual validation for each section rather than rely on .answer_required as the latter won't
+    # take into account declarations custom question dependencies
+    sections_errors = OrderedDict(
+        (
+            section.slug,
+            (
+                section,
+                section.editable and get_validator(
+                    framework,
+                    content,
+                    sf["declaration"],
+                ).get_error_messages_for_page(section),
+            ),
+        )
+        for section in content.summary(sf["declaration"])
+    )
+
+    return render_template(
+        "frameworks/declaration_overview.html",
+        framework=framework,
+        supplier_framework=sf,
+        sections_errors=sections_errors,
+        validates=not any(errors for section, errors in sections_errors.values()),
+        framework_dates=content_loader.get_message(framework_slug, "dates"),
+    ), 200
+
+
+@main.route('/frameworks/<framework_slug>/declaration', methods=['POST'])
+@login_required
+def framework_supplier_declaration_submit(framework_slug):
+    framework = get_framework(data_api_client, framework_slug, allowed_statuses=['open'])
+
+    sf = data_api_client.get_supplier_framework_info(current_user.supplier_id, framework_slug)["frameworkInterest"]
+    # ensure our declaration is at least a dict
+    sf["declaration"] = sf.get("declaration") or {}
+
+    content = content_loader.get_manifest(framework_slug, 'declaration').filter(sf["declaration"])
+
+    validator = get_validator(framework, content, sf["declaration"])
+    errors = validator.get_error_messages()
+    if errors:
+        abort(400, "This declaration has incomplete questions")
+
+    sf["declaration"]["status"] = "complete"
+
+    # unfortunately this can't be totally transactionally safe, but we can worry about that less because it should be
+    # "impossible" to move a previously-"complete" declaration back to being non-"complete"
+
+    try:
+        data_api_client.set_supplier_declaration(
+            current_user.supplier_id,
+            framework["slug"],
+            sf["declaration"],
+            current_user.email_address,
+        )
+    except APIError as e:
+        abort(e.status_code)
+
+    # follow existing flash message passing pattern
+    flash_key = "{}/declaration_complete".format(url_for('.framework_dashboard', framework_slug=framework['slug']))
+    flash(flash_key, 'declaration_complete')
+    return redirect(url_for('.framework_dashboard', framework_slug=framework['slug']))
+
+
+@main.route('/frameworks/<framework_slug>/declaration/edit/<string:section_id>', methods=['GET', 'POST'])
+@login_required
+def framework_supplier_declaration_edit(framework_slug, section_id):
+    framework = get_framework(data_api_client, framework_slug, allowed_statuses=['open'])
+
+    content = content_loader.get_manifest(framework_slug, 'declaration').filter({})
     status_code = 200
 
-    if section_id is None:
-        return redirect(
-            url_for('.framework_supplier_declaration',
-                    framework_slug=framework_slug,
-                    section_id=content.get_next_editable_section_id()))
-
+    # Get and check the current section.
     section = content.get_section(section_id)
     if section is None or not section.editable:
         abort(404)
+    # Do the same for the next section. This also implies whether or not we are on the last page of the declaration.
+    next_section = content.get_section(content.get_next_section_id(section_id=section.id, only_editable=True))
 
-    is_last_page = section_id == content.sections[-1]['id']
-    saved_answers = {}
-
-    try:
-        response = data_api_client.get_supplier_declaration(current_user.supplier_id, framework_slug)
-        if response['declaration']:
-            saved_answers = response['declaration']
-    except APIError as e:
-        if e.status_code != 404:
-            abort(e.status_code)
+    supplier_framework = data_api_client.get_supplier_framework_info(
+        current_user.supplier_id, framework_slug)['frameworkInterest']
+    saved_declaration = supplier_framework.get('declaration', {})
+    name_of_framework_that_section_has_been_prefilled_from = ""
 
     if request.method == 'GET':
         errors = {}
-        all_answers = saved_answers
+
+        section_errors = get_validator(
+            framework,
+            content,
+            saved_declaration,
+        ).get_error_messages_for_page(section)
+
+        # If there are section_errors it means that this section has not previously been completed
+        if section_errors and section.prefill and supplier_framework['prefillDeclarationFromFrameworkSlug']:
+            # Fetch the old declaration to pre-fill from and pass it through
+            # For now we pre-fill a whole section or none of the section
+            # TODO: In future we may need to pre-fill individual questions and add a 'prefilled' flag to the questions
+            try:
+                prefill_from_slug = supplier_framework['prefillDeclarationFromFrameworkSlug']
+                framework_to_reuse = data_api_client.get_framework(prefill_from_slug)['frameworks']
+                declaration_to_reuse = data_api_client.get_supplier_declaration(
+                    current_user.supplier_id,
+                    prefill_from_slug
+                )['declaration']
+                all_answers = declaration_to_reuse
+                name_of_framework_that_section_has_been_prefilled_from = framework_to_reuse['name']
+            except APIError as e:
+                if e.status_code != 404:
+                    abort(e.status_code)
+        else:
+            all_answers = saved_declaration
     else:
         submitted_answers = section.get_data(request.form)
-        all_answers = dict(saved_answers, **submitted_answers)
+        all_answers = dict(saved_declaration, **submitted_answers)
 
         validator = get_validator(framework, content, submitted_answers)
         errors = validator.get_error_messages_for_page(section)
@@ -274,11 +518,8 @@ def framework_supplier_declaration(framework_slug, section_id=None):
         if len(errors) > 0:
             status_code = 400
         else:
-            validator = get_validator(framework, content, all_answers)
-            if validator.get_error_messages():
+            if not all_answers.get("status"):
                 all_answers.update({"status": "started"})
-            else:
-                all_answers.update({"status": "complete"})
             try:
                 data_api_client.set_supplier_declaration(
                     current_user.supplier_id,
@@ -287,31 +528,29 @@ def framework_supplier_declaration(framework_slug, section_id=None):
                     current_user.email_address
                 )
 
-                next_section = content.get_next_editable_section_id(section_id)
-                if next_section:
-                    return redirect(
-                        url_for('.framework_supplier_declaration',
-                                framework_slug=framework['slug'],
-                                section_id=next_section))
+                if next_section and not request.form.get('save_and_return_to_overview', False):
+                    # Go to the next section.
+                    return redirect(url_for(
+                        '.framework_supplier_declaration_edit',
+                        framework_slug=framework['slug'],
+                        section_id=next_section.id
+                    ))
                 else:
-                    url = "{}/declaration_complete".format(
-                        url_for('.framework_dashboard',
-                                framework_slug=framework['slug']))
-                    flash(url, 'declaration_complete')
-                    return redirect(
-                        url_for('.framework_dashboard',
-                                framework_slug=framework['slug']))
+                    # Otherwise they have reached the last page of their declaration.
+                    # Return to the overview.
+                    return redirect(url_for('.framework_supplier_declaration_overview', framework_slug=framework_slug))
             except APIError as e:
                 abort(e.status_code)
 
     return render_template(
         "frameworks/edit_declaration_section.html",
         framework=framework,
+        next_section=next_section,
         section=section,
+        name_of_framework_that_section_has_been_prefilled_from=name_of_framework_that_section_has_been_prefilled_from,
         declaration_answers=all_answers,
-        is_last_page=is_last_page,
         get_question=content.get_question,
-        errors=errors,
+        errors=errors
     ), status_code
 
 
@@ -385,7 +624,7 @@ def framework_updates_email_clarification_question(framework_slug):
     clarification_question = request.form.get(CLARIFICATION_QUESTION_NAME, '').strip()
 
     if not clarification_question:
-        return framework_updates(framework_slug, "Question cannot be empty")
+        return framework_updates(framework_slug, "Add text if you want to ask a question.")
     elif len(clarification_question) > 5000:
         return framework_updates(
             framework_slug,
@@ -401,8 +640,7 @@ def framework_updates_email_clarification_question(framework_slug):
         from_address = "suppliers+{}@digitalmarketplace.service.gov.uk".format(framework['slug'])
         email_body = render_template(
             "emails/clarification_question.html",
-            supplier_name=current_user.supplier_name,
-            user_name=current_user.name,
+            supplier_id=current_user.supplier_id,
             message=clarification_question
         )
         tags = ["clarification-question"]
@@ -429,7 +667,7 @@ def framework_updates_email_clarification_question(framework_slug):
             tags,
             reply_to=from_address,
         )
-    except MandrillException as e:
+    except EmailError as e:
         current_app.logger.error(
             "{framework} clarification question email failed to send. "
             "error {error} supplier_id {supplier_id} email_hash {email_hash}",
@@ -461,7 +699,7 @@ def framework_updates_email_clarification_question(framework_slug):
                 current_app.config['CLARIFICATION_EMAIL_NAME'],
                 tags
             )
-        except MandrillException as e:
+        except EmailError as e:
             current_app.logger.error(
                 "{framework} clarification question confirmation email failed to send. "
                 "error {error} supplier_id {supplier_id} email_hash {email_hash}",
@@ -507,6 +745,7 @@ def framework_agreement(framework_slug):
             'frameworks/contract_start.html',
             signature_page_filename=SIGNATURE_PAGE_FILENAME,
             framework=framework,
+            framework_urls=content_loader.get_message(framework_slug, 'urls'),
             lots=[{
                 'name': lot['name'],
                 'has_completed_draft': (lot in lots_with_completed_drafts)
@@ -599,7 +838,7 @@ def upload_framework_agreement(framework_slug):
             ['{}-framework-agreement'.format(framework_slug)],
             reply_to=current_user.email_address,
         )
-    except MandrillException as e:
+    except EmailError as e:
         current_app.logger.error(
             "Framework agreement email failed to send. "
             "error {error} supplier_id {supplier_id} email_hash {email_hash}",
@@ -761,10 +1000,10 @@ def contract_review(framework_slug, agreement_id):
 
     # if framework agreement doesn't have a name or a role or the agreement file, then 404
     if not (
-        agreement.get('signedAgreementDetails') and
-        agreement['signedAgreementDetails'].get('signerName') and
-        agreement['signedAgreementDetails'].get('signerRole') and
-        agreement.get('signedAgreementPath')
+        agreement.get('signedAgreementDetails')
+        and agreement['signedAgreementDetails'].get('signerName')
+        and agreement['signedAgreementDetails'].get('signerRole')
+        and agreement.get('signedAgreementPath')
     ):
         abort(404)
 
@@ -797,7 +1036,7 @@ def contract_review(framework_slug, agreement_id):
                     current_app.config["FRAMEWORK_AGREEMENT_RETURNED_NAME"],
                     ['{}-framework-agreement'.format(framework_slug)],
                 )
-            except MandrillException as e:
+            except EmailError as e:
                 current_app.logger.error(
                     "Framework agreement email failed to send. "
                     "error {error} supplier_id {supplier_id} email_hash {email_hash}",
@@ -815,10 +1054,7 @@ def contract_review(framework_slug, agreement_id):
 
             if feature.is_active('CONTRACT_VARIATION'):
                 # Redirect to contract variation if it has not been signed
-                if (
-                    framework.get('variations') and
-                    not supplier_framework['agreedVariations']
-                ):
+                if (framework.get('variations') and not supplier_framework['agreedVariations']):
                     variation_slug = list(framework['variations'].keys())[0]
                     return redirect(url_for(
                         '.view_contract_variation',
@@ -896,7 +1132,7 @@ def view_contract_variation(framework_slug, variation_slug):
                     current_app.config['CLARIFICATION_EMAIL_NAME'],
                     ['{}-variation-accepted'.format(framework_slug)]
                 )
-            except MandrillException as e:
+            except EmailError as e:
                 current_app.logger.error(
                     "Variation agreed email failed to send: {error}, supplier_id: {supplier_id}",
                     extra={'error': six.text_type(e), 'supplier_id': current_user.supplier_id}
@@ -911,6 +1147,11 @@ def view_contract_variation(framework_slug, variation_slug):
                 {'question': form['accept_changes'].label.text, 'input_name': 'accept_changes'}
             ]
 
+    supplier_name = supplier_framework['declaration']['nameOfOrganisation']
+    variation_content = content_loader.get_message(framework_slug, variation_content_name).filter(
+        {'supplier_name': supplier_name}
+    )
+
     return render_template(
         "frameworks/contract_variation.html",
         form=form,
@@ -918,7 +1159,7 @@ def view_contract_variation(framework_slug, variation_slug):
         framework=framework,
         supplier_framework=supplier_framework,
         variation_details=variation_details,
-        variation=content_loader.get_message(framework_slug, variation_content_name),
+        variation=variation_content,
         agreed_details=agreed_details,
-        supplier_name=supplier_framework['declaration']['nameOfOrganisation'],
+        supplier_name=supplier_name,
     ), 400 if form_errors else 200

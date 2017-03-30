@@ -1,5 +1,4 @@
 // GOVUK Front-end toolkit styles
-@import "_phase_banner.scss";
 @import "_grid_layout.scss";
 @import "_typography.scss";
 @import "_url-helpers.scss";
@@ -17,8 +16,10 @@ $path: "/suppliers/static/images/";
 @import "shared_scss/_dmspeak.scss";
 
 /* Blocks shared between multiple selectors */
-@import "shared_placeholders/_temporary-messages.scss";
-@import "shared_placeholders/_dm-typography.scss";
+@import "toolkit/shared_placeholders/_dm-typography.scss";
+@import "toolkit/shared_placeholders/_mixins.scss";
+@import "toolkit/shared_placeholders/_placeholders.scss";
+@import "toolkit/shared_placeholders/_temporary-messages.scss";
 
 #wrapper, .wrapper {
   @extend %site-width-container;
@@ -42,6 +43,8 @@ $path: "/suppliers/static/images/";
 @import "toolkit/_link-button";
 @import "toolkit/_notification-banners.scss";
 @import "toolkit/_page-headings.scss";
+@import "toolkit/_phase-banner.scss";
+@import "toolkit/_secondary-action-link.scss";
 @import "toolkit/_service-id.scss";
 @import "toolkit/_temporary-message.scss";
 @import "toolkit/forms/_hint.scss";
@@ -52,6 +55,8 @@ $path: "/suppliers/static/images/";
 @import "toolkit/forms/_textboxes.scss";
 @import "toolkit/forms/_upload.scss";
 @import "toolkit/forms/_validation.scss";
+@import "toolkit/forms/_combinations.scss";
+@import "toolkit/forms/_checkbox-tree.scss";
 @import "toolkit/search/_search-result.scss";
 
 
@@ -115,12 +120,12 @@ $path: "/suppliers/static/images/";
 }
 
 ins {
-    text-decoration: none;
-    background-color: #cce0d6;
-    padding: 0 3px;
+  text-decoration: none;
+  background-color: #cce0d6;
+  padding: 0 3px;
 }
 
 del {
-    background-color: #efcfd1;
-    padding: 0 3px;
+  background-color: #efcfd1;
+  padding: 0 3px;
 }

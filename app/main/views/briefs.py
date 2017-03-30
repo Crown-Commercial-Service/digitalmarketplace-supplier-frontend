@@ -3,12 +3,16 @@ from __future__ import unicode_literals
 
 import re
 
+from datetime import datetime
+
 from flask import abort, flash, redirect, render_template, request, url_for
 from flask_login import current_user
+import flask_featureflags as feature
 
 from dmapiclient import HTTPError
+from dmutils.formats import DATETIME_FORMAT
 
-from ..helpers import login_required
+from ..helpers import login_required, new_supplier_flow_active_for_datetime
 from ..helpers.briefs import (
     get_brief,
     is_supplier_eligible_for_brief,
@@ -74,45 +78,68 @@ def ask_brief_clarification_question(brief_id):
     ), 200 if not error_message else 400
 
 
-@main.route('/opportunities/<int:brief_id>/responses/create', methods=['GET'])
+@main.route('/opportunities/<int:brief_id>/responses/start', methods=['GET', 'POST'])
+@feature.is_active_feature('NEW_SUPPLIER_FLOW')
 @login_required
-def brief_response(brief_id):
-
+def start_brief_response(brief_id):
     brief = get_brief(data_api_client, brief_id, allowed_statuses=['live'])
+    brief_published_at = datetime.strptime(brief['publishedAt'], DATETIME_FORMAT)
+
+    if not new_supplier_flow_active_for_datetime(brief_published_at):
+        abort(404)
 
     if not is_supplier_eligible_for_brief(data_api_client, current_user.supplier_id, brief):
         return _render_not_eligible_for_brief_error_page(brief)
 
-    if supplier_has_a_brief_response(data_api_client, current_user.supplier_id, brief_id):
+    brief_response = data_api_client.find_brief_responses(
+        brief_id=brief_id,
+        supplier_id=current_user.supplier_id,
+        status='draft,submitted'
+    )['briefResponses']
+
+    if brief_response and brief_response[0]['status'] == 'submitted':
         flash('already_applied', 'error')
         return redirect(url_for(".view_response_result", brief_id=brief_id))
 
-    framework, lot = get_framework_and_lot(
-        data_api_client, brief['frameworkSlug'], brief['lotSlug'], allowed_statuses=['live'])
+    if request.method == 'POST':
+        if brief_response and brief_response[0]['status'] == 'draft':
+            return redirect(
+                url_for('.edit_brief_response', brief_id=brief_id, brief_response_id=brief_response[0]['id'])
+            )
+        else:
+            brief_response = data_api_client.create_brief_response(
+                brief_id,
+                current_user.supplier_id,
+                {},
+                current_user.email_address,
+            )['briefResponses']
+            brief_response_id = brief_response['id']
+            return redirect(url_for('.edit_brief_response', brief_id=brief_id, brief_response_id=brief_response_id))
 
-    content = content_loader.get_manifest(framework['slug'], 'edit_brief_response').filter({'lot': lot['slug']})
-    section = content.get_section(content.get_next_editable_section_id())
-
-    # replace generic 'Apply for opportunity' title with title including the name of the brief
-    section.name = "Apply for ‘{}’".format(brief['title'])
-    section.inject_brief_questions_into_boolean_list_question(brief)
+    existing_draft_response = False
+    if brief_response and brief_response[0]['status'] == 'draft':
+        existing_draft_response = brief_response[0]
 
     return render_template(
-        "briefs/brief_response.html",
+        "briefs/start_brief_response.html",
         brief=brief,
-        service_data={},
-        section=section,
-        **dict(main.config['BASE_TEMPLATE_DATA'])
-    ), 200
+        existing_draft_response=existing_draft_response
+    )
 
 
-# Add a create route
-@main.route('/opportunities/<int:brief_id>/responses/create', methods=['POST'])
+@main.route('/opportunities/<int:brief_id>/responses/<int:brief_response_id>', methods=['GET'])
+@main.route(
+    '/opportunities/<int:brief_id>/responses/<int:brief_response_id>/<string:question_id>',
+    methods=['GET', 'POST']
+)
+@feature.is_active_feature('NEW_SUPPLIER_FLOW')
 @login_required
-def create_brief_response(brief_id):
-    """Hits up the data API to create a new brief response."""
-
+def edit_brief_response(brief_id, brief_response_id, question_id=None):
     brief = get_brief(data_api_client, brief_id, allowed_statuses=['live'])
+    brief_response = data_api_client.get_brief_response(brief_response_id)['briefResponses']
+
+    if brief_response['briefId'] != brief['id'] or brief_response['supplierId'] != current_user.supplier_id:
+        abort(404)
 
     if not is_supplier_eligible_for_brief(data_api_client, current_user.supplier_id, brief):
         return _render_not_eligible_for_brief_error_page(brief)
@@ -122,51 +149,115 @@ def create_brief_response(brief_id):
         return redirect(url_for(".view_response_result", brief_id=brief_id))
 
     framework, lot = get_framework_and_lot(
-        data_api_client, brief['frameworkSlug'], brief['lotSlug'], allowed_statuses=['live'])
+        data_api_client, brief['frameworkSlug'], brief['lotSlug'], allowed_statuses=['live', 'expired'])
 
-    content = content_loader.get_manifest(framework['slug'], 'edit_brief_response').filter({'lot': lot['slug']})
+    max_day_rate = None
+    role = brief.get('specialistRole')
+    if role:
+        brief_service = data_api_client.find_services(
+            supplier_id=current_user.supplier_id,
+            framework=brief['frameworkSlug'],
+            status="published",
+            lot=brief["lotSlug"],
+        )["services"][0]
+        max_day_rate = brief_service.get(role + "PriceMax")
+
+    content = content_loader.get_manifest(
+        brief['frameworkSlug'], 'edit_brief_response'
+    ).filter({'lot': lot['slug'], 'brief': brief, 'max_day_rate': max_day_rate})
+
     section = content.get_section(content.get_next_editable_section_id())
-    response_data = section.get_data(request.form)
+    if section is None or not section.editable:
+        abort(404)
 
-    try:
-        brief_response = data_api_client.create_brief_response(
-            brief_id,
-            current_user.supplier_id,
-            response_data,
-            current_user.email_address,
-            page_questions=section.get_field_names()
-        )['briefResponses']
-        data_api_client.submit_brief_response(brief_response['id'], current_user.email_address)
+    # If a question in a brief is optional and is unanswered by the buyer, the brief will have the key but will have no
+    # data. The question will be skipped in the brief response flow (see below). If a user attempts to access the
+    # question by directly visiting the url, this check will return a 404. It has been created specifically for nice to
+    # have requirements, and works because briefs and responses share the same key for this question/response.
+    if question_id in brief.keys() and not brief[question_id]:
+        abort(404)
 
-    except HTTPError as e:
-        # replace generic 'Apply for opportunity' title with title including the name of the brief
-        section.name = "Apply for ‘{}’".format(brief['title'])
-        section.inject_brief_questions_into_boolean_list_question(brief)
-        section_summary = section.summary(response_data)
+    # If a question is to be skipped in the normal flow (due to the reason above), we update the next_question_id.
+    next_question_id = section.get_next_question_id(question_id)
+    if next_question_id in brief.keys() and not brief[next_question_id]:
+        next_question_id = section.get_next_question_id(next_question_id)
 
-        errors = section_summary.get_error_messages(e.message)
+    def redirect_to_next_page():
+        return redirect(url_for(
+            '.edit_brief_response',
+            brief_id=brief_id,
+            brief_response_id=brief_response_id,
+            question_id=next_question_id
+        ))
 
-        return render_template(
-            "briefs/brief_response.html",
-            brief=brief,
-            service_data=response_data,
-            section=section,
-            errors=errors,
-            **dict(main.config['BASE_TEMPLATE_DATA'])
-        ), 400
+    # If no question_id in url then redirect to first question
+    if question_id is None:
+        return redirect_to_next_page()
 
-    if all(brief_response['essentialRequirements']):
-        # "result" parameter is used to track brief applications by analytics
-        return redirect(url_for(".view_response_result", brief_id=brief_id, result='success'))
-    else:
-        return redirect(url_for(".view_response_result", brief_id=brief_id, result='fail'))
+    question = section.get_question(question_id)
+    if question is None:
+        abort(404)
+
+    # Unformat brief response into data for form
+    service_data = question.unformat_data(brief_response)
+
+    status_code = 200
+    errors = {}
+    if request.method == 'POST':
+        try:
+            data_api_client.update_brief_response(
+                brief_response_id,
+                question.get_data(request.form),
+                current_user.email_address,
+                page_questions=[question.id]
+            )
+
+        except HTTPError as e:
+            errors = question.get_error_messages(e.message)
+            status_code = 400
+            service_data = question.unformat_data(question.get_data(request.form))
+
+        else:
+            if next_question_id:
+                return redirect_to_next_page()
+            else:
+                data_api_client.submit_brief_response(
+                    brief_response_id,
+                    current_user.email_address
+                )
+                flash('submitted_first', 'success')
+                return redirect(url_for('.view_response_result', brief_id=brief_id))
+
+    previous_question_id = section.get_previous_question_id(question_id)
+    # Skip previous question if the brief has no nice to have requirements
+    if previous_question_id in brief.keys() and not brief[previous_question_id]:
+        previous_question_id = section.get_previous_question_id(previous_question_id)
+
+    previous_question_url = None
+    if previous_question_id:
+        previous_question_url = url_for(
+            '.edit_brief_response',
+            brief_id=brief_id,
+            brief_response_id=brief_response_id,
+            question_id=previous_question_id
+        )
+
+    return render_template(
+        "briefs/edit_brief_response_question.html",
+        brief=brief,
+        errors=errors,
+        is_last_page=False if next_question_id else True,
+        previous_question_url=previous_question_url,
+        question=question,
+        service_data=service_data
+    ), status_code
 
 
 @main.route('/opportunities/<int:brief_id>/responses/result')
 @login_required
 def view_response_result(brief_id):
     brief = get_brief(data_api_client, brief_id, allowed_statuses=['live', 'closed'])
-
+    brief_published_at = datetime.strptime(brief['publishedAt'], DATETIME_FORMAT)
     if not is_supplier_eligible_for_brief(data_api_client, current_user.supplier_id, brief):
         return _render_not_eligible_for_brief_error_page(brief)
 
@@ -175,19 +266,27 @@ def view_response_result(brief_id):
         supplier_id=current_user.supplier_id
     )['briefResponses']
 
+    legacy_brief = not new_supplier_flow_active_for_datetime(brief_published_at)
     if len(brief_response) == 0:
-        return redirect(url_for(".brief_response", brief_id=brief_id))
-    elif all(brief_response[0]['essentialRequirements']):
+        if legacy_brief:
+            abort(404)
+        else:
+            return redirect(url_for(".start_brief_response", brief_id=brief_id))
+    elif brief_response[0].get('essentialRequirementsMet') or all(brief_response[0]['essentialRequirements']):
         result_state = 'submitted_ok'
     else:
         result_state = 'submitted_unsuccessful'
-
     brief_response = brief_response[0]
     framework, lot = get_framework_and_lot(
-        data_api_client, brief['frameworkSlug'], brief['lotSlug'], allowed_statuses=['live'])
+        data_api_client, brief['frameworkSlug'], brief['lotSlug'], allowed_statuses=['live', 'expired'])
+
+    if brief_response.get('essentialRequirementsMet'):
+        brief_response_display_manifest = 'display_brief_response'
+    else:
+        brief_response_display_manifest = 'legacy_display_brief_response'
 
     response_content = content_loader.get_manifest(
-        framework['slug'], 'display_brief_response').filter({'lot': lot['slug']})
+        framework['slug'], brief_response_display_manifest).filter({'lot': lot['slug'], 'brief': brief})
     for section in response_content:
         section.inject_brief_questions_into_boolean_list_question(brief)
 
@@ -220,7 +319,7 @@ def _render_not_eligible_for_brief_error_page(brief, clarification_question=Fals
             reason = data_reason_slug = "supplier-not-on-lot"
     else:
         reason = "supplier-not-on-framework"
-        data_reason_slug = "supplier-not-on-{}".format(brief['frameworkFramework'])
+        data_reason_slug = "supplier-not-on-{}".format(brief['frameworkSlug'])
 
     return render_template(
         "briefs/not_is_supplier_eligible_for_brief_error.html",
@@ -228,6 +327,5 @@ def _render_not_eligible_for_brief_error_page(brief, clarification_question=Fals
         framework_name=brief['frameworkName'],
         lot=brief['lotSlug'],
         reason=reason,
-        data_reason_slug=data_reason_slug,
-        **dict(main.config['BASE_TEMPLATE_DATA'])
+        data_reason_slug=data_reason_slug
     ), 400

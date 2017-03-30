@@ -4,10 +4,10 @@ from flask import render_template, request, redirect, url_for, abort, flash, cur
 from ... import data_api_client, flask_featureflags
 from ...main import main, content_loader
 from ..helpers import login_required
-from ..helpers.services import is_service_associated_with_supplier, get_signed_document_url, count_unanswered_questions, \
-    get_next_section_name
-from ..helpers.frameworks import get_framework_and_lot, get_declaration_status
+from ..helpers.services import is_service_associated_with_supplier, get_signed_document_url, count_unanswered_questions
+from ..helpers.frameworks import get_framework_and_lot, get_declaration_status, get_supplier_framework_info
 
+from dmcontent.content_loader import ContentNotFoundError
 from dmapiclient import HTTPError
 from dmutils import s3
 from dmutils.documents import upload_service_documents
@@ -42,8 +42,11 @@ def edit_service(service_id):
 
     framework = data_api_client.get_framework(service['frameworkSlug'])['frameworks']
 
-    content = content_loader.get_manifest(framework['slug'], 'edit_service').filter(service)
-    remove_requested = True if request.args.get('remove_requested') else False
+    try:
+        content = content_loader.get_manifest(framework['slug'], 'edit_service').filter(service)
+    except ContentNotFoundError:
+        abort(404)
+    remove_requested = bool(request.args.get('remove_requested'))
 
     return render_template(
         "services/service.html",
@@ -52,7 +55,7 @@ def edit_service(service_id):
         service_unavailability_information=service_unavailability_information,
         framework=framework,
         sections=content.summary(service),
-        remove_requested=remove_requested
+        remove_requested=remove_requested,
     )
 
 
@@ -62,6 +65,13 @@ def remove_service(service_id):
     service = data_api_client.get_service(service_id).get('services')
 
     if not is_service_associated_with_supplier(service):
+        abort(404)
+
+    # we don't actually need the content here, we're just probing to see whether service editing should be allowed for
+    # this framework (signalled by the exsitence of the edit_service manifest
+    try:
+        content_loader.get_manifest(service["frameworkSlug"], 'edit_service')
+    except ContentNotFoundError:
         abort(404)
 
     # suppliers can't un-remove a service
@@ -101,7 +111,10 @@ def edit_section(service_id, section_id):
     if not is_service_associated_with_supplier(service):
         abort(404)
 
-    content = content_loader.get_manifest('g-cloud-6', 'edit_service').filter(service)
+    try:
+        content = content_loader.get_manifest(service["frameworkSlug"], 'edit_service').filter(service)
+    except ContentNotFoundError:
+        abort(404)
     section = content.get_section(section_id)
     if section is None or not section.editable:
         abort(404)
@@ -126,7 +139,10 @@ def update_section(service_id, section_id):
     if not is_service_associated_with_supplier(service):
         abort(404)
 
-    content = content_loader.get_manifest('g-cloud-6', 'edit_service').filter(service)
+    try:
+        content = content_loader.get_manifest(service["frameworkSlug"], 'edit_service').filter(service)
+    except ContentNotFoundError:
+        abort(404)
     section = content.get_section(section_id)
     if section is None or not section.editable:
         abort(404)
@@ -150,79 +166,85 @@ def update_section(service_id, section_id):
             errors=errors
         )
 
+    flash({"updated_service_name": posted_data.get("serviceName") or service.get("serviceName")}, 'service_updated')
+
     return redirect(url_for(".edit_service", service_id=service_id))
 
 
 #  ####################  CREATING NEW DRAFT SERVICES ##########################
 
 
-@main.route('/frameworks/<framework_slug>/submissions/<lot_slug>/create', methods=['GET'])
+@main.route('/frameworks/<framework_slug>/submissions/<lot_slug>/create', methods=['GET', 'POST'])
 @login_required
 def start_new_draft_service(framework_slug, lot_slug):
     """Page to kick off creation of a new service."""
 
     framework, lot = get_framework_and_lot(data_api_client, framework_slug, lot_slug, allowed_statuses=['open'])
 
+    # Suppliers must have registered interest in a framework before they can create draft services
+    if not get_supplier_framework_info(data_api_client, framework_slug):
+        abort(404)
+
     content = content_loader.get_manifest(framework_slug, 'edit_submission').filter(
         {'lot': lot['slug']}
     )
 
     section = content.get_section(content.get_next_editable_section_id())
+    if section is None:
+        section = content.get_section(content.get_next_edit_questions_section_id(None))
+        if section is None:
+            abort(404)
+
+        section = section.get_question_as_section(section.get_next_question_slug())
+
+    if request.method == 'POST':
+        update_data = section.get_data(request.form)
+
+        try:
+            draft_service = data_api_client.create_new_draft_service(
+                framework_slug, lot['slug'], current_user.supplier_id, update_data,
+                current_user.email_address, page_questions=section.get_field_names()
+            )['services']
+        except HTTPError as e:
+            update_data = section.unformat_data(update_data)
+            errors = section.get_error_messages(e.message)
+
+            return render_template(
+                "services/edit_submission_section.html",
+                framework=framework,
+                section=section,
+                service_data=update_data,
+                errors=errors
+            ), 400
+
+        return redirect(
+            url_for(
+                ".view_service_submission",
+                framework_slug=framework['slug'],
+                lot_slug=draft_service['lotSlug'],
+                service_id=draft_service['id'],
+            )
+        )
 
     return render_template(
         "services/edit_submission_section.html",
         framework=framework,
+        lot=lot,
         service_data={},
-        section=section
+        section=section,
+        force_continue_button=True,
     ), 200
-
-
-@main.route('/frameworks/<framework_slug>/submissions/<lot_slug>/create', methods=['POST'])
-@login_required
-def create_new_draft_service(framework_slug, lot_slug):
-    """Hits up the data API to create a new draft service."""
-
-    framework, lot = get_framework_and_lot(data_api_client, framework_slug, lot_slug, allowed_statuses=['open'])
-
-    content = content_loader.get_manifest(framework_slug, 'edit_submission').filter(
-        {'lot': lot['slug']}
-    )
-
-    section = content.get_section(content.get_next_editable_section_id())
-
-    update_data = section.get_data(request.form)
-
-    try:
-        draft_service = data_api_client.create_new_draft_service(
-            framework_slug, lot['slug'], current_user.supplier_id, update_data,
-            current_user.email_address, page_questions=section.get_field_names()
-        )['services']
-    except HTTPError as e:
-        update_data = section.unformat_data(update_data)
-        errors = section.get_error_messages(e.message)
-
-        return render_template(
-            "services/edit_submission_section.html",
-            framework=framework,
-            section=section,
-            service_data=update_data,
-            errors=errors
-        ), 400
-
-    return redirect(
-        url_for(
-            ".view_service_submission",
-            framework_slug=framework['slug'],
-            lot_slug=draft_service['lotSlug'],
-            service_id=draft_service['id'],
-        )
-    )
 
 
 @main.route('/frameworks/<framework_slug>/submissions/<lot_slug>/<service_id>/copy', methods=['POST'])
 @login_required
 def copy_draft_service(framework_slug, lot_slug, service_id):
     framework, lot = get_framework_and_lot(data_api_client, framework_slug, lot_slug, allowed_statuses=['open'])
+
+    # Suppliers must have registered interest in a framework before they can edit draft services
+    if not get_supplier_framework_info(data_api_client, framework_slug):
+        abort(404)
+
     draft = data_api_client.get_draft_service(service_id).get('services')
 
     if draft['lotSlug'] != lot_slug or draft['frameworkSlug'] != framework_slug:
@@ -240,11 +262,22 @@ def copy_draft_service(framework_slug, lot_slug, service_id):
         current_user.email_address
     )['services']
 
+    # Get the first section or question to edit.
+    section_id_to_edit = content.get_next_editable_section_id()
+    if section_id_to_edit is None:
+        section_id_to_edit = content.get_next_edit_questions_section_id()
+        question_slug_to_edit = content.get_section(section_id_to_edit).get_next_question_slug()
+        if question_slug_to_edit is None:
+            abort(404)
+    else:
+        question_slug_to_edit = None
+
     return redirect(url_for(".edit_service_submission",
                             framework_slug=framework['slug'],
                             lot_slug=draft['lotSlug'],
                             service_id=draft_copy['id'],
-                            section_id=content.get_next_editable_section_id(),
+                            section_id=section_id_to_edit,
+                            question_slug=question_slug_to_edit,
                             return_to_summary=1
                             ))
 
@@ -253,6 +286,11 @@ def copy_draft_service(framework_slug, lot_slug, service_id):
 @login_required
 def complete_draft_service(framework_slug, lot_slug, service_id):
     framework, lot = get_framework_and_lot(data_api_client, framework_slug, lot_slug, allowed_statuses=['open'])
+
+    # Suppliers must have registered interest in a framework before they can complete draft services
+    if not get_supplier_framework_info(data_api_client, framework_slug):
+        abort(404)
+
     draft = data_api_client.get_draft_service(service_id).get('services')
 
     if draft['lotSlug'] != lot_slug or draft['frameworkSlug'] != framework_slug:
@@ -288,6 +326,11 @@ def complete_draft_service(framework_slug, lot_slug, service_id):
 @login_required
 def delete_draft_service(framework_slug, lot_slug, service_id):
     framework, lot = get_framework_and_lot(data_api_client, framework_slug, lot_slug, allowed_statuses=['open'])
+
+    # Suppliers must have registered interest in a framework before they can delete draft services
+    if not get_supplier_framework_info(data_api_client, framework_slug):
+        abort(404)
+
     draft = data_api_client.get_draft_service(service_id).get('services')
 
     if draft['lotSlug'] != lot_slug or draft['frameworkSlug'] != framework_slug:
@@ -386,7 +429,14 @@ def edit_service_submission(framework_slug, lot_slug, service_id, section_id, qu
     """
     framework, lot = get_framework_and_lot(data_api_client, framework_slug, lot_slug, allowed_statuses=['open'])
 
-    force_return_to_summary = request.args.get('return_to_summary') or framework['framework'] == "dos"
+    # Suppliers must have registered interest in a framework before they can edit draft services
+    if not get_supplier_framework_info(data_api_client, framework_slug):
+        abort(404)
+
+    force_return_to_summary = (
+        request.args.get('return_to_summary') or framework['framework'] == "digital-outcomes-and-specialists"
+    )
+    next_question = None
 
     try:
         draft = data_api_client.get_draft_service(service_id)['services']
@@ -402,6 +452,7 @@ def edit_service_submission(framework_slug, lot_slug, service_id, section_id, qu
     content = content_loader.get_manifest(framework_slug, 'edit_submission').filter(draft)
     section = content.get_section(section_id)
     if section and (question_slug is not None):
+        next_question = section.get_question_by_slug(section.get_next_question_slug(question_slug))
         section = section.get_question_as_section(question_slug)
 
     if section is None or not section.editable:
@@ -411,16 +462,17 @@ def edit_service_submission(framework_slug, lot_slug, service_id, section_id, qu
     if request.method == "POST":
         update_data = section.get_data(request.form)
 
-        uploader = s3.S3(current_app.config['DM_SUBMISSIONS_BUCKET'])
-        documents_url = url_for('.dashboard', _external=True) + '/assets/'
-        uploaded_documents, document_errors = upload_service_documents(
-            uploader, documents_url, draft, request.files, section,
-            public=False)
+        if request.files:
+            uploader = s3.S3(current_app.config['DM_SUBMISSIONS_BUCKET'])
+            documents_url = url_for('.dashboard', _external=True) + '/assets/'
+            uploaded_documents, document_errors = upload_service_documents(
+                uploader, documents_url, draft, request.files, section,
+                public=False)
 
-        if document_errors:
-            errors = section.get_error_messages(document_errors)
-        else:
-            update_data.update(uploaded_documents)
+            if document_errors:
+                errors = section.get_error_messages(document_errors, question_descriptor_from="question")
+            else:
+                update_data.update(uploaded_documents)
 
         if not errors and section.has_changes_to_save(draft, update_data):
             try:
@@ -432,17 +484,16 @@ def edit_service_submission(framework_slug, lot_slug, service_id, section_id, qu
                 )
             except HTTPError as e:
                 update_data = section.unformat_data(update_data)
-                errors = section.get_error_messages(e.message)
+                errors = section.get_error_messages(e.message, question_descriptor_from="question")
 
         if not errors:
-            next_section = content.get_next_editable_section_id(section_id)
-
-            if next_section and request.form.get('continue_to_next_section') and not force_return_to_summary:
+            if next_question and not force_return_to_summary:
                 return redirect(url_for(".edit_service_submission",
                                         framework_slug=framework['slug'],
                                         lot_slug=draft['lotSlug'],
                                         service_id=service_id,
-                                        section_id=next_section))
+                                        section_id=section_id,
+                                        question_slug=next_question.slug))
             else:
                 return redirect(url_for(".view_service_submission",
                                         framework_slug=framework['slug'],
@@ -462,11 +513,11 @@ def edit_service_submission(framework_slug, lot_slug, service_id, section_id, qu
         "services/edit_submission_section.html",
         section=section,
         framework=framework,
-        next_section_name=get_next_section_name(content, section.id),
+        lot=lot,
+        next_question=next_question,
         service_data=service_data,
         service_id=service_id,
         force_return_to_summary=force_return_to_summary,
-        one_service_limit=lot['oneServiceLimit'],
         errors=errors,
     )
 
@@ -475,6 +526,10 @@ def edit_service_submission(framework_slug, lot_slug, service_id, section_id, qu
             methods=['GET', 'POST'])
 @login_required
 def remove_subsection(framework_slug, lot_slug, service_id, section_id, question_slug):
+    # Suppliers must have registered interest in a framework before they can edit draft services
+    if not get_supplier_framework_info(data_api_client, framework_slug):
+        abort(404)
+
     try:
         draft = data_api_client.get_draft_service(service_id)['services']
     except HTTPError as e:
