@@ -9,6 +9,7 @@ from dmutils.s3 import S3ResponseError
 from dmcontent.content_loader import QuestionNotFoundError
 import rollbar
 
+
 @main.app_errorhandler(APIError)
 def api_error_handler(e):
     return _render_error_page(e.status_code)
