@@ -53,6 +53,7 @@ class Config(object):
     INVITE_EMAIL_FROM = 'no-reply@marketplace.digital.gov.au'
     INVITE_EMAIL_SUBJECT = 'Activate your new Marketplace account'
 
+    AUTHREP_EMAIL_SUBJECT = 'Accepting the agreement to join the Digital Marketplace'
     NEW_SUPPLIER_INVITE_SUBJECT = 'Digital Marketplace - invitation to create seller account'
 
     CLARIFICATION_EMAIL_NAME = DM_GENERIC_ADMIN_NAME

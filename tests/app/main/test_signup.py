@@ -471,7 +471,7 @@ class TestApplicationPage(BaseApplicationTest):
             send_email.assert_called_once_with(
                 'applicant@email.com',
                 mock.ANY,
-                self.app.config['INVITE_EMAIL_SUBJECT'],
+                self.app.config['AUTHREP_EMAIL_SUBJECT'],
                 self.app.config['INVITE_EMAIL_FROM'],
                 self.app.config['INVITE_EMAIL_NAME']
             )
@@ -503,7 +503,7 @@ class TestApplicationPage(BaseApplicationTest):
             send_email.assert_called_once_with(
                 'test@email.com',
                 mock.ANY,
-                self.app.config['INVITE_EMAIL_SUBJECT'],
+                self.app.config['AUTHREP_EMAIL_SUBJECT'],
                 self.app.config['INVITE_EMAIL_FROM'],
                 self.app.config['INVITE_EMAIL_NAME']
             )

@@ -309,7 +309,7 @@ def authorise_application(id):
         send_email(
             application['email'],
             email_body,
-            current_app.config['INVITE_EMAIL_SUBJECT'],
+            current_app.config['AUTHREP_EMAIL_SUBJECT'],
             current_app.config['INVITE_EMAIL_FROM'],
             current_app.config['INVITE_EMAIL_NAME']
         )
@@ -322,4 +322,7 @@ def authorise_application(id):
         )
         abort(503, 'Failed to send user invite reset')
 
-    return render_template('suppliers/authorisation_submitted.html', name=application['representative'])
+    return render_template('suppliers/authorisation_submitted.html',
+                           name=application['representative'],
+                           email_address=application['email'],
+                           subject=current_app.config['AUTHREP_EMAIL_SUBJECT'])
