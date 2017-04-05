@@ -76,7 +76,7 @@ class Config(object):
         'SELLER_REGISTRATION': True,
         'SELLER_UPDATE': True,
         'SELLER_EDIT': True,
-        'DM_FRAMEWORK': False,
+        'DM_FRAMEWORK': True,
         'SUBMIT_REGISTRATION': True
     }
 

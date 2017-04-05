@@ -1,25 +1,36 @@
 {% extends "_base_page.html" %}
 
-{% block page_title %}Not eligible for opportunity – Digital Marketplace{% endblock %}
+{% block page_title %}Can't apply for opportunity – Digital Marketplace{% endblock %}
 
 {% block main_content %}
 
 {% with inhibited_action="ask a question about" if clarification_question else "apply for" %}
 <div class="grid-row">
   <div class="column-two-thirds">
-    <header class="page-heading-smaller">
-      <h1>You can’t {{ inhibited_action }} this opportunity</h1>
-    </header>
-    <p>
-      You can’t {{ inhibited_action }} this opportunity because
-      {% if has_framework_service %}
-        you didn’t say you could provide
-        {{ "this specialist role" if has_framework_lot_service else "services in this category" }}
-        when you applied to the Digital Outcomes and Specialists framework.
+
+
+      {% if framework_name == 'digital-marketplace' %}
+        <header class="page-heading-smaller">
+          <h1>Sorry, you can't {{ inhibited_action }} this opportunity</h1>
+        </header>
+        <p>
+        It was published before we completed the transition to the updated Digital Marketplace. And so it's available to our original sellers only.<br/>
+        You will be able to apply for opportunities from now on if you have the expertise and the buyer makes the brief 'open to all',
+          or includes you on the list of sellers for 'open to 1' or 'open to selected' opportunities.<br/>
+        <br/><a href="/{{framework_name}}/opportunities">Back to opportunities</a>
+        </p>
       {% else %}
-        you’re not a {{ framework_name }} supplier.
+        <header class="page-heading-smaller">
+          <h1>You need to update your profile to apply</h1>
+        </header>
+        <p>
+        To apply for this opportunity you need to be a member of the Digital Marketplace Panel.
+        As a current member of the Digital Service Professionals Panel you're pre-approved to join.
+        All you need to do is complete your seller profile update and accept the new Master Agreement.<br/>
+        Please note you will also need to be approved to offer {{ domain }} to apply for this opportunity.<br/>
+        <a href="/seller/update">Update your seller profile now</a>
       {% endif %}
-    </p>
+
   </div>
 </div>
 {% endwith %}

@@ -43,10 +43,12 @@ def is_supplier_selected_for_brief(data_api_client, current_user, brief):
 
 
 def is_supplier_eligible_for_brief(data_api_client, supplier_code, brief):
-    # FIXME: this is implemented by checking if the given supplier offers a relevant service.
-    # Current suppliers don't have services.
+    supplier = data_api_client. get_supplier(supplier_code)['supplier']
+    if brief.get('frameworkFramework') == 'dsp':
+        return len(supplier['services']) > 0
+    if brief.get('frameworkFramework') == 'dm':
+        return supplier.get('agreed_to_master_agreement', False)
     return True
-    return data_api_client.is_supplier_eligible_for_brief(supplier_code, brief['id'])
 
 
 def supplier_has_a_brief_response(data_api_client, supplier_code, brief_id):

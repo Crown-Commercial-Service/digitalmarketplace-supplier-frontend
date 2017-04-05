@@ -322,23 +322,11 @@ def _render_not_selected_for_brief_error_page(clarification_question=False):
 
 
 def _render_not_eligible_for_brief_error_page(brief, clarification_question=False):
-    common_kwargs = {
-        "supplier_code": current_user.supplier_code,
-        "framework": brief['frameworkSlug'],
-    }
-    has_framework_service = bool(data_api_client.find_services(**common_kwargs)["services"])
-    has_framework_lot_service = has_framework_service and bool(data_api_client.find_services(
-        **dict(common_kwargs, lot=brief['lotSlug'])
-    )["services"])
-    # if has_framework_lot_service is true, we can deduce that the problem is that the roles don't match.
-
     return render_template(
         "briefs/not_is_supplier_eligible_for_brief_error.html",
         clarification_question=clarification_question,
-        has_framework_service=has_framework_service,
-        has_framework_lot_service=has_framework_lot_service,
-        framework_name=brief['frameworkName'],
-        lot=brief['lotSlug'],
+        framework_name=brief['frameworkSlug'],
+        domain=brief.get('areaOfExpertise', '')
     ), 400
 
 
