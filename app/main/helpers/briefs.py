@@ -55,6 +55,16 @@ def supplier_has_a_brief_response(data_api_client, supplier_code, brief_id):
     return len(brief_responses) != 0
 
 
+def supplier_is_assessed(supplier, domain):
+    return 'assessed' in supplier['supplier']['domains'] and \
+        domain in supplier['supplier']['domains']['assessed']
+
+
+def supplier_is_unassessed(supplier, domain):
+    return 'unassessed' in supplier['supplier']['domains'] and \
+        domain in supplier['supplier']['domains']['unassessed']
+
+
 def send_brief_clarification_question(data_api_client, brief, clarification_question):
     # Email the question to brief owners
     email_body = render_template(

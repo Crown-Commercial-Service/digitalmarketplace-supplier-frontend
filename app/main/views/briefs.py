@@ -7,12 +7,14 @@ import json
 from flask import abort, flash, redirect, render_template, request, url_for, \
     current_app
 from flask_login import current_user
+import flask_featureflags as feature
 
 from dmapiclient import HTTPError
 from dmutils.forms import render_template_with_csrf
 from dmutils.email import send_email, EmailError
 from dmutils.documents import upload_service_documents
 from dmutils.s3 import S3
+from react.render import render_component
 
 import six
 import rollbar
@@ -23,7 +25,9 @@ from ..helpers.briefs import (
     is_supplier_selected_for_brief,
     is_supplier_eligible_for_brief,
     send_brief_clarification_question,
-    supplier_has_a_brief_response
+    supplier_has_a_brief_response,
+    supplier_is_assessed,
+    supplier_is_unassessed
 )
 from ..helpers.frameworks import get_framework_and_lot
 from ...main import main, content_loader
@@ -112,6 +116,16 @@ def brief_response(brief_id):
     if supplier_has_a_brief_response(data_api_client, current_user.supplier_code, brief_id):
         flash('already_applied', 'error')
         return redirect(url_for(".view_response_result", brief_id=brief_id))
+
+    if 'areaOfExpertise' in brief:
+        current_supplier = data_api_client.req.suppliers(current_user.supplier_code).get()
+
+        if not supplier_is_assessed(current_supplier, brief['areaOfExpertise']):
+            if supplier_is_unassessed(current_supplier, brief['areaOfExpertise']):
+                return redirect(url_for(".create_assessment", brief_id=brief_id))
+            else:
+                current_domain = data_api_client.req.domain(brief['areaOfExpertise']).get()
+                return redirect('/case-study/create/{}/brief/{}'.format(current_domain['domain']['id'], brief_id))
 
     framework, lot = get_framework_and_lot(
         data_api_client, brief['frameworkSlug'], brief['lotSlug'], allowed_statuses=['live'])
@@ -326,3 +340,46 @@ def _render_not_eligible_for_brief_error_page(brief, clarification_question=Fals
         framework_name=brief['frameworkName'],
         lot=brief['lotSlug'],
     ), 400
+
+
+@main.route('/opportunities/<int:brief_id>/assessment', methods=['GET'])
+@login_required
+def create_assessment(brief_id):
+    brief = get_brief(data_api_client, brief_id, allowed_statuses=['live'])
+
+    domain_name = brief.get('areaOfExpertise')
+    data_api_client.req.assessments().post(data={
+        'assessment': {
+            'supplier_code': current_user.supplier_code,
+            'domain_name': domain_name,
+            'brief_id': brief['id']
+        }})
+
+    framework_slug = 'digital-marketplace' if feature.is_active('DM_FRAMEWORK') else 'digital-service-professionals'
+    opportunity_url = '/{}/opportunities'.format(framework_slug)
+    props = {
+        'form_options': {
+            'domain': domain_name,
+            'opportunityUrl': opportunity_url
+        }
+    }
+
+    rendered_component = render_component('bundles/CaseStudy/CaseStudySubmitConfirmationWidget.js', props)
+
+    return render_template(
+        '_react.html',
+        breadcrumb_items=[
+            {
+                "link": '/',
+                "label": "Home"
+            },
+            {
+                "link": opportunity_url,
+                "label": "Opportunities"
+            },
+            {
+                "label": "Assessment submitted"
+            }
+        ],
+        component=rendered_component
+    )
