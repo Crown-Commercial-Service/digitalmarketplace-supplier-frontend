@@ -348,7 +348,9 @@ def create_assessment(brief_id):
     props = {
         'form_options': {
             'domain': domain_name,
-            'opportunityUrl': opportunity_url
+            'opportunityUrl': opportunity_url,
+            'closingDate':
+                'dates' in brief and 'closing_date' in brief['dates'] and brief['dates']['closing_date'] or None
         }
     }
 
