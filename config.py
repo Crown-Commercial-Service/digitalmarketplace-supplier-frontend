@@ -163,7 +163,7 @@ class Live(Config):
         'SELLER_REGISTRATION': True,
         'SELLER_UPDATE': True,
         'SELLER_EDIT': False,
-        'DM_FRAMEWORK': False,
+        'DM_FRAMEWORK': True,
         'SUBMIT_REGISTRATION': True
     }
 
