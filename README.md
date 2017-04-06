@@ -113,6 +113,18 @@ To just run the application use the `run_app` target.
 
 The supplier frontend runs on port 5003. Use the app at [http://127.0.0.1:5003/suppliers](http://127.0.0.1:5003/suppliers)
 
+Note:  The login is located in the buyer frontend application, so this needs to be running as well to login as a supplier.
+
+If the application is running on port 5003 as described above, login from http://127.0.0.1:5002/login (buyer frontend) as a supplier and then you will be logged in as a supplier on http://127.0.0.1:5003/suppliers
+
+It is easier to use the apps if nginx is configured to run them through one port.  As described in the Digital Marketplace Manual:
+
+The frontend applications are hyperlinked together but are running on different ports. This can cause links to error when they link between different applications. The way around this is to set up nginx so all front end applications can be accessed through port 80.
+
+To do this use the bootstrap.sh script in the nginx folder from [digitalmarketplace-functional-tests](https://github.com/alphagov/digitalmarketplace-functional-tests) to set up nginx aliases.
+
+In this case both the buyer frontend application and supplier applications will available from port 80 usually aliased to localhost and supplier application can be accessed from [localhost/suppliers](localhost/suppliers)
+
 ### Using FeatureFlags
 
 To use feature flags, check out the documentation in (the README of)
