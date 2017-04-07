@@ -2269,12 +2269,12 @@ class TestDeclarationOverviewSubmit(BaseApplicationTest):
 
             assert response.status_code == 404
 
-    def test_framework_standstill(self, data_api_client, get_or_post):
+    def test_framework_coming(self, data_api_client, get_or_post):
         with self.app.test_client():
             self.login()
 
             data_api_client.get_framework.side_effect = _assert_args_and_return(
-                self.framework(status="standstill"),
+                self.framework(status="coming"),
                 "g-cloud-7",
             )
             data_api_client.get_supplier_framework_info.side_effect = _assert_args_and_return(
@@ -2885,6 +2885,26 @@ class TestDeclarationSubmit(BaseApplicationTest):
                 "//*[@data-analytics='trackPageView'][@data-url=$k]",
                 k="/suppliers/frameworks/g-cloud-9/declaration_complete",
             )
+
+    @pytest.mark.parametrize("framework_status", ("standstill", "pending", "live", "expired",))
+    def test_closed_framework_state(self, data_api_client, framework_status):
+        with self.app.test_client():
+            self.login()
+
+            data_api_client.get_framework.side_effect = _assert_args_and_return(
+                self.framework(status=framework_status),
+                "g-cloud-7",
+            )
+            data_api_client.get_supplier_framework_info.side_effect = _assert_args_and_return(
+                self.supplier_framework(framework_slug="g-cloud-7"),
+                1234,
+                "g-cloud-7",
+            )
+            data_api_client.set_supplier_declaration.side_effect = AssertionError("This shouldn't be called")
+
+            response = self.client.post("/suppliers/frameworks/g-cloud-7/declaration")
+
+            assert response.status_code == 404
 
 
 @mock.patch('app.main.views.frameworks.data_api_client', autospec=True)
