@@ -14,8 +14,6 @@ from freezegun import freeze_time
 from tests.app.helpers import BaseApplicationTest, empty_g7_draft_service, empty_g9_draft_service
 
 
-# this is mostly a workaround for pytest not being able to do parametrization with unittest-derived class methods
-# otherwise it doesn't get us much over function parametrization...
 @pytest.fixture(params=(
     # a tuple of framework_slug, framework_name, framework_editable_services
     ("g-cloud-6", "G-Cloud 6", True,),
@@ -26,9 +24,7 @@ def supplier_service_editing_fw_params(request):
     return request.param
 
 
-# and these fixtures really are just a workaround to not being able to use plain function parametrization in unittest-
-# derived classes and should be replaced with that as soon as we're able to do so. hence the hence the oddly specific
-# long names
+# find a better way of organizing this than using oddly specific long names
 @pytest.fixture(params=(
     # a tuple of service status, service_belongs_to_user, expect_api_call_if_data, expected_status_code
     ("published", True, True, 302,),
