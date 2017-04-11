@@ -2311,7 +2311,7 @@ class TestDeclarationOverviewSubmit(BaseApplicationTest):
 @mock.patch('app.main.views.frameworks.data_api_client', autospec=True)
 class TestDeclarationOverview(BaseApplicationTest):
     @staticmethod
-    def _extract_section_information(doc, section_title):
+    def _extract_section_information(doc, section_title, expect_edit_link=True):
         """
             given a section (full text) name, returns that section's relevant information in a tuple (format described
             in comments)
@@ -2327,14 +2327,13 @@ class TestDeclarationOverview(BaseApplicationTest):
             "//a[@class='summary-change-link'][preceding::h2[1][normalize-space(string())=$section_title]]",
             section_title=section_title,
         )
-        assert [a.xpath("normalize-space(string())") for a in edit_as] == ["Edit"]
-        edit_a = edit_as[0]
+        assert ([a.xpath("normalize-space(string())") for a in edit_as] == ["Edit"]) is expect_edit_link
 
         return (
             # table caption text
             table.xpath("normalize-space(string(./caption))"),
             # "Edit" link href
-            edit_a.xpath("@href")[0],
+            edit_as[0].xpath("@href")[0] if expect_edit_link else None,
             tuple(
                 (
                     # contents of row heading
@@ -2355,7 +2354,30 @@ class TestDeclarationOverview(BaseApplicationTest):
             )
         )
 
-    @pytest.mark.parametrize("declaration,decl_valid,prefill_fw_slug,expected_pss,expected_gme,expected_dys", tuple(
+    @staticmethod
+    def _section_information_strip_edit_href(section_information):
+        row_heading, edit_href, rows = section_information
+        return row_heading, None, rows
+
+    def _setup_data_api_client(self, data_api_client, framework_status, declaration, prefill_fw_slug):
+        data_api_client.get_framework.side_effect = _assert_args_and_return(
+            self.framework(slug="g-cloud-9", name="G-Cloud 9", status=framework_status),
+            "g-cloud-9",
+        )
+        data_api_client.get_supplier_framework_info.side_effect = _assert_args_and_return(
+            self.supplier_framework(
+                framework_slug="g-cloud-9",
+                declaration=declaration,
+                prefill_declaration_from_framework_slug=prefill_fw_slug,
+            ),
+            1234,
+            "g-cloud-9",
+        )
+        data_api_client.set_supplier_declaration.side_effect = AssertionError("This shouldn't be called")
+
+    # corresponds to the parametrization args:
+    # "declaration,decl_valid,prefill_fw_slug,expected_pss,expected_gme,expected_dys"
+    _common_parametrization = tuple(
         chain.from_iterable(chain(
         ((
             empty_declaration,  # noqa
@@ -2692,8 +2714,13 @@ class TestDeclarationOverview(BaseApplicationTest):
         # test all of the previous combinations with two possible values of prefill_fw_slug
         (None, "Answer question",),
         ("some-previous-framework", "Review answer",),
-    ))))
-    def test_display(
+    )))
+
+    @pytest.mark.parametrize(
+        "declaration,decl_valid,prefill_fw_slug,expected_pss,expected_gme,expected_dys",
+        _common_parametrization,
+    )
+    def test_display_open(
             self,
             data_api_client,
             declaration,
@@ -2702,24 +2729,11 @@ class TestDeclarationOverview(BaseApplicationTest):
             expected_pss,
             expected_gme,
             expected_dys
-    ):
+            ):
+        self._setup_data_api_client(data_api_client, "open", declaration, prefill_fw_slug)
+
         with self.app.test_client():
             self.login()
-
-            data_api_client.get_framework.side_effect = _assert_args_and_return(
-                self.framework(slug="g-cloud-9", name="G-Cloud 9", status="open"),
-                "g-cloud-9",
-            )
-            data_api_client.get_supplier_framework_info.side_effect = _assert_args_and_return(
-                self.supplier_framework(
-                    framework_slug="g-cloud-9",
-                    declaration=declaration,
-                    prefill_declaration_from_framework_slug=prefill_fw_slug,
-                ),
-                1234,
-                "g-cloud-9",
-            )
-            data_api_client.set_supplier_declaration.side_effect = AssertionError("This shouldn't be called")
 
             response = self.client.get("/suppliers/frameworks/g-cloud-9/declaration")
             assert response.status_code == 200
@@ -2804,6 +2818,116 @@ class TestDeclarationOverview(BaseApplicationTest):
             assert self._extract_section_information(doc, "Providing suitable services") == expected_pss
             assert self._extract_section_information(doc, "Grounds for mandatory exclusion") == expected_gme
             assert self._extract_section_information(doc, u"How you’ll deliver your services") == expected_dys
+
+    @pytest.mark.parametrize(
+        "declaration,decl_valid,prefill_fw_slug,expected_pss,expected_gme,expected_dys",
+        tuple(
+            (
+                declaration,
+                decl_valid,
+                prefill_fw_slug,
+                expected_pss,
+                expected_gme,
+                expected_dys,
+            )
+            for declaration, decl_valid, prefill_fw_slug, expected_pss, expected_gme, expected_dys
+            in _common_parametrization
+            if (declaration or {}).get("status") == "complete"
+        )
+    )
+    @pytest.mark.parametrize("framework_status", ("pending", "standstill", "live", "expired",))
+    def test_display_closed(
+            self,
+            data_api_client,
+            framework_status,
+            declaration,
+            decl_valid,
+            prefill_fw_slug,
+            expected_pss,
+            expected_gme,
+            expected_dys
+            ):
+        self._setup_data_api_client(data_api_client, framework_status, declaration, prefill_fw_slug)
+
+        with self.app.test_client():
+            self.login()
+
+            response = self.client.get("/suppliers/frameworks/g-cloud-9/declaration")
+            assert response.status_code == 200
+            doc = html.fromstring(response.get_data(as_text=True))
+
+            # there shouldn't be any links to the "edit" page
+            assert not any(
+                urljoin("/suppliers/frameworks/g-cloud-9/declaration", a.attrib["href"]).startswith(
+                    "/suppliers/frameworks/g-cloud-9/declaration/edit/"
+                )
+                for a in doc.xpath("//a[@href]")
+            )
+
+            # no submittable forms should be pointing at ourselves
+            assert not any(
+                urljoin("/suppliers/frameworks/g-cloud-9/declaration", form.attrib["action"]) == \
+                    "/suppliers/frameworks/g-cloud-9/declaration"
+                for form in doc.xpath("//form[.//input[@type='submit']]")
+            )
+
+            assert not doc.xpath("//a[@href][normalize-space(string())=$label]", label="Answer question")
+            assert not doc.xpath("//a[@href][normalize-space(string())=$label]", label="Review answer")
+
+            assert not doc.xpath("//p[contains(normalize-space(string()), $t)]", t="make your declaration")
+            assert not doc.xpath("//p[contains(normalize-space(string()), $t)]", t="edit your answers")
+
+            assert self._extract_section_information(
+                doc,
+                "Providing suitable services",
+                expect_edit_link=False,
+            ) == self._section_information_strip_edit_href(expected_pss)
+            assert self._extract_section_information(
+                doc,
+                "Grounds for mandatory exclusion",
+                expect_edit_link=False,
+            ) == self._section_information_strip_edit_href(expected_gme)
+            assert self._extract_section_information(
+                doc,
+                u"How you’ll deliver your services",
+                expect_edit_link=False,
+            ) == self._section_information_strip_edit_href(expected_dys)
+
+    @pytest.mark.parametrize(
+        "declaration,decl_valid,prefill_fw_slug,expected_pss,expected_gme,expected_dys",
+        tuple(
+            (
+                declaration,
+                decl_valid,
+                prefill_fw_slug,
+                expected_pss,
+                expected_gme,
+                expected_dys,
+            )
+            for declaration, decl_valid, prefill_fw_slug, expected_pss, expected_gme, expected_dys
+            in _common_parametrization
+            if (declaration or {}).get("status") != "complete"
+        )
+    )
+    @pytest.mark.parametrize("framework_status", ("pending", "standstill", "live", "expired",))
+    def test_error_closed(
+            self,
+            data_api_client,
+            framework_status,
+            declaration,
+            decl_valid,
+            prefill_fw_slug,
+            expected_pss,
+            expected_gme,
+            expected_dys,
+            ):
+        self._setup_data_api_client(data_api_client, framework_status, declaration, prefill_fw_slug)
+
+        with self.app.test_client():
+            self.login()
+
+            response = self.client.get("/suppliers/frameworks/g-cloud-9/declaration")
+            assert response.status_code == 410
 
 
 @mock.patch('app.main.views.frameworks.data_api_client', autospec=True)

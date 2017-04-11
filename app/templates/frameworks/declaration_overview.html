@@ -27,28 +27,30 @@
 
 
 {% macro make_declaration_button_block() %}
-  {% if validates %}
-    {% if supplier_framework.declaration.status != "complete" %}
-    <form method="POST" action="">
-      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
-      {%
-        with
-        advice = true,
-        type = "save",
-        label = "Make declaration"
-      %}
-        {% include "toolkit/button.html" %}
-      {% endwith %}
-    </form>
-    {% endif %}
-    <p>
-      You can come back and edit your answers at any time before
-      {% if supplier_framework.declaration.status == "complete" %}
-        {{ framework_dates.framework_close_date|nbsp }}.
-      {% else %}
-        the deadline.
+  {% if framework.status == "open" %}
+    {% if validates %}
+      {% if supplier_framework.declaration.status != "complete" %}
+      <form method="POST" action="">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+        {%
+          with
+          advice = true,
+          type = "save",
+          label = "Make declaration"
+        %}
+          {% include "toolkit/button.html" %}
+        {% endwith %}
+      </form>
       {% endif %}
-    </p>
+      <p>
+        You can come back and edit your answers at any time before
+        {% if supplier_framework.declaration.status == "complete" %}
+          {{ framework_dates.framework_close_date|nbsp }}.
+        {% else %}
+          the deadline.
+        {% endif %}
+      </p>
+    {% endif %}
   {% endif %}
 {% endmacro %}
 
@@ -64,7 +66,7 @@
       {% endwith %}
     </div>
     <div class="column-two-thirds">
-      {% if supplier_framework.declaration.status != "complete" %}
+      {% if framework.status == "open" and supplier_framework.declaration.status != "complete" %}
         <p>
           You must {% if not validates %}answer all questions and{% endif %} make your declaration 
           before {{ framework_dates.framework_close_date|nbsp }} to apply to {{ framework.name }}.
