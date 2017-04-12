@@ -2738,15 +2738,24 @@ class TestDeclarationOverview(BaseApplicationTest):
     _g7_parametrization = tuple(
         (
             "g-cloud-7",
-            dict(FULL_G7_SUBMISSION, status=decl_status),
-            True,
+            declaration,
+            decl_valid,
             None,
             # G7 doesn't (yet?) have any "short names" for questions and so will be listing the answers in the
             # overview against their full verbose questions so any sections that we wanted to assert the content of
             # would require a reference copy of all its full question texts kept here. we don't want to do this so for
             # now don't assert any G7 sections...
             (),
-        ) for decl_status in ("started", "complete",)
+        ) for declaration, decl_valid in chain(
+            (
+                (dict(FULL_G7_SUBMISSION, status=decl_status), True)
+                for decl_status in ("started", "complete",)
+            ),
+            (
+                (empty_decl, False)
+                for empty_decl in (None, {})
+            ),
+        )
     )
 
     @pytest.mark.parametrize(
