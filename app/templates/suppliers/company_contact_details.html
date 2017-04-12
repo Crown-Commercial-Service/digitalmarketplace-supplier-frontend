@@ -17,7 +17,7 @@ with items = [
 
 {% block main_content %}
 
-{% if form.errors|length > 1 %}
+{% if form.errors|length >= 1 %}
     <div class="validation-masthead" role="group" aria-labelledby="validation-masthead-heading">
         <h1 class="validation-masthead-heading" id="validation-masthead-heading">
             There was a problem with the details you gave for:
