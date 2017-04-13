@@ -5,7 +5,10 @@
   "private": true,
   "engine": "node >= 0.10.0",
   "dependencies": {
+    "@gov.au/callout": "^0.1.0",
+    "@gov.au/pancake-sass": "^1.0.9",
     "bower": "1.5.2",
+    "colors": "1.1.2",
     "del": "1.1.1",
     "govuk_frontend_toolkit": "4.12.0",
     "gulp": "3.8.7",
@@ -13,17 +16,16 @@
     "gulp-bless": "3.1.0",
     "gulp-filelog": "0.4.1",
     "gulp-include": "1.1.1",
+    "gulp-jasmine-phantom": "3.0.0",
     "gulp-rename": "^1.2.2",
     "gulp-sass": "2.3.1",
     "gulp-sass-lint": "^1.2.0",
     "gulp-shell": "0.2.9",
-    "gulp-uglify": "1.4.0",
     "gulp-sourcemaps": "1.5.2",
-    "gulp-jasmine-phantom": "3.0.0",
     "gulp-svg2png": "^1.0.2",
-    "colors": "1.1.2",
-    "run-sequence": "^1.2.2",
-    "phantomjs-prebuilt": "2.1.7"
+    "gulp-uglify": "1.4.0",
+    "phantomjs-prebuilt": "2.1.7",
+    "run-sequence": "^1.2.2"
   },
   "scripts": {
     "frontend-install": "./node_modules/bower/bin/bower install",
@@ -37,5 +39,27 @@
   "devDependencies": {
     "gulp-livereload": "^3.8.1",
     "gulp-load-plugins": "^1.2.4"
+  },
+  "pancake": {
+    "auto-save": true,
+    "plugins": true,
+    "ignore": [],
+    "sass": {
+      "modules": false,
+      "location": "app/assets/scss/uikit2/",
+      "name": "uikit2.scss"
+    },
+    "css": {
+      "minified": true,
+      "modules": false,
+      "browsers": [
+        "last 2 versions",
+        "ie 8",
+        "ie 9",
+        "ie 10"
+      ],
+      "location": "pancake/css/",
+      "name": "pancake.min.css"
+    }
   }
 }

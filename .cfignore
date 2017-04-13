@@ -3,3 +3,4 @@ tests/
 venv/
 node_modules/
 bower_components/
+app/assets/scss/uikit2
