@@ -152,14 +152,15 @@ def supplier_edit_save(step=None, substep=None):
 @login_required
 @feature.is_active_feature('SELLER_UPDATE')
 def supplier_update():
-    # create application
-    data_api_client.req.suppliers(current_user.supplier_code).application().post(data={
-        'framework': 'digital-marketplace',
-        'current_user': {
-            'name': current_user.name,
-            'email_address': current_user.email_address
-        }
-    })
+    # create application only if no current application
+    if not current_user.application_id:
+        data_api_client.req.suppliers(current_user.supplier_code).application().post(data={
+            'framework': 'digital-marketplace',
+            'current_user': {
+                'name': current_user.name,
+                'email_address': current_user.email_address
+            }
+        })
     return redirect(url_for('.my_application'))
 
 

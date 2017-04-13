@@ -166,6 +166,7 @@ def my_application():
         current_app.logger.error(e)
         abort(e.status_code)
 
+    # if application not in saved state, it has been submitted so show message after submit
     if application.get('status', 'saved') != 'saved':
         return redirect(url_for('.submit_application', id=application['id']))
     else:
