@@ -873,6 +873,7 @@ class TestEditDraftService(BaseApplicationTest):
         assert_equal(response.status_code, 200)
         assert_equal(len(document.cssselect('p.file-upload-existing-value')), 0)
 
+    @pytest.mark.skip
     def test_file_upload(self, data_api_client, s3):
         s3.return_value.bucket_short_name = 'submissions'
         data_api_client.get_framework.return_value = self.framework(status='open')

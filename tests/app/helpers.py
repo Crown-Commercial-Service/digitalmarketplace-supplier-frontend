@@ -167,7 +167,17 @@ class BaseApplicationTest(object):
                     'email': 'email@email.com',
                     'website': 'http://myweb.com',
                 }],
-                'clients': ['one client', 'two clients']
+                'clients': ['one client', 'two clients'],
+                "frameworks": [{"framework_id": 7}]
+            }
+        }
+
+    @staticmethod
+    def application():
+        return {
+            'application': {
+                "id": 12345,
+                "status": "approved"
             }
         }
 
@@ -255,6 +265,7 @@ class BaseApplicationTest(object):
 
         return {
             'frameworks': {
+                'id': 7,
                 'status': status,
                 'clarificationQuestionsOpen': clarification_questions_open,
                 'name': name,

@@ -1,0 +1,30 @@
+{% extends "_base_page.html" %}
+
+{% block page_title %}Can't apply for opportunity – Digital Marketplace{% endblock %}
+
+{% block main_content %}
+
+    {% with inhibited_action="ask a question about" if clarification_question else "apply for" %}
+        <div class="grid-row">
+            <div class="column-two-thirds">
+
+                <header class="page-heading-smaller">
+                    <h1>You need to update your profile to apply</h1>
+                </header>
+                <p>
+                    To apply for this opportunity you need to be a member of the Digital Marketplace Panel. <br/>
+
+                    As a current member of the Digital Service Professionals Panel you're pre-approved to join. <br/>
+
+                    All you need to do is complete your seller profile update and accept the new Master Agreement. <br/>
+
+                    Please note you will also need to be approved to offer
+                    {{ domain }} to apply for this opportunity. <br/>
+                    <br/><a href="/sellers/update">Update your seller profile now</a>
+                </p>
+
+            </div>
+        </div>
+    {% endwith %}
+
+{% endblock %}

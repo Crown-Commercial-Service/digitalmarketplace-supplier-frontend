@@ -42,13 +42,38 @@ def is_supplier_selected_for_brief(data_api_client, current_user, brief):
     return False
 
 
-def is_supplier_eligible_for_brief(data_api_client, supplier_code, brief):
-    supplier = data_api_client. get_supplier(supplier_code)['supplier']
-    if brief.get('frameworkFramework') == 'dsp':
-        return len(supplier['services']) > 0
-    if brief.get('frameworkFramework') == 'dm':
-        return supplier.get('agreed_to_master_agreement', False)
-    return True
+def is_supplier_not_eligible_for_brief(data_api_client, supplier_code, brief):
+    supplier = data_api_client.get_supplier(supplier_code)['supplier']
+    # if framework is new framework dm, old or new seller is deemed to be approved
+    digital_marketplace_seller = False
+
+    digital_marketplace_framework = data_api_client.get_framework('digital-marketplace')
+
+    for framework in supplier.get('frameworks', []):
+        if framework['framework_id'] == digital_marketplace_framework['frameworks']['id']:
+            digital_marketplace_seller = True
+    existing_seller = len(supplier.get('domains', {'legacy': []})['legacy']) > 0
+    old_panel = brief.get('frameworkFramework') == 'dsp'
+
+    application_status = None
+    application_id = current_user.application_id
+    if application_id:
+        application = data_api_client.get_application(application_id)
+        application_status = application.get('application').get('status')
+
+    # sanity check
+    if supplier is None or application_status is None or application_status == 'saved':
+        return 'briefs/not_is_supplier_eligible_for_brief_error.html'
+
+    if application_status == 'submitted':
+        return 'briefs/pending_initial_seller_assessment.html'
+
+    # old panel and new seller
+    if old_panel and not existing_seller:
+        return 'briefs/cant_apply_to_old_panel_opportunity.html'
+
+    if not digital_marketplace_seller and not old_panel:
+        return 'briefs/cant_apply_to_new_panel_opportunity.html'
 
 
 def supplier_has_a_brief_response(data_api_client, supplier_code, brief_id):

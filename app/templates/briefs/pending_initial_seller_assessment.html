@@ -1,0 +1,26 @@
+{% extends "_base_page.html" %}
+
+{% block page_title %}Can't apply for opportunity – Digital Marketplace{% endblock %}
+
+{% block main_content %}
+
+    {% with inhibited_action="ask a question about" if clarification_question else "apply for" %}
+        <div class="grid-row">
+            <div class="column-two-thirds">
+
+                <header class="page-heading-smaller">
+                    <h1>Your initial assessment is in progress</h1>
+                </header>
+                <p>
+                    We'll let you know soon if you're approved to be part of the Digital Marketplace. <br/>
+
+                    Then you can express interest in opportunities like these. <br/>
+
+                    <br/><a href="/{{ framework_name }}/opportunities">View other opportunities</a>
+                </p>
+
+            </div>
+        </div>
+    {% endwith %}
+
+{% endblock %}

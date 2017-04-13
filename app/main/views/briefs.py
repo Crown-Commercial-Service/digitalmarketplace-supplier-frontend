@@ -23,7 +23,7 @@ from ..helpers import login_required
 from ..helpers.briefs import (
     get_brief,
     is_supplier_selected_for_brief,
-    is_supplier_eligible_for_brief,
+    is_supplier_not_eligible_for_brief,
     send_brief_clarification_question,
     supplier_has_a_brief_response,
     supplier_is_assessed,
@@ -37,16 +37,19 @@ from ... import data_api_client
 @main.route('/opportunities/<int:brief_id>/question-and-answer-session', methods=['GET'])
 @login_required
 def question_and_answer_session(brief_id):
-    brief = get_brief(data_api_client, brief_id, allowed_statuses=['live'])
 
+    brief = get_brief(data_api_client, brief_id, allowed_statuses=['live'])
     if brief['clarificationQuestionsAreClosed']:
-        abort(404)
+        return render_template(
+            "briefs/brief_closed_error.html"
+        ), 400
 
     if not is_supplier_selected_for_brief(data_api_client, current_user, brief):
         return _render_not_selected_for_brief_error_page(clarification_question=True)
 
-    if not is_supplier_eligible_for_brief(data_api_client, current_user.supplier_code, brief):
-        return _render_not_eligible_for_brief_error_page(brief, clarification_question=True)
+    ineligible = is_supplier_not_eligible_for_brief(data_api_client, current_user.supplier_code, brief)
+    if ineligible:
+        return _render_error_page(ineligible, brief, clarification_question=True)
 
     return render_template(
         "briefs/question_and_answer_session.html",
@@ -60,13 +63,16 @@ def ask_brief_clarification_question(brief_id):
     brief = get_brief(data_api_client, brief_id, allowed_statuses=['live'])
 
     if brief['clarificationQuestionsAreClosed']:
-        abort(404)
+        return render_template(
+            "briefs/brief_closed_error.html"
+        ), 400
 
     if not is_supplier_selected_for_brief(data_api_client, current_user, brief):
         return _render_not_selected_for_brief_error_page(clarification_question=True)
 
-    if not is_supplier_eligible_for_brief(data_api_client, current_user.supplier_code, brief):
-        return _render_not_eligible_for_brief_error_page(brief, clarification_question=True)
+    ineligible = is_supplier_not_eligible_for_brief(data_api_client, current_user.supplier_code, brief)
+    if ineligible:
+        return _render_error_page(ineligible, brief, clarification_question=True)
 
     error_message = None
     clarification_question_value = None
@@ -99,9 +105,7 @@ def ask_brief_clarification_question(brief_id):
 @main.route('/opportunities/<int:brief_id>/responses/create', methods=['GET'])
 @login_required
 def brief_response(brief_id):
-
     brief = get_brief(data_api_client, brief_id)
-
     if brief['status'] != 'live':
         return render_template(
             "briefs/brief_closed_error.html"
@@ -110,8 +114,9 @@ def brief_response(brief_id):
     if not is_supplier_selected_for_brief(data_api_client, current_user, brief):
         return _render_not_selected_for_brief_error_page()
 
-    if not is_supplier_eligible_for_brief(data_api_client, current_user.supplier_code, brief):
-        return _render_not_eligible_for_brief_error_page(brief)
+    ineligible = is_supplier_not_eligible_for_brief(data_api_client, current_user.supplier_code, brief)
+    if ineligible:
+        return _render_error_page(ineligible, brief)
 
     if supplier_has_a_brief_response(data_api_client, current_user.supplier_code, brief_id):
         flash('already_applied', 'error')
@@ -198,8 +203,9 @@ def submit_brief_response(brief_id):
     if not is_supplier_selected_for_brief(data_api_client, current_user, brief):
         return _render_not_selected_for_brief_error_page()
 
-    if not is_supplier_eligible_for_brief(data_api_client, current_user.supplier_code, brief):
-        return _render_not_eligible_for_brief_error_page(brief)
+    ineligible = is_supplier_not_eligible_for_brief(data_api_client, current_user.supplier_code, brief)
+    if ineligible:
+        return _render_error_page(ineligible, brief, clarification_question=True)
 
     if supplier_has_a_brief_response(data_api_client, current_user.supplier_code, brief_id):
         flash('already_applied', 'error')
@@ -276,8 +282,9 @@ def view_response_result(brief_id):
     if not is_supplier_selected_for_brief(data_api_client, current_user, brief):
         return _render_not_selected_for_brief_error_page()
 
-    if not is_supplier_eligible_for_brief(data_api_client, current_user.supplier_code, brief):
-        return _render_not_eligible_for_brief_error_page(brief)
+    ineligible = is_supplier_not_eligible_for_brief(data_api_client, current_user.supplier_code, brief)
+    if ineligible:
+        return _render_error_page(ineligible, brief, clarification_question=True)
 
     brief_response = data_api_client.find_brief_responses(
         brief_id=brief_id,
@@ -318,6 +325,15 @@ def _render_not_selected_for_brief_error_page(clarification_question=False):
     return render_template(
         "briefs/not_is_supplier_selected_for_brief_error.html",
         clarification_question=clarification_question,
+    ), 400
+
+
+def _render_error_page(eligibleTemplate, brief, clarification_question=False,):
+    return render_template(
+        eligibleTemplate,
+        clarification_question=clarification_question,
+        framework_name=brief['frameworkSlug'],
+        domain=brief.get('areaOfExpertise', ''),
     ), 400
 
 

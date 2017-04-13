@@ -1,0 +1,30 @@
+{% extends "_base_page.html" %}
+
+{% block page_title %}Can't apply for opportunity – Digital Marketplace{% endblock %}
+
+{% block main_content %}
+
+    {% with inhibited_action="ask a question about" if clarification_question else "apply for" %}
+        <div class="grid-row">
+            <div class="column-two-thirds">
+
+                <header class="page-heading-smaller">
+                    <h1>You can't apply for this opportunity</h1>
+                </header>
+                <p>
+                    It was published before we completed the transition to the updated Digital Marketplace. <br/>
+
+                    And so it's available to our original sellers only. <br/>
+
+                    You will be able to apply for opportunities from now on if you have the expertise and the buyer
+                    makes
+                    the brief 'open to all', or invites you to respond to 'open to 1' or 'open to selected'
+                    opportunities.<br/>
+                    <br/><a href="/{{ framework_name }}/opportunities">View other opportunities</a>
+                </p>
+
+            </div>
+        </div>
+    {% endwith %}
+
+{% endblock %}

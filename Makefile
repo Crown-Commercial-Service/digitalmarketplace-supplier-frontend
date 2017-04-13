@@ -23,12 +23,13 @@ requirements_freeze:
 	sed '/^-e /s/-e //' -i requirements.txt
 
 frontend_build:
-	npm run --silent frontend-build:production
+    npm run --silent frontend-build:production
 
 test: show_environment test_pep8 test_python test_javascript
 
 test_pep8: virtualenv
-	${VIRTUALENV_ROOT}/bin/pep8 .
+	pip install pep8
+	pep8 .
 
 test_python: virtualenv
 	${VIRTUALENV_ROOT}/bin/py.test ${PYTEST_ARGS}
