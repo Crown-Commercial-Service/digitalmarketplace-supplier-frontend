@@ -33,8 +33,7 @@
     "frontend-build:production": "./node_modules/gulp/bin/gulp.js build:production",
     "frontend-build:watch": "./node_modules/gulp/bin/gulp.js watch",
     "frontend-build:livereload": "./node_modules/gulp/bin/gulp.js livereload",
-    "test": "./node_modules/gulp/bin/gulp.js test",
-    "postinstall": "npm run frontend-install && npm run frontend-build:production"
+    "test": "./node_modules/gulp/bin/gulp.js test"
   },
   "devDependencies": {
     "gulp-livereload": "^3.8.1",
