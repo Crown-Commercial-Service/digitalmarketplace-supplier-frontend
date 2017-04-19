@@ -38,11 +38,14 @@
   {% else %}
   <div class="grid-row">
   {% endif %}
+
+{% if needs_upgrade %}
     <div class="callout--info" role="alert">
       <h2>Do more in the Marketplace</h2>
       <p>Soon you will only be apply for opportunities that match your expertise. To qualify for more, add case studies and references to your seller profile today.</p>
       <a class='link-button' href='/sellers/update' role='button'>Update your profile</a>
     </div>
+{% endif %}
 
     <div class="column-two-thirds">
       {% with

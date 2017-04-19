@@ -73,10 +73,17 @@ def dashboard():
             )
         })
 
+    digital_marketplace_panel = False
+    digital_marketplace_framework = data_api_client.req.frameworks('digital-marketplace').get()
+    for framework in supplier.get('frameworks', []):
+        if framework['framework_id'] == digital_marketplace_framework['frameworks']['id']:
+            digital_marketplace_panel = True
+
     return render_template_with_csrf(
         "suppliers/dashboard.html",
         supplier=supplier,
         users=get_current_suppliers_users(),
+        needs_upgrade=(not digital_marketplace_panel),
         frameworks={
             'coming': get_frameworks_by_status(all_frameworks, 'coming'),
             'open': get_frameworks_by_status(all_frameworks, 'open'),
