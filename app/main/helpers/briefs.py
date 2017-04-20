@@ -55,6 +55,15 @@ def is_supplier_not_eligible_for_brief(data_api_client, supplier_code, brief):
     existing_seller = len(supplier.get('domains', {'legacy': []})['legacy']) > 0
     old_panel = brief.get('frameworkFramework') == 'dsp'
 
+    if supplier:
+        # old panel and new seller
+        if old_panel and not existing_seller:
+            return 'briefs/cant_apply_to_old_panel_opportunity.html'
+
+        # new panel and old seller
+        if not digital_marketplace_seller and not old_panel:
+            return 'briefs/cant_apply_to_new_panel_opportunity.html'
+
     application_status = None
     application_id = current_user.application_id
     if application_id:
@@ -67,13 +76,6 @@ def is_supplier_not_eligible_for_brief(data_api_client, supplier_code, brief):
 
     if application_status == 'submitted':
         return 'briefs/pending_initial_seller_assessment.html'
-
-    # old panel and new seller
-    if old_panel and not existing_seller:
-        return 'briefs/cant_apply_to_old_panel_opportunity.html'
-
-    if not digital_marketplace_seller and not old_panel:
-        return 'briefs/cant_apply_to_new_panel_opportunity.html'
 
 
 def supplier_has_a_brief_response(data_api_client, supplier_code, brief_id):
