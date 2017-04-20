@@ -140,26 +140,7 @@ class TestSuppliersDashboard(BaseApplicationTest):
             res = self.client.get("/suppliers")
             data = res.get_data(as_text=True)
 
-            assert 'data-analytics="trackPageView" data-url="/suppliers/vpv/?account-created=true"' in data
-
-
-    @mock.patch("app.main.views.suppliers.data_api_client")
-    @mock.patch("app.main.views.suppliers.get_current_suppliers_users")
-    def test_automatic_addition_of_vpv(self, get_current_suppliers_users, data_api_client):
-        with self.client.session_transaction() as session:
-            session['_flashes'] = [('flag', 'account-created')]
-
-        with self.app.test_client():
-            self.login()
-
-            res = self.client.get("/suppliers")
-            data = res.get_data(as_text=True)
-            s = data.find("data-analytics")
-            print "hello"
-            print s
-            print data[s:s+200]
-            assert 'data-analytics="trackPageView" data-url="/suppliers/vpv?account-created=true"' in data
-
+            assert 'data-analytics="trackPageView" data-url="/suppliers?account-created=true"' in data
 
     @mock.patch("app.main.views.suppliers.data_api_client")
     @mock.patch("app.main.views.suppliers.get_current_suppliers_users")
@@ -172,8 +153,7 @@ class TestSuppliersDashboard(BaseApplicationTest):
             res = self.client.get("/suppliers")
             data = res.get_data(as_text=True)
 
-            assert 'data-analytics="trackPageView" data-url="/suppliers/vpv/?account-created=true"' not in data
-
+            assert 'data-analytics="trackPageView" data-url="/suppliers?account-created=true"' not in data
 
     @mock.patch("app.main.views.suppliers.data_api_client")
     @mock.patch("app.main.views.suppliers.get_current_suppliers_users")
