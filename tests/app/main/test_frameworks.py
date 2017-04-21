@@ -2889,14 +2889,15 @@ class TestDeclarationSubmit(BaseApplicationTest):
 
 @mock.patch('app.main.views.frameworks.data_api_client', autospec=True)
 class TestSupplierDeclaration(BaseApplicationTest):
-    def test_get_with_no_previous_answers(self, data_api_client):
+    @pytest.mark.parametrize("empty_declaration", ({}, None,))
+    def test_get_with_no_previous_answers(self, data_api_client, empty_declaration):
         with self.app.test_client():
             self.login()
 
             data_api_client.get_framework.return_value = self.framework(status='open')
             data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
                 framework_slug="g-cloud-7",
-                declaration={}
+                declaration=empty_declaration,
             )
             data_api_client.get_supplier_declaration.side_effect = APIError(mock.Mock(status_code=404))
 

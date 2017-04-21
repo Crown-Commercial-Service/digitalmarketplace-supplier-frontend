@@ -477,7 +477,7 @@ def framework_supplier_declaration_edit(framework_slug, section_id):
 
     supplier_framework = data_api_client.get_supplier_framework_info(
         current_user.supplier_id, framework_slug)['frameworkInterest']
-    saved_declaration = supplier_framework.get('declaration', {})
+    saved_declaration = supplier_framework.get('declaration') or {}
     name_of_framework_that_section_has_been_prefilled_from = ""
 
     if request.method == 'GET':

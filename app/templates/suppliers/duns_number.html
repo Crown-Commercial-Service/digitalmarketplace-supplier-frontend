@@ -23,7 +23,7 @@
         A supplier account already exists with that DUNS number
     </h1>
     <p class="validation-masthead-description">
-        If you no longer have your account details, or if you think this may be an error, please contact <a href="mailto:enquiries@digitalmarketplace.service.gov.uk?subject=DUNS%20number%20question" title="Please contact enquiries@digitalmarketplace.service.gov.uk">enquiries@digitalmarketplace.service.gov.uk</a>
+        If you no longer have your account details, or if you think this may be an error, email <a href="mailto:enquiries@digitalmarketplace.service.gov.uk?subject=DUNS%20number%20question" title="Please contact enquiries@digitalmarketplace.service.gov.uk">enquiries@digitalmarketplace.service.gov.uk</a>
     </p>
 </div>
 {% endif %}
@@ -48,7 +48,7 @@
               error = form.duns_number.errors[0],
               question_advice =
               'The Digital Marketplace uses your head office’s 9&#8209;digit DUNS number to see if you’re already a supplier on the G&#8209;Cloud framework.
-              \n\n<a href="http://www.dnb.co.uk/dandb-duns-number" rel="external">Find out how to get a DUNS number</a>
+              Find out <a href="http://www.dnb.co.uk/dandb-duns-number" rel="external">how to get a DUNS number</a>.
               ' | safe
           %}
             {% include "toolkit/forms/textbox.html" %}
