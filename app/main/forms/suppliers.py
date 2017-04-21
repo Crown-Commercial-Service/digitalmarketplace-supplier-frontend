@@ -40,7 +40,8 @@ class EditContactInformationForm(Form):
     phoneNumber = StripWhitespaceStringField('Phone number')
     email = StripWhitespaceStringField('Email address', validators=[
         DataRequired(message="You must provide an email address"),
-        Email(message="Please enter a valid email address")
+        Regexp("^[^@^\s]+@[^@^\.^\s]+(\.[^@^\.^\s]+)+$",
+               message="Please enter a valid email address")
     ])
     contactName = StripWhitespaceStringField('Contact name', validators=[
         DataRequired(message="You must provide a contact name"),
@@ -75,7 +76,8 @@ class CompanyContactDetailsForm(Form):
     ])
     email_address = StripWhitespaceStringField('Email address', validators=[
         DataRequired(message="You must provide an email address."),
-        Email(message="You must provide a valid email address.")
+        Regexp("^[^@^\s]+@[^@^\.^\s]+(\.[^@^\.^\s]+)+$",
+               message="You must provide a valid email address.")
     ])
     phone_number = StripWhitespaceStringField('Phone number', validators=[
         DataRequired(message="You must provide a phone number."),
@@ -86,5 +88,6 @@ class CompanyContactDetailsForm(Form):
 class EmailAddressForm(Form):
     email_address = StripWhitespaceStringField('Email address', validators=[
         DataRequired(message="You must provide an email address."),
-        Email(message="You must provide a valid email address.")
+        Regexp("^[^@^\s]+@[^@^\.^\s]+(\.[^@^\.^\s]+)+$",
+               message="You must provide a valid email address.")
     ])
