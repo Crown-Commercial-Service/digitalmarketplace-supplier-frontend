@@ -1,6 +1,6 @@
 from flask.ext.wtf import Form
 from wtforms import IntegerField, FieldList
-from wtforms.validators import DataRequired, ValidationError, Length, Optional, Regexp, Email
+from wtforms.validators import DataRequired, ValidationError, Length, Optional, Regexp
 from dmutils.forms import StripWhitespaceStringField
 
 
