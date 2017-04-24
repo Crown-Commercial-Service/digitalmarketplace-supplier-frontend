@@ -2379,7 +2379,7 @@ class TestDeclarationOverview(BaseApplicationTest):
     # "framework_slug,declaration,decl_valid,prefill_fw_slug,expected_sections"
     _common_parametrization = tuple(
         chain.from_iterable(chain(
-        ((
+        ((  # noqa
             "g-cloud-9",
             empty_declaration,
             False,
@@ -2494,7 +2494,7 @@ class TestDeclarationOverview(BaseApplicationTest):
                 ),
             ),
         ) for empty_declaration in (None, {})),  # two possible ways of specifying a "empty" declaration - test both
-        ((
+        ((  # noqa
             "g-cloud-9",
             {
                 "status": "started",
@@ -2607,7 +2607,7 @@ class TestDeclarationOverview(BaseApplicationTest):
                         (
                             "Subcontractors or consortia",
                             "yourself without the use of third parties (subcontractors) as a prime contractor, using "
-                                "third parties (subcontractors) to provide all services",
+                                "third parties (subcontractors) to provide all services",  # noqa
                             (),
                             (),
                             (
@@ -2619,7 +2619,7 @@ class TestDeclarationOverview(BaseApplicationTest):
                 ),
             ),
         ),),
-        ((
+        ((  # noqa
             "g-cloud-9",
             dict(status=declaration_status, **(valid_g9_declaration_base())),
             True,
