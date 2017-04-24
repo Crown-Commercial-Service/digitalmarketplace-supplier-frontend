@@ -932,6 +932,20 @@ class TestFrameworksDashboard(BaseApplicationTest):
             extracted_guidance_links = self._extract_guidance_links(doc)
 
             assert extracted_guidance_links == OrderedDict((
+                ("You submitted:", (
+                    (
+                        'View submitted services',
+                        '/suppliers/frameworks/g-cloud-7/submissions',
+                        None,
+                        None,
+                    ),
+                    (
+                        "View your declaration",
+                        "/suppliers/frameworks/g-cloud-7/declaration",
+                        None,
+                        None,
+                    ),
+                )),
                 ("Legal documents", (
                     (
                         'Download the standard framework agreement',
@@ -1067,6 +1081,20 @@ class TestFrameworksDashboard(BaseApplicationTest):
             extracted_guidance_links = self._extract_guidance_links(doc)
 
             assert extracted_guidance_links == OrderedDict((
+                ("You submitted:", (
+                    (
+                        'View submitted services',
+                        '/suppliers/frameworks/g-cloud-8/submissions',
+                        None,
+                        None,
+                    ),
+                    (
+                        "View your declaration",
+                        "/suppliers/frameworks/g-cloud-8/declaration",
+                        None,
+                        None,
+                    ),
+                )),
                 ("Legal documents", (
                     (
                         'Read the standard framework agreement',
@@ -1177,6 +1205,20 @@ class TestFrameworksDashboard(BaseApplicationTest):
 
             extracted_guidance_links = self._extract_guidance_links(doc)
             assert extracted_guidance_links == OrderedDict((
+                ("You submitted:", (
+                    (
+                        'View submitted services',
+                        '/suppliers/frameworks/g-cloud-8/submissions',
+                        None,
+                        None,
+                    ),
+                    (
+                        "View your declaration",
+                        "/suppliers/frameworks/g-cloud-8/declaration",
+                        None,
+                        None,
+                    ),
+                )),
                 ('Legal documents', (
                     (
                         'Read the standard framework agreement',
@@ -1262,6 +1304,20 @@ class TestFrameworksDashboard(BaseApplicationTest):
 
             extracted_guidance_links = self._extract_guidance_links(doc)
             assert extracted_guidance_links == OrderedDict((
+                ("You submitted:", (
+                    (
+                        'View submitted services',
+                        '/suppliers/frameworks/g-cloud-8/submissions',
+                        None,
+                        None,
+                    ),
+                    (
+                        "View your declaration",
+                        "/suppliers/frameworks/g-cloud-8/declaration",
+                        None,
+                        None,
+                    ),
+                )),
                 ('Legal documents', (
                     (
                         'Read the standard framework agreement',
@@ -1341,6 +1397,20 @@ class TestFrameworksDashboard(BaseApplicationTest):
 
             extracted_guidance_links = self._extract_guidance_links(doc)
             assert extracted_guidance_links == OrderedDict((
+                ("You submitted:", (
+                    (
+                        'View submitted services',
+                        '/suppliers/frameworks/g-cloud-8/submissions',
+                        None,
+                        None,
+                    ),
+                    (
+                        "View your declaration",
+                        "/suppliers/frameworks/g-cloud-8/declaration",
+                        None,
+                        None,
+                    ),
+                )),
                 ('Legal documents', (
                     (
                         'Read the standard framework agreement',
@@ -1569,6 +1639,20 @@ class TestFrameworksDashboard(BaseApplicationTest):
 
             extracted_guidance_links = self._extract_guidance_links(doc)
             assert extracted_guidance_links == OrderedDict((
+                ("You submitted:", (
+                    (
+                        'View submitted services',
+                        '/suppliers/frameworks/g-cloud-8/submissions',
+                        None,
+                        None,
+                    ),
+                    (
+                        "View your declaration",
+                        "/suppliers/frameworks/g-cloud-8/declaration",
+                        None,
+                        None,
+                    ),
+                )),
                 ('Legal documents', (
                     (
                         'Read the standard framework agreement',
