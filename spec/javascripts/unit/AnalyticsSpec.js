@@ -160,7 +160,7 @@ describe("GOVUK.Analytics", function () {
         $analyticsString = $("<div data-analytics='trackPageView' data-url='http://example.com'/>");
         $(document.body).append($analyticsString);
         window.GOVUK.GDM.analytics.virtualPageViews();
-        expect(window.ga.calls.first().args).toEqual([ 'send', 'pageview', { page: 'http://example.com/vpv/' } ]);
+        expect(window.ga.calls.first().args).toEqual([ 'send', 'pageview', { page: 'http://example.com/vpv' } ]);
         expect(window.ga.calls.count()).toEqual(1);
       });
 
@@ -168,14 +168,14 @@ describe("GOVUK.Analytics", function () {
         $analyticsString = $('<div data-analytics="trackPageView" data-url="http:/testing.co.uk/testrubbs?sweet"/>');
         $(document.body).append($analyticsString);
         window.GOVUK.GDM.analytics.virtualPageViews();
-        expect(window.ga.calls.first().args[2]).toEqual({page: "http:/testing.co.uk/testrubbs/vpv/?sweet"});
+        expect(window.ga.calls.first().args[2]).toEqual({page: "http:/testing.co.uk/testrubbs/vpv?sweet"});
       });
 
       it("Should add '/vpv/' to url at the end if no question mark", function () {
         $analyticsString = $("<div data-analytics='trackPageView' data-url='http://example.com'/>");
         $(document.body).append($analyticsString);
         window.GOVUK.GDM.analytics.virtualPageViews();
-        expect(window.ga.calls.first().args[2]).toEqual({page: "http://example.com/vpv/"});
+        expect(window.ga.calls.first().args[2]).toEqual({page: "http://example.com/vpv"});
       });
     });
 
