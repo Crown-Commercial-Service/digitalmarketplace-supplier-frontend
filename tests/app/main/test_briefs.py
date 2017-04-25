@@ -2,13 +2,16 @@
 from __future__ import unicode_literals
 
 import mock
+import pytest
+from lxml import html
+
 from dmapiclient import api_stubs, HTTPError
 from dmapiclient.audit import AuditTypes
 from dmutils.email.exceptions import EmailError
-from ..helpers import BaseApplicationTest, FakeMail
-from lxml import html
 
 from app.main.views.briefs import _render_not_eligible_for_brief_error_page
+
+from ..helpers import BaseApplicationTest, FakeMail
 
 
 brief_form_submission = {
@@ -716,6 +719,23 @@ class TestApplyToBrief(BaseApplicationTest):
             assert page_heading[0].strip() == 'When is the earliest {}'.format(question)
             assert len(page_hint) == 1
             assert page_hint[0] == 'The buyer needs {} 17/01/2017'.format(hint)
+
+    @pytest.mark.parametrize(
+        ('date_string', 'expected'),
+        (('2017-04-25', 'Tuesday 25 April 2017'), ('foo', 'foo'))
+    )
+    def test_availability_question_renders_date_or_falls_back_to_string(self, date_string, expected):
+        self.brief['briefs']['frameworkName'] = "Digital Outcomes and Specialists 2"
+        self.brief['briefs']['frameworkSlug'] = "digital-outcomes-and-specialists-2"
+        self.brief['briefs']['startDate'] = date_string
+        res = self.client.get(
+            '/suppliers/opportunities/1234/responses/5/availability'
+        )
+        assert res.status_code == 200
+
+        doc = html.fromstring(res.get_data(as_text=True))
+        page_hint = doc.xpath("//span[@id='input-availability-question-advice']/p/text()")
+        assert page_hint[0] == 'The buyer needs the specialist to start: {}'.format(expected)
 
     def test_availability_question_escapes_brief_start_date_markdown(self):
         self.brief['briefs']['startDate'] = '**markdown**'
