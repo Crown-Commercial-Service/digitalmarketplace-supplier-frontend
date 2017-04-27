@@ -2978,6 +2978,21 @@ class TestDeclarationOverview(BaseApplicationTest):
             assert response.status_code == 200
             doc = html.fromstring(response.get_data(as_text=True))
 
+            assert [e.xpath("normalize-space(string())") for e in doc.xpath(
+                "//nav//*[@role='breadcrumbs']//a",
+            )] == [
+                "Digital Marketplace",
+                "Your account",
+                "Your F-Cumulus 0 application",
+            ]
+            assert doc.xpath(
+                "//nav//*[@role='breadcrumbs']//a/@href",
+            ) == [
+                "/",
+                "/suppliers",
+                "/suppliers/frameworks/{}".format(framework_slug),
+            ]
+
             # there shouldn't be any links to the "edit" page
             assert not any(
                 urljoin("/suppliers/frameworks/{}/declaration".format(framework_slug), a.attrib["href"]).startswith(
