@@ -140,7 +140,7 @@ class TestSuppliersDashboard(BaseApplicationTest):
             res = self.client.get("/suppliers")
             data = res.get_data(as_text=True)
 
-            assert 'data-analytics="trackPageView" data-url="/suppliers/vpv/?account-created=true"' in data
+            assert 'data-analytics="trackPageView" data-url="/suppliers?account-created=true"' in data
 
     @mock.patch("app.main.views.suppliers.data_api_client")
     @mock.patch("app.main.views.suppliers.get_current_suppliers_users")
@@ -153,7 +153,7 @@ class TestSuppliersDashboard(BaseApplicationTest):
             res = self.client.get("/suppliers")
             data = res.get_data(as_text=True)
 
-            assert 'data-analytics="trackPageView" data-url="/suppliers/vpv/?account-created=true"' not in data
+            assert 'data-analytics="trackPageView" data-url="/suppliers?account-created=true"' not in data
 
     @mock.patch("app.main.views.suppliers.data_api_client")
     @mock.patch("app.main.views.suppliers.get_current_suppliers_users")

@@ -29,7 +29,7 @@
 
 
   {% if 'account-created' in get_flashed_messages(category_filter=["flag"]) %}
-  <div class="grid-row" data-analytics="trackPageView" data-url="/suppliers/vpv/?account-created=true">
+  <div class="grid-row" data-analytics="trackPageView" data-url="/suppliers?account-created=true">
   {% else %}
   <div class="grid-row">
   {% endif %}

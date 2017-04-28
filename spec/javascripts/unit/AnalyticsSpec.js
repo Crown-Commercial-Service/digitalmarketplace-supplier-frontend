@@ -160,8 +160,22 @@ describe("GOVUK.Analytics", function () {
         $analyticsString = $("<div data-analytics='trackPageView' data-url='http://example.com'/>");
         $(document.body).append($analyticsString);
         window.GOVUK.GDM.analytics.virtualPageViews();
-        expect(window.ga.calls.first().args).toEqual([ 'send', 'pageview', { page: 'http://example.com' } ]);
+        expect(window.ga.calls.first().args).toEqual([ 'send', 'pageview', { page: 'http://example.com/vpv' } ]);
         expect(window.ga.calls.count()).toEqual(1);
+      });
+
+      it("Should add '/vpv/' to url before question mark", function () {
+        $analyticsString = $('<div data-analytics="trackPageView" data-url="http:/testing.co.uk/testrubbs?sweet"/>');
+        $(document.body).append($analyticsString);
+        window.GOVUK.GDM.analytics.virtualPageViews();
+        expect(window.ga.calls.first().args[2]).toEqual({page: "http:/testing.co.uk/testrubbs/vpv?sweet"});
+      });
+
+      it("Should add '/vpv/' to url at the end if no question mark", function () {
+        $analyticsString = $("<div data-analytics='trackPageView' data-url='http://example.com'/>");
+        $(document.body).append($analyticsString);
+        window.GOVUK.GDM.analytics.virtualPageViews();
+        expect(window.ga.calls.first().args[2]).toEqual({page: "http://example.com/vpv"});
       });
     });
 
@@ -216,11 +230,11 @@ describe("GOVUK.Analytics", function () {
 
   describe("Supplier eligible to apply for brief", function() {
     var $notOnFrameworkString = $('<div class="grid-row" data-reason="supplier-not-on-dos">');
-    
+
     afterEach(function () {
       $notOnFrameworkString.remove();
     });
-    
+
     it('should send custom dimension if data-reason', function() {
       spyOn(GOVUK.GDM.analytics.location, "pathname")
           .and
