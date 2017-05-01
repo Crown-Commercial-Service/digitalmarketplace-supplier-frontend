@@ -157,7 +157,6 @@ def supplier_edit_save(step=None, substep=None):
 
 @main.route('/update', methods=['GET'])
 @login_required
-@feature.is_active_feature('SELLER_UPDATE')
 def supplier_update():
     # create application only if no current application
     if not current_user.application_id:

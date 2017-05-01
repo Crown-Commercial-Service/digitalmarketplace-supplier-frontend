@@ -71,13 +71,8 @@
           {% else %}
             {% set dashboardUrl = '/sellers' %}
           {% endif %}
-          {% if 'SELLER_REGISTRATION' is active_feature %}
-            {% set registerUrl = config['BASE_PREFIX'] + '/sellers/signup' %}
-            {% set registerText = 'Join the Marketplace' %}
-          {% else %}
-            {% set registerUrl = config['BASE_PREFIX'] + '/buyers/create'%}
-            {% set registerText = 'Register' %}
-          {% endif %}
+          {% set registerUrl = config['BASE_PREFIX'] + '/sellers/signup' %}
+          {% set registerText = 'Join the Marketplace' %}
             {% set props = {
             'registerUrl': registerUrl,
             'registerText': registerText,

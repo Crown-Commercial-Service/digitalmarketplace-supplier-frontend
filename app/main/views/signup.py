@@ -207,10 +207,6 @@ def render_application(id, step=None, substep=None):
         'user_name': current_user.name,
         'user_email': current_user.email_address
     }
-    props['options'] = {
-        'seller_registration': feature.is_active('SELLER_REGISTRATION'),
-        'submit_registration': feature.is_active('SUBMIT_REGISTRATION')
-    }
 
     rendered_component = render_component('bundles/SellerRegistration/ApplicantSignupWidget.js', props)
 
