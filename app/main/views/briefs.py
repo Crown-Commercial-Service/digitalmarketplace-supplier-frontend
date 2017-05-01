@@ -47,10 +47,6 @@ def question_and_answer_session(brief_id):
     if not is_supplier_selected_for_brief(data_api_client, current_user, brief):
         return _render_not_selected_for_brief_error_page(clarification_question=True)
 
-    ineligible = is_supplier_not_eligible_for_brief(data_api_client, current_user.supplier_code, brief)
-    if ineligible:
-        return _render_error_page(ineligible, brief, clarification_question=True)
-
     return render_template(
         "briefs/question_and_answer_session.html",
         brief=brief,
@@ -69,10 +65,6 @@ def ask_brief_clarification_question(brief_id):
 
     if not is_supplier_selected_for_brief(data_api_client, current_user, brief):
         return _render_not_selected_for_brief_error_page(clarification_question=True)
-
-    ineligible = is_supplier_not_eligible_for_brief(data_api_client, current_user.supplier_code, brief)
-    if ineligible:
-        return _render_error_page(ineligible, brief, clarification_question=True)
 
     error_message = None
     clarification_question_value = None
