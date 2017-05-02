@@ -64,7 +64,7 @@
         ) %}
           {% call summary.row() %}
             {{ summary.text(item.name) }}
-            {{ summary.text('Pass' if item.has_completed_draft else 'No application') }}
+            {{ summary.text(item.result) }}
           {% endcall %}
         {% endcall %}
       </div>

@@ -21,7 +21,7 @@ def get_drafts(apiclient, framework_slug):
     except APIError as e:
         abort(e.status_code)
 
-    complete_drafts = [draft for draft in drafts if draft['status'] == 'submitted']
+    complete_drafts = [draft for draft in drafts if draft['status'] in ('submitted', 'failed')]
     drafts = [draft for draft in drafts if draft['status'] == 'not-submitted']
 
     return drafts, complete_drafts
