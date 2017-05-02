@@ -387,13 +387,27 @@ def reuse_framework_supplier_declaration_post(framework_slug):
 @main.route('/frameworks/<framework_slug>/declaration', methods=['GET'])
 @login_required
 def framework_supplier_declaration_overview(framework_slug):
-    framework = get_framework(data_api_client, framework_slug, allowed_statuses=['open'])
+    framework = get_framework(data_api_client, framework_slug, allowed_statuses=[
+        "open",
+        "pending",
+        "standstill",
+        "live",
+        "expired",
+    ])
 
     sf = data_api_client.get_supplier_framework_info(current_user.supplier_id, framework_slug)["frameworkInterest"]
     # ensure our declaration is a a dict
     sf["declaration"] = sf.get("declaration") or {}
 
-    content = content_loader.get_manifest(framework_slug, 'declaration').filter(sf["declaration"])
+    if framework["status"] != "open" and sf["declaration"].get("status") != "complete":
+        # 410 - the thinking here is that the user probably *used to* be able to access a page at this url but they
+        # no longer can, so it's apparently "gone"
+        abort(410)
+
+    try:
+        content = content_loader.get_manifest(framework_slug, 'declaration').filter(sf["declaration"])
+    except ContentNotFoundError:
+        abort(404)
 
     # generate an (ordered) dict of the form {section_slug: (section, section_errors)}.
     # we must perform an actual validation for each section rather than rely on .answer_required as the latter won't
