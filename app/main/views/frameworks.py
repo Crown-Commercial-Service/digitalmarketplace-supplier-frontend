@@ -404,7 +404,10 @@ def framework_supplier_declaration_overview(framework_slug):
         # no longer can, so it's apparently "gone"
         abort(410)
 
-    content = content_loader.get_manifest(framework_slug, 'declaration').filter(sf["declaration"])
+    try:
+        content = content_loader.get_manifest(framework_slug, 'declaration').filter(sf["declaration"])
+    except ContentNotFoundError:
+        abort(404)
 
     # generate an (ordered) dict of the form {section_slug: (section, section_errors)}.
     # we must perform an actual validation for each section rather than rely on .answer_required as the latter won't

@@ -3057,6 +3057,16 @@ class TestDeclarationOverview(BaseApplicationTest):
             response = self.client.get("/suppliers/frameworks/{}/declaration".format(framework_slug))
             assert response.status_code == 410
 
+    @pytest.mark.parametrize("framework_status", ("coming", "open", "pending", "standstill", "live", "expired",))
+    def test_error_nonexistent_framework(self, data_api_client, framework_status):
+        self._setup_data_api_client(data_api_client, framework_status, "g-cloud-31415", {"status": "complete"}, None)
+
+        with self.app.test_client():
+            self.login()
+
+            response = self.client.get("/suppliers/frameworks/g-cloud-31415/declaration")
+            assert response.status_code == 404
+
 
 @mock.patch('app.main.views.frameworks.data_api_client', autospec=True)
 class TestDeclarationSubmit(BaseApplicationTest):
