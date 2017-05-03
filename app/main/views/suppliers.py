@@ -95,64 +95,18 @@ def dashboard():
 
 
 @main.route('/edit', methods=['GET'])
-@main.route('/edit/<path:step>', methods=['GET'])
-@main.route('/edit/<path:step>/<path:substep>', methods=['GET'])
 @login_required
 @feature.is_active_feature('SELLER_EDIT')
 def supplier_edit(step=None, substep=None):
-    try:
-        supplier = data_api_client.get_supplier(
-            current_user.supplier_code
-        )['supplier']
-    except APIError as e:
-        current_app.logger.error(e)
-        abort(e.status_code)
+    application = data_api_client.req.suppliers(current_user.supplier_code).application().edit().post(data={
+        'framework': 'digital-marketplace',
+        'current_user': {
+            'name': current_user.name,
+            'email_address': current_user.email_address
+        }
+    })
 
-    if supplier:
-        supplier['services'] = {
-            d: True
-            for d in supplier.get('domains', {}).get('assessed', []) + supplier.get('domains', {}).get('unassessed', [])
-            }
-
-    props = {"application": supplier}
-    props['basename'] = url_for('.supplier_edit')
-    props['options'] = {'seller_edit': feature.is_active('SELLER_EDIT')}
-    props['form_options'] = {
-        'action': url_for('.supplier_edit_save'),
-        'submit_url':  url_for('.supplier_edit_save'),
-    }
-    rendered_component = render_component('bundles/SellerRegistration/ProfileEditWidget.js', props)
-
-    return render_template(
-        '_react.html',
-        component=rendered_component
-    )
-
-
-@main.route('/edit', methods=['POST'])
-@main.route('/edit/<path:step>', methods=['POST'])
-@main.route('/edit/<path:step>/<path:substep>', methods=['POST'])
-@login_required
-@feature.is_active_feature('SELLER_EDIT')
-def supplier_edit_save(step=None, substep=None):
-    json = request.content_type == 'application/json'
-    form_data = from_response(request)
-    supplier_updates = form_data['application'] if json else form_data
-
-    try:
-        result = data_api_client.update_supplier(
-            current_user.supplier_code,
-            supplier_updates,
-            user=current_user.email_address
-        )
-    except APIError as e:
-        current_app.logger.error(e)
-        abort(e.status_code)
-
-    if json:
-        return jsonify(result)
-    else:
-        return redirect(url_for('.supplier_edit', id=id, step=form_data.get('next_step_slug')))
+    return redirect(url_for('.render_application', id=application['application']['id'], step='start'))
 
 
 @main.route('/update', methods=['GET'])

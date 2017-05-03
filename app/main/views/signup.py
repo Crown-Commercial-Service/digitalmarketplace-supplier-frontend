@@ -208,7 +208,8 @@ def render_application(id, step=None, substep=None):
         'user_email': current_user.email_address
     }
 
-    rendered_component = render_component('bundles/SellerRegistration/ApplicantSignupWidget.js', props)
+    widget = application['application'].get('type') == 'edit' and 'ProfileEdit' or 'ApplicantSignup'
+    rendered_component = render_component('bundles/SellerRegistration/{}Widget.js'.format(widget), props)
 
     return render_template(
         '_react.html',

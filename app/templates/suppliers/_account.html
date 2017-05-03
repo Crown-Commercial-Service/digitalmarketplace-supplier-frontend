@@ -1,9 +1,6 @@
 {% import "toolkit/summary-table.html" as summary %}
 
 {{ summary.heading("Account information") }}
-{% if 'SELLER_EDIT' is active_feature %}
-  {{ summary.top_link("Update your profile	 ", '/sellers/edit/business-details') }}
-{% endif %}
 {% call(item) summary.table(
   [
     ("Email address", current_user.email_address)

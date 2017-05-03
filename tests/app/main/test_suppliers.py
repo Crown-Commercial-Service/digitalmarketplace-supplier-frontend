@@ -8,6 +8,7 @@ from flask import session
 from nose.tools import assert_equal, assert_true, assert_in, assert_false, assert_greater, assert_not_in
 from tests.app.helpers import BaseApplicationTest, csrf_only_request
 from lxml import html
+import pytest
 
 
 find_frameworks_return_value = {
@@ -186,8 +187,9 @@ class TestSupplierEdit(BaseApplicationTest):
         data_api_client.get_supplier.side_effect = limited_supplier
 
         response = self.client.get(self.url_for('main.supplier_edit'))
-        assert_equal(response.status_code, 200)
+        assert_equal(response.status_code, 302)
 
+    @pytest.mark.skip(reason="edit supplier through application")
     def test_update_all_supplier_fields(self, data_api_client, render_component):
         self.login()
 
@@ -205,6 +207,7 @@ class TestSupplierEdit(BaseApplicationTest):
             user='email@email.com'
         )
 
+    @pytest.mark.skip(reason="edit supplier through application")
     def test_should_strip_whitespace_surrounding_supplier_update_all_fields(self, data_api_client, render_component):
         self.login()
 
@@ -228,6 +231,7 @@ class TestSupplierEdit(BaseApplicationTest):
             user='email@email.com'
         )
 
+    @pytest.mark.skip(reason="edit supplier through application")
     def test_description_below_word_length(self, data_api_client, render_component):
         self.login()
 
@@ -239,6 +243,7 @@ class TestSupplierEdit(BaseApplicationTest):
 
         assert_true(data_api_client.update_supplier.called)
 
+    @pytest.mark.skip(reason="edit supplier through application")
     def test_description_above_word_length(self, data_api_client, render_component):
         self.login()
 
@@ -248,6 +253,7 @@ class TestSupplierEdit(BaseApplicationTest):
 
         assert_equal(status, 302)
 
+    @pytest.mark.skip(reason="edit supplier through application")
     def test_should_redirect_to_login_if_not_logged_in(self, data_api_client, render_component):
         edit_url = self.url_for('main.supplier_edit_save')
         res = self.client.get(edit_url)
