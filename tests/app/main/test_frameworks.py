@@ -1909,14 +1909,16 @@ class TestFrameworkAgreement(BaseApplicationTest):
             data_api_client.find_draft_services.return_value = {
                 'services': [
                     {'lotSlug': 'saas', 'status': 'submitted'},
+                    {'lotSlug': 'saas', 'status': 'not-submitted'},
+                    {'lotSlug': 'paas', 'status': 'failed'},
                     {'lotSlug': 'scs', 'status': 'submitted'}
                 ]
             }
             expected_lots_and_statuses = [
-                ('Software as a Service', 'Pass'),
-                ('Platform as a Service', 'No application'),
+                ('Software as a Service', 'Successful'),
+                ('Platform as a Service', 'Unsuccessful'),
                 ('Infrastructure as a Service', 'No application'),
-                ('Specialist Cloud Services', 'Pass'),
+                ('Specialist Cloud Services', 'Successful'),
             ]
 
             res = self.client.get("/suppliers/frameworks/g-cloud-8/agreement")

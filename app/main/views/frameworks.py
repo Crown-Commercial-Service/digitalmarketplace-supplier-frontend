@@ -750,10 +750,20 @@ def framework_agreement(framework_slug):
 
     # if there's a frameworkAgreementVersion key, it means we're on G-Cloud 8 or higher
     if framework.get('frameworkAgreementVersion'):
+        def lot_result(drafts_for_lot):
+            if any(draft['status'] == 'submitted' for draft in drafts_for_lot):
+                return 'Successful'
+            elif any(draft['status'] == 'failed' for draft in drafts_for_lot):
+                return 'Unsuccessful'
+            else:
+                return 'No application'
+
         drafts, complete_drafts = get_drafts(data_api_client, framework_slug)
-        lots_with_completed_drafts = [
-            lot for lot in framework['lots'] if count_drafts_by_lot(complete_drafts, lot['slug'])
-        ]
+        complete_drafts_by_lot = {
+            lot['slug']: [draft for draft in complete_drafts if draft['lotSlug'] == lot['slug']]
+            for lot in framework['lots']
+        }
+        lot_results = {k: lot_result(v) for k, v in complete_drafts_by_lot.items()}
 
         return render_template(
             'frameworks/contract_start.html',
@@ -762,7 +772,7 @@ def framework_agreement(framework_slug):
             framework_urls=content_loader.get_message(framework_slug, 'urls'),
             lots=[{
                 'name': lot['name'],
-                'has_completed_draft': (lot in lots_with_completed_drafts)
+                'result': lot_results[lot['slug']]
             } for lot in framework['lots']],
             supplier_framework=supplier_framework,
         ), 200
