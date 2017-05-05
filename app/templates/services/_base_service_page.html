@@ -91,6 +91,11 @@
                 {% else %}
                   {{ summary.link('Answer question', url_for(".edit_service_submission", framework_slug=framework.slug, lot_slug=service_data.lot, service_id=service_id, section_id=section.id, question_slug=question.slug)) }}
                 {% endif %}
+              {% else %}
+                {# We need to call this (even if with nothing) to add the final column to the row, otherwise the row
+                   terminates early and the line separators between rows do not span the entire width of the table. #}
+                {% call summary.field(action=True) %}
+                {% endcall %}
               {% endif %}
             {% else %}
               {{ summary[question.type](question.value, question.assurance) }}
