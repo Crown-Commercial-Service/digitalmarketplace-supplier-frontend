@@ -46,4 +46,15 @@ show_environment:
 	@echo "Environment variables in use:"
 	@env | grep DM_ || true
 
-.PHONY: run_all run_app virtualenv requirements requirements_for_test npm_install frontend_build test test_flake8 test_python test_javascript show_environment
+
+docker-build:
+	$(if ${RELEASE_NAME},,$(eval export RELEASE_NAME=$(shell git describe)))
+	@echo "Building a docker image for ${RELEASE_NAME}..."
+	docker build --pull -t digitalmarketplace/supplier-frontend --build-arg release_name=${RELEASE_NAME} .
+	docker tag digitalmarketplace/supplier-frontend digitalmarketplace/supplier-frontend:${RELEASE_NAME}
+
+docker-push:
+	$(if ${RELEASE_NAME},,$(eval export RELEASE_NAME=$(shell git describe)))
+	docker push digitalmarketplace/supplier-frontend:${RELEASE_NAME}
+
+.PHONY: run_all run_app virtualenv requirements requirements_for_test npm_install frontend_build test test_flake8 test_python test_javascript show_environment docker-build docker-push

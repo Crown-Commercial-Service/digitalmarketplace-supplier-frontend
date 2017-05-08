@@ -1,0 +1,11 @@
+.git
+*
+
+!app/
+!application.py
+!bower.json
+!config.py
+!gulpfile.js
+!package.json
+!requirements.txt
+!scripts/build.sh
