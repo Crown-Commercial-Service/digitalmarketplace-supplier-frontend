@@ -75,6 +75,7 @@ class Config(object):
 
     # Logging
     DM_LOG_LEVEL = 'DEBUG'
+    DM_PLAIN_TEXT_LOGS = False
     DM_LOG_PATH = None
     DM_APP_NAME = 'supplier-frontend'
     DM_DOWNSTREAM_REQUEST_ID_HEADER = 'X-Amz-Cf-Id'
@@ -91,6 +92,7 @@ class Config(object):
 
 class Test(Config):
     DEBUG = True
+    DM_PLAIN_TEXT_LOGS = True
     DM_LOG_LEVEL = 'CRITICAL'
     WTF_CSRF_ENABLED = False
     SERVER_NAME = 'localhost'
@@ -111,6 +113,7 @@ class Test(Config):
 
 class Development(Config):
     DEBUG = True
+    DM_PLAIN_TEXT_LOGS = True
     SESSION_COOKIE_SECURE = False
 
     # Dates not formatted like YYYY-(0)M-(0)D will fail
