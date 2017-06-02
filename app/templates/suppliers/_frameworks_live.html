@@ -2,7 +2,7 @@
 
 {{ summary.heading("Current services") }}
 {% if frameworks.live %}
-  {{ summary.top_link('View', url_for('.list_services')) }}
+  {{ summary.top_link('View services', url_for('.list_services')) }}
 {% endif %}
 {% call(framework) summary.list_table(
   frameworks.live,
@@ -29,8 +29,14 @@
         </p>
       {% endif %}
     {% endcall %}
+
     {% if framework.onFramework and not framework.needs_to_complete_declaration %}
-      {{ summary.edit_link('View documents and ask a question', url_for('.framework_dashboard', framework_slug=framework.slug)) }}
+        {% call summary.field() %}
+            {% if framework.framework == 'digital-outcomes-and-specialists' %}
+                <a href="{{ url_for('.opportunities_dashboard', framework_slug=framework.slug) }}">View your opportunities</a><br>
+            {% endif %}
+            <a href="{{ url_for('.framework_dashboard', framework_slug=framework.slug) }}">View documents and ask a question</a>
+        {% endcall %}
     {% else %}
       {% call summary.field() %}
       {% endcall %}

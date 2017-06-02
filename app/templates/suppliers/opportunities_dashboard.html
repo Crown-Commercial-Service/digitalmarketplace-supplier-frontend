@@ -1,0 +1,63 @@
+{% extends "_base_page.html" %}
+{% import "toolkit/summary-table.html" as summary %}
+{% block page_title %}Opportunities Overview - Digital Marketplace{% endblock %}
+
+{% block breadcrumb %}
+  {%
+    with items = [
+    {
+        "link": "/",
+        "label": "Digital Marketplace"
+    },
+    {
+        "link": url_for(".dashboard"),
+        "label": "Your account"
+    }
+    ]
+  %}
+    {% include "toolkit/breadcrumb.html" %}
+  {% endwith %}
+{% endblock %}
+
+{% block main_content %}
+
+    <div class="grid-row">
+
+        <div class="column-two-thirds">
+            {% with
+                heading = 'Your {} opportunities'.format(framework.name)
+            %}
+            {% include 'toolkit/page-heading.html' %}
+            {% endwith %}
+        </div>
+    </div>
+
+  <p>
+    <a href={{ "/{}/opportunities".format(framework.framework) }}>
+      Search for other opportunities on the Digital Marketplace
+    </a>
+  </p>
+
+{{ summary.heading("Completed", id="completed-opportunities") }}
+{% call(item) summary.list_table(
+    completed|sort(attribute='brief.applicationsClosedAt'),
+    caption="Completed opportunities",
+    empty_message="You haven’t applied to any opportunities",
+    field_headings=[
+        "Opportunity",
+        "Application closing date",
+        summary.hidden_field_heading("View")
+    ],
+    field_headings_visible=True
+) %}
+
+    {% call summary.row() %}
+        {% call summary.field() %}
+            <a href={{ "/{}/opportunities/{}".format(framework.framework, item.briefId) }}>{{ item.brief.title }}</a>
+        {% endcall %}
+        {{ summary.text(item.brief.applicationsClosedAt|dateformat) }}
+        {{ summary.link("View application", url_for(".view_response_result", brief_id=item.briefId)) if not item.brief.status == 'withdrawn' else summary.text() }}
+    {% endcall %}
+{% endcall %}
+
+{% endblock %}

@@ -148,8 +148,8 @@
 
   {%
     with
-      url = url_for(".dashboard"),
-      text = "Your account"
+      url = url_for(".opportunities_dashboard", framework_slug=brief.frameworkSlug),
+      text = "Your {} applications".format(brief.frameworkName)
   %}
     {% include "toolkit/secondary-action-link.html" %}
   {% endwith %}
