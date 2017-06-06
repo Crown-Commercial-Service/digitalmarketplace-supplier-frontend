@@ -57,6 +57,7 @@
 {% endblock %}
 
 {% block before_sections %}
+  {% if "digital-outcomes-and-specialists" not in service_data.frameworkSlug %}
     <div class="column-two-thirds">
       <div class="view-service-link">
         {%
@@ -68,6 +69,7 @@
         {% endwith %}
       </div>
     </div>
+  {% endif %}
   {% if error %}
     <div class="column-one-whole">
       {% with

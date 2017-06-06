@@ -18,6 +18,8 @@ from tests.app.helpers import BaseApplicationTest, empty_g7_draft_service, empty
     # a tuple of framework_slug, framework_name, framework_editable_services
     ("g-cloud-6", "G-Cloud 6", True,),
     ("g-cloud-7", "G-Cloud 7", True,),
+    ("g-cloud-8", "G-Cloud 8", True,),
+    ("g-cloud-9", "G-Cloud 9", True,),
     ("digital-outcomes-and-specialists", "Digital outcomes and specialists", False,),
 ))
 def supplier_service_editing_fw_params(request):
@@ -203,7 +205,7 @@ class _BaseTestSupplierEditRemoveService(BaseApplicationTest):
 
 
 @mock.patch('app.main.views.services.data_api_client')
-class TestSupplierEditService(_BaseTestSupplierEditRemoveService):
+class SupplierEditServiceTestsSharedAcrossFrameworks(_BaseTestSupplierEditRemoveService):
     def test_should_view_public_service_with_correct_message(
             self, data_api_client, supplier_service_editing_fw_params
     ):
@@ -366,6 +368,37 @@ class TestSupplierEditService(_BaseTestSupplierEditRemoveService):
         res = self.client.get("/suppliers/services/123")
         assert res.status_code == 302
         assert res.location == 'http://localhost/login?next=%2Fsuppliers%2Fservices%2F123'
+
+
+class TestSupplierEditGCloudService(SupplierEditServiceTestsSharedAcrossFrameworks):
+    pass
+
+
+@mock.patch('app.main.views.services.data_api_client')
+class TestSupplierViewDosServices(_BaseTestSupplierEditRemoveService):
+    def test_supplier_can_view_their_dos_service_details(
+            self, data_api_client
+    ):
+        framework_slug, framework_name = "digital-outcomes-and-specialists-2", "Digital outcomes and specialists 2"
+        self.login()
+        self._setup_service(data_api_client, framework_slug, framework_name, service_status='published')
+
+        res = self.client.get('/suppliers/services/123')
+
+        assert res.status_code == 200
+
+        assert 'Service name 123' in res.get_data(as_text=True)
+
+    def test_no_link_to_public_service_page(self, data_api_client):
+        framework_slug, framework_name = "digital-outcomes-and-specialists-2", "Digital outcomes and specialists 2"
+        self.login()
+        self._setup_service(data_api_client, framework_slug, framework_name, service_status='published')
+
+        res = self.client.get('/suppliers/services/123')
+
+        assert res.status_code == 200
+
+        assert 'View service page on the Digital Marketplace' not in res.get_data(as_text=True)
 
 
 @mock.patch('app.main.views.services.data_api_client')
