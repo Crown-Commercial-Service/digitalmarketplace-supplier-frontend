@@ -92,7 +92,7 @@ To run the whole testsuite:
 make test
 ```
 
-To test individual parts of the test stack use the `test_pep8`, `test_python`
+To test individual parts of the test stack use the `test_flake8`, `test_python`
 or `test_javascript` targets.
 
 eg.
