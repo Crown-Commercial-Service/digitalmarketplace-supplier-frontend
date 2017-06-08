@@ -16,11 +16,8 @@ from tests.app.helpers import BaseApplicationTest, empty_g7_draft_service, empty
 
 @pytest.fixture(params=(
     # a tuple of framework_slug, framework_name, framework_editable_services
-    ("g-cloud-6", "G-Cloud 6", True,),
-    ("g-cloud-7", "G-Cloud 7", True,),
-    ("g-cloud-8", "G-Cloud 8", True,),
     ("g-cloud-9", "G-Cloud 9", True,),
-    ("digital-outcomes-and-specialists", "Digital outcomes and specialists", False,),
+    ("digital-outcomes-and-specialists-2", "Digital outcomes and specialists 2", False,),
 ))
 def supplier_service_editing_fw_params(request):
     return request.param
@@ -204,19 +201,40 @@ class _BaseTestSupplierEditRemoveService(BaseApplicationTest):
         }
 
 
-@mock.patch('app.main.views.services.data_api_client')
 class SupplierEditServiceTestsSharedAcrossFrameworks(_BaseTestSupplierEditRemoveService):
-    def test_should_view_public_service_with_correct_message(
-            self, data_api_client, supplier_service_editing_fw_params
-    ):
-        framework_slug, framework_name, framework_editable_services = supplier_service_editing_fw_params
+    """Tests shared by both DOS and GCloud frameworks for editing a service e.g. /suppliers/services/123"""
+    def test_should_not_view_other_suppliers_services(self, data_api_client):
         self.login()
-        self._setup_service(data_api_client, framework_slug, framework_name, service_status='published')
+        self._setup_service(
+            data_api_client,
+            self.framework_slug,
+            self.framework_name,
+            service_status='published',
+            service_belongs_to_user=False
+        )
 
         res = self.client.get('/suppliers/services/123')
-        if not framework_editable_services:
-            assert res.status_code == 404
-            return
+
+        assert res.status_code == 404
+
+    def test_should_redirect_to_login_if_not_logged_in(self, data_api_client):
+        self._setup_service(
+            data_api_client, self.framework_slug, self.framework_name, service_status='published')
+        res = self.client.get("/suppliers/services/123")
+        assert res.status_code == 302
+        assert res.location == 'http://localhost/login?next=%2Fsuppliers%2Fservices%2F123'
+
+
+@mock.patch('app.main.views.services.data_api_client')
+class TestSupplierEditGCloudService(SupplierEditServiceTestsSharedAcrossFrameworks):
+    framework_slug = "g-cloud-9"
+    framework_name = "G-Cloud 9"
+
+    def test_should_view_public_service_with_correct_message(self, data_api_client):
+        self.login()
+        self._setup_service(data_api_client, self.framework_slug, self.framework_name, service_status='published')
+
+        res = self.client.get('/suppliers/services/123')
 
         assert res.status_code == 200
 
@@ -252,12 +270,9 @@ class SupplierEditServiceTestsSharedAcrossFrameworks(_BaseTestSupplierEditRemove
             res.get_data(as_text=True)
         )
 
-    def test_should_view_public_service_with_update_message(
-            self, data_api_client, supplier_service_editing_fw_params
-    ):
-        framework_slug, framework_name, framework_editable_services = supplier_service_editing_fw_params
+    def test_should_view_public_service_with_update_message(self, data_api_client):
         self.login()
-        self._setup_service(data_api_client, framework_slug, framework_name, service_status='published')
+        self._setup_service(data_api_client, self.framework_slug, self.framework_name, service_status='published')
 
         # this is meant to emulate a "service updated" message
         with self.client.session_transaction() as session:
@@ -266,9 +281,6 @@ class SupplierEditServiceTestsSharedAcrossFrameworks(_BaseTestSupplierEditRemove
             ]
 
         res = self.client.get('/suppliers/services/123')
-        if not framework_editable_services:
-            assert res.status_code == 404
-            return
 
         assert res.status_code == 200
 
@@ -304,17 +316,11 @@ class SupplierEditServiceTestsSharedAcrossFrameworks(_BaseTestSupplierEditRemove
             res.get_data(as_text=True)
         )
 
-    def test_should_view_private_service_with_correct_message(
-            self, data_api_client, supplier_service_editing_fw_params
-    ):
-        framework_slug, framework_name, framework_editable_services = supplier_service_editing_fw_params
+    def test_should_view_private_service_with_correct_message(self, data_api_client):
         self.login()
-        self._setup_service(data_api_client, framework_slug, framework_name, service_status='enabled')
+        self._setup_service(data_api_client, self.framework_slug, self.framework_name, service_status='enabled')
 
         res = self.client.get('/suppliers/services/123')
-        if not framework_editable_services:
-            assert res.status_code == 404
-            return
 
         assert res.status_code == 200
         assert 'Service name 123' in res.get_data(as_text=True)
@@ -329,17 +335,11 @@ class SupplierEditServiceTestsSharedAcrossFrameworks(_BaseTestSupplierEditRemove
             res.get_data(as_text=True)
         )
 
-    def test_should_view_disabled_service_with_removed_message(
-            self, data_api_client, supplier_service_editing_fw_params
-    ):
-        framework_slug, framework_name, framework_editable_services = supplier_service_editing_fw_params
+    def test_should_view_disabled_service_with_removed_message(self, data_api_client):
         self.login()
-        self._setup_service(data_api_client, framework_slug, framework_name, service_status='disabled')
+        self._setup_service(data_api_client, self.framework_slug, self.framework_name, service_status='disabled')
 
         res = self.client.get('/suppliers/services/123')
-        if not framework_editable_services:
-            assert res.status_code == 404
-            return
 
         assert res.status_code == 200
         self.assert_in_strip_whitespace(
@@ -352,61 +352,34 @@ class SupplierEditServiceTestsSharedAcrossFrameworks(_BaseTestSupplierEditRemove
             res.get_data(as_text=True)
         )
 
-    def test_should_not_view_other_suppliers_services(
-            self, data_api_client, supplier_service_editing_fw_params
-    ):
-        framework_slug, framework_name, framework_editable_services = supplier_service_editing_fw_params
-        self.login()
-        self._setup_service(
-            data_api_client, framework_slug, framework_name, service_status='published', service_belongs_to_user=False)
-
-        res = self.client.get('/suppliers/services/123')
-
-        assert res.status_code == 404
-
-    def test_should_redirect_to_login_if_not_logged_in(self, data_api_client):
-        res = self.client.get("/suppliers/services/123")
-        assert res.status_code == 302
-        assert res.location == 'http://localhost/login?next=%2Fsuppliers%2Fservices%2F123'
-
-
-class TestSupplierEditGCloudService(SupplierEditServiceTestsSharedAcrossFrameworks):
-    pass
-
 
 @mock.patch('app.main.views.services.data_api_client')
-class TestSupplierViewDosServices(_BaseTestSupplierEditRemoveService):
-    def test_supplier_can_view_their_dos_service_details(
-            self, data_api_client
-    ):
-        framework_slug, framework_name = "digital-outcomes-and-specialists-2", "Digital outcomes and specialists 2"
-        self.login()
-        self._setup_service(data_api_client, framework_slug, framework_name, service_status='published')
+class TestSupplierEditDosServices(SupplierEditServiceTestsSharedAcrossFrameworks):
+    """Although the route tested is the edit service page, DOS services are not editable or removable and are only
+    viewable at the moment"""
+    framework_slug = "digital-outcomes-and-specialists-2"
+    framework_name = "Digital outcomes and specialists 2"
 
+    def test_supplier_can_view_their_dos_service_details(self, data_api_client):
+        self.login()
+        self._setup_service(data_api_client, self.framework_slug, self.framework_name, service_status='published')
         res = self.client.get('/suppliers/services/123')
 
         assert res.status_code == 200
-
         assert 'Service name 123' in res.get_data(as_text=True)
 
     def test_no_link_to_public_service_page(self, data_api_client):
-        framework_slug, framework_name = "digital-outcomes-and-specialists-2", "Digital outcomes and specialists 2"
         self.login()
-        self._setup_service(data_api_client, framework_slug, framework_name, service_status='published')
-
+        self._setup_service(data_api_client, self.framework_slug, self.framework_name, service_status='published')
         res = self.client.get('/suppliers/services/123')
-
-        assert res.status_code == 200
 
         assert 'View service page on the Digital Marketplace' not in res.get_data(as_text=True)
 
     def test_no_remove_service_section(self, data_api_client):
-        framework_slug, framework_name = "digital-outcomes-and-specialists-2", "Digital outcomes and specialists 2"
         self.login()
-        self._setup_service(data_api_client, framework_slug, framework_name, service_status='published')
-
+        self._setup_service(data_api_client, self.framework_slug, self.framework_name, service_status='published')
         res = self.client.get('/suppliers/services/123')
-        
+
         self.assert_not_in_strip_whitespace(
             'Remove this service',
             res.get_data(as_text=True)
