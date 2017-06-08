@@ -89,7 +89,7 @@
 {% endblock %}
 
 {% block after_sections %}
-  {% if service_data.status == 'published' and not remove_requested %}
+  {% if service_data.status == 'published' and not remove_requested and "digital-outcomes-and-specialists" not in service_data.frameworkSlug %}
     <div class="column-two-thirds">
       <div class="edit-service-status-panel">
         <h2>Remove this service</h2>
