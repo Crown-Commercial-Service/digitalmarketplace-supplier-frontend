@@ -238,6 +238,31 @@ class SupplierEditServiceTestsSharedAcrossFrameworks(_BaseTestSupplierEditRemove
         assert res.status_code == 302
         assert res.location == 'http://localhost/login?next=%2Fsuppliers%2Fservices%2F123'
 
+    @pytest.mark.parametrize("status", ["enabled", "disabled"])
+    def test_should_view_private_or_disabled_service_with_correct_message(self, data_api_client, status):
+        self.login()
+        self._setup_service(
+            data_api_client,
+            service_status=status,
+            **self.framework_kwargs
+        )
+
+        res = self.client.get('/suppliers/services/123')
+
+        assert res.status_code == 200
+        assert 'Service name 123' in res.get_data(as_text=True)
+
+        self.assert_in_strip_whitespace(
+            '<h2>This service was removed on Monday 23 March 2015</h2>',
+            res.get_data(as_text=True)
+        )
+
+        # this assertion should always be true for DOS, still we need to check it for g-cloud
+        self.assert_not_in_strip_whitespace(
+            '<h2>Remove this service</h2>',
+            res.get_data(as_text=True)
+        )
+
 
 @mock.patch('app.main.views.services.data_api_client')
 class TestSupplierEditGCloudService(SupplierEditServiceTestsSharedAcrossFrameworks):
@@ -338,50 +363,6 @@ class TestSupplierEditGCloudService(SupplierEditServiceTestsSharedAcrossFramewor
         # dummy service updated message should be there
         self.assert_in_strip_whitespace(
             "Foo Bar 123 321",
-            res.get_data(as_text=True)
-        )
-
-    def test_should_view_private_service_with_correct_message(self, data_api_client):
-        self.login()
-        self._setup_service(
-            data_api_client,
-            service_status='enabled',
-            **self.framework_kwargs
-        )
-
-        res = self.client.get('/suppliers/services/123')
-
-        assert res.status_code == 200
-        assert 'Service name 123' in res.get_data(as_text=True)
-
-        self.assert_in_strip_whitespace(
-            '<h2>This service was removed on Monday 23 March 2015</h2>',
-            res.get_data(as_text=True)
-        )
-
-        self.assert_not_in_strip_whitespace(
-            '<h2>Remove this service</h2>',
-            res.get_data(as_text=True)
-        )
-
-    def test_should_view_disabled_service_with_removed_message(self, data_api_client):
-        self.login()
-        self._setup_service(
-            data_api_client,
-            service_status='disabled',
-            **self.framework_kwargs
-        )
-
-        res = self.client.get('/suppliers/services/123')
-
-        assert res.status_code == 200
-        self.assert_in_strip_whitespace(
-            'Service name 123',
-            res.get_data(as_text=True)
-        )
-
-        self.assert_in_strip_whitespace(
-            '<h2>This service was removed on Monday 23 March 2015</h2>',
             res.get_data(as_text=True)
         )
 
