@@ -57,7 +57,7 @@
 {% endblock %}
 
 {% block before_sections %}
-  {% if "digital-outcomes-and-specialists" not in service_data.frameworkSlug %}
+  {% if "digital-outcomes-and-specialists" != service_data.frameworkFramework %}
     <div class="column-two-thirds">
       <div class="view-service-link">
         {%
@@ -89,7 +89,7 @@
 {% endblock %}
 
 {% block after_sections %}
-  {% if service_data.status == 'published' and not remove_requested and "digital-outcomes-and-specialists" not in service_data.frameworkSlug %}
+  {% if service_data.status == 'published' and not remove_requested and "digital-outcomes-and-specialists" != service_data.frameworkFramework %}
     <div class="column-two-thirds">
       <div class="edit-service-status-panel">
         <h2>Remove this service</h2>
