@@ -67,10 +67,12 @@ def remove_service(service_id):
     if not is_service_associated_with_supplier(service):
         abort(404)
 
+    # dos services should not be removable
+    if 'digital-outcomes-and-specialists' == service["frameworkFramework"]:
+        abort(404)
+
     # we don't actually need the content here, we're just probing to see whether service editing should be allowed for
     # this framework (signalled by the exsitence of the edit_service manifest
-    if 'digital-outcomes-and-specialists' in service["frameworkSlug"]:
-        abort(404)
     try:
         content_loader.get_manifest(service["frameworkSlug"], 'edit_service')
     except ContentNotFoundError:

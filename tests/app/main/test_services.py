@@ -15,9 +15,19 @@ from tests.app.helpers import BaseApplicationTest, empty_g7_draft_service, empty
 
 
 @pytest.fixture(params=(
-    # a tuple of framework_slug, framework_name, framework_editable_services
-    ("g-cloud-9", "G-Cloud 9", True,),
-    ("digital-outcomes-and-specialists-2", "Digital outcomes and specialists 2", False,),
+    # a tuple of framework_slug, framework_framework, framework_name, framework_editable_services
+    (
+        "g-cloud-9",
+        "g-cloud",
+        "G-Cloud 9",
+        True
+    ),
+    (
+        "digital-outcomes-and-specialists-2",
+        "digital-outcomes-and-specialists",
+        "Digital outcomes and specialists 2",
+        False
+    )
 ))
 def supplier_service_editing_fw_params(request):
     return request.param
@@ -170,6 +180,7 @@ class _BaseTestSupplierEditRemoveService(BaseApplicationTest):
             self,
             data_api_client,
             framework_slug,
+            framework_framework,
             framework_name,
             service_status="published",
             service_belongs_to_user=True,
@@ -182,6 +193,7 @@ class _BaseTestSupplierEditRemoveService(BaseApplicationTest):
                 'id': '123',
                 'frameworkName': framework_name,
                 'frameworkSlug': framework_slug,
+                'frameworkFramework': framework_framework,
                 'supplierId': 1234 if service_belongs_to_user else 1235,
             }
         }
@@ -208,6 +220,7 @@ class SupplierEditServiceTestsSharedAcrossFrameworks(_BaseTestSupplierEditRemove
         self._setup_service(
             data_api_client,
             self.framework_slug,
+            self.framework_framework,
             self.framework_name,
             service_status='published',
             service_belongs_to_user=False
@@ -219,7 +232,12 @@ class SupplierEditServiceTestsSharedAcrossFrameworks(_BaseTestSupplierEditRemove
 
     def test_should_redirect_to_login_if_not_logged_in(self, data_api_client):
         self._setup_service(
-            data_api_client, self.framework_slug, self.framework_name, service_status='published')
+            data_api_client,
+            self.framework_slug,
+            self.framework_framework,
+            self.framework_name,
+            service_status='published'
+        )
         res = self.client.get("/suppliers/services/123")
         assert res.status_code == 302
         assert res.location == 'http://localhost/login?next=%2Fsuppliers%2Fservices%2F123'
@@ -228,11 +246,18 @@ class SupplierEditServiceTestsSharedAcrossFrameworks(_BaseTestSupplierEditRemove
 @mock.patch('app.main.views.services.data_api_client')
 class TestSupplierEditGCloudService(SupplierEditServiceTestsSharedAcrossFrameworks):
     framework_slug = "g-cloud-9"
+    framework_framework = "g-cloud"
     framework_name = "G-Cloud 9"
 
     def test_should_view_public_service_with_correct_message(self, data_api_client):
         self.login()
-        self._setup_service(data_api_client, self.framework_slug, self.framework_name, service_status='published')
+        self._setup_service(
+            data_api_client,
+            self.framework_slug,
+            self.framework_framework,
+            self.framework_name,
+            service_status='published'
+        )
 
         res = self.client.get('/suppliers/services/123')
 
@@ -272,7 +297,13 @@ class TestSupplierEditGCloudService(SupplierEditServiceTestsSharedAcrossFramewor
 
     def test_should_view_public_service_with_update_message(self, data_api_client):
         self.login()
-        self._setup_service(data_api_client, self.framework_slug, self.framework_name, service_status='published')
+        self._setup_service(
+            data_api_client,
+            self.framework_slug,
+            self.framework_framework,
+            self.framework_name,
+            service_status='published'
+        )
 
         # this is meant to emulate a "service updated" message
         with self.client.session_transaction() as session:
@@ -318,7 +349,13 @@ class TestSupplierEditGCloudService(SupplierEditServiceTestsSharedAcrossFramewor
 
     def test_should_view_private_service_with_correct_message(self, data_api_client):
         self.login()
-        self._setup_service(data_api_client, self.framework_slug, self.framework_name, service_status='enabled')
+        self._setup_service(
+            data_api_client,
+            self.framework_slug,
+            self.framework_framework,
+            self.framework_name,
+            service_status='enabled'
+        )
 
         res = self.client.get('/suppliers/services/123')
 
@@ -337,7 +374,13 @@ class TestSupplierEditGCloudService(SupplierEditServiceTestsSharedAcrossFramewor
 
     def test_should_view_disabled_service_with_removed_message(self, data_api_client):
         self.login()
-        self._setup_service(data_api_client, self.framework_slug, self.framework_name, service_status='disabled')
+        self._setup_service(
+            data_api_client,
+            self.framework_slug,
+            self.framework_framework,
+            self.framework_name,
+            service_status='disabled'
+        )
 
         res = self.client.get('/suppliers/services/123')
 
@@ -358,11 +401,18 @@ class TestSupplierEditDosServices(SupplierEditServiceTestsSharedAcrossFrameworks
     """Although the route tested is the edit service page, DOS services are not editable or removable and are only
     viewable at the moment"""
     framework_slug = "digital-outcomes-and-specialists-2"
+    framework_framework = "digital-outcomes-and-specialists"
     framework_name = "Digital outcomes and specialists 2"
 
     def test_supplier_can_view_their_dos_service_details(self, data_api_client):
         self.login()
-        self._setup_service(data_api_client, self.framework_slug, self.framework_name, service_status='published')
+        self._setup_service(
+            data_api_client,
+            self.framework_slug,
+            self.framework_framework,
+            self.framework_name,
+            service_status='published'
+        )
         res = self.client.get('/suppliers/services/123')
 
         assert res.status_code == 200
@@ -370,14 +420,26 @@ class TestSupplierEditDosServices(SupplierEditServiceTestsSharedAcrossFrameworks
 
     def test_no_link_to_public_service_page(self, data_api_client):
         self.login()
-        self._setup_service(data_api_client, self.framework_slug, self.framework_name, service_status='published')
+        self._setup_service(
+            data_api_client,
+            self.framework_slug,
+            self.framework_framework,
+            self.framework_name,
+            service_status='published'
+        )
         res = self.client.get('/suppliers/services/123')
 
         assert 'View service page on the Digital Marketplace' not in res.get_data(as_text=True)
 
     def test_no_remove_service_section(self, data_api_client):
         self.login()
-        self._setup_service(data_api_client, self.framework_slug, self.framework_name, service_status='published')
+        self._setup_service(
+            data_api_client,
+            self.framework_slug,
+            self.framework_framework,
+            self.framework_name,
+            service_status='published'
+        )
         res = self.client.get('/suppliers/services/123')
 
         self.assert_not_in_strip_whitespace(
@@ -396,9 +458,16 @@ class TestSupplierRemoveServiceEditInterplay(_BaseTestSupplierEditRemoveService)
     def test_should_view_confirmation_message_if_first_remove_service_button_clicked(
             self, data_api_client, supplier_service_editing_fw_params
     ):
-        framework_slug, framework_name, framework_editable_services = supplier_service_editing_fw_params
+        framework_slug, framework_framework, framework_name, framework_editable_services = \
+            supplier_service_editing_fw_params
         self.login()
-        self._setup_service(data_api_client, framework_slug, framework_name, service_status='published')
+        self._setup_service(
+            data_api_client,
+            framework_slug,
+            framework_framework,
+            framework_name,
+            service_status='published'
+        )
 
         # NOTE two http requests performed here
         res = self.client.post('/suppliers/services/123/remove', follow_redirects=True)
@@ -430,9 +499,16 @@ class TestSupplierRemoveServiceEditInterplay(_BaseTestSupplierEditRemoveService)
     def test_should_view_correct_notification_message_if_service_removed(
             self, data_api_client, supplier_service_editing_fw_params
     ):
-        framework_slug, framework_name, framework_editable_services = supplier_service_editing_fw_params
+        framework_slug, framework_framework, framework_name, framework_editable_services = \
+            supplier_service_editing_fw_params
         self.login()
-        self._setup_service(data_api_client, framework_slug, framework_name, service_status='published')
+        self._setup_service(
+            data_api_client,
+            framework_slug,
+            framework_framework,
+            framework_name,
+            service_status='published'
+        )
 
         # NOTE two http requests performed here
         res = self.client.post(
@@ -466,7 +542,8 @@ class TestSupplierRemoveService(_BaseTestSupplierEditRemoveService):
             supplier_remove_service__service_status__expected_results,
             supplier_remove_service__post_data,
     ):
-        framework_slug, framework_name, framework_editable_services = supplier_service_editing_fw_params
+        framework_slug, framework_framework, framework_name, framework_editable_services = \
+            supplier_service_editing_fw_params
         service_status, service_belongs_to_user, expect_api_call_if_data, expected_status_code = \
             supplier_remove_service__service_status__expected_results
         post_data = supplier_remove_service__post_data
@@ -475,6 +552,7 @@ class TestSupplierRemoveService(_BaseTestSupplierEditRemoveService):
         self._setup_service(
             data_api_client,
             framework_slug,
+            framework_framework,
             framework_name,
             service_status=service_status,
             service_belongs_to_user=service_belongs_to_user,
