@@ -219,11 +219,9 @@ class SupplierEditServiceTestsSharedAcrossFrameworks(_BaseTestSupplierEditRemove
         self.login()
         self._setup_service(
             data_api_client,
-            self.framework_slug,
-            self.framework_framework,
-            self.framework_name,
             service_status='published',
-            service_belongs_to_user=False
+            service_belongs_to_user=False,
+            **self.framework_kwargs
         )
 
         res = self.client.get('/suppliers/services/123')
@@ -233,10 +231,8 @@ class SupplierEditServiceTestsSharedAcrossFrameworks(_BaseTestSupplierEditRemove
     def test_should_redirect_to_login_if_not_logged_in(self, data_api_client):
         self._setup_service(
             data_api_client,
-            self.framework_slug,
-            self.framework_framework,
-            self.framework_name,
-            service_status='published'
+            service_status='published',
+            **self.framework_kwargs
         )
         res = self.client.get("/suppliers/services/123")
         assert res.status_code == 302
@@ -245,18 +241,18 @@ class SupplierEditServiceTestsSharedAcrossFrameworks(_BaseTestSupplierEditRemove
 
 @mock.patch('app.main.views.services.data_api_client')
 class TestSupplierEditGCloudService(SupplierEditServiceTestsSharedAcrossFrameworks):
-    framework_slug = "g-cloud-9"
-    framework_framework = "g-cloud"
-    framework_name = "G-Cloud 9"
+    framework_kwargs = {
+        "framework_slug": "g-cloud-9",
+        "framework_framework": "g-cloud",
+        "framework_name": "G-Cloud 9"
+    }
 
     def test_should_view_public_service_with_correct_message(self, data_api_client):
         self.login()
         self._setup_service(
             data_api_client,
-            self.framework_slug,
-            self.framework_framework,
-            self.framework_name,
-            service_status='published'
+            service_status='published',
+            **self.framework_kwargs
         )
 
         res = self.client.get('/suppliers/services/123')
@@ -299,10 +295,8 @@ class TestSupplierEditGCloudService(SupplierEditServiceTestsSharedAcrossFramewor
         self.login()
         self._setup_service(
             data_api_client,
-            self.framework_slug,
-            self.framework_framework,
-            self.framework_name,
-            service_status='published'
+            service_status='published',
+            **self.framework_kwargs
         )
 
         # this is meant to emulate a "service updated" message
@@ -351,10 +345,8 @@ class TestSupplierEditGCloudService(SupplierEditServiceTestsSharedAcrossFramewor
         self.login()
         self._setup_service(
             data_api_client,
-            self.framework_slug,
-            self.framework_framework,
-            self.framework_name,
-            service_status='enabled'
+            service_status='enabled',
+            **self.framework_kwargs
         )
 
         res = self.client.get('/suppliers/services/123')
@@ -376,10 +368,8 @@ class TestSupplierEditGCloudService(SupplierEditServiceTestsSharedAcrossFramewor
         self.login()
         self._setup_service(
             data_api_client,
-            self.framework_slug,
-            self.framework_framework,
-            self.framework_name,
-            service_status='disabled'
+            service_status='disabled',
+            **self.framework_kwargs
         )
 
         res = self.client.get('/suppliers/services/123')
@@ -400,18 +390,18 @@ class TestSupplierEditGCloudService(SupplierEditServiceTestsSharedAcrossFramewor
 class TestSupplierEditDosServices(SupplierEditServiceTestsSharedAcrossFrameworks):
     """Although the route tested is the edit service page, DOS services are not editable or removable and are only
     viewable at the moment"""
-    framework_slug = "digital-outcomes-and-specialists-2"
-    framework_framework = "digital-outcomes-and-specialists"
-    framework_name = "Digital outcomes and specialists 2"
+    framework_kwargs = {
+        "framework_slug": "digital-outcomes-and-specialists-2",
+        "framework_framework": "digital-outcomes-and-specialists",
+        "framework_name": "Digital outcomes and specialists 2"
+    }
 
     def test_supplier_can_view_their_dos_service_details(self, data_api_client):
         self.login()
         self._setup_service(
             data_api_client,
-            self.framework_slug,
-            self.framework_framework,
-            self.framework_name,
-            service_status='published'
+            service_status='published',
+            **self.framework_kwargs
         )
         res = self.client.get('/suppliers/services/123')
 
@@ -422,10 +412,8 @@ class TestSupplierEditDosServices(SupplierEditServiceTestsSharedAcrossFrameworks
         self.login()
         self._setup_service(
             data_api_client,
-            self.framework_slug,
-            self.framework_framework,
-            self.framework_name,
-            service_status='published'
+            service_status='published',
+            **self.framework_kwargs
         )
         res = self.client.get('/suppliers/services/123')
 
@@ -435,10 +423,8 @@ class TestSupplierEditDosServices(SupplierEditServiceTestsSharedAcrossFrameworks
         self.login()
         self._setup_service(
             data_api_client,
-            self.framework_slug,
-            self.framework_framework,
-            self.framework_name,
-            service_status='published'
+            service_status='published',
+            **self.framework_kwargs
         )
         res = self.client.get('/suppliers/services/123')
 
