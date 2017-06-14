@@ -14,6 +14,7 @@ var repoRoot = __dirname + '/';
 var bowerRoot = repoRoot + 'bower_components';
 var npmRoot = repoRoot + 'node_modules';
 var govukToolkitRoot = npmRoot + '/govuk_frontend_toolkit';
+var govukElementsRoot = npmRoot + '/govuk-elements-sass';
 var dmToolkitRoot = bowerRoot + '/digitalmarketplace-frontend-toolkit/toolkit';
 var sspContentRoot = bowerRoot + '/digitalmarketplace-frameworks';
 var assetsFolder = repoRoot + 'app/assets';
@@ -40,6 +41,7 @@ var sassOptions = {
       assetsFolder + '/scss',
       dmToolkitRoot + '/scss',
       govukToolkitRoot + '/stylesheets',
+      govukElementsRoot + '/public/sass',
     ],
     sourceComments: true,
     errLogToConsole: true
@@ -51,6 +53,7 @@ var sassOptions = {
       assetsFolder + '/scss',
       dmToolkitRoot + '/scss',
       govukToolkitRoot + '/stylesheets',
+      govukElementsRoot + '/public/sass',
     ],
   },
 };
