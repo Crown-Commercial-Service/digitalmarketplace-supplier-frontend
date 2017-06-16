@@ -65,7 +65,7 @@ def send_brief_clarification_question(data_api_client, brief, clarification_ques
         user=current_user.email_address,
         object_type="briefs",
         object_id=brief['id'],
-        data={"question": clarification_question, "briefId": brief['id']})
+        data={"question": clarification_question, "briefId": brief['id'], "supplierId": current_user.supplier_id})
 
     # Send the supplier a copy of the question
     supplier_email_body = render_template(

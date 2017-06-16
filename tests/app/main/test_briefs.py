@@ -235,7 +235,7 @@ class TestSubmitClarificationQuestions(BaseApplicationTest):
         data_api_client.create_audit_event.assert_called_with(
             audit_type=AuditTypes.send_clarification_question,
             object_type='briefs',
-            data={'briefId': 1234, 'question': u'important question'},
+            data={'briefId': 1234, 'question': u'important question', 'supplierId': 1234},
             user='email@email.com',
             object_id=1234
         )
