@@ -88,6 +88,13 @@
   {% endif %}
 {% endblock %}
 
+{% block summary_row %}
+  {% if not question.is_empty %}
+    {{ summary.field_name(question.label) }}
+    {{ summary[question.type](question.value, question.assurance) }}
+  {% endif %}
+{% endblock %}
+
 {% block after_sections %}
   {% if service_data.status == 'published' and not remove_requested and "digital-outcomes-and-specialists" != service_data.frameworkFramework %}
     <div class="column-two-thirds">

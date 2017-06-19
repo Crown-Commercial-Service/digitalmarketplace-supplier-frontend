@@ -184,18 +184,20 @@ class _BaseTestSupplierEditRemoveService(BaseApplicationTest):
             framework_name,
             service_status="published",
             service_belongs_to_user=True,
+            **kwargs
     ):
-
+        service_data = {
+            'serviceName': 'Service name 123',
+            'status': service_status,
+            'id': '123',
+            'frameworkName': framework_name,
+            'frameworkSlug': framework_slug,
+            'frameworkFramework': framework_framework,
+            'supplierId': 1234 if service_belongs_to_user else 1235,
+        }
+        service_data.update(kwargs)
         data_api_client.get_service.return_value = {
-            'services': {
-                'serviceName': 'Service name 123',
-                'status': service_status,
-                'id': '123',
-                'frameworkName': framework_name,
-                'frameworkSlug': framework_slug,
-                'frameworkFramework': framework_framework,
-                'supplierId': 1234 if service_belongs_to_user else 1235,
-            }
+            'services': service_data
         }
         if service_status == 'published':
             data_api_client.update_service_status.return_value = data_api_client.get_service.return_value
@@ -411,6 +413,38 @@ class TestSupplierEditDosServices(SupplierEditServiceTestsSharedAcrossFrameworks
 
         self.assert_not_in_strip_whitespace(
             'Remove this service',
+            res.get_data(as_text=True)
+        )
+
+    def test_empty_questions_are_hidden(self, data_api_client):
+        """Although the behaviour of hiding empty question summary rows is not specific to DOS, it is currently the
+        only framework with questions that can be empty so we test this behaviour in this class"""
+        service_kwargs = {
+            "designerLocations": ["London", "Scotland"],
+            "designerPriceMin": "100",
+            "designerPriceMax": "1000",
+            "lot": "digital-specialists",
+            "lotName": "Digital specialists",
+            "lotSlug": "digital-specialists"
+        }
+        service_kwargs.update(self.framework_kwargs)
+        self.login()
+        self._setup_service(
+            data_api_client,
+            service_status='published',
+            **service_kwargs
+        )
+
+        res = self.client.get('/suppliers/services/123')
+
+        assert res.status_code == 200
+        self.assert_in_strip_whitespace(
+            'Designer',
+            res.get_data(as_text=True)
+        )
+        # No developer role in data so table row should not exist
+        self.assert_not_in_strip_whitespace(
+            'Developer',
             res.get_data(as_text=True)
         )
 
