@@ -5870,9 +5870,17 @@ class TestOpportunitiesDashboard(BaseApplicationTest):
             resp = self.client.get(self.opportunities_dashboard_url)
             assert resp.status_code == 200
 
-    def test_must_have_supplier_framework(self, data_api_client):
+    def test_404_if_framework_does_not_exist(self, data_api_client):
         data_api_client.get_framework.side_effect = APIError(mock.Mock(status_code=404))
-        data_api_client.get_supplier_framework_info.return_value = self.supplier_framework_response
+        with self.client:
+            self.login()
+            resp = self.client.get('/suppliers/frameworks/does-not-exist/opportunities')
+
+            assert resp.status_code == 404
+
+    def test_404_if_supplier_framework_does_not_exist(self, data_api_client):
+        data_api_client.get_framework.return_value = self.framework_response
+        data_api_client.get_supplier_framework_info.side_effect = APIError(mock.Mock(status_code=404))
         with self.client:
             self.login()
             resp = self.client.get(self.opportunities_dashboard_url)
