@@ -100,7 +100,6 @@
       }
     })
     var globalCategories = new Categories(categories_data)
-
     function appendCounter(id) {
        var $_counter = $('#' + id)
 
@@ -164,19 +163,13 @@
 
     // make clicks on checkboxes update the categories state
     // TODO: looks like the event is triggered four times
-    $('#checkbox-tree__inputs').on('click', 'label', function (event) {
+    $('#checkbox-tree__inputs').on('click', 'input', function (event) {
       var target = event.target
       var targetNodeName = target.nodeName.toLowerCase()
       var categoryName
 
       function getLabelTextForInput (input) {
-        var text = ''
-        var siblings = $(input).parent().contents().each(function () {
-          var childNode = this
-          if (childNode.nodeType === 3) { // text node
-            text += $(childNode).text()
-          }
-        })
+        var text = $(input).siblings().first().text()
         return $.trim(text)
       }
 
