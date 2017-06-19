@@ -5880,12 +5880,12 @@ class TestOpportunitiesDashboard(BaseApplicationTest):
             assert resp.status_code == 404
 
     def test_only_works_for_dos_to_view(self, data_api_client):
-        self.framework_response['frameworks'].update({'framework': 'g-cloud-9'})
+        self.framework_response['frameworks'].update({'slug': 'g-cloud-9', 'framework': 'g-cloud'})
         data_api_client.get_framework.return_value = self.framework_response
         data_api_client.get_supplier_framework_info.return_value = self.supplier_framework_response
         with self.client:
             self.login()
-            resp = self.client.get(self.opportunities_dashboard_url)
+            resp = self.client.get('/suppliers/frameworks/g-cloud-9/opportunities')
 
             assert resp.status_code == 404
 
