@@ -399,7 +399,7 @@ class TestSupplierEditDosServices(SupplierEditServiceTestsSharedAcrossFrameworks
             **self.framework_kwargs
         )
         res = self.client.get('/suppliers/services/123')
-
+        assert res.status_code == 200
         assert 'View service page on the Digital Marketplace' not in res.get_data(as_text=True)
 
     def test_no_remove_service_section(self, data_api_client):
@@ -410,9 +410,23 @@ class TestSupplierEditDosServices(SupplierEditServiceTestsSharedAcrossFrameworks
             **self.framework_kwargs
         )
         res = self.client.get('/suppliers/services/123')
-
+        assert res.status_code == 200
         self.assert_not_in_strip_whitespace(
             'Remove this service',
+            res.get_data(as_text=True)
+        )
+
+    def test_no_remove_service_confirmation_prompt(self, data_api_client):
+        self.login()
+        self._setup_service(
+            data_api_client,
+            service_status='published',
+            **self.framework_kwargs
+        )
+        res = self.client.get('/suppliers/services/123?remove_requested=True')
+        assert res.status_code == 200
+        self.assert_not_in_strip_whitespace(
+            'Are you sure you want to remove your service?',
             res.get_data(as_text=True)
         )
 
