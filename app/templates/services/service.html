@@ -32,7 +32,7 @@
       %}
         {% include "toolkit/notification-banner.html" %}
       {% endwith %}
-    {% elif remove_requested %}
+    {% elif remove_requested and service_data.frameworkFramework != "digital-outcomes-and-specialists" %}
       <div class="banner-destructive-with-action">
         <p class="banner-message">
           Are you sure you want to remove your service?
