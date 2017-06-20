@@ -57,6 +57,7 @@
 {% endblock %}
 
 {% block before_sections %}
+  {% if service_data.frameworkFramework != "digital-outcomes-and-specialists" %}
     <div class="column-two-thirds">
       <div class="view-service-link">
         {%
@@ -68,6 +69,7 @@
         {% endwith %}
       </div>
     </div>
+  {% endif %}
   {% if error %}
     <div class="column-one-whole">
       {% with
@@ -86,8 +88,15 @@
   {% endif %}
 {% endblock %}
 
+{% block summary_row %}
+  {% if not question.is_empty %}
+    {{ summary.field_name(question.label) }}
+    {{ summary[question.type](question.value, question.assurance) }}
+  {% endif %}
+{% endblock %}
+
 {% block after_sections %}
-  {% if service_data.status == 'published' and not remove_requested %}
+  {% if service_data.status == 'published' and not remove_requested and service_data.frameworkFramework != "digital-outcomes-and-specialists" %}
     <div class="column-two-thirds">
       <div class="edit-service-status-panel">
         <h2>Remove this service</h2>

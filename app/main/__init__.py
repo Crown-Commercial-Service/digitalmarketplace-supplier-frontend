@@ -23,6 +23,7 @@ content_loader.load_messages('digital-outcomes-and-specialists', ['dates', 'urls
 
 content_loader.load_manifest('digital-outcomes-and-specialists-2', 'declaration', 'declaration')
 content_loader.load_manifest('digital-outcomes-and-specialists-2', 'services', 'edit_submission')
+content_loader.load_manifest('digital-outcomes-and-specialists-2', 'services', 'edit_service')
 content_loader.load_manifest('digital-outcomes-and-specialists-2', 'briefs', 'edit_brief')
 content_loader.load_manifest('digital-outcomes-and-specialists-2', 'brief-responses', 'edit_brief_response')
 content_loader.load_manifest('digital-outcomes-and-specialists-2', 'brief-responses', 'display_brief_response')

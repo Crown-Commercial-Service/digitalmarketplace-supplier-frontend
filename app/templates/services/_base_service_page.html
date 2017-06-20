@@ -79,45 +79,7 @@
           field_headings_visible=False
         ) %}
           {% call summary.row() %}
-            {{ summary.field_name(question.label) }}
-            {% if question.is_empty %}
-              {% if framework and framework.status == 'open' and section.edit_questions %}
-                {% if lot.oneServiceLimit %}
-                  {% if question.empty_message %}
-                    {% call summary.field() %}
-                      <span class="summary-item-field-answer-required">{{ question.empty_message }}</span>
-                    {% endcall %}
-                  {% endif %}
-                {% else %}
-                  {{ summary.link('Answer question', url_for(".edit_service_submission", framework_slug=framework.slug, lot_slug=service_data.lot, service_id=service_id, section_id=section.id, question_slug=question.slug)) }}
-                {% endif %}
-              {% else %}
-                {# We need to call this (even if with nothing) to add the final column to the row, otherwise the row
-                   terminates early and the line separators between rows do not span the entire width of the table. #}
-                {% call summary.field(action=True) %}
-                {% endcall %}
-              {% endif %}
-            {% else %}
-              {{ summary[question.type](question.value, question.assurance) }}
-            {% endif %}
-            {% if framework.status == 'open' %}
-              {% if section.edit_questions and not question.is_empty %}
-                {% if lot.oneServiceLimit %}
-                  {{ summary.remove_link('Remove', url_for(".remove_subsection", framework_slug=framework.slug, lot_slug=service_data.lot, service_id=service_id, section_id=section.id, question_slug=question.slug)) }}
-                {% endif %}
-                {{ summary.edit_link('Edit', url_for(".edit_service_submission", framework_slug=framework.slug, lot_slug=service_data.lot, service_id=service_id, section_id=section.id, question_slug=question.slug)) }}
-              {% elif section.edit_questions and lot.oneServiceLimit %}
-                {% if lot.oneServiceLimit %}
-                  {% call summary.field() %}
-                  {% endcall %}
-                {% endif %}
-                {{ summary.edit_link('Add', url_for(".edit_service_submission", framework_slug=framework.slug, lot_slug=service_data.lot, service_id=service_id, section_id=section.id, question_slug=question.slug)) }}
-              {% else %}
-                {% call summary.field(action=True) %}
-                  {{ 'Optional' if question.get('optional') else '' }}
-                {% endcall %}
-              {% endif %}
-            {% endif %}
+            {% block summary_row scoped %}{% endblock %}
           {% endcall %}
         {% endcall %}
       {% endfor %}
