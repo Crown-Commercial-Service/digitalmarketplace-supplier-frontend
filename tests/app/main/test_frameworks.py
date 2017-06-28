@@ -5816,7 +5816,8 @@ class TestOpportunitiesDashboard(BaseApplicationTest):
                 'brief': {
                     'title': 'Highest date, submitted, lowest id',
                     'applicationsClosedAt': '2017-06-08T10:26:21.538917Z',
-                    'status': 'closed'
+                    'status': 'closed',
+                    'frameworkSlug': 'digital-outcomes-and-specialists-2'
                 },
                 'status': 'submitted',
             },
@@ -5825,7 +5826,8 @@ class TestOpportunitiesDashboard(BaseApplicationTest):
                 'brief': {
                     'title': 'Lowest date, submitted, mid id',
                     'applicationsClosedAt': '2017-06-06T10:26:21.538917Z',
-                    'status': 'closed'
+                    'status': 'closed',
+                    'frameworkSlug': 'digital-outcomes-and-specialists-2'
                 },
                 'status': 'submitted',
             },
@@ -5834,7 +5836,8 @@ class TestOpportunitiesDashboard(BaseApplicationTest):
                 'brief': {
                     'title': 'Mid date, submitted, highest id',
                     'applicationsClosedAt': '2017-06-07T10:26:21.538917Z',
-                    'status': 'withdrawn'
+                    'status': 'withdrawn',
+                    'frameworkSlug': 'digital-outcomes-and-specialists-2'
                 },
                 'status': 'submitted',
             }
@@ -5862,13 +5865,14 @@ class TestOpportunitiesDashboard(BaseApplicationTest):
             assert res.status_code == 200
         return first_row.xpath('string()'), second_row.xpath('string()'), third_row.xpath('string()')
 
-    def test_works_with_correct_data(self, data_api_client):
+    def test_request_works_and_correct_data_is_fetched(self, data_api_client):
         data_api_client.get_supplier_framework_info.return_value = self.supplier_framework_response
         data_api_client.get_framework.return_value = self.framework_response
         with self.client:
             self.login()
             resp = self.client.get(self.opportunities_dashboard_url)
             assert resp.status_code == 200
+            data_api_client.find_brief_responses.assert_called_once_with(supplier_id=1234, framework='digital-outcomes-and-specialists-2')
 
     def test_404_if_framework_does_not_exist(self, data_api_client):
         data_api_client.get_framework.side_effect = APIError(mock.Mock(status_code=404))
@@ -5887,7 +5891,7 @@ class TestOpportunitiesDashboard(BaseApplicationTest):
 
             assert resp.status_code == 404
 
-    def test_only_works_for_dos_to_view(self, data_api_client):
+    def test_404_if_framework_is_not_dos(self, data_api_client):
         self.framework_response['frameworks'].update({'slug': 'g-cloud-9', 'framework': 'g-cloud'})
         data_api_client.get_framework.return_value = self.framework_response
         data_api_client.get_supplier_framework_info.return_value = self.supplier_framework_response
@@ -5897,7 +5901,7 @@ class TestOpportunitiesDashboard(BaseApplicationTest):
 
             assert resp.status_code == 404
 
-    def test_must_be_on_framework_to_view(self, data_api_client):
+    def test_404_if_supplier_not_on_framework(self, data_api_client):
         data_api_client.get_framework.return_value = self.framework_response
         self.supplier_framework_response['frameworkInterest'].update(
             {'onFramework': False}

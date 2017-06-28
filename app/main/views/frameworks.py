@@ -1203,7 +1203,7 @@ def opportunities_dashboard(framework_slug):
     if not (framework['framework'] == 'digital-outcomes-and-specialists' and supplier_framework['onFramework']):
         abort(404)
     opportunities = data_api_client.find_brief_responses(
-        supplier_id=current_user.supplier_id,
+        supplier_id=current_user.supplier_id, framework=framework_slug
     )['briefResponses']
 
     return render_template(
