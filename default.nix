@@ -11,6 +11,8 @@
       pkgs.nodejs
       pkgs.libffi
       pkgs.libyaml
+      # pip requires git to fetch some of its dependencies
+      pkgs.git
       # for `cryptography`
       pkgs.openssl
     ] ++ pkgs.stdenv.lib.optionals forDev ([
