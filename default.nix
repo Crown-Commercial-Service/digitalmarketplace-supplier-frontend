@@ -12,7 +12,7 @@
       pkgs.libffi
       pkgs.libyaml
       # for `cryptography`
-      pkgs.openssl_1_1_0
+      pkgs.openssl
     ] ++ pkgs.stdenv.lib.optionals forDev ([
         # for lxml
         pkgs.libxml2
