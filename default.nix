@@ -1,10 +1,14 @@
-{
-  pkgs ? import <nixpkgs> {},
-  pythonPackages ? pkgs.python36Packages,
-  forDev ? true
-}:
-{
-  digitalMarketplaceSupplierFrontendEnv = pkgs.stdenv.mkDerivation {
+argsOuter@{...}:
+let
+  # specifying args defaults in this slightly non-standard way to allow us to include the default values in `args`
+  args = rec {
+    pkgs = import <nixpkgs> {};
+    pythonPackages = pkgs.python36Packages;
+    forDev = true;
+    localOverridesPath = ./local.nix;
+  } // argsOuter;
+in (with args; {
+  digitalMarketplaceSupplierFrontendEnv = (pkgs.stdenv.mkDerivation rec {
     name = "digitalmarketplace-supplier-frontend-env";
     buildInputs = [
       pythonPackages.virtualenv
@@ -44,5 +48,5 @@
       source $VIRTUALENV_ROOT/bin/activate
       make requirements${pkgs.stdenv.lib.optionalString forDev "-dev"}
     '';
-  };
-}
+  }).overrideAttrs (if builtins.pathExists localOverridesPath then (import localOverridesPath args) else (x: x));
+})
