@@ -36,7 +36,7 @@
                           {% set followup_questions_already_displayed = followup_questions_already_displayed.extend([followup_question]) %}
 
                           {{ summary.field_name(question.question) }}
-                          {{ summary.text(item.unformat_data(brief_response)[followup_question]) }}
+                          {{ summary.text(item.unformat_data(brief_response)[followup_question] | preserve_line_breaks) }}
                         {% endcall %}
                       {% endfor %}
                     {% endif %}
@@ -45,7 +45,7 @@
                     {% if question.id not in followup_questions_already_displayed %}
                       {% call summary.row() %}
                         {{ summary.field_name(question.question) }}
-                        {{ summary.text(item.unformat_data(brief_response)[question.id]) }}
+                        {{ summary.text(item.unformat_data(brief_response)[question.id] | preserve_line_breaks) }}
                       {% endcall %}
                     {% endif %}
                   {% endif %}
