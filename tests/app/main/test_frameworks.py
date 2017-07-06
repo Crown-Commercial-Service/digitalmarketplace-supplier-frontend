@@ -2026,7 +2026,10 @@ class TestFrameworkAgreementUpload(BaseApplicationTest):
             data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
                 on_framework=True)
             generate_timestamped_document_upload_path.return_value = 'my/path.pdf'
-            s3.return_value.save.side_effect = S3ResponseError(500, 'All fail')
+            s3.return_value.save.side_effect = S3ResponseError(
+                {'Error': {'Code': 500, 'Message': 'All fail'}},
+                'test_api_is_not_updated_and_email_not_sent_if_upload_fails'
+            )
 
             res = self.client.post(
                 '/suppliers/frameworks/g-cloud-7/agreement',
@@ -3613,7 +3616,10 @@ class TestFrameworkUpdatesPage(BaseApplicationTest):
     def test_should_be_a_503_if_connecting_to_amazon_fails(self, s3, data_api_client):
         data_api_client.get_framework.return_value = self.framework('open')
         # if s3 throws a 500-level error
-        s3.side_effect = S3ResponseError(500, 'Amazon has collapsed. The internet is over.')
+        s3.side_effect = S3ResponseError(
+            {'Error': {'Code': 500, 'Message': 'Amazon has collapsed. The internet is over.'}},
+            'test_should_be_a_503_if_connecting_to_amazon_fails'
+        )
 
         with self.app.test_client():
             self.login()
