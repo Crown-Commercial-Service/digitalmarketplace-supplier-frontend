@@ -8,11 +8,5 @@ git+https://github.com/alphagov/digitalmarketplace-utils.git@27.1.0#egg=digitalm
 git+https://github.com/alphagov/digitalmarketplace-content-loader.git@4.2.0#egg=digitalmarketplace-content-loader==4.2.0
 git+https://github.com/alphagov/digitalmarketplace-apiclient.git@8.5.0#egg=digitalmarketplace-apiclient==8.5.0
 
-# For Cloud Foundry
-cffi==1.9.1
-gunicorn==19.4.5
-awscli>=1.11,<1.12
-awscli-cwlogs>=1.4,<1.5
-
 # Pinned requirements
 Jinja2==2.9.5
