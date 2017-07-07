@@ -25,7 +25,8 @@
 
         <div class="column-two-thirds">
             {% with
-                heading = 'Your {} opportunities'.format(framework.name)
+                heading = 'Your {} opportunities'.format(framework.name),
+                smaller = True
             %}
             {% include 'toolkit/page-heading.html' %}
             {% endwith %}
@@ -34,11 +35,12 @@
 
   <p>
     <a href={{ "/{}/opportunities".format(framework.framework) }}>
-      Search for other opportunities on the Digital Marketplace
+      Search for opportunities
     </a>
   </p>
 
-{{ summary.heading("Completed", id="completed-opportunities") }}
+
+{{ summary.heading("Applications you’ve made", id="completed-opportunities") }}
 {% call(item) summary.list_table(
     completed|sort(attribute='brief.applicationsClosedAt'),
     caption="Completed opportunities",
@@ -52,7 +54,7 @@
 ) %}
 
     {% call summary.row() %}
-        {% call summary.field() %}
+        {% call summary.field(first=True, wide=True) %}
             <a href={{ "/{}/opportunities/{}".format(framework.framework, item.briefId) }}>{{ item.brief.title }}</a>
         {% endcall %}
         {{ summary.text(item.brief.applicationsClosedAt|dateformat) }}

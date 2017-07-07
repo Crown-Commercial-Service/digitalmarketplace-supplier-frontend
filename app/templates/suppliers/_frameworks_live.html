@@ -31,7 +31,7 @@
     {% endcall %}
 
     {% if framework.onFramework and not framework.needs_to_complete_declaration %}
-        {% call summary.field() %}
+        {% call summary.field(action=True) %}
             {% if framework.framework == 'digital-outcomes-and-specialists' %}
                 <a href="{{ url_for('.opportunities_dashboard', framework_slug=framework.slug) }}">View your opportunities</a><br>
             {% endif %}
