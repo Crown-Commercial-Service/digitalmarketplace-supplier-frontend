@@ -58,7 +58,7 @@
             <a href={{ "/{}/opportunities/{}".format(framework.framework, item.briefId) }}>{{ item.brief.title }}</a>
         {% endcall %}
         {{ summary.text(item.brief.applicationsClosedAt|dateformat) }}
-        {{ summary.link("View application", url_for(".view_response_result", brief_id=item.briefId)) if not item.brief.status == 'withdrawn' else summary.text() }}
+        {{ summary.edit_link("View application", url_for(".view_response_result", brief_id=item.briefId)) if not item.brief.status == 'withdrawn' else summary.text() }}
     {% endcall %}
 {% endcall %}
 
