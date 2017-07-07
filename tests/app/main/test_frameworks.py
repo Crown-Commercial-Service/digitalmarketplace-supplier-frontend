@@ -5843,7 +5843,7 @@ class TestOpportunitiesDashboard(BaseApplicationTest):
             }
         ]}
 
-    def get_table_rows(self, table_name, data_api_client):
+    def get_table_rows_by_id(self, table_id, data_api_client):
         """Helper function to get our 3 table rows as strings."""
         data_api_client.get_framework.return_value = self.framework_response
         data_api_client.get_supplier_framework_info.return_value = self.supplier_framework_response
@@ -5853,17 +5853,13 @@ class TestOpportunitiesDashboard(BaseApplicationTest):
             res = self.client.get(self.opportunities_dashboard_url)
 
             doc = html.fromstring(res.get_data(as_text=True))
-
-            xpath_string = (
-                "//*[@class='summary-item-heading'][normalize-space(text())='{}']"
-                "/following-sibling::table[1]"
-            ).format(table_name)
+            xpath_string = ".//*[@id='{}']/following-sibling::table[1]".format(table_id)
 
             table = doc.xpath(xpath_string)[0]
-            first_row, second_row, third_row = table.find_class('summary-item-row')
+            rows = table.find_class('summary-item-row')
 
             assert res.status_code == 200
-        return first_row.xpath('string()'), second_row.xpath('string()'), third_row.xpath('string()')
+        return [i.xpath('string()') for i in rows]
 
     def test_request_works_and_correct_data_is_fetched(self, data_api_client):
         data_api_client.get_supplier_framework_info.return_value = self.supplier_framework_response
@@ -5915,7 +5911,7 @@ class TestOpportunitiesDashboard(BaseApplicationTest):
 
     def test_completed_list_of_opportunities(self, data_api_client):
         """Assert the 'Completed opportunities' table on this page contains the correct values."""
-        first_row, second_row, third_row = self.get_table_rows('Completed', data_api_client)
+        first_row, second_row, third_row = self.get_table_rows_by_id('submitted-opportunities', data_api_client)
 
         assert 'Lowest date, submitted, mid id' in first_row
         assert 'Tuesday 6 June 2017' in first_row
@@ -5923,14 +5919,14 @@ class TestOpportunitiesDashboard(BaseApplicationTest):
 
     def test_completed_list_of_opportunities_ordered_by_applications_closed_at(self, data_api_client):
         """Assert the 'Completed opportunities' table on this page contains the brief responses in the correct order."""
-        first_row, second_row, third_row = self.get_table_rows('Completed', data_api_client)
+        first_row, second_row, third_row = self.get_table_rows_by_id('submitted-opportunities', data_api_client)
 
         assert 'Lowest date' in first_row
         assert 'Mid date' in second_row
         assert 'Highest date' in third_row
 
     def test_withdrawn_has_no_link_to_application(self, data_api_client):
-        first_row, second_row, third_row = self.get_table_rows('Completed', data_api_client)
+        first_row, second_row, third_row = self.get_table_rows_by_id('submitted-opportunities', data_api_client)
 
         assert 'View application' in first_row
         assert 'View application' not in second_row
