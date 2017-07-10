@@ -5868,7 +5868,10 @@ class TestOpportunitiesDashboard(BaseApplicationTest):
             self.login()
             resp = self.client.get(self.opportunities_dashboard_url)
             assert resp.status_code == 200
-            data_api_client.find_brief_responses.assert_called_once_with(supplier_id=1234, framework='digital-outcomes-and-specialists-2')
+            data_api_client.find_brief_responses.assert_called_once_with(
+                supplier_id=1234,
+                framework='digital-outcomes-and-specialists-2'
+            )
 
     def test_404_if_framework_does_not_exist(self, data_api_client):
         data_api_client.get_framework.side_effect = APIError(mock.Mock(status_code=404))
@@ -5913,17 +5916,17 @@ class TestOpportunitiesDashboard(BaseApplicationTest):
         """Assert the 'Completed opportunities' table on this page contains the correct values."""
         first_row, second_row, third_row = self.get_table_rows_by_id('submitted-opportunities', data_api_client)
 
-        assert 'Lowest date, submitted, mid id' in first_row
-        assert 'Tuesday 6 June 2017' in first_row
+        assert 'Highest date, submitted, lowest id' in first_row
+        assert 'Thursday 8 June 2017' in first_row
         assert 'View application' in first_row
 
     def test_completed_list_of_opportunities_ordered_by_applications_closed_at(self, data_api_client):
         """Assert the 'Completed opportunities' table on this page contains the brief responses in the correct order."""
         first_row, second_row, third_row = self.get_table_rows_by_id('submitted-opportunities', data_api_client)
 
-        assert 'Lowest date' in first_row
+        assert 'Highest date' in first_row
         assert 'Mid date' in second_row
-        assert 'Highest date' in third_row
+        assert 'Lowest date' in third_row
 
     def test_withdrawn_has_no_link_to_application(self, data_api_client):
         first_row, second_row, third_row = self.get_table_rows_by_id('submitted-opportunities', data_api_client)

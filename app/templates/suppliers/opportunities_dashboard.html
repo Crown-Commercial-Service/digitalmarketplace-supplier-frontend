@@ -35,19 +35,19 @@
 
   <p>
     <a href={{ "/{}/opportunities".format(framework.framework) }}>
-      Search for opportunities
+      Search for other opportunities
     </a>
   </p>
 
 
 {{ summary.heading("Applications you’ve made", id="submitted-opportunities") }}
 {% call(item) summary.list_table(
-    completed|sort(attribute='brief.applicationsClosedAt'),
+    completed|sort(attribute='brief.applicationsClosedAt', reverse=True),
     caption="Completed opportunities",
     empty_message="You haven’t applied to any opportunities",
     field_headings=[
         "Opportunity",
-        "Application closing date",
+        "Closing date",
         summary.hidden_field_heading("View")
     ],
     field_headings_visible=True
