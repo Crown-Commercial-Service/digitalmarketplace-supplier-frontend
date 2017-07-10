@@ -1187,3 +1187,27 @@ def view_contract_variation(framework_slug, variation_slug):
         agreed_details=agreed_details,
         supplier_name=supplier_name,
     ), 400 if form_errors else 200
+
+
+@main.route('/frameworks/<framework_slug>/opportunities', methods=['GET'])
+@login_required
+def opportunities_dashboard(framework_slug):
+    try:
+        framework = data_api_client.get_framework(slug=framework_slug)['frameworks']
+        supplier_framework = data_api_client.get_supplier_framework_info(
+            supplier_id=current_user.supplier_id,
+            framework_slug=framework['slug']
+        )['frameworkInterest']
+    except APIError as e:
+        abort(e.status_code)
+    if not (framework['framework'] == 'digital-outcomes-and-specialists' and supplier_framework['onFramework']):
+        abort(404)
+    opportunities = data_api_client.find_brief_responses(
+        supplier_id=current_user.supplier_id, framework=framework_slug
+    )['briefResponses']
+
+    return render_template(
+        "suppliers/opportunities_dashboard.html",
+        framework=framework,
+        completed=opportunities
+    ), 200

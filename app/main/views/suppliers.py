@@ -63,7 +63,6 @@ def dashboard():
                 framework.get('onFramework') and framework.get('agreementReturned') is False
             )
         })
-
     return render_template(
         "suppliers/dashboard.html",
         supplier=supplier,

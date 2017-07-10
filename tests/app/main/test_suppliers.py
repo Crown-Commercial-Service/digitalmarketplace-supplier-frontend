@@ -1,8 +1,8 @@
 # coding=utf-8
-
-import mock
 from flask import session
 from lxml import html
+import mock
+import pytest
 
 from dmapiclient import HTTPError
 from dmutils.email.exceptions import EmailError
@@ -59,9 +59,10 @@ def get_user():
     }]
 
 
+@mock.patch("app.main.views.suppliers.data_api_client", autospec=True)
+@mock.patch("app.main.views.suppliers.get_current_suppliers_users", autospec=True)
 class TestSuppliersDashboard(BaseApplicationTest):
-    @mock.patch("app.main.views.suppliers.data_api_client")
-    @mock.patch("app.main.views.suppliers.get_current_suppliers_users")
+
     def test_shows_supplier_info(self, get_current_suppliers_users, data_api_client):
         data_api_client.get_framework.return_value = self.framework('open')
         data_api_client.get_supplier.side_effect = get_supplier
@@ -98,8 +99,6 @@ class TestSuppliersDashboard(BaseApplicationTest):
             assert self.strip_all_whitespace('User Name</span></td>') in self.strip_all_whitespace(resp_data)
             assert self.strip_all_whitespace('email@email.com</span></td>') in self.strip_all_whitespace(resp_data)
 
-    @mock.patch("app.main.views.suppliers.data_api_client")
-    @mock.patch("app.main.views.suppliers.get_current_suppliers_users")
     def test_error_and_success_flashed_messages_only_are_shown_in_banner_messages(
         self, get_current_suppliers_users, data_api_client
     ):
@@ -126,8 +125,6 @@ class TestSuppliersDashboard(BaseApplicationTest):
             assert '<pclass="banner-message">Thisisasuccess</p>' in data
             assert '<pclass="banner-message">account-created</p>' not in data
 
-    @mock.patch("app.main.views.suppliers.data_api_client")
-    @mock.patch("app.main.views.suppliers.get_current_suppliers_users")
     def test_data_analytics_track_page_view_is_shown_if_account_created_flag_flash_message(
         self, get_current_suppliers_users, data_api_client
     ):
@@ -142,8 +139,6 @@ class TestSuppliersDashboard(BaseApplicationTest):
 
             assert 'data-analytics="trackPageView" data-url="/suppliers?account-created=true"' in data
 
-    @mock.patch("app.main.views.suppliers.data_api_client")
-    @mock.patch("app.main.views.suppliers.get_current_suppliers_users")
     def test_data_analytics_track_page_view_is_not_shown_if_no_account_created_flag_flash_message(
         self, get_current_suppliers_users, data_api_client
     ):
@@ -155,8 +150,6 @@ class TestSuppliersDashboard(BaseApplicationTest):
 
             assert 'data-analytics="trackPageView" data-url="/suppliers?account-created=true"' not in data
 
-    @mock.patch("app.main.views.suppliers.data_api_client")
-    @mock.patch("app.main.views.suppliers.get_current_suppliers_users")
     def test_shows_edit_buttons(self, get_current_suppliers_users, data_api_client):
         data_api_client.get_supplier.side_effect = get_supplier
         data_api_client.find_frameworks.return_value = find_frameworks_return_value
@@ -170,13 +163,12 @@ class TestSuppliersDashboard(BaseApplicationTest):
             self.login()
 
             res = self.client.get("/suppliers")
+            response_text = res.get_data(as_text=True)
             assert res.status_code == 200
 
-            assert '<a href="/suppliers/edit" class="summary-change-link">Edit</a>' in res.get_data(as_text=True)
-            assert '<a href="/suppliers/services" class="summary-change-link">View</a>' in res.get_data(as_text=True)
+            assert '<a href="/suppliers/edit" class="summary-change-link">Edit</a>' in response_text
+            assert '<a href="/suppliers/services" class="summary-change-link">View services</a>' in response_text
 
-    @mock.patch("app.main.views.suppliers.data_api_client")
-    @mock.patch("app.main.views.suppliers.get_current_suppliers_users")
     def test_shows_dos_is_coming(
         self, get_current_suppliers_users, data_api_client
     ):
@@ -212,8 +204,6 @@ class TestSuppliersDashboard(BaseApplicationTest):
                 message[0].xpath('p/text()')[0]
             assert u"Find out if your services are suitable" in message[0].xpath('p/a/text()')[0]
 
-    @mock.patch("app.main.views.suppliers.data_api_client")
-    @mock.patch("app.main.views.suppliers.get_current_suppliers_users")
     def test_shows_gcloud_7_application_button(self, get_current_suppliers_users, data_api_client):
         data_api_client.get_framework_interest.return_value = {'frameworks': []}
         data_api_client.get_supplier.side_effect = get_supplier
@@ -242,8 +232,6 @@ class TestSuppliersDashboard(BaseApplicationTest):
             assert 'Apply to G-Cloud 7' in doc.xpath('//h2[@class="summary-item-heading"]/text()')[0]
             assert doc.xpath('//input[@class="button-save"]/@value')[0] == 'Start application'
 
-    @mock.patch("app.main.views.suppliers.data_api_client")
-    @mock.patch("app.main.views.suppliers.get_current_suppliers_users")
     def test_shows_gcloud_7_continue_link(self, get_current_suppliers_users, data_api_client):
         data_api_client.get_supplier.side_effect = get_supplier
         data_api_client.get_supplier_frameworks.return_value = {
@@ -263,8 +251,6 @@ class TestSuppliersDashboard(BaseApplicationTest):
             assert doc.xpath('//a[@href="/suppliers/frameworks/g-cloud-7"]/text()')[0] == \
                 "Continue your G-Cloud 7 application"
 
-    @mock.patch("app.main.views.suppliers.data_api_client")
-    @mock.patch("app.main.views.suppliers.get_current_suppliers_users")
     def test_shows_gcloud_7_closed_message_if_pending_and_no_interest(self, get_current_suppliers_users, data_api_client):  # noqa
         data_api_client.get_framework.return_value = self.framework('pending')
         data_api_client.get_supplier.side_effect = get_supplier
@@ -290,8 +276,6 @@ class TestSuppliersDashboard(BaseApplicationTest):
             assert u"G-Cloud 7 is closed for applications" in message[0].xpath('h2/text()')[0]
             assert len(message[0].xpath('p[1]/a[@href="https://digitalmarketplace.blog.gov.uk/"]')) > 0
 
-    @mock.patch("app.main.views.suppliers.data_api_client")
-    @mock.patch("app.main.views.suppliers.get_current_suppliers_users")
     def test_shows_gcloud_7_closed_message_if_pending_and_no_application(self, get_current_suppliers_users, data_api_client):  # noqa
         data_api_client.get_framework.return_value = self.framework('pending')
         data_api_client.get_supplier.side_effect = get_supplier
@@ -327,8 +311,6 @@ class TestSuppliersDashboard(BaseApplicationTest):
             assert u"You didn’t submit an application" in message[0].xpath('p[1]/text()')[0]
             assert len(message[0].xpath('p[2]/a[contains(@href, "suppliers/frameworks/g-cloud-7")]')) > 0
 
-    @mock.patch("app.main.views.suppliers.data_api_client")
-    @mock.patch("app.main.views.suppliers.get_current_suppliers_users")
     def test_shows_gcloud_7_closed_message_if_pending_and_application_done(
         self, get_current_suppliers_users, data_api_client
     ):
@@ -364,8 +346,6 @@ class TestSuppliersDashboard(BaseApplicationTest):
             assert len(headings[0].xpath('../p[1]/a[contains(@href, "suppliers/frameworks/g-cloud-7")]')) > 0
             assert u"View your submitted application" in headings[0].xpath('../p[1]/a/text()')[0]
 
-    @mock.patch("app.main.views.suppliers.data_api_client")
-    @mock.patch("app.main.views.suppliers.get_current_suppliers_users")
     @mock.patch("app.main.views.suppliers.content_loader")
     def test_shows_gcloud_7_in_standstill_application_passed_with_message(
         self, content_loader, get_current_suppliers_users, data_api_client
@@ -415,8 +395,6 @@ class TestSuppliersDashboard(BaseApplicationTest):
             assert u"99 services" in first_row
             assert u"You must sign the framework agreement to sell these services" in first_row
 
-    @mock.patch("app.main.views.suppliers.data_api_client")
-    @mock.patch("app.main.views.suppliers.get_current_suppliers_users")
     @mock.patch("app.main.views.suppliers.content_loader")
     def test_shows_gcloud_7_in_standstill_application_passed_without_live_date(
         self, content_loader, get_current_suppliers_users, data_api_client
@@ -461,8 +439,6 @@ class TestSuppliersDashboard(BaseApplicationTest):
             assert u"G-Cloud 7" in first_row
             assert u"Live from" not in first_row
 
-    @mock.patch("app.main.views.suppliers.data_api_client")
-    @mock.patch("app.main.views.suppliers.get_current_suppliers_users")
     def test_shows_gcloud_7_in_standstill_fw_agreement_returned(
         self, get_current_suppliers_users, data_api_client
     ):
@@ -509,8 +485,6 @@ class TestSuppliersDashboard(BaseApplicationTest):
             assert u"99 services" in first_row
             assert u"You must sign the framework agreement to sell these services" not in first_row
 
-    @mock.patch("app.main.views.suppliers.data_api_client")
-    @mock.patch("app.main.views.suppliers.get_current_suppliers_users")
     def test_shows_gcloud_7_in_standstill_no_application(
         self, get_current_suppliers_users, data_api_client
     ):
@@ -536,8 +510,6 @@ class TestSuppliersDashboard(BaseApplicationTest):
 
             assert u"Pending services" not in headings[0].xpath('text()')[0]
 
-    @mock.patch("app.main.views.suppliers.data_api_client")
-    @mock.patch("app.main.views.suppliers.get_current_suppliers_users")
     def test_shows_gcloud_7_in_standstill_application_failed(
         self, get_current_suppliers_users, data_api_client
     ):
@@ -585,8 +557,6 @@ class TestSuppliersDashboard(BaseApplicationTest):
             assert u"You must sign the framework agreement to sell these services" not in first_row
             assert u"View your documents" in first_row
 
-    @mock.patch("app.main.views.suppliers.data_api_client")
-    @mock.patch("app.main.views.suppliers.get_current_suppliers_users")
     def test_shows_gcloud_7_in_standstill_application_passed(
         self, get_current_suppliers_users, data_api_client
     ):
@@ -633,8 +603,6 @@ class TestSuppliersDashboard(BaseApplicationTest):
             assert u"99 services" in first_row
             assert u"You must sign the framework agreement to sell these services" not in first_row
 
-    @mock.patch("app.main.views.suppliers.data_api_client")
-    @mock.patch("app.main.views.suppliers.get_current_suppliers_users")
     def test_shows_register_for_dos_button(self, get_current_suppliers_users, data_api_client):
         data_api_client.get_framework.return_value = self.framework(status='other')
         data_api_client.get_supplier.side_effect = get_supplier
@@ -666,8 +634,6 @@ class TestSuppliersDashboard(BaseApplicationTest):
             )[0]
             assert doc.xpath('//div[@class="summary-item-lede"]//input/@value')[0] == "Start application"
 
-    @mock.patch("app.main.views.suppliers.data_api_client")
-    @mock.patch("app.main.views.suppliers.get_current_suppliers_users")
     def test_shows_continue_with_dos_link(self, get_current_suppliers_users, data_api_client):
         data_api_client.get_supplier.side_effect = get_supplier
         data_api_client.get_supplier_frameworks.return_value = {
@@ -700,6 +666,74 @@ class TestSuppliersDashboard(BaseApplicationTest):
             assert "Continue your Digital Outcomes and Specialists application" in doc.xpath(
                 '//a[@class="browse-list-item-link"]/text()'
             )[0]
+
+
+@mock.patch("app.main.views.suppliers.data_api_client", autospec=True)
+@mock.patch("app.main.views.suppliers.get_current_suppliers_users", autospec=True)
+class TestSupplierOpportunitiesDashboardLink(BaseApplicationTest):
+    def setup_method(self, method):
+        super(TestSupplierOpportunitiesDashboardLink, self).setup_method(method)
+        self.get_supplier_frameworks_response = {
+            'agreementReturned': True,
+            'complete_drafts_count': 2,
+            'declaration': {'status': 'complete'},
+            'frameworkSlug': 'digital-outcomes-and-specialists-2',
+            'onFramework': True,
+            'services_count': 2,
+            'supplierId': 1234
+        }
+        self.find_frameworks_response = {
+            'framework': 'digital-outcomes-and-specialists',
+            'name': 'Digital Outcomes and Specialists 2',
+            'slug': 'digital-outcomes-and-specialists-2',
+            'status': 'live'
+        }
+
+    def test_opportunities_dashboard_link(self, get_current_suppliers_users, data_api_client):
+        data_api_client.get_supplier.side_effect = get_supplier
+        data_api_client.get_supplier_frameworks.return_value = {
+            'frameworkInterest': [self.get_supplier_frameworks_response]}
+        data_api_client.find_frameworks.return_value = {"frameworks": [self.find_frameworks_response]}
+
+        with self.client:
+            self.login()
+            res = self.client.get("/suppliers")
+            doc = html.fromstring(res.get_data(as_text=True))
+
+            expected_link = "/suppliers/frameworks/digital-outcomes-and-specialists-2/opportunities"
+            link_element = [i for i in doc.iterlinks() if i[2] == expected_link][0][0]
+
+            assert 'View your opportunities' in link_element.xpath('string()')
+
+    @pytest.mark.parametrize(
+        'incorrect_data',
+        (
+            {'onFramework': False},
+            {'services_count': 0},
+            {'frameworkSlug': 'not-dos'}
+        )
+    )
+    def test_opportunities_dashboard_link_fails_with_incomplete_data(
+            self,
+            get_current_suppliers_users,
+            data_api_client,
+            incorrect_data
+    ):
+        self.get_supplier_frameworks_response.update(incorrect_data)
+
+        data_api_client.get_supplier.side_effect = get_supplier
+        data_api_client.get_supplier_frameworks.return_value = {
+            'frameworkInterest': [self.get_supplier_frameworks_response]}
+        data_api_client.find_frameworks.return_value = {"frameworks": [self.find_frameworks_response]}
+
+        with self.client:
+            self.login()
+            res = self.client.get("/suppliers")
+            doc = html.fromstring(res.get_data(as_text=True))
+
+            unexpected_link = "/suppliers/frameworks/digital-outcomes-and-specialists-2/opportunities"
+
+            assert not any(filter(lambda i: i[2] == unexpected_link, doc.iterlinks()))
 
 
 class TestSupplierDashboardLogin(BaseApplicationTest):
