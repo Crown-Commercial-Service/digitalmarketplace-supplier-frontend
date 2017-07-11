@@ -109,7 +109,7 @@ class TestBriefQuestionAndAnswerSession(BaseApplicationTest):
         data_api_client.is_supplier_eligible_for_brief.return_value = False
 
         res = self.client.get('/suppliers/opportunities/1/question-and-answer-session')
-        assert res.status_code == 400
+        assert res.status_code == 403
 
     def test_q_and_a_session_details_requires_existing_brief_id(self, data_api_client):
         self.login()
@@ -174,7 +174,7 @@ class TestBriefClarificationQuestions(BaseApplicationTest):
         data_api_client.is_supplier_eligible_for_brief.return_value = False
 
         res = self.client.get('/suppliers/opportunities/1/ask-a-question')
-        assert res.status_code == 400
+        assert res.status_code == 403
 
     def test_clarification_question_form_requires_live_brief(self, data_api_client):
         self.login()
@@ -285,7 +285,7 @@ class TestSubmitClarificationQuestions(BaseApplicationTest):
         })
         doc = html.fromstring(res.get_data(as_text=True))
 
-        assert res.status_code == 400
+        assert res.status_code == 403
         assert doc.xpath('normalize-space(//h1/text())') == ERROR_MESSAGE_PAGE_HEADING_CLARIFICATION
         assert len(doc.xpath(
             '//*[contains(normalize-space(text()), normalize-space("{}"))]'.format(
@@ -307,7 +307,7 @@ class TestSubmitClarificationQuestions(BaseApplicationTest):
         })
         doc = html.fromstring(res.get_data(as_text=True))
 
-        assert res.status_code == 400
+        assert res.status_code == 403
         assert doc.xpath('normalize-space(//h1/text())') == ERROR_MESSAGE_PAGE_HEADING_CLARIFICATION
         assert len(doc.xpath(
             '//*[contains(normalize-space(text()), normalize-space("{}"))]'.format(
@@ -330,7 +330,7 @@ class TestSubmitClarificationQuestions(BaseApplicationTest):
         })
         doc = html.fromstring(res.get_data(as_text=True))
 
-        assert res.status_code == 400
+        assert res.status_code == 403
         assert doc.xpath('normalize-space(//h1/text())') == ERROR_MESSAGE_PAGE_HEADING_CLARIFICATION
         assert len(doc.xpath(
             '//*[contains(normalize-space(text()), normalize-space("{}"))]'.format(
@@ -505,11 +505,11 @@ class TestApplyToBrief(BaseApplicationTest):
         self, _render_not_eligible_for_brief_error_page, is_supplier_eligible_for_brief
     ):
         is_supplier_eligible_for_brief.return_value = False
-        _render_not_eligible_for_brief_error_page.return_value = 'dummy response', 400
+        _render_not_eligible_for_brief_error_page.return_value = 'dummy response', 403
 
         for method in ('get', 'post'):
             res = self.client.open('/suppliers/opportunities/1234/responses/5/question-id', method=method)
-            assert res.status_code == 400
+            assert res.status_code == 403
             _render_not_eligible_for_brief_error_page.assert_called_with(self.brief['briefs'])
 
     @mock.patch("app.main.views.briefs.supplier_has_a_brief_response")
@@ -1240,10 +1240,10 @@ class TestStartBriefResponseApplication(BaseApplicationTest, BriefResponseTestHe
             'briefResponses': []
         }
         is_supplier_eligible_for_brief.return_value = False
-        _render_not_eligible_for_brief_error_page.return_value = 'dummy response', 400
+        _render_not_eligible_for_brief_error_page.return_value = 'dummy response', 403
 
         res = self.client.get('/suppliers/opportunities/1234/responses/start')
-        assert res.status_code == 400
+        assert res.status_code == 403
         _render_not_eligible_for_brief_error_page.assert_called_once_with(self.brief['briefs'])
 
     def test_start_application_contains_brief_title_and_breadcrumbs(self, data_api_client):
@@ -1387,10 +1387,10 @@ class TestPostStartBriefResponseApplication(BaseApplicationTest):
     ):
         data_api_client.get_brief.return_value = self.brief
         is_supplier_eligible_for_brief.return_value = False
-        _render_not_eligible_for_brief_error_page.return_value = 'dummy response', 400
+        _render_not_eligible_for_brief_error_page.return_value = 'dummy response', 403
 
         res = self.client.post('/suppliers/opportunities/2345/responses/start')
-        assert res.status_code == 400
+        assert res.status_code == 403
         _render_not_eligible_for_brief_error_page.assert_called_once_with(self.brief['briefs'])
 
     def test_valid_post_calls_api_and_redirects_to_edit_the_created_brief_response_if_no_application_started(
@@ -1545,10 +1545,10 @@ class TestResponseResultPageLegacyFlow(ResponseResultPageBothFlows):
         data_api_client.get_brief.return_value = self.brief
         data_api_client.find_brief_responses.return_value = self.brief_responses
         is_supplier_eligible_for_brief.return_value = False
-        _render_not_eligible_for_brief_error_page.return_value = 'dummy response', 400
+        _render_not_eligible_for_brief_error_page.return_value = 'dummy response', 403
 
         res = self.client.get('/suppliers/opportunities/1234/responses/result')
-        assert res.status_code == 400
+        assert res.status_code == 403
         _render_not_eligible_for_brief_error_page.assert_called_once_with(self.brief['briefs'])
 
     def test_view_response_result_page_escapes_essential_and_nice_to_have_requirements(self, data_api_client):
@@ -1763,10 +1763,10 @@ class TestResponseResultPage(ResponseResultPageBothFlows, BriefResponseTestHelpe
         data_api_client.get_brief.return_value = self.brief
         data_api_client.find_brief_responses.return_value = self.brief_responses
         is_supplier_eligible_for_brief.return_value = False
-        _render_not_eligible_for_brief_error_page.return_value = 'dummy response', 400
+        _render_not_eligible_for_brief_error_page.return_value = 'dummy response', 403
 
         res = self.client.get('/suppliers/opportunities/1234/responses/result')
-        assert res.status_code == 400
+        assert res.status_code == 403
         _render_not_eligible_for_brief_error_page.assert_called_once_with(self.brief['briefs'])
 
     def test_view_response_result_page_escapes_essential_and_nice_to_have_requirements(self, data_api_client):
