@@ -328,4 +328,4 @@ def _render_not_eligible_for_brief_error_page(brief, clarification_question=Fals
         lot=brief['lotSlug'],
         reason=reason,
         data_reason_slug=data_reason_slug
-    ), 400
+    ), 403
