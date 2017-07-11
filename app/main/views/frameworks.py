@@ -959,7 +959,8 @@ def signature_upload(framework_slug, agreement_id):
     check_agreement_is_related_to_supplier_framework_or_abort(agreement, supplier_framework)
 
     agreements_bucket = s3.S3(current_app.config['DM_AGREEMENTS_BUCKET'])
-    signature_page = agreements_bucket.get_key(agreement.get('signedAgreementPath'))
+    agreement_path = agreement.get('signedAgreementPath')
+    signature_page = agreements_bucket.get_key(agreement_path) if agreement_path else None
     upload_error = None
 
     if request.method == 'POST':
