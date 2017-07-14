@@ -8,4 +8,4 @@
 set -o pipefail
 
 # Install development dependencies
-make requirements_for_test npm_install frontend_build
+make requirements-dev npm-install frontend-build
