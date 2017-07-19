@@ -17,10 +17,10 @@ sudo easy_install virtualenv
 
 Install dependencies, build assets and run the app
 ```
-make run_all
+make run-all
 ```
 
-Debian (jessie) users will need `libxslt1-dev` and `libxml2-dev` installed for `requirements_for_test`.
+Debian (jessie) users will need `libxslt1-dev` and `libxml2-dev` installed for `requirements-dev`.
 
 ## Full setup
 
@@ -44,7 +44,7 @@ source ./venv/bin/activate
 
 Install new Python dependencies with pip
 
-```make requirements_for_test```
+```make requirements-dev```
 
 
 ## Front-end
@@ -93,23 +93,23 @@ make test
 ```
 
 To test individual parts of the test stack use the `test_flake8`, `test_python`
-or `test_javascript` targets.
+or `test-javascript` targets.
 
 eg.
 ```
-make test_javascript
+make test-javascript
 ```
 
 ### Run the development server
 
-To run the Supplier Frontend App for local development use the `run_all` target.
+To run the Supplier Frontend App for local development use the `run-all` target.
 This will install requirements, build assets and run the app.
 
 ```
-make run_all
+make run-all
 ```
 
-To just run the application use the `run_app` target.
+To just run the application use the `run-app` target.
 
 The supplier frontend runs on port 5003. Use the app at [http://127.0.0.1:5003/suppliers](http://127.0.0.1:5003/suppliers)
 
@@ -124,6 +124,19 @@ The frontend applications are hyperlinked together but are running on different 
 To do this use the bootstrap.sh script in the nginx folder from [digitalmarketplace-functional-tests](https://github.com/alphagov/digitalmarketplace-functional-tests) to set up nginx aliases.
 
 In this case both the buyer frontend application and supplier applications will available from port 80 usually aliased to localhost and supplier application can be accessed from [localhost/suppliers](localhost/suppliers)
+
+### Updating application dependencies
+
+`requirements.txt` file is generated from the `requirements-app.txt` in order to pin
+versions of all nested dependecies. If `requirements-app.txt` has been changed (or
+we want to update the unpinned nested dependencies) `requirements.txt` should be
+regenerated with
+
+```
+make freeze-requirements
+```
+
+`requirements.txt` should be commited alongside `requirements-app.txt` changes.
 
 ### Using FeatureFlags
 
