@@ -1,9 +1,6 @@
 {% import "toolkit/summary-table.html" as summary %}
 
 {{ summary.heading("Current services") }}
-{% if frameworks.live %}
-  {{ summary.top_link('View services', url_for('.list_services')) }}
-{% endif %}
 {% call(framework) summary.list_table(
   frameworks.live,
   caption='Current services',
@@ -32,6 +29,7 @@
 
     {% if framework.onFramework and not framework.needs_to_complete_declaration %}
         {% call summary.field(action=True) %}
+            <a href="{{ url_for('.list_services', framework_slug=framework.slug) }}">View services</a><br>
             {% if framework.framework == 'digital-outcomes-and-specialists' %}
                 <a href="{{ url_for('.opportunities_dashboard', framework_slug=framework.slug) }}">View your opportunities</a><br>
             {% endif %}

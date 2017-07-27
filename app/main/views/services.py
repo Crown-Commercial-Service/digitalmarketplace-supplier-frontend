@@ -5,7 +5,12 @@ from ... import data_api_client, flask_featureflags
 from ...main import main, content_loader
 from ..helpers import login_required
 from ..helpers.services import is_service_associated_with_supplier, get_signed_document_url, count_unanswered_questions
-from ..helpers.frameworks import get_framework_and_lot, get_declaration_status, get_supplier_framework_info
+from ..helpers.frameworks import (
+    get_framework_and_lot,
+    get_declaration_status,
+    get_supplier_framework_info,
+    get_framework,
+)
 
 from dmcontent.content_loader import ContentNotFoundError
 from dmapiclient import HTTPError
@@ -13,18 +18,21 @@ from dmutils import s3
 from dmutils.documents import upload_service_documents
 
 
-@main.route('/services')
+@main.route('/services/<string:framework_slug>')
 @login_required
-def list_services():
-    suppliers_services = sorted(
-        data_api_client.find_services(supplier_id=current_user.supplier_id)["services"],
-        key=lambda service: service['frameworkSlug'],
-        reverse=True
-    )
+def list_services(framework_slug):
+    framework = get_framework(data_api_client, framework_slug, allowed_statuses=['live'])
+
+    suppliers_services = data_api_client.find_services(
+        supplier_id=current_user.supplier_id,
+        framework=framework_slug,
+    )["services"]
 
     return render_template(
         "services/list_services.html",
-        services=suppliers_services), 200
+        services=suppliers_services,
+        framework=framework,
+    ), 200
 
 
 #  #######################  EDITING LIVE SERVICES #############################

@@ -36,33 +36,34 @@
   {% endwith %}
   <div class="grid-row">
     <div class="column-two-thirds">
-      {% with
-        heading = "Current services"
-      %}
+      {% set heading %}
+        Your {{ framework.name }} services
+      {% endset %}
+      {% with smaller=true %}
         {% include 'toolkit/page-heading.html' %}
       {% endwith %}
     </div>
   </div>
 
+  {% set empty_message %}
+    You don’t have any {{ framework.name }} services on the Digital Marketplace
+  {% endset %}
   {% call(item) summary.list_table(
     services,
     caption='Current services',
     field_headings=[
       'Name',
-      'Framework',
       'Lot',
-      summary.hidden_field_heading("Action")
+      summary.hidden_field_heading("Status")
     ],
     field_headings_visible=True,
-    empty_message="You don't have any services on the Digital Marketplace"
+    empty_message=empty_message
   ) %}
     {% call summary.row() %}
       {{ summary.service_link(
           item.serviceName or item.lotName,
           url_for('.edit_service', service_id=item.id)
       ) }}
-
-      {{ summary.text(item.frameworkName) }}
 
       {{ summary.text(item.lotName or item.lot) }}
 
