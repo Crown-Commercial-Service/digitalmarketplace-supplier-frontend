@@ -62,7 +62,7 @@
     {% call summary.row() %}
       {{ summary.service_link(
           item.serviceName or item.lotName,
-          url_for('.edit_service', service_id=item.id)
+          url_for('.edit_service', framework_slug=item.frameworkSlug, service_id=item.id)
       ) }}
 
       {{ summary.text(item.lotName or item.lot) }}
