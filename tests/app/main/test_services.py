@@ -6,6 +6,7 @@ except ImportError:
 
 from dmapiclient import HTTPError
 import copy
+from functools import partial
 import mock
 import pytest
 from lxml import html
@@ -48,6 +49,114 @@ def supplier_remove_service__service_status__expected_results(request):
 @pytest.fixture(params=(False, True,))
 def supplier_remove_service__post_data(request):
     return request.param
+
+
+@pytest.mark.parametrize("service_status", ("published", "enabled", "disabled",))
+@pytest.mark.parametrize("framework_framework", ("g-cloud", "digital-outcomes-and-specialists",))
+@mock.patch('app.main.views.services.data_api_client')
+class TestServiceHeirarchyRedirection(BaseApplicationTest):
+    @staticmethod
+    def _mock_get_service_side_effect(service_status, framework_framework, service_belongs_to_user, service_id):
+        try:
+            return {"567": {
+                'services': {
+                    'serviceName': 'Some name 567',
+                    'status': service_status,
+                    'id': '567',
+                    'frameworkName': "Q-Cloud #57",
+                    'frameworkSlug': "q-cloud-57",
+                    'frameworkFramework': framework_framework,
+                    'supplierId': 1234 if service_belongs_to_user else 1235,
+                },
+            }}[str(service_id)]
+        except KeyError:
+            raise HTTPError(mock.Mock(status_code=404))
+
+    @pytest.mark.parametrize("suffix", ("", "/blah/123",))
+    def test_redirects_happy_path(
+            self,
+            data_api_client,
+            service_status,
+            framework_framework,
+            suffix,
+    ):
+        with self.app.test_client():
+            self.login()
+
+            data_api_client.get_service.side_effect = partial(
+                self._mock_get_service_side_effect,
+                service_status,
+                framework_framework,
+                True,
+            )
+            res = self.client.get('/suppliers/services/567' + suffix)
+
+            assert res.status_code == 302
+            assert res.location == "http://localhost/suppliers/frameworks/q-cloud-57/services/567" + suffix
+
+    @pytest.mark.parametrize("suffix", ("", "/blah/123",))
+    def test_fails_if_wrong_supplier(
+            self,
+            data_api_client,
+            service_status,
+            framework_framework,
+            suffix,
+    ):
+        with self.app.test_client():
+            self.login()
+
+            data_api_client.get_service.side_effect = partial(
+                self._mock_get_service_side_effect,
+                service_status,
+                framework_framework,
+                False,
+            )
+            res = self.client.get('/suppliers/services/567' + suffix)
+
+            assert res.status_code == 404
+
+    @pytest.mark.parametrize("suffix", ("", "/blah/123",))
+    def test_fails_if_unknown_service(
+            self,
+            data_api_client,
+            service_status,
+            framework_framework,
+            suffix,
+    ):
+        with self.app.test_client():
+            self.login()
+
+            data_api_client.get_service.side_effect = partial(
+                self._mock_get_service_side_effect,
+                service_status,
+                framework_framework,
+                True,
+            )
+            res = self.client.get('/suppliers/services/31415' + suffix)
+
+            assert res.status_code == 404
+
+    @pytest.mark.parametrize("service_belongs_to_user", (False, True,))
+    def test_trailing_slash(
+            self,
+            data_api_client,
+            service_status,
+            framework_framework,
+            service_belongs_to_user,
+    ):
+        with self.app.test_client():
+            self.login()
+
+            data_api_client.get_service.side_effect = partial(
+                self._mock_get_service_side_effect,
+                service_status,
+                framework_framework,
+                True,
+            )
+            res = self.client.get('/suppliers/services/567/')
+
+            assert res.status_code == 301
+            assert res.location == "http://localhost/suppliers/services/567"
 
 
 class TestListServices(BaseApplicationTest):
