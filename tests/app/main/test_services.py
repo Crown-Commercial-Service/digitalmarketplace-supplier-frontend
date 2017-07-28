@@ -51,17 +51,22 @@ def supplier_remove_service__post_data(request):
 
 
 class TestListServices(BaseApplicationTest):
-    def setup_framework_mock(self, data_api_client):
-        data_api_client.get_framework.side_effect = lambda framework_slug: {
-            "g-cloud-909": self.framework(status="live", name="G-Cloud 909", slug="g-cloud-909"),
-        }[framework_slug]
+    def _mock_get_framework_side_effect(self, framework_slug):
+        try:
+            return {
+                "g-cloud-909": self.framework(status="live", name="G-Cloud 909", slug="g-cloud-909"),
+                "g-cloud-890": self.framework(status="open", name="G-Cloud 890", slug="g-cloud-890"),
+                "g-cloud-870": self.framework(status="expired", name="G-Cloud 870", slug="g-cloud-870"),
+            }[framework_slug]
+        except KeyError:
+            raise HTTPError(mock.Mock(status_code=404))
 
     @mock.patch('app.main.views.services.data_api_client')
     def test_shows_no_services_message(self, data_api_client):
         with self.app.test_client():
             self.login()
 
-            self.setup_framework_mock(data_api_client)
+            data_api_client.get_framework.side_effect = self._mock_get_framework_side_effect
             data_api_client.find_services.return_value = {
                 "services": [],
             }
@@ -84,12 +89,28 @@ class TestListServices(BaseApplicationTest):
                 framework="g-cloud-909",
             )
 
+    @pytest.mark.parametrize("framework_slug", (
+        "g-cloud-890",
+        "g-cloud-870",
+        "x-cloud-123",
+    ))
+    @mock.patch('app.main.views.services.data_api_client')
+    def test_no_services_list_inappropriate_frameworks(self, data_api_client, framework_slug):
+        with self.app.test_client():
+            self.login()
+
+            data_api_client.get_framework.side_effect = self._mock_get_framework_side_effect
+            data_api_client.find_services.side_effect = AssertionError("Shouldn't be called")
+
+            res = self.client.get("/suppliers/frameworks/{}/services".format(framework_slug))
+            assert res.status_code == 404
+
     @mock.patch('app.main.views.services.data_api_client')
     def test_shows_services_list(self, data_api_client):
         with self.app.test_client():
             self.login()
 
-            self.setup_framework_mock(data_api_client)
+            data_api_client.get_framework.side_effect = self._mock_get_framework_side_effect
             data_api_client.find_services.return_value = {
                 'services': [{
                     'serviceName': 'Service name 123',
@@ -153,7 +174,7 @@ class TestListServices(BaseApplicationTest):
         with self.app.test_client():
             self.login()
 
-            self.setup_framework_mock(data_api_client)
+            data_api_client.get_framework.side_effect = self._mock_get_framework_side_effect
             data_api_client.find_services.return_value = {
                 'services': [{
                     'serviceName': 'Service name 123',
@@ -182,7 +203,7 @@ class TestListServices(BaseApplicationTest):
         with self.app.test_client():
             self.login()
 
-            self.setup_framework_mock(data_api_client)
+            data_api_client.get_framework.side_effect = self._mock_get_framework_side_effect
             data_api_client.find_services.return_value = {
                 'services': [{
                     'status': 'published',
@@ -297,6 +318,18 @@ class SupplierEditServiceTestsSharedAcrossFrameworks(_BaseTestSupplierEditRemove
             '<h2>Remove this service</h2>',
             res.get_data(as_text=True)
         )
+
+    @pytest.mark.parametrize("status", ["published", "enabled", "disabled"])
+    def test_service_incorrect_framework(self, data_api_client, status):
+        self.login()
+        self._setup_service(
+            data_api_client,
+            service_status=status,
+            **self.framework_kwargs
+        )
+
+        res = self.client.get("/suppliers/frameworks/not-a-framework/services/123")
+        assert res.status_code == 404
 
 
 @mock.patch('app.main.views.services.data_api_client')
@@ -623,6 +656,32 @@ class TestSupplierRemoveService(_BaseTestSupplierEditRemoveService):
         assert data_api_client.update_service_status.called is (expect_api_call_if_data and post_data)
         assert response.status_code == expected_status_code
 
+    @pytest.mark.parametrize("confirm", (False, True,))
+    def test_should_fail_if_incorrent_framework(
+            self,
+            data_api_client,
+            supplier_service_editing_fw_params,
+            confirm,
+    ):
+        framework_slug, framework_framework, framework_name, framework_editable_services = \
+            supplier_service_editing_fw_params
+        self.login()
+        self._setup_service(
+            data_api_client,
+            framework_slug,
+            framework_framework,
+            framework_name,
+            service_status='published'
+        )
+
+        res = self.client.post(
+            '/suppliers/frameworks/{}-fake/services/123/remove'.format(framework_slug),
+            data={'remove_confirmed': True} if confirm else None,
+        )
+
+        assert res.status_code == 404
+        assert data_api_client.update_service_status.called is False
+
 
 @mock.patch('app.main.views.services.data_api_client')
 class TestSupplierEditUpdateServiceSection(BaseApplicationTest):
@@ -654,6 +713,15 @@ class TestSupplierEditUpdateServiceSection(BaseApplicationTest):
         assert self.strip_all_whitespace(
             '<a href="/suppliers/frameworks/g-cloud-6/services/1">Return to service summary</a>'
         ) in self.strip_all_whitespace(res.get_data(as_text=True))
+        assert data_api_client.update_service.called is False
+        self.assert_no_flashes()
+
+    def test_edit_service_incorrect_framework(self, data_api_client):
+        data_api_client.get_service.return_value = self.empty_service
+        res = self.client.get('/suppliers/frameworks/g-cloud-7/services/1/edit/description')
+        assert res.status_code == 404
+        assert data_api_client.update_service.called is False
+        self.assert_no_flashes()
 
     def test_questions_for_this_service_section_can_be_changed(self, data_api_client):
         data_api_client.get_service.return_value = self.empty_service
@@ -688,6 +756,7 @@ class TestSupplierEditUpdateServiceSection(BaseApplicationTest):
             })
 
         assert res.status_code == 404
+        assert data_api_client.update_service.called is False
         self.assert_no_flashes()
 
     def test_only_questions_for_this_service_section_can_be_changed(self, data_api_client):
@@ -712,6 +781,7 @@ class TestSupplierEditUpdateServiceSection(BaseApplicationTest):
         res = self.client.get('/suppliers/frameworks/g-cloud-6/services/1/edit/description')
 
         assert res.status_code == 404
+        assert data_api_client.update_service.called is False
 
     def test_edit_non_existent_section_returns_404(self, data_api_client):
         data_api_client.get_service.return_value = self.empty_service
@@ -719,6 +789,7 @@ class TestSupplierEditUpdateServiceSection(BaseApplicationTest):
             '/suppliers/frameworks/g-cloud-6/services/1/edit/invalid-section'
         )
         assert res.status_code == 404
+        assert data_api_client.update_service.called is False
 
     def test_update_with_answer_required_error(self, data_api_client):
         data_api_client.get_service.return_value = self.empty_service
@@ -758,6 +829,7 @@ class TestSupplierEditUpdateServiceSection(BaseApplicationTest):
 
         assert res.status_code == 404
         self.assert_no_flashes()
+        assert data_api_client.update_service.called is False
 
     def test_update_non_existent_section_returns_404(self, data_api_client):
         data_api_client.get_service.return_value = self.empty_service
@@ -766,6 +838,20 @@ class TestSupplierEditUpdateServiceSection(BaseApplicationTest):
         )
         assert res.status_code == 404
         self.assert_no_flashes()
+        assert data_api_client.update_service.called is False
+
+    def test_incorrect_framework_fails(self, data_api_client):
+        data_api_client.get_service.return_value = self.empty_service
+        res = self.client.post(
+            '/suppliers/frameworks/g-cloud-7/services/1/edit/description',
+            data={
+                'serviceName': 'The service',
+                'serviceSummary': 'This is the service',
+            })
+
+        assert res.status_code == 404
+        self.assert_no_flashes()
+        assert data_api_client.update_service.called is False
 
 
 @mock.patch('app.main.views.services.data_api_client', autospec=True)
