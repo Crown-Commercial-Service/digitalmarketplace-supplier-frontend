@@ -189,13 +189,13 @@ class TestSuppliersDashboard(BaseApplicationTest):
             )
 
             assert document.xpath(
-                "//tr[./td[normalize-space(string())=$f]][.//a[normalize-space(string())=$t][@href=$u]]",
+                "//*[(.//h2)[1][normalize-space(string())=$f]][.//a[normalize-space(string())=$t][@href=$u]]",
                 f="G-Cloud 6",
                 t="View services",
                 u="/suppliers/frameworks/g-cloud-6/services",
             )
             assert not document.xpath(
-                "//tr[./td[normalize-space(string())=$f]][.//a[normalize-space(string())=$t]]",
+                "//*[(.//h2)[1][normalize-space(string())=$f]][.//a[normalize-space(string())=$t]]",
                 f="G-Cloud 7",
                 t="View services",
             )
