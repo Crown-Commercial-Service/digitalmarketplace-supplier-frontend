@@ -151,7 +151,7 @@ class TestServiceHeirarchyRedirection(BaseApplicationTest):
                 self._mock_get_service_side_effect,
                 service_status,
                 framework_framework,
-                True,
+                service_belongs_to_user,
             )
             res = self.client.get('/suppliers/services/567/')
 
