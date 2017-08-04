@@ -77,6 +77,23 @@ def dashboard():
     ), 200
 
 
+@main.route('/details', methods=['GET'])
+@login_required
+def supplier_details():
+    try:
+        supplier = data_api_client.get_supplier(
+            current_user.supplier_id
+        )['suppliers']
+    except APIError as e:
+        abort(e.status_code)
+    supplier['contact'] = supplier['contactInformation'][0]
+
+    return render_template(
+        "suppliers/details.html",
+        supplier=supplier,
+    ), 200
+
+
 @main.route('/edit', methods=['GET'])
 @login_required
 def edit_supplier(supplier_form=None, contact_form=None, error=None):

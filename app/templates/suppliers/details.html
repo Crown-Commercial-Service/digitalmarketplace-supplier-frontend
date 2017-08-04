@@ -1,0 +1,84 @@
+{% extends "_base_page.html" %}
+{% import "toolkit/summary-table.html" as summary %}
+{% block page_title %}Supplier details – Digital Marketplace{% endblock %}
+
+{% block breadcrumb %}
+  {%
+    with items = [
+      {
+        "link": "/",
+        "label": "Digital Marketplace"
+      },
+      {
+        "link": url_for(".dashboard"),
+        "label": "Your account"
+      }
+    ]
+  %}
+    {% include "toolkit/breadcrumb.html" %}
+  {% endwith %}
+{% endblock %}
+
+
+{% block main_content %}
+{%
+  with
+    heading = "Supplier details"
+%}
+  {% include "toolkit/page-heading.html" %}
+{% endwith %}
+
+
+{{ summary.top_link('Edit', url_for('.edit_supplier')) }}
+{% call(item) summary.mapping_table(
+  caption='Supplier details',
+  field_headings=[
+    'Label',
+    'Value'
+  ],
+  field_headings_visible=False
+) %}
+  {% call summary.row() %}
+    {{ summary.field_name('Contact name') }}
+    {{ summary.text(supplier.contact.contactName) }}
+  {% endcall %}
+  {% call summary.row() %}
+    {{ summary.field_name('Email address') }}
+    {{ summary.text(supplier.contact.email) }}
+  {% endcall %}
+  {% call summary.row() %}
+    {{ summary.field_name('Phone number') }}
+    {{ summary.text(supplier.contact.phoneNumber) }}
+  {% endcall %}
+  {% call summary.row() %}
+    {{ summary.field_name('Website') }}
+    {{ summary.external_link(supplier.contact.website, supplier.contact.website)}}
+  {% endcall %}
+  {% call summary.row() %}
+    {{ summary.field_name('Address') }}
+    {% call summary.field() %}
+      {%
+        with
+        without_spacing = true,
+        postcode = supplier.contact.get("postcode"),
+        street_address = True,
+        street_address_line_1 = supplier.contact.get("address1"),
+        street_address_line_2 = supplier.contact.get("address2"),
+        locality = supplier.contact.get("city"),
+        country = supplier.contact.get("country")
+      %}
+        {% include "toolkit/contact-details.html" %}
+      {% endwith %}
+    {% endcall %}
+  {% endcall %}
+  {% call summary.row() %}
+    {{ summary.field_name('Supplier summary') }}
+    {{ summary.text(supplier.description) }}
+  {% endcall %}
+  {% call summary.row() %}
+    {{ summary.field_name('Clients') }}
+    {{ summary.list(supplier.clients) }}
+  {% endcall %}
+{% endcall %}
+
+{% endblock %}
