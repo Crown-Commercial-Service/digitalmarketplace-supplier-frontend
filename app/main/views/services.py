@@ -203,7 +203,7 @@ def update_section(framework_slug, service_id, section_id):
 
 
 # we have to split these route definitions in two because without a fixed "/" separating the service_id and
-# trailing_path because otherwise it's not clearly defined where flask should start capturing trailing_path
+# trailing_path it's not clearly defined where flask should start capturing trailing_path
 @main.route("/services/<string:service_id>", defaults={"trailing_path": ""})
 @main.route("/services/<string:service_id>/<path:trailing_path>")
 @login_required
@@ -223,8 +223,8 @@ def redirect_direct_service_urls(service_id, trailing_path):
     # of views
     return redirect(url_for(
         ".edit_service",
-        service_id=service_id,
         framework_slug=service["frameworkSlug"],
+        service_id=service_id,
     ) + (trailing_path and ("/" + trailing_path)))
 
 
