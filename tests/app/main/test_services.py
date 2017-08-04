@@ -185,12 +185,12 @@ class TestListServices(BaseApplicationTest):
 
             document = html.fromstring(res.get_data(as_text=True))
             assert document.xpath(
-                "//*[contains(@class, 'summary-item-no-content')][normalize-space(string())=$t]",
-                t=u"You don’t have any G-Cloud 909 services on the Digital Marketplace",
-            )
-            assert document.xpath(
                 "//h1[normalize-space(string())=$t]",
                 t=u"Your G-Cloud 909 services",
+            )
+            assert document.xpath(
+                "//*[contains(@class, 'summary-item-no-content')][normalize-space(string())=$t]",
+                t=u"You don’t have any G-Cloud 909 services on the Digital Marketplace",
             )
 
             data_api_client.find_services.assert_called_once_with(
@@ -255,7 +255,7 @@ class TestListServices(BaseApplicationTest):
             )
 
     @mock.patch('app.data_api_client')
-    def test_should_not_be_able_to_see_page_if_made_inactive(self, services_data_api_client):
+    def test_should_not_be_able_to_see_page_if_user_inactive(self, services_data_api_client):
         with self.app.test_client():
             self.login()
 
@@ -766,7 +766,7 @@ class TestSupplierRemoveService(_BaseTestSupplierEditRemoveService):
         assert response.status_code == expected_status_code
 
     @pytest.mark.parametrize("confirm", (False, True,))
-    def test_should_fail_if_incorrent_framework(
+    def test_should_fail_if_incorrect_framework(
             self,
             data_api_client,
             supplier_service_editing_fw_params,
