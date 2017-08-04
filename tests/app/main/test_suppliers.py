@@ -208,7 +208,7 @@ class TestSuppliersDashboard(BaseApplicationTest):
             assert document.xpath(
                 "//a[normalize-space(string())=$t][@href=$u][contains(@class, $c)]",
                 t="Edit",
-                u="/suppliers/edit",
+                u="/suppliers/details/edit",
                 c="summary-change-link",
             )
 
@@ -858,7 +858,7 @@ class TestSupplierUpdate(BaseApplicationTest):
                 "contact_postcode": "11 AB",
             }
         data.update(kwargs)
-        res = self.client.post("/suppliers/edit", data=data)
+        res = self.client.post("/suppliers/details/edit", data=data)
         return res.status_code, res.get_data(as_text=True)
 
     def test_should_render_edit_page_with_minimum_data(self, data_api_client):
@@ -883,7 +883,7 @@ class TestSupplierUpdate(BaseApplicationTest):
 
         data_api_client.get_supplier.side_effect = limited_supplier
 
-        response = self.client.get("/suppliers/edit")
+        response = self.client.get("/suppliers/details/edit")
         assert response.status_code == 200
 
     def test_update_all_supplier_fields(self, data_api_client):
@@ -1037,9 +1037,9 @@ class TestSupplierUpdate(BaseApplicationTest):
         assert 'You must have 10 or fewer clients' in resp
 
     def test_should_redirect_to_login_if_not_logged_in(self, data_api_client):
-        res = self.client.get("/suppliers/edit")
+        res = self.client.get("/suppliers/details/edit")
         assert res.status_code == 302
-        assert res.location == "http://localhost/login?next=%2Fsuppliers%2Fedit"
+        assert res.location == "http://localhost/login?next=%2Fsuppliers%2Fdetails%2Fedit"
 
 
 class TestCreateSupplier(BaseApplicationTest):

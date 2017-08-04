@@ -94,7 +94,7 @@ def supplier_details():
     ), 200
 
 
-@main.route('/edit', methods=['GET'])
+@main.route('/details/edit', methods=['GET'])
 @login_required
 def edit_supplier(supplier_form=None, contact_form=None, error=None):
     try:
@@ -122,7 +122,7 @@ def edit_supplier(supplier_form=None, contact_form=None, error=None):
     ), 200
 
 
-@main.route('/edit', methods=['POST'])
+@main.route('/details/edit', methods=['POST'])
 @login_required
 def update_supplier():
     # FieldList expects post parameter keys to have number suffixes
@@ -158,7 +158,7 @@ def update_supplier():
                              contact_form=contact_form,
                              error=e.message)
 
-    return redirect(url_for(".dashboard"))
+    return redirect(url_for(".supplier_details"))
 
 
 @main.route('/create', methods=['GET'])
