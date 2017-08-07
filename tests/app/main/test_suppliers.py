@@ -213,26 +213,26 @@ class TestSuppliersDashboard(BaseApplicationTest):
             )
 
             assert document.xpath(
-                "//*[(.//h2)[1][normalize-space(string())=$f]][.//a[normalize-space(string())=$t][@href=$u]]",
+                "//*[(.//h3)[1][normalize-space(string())=$f]][.//a[normalize-space(string())=$t][@href=$u]]",
                 f="G-Cloud 6",
                 t="View services",
                 u="/suppliers/frameworks/g-cloud-6/services",
             )
 
             assert not document.xpath(
-                "//*[(.//h2)[1][normalize-space(string())=$f]][.//a[normalize-space(string())=$t]]",
+                "//*[(.//h3)[1][normalize-space(string())=$f]][.//a[normalize-space(string())=$t]]",
                 f="G-Cloud 7",
                 t="View services",
             )
             assert not document.xpath("//a[@href=$u]", u="/suppliers/frameworks/g-cloud-7/services")
             assert not document.xpath(
-                "//*[(.//h2)[1][normalize-space(string())=$f]][.//a[normalize-space(string())=$t]]",
+                "//*[(.//h3)[1][normalize-space(string())=$f]][.//a[normalize-space(string())=$t]]",
                 f="H-Cloud 88",
                 t="View services",
             )
             assert not document.xpath("//a[@href=$u]", u="/suppliers/frameworks/h-cloud-88/services")
             assert not document.xpath(
-                "//*[(.//h2)[1][normalize-space(string())=$f]][.//a[normalize-space(string())=$t]]",
+                "//*[(.//h3)[1][normalize-space(string())=$f]][.//a[normalize-space(string())=$t]]",
                 f="Digital Rhymes and Reasons",
                 t="View services",
             )

@@ -27,13 +27,18 @@
     {% endfor %}
   {% endwith %}
 
+  {% include 'suppliers/_frameworks_coming.html' %}
+  {% include 'suppliers/_frameworks_open.html' %}
+  {% include 'suppliers/_frameworks_pending.html' %}
+  {% include 'suppliers/_frameworks_standstill.html' %}
+
 
   {% if 'account-created' in get_flashed_messages(category_filter=["flag"]) %}
   <div class="grid-row" data-analytics="trackPageView" data-url="/suppliers?account-created=true">
   {% else %}
   <div class="grid-row">
   {% endif %}
-    <div class="column-two-thirds">
+    <div class="column-one-whole">
       {% with
         context = current_user.email_address,
         heading = current_user.supplier_name
@@ -42,12 +47,19 @@
       {% endwith %}
     </div>
   </div>
+  <h2 class="visually-hidden">Your services</h2>
+  <div class="grid-row">
+    <div class="column-two-thirds dmspeak">
+      {% include 'suppliers/_frameworks_live.html' %}
+    </div>
+    <div class="column-one-third dmspeak">
+      <h2 class="heading-xmedium">Your organisation</h2>
+      <p>
+        <a href="{{ url_for('.supplier_details') }}">Supplier details</a>
+      </p>
+    </div>
+  </div>
 
-  {% include 'suppliers/_frameworks_coming.html' %}
-  {% include 'suppliers/_frameworks_open.html' %}
-  {% include 'suppliers/_frameworks_pending.html' %}
-  {% include 'suppliers/_frameworks_standstill.html' %}
-  {% include 'suppliers/_frameworks_live.html' %}
 
   {% include 'suppliers/_information.html' %}
   {% include 'suppliers/_contributors.html' %}

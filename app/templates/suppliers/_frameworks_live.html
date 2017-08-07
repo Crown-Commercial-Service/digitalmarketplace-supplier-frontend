@@ -1,26 +1,22 @@
-<div class="grid-row">
-  <div class="column-two-thirds dmspeak">
-  {% for framework in frameworks.live %}
-  {% if framework.onFramework %}
-    <h2 class="heading-xmedium">{{ framework.name }}</h2>
-    <p>
-    {% if framework.needs_to_complete_declaration %}
-      <a href="{{ url_for('.framework_agreement', framework_slug=framework.slug) }}">
-        You must sign the framework agreement to sell these services
-      </a>
-    {% else %}
-      <a href="{{ url_for('.list_services', framework_slug=framework.slug) }}">View services</a><br>
-      {% if framework.framework == 'digital-outcomes-and-specialists' %}
-        <a href="{{ url_for('.opportunities_dashboard', framework_slug=framework.slug) }}">View your opportunities</a><br>
-      {% endif %}
-      <a href="{{ url_for('.framework_dashboard', framework_slug=framework.slug) }}">View documents and ask a question</a>
-    {% endif %}
-    </p>
-  {% endif %}
+{% for framework in frameworks.live %}
+{% if framework.onFramework %}
+  <h3 class="heading-xmedium">{{ framework.name }}</h2>
+  <p>
+  {% if framework.needs_to_complete_declaration %}
+    <a href="{{ url_for('.framework_agreement', framework_slug=framework.slug) }}">
+      You must sign the framework agreement to sell these services
+    </a>
   {% else %}
-    <p>
-      You don't have any services on the Digital Marketplace
-    </p>
-  {% endfor %}
-  </div>
-</div>
+    <a href="{{ url_for('.list_services', framework_slug=framework.slug) }}">View services</a><br>
+    {% if framework.framework == 'digital-outcomes-and-specialists' %}
+      <a href="{{ url_for('.opportunities_dashboard', framework_slug=framework.slug) }}">View your opportunities</a><br>
+    {% endif %}
+    <a href="{{ url_for('.framework_dashboard', framework_slug=framework.slug) }}">View documents and ask a question</a>
+  {% endif %}
+  </p>
+{% endif %}
+{% else %}
+  <p>
+    You don't have any services on the Digital Marketplace
+  </p>
+{% endfor %}
