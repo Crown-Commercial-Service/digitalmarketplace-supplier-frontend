@@ -89,43 +89,6 @@ def get_user():
 @mock.patch("app.main.views.suppliers.data_api_client", autospec=True)
 @mock.patch("app.main.views.suppliers.get_current_suppliers_users", autospec=True)
 class TestSuppliersDashboard(BaseApplicationTest):
-
-    def test_shows_supplier_info(self, get_current_suppliers_users, data_api_client):
-        data_api_client.get_framework.return_value = self.framework('open')
-        data_api_client.get_supplier.side_effect = get_supplier
-        data_api_client.find_audit_events.return_value = {
-            "auditEvents": []
-        }
-        get_current_suppliers_users.side_effect = get_user
-        with self.app.test_client():
-            self.login()
-
-            res = self.client.get("/suppliers")
-            assert res.status_code == 200
-
-            data_api_client.get_supplier.assert_called_once_with(1234)
-
-            resp_data = res.get_data(as_text=True)
-
-            assert "Supplier Description" in resp_data
-            assert "Client One" in resp_data
-            assert "Client Two" in resp_data
-
-            assert "1 Street" in resp_data
-            assert "2 Building" in resp_data
-            assert "supplier.dmdev" in resp_data
-            assert "supplier@user.dmdev" in resp_data
-            assert "Supplier Person" in resp_data
-            assert "0800123123" in resp_data
-            assert "Supplierville" in resp_data
-            assert "Supplierland" in resp_data
-            assert "11 AB" in resp_data
-
-            # Check contributors table exists
-            assert self.strip_all_whitespace('Contributors</h2>') in self.strip_all_whitespace(resp_data)
-            assert self.strip_all_whitespace('User Name</span></td>') in self.strip_all_whitespace(resp_data)
-            assert self.strip_all_whitespace('email@email.com</span></td>') in self.strip_all_whitespace(resp_data)
-
     def test_error_and_success_flashed_messages_only_are_shown_in_banner_messages(
         self, get_current_suppliers_users, data_api_client
     ):
@@ -204,13 +167,6 @@ class TestSuppliersDashboard(BaseApplicationTest):
             assert res.status_code == 200
 
             document = html.fromstring(res.get_data(as_text=True))
-
-            assert document.xpath(
-                "//a[normalize-space(string())=$t][@href=$u][contains(@class, $c)]",
-                t="Edit",
-                u="/suppliers/details/edit",
-                c="summary-change-link",
-            )
 
             assert document.xpath(
                 "//*[(.//h3)[1][normalize-space(string())=$f]][.//a[normalize-space(string())=$t][@href=$u]]",
@@ -735,6 +691,43 @@ class TestSuppliersDashboard(BaseApplicationTest):
             assert "Continue your Digital Outcomes and Specialists application" in doc.xpath(
                 '//a[@class="browse-list-item-link"]/text()'
             )[0]
+
+
+@mock.patch("app.main.views.suppliers.data_api_client", autospec=True)
+class TestSupplierDetails(BaseApplicationTest):
+    def test_shows_supplier_info(self, data_api_client):
+        data_api_client.get_supplier.side_effect = get_supplier
+        with self.app.test_client():
+            self.login()
+
+            res = self.client.get("/suppliers/details")
+            assert res.status_code == 200
+
+            document = html.fromstring(res.get_data(as_text=True))
+
+            assert document.xpath(
+                "//a[normalize-space(string())=$t][@href=$u][contains(@class, $c)]",
+                t="Edit",
+                u="/suppliers/details/edit",
+                c="summary-change-link",
+            )
+
+            for property_str in (
+                "Supplier Description",
+                "Client One",
+                "Client Two",
+                "1 Street 2 Building",  # space-normalized together
+                "supplier.dmdev",
+                "supplier@user.dmdev",
+                "Supplier Person",
+                "0800123123",
+                "Supplierville",
+                "Supplierland",
+                "11 AB",
+            ):
+                assert document.xpath("//*[normalize-space(string())=$t]", t=property_str), property_str
+
+            data_api_client.get_supplier.assert_called_once_with(1234)
 
 
 @mock.patch("app.main.views.suppliers.data_api_client", autospec=True)
