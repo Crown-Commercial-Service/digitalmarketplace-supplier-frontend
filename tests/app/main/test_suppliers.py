@@ -531,9 +531,8 @@ class TestSuppliersDashboard(BaseApplicationTest):
             self.login()
             res = self.client.get("/suppliers")
             doc = html.fromstring(res.get_data(as_text=True))
-            headings = doc.xpath('//h2[@class="summary-item-heading"]')
 
-            assert u"Pending services" not in headings[0].xpath('text()')[0]
+            assert not doc.xpath('//h2[normalize-space(string())=$t]', t="Pending services")
 
     def test_shows_gcloud_7_in_standstill_application_failed(
         self, get_current_suppliers_users, data_api_client
