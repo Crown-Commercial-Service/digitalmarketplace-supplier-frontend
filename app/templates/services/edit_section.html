@@ -1,6 +1,9 @@
 {% extends "services/_base_edit_section_page.html" %}
 
 {% block breadcrumb %}
+  {% set your_services_text %}
+    Your {{ service_data["frameworkName"] }} services
+  {% endset %}
   {%
     with items = [
       {
@@ -12,11 +15,11 @@
         "label": "Your account"
       },
       {
-        "link": url_for(".list_services"),
-        "label": "Current services"
+        "link": url_for(".list_services", framework_slug=service_data["frameworkSlug"]),
+        "label": your_services_text
       },
       {
-        "link": url_for(".edit_service", service_id=service_id),
+        "link": url_for(".edit_service", framework_slug=service_data["frameworkSlug"], service_id=service_id),
         "label": service_data["serviceName"]
       }
     ]
@@ -35,4 +38,4 @@
   {% endwith %}
 {% endblock %}
 
-{% block return_to_service %}{{ url_for(".edit_service", service_id=service_id) }}{% endblock %}
+{% block return_to_service %}{{ url_for(".edit_service", framework_slug=service_data["frameworkSlug"], service_id=service_id) }}{% endblock %}

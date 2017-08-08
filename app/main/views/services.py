@@ -5,7 +5,12 @@ from ... import data_api_client, flask_featureflags
 from ...main import main, content_loader
 from ..helpers import login_required
 from ..helpers.services import is_service_associated_with_supplier, get_signed_document_url, count_unanswered_questions
-from ..helpers.frameworks import get_framework_and_lot, get_declaration_status, get_supplier_framework_info
+from ..helpers.frameworks import (
+    get_framework_and_lot,
+    get_declaration_status,
+    get_supplier_framework_info,
+    get_framework,
+)
 
 from dmcontent.content_loader import ContentNotFoundError
 from dmapiclient import HTTPError
@@ -13,31 +18,37 @@ from dmutils import s3
 from dmutils.documents import upload_service_documents
 
 
-@main.route('/services')
+@main.route("/frameworks/<string:framework_slug>/services")
 @login_required
-def list_services():
-    suppliers_services = sorted(
-        data_api_client.find_services(supplier_id=current_user.supplier_id)["services"],
-        key=lambda service: service['frameworkSlug'],
-        reverse=True
-    )
+def list_services(framework_slug):
+    framework = get_framework(data_api_client, framework_slug, allowed_statuses=['live'])
+
+    suppliers_services = data_api_client.find_services(
+        supplier_id=current_user.supplier_id,
+        framework=framework_slug,
+    )["services"]
 
     return render_template(
         "services/list_services.html",
-        services=suppliers_services), 200
+        services=suppliers_services,
+        framework=framework,
+    ), 200
 
 
 #  #######################  EDITING LIVE SERVICES #############################
 
 
-@main.route('/services/<string:service_id>', methods=['GET'])
+@main.route("/frameworks/<string:framework_slug>/services/<string:service_id>", methods=['GET'])
 @login_required
-def edit_service(service_id):
+def edit_service(framework_slug, service_id):
     service = data_api_client.get_service(service_id)
     service_unavailability_information = service.get('serviceMadeUnavailableAuditEvent')
     service = service.get('services')
 
     if not is_service_associated_with_supplier(service):
+        abort(404)
+
+    if service["frameworkSlug"] != framework_slug:
         abort(404)
 
     framework = data_api_client.get_framework(service['frameworkSlug'])['frameworks']
@@ -59,12 +70,15 @@ def edit_service(service_id):
     )
 
 
-@main.route('/services/<string:service_id>/remove', methods=['POST'])
+@main.route("/frameworks/<string:framework_slug>/services/<string:service_id>/remove", methods=['POST'])
 @login_required
-def remove_service(service_id):
+def remove_service(framework_slug, service_id):
     service = data_api_client.get_service(service_id).get('services')
 
     if not is_service_associated_with_supplier(service):
+        abort(404)
+
+    if service["frameworkSlug"] != framework_slug:
         abort(404)
 
     # dos services should not be removable
@@ -95,24 +109,31 @@ def remove_service(service_id):
             'updated_service_name': updated_service.get('serviceName')
         }, 'remove_service')
 
-        return redirect(url_for(".list_services"))
+        return redirect(url_for(".list_services", framework_slug=service["frameworkSlug"]))
 
     return redirect(url_for(
         ".edit_service",
         service_id=service_id,
+        framework_slug=service["frameworkSlug"],
         remove_requested=True))
 
 
-@main.route('/services/<string:service_id>/edit/<string:section_id>', methods=['GET'])
+@main.route(
+    "/frameworks/<string:framework_slug>/services/<string:service_id>/edit/<string:section_id>",
+    methods=['GET'],
+)
 @login_required
 @flask_featureflags.is_active_feature('EDIT_SECTIONS')
-def edit_section(service_id, section_id):
+def edit_section(framework_slug, service_id, section_id):
     service = data_api_client.get_service(service_id)
     if service is None:
         abort(404)
     service = service['services']
 
     if not is_service_associated_with_supplier(service):
+        abort(404)
+
+    if service["frameworkSlug"] != framework_slug:
         abort(404)
 
     try:
@@ -127,20 +148,26 @@ def edit_section(service_id, section_id):
         "services/edit_section.html",
         section=section,
         service_data=service,
-        service_id=service_id
+        service_id=service_id,
     )
 
 
-@main.route('/services/<string:service_id>/edit/<string:section_id>', methods=['POST'])
+@main.route(
+    "/frameworks/<string:framework_slug>/services/<string:service_id>/edit/<string:section_id>",
+    methods=['POST'],
+)
 @login_required
 @flask_featureflags.is_active_feature('EDIT_SECTIONS')
-def update_section(service_id, section_id):
+def update_section(framework_slug, service_id, section_id):
     service = data_api_client.get_service(service_id)
     if service is None:
         abort(404)
     service = service['services']
 
     if not is_service_associated_with_supplier(service):
+        abort(404)
+
+    if service["frameworkSlug"] != framework_slug:
         abort(404)
 
     try:
@@ -167,12 +194,38 @@ def update_section(service_id, section_id):
             section=section,
             service_data=posted_data,
             service_id=service_id,
-            errors=errors
+            errors=errors,
         )
 
     flash({"updated_service_name": posted_data.get("serviceName") or service.get("serviceName")}, 'service_updated')
 
-    return redirect(url_for(".edit_service", service_id=service_id))
+    return redirect(url_for(".edit_service", service_id=service_id, framework_slug=service["frameworkSlug"]))
+
+
+# we have to split these route definitions in two because without a fixed "/" separating the service_id and
+# trailing_path it's not clearly defined where flask should start capturing trailing_path
+@main.route("/services/<string:service_id>", defaults={"trailing_path": ""})
+@main.route("/services/<string:service_id>/<path:trailing_path>")
+@login_required
+def redirect_direct_service_urls(service_id, trailing_path):
+    service_response = data_api_client.get_service(service_id)
+    if service_response is None:
+        abort(404)
+    service = service_response["services"]
+
+    # technically we could rely on the target view to do the access restriction, but this would still allow a
+    # user from a different supplier to sniff the existence & framework of a service id
+    if not is_service_associated_with_supplier(service):
+        abort(404)
+
+    # note this relies on the views beneath /services/<service_id>/... remaining beneath
+    # /frameworks/<framework_slug>/services/<service_id>/..., but allows us to build one redirector to work for a number
+    # of views
+    return redirect(url_for(
+        ".edit_service",
+        framework_slug=service["frameworkSlug"],
+        service_id=service_id,
+    ) + (trailing_path and ("/" + trailing_path)))
 
 
 #  ####################  CREATING NEW DRAFT SERVICES ##########################

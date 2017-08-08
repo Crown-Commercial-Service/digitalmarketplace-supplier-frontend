@@ -11,9 +11,23 @@ from tests.app.helpers import BaseApplicationTest
 
 find_frameworks_return_value = {
     "frameworks": [
-        {'status': 'live', 'slug': 'g-cloud-6', 'name': 'G-Cloud 6'},
-        {'status': 'open', 'slug': 'digital-outcomes-and-specialists', 'name': 'Digital Outcomes and Specialists'},
-        {'status': 'open', 'slug': 'g-cloud-7', 'name': 'G-Cloud 7'}
+        {
+            'status': 'live',
+            'slug': 'g-cloud-6',
+            'name': 'G-Cloud 6',
+            "onFramework": True,
+            "agreementReturned": True,
+        },
+        {
+            'status': 'open',
+            'slug': 'digital-outcomes-and-specialists',
+            'name': 'Digital Outcomes and Specialists',
+        },
+        {
+            'status': 'open',
+            'slug': 'g-cloud-7',
+            'name': 'G-Cloud 7',
+        },
     ]
 }
 
@@ -163,11 +177,29 @@ class TestSuppliersDashboard(BaseApplicationTest):
             self.login()
 
             res = self.client.get("/suppliers")
-            response_text = res.get_data(as_text=True)
             assert res.status_code == 200
 
-            assert '<a href="/suppliers/edit" class="summary-change-link">Edit</a>' in response_text
-            assert '<a href="/suppliers/services" class="summary-change-link">View services</a>' in response_text
+            document = html.fromstring(res.get_data(as_text=True))
+
+            assert document.xpath(
+                "//a[normalize-space(string())=$t][@href=$u][contains(@class, $c)]",
+                t="Edit",
+                u="/suppliers/edit",
+                c="summary-change-link",
+            )
+
+            assert document.xpath(
+                "//tr[./td[normalize-space(string())=$f]][.//a[normalize-space(string())=$t][@href=$u]]",
+                f="G-Cloud 6",
+                t="View services",
+                u="/suppliers/frameworks/g-cloud-6/services",
+            )
+            assert not document.xpath(
+                "//tr[./td[normalize-space(string())=$f]][.//a[normalize-space(string())=$t]]",
+                f="G-Cloud 7",
+                t="View services",
+            )
+            assert not document.xpath("//a[@href=$u]", u="/suppliers/frameworks/g-cloud-7/services")
 
     def test_shows_dos_is_coming(
         self, get_current_suppliers_users, data_api_client
