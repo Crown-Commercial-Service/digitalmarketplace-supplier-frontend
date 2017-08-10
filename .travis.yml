@@ -5,8 +5,7 @@ cache:
     - node_modules
     - bower_components
 python:
-  - "2.7"
-  - "3.4"
+  - "3.6"
 before_install:
   - nvm install 4.2
 install:
