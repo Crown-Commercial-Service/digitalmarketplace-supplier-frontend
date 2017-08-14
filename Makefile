@@ -17,7 +17,7 @@ run-app: show-environment virtualenv
 
 .PHONY: virtualenv
 virtualenv:
-	[ -z $$VIRTUAL_ENV ] && [ ! -d venv ] && virtualenv venv || true
+	[ -z $$VIRTUAL_ENV ] && [ ! -d venv ] && virtualenv -p python3 venv || true
 
 .PHONY: upgrade-pip
 upgrade-pip: virtualenv
