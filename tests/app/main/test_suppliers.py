@@ -12,21 +12,34 @@ from tests.app.helpers import BaseApplicationTest
 find_frameworks_return_value = {
     "frameworks": [
         {
+            'status': 'expired',
+            'slug': 'h-cloud-88',
+            'name': 'H-Cloud 88',
+            'framework': 'g-cloud',
+        },
+        {
             'status': 'live',
             'slug': 'g-cloud-6',
             'name': 'G-Cloud 6',
-            "onFramework": True,
-            "agreementReturned": True,
+            'framework': 'g-cloud',
         },
         {
             'status': 'open',
             'slug': 'digital-outcomes-and-specialists',
             'name': 'Digital Outcomes and Specialists',
+            'framework': 'digital-outcomes-and-specialists',
+        },
+        {
+            'status': 'live',
+            'slug': 'digital-rhymes-and-reasons',
+            'name': 'Digital Rhymes and Reasons',
+            'framework': 'digital-outcomes-and-specialists',
         },
         {
             'status': 'open',
             'slug': 'g-cloud-7',
             'name': 'G-Cloud 7',
+            'framework': 'g-cloud',
         },
     ]
 }
@@ -169,8 +182,19 @@ class TestSuppliersDashboard(BaseApplicationTest):
         data_api_client.find_frameworks.return_value = find_frameworks_return_value
         data_api_client.get_supplier_frameworks.return_value = {
             'frameworkInterest': [
-                {'frameworkSlug': 'g-cloud-6', 'services_count': 99}
-            ]
+                {
+                    'frameworkSlug': 'h-cloud-88',
+                    'services_count': 12,
+                    "onFramework": True,
+                    "agreementReturned": True,
+                },
+                {
+                    'frameworkSlug': 'g-cloud-6',
+                    'services_count': 99,
+                    "onFramework": True,
+                    "agreementReturned": True,
+                },
+            ],
         }
         get_current_suppliers_users.side_effect = get_user
         with self.app.test_client():
@@ -189,17 +213,30 @@ class TestSuppliersDashboard(BaseApplicationTest):
             )
 
             assert document.xpath(
-                "//tr[./td[normalize-space(string())=$f]][.//a[normalize-space(string())=$t][@href=$u]]",
+                "//*[(.//h2)[1][normalize-space(string())=$f]][.//a[normalize-space(string())=$t][@href=$u]]",
                 f="G-Cloud 6",
                 t="View services",
                 u="/suppliers/frameworks/g-cloud-6/services",
             )
+
             assert not document.xpath(
-                "//tr[./td[normalize-space(string())=$f]][.//a[normalize-space(string())=$t]]",
+                "//*[(.//h2)[1][normalize-space(string())=$f]][.//a[normalize-space(string())=$t]]",
                 f="G-Cloud 7",
                 t="View services",
             )
             assert not document.xpath("//a[@href=$u]", u="/suppliers/frameworks/g-cloud-7/services")
+            assert not document.xpath(
+                "//*[(.//h2)[1][normalize-space(string())=$f]][.//a[normalize-space(string())=$t]]",
+                f="H-Cloud 88",
+                t="View services",
+            )
+            assert not document.xpath("//a[@href=$u]", u="/suppliers/frameworks/h-cloud-88/services")
+            assert not document.xpath(
+                "//*[(.//h2)[1][normalize-space(string())=$f]][.//a[normalize-space(string())=$t]]",
+                f="Digital Rhymes and Reasons",
+                t="View services",
+            )
+            assert not document.xpath("//a[@href=$u]", u="/suppliers/frameworks/digital-rhymes-and-reasons/services")
 
     def test_shows_dos_is_coming(
         self, get_current_suppliers_users, data_api_client
