@@ -8,6 +8,7 @@
     "bower": "1.5.2",
     "del": "1.1.1",
     "govuk_frontend_toolkit": "5.0.3",
+    "govuk-elements-sass": "3.0.3",
     "gulp": "3.8.7",
     "gulp-filelog": "0.4.1",
     "gulp-include": "1.1.1",
