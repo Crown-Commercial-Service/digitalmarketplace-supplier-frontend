@@ -13,6 +13,10 @@
       {
         "link": url_for(".dashboard"),
         "label": "Your account"
+      },
+      {
+        "link": url_for(".supplier_details"),
+        "label": "Supplier details"
       }
     ]
   %}
@@ -108,7 +112,7 @@
     {% include "toolkit/button.html" %}
   {% endwith %}
   <p>
-    <a href="{{ url_for('.dashboard') }}">Return without saving</a>
+    <a href="{{ url_for('.supplier_details') }}">Return without saving</a>
   </p>
   </form>
 

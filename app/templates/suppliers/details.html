@@ -1,9 +1,37 @@
+{% extends "_base_page.html" %}
 {% import "toolkit/summary-table.html" as summary %}
+{% block page_title %}Supplier details – Digital Marketplace{% endblock %}
 
-{{ summary.heading("Supplier information") }}
+{% block breadcrumb %}
+  {%
+    with items = [
+      {
+        "link": "/",
+        "label": "Digital Marketplace"
+      },
+      {
+        "link": url_for(".dashboard"),
+        "label": "Your account"
+      }
+    ]
+  %}
+    {% include "toolkit/breadcrumb.html" %}
+  {% endwith %}
+{% endblock %}
+
+
+{% block main_content %}
+{%
+  with
+    heading = "Supplier details"
+%}
+  {% include "toolkit/page-heading.html" %}
+{% endwith %}
+
+
 {{ summary.top_link('Edit', url_for('.edit_supplier')) }}
 {% call(item) summary.mapping_table(
-  caption='Supplier information',
+  caption='Supplier details',
   field_headings=[
     'Label',
     'Value'
@@ -52,3 +80,5 @@
     {{ summary.list(supplier.clients) }}
   {% endcall %}
 {% endcall %}
+
+{% endblock %}

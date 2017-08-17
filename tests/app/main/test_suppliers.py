@@ -12,21 +12,34 @@ from tests.app.helpers import BaseApplicationTest
 find_frameworks_return_value = {
     "frameworks": [
         {
+            'status': 'expired',
+            'slug': 'h-cloud-88',
+            'name': 'H-Cloud 88',
+            'framework': 'g-cloud',
+        },
+        {
             'status': 'live',
             'slug': 'g-cloud-6',
             'name': 'G-Cloud 6',
-            "onFramework": True,
-            "agreementReturned": True,
+            'framework': 'g-cloud',
         },
         {
             'status': 'open',
             'slug': 'digital-outcomes-and-specialists',
             'name': 'Digital Outcomes and Specialists',
+            'framework': 'digital-outcomes-and-specialists',
+        },
+        {
+            'status': 'live',
+            'slug': 'digital-rhymes-and-reasons',
+            'name': 'Digital Rhymes and Reasons',
+            'framework': 'digital-outcomes-and-specialists',
         },
         {
             'status': 'open',
             'slug': 'g-cloud-7',
             'name': 'G-Cloud 7',
+            'framework': 'g-cloud',
         },
     ]
 }
@@ -76,43 +89,6 @@ def get_user():
 @mock.patch("app.main.views.suppliers.data_api_client", autospec=True)
 @mock.patch("app.main.views.suppliers.get_current_suppliers_users", autospec=True)
 class TestSuppliersDashboard(BaseApplicationTest):
-
-    def test_shows_supplier_info(self, get_current_suppliers_users, data_api_client):
-        data_api_client.get_framework.return_value = self.framework('open')
-        data_api_client.get_supplier.side_effect = get_supplier
-        data_api_client.find_audit_events.return_value = {
-            "auditEvents": []
-        }
-        get_current_suppliers_users.side_effect = get_user
-        with self.app.test_client():
-            self.login()
-
-            res = self.client.get("/suppliers")
-            assert res.status_code == 200
-
-            data_api_client.get_supplier.assert_called_once_with(1234)
-
-            resp_data = res.get_data(as_text=True)
-
-            assert "Supplier Description" in resp_data
-            assert "Client One" in resp_data
-            assert "Client Two" in resp_data
-
-            assert "1 Street" in resp_data
-            assert "2 Building" in resp_data
-            assert "supplier.dmdev" in resp_data
-            assert "supplier@user.dmdev" in resp_data
-            assert "Supplier Person" in resp_data
-            assert "0800123123" in resp_data
-            assert "Supplierville" in resp_data
-            assert "Supplierland" in resp_data
-            assert "11 AB" in resp_data
-
-            # Check contributors table exists
-            assert self.strip_all_whitespace('Contributors</h2>') in self.strip_all_whitespace(resp_data)
-            assert self.strip_all_whitespace('User Name</span></td>') in self.strip_all_whitespace(resp_data)
-            assert self.strip_all_whitespace('email@email.com</span></td>') in self.strip_all_whitespace(resp_data)
-
     def test_error_and_success_flashed_messages_only_are_shown_in_banner_messages(
         self, get_current_suppliers_users, data_api_client
     ):
@@ -169,8 +145,19 @@ class TestSuppliersDashboard(BaseApplicationTest):
         data_api_client.find_frameworks.return_value = find_frameworks_return_value
         data_api_client.get_supplier_frameworks.return_value = {
             'frameworkInterest': [
-                {'frameworkSlug': 'g-cloud-6', 'services_count': 99}
-            ]
+                {
+                    'frameworkSlug': 'h-cloud-88',
+                    'services_count': 12,
+                    "onFramework": True,
+                    "agreementReturned": True,
+                },
+                {
+                    'frameworkSlug': 'g-cloud-6',
+                    'services_count': 99,
+                    "onFramework": True,
+                    "agreementReturned": True,
+                },
+            ],
         }
         get_current_suppliers_users.side_effect = get_user
         with self.app.test_client():
@@ -182,24 +169,30 @@ class TestSuppliersDashboard(BaseApplicationTest):
             document = html.fromstring(res.get_data(as_text=True))
 
             assert document.xpath(
-                "//a[normalize-space(string())=$t][@href=$u][contains(@class, $c)]",
-                t="Edit",
-                u="/suppliers/edit",
-                c="summary-change-link",
-            )
-
-            assert document.xpath(
-                "//tr[./td[normalize-space(string())=$f]][.//a[normalize-space(string())=$t][@href=$u]]",
+                "//*[(.//h3)[1][normalize-space(string())=$f]][.//a[normalize-space(string())=$t][@href=$u]]",
                 f="G-Cloud 6",
                 t="View services",
                 u="/suppliers/frameworks/g-cloud-6/services",
             )
+
             assert not document.xpath(
-                "//tr[./td[normalize-space(string())=$f]][.//a[normalize-space(string())=$t]]",
+                "//*[(.//h3)[1][normalize-space(string())=$f]][.//a[normalize-space(string())=$t]]",
                 f="G-Cloud 7",
                 t="View services",
             )
             assert not document.xpath("//a[@href=$u]", u="/suppliers/frameworks/g-cloud-7/services")
+            assert not document.xpath(
+                "//*[(.//h3)[1][normalize-space(string())=$f]][.//a[normalize-space(string())=$t]]",
+                f="H-Cloud 88",
+                t="View services",
+            )
+            assert not document.xpath("//a[@href=$u]", u="/suppliers/frameworks/h-cloud-88/services")
+            assert not document.xpath(
+                "//*[(.//h3)[1][normalize-space(string())=$f]][.//a[normalize-space(string())=$t]]",
+                f="Digital Rhymes and Reasons",
+                t="View services",
+            )
+            assert not document.xpath("//a[@href=$u]", u="/suppliers/frameworks/digital-rhymes-and-reasons/services")
 
     def test_shows_dos_is_coming(
         self, get_current_suppliers_users, data_api_client
@@ -538,9 +531,8 @@ class TestSuppliersDashboard(BaseApplicationTest):
             self.login()
             res = self.client.get("/suppliers")
             doc = html.fromstring(res.get_data(as_text=True))
-            headings = doc.xpath('//h2[@class="summary-item-heading"]')
 
-            assert u"Pending services" not in headings[0].xpath('text()')[0]
+            assert not doc.xpath('//h2[normalize-space(string())=$t]', t="Pending services")
 
     def test_shows_gcloud_7_in_standstill_application_failed(
         self, get_current_suppliers_users, data_api_client
@@ -701,6 +693,43 @@ class TestSuppliersDashboard(BaseApplicationTest):
 
 
 @mock.patch("app.main.views.suppliers.data_api_client", autospec=True)
+class TestSupplierDetails(BaseApplicationTest):
+    def test_shows_supplier_info(self, data_api_client):
+        data_api_client.get_supplier.side_effect = get_supplier
+        with self.app.test_client():
+            self.login()
+
+            res = self.client.get("/suppliers/details")
+            assert res.status_code == 200
+
+            document = html.fromstring(res.get_data(as_text=True))
+
+            assert document.xpath(
+                "//a[normalize-space(string())=$t][@href=$u][contains(@class, $c)]",
+                t="Edit",
+                u="/suppliers/details/edit",
+                c="summary-change-link",
+            )
+
+            for property_str in (
+                "Supplier Description",
+                "Client One",
+                "Client Two",
+                "1 Street 2 Building",  # space-normalized together
+                "supplier.dmdev",
+                "supplier@user.dmdev",
+                "Supplier Person",
+                "0800123123",
+                "Supplierville",
+                "Supplierland",
+                "11 AB",
+            ):
+                assert document.xpath("//*[normalize-space(string())=$t]", t=property_str), property_str
+
+            data_api_client.get_supplier.assert_called_once_with(1234)
+
+
+@mock.patch("app.main.views.suppliers.data_api_client", autospec=True)
 @mock.patch("app.main.views.suppliers.get_current_suppliers_users", autospec=True)
 class TestSupplierOpportunitiesDashboardLink(BaseApplicationTest):
     def setup_method(self, method):
@@ -821,7 +850,7 @@ class TestSupplierUpdate(BaseApplicationTest):
                 "contact_postcode": "11 AB",
             }
         data.update(kwargs)
-        res = self.client.post("/suppliers/edit", data=data)
+        res = self.client.post("/suppliers/details/edit", data=data)
         return res.status_code, res.get_data(as_text=True)
 
     def test_should_render_edit_page_with_minimum_data(self, data_api_client):
@@ -846,7 +875,7 @@ class TestSupplierUpdate(BaseApplicationTest):
 
         data_api_client.get_supplier.side_effect = limited_supplier
 
-        response = self.client.get("/suppliers/edit")
+        response = self.client.get("/suppliers/details/edit")
         assert response.status_code == 200
 
     def test_update_all_supplier_fields(self, data_api_client):
@@ -1000,9 +1029,9 @@ class TestSupplierUpdate(BaseApplicationTest):
         assert 'You must have 10 or fewer clients' in resp
 
     def test_should_redirect_to_login_if_not_logged_in(self, data_api_client):
-        res = self.client.get("/suppliers/edit")
+        res = self.client.get("/suppliers/details/edit")
         assert res.status_code == 302
-        assert res.location == "http://localhost/login?next=%2Fsuppliers%2Fedit"
+        assert res.location == "http://localhost/login?next=%2Fsuppliers%2Fdetails%2Fedit"
 
 
 class TestCreateSupplier(BaseApplicationTest):
