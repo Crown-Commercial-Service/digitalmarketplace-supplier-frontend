@@ -94,6 +94,13 @@ def supplier_details():
     ), 200
 
 
+@main.route('/edit', methods=['GET'])
+@login_required
+def edit_supplier_redirect():
+    # redirect old route for this view
+    return redirect(url_for('.edit_supplier'), 302)
+
+
 @main.route('/details/edit', methods=['GET'])
 @login_required
 def edit_supplier(supplier_form=None, contact_form=None, error=None):
