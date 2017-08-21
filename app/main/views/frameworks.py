@@ -1192,5 +1192,5 @@ def view_contract_variation(framework_slug, variation_slug):
 
 @main.route('/frameworks/<framework_slug>/opportunities', methods=['GET'])
 @login_required
-def opportunities_dashboard(framework_slug):
-    return redirect("/suppliers/opportunities/frameworks/{}".format(framework_slug), code=301)
+def opportunities_dashboard_deprecated(framework_slug):
+    return redirect(url_for('external.opportunities_dashboard', framework_slug=framework_slug), code=301)
