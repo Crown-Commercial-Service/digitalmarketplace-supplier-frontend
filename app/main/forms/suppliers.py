@@ -31,8 +31,8 @@ class EditSupplierForm(Form):
 
 class EditContactInformationForm(Form):
     id = IntegerField()
-    address1 = StripWhitespaceStringField('Business address')
-    address2 = StripWhitespaceStringField('Business address')
+    address1 = StripWhitespaceStringField('Registered office address')
+    address2 = StripWhitespaceStringField('Registered office address')
     city = StripWhitespaceStringField('Town or city')
     country = StripWhitespaceStringField()
     postcode = StripWhitespaceStringField()
