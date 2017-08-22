@@ -34,7 +34,6 @@ class EditContactInformationForm(Form):
     address1 = StripWhitespaceStringField('Registered office address')
     address2 = StripWhitespaceStringField('Registered office address')
     city = StripWhitespaceStringField('Town or city')
-    country = StripWhitespaceStringField()
     postcode = StripWhitespaceStringField()
     website = StripWhitespaceStringField()
     phoneNumber = StripWhitespaceStringField('Phone number')
