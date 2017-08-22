@@ -64,7 +64,6 @@
         postcode = supplier.contact.get("postcode"),
         street_address = True,
         street_address_line_1 = supplier.contact.get("address1"),
-        street_address_line_2 = supplier.contact.get("address2"),
         locality = supplier.contact.get("city")
       %}
         {% include "toolkit/contact-details.html" %}
