@@ -56,7 +56,7 @@
     {{ summary.external_link(supplier.contact.website, supplier.contact.website)}}
   {% endcall %}
   {% call summary.row() %}
-    {{ summary.field_name('Address') }}
+    {{ summary.field_name('Registered office address') }}
     {% call summary.field() %}
       {%
         with
@@ -65,8 +65,7 @@
         street_address = True,
         street_address_line_1 = supplier.contact.get("address1"),
         street_address_line_2 = supplier.contact.get("address2"),
-        locality = supplier.contact.get("city"),
-        country = supplier.contact.get("country")
+        locality = supplier.contact.get("city")
       %}
         {% include "toolkit/contact-details.html" %}
       {% endwith %}
