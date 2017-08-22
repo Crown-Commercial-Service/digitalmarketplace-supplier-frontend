@@ -761,10 +761,20 @@ class TestSupplierOpportunitiesDashboardLink(BaseApplicationTest):
             res = self.client.get("/suppliers")
             doc = html.fromstring(res.get_data(as_text=True))
 
-            expected_link = "/suppliers/frameworks/digital-outcomes-and-specialists-2/opportunities"
-            link_element = [i for i in doc.iterlinks() if i[2] == expected_link][0][0]
-
-            assert 'View your opportunities' in link_element.xpath('string()')
+            # note how this also tests the ordering of the links
+            assert doc.xpath(
+                "//h3[normalize-space(string())=$f]"
+                "[(following::a)[1][normalize-space(string())=$t1][@href=$u1]]"
+                "[(following::a)[2][normalize-space(string())=$t2][@href=$u2]]"
+                "[(following::a)[3][normalize-space(string())=$t3][@href=$u3]]",
+                f="Digital Outcomes and Specialists 2",
+                t1="View your opportunities",
+                u1="/suppliers/frameworks/digital-outcomes-and-specialists-2/opportunities",
+                t2="View services",
+                u2="/suppliers/frameworks/digital-outcomes-and-specialists-2/services",
+                t3="View documents and ask a question",
+                u3="/suppliers/frameworks/digital-outcomes-and-specialists-2",
+            )
 
     @pytest.mark.parametrize(
         'incorrect_data',
