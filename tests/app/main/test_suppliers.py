@@ -721,7 +721,7 @@ class TestSupplierDetails(BaseApplicationTest):
                 "Supplier Person",
                 "0800123123",
                 "Supplierville",
-                "Supplierland",
+                #  "Supplierland" is not shown on the page, even though it occurs in the supplier's contactInformation
                 "11 AB",
             ):
                 assert document.xpath("//*[normalize-space(string())=$t]", t=property_str), property_str
@@ -856,7 +856,6 @@ class TestSupplierUpdate(BaseApplicationTest):
                 "contact_address1": "1 Street",
                 "contact_address2": "2 Building",
                 "contact_city": "Supplierville",
-                "contact_country": "Supplierland",
                 "contact_postcode": "11 AB",
             }
         data.update(kwargs)
@@ -908,7 +907,6 @@ class TestSupplierUpdate(BaseApplicationTest):
             {
                 'website': u'supplier.dmdev',
                 'city': u'Supplierville',
-                'country': u'Supplierland',
                 'address1': u'1 Street',
                 'address2': u'2 Building',
                 'email': u'supplier@user.dmdev',
@@ -934,7 +932,6 @@ class TestSupplierUpdate(BaseApplicationTest):
             "contact_address1": "  1 Street  ",
             "contact_address2": "  2 Building  ",
             "contact_city": "  Supplierville  ",
-            "contact_country": "  Supplierland  ",
             "contact_postcode": "  11 AB  "
         }
 
@@ -955,7 +952,6 @@ class TestSupplierUpdate(BaseApplicationTest):
             {
                 'website': u'supplier.dmdev',
                 'city': u'Supplierville',
-                'country': u'Supplierland',
                 'address1': u'1 Street',
                 'address2': u'2 Building',
                 'email': u'supplier@user.dmdev',
@@ -980,7 +976,6 @@ class TestSupplierUpdate(BaseApplicationTest):
             "contact_address1": "1 Street",
             "contact_address2": "2 Building",
             "contact_city": "Supplierville",
-            "contact_country": u"Supplierland",
             "contact_postcode": "11 AB",
         })
 
@@ -1000,7 +995,6 @@ class TestSupplierUpdate(BaseApplicationTest):
         assert 'value="1 Street"' in resp
         assert 'value="2 Building"' in resp
         assert 'value="Supplierville"' in resp
-        assert 'value="Supplierland"' in resp
         assert 'value="11 AB"' in resp
 
     def test_description_below_word_length(self, data_api_client):
