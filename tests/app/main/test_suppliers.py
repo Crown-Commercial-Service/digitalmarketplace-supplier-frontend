@@ -1544,6 +1544,7 @@ class TestCreateSupplier(BaseApplicationTest):
 
             generate_token.assert_called_once_with(
                 {
+                    "role": "supplier",
                     "email_address": "valid@email.com",
                     "supplier_id": 12345,
                     "supplier_name": "Supplier Name"
@@ -1598,6 +1599,7 @@ class TestCreateSupplier(BaseApplicationTest):
 
         generate_token.assert_called_once_with(
             {
+                "role": "supplier",
                 "email_address": "valid@email.com",
                 "supplier_id": 12345,
                 "supplier_name": "Supplier Name"

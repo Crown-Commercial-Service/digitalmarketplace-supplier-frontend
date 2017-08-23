@@ -97,6 +97,7 @@ class TestInviteUser(BaseApplicationTest):
             assert res.status_code == 302
             generate_token.assert_called_once_with(
                 {
+                    "role": "supplier",
                     "supplier_id": 1234,
                     "supplier_name": "Supplier NĀme",
                     "email_address": "this@isvalid.com"

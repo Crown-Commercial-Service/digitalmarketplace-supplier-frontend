@@ -31,6 +31,7 @@ def send_invite_user():
     if form.validate_on_submit():
         token = generate_token(
             {
+                "role": "supplier",
                 "supplier_id": current_user.supplier_id,
                 "supplier_name": current_user.supplier_name,
                 "email_address": form.email_address.data
