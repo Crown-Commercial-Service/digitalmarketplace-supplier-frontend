@@ -23,10 +23,3 @@ def login_required(func):
             return current_app.login_manager.unauthorized()
         return func(*args, **kwargs)
     return decorated_view
-
-
-def new_supplier_flow_active_for_datetime(dt):
-    if not current_app.config['FEATURE_FLAGS_NEW_SUPPLIER_FLOW']:
-        return False
-    nsf_on = datetime.strptime(current_app.config['FEATURE_FLAGS_NEW_SUPPLIER_FLOW'], "%Y-%m-%d")
-    return nsf_on <= dt

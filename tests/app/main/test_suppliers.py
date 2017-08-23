@@ -769,7 +769,7 @@ class TestSupplierOpportunitiesDashboardLink(BaseApplicationTest):
                 "[(following::a)[3][normalize-space(string())=$t3][@href=$u3]]",
                 f="Digital Outcomes and Specialists 2",
                 t1="View your opportunities",
-                u1="/suppliers/frameworks/digital-outcomes-and-specialists-2/opportunities",
+                u1="/suppliers/opportunities/frameworks/digital-outcomes-and-specialists-2",
                 t2="View services",
                 u2="/suppliers/frameworks/digital-outcomes-and-specialists-2/services",
                 t3="View documents and ask a question",

@@ -8,7 +8,7 @@
     </a>
   {% else %}
     {% if framework.framework == 'digital-outcomes-and-specialists' %}
-      <a href="{{ url_for('.opportunities_dashboard', framework_slug=framework.slug) }}">View your opportunities</a><br>
+      <a href="{{ url_for('external.opportunities_dashboard', framework_slug=framework.slug) }}">View your opportunities</a><br>
     {% endif %}
     <a href="{{ url_for('.list_services', framework_slug=framework.slug) }}">View services</a><br>
     <a href="{{ url_for('.framework_dashboard', framework_slug=framework.slug) }}">View documents and ask a question</a>
