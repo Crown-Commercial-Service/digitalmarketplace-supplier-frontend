@@ -44,16 +44,12 @@
     {{ summary.text(supplier.contact.contactName) }}
   {% endcall %}
   {% call summary.row() %}
-    {{ summary.field_name('Email address') }}
+    {{ summary.field_name('Contact email') }}
     {{ summary.text(supplier.contact.email) }}
   {% endcall %}
   {% call summary.row() %}
-    {{ summary.field_name('Phone number') }}
+    {{ summary.field_name('Contact phone number') }}
     {{ summary.text(supplier.contact.phoneNumber) }}
-  {% endcall %}
-  {% call summary.row() %}
-    {{ summary.field_name('Website') }}
-    {{ summary.external_link(supplier.contact.website, supplier.contact.website)}}
   {% endcall %}
   {% call summary.row() %}
     {{ summary.field_name('Registered office address') }}
@@ -74,10 +70,51 @@
     {{ summary.field_name('Supplier summary') }}
     {{ summary.text(supplier.description) }}
   {% endcall %}
-  {% call summary.row() %}
-    {{ summary.field_name('Clients') }}
-    {{ summary.list(supplier.clients) }}
-  {% endcall %}
 {% endcall %}
 
+{{ summary.heading("Registration information", id="registration_information") }}
+{{ summary.description("This is used to process your applications and manage your participation on frameworks.") }}
+{% call(item) summary.mapping_table(
+  caption='Registration information',
+  field_headings=[
+    'Label',
+    'Value'
+  ],
+  field_headings_visible=False
+) %}
+
+  {% call summary.row() %}
+    {{ summary.field_name('Registered company name') }}
+    {{ summary.text(supplier.registeredName) }}
+  {% endcall %}
+  {% call summary.row() %}
+    {{ summary.field_name('Companies House number') }}
+    {{ summary.text(supplier.companiesHouseNumber) }}
+  {% endcall %}
+  {% call summary.row() %}
+    {{ summary.field_name('Where your business was established') }}
+    {{ summary.text(supplier.registrationCountry) }}
+  {% endcall %}
+  {% call summary.row() %}
+    {{ summary.field_name('Registration number') }}
+    {{ summary.text(supplier.otherCompanyRegistrationNumber) }}
+  {% endcall %}
+  {% call summary.row() %}
+    {{ summary.field_name('DUNS number') }}
+    {{ summary.text(supplier.dunsNumber) }}
+  {% endcall %}
+  {% call summary.row() %}
+    {{ summary.field_name('VAT number') }}
+    {{ summary.text(supplier.vatNumber) }}
+  {% endcall %}
+  {% call summary.row() %}
+    {{ summary.field_name('Trading status') }}
+    {{ summary.text(supplier.tradingStatus|capitalize_first) }}
+  {% endcall %}
+  {% call summary.row() %}
+    {{ summary.field_name('Company size') }}
+    {{ summary.text(supplier.organisationSize|capitalize_first) }}
+  {% endcall %}
+
+{% endcall %}
 {% endblock %}
