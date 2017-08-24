@@ -87,16 +87,13 @@
 
       <div class="question">
         <label class="question-heading">
-          Business address
+          Registered office address
         </label>
         {{ forms.input('contact_id', contact_form.id.data, type='hidden') }}
         <div class="box-label" id="address1-label">Building and street</div>
         {{ forms.input('contact_address1', contact_form.address1.data, errors=contact_form.address1.errors) }}
-        {{ forms.input('contact_address2', contact_form.address2.data, errors=contact_form.address2.errors) }}
         <div class="box-label" id="city-label">Town or city</div>
         {{ forms.input('contact_city', contact_form.city.data, errors=contact_form.city.errors) }}
-        <div class="box-label" id="country-label">Country</div>
-        {{ forms.input('contact_country', contact_form.country.data, errors=contact_form.country.errors) }}
         <div class="box-label" id="postcode-label">Postcode</div>
         {{ forms.input('contact_postcode', contact_form.postcode.data, errors=contact_form.postcode.errors) }}
       </div>

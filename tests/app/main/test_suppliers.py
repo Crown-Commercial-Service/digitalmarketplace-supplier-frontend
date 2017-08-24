@@ -715,13 +715,13 @@ class TestSupplierDetails(BaseApplicationTest):
                 "Supplier Description",
                 "Client One",
                 "Client Two",
-                "1 Street 2 Building",  # space-normalized together
+                "1 Street",  # "2 Building" is not shown, even though it's in the supplier's contactInformation
                 "supplier.dmdev",
                 "supplier@user.dmdev",
                 "Supplier Person",
                 "0800123123",
                 "Supplierville",
-                "Supplierland",
+                #  "Supplierland" is not shown, even though it's in the supplier's contactInformation
                 "11 AB",
             ):
                 assert document.xpath("//*[normalize-space(string())=$t]", t=property_str), property_str
@@ -854,9 +854,7 @@ class TestSupplierUpdate(BaseApplicationTest):
                 "contact_contactName": "Supplier Person",
                 "contact_phoneNumber": "0800123123",
                 "contact_address1": "1 Street",
-                "contact_address2": "2 Building",
                 "contact_city": "Supplierville",
-                "contact_country": "Supplierland",
                 "contact_postcode": "11 AB",
             }
         data.update(kwargs)
@@ -908,9 +906,7 @@ class TestSupplierUpdate(BaseApplicationTest):
             {
                 'website': u'supplier.dmdev',
                 'city': u'Supplierville',
-                'country': u'Supplierland',
                 'address1': u'1 Street',
-                'address2': u'2 Building',
                 'email': u'supplier@user.dmdev',
                 'phoneNumber': u'0800123123',
                 'postcode': u'11 AB',
@@ -932,9 +928,7 @@ class TestSupplierUpdate(BaseApplicationTest):
             "contact_contactName": "  Supplier Person  ",
             "contact_phoneNumber": "  0800123123  ",
             "contact_address1": "  1 Street  ",
-            "contact_address2": "  2 Building  ",
             "contact_city": "  Supplierville  ",
-            "contact_country": "  Supplierland  ",
             "contact_postcode": "  11 AB  "
         }
 
@@ -955,9 +949,7 @@ class TestSupplierUpdate(BaseApplicationTest):
             {
                 'website': u'supplier.dmdev',
                 'city': u'Supplierville',
-                'country': u'Supplierland',
                 'address1': u'1 Street',
-                'address2': u'2 Building',
                 'email': u'supplier@user.dmdev',
                 'phoneNumber': u'0800123123',
                 'postcode': u'11 AB',
@@ -978,9 +970,7 @@ class TestSupplierUpdate(BaseApplicationTest):
             "contact_contactName": "Supplier Person",
             "contact_phoneNumber": "0800123123",
             "contact_address1": "1 Street",
-            "contact_address2": "2 Building",
             "contact_city": "Supplierville",
-            "contact_country": u"Supplierland",
             "contact_postcode": "11 AB",
         })
 
@@ -998,9 +988,7 @@ class TestSupplierUpdate(BaseApplicationTest):
         assert 'value="Supplier Person"' in resp
         assert 'value="0800123123"' in resp
         assert 'value="1 Street"' in resp
-        assert 'value="2 Building"' in resp
         assert 'value="Supplierville"' in resp
-        assert 'value="Supplierland"' in resp
         assert 'value="11 AB"' in resp
 
     def test_description_below_word_length(self, data_api_client):
