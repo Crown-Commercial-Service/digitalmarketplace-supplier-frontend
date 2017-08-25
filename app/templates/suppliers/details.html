@@ -83,38 +83,61 @@
   field_headings_visible=False
 ) %}
 
-  {% call summary.row() %}
-    {{ summary.field_name('Registered company name') }}
-    {{ summary.text(supplier.registeredName) }}
-  {% endcall %}
-  {% call summary.row() %}
-    {{ summary.field_name('Companies House number') }}
-    {{ summary.text(supplier.companiesHouseNumber) }}
-  {% endcall %}
-  {% call summary.row() %}
-    {{ summary.field_name('Where your business was established') }}
-    {{ summary.text(supplier.registrationCountry) }}
-  {% endcall %}
-  {% call summary.row() %}
-    {{ summary.field_name('Registration number') }}
-    {{ summary.text(supplier.otherCompanyRegistrationNumber) }}
-  {% endcall %}
-  {% call summary.row() %}
-    {{ summary.field_name('DUNS number') }}
-    {{ summary.text(supplier.dunsNumber) }}
-  {% endcall %}
-  {% call summary.row() %}
-    {{ summary.field_name('VAT number') }}
-    {{ summary.text(supplier.vatNumber) }}
-  {% endcall %}
-  {% call summary.row() %}
-    {{ summary.field_name('Trading status') }}
-    {{ summary.text(supplier.tradingStatus|capitalize_first) }}
-  {% endcall %}
-  {% call summary.row() %}
-    {{ summary.field_name('Company size') }}
-    {{ summary.text(supplier.organisationSize|capitalize_first) }}
-  {% endcall %}
+  {% if supplier.registeredName %}
+    {% call summary.row() %}
+      {{ summary.field_name('Registered company name') }}
+      {{ summary.text(supplier.registeredName) }}
+    {% endcall %}
+  {% endif %}
+
+  {% if supplier.companiesHouseNumber %}
+    {% call summary.row() %}
+      {{ summary.field_name('Companies House number') }}
+      {{ summary.text(supplier.companiesHouseNumber) }}
+    {% endcall %}
+  {% endif %}
+
+  {% if supplier.registrationCountry and not supplier.companiesHouseNumber %}
+    {% call summary.row() %}
+      {{ summary.field_name('Where your business was established') }}
+      {{ summary.text(supplier.registrationCountry) }}
+    {% endcall %}
+  {% endif %}
+
+  {% if supplier.otherCompanyRegistrationNumber and not supplier.companiesHouseNumber and supplier.registrationCountry != 'UK' %}
+    {% call summary.row() %}
+      {{ summary.field_name('Registration number') }}
+      {{ summary.text(supplier.otherCompanyRegistrationNumber) }}
+    {% endcall %}
+  {% endif %}
+
+  {% if supplier.dunsNumber %}
+    {% call summary.row() %}
+      {{ summary.field_name('DUNS number') }}
+      {{ summary.text(supplier.dunsNumber) }}
+    {% endcall %}
+  {% endif %}
+
+  {% if supplier.vatNumber %}
+    {% call summary.row() %}
+      {{ summary.field_name('VAT number') }}
+      {{ summary.text(supplier.vatNumber) }}
+    {% endcall %}
+  {% endif %}
+
+  {% if supplier.tradingStatus %}
+    {% call summary.row() %}
+      {{ summary.field_name('Trading status') }}
+      {{ summary.text(supplier.tradingStatus|capitalize_first) }}
+    {% endcall %}
+  {% endif %}
+
+  {% if supplier.organisationSize %}
+    {% call summary.row() %}
+      {{ summary.field_name('Company size') }}
+      {{ summary.text(supplier.organisationSize|capitalize_first) }}
+    {% endcall %}
+  {% endif %}
 
 {% endcall %}
 {% endblock %}
