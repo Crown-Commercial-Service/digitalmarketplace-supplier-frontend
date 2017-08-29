@@ -1,5 +1,5 @@
 from flask.ext.wtf import Form
-from wtforms import IntegerField, FieldList
+from wtforms import IntegerField
 from wtforms.validators import DataRequired, ValidationError, Length, Optional, Regexp
 from dmutils.forms import StripWhitespaceStringField
 
@@ -22,28 +22,22 @@ class EditSupplierForm(Form):
     description = StripWhitespaceStringField('Supplier summary', validators=[
         word_length(50, 'Your summary must not be more than %d words')
     ])
-    clients = FieldList(StripWhitespaceStringField())
-
-    def validate_clients(form, field):
-        if len(field.data) > 10:
-            raise ValidationError('You must have 10 or fewer clients')
 
 
 class EditContactInformationForm(Form):
     id = IntegerField()
-    address1 = StripWhitespaceStringField('Registered office address')
-    city = StripWhitespaceStringField('Town or city')
-    postcode = StripWhitespaceStringField()
-    website = StripWhitespaceStringField()
-    phoneNumber = StripWhitespaceStringField('Phone number')
-    email = StripWhitespaceStringField('Email address', validators=[
+    contactName = StripWhitespaceStringField('Contact name', validators=[
+        DataRequired(message="You must provide a contact name"),
+    ])
+    email = StripWhitespaceStringField('Contact email', validators=[
         DataRequired(message="You must provide an email address"),
         Regexp("^[^@^\s]+@[^@^\.^\s]+(\.[^@^\.^\s]+)+$",
                message="Please enter a valid email address")
     ])
-    contactName = StripWhitespaceStringField('Contact name', validators=[
-        DataRequired(message="You must provide a contact name"),
-    ])
+    phoneNumber = StripWhitespaceStringField('Contact phone number')
+    address1 = StripWhitespaceStringField('Building and street')
+    city = StripWhitespaceStringField('Town or city')
+    postcode = StripWhitespaceStringField('Postcode')
 
 
 class DunsNumberForm(Form):
@@ -72,12 +66,12 @@ class CompanyContactDetailsForm(Form):
         DataRequired(message="You must provide a contact name."),
         Length(max=255, message="You must provide a contact name under 256 characters.")
     ])
-    email_address = StripWhitespaceStringField('Email address', validators=[
+    email_address = StripWhitespaceStringField('Contact email address', validators=[
         DataRequired(message="You must provide an email address."),
         Regexp("^[^@^\s]+@[^@^\.^\s]+(\.[^@^\.^\s]+)+$",
                message="You must provide a valid email address.")
     ])
-    phone_number = StripWhitespaceStringField('Phone number', validators=[
+    phone_number = StripWhitespaceStringField('Contact phone number', validators=[
         DataRequired(message="You must provide a phone number."),
         Length(max=20, message="You must provide a phone number under 20 characters.")
     ])

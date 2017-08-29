@@ -139,7 +139,6 @@ def update_supplier():
     supplier_form = EditSupplierForm(
         formdata=None,
         description=request.form['description'],
-        clients=filter(None, request.form.getlist('clients'))
     )
 
     contact_form = EditContactInformationForm(prefix='contact_')
