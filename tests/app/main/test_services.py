@@ -270,13 +270,13 @@ class TestListServices(BaseApplicationTest):
 
             res = self.client.get('/suppliers/frameworks/g-cloud-909/services')
             assert res.status_code == 302
-            assert res.location == 'http://localhost/login?next=%2Fsuppliers%2Fframeworks%2Fg-cloud-909%2Fservices'
+            assert res.location == 'http://localhost/user/login?next=%2Fsuppliers%2Fframeworks%2Fg-cloud-909%2Fservices'
 
     @mock.patch('app.main.views.services.data_api_client')
     def test_should_redirect_to_login_if_not_logged_in(self, data_api_client):
         res = self.client.get("/suppliers/frameworks/g-cloud-909/services")
         assert res.status_code == 302
-        assert res.location == 'http://localhost/login?next=%2Fsuppliers%2Fframeworks%2Fg-cloud-909%2Fservices'
+        assert res.location == 'http://localhost/user/login?next=%2Fsuppliers%2Fframeworks%2Fg-cloud-909%2Fservices'
 
     @mock.patch('app.main.views.services.data_api_client')
     def test_shows_service_edit_link_with_id(self, data_api_client):
@@ -399,9 +399,10 @@ class SupplierEditServiceTestsSharedAcrossFrameworks(_BaseTestSupplierEditRemove
         )
         res = self.client.get("/suppliers/frameworks/{}/services/123".format(self.framework_kwargs["framework_slug"]))
         assert res.status_code == 302
-        assert res.location == 'http://localhost/login?next=%2Fsuppliers%2Fframeworks%2F{}%2Fservices%2F123'.format(
-            self.framework_kwargs["framework_slug"]
-        )
+        assert res.location == \
+            'http://localhost/user/login?next=%2Fsuppliers%2Fframeworks%2F{}%2Fservices%2F123'.format(
+                self.framework_kwargs["framework_slug"]
+            )
 
     @pytest.mark.parametrize("status", ["enabled", "disabled"])
     def test_should_view_private_or_disabled_service_with_correct_message(self, data_api_client, status):

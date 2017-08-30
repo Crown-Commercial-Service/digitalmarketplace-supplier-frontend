@@ -27,9 +27,9 @@ def content_loader_error_handler(e):
 @main.app_errorhandler(401)
 def page_unauthorized(e):
     if request.method == 'GET':
-        return redirect('/login?next={}'.format(quote_plus(request.path)))
+        return redirect('/user/login?next={}'.format(quote_plus(request.path)))
     else:
-        return redirect('/login')
+        return redirect('/user/login')
 
 
 @main.app_errorhandler(404)

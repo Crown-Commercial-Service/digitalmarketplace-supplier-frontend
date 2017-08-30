@@ -17,7 +17,7 @@ class TestSupplierRoleRequired(BaseApplicationTest):
             self.login_as_buyer()
             res = self.client.get('/suppliers')
             assert res.status_code == 302
-            assert res.location == 'http://localhost/login?next=%2Fsuppliers'
+            assert res.location == 'http://localhost/user/login?next=%2Fsuppliers'
             self.assert_flashes('supplier-role-required', expected_category='error')
 
 

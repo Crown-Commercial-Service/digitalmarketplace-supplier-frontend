@@ -881,7 +881,7 @@ class TestSupplierDashboardLogin(BaseApplicationTest):
     def test_should_redirect_to_login_if_not_logged_in(self):
         res = self.client.get("/suppliers")
         assert res.status_code == 302
-        assert res.location == "http://localhost/login?next=%2Fsuppliers"
+        assert res.location == "http://localhost/user/login?next=%2Fsuppliers"
 
 
 @mock.patch("app.main.views.suppliers.data_api_client")
@@ -1049,7 +1049,7 @@ class TestSupplierUpdate(BaseApplicationTest):
     def test_should_redirect_to_login_if_not_logged_in(self, data_api_client):
         res = self.client.get("/suppliers/details/edit")
         assert res.status_code == 302
-        assert res.location == "http://localhost/login?next=%2Fsuppliers%2Fdetails%2Fedit"
+        assert res.location == "http://localhost/user/login?next=%2Fsuppliers%2Fdetails%2Fedit"
 
 
 class TestCreateSupplier(BaseApplicationTest):
