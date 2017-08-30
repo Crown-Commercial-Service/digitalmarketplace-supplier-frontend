@@ -39,7 +39,7 @@ def send_invite_user():
             current_app.config['SHARED_EMAIL_KEY'],
             current_app.config['INVITE_EMAIL_SALT']
         )
-        url = url_for('main.create_user', encoded_token=token, _external=True)
+        url = url_for('external.create_user', encoded_token=token, _external=True)
         email_body = render_template(
             "emails/invite_user_email.html",
             url=url,
