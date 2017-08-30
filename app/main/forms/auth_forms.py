@@ -35,21 +35,3 @@ class ChangePasswordForm(Form):
         DataRequired(message="Please confirm your new password"),
         EqualTo('password', message="The passwords you entered do not match")
     ])
-
-
-class CreateUserForm(Form):
-    name = StripWhitespaceStringField('Your name', validators=[
-        DataRequired(message="Please enter a name"),
-        Length(min=1,
-               max=255,
-               message="Names must be between 1 and 255 characters"
-               )
-    ])
-
-    password = PasswordField('Password', validators=[
-        DataRequired(message="Please enter a password"),
-        Length(min=10,
-               max=50,
-               message="Passwords must be between 10 and 50 characters"
-               )
-    ])
