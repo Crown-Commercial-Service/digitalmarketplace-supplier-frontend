@@ -46,8 +46,17 @@ find_frameworks_return_value = {
 
 
 def get_supplier(*args, **kwargs):
-    return {"suppliers": {
+    supplier_info = {
         "id": 1234,
+        "dunsNumber": "987654321",
+        "companiesHouseNumber": "CH123456",
+        "registeredName": "Official Name Inc",
+        "registrationCountry": "bz",
+        "otherCompanyRegistrationNumber": "BEL153",
+        "registrationDate": "1973-01-02",
+        "vatNumber": "12345678",
+        "organisationSize": "small",
+        "tradingStatus": "Open for business",
         "name": "Supplier Name",
         "description": "Supplier Description",
         "clients": ["Client One", "Client Two"],
@@ -67,7 +76,9 @@ def get_supplier(*args, **kwargs):
             "G-Cloud 6": 12,
             "G-Cloud 5": 34
         }
-    }}
+    }
+    supplier_info.update(kwargs)
+    return {"suppliers": supplier_info}
 
 
 def get_user():
@@ -701,8 +712,8 @@ class TestSupplierDetails(BaseApplicationTest):
 
             res = self.client.get("/suppliers/details")
             assert res.status_code == 200
-
-            document = html.fromstring(res.get_data(as_text=True))
+            page_html = res.get_data(as_text=True)
+            document = html.fromstring(page_html)
 
             assert document.xpath(
                 "//a[normalize-space(string())=$t][@href=$u][contains(@class, $c)]",
@@ -712,21 +723,53 @@ class TestSupplierDetails(BaseApplicationTest):
             )
 
             for property_str in (
-                "Supplier Description",
-                "Client One",
-                "Client Two",
-                "1 Street",  # "2 Building" is not shown, even though it's in the supplier's contactInformation
-                "supplier.dmdev",
-                "supplier@user.dmdev",
-                "Supplier Person",
-                "0800123123",
-                "Supplierville",
-                #  "Supplierland" is not shown, even though it's in the supplier's contactInformation
-                "11 AB",
+                # "Supplier details" section at the top
+                "Supplier Person",  # Contact name
+                "supplier@user.dmdev",  # Contact email
+                "0800123123",  # Phone number
+                "1 Street",  # Address: "2 Building" and "Supplierland" are not shown, even though in contactInformation
+                "Supplierville",  # Town or City
+                "11 AB",  # Postcode
+                "Supplier Description",  # Supplier summary
+                # "Registration information" section
+                "Official Name Inc",  # Registered company name
+                "CH123456",  # Companies House number
+                "987654321",  # DUNS number
+                "12345678",  # VAT number
+                "Open for business",  # Trading status
+                "Small",  # Size
             ):
                 assert document.xpath("//*[normalize-space(string())=$t]", t=property_str), property_str
 
+            # Registration country and registration number not shown if Companies House ID exists
+            for property_str in ("bz", "BEL153",):
+                assert property_str not in page_html
+
             data_api_client.get_supplier.assert_called_once_with(1234)
+
+    def test_shows_overseas_supplier_info_if_no_companies_house_number(self, data_api_client):
+        data_api_client.get_supplier.return_value = get_supplier(companiesHouseNumber=None)
+        with self.app.test_client():
+            self.login()
+
+            res = self.client.get("/suppliers/details")
+            assert res.status_code == 200
+            page_html = res.get_data(as_text=True)
+            document = html.fromstring(page_html)
+            for property_str in ("BZ", "BEL153",):
+                assert document.xpath("//*[normalize-space(string())=$t]", t=property_str), property_str
+
+    def test_does_not_show_overseas_supplier_number_if_uk_company(self, data_api_client):
+        data_api_client.get_supplier.return_value = get_supplier(companiesHouseNumber=None, registrationCountry="gb")
+        with self.app.test_client():
+            self.login()
+
+            res = self.client.get("/suppliers/details")
+            assert res.status_code == 200
+            page_html = res.get_data(as_text=True)
+            document = html.fromstring(page_html)
+            assert document.xpath("//*[normalize-space(string())='GB']")  # Country GB is shown
+            assert "BEL153" not in page_html  # But overseas registration field isn't
 
 
 @mock.patch("app.main.views.suppliers.data_api_client", autospec=True)
@@ -847,10 +890,8 @@ class TestSupplierUpdate(BaseApplicationTest):
         if data is None:
             data = {
                 "description": "New Description",
-                "clients": ["ClientA", "ClientB"],
                 "contact_id": 2,
                 "contact_email": "supplier@user.dmdev",
-                "contact_website": "supplier.dmdev",
                 "contact_contactName": "Supplier Person",
                 "contact_phoneNumber": "0800123123",
                 "contact_address1": "1 Street",
@@ -896,7 +937,6 @@ class TestSupplierUpdate(BaseApplicationTest):
         data_api_client.update_supplier.assert_called_once_with(
             1234,
             {
-                'clients': [u'ClientA', u'ClientB'],
                 'description': u'New Description'
             },
             'email@email.com'
@@ -904,7 +944,6 @@ class TestSupplierUpdate(BaseApplicationTest):
         data_api_client.update_contact_information.assert_called_once_with(
             1234, 2,
             {
-                'website': u'supplier.dmdev',
                 'city': u'Supplierville',
                 'address1': u'1 Street',
                 'email': u'supplier@user.dmdev',
@@ -921,10 +960,8 @@ class TestSupplierUpdate(BaseApplicationTest):
 
         data = {
             "description": "  New Description  ",
-            "clients": ["  ClientA  ", "  ClientB  "],
             "contact_id": 2,
             "contact_email": "  supplier@user.dmdev  ",
-            "contact_website": "  supplier.dmdev  ",
             "contact_contactName": "  Supplier Person  ",
             "contact_phoneNumber": "  0800123123  ",
             "contact_address1": "  1 Street  ",
@@ -939,7 +976,6 @@ class TestSupplierUpdate(BaseApplicationTest):
         data_api_client.update_supplier.assert_called_once_with(
             1234,
             {
-                'clients': [u'ClientA', u'ClientB'],
                 'description': u'New Description'
             },
             'email@email.com'
@@ -947,7 +983,6 @@ class TestSupplierUpdate(BaseApplicationTest):
         data_api_client.update_contact_information.assert_called_once_with(
             1234, 2,
             {
-                'website': u'supplier.dmdev',
                 'city': u'Supplierville',
                 'address1': u'1 Street',
                 'email': u'supplier@user.dmdev',
@@ -964,9 +999,7 @@ class TestSupplierUpdate(BaseApplicationTest):
 
         status, resp = self.post_supplier_edit({
             "description": "New Description",
-            "clients": ["ClientA", "", "ClientB"],
             "contact_id": 2,
-            "contact_website": "supplier.dmdev",
             "contact_contactName": "Supplier Person",
             "contact_phoneNumber": "0800123123",
             "contact_address1": "1 Street",
@@ -981,10 +1014,7 @@ class TestSupplierUpdate(BaseApplicationTest):
         assert data_api_client.update_contact_information.called is False
 
         assert "New Description" in resp
-        assert 'value="ClientA"' in resp
-        assert 'value="ClientB"' in resp
         assert 'value="2"' in resp
-        assert 'value="supplier.dmdev"' in resp
         assert 'value="Supplier Person"' in resp
         assert 'value="0800123123"' in resp
         assert 'value="1 Street"' in resp
@@ -1015,16 +1045,6 @@ class TestSupplierUpdate(BaseApplicationTest):
 
         assert data_api_client.update_supplier.called is False
         assert data_api_client.update_contact_information.called is False
-
-    def test_clients_above_limit(self, data_api_client):
-        self.login()
-
-        status, resp = self.post_supplier_edit(
-            clients=["", "A Client"] * 11
-        )
-
-        assert status == 200
-        assert 'You must have 10 or fewer clients' in resp
 
     def test_should_redirect_to_login_if_not_logged_in(self, data_api_client):
         res = self.client.get("/suppliers/details/edit")
