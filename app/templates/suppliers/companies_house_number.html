@@ -1,6 +1,6 @@
 {% extends "_base_page.html" %}
 
-{% block page_title %}Companies House – Create new supplier – Digital Marketplace{% endblock %}
+{% block page_title %}Companies House number – Create a supplier account – Digital Marketplace{% endblock %}
 
 {% block breadcrumb %}
 {%
@@ -36,9 +36,7 @@
             value = form.companies_house_number.data,
             error = form.companies_house_number.errors[0],
             question_advice =
-            'This is a unique 8-character number given to your company by Companies House.
-            Find your <a href="https://beta.companieshouse.gov.uk/">Companies House number</a>.
-            ' | safe
+            '<a href="https://beta.companieshouse.gov.uk/">Find your Companies House number</a>' | safe
         %}
         {% include "toolkit/forms/textbox.html" %}
         {% endwith %}
