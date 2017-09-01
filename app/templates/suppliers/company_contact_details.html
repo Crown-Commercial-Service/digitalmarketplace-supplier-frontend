@@ -1,6 +1,6 @@
 {% extends "_base_page.html" %}
 
-{% block page_title %}Company contact details – Create new supplier – Digital Marketplace{% endblock %}
+{% block page_title %}Company contact details – Create a supplier account – Digital Marketplace{% endblock %}
 
 {% block breadcrumb %}
 {%
@@ -25,7 +25,7 @@ with items = [
         <ul>
         {% for field_name, field_errors in form.errors|dictsort if field_errors %}
         {% for error in field_errors %}
-          <li><a href="#{{ form[field_name].id }}" class="validation-masthead-link">{{ form[field_name].label.text|lower }}</a></li>
+          <li><a href="#{{ form[field_name].id }}" class="validation-masthead-link">{{ form[field_name].label.text }}</a></li>
         {% endfor %}
         {% endfor %}
         </ul>
