@@ -1,7 +1,7 @@
 {% extends "_base_page.html" %}
 {% import "toolkit/summary-table.html" as summary %}
 
-{% block page_title %}Create login — Create new supplier – Digital Marketplace{% endblock %}
+{% block page_title %}Create login — Create a supplier account – Digital Marketplace{% endblock %}
 
 {% block breadcrumb %}
 {%
@@ -32,14 +32,18 @@
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
       {%
         with
-          question = "Your email address",
+          question = "Add your email",
           name = "email_address",
           value = email_address,
-          error = form.email_address.errors[0]
+          error = form.email_address.errors[0],
+          question_advice =
+          '<p>You’ll use this to sign in to your company’s supplier account.</p>
+           <p>It won’t be visible on the Digital Marketplace.</p>
+           <p>You can add other email addresses to your supplier account later.</p>
+          ' | safe
       %}
         {% include "toolkit/forms/textbox.html" %}
       {% endwith %}
-      <p>You'll use this address to log in. It won’t be publicly visible.</p>
       {%
         with
           type = "save",
