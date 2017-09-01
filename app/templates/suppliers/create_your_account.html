@@ -28,20 +28,19 @@
 
 <div class="grid-row">
   <div class="column-two-thirds">
-
+    <div class="dmspeak">
+       <p>You’ll use this to sign in to your company’s supplier account.</p>
+       <p>It won’t be visible on the Digital Marketplace.</p>
+       <p>You can add other email addresses to your supplier account later.</p>
+    </div>
     <form method="POST" action="{{ url_for('.submit_create_your_account') }}">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
       {%
         with
-          question = "Add your email",
+          question = "Your email address",
           name = "email_address",
           value = email_address,
-          error = form.email_address.errors[0],
-          question_advice =
-          '<p>You’ll use this to sign in to your company’s supplier account.</p>
-           <p>It won’t be visible on the Digital Marketplace.</p>
-           <p>You can add other email addresses to your supplier account later.</p>
-          ' | safe
+          error = form.email_address.errors[0]
       %}
         {% include "toolkit/forms/textbox.html" %}
       {% endwith %}
