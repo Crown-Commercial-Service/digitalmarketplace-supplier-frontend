@@ -1,7 +1,7 @@
 {% extends "_base_page.html" %}
 {% import "toolkit/summary-table.html" as summary %}
 
-{% block page_title %}Check your information – Create new supplier – Digital Marketplace{% endblock %}
+{% block page_title %}Check your information – Create a supplier account – Digital Marketplace{% endblock %}
 
 {% block breadcrumb %}
 {%
@@ -61,17 +61,17 @@
   {{ summary.edit_link("Edit", url_for(".company_name")) }}
   {% endcall %}
   {% call summary.row(complete=session.get("contact_name", None)) %}
-  {{ summary.field_name("Primary contact name") }}
+  {{ summary.field_name("Contact name") }}
   {{ summary.text(session.get("contact_name", "You must answer this question.")) }}
   {{ summary.edit_link("Edit", url_for(".company_contact_details")) }}
   {% endcall %}
   {% call summary.row(complete=session.get("phone_number", None)) %}
-  {{ summary.field_name("Primary contact email") }}
+  {{ summary.field_name("Contact email") }}
   {{ summary.text(session.get("email_address", "You must answer this question.")) }}
   {{ summary.edit_link("Edit", url_for(".company_contact_details")) }}
   {% endcall %}
   {% call summary.row(complete=session.get("phone_number", None)) %}
-  {{ summary.field_name("Primary contact phone number") }}
+  {{ summary.field_name("Contact phone number") }}
   {{ summary.text(session.get("phone_number", "You must answer this question.")) }}
   {{ summary.edit_link("Edit", url_for(".company_contact_details")) }}
   {% endcall %}
