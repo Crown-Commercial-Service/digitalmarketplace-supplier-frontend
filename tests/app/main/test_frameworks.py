@@ -1863,7 +1863,7 @@ class TestFrameworkAgreement(BaseApplicationTest):
             doc = html.fromstring(data)
 
             assert res.status_code == 200
-            assert u'/suppliers/frameworks/g-cloud-7/agreement' == doc.xpath('//form')[0].action
+            assert u'/suppliers/frameworks/g-cloud-7/agreement' == doc.xpath('//form')[1].action
             assert u'Document uploaded Monday 2 November 2015 at 15:25' in data
             assert u'Your document has been uploaded' in data
 
@@ -1880,7 +1880,7 @@ class TestFrameworkAgreement(BaseApplicationTest):
             doc = html.fromstring(data)
 
             assert res.status_code == 200
-            assert u'/suppliers/frameworks/g-cloud-7/agreement' == doc.xpath('//form')[0].action
+            assert u'/suppliers/frameworks/g-cloud-7/agreement' == doc.xpath('//form')[1].action
             assert u'Document uploaded' not in data
             assert u'Your document has been uploaded' not in data
 
