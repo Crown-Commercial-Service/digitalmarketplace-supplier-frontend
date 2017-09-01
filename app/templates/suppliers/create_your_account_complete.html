@@ -1,6 +1,6 @@
 {% extends "_base_page.html" %}
 
-{% block page_title %}Activate your account - Create new supplier – Digital Marketplace{% endblock %}
+{% block page_title %}Activate your account - Create a supplier account – Digital Marketplace{% endblock %}
 
 {% block breadcrumb %}
 {%
@@ -26,10 +26,15 @@
 
   <div class="grid-row">
     <div class="column-two-thirds">
-      <p>
-        An email has been sent to {{ email_address }}.
-        You need to click on the link in the email to activate your account.
-      </p>
+      <div class="dmspeak">
+        <p>An email has been sent to {{ email_address }}.</p>
+        <p>You must click on the link in the email to activate your account.</p>
+        <br />
+        <p>
+          You will be asked to create a password for your account.
+          You won’t be able to view your company’s supplier account details without this password.
+        </p>
+      </div>
     </div>
   </div>
 
