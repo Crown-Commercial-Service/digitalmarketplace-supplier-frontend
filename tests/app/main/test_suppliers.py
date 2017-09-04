@@ -1158,21 +1158,40 @@ class TestCreateSupplier(BaseApplicationTest):
         res = self.client.post(
             "/suppliers/companies-house-number",
             data={
-                'companies_house_number': "short"
+                'companies_house_number': "1234567"
             }
         )
         assert res.status_code == 400
-        assert "Companies House numbers must have 8 characters." in res.get_data(as_text=True)
+        assert ("Companies House numbers must have either 8 digits or 2 letters followed by 6 digits."
+                in
+                res.get_data(as_text=True)
+                )
 
     def test_should_be_an_error_if_companies_house_number_is_not_8_characters_long(self):
         res = self.client.post(
             "/suppliers/companies-house-number",
             data={
-                'companies_house_number': "muchtoolongtobecompanieshouse"
+                'companies_house_number': "123456789"
             }
         )
         assert res.status_code == 400
-        assert "Companies House numbers must have 8 characters." in res.get_data(as_text=True)
+        assert ("Companies House numbers must have either 8 digits or 2 letters followed by 6 digits."
+                in
+                res.get_data(as_text=True)
+                )
+
+    def test_should_be_an_error_if_companies_house_number_is_8_characters_but_invalid_format(self):
+        res = self.client.post(
+            "/suppliers/companies-house-number",
+            data={
+                'companies_house_number': "ABC12345"
+            }
+        )
+        assert res.status_code == 400
+        assert ("Companies House numbers must have either 8 digits or 2 letters followed by 6 digits."
+                in
+                res.get_data(as_text=True)
+                )
 
     def test_should_allow_valid_companies_house_number(self):
         with self.client as c:

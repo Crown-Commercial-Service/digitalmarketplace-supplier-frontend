@@ -50,7 +50,9 @@ class DunsNumberForm(Form):
 class CompaniesHouseNumberForm(Form):
     companies_house_number = StripWhitespaceStringField('Companies house number', validators=[
         Optional(),
-        Length(min=8, max=8, message="Companies House numbers must have 8 characters.")
+        Regexp(r'^([0-9]{2}|[A-Za-z]{2})[0-9]{6}$',
+               message="Companies House numbers must have either 8 digits or 2 letters followed by 6 digits."
+               )
     ])
 
 
