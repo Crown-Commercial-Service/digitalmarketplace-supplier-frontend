@@ -2,97 +2,22 @@ from __future__ import absolute_import
 import six
 from flask_login import current_user
 from flask import current_app, flash, redirect, render_template, url_for, abort
-from flask_login import login_user
 
-from dmapiclient import HTTPError
 from dmapiclient.audit import AuditTypes
-from dmutils.user import User
-from dmutils.email import decode_invitation_token, generate_token, send_email
+from dmutils.email import generate_token, send_email
 from dmutils.email.exceptions import EmailError
 
 from .. import main
-from ..forms.auth_forms import EmailAddressForm, CreateUserForm
+from ..forms.auth_forms import EmailAddressForm
 from ..helpers import hash_email, login_required
 from ... import data_api_client
 
 
-@main.route('/create-user/<string:encoded_token>', methods=["GET"])
+# Any invites sent before the new user-frontend becomes active will be linking to this route. We need to maintain it
+# for seven days after the user-frontend goes live.
+@main.route('/create-user/<string:encoded_token>', methods=['GET'])
 def create_user(encoded_token):
-    form = CreateUserForm()
-
-    token = decode_invitation_token(encoded_token)
-
-    if token is None:
-        current_app.logger.warning(
-            "createuser.token_invalid: {encoded_token}",
-            extra={'encoded_token': encoded_token})
-        return render_template(
-            "auth/create_user_error.html",
-            token=None), 400
-
-    user_json = data_api_client.get_user(email_address=token["email_address"])
-
-    if not user_json:
-        return render_template(
-            "auth/create_user.html",
-            form=form,
-            email_address=token['email_address'],
-            supplier_name=token['supplier_name'],
-            token=encoded_token), 200
-
-    user = User.from_json(user_json)
-    return render_template(
-        "auth/create_user_error.html",
-        token=token,
-        user=user), 400
-
-
-@main.route('/create-user/<string:encoded_token>', methods=["POST"])
-def submit_create_user(encoded_token):
-    form = CreateUserForm()
-
-    token = decode_invitation_token(encoded_token)
-    if token is None:
-        current_app.logger.warning("createuser.token_invalid: {encoded_token}",
-                                   extra={'encoded_token': encoded_token})
-        return render_template(
-            "auth/create_user_error.html",
-            token=None), 400
-
-    else:
-        if not form.validate_on_submit():
-            current_app.logger.warning(
-                "createuser.invalid: {form_errors}",
-                extra={'form_errors': ", ".join(form.errors)})
-            return render_template(
-                "auth/create_user.html",
-                form=form,
-                token=encoded_token,
-                email_address=token['email_address'],
-                supplier_name=token['supplier_name']), 400
-
-        try:
-            user = data_api_client.create_user({
-                'name': form.name.data,
-                'password': form.password.data,
-                'emailAddress': token['email_address'],
-                'role': 'supplier',
-                'supplierId': token['supplier_id']
-            })
-
-            user = User.from_json(user)
-            login_user(user)
-
-        except HTTPError as e:
-            if e.status_code != 409:
-                raise
-
-            return render_template(
-                "auth/create_user_error.html",
-                token=None), 400
-
-        flash('account-created', 'flag')
-        return redirect(url_for('.dashboard'))
+    return redirect(url_for('external.create_user', encoded_token=encoded_token), 301)
 
 
 @main.route('/invite-user', methods=["GET"])
@@ -113,6 +38,7 @@ def send_invite_user():
     if form.validate_on_submit():
         token = generate_token(
             {
+                "role": "supplier",
                 "supplier_id": current_user.supplier_id,
                 "supplier_name": current_user.supplier_name,
                 "email_address": form.email_address.data
@@ -120,7 +46,7 @@ def send_invite_user():
             current_app.config['SHARED_EMAIL_KEY'],
             current_app.config['INVITE_EMAIL_SALT']
         )
-        url = url_for('main.create_user', encoded_token=token, _external=True)
+        url = url_for('external.create_user', encoded_token=token, _external=True)
         email_body = render_template(
             "emails/invite_user_email.html",
             url=url,

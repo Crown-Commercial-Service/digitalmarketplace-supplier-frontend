@@ -96,7 +96,7 @@ class TestPostUsers(BaseApplicationTest):
             '/suppliers/users/123/deactivate'
         )
         assert res.status_code == 302
-        assert res.location == 'http://localhost/login'
+        assert res.location == 'http://localhost/user/login'
 
     def test_cannot_deactivate_self(self):
         with self.app.test_client():

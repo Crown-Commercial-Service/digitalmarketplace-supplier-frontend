@@ -404,6 +404,7 @@ def submit_company_summary():
 
         token = generate_token(
             {
+                "role": "supplier",
                 "email_address": account_email_address,
                 "supplier_id": session['email_supplier_id'],
                 "supplier_name": session['email_company_name']
@@ -412,7 +413,7 @@ def submit_company_summary():
             current_app.config['INVITE_EMAIL_SALT']
         )
 
-        url = url_for('main.create_user', encoded_token=token, _external=True)
+        url = url_for('external.create_user', encoded_token=token, _external=True)
 
         email_body = render_template(
             "emails/create_user_email.html",
