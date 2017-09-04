@@ -1,7 +1,7 @@
 {% extends "_base_page.html" %}
 {% import "toolkit/summary-table.html" as summary %}
 
-{% block page_title %}Create login — Create new supplier – Digital Marketplace{% endblock %}
+{% block page_title %}Create login — Create a supplier account – Digital Marketplace{% endblock %}
 
 {% block breadcrumb %}
 {%
@@ -20,14 +20,19 @@
 
 {%
   with
-    heading = "Create login"
+    heading = "Create login",
+    smaller = True
 %}
   {% include "toolkit/page-heading.html" %}
 {% endwith %}
 
 <div class="grid-row">
   <div class="column-two-thirds">
-
+    <div class="dmspeak">
+       <p>You’ll use this to sign in to your company’s supplier account.</p>
+       <p>It won’t be visible on the Digital Marketplace.</p>
+       <p>You can add other email addresses to your supplier account later.</p>
+    </div>
     <form method="POST" action="{{ url_for('.submit_create_your_account') }}">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
       {%
@@ -39,7 +44,6 @@
       %}
         {% include "toolkit/forms/textbox.html" %}
       {% endwith %}
-      <p>You'll use this address to log in. It won’t be publicly visible.</p>
       {%
         with
           type = "save",
