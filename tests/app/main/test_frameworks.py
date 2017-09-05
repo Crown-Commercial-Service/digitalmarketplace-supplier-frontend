@@ -23,7 +23,14 @@ from dmapiclient.audit import AuditTypes
 from dmutils.email.exceptions import EmailError
 from dmutils.s3 import S3ResponseError
 
-from ..helpers import BaseApplicationTest, FULL_G7_SUBMISSION, FakeMail, valid_g9_declaration_base
+from ..helpers import (
+    BaseApplicationTest,
+    FULL_G7_SUBMISSION,
+    FakeMail,
+    valid_g9_declaration_base,
+    assert_args_and_raise,
+    assert_args_and_return,
+)
 
 
 def _return_fake_s3_file_dict(directory, filename, ext, last_modified=None, size=None):
@@ -44,22 +51,6 @@ def get_g_cloud_8():
         slug='g-cloud-8',
         framework_agreement_version='v1.0'
     )
-
-
-def _assert_args_and_raise(e, *args, **kwargs):
-    def _inner(*inner_args, **inner_kwargs):
-        assert args == inner_args
-        assert kwargs == inner_kwargs
-        raise e
-    return _inner
-
-
-def _assert_args_and_return(retval, *args, **kwargs):
-    def _inner(*inner_args, **inner_kwargs):
-        assert args == inner_args
-        assert kwargs == inner_kwargs
-        return retval
-    return _inner
 
 
 @pytest.fixture(params=("GET", "POST"))
@@ -2343,11 +2334,11 @@ class TestDeclarationOverviewSubmit(BaseApplicationTest):
         with self.app.test_client():
             self.login()
 
-            data_api_client.get_framework.side_effect = _assert_args_and_return(
+            data_api_client.get_framework.side_effect = assert_args_and_return(
                 self.framework(status="open"),
                 "g-cloud-7",
             )
-            data_api_client.get_supplier_framework_info.side_effect = _assert_args_and_raise(
+            data_api_client.get_supplier_framework_info.side_effect = assert_args_and_raise(
                 APIError(mock.Mock(status_code=404)),
                 1234,
                 "g-cloud-7",
@@ -2362,11 +2353,11 @@ class TestDeclarationOverviewSubmit(BaseApplicationTest):
         with self.app.test_client():
             self.login()
 
-            data_api_client.get_framework.side_effect = _assert_args_and_return(
+            data_api_client.get_framework.side_effect = assert_args_and_return(
                 self.framework(status="coming"),
                 "g-cloud-7",
             )
-            data_api_client.get_supplier_framework_info.side_effect = _assert_args_and_return(
+            data_api_client.get_supplier_framework_info.side_effect = assert_args_and_return(
                 self.supplier_framework(framework_slug="g-cloud-7"),
                 1234,
                 "g-cloud-7",
@@ -2381,11 +2372,11 @@ class TestDeclarationOverviewSubmit(BaseApplicationTest):
         with self.app.test_client():
             self.login()
 
-            data_api_client.get_framework.side_effect = _assert_args_and_raise(
+            data_api_client.get_framework.side_effect = assert_args_and_raise(
                 APIError(mock.Mock(status_code=404)),
                 "muttoning-clouds",
             )
-            data_api_client.get_supplier_framework_info.side_effect = _assert_args_and_raise(
+            data_api_client.get_supplier_framework_info.side_effect = assert_args_and_raise(
                 APIError(mock.Mock(status_code=404)),
                 1234,
                 "muttoning-clouds",
@@ -2449,11 +2440,11 @@ class TestDeclarationOverview(BaseApplicationTest):
         return row_heading, None, rows
 
     def _setup_data_api_client(self, data_api_client, framework_status, framework_slug, declaration, prefill_fw_slug):
-        data_api_client.get_framework.side_effect = _assert_args_and_return(
+        data_api_client.get_framework.side_effect = assert_args_and_return(
             self.framework(slug=framework_slug, name="F-Cumulus 0", status=framework_status),
             framework_slug,
         )
-        data_api_client.get_supplier_framework_info.side_effect = _assert_args_and_return(
+        data_api_client.get_supplier_framework_info.side_effect = assert_args_and_return(
             self.supplier_framework(
                 framework_slug=framework_slug,
                 declaration=declaration,
@@ -3092,11 +3083,11 @@ class TestDeclarationSubmit(BaseApplicationTest):
         with self.app.test_client():
             self.login()
 
-            data_api_client.get_framework.side_effect = _assert_args_and_return(
+            data_api_client.get_framework.side_effect = assert_args_and_return(
                 self.framework(slug="g-cloud-9", name="G-Cloud 9", status="open"),
                 "g-cloud-9",
             )
-            data_api_client.get_supplier_framework_info.side_effect = _assert_args_and_return(
+            data_api_client.get_supplier_framework_info.side_effect = assert_args_and_return(
                 self.supplier_framework(
                     framework_slug="g-cloud-9",
                     declaration=invalid_declaration,
@@ -3118,11 +3109,11 @@ class TestDeclarationSubmit(BaseApplicationTest):
         with self.app.test_client():
             self.login()
 
-            data_api_client.get_framework.side_effect = _assert_args_and_return(
+            data_api_client.get_framework.side_effect = assert_args_and_return(
                 self.framework(slug="g-cloud-9", name="G-Cloud 9", status="open"),
                 "g-cloud-9",
             )
-            data_api_client.get_supplier_framework_info.side_effect = _assert_args_and_return(
+            data_api_client.get_supplier_framework_info.side_effect = assert_args_and_return(
                 self.supplier_framework(
                     framework_slug="g-cloud-9",
                     declaration=dict(status=declaration_status, **(valid_g9_declaration_base())),
@@ -3131,7 +3122,7 @@ class TestDeclarationSubmit(BaseApplicationTest):
                 1234,
                 "g-cloud-9",
             )
-            data_api_client.set_supplier_declaration.side_effect = _assert_args_and_return(
+            data_api_client.set_supplier_declaration.side_effect = assert_args_and_return(
                 dict(status="complete", **(valid_g9_declaration_base())),
                 1234,
                 "g-cloud-9",
@@ -3158,11 +3149,11 @@ class TestDeclarationSubmit(BaseApplicationTest):
         with self.app.test_client():
             self.login()
 
-            data_api_client.get_framework.side_effect = _assert_args_and_return(
+            data_api_client.get_framework.side_effect = assert_args_and_return(
                 self.framework(status=framework_status),
                 "g-cloud-7",
             )
-            data_api_client.get_supplier_framework_info.side_effect = _assert_args_and_return(
+            data_api_client.get_supplier_framework_info.side_effect = assert_args_and_return(
                 self.supplier_framework(framework_slug="g-cloud-7"),
                 1234,
                 "g-cloud-7",

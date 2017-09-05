@@ -10,6 +10,24 @@ from dmutils.formats import DATETIME_FORMAT
 import pytest
 
 
+# intended to be used as a mock's side_effect
+def assert_args_and_raise(e, *args, **kwargs):
+    def _inner(*inner_args, **inner_kwargs):
+        assert args == inner_args
+        assert kwargs == inner_kwargs
+        raise e
+    return _inner
+
+
+# intended to be used as a mock's side_effect
+def assert_args_and_return(retval, *args, **kwargs):
+    def _inner(*inner_args, **inner_kwargs):
+        assert args == inner_args
+        assert kwargs == inner_kwargs
+        return retval
+    return _inner
+
+
 FULL_G7_SUBMISSION = {
     "status": "complete",
     "PR1": "true",
