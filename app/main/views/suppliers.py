@@ -486,9 +486,23 @@ def join_open_framework_notification_mailing_list():
                 current_app.config["DM_MAILCHIMP_OPEN_FRAMEWORK_NOTIFICATION_MAILING_LIST_ID"],
                 form.data["email_address"],
             )
+
             # note we're signalling our flash messages in two separate ways here
             if mc_response not in (True, False,):
                 # success
+                data_api_client.create_audit_event(
+                    audit_type=AuditTypes.mailing_list_subscription,
+                    data={
+                        "subscribedEmail": form.data["email_address"],
+                        "mailchimp": {k: mc_response.get(k) for k in (
+                            "id",
+                            "unique_email_id",
+                            "timestamp_opt",
+                            "last_changed",
+                            "list_id",
+                        )},
+                    },
+                )
 
                 # this message will be consumed by the buyer app which has been converted to display raw "literal"
                 # content from the session

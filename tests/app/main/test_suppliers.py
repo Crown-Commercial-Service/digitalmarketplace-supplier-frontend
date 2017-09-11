@@ -6,6 +6,7 @@ import pytest
 from six.moves.urllib.parse import urlparse
 
 from dmapiclient import HTTPError
+from dmapiclient.audit import AuditTypes
 from dmutils.email.exceptions import EmailError
 
 from tests.app.helpers import BaseApplicationTest, assert_args_and_return
@@ -1668,6 +1669,7 @@ class TestCreateSupplier(BaseApplicationTest):
             assert 'An email has been sent to my-email@example.com' in res.get_data(as_text=True)
 
 
+@mock.patch("app.main.suppliers.data_api_client")
 class TestJoinOpenFrameworkNotificationMailingList(BaseApplicationTest):
     @staticmethod
     def _common_page_asserts_and_get_form(doc):
@@ -1686,7 +1688,8 @@ class TestJoinOpenFrameworkNotificationMailingList(BaseApplicationTest):
         return form
 
     @mock.patch("app.main.views.suppliers.DMMailChimpClient")
-    def test_get(self, mailchimp_client_class):
+    def test_get(self, mailchimp_client_class, data_api_client):
+        data_api_client.create_audit_event.side_effect = AssertionError("This should not be called")
         mailchimp_client_instance = mock.Mock(spec=("subscribe_new_email_to_list",))
         mailchimp_client_instance.subscribe_new_email_to_list.side_effect = AssertionError("This should not be called")
 
@@ -1725,7 +1728,14 @@ class TestJoinOpenFrameworkNotificationMailingList(BaseApplicationTest):
         ("", "You must provide an email address.",),
     ))
     @mock.patch("app.main.views.suppliers.DMMailChimpClient")
-    def test_post_invalid_email(self, mailchimp_client_class, email_address_value, expected_validation_message):
+    def test_post_invalid_email(
+        self,
+        mailchimp_client_class,
+        data_api_client,
+        email_address_value,
+        expected_validation_message,
+    ):
+        data_api_client.create_audit_event.side_effect = AssertionError("This should not be called")
         mailchimp_client_instance = mock.Mock(spec=("subscribe_new_email_to_list",))
         mailchimp_client_instance.subscribe_new_email_to_list.side_effect = AssertionError("This should not be called")
 
@@ -1760,7 +1770,8 @@ class TestJoinOpenFrameworkNotificationMailingList(BaseApplicationTest):
 
     @pytest.mark.parametrize("mc_retval", (True, False,))
     @mock.patch("app.main.views.suppliers.DMMailChimpClient")
-    def test_post_valid_email_failure(self, mailchimp_client_class, mc_retval):
+    def test_post_valid_email_failure(self, mailchimp_client_class, data_api_client, mc_retval):
+        data_api_client.create_audit_event.side_effect = AssertionError("This should not be called")
         mailchimp_client_instance = mock.Mock(spec=("subscribe_new_email_to_list",))
         mailchimp_client_instance.subscribe_new_email_to_list.side_effect = assert_args_and_return(
             mc_retval,
@@ -1813,10 +1824,31 @@ class TestJoinOpenFrameworkNotificationMailingList(BaseApplicationTest):
         self.assert_no_flashes()
 
     @mock.patch("app.main.views.suppliers.DMMailChimpClient")
-    def test_post_valid_email_success(self, mailchimp_client_class):
+    def test_post_valid_email_success(self, mailchimp_client_class, data_api_client):
+        data_api_client.create_audit_event.side_effect = assert_args_and_return(
+            {"convincing": "response"},
+            audit_type=AuditTypes.mailing_list_subscription,
+            data={
+                "subscribedEmail": "qu&rt@four.pence",
+                "mailchimp": {
+                    "id": "cashregister-clanged",
+                    "unique_email_id": "clock-clacked",
+                    "timestamp_opt": None,
+                    "last_changed": "1904-06-16T16:00:00+00:00",
+                    "list_id": "flowered-tables",
+                },
+            },
+        )
         mailchimp_client_instance = mock.Mock(spec=("subscribe_new_email_to_list",))
         mailchimp_client_instance.subscribe_new_email_to_list.side_effect = assert_args_and_return(
-            {"someConvincing": "jsonResponse"},
+            {
+                "id": "cashregister-clanged",
+                "unique_email_id": "clock-clacked",
+                # timestamp_opt deliberately omitted
+                "last_changed": "1904-06-16T16:00:00+00:00",
+                "list_id": "flowered-tables",
+                "has-he-forgotten": "perhaps-a-trick",  # should be ignored
+            },
             "not_a_real_mailing_list",
             "qu&rt@four.pence",
         )
