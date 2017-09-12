@@ -1,7 +1,7 @@
 from flask.ext.wtf import Form
 from wtforms import IntegerField
 from wtforms.validators import DataRequired, ValidationError, Length, Optional, Regexp
-from dmutils.forms import StripWhitespaceStringField
+from dmutils.forms import StripWhitespaceStringField, EmailField, EmailValidator
 
 
 def word_length(limit=None, message=None):
@@ -29,10 +29,8 @@ class EditContactInformationForm(Form):
     contactName = StripWhitespaceStringField('Contact name', validators=[
         DataRequired(message="You must provide a contact name"),
     ])
-    email = StripWhitespaceStringField('Contact email', validators=[
+    email = EmailField('Contact email', validators=[
         DataRequired(message="You must provide an email address"),
-        Regexp("^[^@^\s]+@[^@^\.^\s]+(\.[^@^\.^\s]+)+$",
-               message="Please enter a valid email address")
     ])
     phoneNumber = StripWhitespaceStringField('Contact phone number')
     address1 = StripWhitespaceStringField('Building and street')
@@ -70,8 +68,7 @@ class CompanyContactDetailsForm(Form):
     ])
     email_address = StripWhitespaceStringField('Contact email address', validators=[
         DataRequired(message="You must provide an email address."),
-        Regexp("^[^@^\s]+@[^@^\.^\s]+(\.[^@^\.^\s]+)+$",
-               message="You must provide a valid email address.")
+        EmailValidator(message="You must provide a valid email address."),
     ])
     phone_number = StripWhitespaceStringField('Contact phone number', validators=[
         DataRequired(message="You must provide a phone number."),
@@ -82,6 +79,5 @@ class CompanyContactDetailsForm(Form):
 class EmailAddressForm(Form):
     email_address = StripWhitespaceStringField('Email address', validators=[
         DataRequired(message="You must provide an email address."),
-        Regexp("^[^@^\s]+@[^@^\.^\s]+(\.[^@^\.^\s]+)+$",
-               message="You must provide a valid email address.")
+        EmailValidator(message="You must provide a valid email address."),
     ])
