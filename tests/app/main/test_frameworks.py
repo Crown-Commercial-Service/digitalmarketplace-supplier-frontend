@@ -116,7 +116,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
             ),
             (
                 'Submitted by',
-                'User email@email.com Sunday 10 July 2016 at 22:20'
+                'User email@email.com Sunday 10 July 2016 at 10:20pm'
             ),
             (
                 'Countersignature',
@@ -1855,7 +1855,7 @@ class TestFrameworkAgreement(BaseApplicationTest):
 
             assert res.status_code == 200
             assert u'/suppliers/frameworks/g-cloud-7/agreement' == doc.xpath('//form')[1].action
-            assert u'Document uploaded Monday 2 November 2015 at 15:25' in data
+            assert u'Document uploaded Monday 2 November 2015 at 3:25pm' in data
             assert u'Your document has been uploaded' in data
 
     def test_upload_message_if_agreement_is_not_returned(self, data_api_client):
@@ -4692,7 +4692,7 @@ class TestSignatureUploadPage(BaseApplicationTest):
 
                 s3.return_value.get_key.assert_called_with('already/uploaded/file/path.pdf')
                 assert res.status_code == 200
-                assert "test.pdf, uploaded Sunday 10 July 2016 at 22:18" in res.get_data(as_text=True)
+                assert "test.pdf, uploaded Sunday 10 July 2016 at 10:18pm" in res.get_data(as_text=True)
 
     @mock.patch('dmutils.s3.S3')
     def test_signature_page_displays_file_upload_timestamp_if_no_filename_in_session(
@@ -4719,7 +4719,7 @@ class TestSignatureUploadPage(BaseApplicationTest):
                 )
                 s3.return_value.get_key.assert_called_with('already/uploaded/file/path.pdf')
                 assert res.status_code == 200
-                assert "Uploaded Sunday 10 July 2016 at 22:18" in res.get_data(as_text=True)
+                assert "Uploaded Sunday 10 July 2016 at 10:18pm" in res.get_data(as_text=True)
 
     @mock.patch('dmutils.s3.S3')
     def test_signature_page_allows_continuation_without_file_chosen_to_be_uploaded_if_an_uploaded_file_already_exists(
@@ -4828,7 +4828,7 @@ class TestContractReviewPage(BaseApplicationTest):
             assert res.status_code == 200
             page = res.get_data(as_text=True)
             assert u'Check the details you’ve given before returning the signature page for £unicodename' in page
-            assert '<tdclass="summary-item-field-first"><span>UploadedSunday10July2016at22:18</span></td>' in self.strip_all_whitespace(page)  # noqa
+            assert '<tdclass="summary-item-field-first"><span>UploadedSunday10July2016at10:18pm</span></td>' in self.strip_all_whitespace(page)  # noqa
 
     @mock.patch('dmutils.s3.S3')
     def test_contract_review_page_aborts_if_visited_when_information_required_to_return_agreement_does_not_exist(
@@ -5346,7 +5346,7 @@ class TestContractVariation(BaseApplicationTest):
 
         assert res.status_code == 200
         assert len(doc.xpath('//h2[contains(text(), "Contract variation status")]')) == 1
-        assert u"<span>William Drăyton<br />agreed@email.com<br />Friday 19 August 2016 at 16:47</span>" in page_text
+        assert u"<span>William Drăyton<br />agreed@email.com<br />Friday 19 August 2016 at 4:47pm</span>" in page_text
         assert len(doc.xpath('//label[contains(text(), "I accept these proposed changes")]')) == 0
         assert len(doc.xpath('//input[@value="Save and continue"]')) == 0
 
