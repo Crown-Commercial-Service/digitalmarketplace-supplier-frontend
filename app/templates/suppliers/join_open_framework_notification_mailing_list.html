@@ -36,16 +36,15 @@
 {% endwith %}
 
 <div class="single-question-page">
-  {%
-  with
-      heading = "Sign up for Digital Marketplace email alerts",
-      smaller = True
-  %}
-  {% include "toolkit/page-heading.html" %}
-  {% endwith %}
-
   <div class="grid-row">
     <div class="column-two-thirds">
+      {%
+      with
+          heading = "Sign up for Digital Marketplace email alerts",
+          smaller = True
+      %}
+      {% include "toolkit/page-heading.html" %}
+      {% endwith %}
       <form method="POST" action="">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
           {% set question_advice %}
