@@ -2,7 +2,7 @@
 
 from itertools import chain
 
-from flask import render_template, request, redirect, url_for, abort, session, Markup
+from flask import render_template, request, redirect, url_for, abort, session, Markup, flash
 from flask_login import current_user, current_app
 import six
 
@@ -10,6 +10,7 @@ from dmapiclient import APIError
 from dmapiclient.audit import AuditTypes
 from dmutils.email import send_email, generate_token
 from dmutils.email.exceptions import EmailError
+from dmutils.email.dm_mailchimp import DMMailChimpClient
 from dmcontent.content_loader import ContentNotFoundError
 
 from ...main import main, content_loader
@@ -467,3 +468,62 @@ def create_your_account_complete():
         "suppliers/create_your_account_complete.html",
         email_address=email_address
     ), 200
+
+
+@main.route('/mailing-list', methods=["GET", "POST"])
+def join_open_framework_notification_mailing_list():
+    status = 200
+    if request.method == "POST":
+        form = EmailAddressForm(request.form)
+        if form.validate():
+            dmmc_client = DMMailChimpClient(
+                current_app.config["DM_MAILCHIMP_USERNAME"],
+                current_app.config["DM_MAILCHIMP_API_KEY"],
+                current_app.logger,
+            )
+
+            mc_response = dmmc_client.subscribe_new_email_to_list(
+                current_app.config["DM_MAILCHIMP_OPEN_FRAMEWORK_NOTIFICATION_MAILING_LIST_ID"],
+                form.data["email_address"],
+            )
+
+            # note we're signalling our flash messages in two separate ways here
+            if mc_response not in (True, False,):
+                # success
+                data_api_client.create_audit_event(
+                    audit_type=AuditTypes.mailing_list_subscription,
+                    data={
+                        "subscribedEmail": form.data["email_address"],
+                        "mailchimp": {k: mc_response.get(k) for k in (
+                            "id",
+                            "unique_email_id",
+                            "timestamp_opt",
+                            "last_changed",
+                            "list_id",
+                        )},
+                    },
+                )
+
+                # this message will be consumed by the buyer app which has been converted to display raw "literal"
+                # content from the session
+                flash(Markup(render_template(
+                    "flashmessages/join_open_framework_notification_mailing_list_success.html",
+                    email_address=form.data["email_address"],
+                )), "success")
+
+                return redirect("/")
+            else:
+                # failure
+                flash("mailing_list_signup_error", "error")
+                status = 503
+                # fall through to re-display form with error
+        else:
+            status = 400
+            # fall through to re-display form with errors
+    else:
+        form = EmailAddressForm()
+
+    return render_template(
+        "suppliers/join_open_framework_notification_mailing_list.html",
+        form=form,
+    ), status

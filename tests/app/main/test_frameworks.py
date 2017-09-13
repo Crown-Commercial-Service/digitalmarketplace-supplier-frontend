@@ -23,7 +23,14 @@ from dmapiclient.audit import AuditTypes
 from dmutils.email.exceptions import EmailError
 from dmutils.s3 import S3ResponseError
 
-from ..helpers import BaseApplicationTest, FULL_G7_SUBMISSION, FakeMail, valid_g9_declaration_base
+from ..helpers import (
+    BaseApplicationTest,
+    FULL_G7_SUBMISSION,
+    FakeMail,
+    valid_g9_declaration_base,
+    assert_args_and_raise,
+    assert_args_and_return,
+)
 
 
 def _return_fake_s3_file_dict(directory, filename, ext, last_modified=None, size=None):
@@ -44,22 +51,6 @@ def get_g_cloud_8():
         slug='g-cloud-8',
         framework_agreement_version='v1.0'
     )
-
-
-def _assert_args_and_raise(e, *args, **kwargs):
-    def _inner(*inner_args, **inner_kwargs):
-        assert args == inner_args
-        assert kwargs == inner_kwargs
-        raise e
-    return _inner
-
-
-def _assert_args_and_return(retval, *args, **kwargs):
-    def _inner(*inner_args, **inner_kwargs):
-        assert args == inner_args
-        assert kwargs == inner_kwargs
-        return retval
-    return _inner
 
 
 @pytest.fixture(params=("GET", "POST"))
@@ -125,7 +116,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
             ),
             (
                 'Submitted by',
-                'User email@email.com Sunday 10 July 2016 at 22:20'
+                'User email@email.com Sunday 10 July 2016 at 10:20pm'
             ),
             (
                 'Countersignature',
@@ -1864,7 +1855,7 @@ class TestFrameworkAgreement(BaseApplicationTest):
 
             assert res.status_code == 200
             assert u'/suppliers/frameworks/g-cloud-7/agreement' == doc.xpath('//form')[1].action
-            assert u'Document uploaded Monday 2 November 2015 at 15:25' in data
+            assert u'Document uploaded Monday 2 November 2015 at 3:25pm' in data
             assert u'Your document has been uploaded' in data
 
     def test_upload_message_if_agreement_is_not_returned(self, data_api_client):
@@ -2343,11 +2334,11 @@ class TestDeclarationOverviewSubmit(BaseApplicationTest):
         with self.app.test_client():
             self.login()
 
-            data_api_client.get_framework.side_effect = _assert_args_and_return(
+            data_api_client.get_framework.side_effect = assert_args_and_return(
                 self.framework(status="open"),
                 "g-cloud-7",
             )
-            data_api_client.get_supplier_framework_info.side_effect = _assert_args_and_raise(
+            data_api_client.get_supplier_framework_info.side_effect = assert_args_and_raise(
                 APIError(mock.Mock(status_code=404)),
                 1234,
                 "g-cloud-7",
@@ -2362,11 +2353,11 @@ class TestDeclarationOverviewSubmit(BaseApplicationTest):
         with self.app.test_client():
             self.login()
 
-            data_api_client.get_framework.side_effect = _assert_args_and_return(
+            data_api_client.get_framework.side_effect = assert_args_and_return(
                 self.framework(status="coming"),
                 "g-cloud-7",
             )
-            data_api_client.get_supplier_framework_info.side_effect = _assert_args_and_return(
+            data_api_client.get_supplier_framework_info.side_effect = assert_args_and_return(
                 self.supplier_framework(framework_slug="g-cloud-7"),
                 1234,
                 "g-cloud-7",
@@ -2381,11 +2372,11 @@ class TestDeclarationOverviewSubmit(BaseApplicationTest):
         with self.app.test_client():
             self.login()
 
-            data_api_client.get_framework.side_effect = _assert_args_and_raise(
+            data_api_client.get_framework.side_effect = assert_args_and_raise(
                 APIError(mock.Mock(status_code=404)),
                 "muttoning-clouds",
             )
-            data_api_client.get_supplier_framework_info.side_effect = _assert_args_and_raise(
+            data_api_client.get_supplier_framework_info.side_effect = assert_args_and_raise(
                 APIError(mock.Mock(status_code=404)),
                 1234,
                 "muttoning-clouds",
@@ -2449,11 +2440,11 @@ class TestDeclarationOverview(BaseApplicationTest):
         return row_heading, None, rows
 
     def _setup_data_api_client(self, data_api_client, framework_status, framework_slug, declaration, prefill_fw_slug):
-        data_api_client.get_framework.side_effect = _assert_args_and_return(
+        data_api_client.get_framework.side_effect = assert_args_and_return(
             self.framework(slug=framework_slug, name="F-Cumulus 0", status=framework_status),
             framework_slug,
         )
-        data_api_client.get_supplier_framework_info.side_effect = _assert_args_and_return(
+        data_api_client.get_supplier_framework_info.side_effect = assert_args_and_return(
             self.supplier_framework(
                 framework_slug=framework_slug,
                 declaration=declaration,
@@ -3092,11 +3083,11 @@ class TestDeclarationSubmit(BaseApplicationTest):
         with self.app.test_client():
             self.login()
 
-            data_api_client.get_framework.side_effect = _assert_args_and_return(
+            data_api_client.get_framework.side_effect = assert_args_and_return(
                 self.framework(slug="g-cloud-9", name="G-Cloud 9", status="open"),
                 "g-cloud-9",
             )
-            data_api_client.get_supplier_framework_info.side_effect = _assert_args_and_return(
+            data_api_client.get_supplier_framework_info.side_effect = assert_args_and_return(
                 self.supplier_framework(
                     framework_slug="g-cloud-9",
                     declaration=invalid_declaration,
@@ -3118,11 +3109,11 @@ class TestDeclarationSubmit(BaseApplicationTest):
         with self.app.test_client():
             self.login()
 
-            data_api_client.get_framework.side_effect = _assert_args_and_return(
+            data_api_client.get_framework.side_effect = assert_args_and_return(
                 self.framework(slug="g-cloud-9", name="G-Cloud 9", status="open"),
                 "g-cloud-9",
             )
-            data_api_client.get_supplier_framework_info.side_effect = _assert_args_and_return(
+            data_api_client.get_supplier_framework_info.side_effect = assert_args_and_return(
                 self.supplier_framework(
                     framework_slug="g-cloud-9",
                     declaration=dict(status=declaration_status, **(valid_g9_declaration_base())),
@@ -3131,7 +3122,7 @@ class TestDeclarationSubmit(BaseApplicationTest):
                 1234,
                 "g-cloud-9",
             )
-            data_api_client.set_supplier_declaration.side_effect = _assert_args_and_return(
+            data_api_client.set_supplier_declaration.side_effect = assert_args_and_return(
                 dict(status="complete", **(valid_g9_declaration_base())),
                 1234,
                 "g-cloud-9",
@@ -3158,11 +3149,11 @@ class TestDeclarationSubmit(BaseApplicationTest):
         with self.app.test_client():
             self.login()
 
-            data_api_client.get_framework.side_effect = _assert_args_and_return(
+            data_api_client.get_framework.side_effect = assert_args_and_return(
                 self.framework(status=framework_status),
                 "g-cloud-7",
             )
-            data_api_client.get_supplier_framework_info.side_effect = _assert_args_and_return(
+            data_api_client.get_supplier_framework_info.side_effect = assert_args_and_return(
                 self.supplier_framework(framework_slug="g-cloud-7"),
                 1234,
                 "g-cloud-7",
@@ -4701,7 +4692,7 @@ class TestSignatureUploadPage(BaseApplicationTest):
 
                 s3.return_value.get_key.assert_called_with('already/uploaded/file/path.pdf')
                 assert res.status_code == 200
-                assert "test.pdf, uploaded Sunday 10 July 2016 at 22:18" in res.get_data(as_text=True)
+                assert "test.pdf, uploaded Sunday 10 July 2016 at 10:18pm" in res.get_data(as_text=True)
 
     @mock.patch('dmutils.s3.S3')
     def test_signature_page_displays_file_upload_timestamp_if_no_filename_in_session(
@@ -4728,7 +4719,7 @@ class TestSignatureUploadPage(BaseApplicationTest):
                 )
                 s3.return_value.get_key.assert_called_with('already/uploaded/file/path.pdf')
                 assert res.status_code == 200
-                assert "Uploaded Sunday 10 July 2016 at 22:18" in res.get_data(as_text=True)
+                assert "Uploaded Sunday 10 July 2016 at 10:18pm" in res.get_data(as_text=True)
 
     @mock.patch('dmutils.s3.S3')
     def test_signature_page_allows_continuation_without_file_chosen_to_be_uploaded_if_an_uploaded_file_already_exists(
@@ -4837,7 +4828,7 @@ class TestContractReviewPage(BaseApplicationTest):
             assert res.status_code == 200
             page = res.get_data(as_text=True)
             assert u'Check the details you’ve given before returning the signature page for £unicodename' in page
-            assert '<tdclass="summary-item-field-first"><span>UploadedSunday10July2016at22:18</span></td>' in self.strip_all_whitespace(page)  # noqa
+            assert '<tdclass="summary-item-field-first"><span>UploadedSunday10July2016at10:18pm</span></td>' in self.strip_all_whitespace(page)  # noqa
 
     @mock.patch('dmutils.s3.S3')
     def test_contract_review_page_aborts_if_visited_when_information_required_to_return_agreement_does_not_exist(
@@ -5355,7 +5346,7 @@ class TestContractVariation(BaseApplicationTest):
 
         assert res.status_code == 200
         assert len(doc.xpath('//h2[contains(text(), "Contract variation status")]')) == 1
-        assert u"<span>William Drăyton<br />agreed@email.com<br />Friday 19 August 2016 at 16:47</span>" in page_text
+        assert u"<span>William Drăyton<br />agreed@email.com<br />Friday 19 August 2016 at 4:47pm</span>" in page_text
         assert len(doc.xpath('//label[contains(text(), "I accept these proposed changes")]')) == 0
         assert len(doc.xpath('//input[@value="Save and continue"]')) == 0
 

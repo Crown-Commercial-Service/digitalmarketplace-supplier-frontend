@@ -3,11 +3,13 @@ from flask import session
 from lxml import html
 import mock
 import pytest
+from six.moves.urllib.parse import urlparse
 
 from dmapiclient import HTTPError
+from dmapiclient.audit import AuditTypes
 from dmutils.email.exceptions import EmailError
 
-from tests.app.helpers import BaseApplicationTest
+from tests.app.helpers import BaseApplicationTest, assert_args_and_return
 
 find_frameworks_return_value = {
     "frameworks": [
@@ -1665,3 +1667,213 @@ class TestCreateSupplier(BaseApplicationTest):
 
             assert res.status_code == 200
             assert 'An email has been sent to my-email@example.com' in res.get_data(as_text=True)
+
+
+@mock.patch("app.main.suppliers.data_api_client")
+class TestJoinOpenFrameworkNotificationMailingList(BaseApplicationTest):
+    @staticmethod
+    def _common_page_asserts_and_get_form(doc):
+        assert tuple(h1.xpath("normalize-space(string())") for h1 in doc.xpath("//h1")) == (
+            "Sign up for Digital Marketplace email alerts",
+        )
+
+        form = next(
+            form for form in doc.xpath("//form[@method='POST']")
+            if urlparse(form.action)[2:] == ("/suppliers/mailing-list", "", "", "",) and
+            form.xpath(".//input[@name='email_address']")
+        )
+        assert form.xpath(".//input[@name='csrf_token']")
+        assert form.xpath(".//input[@type='submit'][@value='Subscribe']")
+
+        return form
+
+    @mock.patch("app.main.views.suppliers.DMMailChimpClient")
+    def test_get(self, mailchimp_client_class, data_api_client):
+        data_api_client.create_audit_event.side_effect = AssertionError("This should not be called")
+        mailchimp_client_instance = mock.Mock(spec=("subscribe_new_email_to_list",))
+        mailchimp_client_instance.subscribe_new_email_to_list.side_effect = AssertionError("This should not be called")
+
+        mailchimp_client_class.side_effect = assert_args_and_return(
+            mailchimp_client_instance,
+            "not_a_real_username",
+            "not_a_real_key",
+            mock.ANY,
+        )
+
+        response = self.client.get(
+            "/suppliers/mailing-list",
+        )
+        assert response.status_code == 200
+        doc = html.fromstring(response.get_data(as_text=True), base_url="/suppliers/mailing-list")
+
+        assert not doc.xpath(
+            "//*[normalize-space(string())=$t]",
+            t="You must provide a valid email address.",
+        )
+        assert not doc.xpath(
+            "//*[normalize-space(string())=$t]",
+            t="You must provide an email address.",
+        )
+        assert not doc.xpath("//*[contains(@class, 'validation-message')]")
+
+        form = self._common_page_asserts_and_get_form(doc)
+
+        # we have already tested for the existence of input[@name='email_address']
+        assert not any(inp.value for inp in form.xpath(".//input[@name='email_address']"))
+
+        self.assert_no_flashes()
+
+    @pytest.mark.parametrize("email_address_value,expected_validation_message", (
+        ("pint@twopence", "You must provide a valid email address.",),
+        ("", "You must provide an email address.",),
+    ))
+    @mock.patch("app.main.views.suppliers.DMMailChimpClient")
+    def test_post_invalid_email(
+        self,
+        mailchimp_client_class,
+        data_api_client,
+        email_address_value,
+        expected_validation_message,
+    ):
+        data_api_client.create_audit_event.side_effect = AssertionError("This should not be called")
+        mailchimp_client_instance = mock.Mock(spec=("subscribe_new_email_to_list",))
+        mailchimp_client_instance.subscribe_new_email_to_list.side_effect = AssertionError("This should not be called")
+
+        mailchimp_client_class.side_effect = assert_args_and_return(
+            mailchimp_client_instance,
+            "not_a_real_username",
+            "not_a_real_key",
+            mock.ANY,
+        )
+
+        response = self.client.post(
+            "/suppliers/mailing-list",
+            data={
+                "email_address": email_address_value,
+            },
+        )
+        assert response.status_code == 400
+        doc = html.fromstring(response.get_data(as_text=True), base_url="/suppliers/mailing-list")
+
+        form = self._common_page_asserts_and_get_form(doc)
+        assert tuple(inp.value for inp in form.xpath(".//input[@name='email_address']")) == (
+            email_address_value,
+        )
+
+        assert doc.xpath(
+            "//label[@for='input-email_address']//*[contains(@class, 'validation-message')]"
+            "[normalize-space(string())=$t]",
+            t=expected_validation_message,
+        )
+
+        self.assert_no_flashes()
+
+    @pytest.mark.parametrize("mc_retval", (True, False,))
+    @mock.patch("app.main.views.suppliers.DMMailChimpClient")
+    def test_post_valid_email_failure(self, mailchimp_client_class, data_api_client, mc_retval):
+        data_api_client.create_audit_event.side_effect = AssertionError("This should not be called")
+        mailchimp_client_instance = mock.Mock(spec=("subscribe_new_email_to_list",))
+        mailchimp_client_instance.subscribe_new_email_to_list.side_effect = assert_args_and_return(
+            mc_retval,
+            "not_a_real_mailing_list",
+            "squinting@ger.ty",
+        )
+
+        mailchimp_client_class.side_effect = assert_args_and_return(
+            mailchimp_client_instance,
+            "not_a_real_username",
+            "not_a_real_key",
+            mock.ANY,
+        )
+
+        response = self.client.post(
+            "/suppliers/mailing-list",
+            data={
+                "email_address": "squinting@ger.ty",
+            },
+        )
+        assert response.status_code == 503
+        doc = html.fromstring(response.get_data(as_text=True), base_url="/suppliers/mailing-list")
+
+        assert mailchimp_client_instance.subscribe_new_email_to_list.called is True
+
+        form = self._common_page_asserts_and_get_form(doc)
+        assert tuple(inp.value for inp in form.xpath(".//input[@name='email_address']")) == (
+            "squinting@ger.ty",
+        )
+
+        assert not doc.xpath(
+            "//*[normalize-space(string())=$t]",
+            t="You must provide a valid email address.",
+        )
+        assert not doc.xpath(
+            "//*[normalize-space(string())=$t]",
+            t="You must provide an email address.",
+        )
+        assert not doc.xpath("//*[contains(@class, 'validation-message')]")
+
+        assert doc.xpath(
+            "//*[contains(@class, 'banner-destructive-without-action')][contains(normalize-space(string()), $t)]//"
+            "a[@href=$m][normalize-space(string())=$e]",
+            t="The service is unavailable at the moment",
+            m="mailto:enquiries@digitalmarketplace.service.gov.uk",
+            e="enquiries@digitalmarketplace.service.gov.uk",
+        )
+
+        # flash message should have been consumed by view's own page rendering
+        self.assert_no_flashes()
+
+    @mock.patch("app.main.views.suppliers.DMMailChimpClient")
+    def test_post_valid_email_success(self, mailchimp_client_class, data_api_client):
+        data_api_client.create_audit_event.side_effect = assert_args_and_return(
+            {"convincing": "response"},
+            audit_type=AuditTypes.mailing_list_subscription,
+            data={
+                "subscribedEmail": "qu&rt@four.pence",
+                "mailchimp": {
+                    "id": "cashregister-clanged",
+                    "unique_email_id": "clock-clacked",
+                    "timestamp_opt": None,
+                    "last_changed": "1904-06-16T16:00:00+00:00",
+                    "list_id": "flowered-tables",
+                },
+            },
+        )
+        mailchimp_client_instance = mock.Mock(spec=("subscribe_new_email_to_list",))
+        mailchimp_client_instance.subscribe_new_email_to_list.side_effect = assert_args_and_return(
+            {
+                "id": "cashregister-clanged",
+                "unique_email_id": "clock-clacked",
+                # timestamp_opt deliberately omitted
+                "last_changed": "1904-06-16T16:00:00+00:00",
+                "list_id": "flowered-tables",
+                "has-he-forgotten": "perhaps-a-trick",  # should be ignored
+            },
+            "not_a_real_mailing_list",
+            "qu&rt@four.pence",
+        )
+
+        mailchimp_client_class.side_effect = assert_args_and_return(
+            mailchimp_client_instance,
+            "not_a_real_username",
+            "not_a_real_key",
+            mock.ANY,
+        )
+
+        response = self.client.post(
+            "/suppliers/mailing-list",
+            data={
+                # no, ampersands are probably not valid in this position in an email address but they are accepted
+                # by our regex and we want to be able to check their escaping in the flash message
+                "email_address": "qu&rt@four.pence",
+            },
+        )
+
+        assert response.status_code == 302
+        assert response.location == "http://localhost/"
+        assert mailchimp_client_instance.subscribe_new_email_to_list.called is True
+
+        self.assert_flashes(
+            "You will receive email notifications to qu&amp;rt@four.pence when applications are opening.",
+            "success",
+        )

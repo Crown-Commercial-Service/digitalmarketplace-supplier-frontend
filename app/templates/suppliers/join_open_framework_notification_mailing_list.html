@@ -1,0 +1,80 @@
+{% extends "_base_page.html" %}
+
+{% block page_title %}Sign up for Digital Marketplace email alerts – Digital Marketplace{% endblock %}
+
+{% block breadcrumb %}
+{%
+  with items = [
+    {
+      "link": "/",
+      "label": "Digital Marketplace"
+    }
+  ]
+%}
+{% include "toolkit/breadcrumb.html" %}
+{% endwith %}
+{% endblock %}
+
+{% block main_content %}
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    {% for category, message in messages %}
+      {% if category == "error" and message == "mailing_list_signup_error" %}
+        {% set message %}
+          The service is unavailable at the moment. If the problem continues please
+          contact <a href="mailto:enquiries@digitalmarketplace.service.gov.uk">enquiries@digitalmarketplace.service.gov.uk</a>.
+        {% endset %}
+        {%
+          with type = "destructive"
+        %}
+          {% include "toolkit/notification-banner.html" %}
+        {% endwith %}
+      {% endif %}
+    {% endfor %}
+  {% endif %}
+{% endwith %}
+
+<div class="single-question-page">
+  <div class="grid-row">
+    <div class="column-two-thirds">
+      {%
+      with
+          heading = "Sign up for Digital Marketplace email alerts",
+          smaller = True
+      %}
+      {% include "toolkit/page-heading.html" %}
+      {% endwith %}
+      <form method="POST" action="">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+          {% set question_advice %}
+            <p>
+              We’ll let you know when applications to sell your services will open.
+            </p>
+            <p>
+              You do not need to subscribe if you already have a supplier account.
+            </p>
+          {% endset %}
+          {%
+            with
+              question = "Email",
+              name = "email_address",
+              value = form.email_address.data,
+              error = form.email_address.errors[0],
+              question_advice = question_advice
+          %}
+            {% include "toolkit/forms/textbox.html" %}
+          {% endwith %}
+
+          {%
+            with
+              type = "save",
+              label = "Subscribe"
+          %}
+          {% include "toolkit/button.html" %}
+          {% endwith %}
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
