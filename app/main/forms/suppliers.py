@@ -29,7 +29,7 @@ class EditContactInformationForm(Form):
     contactName = StripWhitespaceStringField('Contact name', validators=[
         DataRequired(message="You must provide a contact name"),
     ])
-    email = EmailField('Contact email', validators=[
+    email = EmailField('Contact email address', validators=[
         DataRequired(message="You must provide an email address"),
     ])
     phoneNumber = StripWhitespaceStringField('Contact phone number')
