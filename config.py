@@ -33,6 +33,10 @@ class Config(object):
     DM_SUBMISSIONS_BUCKET = None
     DM_ASSETS_URL = None
 
+    DM_MAILCHIMP_USERNAME = None
+    DM_MAILCHIMP_API_KEY = None
+    DM_MAILCHIMP_OPEN_FRAMEWORK_NOTIFICATION_MAILING_LIST_ID = None
+
     DEBUG = False
 
     RESET_PASSWORD_EMAIL_NAME = 'Digital Marketplace Admin'
@@ -99,6 +103,10 @@ class Test(Config):
     SHARED_EMAIL_KEY = "KEY"
     DM_CLARIFICATION_QUESTION_EMAIL = 'digitalmarketplace@mailinator.com'
 
+    DM_MAILCHIMP_USERNAME = 'not_a_real_username'
+    DM_MAILCHIMP_API_KEY = 'not_a_real_key'
+    DM_MAILCHIMP_OPEN_FRAMEWORK_NOTIFICATION_MAILING_LIST_ID = "not_a_real_mailing_list"
+
     FEATURE_FLAGS_EDIT_SECTIONS = enabled_since('2015-06-03')
     FEATURE_FLAGS_CONTRACT_VARIATION = enabled_since('2016-08-11')
 
@@ -131,6 +139,10 @@ class Development(Config):
     DM_MANDRILL_API_KEY = "not_a_real_key"
     SHARED_EMAIL_KEY = "very_secret"
     SECRET_KEY = 'verySecretKey'
+
+    DM_MAILCHIMP_USERNAME = 'not_a_real_username'
+    DM_MAILCHIMP_API_KEY = 'not_a_real_key'
+    DM_MAILCHIMP_OPEN_FRAMEWORK_NOTIFICATION_MAILING_LIST_ID = "not_a_real_mailing_list"
 
 
 class Live(Config):
