@@ -311,3 +311,26 @@ def check_agreement_is_related_to_supplier_framework_or_abort(agreement, supplie
         abort(404)
     if not agreement.get('frameworkSlug') or agreement.get('frameworkSlug') != supplier_framework.get('frameworkSlug'):
         abort(404)
+
+
+def get_frameworks_closed_and_open_for_applications(frameworks):
+
+    all_open_fwks = []
+    all_opening_fwks = []
+    all_closed_fwks = []
+    framework_frameworks = set([framework['framework'] for framework in frameworks])
+
+    # We need to find one framework iteration per framework-framework, open > coming > closed
+    for f_f in framework_frameworks:
+        framework_iterations = [framework for framework in frameworks if framework['framework'] == f_f]
+        open_fwks = [fwk for fwk in framework_iterations if fwk['status'] == 'open']
+        opening_fwks = [fwk for fwk in framework_iterations if fwk['status'] == 'coming']
+        closed_fwks = [fwk for fwk in framework_iterations if fwk['status'] not in ('open', 'coming')]
+        if open_fwks:
+            all_open_fwks.append(open_fwks[0])
+        elif opening_fwks:
+            all_opening_fwks.append(opening_fwks[0])
+        else:
+            all_closed_fwks.append(closed_fwks[0])
+
+    return all_open_fwks, all_opening_fwks, all_closed_fwks
