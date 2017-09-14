@@ -1877,3 +1877,144 @@ class TestJoinOpenFrameworkNotificationMailingList(BaseApplicationTest):
             "You will receive email notifications to qu&amp;rt@four.pence when applications are opening.",
             "success",
         )
+
+
+@mock.patch("app.main.suppliers.data_api_client", autospec=True)
+class TestBecomeASupplier(BaseApplicationTest):
+
+    def test_become_a_supplier_page_loads_ok(self, data_api_client):
+        res = self.client.get("/suppliers/supply")
+
+        assert res.status_code == 200
+        assert self.strip_all_whitespace(u"<h1>Become a supplier</h1>") in \
+               self.strip_all_whitespace(res.get_data(as_text=True))
+
+    def test_all_open_or_coming_frameworks(self, data_api_client):
+        data_api_client.find_frameworks.return_value = {
+            "frameworks": [
+                {
+                    "framework": "g-cloud",
+                    "slug": "g-cloud-9",
+                    "status": "open"
+                },
+                {
+                    "framework": "g-cloud",
+                    "slug": "g-cloud-8",
+                    "status": "live"
+                },
+                {
+                    "framework": "digital-outcomes-and-specialists",
+                    "slug": "digital-outcomes-and-specialists-2",
+                    "status": "coming"
+                },
+                {
+                    "framework": "digital-outcomes-and-specialists",
+                    "slug": "digital-outcomes-and-specialists",
+                    "status": "live"
+                },
+                ]
+        }
+
+        with self.app.test_client():
+            res = self.client.get("/suppliers/supply")
+            data = res.get_data(as_text=True)
+
+            # Check right headings are there
+            assert u'Services you can apply to sell' in data
+            assert u'Services you can’t apply to sell at the moment' not in data
+            assert u'You can’t apply to sell anything at the moment' not in data
+
+            # Check the right framework content is there
+            assert u'‘Digital Outcomes and Specialists’ is opening for applications.' in data
+            assert u'‘G-Cloud’ is open for applications.' in data
+
+            # Check the right calls to action are there
+            assert 'Create a supplier account' in data
+            assert 'Get notifications when applications are opening' not in data
+
+
+    def test_all_closed_frameworks(self, data_api_client):
+        data_api_client.find_frameworks.return_value = {
+            "frameworks": [
+                {
+                    "framework": "g-cloud",
+                    "slug": "g-cloud-9",
+                    "status": "live"
+                },
+                {
+                    "framework": "g-cloud",
+                    "slug": "g-cloud-8",
+                    "status": "expired"
+                },
+                {
+                    "framework": "digital-outcomes-and-specialists",
+                    "slug": "digital-outcomes-and-specialists-2",
+                    "status": "standstill"
+                },
+                {
+                    "framework": "digital-outcomes-and-specialists",
+                    "slug": "digital-outcomes-and-specialists",
+                    "status": "live"
+                },
+                ]
+        }
+
+        with self.app.test_client():
+            res = self.client.get("/suppliers/supply")
+            data = res.get_data(as_text=True)
+
+            # Check right headings are there
+            assert u'You can’t apply to sell anything at the moment' in data
+            assert u'Services you can apply to sell' not in data
+            assert u'Services you can’t apply to sell at the moment' not in data
+
+            # Check the right framework content is there
+            assert u'‘Digital Outcomes and Specialists’ is closed for applications.' in data
+            assert u'‘G-Cloud’ is closed for applications.' in data
+
+            # Check the right calls to action are there
+            assert 'Create a supplier account' not in data
+            assert 'Get notifications when applications are opening' in data
+
+    def test_one_open_one_closed_framework(self, data_api_client):
+        data_api_client.find_frameworks.return_value = {
+            "frameworks": [
+                {
+                    "framework": "g-cloud",
+                    "slug": "g-cloud-9",
+                    "status": "open"
+                },
+                {
+                    "framework": "g-cloud",
+                    "slug": "g-cloud-8",
+                    "status": "live"
+                },
+                {
+                    "framework": "digital-outcomes-and-specialists",
+                    "slug": "digital-outcomes-and-specialists-2",
+                    "status": "live"
+                },
+                {
+                    "framework": "digital-outcomes-and-specialists",
+                    "slug": "digital-outcomes-and-specialists",
+                    "status": "expired"
+                },
+            ]
+        }
+
+        with self.app.test_client():
+            res = self.client.get("/suppliers/supply")
+            data = res.get_data(as_text=True)
+
+            # Check right headings are there
+            assert u'Services you can apply to sell' in data
+            assert u'Services you can’t apply to sell at the moment' in data
+            assert u'You can’t apply to sell anything at the moment' not in data
+
+            # Check the right framework content is there
+            assert u'‘Digital Outcomes and Specialists’ is closed for applications.' in data
+            assert u'‘G-Cloud’ is open for applications.' in data
+
+            # Check the right calls to action are there
+            assert 'Create a supplier account' in data
+            assert 'Get notifications when applications are opening' in data
