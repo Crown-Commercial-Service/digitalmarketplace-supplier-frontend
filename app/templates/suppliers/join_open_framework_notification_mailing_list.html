@@ -35,46 +35,43 @@
   {% endif %}
 {% endwith %}
 
-<div class="single-question-page">
-  <div class="grid-row">
-    <div class="column-two-thirds">
-      {%
-      with
-          heading = "Sign up for Digital Marketplace email alerts",
-          smaller = True
-      %}
+<div class="grid-row">
+  <div class="column-two-thirds">
+    {%
+    with
+        heading = "Sign up for Digital Marketplace email alerts",
+        smaller = True
+    %}
       {% include "toolkit/page-heading.html" %}
-      {% endwith %}
-      <form method="POST" action="">
-          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-          {% set question_advice %}
-            <p>
-              We’ll let you know when applications to sell your services will open.
-            </p>
-            <p>
-              You do not need to subscribe if you already have a supplier account.
-            </p>
-          {% endset %}
-          {%
-            with
-              question = "Email",
-              name = "email_address",
-              value = form.email_address.data,
-              error = form.email_address.errors[0],
-              question_advice = question_advice
-          %}
-            {% include "toolkit/forms/textbox.html" %}
-          {% endwith %}
-
-          {%
-            with
-              type = "save",
-              label = "Subscribe"
-          %}
-          {% include "toolkit/button.html" %}
-          {% endwith %}
-      </form>
+    {% endwith %}
+    <div class="dmspeak">
+      <p>
+        We’ll let you know when applications to sell your services will open.
+      </p>
+      <p>
+        You do not need to subscribe if you already have a supplier account.
+      </p>
     </div>
+    <form method="POST" action="">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+        {%
+          with
+            question = "Your email address",
+            name = "email_address",
+            value = form.email_address.data,
+            error = form.email_address.errors[0]
+        %}
+          {% include "toolkit/forms/textbox.html" %}
+        {% endwith %}
+
+        {%
+          with
+            type = "save",
+            label = "Subscribe"
+        %}
+        {% include "toolkit/button.html" %}
+        {% endwith %}
+    </form>
   </div>
 </div>
 {% endblock %}
