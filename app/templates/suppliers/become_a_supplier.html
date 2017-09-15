@@ -32,12 +32,9 @@
           <h2 class="heading-xmedium padding-bottom-small">Services you can apply to sell</h2>
 
         {% for framework in open_fwks + opening_fwks %}
-
-          {{ content_loader.get_message(framework.slug, 'become-a-supplier', framework.status) }}
-          {% if not loop.last %}
-          <p>&nbsp;</p>
-          {% endif %}
-
+          <div {% if not loop.last %} class="padding-bottom-small"{% endif %}>
+            {{ content_loader.get_message(framework.slug, 'become-a-supplier', framework.status) }}
+          </div>
         {% endfor %}
 
         {%
@@ -53,24 +50,22 @@
             <h2 class="heading-xmedium padding-bottom-small">Services you can’t apply to sell at the moment</h2>
 
           {% for framework in closed_fwks %}
-            {{ content_loader.get_message(framework.slug, 'become-a-supplier', framework.status) }}
-            {% if not loop.last %}
-            <p>&nbsp;</p>
-            {% endif %}
+            <div {% if not loop.last %} class="padding-bottom-small"{% endif %}>
+              {{ content_loader.get_message(framework.slug, 'become-a-supplier', framework.status) }}
+            </div>
           {% endfor %}
           </div>
         {% endif %}
 
 
       {% else %}
-      <div class="dmspeak">
+        <div class="dmspeak">
           <h2 class="heading-xmedium padding-bottom-small">You can’t apply to sell anything at the moment</h2>
 
           {% for framework in closed_fwks %}
-            {{ content_loader.get_message(framework.slug, 'become-a-supplier', framework.status) }}
-            {% if not loop.last %}
-            <p>&nbsp;</p>
-            {% endif %}
+            <div {% if not loop.last %} class="padding-bottom-small"{% endif %}>
+              {{ content_loader.get_message(framework.slug, 'become-a-supplier', framework.status) }}
+            </div>
           {% endfor %}
 
         </div>
