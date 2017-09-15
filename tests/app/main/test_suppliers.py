@@ -1919,6 +1919,8 @@ class TestBecomeASupplier(BaseApplicationTest):
             res = self.client.get("/suppliers/supply")
             data = res.get_data(as_text=True)
 
+            data_api_client.find_frameworks.assert_called_once_with()
+
             # Check right headings are there
             assert u'Services you can apply to sell' in data
             assert u'Services you can’t apply to sell at the moment' not in data
@@ -1963,6 +1965,8 @@ class TestBecomeASupplier(BaseApplicationTest):
             res = self.client.get("/suppliers/supply")
             data = res.get_data(as_text=True)
 
+            data_api_client.find_frameworks.assert_called_once_with()
+
             # Check right headings are there
             assert u'You can’t apply to sell anything at the moment' in data
             assert u'Services you can apply to sell' not in data
@@ -2005,6 +2009,8 @@ class TestBecomeASupplier(BaseApplicationTest):
         with self.app.test_client():
             res = self.client.get("/suppliers/supply")
             data = res.get_data(as_text=True)
+
+            data_api_client.find_frameworks.assert_called_once_with()
 
             # Check right headings are there
             assert u'Services you can apply to sell' in data
