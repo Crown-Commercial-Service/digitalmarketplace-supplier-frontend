@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import re
 from datetime import datetime
+from itertools import chain, islice, groupby
 
 from dmutils.formats import DATETIME_FORMAT
 from flask import abort
@@ -314,23 +315,22 @@ def check_agreement_is_related_to_supplier_framework_or_abort(agreement, supplie
 
 
 def get_frameworks_closed_and_open_for_applications(frameworks):
-
-    all_open_fwks = []
-    all_opening_fwks = []
-    all_closed_fwks = []
-    framework_frameworks = set([framework['framework'] for framework in frameworks])
-
-    # We need to find one framework iteration per framework-framework, open > coming > closed
-    for f_f in framework_frameworks:
-        framework_iterations = [framework for framework in frameworks if framework['framework'] == f_f]
-        open_fwks = [fwk for fwk in framework_iterations if fwk['status'] == 'open']
-        opening_fwks = [fwk for fwk in framework_iterations if fwk['status'] == 'coming']
-        closed_fwks = [fwk for fwk in framework_iterations if fwk['status'] not in ('open', 'coming')]
-        if open_fwks:
-            all_open_fwks.append(open_fwks[0])
-        elif opening_fwks:
-            all_opening_fwks.append(opening_fwks[0])
+    # This will find one framework iteration per framework-framework, open > coming > closed
+    def status_priority(status):
+        if status == "open":
+            return 0
+        elif status == "coming":
+            return 1
         else:
-            all_closed_fwks.append(closed_fwks[0])
+            return 2
 
-    return all_open_fwks, all_opening_fwks, all_closed_fwks
+    return tuple(chain.from_iterable(
+        islice(grp, 1)          # take the first framework
+        for _, grp in groupby(  # from each framework_framework
+            sorted(             # listed in priority order
+                (fw for fw in frameworks),
+                key=lambda fw_sort: (fw_sort["framework"], status_priority(fw_sort["status"])),
+            ),
+            key=lambda fw_groupby: fw_groupby["framework"],
+        )
+    ))

@@ -1887,7 +1887,7 @@ class TestBecomeASupplier(BaseApplicationTest):
 
         assert res.status_code == 200
         assert self.strip_all_whitespace(u"<h1>Become a supplier</h1>") in \
-               self.strip_all_whitespace(res.get_data(as_text=True))
+            self.strip_all_whitespace(res.get_data(as_text=True))
 
     def test_all_open_or_coming_frameworks(self, data_api_client):
         data_api_client.find_frameworks.return_value = {
@@ -1912,7 +1912,7 @@ class TestBecomeASupplier(BaseApplicationTest):
                     "slug": "digital-outcomes-and-specialists",
                     "status": "live"
                 },
-                ]
+            ]
         }
 
         with self.app.test_client():
@@ -1933,7 +1933,6 @@ class TestBecomeASupplier(BaseApplicationTest):
             # Check the right calls to action are there
             assert 'Create a supplier account' in data
             assert 'Get notifications when applications are opening' not in data
-
 
     def test_all_closed_frameworks(self, data_api_client):
         data_api_client.find_frameworks.return_value = {
@@ -1958,7 +1957,7 @@ class TestBecomeASupplier(BaseApplicationTest):
                     "slug": "digital-outcomes-and-specialists",
                     "status": "live"
                 },
-                ]
+            ]
         }
 
         with self.app.test_client():

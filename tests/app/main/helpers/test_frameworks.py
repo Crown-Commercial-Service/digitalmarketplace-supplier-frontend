@@ -519,12 +519,12 @@ def test_get_frameworks_closed_and_open_for_applications():
                 {"framework": "digi-stuff", "slug": "digi-stuff-8", "status": "expired"},
                 {"framework": "paper-stuff", "slug": "paper-stuff-8", "status": "expired"},
                 {"framework": "paper-stuff", "slug": "paper-stuff-7", "status": "expired"},
-                ],
-            "expected": {
-                "open": [{"framework": "g-things", "slug": "g-things-23", "status": "open"}],
-                "opening": [{"framework": "digi-stuff", "slug": "digi-stuff-10", "status": "coming"}],
-                "closed": [{"framework": "paper-stuff", "slug": "paper-stuff-8", "status": "expired"}],
-            }
+            ],
+            "expected": (
+                {"framework": "digi-stuff", "slug": "digi-stuff-10", "status": "coming"},
+                {"framework": "g-things", "slug": "g-things-23", "status": "open"},
+                {"framework": "paper-stuff", "slug": "paper-stuff-8", "status": "expired"},
+            ),
         },
         {
             "frameworks": [
@@ -535,15 +535,11 @@ def test_get_frameworks_closed_and_open_for_applications():
                 {"framework": "paper-stuff", "slug": "paper-stuff-8", "status": "standstill"},
                 {"framework": "paper-stuff", "slug": "paper-stuff-7", "status": "expired"},
             ],
-            "expected": {
-                "open": [],
-                "opening": [],
-                "closed": [
-                    {"framework": "paper-stuff", "slug": "paper-stuff-8", "status": "standstill"},
-                    {"framework": "digi-stuff", "slug": "digi-stuff-11", "status": "pending"},
-                    {"framework": "g-things", "slug": "g-things-24", "status": "live"},
-                ],
-            }
+            "expected": (
+                {"framework": "digi-stuff", "slug": "digi-stuff-11", "status": "pending"},
+                {"framework": "g-things", "slug": "g-things-24", "status": "live"},
+                {"framework": "paper-stuff", "slug": "paper-stuff-8", "status": "standstill"},
+            ),
         },
         {
             "frameworks": [
@@ -554,20 +550,13 @@ def test_get_frameworks_closed_and_open_for_applications():
                 {"framework": "paper-stuff", "slug": "paper-stuff-8", "status": "expired"},
                 {"framework": "paper-stuff", "slug": "paper-stuff-7", "status": "expired"},
             ],
-            "expected": {
-                "open": [
-                    {"framework": "digi-stuff", "slug": "digi-stuff-11", "status": "open"},
-                    {"framework": "g-things", "slug": "g-things-24", "status": "open"},
-                ],
-                "opening": [],
-                "closed": [
-                    {"framework": "paper-stuff", "slug": "paper-stuff-8", "status": "expired"}
-                ],
-            }
+            "expected": (
+                {"framework": "digi-stuff", "slug": "digi-stuff-11", "status": "open"},
+                {"framework": "g-things", "slug": "g-things-24", "status": "open"},
+                {"framework": "paper-stuff", "slug": "paper-stuff-8", "status": "expired"},
+            ),
         },
     ]
     for case in cases:
-        open_fwks, opening_fwks, closed_fwks = get_frameworks_closed_and_open_for_applications(case["frameworks"])
-        assert open_fwks == case["expected"]["open"], "ERROR ON CASE {}".format(case)
-        assert opening_fwks == case["expected"]["opening"], "ERROR ON CASE {}".format(case)
-        assert closed_fwks == case["expected"]["closed"], "ERROR ON CASE {}".format(case)
+        displayed_frameworks = get_frameworks_closed_and_open_for_applications(case["frameworks"])
+        assert displayed_frameworks == case["expected"], "ERROR ON CASE {}".format(case)

@@ -177,8 +177,8 @@ def become_a_supplier():
             key=lambda framework: framework['slug'],
             reverse=True
         )
-        open_fwks, opening_fwks, closed_fwks = get_frameworks_closed_and_open_for_applications(frameworks)
-        for fwk in chain(closed_fwks, open_fwks, opening_fwks):
+        displayed_frameworks = get_frameworks_closed_and_open_for_applications(frameworks)
+        for fwk in displayed_frameworks:
             content_loader.load_messages(fwk.get('slug'), ['become-a-supplier'])
 
     #  if no message file is found (should never happen), die
@@ -190,9 +190,9 @@ def become_a_supplier():
 
     return render_template(
         "suppliers/become_a_supplier.html",
-        open_fwks=open_fwks,
-        opening_fwks=opening_fwks,
-        closed_fwks=closed_fwks,
+        open_fwks=[fwk for fwk in displayed_frameworks if fwk["status"] == "open"],
+        opening_fwks=[fwk for fwk in displayed_frameworks if fwk["status"] == "coming"],
+        closed_fwks=[fwk for fwk in displayed_frameworks if fwk["status"] not in ("open", "coming")],
         content_loader=content_loader
     ), 200
 
