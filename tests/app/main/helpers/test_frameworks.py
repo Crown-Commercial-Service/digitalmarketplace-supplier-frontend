@@ -7,8 +7,8 @@ from werkzeug.exceptions import HTTPException
 
 from app.main.helpers.frameworks import (
     check_agreement_is_related_to_supplier_framework_or_abort, get_framework_for_reuse, get_statuses_for_lot,
-    return_supplier_framework_info_if_on_framework_or_abort, order_frameworks_for_reuse
-)
+    return_supplier_framework_info_if_on_framework_or_abort, order_frameworks_for_reuse,
+    get_frameworks_closed_and_open_for_applications)
 
 
 def get_lot_status_examples():
@@ -504,3 +504,59 @@ def test_get_reusable_declaration_none(data_api_client):
     framework = get_framework_for_reuse(declarations, client=data_api_client)
 
     assert framework is None
+
+
+def test_get_frameworks_closed_and_open_for_applications():
+    cases = [
+        {
+            "frameworks": [
+                {"framework": "g-things", "slug": "g-things-23", "status": "open"},
+                {"framework": "g-things", "slug": "g-things-22", "status": "live"},
+                {"framework": "g-things", "slug": "g-things-21", "status": "expired"},
+                {"framework": "g-things", "slug": "g-things-20", "status": "expired"},
+                {"framework": "digi-stuff", "slug": "digi-stuff-10", "status": "coming"},
+                {"framework": "digi-stuff", "slug": "digi-stuff-9", "status": "live"},
+                {"framework": "digi-stuff", "slug": "digi-stuff-8", "status": "expired"},
+                {"framework": "paper-stuff", "slug": "paper-stuff-8", "status": "expired"},
+                {"framework": "paper-stuff", "slug": "paper-stuff-7", "status": "expired"},
+            ],
+            "expected": (
+                {"framework": "digi-stuff", "slug": "digi-stuff-10", "status": "coming"},
+                {"framework": "g-things", "slug": "g-things-23", "status": "open"},
+                {"framework": "paper-stuff", "slug": "paper-stuff-8", "status": "expired"},
+            ),
+        },
+        {
+            "frameworks": [
+                {"framework": "g-things", "slug": "g-things-24", "status": "live"},
+                {"framework": "g-things", "slug": "g-things-23", "status": "expired"},
+                {"framework": "digi-stuff", "slug": "digi-stuff-11", "status": "pending"},
+                {"framework": "digi-stuff", "slug": "digi-stuff-9", "status": "live"},
+                {"framework": "paper-stuff", "slug": "paper-stuff-8", "status": "standstill"},
+                {"framework": "paper-stuff", "slug": "paper-stuff-7", "status": "expired"},
+            ],
+            "expected": (
+                {"framework": "digi-stuff", "slug": "digi-stuff-11", "status": "pending"},
+                {"framework": "g-things", "slug": "g-things-24", "status": "live"},
+                {"framework": "paper-stuff", "slug": "paper-stuff-8", "status": "standstill"},
+            ),
+        },
+        {
+            "frameworks": [
+                {"framework": "g-things", "slug": "g-things-24", "status": "open"},
+                {"framework": "g-things", "slug": "g-things-23", "status": "live"},
+                {"framework": "digi-stuff", "slug": "digi-stuff-11", "status": "open"},
+                {"framework": "digi-stuff", "slug": "digi-stuff-9", "status": "live"},
+                {"framework": "paper-stuff", "slug": "paper-stuff-8", "status": "expired"},
+                {"framework": "paper-stuff", "slug": "paper-stuff-7", "status": "expired"},
+            ],
+            "expected": (
+                {"framework": "digi-stuff", "slug": "digi-stuff-11", "status": "open"},
+                {"framework": "g-things", "slug": "g-things-24", "status": "open"},
+                {"framework": "paper-stuff", "slug": "paper-stuff-8", "status": "expired"},
+            ),
+        },
+    ]
+    for case in cases:
+        displayed_frameworks = get_frameworks_closed_and_open_for_applications(case["frameworks"])
+        assert displayed_frameworks == case["expected"], "ERROR ON CASE {}".format(case)

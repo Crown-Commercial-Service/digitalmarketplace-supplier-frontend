@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import re
 from datetime import datetime
+from itertools import chain, islice, groupby
 
 from dmutils.formats import DATETIME_FORMAT
 from flask import abort
@@ -311,3 +312,25 @@ def check_agreement_is_related_to_supplier_framework_or_abort(agreement, supplie
         abort(404)
     if not agreement.get('frameworkSlug') or agreement.get('frameworkSlug') != supplier_framework.get('frameworkSlug'):
         abort(404)
+
+
+def get_frameworks_closed_and_open_for_applications(frameworks):
+    # This will find one framework iteration per framework-framework, open > coming > closed
+    def status_priority(status):
+        if status == "open":
+            return 0
+        elif status == "coming":
+            return 1
+        else:
+            return 2
+
+    return tuple(chain.from_iterable(
+        islice(grp, 1)          # take the first framework
+        for _, grp in groupby(  # from each framework_framework
+            sorted(             # listed in priority order
+                (fw for fw in frameworks),
+                key=lambda fw_sort: (fw_sort["framework"], status_priority(fw_sort["status"])),
+            ),
+            key=lambda fw_groupby: fw_groupby["framework"],
+        )
+    ))

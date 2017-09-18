@@ -19,7 +19,7 @@ from ..forms.suppliers import (
     EditSupplierForm, EditContactInformationForm, DunsNumberForm, CompaniesHouseNumberForm,
     CompanyContactDetailsForm, CompanyNameForm, EmailAddressForm
 )
-from ..helpers.frameworks import get_frameworks_by_status
+from ..helpers.frameworks import get_frameworks_by_status, get_frameworks_closed_and_open_for_applications
 from ..helpers import hash_email, login_required
 from .users import get_current_suppliers_users
 
@@ -166,6 +166,35 @@ def update_supplier():
                              error=e.message)
 
     return redirect(url_for(".supplier_details"))
+
+
+@main.route('/supply', methods=['GET'])
+def become_a_supplier():
+
+    try:
+        frameworks = sorted(
+            data_api_client.find_frameworks().get('frameworks'),
+            key=lambda framework: framework['slug'],
+            reverse=True
+        )
+        displayed_frameworks = get_frameworks_closed_and_open_for_applications(frameworks)
+        for fwk in displayed_frameworks:
+            content_loader.load_messages(fwk.get('slug'), ['become-a-supplier'])
+
+    #  if no message file is found (should never happen), die
+    except ContentNotFoundError:
+        current_app.logger.error(
+            "contentloader.fail No 'become-a-supplier' message file found for framework."
+        )
+        abort(500)
+
+    return render_template(
+        "suppliers/become_a_supplier.html",
+        open_fwks=[fwk for fwk in displayed_frameworks if fwk["status"] == "open"],
+        opening_fwks=[fwk for fwk in displayed_frameworks if fwk["status"] == "coming"],
+        closed_fwks=[fwk for fwk in displayed_frameworks if fwk["status"] not in ("open", "coming")],
+        content_loader=content_loader
+    ), 200
 
 
 @main.route('/create', methods=['GET'])
