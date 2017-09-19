@@ -1927,8 +1927,8 @@ class TestBecomeASupplier(BaseApplicationTest):
             assert u'You can’t apply to sell anything at the moment' not in data
 
             # Check the right framework content is there
-            assert u'‘Digital Outcomes and Specialists’ is opening for applications.' in data
-            assert u'‘G-Cloud’ is open for applications.' in data
+            assert u'Digital Outcomes and Specialists is opening for applications.' in data
+            assert u'G-Cloud is open for applications.' in data
 
             # Check the right calls to action are there
             assert 'Create a supplier account' in data
@@ -1972,8 +1972,8 @@ class TestBecomeASupplier(BaseApplicationTest):
             assert u'Services you can’t apply to sell at the moment' not in data
 
             # Check the right framework content is there
-            assert u'‘Digital Outcomes and Specialists’ is closed for applications.' in data
-            assert u'‘G-Cloud’ is closed for applications.' in data
+            assert u'Digital Outcomes and Specialists is closed for applications.' in data
+            assert u'G-Cloud is closed for applications.' in data
 
             # Check the right calls to action are there
             assert 'Create a supplier account' not in data
@@ -2017,8 +2017,8 @@ class TestBecomeASupplier(BaseApplicationTest):
             assert u'You can’t apply to sell anything at the moment' not in data
 
             # Check the right framework content is there
-            assert u'‘Digital Outcomes and Specialists’ is closed for applications.' in data
-            assert u'‘G-Cloud’ is open for applications.' in data
+            assert u'Digital Outcomes and Specialists is closed for applications.' in data
+            assert u'G-Cloud is open for applications.' in data
 
             # Check the right calls to action are there
             assert 'Create a supplier account' in data
