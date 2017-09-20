@@ -7,7 +7,6 @@ from six.moves.urllib.parse import urlparse
 
 from dmapiclient import HTTPError
 from dmapiclient.audit import AuditTypes
-from dmutils.email.exceptions import EmailError
 
 from tests.app.helpers import BaseApplicationTest, assert_args_and_return
 
@@ -1427,9 +1426,8 @@ class TestCreateSupplier(BaseApplicationTest):
         assert 'You must answer all the questions' in res.get_data(as_text=True)
 
     @mock.patch("app.main.suppliers.data_api_client")
-    @mock.patch("app.main.suppliers.send_email")
-    @mock.patch("app.main.suppliers.generate_token")
-    def test_should_redirect_to_create_your_account_if_valid_session(self, generate_token, send_email, data_api_client):
+    @mock.patch("app.main.suppliers.InviteUser")
+    def test_should_redirect_to_create_your_account_if_valid_session(self, InviteUser, data_api_client):
         with self.client as c:
             with c.session_transaction() as sess:
                 sess['email_address'] = "email_address"
@@ -1464,9 +1462,8 @@ class TestCreateSupplier(BaseApplicationTest):
             assert session['email_company_name'] == 'Supplier Name'
 
     @mock.patch("app.main.suppliers.data_api_client")
-    @mock.patch("app.main.suppliers.send_email")
-    @mock.patch("app.main.suppliers.generate_token")
-    def test_should_allow_missing_companies_house_number(self, generate_token, send_email, data_api_client):
+    @mock.patch("app.main.suppliers.InviteUser")
+    def test_should_allow_missing_companies_house_number(self, InviteUser, data_api_client):
         with self.client.session_transaction() as sess:
             sess['email_address'] = "email_address"
             sess['phone_number'] = "phone_number"
@@ -1547,9 +1544,11 @@ class TestCreateSupplier(BaseApplicationTest):
         assert "You must provide a valid email address." in res.get_data(as_text=True)
 
     @mock.patch("app.main.suppliers.data_api_client")
-    @mock.patch("app.main.suppliers.send_email")
-    @mock.patch("app.main.suppliers.generate_token")
-    def test_should_allow_correct_email_address(self, generate_token, send_email, data_api_client):
+    @mock.patch("app.main.suppliers.InviteUser")
+    def test_should_allow_correct_email_address(self, InviteUser, data_api_client):
+        send_invite_email_mock = mock.Mock(token='invite-token')
+        InviteUser.return_value = send_invite_email_mock
+
         with self.client as c:
             with c.session_transaction() as sess:
                 sess['email_address'] = "email_address"
@@ -1563,83 +1562,48 @@ class TestCreateSupplier(BaseApplicationTest):
 
             res = c.post("/suppliers/company-summary")
 
-            generate_token.assert_called_once_with(
+            InviteUser.assert_called_once_with(
                 {
                     "role": "supplier",
                     "email_address": "valid@email.com",
                     "supplier_id": 12345,
                     "supplier_name": "Supplier Name"
-                },
-                "KEY",
-                "InviteEmailSalt"
+                }
             )
 
-            send_email.assert_called_once_with(
-                "valid@email.com",
-                mock.ANY,
-                "MANDRILL",
-                "Create your Digital Marketplace account",
-                "enquiries@digitalmarketplace.service.gov.uk",
-                "Digital Marketplace Admin",
-                ["user-creation"]
+            send_invite_email_mock.send_invite_email.assert_called_once_with(
+                'http://localhost/user/create/invite-token'
             )
 
             assert res.status_code == 302
             assert res.location == 'http://localhost/suppliers/create-your-account-complete'
-            assert session['email_sent_to'] == 'valid@email.com'
-
-    @mock.patch("app.main.suppliers.send_email")
-    @mock.patch("app.main.suppliers.generate_token")
-    def test_should_be_an_error_if_incomplete_session_on_account_creation(self, generate_token, send_email):
-        res = self.client.post(
-            "/suppliers/company-summary"
-        )
-
-        assert generate_token.called is False
-        assert send_email.called is False
-        assert res.status_code == 400
 
     @mock.patch("app.main.suppliers.data_api_client")
-    @mock.patch("app.main.suppliers.send_email")
-    @mock.patch("app.main.suppliers.generate_token")
-    def test_should_be_a_503_if_mandrill_failure_on_creation_email(self, generate_token, send_email, data_api_client):
-        with self.client.session_transaction() as sess:
-            sess['email_address'] = "email_address"
-            sess['phone_number'] = "phone_number"
-            sess['contact_name'] = "contact_name"
-            sess['duns_number'] = "duns_number"
-            sess['company_name'] = "company_name"
-            sess['account_email_address'] = "valid@email.com"
+    @mock.patch('dmutils.email.invite_user.DMNotifyClient')
+    def test_should_correctly_store_email_address_in_session(self, DMNotifyClient, data_api_client):
+        with self.client as c:
+            with c.session_transaction() as sess:
+                sess['email_address'] = "email_address"
+                sess['phone_number'] = "phone_number"
+                sess['contact_name'] = "contact_name"
+                sess['duns_number'] = "duns_number"
+                sess['company_name'] = "company_name"
+                sess['account_email_address'] = "valid@email.com"
 
-        send_email.side_effect = EmailError("Failed")
-        data_api_client.create_supplier.return_value = self.supplier()
+            data_api_client.create_supplier.return_value = self.supplier()
 
+            c.post("/suppliers/company-summary")
+
+            assert session['email_sent_to'] == 'valid@email.com'
+
+    @mock.patch("app.main.suppliers.InviteUser")
+    def test_should_be_an_error_if_incomplete_session_on_account_creation(self, InviteUser):
         res = self.client.post(
             "/suppliers/company-summary"
         )
 
-        generate_token.assert_called_once_with(
-            {
-                "role": "supplier",
-                "email_address": "valid@email.com",
-                "supplier_id": 12345,
-                "supplier_name": "Supplier Name"
-            },
-            "KEY",
-            "InviteEmailSalt"
-        )
-
-        send_email.assert_called_once_with(
-            "valid@email.com",
-            mock.ANY,
-            "MANDRILL",
-            "Create your Digital Marketplace account",
-            "enquiries@digitalmarketplace.service.gov.uk",
-            "Digital Marketplace Admin",
-            ["user-creation"]
-        )
-
-        assert res.status_code == 503
+        assert InviteUser.called is False
+        assert res.status_code == 400
 
     def test_should_show_email_address_on_create_account_complete(self):
         with self.client as c:

@@ -4,12 +4,10 @@ from itertools import chain
 
 from flask import render_template, request, redirect, url_for, abort, session, Markup, flash
 from flask_login import current_user, current_app
-import six
 
 from dmapiclient import APIError
 from dmapiclient.audit import AuditTypes
-from dmutils.email import send_email, generate_token
-from dmutils.email.exceptions import EmailError
+from dmutils.email import InviteUser
 from dmutils.email.dm_mailchimp import DMMailChimpClient
 from dmcontent.content_loader import ContentNotFoundError
 
@@ -20,7 +18,7 @@ from ..forms.suppliers import (
     CompanyContactDetailsForm, CompanyNameForm, EmailAddressForm
 )
 from ..helpers.frameworks import get_frameworks_by_status, get_frameworks_closed_and_open_for_applications
-from ..helpers import hash_email, login_required
+from ..helpers import login_required
 from .users import get_current_suppliers_users
 
 
@@ -432,44 +430,16 @@ def submit_company_summary():
         session['email_company_name'] = supplier['suppliers']['name']
         session['email_supplier_id'] = supplier['suppliers']['id']
 
-        token = generate_token(
-            {
-                "role": "supplier",
-                "email_address": account_email_address,
-                "supplier_id": session['email_supplier_id'],
-                "supplier_name": session['email_company_name']
-            },
-            current_app.config['SHARED_EMAIL_KEY'],
-            current_app.config['INVITE_EMAIL_SALT']
-        )
+        token_data = {
+            "role": "supplier",
+            "email_address": account_email_address,
+            "supplier_id": session['email_supplier_id'],
+            "supplier_name": session['email_company_name']
+        }
 
-        url = url_for('external.create_user', encoded_token=token, _external=True)
-
-        email_body = render_template(
-            "emails/create_user_email.html",
-            company_name=session['email_company_name'],
-            url=url
-        )
-        try:
-            send_email(
-                account_email_address,
-                email_body,
-                current_app.config['DM_MANDRILL_API_KEY'],
-                current_app.config['CREATE_USER_SUBJECT'],
-                current_app.config['RESET_PASSWORD_EMAIL_FROM'],
-                current_app.config['RESET_PASSWORD_EMAIL_NAME'],
-                ["user-creation"]
-            )
-            session['email_sent_to'] = account_email_address
-        except EmailError as e:
-            current_app.logger.error(
-                "suppliercreate.fail: Create user email failed to send. "
-                "error {error} supplier_id {supplier_id} email_hash {email_hash}",
-                extra={
-                    'error': six.text_type(e),
-                    'supplier_id': session['email_supplier_id'],
-                    'email_hash': hash_email(account_email_address)})
-            abort(503, "Failed to send user creation email")
+        user_invite = InviteUser(token_data)
+        invite_link = url_for('external.create_user', encoded_token=user_invite.token, _external=True)
+        user_invite.send_invite_email(invite_link)
 
         data_api_client.create_audit_event(
             audit_type=AuditTypes.invite_user,
