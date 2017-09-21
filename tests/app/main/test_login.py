@@ -52,8 +52,8 @@ class TestInviteUser(BaseApplicationTest):
             assert res.status_code == 400
 
     @mock.patch('app.main.views.login.data_api_client')
-    @mock.patch('app.main.views.login.send_email')
-    def test_should_redirect_to_list_users_on_success_invite(self, send_email, data_api_client):
+    @mock.patch('app.main.views.login.InviteUser')
+    def test_should_redirect_to_list_users_on_success_invite(self, InviteUser, data_api_client):
         with self.app.app_context():
             self.login()
             res = self.client.post(
@@ -66,8 +66,8 @@ class TestInviteUser(BaseApplicationTest):
             assert res.location == 'http://localhost/suppliers/users'
 
     @mock.patch('app.main.views.login.data_api_client')
-    @mock.patch('app.main.views.login.send_email')
-    def test_should_strip_whitespace_surrounding_invite_user_email_address_field(self, send_email, data_api_client):
+    @mock.patch('app.main.views.login.InviteUser')
+    def test_should_strip_whitespace_surrounding_invite_user_email_address_field(self, InviteUser, data_api_client):
         with self.app.app_context():
             self.login()
             self.client.post(
@@ -76,46 +76,17 @@ class TestInviteUser(BaseApplicationTest):
                     'email_address': '  this@isvalid.com  '
                 }
             )
-            send_email.assert_called_once_with(
-                'this@isvalid.com',
-                mock.ANY,
-                mock.ANY,
-                mock.ANY,
-                mock.ANY,
-                mock.ANY,
-                mock.ANY,
-            )
-
-    @mock.patch('app.main.views.login.data_api_client')
-    @mock.patch('app.main.views.login.generate_token')
-    @mock.patch('app.main.views.login.send_email')
-    def test_should_call_generate_token_with_correct_params(self, send_email, generate_token, data_api_client):
-        with self.app.app_context():
-
-            self.app.config['SHARED_EMAIL_KEY'] = "KEY"
-            self.app.config['INVITE_EMAIL_SALT'] = "SALT"
-
-            self.login()
-            res = self.client.post(
-                '/suppliers/invite-user',
-                data={
-                    'email_address': 'this@isvalid.com'
-                })
-            assert res.status_code == 302
-            generate_token.assert_called_once_with(
+            InviteUser.assert_called_once_with(
                 {
-                    "role": "supplier",
-                    "supplier_id": 1234,
-                    "supplier_name": "Supplier NĀme",
-                    "email_address": "this@isvalid.com"
-                },
-                'KEY',
-                'SALT'
+                    'role': 'supplier',
+                    'supplier_id': mock.ANY,
+                    'supplier_name': mock.ANY,
+                    'email_address': 'this@isvalid.com'
+                }
             )
 
-    @mock.patch('app.main.views.login.send_email')
-    @mock.patch('app.main.views.login.generate_token')
-    def test_should_not_generate_token_or_send_email_if_invalid_email(self, send_email, generate_token):
+    @mock.patch('app.main.views.login.InviteUser')
+    def test_should_not_send_email_if_invalid_email(self, InviteUser):
         with self.app.app_context():
 
             self.login()
@@ -125,15 +96,16 @@ class TestInviteUser(BaseApplicationTest):
                     'email_address': 'total rubbish'
                 })
             assert res.status_code == 400
-            assert send_email.called is False
-            assert generate_token.called is False
+            assert InviteUser.send_email.called is False
 
-    @mock.patch('app.main.views.login.send_email')
-    def test_should_be_an_error_if_send_invitation_email_fails(self, send_email):
+    @mock.patch('dmutils.email.invite_user.DMNotifyClient')
+    def test_should_be_an_error_if_send_invitation_email_fails(self, DMNotifyClient):
+        notify_client_mock = mock.Mock()
+        notify_client_mock.send_email.side_effect = EmailError()
+        DMNotifyClient.return_value = notify_client_mock
+
         with self.app.app_context():
             self.login()
-
-            send_email.side_effect = EmailError(Exception('API is down'))
 
             res = self.client.post(
                 '/suppliers/invite-user',
@@ -143,17 +115,14 @@ class TestInviteUser(BaseApplicationTest):
             assert res.status_code == 503
 
     @mock.patch('app.main.views.login.data_api_client')
-    @mock.patch('app.main.views.login.send_email')
-    def test_should_call_send_invitation_email_with_correct_params(self, send_email, data_api_client):
+    @mock.patch('app.main.views.login.InviteUser')
+    def test_should_send_invitation_email_with_correct_params(self, InviteUser, data_api_client):
+        user_invite_mock = mock.Mock()
+        user_invite_mock.token = 'not-actually-a-token'
+        InviteUser.return_value = user_invite_mock
+
         with self.app.app_context():
-
             self.login()
-
-            self.app.config['DM_MANDRILL_API_KEY'] = "API KEY"
-            self.app.config['INVITE_EMAIL_SUBJECT'] = "SUBJECT"
-            self.app.config['INVITE_EMAIL_FROM'] = "EMAIL FROM"
-            self.app.config['INVITE_EMAIL_NAME'] = "EMAIL NAME"
-
             res = self.client.post(
                 '/suppliers/invite-user',
                 data={'email_address': 'email@email.com', 'name': 'valid'}
@@ -161,19 +130,22 @@ class TestInviteUser(BaseApplicationTest):
 
             assert res.status_code == 302
 
-            send_email.assert_called_once_with(
-                "email@email.com",
-                mock.ANY,
-                "API KEY",
-                "SUBJECT",
-                "EMAIL FROM",
-                "EMAIL NAME",
-                ["user-invite"]
+            InviteUser.assert_called_once_with(
+                {
+                    'role': 'supplier',
+                    'supplier_id': mock.ANY,
+                    'supplier_name': mock.ANY,
+                    'email_address': 'email@email.com'
+                }
+            )
+
+            user_invite_mock.send_invite_email.assert_called_once_with(
+                'http://localhost/user/create/not-actually-a-token'
             )
 
     @mock.patch('app.main.views.login.data_api_client')
-    @mock.patch('app.main.views.login.send_email')
-    def test_should_create_audit_event(self, send_email, data_api_client):
+    @mock.patch('app.main.views.login.InviteUser')
+    def test_should_create_audit_event(self, InviteUser, data_api_client):
         with self.app.app_context():
             self.login()
 
