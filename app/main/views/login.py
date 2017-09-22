@@ -11,13 +11,6 @@ from ..helpers import login_required
 from ... import data_api_client
 
 
-# Any invites sent before the new user-frontend becomes active will be linking to this route. We need to maintain it
-# for seven days after the user-frontend goes live.
-@main.route('/create-user/<string:encoded_token>', methods=['GET'])
-def create_user(encoded_token):
-    return redirect(url_for('external.create_user', encoded_token=encoded_token), 301)
-
-
 @main.route('/invite-user', methods=["GET"])
 @login_required
 def invite_user():
