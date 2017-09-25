@@ -13,6 +13,7 @@ from dmapiclient import APIError
 from dmapiclient.audit import AuditTypes
 from dmutils.email import send_email
 from dmutils.email.exceptions import EmailError
+from dmutils.email.helpers import hash_string
 from dmcontent.formats import format_service_price
 from dmcontent.questions import ContentQuestion
 from dmcontent.errors import ContentNotFoundError
@@ -27,7 +28,7 @@ from dmutils.documents import (
 
 from ... import data_api_client, flask_featureflags
 from ...main import main, content_loader
-from ..helpers import hash_email, login_required
+from ..helpers import login_required
 from ..helpers.frameworks import (
     get_declaration_status, get_last_modified_from_first_matching_file, register_interest_in_framework,
     get_supplier_on_framework_from_info, get_declaration_status_from_info, get_supplier_framework_info,
@@ -688,7 +689,7 @@ def framework_updates_email_clarification_question(framework_slug):
             extra={'error': six.text_type(e),
                    'framework': framework['slug'],
                    'supplier_id': current_user.supplier_id,
-                   'email_hash': hash_email(current_user.email_address)})
+                   'email_hash': hash_string(current_user.email_address)})
         abort(503, "Clarification question email failed to send")
 
     if framework['clarificationQuestionsOpen']:
@@ -720,7 +721,7 @@ def framework_updates_email_clarification_question(framework_slug):
                 extra={'error': six.text_type(e),
                        'framework': framework['slug'],
                        'supplier_id': current_user.supplier_id,
-                       'email_hash': hash_email(current_user.email_address)})
+                       'email_hash': hash_string(current_user.email_address)})
     else:
         # Do not send confirmation email to the user who submitted the question
         # Zendesk will handle this instead
@@ -868,7 +869,7 @@ def upload_framework_agreement(framework_slug):
             "error {error} supplier_id {supplier_id} email_hash {email_hash}",
             extra={'error': six.text_type(e),
                    'supplier_id': current_user.supplier_id,
-                   'email_hash': hash_email(current_user.email_address)})
+                   'email_hash': hash_string(current_user.email_address)})
         abort(503, "Framework agreement email failed to send")
 
     return redirect(url_for('.framework_agreement', framework_slug=framework_slug))
@@ -1067,7 +1068,7 @@ def contract_review(framework_slug, agreement_id):
                     "error {error} supplier_id {supplier_id} email_hash {email_hash}",
                     extra={'error': six.text_type(e),
                            'supplier_id': current_user.supplier_id,
-                           'email_hash': hash_email(current_user.email_address)})
+                           'email_hash': hash_string(current_user.email_address)})
                 abort(503, "Framework agreement email failed to send")
 
             session.pop('signature_page', None)
