@@ -24,8 +24,14 @@ class Config(object):
     DM_DATA_API_URL = None
     DM_DATA_API_AUTH_TOKEN = None
     DM_MANDRILL_API_KEY = None
+    DM_NOTIFY_API_KEY = None
     DM_CLARIFICATION_QUESTION_EMAIL = 'digitalmarketplace@mailinator.com'
     DM_FRAMEWORK_AGREEMENTS_EMAIL = 'enquiries@example.com'
+
+    NOTIFY_TEMPLATES = {
+        'create_user_account': '1d1e38a6-744a-4d5a-84af-aefccde70a6c',
+        'invite_contributor': '1cca85e8-d647-46e6-9c0d-6af90b9e69b0'
+    }
 
     DM_AGREEMENTS_BUCKET = None
     DM_COMMUNICATIONS_BUCKET = None
@@ -38,10 +44,6 @@ class Config(object):
     DM_MAILCHIMP_OPEN_FRAMEWORK_NOTIFICATION_MAILING_LIST_ID = None
 
     DEBUG = False
-
-    RESET_PASSWORD_EMAIL_NAME = 'Digital Marketplace Admin'
-    RESET_PASSWORD_EMAIL_FROM = 'enquiries@digitalmarketplace.service.gov.uk'
-    RESET_PASSWORD_EMAIL_SUBJECT = 'Reset your Digital Marketplace password'
 
     INVITE_EMAIL_NAME = 'Digital Marketplace Admin'
     INVITE_EMAIL_FROM = 'enquiries@digitalmarketplace.service.gov.uk'
@@ -56,7 +58,6 @@ class Config(object):
 
     DM_GENERIC_NOREPLY_EMAIL = 'do-not-reply@digitalmarketplace.service.gov.uk'
 
-    CREATE_USER_SUBJECT = 'Create your Digital Marketplace account'
     SECRET_KEY = None
     SHARED_EMAIL_KEY = None
     RESET_PASSWORD_SALT = 'ResetPasswordSalt'
@@ -100,6 +101,8 @@ class Test(Config):
     WTF_CSRF_ENABLED = False
     SERVER_NAME = 'localhost'
     DM_MANDRILL_API_KEY = 'MANDRILL'
+    DM_NOTIFY_API_KEY = "not_a_real_key-00000000-fake-uuid-0000-000000000000"
+
     SHARED_EMAIL_KEY = "KEY"
     DM_CLARIFICATION_QUESTION_EMAIL = 'digitalmarketplace@mailinator.com'
 
@@ -137,6 +140,8 @@ class Development(Config):
     DM_ASSETS_URL = "https://{}.s3-eu-west-1.amazonaws.com".format(DM_SUBMISSIONS_BUCKET)
 
     DM_MANDRILL_API_KEY = "not_a_real_key"
+    DM_NOTIFY_API_KEY = "not_a_real_key-00000000-fake-uuid-0000-000000000000"
+
     SHARED_EMAIL_KEY = "very_secret"
     SECRET_KEY = 'verySecretKey'
 
@@ -161,6 +166,14 @@ class Preview(Live):
 
 class Production(Live):
     FEATURE_FLAGS_CONTRACT_VARIATION = enabled_since('2016-08-23')
+
+    NOTIFY_TEMPLATES = {
+        'create_user_account': '84f5d812-df9d-4ab8-804a-06f64f5abd30',
+        'invite_contributor': '5eefe42d-1694-4388-8908-991cdfba0a71'
+    }
+
+    # Check we didn't forget any live template IDs
+    assert NOTIFY_TEMPLATES.keys() == Config.NOTIFY_TEMPLATES.keys()
 
 
 class Staging(Production):
