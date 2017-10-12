@@ -793,7 +793,7 @@ class TestSupplierRemoveService(_BaseTestSupplierEditRemoveService):
         assert data_api_client.update_service_status.called is False
 
 
-@mock.patch('app.main.views.services.data_api_client')
+@mock.patch('app.main.views.services.data_api_client', autospec=True)
 class TestSupplierEditUpdateServiceSection(BaseApplicationTest):
 
     empty_service = {
@@ -994,6 +994,16 @@ class TestSupplierEditUpdateServiceSectionG9(BaseApplicationTest):
         res = self.client.get('/suppliers/frameworks/g-cloud-9/services/321/edit/service-features-and-benefits')
 
         assert res.status_code == 200
+        document = html.fromstring(res.get_data(as_text=True))
+        assert tuple(
+            (elem.attrib["name"], elem.attrib["value"],)
+            for elem in document.xpath("//form//input[@name='serviceFeatures' or @name='serviceBenefits']")
+            if elem.attrib.get("value")
+        ) == (
+            ("serviceFeatures", "eight",),
+            ("serviceFeatures", "nine",),
+            ("serviceBenefits", "ten",),
+        )
 
     def test_questions_for_this_service_section_can_be_changed(self, data_api_client):
         data_api_client.get_service.return_value = self.base_service
@@ -1005,6 +1015,7 @@ class TestSupplierEditUpdateServiceSectionG9(BaseApplicationTest):
             })
 
         assert res.status_code == 302
+        assert res.location == "http://localhost/suppliers/frameworks/g-cloud-9/services/321"
         data_api_client.update_service.assert_called_once_with(
             '321',
             {
