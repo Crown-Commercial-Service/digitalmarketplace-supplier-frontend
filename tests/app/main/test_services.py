@@ -965,6 +965,62 @@ class TestSupplierEditUpdateServiceSection(BaseApplicationTest):
 
 
 @mock.patch('app.main.views.services.data_api_client', autospec=True)
+class TestSupplierEditUpdateServiceSectionG9(BaseApplicationTest):
+
+    base_service = {
+        'services': {
+            'serviceName': 'Service name 321',
+            'status': 'published',
+            'id': '321',
+            'frameworkSlug': 'g-cloud-9',
+            'frameworkName': 'G-Cloud 9',
+            'supplierId': 1234,
+            'supplierName': 'We supply almost any',
+            'lot': 'cloud-software',
+            'lotSlug': 'cloud-software',
+            'lotName': "Cloudy Softwares",
+            'serviceFeatures': ["eight", "nine"],
+            'serviceBenefits': ["ten"],
+        }
+    }
+
+    def setup_method(self, method):
+        super(TestSupplierEditUpdateServiceSectionG9, self).setup_method(method)
+        with self.app.test_client():
+            self.login()
+
+    def test_edit_page(self, data_api_client):
+        data_api_client.get_service.return_value = self.base_service
+        res = self.client.get('/suppliers/frameworks/g-cloud-9/services/321/edit/service-features-and-benefits')
+
+        assert res.status_code == 200
+
+    def test_questions_for_this_service_section_can_be_changed(self, data_api_client):
+        data_api_client.get_service.return_value = self.base_service
+        res = self.client.post(
+            '/suppliers/frameworks/g-cloud-9/services/321/edit/service-features-and-benefits',
+            data={
+                'serviceFeatures': ["one", "two"],
+                'serviceBenefits': ["three", "four"],
+            })
+
+        assert res.status_code == 302
+        data_api_client.update_service.assert_called_once_with(
+            '321',
+            {
+                'serviceFeatures': ["one", "two"],
+                'serviceBenefits': ["three", "four"],
+            },
+            'email@email.com',
+        )
+
+        self.assert_flashes(
+            {"updated_service_name": "Service name 321"},
+            "service_updated",
+        )
+
+
+@mock.patch('app.main.views.services.data_api_client', autospec=True)
 class TestCreateDraftService(BaseApplicationTest):
     def setup_method(self, method):
         super(TestCreateDraftService, self).setup_method(method)

@@ -96,7 +96,8 @@
 {%- endmacro %}
 
 {#
-  we want to be able to import and use this file as though it's the toolkit's forms.html, so we just straight import
-  the macros we haven't modified
+  we want to be able to import and use this file as though it's the toolkit's forms.html, but imports don't seem to get
+  re-exported in jinja, so this seems to be the least-ugly way to forward definitions:
 #}
-{% from "toolkit/forms/macros/forms.html" import boolean_list, multiquestion %}
+{% macro boolean_list() %}{{ upstream_forms.boolean_list(*varargs, **kwargs) }}{% endmacro %}
+{% macro multiquestion() %}{{ upstream_forms.multiquestion(*varargs, **kwargs) }}{% endmacro %}
