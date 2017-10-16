@@ -6,7 +6,7 @@ flake8-putty==0.4.0
 freezegun==0.3.4
 lxml==3.8.0
 mock==2.0.0
-pytest==2.8.2
+pytest==3.2.3
 pytest-cov==2.2.0
 python-coveralls==2.5.0
 requests-mock==0.6.0
