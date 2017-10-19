@@ -166,6 +166,7 @@ class Preview(Live):
 
 class Production(Live):
     FEATURE_FLAGS_CONTRACT_VARIATION = enabled_since('2016-08-23')
+    FEATURE_FLAGS_EDIT_SECTIONS = enabled_since('2017-10-19')
 
     NOTIFY_TEMPLATES = {
         'create_user_account': '84f5d812-df9d-4ab8-804a-06f64f5abd30',
