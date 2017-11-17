@@ -202,6 +202,7 @@ def update_section(framework_slug, service_id, section_id):
                 current_user.email_address)
         except HTTPError as e:
             errors = section.get_error_messages(e.message)
+            # If the service name is empty the final breadcrumb will disappear, so re-populate with the current name
             if not posted_data.get('serviceName', None):
                 posted_data['serviceName'] = service.get('serviceName', '')
 
