@@ -544,6 +544,32 @@ class TestSupplierEditGCloudService(SupplierEditServiceTestsSharedAcrossFramewor
             res.get_data(as_text=True)
         )
 
+    def test_editable_empty_questions_are_shown(self, data_api_client):
+        """Currently the only question that is editable but potentially empty (optional during service submission)
+        is the serviceDefinitionDocumentURL for G-Cloud 9 so we test this behaviour in this class"""
+        service_kwargs = {
+            "serviceName": "My G-Cloud 9 service",
+            "lot": "cloud-hosting",
+            "lotName": "Cloud Hosting",
+            "lotSlug": "cloud-hosting"
+        }
+        service_kwargs.update(self.framework_kwargs)
+        self.login()
+        self._setup_service(
+            data_api_client,
+            service_status='published',
+            **service_kwargs
+        )
+
+        res = self.client.get("/suppliers/frameworks/{}/services/123".format(self.framework_kwargs["framework_slug"]))
+
+        assert res.status_code == 200
+        # There's no serviceDefinitionDocumentURL in the test service data, but the row should still be shown
+        self.assert_in_strip_whitespace(
+            'Service definition document',
+            res.get_data(as_text=True)
+        )
+
 
 @mock.patch('app.main.views.services.data_api_client')
 class TestSupplierEditDosServices(SupplierEditServiceTestsSharedAcrossFrameworks):
@@ -608,9 +634,9 @@ class TestSupplierEditDosServices(SupplierEditServiceTestsSharedAcrossFrameworks
             res.get_data(as_text=True)
         )
 
-    def test_empty_questions_are_hidden(self, data_api_client):
+    def test_uneditable_empty_questions_are_hidden(self, data_api_client):
         """Although the behaviour of hiding empty question summary rows is not specific to DOS, it is currently the
-        only framework with questions that can be empty so we test this behaviour in this class"""
+        only framework with uneditable questions that can be empty so we test this behaviour in this class"""
         service_kwargs = {
             "designerLocations": ["London", "Scotland"],
             "designerPriceMin": "100",
@@ -793,6 +819,7 @@ class TestSupplierRemoveService(_BaseTestSupplierEditRemoveService):
         assert data_api_client.update_service_status.called is False
 
 
+@mock.patch('dmutils.s3.S3')
 @mock.patch('app.main.views.services.data_api_client', autospec=True)
 class TestSupplierEditUpdateServiceSection(BaseApplicationTest):
 
@@ -816,7 +843,7 @@ class TestSupplierEditUpdateServiceSection(BaseApplicationTest):
         with self.app.test_client():
             self.login()
 
-    def test_return_to_service_summary_link_present(self, data_api_client):
+    def test_return_to_service_summary_link_present(self, data_api_client, s3):
         data_api_client.get_service.return_value = self.empty_service
         res = self.client.get('/suppliers/frameworks/g-cloud-6/services/1/edit/description')
         assert res.status_code == 200
@@ -826,14 +853,14 @@ class TestSupplierEditUpdateServiceSection(BaseApplicationTest):
         assert data_api_client.update_service.called is False
         self.assert_no_flashes()
 
-    def test_edit_service_incorrect_framework(self, data_api_client):
+    def test_edit_service_incorrect_framework(self, data_api_client, s3):
         data_api_client.get_service.return_value = self.empty_service
         res = self.client.get('/suppliers/frameworks/g-cloud-7/services/1/edit/description')
         assert res.status_code == 404
         assert data_api_client.update_service.called is False
         self.assert_no_flashes()
 
-    def test_questions_for_this_service_section_can_be_changed(self, data_api_client):
+    def test_questions_for_this_service_section_can_be_changed(self, data_api_client, s3):
         data_api_client.get_service.return_value = self.empty_service
         res = self.client.post(
             '/suppliers/frameworks/g-cloud-6/services/1/edit/description',
@@ -852,7 +879,7 @@ class TestSupplierEditUpdateServiceSection(BaseApplicationTest):
             "service_updated",
         )
 
-    def test_editing_readonly_section_is_not_allowed(self, data_api_client):
+    def test_editing_readonly_section_is_not_allowed(self, data_api_client, s3):
         data_api_client.get_service.return_value = self.empty_service
 
         res = self.client.get('/suppliers/frameworks/g-cloud-6/services/1/edit/service-attributes')
@@ -869,7 +896,7 @@ class TestSupplierEditUpdateServiceSection(BaseApplicationTest):
         assert data_api_client.update_service.called is False
         self.assert_no_flashes()
 
-    def test_only_questions_for_this_service_section_can_be_changed(self, data_api_client):
+    def test_only_questions_for_this_service_section_can_be_changed(self, data_api_client, s3):
         data_api_client.get_service.return_value = self.empty_service
         res = self.client.post(
             '/suppliers/frameworks/g-cloud-6/services/1/edit/description',
@@ -886,14 +913,14 @@ class TestSupplierEditUpdateServiceSection(BaseApplicationTest):
             "service_updated",
         )
 
-    def test_edit_non_existent_service_returns_404(self, data_api_client):
+    def test_edit_non_existent_service_returns_404(self, data_api_client, s3):
         data_api_client.get_service.return_value = None
         res = self.client.get('/suppliers/frameworks/g-cloud-6/services/1/edit/description')
 
         assert res.status_code == 404
         assert data_api_client.update_service.called is False
 
-    def test_edit_non_existent_section_returns_404(self, data_api_client):
+    def test_edit_non_existent_section_returns_404(self, data_api_client, s3):
         data_api_client.get_service.return_value = self.empty_service
         res = self.client.get(
             '/suppliers/frameworks/g-cloud-6/services/1/edit/invalid-section'
@@ -901,7 +928,7 @@ class TestSupplierEditUpdateServiceSection(BaseApplicationTest):
         assert res.status_code == 404
         assert data_api_client.update_service.called is False
 
-    def test_update_with_answer_required_error(self, data_api_client):
+    def test_update_with_answer_required_error(self, data_api_client, s3):
         data_api_client.get_service.return_value = self.empty_service
         data_api_client.update_service.side_effect = HTTPError(
             mock.Mock(status_code=400),
@@ -910,14 +937,14 @@ class TestSupplierEditUpdateServiceSection(BaseApplicationTest):
             '/suppliers/frameworks/g-cloud-6/services/1/edit/description',
             data={})
 
-        assert res.status_code == 200
+        assert res.status_code == 400
         document = html.fromstring(res.get_data(as_text=True))
         assert document.xpath(
             '//span[@class="validation-message"]/text()'
         )[0].strip() == "You need to answer this question."
         self.assert_no_flashes()
 
-    def test_update_with_under_50_words_error(self, data_api_client):
+    def test_update_with_under_50_words_error(self, data_api_client, s3):
         data_api_client.get_service.return_value = self.empty_service
         data_api_client.update_service.side_effect = HTTPError(
             mock.Mock(status_code=400),
@@ -926,14 +953,14 @@ class TestSupplierEditUpdateServiceSection(BaseApplicationTest):
             '/suppliers/frameworks/g-cloud-6/services/1/edit/description',
             data={})
 
-        assert res.status_code == 200
+        assert res.status_code == 400
         document = html.fromstring(res.get_data(as_text=True))
         assert document.xpath(
             '//span[@class="validation-message"]/text()'
         )[0].strip() == "Your description must be no more than 50 words."
         self.assert_no_flashes()
 
-    def test_update_non_existent_service_returns_404(self, data_api_client):
+    def test_update_non_existent_service_returns_404(self, data_api_client, s3):
         data_api_client.get_service.return_value = None
         res = self.client.post('/suppliers/frameworks/g-cloud-6/services/1/edit/description')
 
@@ -941,7 +968,7 @@ class TestSupplierEditUpdateServiceSection(BaseApplicationTest):
         self.assert_no_flashes()
         assert data_api_client.update_service.called is False
 
-    def test_update_non_existent_section_returns_404(self, data_api_client):
+    def test_update_non_existent_section_returns_404(self, data_api_client, s3):
         data_api_client.get_service.return_value = self.empty_service
         res = self.client.post(
             '/suppliers/frameworks/g-cloud-6/services/1/edit/invalid_section'
@@ -950,7 +977,7 @@ class TestSupplierEditUpdateServiceSection(BaseApplicationTest):
         self.assert_no_flashes()
         assert data_api_client.update_service.called is False
 
-    def test_incorrect_framework_fails(self, data_api_client):
+    def test_incorrect_framework_fails(self, data_api_client, s3):
         data_api_client.get_service.return_value = self.empty_service
         res = self.client.post(
             '/suppliers/frameworks/g-cloud-7/services/1/edit/description',
@@ -964,6 +991,7 @@ class TestSupplierEditUpdateServiceSection(BaseApplicationTest):
         assert data_api_client.update_service.called is False
 
 
+@mock.patch('dmutils.s3.S3')
 @mock.patch('app.main.views.services.data_api_client', autospec=True)
 class TestSupplierEditUpdateServiceSectionG9(BaseApplicationTest):
 
@@ -989,7 +1017,7 @@ class TestSupplierEditUpdateServiceSectionG9(BaseApplicationTest):
         with self.app.test_client():
             self.login()
 
-    def test_edit_page(self, data_api_client):
+    def test_edit_page(self, data_api_client, s3):
         data_api_client.get_service.return_value = self.base_service
         res = self.client.get('/suppliers/frameworks/g-cloud-9/services/321/edit/service-features-and-benefits')
 
@@ -1005,7 +1033,7 @@ class TestSupplierEditUpdateServiceSectionG9(BaseApplicationTest):
             ("serviceBenefits", "ten",),
         )
 
-    def test_questions_for_this_service_section_can_be_changed(self, data_api_client):
+    def test_questions_for_this_service_section_can_be_changed(self, data_api_client, s3):
         data_api_client.get_service.return_value = self.base_service
         res = self.client.post(
             '/suppliers/frameworks/g-cloud-9/services/321/edit/service-features-and-benefits',
@@ -1029,6 +1057,67 @@ class TestSupplierEditUpdateServiceSectionG9(BaseApplicationTest):
             {"updated_service_name": "Service name 321"},
             "service_updated",
         )
+
+    def test_file_upload(self, data_api_client, s3):
+        data_api_client.get_service.return_value = self.base_service
+        with freeze_time('2017-11-12 13:14:15'):
+            res = self.client.post(
+                '/suppliers/frameworks/g-cloud-9/services/321/edit/documents',
+                data={
+                    'serviceDefinitionDocumentURL': (StringIO(b'doc'), 'document.pdf'),
+                }
+            )
+
+        assert res.status_code == 302
+        data_api_client.update_service.assert_called_once_with(
+            '321',
+            {
+                'serviceDefinitionDocumentURL':
+                'http://asset-host/g-cloud-9/documents/1234/321-service-definition-document-2017-11-12-1314.pdf'
+            },
+            'email@email.com',
+        )
+
+        s3.return_value.save.assert_called_once_with(
+            'g-cloud-9/documents/1234/321-service-definition-document-2017-11-12-1314.pdf',
+            mock.ANY, acl='public-read'
+        )
+
+    def test_S3_should_not_be_called_if_there_are_no_files(self, data_api_client, s3):
+        data_api_client.get_service.return_value = self.base_service
+        res = self.client.post(
+            '/suppliers/frameworks/g-cloud-9/services/321/edit/service-features-and-benefits',
+            data={
+                'serviceFeatures': ["one", "two"],
+                'serviceBenefits': ["three", "four"],
+            })
+
+        assert res.status_code == 302
+        assert s3.return_value.save.called is False
+
+    def test_file_upload_filters_empty_and_unknown_files(self, data_api_client, s3):
+        data_api_client.get_service.return_value = self.base_service
+        res = self.client.post(
+            '/suppliers/frameworks/g-cloud-9/services/321/edit/documents',
+            data={
+                'serviceDefinitionDocumentURL': (StringIO(b''), 'document.pdf'),
+                'unknownDocumentURL': (StringIO(b'doc'), 'document.pdf'),
+            })
+
+        assert res.status_code == 302
+        assert s3.return_value.save.called is False
+        data_api_client.update_service.assert_called_once_with('321', {}, 'email@email.com')
+
+    def test_upload_question_can_not_be_set_by_form_data(self, data_api_client, s3):
+        data_api_client.get_service.return_value = self.base_service
+        res = self.client.post(
+            '/suppliers/frameworks/g-cloud-9/services/321/edit/documents',
+            data={
+                'serviceDefinitionDocumentURL': 'http://example.com/document.pdf',
+            })
+
+        assert res.status_code == 302
+        data_api_client.update_service.assert_called_once_with('321', {}, 'email@email.com')
 
 
 @mock.patch('app.main.views.services.data_api_client', autospec=True)
