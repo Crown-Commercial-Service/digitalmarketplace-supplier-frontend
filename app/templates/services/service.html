@@ -95,10 +95,16 @@
 {% endblock %}
 
 {% block summary_row %}
+  {{ summary.field_name(question.label) }}
   {% if not question.is_empty %}
-    {{ summary.field_name(question.label) }}
     {{ summary[question.type](question.value, question.assurance) }}
-  {% endif %}
+  {% else %}
+      {# We need to call this (even if with nothing) to add the final column to the row, otherwise the row
+         terminates early and the line separators between rows do not span the entire width of the table. #}
+      {% call summary.field() %}
+        <span class="summary-item-field-answer-required" align="left">{{ question.empty_message }}</span>
+      {% endcall %}
+    {% endif %}
 {% endblock %}
 
 {% block after_sections %}
