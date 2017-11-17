@@ -564,11 +564,11 @@ class TestSupplierEditGCloudService(SupplierEditServiceTestsSharedAcrossFramewor
         res = self.client.get("/suppliers/frameworks/{}/services/123".format(self.framework_kwargs["framework_slug"]))
 
         assert res.status_code == 200
-        # There's no serviceDefinitionDocumentURL in the test service data, but the row should still be shown
-        self.assert_in_strip_whitespace(
-            'Service definition document',
-            res.get_data(as_text=True)
-        )
+        page = res.get_data(as_text=True)
+
+        # There's no serviceDefinitionDocumentURL in the test service data, so a row with empty_message should be shown
+        self.assert_in_strip_whitespace('Service definition document', page)
+        self.assert_in_strip_whitespace('You haven’t added a service definition document', page)
 
 
 @mock.patch('app.main.views.services.data_api_client')
