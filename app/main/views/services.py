@@ -181,6 +181,7 @@ def update_section(framework_slug, service_id, section_id):
     posted_data = section.get_data(request.form)
 
     errors = None
+    # This utils method filters out any empty documents and validates against service document rules
     uploaded_documents, document_errors = upload_service_documents(
         s3.S3(current_app.config['DM_DOCUMENTS_BUCKET']),
         'documents',
@@ -538,6 +539,7 @@ def edit_service_submission(framework_slug, lot_slug, service_id, section_id, qu
         if request.files:
             uploader = s3.S3(current_app.config['DM_SUBMISSIONS_BUCKET'])
             documents_url = url_for('.dashboard', _external=True) + '/assets/'
+            # This utils method filters out any empty documents and validates against service document rules
             uploaded_documents, document_errors = upload_service_documents(
                 uploader, 'submissions', documents_url, draft, request.files, section,
                 public=False)
