@@ -180,25 +180,42 @@ def update_section(framework_slug, service_id, section_id):
 
     posted_data = section.get_data(request.form)
 
-    try:
-        data_api_client.update_service(
-            service_id,
-            posted_data,
-            current_user.email_address)
-    except HTTPError as e:
-        errors = section.get_error_messages(e.message)
-        if not posted_data.get('serviceName', None):
-            posted_data['serviceName'] = service.get('serviceName', '')
+    errors = None
+    # This utils method filters out any empty documents and validates against service document rules
+    uploaded_documents, document_errors = upload_service_documents(
+        s3.S3(current_app.config['DM_DOCUMENTS_BUCKET']),
+        'documents',
+        current_app.config['DM_ASSETS_URL'],
+        service,
+        request.files,
+        section,
+    )
+    if document_errors:
+        errors = section.get_error_messages(document_errors)
+    else:
+        posted_data.update(uploaded_documents)
+
+    if not errors and section.has_changes_to_save(service, posted_data):
+        try:
+            data_api_client.update_service(
+                service_id,
+                posted_data,
+                current_user.email_address)
+        except HTTPError as e:
+            errors = section.get_error_messages(e.message)
+            # If the service name is empty the final breadcrumb will disappear, so re-populate with the current name
+            if not posted_data.get('serviceName', None):
+                posted_data['serviceName'] = service.get('serviceName', '')
+
+    if errors:
         return render_template(
             "services/edit_section.html",
             section=section,
             service_data=posted_data,
             service_id=service_id,
             errors=errors,
-        )
-
+        ), 400
     flash({"updated_service_name": posted_data.get("serviceName") or service.get("serviceName")}, 'service_updated')
-
     return redirect(url_for(".edit_service", service_id=service_id, framework_slug=service["frameworkSlug"]))
 
 
@@ -522,6 +539,7 @@ def edit_service_submission(framework_slug, lot_slug, service_id, section_id, qu
         if request.files:
             uploader = s3.S3(current_app.config['DM_SUBMISSIONS_BUCKET'])
             documents_url = url_for('.dashboard', _external=True) + '/assets/'
+            # This utils method filters out any empty documents and validates against service document rules
             uploaded_documents, document_errors = upload_service_documents(
                 uploader, 'submissions', documents_url, draft, request.files, section,
                 public=False)
