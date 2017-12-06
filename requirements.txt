@@ -8,14 +8,16 @@ Flask-WTF==0.12
 
 git+https://github.com/alphagov/digitalmarketplace-utils.git@29.0.0#egg=digitalmarketplace-utils==29.0.0
 git+https://github.com/alphagov/digitalmarketplace-content-loader.git@4.2.0#egg=digitalmarketplace-content-loader==4.2.0
-git+https://github.com/alphagov/digitalmarketplace-apiclient.git@10.4.0#egg=digitalmarketplace-apiclient==10.4.0
+git+https://github.com/alphagov/digitalmarketplace-apiclient.git@13.1.0#egg=digitalmarketplace-apiclient==13.1.0
 
 ## The following requirements were added by pip freeze:
 asn1crypto==0.23.0
 backoff==1.0.7
 boto3==1.4.4
 botocore==1.5.95
+certifi==2017.11.5
 cffi==1.11.2
+chardet==3.0.4
 contextlib2==0.4.0
 cryptography==1.9
 docopt==0.4.0
@@ -26,7 +28,7 @@ future==0.16.0
 idna==2.6
 inflection==0.2.1
 itsdangerous==0.24
-Jinja2==2.9.6
+Jinja2==2.10
 jmespath==0.9.3
 mailchimp3==2.0.11
 mandrill==1.0.57
@@ -41,10 +43,11 @@ python-dateutil==2.6.1
 python-json-logger==0.1.4
 pytz==2015.4
 PyYAML==3.11
-requests==2.7.0
-s3transfer==0.1.11
+requests==2.18.4
+s3transfer==0.1.12
 six==1.9.0
 unicodecsv==0.14.1
+urllib3==1.22
 Werkzeug==0.12.2
 workdays==1.4
 WTForms==2.1
