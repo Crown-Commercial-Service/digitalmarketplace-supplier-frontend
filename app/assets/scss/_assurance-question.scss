@@ -8,19 +8,15 @@
     @include core-19;
   }
 
-}
-
-.assurance-question {
-
   .validation-wrapper {
-    
+
     margin-bottom: $gutter * 1.5;
-      
+
     .question {
       margin-top: 0;
       margin-bottom: 0;
     }
-    
+
   }
   
 }

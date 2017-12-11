@@ -69,7 +69,11 @@ $path: "/suppliers/static/images/";
 @import "_service-status.scss";
 @import "_view-service-link.scss";
 @import "_framework-application.scss";
-@import "_assurance-question.scss";
+@import "_assurance-question.scss";            // This could probably be removed as the only usage is in service editing
+                                               // and editing expired services is not officially supported (it can be
+                                               // done only by hacking URLs). However, without also removing supporting
+                                               // HTML and/or code that allows assurance questions to go in, it doesn't
+                                               // make sense to remove the styling.
 @import "_supplier-declaration.scss";
 @import "_updates.scss";
 @import "_service_submission.scss";
