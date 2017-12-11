@@ -92,42 +92,6 @@ $path: "/suppliers/static/images/";
   }
 }
 
-.isolated-text {
-  margin-bottom: 30px;
-}
-
-.browse-list-borderless {
-  .browse-list-item {
-    border-top: none;
-    padding-top: 0;
-    margin-top: 20px;
-  }
-}
-
-.filter-field-text {
-  @include core-16;
-  @include box-sizing(border-box);
-  width: 100%;
-  padding: 5px;
-}
-
-.return-to-top {
-  display: block;
-  @include core-19;
-  margin: (1.5 * $gutter) 0 (2 * $gutter);
-}
-
 .padding-bottom-small {
   padding-bottom: 10px;
-}
-
-ins {
-  text-decoration: none;
-  background-color: #cce0d6;
-  padding: 0 3px;
-}
-
-del {
-  background-color: #efcfd1;
-  padding: 0 3px;
 }
