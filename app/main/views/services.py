@@ -51,7 +51,7 @@ def edit_service(framework_slug, service_id):
     if service["frameworkSlug"] != framework_slug:
         abort(404)
 
-    framework = data_api_client.get_framework(service['frameworkSlug'])['frameworks']
+    framework = get_framework(data_api_client, service['frameworkSlug'], allowed_statuses=['live'])
 
     try:
         content = content_loader.get_manifest(framework['slug'], 'edit_service').filter(service)
@@ -84,6 +84,9 @@ def remove_service(framework_slug, service_id):
     # dos services should not be removable
     if service["frameworkFramework"] == 'digital-outcomes-and-specialists':
         abort(404)
+
+    # we don't actually need the framework here; using this to 404 if framework for the service is not live
+    get_framework(data_api_client, service['frameworkSlug'], allowed_statuses=['live'])
 
     # we don't actually need the content here, we're just probing to see whether service editing should be allowed for
     # this framework (signalled by the existence of the edit_service manifest
@@ -136,6 +139,9 @@ def edit_section(framework_slug, service_id, section_id):
     if service["frameworkSlug"] != framework_slug:
         abort(404)
 
+    # we don't actually need the framework here; using this to 404 if framework for the service is not live
+    get_framework(data_api_client, service['frameworkSlug'], allowed_statuses=['live'])
+
     try:
         content = content_loader.get_manifest(service["frameworkSlug"], 'edit_service').filter(service)
     except ContentNotFoundError:
@@ -169,6 +175,9 @@ def update_section(framework_slug, service_id, section_id):
 
     if service["frameworkSlug"] != framework_slug:
         abort(404)
+
+    # we don't actually need the framework here; using this to 404 if framework for the service is not live
+    get_framework(data_api_client, service['frameworkSlug'], allowed_statuses=['live'])
 
     try:
         content = content_loader.get_manifest(service["frameworkSlug"], 'edit_service').filter(service)

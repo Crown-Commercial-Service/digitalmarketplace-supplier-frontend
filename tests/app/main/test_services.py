@@ -378,6 +378,35 @@ class _BaseTestSupplierEditRemoveService(BaseApplicationTest):
 
 class SupplierEditServiceTestsSharedAcrossFrameworks(_BaseTestSupplierEditRemoveService):
     """Tests shared by both DOS and GCloud frameworks for editing a service e.g. /suppliers/services/123"""
+
+    @pytest.mark.parametrize("fwk_status,expected_code", [
+        ("coming", 404),
+        ("open", 404),
+        ("pending", 404),
+        ("standstill", 404),
+        ("live", 200),
+        ("expired", 404),
+    ])
+    def test_edit_page_only_exists_for_services_on_live_frameworks(self, data_api_client, fwk_status, expected_code):
+        self.login()
+        fwk_kwargs = self.framework_kwargs.copy()
+        fwk_kwargs.update({'status': fwk_status})
+        self._setup_service(
+            data_api_client,
+            service_status='published',
+            **fwk_kwargs
+        )
+        data_api_client.get_framework.return_value = {
+            'frameworks': {
+                'slug': fwk_kwargs.get('framework_slug'),
+                'status': fwk_kwargs.get('status'),
+            }
+        }
+        res = self.client.get("/suppliers/frameworks/{}/services/123".format(self.framework_kwargs["framework_slug"]))
+        assert res.status_code == expected_code, (
+            "Unexpected response {} for {} framework state".format(res.status_code, fwk_status)
+        )
+
     def test_should_not_view_other_suppliers_services(self, data_api_client):
         self.login()
         self._setup_service(
@@ -757,6 +786,40 @@ class TestSupplierRemoveServiceEditInterplay(_BaseTestSupplierEditRemoveService)
 
 @mock.patch('app.main.views.services.data_api_client')
 class TestSupplierRemoveService(_BaseTestSupplierEditRemoveService):
+
+    @pytest.mark.parametrize("fwk_status,expected_code", [
+        ("coming", 404),
+        ("open", 404),
+        ("pending", 404),
+        ("standstill", 404),
+        ("live", 302),
+        ("expired", 404),
+    ])
+    def test_remove_only_works_for_services_on_live_frameworks(self, data_api_client, fwk_status, expected_code):
+        self.login()
+        self._setup_service(
+            data_api_client,
+            'g-cloud-9',
+            'g-cloud',
+            'G-Cloud 9',
+            service_status='published',
+            service_belongs_to_user=True,
+        )
+        data_api_client.get_framework.return_value = {
+            'frameworks': {
+                'slug': 'g-cloud-9',
+                'status': fwk_status,
+            }
+        }
+        response = self.client.post(
+            '/suppliers/frameworks/g-cloud-9/services/123/remove',
+            data={'remove_confirmed': True},
+        )
+
+        assert response.status_code == expected_code, (
+            "Unexpected response {} for {} framework state".format(response.status_code, fwk_status)
+        )
+
     def test_remove_service(
             self,
             data_api_client,
@@ -823,6 +886,16 @@ class TestSupplierRemoveService(_BaseTestSupplierEditRemoveService):
 @mock.patch('app.main.views.services.data_api_client', autospec=True)
 class TestSupplierEditUpdateServiceSection(BaseApplicationTest):
 
+    def _get_framework_response(self, **kwargs):
+        framework = {
+            "framework": "g-cloud",
+            "name": "G-Cloud 6",
+            "slug": "g-cloud-6",
+            "status": "live",
+        }
+        framework.update(kwargs)
+        return {"frameworks": framework}
+
     empty_service = {
         'services': {
             'serviceName': 'Service name 123',
@@ -843,8 +916,26 @@ class TestSupplierEditUpdateServiceSection(BaseApplicationTest):
         with self.app.test_client():
             self.login()
 
+    @pytest.mark.parametrize("fwk_status,expected_code", [
+        ("coming", 404),
+        ("open", 404),
+        ("pending", 404),
+        ("standstill", 404),
+        ("live", 200),
+        ("expired", 404),
+    ])
+    def test_edit_section_only_exists_for_live_frameworks(self, data_api_client, s3, fwk_status, expected_code):
+        data_api_client.get_service.return_value = self.empty_service
+        data_api_client.get_framework.return_value = self._get_framework_response(status=fwk_status)
+
+        res = self.client.get('/suppliers/frameworks/g-cloud-6/services/1/edit/description')
+        assert res.status_code == expected_code, (
+            "Unexpected response {} for {} framework state".format(res.status_code, fwk_status)
+        )
+
     def test_return_to_service_summary_link_present(self, data_api_client, s3):
         data_api_client.get_service.return_value = self.empty_service
+        data_api_client.get_framework.return_value = self._get_framework_response()
         res = self.client.get('/suppliers/frameworks/g-cloud-6/services/1/edit/description')
         assert res.status_code == 200
         assert self.strip_all_whitespace(
@@ -855,13 +946,38 @@ class TestSupplierEditUpdateServiceSection(BaseApplicationTest):
 
     def test_edit_service_incorrect_framework(self, data_api_client, s3):
         data_api_client.get_service.return_value = self.empty_service
+        data_api_client.get_framework.return_value = self._get_framework_response()
         res = self.client.get('/suppliers/frameworks/g-cloud-7/services/1/edit/description')
         assert res.status_code == 404
         assert data_api_client.update_service.called is False
         self.assert_no_flashes()
 
+    @pytest.mark.parametrize("fwk_status,expected_code", [
+        ("coming", 404),
+        ("open", 404),
+        ("pending", 404),
+        ("standstill", 404),
+        ("live", 302),
+        ("expired", 404),
+    ])
+    def test_update_section_only_works_for_live_frameworks(self, data_api_client, s3, fwk_status, expected_code):
+        data_api_client.get_service.return_value = self.empty_service
+        data_api_client.get_framework.return_value = self._get_framework_response(status=fwk_status)
+
+        res = self.client.post(
+            '/suppliers/frameworks/g-cloud-6/services/1/edit/description',
+            data={
+                'serviceName': 'The service',
+                'serviceSummary': 'This is the service',
+            })
+
+        assert res.status_code == expected_code, (
+            "Unexpected response {} for {} framework state".format(res.status_code, fwk_status)
+        )
+
     def test_questions_for_this_service_section_can_be_changed(self, data_api_client, s3):
         data_api_client.get_service.return_value = self.empty_service
+        data_api_client.get_framework.return_value = self._get_framework_response()
         res = self.client.post(
             '/suppliers/frameworks/g-cloud-6/services/1/edit/description',
             data={
@@ -881,7 +997,7 @@ class TestSupplierEditUpdateServiceSection(BaseApplicationTest):
 
     def test_editing_readonly_section_is_not_allowed(self, data_api_client, s3):
         data_api_client.get_service.return_value = self.empty_service
-
+        data_api_client.get_framework.return_value = self._get_framework_response()
         res = self.client.get('/suppliers/frameworks/g-cloud-6/services/1/edit/service-attributes')
         assert res.status_code == 404
 
@@ -898,6 +1014,7 @@ class TestSupplierEditUpdateServiceSection(BaseApplicationTest):
 
     def test_only_questions_for_this_service_section_can_be_changed(self, data_api_client, s3):
         data_api_client.get_service.return_value = self.empty_service
+        data_api_client.get_framework.return_value = self._get_framework_response()
         res = self.client.post(
             '/suppliers/frameworks/g-cloud-6/services/1/edit/description',
             data={
@@ -915,6 +1032,7 @@ class TestSupplierEditUpdateServiceSection(BaseApplicationTest):
 
     def test_edit_non_existent_service_returns_404(self, data_api_client, s3):
         data_api_client.get_service.return_value = None
+        data_api_client.get_framework.return_value = self._get_framework_response()
         res = self.client.get('/suppliers/frameworks/g-cloud-6/services/1/edit/description')
 
         assert res.status_code == 404
@@ -930,6 +1048,7 @@ class TestSupplierEditUpdateServiceSection(BaseApplicationTest):
 
     def test_update_with_answer_required_error(self, data_api_client, s3):
         data_api_client.get_service.return_value = self.empty_service
+        data_api_client.get_framework.return_value = self._get_framework_response()
         data_api_client.update_service.side_effect = HTTPError(
             mock.Mock(status_code=400),
             {'serviceSummary': 'answer_required'})
@@ -946,6 +1065,7 @@ class TestSupplierEditUpdateServiceSection(BaseApplicationTest):
 
     def test_update_with_under_50_words_error(self, data_api_client, s3):
         data_api_client.get_service.return_value = self.empty_service
+        data_api_client.get_framework.return_value = self._get_framework_response()
         data_api_client.update_service.side_effect = HTTPError(
             mock.Mock(status_code=400),
             {'serviceSummary': 'under_50_words'})
@@ -962,6 +1082,7 @@ class TestSupplierEditUpdateServiceSection(BaseApplicationTest):
 
     def test_update_non_existent_service_returns_404(self, data_api_client, s3):
         data_api_client.get_service.return_value = None
+        data_api_client.get_framework.return_value = self._get_framework_response()
         res = self.client.post('/suppliers/frameworks/g-cloud-6/services/1/edit/description')
 
         assert res.status_code == 404
@@ -970,6 +1091,7 @@ class TestSupplierEditUpdateServiceSection(BaseApplicationTest):
 
     def test_update_non_existent_section_returns_404(self, data_api_client, s3):
         data_api_client.get_service.return_value = self.empty_service
+        data_api_client.get_framework.return_value = self._get_framework_response()
         res = self.client.post(
             '/suppliers/frameworks/g-cloud-6/services/1/edit/invalid_section'
         )
@@ -979,6 +1101,7 @@ class TestSupplierEditUpdateServiceSection(BaseApplicationTest):
 
     def test_incorrect_framework_fails(self, data_api_client, s3):
         data_api_client.get_service.return_value = self.empty_service
+        data_api_client.get_framework.return_value = self._get_framework_response()
         res = self.client.post(
             '/suppliers/frameworks/g-cloud-7/services/1/edit/description',
             data={
@@ -994,6 +1117,18 @@ class TestSupplierEditUpdateServiceSection(BaseApplicationTest):
 @mock.patch('dmutils.s3.S3')
 @mock.patch('app.main.views.services.data_api_client', autospec=True)
 class TestSupplierEditUpdateServiceSectionG9(BaseApplicationTest):
+
+    def _get_framework_response(self, **kwargs):
+        framework = {
+            "frameworks": {
+                "framework": "g-cloud",
+                "name": "G-Cloud 9",
+                "slug": "g-cloud-9",
+                "status": "live",
+            }
+        }
+        framework.update(kwargs)
+        return framework
 
     base_service = {
         'services': {
@@ -1019,6 +1154,7 @@ class TestSupplierEditUpdateServiceSectionG9(BaseApplicationTest):
 
     def test_edit_page(self, data_api_client, s3):
         data_api_client.get_service.return_value = self.base_service
+        data_api_client.get_framework.return_value = self._get_framework_response()
         res = self.client.get('/suppliers/frameworks/g-cloud-9/services/321/edit/service-features-and-benefits')
 
         assert res.status_code == 200
@@ -1035,6 +1171,7 @@ class TestSupplierEditUpdateServiceSectionG9(BaseApplicationTest):
 
     def test_questions_for_this_service_section_can_be_changed(self, data_api_client, s3):
         data_api_client.get_service.return_value = self.base_service
+        data_api_client.get_framework.return_value = self._get_framework_response()
         res = self.client.post(
             '/suppliers/frameworks/g-cloud-9/services/321/edit/service-features-and-benefits',
             data={
@@ -1060,6 +1197,7 @@ class TestSupplierEditUpdateServiceSectionG9(BaseApplicationTest):
 
     def test_file_upload(self, data_api_client, s3):
         data_api_client.get_service.return_value = self.base_service
+        data_api_client.get_framework.return_value = self._get_framework_response()
         with freeze_time('2017-11-12 13:14:15'):
             res = self.client.post(
                 '/suppliers/frameworks/g-cloud-9/services/321/edit/documents',
@@ -1085,6 +1223,7 @@ class TestSupplierEditUpdateServiceSectionG9(BaseApplicationTest):
 
     def test_S3_should_not_be_called_if_there_are_no_files(self, data_api_client, s3):
         data_api_client.get_service.return_value = self.base_service
+        data_api_client.get_framework.return_value = self._get_framework_response()
         res = self.client.post(
             '/suppliers/frameworks/g-cloud-9/services/321/edit/service-features-and-benefits',
             data={
@@ -1097,6 +1236,7 @@ class TestSupplierEditUpdateServiceSectionG9(BaseApplicationTest):
 
     def test_file_upload_filters_empty_and_unknown_files(self, data_api_client, s3):
         data_api_client.get_service.return_value = self.base_service
+        data_api_client.get_framework.return_value = self._get_framework_response()
         res = self.client.post(
             '/suppliers/frameworks/g-cloud-9/services/321/edit/documents',
             data={
@@ -1110,6 +1250,7 @@ class TestSupplierEditUpdateServiceSectionG9(BaseApplicationTest):
 
     def test_upload_question_can_not_be_set_by_form_data(self, data_api_client, s3):
         data_api_client.get_service.return_value = self.base_service
+        data_api_client.get_framework.return_value = self._get_framework_response()
         res = self.client.post(
             '/suppliers/frameworks/g-cloud-9/services/321/edit/documents',
             data={
