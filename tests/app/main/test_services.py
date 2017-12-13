@@ -887,14 +887,15 @@ class TestSupplierRemoveService(_BaseTestSupplierEditRemoveService):
 class TestSupplierEditUpdateServiceSection(BaseApplicationTest):
 
     def _get_framework_response(self, **kwargs):
-        framework = {
-            "framework": "g-cloud",
-            "name": "G-Cloud 6",
-            "slug": "g-cloud-6",
-            "status": "live",
+        return {
+            "frameworks": {
+                "framework": "g-cloud",
+                "name": "G-Cloud 6",
+                "slug": "g-cloud-6",
+                "status": "live",
+                **kwargs
+            }
         }
-        framework.update(kwargs)
-        return {"frameworks": framework}
 
     empty_service = {
         'services': {
@@ -1119,16 +1120,15 @@ class TestSupplierEditUpdateServiceSection(BaseApplicationTest):
 class TestSupplierEditUpdateServiceSectionG9(BaseApplicationTest):
 
     def _get_framework_response(self, **kwargs):
-        framework = {
+        return {
             "frameworks": {
                 "framework": "g-cloud",
                 "name": "G-Cloud 9",
                 "slug": "g-cloud-9",
                 "status": "live",
+                **kwargs
             }
         }
-        framework.update(kwargs)
-        return framework
 
     base_service = {
         'services': {
