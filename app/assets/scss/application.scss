@@ -1,3 +1,7 @@
+// Reset styles on core HTML elements that might be injected by eg a user's browser, so that we have a known clean base
+// for DM styles to build on.
+@import "toolkit/shared_scss/_reset.scss";
+
 // GOVUK Front-end toolkit variables, mixins and functions
 @import "_grid_layout.scss";
 @import "_typography.scss";
@@ -15,7 +19,6 @@ $path: "/suppliers/static/images/";
 // Digital Marketplace Front-end toolkit shared styles between multiple apps
 @import "toolkit/shared_scss/_dmspeak.scss";
 @import "toolkit/shared_scss/_lists.scss";
-@import "toolkit/shared_scss/_reset.scss";
 
 // Digital Marketplace Front-end toolkit styles (only import the files you need)
 @import "toolkit/_breadcrumb.scss";
