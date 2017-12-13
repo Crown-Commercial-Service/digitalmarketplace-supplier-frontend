@@ -6,10 +6,10 @@ from ...main import main, content_loader
 from ..helpers import login_required
 from ..helpers.services import is_service_associated_with_supplier, get_signed_document_url, count_unanswered_questions
 from ..helpers.frameworks import (
-    get_framework_and_lot,
+    get_framework_and_lot_or_404,
     get_declaration_status,
     get_supplier_framework_info,
-    get_framework,
+    get_framework_or_404,
 )
 
 from dmcontent.content_loader import ContentNotFoundError
@@ -21,7 +21,7 @@ from dmutils.documents import upload_service_documents
 @main.route("/frameworks/<string:framework_slug>/services")
 @login_required
 def list_services(framework_slug):
-    framework = get_framework(data_api_client, framework_slug, allowed_statuses=['live'])
+    framework = get_framework_or_404(data_api_client, framework_slug, allowed_statuses=['live'])
 
     suppliers_services = data_api_client.find_services(
         supplier_id=current_user.supplier_id,
@@ -51,7 +51,7 @@ def edit_service(framework_slug, service_id):
     if service["frameworkSlug"] != framework_slug:
         abort(404)
 
-    framework = get_framework(data_api_client, service['frameworkSlug'], allowed_statuses=['live'])
+    framework = get_framework_or_404(data_api_client, service['frameworkSlug'], allowed_statuses=['live'])
 
     try:
         content = content_loader.get_manifest(framework['slug'], 'edit_service').filter(service)
@@ -86,7 +86,7 @@ def remove_service(framework_slug, service_id):
         abort(404)
 
     # we don't actually need the framework here; using this to 404 if framework for the service is not live
-    get_framework(data_api_client, service['frameworkSlug'], allowed_statuses=['live'])
+    get_framework_or_404(data_api_client, service['frameworkSlug'], allowed_statuses=['live'])
 
     # we don't actually need the content here, we're just probing to see whether service editing should be allowed for
     # this framework (signalled by the existence of the edit_service manifest
@@ -140,7 +140,7 @@ def edit_section(framework_slug, service_id, section_id):
         abort(404)
 
     # we don't actually need the framework here; using this to 404 if framework for the service is not live
-    get_framework(data_api_client, service['frameworkSlug'], allowed_statuses=['live'])
+    get_framework_or_404(data_api_client, service['frameworkSlug'], allowed_statuses=['live'])
 
     try:
         content = content_loader.get_manifest(service["frameworkSlug"], 'edit_service').filter(service)
@@ -177,7 +177,7 @@ def update_section(framework_slug, service_id, section_id):
         abort(404)
 
     # we don't actually need the framework here; using this to 404 if framework for the service is not live
-    get_framework(data_api_client, service['frameworkSlug'], allowed_statuses=['live'])
+    get_framework_or_404(data_api_client, service['frameworkSlug'], allowed_statuses=['live'])
 
     try:
         content = content_loader.get_manifest(service["frameworkSlug"], 'edit_service').filter(service)
@@ -262,7 +262,7 @@ def redirect_direct_service_urls(service_id, trailing_path):
 def start_new_draft_service(framework_slug, lot_slug):
     """Page to kick off creation of a new service."""
 
-    framework, lot = get_framework_and_lot(data_api_client, framework_slug, lot_slug, allowed_statuses=['open'])
+    framework, lot = get_framework_and_lot_or_404(data_api_client, framework_slug, lot_slug, allowed_statuses=['open'])
 
     # Suppliers must have registered interest in a framework before they can create draft services
     if not get_supplier_framework_info(data_api_client, framework_slug):
@@ -322,7 +322,7 @@ def start_new_draft_service(framework_slug, lot_slug):
 @main.route('/frameworks/<framework_slug>/submissions/<lot_slug>/<service_id>/copy', methods=['POST'])
 @login_required
 def copy_draft_service(framework_slug, lot_slug, service_id):
-    framework, lot = get_framework_and_lot(data_api_client, framework_slug, lot_slug, allowed_statuses=['open'])
+    framework, lot = get_framework_and_lot_or_404(data_api_client, framework_slug, lot_slug, allowed_statuses=['open'])
 
     # Suppliers must have registered interest in a framework before they can edit draft services
     if not get_supplier_framework_info(data_api_client, framework_slug):
@@ -368,7 +368,7 @@ def copy_draft_service(framework_slug, lot_slug, service_id):
 @main.route('/frameworks/<framework_slug>/submissions/<lot_slug>/<service_id>/complete', methods=['POST'])
 @login_required
 def complete_draft_service(framework_slug, lot_slug, service_id):
-    framework, lot = get_framework_and_lot(data_api_client, framework_slug, lot_slug, allowed_statuses=['open'])
+    framework, lot = get_framework_and_lot_or_404(data_api_client, framework_slug, lot_slug, allowed_statuses=['open'])
 
     # Suppliers must have registered interest in a framework before they can complete draft services
     if not get_supplier_framework_info(data_api_client, framework_slug):
@@ -408,7 +408,7 @@ def complete_draft_service(framework_slug, lot_slug, service_id):
 @main.route('/frameworks/<framework_slug>/submissions/<lot_slug>/<service_id>/delete', methods=['POST'])
 @login_required
 def delete_draft_service(framework_slug, lot_slug, service_id):
-    framework, lot = get_framework_and_lot(data_api_client, framework_slug, lot_slug, allowed_statuses=['open'])
+    framework, lot = get_framework_and_lot_or_404(data_api_client, framework_slug, lot_slug, allowed_statuses=['open'])
 
     # Suppliers must have registered interest in a framework before they can delete draft services
     if not get_supplier_framework_info(data_api_client, framework_slug):
@@ -461,7 +461,7 @@ def service_submission_document(framework_slug, supplier_id, document_name):
 @main.route('/frameworks/<framework_slug>/submissions/<lot_slug>/<service_id>', methods=['GET'])
 @login_required
 def view_service_submission(framework_slug, lot_slug, service_id):
-    framework, lot = get_framework_and_lot(data_api_client, framework_slug, lot_slug)
+    framework, lot = get_framework_and_lot_or_404(data_api_client, framework_slug, lot_slug)
 
     try:
         data = data_api_client.get_draft_service(service_id)
@@ -510,7 +510,7 @@ def edit_service_submission(framework_slug, lot_slug, service_id, section_id, qu
         Also accepts URL parameter `return_to_summary` which will remove the ability to continue to the next section
         on submit
     """
-    framework, lot = get_framework_and_lot(data_api_client, framework_slug, lot_slug, allowed_statuses=['open'])
+    framework, lot = get_framework_and_lot_or_404(data_api_client, framework_slug, lot_slug, allowed_statuses=['open'])
 
     # Suppliers must have registered interest in a framework before they can edit draft services
     if not get_supplier_framework_info(data_api_client, framework_slug):

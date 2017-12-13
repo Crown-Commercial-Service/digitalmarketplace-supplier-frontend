@@ -32,7 +32,7 @@ from ..helpers import login_required
 from ..helpers.frameworks import (
     get_declaration_status, get_last_modified_from_first_matching_file, register_interest_in_framework,
     get_supplier_on_framework_from_info, get_declaration_status_from_info, get_supplier_framework_info,
-    get_framework, get_framework_and_lot, count_drafts_by_lot, get_statuses_for_lot,
+    get_framework_or_404, get_framework_and_lot_or_404, count_drafts_by_lot, get_statuses_for_lot,
     return_supplier_framework_info_if_on_framework_or_abort, returned_agreement_email_recipients,
     check_agreement_is_related_to_supplier_framework_or_abort, get_framework_for_reuse,
 )
@@ -48,7 +48,7 @@ CLARIFICATION_QUESTION_NAME = 'clarification_question'
 @main.route('/frameworks/<framework_slug>', methods=['GET', 'POST'])
 @login_required
 def framework_dashboard(framework_slug):
-    framework = get_framework(data_api_client, framework_slug)
+    framework = get_framework_or_404(data_api_client, framework_slug)
     if request.method == 'POST':
         register_interest_in_framework(data_api_client, framework_slug)
         supplier_users = data_api_client.find_users(supplier_id=current_user.supplier_id)
@@ -179,7 +179,7 @@ def framework_dashboard(framework_slug):
 @main.route('/frameworks/<framework_slug>/submissions', methods=['GET'])
 @login_required
 def framework_submission_lots(framework_slug):
-    framework = get_framework(data_api_client, framework_slug)
+    framework = get_framework_or_404(data_api_client, framework_slug)
 
     drafts, complete_drafts = get_drafts(data_api_client, framework_slug)
     declaration_status = get_declaration_status(data_api_client, framework_slug)
@@ -229,7 +229,7 @@ def framework_submission_lots(framework_slug):
 @main.route('/frameworks/<framework_slug>/submissions/<lot_slug>', methods=['GET'])
 @login_required
 def framework_submission_services(framework_slug, lot_slug):
-    framework, lot = get_framework_and_lot(data_api_client, framework_slug, lot_slug)
+    framework, lot = get_framework_and_lot_or_404(data_api_client, framework_slug, lot_slug)
 
     drafts, complete_drafts = get_lot_drafts(data_api_client, framework_slug, lot_slug)
     declaration_status = get_declaration_status(data_api_client, framework_slug)
@@ -272,7 +272,7 @@ def framework_submission_services(framework_slug, lot_slug):
 @main.route('/frameworks/<framework_slug>/declaration/start', methods=['GET'])
 @login_required
 def framework_start_supplier_declaration(framework_slug):
-    framework = get_framework(data_api_client, framework_slug, allowed_statuses=['open'])
+    framework = get_framework_or_404(data_api_client, framework_slug, allowed_statuses=['open'])
     framework_close_date = content_loader.get_message(framework_slug, 'dates', 'framework_close_date')
 
     return render_template("frameworks/start_declaration.html",
@@ -388,7 +388,7 @@ def reuse_framework_supplier_declaration_post(framework_slug):
 @main.route('/frameworks/<framework_slug>/declaration', methods=['GET'])
 @login_required
 def framework_supplier_declaration_overview(framework_slug):
-    framework = get_framework(data_api_client, framework_slug, allowed_statuses=[
+    framework = get_framework_or_404(data_api_client, framework_slug, allowed_statuses=[
         "open",
         "pending",
         "standstill",
@@ -441,7 +441,7 @@ def framework_supplier_declaration_overview(framework_slug):
 @main.route('/frameworks/<framework_slug>/declaration', methods=['POST'])
 @login_required
 def framework_supplier_declaration_submit(framework_slug):
-    framework = get_framework(data_api_client, framework_slug, allowed_statuses=['open'])
+    framework = get_framework_or_404(data_api_client, framework_slug, allowed_statuses=['open'])
 
     sf = data_api_client.get_supplier_framework_info(current_user.supplier_id, framework_slug)["frameworkInterest"]
     # ensure our declaration is at least a dict
@@ -478,7 +478,7 @@ def framework_supplier_declaration_submit(framework_slug):
 @main.route('/frameworks/<framework_slug>/declaration/edit/<string:section_id>', methods=['GET', 'POST'])
 @login_required
 def framework_supplier_declaration_edit(framework_slug, section_id):
-    framework = get_framework(data_api_client, framework_slug, allowed_statuses=['open'])
+    framework = get_framework_or_404(data_api_client, framework_slug, allowed_statuses=['open'])
 
     content = content_loader.get_manifest(framework_slug, 'declaration').filter({})
     status_code = 200
@@ -599,7 +599,7 @@ def download_agreement_file(framework_slug, document_name):
 @main.route('/frameworks/<framework_slug>/updates', methods=['GET'])
 @login_required
 def framework_updates(framework_slug, error_message=None, default_textbox_value=None):
-    framework = get_framework(data_api_client, framework_slug)
+    framework = get_framework_or_404(data_api_client, framework_slug)
     supplier_framework_info = get_supplier_framework_info(data_api_client, framework_slug)
 
     current_app.logger.info("{framework_slug}-updates.viewed: user_id {user_id} supplier_id {supplier_id}",
@@ -633,7 +633,7 @@ def framework_updates(framework_slug, error_message=None, default_textbox_value=
 @main.route('/frameworks/<framework_slug>/updates', methods=['POST'])
 @login_required
 def framework_updates_email_clarification_question(framework_slug):
-    framework = get_framework(data_api_client, framework_slug)
+    framework = get_framework_or_404(data_api_client, framework_slug)
 
     # Stripped input should not empty
     clarification_question = request.form.get(CLARIFICATION_QUESTION_NAME, '').strip()
@@ -741,7 +741,7 @@ def framework_updates_email_clarification_question(framework_slug):
 @main.route('/frameworks/<framework_slug>/agreement', methods=['GET'])
 @login_required
 def framework_agreement(framework_slug):
-    framework = get_framework(data_api_client, framework_slug, allowed_statuses=['standstill', 'live'])
+    framework = get_framework_or_404(data_api_client, framework_slug, allowed_statuses=['standstill', 'live'])
     supplier_framework = return_supplier_framework_info_if_on_framework_or_abort(data_api_client, framework_slug)
 
     if supplier_framework['agreementReturned']:
@@ -792,7 +792,7 @@ def upload_framework_agreement(framework_slug):
     """
     This is the route used to upload agreements for pre-G-Cloud 8 frameworks
     """
-    framework = get_framework(data_api_client, framework_slug, allowed_statuses=['standstill', 'live'])
+    framework = get_framework_or_404(data_api_client, framework_slug, allowed_statuses=['standstill', 'live'])
     # if there's a frameworkAgreementVersion key it means we're on G-Cloud 8 or higher and shouldn't be using this route
     if framework.get('frameworkAgreementVersion'):
         abort(404)
@@ -878,7 +878,7 @@ def upload_framework_agreement(framework_slug):
 @main.route('/frameworks/<framework_slug>/create-agreement', methods=['POST'])
 @login_required
 def create_framework_agreement(framework_slug):
-    framework = get_framework(data_api_client, framework_slug, allowed_statuses=['standstill', 'live'])
+    framework = get_framework_or_404(data_api_client, framework_slug, allowed_statuses=['standstill', 'live'])
     # if there's no frameworkAgreementVersion key it means we're pre-G-Cloud 8 and shouldn't be using this route
     if not framework.get('frameworkAgreementVersion'):
         abort(404)
@@ -894,7 +894,7 @@ def create_framework_agreement(framework_slug):
 @main.route('/frameworks/<framework_slug>/<int:agreement_id>/signer-details', methods=['GET', 'POST'])
 @login_required
 def signer_details(framework_slug, agreement_id):
-    framework = get_framework(data_api_client, framework_slug, allowed_statuses=['standstill', 'live'])
+    framework = get_framework_or_404(data_api_client, framework_slug, allowed_statuses=['standstill', 'live'])
     # if there's no frameworkAgreementVersion key it means we're pre-G-Cloud 8 and shouldn't be using this route
     if not framework.get('frameworkAgreementVersion'):
         abort(404)
@@ -951,7 +951,7 @@ def signer_details(framework_slug, agreement_id):
 @main.route('/frameworks/<framework_slug>/<int:agreement_id>/signature-upload', methods=['GET', 'POST'])
 @login_required
 def signature_upload(framework_slug, agreement_id):
-    framework = get_framework(data_api_client, framework_slug, allowed_statuses=['standstill', 'live'])
+    framework = get_framework_or_404(data_api_client, framework_slug, allowed_statuses=['standstill', 'live'])
     # if there's no frameworkAgreementVersion key it means we're pre-G-Cloud 8 and shouldn't be using this route
     if not framework.get('frameworkAgreementVersion'):
         abort(404)
@@ -1016,7 +1016,7 @@ def signature_upload(framework_slug, agreement_id):
 @main.route('/frameworks/<framework_slug>/<int:agreement_id>/contract-review', methods=['GET', 'POST'])
 @login_required
 def contract_review(framework_slug, agreement_id):
-    framework = get_framework(data_api_client, framework_slug, allowed_statuses=['standstill', 'live'])
+    framework = get_framework_or_404(data_api_client, framework_slug, allowed_statuses=['standstill', 'live'])
     # if there's no frameworkAgreementVersion key it means we're pre-G-Cloud 8 and shouldn't be using this route
     if not framework.get('frameworkAgreementVersion'):
         abort(404)
@@ -1114,7 +1114,7 @@ def contract_review(framework_slug, agreement_id):
 @flask_featureflags.is_active_feature('CONTRACT_VARIATION')
 @login_required
 def view_contract_variation(framework_slug, variation_slug):
-    framework = get_framework(data_api_client, framework_slug, allowed_statuses=['live'])
+    framework = get_framework_or_404(data_api_client, framework_slug, allowed_statuses=['live'])
     supplier_framework = return_supplier_framework_info_if_on_framework_or_abort(data_api_client, framework_slug)
     variation_details = framework.get('variations', {}).get(variation_slug)
 
