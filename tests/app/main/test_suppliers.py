@@ -1726,9 +1726,12 @@ class TestJoinOpenFrameworkNotificationMailingList(BaseApplicationTest):
 
         self.assert_no_flashes()
 
-    @pytest.mark.parametrize("mc_retval", (True, False,))
+    @pytest.mark.parametrize("mc_retval,expected_status", (
+        (True, 400),
+        (False, 503),
+    ))
     @mock.patch("app.main.views.suppliers.DMMailChimpClient")
-    def test_post_valid_email_failure(self, mailchimp_client_class, data_api_client, mc_retval):
+    def test_post_valid_email_failure(self, mailchimp_client_class, data_api_client, mc_retval, expected_status):
         data_api_client.create_audit_event.side_effect = AssertionError("This should not be called")
         mailchimp_client_instance = mock.Mock(spec=("subscribe_new_email_to_list",))
         mailchimp_client_instance.subscribe_new_email_to_list.side_effect = assert_args_and_return(
@@ -1750,7 +1753,7 @@ class TestJoinOpenFrameworkNotificationMailingList(BaseApplicationTest):
                 "email_address": "squinting@ger.ty",
             },
         )
-        assert response.status_code == 503
+        assert response.status_code == expected_status
         doc = html.fromstring(response.get_data(as_text=True), base_url="/suppliers/mailing-list")
 
         assert mailchimp_client_instance.subscribe_new_email_to_list.called is True
