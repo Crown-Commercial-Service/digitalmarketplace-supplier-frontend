@@ -11,15 +11,14 @@ var sourcemaps = require('gulp-sourcemaps');
 // Paths
 var environment;
 var repoRoot = __dirname + '/';
-var bowerRoot = repoRoot + 'bower_components';
 var npmRoot = repoRoot + 'node_modules';
 var govukToolkitRoot = npmRoot + '/govuk_frontend_toolkit';
 var govukElementsRoot = npmRoot + '/govuk-elements-sass';
-var dmToolkitRoot = bowerRoot + '/digitalmarketplace-frontend-toolkit/toolkit';
-var sspContentRoot = bowerRoot + '/digitalmarketplace-frameworks';
+var dmToolkitRoot = npmRoot + '/digitalmarketplace-frontend-toolkit/toolkit';
+var sspContentRoot = npmRoot + '/digitalmarketplace-frameworks';
 var assetsFolder = repoRoot + 'app/assets';
 var staticFolder = repoRoot + 'app/static';
-var govukTemplateFolder = repoRoot + 'bower_components/govuk_template';
+var govukTemplateFolder = repoRoot + 'node_modules/govuk_template';
 var govukTemplateAssetsFolder = govukTemplateFolder + '/assets';
 var govukTemplateLayoutsFolder = govukTemplateFolder + '/views/layouts';
 
@@ -266,7 +265,7 @@ gulp.task('test', function () {
 gulp.task('watch', ['build:development'], function () {
   var jsWatcher = gulp.watch([ assetsFolder + '/**/*.js' ], ['js']);
   var cssWatcher = gulp.watch([ assetsFolder + '/**/*.scss' ], ['sass']);
-  var dmWatcher = gulp.watch([ bowerRoot + '/digitalmarketplace-frameworks/**' ], ['copy:frameworks']);
+  var dmWatcher = gulp.watch([ npmRoot + '/digitalmarketplace-frameworks/**' ], ['copy:frameworks']);
   var notice = function (event) {
     console.log('File ' + event.path + ' was ' + event.type + ' running tasks...');
   };

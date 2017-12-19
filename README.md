@@ -53,7 +53,8 @@ Front-end code (both development and production) is compiled using [Node](http:/
 
 ### Requirements
 
-You need Node (minimum version of 0.10.0, maximum version 0.12.x) which will also get you [NPM](npmjs.org), Node's package management tool.
+You need Node (try to install the version we use in production -
+ see the [base docker image](https://github.com/alphagov/digitalmarketplace-docker-base/blob/master/base.docker)).
 
 To check the version you're running, type:
 
@@ -63,23 +64,20 @@ node --version
 
 ### Installation
 
+[How to install yarn](https://yarnpkg.com/en/docs/install)
 To install the required Node modules, type:
 
 ```
-npm install
+yarn
 ```
 
 ## Frontend tasks
 
-[NPM](https://www.npmjs.org/) is used for all frontend build tasks. The commands available are:
+[YARN](https://yarnpkg.com/en/) is used for all frontend build tasks. The commands available are:
 
-- `npm run frontend-build:development` (compile the frontend files for development)
-- `npm run frontend-build:production` (compile the frontend files for production)
-- `npm run frontend-build:watch` (watch all frontend files & rebuild when anything changes)
-- `npm run frontend-install` (install all non-NPM dependancies)
-
-Note: `npm run frontend-install` is run automatically as a post-install task when you run `npm install`.
-
+- `yarn run frontend-build:development` (compile the frontend files for development)
+- `yarn run frontend-build:production` (compile the frontend files for production)
+- `yarn run frontend-build:watch` (watch all frontend files & rebuild when anything changes)
 
 
 
@@ -165,11 +163,3 @@ AWS access keys can be found/configured in the Identity and Access Management (I
 
 If you're experiencing problems connecting, make sure to `unset` any `env` variables used by boto (e.g. `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`,
 `AWS_SECURITY_TOKEN` and `AWS_PROFILE`) as they may be overriding the values in your credentials file.
-
-### Running on Heroku
-
-- Setup the heroku command https://devcenter.heroku.com/articles/getting-started-with-python#set-up
-- Create the app with `heroku create`
-- Set the app to have a multi-buildpack with `heroku buildpacks:set https://github.com/ddollar/heroku-buildpack-multi.git`
-- Set environment variables with `heroku config:set`
-- Deploy the app with `git push heroku <your-branch>:master`
