@@ -33,6 +33,17 @@ content_loader.load_manifest('g-cloud-9', 'services', 'edit_submission')
 content_loader.load_manifest('g-cloud-9', 'declaration', 'declaration')
 content_loader.load_messages('g-cloud-9', ['dates', 'urls', 'advice'])
 
+content_loader.load_manifest('g-cloud-10', 'services', 'edit_service')
+content_loader.load_manifest('g-cloud-10', 'services', 'edit_submission')
+content_loader.load_manifest('g-cloud-10', 'declaration', 'declaration')
+content_loader.load_messages('g-cloud-10', ['dates', 'urls', 'advice'])
+
+content_loader.load_manifest('digital-outcomes-and-specialists-3', 'declaration', 'declaration')
+content_loader.load_manifest('digital-outcomes-and-specialists-3', 'services', 'edit_submission')
+content_loader.load_manifest('digital-outcomes-and-specialists-3', 'services', 'edit_service')
+content_loader.load_manifest('digital-outcomes-and-specialists-3', 'briefs', 'edit_brief')
+content_loader.load_messages('digital-outcomes-and-specialists-3', ['dates', 'urls'])
+
 
 @main.after_request
 def add_cache_control(response):
