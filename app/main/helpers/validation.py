@@ -236,4 +236,6 @@ VALIDATORS = {
     "digital-outcomes-and-specialists": DOSValidator,
     "digital-outcomes-and-specialists-2": DOS2Validator,
     "g-cloud-9": DOS2Validator,
+    "g-cloud-10": DOS2Validator,
+    "digital-outcomes-and-specialists-3": DOS2Validator,
 }
