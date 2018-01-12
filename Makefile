@@ -9,7 +9,7 @@ else
 endif
 
 .PHONY: run-all
-run-all: requirements npm-install frontend-build run-app
+run-all: requirements yarn-install frontend-build run-app
 
 .PHONY: run-app
 run-app: show-environment virtualenv
@@ -42,13 +42,13 @@ freeze-requirements:
 	$$(pwd)/venv-freeze/bin/pip freeze -r requirements-app.txt | sed -n '/The following requirements were added by pip freeze/,$$p' >> requirements.txt
 	rm -rf venv-freeze
 
-.PHONY: npm-install
-npm-install: package.json
-	npm install
+.PHONY: yarn-install
+yarn-install:
+	yarn
 
 .PHONY: frontend-build
 frontend-build:
-	npm run --silent frontend-build:${GULP_ENVIRONMENT}
+	yarn run --silent frontend-build:${GULP_ENVIRONMENT}
 
 .PHONY: test
 test: show-environment test-requirements frontend-build test-flake8 test-python test-javascript
@@ -70,7 +70,7 @@ test-python: virtualenv
 
 .PHONY: test-javascript
 test-javascript: frontend-build
-	npm test
+	yarn test
 
 .PHONY: show-environment
 show-environment:
