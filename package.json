@@ -19,7 +19,7 @@
     "colors": "1.1.2",
     "jquery": "1.12.0",
     "hogan.js": "3.0.2",
-    "digitalmarketplace-frontend-toolkit": "https://github.com/alphagov/digitalmarketplace-frontend-toolkit.git#v27.0.0",
+    "digitalmarketplace-frontend-toolkit": "https://github.com/alphagov/digitalmarketplace-frontend-toolkit.git#v28.0.0",
     "govuk_template": "https://github.com/alphagov/govuk_template/releases/download/v0.19.2/jinja_govuk_template-0.19.2.tgz",
     "digitalmarketplace-frameworks": "https://github.com/alphagov/digitalmarketplace-frameworks.git#10.4.1"
   },
