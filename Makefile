@@ -44,7 +44,7 @@ freeze-requirements:
 
 .PHONY: yarn-install
 yarn-install:
-	yarn
+	yarn install --frozen-lockfile  # We use --frozen-lockfile here so that Travis catches dependencies which need updating.
 
 .PHONY: frontend-build
 frontend-build:
