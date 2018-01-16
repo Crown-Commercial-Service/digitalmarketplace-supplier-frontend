@@ -15,7 +15,6 @@ import mock
 import pytest
 from six.moves.urllib.parse import urljoin
 
-from flask import session
 from lxml import html
 from dmapiclient import APIError
 from dmapiclient.audit import AuditTypes
@@ -4535,50 +4534,50 @@ class TestSignatureUploadPage(BaseApplicationTest):
 
     @mock.patch('dmutils.s3.S3')
     @mock.patch('app.main.views.frameworks.generate_timestamped_document_upload_path')
+    @mock.patch('app.main.views.frameworks.session', new_callable=dict)
     def test_upload_signature_page(
-        self, generate_timestamped_document_upload_path, s3, return_supplier_framework, data_api_client
+        self, session, generate_timestamped_document_upload_path, s3, return_supplier_framework, data_api_client
     ):
-        with self.client:
-            self.login()
+        self.login()
 
-            data_api_client.get_framework.return_value = get_g_cloud_8()
-            data_api_client.get_framework_agreement.return_value = self.framework_agreement()
-            return_supplier_framework.return_value = self.supplier_framework(
-                framework_slug='g-cloud-8',
-                on_framework=True
-            )['frameworkInterest']
-            generate_timestamped_document_upload_path.return_value = 'my/path.jpg'
+        data_api_client.get_framework.return_value = get_g_cloud_8()
+        data_api_client.get_framework_agreement.return_value = self.framework_agreement()
+        return_supplier_framework.return_value = self.supplier_framework(
+            framework_slug='g-cloud-8',
+            on_framework=True
+        )['frameworkInterest']
+        generate_timestamped_document_upload_path.return_value = 'my/path.jpg'
 
-            res = self.client.post(
-                '/suppliers/frameworks/g-cloud-8/234/signature-upload',
-                data={
-                    'signature_page': (StringIO(b'asdf'), 'test.jpg'),
-                }
-            )
+        res = self.client.post(
+            '/suppliers/frameworks/g-cloud-8/234/signature-upload',
+            data={
+                'signature_page': (StringIO(b'asdf'), 'test.jpg'),
+            }
+        )
 
-            generate_timestamped_document_upload_path.assert_called_once_with(
-                'g-cloud-8',
-                1234,
-                'agreements',
-                'signed-framework-agreement.jpg'
-            )
+        generate_timestamped_document_upload_path.assert_called_once_with(
+            'g-cloud-8',
+            1234,
+            'agreements',
+            'signed-framework-agreement.jpg'
+        )
 
-            s3.return_value.save.assert_called_with(
-                'my/path.jpg',
-                mock.ANY,
-                download_filename='Supplier_Nme-1234-signed-signature-page.jpg',
-                acl='private',
-                disposition_type='inline'
-            )
-            data_api_client.update_framework_agreement.assert_called_with(
-                234,
-                {"signedAgreementPath": 'my/path.jpg'},
-                'email@email.com'
-            )
+        s3.return_value.save.assert_called_with(
+            'my/path.jpg',
+            mock.ANY,
+            download_filename='Supplier_Nme-1234-signed-signature-page.jpg',
+            acl='private',
+            disposition_type='inline'
+        )
+        data_api_client.update_framework_agreement.assert_called_with(
+            234,
+            {"signedAgreementPath": 'my/path.jpg'},
+            'email@email.com'
+        )
 
-            assert session['signature_page'] == 'test.jpg'
-            assert res.status_code == 302
-            assert res.location == 'http://localhost/suppliers/frameworks/g-cloud-8/234/contract-review'
+        assert session['signature_page'] == 'test.jpg'
+        assert res.status_code == 302
+        assert res.location == 'http://localhost/suppliers/frameworks/g-cloud-8/234/contract-review'
 
     @mock.patch('dmutils.s3.S3')
     @mock.patch('app.main.views.frameworks.file_is_empty')
