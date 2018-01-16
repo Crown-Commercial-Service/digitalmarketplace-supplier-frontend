@@ -3,7 +3,6 @@ from collections import OrderedDict
 from itertools import chain
 
 from dmapiclient import HTTPError
-from flask import request
 from werkzeug.datastructures import MultiDict
 
 from app.main.forms.frameworks import ReuseDeclarationForm
@@ -5494,13 +5493,10 @@ class TestReuseFrameworkSupplierDeclaration(BaseApplicationTest):
 
     def test_reusable_declaration_framework_slug_param(self, data_api_client):
         """Ensure that when using the param to specify declaration we collect the correct declaration."""
-
-        # Modify the data client.
-        t07 = '2009-12-03T01:01:01.000000Z'
         framework = {
             'x_field': 'foo',
             'allowDeclarationReuse': True,
-            'applicationCloseDate': t07,
+            'applicationCloseDate': '2009-12-03T01:01:01.000000Z',
             'slug': 'g-cloud-8',
             'name': 'g-cloud-8'
         }
@@ -5513,14 +5509,9 @@ class TestReuseFrameworkSupplierDeclaration(BaseApplicationTest):
             }
         }
 
-        # Do the get.
-        with self.client as cont:
-            resp = cont.get(
-                '/suppliers/frameworks/g-cloud-9/declaration/reuse?reusable_declaration_framework_slug=g-cloud-8'
-            )
-
-            # Assert request arg inside context manager.
-            assert request.args['reusable_declaration_framework_slug'] == 'g-cloud-8'
+        resp = self.client.get(
+            '/suppliers/frameworks/g-cloud-9/declaration/reuse?reusable_declaration_framework_slug=g-cloud-8'
+        )
 
         # Assert response OK.
         assert resp.status_code == 200
