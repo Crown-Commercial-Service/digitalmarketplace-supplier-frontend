@@ -7,14 +7,11 @@ from werkzeug.datastructures import MultiDict
 
 from app.main.forms.frameworks import ReuseDeclarationForm
 
-try:
-    from StringIO import StringIO
-except ImportError:
-    from io import BytesIO as StringIO
 import mock
 import pytest
 from six.moves.urllib.parse import urljoin
 
+from io import BytesIO
 from lxml import html
 from dmapiclient import APIError
 from dmapiclient.audit import AuditTypes
@@ -1791,7 +1788,7 @@ class TestFrameworkAgreementUpload(BaseApplicationTest):
 
         res = self.client.post(
             '/suppliers/frameworks/g-cloud-7/agreement',
-            data={'agreement': (StringIO(b'doc'), 'test.pdf')}
+            data={'agreement': (BytesIO(b'doc'), 'test.pdf')}
         )
 
         assert res.status_code == 404
@@ -1805,7 +1802,7 @@ class TestFrameworkAgreementUpload(BaseApplicationTest):
 
         res = self.client.post(
             '/suppliers/frameworks/g-cloud-7/agreement',
-            data={'agreement': (StringIO(b'doc'), 'test.pdf')}
+            data={'agreement': (BytesIO(b'doc'), 'test.pdf')}
         )
 
         assert res.status_code == 404
@@ -1821,7 +1818,7 @@ class TestFrameworkAgreementUpload(BaseApplicationTest):
 
         res = self.client.post(
             '/suppliers/frameworks/g-cloud-7/agreement',
-            data={'agreement': (StringIO(b'doc'), 'test.pdf')}
+            data={'agreement': (BytesIO(b'doc'), 'test.pdf')}
         )
 
         assert res.status_code == 400
@@ -1838,7 +1835,7 @@ class TestFrameworkAgreementUpload(BaseApplicationTest):
 
         res = self.client.post(
             '/suppliers/frameworks/g-cloud-7/agreement',
-            data={'agreement': (StringIO(b''), 'test.pdf')}
+            data={'agreement': (BytesIO(b''), 'test.pdf')}
         )
 
         assert res.status_code == 400
@@ -1861,7 +1858,7 @@ class TestFrameworkAgreementUpload(BaseApplicationTest):
 
         res = self.client.post(
             '/suppliers/frameworks/g-cloud-7/agreement',
-            data={'agreement': (StringIO(b'doc'), 'test.pdf')}
+            data={'agreement': (BytesIO(b'doc'), 'test.pdf')}
         )
 
         assert res.status_code == 503
@@ -1890,7 +1887,7 @@ class TestFrameworkAgreementUpload(BaseApplicationTest):
 
         res = self.client.post(
             '/suppliers/frameworks/g-cloud-7/agreement',
-            data={'agreement': (StringIO(b'doc'), 'test.pdf')}
+            data={'agreement': (BytesIO(b'doc'), 'test.pdf')}
         )
 
         assert res.status_code == 500
@@ -1912,7 +1909,7 @@ class TestFrameworkAgreementUpload(BaseApplicationTest):
 
         res = self.client.post(
             '/suppliers/frameworks/g-cloud-7/agreement',
-            data={'agreement': (StringIO(b'doc'), 'test.pdf')}
+            data={'agreement': (BytesIO(b'doc'), 'test.pdf')}
         )
 
         assert res.status_code == 500
@@ -1934,7 +1931,7 @@ class TestFrameworkAgreementUpload(BaseApplicationTest):
 
         res = self.client.post(
             '/suppliers/frameworks/g-cloud-7/agreement',
-            data={'agreement': (StringIO(b'doc'), 'test.pdf')}
+            data={'agreement': (BytesIO(b'doc'), 'test.pdf')}
         )
 
         assert res.status_code == 500
@@ -1957,7 +1954,7 @@ class TestFrameworkAgreementUpload(BaseApplicationTest):
 
         res = self.client.post(
             '/suppliers/frameworks/g-cloud-7/agreement',
-            data={'agreement': (StringIO(b'doc'), 'test.pdf')}
+            data={'agreement': (BytesIO(b'doc'), 'test.pdf')}
         )
 
         assert res.status_code == 503
@@ -1977,7 +1974,7 @@ class TestFrameworkAgreementUpload(BaseApplicationTest):
 
         res = self.client.post(
             '/suppliers/frameworks/g-cloud-7/agreement',
-            data={'agreement': (StringIO(b'doc'), 'test.pdf')}
+            data={'agreement': (BytesIO(b'doc'), 'test.pdf')}
         )
 
         generate_timestamped_document_upload_path.assert_called_once_with(
@@ -2015,7 +2012,7 @@ class TestFrameworkAgreementUpload(BaseApplicationTest):
 
         res = self.client.post(
             '/suppliers/frameworks/g-cloud-7/agreement',
-            data={'agreement': (StringIO(b'doc'), 'test.jpg')}
+            data={'agreement': (BytesIO(b'doc'), 'test.jpg')}
         )
 
         s3.return_value.save.assert_called_with(
@@ -4257,7 +4254,7 @@ class TestSignatureUploadPage(BaseApplicationTest):
 
         res = self.client.post(
             '/suppliers/frameworks/g-cloud-8/234/signature-upload',
-            data={'signature_page': (StringIO(b'asdf'), 'test.jpg')}
+            data={'signature_page': (BytesIO(b'asdf'), 'test.jpg')}
         )
 
         generate_timestamped_document_upload_path.assert_called_once_with(
@@ -4302,7 +4299,7 @@ class TestSignatureUploadPage(BaseApplicationTest):
 
         res = self.client.post(
             '/suppliers/frameworks/g-cloud-8/234/signature-upload',
-            data={'signature_page': (StringIO(b''), 'test.pdf')}
+            data={'signature_page': (BytesIO(b''), 'test.pdf')}
         )
 
         assert res.status_code == 400
@@ -4326,7 +4323,7 @@ class TestSignatureUploadPage(BaseApplicationTest):
 
         res = self.client.post(
             '/suppliers/frameworks/g-cloud-8/234/signature-upload',
-            data={'signature_page': (StringIO(b'asdf'), 'test.txt')}
+            data={'signature_page': (BytesIO(b'asdf'), 'test.txt')}
         )
 
         assert res.status_code == 400
@@ -4350,7 +4347,7 @@ class TestSignatureUploadPage(BaseApplicationTest):
 
         res = self.client.post(
             '/suppliers/frameworks/g-cloud-8/234/signature-upload',
-            data={'signature_page': (StringIO(b'asdf'), 'test.jpg')}
+            data={'signature_page': (BytesIO(b'asdf'), 'test.jpg')}
         )
 
         assert res.status_code == 400
@@ -4421,7 +4418,7 @@ class TestSignatureUploadPage(BaseApplicationTest):
         self.login()
         res = self.client.post(
             '/suppliers/frameworks/g-cloud-8/234/signature-upload',
-            data={'signature_page': (StringIO(b''), '')}
+            data={'signature_page': (BytesIO(b''), '')}
         )
         s3.return_value.get_key.assert_called_with('already/uploaded/file/path.pdf')
         assert res.status_code == 302
