@@ -22,7 +22,6 @@
   {{ upstream_forms.list(question_content, service_data, errors,
     error=errors.get(question_content.id)['message']|question_references(kwargs.get_question),
     hint=(question_content.hint or '')|question_references(kwargs.get_question),
-    number_of_items=10,
     question=question_content.question|question_references(kwargs.get_question),
     **kwargs
   ) }}
