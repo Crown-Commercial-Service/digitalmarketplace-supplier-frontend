@@ -40,7 +40,6 @@
   {{ upstream_forms.radios(question_content, service_data, errors,
     error=errors.get(question_content.id)['message']|question_references(kwargs.get_question),
     hint=(question_content.hint or '')|question_references(kwargs.get_question),
-    hint_underneath=(question_content.hint_underneath or False),
     question=question_content.question|question_references(kwargs.get_question),
     **kwargs
   ) }}
