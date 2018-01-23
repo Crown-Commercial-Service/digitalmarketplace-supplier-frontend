@@ -154,6 +154,16 @@ def return_supplier_framework_info_if_on_framework_or_abort(data_api_client, fra
 
 
 def question_references(data, get_question):
+    """
+    Replace placeholders for question references with the number of the referenced question
+
+    e.g. "This is my question hint which references question [[anotherQuestion]]" becomes
+    "This is my question hint which references question 7"
+
+    :param data: Object to have placeholders replaced for example a string or Markup object
+    :param get_question: ContentManifest.get_question function
+    :return: Object with same type of original `data` object but with question references replaced
+    """
     if not data:
         return data
     references = re.sub(
