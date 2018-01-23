@@ -3,6 +3,7 @@ try:
     from StringIO import StringIO
 except ImportError:
     from io import BytesIO as StringIO
+from datetime import datetime
 
 from dmapiclient import HTTPError
 import copy
@@ -12,6 +13,7 @@ import pytest
 from lxml import html
 from freezegun import freeze_time
 
+from app.main.helpers.services import parse_document_upload_time
 from tests.app.helpers import BaseApplicationTest, empty_g7_draft_service, empty_g9_draft_service
 
 
@@ -2279,3 +2281,9 @@ class TestSubmissionDocuments(BaseApplicationTest):
         )
 
         assert res.status_code == 404
+
+
+class TestParseDocumentUploadTime(BaseApplicationTest):
+    def test_parses_document_upload_time(self):
+        file_url = "http://www.address.com/g-cloud-9/submissions/92352/70419-terms-and-conditions-2018-01-23-1103.pdf"
+        assert parse_document_upload_time(file_url) == datetime(2018, 1, 23, 11, 3)
