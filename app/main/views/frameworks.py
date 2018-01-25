@@ -7,7 +7,6 @@ from dmapiclient import HTTPError
 from flask import render_template, request, abort, flash, redirect, url_for, current_app, session
 from flask_login import current_user
 import flask_featureflags as feature
-import six
 
 from dmapiclient import APIError
 from dmapiclient.audit import AuditTypes
@@ -67,7 +66,7 @@ def framework_dashboard(framework_slug):
         except EmailError as e:
             current_app.logger.error(
                 "Application started email failed to send: {error}, supplier_id: {supplier_id}",
-                extra={'error': six.text_type(e), 'supplier_id': current_user.supplier_id}
+                extra={'error': str(e), 'supplier_id': current_user.supplier_id}
             )
 
     drafts, complete_drafts = get_drafts(data_api_client, framework_slug)
@@ -148,7 +147,7 @@ def framework_dashboard(framework_slug):
                 d["path"] + d.get("filename", ""),
             ),
         )
-        for label, d in six.iteritems(base_communications_files)
+        for label, d in base_communications_files.items()
     }
 
     return render_template(
@@ -686,7 +685,7 @@ def framework_updates_email_clarification_question(framework_slug):
         current_app.logger.error(
             "{framework} clarification question email failed to send. "
             "error {error} supplier_id {supplier_id} email_hash {email_hash}",
-            extra={'error': six.text_type(e),
+            extra={'error': str(e),
                    'framework': framework['slug'],
                    'supplier_id': current_user.supplier_id,
                    'email_hash': hash_string(current_user.email_address)})
@@ -718,7 +717,7 @@ def framework_updates_email_clarification_question(framework_slug):
             current_app.logger.error(
                 "{framework} clarification question confirmation email failed to send. "
                 "error {error} supplier_id {supplier_id} email_hash {email_hash}",
-                extra={'error': six.text_type(e),
+                extra={'error': str(e),
                        'framework': framework['slug'],
                        'supplier_id': current_user.supplier_id,
                        'email_hash': hash_string(current_user.email_address)})
@@ -867,7 +866,7 @@ def upload_framework_agreement(framework_slug):
         current_app.logger.error(
             "Framework agreement email failed to send. "
             "error {error} supplier_id {supplier_id} email_hash {email_hash}",
-            extra={'error': six.text_type(e),
+            extra={'error': str(e),
                    'supplier_id': current_user.supplier_id,
                    'email_hash': hash_string(current_user.email_address)})
         abort(503, "Framework agreement email failed to send")
@@ -1071,7 +1070,7 @@ def contract_review(framework_slug, agreement_id):
                 current_app.logger.error(
                     "Framework agreement email failed to send. "
                     "error {error} supplier_id {supplier_id} email_hash {email_hash}",
-                    extra={'error': six.text_type(e),
+                    extra={'error': str(e),
                            'supplier_id': current_user.supplier_id,
                            'email_hash': hash_string(current_user.email_address)})
                 abort(503, "Framework agreement email failed to send")
@@ -1166,7 +1165,7 @@ def view_contract_variation(framework_slug, variation_slug):
             except EmailError as e:
                 current_app.logger.error(
                     "Variation agreed email failed to send: {error}, supplier_id: {supplier_id}",
-                    extra={'error': six.text_type(e), 'supplier_id': current_user.supplier_id}
+                    extra={'error': str(e), 'supplier_id': current_user.supplier_id}
                 )
             flash('variation_accepted')
             return redirect(url_for(".view_contract_variation",
