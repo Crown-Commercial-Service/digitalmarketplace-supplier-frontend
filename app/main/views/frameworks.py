@@ -961,23 +961,28 @@ def signature_upload(framework_slug, agreement_id):
 
     agreements_bucket = s3.S3(current_app.config['DM_AGREEMENTS_BUCKET'])
     agreement_path = agreement.get('signedAgreementPath')
-    signature_page = agreements_bucket.get_key(agreement_path) if agreement_path else None
+    existing_signature_page = agreements_bucket.get_key(agreement_path) if agreement_path else None
     upload_error = None
-
     if request.method == 'POST':
+        fresh_signature_page = request.files.get('signature_page')
+
         # No file chosen for upload and file already exists on s3 so can use existing and progress
-        if not request.files['signature_page'].filename and signature_page:
+        if not (fresh_signature_page and fresh_signature_page.filename) and existing_signature_page:
             return redirect(url_for(".contract_review", framework_slug=framework_slug, agreement_id=agreement_id))
 
-        if not file_is_image(request.files['signature_page']) and not file_is_pdf(request.files['signature_page']):
+        # Validate file
+        if not fresh_signature_page:
+            upload_error = "You must choose a file to upload"
+        elif not file_is_image(fresh_signature_page) and not file_is_pdf(fresh_signature_page):
             upload_error = "The file must be a PDF, JPG or PNG"
-        elif not file_is_less_than_5mb(request.files['signature_page']):
+        elif not file_is_less_than_5mb(fresh_signature_page):
             upload_error = "The file must be less than 5MB"
-        elif file_is_empty(request.files['signature_page']):
+        elif file_is_empty(fresh_signature_page):
             upload_error = "The file must not be empty"
 
+        # If all looks good then upload the file and proceed to next step of signing
         if not upload_error:
-            extension = get_extension(request.files['signature_page'].filename)
+            extension = get_extension(fresh_signature_page.filename)
             upload_path = generate_timestamped_document_upload_path(
                 framework_slug,
                 current_user.supplier_id,
@@ -986,7 +991,7 @@ def signature_upload(framework_slug, agreement_id):
             )
             agreements_bucket.save(
                 upload_path,
-                request.files['signature_page'],
+                fresh_signature_page,
                 acl='private',
                 download_filename='{}-{}-{}{}'.format(
                     sanitise_supplier_name(current_user.supplier_name),
@@ -1000,7 +1005,7 @@ def signature_upload(framework_slug, agreement_id):
             data_api_client.update_framework_agreement(agreement_id, {"signedAgreementPath": upload_path},
                                                        current_user.email_address)
 
-            session['signature_page'] = request.files['signature_page'].filename
+            session['signature_page'] = fresh_signature_page.filename
 
             return redirect(url_for(".contract_review", framework_slug=framework_slug, agreement_id=agreement_id))
 
@@ -1008,7 +1013,7 @@ def signature_upload(framework_slug, agreement_id):
         "frameworks/signature_upload.html",
         agreement=agreement,
         framework=framework,
-        signature_page=signature_page,
+        signature_page=existing_signature_page,
         upload_error=upload_error,
     ), 400 if upload_error else 200
 

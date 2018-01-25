@@ -4283,6 +4283,30 @@ class TestSignatureUploadPage(BaseApplicationTest):
 
     @mock.patch('dmutils.s3.S3')
     @mock.patch('app.main.views.frameworks.file_is_empty')
+    def test_signature_upload_returns_400_if_no_file_is_chosen(
+        self, file_is_empty, s3, return_supplier_framework, data_api_client
+    ):
+        self.login()
+
+        data_api_client.get_framework.return_value = get_g_cloud_8()
+        data_api_client.get_framework_agreement.return_value = self.framework_agreement()
+        return_supplier_framework.return_value = self.supplier_framework(
+            framework_slug='g-cloud-8',
+            on_framework=True
+        )['frameworkInterest']
+        s3.return_value.get_key.return_value = None
+        file_is_empty.return_value = True
+
+        res = self.client.post(
+            '/suppliers/frameworks/g-cloud-8/234/signature-upload',
+            data={}
+        )
+
+        assert res.status_code == 400
+        assert 'You must choose a file to upload' in res.get_data(as_text=True)
+
+    @mock.patch('dmutils.s3.S3')
+    @mock.patch('app.main.views.frameworks.file_is_empty')
     def test_signature_upload_returns_400_if_file_is_empty(
         self, file_is_empty, s3, return_supplier_framework, data_api_client
     ):
