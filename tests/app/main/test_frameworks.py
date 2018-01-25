@@ -1,23 +1,19 @@
 # -*- coding: utf-8 -*-
-from collections import OrderedDict
-from itertools import chain
-
-from dmapiclient import HTTPError
-from werkzeug.datastructures import MultiDict
-
-from app.main.forms.frameworks import ReuseDeclarationForm
-
 import mock
 import pytest
-from six.moves.urllib.parse import urljoin
-
+from collections import OrderedDict
 from io import BytesIO
+from itertools import chain
 from lxml import html
-from dmapiclient import APIError
+from urllib.parse import urljoin
+from werkzeug.datastructures import MultiDict
+
+from dmapiclient import APIError, HTTPError
 from dmapiclient.audit import AuditTypes
 from dmutils.email.exceptions import EmailError
 from dmutils.s3 import S3ResponseError
 
+from app.main.forms.frameworks import ReuseDeclarationForm
 from ..helpers import (
     BaseApplicationTest,
     FULL_G7_SUBMISSION,
