@@ -1,0 +1,37 @@
+{% extends "_base_page.html" %}
+{% import "toolkit/summary-table.html" as summary %}
+{% block page_title %}Registration Country – Digital Marketplace{% endblock %}
+
+{% block breadcrumb %}
+  {%
+    with items = [
+      {
+        "link": "/",
+        "label": "Digital Marketplace"
+      },
+      {
+        "link": url_for(".dashboard"),
+        "label": "Your account"
+      }
+    ]
+  %}
+    {% include "toolkit/breadcrumb.html" %}
+  {% endwith %}
+{% endblock %}
+
+
+{% block main_content %}
+{%
+  with
+    heading = "Company registration country",
+    smaller = true
+%}
+  {% include "toolkit/page-heading.html" %}
+{% endwith %}
+
+<select id="location-autocomplete">
+{% for country in countries %}
+  <option value={{country[1]}}>{{country[0]}}</option>
+{% endfor %}
+</select>
+{% endblock %}

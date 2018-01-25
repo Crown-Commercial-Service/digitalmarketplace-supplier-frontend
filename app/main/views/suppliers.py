@@ -19,6 +19,8 @@ from ..forms.suppliers import (
 from ..helpers.frameworks import get_frameworks_by_status, get_frameworks_closed_and_open_for_applications
 from ..helpers import login_required
 from .users import get_current_suppliers_users
+import json
+import os
 
 
 @main.route('')
@@ -89,6 +91,28 @@ def supplier_details():
     return render_template(
         "suppliers/details.html",
         supplier=supplier,
+    ), 200
+
+
+@main.route('/country-picker', methods=['GET'])
+@login_required
+def country_picker():
+    try:
+        supplier = data_api_client.get_supplier(
+            current_user.supplier_id
+        )['suppliers']
+    except APIError as e:
+        abort(e.status_code)
+    supplier['contact'] = supplier['contactInformation'][0]
+
+    filename = os.path.join(current_app.static_folder, 'location-autocomplete-canonical-list.json')
+    with open(filename) as f:
+        countries = json.load(f)
+
+    return render_template(
+        "suppliers/country_picker.html",
+        supplier=supplier,
+        countries=countries,
     ), 200
 
 
