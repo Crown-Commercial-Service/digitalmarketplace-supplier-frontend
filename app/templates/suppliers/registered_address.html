@@ -1,0 +1,98 @@
+{% extends "_base_page.html" %}
+{% import "macros/forms.html" as forms %}
+{% import "toolkit/summary-table.html" as summary %}
+{% block page_title %}Registered address – Digital Marketplace{% endblock %}
+
+{% block breadcrumb %}
+  {%
+    with items = [
+      {
+        "link": "/",
+        "label": "Digital Marketplace"
+      },
+      {
+        "link": url_for(".dashboard"),
+        "label": "Your account"
+      },
+      {
+        "link": url_for(".supplier_details"),
+        "label": "Company details"
+      },
+    ]
+  %}
+    {% include "toolkit/breadcrumb.html" %}
+  {% endwith %}
+{% endblock %}
+
+
+{% block main_content %}
+
+  <div class="grid-row">
+    <div class="column-one-whole">
+      {% with
+        heading = "What is your registered office address?",
+        smaller = true
+      %}
+        {% include 'toolkit/page-heading.html' %}
+      {% endwith %}
+    </div>
+  </div>
+
+  {% if error %}
+  <div class="validation-masthead" aria-labelledby="validation-masthead-heading">
+    <h3 class="validation-masthead-heading" id="validation-masthead-heading">
+      {{ error }}
+    </h3>
+  </div>
+  {% endif %}
+
+  <form action="{{ url_for('.update_registered_address') }}" method="post">
+
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+
+  <div class="grid-row">
+    <div class="column-two-thirds">
+
+      {{ forms.input('id', registered_address_form.id.data, type='hidden') }}
+      {{ forms.question_input('address1', 'Building and street', value=registered_address_form.address1.data, errors=registered_address_form.address1.errors) }}
+      {{ forms.question_input('city', 'Town or city', value=registered_address_form.city.data, errors=registered_address_form.city.errors) }}
+      {{ forms.question_input('postcode', 'Postcode', value=registered_address_form.postcode.data, errors=registered_address_form.postcode.errors) }}
+
+      {% if registered_country_form.registrationCountry.errors %}
+      <div class="validation-wrapper">
+        <style>
+          #location-autocomplete {border: 5px solid #B10E1E;}
+          .autocomplete__hint {border: 5px solid;}
+        </style>
+      {% endif %}
+
+      <div class="question">
+        <span class="question-heading" id="country-label">Country</span>
+        {{ forms.field_errors("registrationCountry", errors=registered_country_form.registrationCountry.errors) }}
+        <select name="registrationCountry" id="location-autocomplete" value="{{ registered_country_form.registrationCountry.data }}">
+        {% for country in countries %}
+          <option value={{country[1]}}>{{country[0]}}</option>
+        {% endfor %}
+        </select>
+      </div>
+      {% if registered_country_form.registrationCountry.errors %}
+      </div>
+      {% endif %}
+
+    {%
+      with
+      type = "save",
+      label = "Save and return"
+    %}
+      {% include "toolkit/button.html" %}
+    {% endwith %}
+    </div>
+  </div>
+
+
+  <p>
+    <a href="{{ url_for('.supplier_details') }}">Return to company details</a>
+  </p>
+  </form>
+
+{% endblock %}
