@@ -1,3 +1,18 @@
+{#
+The following form macros extend on top of of the macros found in the front end toolkit so we can support additional
+functionality needed for forms for applying for a framework.
+
+Because questions for the supplier framework declaration form have hints, questions and errors that are supposed to
+reference the numbers of other questions, after we get the manifest (which allows us to know the number for each
+question) from the content loader, we must replace the placeholders for question references with their corresponding
+question number. This is done using the `question_references` helper. This behaviour does not seem to be needed for any
+of our other forms. Note, it may be an idea in the future to move this functionality into the content loader as it
+doesn't feel quite right being at the templating level.
+
+So we can format the value of a form upload to be a 'pretty' datetime string for file uploads for editing a service, we
+set a custom filter on its value.
+#}
+
 {% import "toolkit/forms/macros/forms.html" as upstream_forms %}
 
 {% macro text(question_content, service_data, errors) -%}
@@ -22,7 +37,6 @@
   {{ upstream_forms.list(question_content, service_data, errors,
     error=errors.get(question_content.id)['message']|question_references(kwargs.get_question),
     hint=(question_content.hint or '')|question_references(kwargs.get_question),
-    number_of_items=10,
     question=question_content.question|question_references(kwargs.get_question),
     **kwargs
   ) }}
@@ -41,7 +55,6 @@
   {{ upstream_forms.radios(question_content, service_data, errors,
     error=errors.get(question_content.id)['message']|question_references(kwargs.get_question),
     hint=(question_content.hint or '')|question_references(kwargs.get_question),
-    hint_underneath=(question_content.hint_underneath or False),
     question=question_content.question|question_references(kwargs.get_question),
     **kwargs
   ) }}
