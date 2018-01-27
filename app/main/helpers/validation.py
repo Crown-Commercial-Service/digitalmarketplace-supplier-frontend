@@ -1,6 +1,7 @@
 from functools import reduce
 from operator import add
 import re
+
 from werkzeug.datastructures import ImmutableOrderedMultiDict
 
 EMAIL_REGEX = r'^[^@^\s]+@[^@^\.^\s]+(\.[^@^\.^\s]+)+$'

@@ -1,4 +1,5 @@
 from flask import Blueprint
+
 from dmcontent.content_loader import ContentLoader
 
 main = Blueprint('main', __name__)

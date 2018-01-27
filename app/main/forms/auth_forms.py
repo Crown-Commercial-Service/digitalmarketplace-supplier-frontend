@@ -1,6 +1,7 @@
 from flask.ext.wtf import Form
 from wtforms import PasswordField
 from wtforms.validators import DataRequired, Regexp, EqualTo, Length
+
 from dmutils.forms import StripWhitespaceStringField
 
 

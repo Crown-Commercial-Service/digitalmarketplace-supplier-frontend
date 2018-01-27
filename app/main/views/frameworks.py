@@ -3,20 +3,15 @@ from collections import OrderedDict
 from itertools import chain
 
 from dateutil.parser import parse as date_parse
-from dmapiclient import HTTPError
 from flask import render_template, request, abort, flash, redirect, url_for, current_app, session
 from flask_login import current_user
 import flask_featureflags as feature
 
-from dmapiclient import APIError
+from dmapiclient import APIError, HTTPError
 from dmapiclient.audit import AuditTypes
-from dmutils.email import send_email
-from dmutils.email.exceptions import EmailError
-from dmutils.email.helpers import hash_string
 from dmcontent.formats import format_service_price
 from dmcontent.questions import ContentQuestion
 from dmcontent.errors import ContentNotFoundError
-from dmutils.formats import datetimeformat
 from dmutils import s3
 from dmutils.documents import (
     RESULT_LETTER_FILENAME, AGREEMENT_FILENAME, SIGNED_AGREEMENT_PREFIX, SIGNED_SIGNATURE_PAGE_PREFIX,
@@ -24,6 +19,10 @@ from dmutils.documents import (
     degenerate_document_path_and_return_doc_name, get_signed_url, get_extension, file_is_less_than_5mb,
     file_is_empty, file_is_image, file_is_pdf, sanitise_supplier_name
 )
+from dmutils.email import send_email
+from dmutils.email.exceptions import EmailError
+from dmutils.email.helpers import hash_string
+from dmutils.formats import datetimeformat
 
 from ... import data_api_client, flask_featureflags
 from ...main import main, content_loader

@@ -1,14 +1,11 @@
-import re
 from datetime import datetime
+import re
+import urllib.parse as urlparse
+
 from flask import abort, current_app
 from flask_login import current_user
 
 from dmapiclient import APIError
-
-try:
-    import urlparse
-except ImportError:
-    import urllib.parse as urlparse
 
 
 def get_drafts(apiclient, framework_slug):

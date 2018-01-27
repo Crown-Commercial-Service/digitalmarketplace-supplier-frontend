@@ -1,6 +1,7 @@
 from flask.ext.wtf import Form
 from wtforms import BooleanField, HiddenField
 from wtforms.validators import DataRequired, InputRequired, Length
+
 from dmutils.forms import StripWhitespaceStringField
 
 

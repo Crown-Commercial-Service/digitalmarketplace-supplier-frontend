@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
-import re
 from datetime import datetime
 from itertools import chain, islice, groupby
+import re
 
-from dmutils.formats import DATETIME_FORMAT
 from flask import abort
 from flask_login import current_user
+
 from dmapiclient import APIError
+from dmutils.formats import DATETIME_FORMAT
 
 
 def get_framework_or_404(client, framework_slug, allowed_statuses=None):
