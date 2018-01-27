@@ -1,13 +1,11 @@
 # coding: utf-8
-from __future__ import unicode_literals
-
 from flask import current_app
+import mock
 
 from dmapiclient.audit import AuditTypes
 from dmutils.email.exceptions import EmailError
 
 from ..helpers import BaseApplicationTest
-import mock
 
 EMAIL_EMPTY_ERROR = "Email address must be provided"
 EMAIL_INVALID_ERROR = "Please enter a valid email address"

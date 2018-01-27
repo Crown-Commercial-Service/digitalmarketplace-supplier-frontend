@@ -1,9 +1,10 @@
 # coding=utf-8
-
 import mock
-from .helpers import BaseApplicationTest
+
 from dmapiclient.errors import HTTPError
+
 from app.main.helpers.frameworks import question_references
+from .helpers import BaseApplicationTest
 
 
 class TestApplication(BaseApplicationTest):

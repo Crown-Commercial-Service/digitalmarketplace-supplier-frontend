@@ -1,13 +1,15 @@
 # -*- coding: utf-8 -*-
-import re
-from mock import patch
-from app import create_app
-from tests import login_for_tests
-from werkzeug.http import parse_cookie
-from app import data_api_client
 from datetime import datetime, timedelta
-from dmutils.formats import DATETIME_FORMAT
+import re
+
+from mock import patch
 import pytest
+from werkzeug.http import parse_cookie
+
+from dmutils.formats import DATETIME_FORMAT
+
+from app import create_app, data_api_client
+from tests import login_for_tests
 
 
 # intended to be used as a mock's side_effect
