@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
 import mock
-import pytest
 from collections import OrderedDict
 from io import BytesIO
 from itertools import chain
-from lxml import html
 from urllib.parse import urljoin
+
+from lxml import html
+import pytest
 from werkzeug.datastructures import MultiDict
 
 from dmapiclient import APIError, HTTPError
@@ -4209,10 +4210,8 @@ class TestSignatureUploadPage(BaseApplicationTest):
 
     @mock.patch('app.main.views.frameworks.check_agreement_is_related_to_supplier_framework_or_abort')
     @mock.patch('dmutils.s3.S3')
-    @mock.patch('app.main.views.frameworks.generate_timestamped_document_upload_path')
     def test_we_abort_if_agreement_does_not_match_supplier_framework(
         self,
-        generate_timestamped_document_upload_path,
         s3,
         check_agreement_is_related_to_supplier_framework_or_abort,
         return_supplier_framework,
@@ -4278,9 +4277,8 @@ class TestSignatureUploadPage(BaseApplicationTest):
         assert res.location == 'http://localhost/suppliers/frameworks/g-cloud-8/234/contract-review'
 
     @mock.patch('dmutils.s3.S3')
-    @mock.patch('app.main.views.frameworks.file_is_empty')
     def test_signature_upload_returns_400_if_no_file_is_chosen(
-        self, file_is_empty, s3, return_supplier_framework, data_api_client
+        self, s3, return_supplier_framework, data_api_client
     ):
         self.login()
 
@@ -4290,8 +4288,7 @@ class TestSignatureUploadPage(BaseApplicationTest):
             framework_slug='g-cloud-8',
             on_framework=True
         )['frameworkInterest']
-        s3.return_value.get_key.return_value = None
-        file_is_empty.return_value = True
+        s3.return_value.get_key.return_value = None  # No signature file has been previously uploaded
 
         res = self.client.post(
             '/suppliers/frameworks/g-cloud-8/234/signature-upload',
@@ -4302,9 +4299,8 @@ class TestSignatureUploadPage(BaseApplicationTest):
         assert 'You must choose a file to upload' in res.get_data(as_text=True)
 
     @mock.patch('dmutils.s3.S3')
-    @mock.patch('app.main.views.frameworks.file_is_empty')
     def test_signature_upload_returns_400_if_file_is_empty(
-        self, file_is_empty, s3, return_supplier_framework, data_api_client
+        self, s3, return_supplier_framework, data_api_client
     ):
         self.login()
 
@@ -4314,21 +4310,19 @@ class TestSignatureUploadPage(BaseApplicationTest):
             framework_slug='g-cloud-8',
             on_framework=True
         )['frameworkInterest']
-        s3.return_value.get_key.return_value = None
-        file_is_empty.return_value = True
+        s3.return_value.get_key.return_value = None   # No signature file has been previously uploaded
 
         res = self.client.post(
             '/suppliers/frameworks/g-cloud-8/234/signature-upload',
-            data={'signature_page': (BytesIO(b''), 'test.pdf')}
+            data={'signature_page': (BytesIO(b''), 'test.pdf')}  # Empty file called test.pdf
         )
 
         assert res.status_code == 400
         assert 'The file must not be empty' in res.get_data(as_text=True)
 
     @mock.patch('dmutils.s3.S3')
-    @mock.patch('app.main.views.frameworks.file_is_image')
     def test_signature_upload_returns_400_if_file_is_not_image_or_pdf(
-        self, file_is_image, s3, return_supplier_framework, data_api_client
+        self, s3, return_supplier_framework, data_api_client
     ):
         self.login()
 
@@ -4338,12 +4332,11 @@ class TestSignatureUploadPage(BaseApplicationTest):
             framework_slug='g-cloud-8',
             on_framework=True
         )['frameworkInterest']
-        s3.return_value.get_key.return_value = None
-        file_is_image.return_value = False
+        s3.return_value.get_key.return_value = None   # No signature file has been previously uploaded
 
         res = self.client.post(
             '/suppliers/frameworks/g-cloud-8/234/signature-upload',
-            data={'signature_page': (BytesIO(b'asdf'), 'test.txt')}
+            data={'signature_page': (BytesIO(b'asdf'), 'test.txt')}  # Non-empty file called test.txt
         )
 
         assert res.status_code == 400
@@ -4362,7 +4355,7 @@ class TestSignatureUploadPage(BaseApplicationTest):
             framework_slug='g-cloud-8',
             on_framework=True
         )['frameworkInterest']
-        s3.return_value.get_key.return_value = None
+        s3.return_value.get_key.return_value = None   # No signature file has been previously uploaded
         file_is_less_than_5mb.return_value = False
 
         res = self.client.post(
