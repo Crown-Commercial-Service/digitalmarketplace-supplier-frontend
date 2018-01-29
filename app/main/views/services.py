@@ -1,5 +1,10 @@
-from flask_login import current_user
 from flask import render_template, request, redirect, url_for, abort, flash, current_app
+from flask_login import current_user
+
+from dmapiclient import HTTPError
+from dmcontent.content_loader import ContentNotFoundError
+from dmutils import s3
+from dmutils.documents import upload_service_documents
 
 from ... import data_api_client, flask_featureflags
 from ...main import main, content_loader
@@ -11,11 +16,6 @@ from ..helpers.frameworks import (
     get_supplier_framework_info,
     get_framework_or_404,
 )
-
-from dmcontent.content_loader import ContentNotFoundError
-from dmapiclient import HTTPError
-from dmutils import s3
-from dmutils.documents import upload_service_documents
 
 
 @main.route("/frameworks/<string:framework_slug>/services")

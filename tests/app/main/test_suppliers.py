@@ -1,9 +1,10 @@
 # coding=utf-8
+from urllib.parse import urlparse
+
 from flask import session, current_app
 from lxml import html
 import mock
 import pytest
-from six.moves.urllib.parse import urlparse
 
 from dmapiclient import HTTPError
 from dmapiclient.audit import AuditTypes

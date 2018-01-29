@@ -1,10 +1,10 @@
 import base64
-import hashlib
-import flask_login
-
 from datetime import datetime
 from functools import wraps
+import hashlib
+
 from flask import current_app, flash
+import flask_login
 
 
 def login_required(func):

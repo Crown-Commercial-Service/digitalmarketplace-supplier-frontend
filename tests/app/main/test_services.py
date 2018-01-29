@@ -1,17 +1,15 @@
 # -*- coding: utf-8 -*-
-try:
-    from StringIO import StringIO
-except ImportError:
-    from io import BytesIO as StringIO
-from datetime import datetime
-
-from dmapiclient import HTTPError
 import copy
+from datetime import datetime
 from functools import partial
+from io import BytesIO
+
+from freezegun import freeze_time
+from lxml import html
 import mock
 import pytest
-from lxml import html
-from freezegun import freeze_time
+
+from dmapiclient import HTTPError
 
 from app.main.helpers.services import parse_document_upload_time
 from tests.app.helpers import BaseApplicationTest, empty_g7_draft_service, empty_g9_draft_service
@@ -1204,7 +1202,7 @@ class TestSupplierEditUpdateServiceSectionG9(BaseApplicationTest):
             res = self.client.post(
                 '/suppliers/frameworks/g-cloud-9/services/321/edit/documents',
                 data={
-                    'serviceDefinitionDocumentURL': (StringIO(b'doc'), 'document.pdf'),
+                    'serviceDefinitionDocumentURL': (BytesIO(b'doc'), 'document.pdf'),
                 }
             )
 
@@ -1242,8 +1240,8 @@ class TestSupplierEditUpdateServiceSectionG9(BaseApplicationTest):
         res = self.client.post(
             '/suppliers/frameworks/g-cloud-9/services/321/edit/documents',
             data={
-                'serviceDefinitionDocumentURL': (StringIO(b''), 'document.pdf'),
-                'unknownDocumentURL': (StringIO(b'doc'), 'document.pdf'),
+                'serviceDefinitionDocumentURL': (BytesIO(b''), 'document.pdf'),
+                'unknownDocumentURL': (BytesIO(b'doc'), 'document.pdf'),
             })
 
         assert res.status_code == 302
@@ -1606,7 +1604,7 @@ class TestEditDraftService(BaseApplicationTest):
             res = self.client.post(
                 '/suppliers/frameworks/g-cloud-7/submissions/scs/1/edit/service-definition',
                 data={
-                    'serviceDefinitionDocumentURL': (StringIO(b'doc'), 'document.pdf'),
+                    'serviceDefinitionDocumentURL': (BytesIO(b'doc'), 'document.pdf'),
                 }
             )
 
@@ -1629,9 +1627,9 @@ class TestEditDraftService(BaseApplicationTest):
         res = self.client.post(
             '/suppliers/frameworks/g-cloud-7/submissions/scs/1/edit/service-definition',
             data={
-                'serviceDefinitionDocumentURL': (StringIO(b''), 'document.pdf'),
-                'unknownDocumentURL': (StringIO(b'doc'), 'document.pdf'),
-                'pricingDocumentURL': (StringIO(b'doc'), 'document.pdf'),
+                'serviceDefinitionDocumentURL': (BytesIO(b''), 'document.pdf'),
+                'unknownDocumentURL': (BytesIO(b'doc'), 'document.pdf'),
+                'pricingDocumentURL': (BytesIO(b'doc'), 'document.pdf'),
             })
 
         assert res.status_code == 302

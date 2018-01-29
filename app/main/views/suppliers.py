@@ -1,5 +1,4 @@
 # coding=utf-8
-
 from itertools import chain
 
 from flask import render_template, request, redirect, url_for, abort, session, Markup, flash
@@ -7,9 +6,9 @@ from flask_login import current_user, current_app
 
 from dmapiclient import APIError
 from dmapiclient.audit import AuditTypes
+from dmcontent.content_loader import ContentNotFoundError
 from dmutils.email import send_user_account_email
 from dmutils.email.dm_mailchimp import DMMailChimpClient
-from dmcontent.content_loader import ContentNotFoundError
 
 from ...main import main, content_loader
 from ... import data_api_client

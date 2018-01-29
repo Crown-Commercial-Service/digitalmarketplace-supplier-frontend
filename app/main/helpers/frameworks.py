@@ -1,12 +1,13 @@
 # -*- coding: utf-8 -*-
-import re
 from datetime import datetime
 from itertools import chain, islice, groupby
+import re
 
-from dmutils.formats import DATETIME_FORMAT
 from flask import abort
 from flask_login import current_user
+
 from dmapiclient import APIError
+from dmutils.formats import DATETIME_FORMAT
 
 
 def get_framework_or_404(client, framework_slug, allowed_statuses=None):
@@ -59,12 +60,13 @@ def register_interest_in_framework(client, framework_slug):
 
 def get_last_modified_from_first_matching_file(key_list, framework_slug, prefix):
     """
-    Takes a list of file keys and a string.
-    Returns the 'last_modified' timestamp for first file whose path starts with the passed-in string,
+    Takes a list of file keys, a framework slug and a string that is a whole or start of a filename.
+    Returns the 'last_modified' timestamp for first file whose path starts with the framework slug and passed-in string,
     or None if no matching file is found.
 
     :param key_list: list of file keys (from an s3 bucket)
-    :param path_starts_with: check for file paths which start with this string
+    :param framework_slug: the framework that we're looking up a document for (this is the first part of the file path)
+    :param prefix: the first part of the filename to match (this could also be the complete filename for an exact match)
     :return: the timestamp of the first matching file key or None
     """
     path_starts_with = '{}/{}'.format(framework_slug, prefix)

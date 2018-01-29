@@ -1,12 +1,12 @@
-try:
-    from urllib import quote_plus
-except ImportError:
-    from urllib.parse import quote_plus
+from urllib.parse import quote_plus
+
 from flask import redirect, render_template, request
-from app.main import main
+
 from dmapiclient import APIError
-from dmutils.s3 import S3ResponseError
 from dmcontent.content_loader import QuestionNotFoundError
+from dmutils.s3 import S3ResponseError
+
+from app.main import main
 
 
 @main.app_errorhandler(APIError)

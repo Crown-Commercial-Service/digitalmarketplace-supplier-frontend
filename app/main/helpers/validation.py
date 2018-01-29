@@ -1,7 +1,7 @@
 from functools import reduce
 from operator import add
 import re
-import six
+
 from werkzeug.datastructures import ImmutableOrderedMultiDict
 
 EMAIL_REGEX = r'^[^@^\s]+@[^@^\.^\s]+(\.[^@^\.^\s]+)+$'
@@ -67,7 +67,7 @@ class DeclarationValidator(object):
 
     def fields_with_values(self):
         return set(key for key, value in self.answers.items()
-                   if value is not None and (not isinstance(value, six.string_types) or len(value) > 0))
+                   if value is not None and (not isinstance(value, str) or len(value) > 0))
 
     def errors(self):
         errors_map = {}

@@ -1,6 +1,5 @@
-from __future__ import absolute_import
-from flask_login import current_user
 from flask import flash, redirect, render_template, url_for, current_app
+from flask_login import current_user
 
 from dmapiclient.audit import AuditTypes
 from dmutils.email import send_user_account_email
