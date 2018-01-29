@@ -24,15 +24,6 @@
 {%- endmacro %}
 
 
-{% macro question_list_entry(id, question, value='', hint='', errors=None, item_name='', number_of_items=10) -%}
-  {% with
-    values=value,
-    error=errors[0]
-  %}
-    {% include "toolkit/forms/list-entry.html" %}
-  {% endwith %}
-{%- endmacro %}
-
 
 {% macro field_errors(name, errors=None) -%}
   {% if errors %}
