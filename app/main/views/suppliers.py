@@ -233,7 +233,7 @@ def submit_duns_number():
                 form=form
             ), 400
         session[form.duns_number.name] = form.duns_number.data
-        return redirect(url_for(".companies_house_number"))
+        return redirect(url_for(".company_name"))
     else:
         current_app.logger.warning(
             "suppliercreate.fail: duns:{duns} {duns_errors}",
@@ -265,10 +265,11 @@ def submit_companies_house_number():
 
     if form.validate_on_submit():
         if form.companies_house_number.data:
+            # TODO: below should be a statement updating database with Company House Number
             session[form.companies_house_number.name] = form.companies_house_number.data
         else:
             session.pop(form.companies_house_number.name, None)
-        return redirect(url_for(".company_name"))
+        return redirect(url_for(".supplier_details"))
     else:
         current_app.logger.warning(
             "suppliercreate.fail: duns:{duns} {duns_errors}",
@@ -418,9 +419,6 @@ def submit_company_summary():
                 "contactName": session["contact_name"]
             }]
         }
-
-        if session.get("companies_house_number", None):
-            supplier["companiesHouseNumber"] = session.get("companies_house_number")
 
         account_email_address = session.get("account_email_address", None)
 
