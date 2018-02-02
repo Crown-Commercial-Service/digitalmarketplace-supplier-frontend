@@ -824,7 +824,7 @@ def upload_framework_agreement(framework_slug):
     agreements_bucket.save(
         path,
         request.files['agreement'],
-        acl='private',
+        acl='bucket-owner-full-control',
         download_filename='{}-{}-{}{}'.format(
             sanitise_supplier_name(current_user.supplier_name),
             current_user.supplier_id,
@@ -990,7 +990,7 @@ def signature_upload(framework_slug, agreement_id):
             agreements_bucket.save(
                 upload_path,
                 fresh_signature_page,
-                acl='private',
+                acl='bucket-owner-full-control',
                 download_filename='{}-{}-{}{}'.format(
                     sanitise_supplier_name(current_user.supplier_name),
                     current_user.supplier_id,
