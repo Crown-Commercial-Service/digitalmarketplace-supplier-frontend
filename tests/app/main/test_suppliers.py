@@ -1121,7 +1121,7 @@ class TestCreateSupplier(BaseApplicationTest):
             }
         )
         assert res.status_code == 302
-        assert res.location == 'http://localhost/suppliers/companies-house-number'
+        assert res.location == 'http://localhost/suppliers/company-name'
 
     @mock.patch("app.main.suppliers.data_api_client")
     def test_should_allow_duns_numbers_that_start_with_zero(self, data_api_client):
@@ -1133,7 +1133,7 @@ class TestCreateSupplier(BaseApplicationTest):
             }
         )
         assert res.status_code == 302
-        assert res.location == 'http://localhost/suppliers/companies-house-number'
+        assert res.location == 'http://localhost/suppliers/company-name'
 
     @mock.patch("app.main.suppliers.data_api_client")
     def test_should_strip_whitespace_surrounding_duns_number_field(self, data_api_client):
@@ -1154,7 +1154,7 @@ class TestCreateSupplier(BaseApplicationTest):
             data={}
         )
         assert res.status_code == 302
-        assert res.location == 'http://localhost/suppliers/company-name'
+        assert res.location == 'http://localhost/suppliers/details'
 
     def test_should_be_an_error_if_companies_house_number_is_not_8_characters_short(self):
         res = self.client.post(
@@ -1204,7 +1204,7 @@ class TestCreateSupplier(BaseApplicationTest):
                 }
             )
             assert res.status_code == 302
-            assert res.location == 'http://localhost/suppliers/company-name'
+            assert res.location == 'http://localhost/suppliers/details'
 
     def test_should_strip_whitespace_surrounding_companies_house_number_field(self):
         with self.client as c:
@@ -1226,7 +1226,7 @@ class TestCreateSupplier(BaseApplicationTest):
                 }
             )
             assert res.status_code == 302
-            assert res.location == 'http://localhost/suppliers/company-name'
+            assert res.location == 'http://localhost/suppliers/details'
             assert "companies_house_number" not in session
 
     def test_should_allow_valid_company_name(self):
@@ -1436,7 +1436,6 @@ class TestCreateSupplier(BaseApplicationTest):
                 sess['contact_name'] = "contact_name"
                 sess['duns_number'] = "duns_number"
                 sess['company_name'] = "company_name"
-                sess['companies_house_number'] = "companies_house_number"
                 sess['account_email_address'] = "valid@email.com"
 
             data_api_client.create_supplier.return_value = self.supplier()
@@ -1451,14 +1450,12 @@ class TestCreateSupplier(BaseApplicationTest):
                 }],
                 "dunsNumber": "duns_number",
                 "name": "company_name",
-                "companiesHouseNumber": "companies_house_number",
             })
             assert 'email_address' not in session
             assert 'phone_number' not in session
             assert 'contact_name' not in session
             assert 'duns_number' not in session
             assert 'company_name' not in session
-            assert 'companies_house_number' not in session
             assert session['email_supplier_id'] == 12345
             assert session['email_company_name'] == 'Supplier Name'
 

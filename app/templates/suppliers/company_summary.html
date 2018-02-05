@@ -51,11 +51,6 @@
   {{ summary.text(session.get("duns_number", "You must answer this question.")) }}
   {{ summary.edit_link("Edit", url_for(".duns_number")) }}
   {% endcall %}
-  {% call summary.row() %}
-  {{ summary.field_name("Companies House number") }}
-  {{ summary.text(session["companies_house_number"]) }}
-  {{ summary.edit_link("Edit", url_for(".companies_house_number")) }}
-  {% endcall %}
   {% call summary.row(complete=session.get("company_name", None)) %}
   {{ summary.field_name("Company name") }}
   {{ summary.text(session.get("company_name", "You must answer this question.")) }}
