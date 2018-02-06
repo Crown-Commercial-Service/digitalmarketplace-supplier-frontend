@@ -224,8 +224,8 @@ class TestFrameworksDashboard(BaseApplicationTest):
 
         heading = doc.xpath('//div[@class="summary-item-lede"]//h2[@class="summary-item-heading"]')
         assert len(heading) > 0
-        assert u"G-Cloud 7 is closed for applications" in heading[0].xpath('text()')[0]
-        assert u"You didn't submit an application." in heading[0].xpath('../p[1]/text()')[0]
+        assert "G-Cloud 7 is closed for applications" in heading[0].xpath('text()')[0]
+        assert "You didn't submit an application." in heading[0].xpath('../p[1]/text()')[0]
 
     def test_shows_gcloud_7_closed_message_if_pending_and_application(self, data_api_client, s3):
         self.login()
@@ -243,11 +243,11 @@ class TestFrameworksDashboard(BaseApplicationTest):
         doc = html.fromstring(res.get_data(as_text=True))
         heading = doc.xpath('//div[@class="summary-item-lede"]//h2[@class="summary-item-heading"]')
         assert len(heading) > 0
-        assert u"G-Cloud 7 is closed for applications" in heading[0].xpath('text()')[0]
+        assert "G-Cloud 7 is closed for applications" in heading[0].xpath('text()')[0]
         lede = doc.xpath('//div[@class="summary-item-lede"]')
-        expected_string = u"You made your supplier declaration and submitted 1 service for consideration."
+        expected_string = "You made your supplier declaration and submitted 1 service for consideration."
         assert (expected_string in lede[0].xpath('./p[1]/text()')[0])
-        assert u"We’ll let you know the result of your application by " in lede[0].xpath('./p[2]/text()')[0]
+        assert "We’ll let you know the result of your application by " in lede[0].xpath('./p[2]/text()')[0]
 
     def test_declaration_status_when_complete(self, data_api_client, s3):
         self.login()
@@ -344,7 +344,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
                     "2016-06-01T14:00:00.000Z",
                 ),
                 (
-                    u"Download the proposed \u2018call-off\u2019 contract",
+                    "Download the proposed \u2018call-off\u2019 contract",
                     "/suppliers/frameworks/g-cloud-7/files/g-cloud-7-proposed-call-off.pdf",
                     "Sunday 1 May 2016",
                     "2016-05-01T14:00:00.000Z",
@@ -434,7 +434,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
                     "2016-06-01T14:00:00.000Z",
                 ),
                 (
-                    u"Download the proposed \u2018call-off\u2019 contract",
+                    "Download the proposed \u2018call-off\u2019 contract",
                     "/suppliers/frameworks/g-cloud-7/files/g-cloud-7-proposed-call-off.pdf",
                     "Sunday 1 May 2016",
                     "2016-05-01T14:00:00.000Z",
@@ -516,7 +516,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
                     "2016-06-02T14:00:00.000Z",
                 ),
                 (
-                    u"Download the proposed \u2018call-off\u2019 contract",
+                    "Download the proposed \u2018call-off\u2019 contract",
                     "/suppliers/frameworks/g-cloud-7/files/g-cloud-7-proposed-call-off.pdf",
                     "Sunday 1 May 2016",
                     "2016-05-01T14:00:00.000Z",
@@ -631,7 +631,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
                 ),
                 (
                     "g-cloud-7-call-off.pdf",
-                    u"Download the proposed \u2018call-off\u2019 contract",
+                    "Download the proposed \u2018call-off\u2019 contract",
                 ),
                 (
                     "g-cloud-7-reporting-template.xls",
@@ -850,7 +850,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
                     None,
                 ),
                 (
-                    u"Download your countersigned framework agreement",
+                    "Download your countersigned framework agreement",
                     "/suppliers/frameworks/g-cloud-7/agreements/countersigned-agreement.pdf",
                     None,
                     None,
@@ -990,13 +990,13 @@ class TestFrameworksDashboard(BaseApplicationTest):
                     None,
                 ),
                 (
-                    u"Download your \u2018original\u2019 framework agreement signature page",
+                    "Download your \u2018original\u2019 framework agreement signature page",
                     "/suppliers/frameworks/g-cloud-8/agreements/pathy/mc/path.face",
                     None,
                     None,
                 ),
                 (
-                    u"Download your \u2018counterpart\u2019 framework agreement signature page",
+                    "Download your \u2018counterpart\u2019 framework agreement signature page",
                     "/suppliers/frameworks/g-cloud-8/agreements/countersigned-agreement.pdf",
                     None,
                     None,
@@ -1470,7 +1470,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
                     "agreedAt": "2016-08-19T15:47:08.116613Z",
                     "agreedUserId": 1,
                     "agreedUserEmail": "agreed@email.com",
-                    "agreedUserName": u"William Drăyton",
+                    "agreedUserName": "William Drăyton",
                 },
             },
         )
@@ -2361,7 +2361,7 @@ class TestDeclarationOverview(BaseApplicationTest):
                 ),
                 (   # expected result for "How you’ll deliver your services" section as returned by
                     # _extract_section_information
-                    u"How you’ll deliver your services",
+                    "How you’ll deliver your services",
                     "/suppliers/frameworks/g-cloud-9/declaration/edit/how-youll-deliver-your-services",
                     (
                         (
@@ -2493,7 +2493,7 @@ class TestDeclarationOverview(BaseApplicationTest):
                 ),
                 (   # expected result for "How you’ll deliver your services" section as returned by
                     # _extract_section_information
-                    u"How you’ll deliver your services",
+                    "How you’ll deliver your services",
                     "/suppliers/frameworks/g-cloud-9/declaration/edit/how-youll-deliver-your-services",
                     (
                         (
@@ -3393,7 +3393,7 @@ class TestFrameworkUpdatesPage(BaseApplicationTest):
 
         assert response.status_code == 503
         assert (
-            self.strip_all_whitespace(u"<h1>Sorry, we’re experiencing technical difficulties</h1>")
+            self.strip_all_whitespace("<h1>Sorry, we’re experiencing technical difficulties</h1>")
             in self.strip_all_whitespace(response.get_data(as_text=True))
         )
 
@@ -3791,8 +3791,8 @@ class TestG7ServicesList(BaseApplicationTest):
         assert response.status_code == 200
         heading = doc.xpath('//div[@class="summary-item-lede"]//h2[@class="summary-item-heading"]')
         assert len(heading) > 0
-        assert u"G-Cloud 7 is closed for applications" in heading[0].xpath('text()')[0]
-        assert u"You made your supplier declaration and submitted 1 complete service." in \
+        assert "G-Cloud 7 is closed for applications" in heading[0].xpath('text()')[0]
+        assert "You made your supplier declaration and submitted 1 complete service." in \
             heading[0].xpath('../p[1]/text()')[0]
 
         assert not doc.xpath(
@@ -3863,13 +3863,13 @@ class TestG7ServicesList(BaseApplicationTest):
 
         assert submissions_doc.xpath(
             "//*[@class='banner-warning-without-action'][normalize-space(string())=$t][.//a[@href=$u]]",
-            t=u"You need to make the supplier\u00a0declaration before any services can be submitted",
+            t="You need to make the supplier\u00a0declaration before any services can be submitted",
             u=expected_url
         )
 
         assert lot_page_doc.xpath(
             "//*[@class='banner-warning-without-action'][normalize-space(string())=$t][.//a[@href=$u]]",
-            t=u"You need to make the supplier\u00a0declaration before any services can be submitted",
+            t="You need to make the supplier\u00a0declaration before any services can be submitted",
             u=expected_url
         )
 
@@ -4454,7 +4454,7 @@ class TestContractReviewPage(BaseApplicationTest):
             declaration={
                 "primaryContact": "contact name",
                 "primaryContactEmail": "email@email.com",
-                "nameOfOrganisation": u"£unicodename"
+                "nameOfOrganisation": "£unicodename"
             },
         )['frameworkInterest']
         data_api_client.get_framework_agreement.return_value = self.framework_agreement(
@@ -4474,7 +4474,7 @@ class TestContractReviewPage(BaseApplicationTest):
         assert u'Check the details you’ve given before returning the signature page for £unicodename' in page
         assert '<tdclass="summary-item-field"><span><p>signer_name</p><p>signer_role</p></span></td>' \
             in page_without_whitespace
-        assert u"I have the authority to return this agreement on behalf of £unicodename" in page
+        assert "I have the authority to return this agreement on behalf of £unicodename" in page
         assert "Returning the signature page will notify the Crown Commercial Service and the primary contact you "
         "gave in your G-Cloud 8 application, contact name at email@email.com." in page
         assert '<tdclass="summary-item-field-first"><span>test.pdf</span></td>' in page_without_whitespace
@@ -4491,7 +4491,7 @@ class TestContractReviewPage(BaseApplicationTest):
             declaration={
                 "primaryContact": "contact name",
                 "primaryContactEmail": "email@email.com",
-                "nameOfOrganisation": u"£unicodename"
+                "nameOfOrganisation": "£unicodename"
             },
         )['frameworkInterest']
         data_api_client.get_framework_agreement.return_value = self.framework_agreement(
@@ -4523,7 +4523,7 @@ class TestContractReviewPage(BaseApplicationTest):
             declaration={
                 "primaryContact": "contact name",
                 "primaryContactEmail": "email@email.com",
-                "nameOfOrganisation": u"£unicodename"
+                "nameOfOrganisation": "£unicodename"
             },
         )['frameworkInterest']
         data_api_client.get_framework_agreement.return_value = self.framework_agreement(
@@ -4569,7 +4569,7 @@ class TestContractReviewPage(BaseApplicationTest):
             declaration={
                 "primaryContact": "contact name",
                 "primaryContactEmail": "email@email.com",
-                "nameOfOrganisation": u"£unicodename"
+                "nameOfOrganisation": "£unicodename"
             },
         )['frameworkInterest']
         data_api_client.get_framework_agreement.return_value = self.framework_agreement(
@@ -4597,7 +4597,7 @@ class TestContractReviewPage(BaseApplicationTest):
             declaration={
                 "primaryContact": "contact name",
                 "primaryContactEmail": "email2@email.com",
-                "nameOfOrganisation": u"£unicodename"
+                "nameOfOrganisation": "£unicodename"
             },
         )['frameworkInterest']
         data_api_client.get_framework_agreement.return_value = self.framework_agreement(
@@ -4648,7 +4648,7 @@ class TestContractReviewPage(BaseApplicationTest):
             declaration={
                 "primaryContact": "contact name",
                 "primaryContactEmail": "email@email.com",
-                "nameOfOrganisation": u"£unicodename"
+                "nameOfOrganisation": "£unicodename"
             },
         )['frameworkInterest']
         data_api_client.get_framework_agreement.return_value = self.framework_agreement(
@@ -4685,7 +4685,7 @@ class TestContractReviewPage(BaseApplicationTest):
             declaration={
                 "primaryContact": "contact name",
                 "primaryContactEmail": "email@email.com",
-                "nameOfOrganisation": u"£unicodename"
+                "nameOfOrganisation": "£unicodename"
             },
         )['frameworkInterest']
         data_api_client.get_framework_agreement.return_value = self.framework_agreement(
@@ -4719,7 +4719,7 @@ class TestContractReviewPage(BaseApplicationTest):
             declaration={
                 "primaryContact": "contact name",
                 "primaryContactEmail": "email@email.com",
-                "nameOfOrganisation": u"£unicodename"
+                "nameOfOrganisation": "£unicodename"
             },
         )['frameworkInterest']
         data_api_client.get_framework_agreement.return_value = self.framework_agreement(
@@ -4755,7 +4755,7 @@ class TestContractReviewPage(BaseApplicationTest):
             declaration={
                 "primaryContact": "contact name",
                 "primaryContactEmail": "email2@email.com",
-                "nameOfOrganisation": u"£unicodename"
+                "nameOfOrganisation": "£unicodename"
             },
             agreed_variations={
                 '1': {
@@ -4796,7 +4796,7 @@ class TestContractReviewPage(BaseApplicationTest):
             declaration={
                 "primaryContact": "contact name",
                 "primaryContactEmail": "email@email.com",
-                "nameOfOrganisation": u"£unicodename"
+                "nameOfOrganisation": "£unicodename"
             },
         )['frameworkInterest']
         data_api_client.get_framework_agreement.return_value = self.framework_agreement(
@@ -4832,7 +4832,7 @@ class TestContractReviewPage(BaseApplicationTest):
             declaration={
                 "primaryContact": "contact name",
                 "primaryContactEmail": "email2@email.com",
-                "nameOfOrganisation": u"£unicodename"
+                "nameOfOrganisation": "£unicodename"
             },
             agreed_variations={}
         )['frameworkInterest']
@@ -4867,7 +4867,7 @@ class TestContractReviewPage(BaseApplicationTest):
             declaration={
                 "primaryContact": "contact name",
                 "primaryContactEmail": "email@email.com",
-                "nameOfOrganisation": u"£unicodename"
+                "nameOfOrganisation": "£unicodename"
             },
         )['frameworkInterest']
         data_api_client.get_framework_agreement.return_value = self.framework_agreement(
@@ -4908,6 +4908,14 @@ class TestContractVariation(BaseApplicationTest):
             framework_agreement_version='3.1'
         )
         self.g8_framework['frameworks']['variations'] = {"1": {"createdAt": "2018-08-16"}}
+
+        self.g9_framework = self.framework(
+            name='G-Cloud 9',
+            slug='g-cloud-9',
+            status='live',
+            framework_agreement_version='3.1'
+        )
+        self.g9_framework['frameworks']['variations'] = {"1": {"createdAt": "2018-08-16"}}
 
         self.login()
 
@@ -4959,7 +4967,7 @@ class TestContractVariation(BaseApplicationTest):
 
         assert res.status_code == 200
         assert len(doc.xpath('//label[contains(text(), "I accept these proposed changes")]')) == 1
-        assert len(doc.xpath('//input[@value="Save and continue"]')) == 1
+        assert len(doc.xpath('//input[@value="I accept"]')) == 1
 
     def test_shows_signer_details_and_no_form_if_already_agreed(self, data_api_client):
         already_agreed = self.good_supplier_framework.copy()
@@ -4968,7 +4976,7 @@ class TestContractVariation(BaseApplicationTest):
                 "agreedAt": "2016-08-19T15:47:08.116613Z",
                 "agreedUserId": 1,
                 "agreedUserEmail": "agreed@email.com",
-                "agreedUserName": u"William Drăyton",
+                "agreedUserName": "William Drăyton",
             }}
         data_api_client.get_framework.return_value = self.g8_framework
         data_api_client.get_supplier_framework_info.return_value = already_agreed
@@ -4979,9 +4987,36 @@ class TestContractVariation(BaseApplicationTest):
 
         assert res.status_code == 200
         assert len(doc.xpath('//h2[contains(text(), "Contract variation status")]')) == 1
-        assert u"<span>William Drăyton<br />agreed@email.com<br />Friday 19 August 2016 at 4:47pm</span>" in page_text
+        assert "<span>William Drăyton<br />agreed@email.com<br />Friday 19 August 2016 at 4:47pm</span>" in page_text
+        assert "<span>Waiting for CCS to countersign</span>" in page_text
         assert len(doc.xpath('//label[contains(text(), "I accept these proposed changes")]')) == 0
-        assert len(doc.xpath('//input[@value="Save and continue"]')) == 0
+        assert len(doc.xpath('//input[@value="I accept"]')) == 0
+
+    def test_shows_signer_details_and_different_text_if_already_agreed_but_no_countersign(self, data_api_client):
+        already_agreed = self.good_supplier_framework.copy()
+        already_agreed['frameworkInterest']['agreedVariations'] = {
+            "1": {
+                "agreedAt": "2016-08-19T15:47:08.116613Z",
+                "agreedUserId": 1,
+                "agreedUserEmail": "agreed@email.com",
+                "agreedUserName": "William Drăyton",
+            }}
+        data_api_client.get_framework.return_value = self.g9_framework
+        data_api_client.get_supplier_framework_info.return_value = already_agreed
+
+        res = self.client.get("/suppliers/frameworks/g-cloud-9/contract-variation/1")
+        page_text = res.get_data(as_text=True)
+        doc = html.fromstring(page_text)
+
+        assert res.status_code == 200
+        assert len(doc.xpath('//h1[contains(text(), "G-Cloud 9: proposed contract variation")]')) == 1
+        assert len(doc.xpath('//h2[contains(text(), "Contract variation status")]')) == 1
+        assert "<span>William Drăyton<br />agreed@email.com<br />Friday 19 August 2016 at 4:47pm</span>" in page_text
+        assert "<span>Waiting for CCS to countersign</span>" in page_text
+        assert "You have accepted the Crown Commercial Service’s changes to the framework agreement" in page_text
+        assert "They will come into effect when CCS has countersigned them." in page_text
+        assert len(doc.xpath('//label[contains(text(), "I accept these proposed changes")]')) == 0
+        assert len(doc.xpath('//input[@value="I accept"]')) == 0
 
     def test_shows_updated_heading_and_countersigner_details_but_no_form_if_countersigned(self, data_api_client):
         already_agreed = self.good_supplier_framework.copy()
@@ -4990,7 +5025,7 @@ class TestContractVariation(BaseApplicationTest):
                 "agreedAt": "2016-08-19T15:47:08.116613Z",
                 "agreedUserId": 1,
                 "agreedUserEmail": "agreed@email.com",
-                "agreedUserName": u"William Drăyton",
+                "agreedUserName": "William Drăyton",
             }}
         g8_with_countersigned_variation = self.framework(status='live', name='G-Cloud 8')
         g8_with_countersigned_variation['frameworks']['variations'] = {"1": {
@@ -5008,11 +5043,11 @@ class TestContractVariation(BaseApplicationTest):
         doc = html.fromstring(page_text)
 
         assert res.status_code == 200
-        assert len(doc.xpath('//h1[contains(text(), "G-Cloud 8: contract variation")]')) == 1
+        assert len(doc.xpath('//h1[contains(text(), "G-Cloud 8: accepted contract variation")]')) == 1
         assert len(doc.xpath('//h2[contains(text(), "Contract variation status")]')) == 1
-        assert u"<span>A.N. Other<br />Head honcho<br />Saturday 1 October 2016</span>" in page_text
+        assert "<span>A.N. Other<br />Head honcho<br />Saturday 1 October 2016</span>" in page_text
         assert len(doc.xpath('//label[contains(text(), "I accept these proposed changes")]')) == 0
-        assert len(doc.xpath('//input[@value="Save and continue"]')) == 0
+        assert len(doc.xpath('//input[@value="I accept"]')) == 0
 
     def test_api_is_called_to_agree(self, data_api_client):
         data_api_client.get_framework.return_value = self.g8_framework
@@ -5114,7 +5149,7 @@ class TestContractVariation(BaseApplicationTest):
         doc = html.fromstring(res.get_data(as_text=True))
 
         assert res.status_code == 400
-        validation_message = "You can only save and continue if you agree to the proposed changes"
+        validation_message = "You need to accept the proposed changes to continue."
         assert len(
             doc.xpath('//span[@class="validation-message"][contains(text(), "{}")]'.format(validation_message))
         ) == 1

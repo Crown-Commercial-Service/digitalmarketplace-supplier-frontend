@@ -53,6 +53,7 @@ $path: "/suppliers/static/images/";
 
 
 // App-specific styles
+@import "_variables.scss";
 @import "_assurance-question.scss";           // This could probably be removed as the only usage is in service editing
                                               // and editing expired services is not officially supported (it can be
                                               // done only by hacking URLs). However, without also removing supporting
@@ -103,11 +104,11 @@ $path: "/suppliers/static/images/";
 // app-specific.
 ins {
   text-decoration: none;
-  background-color: #cce0d6;
-  padding: 0 3px;
+  background-color: $diff-insertion-color;
+  padding-right: 3px;
 }
 
 del {
-  background-color: #efcfd1;
-  padding: 0 3px;
+  background-color: $diff-deletion-color;
+  padding-right: 3px;
 }

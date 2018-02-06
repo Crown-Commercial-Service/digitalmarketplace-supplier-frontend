@@ -47,28 +47,36 @@
     {% endfor %}
   {% endwith %}
 
-
+    <div class="grid-row">
+      <div class="column-one-whole">
+        {% if form.errors %}
+          {%
+            with
+            errors = form_errors
+          %}
+            {% include 'toolkit/forms/validation.html' %}
+          {% endwith %}
+        {% endif %}
+      </div>
+    </div>
     <div class="grid-row">
         <div class="column-two-thirds">
-            {% with
-              heading = "{}:{}contract variation".format(framework.name, " " if variation_details.get('countersignedAt') else " proposed "),
-              smaller = True
-            %}
-              {% include 'toolkit/page-heading.html' %}
-            {% endwith %}
+          
+          
+          
+          {% with
+            heading = "{}:{}contract variation".format(framework.name, " accepted " if variation_details.get('countersignedAt') else " proposed "),
+            smaller = True
+          %}
+            {% include 'toolkit/page-heading.html' %}
+          {% endwith %}
 
-          {% if form.errors %}
-            {%
-              with
-              errors = form_errors
-            %}
-              {% include 'toolkit/forms/validation.html' %}
-            {% endwith %}
-          {% endif %}
 
           <div class="section-description">
           {% if variation_details.get('countersignedAt') and agreed_details %}
             {{ variation.variation_description_in_place }}
+          {% elif not variation_details.get('countersignedAt') and agreed_details and variation.variation_description_not_in_place_but_agreed %}
+             {{ variation.variation_description_not_in_place_but_agreed }}
           {% else %}
             {{ variation.variation_description_not_in_place }}
             {% if not agreed_details and variation.variation_not_yet_agreed_extra %}
@@ -76,6 +84,40 @@
             {% endif %}
           {% endif %}
           </div>
+
+      </div>
+    </div>
+    <div class="grid-row">
+      <div class="column-one-whole">
+
+          {% if agreed_details %}
+          <div class="section-summary">
+            {{ summary.heading("Contract variation status", id="contract_variation_status") }}
+            {% call(item) summary.list_table(
+              [
+                {"key": "Agreed by", "value": ("%s<br />%s<br />%s" % (agreed_details.agreedUserName, agreed_details.agreedUserEmail, agreed_details.agreedAt|datetimeformat))|safe},
+                {"key": "Countersigned by", "value": ("%s<br />%s<br />%s" % 
+                  (
+                    variation_details.countersignerName, 
+                    variation_details.countersignerRole, 
+                    variation_details.countersignedAt|dateformat
+                  )
+                )|safe if variation_details.get('countersignedAt') else "Waiting for CCS to countersign"}
+              ],
+              caption="Contract variation status",
+              field_headings=[
+              "Field",
+              "Value"
+              ],
+              field_headings_visible=False
+            ) %}
+              {% call summary.row() %}
+                {{ summary.field_name(item.key) }}
+                {{ summary.text(item.value) }}
+              {% endcall %}
+            {% endcall %}
+          </div>
+          {% endif %}
 
           {{ summary.heading("Framework agreement", id="framework_agreement_changes") }}
           {% call(item) summary.list_table(
@@ -120,7 +162,7 @@
                 type = "checkbox",
                 name = "accept_changes",
                 options = [
-                { "label": form.accept_changes.label.text,
+                { "label": variation.variation_agreement_label or form.accept_changes.label.text,
                   "value": "Yes, I accept the changes"
                 }
                 ],
@@ -129,10 +171,16 @@
               {% include "toolkit/forms/selection-buttons.html" %}
               {% endwith %}
 
-              <p>We’ll tell you when CCS has countersigned the changes and they come into effect.</p>
+              <p>
+                {% if variation.variation_comes_in_effect_description %} 
+                  {{ variation.variation_comes_in_effect_description }} 
+                {% else%} 
+                  We’ll tell you when CCS has countersigned the changes and they come into effect.
+                {% endif %}
+              </p>
                 {%
                   with
-                  label="Save and continue",
+                  label="I accept",
                   type="save"
                 %}
                   {% include "toolkit/button.html" %}
@@ -140,25 +188,6 @@
               </form>
 
           {% else %}
-
-            {{ summary.heading("Contract variation status", id="contract_variation_status") }}
-            {% call(item) summary.list_table(
-              [
-                {"key": "Agreed by", "value": ("%s<br />%s<br />%s" % (agreed_details.agreedUserName, agreed_details.agreedUserEmail, agreed_details.agreedAt|datetimeformat))|safe},
-                {"key": "Countersigned by", "value": ("%s<br />%s<br />%s" % (variation_details.countersignerName, variation_details.countersignerRole, variation_details.countersignedAt|dateformat))|safe if variation_details.get('countersignedAt') else "Waiting for CCS to countersign"}
-              ],
-              caption="Contract variation status",
-              field_headings=[
-              "Field",
-              "Value"
-              ],
-              field_headings_visible=False
-            ) %}
-              {% call summary.row() %}
-                {{ summary.field_name(item.key) }}
-                {{ summary.text(item.value) }}
-              {% endcall %}
-            {% endcall %}
 
             <p class="padding-bottom-small">&nbsp;</p>
 

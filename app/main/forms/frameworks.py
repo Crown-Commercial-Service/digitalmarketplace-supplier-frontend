@@ -32,7 +32,7 @@ class AcceptAgreementVariationForm(Form):
     accept_changes = BooleanField(
         'I accept these proposed changes',
         validators=[
-            DataRequired(message="You can only save and continue if you agree to the proposed changes.")
+            DataRequired(message="You need to accept the proposed changes to continue.")
         ]
     )
 
