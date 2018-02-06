@@ -1,0 +1,94 @@
+{% extends "_base_page.html" %}
+{% import "macros/forms.html" as forms %}
+{% import "toolkit/summary-table.html" as summary %}
+{% block page_title %}Registered address – Digital Marketplace{% endblock %}
+
+{% block breadcrumb %}
+  {%
+    with items = [
+      {
+        "link": "/",
+        "label": "Digital Marketplace"
+      },
+      {
+        "link": url_for(".dashboard"),
+        "label": "Your account"
+      },
+      {
+        "link": url_for(".supplier_details"),
+        "label": "Supplier details"
+      },
+    ]
+  %}
+    {% include "toolkit/breadcrumb.html" %}
+  {% endwith %}
+{% endblock %}
+
+
+{% block main_content %}
+
+  <div class="grid-row">
+    <div class="column-one-whole">
+      {% with
+        heading = "What is your registered office address?",
+        smaller = true
+      %}
+        {% include 'toolkit/page-heading.html' %}
+      {% endwith %}
+    </div>
+  </div>
+
+  {% if error %}
+  <div class="validation-masthead" aria-labelledby="validation-masthead-heading">
+    <h3 class="validation-masthead-heading" id="validation-masthead-heading">
+      {{ error }}
+    </h3>
+  </div>
+  {% endif %}
+
+  <form action="{{ url_for('.update_supplier') }}" method="post" enctype="multipart/form-data">
+
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+
+  <div class="grid-row">
+    <div class="column-two-thirds">
+
+      <div class="question">
+        {{ forms.input('id', registered_address_form.id.data, type='hidden') }}
+        <span class="question-heading" id="address1-label">Building and street</span>
+        {{ forms.input('address1', registered_address_form.address1.data, errors=registered_address_form.address1.errors) }}
+      </div>
+      <div class="question">
+        <span class="question-heading" id="city-label">Town or city</span>
+        {{ forms.input('city', registered_address_form.city.data, errors=registered_address_form.city.errors) }}
+      </div>
+      <div class="question">
+        <span class="question-heading" id="postcode-label">Postcode</span>
+        {{ forms.input('postcode', registered_address_form.postcode.data, errors=registered_address_form.postcode.errors) }}
+      </div>
+      <div class="question">
+        <span class="question-heading" id="country-label">Country</span>
+        <select name="registrationCountry" id="location-autocomplete" value="{{ registered_country_form.registrationCountry.data }}">
+        {% for country in countries %}
+          <option value={{country[1]}}>{{country[0]}}</option>
+        {% endfor %}
+        </select>
+      </div>
+
+    {%
+      with
+      type = "save",
+      label = "Save and return"
+    %}
+      {% include "toolkit/button.html" %}
+    {% endwith %}
+    </div>
+  </div>
+
+
+  <p>
+    <a href="{{ url_for('.supplier_details') }}">Return without saving</a>
+  </p>
+  </form>
+
+{% endblock %}

@@ -14,7 +14,7 @@ from ...main import main, content_loader
 from ... import data_api_client
 from ..forms.suppliers import (
     EditSupplierForm, EditContactInformationForm, DunsNumberForm, CompaniesHouseNumberForm,
-    CompanyContactDetailsForm, CompanyNameForm, EmailAddressForm
+    CompanyContactDetailsForm, CompanyNameForm, EmailAddressForm, EditRegisteredAddressForm, EditRegisteredCountryForm
 )
 from ..helpers.frameworks import get_frameworks_by_status, get_frameworks_closed_and_open_for_applications
 from ..helpers import login_required
@@ -94,9 +94,9 @@ def supplier_details():
     ), 200
 
 
-@main.route('/country-picker', methods=['GET'])
+@main.route('/registered-address/edit', methods=['GET'])
 @login_required
-def country_picker():
+def edit_registered_address(registered_address_form=None, registered_country_form=None, error=None):
     try:
         supplier = data_api_client.get_supplier(
             current_user.supplier_id
@@ -105,15 +105,59 @@ def country_picker():
         abort(e.status_code)
     supplier['contact'] = supplier['contactInformation'][0]
 
-    filename = os.path.join(current_app.static_folder, 'location-autocomplete-canonical-list.json')
-    with open(filename) as f:
+    countryfile = os.path.join(current_app.static_folder, 'location-autocomplete-canonical-list.json')
+    with open(countryfile) as f:
         countries = json.load(f)
+    if not registered_address_form:
+        registered_address_form = EditRegisteredAddressForm(
+            **supplier['contactInformation'][0]
+        )
+
+    if not registered_country_form:
+        registered_country_form = EditRegisteredCountryForm()
 
     return render_template(
-        "suppliers/country_picker.html",
+        "suppliers/registered_address.html",
         supplier=supplier,
         countries=countries,
+        registered_address_form=registered_address_form,
+        registered_country_form=registered_country_form,
+        error=error,
     ), 200
+
+@main.route('/registered-address/edit', methods=['POST'])
+@login_required
+def update_registered_address():
+    registered_address_form = EditRegisteredAddressForm()
+    registered_country_form = EditRegisteredCountryForm()
+
+    if not (registered_address_form.validate_on_submit() and registered_country_form.validate_on_submit()):
+        return edit_registered_address(
+            registered_address_form=registered_address_form,
+            registered_country_form=registered_country_form,
+        )
+
+    try:
+        data_api_client.update_supplier(
+            current_user.supplier_id,
+            registered_country_form.data,
+            current_user.email_address,
+        )
+
+        data_api_client.update_contact_information(
+            current_user.supplier_id,
+            registered_address_form.id.data,
+            registered_address_form.data,
+            current_user.email_address
+        )
+    except APIError as e:
+        return edit_registered_address(
+            registered_address_form=registered_address_form,
+            registered_country_form=registered_country_form,
+            error=e.message,
+        )
+
+    return redirect(url_for(".supplier_details"))
 
 
 @main.route('/edit', methods=['GET'])

@@ -1,5 +1,5 @@
 from flask_wtf import Form
-from wtforms import IntegerField
+from wtforms import IntegerField, SelectField
 from wtforms.validators import DataRequired, ValidationError, Length, Optional, Regexp
 
 from dmutils.forms import StripWhitespaceStringField, EmailField, EmailValidator
@@ -34,9 +34,29 @@ class EditContactInformationForm(Form):
         DataRequired(message="You must provide an email address"),
     ])
     phoneNumber = StripWhitespaceStringField('Contact phone number')
+    # TODO: remove these fields when address is removed from the supplier details edit page
     address1 = StripWhitespaceStringField('Building and street')
     city = StripWhitespaceStringField('Town or city')
     postcode = StripWhitespaceStringField('Postcode')
+
+
+class EditRegisteredAddressForm(Form):
+    id = IntegerField()
+    address1 = StripWhitespaceStringField('Building and street', validators=[
+        DataRequired(message="You need to enter the street address."),
+    ])
+    city = StripWhitespaceStringField('Town or city', validators=[
+        DataRequired(message="You need to enter the town or city."),
+    ])
+    postcode = StripWhitespaceStringField('Postcode', validators=[
+        DataRequired(message="You need to enter the postcode."),
+    ])
+
+
+class EditRegisteredCountryForm(Form):
+    registrationCountry = StripWhitespaceStringField('Country', validators=[
+        DataRequired(message="You need to enter the country."),
+    ])
 
 
 class DunsNumberForm(Form):
