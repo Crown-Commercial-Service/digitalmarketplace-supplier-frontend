@@ -1862,7 +1862,7 @@ class TestFrameworkAgreementUpload(BaseApplicationTest):
         s3.return_value.save.assert_called_with(
             'my/path.pdf',
             mock.ANY,
-            acl='private',
+            acl='bucket-owner-full-control',
             download_filename='Supplier_Nme-1234-signed-framework-agreement.pdf'
         )
 
@@ -1984,7 +1984,7 @@ class TestFrameworkAgreementUpload(BaseApplicationTest):
         s3.return_value.save.assert_called_with(
             'my/path.pdf',
             mock.ANY,
-            acl='private',
+            acl='bucket-owner-full-control',
             download_filename='Supplier_Nme-1234-signed-framework-agreement.pdf'
         )
         data_api_client.create_framework_agreement.assert_called_with(1234, 'g-cloud-7', 'email@email.com')
@@ -2015,7 +2015,7 @@ class TestFrameworkAgreementUpload(BaseApplicationTest):
         s3.return_value.save.assert_called_with(
             'my/path.jpg',
             mock.ANY,
-            acl='private',
+            acl='bucket-owner-full-control',
             download_filename='Supplier_Nme-1234-signed-framework-agreement.jpg'
         )
         assert res.status_code == 302
@@ -4263,7 +4263,7 @@ class TestSignatureUploadPage(BaseApplicationTest):
             'my/path.jpg',
             mock.ANY,
             download_filename='Supplier_Nme-1234-signed-signature-page.jpg',
-            acl='private',
+            acl='bucket-owner-full-control',
             disposition_type='inline'
         )
         data_api_client.update_framework_agreement.assert_called_with(
