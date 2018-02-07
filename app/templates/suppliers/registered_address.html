@@ -46,6 +46,34 @@
   </div>
   {% endif %}
 
+  {% if registered_address_form.errors or registered_country_form.errors %}
+      <div class="validation-masthead" aria-labelledby="validation-masthead-heading">
+          <h3 class="validation-masthead-heading" id="validation-masthead-heading">
+              There was a problem with the details you gave for:
+          </h3>
+          {% if registered_address_form.errors %}
+          <ul>
+          {% for field_name, field_errors in registered_address_form.errors|dictsort %}
+            {% for error in field_errors %}
+              <li><a href="#{{ field_name }}" class="validation-masthead-link">{{ registered_address_form[field_name].label.text }}</a>
+            {% endfor %}
+          {% endfor %}
+          </ul>
+          {% endif %}
+
+          {% if registered_country_form.errors %}
+          <ul>
+          {% for field_name, field_errors in registered_country_form.errors|dictsort %}
+            {% for error in field_errors %}
+            <li><a href="#{{ field_name }}" class="validation-masthead-link">{{ registered_country_form[field_name].label.text }}</a></li>
+            {% endfor %}
+          {% endfor %}
+          </ul>
+          {% endif %}
+      </div>
+  {% endif %}
+
+
   <form action="{{ url_for('.update_registered_address') }}" method="post" enctype="multipart/form-data">
 
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
@@ -53,31 +81,29 @@
   <div class="grid-row">
     <div class="column-two-thirds">
 
-      <div class="question">
-        {{ forms.input('id', registered_address_form.id.data, type='hidden') }}
-        <span class="question-heading" id="address1-label">Building and street</span>
-        {{ forms.input('address1', registered_address_form.address1.data, errors=registered_address_form.address1.errors) }}
-      </div>
-      <div class="question">
-        <span class="question-heading" id="city-label">Town or city</span>
-        {{ forms.input('city', registered_address_form.city.data, errors=registered_address_form.city.errors) }}
-      </div>
-      <div class="question">
-        <span class="question-heading" id="postcode-label">Postcode</span>
-        {{ forms.input('postcode', registered_address_form.postcode.data, errors=registered_address_form.postcode.errors) }}
-      </div>
+      {{ forms.input('id', registered_address_form.id.data, type='hidden') }}
+      {{ forms.question_input('address1', 'Building and street', value=registered_address_form.address1.data, errors=registered_address_form.address1.errors) }}
+      {{ forms.question_input('city', 'Town or city', value=registered_address_form.city.data, errors=registered_address_form.city.errors) }}
+      {{ forms.question_input('postcode', 'Postcode', value=registered_address_form.postcode.data, errors=registered_address_form.postcode.errors) }}
+
+      {% if registered_country_form.registrationCountry.errors %}
+        <div class="validation-wrapper">
+      {% endif %}
       <div class="question">
         <span class="question-heading" id="country-label">Country</span>
-        {{ forms.field_errors("registrationCountry", errors=registered_country_form.registrationCountry.errors) }}
+        {{ forms.field_errors('registrationCountry', errors=registered_country_form.registrationCountry.errors) }}
         <select name="registrationCountry" id="location-autocomplete">
         {% if not registered_country_form.registrationCountry.data %}
           <option selected="selected"></option>
         {% endif %}
         {% for country in countries %}
-          <option value="{{country[1]}}"{% if registered_country_form.registrationCountry.data ==  country[1]%} selected="selected"{% endif %}>{{country[0]}}</option>
+          <option value="{{country[1]}}"{% if registered_country_form.registrationCountry.data == country[1]%} selected="selected"{% endif %}>{{country[0]}}</option>
         {% endfor %}
         </select>
       </div>
+      {% if registered_country_form.registrationCountry.errors %}
+        </div>
+      {% endif %}
 
     {%
       with
