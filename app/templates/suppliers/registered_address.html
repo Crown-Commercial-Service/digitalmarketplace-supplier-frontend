@@ -71,7 +71,7 @@
         {{ forms.field_errors("registrationCountry", errors=registered_country_form.registrationCountry.errors) }}
         <select name="registrationCountry" id="location-autocomplete" value="{{ registered_country_form.registrationCountry.data }}">
         {% for country in countries %}
-          <option value={{country[1]}}>{{country[0]}}</option>
+          <option value=""></option>
         {% endfor %}
         </select>
       </div>
