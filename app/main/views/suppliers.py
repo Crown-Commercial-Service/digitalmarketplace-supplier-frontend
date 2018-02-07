@@ -114,7 +114,9 @@ def edit_registered_address(registered_address_form=None, registered_country_for
         )
 
     if not registered_country_form:
-        registered_country_form = EditRegisteredCountryForm()
+        registered_country_form = EditRegisteredCountryForm(
+            registrationCountry=supplier['registrationCountry']
+        )
 
     return render_template(
         "suppliers/registered_address.html",

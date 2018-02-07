@@ -1084,6 +1084,25 @@ class TestEditSupplierRegisteredAddress(BaseApplicationTest):
         response = self.client.get("/suppliers/registered-address/edit")
         assert response.status_code == 200
 
+    def test_should_prepopulate_country_field(self, data_api_client):
+        self.login()
+
+        data_api_client.get_supplier.return_value = {
+            'suppliers': {
+                'contactInformation': [{'id': 1234}],
+                'dunsNumber': '999999999',
+                'id': 12345,
+                'registrationCountry': 'GB',
+                'name': 'Supplier Name'
+            }
+        }
+
+        response = self.client.get("/suppliers/registered-address/edit")
+        assert response.status_code == 200
+
+        doc = html.fromstring(response.get_data(as_text=True))
+        assert doc.xpath("//*[@id='location-autocomplete'][@value='GB']")
+
     def test_update_all_supplier_address_fields(self, data_api_client):
         self.login()
 

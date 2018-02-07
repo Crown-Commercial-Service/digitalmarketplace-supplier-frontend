@@ -69,9 +69,12 @@
       <div class="question">
         <span class="question-heading" id="country-label">Country</span>
         {{ forms.field_errors("registrationCountry", errors=registered_country_form.registrationCountry.errors) }}
-        <select name="registrationCountry" id="location-autocomplete" value="{{ registered_country_form.registrationCountry.data }}">
+        <select name="registrationCountry" id="location-autocomplete">
+        {% if not registered_country_form.registrationCountry.data %}
+          <option selected="selected"></option>
+        {% endif %}
         {% for country in countries %}
-          <option value=""></option>
+          <option value="{{country[1]}}"{% if registered_country_form.registrationCountry.data ==  country[1]%} selected="selected"{% endif %}>{{country[0]}}</option>
         {% endfor %}
         </select>
       </div>
