@@ -1141,18 +1141,20 @@ class TestEditSupplierRegisteredAddress(BaseApplicationTest):
         status, response = self.post_supplier_address_edit({
             "id": 2,
             "address1": "SomeStreet",
-            "city": "Supplierville",
+            "city": "",
             "postcode": "11 AB",
+            "registeredCountry": "",
         })
 
         assert status == 200
+        assert "You need to enter the town or city." in response
         assert "You need to enter the country." in response
+
 
         assert data_api_client.update_supplier.called is False
         assert data_api_client.update_contact_information.called is False
 
         assert 'value="2"' in response
-        assert 'value="Supplierville"' in response
         assert 'value="11 AB"' in response
         assert 'value="SomeStreet"' in response
 

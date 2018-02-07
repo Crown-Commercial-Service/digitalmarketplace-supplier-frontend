@@ -131,7 +131,10 @@ def update_registered_address():
     registered_address_form = EditRegisteredAddressForm()
     registered_country_form = EditRegisteredCountryForm()
 
-    if not (registered_address_form.validate_on_submit() and registered_country_form.validate_on_submit()):
+    address_valid = registered_address_form.validate_on_submit()
+    country_valid = registered_country_form.validate_on_submit()
+
+    if not (address_valid and country_valid):
         return edit_registered_address(
             registered_address_form=registered_address_form,
             registered_country_form=registered_country_form,
