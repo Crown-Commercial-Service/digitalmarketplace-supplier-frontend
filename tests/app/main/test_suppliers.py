@@ -68,7 +68,7 @@ def get_supplier(*args, **kwargs):
             "email": "supplier@user.dmdev",
             "contactName": "Supplier Person",
             "phoneNumber": "0800123123",
-            "1": "1 Street",
+            "address1": "1 Street",
             "address2": "2 Building",
             "city": "Supplierville",
             "country": "Supplierland",
@@ -1159,7 +1159,7 @@ class TestEditSupplierRegisteredAddress(BaseApplicationTest):
     def test_should_redirect_to_login_if_not_logged_in(self, data_api_client):
         res = self.client.get("/suppliers/registered-address/edit")
         assert res.status_code == 302
-        assert res.location == "http://localhost/user/login?next=%2Fsuppliers%2Fdetails%2Fedit"
+        assert res.location == "http://localhost/user/login?next=%2Fsuppliers%2Fregistered-address%2Fedit"
 
 
 class TestCreateSupplier(BaseApplicationTest):
