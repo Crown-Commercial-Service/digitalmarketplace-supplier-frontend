@@ -1063,7 +1063,7 @@ class TestEditSupplierRegisteredAddress(BaseApplicationTest):
                 "address1": "1 Street",
                 "city": "Supplierville",
                 "postcode": "11 AB",
-                "registrationCountry": "gb",
+                "registrationCountry": "GB",
             }
         data.update(kwargs)
         res = self.client.post("/suppliers/registered-address/edit", data=data)
@@ -1094,7 +1094,7 @@ class TestEditSupplierRegisteredAddress(BaseApplicationTest):
         data_api_client.update_supplier.assert_called_once_with(
             1234,
             {
-                'registrationCountry': 'gb'
+                'registrationCountry': 'GB'
             },
             'email@email.com'
         )
@@ -1117,7 +1117,7 @@ class TestEditSupplierRegisteredAddress(BaseApplicationTest):
             "address1": "  1 Street  ",
             "city": "  Supplierville  ",
             "postcode": "  11 AB  ",
-            "registrationCountry": "gb",
+            "registrationCountry": "GB",
         }
 
         status, _ = self.post_supplier_address_edit(data=data)
