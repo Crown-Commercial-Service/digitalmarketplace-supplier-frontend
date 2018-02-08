@@ -2,8 +2,8 @@
 {% import "macros/forms.html" as forms %}
 {% import "toolkit/summary-table.html" as summary %}
 {% block head %}
-  {{ super() }}
   <link rel="stylesheet" href="{{ asset_path }}stylesheets/location-autocomplete.min.css" />
+  {{ super() }}
 {% endblock %}
 {% block page_title %}Registered address – Digital Marketplace{% endblock %}
 
@@ -69,14 +69,13 @@
           <ul>
           {% for field_name, field_errors in registered_country_form.errors|dictsort %}
             {% for error in field_errors %}
-            <li><a href="#{{ field_name }}" class="validation-masthead-link">{{ registered_country_form[field_name].label.text }}</a></li>
+            <li><a href="javascript:document.getElementById('location-autocomplete').focus()" class="validation-masthead-link">{{ registered_country_form[field_name].label.text }}</a></li>
             {% endfor %}
           {% endfor %}
           </ul>
           {% endif %}
       </div>
   {% endif %}
-
 
   <form action="{{ url_for('.update_registered_address') }}" method="post" enctype="multipart/form-data">
 
@@ -92,7 +91,12 @@
 
       {% if registered_country_form.registrationCountry.errors %}
         <div class="validation-wrapper">
+        <style>
+          #location-autocomplete {border: 5px solid #B10E1E;}
+          .autocomplete__hint {border: 5px solid;}
+        </style>
       {% endif %}
+
       <div class="question">
         <span class="question-heading" id="country-label">Country</span>
         {{ forms.field_errors('registrationCountry', errors=registered_country_form.registrationCountry.errors) }}
@@ -116,6 +120,7 @@
     %}
       {% include "toolkit/button.html" %}
     {% endwith %}
+
     </div>
   </div>
   <p>
@@ -134,6 +139,7 @@
   });
 
   $('#location-autocomplete').keyup(function(event) {
+    // Clear the input value of the country select input, if the autocomplete is cleared.
     if ($(this).val().length < 2) {
       $('#location-autocomplete-select').val('');
     };
