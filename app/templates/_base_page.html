@@ -2,7 +2,6 @@
 
 {% block head %}
   {% include "_stylesheets.html" %}
-  <link rel="stylesheet" href="{{ asset_path }}stylesheets/location-autocomplete.min.css" />
 {% endblock %}
 
 {% block cookie_message %}
@@ -44,11 +43,4 @@
 
 {% block body_end %}
   {% include "_javascripts.html" %}
-  <script type="text/javascript" src="{{ asset_path }}javascripts/location-autocomplete.min.js"></script>
-  <script type="text/javascript">
-    openregisterLocationPicker({
-      selectElement: document.getElementById('location-autocomplete'),
-      url: '{{ asset_path }}location-autocomplete-graph.json'
-    })
-  </script>
 {% endblock %}
