@@ -92,7 +92,7 @@
       <div class="question">
         <span class="question-heading" id="country-label">Country</span>
         {{ forms.field_errors('registrationCountry', errors=registered_country_form.registrationCountry.errors) }}
-        <select name="registrationCountry" id="location-autocomplete">
+        <select name="registrationCountry" id="location-autocomplete" class="location-autocomplete-fallback">
         {% if not registered_country_form.registrationCountry.data %}
           <option value="" selected="selected"></option>
         {% endif %}
@@ -112,6 +112,7 @@
     %}
       {% include "toolkit/button.html" %}
     {% endwith %}
+
     </div>
   </div>
   <p>
@@ -130,6 +131,7 @@
   });
 
   $('#location-autocomplete').keyup(function(event) {
+    // Clear the input value of the country select input, if the autocomplete is cleared.
     if ($(this).val().length < 2) {
       $('#location-autocomplete-select').val('');
     };
