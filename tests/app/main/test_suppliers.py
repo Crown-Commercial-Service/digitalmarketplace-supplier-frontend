@@ -1063,7 +1063,7 @@ class TestEditSupplierRegisteredAddress(BaseApplicationTest):
                 "address1": "1 Street",
                 "city": "Supplierville",
                 "postcode": "11 AB",
-                "registrationCountry": "GB",
+                "registrationCountry": "country:GB",
             }
         data.update(kwargs)
         res = self.client.post("/suppliers/registered-address/edit", data=data)
@@ -1077,7 +1077,8 @@ class TestEditSupplierRegisteredAddress(BaseApplicationTest):
                 'contactInformation': [{'id': 1234}],
                 'dunsNumber': '999999999',
                 'id': 12345,
-                'name': 'Supplier Name'
+                'name': 'Supplier Name',
+                'registrationCountry': "",
             }
         }
 
@@ -1092,7 +1093,7 @@ class TestEditSupplierRegisteredAddress(BaseApplicationTest):
                 'contactInformation': [{'id': 1234}],
                 'dunsNumber': '999999999',
                 'id': 12345,
-                'registrationCountry': 'GB',
+                'registrationCountry': 'country:GB',
                 'name': 'Supplier Name'
             }
         }
@@ -1101,7 +1102,7 @@ class TestEditSupplierRegisteredAddress(BaseApplicationTest):
         assert response.status_code == 200
 
         doc = html.fromstring(response.get_data(as_text=True))
-        assert doc.xpath("//*[@id='location-autocomplete'][@value='GB']")
+        assert doc.xpath("//option[@selected='selected'][@value='country:GB']")
 
     def test_update_all_supplier_address_fields(self, data_api_client):
         self.login()
@@ -1113,7 +1114,7 @@ class TestEditSupplierRegisteredAddress(BaseApplicationTest):
         data_api_client.update_supplier.assert_called_once_with(
             1234,
             {
-                'registrationCountry': 'GB'
+                'registrationCountry': 'country:GB'
             },
             'email@email.com'
         )
@@ -1136,7 +1137,7 @@ class TestEditSupplierRegisteredAddress(BaseApplicationTest):
             "address1": "  1 Street  ",
             "city": "  Supplierville  ",
             "postcode": "  11 AB  ",
-            "registrationCountry": "GB",
+            "registrationCountry": "country:GB",
         }
 
         status, _ = self.post_supplier_address_edit(data=data)
@@ -1154,7 +1155,7 @@ class TestEditSupplierRegisteredAddress(BaseApplicationTest):
             'email@email.com'
         )
 
-    def test_missing_required_supplier_address_fields(self, data_api_client):
+    def test_validation_on_required_supplier_address_fields(self, data_api_client):
         self.login()
 
         status, response = self.post_supplier_address_edit({
@@ -1176,6 +1177,24 @@ class TestEditSupplierRegisteredAddress(BaseApplicationTest):
         assert 'value="2"' in response
         assert 'value="11 AB"' in response
         assert 'value="SomeStreet"' in response
+
+    def test_validation_fails_for_invalid_country(self, data_api_client):
+        self.login()
+
+        status, response = self.post_supplier_address_edit({
+            "id": 2,
+            "address1": "SomeStreet",
+            "city": "Florence",
+            "postcode": "11 AB",
+            "registeredCountry": "country:BLAH",
+        })
+
+        assert status == 200
+        assert "You need to enter the country." in response
+
+
+        assert data_api_client.update_supplier.called is False
+        assert data_api_client.update_contact_information.called is False
 
     def test_should_redirect_to_login_if_not_logged_in(self, data_api_client):
         res = self.client.get("/suppliers/registered-address/edit")

@@ -1,9 +1,8 @@
 from flask_wtf import Form
 from wtforms import IntegerField, SelectField
-from wtforms.validators import DataRequired, ValidationError, Length, Optional, Regexp
+from wtforms.validators import DataRequired, ValidationError, Length, Optional, Regexp, AnyOf
 
 from dmutils.forms import StripWhitespaceStringField, EmailField, EmailValidator
-
 
 def word_length(limit=None, message=None):
     message = message or 'Must not be more than %d words'
@@ -54,8 +53,14 @@ class EditRegisteredAddressForm(Form):
 
 
 class EditRegisteredCountryForm(Form):
+    def __init__(self, valid_countries=None, **kwargs):
+        super().__init__(**kwargs)
+        if valid_countries:
+            self.registrationCountry.validators[1].values = [country[1] for country in valid_countries]
+
     registrationCountry = StripWhitespaceStringField('Country', validators=[
         DataRequired(message="You need to enter the country."),
+        AnyOf(values=[], message="This is not a valid country"),
     ])
 
 

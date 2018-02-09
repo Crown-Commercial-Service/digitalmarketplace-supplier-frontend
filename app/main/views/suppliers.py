@@ -130,8 +130,12 @@ def edit_registered_address(registered_address_form=None, registered_country_for
 @main.route('/registered-address/edit', methods=['POST'])
 @login_required
 def update_registered_address():
+    countryfile = os.path.join(current_app.static_folder, 'location-autocomplete-canonical-list.json')
+    with open(countryfile) as f:
+        countries = json.load(f)
+
     registered_address_form = EditRegisteredAddressForm()
-    registered_country_form = EditRegisteredCountryForm()
+    registered_country_form = EditRegisteredCountryForm(valid_countries=countries)
 
     address_valid = registered_address_form.validate_on_submit()
     country_valid = registered_country_form.validate_on_submit()
