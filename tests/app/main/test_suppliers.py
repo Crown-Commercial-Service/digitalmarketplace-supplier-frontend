@@ -1982,3 +1982,63 @@ class TestBecomeASupplier(BaseApplicationTest):
             # Check the right calls to action are there
             assert 'Create a supplier account' in data
             assert 'Get notifications when applications are opening' in data
+
+
+@mock.patch("app.main.views.suppliers.data_api_client", autospec=True)
+class TestSupplierEditOrganisationSize(BaseApplicationTest):
+    def test_edit_organisation_size_page_loads(self, data_api_client):
+        with self.app.test_client():
+            self.login()
+
+            res = self.client.get("/suppliers/organisation-size/edit")
+            assert res.status_code == 200, 'The edit organisation-size page has not loaded correctly.'
+
+    def test_no_selection_triggers_input_required_validation(self, data_api_client):
+        with self.app.test_client():
+            self.login()
+
+            res = self.client.post("/suppliers/organisation-size/edit")
+            doc = html.fromstring(res.get_data(as_text=True))
+            error = doc.xpath('//span[@id="error-organisation_size"]')
+
+            assert len(error) == 1, \
+                'Only one validation message should be shown.'
+
+            assert error[0].text.strip() == 'You must choose an organisation size.', \
+                'The validation message is not as anticipated.'
+
+    @pytest.mark.parametrize('size', (None, 'micro', 'small', 'medium', 'large'))
+    def test_post_choice_triggers_api_supplier_update_and_redirect(self, data_api_client, size):
+        with self.app.test_client():
+            self.login()
+
+            self.client.post("/suppliers/organisation-size/edit", data={'organisation_size': size})
+
+            call_args_list = data_api_client.update_supplier.call_args_list
+            if size:
+                assert call_args_list == [
+                    mock.call(supplier_id=1234, supplier={'organisationSize': size}, user='email@email.com')
+                ], 'update_supplier was called with the wrong arguments'
+
+            else:
+                assert call_args_list == [], 'update_supplier was called with the wrong arguments'
+
+    @pytest.mark.parametrize('existing_size, expected_selection',
+                             (
+                                 (None, []),
+                                 ('micro', ['micro']),
+                                 ('small', ['small']),
+                                 ('medium', ['medium']),
+                                 ('large', ['large']),
+                             ))
+    def test_existing_org_size_sets_current_selection(self, data_api_client, existing_size, expected_selection):
+        data = {'organisationSize': existing_size} if existing_size else {}
+        data_api_client.get_supplier.return_value = {'suppliers': data}
+
+        with self.app.test_client():
+            self.login()
+
+            res = self.client.get("/suppliers/organisation-size/edit")
+            doc = html.fromstring(res.get_data(as_text=True))
+            selected_value = doc.xpath('//input[@name="organisation_size" and @checked="checked"]/@value')
+            assert selected_value == expected_selection, 'The organisation size has not pre-populated correctly.'
