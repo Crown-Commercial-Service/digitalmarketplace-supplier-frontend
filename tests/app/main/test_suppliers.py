@@ -1170,7 +1170,6 @@ class TestEditSupplierRegisteredAddress(BaseApplicationTest):
         assert "You need to enter the town or city." in response
         assert "You need to enter the country." in response
 
-
         assert data_api_client.update_supplier.called is False
         assert data_api_client.update_contact_information.called is False
 
@@ -1191,7 +1190,6 @@ class TestEditSupplierRegisteredAddress(BaseApplicationTest):
 
         assert status == 200
         assert "You need to enter the country." in response
-
 
         assert data_api_client.update_supplier.called is False
         assert data_api_client.update_contact_information.called is False

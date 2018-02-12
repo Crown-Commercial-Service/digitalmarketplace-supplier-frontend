@@ -4,6 +4,7 @@ from wtforms.validators import AnyOf, DataRequired, InputRequired, Length, Optio
 
 from dmutils.forms import StripWhitespaceStringField, EmailField, EmailValidator
 
+
 def word_length(limit=None, message=None):
     message = message or 'Must not be more than %d words'
     message = message % limit
