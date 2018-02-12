@@ -14,7 +14,7 @@ from ...main import main, content_loader
 from ... import data_api_client
 from ..forms.suppliers import (
     EditSupplierForm, EditContactInformationForm, DunsNumberForm, CompaniesHouseNumberForm,
-    CompanyContactDetailsForm, CompanyNameForm, EmailAddressForm
+    CompanyContactDetailsForm, CompanyNameForm, EmailAddressForm, EditRegisteredAddressForm, EditRegisteredCountryForm
 )
 from ..helpers.frameworks import get_frameworks_by_status, get_frameworks_closed_and_open_for_applications
 from ..helpers import login_required
@@ -90,6 +90,77 @@ def supplier_details():
         "suppliers/details.html",
         supplier=supplier,
     ), 200
+
+
+@main.route('/registered-address/edit', methods=['GET'])
+@login_required
+def edit_registered_address(registered_address_form=None, registered_country_form=None, error=None):
+    try:
+        supplier = data_api_client.get_supplier(
+            current_user.supplier_id
+        )['suppliers']
+    except APIError as e:
+        abort(e.status_code)
+    supplier['contact'] = supplier['contactInformation'][0]
+
+    if not registered_address_form:
+        registered_address_form = EditRegisteredAddressForm(
+            **supplier['contactInformation'][0]
+        )
+
+    if not registered_country_form:
+        registered_country_form = EditRegisteredCountryForm(
+            registrationCountry=supplier['registrationCountry']
+        )
+
+    return render_template(
+        "suppliers/registered_address.html",
+        supplier=supplier,
+        countries=current_app.config['COUNTRY_LIST'],
+        registered_address_form=registered_address_form,
+        registered_country_form=registered_country_form,
+        error=error,
+    ), 200
+
+
+@main.route('/registered-address/edit', methods=['POST'])
+@login_required
+def update_registered_address():
+    registered_address_form = EditRegisteredAddressForm()
+    registered_country_form = EditRegisteredCountryForm(
+        valid_countries=current_app.config['COUNTRY_LIST']
+    )
+
+    address_valid = registered_address_form.validate_on_submit()
+    country_valid = registered_country_form.validate_on_submit()
+
+    if not (address_valid and country_valid):
+        return edit_registered_address(
+            registered_address_form=registered_address_form,
+            registered_country_form=registered_country_form,
+        )
+
+    try:
+        data_api_client.update_supplier(
+            current_user.supplier_id,
+            registered_country_form.data,
+            current_user.email_address,
+        )
+
+        data_api_client.update_contact_information(
+            current_user.supplier_id,
+            registered_address_form.id.data,
+            registered_address_form.data,
+            current_user.email_address
+        )
+    except APIError as e:
+        return edit_registered_address(
+            registered_address_form=registered_address_form,
+            registered_country_form=registered_country_form,
+            error=e.message,
+        )
+
+    return redirect(url_for(".supplier_details"))
 
 
 @main.route('/edit', methods=['GET'])

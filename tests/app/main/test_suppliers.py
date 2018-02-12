@@ -1054,6 +1054,152 @@ class TestSupplierUpdate(BaseApplicationTest):
         assert res.location == "http://localhost/user/login?next=%2Fsuppliers%2Fdetails%2Fedit"
 
 
+@mock.patch("app.main.views.suppliers.data_api_client")
+class TestEditSupplierRegisteredAddress(BaseApplicationTest):
+    def post_supplier_address_edit(self, data=None, **kwargs):
+        if data is None:
+            data = {
+                "id": 2,
+                "address1": "1 Street",
+                "city": "Supplierville",
+                "postcode": "11 AB",
+                "registrationCountry": "country:GB",
+            }
+        data.update(kwargs)
+        res = self.client.post("/suppliers/registered-address/edit", data=data)
+        return res.status_code, res.get_data(as_text=True)
+
+    def test_should_render_edit_address_page_with_minimum_data(self, data_api_client):
+        self.login()
+
+        data_api_client.get_supplier.return_value = {
+            'suppliers': {
+                'contactInformation': [{'id': 1234}],
+                'dunsNumber': '999999999',
+                'id': 12345,
+                'name': 'Supplier Name',
+                'registrationCountry': "",
+            }
+        }
+
+        response = self.client.get("/suppliers/registered-address/edit")
+        assert response.status_code == 200
+
+    def test_should_prepopulate_country_field(self, data_api_client):
+        self.login()
+
+        data_api_client.get_supplier.return_value = {
+            'suppliers': {
+                'contactInformation': [{'id': 1234}],
+                'dunsNumber': '999999999',
+                'id': 12345,
+                'registrationCountry': 'country:GB',
+                'name': 'Supplier Name'
+            }
+        }
+
+        response = self.client.get("/suppliers/registered-address/edit")
+        assert response.status_code == 200
+
+        doc = html.fromstring(response.get_data(as_text=True))
+        assert doc.xpath("//option[@selected='selected'][@value='country:GB']")
+
+    def test_update_all_supplier_address_fields(self, data_api_client):
+        self.login()
+
+        status, _ = self.post_supplier_address_edit()
+
+        assert status == 302
+
+        data_api_client.update_supplier.assert_called_once_with(
+            1234,
+            {
+                'registrationCountry': 'country:GB'
+            },
+            'email@email.com'
+        )
+        data_api_client.update_contact_information.assert_called_once_with(
+            1234, 2,
+            {
+                'city': 'Supplierville',
+                'address1': '1 Street',
+                'postcode': '11 AB',
+                'id': 2
+            },
+            'email@email.com'
+        )
+
+    def test_should_strip_whitespace_surrounding_supplier_update_all_fields(self, data_api_client):
+        self.login()
+
+        data = {
+            "id": 2,
+            "address1": "  1 Street  ",
+            "city": "  Supplierville  ",
+            "postcode": "  11 AB  ",
+            "registrationCountry": "country:GB",
+        }
+
+        status, _ = self.post_supplier_address_edit(data=data)
+
+        assert status == 302
+
+        data_api_client.update_contact_information.assert_called_once_with(
+            1234, 2,
+            {
+                'city': 'Supplierville',
+                'address1': '1 Street',
+                'postcode': '11 AB',
+                'id': 2
+            },
+            'email@email.com'
+        )
+
+    def test_validation_on_required_supplier_address_fields(self, data_api_client):
+        self.login()
+
+        status, response = self.post_supplier_address_edit({
+            "id": 2,
+            "address1": "SomeStreet",
+            "city": "",
+            "postcode": "11 AB",
+            "registeredCountry": "",
+        })
+
+        assert status == 200
+        assert "You need to enter the town or city." in response
+        assert "You need to enter the country." in response
+
+        assert data_api_client.update_supplier.called is False
+        assert data_api_client.update_contact_information.called is False
+
+        assert 'value="2"' in response
+        assert 'value="11 AB"' in response
+        assert 'value="SomeStreet"' in response
+
+    def test_validation_fails_for_invalid_country(self, data_api_client):
+        self.login()
+
+        status, response = self.post_supplier_address_edit({
+            "id": 2,
+            "address1": "SomeStreet",
+            "city": "Florence",
+            "postcode": "11 AB",
+            "registeredCountry": "country:BLAH",
+        })
+
+        assert status == 200
+        assert "You need to enter the country." in response
+
+        assert data_api_client.update_supplier.called is False
+        assert data_api_client.update_contact_information.called is False
+
+    def test_should_redirect_to_login_if_not_logged_in(self, data_api_client):
+        res = self.client.get("/suppliers/registered-address/edit")
+        assert res.status_code == 302
+        assert res.location == "http://localhost/user/login?next=%2Fsuppliers%2Fregistered-address%2Fedit"
+
+
 class TestCreateSupplier(BaseApplicationTest):
     def test_should_be_an_error_if_no_duns_number(self):
         res = self.client.post(

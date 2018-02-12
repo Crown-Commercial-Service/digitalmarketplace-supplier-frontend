@@ -1,0 +1,148 @@
+{% extends "_base_page.html" %}
+{% import "macros/forms.html" as forms %}
+{% import "toolkit/summary-table.html" as summary %}
+{% block head %}
+  <link rel="stylesheet" href="{{ asset_path }}stylesheets/location-autocomplete.min.css" />
+  {{ super() }}
+{% endblock %}
+{% block page_title %}Registered address – Digital Marketplace{% endblock %}
+
+{% block breadcrumb %}
+  {%
+    with items = [
+      {
+        "link": "/",
+        "label": "Digital Marketplace"
+      },
+      {
+        "link": url_for(".dashboard"),
+        "label": "Your account"
+      },
+      {
+        "link": url_for(".supplier_details"),
+        "label": "Supplier details"
+      },
+    ]
+  %}
+    {% include "toolkit/breadcrumb.html" %}
+  {% endwith %}
+{% endblock %}
+
+
+{% block main_content %}
+
+  <div class="grid-row">
+    <div class="column-one-whole">
+      {% with
+        heading = "What is your registered office address?",
+        smaller = true
+      %}
+        {% include 'toolkit/page-heading.html' %}
+      {% endwith %}
+    </div>
+  </div>
+
+  {% if error %}
+  <div class="validation-masthead" aria-labelledby="validation-masthead-heading">
+    <h3 class="validation-masthead-heading" id="validation-masthead-heading">
+      {{ error }}
+    </h3>
+  </div>
+  {% endif %}
+
+  {% if registered_address_form.errors or registered_country_form.errors %}
+      <div class="validation-masthead" aria-labelledby="validation-masthead-heading">
+          <h3 class="validation-masthead-heading" id="validation-masthead-heading">
+              There was a problem with the details you gave for:
+          </h3>
+          {% if registered_address_form.errors %}
+          <ul>
+          {% for field_name, field_errors in registered_address_form.errors|dictsort %}
+            {% for error in field_errors %}
+              <li><a href="#{{ field_name }}" class="validation-masthead-link">{{ registered_address_form[field_name].label.text }}</a>
+            {% endfor %}
+          {% endfor %}
+          </ul>
+          {% endif %}
+
+          {% if registered_country_form.errors %}
+          <ul>
+          {% for field_name, field_errors in registered_country_form.errors|dictsort %}
+            {% for error in field_errors %}
+            <li><a href="javascript:document.getElementById('location-autocomplete').focus()" class="validation-masthead-link">{{ registered_country_form[field_name].label.text }}</a></li>
+            {% endfor %}
+          {% endfor %}
+          </ul>
+          {% endif %}
+      </div>
+  {% endif %}
+
+  <form action="{{ url_for('.update_registered_address') }}" method="post" enctype="multipart/form-data">
+
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+
+  <div class="grid-row">
+    <div class="column-two-thirds">
+
+      {{ forms.input('id', registered_address_form.id.data, type='hidden') }}
+      {{ forms.question_input('address1', 'Building and street', value=registered_address_form.address1.data, errors=registered_address_form.address1.errors) }}
+      {{ forms.question_input('city', 'Town or city', value=registered_address_form.city.data, errors=registered_address_form.city.errors) }}
+      {{ forms.question_input('postcode', 'Postcode', value=registered_address_form.postcode.data, errors=registered_address_form.postcode.errors) }}
+
+      {% if registered_country_form.registrationCountry.errors %}
+        <div class="validation-wrapper">
+        <style>
+          #location-autocomplete {border: 5px solid #B10E1E;}
+          .autocomplete__hint {border: 5px solid;}
+        </style>
+      {% endif %}
+
+      <div class="question">
+        <span class="question-heading" id="country-label">Country</span>
+        {{ forms.field_errors('registrationCountry', errors=registered_country_form.registrationCountry.errors) }}
+        <select name="registrationCountry" id="location-autocomplete">
+        {% if not registered_country_form.registrationCountry.data %}
+          <option value="" selected="selected"></option>
+        {% endif %}
+        {% for country in countries %}
+          <option value="{{country[1]}}"{% if registered_country_form.registrationCountry.data == country[1]%} selected="selected"{% endif %}>{{country[0]}}</option>
+        {% endfor %}
+        </select>
+      </div>
+      {% if registered_country_form.registrationCountry.errors %}
+        </div>
+      {% endif %}
+
+    {%
+      with
+      type = "save",
+      label = "Save and return"
+    %}
+      {% include "toolkit/button.html" %}
+    {% endwith %}
+
+    </div>
+  </div>
+  <p>
+    <a href="{{ url_for('.supplier_details') }}">Return without saving</a>
+  </p>
+</form>
+{% endblock %}
+
+{% block body_end %}
+{{ super() }}
+<script type="text/javascript" src="{{ asset_path }}javascripts/location-autocomplete.min.js"></script>
+<script type="text/javascript">
+  openregisterLocationPicker({
+    selectElement: document.getElementById('location-autocomplete'),
+    url: '{{ asset_path }}location-autocomplete-graph.json'
+  });
+
+  $('#location-autocomplete').keyup(function(event) {
+    // Clear the input value of the country select input, if the autocomplete is cleared.
+    if ($(this).val().length < 2) {
+      $('#location-autocomplete-select').val('');
+    };
+  });
+</script>
+{% endblock %}
