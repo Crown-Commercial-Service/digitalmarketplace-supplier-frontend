@@ -17,17 +17,12 @@
 {% endblock %}
 
 {% block main_content %}
-
-{%
-  with
-    heading = "Create login",
-    smaller = True
-%}
-  {% include "toolkit/page-heading.html" %}
-{% endwith %}
-
 <div class="grid-row">
   <div class="column-two-thirds">
+    {% with heading = "Create login", smaller = True %}
+      {% include "toolkit/page-heading.html" %}
+    {% endwith %}
+    
     <div class="dmspeak">
        <p>You’ll use this to sign in to your company’s supplier account.</p>
        <p>It won’t be visible on the Digital Marketplace.</p>

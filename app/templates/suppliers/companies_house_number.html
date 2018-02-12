@@ -18,16 +18,12 @@
 {% block main_content %}
 
 <div class="single-question-page">
-  {%
-    with
-      heading = "Companies House number (optional)",
-      smaller = True
-  %}
-  {% include "toolkit/page-heading.html" %}
-  {% endwith %}
-
   <div class="grid-row">
     <div class="column-two-thirds">
+      {% with heading = "Companies House number (optional)", smaller = True %}
+        {% include "toolkit/page-heading.html" %}
+      {% endwith %}
+      
       <form method="POST" action="{{ url_for('.submit_companies_house_number') }}">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
         {% set question_advice %}

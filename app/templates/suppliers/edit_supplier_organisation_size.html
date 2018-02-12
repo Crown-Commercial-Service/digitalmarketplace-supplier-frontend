@@ -24,12 +24,12 @@
 {% block main_content %}
 
 <div class="single-question-page">
-  {% with heading = "What size is your organisation?",
-          smaller = True %}
-    {% include "toolkit/page-heading.html" %}
-  {% endwith %}
   <div class="grid-row">
     <div class="column-two-thirds">
+      {% with heading = "What size is your organisation?", smaller = True %}
+        {% include "toolkit/page-heading.html" %}
+      {% endwith %}
+      
       <form method="POST" action="{{ url_for('.edit_supplier_organisation_size') }}">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
         {% set hint %}

@@ -32,21 +32,16 @@ with items = [
     </div>
 {% endif %}
 
-{%
-with
-    heading = "Company contact details",
-    smaller = True
-%}
-{% include "toolkit/page-heading.html" %}
-{% endwith %}
-
 <div class="grid-row">
-
     <div class="column-two-thirds">
+        {% with heading = "Company contact details", smaller = True %}
+            {% include "toolkit/page-heading.html" %}
+        {% endwith %}
+        
         <p>This information will be visible on the Digital Marketplace.</p>
-
+    
         <p>You can change it at any time.</p>
-
+    
         <form method="POST" action="{{ url_for('.submit_company_contact_details') }}">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
             {%
@@ -58,7 +53,7 @@ with
             %}
             {% include "toolkit/forms/textbox.html" %}
             {% endwith %}
-
+    
             {%
                 with
                     question = "Contact email address",
@@ -68,7 +63,7 @@ with
             %}
             {% include "toolkit/forms/textbox.html" %}
             {% endwith %}
-
+    
             {%
                 with
                     question = "Contact phone number",
