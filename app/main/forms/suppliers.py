@@ -1,8 +1,9 @@
 from flask_wtf import Form
-from wtforms import IntegerField, SelectField
+from wtforms import IntegerField
 from wtforms.validators import DataRequired, ValidationError, Length, Optional, Regexp, AnyOf
 
 from dmutils.forms import StripWhitespaceStringField, EmailField, EmailValidator
+
 
 def word_length(limit=None, message=None):
     message = message or 'Must not be more than %d words'

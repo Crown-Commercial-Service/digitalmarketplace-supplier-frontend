@@ -1,6 +1,7 @@
 # coding=utf-8
 
 import os
+import json
 import jinja2
 from dmutils.status import enabled_since, get_version_label
 from dmutils.asset_fingerprint import AssetFingerprinter
@@ -83,6 +84,14 @@ class Config(object):
     DM_LOG_PATH = None
     DM_APP_NAME = 'supplier-frontend'
     DM_DOWNSTREAM_REQUEST_ID_HEADER = 'X-Amz-Cf-Id'
+
+    def load_countries():
+        repo_root = os.path.abspath(os.path.dirname(__file__))
+        countryfile = os.path.join(repo_root, 'app/static/location-autocomplete-canonical-list.json')
+        with open(countryfile) as f:
+            return json.load(f)
+
+    COUNTRY_LIST = load_countries()
 
     @staticmethod
     def init_app(app):

@@ -19,8 +19,6 @@ from ..forms.suppliers import (
 from ..helpers.frameworks import get_frameworks_by_status, get_frameworks_closed_and_open_for_applications
 from ..helpers import login_required
 from .users import get_current_suppliers_users
-import json
-import os
 
 
 @main.route('')
@@ -105,9 +103,6 @@ def edit_registered_address(registered_address_form=None, registered_country_for
         abort(e.status_code)
     supplier['contact'] = supplier['contactInformation'][0]
 
-    countryfile = os.path.join(current_app.static_folder, 'location-autocomplete-canonical-list.json')
-    with open(countryfile) as f:
-        countries = json.load(f)
     if not registered_address_form:
         registered_address_form = EditRegisteredAddressForm(
             **supplier['contactInformation'][0]
@@ -121,21 +116,20 @@ def edit_registered_address(registered_address_form=None, registered_country_for
     return render_template(
         "suppliers/registered_address.html",
         supplier=supplier,
-        countries=countries,
+        countries=current_app.config['COUNTRY_LIST'],
         registered_address_form=registered_address_form,
         registered_country_form=registered_country_form,
         error=error,
     ), 200
 
+
 @main.route('/registered-address/edit', methods=['POST'])
 @login_required
 def update_registered_address():
-    countryfile = os.path.join(current_app.static_folder, 'location-autocomplete-canonical-list.json')
-    with open(countryfile) as f:
-        countries = json.load(f)
-
     registered_address_form = EditRegisteredAddressForm()
-    registered_country_form = EditRegisteredCountryForm(valid_countries=countries)
+    registered_country_form = EditRegisteredCountryForm(
+        valid_countries=current_app.config['COUNTRY_LIST']
+    )
 
     address_valid = registered_address_form.validate_on_submit()
     country_valid = registered_country_form.validate_on_submit()
