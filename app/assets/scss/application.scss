@@ -104,11 +104,11 @@ $path: "/suppliers/static/images/";
 // app-specific.
 ins {
   text-decoration: none;
-  background-color: $diff-insertion-color;
+  background-color: $diff-insertion-green;
   padding-right: 3px;
 }
 
 del {
-  background-color: $diff-deletion-color;
+  background-color: $diff-deletion-red;
   padding-right: 3px;
 }
