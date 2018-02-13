@@ -521,7 +521,7 @@ detect-file@^1.0.0:
 
 "digitalmarketplace-frameworks@https://github.com/alphagov/digitalmarketplace-frameworks.git#10.4.0":
   version "0.0.0"
-  resolved "https://github.com/alphagov/digitalmarketplace-frameworks.git#c527a235aa0f02e789d8384df53da9bf3bb7b480"
+  resolved "https://github.com/alphagov/digitalmarketplace-frameworks.git#f38764d3d1782bf999b16fae2e5240aee75ba524"
 
 "digitalmarketplace-frontend-toolkit@https://github.com/alphagov/digitalmarketplace-frontend-toolkit.git#v27.0.0":
   version "0.0.1"
