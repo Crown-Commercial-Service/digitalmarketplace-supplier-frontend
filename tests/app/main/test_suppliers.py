@@ -53,7 +53,7 @@ def get_supplier(*args, **kwargs):
         "dunsNumber": "987654321",
         "companiesHouseNumber": "CH123456",
         "registeredName": "Official Name Inc",
-        "registrationCountry": "bz",
+        "registrationCountry": "country:BZ",
         "otherCompanyRegistrationNumber": "BEL153",
         "registrationDate": "1973-01-02",
         "vatNumber": "12345678",
@@ -744,7 +744,7 @@ class TestSupplierDetails(BaseApplicationTest):
                 assert document.xpath("//*[normalize-space(string())=$t]", t=property_str), property_str
 
             # Registration country and registration number not shown if Companies House ID exists
-            for property_str in ("bz", "BEL153",):
+            for property_str in ("Belize", "BEL153",):
                 assert property_str not in page_html
 
             data_api_client.get_supplier.assert_called_once_with(1234)
@@ -758,11 +758,13 @@ class TestSupplierDetails(BaseApplicationTest):
             assert res.status_code == 200
             page_html = res.get_data(as_text=True)
             document = html.fromstring(page_html)
-            for property_str in ("BZ", "BEL153",):
+            for property_str in ("Belize", "BEL153",):
                 assert document.xpath("//*[normalize-space(string())=$t]", t=property_str), property_str
 
     def test_does_not_show_overseas_supplier_number_if_uk_company(self, data_api_client):
-        data_api_client.get_supplier.return_value = get_supplier(companiesHouseNumber=None, registrationCountry="gb")
+        data_api_client.get_supplier.return_value = get_supplier(
+            companiesHouseNumber=None, registrationCountry="country:GB"
+        )
         with self.app.test_client():
             self.login()
 
@@ -770,8 +772,21 @@ class TestSupplierDetails(BaseApplicationTest):
             assert res.status_code == 200
             page_html = res.get_data(as_text=True)
             document = html.fromstring(page_html)
-            assert document.xpath("//*[normalize-space(string())='GB']")  # Country GB is shown
+            assert document.xpath("//*[normalize-space(string())='United Kingdom']")  # Country United Kingdom is shown
             assert "BEL153" not in page_html  # But overseas registration field isn't
+
+    def test_shows_united_kingdom_for_old_style_country_code(self, data_api_client):
+        data_api_client.get_supplier.return_value = get_supplier(
+            companiesHouseNumber=None, registrationCountry="gb"
+        )
+        with self.app.test_client():
+            self.login()
+
+            res = self.client.get("/suppliers/details")
+            assert res.status_code == 200
+            page_html = res.get_data(as_text=True)
+            document = html.fromstring(page_html)
+            assert document.xpath("//*[normalize-space(string())='United Kingdom']")  # Country United Kingdom is shown
 
 
 @mock.patch("app.main.views.suppliers.data_api_client", autospec=True)
