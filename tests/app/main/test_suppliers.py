@@ -1183,7 +1183,7 @@ class TestEditSupplierRegisteredAddress(BaseApplicationTest):
 
         assert status == 200
         assert "You need to enter the town or city." in response
-        assert "You need to enter the country." in response
+        assert "You need to enter a country." in response
 
         assert data_api_client.update_supplier.called is False
         assert data_api_client.update_contact_information.called is False
@@ -1191,6 +1191,47 @@ class TestEditSupplierRegisteredAddress(BaseApplicationTest):
         assert 'value="2"' in response
         assert 'value="11 AB"' in response
         assert 'value="SomeStreet"' in response
+
+    @pytest.mark.parametrize(
+        'length, validation_error_returned, status_code',
+        (
+            (255, False, 302),
+            (256, True, 200),
+        ),
+    )
+    def test_validation_on_length_of_supplier_address_fields(
+        self, data_api_client, length, validation_error_returned, status_code
+    ):
+        self.login()
+
+        status, response = self.post_supplier_address_edit({
+            "id": 2,
+            "address1": "A" * length,
+            "city": "C" * length,
+            "postcode": "P" * length,
+            "registrationCountry": "country:GB",
+        })
+
+        assert status == status_code
+
+        validation_messages = [
+            "You must provide a building and street name under 256 characters.",
+            "You must provide a town or city name under 256 characters.",
+            "You must provide a valid postcode.",
+        ]
+        for message in validation_messages:
+            assert (message in response) == validation_error_returned
+
+        assert data_api_client.update_supplier.called is not validation_error_returned
+        assert data_api_client.update_contact_information.called is not validation_error_returned
+
+        data_values = [
+            f"value=\"{'A' * length}\"",
+            f"value=\"{'C' * length}\"",
+            f"value=\"{'P' * length}\"",
+        ]
+        for value in data_values:
+            assert (value in response) == validation_error_returned
 
     def test_validation_fails_for_invalid_country(self, data_api_client):
         self.login()
@@ -1204,7 +1245,7 @@ class TestEditSupplierRegisteredAddress(BaseApplicationTest):
         })
 
         assert status == 200
-        assert "You need to enter the country." in response
+        assert "You need to enter a country." in response
 
         assert data_api_client.update_supplier.called is False
         assert data_api_client.update_contact_information.called is False
