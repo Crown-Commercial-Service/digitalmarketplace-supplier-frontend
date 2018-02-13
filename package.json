@@ -21,7 +21,7 @@
     "hogan.js": "3.0.2",
     "digitalmarketplace-frontend-toolkit": "https://github.com/alphagov/digitalmarketplace-frontend-toolkit.git#v27.0.0",
     "govuk_template": "https://github.com/alphagov/govuk_template/releases/download/v0.19.2/jinja_govuk_template-0.19.2.tgz",
-    "digitalmarketplace-frameworks": "https://github.com/alphagov/digitalmarketplace-frameworks.git#10.2.0"
+    "digitalmarketplace-frameworks": "https://github.com/alphagov/digitalmarketplace-frameworks.git#10.4.0"
   },
   "scripts": {
     "frontend-build:development": "./node_modules/gulp/bin/gulp.js build:development",
