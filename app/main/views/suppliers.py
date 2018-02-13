@@ -25,7 +25,8 @@ from ..forms.suppliers import (
     EmailAddressForm,
 )
 from ..helpers.frameworks import get_frameworks_by_status, get_frameworks_closed_and_open_for_applications
-from ..helpers import login_required, COUNTRY_LIST
+from ..helpers.suppliers import get_country_name_from_country_code, COUNTRY_TUPLE
+from ..helpers import login_required
 from .users import get_current_suppliers_users
 
 
@@ -93,10 +94,12 @@ def supplier_details():
     except APIError as e:
         abort(e.status_code)
     supplier['contact'] = supplier['contactInformation'][0]
+    country_name = get_country_name_from_country_code(supplier['registrationCountry'])
 
     return render_template(
         "suppliers/details.html",
         supplier=supplier,
+        country_name=country_name,
     ), 200
 
 
@@ -124,7 +127,7 @@ def edit_registered_address(registered_address_form=None, registered_country_for
     return render_template(
         "suppliers/registered_address.html",
         supplier=supplier,
-        countries=COUNTRY_LIST,
+        countries=COUNTRY_TUPLE,
         registered_address_form=registered_address_form,
         registered_country_form=registered_country_form,
         error=error,
@@ -135,9 +138,7 @@ def edit_registered_address(registered_address_form=None, registered_country_for
 @login_required
 def update_registered_address():
     registered_address_form = EditRegisteredAddressForm()
-    registered_country_form = EditRegisteredCountryForm(
-        valid_countries=COUNTRY_LIST
-    )
+    registered_country_form = EditRegisteredCountryForm()
 
     address_valid = registered_address_form.validate_on_submit()
     country_valid = registered_country_form.validate_on_submit()

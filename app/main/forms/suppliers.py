@@ -3,6 +3,7 @@ from wtforms import IntegerField, RadioField, SelectField
 from wtforms.validators import AnyOf, DataRequired, InputRequired, Length, Optional, Regexp, ValidationError
 
 from dmutils.forms import StripWhitespaceStringField, EmailField, EmailValidator
+from ..helpers.suppliers import COUNTRY_TUPLE
 
 
 def word_length(limit=None, message=None):
@@ -54,14 +55,9 @@ class EditRegisteredAddressForm(Form):
 
 
 class EditRegisteredCountryForm(Form):
-    def __init__(self, valid_countries=None, **kwargs):
-        super().__init__(**kwargs)
-        if valid_countries:
-            self.registrationCountry.validators[1].values = [country[1] for country in valid_countries]
-
     registrationCountry = StripWhitespaceStringField('Country', validators=[
-        DataRequired(message="You need to enter the country."),
-        AnyOf(values=[], message="This is not a valid country"),
+        InputRequired(message="You need to enter a country."),
+        AnyOf(values=[country[1] for country in COUNTRY_TUPLE], message="You must enter a valid country."),
     ])
 
 
