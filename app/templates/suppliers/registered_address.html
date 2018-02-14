@@ -69,14 +69,13 @@
     </div>
   </div>
 
-  <form action="{{ url_for('.update_registered_address') }}" method="post">
+  <form action="{{ url_for('.edit_registered_address') }}" method="post">
 
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
 
   <div class="grid-row">
     <div class="column-two-thirds">
 
-      {{ forms.input('id', registered_address_form.id.data, type='hidden') }}
       {{ forms.question_input('address1', 'Building and street', value=registered_address_form.address1.data, errors=registered_address_form.address1.errors) }}
       {{ forms.question_input('city', 'Town or city', value=registered_address_form.city.data, errors=registered_address_form.city.errors) }}
       {{ forms.question_input('postcode', 'Postcode', value=registered_address_form.postcode.data, errors=registered_address_form.postcode.errors) }}

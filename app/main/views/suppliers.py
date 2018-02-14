@@ -103,9 +103,9 @@ def supplier_details():
     ), 200
 
 
-@main.route('/registered-address/edit', methods=['GET'])
+@main.route('/registered-address/edit', methods=['GET', 'POST'])
 @login_required
-def edit_registered_address(registered_address_form=None, registered_country_form=None, error=None):
+def edit_registered_address():
     try:
         supplier = data_api_client.get_supplier(
             current_user.supplier_id
@@ -114,15 +114,44 @@ def edit_registered_address(registered_address_form=None, registered_country_for
         abort(e.status_code)
     supplier['contact'] = supplier['contactInformation'][0]
 
-    if not registered_address_form:
-        registered_address_form = EditRegisteredAddressForm(
-            **supplier['contactInformation'][0]
-        )
+    error = None
+    http_status = 200
+    registered_address_form = EditRegisteredAddressForm()
+    registered_country_form = EditRegisteredCountryForm()
 
-    if not registered_country_form:
-        registered_country_form = EditRegisteredCountryForm(
-            registrationCountry=supplier['registrationCountry']
-        )
+    if request.method == 'POST':
+        address_valid = registered_address_form.validate_on_submit()
+        country_valid = registered_country_form.validate_on_submit()
+
+        if address_valid and country_valid:
+            try:
+                data_api_client.update_supplier(
+                    current_user.supplier_id,
+                    registered_country_form.data,
+                    current_user.email_address,
+                )
+
+                data_api_client.update_contact_information(
+                    current_user.supplier_id,
+                    supplier['contact']['id'],
+                    registered_address_form.data,
+                    current_user.email_address
+                )
+
+            except APIError as e:
+                error = e.message
+
+            else:
+                return redirect(url_for(".supplier_details"))
+
+        http_status = 400
+
+    else:
+        registered_address_form.address1.data = supplier['contact'].get('address1')
+        registered_address_form.city.data = supplier['contact'].get('city')
+        registered_address_form.postcode.data = supplier['contact'].get('postcode')
+
+        registered_country_form.registrationCountry.data = supplier.get('registrationCountry')
 
     return render_template(
         "suppliers/registered_address.html",
@@ -131,45 +160,7 @@ def edit_registered_address(registered_address_form=None, registered_country_for
         registered_address_form=registered_address_form,
         registered_country_form=registered_country_form,
         error=error,
-    ), 200
-
-
-@main.route('/registered-address/edit', methods=['POST'])
-@login_required
-def update_registered_address():
-    registered_address_form = EditRegisteredAddressForm()
-    registered_country_form = EditRegisteredCountryForm()
-
-    address_valid = registered_address_form.validate_on_submit()
-    country_valid = registered_country_form.validate_on_submit()
-
-    if not (address_valid and country_valid):
-        return edit_registered_address(
-            registered_address_form=registered_address_form,
-            registered_country_form=registered_country_form,
-        )
-
-    try:
-        data_api_client.update_supplier(
-            current_user.supplier_id,
-            registered_country_form.data,
-            current_user.email_address,
-        )
-
-        data_api_client.update_contact_information(
-            current_user.supplier_id,
-            registered_address_form.id.data,
-            registered_address_form.data,
-            current_user.email_address
-        )
-    except APIError as e:
-        return edit_registered_address(
-            registered_address_form=registered_address_form,
-            registered_country_form=registered_country_form,
-            error=e.message,
-        )
-
-    return redirect(url_for(".supplier_details"))
+    ), http_status
 
 
 @main.route('/edit', methods=['GET'])

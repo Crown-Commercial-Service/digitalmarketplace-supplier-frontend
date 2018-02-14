@@ -42,7 +42,6 @@ class EditContactInformationForm(Form):
 
 
 class EditRegisteredAddressForm(Form):
-    id = IntegerField()
     address1 = StripWhitespaceStringField('Building and street', validators=[
         InputRequired(message="You need to enter the street address."),
         Length(max=255, message="You must provide a building and street name under 256 characters."),
