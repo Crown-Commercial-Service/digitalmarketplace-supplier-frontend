@@ -1,5 +1,5 @@
 from flask_wtf import Form
-from wtforms import IntegerField, RadioField, SelectField
+from wtforms import IntegerField, RadioField
 from wtforms.validators import AnyOf, InputRequired, Length, Optional, Regexp, ValidationError
 
 from dmutils.forms import StripWhitespaceStringField, EmailField, EmailValidator

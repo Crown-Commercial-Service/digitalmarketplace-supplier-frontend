@@ -1,5 +1,5 @@
 {% extends "_base_page.html" %}
-{% import "macros/forms.html" as forms %}
+{% import "toolkit/forms/macros/forms.html" as forms %}
 {% import "toolkit/summary-table.html" as summary %}
 {% block head %}
   <link type="text/css" rel="stylesheet" media="screen" href="{{ asset_fingerprinter.get_url('stylesheets/location-autocomplete.min.css') }}"/>
@@ -76,9 +76,9 @@
   <div class="grid-row">
     <div class="column-two-thirds">
 
-      {{ forms.question_input('address1', 'Building and street', value=registered_address_form.address1.data, errors=registered_address_form.address1.errors) }}
-      {{ forms.question_input('city', 'Town or city', value=registered_address_form.city.data, errors=registered_address_form.city.errors) }}
-      {{ forms.question_input('postcode', 'Postcode', value=registered_address_form.postcode.data, errors=registered_address_form.postcode.errors) }}
+      {{ forms.question_textbox('address1', 'Building and street', value=registered_address_form.address1.data, errors=registered_address_form.address1.errors) }}
+      {{ forms.question_textbox('city', 'Town or city', value=registered_address_form.city.data, errors=registered_address_form.city.errors) }}
+      {{ forms.question_textbox('postcode', 'Postcode', value=registered_address_form.postcode.data, errors=registered_address_form.postcode.errors) }}
 
       {% if registered_country_form.registrationCountry.errors %}
       <div class="validation-wrapper">

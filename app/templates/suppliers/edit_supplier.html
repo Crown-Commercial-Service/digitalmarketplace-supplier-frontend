@@ -1,5 +1,5 @@
 {% extends "_base_page.html" %}
-{% import "macros/forms.html" as forms %}
+{% import "toolkit/forms/macros/forms.html" as forms %}
 
 {% block page_title %}Edit supplier – Digital Marketplace{% endblock %}
 
@@ -77,9 +77,9 @@
   <div class="grid-row">
     <div class="column-two-thirds">
 
-      {{ forms.question_input('contact_contactName', 'Contact name', contact_form.contactName.data, 'Primary contact', errors=contact_form.contactName.errors) }}
-      {{ forms.question_input('contact_email', 'Contact email', contact_form.email.data, errors=contact_form.email.errors) }}
-      {{ forms.question_input('contact_phoneNumber', 'Contact phone number', contact_form.phoneNumber.data, errors=contact_form.phoneNumber.errors) }}
+      {{ forms.question_textbox('contact_contactName', 'Contact name', contact_form.contactName.data, 'Primary contact', errors=contact_form.contactName.errors) }}
+      {{ forms.question_textbox('contact_email', 'Contact email', contact_form.email.data, errors=contact_form.email.errors) }}
+      {{ forms.question_textbox('contact_phoneNumber', 'Contact phone number', contact_form.phoneNumber.data, errors=contact_form.phoneNumber.errors) }}
 
       <div class="question">
         <label class="question-heading">
