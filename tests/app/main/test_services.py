@@ -1618,7 +1618,7 @@ class TestEditDraftService(BaseApplicationTest):
 
         s3.return_value.save.assert_called_once_with(
             'g-cloud-7/submissions/1234/1-service-definition-document-2015-01-02-0304.pdf',
-            mock.ANY, acl='private'
+            mock.ANY, acl='bucket-owner-full-control'
         )
 
     def test_file_upload_filters_empty_and_unknown_files(self, data_api_client, s3):

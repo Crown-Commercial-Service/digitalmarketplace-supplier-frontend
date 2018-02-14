@@ -40,7 +40,11 @@ def create_app(config_name):
 
     application.register_blueprint(main_blueprint, url_prefix='/suppliers')
     application.register_blueprint(status_blueprint, url_prefix='/suppliers')
+
+    # Must be registered last so that any routes declared in the app are registered first (i.e. take precedence over
+    # the external NotImplemented routes in the dm-utils external blueprint).
     application.register_blueprint(external_blueprint)
+
     login_manager.login_message_category = "must_login"
     main_blueprint.config = application.config.copy()
 

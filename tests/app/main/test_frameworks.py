@@ -103,7 +103,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
             ),
             (
                 'Submitted by',
-                'User email@email.com Sunday 10 July 2016 at 10:20pm'
+                'User email@email.com Sunday 10 July 2016 at 10:20pm BST'
             ),
             (
                 'Countersignature',
@@ -4507,7 +4507,7 @@ class TestContractReviewPage(BaseApplicationTest):
         page = res.get_data(as_text=True)
         assert u'Check the details you’ve given before returning the signature page for £unicodename' in page
         assert (
-            '<tdclass="summary-item-field-first"><span>UploadedSunday10July2016at10:18pm</span></td>'
+            '<tdclass="summary-item-field-first"><span>UploadedSunday10July2016at10:18pmBST</span></td>'
             in self.strip_all_whitespace(page)
         )
 
@@ -4987,7 +4987,9 @@ class TestContractVariation(BaseApplicationTest):
 
         assert res.status_code == 200
         assert len(doc.xpath('//h2[contains(text(), "Contract variation status")]')) == 1
-        assert "<span>William Drăyton<br />agreed@email.com<br />Friday 19 August 2016 at 4:47pm</span>" in page_text
+        assert (
+            "<span>William Drăyton<br />agreed@email.com<br />Friday 19 August 2016 at 4:47pm BST</span>" in page_text
+        )
         assert "<span>Waiting for CCS to countersign</span>" in page_text
         assert len(doc.xpath('//label[contains(text(), "I accept these proposed changes")]')) == 0
         assert len(doc.xpath('//input[@value="I accept"]')) == 0
@@ -5011,7 +5013,9 @@ class TestContractVariation(BaseApplicationTest):
         assert res.status_code == 200
         assert len(doc.xpath('//h1[contains(text(), "G-Cloud 9: proposed contract variation")]')) == 1
         assert len(doc.xpath('//h2[contains(text(), "Contract variation status")]')) == 1
-        assert "<span>William Drăyton<br />agreed@email.com<br />Friday 19 August 2016 at 4:47pm</span>" in page_text
+        assert (
+            "<span>William Drăyton<br />agreed@email.com<br />Friday 19 August 2016 at 4:47pm BST</span>" in page_text
+        )
         assert "<span>Waiting for CCS to countersign</span>" in page_text
         assert "You have accepted the Crown Commercial Service’s changes to the framework agreement" in page_text
         assert "They will come into effect when CCS has countersigned them." in page_text
