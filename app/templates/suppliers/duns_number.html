@@ -35,44 +35,43 @@
 </div>
 {% endif %}
 
-<div>
-  {% with heading = "Enter your DUNS number",
-          smaller = True %}
-    {% include "toolkit/page-heading.html" %}
-  {% endwith %}
+<div class="grid-row">
+  <div class="column-two-thirds">
+    {% with heading = "Enter your DUNS number",
+            smaller = True %}
+      {% include "toolkit/page-heading.html" %}
+    {% endwith %}
   
-  <div class="grid-row">
-    <div class="column-two-thirds">
-      <form method="POST" action="{{ url_for('.submit_duns_number') }}">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-        <div class="dmspeak">
-          <p>If you registered your business with Companies House, you will automatically have been given a unique
-            DUNS number.</p>
-          <p>The Digital Marketplace uses this to check if your business already has a supplier account.</p>
-        </div>
-          <p class="lead">You can either:</p>
-          <ul class="list-bullet">
-            <li><a href="https://www.dnb.co.uk/duns-number/lookup.html" rel="external">find your DUNS number</a> on the
-              Dun &amp; Bradstreet website</li>
-            <li><a href="https://www.dnb.co.uk/duns-number/lookup/request-a-duns-number.html" rel="external">apply for
-              a DUNS number</a> if you don&rsquo;t have one</li>
-          </ul>
-        
-        {% with question = "DUNS number",
-                name = "duns_number",
-                value = form.duns_number.data,
-                error = form.duns_number.errors[0],
-                question_advice = question_advice,
-                hint = "This is a 9 digit number" %}
-          {% include "toolkit/forms/textbox.html" %}
-        {% endwith %}
+    
+    <form method="POST" action="{{ url_for('.submit_duns_number') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+      <div class="dmspeak">
+        <p>If you registered your business with Companies House, you will automatically have been given a unique
+          DUNS number.</p>
+        <p>The Digital Marketplace uses this to check if your business already has a supplier account.</p>
+      </div>
+        <p class="lead">You can either:</p>
+        <ul class="list-bullet">
+          <li><a href="https://www.dnb.co.uk/duns-number/lookup.html" rel="external">find your DUNS number</a> on the
+            Dun &amp; Bradstreet website</li>
+          <li><a href="https://www.dnb.co.uk/duns-number/lookup/request-a-duns-number.html" rel="external">apply for
+            a DUNS number</a> if you don&rsquo;t have one</li>
+        </ul>
+      
+      {% with question = "DUNS number",
+              name = "duns_number",
+              value = form.duns_number.data,
+              error = form.duns_number.errors[0],
+              question_advice = question_advice,
+              hint = "This is a 9 digit number" %}
+        {% include "toolkit/forms/textbox.html" %}
+      {% endwith %}
 
-        {% with type = "save",
-                label = "Save and continue" %}
-          {% include "toolkit/button.html" %}
-        {% endwith %}
-      </form>
-    </div>
+      {% with type = "save",
+              label = "Save and continue" %}
+        {% include "toolkit/button.html" %}
+      {% endwith %}
+    </form>
   </div>
 </div>
 {% endblock %}

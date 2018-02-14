@@ -16,16 +16,11 @@
 {% endblock %}
 
 {% block main_content %}
-
-  {%
-    with heading = "Become a supplier",
-         smaller = True
-  %}
-    {% include "toolkit/page-heading.html" %}
-  {% endwith %}
-
   <div class="grid-row">
     <div class="column-two-thirds">
+      {% with heading = "Become a supplier", smaller = True %}
+        {% include "toolkit/page-heading.html" %}
+      {% endwith %}
 
       {% if open_fwks or opening_fwks %}
         <div class="dmspeak">

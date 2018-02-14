@@ -13,8 +13,14 @@ from dmutils.email.dm_mailchimp import DMMailChimpClient
 from ...main import main, content_loader
 from ... import data_api_client
 from ..forms.suppliers import (
-    EditSupplierForm, EditContactInformationForm, DunsNumberForm, CompaniesHouseNumberForm,
-    CompanyContactDetailsForm, CompanyNameForm, EmailAddressForm
+    CompaniesHouseNumberForm,
+    CompanyContactDetailsForm,
+    CompanyNameForm,
+    CompanyOrganisationSizeForm,
+    DunsNumberForm,
+    EditContactInformationForm,
+    EditSupplierForm,
+    EmailAddressForm,
 )
 from ..helpers.frameworks import get_frameworks_by_status, get_frameworks_closed_and_open_for_applications
 from ..helpers import login_required
@@ -163,6 +169,33 @@ def update_supplier():
                              error=e.message)
 
     return redirect(url_for(".supplier_details"))
+
+
+@main.route('/organisation-size/edit', methods=['GET', 'POST'])
+@login_required
+def edit_supplier_organisation_size():
+    form = CompanyOrganisationSizeForm()
+
+    if request.method == 'POST':
+        if form.validate_on_submit():
+            data_api_client.update_supplier(supplier_id=current_user.supplier_id,
+                                            supplier={"organisationSize": form.organisation_size.data},
+                                            user=current_user.email_address)
+            return redirect(url_for('.supplier_details'))
+
+        current_app.logger.warning(
+            "supplieredit.fail: organisation-size:{osize}, errors:{osize_errors}",
+            extra={
+                'osize': form.organisation_size.data,
+                'osize_errors': ",".join(form.organisation_size.errors)
+            })
+
+        return render_template("suppliers/edit_supplier_organisation_size.html", form=form), 400
+
+    supplier = data_api_client.get_supplier(current_user.supplier_id)['suppliers']
+    form.organisation_size.data = supplier.get('organisationSize', None)
+
+    return render_template('suppliers/edit_supplier_organisation_size.html', form=form)
 
 
 @main.route('/supply', methods=['GET'])

@@ -22,14 +22,12 @@
 {% block main_content %}
 
 <div class="start-page">
-  {%
-    with heading = "Create a supplier account",
-         smaller = True
-  %}
-    {% include "toolkit/page-heading.html" %}
-  {% endwith %}
   <div class="grid-row">
     <div class="column-two-thirds">
+      {% with heading = "Create a supplier account", smaller = True %}
+        {% include "toolkit/page-heading.html" %}
+      {% endwith %}
+      
       <div class="dmspeak">
         <p>If your company is not <a href="https://beta.companieshouse.gov.uk/" rel="external">registered with Companies House</a>,
            you will need to <a href="https://www.dnb.co.uk/duns-number/lookup/request-a-duns-number.html" rel="external">apply for a DUNS number</a>

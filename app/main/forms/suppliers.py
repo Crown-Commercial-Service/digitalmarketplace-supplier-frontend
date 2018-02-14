@@ -1,6 +1,6 @@
 from flask_wtf import Form
-from wtforms import IntegerField
-from wtforms.validators import DataRequired, ValidationError, Length, Optional, Regexp
+from wtforms import IntegerField, RadioField
+from wtforms.validators import DataRequired, ValidationError, Length, Optional, Regexp, InputRequired
 
 from dmutils.forms import StripWhitespaceStringField, EmailField, EmailValidator
 
@@ -82,3 +82,36 @@ class EmailAddressForm(Form):
         DataRequired(message="You must provide an email address."),
         EmailValidator(message="You must provide a valid email address."),
     ])
+
+
+class CompanyOrganisationSizeForm(Form):
+    OPTIONS = [
+        {
+            "value": "micro",
+            "label": "Micro",
+            "description": "Under 10 employees and 2 million euros or less in either annual turnover or balance "
+                           "sheet total",
+        },
+        {
+            "value": "small",
+            "label": "Small",
+            "description": "Under 50 employees and 10 million euros or less in either annual turnover or balance "
+                           "sheet total",
+        },
+        {
+            "value": "medium",
+            "label": "Medium",
+            "description": "Under 250 employees and either 50 million euros or less in either annual turnover or "
+                           "43 million euros or less in annual balance sheet total",
+        },
+        {
+            "value": "large",
+            "label": "Large",
+            "description": "250 or more employees and either over 50 million euros in annual turnover or over 43 "
+                           "million euros in balance sheet total",
+        },
+    ]
+
+    organisation_size = RadioField('Organisation size',
+                                   validators=[InputRequired(message="You must choose an organisation size.")],
+                                   choices=[(o['value'], o['label']) for o in OPTIONS])
