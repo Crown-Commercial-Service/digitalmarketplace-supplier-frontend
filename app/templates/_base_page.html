@@ -10,12 +10,15 @@
 
 {% block header_class %}with-proposition{% endblock %}
 
+{% block inside_header %}
+  {% include "toolkit/inside-header.html" %}
+{% endblock %}
+
 {% block proposition_header %}
   {% include "toolkit/proposition-header.html" %}
 {% endblock %}
 
 {% block content %}
-  {% include "toolkit/phase-banner.html" %}
   {% block breadcrumb %}{% endblock %}
   <div id="wrapper">
     <main id="content" role="main">
