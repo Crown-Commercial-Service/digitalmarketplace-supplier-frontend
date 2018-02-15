@@ -27,6 +27,7 @@ var govukTemplateLayoutsFolder = govukTemplateFolder + '/views/layouts';
 var jsSourceFile = assetsFolder + '/javascripts/application.js';
 var jsDistributionFolder = staticFolder + '/javascripts';
 var jsDistributionFile = 'application.js';
+var jsPageSpecific = assetsFolder + '/javascripts/page_specific';
 
 // CSS paths
 var cssSourceGlob = assetsFolder + '/scss/application*.scss';
@@ -279,15 +280,23 @@ gulp.task(
 );
 
 gulp.task(
-  'copy:country_picker:javascripts',
+  'copy:country_picker_package:javascripts',
   copyFiletypeFactory(
-    "country picker javascripts to static folder",
+    "country picker package javascripts to static folder",
     govukCountryPickerDist,
     "{js,js.map}",
     jsDistributionFolder
   )
 );
 
+gulp.task(
+  'copy:page_specific:javascripts',
+  copyFactory(
+    "page specific javascript to static folder",
+    jsPageSpecific,
+    jsDistributionFolder
+  )
+);
 
 gulp.task('test', function () {
   var manifest = require(repoRoot + 'spec/javascripts/manifest.js').manifest;
@@ -345,7 +354,8 @@ gulp.task(
     'copy:govuk_template',
     'copy:country_picker:jsons',
     'copy:country_picker:stylesheets',
-    'copy:country_picker:javascripts',
+    'copy:country_picker_package:javascripts',
+    'copy:page_specific:javascripts',
   ]
 );
 

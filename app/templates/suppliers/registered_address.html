@@ -120,20 +120,7 @@
 </form>
 {% endblock %}
 
-{% block body_end %}
-{{ super() }}
+{% block page_scripts %}
 <script type="text/javascript" src="{{ asset_path }}javascripts/location-autocomplete.min.js"></script>
-<script type="text/javascript">
-  openregisterLocationPicker({
-    selectElement: document.getElementById('location-autocomplete'),
-    url: '{{ asset_path }}location-autocomplete-graph.json'
-  });
-
-  $('#location-autocomplete').keyup(function(event) {
-    // Clear the input value of the country select input, if the autocomplete is cleared.
-    if ($(this).val().length < 2) {
-      $('#location-autocomplete-select').val('');
-    };
-  });
-</script>
+<script type="text/javascript" src="{{ asset_path }}javascripts/app-location-autocomplete.js"></script>
 {% endblock %}
