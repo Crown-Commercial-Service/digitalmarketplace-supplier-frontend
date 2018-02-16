@@ -6,7 +6,7 @@ def load_countries():
     helpers_path = os.path.abspath(os.path.dirname(__file__))
     countryfile = os.path.join(helpers_path, '../../static/location-autocomplete-canonical-list.json')
     with open(countryfile) as f:
-        return (json.load(f))
+        return json.load(f)
 
 
 def get_country_name_from_country_code(country_code):
@@ -27,3 +27,24 @@ def get_country_name_from_country_code(country_code):
 
 
 COUNTRY_TUPLE = load_countries()
+
+
+def supplier_company_details_are_complete(supplier_data):
+    supplier_required_fields = ['dunsNumber', 'name', 'registeredName', 'registrationCountry', 'registrationDate',
+                                'organisationSize', 'tradingStatus']
+    contact_required_fields = ['address1', 'city', 'postcode']
+
+    registration_country = supplier_data['registrationCountry'] if 'registrationCountry' in supplier_data else None
+    if registration_country == 'gb' or registration_country == 'country:GB':
+        supplier_required_fields.append('companiesHouseNumber')
+        supplier_required_fields.append('vatNumber')
+
+    else:
+        supplier_required_fields.append('otherCompanyRegistrationNumber')
+
+    return (
+        all([f in supplier_data and supplier_data[f] for f in supplier_required_fields]) and
+        all([f in supplier_data['contactInformation'][0] and supplier_data['contactInformation'][0][f]
+             for f in
+             contact_required_fields])
+    )

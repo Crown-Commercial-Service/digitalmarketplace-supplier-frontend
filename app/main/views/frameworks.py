@@ -34,10 +34,14 @@ from ..helpers.frameworks import (
     return_supplier_framework_info_if_on_framework_or_abort, returned_agreement_email_recipients,
     check_agreement_is_related_to_supplier_framework_or_abort, get_framework_for_reuse,
 )
-from ..helpers.validation import get_validator
+from ..helpers.suppliers import supplier_company_details_are_complete
 from ..helpers.services import (
-    get_signed_document_url, get_drafts, get_lot_drafts, count_unanswered_questions
+    count_unanswered_questions,
+    get_drafts,
+    get_lot_drafts,
+    get_signed_document_url,
 )
+from ..helpers.validation import get_validator
 from ..forms.frameworks import SignerDetailsForm, ContractReviewForm, AcceptAgreementVariationForm, ReuseDeclarationForm
 
 CLARIFICATION_QUESTION_NAME = 'clarification_question'
@@ -73,6 +77,7 @@ def framework_dashboard(framework_slug):
     supplier_framework_info = get_supplier_framework_info(data_api_client, framework_slug)
     declaration_status = get_declaration_status_from_info(supplier_framework_info)
     supplier_is_on_framework = get_supplier_on_framework_from_info(supplier_framework_info)
+    supplier = data_api_client.get_supplier(current_user.supplier_id)['suppliers']
 
     # Do not show a framework dashboard for earlier G-Cloud iterations
     if declaration_status == 'unstarted' and framework['status'] == 'live':
@@ -171,6 +176,7 @@ def framework_dashboard(framework_slug):
         supplier_framework=supplier_framework_info,
         supplier_is_on_framework=supplier_is_on_framework,
         framework_advice=framework_advice,
+        company_details_complete=supplier_company_details_are_complete(supplier),
     ), 200
 
 

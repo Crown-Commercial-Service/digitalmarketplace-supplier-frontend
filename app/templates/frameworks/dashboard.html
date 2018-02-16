@@ -49,7 +49,7 @@
   {% endwith %}
 
   {# Confidence Banner #}
-  {% if application_made and framework.status == 'open' %}
+  {% if application_made and company_details_complete and framework.status == 'open' %}
     {% with 
       message = "Your application will be submitted at %s. <br> You can edit your declaration and services at any time before the deadline."|safe % framework_dates.framework_close_date|nbsp,
       type="success"
