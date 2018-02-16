@@ -788,6 +788,17 @@ class TestSupplierDetails(BaseApplicationTest):
             document = html.fromstring(page_html)
             assert document.xpath("//*[normalize-space(string())='United Kingdom']")  # Country United Kingdom is shown
 
+    def test_handles_supplier_with_no_registration_country_key(self, data_api_client):
+        supplier = get_supplier()
+        del supplier['suppliers']['registrationCountry']
+        data_api_client.get_supplier.return_value = supplier
+
+        with self.app.test_client():
+            self.login()
+
+            res = self.client.get("/suppliers/details")
+            assert res.status_code == 200
+
 
 @mock.patch("app.main.views.suppliers.data_api_client", autospec=True)
 @mock.patch("app.main.views.suppliers.get_current_suppliers_users", autospec=True)

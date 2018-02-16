@@ -94,7 +94,7 @@ def supplier_details():
     except APIError as e:
         abort(e.status_code)
     supplier['contact'] = supplier['contactInformation'][0]
-    country_name = get_country_name_from_country_code(supplier['registrationCountry'])
+    country_name = get_country_name_from_country_code(supplier.get('registrationCountry'))
 
     return render_template(
         "suppliers/details.html",
