@@ -1,8 +1,9 @@
 from flask_wtf import Form
 from wtforms import IntegerField, RadioField
-from wtforms.validators import DataRequired, ValidationError, Length, Optional, Regexp, InputRequired
+from wtforms.validators import AnyOf, InputRequired, Length, Optional, Regexp, ValidationError
 
 from dmutils.forms import StripWhitespaceStringField, EmailField, EmailValidator
+from ..helpers.suppliers import COUNTRY_TUPLE
 
 
 def word_length(limit=None, message=None):
@@ -28,20 +29,43 @@ class EditSupplierForm(Form):
 class EditContactInformationForm(Form):
     id = IntegerField()
     contactName = StripWhitespaceStringField('Contact name', validators=[
-        DataRequired(message="You must provide a contact name"),
+        InputRequired(message="You must provide a contact name"),
     ])
     email = EmailField('Contact email address', validators=[
-        DataRequired(message="You must provide an email address"),
+        InputRequired(message="You must provide an email address"),
     ])
     phoneNumber = StripWhitespaceStringField('Contact phone number')
+    # TODO: remove these fields when address is removed from the supplier details edit page
     address1 = StripWhitespaceStringField('Building and street')
     city = StripWhitespaceStringField('Town or city')
     postcode = StripWhitespaceStringField('Postcode')
 
 
+class EditRegisteredAddressForm(Form):
+    address1 = StripWhitespaceStringField('Building and street', validators=[
+        InputRequired(message="You need to enter the street address."),
+        Length(max=255, message="You must provide a building and street name under 256 characters."),
+    ])
+    city = StripWhitespaceStringField('Town or city', validators=[
+        InputRequired(message="You need to enter the town or city."),
+        Length(max=255, message="You must provide a town or city name under 256 characters."),
+    ])
+    postcode = StripWhitespaceStringField('Postcode', validators=[
+        InputRequired(message="You need to enter the postcode."),
+        Length(max=255, message="You must provide a valid postcode."),
+    ])
+
+
+class EditRegisteredCountryForm(Form):
+    registrationCountry = StripWhitespaceStringField('Country', validators=[
+        InputRequired(message="You need to enter a country."),
+        AnyOf(values=[country[1] for country in COUNTRY_TUPLE], message="You must enter a valid country."),
+    ])
+
+
 class DunsNumberForm(Form):
     duns_number = StripWhitespaceStringField('DUNS Number', validators=[
-        DataRequired(message="You must enter a DUNS number with 9 digits."),
+        InputRequired(message="You must enter a DUNS number with 9 digits."),
         Regexp(r'^\d{9}$', message="You must enter a DUNS number with 9 digits."),
     ])
 
@@ -57,29 +81,29 @@ class CompaniesHouseNumberForm(Form):
 
 class CompanyNameForm(Form):
     company_name = StripWhitespaceStringField('Company name', validators=[
-        DataRequired(message="You must provide a company name."),
+        InputRequired(message="You must provide a company name."),
         Length(max=255, message="You must provide a company name under 256 characters.")
     ])
 
 
 class CompanyContactDetailsForm(Form):
     contact_name = StripWhitespaceStringField('Contact name', validators=[
-        DataRequired(message="You must provide a contact name."),
+        InputRequired(message="You must provide a contact name."),
         Length(max=255, message="You must provide a contact name under 256 characters.")
     ])
     email_address = StripWhitespaceStringField('Contact email address', validators=[
-        DataRequired(message="You must provide an email address."),
+        InputRequired(message="You must provide an email address."),
         EmailValidator(message="You must provide a valid email address."),
     ])
     phone_number = StripWhitespaceStringField('Contact phone number', validators=[
-        DataRequired(message="You must provide a phone number."),
+        InputRequired(message="You must provide a phone number."),
         Length(max=20, message="You must provide a phone number under 20 characters.")
     ])
 
 
 class EmailAddressForm(Form):
     email_address = StripWhitespaceStringField('Email address', validators=[
-        DataRequired(message="You must provide an email address."),
+        InputRequired(message="You must provide an email address."),
         EmailValidator(message="You must provide a valid email address."),
     ])
 

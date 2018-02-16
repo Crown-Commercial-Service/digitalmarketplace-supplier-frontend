@@ -100,11 +100,11 @@
   {% if supplier.registrationCountry and not supplier.companiesHouseNumber %}
     {% call summary.row() %}
       {{ summary.field_name('Where your business was established') }}
-      {{ summary.text(supplier.registrationCountry|upper) }}
+      {{ summary.text(country_name) }}
     {% endcall %}
   {% endif %}
 
-  {% if supplier.otherCompanyRegistrationNumber and not supplier.companiesHouseNumber and supplier.registrationCountry != 'gb' %}
+  {% if supplier.otherCompanyRegistrationNumber and not supplier.companiesHouseNumber and country_name != 'United Kingdom' %}
     {% call summary.row() %}
       {{ summary.field_name('Registration number') }}
       {{ summary.text(supplier.otherCompanyRegistrationNumber) }}

@@ -19,10 +19,13 @@ from ..forms.suppliers import (
     CompanyOrganisationSizeForm,
     DunsNumberForm,
     EditContactInformationForm,
+    EditRegisteredAddressForm,
+    EditRegisteredCountryForm,
     EditSupplierForm,
     EmailAddressForm,
 )
 from ..helpers.frameworks import get_frameworks_by_status, get_frameworks_closed_and_open_for_applications
+from ..helpers.suppliers import get_country_name_from_country_code, COUNTRY_TUPLE
 from ..helpers import login_required
 from .users import get_current_suppliers_users
 
@@ -91,11 +94,73 @@ def supplier_details():
     except APIError as e:
         abort(e.status_code)
     supplier['contact'] = supplier['contactInformation'][0]
+    country_name = get_country_name_from_country_code(supplier['registrationCountry'])
 
     return render_template(
         "suppliers/details.html",
         supplier=supplier,
+        country_name=country_name,
     ), 200
+
+
+@main.route('/registered-address/edit', methods=['GET', 'POST'])
+@login_required
+def edit_registered_address():
+    try:
+        supplier = data_api_client.get_supplier(
+            current_user.supplier_id
+        )['suppliers']
+    except APIError as e:
+        abort(e.status_code)
+    supplier['contact'] = supplier['contactInformation'][0]
+
+    error = None
+    http_status = 200
+    registered_address_form = EditRegisteredAddressForm()
+    registered_country_form = EditRegisteredCountryForm()
+
+    if request.method == 'POST':
+        address_valid = registered_address_form.validate_on_submit()
+        country_valid = registered_country_form.validate_on_submit()
+
+        if address_valid and country_valid:
+            try:
+                data_api_client.update_supplier(
+                    current_user.supplier_id,
+                    registered_country_form.data,
+                    current_user.email_address,
+                )
+
+                data_api_client.update_contact_information(
+                    current_user.supplier_id,
+                    supplier['contact']['id'],
+                    registered_address_form.data,
+                    current_user.email_address
+                )
+
+            except APIError as e:
+                error = e.message
+
+            else:
+                return redirect(url_for(".supplier_details"))
+
+        http_status = 400
+
+    else:
+        registered_address_form.address1.data = supplier['contact'].get('address1')
+        registered_address_form.city.data = supplier['contact'].get('city')
+        registered_address_form.postcode.data = supplier['contact'].get('postcode')
+
+        registered_country_form.registrationCountry.data = supplier.get('registrationCountry')
+
+    return render_template(
+        "suppliers/registered_address.html",
+        supplier=supplier,
+        countries=COUNTRY_TUPLE,
+        registered_address_form=registered_address_form,
+        registered_country_form=registered_country_form,
+        error=error,
+    ), http_status
 
 
 @main.route('/edit', methods=['GET'])
