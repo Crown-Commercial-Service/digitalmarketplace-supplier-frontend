@@ -719,7 +719,7 @@ class TestSupplierDetails(BaseApplicationTest):
 
             assert document.xpath(
                 "//a[normalize-space(string())=$t][@href=$u][contains(@class, $c)]",
-                t="Edit",
+                t="Change",
                 u="/suppliers/details/edit",
                 c="summary-change-link",
             )
@@ -743,9 +743,8 @@ class TestSupplierDetails(BaseApplicationTest):
             ):
                 assert document.xpath("//*[normalize-space(string())=$t]", t=property_str), property_str
 
-            # Registration country and registration number not shown if Companies House ID exists
-            for property_str in ("Belize", "BEL153",):
-                assert property_str not in page_html
+            # Registration nnumber not shown if Companies House ID exists
+            assert "BEL153" not in page_html
 
             data_api_client.get_supplier.assert_called_once_with(1234)
 
@@ -798,6 +797,27 @@ class TestSupplierDetails(BaseApplicationTest):
 
             res = self.client.get("/suppliers/details")
             assert res.status_code == 200
+
+    def test_shows_address_details(self, data_api_client):
+        data_api_client.get_supplier.return_value = get_supplier(registrationCountry="country:GB")
+
+        with self.app.test_client():
+            self.login()
+
+            response = self.client.get("/suppliers/details")
+            assert response.status_code == 200
+            page_html = response.get_data(as_text=True)
+            document = html.fromstring(page_html)
+
+            address1 = document.xpath("//span[text()='Registered company address']/following::td[1]/span/p/span[1]")
+            town = document.xpath("//span[text()='Registered company address']/following::td[1]/span/p/span[2]")
+            postcode = document.xpath("//span[text()='Registered company address']/following::td[1]/span/p/span[3]")
+            country = document.xpath("//span[text()='Registered company address']/following::td[1]/span/p/span[4]")
+
+            assert "1 Street" in address1[0].text
+            assert "Supplierville" in town[0].text
+            assert "11 AB" in postcode[0].text
+            assert "United Kingdom" in country[0].text
 
 
 @mock.patch("app.main.views.suppliers.data_api_client", autospec=True)

@@ -23,57 +23,48 @@
 {% block main_content %}
 {%
   with
-    heading = "Supplier details",
+    heading = "Company details",
     smaller = true
 %}
   {% include "toolkit/page-heading.html" %}
 {% endwith %}
 
-
-{{ summary.top_link('Edit', url_for('.edit_supplier')) }}
+{{ summary.heading("What buyers will see", id="what_buyers_will_see") }}
+{{ summary.top_link('Change', url_for('.edit_supplier')) }}
 {% call(item) summary.mapping_table(
-  caption='Supplier details',
+  caption='What buyers will see',
   field_headings=[
     'Label',
-    'Value'
+    'Value',
+    'Optional'
   ],
   field_headings_visible=False
 ) %}
   {% call summary.row() %}
     {{ summary.field_name('Contact name') }}
     {{ summary.text(supplier.contact.contactName) }}
+    {{ summary.text("") }}
   {% endcall %}
   {% call summary.row() %}
     {{ summary.field_name('Contact email') }}
     {{ summary.text(supplier.contact.email) }}
+    {{ summary.text("") }}
   {% endcall %}
   {% call summary.row() %}
     {{ summary.field_name('Contact phone number') }}
     {{ summary.text(supplier.contact.phoneNumber) }}
+    {{ summary.text("") }}
   {% endcall %}
   {% call summary.row() %}
-    {{ summary.field_name('Registered office address') }}
-    {% call summary.field() %}
-      {%
-        with
-        without_spacing = true,
-        postcode = supplier.contact.get("postcode"),
-        street_address = True,
-        street_address_line_1 = supplier.contact.get("address1"),
-        locality = supplier.contact.get("city")
-      %}
-        {% include "toolkit/contact-details.html" %}
-      {% endwith %}
-    {% endcall %}
-  {% endcall %}
-  {% call summary.row() %}
-    {{ summary.field_name('Supplier summary') }}
+    {{ summary.field_name('Summary') }}
     {{ summary.text(supplier.description) }}
+    {% call summary.field(action=True) %}
+      Optional
+    {% endcall %}
   {% endcall %}
 {% endcall %}
 
-{{ summary.heading("Registration information", id="registration_information") }}
-{{ summary.description("This is used to process your applications and manage your participation on frameworks.") }}
+{{ summary.heading("Company details for your framework applications", id="registration_information") }}
 {% call(item) summary.mapping_table(
   caption='Registration information',
   field_headings=[
@@ -82,13 +73,34 @@
   ],
   field_headings_visible=False
 ) %}
-
-  {% if supplier.registeredName %}
-    {% call summary.row() %}
-      {{ summary.field_name('Registered company name') }}
+{% if supplier.registeredName %}
+  {% call summary.row() %}
+    {{ summary.field_name('Registered company name') }}
       {{ summary.text(supplier.registeredName) }}
+  {% endcall %}
+{% endif %}
+
+{% set postcode = supplier.contact.get("postcode") %}
+{% set street_address_line_1 = supplier.contact.get("address1") %}
+{% set locality = supplier.contact.get("city") %}
+{% if postcode or street_address_line_1 or locality or supplier.registrationCountry %}
+  {% call summary.row() %}
+    {{ summary.field_name('Registered company address') }}
+    {% call summary.field() %}
+      {%
+        with
+        without_spacing = true,
+        postcode = postcode,
+        street_address = True,
+        street_address_line_1 = street_address_line_1,
+        locality = locality,
+        country = country_name
+      %}
+        {% include "toolkit/contact-details.html" %}
+      {% endwith %}
     {% endcall %}
-  {% endif %}
+  {% endcall %}
+{% endif %}
 
   {% if supplier.companiesHouseNumber %}
     {% call summary.row() %}
@@ -97,24 +109,10 @@
     {% endcall %}
   {% endif %}
 
-  {% if supplier.registrationCountry and not supplier.companiesHouseNumber %}
-    {% call summary.row() %}
-      {{ summary.field_name('Where your business was established') }}
-      {{ summary.text(country_name) }}
-    {% endcall %}
-  {% endif %}
-
   {% if supplier.otherCompanyRegistrationNumber and not supplier.companiesHouseNumber and country_name != 'United Kingdom' %}
     {% call summary.row() %}
       {{ summary.field_name('Registration number') }}
       {{ summary.text(supplier.otherCompanyRegistrationNumber) }}
-    {% endcall %}
-  {% endif %}
-
-  {% if supplier.dunsNumber %}
-    {% call summary.row() %}
-      {{ summary.field_name('DUNS number') }}
-      {{ summary.text(supplier.dunsNumber) }}
     {% endcall %}
   {% endif %}
 
@@ -136,6 +134,13 @@
     {% call summary.row() %}
       {{ summary.field_name('Company size') }}
       {{ summary.text(supplier.organisationSize|capitalize_first) }}
+    {% endcall %}
+  {% endif %}
+
+  {% if supplier.dunsNumber %}
+    {% call summary.row() %}
+      {{ summary.field_name('DUNS number') }}
+      {{ summary.text(supplier.dunsNumber) }}
     {% endcall %}
   {% endif %}
 
