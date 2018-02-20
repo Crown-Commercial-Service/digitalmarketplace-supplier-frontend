@@ -35,10 +35,6 @@ class EditContactInformationForm(Form):
         InputRequired(message="You must provide an email address"),
     ])
     phoneNumber = StripWhitespaceStringField('Contact phone number')
-    # TODO: remove these fields when address is removed from the supplier details edit page
-    address1 = StripWhitespaceStringField('Building and street')
-    city = StripWhitespaceStringField('Town or city')
-    postcode = StripWhitespaceStringField('Postcode')
 
 
 class EditRegisteredAddressForm(Form):

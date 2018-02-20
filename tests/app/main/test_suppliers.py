@@ -942,9 +942,6 @@ class TestSupplierUpdate(BaseApplicationTest):
                 "contact_email": "supplier@user.dmdev",
                 "contact_contactName": "Supplier Person",
                 "contact_phoneNumber": "0800123123",
-                "contact_address1": "1 Street",
-                "contact_city": "Supplierville",
-                "contact_postcode": "11 AB",
             }
         data.update(kwargs)
         res = self.client.post("/suppliers/details/edit", data=data)
@@ -992,11 +989,8 @@ class TestSupplierUpdate(BaseApplicationTest):
         data_api_client.update_contact_information.assert_called_once_with(
             1234, 2,
             {
-                'city': u'Supplierville',
-                'address1': u'1 Street',
                 'email': u'supplier@user.dmdev',
                 'phoneNumber': u'0800123123',
-                'postcode': u'11 AB',
                 'contactName': u'Supplier Person',
                 'id': 2
             },
@@ -1012,9 +1006,6 @@ class TestSupplierUpdate(BaseApplicationTest):
             "contact_email": "  supplier@user.dmdev  ",
             "contact_contactName": "  Supplier Person  ",
             "contact_phoneNumber": "  0800123123  ",
-            "contact_address1": "  1 Street  ",
-            "contact_city": "  Supplierville  ",
-            "contact_postcode": "  11 AB  "
         }
 
         status, _ = self.post_supplier_edit(data=data)
@@ -1031,11 +1022,8 @@ class TestSupplierUpdate(BaseApplicationTest):
         data_api_client.update_contact_information.assert_called_once_with(
             1234, 2,
             {
-                'city': u'Supplierville',
-                'address1': u'1 Street',
                 'email': u'supplier@user.dmdev',
                 'phoneNumber': u'0800123123',
-                'postcode': u'11 AB',
                 'contactName': u'Supplier Person',
                 'id': 2
             },
@@ -1045,29 +1033,23 @@ class TestSupplierUpdate(BaseApplicationTest):
     def test_missing_required_supplier_fields(self, data_api_client):
         self.login()
 
-        status, resp = self.post_supplier_edit({
+        status, response = self.post_supplier_edit({
             "description": "New Description",
             "contact_id": 2,
             "contact_contactName": "Supplier Person",
             "contact_phoneNumber": "0800123123",
-            "contact_address1": "1 Street",
-            "contact_city": "Supplierville",
-            "contact_postcode": "11 AB",
         })
 
         assert status == 200
-        assert 'You must provide an email address' in resp
+        assert 'You must provide an email address' in response
 
         assert data_api_client.update_supplier.called is False
         assert data_api_client.update_contact_information.called is False
 
-        assert "New Description" in resp
-        assert 'value="2"' in resp
-        assert 'value="Supplier Person"' in resp
-        assert 'value="0800123123"' in resp
-        assert 'value="1 Street"' in resp
-        assert 'value="Supplierville"' in resp
-        assert 'value="11 AB"' in resp
+        assert "New Description" in response
+        assert 'value="2"' in response
+        assert 'value="Supplier Person"' in response
+        assert 'value="0800123123"' in response
 
     def test_description_below_word_length(self, data_api_client):
         self.login()
