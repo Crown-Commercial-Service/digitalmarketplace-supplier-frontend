@@ -4927,7 +4927,7 @@ class TestContractVariation(BaseApplicationTest):
         doc = html.fromstring(res.get_data(as_text=True))
 
         assert res.status_code == 200
-        assert len(doc.xpath('//h1[contains(text(), "G-Cloud 8: proposed contract variation")]')) == 1
+        assert len(doc.xpath('//h1[contains(text(), "Accept the contract variation for G-Cloud 8")]')) == 1
 
     def test_supplier_must_be_on_framework(self, data_api_client):
         supplier_not_on_framework = self.good_supplier_framework.copy()
@@ -4966,7 +4966,7 @@ class TestContractVariation(BaseApplicationTest):
         doc = html.fromstring(res.get_data(as_text=True))
 
         assert res.status_code == 200
-        assert len(doc.xpath('//label[contains(text(), "I accept these proposed changes")]')) == 1
+        assert len(doc.xpath('//label[contains(text(), "I accept these changes")]')) == 1
         assert len(doc.xpath('//input[@value="I accept"]')) == 1
 
     def test_shows_signer_details_and_no_form_if_already_agreed(self, data_api_client):
@@ -5011,7 +5011,7 @@ class TestContractVariation(BaseApplicationTest):
         doc = html.fromstring(page_text)
 
         assert res.status_code == 200
-        assert len(doc.xpath('//h1[contains(text(), "G-Cloud 9: proposed contract variation")]')) == 1
+        assert len(doc.xpath('//h1[contains(text(), "The contract variation for G-Cloud 9")]')) == 1
         assert len(doc.xpath('//h2[contains(text(), "Contract variation status")]')) == 1
         assert (
             "<span>William Drăyton<br />agreed@email.com<br />Friday 19 August 2016 at 4:47pm BST</span>" in page_text
@@ -5047,7 +5047,7 @@ class TestContractVariation(BaseApplicationTest):
         doc = html.fromstring(page_text)
 
         assert res.status_code == 200
-        assert len(doc.xpath('//h1[contains(text(), "G-Cloud 8: accepted contract variation")]')) == 1
+        assert len(doc.xpath('//h1[contains(text(), "The contract variation for G-Cloud 8")]')) == 1
         assert len(doc.xpath('//h2[contains(text(), "Contract variation status")]')) == 1
         assert "<span>A.N. Other<br />Head honcho<br />Saturday 1 October 2016</span>" in page_text
         assert len(doc.xpath('//label[contains(text(), "I accept these proposed changes")]')) == 0
@@ -5153,7 +5153,7 @@ class TestContractVariation(BaseApplicationTest):
         doc = html.fromstring(res.get_data(as_text=True))
 
         assert res.status_code == 400
-        validation_message = "You need to accept the proposed changes to continue."
+        validation_message = "You need to accept these changes to continue."
         assert len(
             doc.xpath('//span[@class="validation-message"][contains(text(), "{}")]'.format(validation_message))
         ) == 1

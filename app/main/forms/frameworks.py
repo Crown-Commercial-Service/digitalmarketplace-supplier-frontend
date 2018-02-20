@@ -30,9 +30,9 @@ class ContractReviewForm(Form):
 
 class AcceptAgreementVariationForm(Form):
     accept_changes = BooleanField(
-        'I accept these proposed changes',
+        'I accept these changes',
         validators=[
-            DataRequired(message="You need to accept the proposed changes to continue.")
+            DataRequired(message="You need to accept these changes to continue.")
         ]
     )
 

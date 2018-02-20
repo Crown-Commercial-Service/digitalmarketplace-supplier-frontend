@@ -50,11 +50,9 @@
     <div class="grid-row">
       <div class="column-one-whole">
         {% if form.errors %}
-          {%
-            with
-            errors = form_errors
-          %}
-            {% include 'toolkit/forms/validation.html' %}
+         {% with 
+            message = "You must <a href=\"#{}\">accept the changes</a> to continue.".format(form_errors[0].input_name)|safe, type = "destructive" %} 
+            {% include "toolkit/notification-banner.html" %} 
           {% endwith %}
         {% endif %}
       </div>
@@ -62,15 +60,14 @@
     <div class="grid-row">
         <div class="column-two-thirds">
           
-          
-          
           {% with
-            heading = "{}:{}contract variation".format(framework.name, " accepted " if variation_details.get('countersignedAt') else " proposed "),
+            heading = "{} contract variation for {}".format(
+               "The" if variation_details.get('countersignedAt') or agreed_details
+               else "Accept the", framework.name),
             smaller = True
           %}
             {% include 'toolkit/page-heading.html' %}
           {% endwith %}
-
 
           <div class="section-description">
           {% if variation_details.get('countersignedAt') and agreed_details %}
