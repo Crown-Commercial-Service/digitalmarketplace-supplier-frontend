@@ -1,0 +1,48 @@
+{% extends "_base_page.html" %}
+
+{% block page_title %}Change your {{ completed_data_description }} – Digital Marketplace{% endblock %}
+
+{% block breadcrumb %}
+  {% with items = [
+    {
+      "link": "/",
+      "label": "Digital Marketplace"
+    },
+    {
+       "link": url_for('.dashboard'),
+       "label": "Your account"
+    },
+    {
+      "link": url_for('.supplier_details'),
+      "label": "Company details"
+    },
+  ] %}
+    {% include "toolkit/breadcrumb.html" %}
+  {% endwith %}
+{% endblock %}
+
+{% block main_content %}
+
+<div class="single-question-page">
+  <div class="grid-row">
+
+    <div class="column-two-thirds dmspeak">
+      {% with heading = "Change your {}".format(completed_data_description), smaller = True %}
+        {% include "toolkit/page-heading.html" %}
+      {% endwith %}
+
+      <p>Contact <a href="mailto:cloud_digital@crowncommercial.gov.uk">cloud_digital@crowncommercial.gov.uk</a> to make changes to your:</p>
+
+      <ul class="list-bullet">
+        <li>registered company name</li>
+        <li>registration number</li>
+        <li>VAT number</li>
+        <li>DUNS number</li>
+      </ul>
+
+      <p><a href="{{ url_for('.supplier_details') }}">Return to company details</a></p>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

@@ -63,6 +63,14 @@ class EditRegisteredCountryForm(Form):
     ])
 
 
+# "Add" rather than "Edit" because this information can only be set once by a supplier
+class AddCompanyRegisteredNameForm(Form):
+    registered_company_name = StripWhitespaceStringField('Registered company name', validators=[
+        InputRequired(message="You must provide a registered company name."),
+        Length(max=255, message="You must provide a registered company name under 256 characters.")
+    ])
+
+
 class DunsNumberForm(Form):
     duns_number = StripWhitespaceStringField('DUNS Number', validators=[
         InputRequired(message="You must enter a DUNS number with 9 digits."),

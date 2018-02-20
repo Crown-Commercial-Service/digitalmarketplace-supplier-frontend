@@ -13,6 +13,7 @@ from dmutils.email.dm_mailchimp import DMMailChimpClient
 from ...main import main, content_loader
 from ... import data_api_client
 from ..forms.suppliers import (
+    AddCompanyRegisteredNameForm,
     CompaniesHouseNumberForm,
     CompanyContactDetailsForm,
     CompanyNameForm,
@@ -161,6 +162,39 @@ def edit_registered_address():
         registered_country_form=registered_country_form,
         error=error,
     ), http_status
+
+
+@main.route('/registered-company-name/edit', methods=['GET', 'POST'])
+@login_required
+def edit_supplier_registered_name():
+    form = AddCompanyRegisteredNameForm()
+    supplier = data_api_client.get_supplier(current_user.supplier_id)['suppliers']
+
+    if supplier.get("registeredName"):
+        return (
+            render_template("suppliers/already_completed.html", completed_data_description="registered company name"),
+            200 if request.method == 'GET' else 400
+        )
+
+    if request.method == 'POST':
+        if form.validate_on_submit():
+            data_api_client.update_supplier(supplier_id=current_user.supplier_id,
+                                            supplier={"registeredName": form.registered_company_name.data},
+                                            user=current_user.email_address)
+            return redirect(url_for('.supplier_details'))
+
+        current_app.logger.warning(
+            "supplieredit.fail: registered-name:{rname}, errors:{rname_errors}",
+            extra={
+                'rname': form.registered_company_name.data,
+                'rname_errors': ",".join(form.registered_company_name.errors)
+            })
+
+        return render_template("suppliers/edit_registered_name.html", form=form), 400
+
+    form.registered_company_name.data = supplier.get("registeredName", "")
+
+    return render_template('suppliers/edit_registered_name.html', form=form)
 
 
 @main.route('/edit', methods=['GET'])
