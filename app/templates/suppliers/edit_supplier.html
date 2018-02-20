@@ -1,7 +1,7 @@
 {% extends "_base_page.html" %}
 {% import "toolkit/forms/macros/forms.html" as forms %}
 
-{% block page_title %}Edit supplier – Digital Marketplace{% endblock %}
+{% block page_title %}What buyers will see – Digital Marketplace{% endblock %}
 
 {% block breadcrumb %}
   {%
@@ -16,7 +16,7 @@
       },
       {
         "link": url_for(".supplier_details"),
-        "label": "Supplier details"
+        "label": "Company details"
       }
     ]
   %}
@@ -28,13 +28,18 @@
   <div class="grid-row">
     <div class="column-one-whole">
       {% with
-        context = "Edit supplier information",
-        heading = current_user.supplier_name
+        heading = "What buyers will see"
       %}
         {% include 'toolkit/page-heading.html' %}
       {% endwith %}
+
+      <div class="dmspeak">
+        <p>This information will be visible on the Digital Marketplace.</p>
+        <p>You can change it at any time.</p>
+      </div>
     </div>
   </div>
+
 
   {% if error %}
   <div class="validation-masthead" aria-labelledby="validation-masthead-heading">
