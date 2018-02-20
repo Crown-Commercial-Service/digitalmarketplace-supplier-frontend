@@ -1295,43 +1295,20 @@ class TestEditSupplierRegisteredAddress(BaseApplicationTest):
 
 
 class TestCreateSupplier(BaseApplicationTest):
-    def test_should_be_an_error_if_no_duns_number(self):
+    @pytest.mark.parametrize('duns_number', [None, 'invalid', '12345678', '1234567890'])
+    def test_should_be_an_error_if_missing_or_invalid_duns_number(self, duns_number):
+        """Ensures that validation on duns number prevents submission of:
+        1) No value
+        2) Non-numerics
+        3) Numerics shorter/longer than 9 characters"""
         res = self.client.post(
             "/suppliers/duns-number",
-            data={}
+            data={'duns_number': duns_number} if duns_number else {}
         )
         assert res.status_code == 400
         assert "You must enter a DUNS number with 9 digits." in res.get_data(as_text=True)
 
-    def test_should_be_an_error_if_no_duns_number_is_letters(self):
-        res = self.client.post(
-            "/suppliers/duns-number",
-            data={
-                'duns_number': "invalid"
-            }
-        )
-        assert res.status_code == 400
-        assert "You must enter a DUNS number with 9 digits." in res.get_data(as_text=True)
-
-    def test_should_be_an_error_if_no_duns_number_is_less_than_nine_digits(self):
-        res = self.client.post(
-            "/suppliers/duns-number",
-            data={
-                'duns_number': "12345678"
-            }
-        )
-        assert res.status_code == 400
-        assert "You must enter a DUNS number with 9 digits." in res.get_data(as_text=True)
-
-    def test_should_be_an_error_if_no_duns_number_is_more_than_nine_digits(self):
-        res = self.client.post(
-            "/suppliers/duns-number",
-            data={
-                'duns_number': "1234567890"
-            }
-        )
-        assert res.status_code == 400
-        assert "You must enter a DUNS number with 9 digits." in res.get_data(as_text=True)
+        self.assert_validation_masthead(res)
 
     @mock.patch("app.main.suppliers.data_api_client")
     def test_should_be_an_error_if_duns_number_in_use(self, data_api_client):
@@ -1396,44 +1373,21 @@ class TestCreateSupplier(BaseApplicationTest):
         assert res.status_code == 302
         assert res.location == 'http://localhost/suppliers/details'
 
-    def test_should_be_an_error_if_companies_house_number_is_not_8_characters_short(self):
+    @pytest.mark.parametrize('companies_house_number', ['1234567', '123456789', 'ABC12345'])
+    def test_should_be_an_error_if_submitted_value_bad_format_for_companies_house_number(self, companies_house_number):
+        """Ensures that validation on companies house number prevents submission of:
+        1) Values shorter/longer than 8 characters
+        2) 8-character submissions of an invalid format"""
         res = self.client.post(
             "/suppliers/companies-house-number",
-            data={
-                'companies_house_number': "1234567"
-            }
+            data={'companies_house_number': companies_house_number}
         )
         assert res.status_code == 400
-        assert ("Companies House numbers must have either 8 digits or 2 letters followed by 6 digits."
-                in
-                res.get_data(as_text=True)
-                )
 
-    def test_should_be_an_error_if_companies_house_number_is_not_8_characters_long(self):
-        res = self.client.post(
-            "/suppliers/companies-house-number",
-            data={
-                'companies_house_number': "123456789"
-            }
-        )
-        assert res.status_code == 400
-        assert ("Companies House numbers must have either 8 digits or 2 letters followed by 6 digits."
-                in
-                res.get_data(as_text=True)
-                )
+        body = res.get_data(as_text=True)
+        assert "Companies House numbers must have either 8 digits or 2 letters followed by 6 digits." in body
 
-    def test_should_be_an_error_if_companies_house_number_is_8_characters_but_invalid_format(self):
-        res = self.client.post(
-            "/suppliers/companies-house-number",
-            data={
-                'companies_house_number': "ABC12345"
-            }
-        )
-        assert res.status_code == 400
-        assert ("Companies House numbers must have either 8 digits or 2 letters followed by 6 digits."
-                in
-                res.get_data(as_text=True)
-                )
+        self.assert_validation_masthead(res)
 
     def test_should_allow_valid_companies_house_number(self):
         with self.client as c:
@@ -1498,6 +1452,8 @@ class TestCreateSupplier(BaseApplicationTest):
         assert res.status_code == 400
         assert "You must provide a company name." in res.get_data(as_text=True)
 
+        self.assert_validation_masthead(res)
+
     def test_should_be_an_error_if_company_name_too_long(self):
         twofiftysix = "a" * 256
         res = self.client.post(
@@ -1508,6 +1464,8 @@ class TestCreateSupplier(BaseApplicationTest):
         )
         assert res.status_code == 400
         assert "You must provide a company name under 256 characters." in res.get_data(as_text=True)
+
+        self.assert_validation_masthead(res)
 
     def test_should_allow_valid_company_contact_details(self):
         res = self.client.post(
@@ -2233,19 +2191,25 @@ class TestSupplierEditOrganisationSize(BaseApplicationTest):
             res = self.client.get("/suppliers/organisation-size/edit")
             assert res.status_code == 200, 'The edit organisation-size page has not loaded correctly.'
 
-    def test_no_selection_triggers_input_required_validation(self, data_api_client):
+    @pytest.mark.parametrize('organisation_size, expected_error',
+                             (
+                                 (None, "You must choose an organisation size."),
+                                 ('blah', "Not a valid choice")
+                             ))
+    def test_missing_or_invalid_choice_shows_validation(self, data_api_client, organisation_size, expected_error):
         with self.app.test_client():
             self.login()
 
-            res = self.client.post("/suppliers/organisation-size/edit")
+            res = self.client.post("/suppliers/organisation-size/edit",
+                                   data={'organisation_size': organisation_size} if organisation_size else {})
             doc = html.fromstring(res.get_data(as_text=True))
             error = doc.xpath('//span[@id="error-organisation_size"]')
 
-            assert len(error) == 1, \
-                'Only one validation message should be shown.'
+            assert len(error) == 1, 'Only one validation message should be shown.'
 
-            assert error[0].text.strip() == 'You must choose an organisation size.', \
-                'The validation message is not as anticipated.'
+            assert error[0].text.strip() == expected_error, 'The validation message is not as anticipated.'
+
+            self.assert_validation_masthead(res)
 
     @pytest.mark.parametrize('size', (None, 'micro', 'small', 'medium', 'large'))
     def test_post_choice_triggers_api_supplier_update_and_redirect(self, data_api_client, size):

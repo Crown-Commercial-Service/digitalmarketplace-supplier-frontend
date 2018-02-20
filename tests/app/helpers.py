@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from datetime import datetime, timedelta
+from lxml import html
 import re
 
 from mock import patch
@@ -492,6 +493,11 @@ class BaseApplicationTest(object):
     def assert_no_flashes(self):
         with self.client.session_transaction() as session:
             assert not session.get("_flashes")
+
+    def assert_validation_masthead(self, res, title="There was a problem with your answer to:"):
+        doc = html.fromstring(res.get_data(as_text=True))
+        masthead_text = doc.xpath('//h1[@class="validation-masthead-heading"]/text()')
+        assert masthead_text and title in masthead_text[0]
 
 
 class FakeMail(object):

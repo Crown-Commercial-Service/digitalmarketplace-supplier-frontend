@@ -25,6 +25,12 @@
 
 <div class="single-question-page">
   <div class="grid-row">
+    {% if form.errors %}
+      {% with errors = [{'question': form.organisation_size.label, 'input_name': form.organisation_size.name}] %}
+        {% include 'toolkit/forms/validation.html' %}
+      {% endwith %}
+    {% endif %}
+    
     <div class="column-two-thirds">
       {% with heading = "What size is your organisation?", smaller = True %}
         {% include "toolkit/page-heading.html" %}
