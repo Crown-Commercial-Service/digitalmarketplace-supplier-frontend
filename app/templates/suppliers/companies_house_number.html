@@ -19,6 +19,13 @@
 
 <div class="single-question-page">
   <div class="grid-row">
+    {% if form.errors %}
+      {% with errors = [{'question': form.companies_house_number.label, 'input_name': form.companies_house_number.name}]
+      %}
+        {% include 'toolkit/forms/validation.html' %}
+      {% endwith %}
+    {% endif %}
+    
     <div class="column-two-thirds">
       {% with heading = "Companies House number (optional)", smaller = True %}
         {% include "toolkit/page-heading.html" %}
