@@ -6,7 +6,7 @@ from lxml import html
 import mock
 import pytest
 
-from dmapiclient import HTTPError
+from dmapiclient import HTTPError, APIError
 from dmapiclient.audit import AuditTypes
 
 from tests.app.helpers import BaseApplicationTest, assert_args_and_return
@@ -2246,3 +2246,82 @@ class TestSupplierEditOrganisationSize(BaseApplicationTest):
             doc = html.fromstring(res.get_data(as_text=True))
             selected_value = doc.xpath('//input[@name="organisation_size" and @checked="checked"]/@value')
             assert selected_value == expected_selection, 'The organisation size has not pre-populated correctly.'
+
+
+@mock.patch("app.main.views.suppliers.data_api_client", autospec=True)
+class TestSupplierAddRegisteredCompanyName(BaseApplicationTest):
+    def test_add_registered_company_name_page_loads(self, data_api_client):
+        with self.app.test_client():
+            self.login()
+            data_api_client.get_supplier.return_value = get_supplier(registeredName=None)
+
+            res = self.client.get("/suppliers/registered-company-name/edit")
+            assert res.status_code == 200, 'The add registered company name page has not loaded correctly.'
+
+    def test_no_input_triggers_input_required_validation_and_does_not_call_api_update(self, data_api_client):
+        with self.app.test_client():
+            expect_header = self.strip_all_whitespace('There was a problem with your answer to:Registered company name')
+            expect_error = 'You must provide a registered company name.'
+
+            self.login()
+            data_api_client.get_supplier.return_value = get_supplier(registeredName=None)
+
+            res = self.client.post("/suppliers/registered-company-name/edit")
+            doc = html.fromstring(res.get_data(as_text=True))
+            validation_top = doc.xpath('//div[@class="validation-masthead"]')
+            validation_wrap = doc.xpath('//span[@class="validation-message"]')
+
+            assert self.strip_all_whitespace(validation_top[0].text_content()) == expect_header,\
+                'The masthead message is not as expected.'
+            assert len(validation_wrap) == 1, 'Only one validation message should be shown.'
+            assert validation_wrap[0].text.strip() == expect_error, 'The validation message is not as expected.'
+            assert data_api_client.update_supplier.call_args_list == []
+
+    def test_post_input_triggers_api_supplier_update_and_redirect(self, data_api_client):
+        with self.app.test_client():
+            self.login()
+            data_api_client.get_supplier.return_value = get_supplier(registeredName=None)
+
+            self.client.post("/suppliers/registered-company-name/edit", data={'registered_company_name': "K-Inc"})
+
+            assert data_api_client.update_supplier.call_args_list == [
+                mock.call(supplier_id=1234, supplier={'registeredName': "K-Inc"}, user='email@email.com')
+            ], 'update_supplier was called with the wrong arguments'
+
+    def test_post_response_shows_error_message_on_api_failure(self, data_api_client):
+        with self.app.test_client():
+            self.login()
+            error_message = "You broke it"
+            data_api_client.get_supplier.return_value = get_supplier(registeredName=None)
+            data_api_client.update_supplier.side_effect = APIError(mock.Mock(status_code=504), error_message)
+            res = self.client.post("/suppliers/registered-company-name/edit", data={'registered_company_name': "K-Inc"})
+            doc = html.fromstring(res.get_data(as_text=True))
+            validation_wrap = doc.xpath('//span[@class="validation-message"]')
+
+            assert res.status_code == 400
+            assert len(validation_wrap) == 1, 'Only one validation message should be shown.'
+            assert validation_wrap[0].text.strip() == error_message, 'The validation message is not as expected.'
+
+    def test_get_shows_already_entered_page_and_api_not_called_update_if_data_already_entered(self, data_api_client):
+        with self.app.test_client():
+            self.login()
+            data_api_client.get_supplier.side_effect = get_supplier
+            res = self.client.get("/suppliers/registered-company-name/edit")
+            doc = html.fromstring(res.get_data(as_text=True))
+            page_heading = doc.xpath('//h1')
+
+            assert res.status_code == 200
+            assert page_heading[0].text.strip() == "Change your registered company name"
+            assert data_api_client.update_supplier.call_args_list == []
+
+    def test_post_shows_already_entered_page_and_api_not_called_if_data_already_entered(self, data_api_client):
+        with self.app.test_client():
+            self.login()
+            data_api_client.get_supplier.side_effect = get_supplier
+            res = self.client.post("/suppliers/registered-company-name/edit", data={'registered_company_name': "K-Inc"})
+            doc = html.fromstring(res.get_data(as_text=True))
+            page_heading = doc.xpath('//h1')
+
+            assert res.status_code == 400
+            assert page_heading[0].text.strip() == "Change your registered company name"
+            assert data_api_client.update_supplier.call_args_list == []
