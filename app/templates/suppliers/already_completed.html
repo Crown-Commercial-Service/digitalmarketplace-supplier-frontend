@@ -31,7 +31,8 @@
         {% include "toolkit/page-heading.html" %}
       {% endwith %}
 
-      <p>Contact <a href="mailto:cloud_digital@crowncommercial.gov.uk">cloud_digital@crowncommercial.gov.uk</a> to make changes to your:</p>
+      <div class="explanation-list">
+      <p class="lead">Contact <a href="mailto:cloud_digital@crowncommercial.gov.uk">cloud_digital@crowncommercial.gov.uk</a> to make changes to your:</p>
 
       <ul class="list-bullet">
         <li>registered company name</li>
@@ -39,8 +40,16 @@
         <li>VAT number</li>
         <li>DUNS number</li>
       </ul>
+      </div>
 
-      <p><a href="{{ url_for('.supplier_details') }}">Return to company details</a></p>
+      {%
+        with
+        url = url_for('.supplier_details'),
+        text = "Return to company details"
+      %}
+        {% include "toolkit/secondary-action-link.html" %}
+      {% endwith %}
+
     </div>
   </div>
 </div>
