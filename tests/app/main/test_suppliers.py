@@ -938,10 +938,9 @@ class TestSupplierUpdate(BaseApplicationTest):
         if data is None:
             data = {
                 "description": "New Description",
-                "contact_id": 2,
-                "contact_email": "supplier@user.dmdev",
-                "contact_contactName": "Supplier Person",
-                "contact_phoneNumber": "0800123123",
+                "email": "supplier@user.dmdev",
+                "contactName": "Supplier Person",
+                "phoneNumber": "0800123123",
             }
         data.update(kwargs)
         res = self.client.post("/suppliers/details/edit", data=data)
@@ -974,7 +973,7 @@ class TestSupplierUpdate(BaseApplicationTest):
 
     def test_update_all_supplier_fields(self, data_api_client):
         self.login()
-
+        data_api_client.get_supplier.side_effect = get_supplier
         status, _ = self.post_supplier_edit()
 
         assert status == 302
@@ -992,20 +991,18 @@ class TestSupplierUpdate(BaseApplicationTest):
                 'email': u'supplier@user.dmdev',
                 'phoneNumber': u'0800123123',
                 'contactName': u'Supplier Person',
-                'id': 2
             },
             'email@email.com'
         )
 
     def test_should_strip_whitespace_surrounding_supplier_update_all_fields(self, data_api_client):
         self.login()
-
+        data_api_client.get_supplier.side_effect = get_supplier
         data = {
             "description": "  New Description  ",
-            "contact_id": 2,
-            "contact_email": "  supplier@user.dmdev  ",
-            "contact_contactName": "  Supplier Person  ",
-            "contact_phoneNumber": "  0800123123  ",
+            "email": "  supplier@user.dmdev  ",
+            "contactName": "  Supplier Person  ",
+            "phoneNumber": "  0800123123  ",
         }
 
         status, _ = self.post_supplier_edit(data=data)
@@ -1025,7 +1022,6 @@ class TestSupplierUpdate(BaseApplicationTest):
                 'email': u'supplier@user.dmdev',
                 'phoneNumber': u'0800123123',
                 'contactName': u'Supplier Person',
-                'id': 2
             },
             'email@email.com'
         )
@@ -1035,19 +1031,17 @@ class TestSupplierUpdate(BaseApplicationTest):
 
         status, response = self.post_supplier_edit({
             "description": "New Description",
-            "contact_id": 2,
-            "contact_contactName": "Supplier Person",
-            "contact_phoneNumber": "0800123123",
+            "contactName": "Supplier Person",
+            "phoneNumber": "0800123123",
         })
 
-        assert status == 200
+        assert status == 400
         assert 'You must provide an email address' in response
 
         assert data_api_client.update_supplier.called is False
         assert data_api_client.update_contact_information.called is False
 
         assert "New Description" in response
-        assert 'value="2"' in response
         assert 'value="Supplier Person"' in response
         assert 'value="0800123123"' in response
 
@@ -1070,7 +1064,7 @@ class TestSupplierUpdate(BaseApplicationTest):
             description="DESCR " * 51
         )
 
-        assert status == 200
+        assert status == 400
         assert 'must not be more than 50' in resp
 
         assert data_api_client.update_supplier.called is False

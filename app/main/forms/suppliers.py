@@ -1,5 +1,5 @@
 from flask_wtf import Form
-from wtforms import IntegerField, RadioField
+from wtforms import RadioField
 from wtforms.validators import AnyOf, InputRequired, Length, Optional, Regexp, ValidationError
 
 from dmutils.forms import StripWhitespaceStringField, EmailField, EmailValidator
@@ -27,7 +27,6 @@ class EditSupplierForm(Form):
 
 
 class EditContactInformationForm(Form):
-    id = IntegerField()
     contactName = StripWhitespaceStringField('Contact name', validators=[
         InputRequired(message="You must provide a contact name"),
     ])

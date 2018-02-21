@@ -75,17 +75,16 @@
       </div>
   {% endif %}
 
-  <form action="{{ url_for('.update_supplier') }}" method="post" enctype="multipart/form-data">
+  <form action="{{ url_for('.edit_supplier') }}" method="post" enctype="multipart/form-data">
 
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
 
   <div class="grid-row">
     <div class="column-two-thirds">
 
-      {{ forms.question_textbox('contact_contactName', 'Contact name', contact_form.contactName.data, 'Primary contact', errors=contact_form.contactName.errors) }}
-      {{ forms.question_textbox('contact_email', 'Contact email', contact_form.email.data, errors=contact_form.email.errors) }}
-      {{ forms.question_textbox('contact_phoneNumber', 'Contact phone number', contact_form.phoneNumber.data, errors=contact_form.phoneNumber.errors) }}
-      {{ forms.input('contact_id', contact_form.id.data, type='hidden') }}
+      {{ forms.question_textbox('contactName', 'Contact name', contact_form.contactName.data, 'Primary contact', errors=contact_form.contactName.errors) }}
+      {{ forms.question_textbox('email', 'Contact email', contact_form.email.data, errors=contact_form.email.errors) }}
+      {{ forms.question_textbox('phoneNumber', 'Contact phone number', contact_form.phoneNumber.data, errors=contact_form.phoneNumber.errors) }}
 
 
       {{ forms.question_textarea('description', 'Supplier summary', supplier_form.description.data, '50 words max', errors=supplier_form.description.errors, max_length_in_words=50) }}
