@@ -169,19 +169,23 @@ def edit_registered_address():
 def edit_supplier_registered_name():
     form = AddCompanyRegisteredNameForm()
     supplier = data_api_client.get_supplier(current_user.supplier_id)['suppliers']
-
     if supplier.get("registeredName"):
         return (
             render_template("suppliers/already_completed.html", completed_data_description="registered company name"),
             200 if request.method == 'GET' else 400
         )
-
     if request.method == 'POST':
         if form.validate_on_submit():
-            data_api_client.update_supplier(supplier_id=current_user.supplier_id,
-                                            supplier={"registeredName": form.registered_company_name.data},
-                                            user=current_user.email_address)
-            return redirect(url_for('.supplier_details'))
+            try:
+                data_api_client.update_supplier(supplier_id=current_user.supplier_id,
+                                                supplier={"registeredName": form.registered_company_name.data},
+                                                user=current_user.email_address)
+            except APIError as e:
+                api_error = e.message
+                form.registered_company_name.errors.append(api_error)
+                current_app.logger.warning("supplieredit.fail: api error:{api_error}", extra={"api_error": api_error})
+            else:
+                return redirect(url_for('.supplier_details'))
 
         current_app.logger.warning(
             "supplieredit.fail: registered-name:{rname}, errors:{rname_errors}",
