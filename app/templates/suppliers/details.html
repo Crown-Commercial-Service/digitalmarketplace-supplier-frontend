@@ -75,19 +75,21 @@
   ],
   field_headings_visible=False
 ) %}
-{% if supplier.registeredName %}
-  {% call summary.row() %}
-    {{ summary.field_name('Registered company name') }}
-      {{ summary.text(supplier.registeredName) }}
-  {% endcall %}
-{% endif %}
+{% call summary.row() %}
+  {{ summary.field_name('Registered company name') }}
+  {% if supplier.registeredName %}
+    {{ summary.text(supplier.registeredName) }}
+  {% else %}
+    {{ summary.link(link_title="Answer required", link="/registered-company-name/edit") }}
+  {% endif %}
+{% endcall %}
 
 {% set postcode = supplier.contact.get("postcode") %}
 {% set street_address_line_1 = supplier.contact.get("address1") %}
 {% set locality = supplier.contact.get("city") %}
-{% if postcode or street_address_line_1 or locality or supplier.registrationCountry %}
-  {% call summary.row() %}
-    {{ summary.field_name('Registered company address') }}
+{% call summary.row() %}
+  {{ summary.field_name('Registered company address') }}
+  {% if postcode and street_address_line_1 and locality and supplier.registrationCountry %}
     {% call summary.field() %}
       {%
         with
@@ -101,8 +103,11 @@
         {% include "toolkit/contact-details.html" %}
       {% endwith %}
     {% endcall %}
-  {% endcall %}
-{% endif %}
+  {%  else %}
+    {{ summary.link(link_title="Answer required", link="/registered-address/edit") }}
+  {% endif %}
+{% endcall %}
+
 
   {% if supplier.companiesHouseNumber %}
     {% call summary.row() %}
@@ -118,26 +123,32 @@
     {% endcall %}
   {% endif %}
 
+{% call summary.row() %}
+  {{ summary.field_name('VAT number') }}
   {% if supplier.vatNumber %}
-    {% call summary.row() %}
-      {{ summary.field_name('VAT number') }}
-      {{ summary.text(supplier.vatNumber) }}
-    {% endcall %}
+    {{ summary.text(supplier.vatNumber) }}
+  {% else %}
+    {{ summary.link(link_title="Answer required", link="/vat-number/edit") }}
   {% endif %}
+{% endcall %}
 
+{% call summary.row() %}
+  {{ summary.field_name('Trading status') }}
   {% if supplier.tradingStatus %}
-    {% call summary.row() %}
-      {{ summary.field_name('Trading status') }}
-      {{ summary.text(supplier.tradingStatus|capitalize_first) }}
-    {% endcall %}
+    {{ summary.text(supplier.tradingStatus|capitalize_first) }}
+  {% else %}
+    {{ summary.link(link_title="Answer required", link="/trading-status/edit") }}
   {% endif %}
+{% endcall %}
 
+{% call summary.row() %}
+  {{ summary.field_name('Company size') }}
   {% if supplier.organisationSize %}
-    {% call summary.row() %}
-      {{ summary.field_name('Company size') }}
-      {{ summary.text(supplier.organisationSize|capitalize_first) }}
-    {% endcall %}
+    {{ summary.text(supplier.organisationSize|capitalize_first) }}
+  {% else %}
+    {{ summary.link(link_title="Answer required", link="/organisation-size/edit") }}
   {% endif %}
+{% endcall %}
 
   {% if supplier.dunsNumber %}
     {% call summary.row() %}

@@ -825,6 +825,33 @@ class TestSupplierDetails(BaseApplicationTest):
             assert "11 AB" in postcode[0].text
             assert "United Kingdom" in country[0].text
 
+    @pytest.mark.parametrize(
+        "question,null_attribute,link_address",
+        [
+            ("Registered company name", {"registeredName": None}, "/registered-company-name/edit"),
+            ("Registered company address", {"registrationCountry": None}, "/registered-address/edit"),
+            ("Trading status", {"tradingStatus": None}, "/trading-status/edit"),
+            ("Company size", {"organisationSize": None}, "/organisation-size/edit"),
+            ("VAT number", {"vatNumber": None}, "/vat-number/edit"),
+        ]
+    )
+    def test_question_field_requires_answer_if_empty(self, data_api_client, question, null_attribute, link_address):
+        data_api_client.get_supplier.return_value = get_supplier(**null_attribute)
+
+        with self.app.test_client():
+            self.login()
+
+            res = self.client.get("/suppliers/details")
+            assert res.status_code == 200
+            page_html = res.get_data(as_text=True)
+            document = html.fromstring(page_html)
+            answer_required_link = document.xpath(
+                "//span[text()='{}']/following::td[1]/span/a[text()='Answer required']".format(question)
+            )
+
+            assert answer_required_link
+            assert answer_required_link[0].values()[0] == link_address
+
 
 @mock.patch("app.main.views.suppliers.data_api_client", autospec=True)
 @mock.patch("app.main.views.suppliers.get_current_suppliers_users", autospec=True)
