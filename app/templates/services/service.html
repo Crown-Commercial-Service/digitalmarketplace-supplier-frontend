@@ -90,7 +90,7 @@
 
 {% block edit_link %}
   {% if 'EDIT_SECTIONS' is active_feature %}
-    {{ summary.top_link("Edit", url_for(".edit_section", framework_slug=service_data["frameworkSlug"], service_id=service_id, section_id=section.id)) }}
+    {{ summary.top_link("Edit", url_for(".edit_section", framework_slug=service_data["frameworkSlug"], service_id=service_id, section_id=section.id, hidden_text=section.name)) }}
   {% endif %}
 {% endblock %}
 

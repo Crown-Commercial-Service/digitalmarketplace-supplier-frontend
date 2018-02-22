@@ -49,27 +49,27 @@
   {% call summary.row(complete=session.get("duns_number", None)) %}
   {{ summary.field_name("DUNS number") }}
   {{ summary.text(session.get("duns_number", "You must answer this question.")) }}
-  {{ summary.edit_link("Edit", url_for(".duns_number")) }}
+  {{ summary.edit_link("Edit", url_for(".duns_number"), hidden_text="DUNS number") }}
   {% endcall %}
   {% call summary.row(complete=session.get("company_name", None)) %}
   {{ summary.field_name("Company name") }}
   {{ summary.text(session.get("company_name", "You must answer this question.")) }}
-  {{ summary.edit_link("Edit", url_for(".company_name")) }}
+  {{ summary.edit_link("Edit", url_for(".company_name"), hidden_text="company name") }}
   {% endcall %}
   {% call summary.row(complete=session.get("contact_name", None)) %}
   {{ summary.field_name("Contact name") }}
   {{ summary.text(session.get("contact_name", "You must answer this question.")) }}
-  {{ summary.edit_link("Edit", url_for(".company_contact_details")) }}
+  {{ summary.edit_link("Edit", url_for(".company_contact_details"), hidden_text="contact name") }}
   {% endcall %}
-  {% call summary.row(complete=session.get("phone_number", None)) %}
+  {% call summary.row(complete=session.get("email_address", None)) %}
   {{ summary.field_name("Contact email") }}
   {{ summary.text(session.get("email_address", "You must answer this question.")) }}
-  {{ summary.edit_link("Edit", url_for(".company_contact_details")) }}
+  {{ summary.edit_link("Edit", url_for(".company_contact_details"), hidden_text="contact email") }}
   {% endcall %}
   {% call summary.row(complete=session.get("phone_number", None)) %}
   {{ summary.field_name("Contact phone number") }}
   {{ summary.text(session.get("phone_number", "You must answer this question.")) }}
-  {{ summary.edit_link("Edit", url_for(".company_contact_details")) }}
+  {{ summary.edit_link("Edit", url_for(".company_contact_details"), hidden_text="contact phone number") }}
   {% endcall %}
   {% endcall %}
 
@@ -85,7 +85,7 @@
     {% call summary.row(complete=session.get("account_email_address", None)) %}
     {{ summary.field_name("Email address") }}
     {{ summary.text(session.get("account_email_address", "You must answer this question.")) }}
-    {{ summary.edit_link("Edit", url_for(".create_your_account")) }}
+    {{ summary.edit_link("Edit", url_for(".create_your_account"), hidden_text="email address") }}
     {% endcall %}
   {% endcall %}
 </div>

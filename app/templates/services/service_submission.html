@@ -127,7 +127,7 @@
 
 {% block edit_link %}
   {% if framework.status == 'open' %}
-    {{ summary.top_link("Edit", url_for(".edit_service_submission", framework_slug=framework.slug, lot_slug=service_data.lot, service_id=service_id, section_id=section.id)) }}
+    {{ summary.top_link("Edit", url_for(".edit_service_submission", framework_slug=framework.slug, lot_slug=service_data.lot, service_id=service_id, section_id=section.id, hidden_text=section.name)) }}
   {% endif %}
 {% endblock %}
 
