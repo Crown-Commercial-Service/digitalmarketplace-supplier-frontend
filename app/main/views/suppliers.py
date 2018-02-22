@@ -25,6 +25,7 @@ from ..forms.suppliers import (
     EditRegisteredCountryForm,
     EditSupplierForm,
     EmailAddressForm,
+    VatNumberForm,
 )
 from ..helpers.frameworks import get_frameworks_by_status, get_frameworks_closed_and_open_for_applications
 from ..helpers.suppliers import get_country_name_from_country_code, COUNTRY_TUPLE, \
@@ -375,6 +376,56 @@ def edit_supplier_trading_status():
     form.trading_status.data = prefill_trading_status
 
     return render_template('suppliers/edit_supplier_trading_status.html', form=form)
+
+
+@main.route('/vat-number/edit', methods=['GET', 'POST'])
+@login_required
+def edit_supplier_vat_number():
+    form = VatNumberForm()
+    try:
+        supplier = data_api_client.get_supplier(current_user.supplier_id)['suppliers']
+    except APIError as e:
+        abort(e.status_code)
+
+    if supplier.get("vatNumber"):
+        return (
+            render_template("suppliers/already_completed.html", completed_data_description="VAT number"),
+            200 if request.method == 'GET' else 400
+        )
+
+    form_errors = None
+    if request.method == 'POST':
+        if form.validate_on_submit():
+            vat_number = form.vat_number.data if form.vat_registered.data == 'Yes' else 'Not VAT registered'
+
+            try:
+                data_api_client.update_supplier(supplier_id=current_user.supplier_id,
+                                                supplier={"vatNumber": vat_number},
+                                                user=current_user.email_address)
+            except APIError as e:
+                abort(e.status_code)
+
+            return redirect(url_for('.supplier_details'))
+
+        current_app.logger.warning(
+            "supplieredit.fail: vat-number:{vat_number}, vat-number-errors:{vat_number_errors}, "
+            "vat-registered:{vat_registered}, vat-registered-errors{vat_registered_errors}",
+            extra={
+                "vat_number": form.vat_number.data,
+                "vat_number_errors": ",".join(form.vat_number.errors),
+                "vat_registered": form.vat_registered.data,
+                "vat_registered_errors": ",".join(form.vat_registered.errors),
+            })
+
+        form_errors = [
+            {'question': form[field].label.text, 'input_name': form[field].name} for field in form.errors.keys()
+        ]
+
+    return render_template(
+        'suppliers/edit_vat_number.html',
+        form=form,
+        form_errors=form_errors
+    ), 200 if request.method == 'GET' else 400
 
 
 @main.route('/supply', methods=['GET'])

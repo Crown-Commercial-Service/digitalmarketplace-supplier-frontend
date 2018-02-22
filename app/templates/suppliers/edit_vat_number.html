@@ -1,0 +1,72 @@
+{% extends "_base_page.html" %}
+
+{% block page_title %}VAT number – Digital Marketplace{% endblock %}
+
+{% block breadcrumb %}
+  {% with items = [
+    {
+      "link": "/",
+      "label": "Digital Marketplace"
+    },
+    {
+       "link": url_for('.dashboard'),
+       "label": "Your account"
+    },
+    {
+      "link": url_for('.supplier_details'),
+      "label": "Company details"
+    },
+  ] %}
+    {% include "toolkit/breadcrumb.html" %}
+  {% endwith %}
+{% endblock %}
+
+{% block main_content %}
+
+{% if form.errors %}
+  {% with errors = form_errors %}
+    {% include 'toolkit/forms/validation.html' %}
+  {% endwith %}
+{% endif %}
+
+<div class="grid-row">
+  <div class="column-two-thirds">
+    {% with heading = "Are you registered for VAT?", smaller = True %}
+      {% include "toolkit/page-heading.html" %}
+    {% endwith %}
+
+    <form method="POST" action="{{ url_for('.edit_supplier_vat_number') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+      {%
+        with
+        name = "vat_registered",
+        type = "radio",
+        value = form.vat_registered.data,
+        error = form.vat_registered.errors[0],
+        options = [
+          {
+              "label": "Yes",
+              "reveal": {
+                "name": "vat_number",
+                "question": "What is your VAT number?",
+                "value": form.vat_number.data,
+                "error": form.vat_number.errors[0]
+              }
+          },
+          {
+              "label": "No"
+          }
+        ]
+      %}
+        {% include "toolkit/forms/selection-buttons.html" %}
+      {% endwith %}
+
+      {% with type = "save",
+              label = "Save and continue" %}
+        {% include "toolkit/button.html" %}
+      {% endwith %}
+      <p><a href="{{ url_for('.supplier_details') }}">Return to company details</a></p>
+    </form>
+  </div>
+</div>
+{% endblock %}
