@@ -720,7 +720,7 @@ class TestSupplierDetails(BaseApplicationTest):
             assert document.xpath(
                 "//a[normalize-space(string())=$t][@href=$u][contains(@class, $c)]",
                 t="Change",
-                u="/suppliers/details/edit",
+                u="/suppliers/what-buyers-will-see/edit",
                 c="summary-change-link",
             )
 
@@ -943,7 +943,7 @@ class TestSupplierUpdate(BaseApplicationTest):
                 "phoneNumber": "0800123123",
             }
         data.update(kwargs)
-        res = self.client.post("/suppliers/details/edit", data=data)
+        res = self.client.post("/suppliers/what-buyers-will-see/edit", data=data)
         return res.status_code, res.get_data(as_text=True)
 
     def test_should_render_edit_page_with_minimum_data(self, data_api_client):
@@ -968,7 +968,7 @@ class TestSupplierUpdate(BaseApplicationTest):
 
         data_api_client.get_supplier.side_effect = limited_supplier
 
-        response = self.client.get("/suppliers/details/edit")
+        response = self.client.get("/suppliers/what-buyers-will-see/edit")
         assert response.status_code == 200
 
     def test_update_all_supplier_fields(self, data_api_client):
@@ -1071,9 +1071,9 @@ class TestSupplierUpdate(BaseApplicationTest):
         assert data_api_client.update_contact_information.called is False
 
     def test_should_redirect_to_login_if_not_logged_in(self, data_api_client):
-        res = self.client.get("/suppliers/details/edit")
+        res = self.client.get("/suppliers/what-buyers-will-see/edit")
         assert res.status_code == 302
-        assert res.location == "http://localhost/user/login?next=%2Fsuppliers%2Fdetails%2Fedit"
+        assert res.location == "http://localhost/user/login?next=%2Fsuppliers%2Fwhat-buyers-will-see%2Fedit"
 
 
 class TestEditSupplierRegisteredAddress(BaseApplicationTest):

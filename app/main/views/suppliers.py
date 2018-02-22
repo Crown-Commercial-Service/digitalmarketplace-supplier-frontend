@@ -199,14 +199,14 @@ def edit_supplier_registered_name():
 
 @main.route('/edit', methods=['GET'])
 @login_required
-def edit_supplier_redirect():
+def edit_what_buyers_will_see_redirect():
     # redirect old route for this view
-    return redirect(url_for('.edit_supplier'), 302)
+    return redirect(url_for('.edit_what_buyers_will_see'), 302)
 
 
-@main.route('/details/edit', methods=['GET', 'POST'])
+@main.route('/what-buyers-will-see/edit', methods=['GET', 'POST'])
 @login_required
-def edit_supplier():
+def edit_what_buyers_will_see():
     try:
         supplier = data_api_client.get_supplier(
             current_user.supplier_id
@@ -253,7 +253,7 @@ def edit_supplier():
         contact_form.email.data = supplier['contact'].get('email')
 
     return render_template(
-        "suppliers/edit_supplier.html",
+        "suppliers/edit_what_buyers_will_see.html",
         error=error,
         supplier_form=supplier_form,
         contact_form=contact_form
