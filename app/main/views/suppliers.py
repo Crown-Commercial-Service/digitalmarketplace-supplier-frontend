@@ -174,29 +174,25 @@ def edit_supplier_registered_name():
             render_template("suppliers/already_completed.html", completed_data_description="registered company name"),
             200 if request.method == 'GET' else 400
         )
+
     if request.method == 'POST':
         if form.validate_on_submit():
             try:
                 data_api_client.update_supplier(supplier_id=current_user.supplier_id,
                                                 supplier={"registeredName": form.registered_company_name.data},
                                                 user=current_user.email_address)
-            except APIError as e:
-                api_error = e.message
-                form.registered_company_name.errors.append(api_error)
-                current_app.logger.warning("supplieredit.fail: api error:{api_error}", extra={"api_error": api_error})
-            else:
                 return redirect(url_for('.supplier_details'))
+            except APIError as e:
+                abort(e.status_code)
+        else:
+            current_app.logger.warning(
+                "supplieredit.fail: registered-name:{rname}, errors:{rname_errors}",
+                extra={
+                    'rname': form.registered_company_name.data,
+                    'rname_errors': ",".join(form.registered_company_name.errors)
+                })
 
-        current_app.logger.warning(
-            "supplieredit.fail: registered-name:{rname}, errors:{rname_errors}",
-            extra={
-                'rname': form.registered_company_name.data,
-                'rname_errors': ",".join(form.registered_company_name.errors)
-            })
-
-        return render_template("suppliers/edit_registered_name.html", form=form), 400
-
-    form.registered_company_name.data = supplier.get("registeredName", "")
+            return render_template("suppliers/edit_registered_name.html", form=form), 400
 
     return render_template('suppliers/edit_registered_name.html', form=form)
 

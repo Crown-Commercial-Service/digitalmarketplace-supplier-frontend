@@ -2288,19 +2288,13 @@ class TestSupplierAddRegisteredCompanyName(BaseApplicationTest):
                 mock.call(supplier_id=1234, supplier={'registeredName': "K-Inc"}, user='email@email.com')
             ], 'update_supplier was called with the wrong arguments'
 
-    def test_post_response_shows_error_message_on_api_failure(self, data_api_client):
+    def test_fails_if_api_update_fails(self, data_api_client):
         with self.app.test_client():
             self.login()
-            error_message = "You broke it"
             data_api_client.get_supplier.return_value = get_supplier(registeredName=None)
-            data_api_client.update_supplier.side_effect = APIError(mock.Mock(status_code=504), error_message)
+            data_api_client.update_supplier.side_effect = APIError(mock.Mock(status_code=504))
             res = self.client.post("/suppliers/registered-company-name/edit", data={'registered_company_name': "K-Inc"})
-            doc = html.fromstring(res.get_data(as_text=True))
-            validation_wrap = doc.xpath('//span[@class="validation-message"]')
-
-            assert res.status_code == 400
-            assert len(validation_wrap) == 1, 'Only one validation message should be shown.'
-            assert validation_wrap[0].text.strip() == error_message, 'The validation message is not as expected.'
+            assert res.status_code == 504
 
     def test_get_shows_already_entered_page_and_api_not_called_update_if_data_already_entered(self, data_api_client):
         with self.app.test_client():
