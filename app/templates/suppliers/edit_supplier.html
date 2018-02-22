@@ -25,6 +25,41 @@
 {% endblock %}
 
 {% block main_content %}
+
+{% if error %}
+<div class="validation-masthead" aria-labelledby="validation-masthead-heading">
+  <h3 class="validation-masthead-heading" id="validation-masthead-heading">
+    {{ error }}
+  </h3>
+</div>
+{% endif %}
+{% if supplier_form.errors or contact_form.errors %}
+    <div class="validation-masthead" aria-labelledby="validation-masthead-heading">
+        <h3 class="validation-masthead-heading" id="validation-masthead-heading">
+            There was a problem with the details you gave for:
+        </h3>
+        {% if supplier_form.errors %}
+        <ul>
+        {% for field_name, field_errors in supplier_form.errors|dictsort %}
+          {% for error in field_errors %}
+            <li><a href="#{{ field_name }}" class="validation-masthead-link">{{ supplier_form[field_name].label.text }}</a>
+          {% endfor %}
+        {% endfor %}
+        </ul>
+        {% endif %}
+
+        {% if contact_form.errors %}
+        <ul>
+        {% for field_name, field_errors in contact_form.errors|dictsort %}
+          {% for error in field_errors %}
+          <li><a href="#contact_{{ field_name }}" class="validation-masthead-link">{{ contact_form[field_name].label.text }}</a></li>
+          {% endfor %}
+        {% endfor %}
+        </ul>
+        {% endif %}
+    </div>
+{% endif %}
+
   <div class="grid-row">
     <div class="column-one-whole">
       {% with
@@ -39,41 +74,6 @@
       </div>
     </div>
   </div>
-
-
-  {% if error %}
-  <div class="validation-masthead" aria-labelledby="validation-masthead-heading">
-    <h3 class="validation-masthead-heading" id="validation-masthead-heading">
-      {{ error }}
-    </h3>
-  </div>
-  {% endif %}
-  {% if supplier_form.errors or contact_form.errors %}
-      <div class="validation-masthead" aria-labelledby="validation-masthead-heading">
-          <h3 class="validation-masthead-heading" id="validation-masthead-heading">
-              There was a problem with the details you gave for:
-          </h3>
-          {% if supplier_form.errors %}
-          <ul>
-          {% for field_name, field_errors in supplier_form.errors|dictsort %}
-            {% for error in field_errors %}
-              <li><a href="#{{ field_name }}" class="validation-masthead-link">{{ supplier_form[field_name].label.text }}</a>
-            {% endfor %}
-          {% endfor %}
-          </ul>
-          {% endif %}
-
-          {% if contact_form.errors %}
-          <ul>
-          {% for field_name, field_errors in contact_form.errors|dictsort %}
-            {% for error in field_errors %}
-            <li><a href="#contact_{{ field_name }}" class="validation-masthead-link">{{ contact_form[field_name].label.text }}</a></li>
-            {% endfor %}
-          {% endfor %}
-          </ul>
-          {% endif %}
-      </div>
-  {% endif %}
 
   <form action="{{ url_for('.edit_supplier') }}" method="post" enctype="multipart/form-data">
 
