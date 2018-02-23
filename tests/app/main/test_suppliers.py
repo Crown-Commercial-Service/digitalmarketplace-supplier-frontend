@@ -1282,16 +1282,19 @@ class TestEditSupplierRegisteredAddress(BaseApplicationTest):
 
     def test_handles_api_errors_when_updating_supplier_or_contact_information(self):
         self.login()
-        self.data_api_client.update_supplier.side_effect = [HTTPError(400, "I'm an error from the API"), None]
-        self.data_api_client.update_contact_information.side_effect = HTTPError(400, "So am I!")
+        self.data_api_client.update_supplier.side_effect = HTTPError(400, "I'm an error from the API")
 
-        for error_message in ["I'm an error from the API", "So am I!"]:
-            status, response = self.post_supplier_address_edit()
-            doc = html.fromstring(response)
+        status, response = self.post_supplier_address_edit()
 
-            assert status == 400
-            assert doc.xpath('normalize-space(//h1[@id="validation-masthead-heading"])') == error_message
-            assert "What is your registered office address?" in doc.xpath('//h1')[-1].text
+        assert status == 503
+
+    def test_handles_api_errors_when_updating_contact_information(self):
+        self.login()
+        self.data_api_client.update_contact_information.side_effect = HTTPError(400, "I'm an error from the API")
+
+        status, response = self.post_supplier_address_edit()
+
+        assert status == 503
 
 
 class TestCreateSupplier(BaseApplicationTest):

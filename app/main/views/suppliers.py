@@ -116,7 +116,6 @@ def edit_registered_address():
         abort(e.status_code)
     supplier['contact'] = supplier['contactInformation'][0]
 
-    error = None
     http_status = 200
     registered_address_form = EditRegisteredAddressForm()
     registered_country_form = EditRegisteredCountryForm()
@@ -141,10 +140,9 @@ def edit_registered_address():
                 )
 
             except APIError as e:
-                error = e.message
+                abort(e.status_code)
 
-            else:
-                return redirect(url_for(".supplier_details"))
+            return redirect(url_for(".supplier_details"))
 
         http_status = 400
 
@@ -161,7 +159,6 @@ def edit_registered_address():
         countries=COUNTRY_TUPLE,
         registered_address_form=registered_address_form,
         registered_country_form=registered_country_form,
-        error=error,
     ), http_status
 
 
