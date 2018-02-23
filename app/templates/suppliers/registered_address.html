@@ -51,7 +51,7 @@
           {% endfor %}
           {% for field_name, field_errors in registered_country_form.errors|dictsort %}
             {% for error in field_errors %}
-              <li><a href="javascript:document.getElementById('location-autocomplete').focus()" class="validation-masthead-link">{{ registered_country_form[field_name].label.text }}</a></li>
+              <li><a href="#{{ field_name }}" class="validation-masthead-link">{{ registered_country_form[field_name].label.text }}</a></li>
             {% endfor %}
           {% endfor %}
         </ul>
@@ -88,7 +88,7 @@
         </style>
       {% endif %}
 
-      <div class="question">
+      <div class="question" id="registrationCountry">
         <span class="question-heading" id="country-label">Country</span>
         {{ forms.field_errors('registrationCountry', errors=registered_country_form.registrationCountry.errors) }}
         <select name="registrationCountry" id="location-autocomplete" class="location-autocomplete-fallback">
