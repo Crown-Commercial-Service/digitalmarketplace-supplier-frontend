@@ -4,11 +4,11 @@ var manifest = {
     '../../../node_modules/jquery/dist/jquery.js',
     '../../../node_modules/govuk_frontend_toolkit/javascripts/govuk/analytics/google-analytics-universal-tracker.js',
     '../../../node_modules/govuk_frontend_toolkit/javascripts/govuk/analytics/analytics.js',
-    '../../../app/assets/javascripts/analytics/_register.js',
+    '../../../node_modules/digitalmarketplace-frontend-toolkit/toolkit/javascripts/analytics/_register.js',
+    '../../../node_modules/digitalmarketplace-frontend-toolkit/toolkit/javascripts/analytics/_init.js',
     '../../../app/assets/javascripts/analytics/_pageViews.js',
     '../../../app/assets/javascripts/analytics/_events.js',
     '../../../app/assets/javascripts/analytics/_virtualPageViews.js',
-    '../../../app/assets/javascripts/analytics/_init.js'
   ],
   test : [
     '../unit/AnalyticsSpec.js'
