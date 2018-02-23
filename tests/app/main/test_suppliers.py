@@ -830,6 +830,11 @@ class TestSupplierDetails(BaseApplicationTest):
         [
             ("Registered company name", {"registeredName": None}, "/registered-company-name/edit"),
             ("Registered company address", {"registrationCountry": None}, "/registered-address/edit"),
+            (
+                "Registration number",
+                {"companiesHouseNumber": None, "otherCompanyRegistrationNumber": None},
+                "/registration-number/edit"
+            ),
             ("Trading status", {"tradingStatus": None}, "/trading-status/edit"),
             ("Company size", {"organisationSize": None}, "/organisation-size/edit"),
             ("VAT number", {"vatNumber": None}, "/vat-number/edit"),
@@ -852,6 +857,19 @@ class TestSupplierDetails(BaseApplicationTest):
             assert answer_required_link
             assert answer_required_link[0].values()[0] == link_address
 
+    def test_registration_number_field_shows_other_registration_num_if_no_companies_house_num(self, data_api_client):
+        data_api_client.get_supplier.return_value = get_supplier(
+            companiesHouseNumber=None, otherCompanyRegistrationNumber="42, EARTH"
+        )
+
+        with self.app.test_client():
+            self.login()
+
+            res = self.client.get("/suppliers/details")
+            assert res.status_code == 200
+            page_html = res.get_data(as_text=True)
+            document = html.fromstring(page_html)
+            assert document.xpath("//span[text()='Registration number']/following::td[1]/span[text()='42, EARTH']")
 
 @mock.patch("app.main.views.suppliers.data_api_client", autospec=True)
 @mock.patch("app.main.views.suppliers.get_current_suppliers_users", autospec=True)

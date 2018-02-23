@@ -108,20 +108,16 @@
   {% endif %}
 {% endcall %}
 
-
+{% call summary.row() %}
+  {{ summary.field_name('Registration number') }}
   {% if supplier.companiesHouseNumber %}
-    {% call summary.row() %}
-      {{ summary.field_name('Companies House number') }}
-      {{ summary.text(supplier.companiesHouseNumber) }}
-    {% endcall %}
+    {{ summary.text(supplier.companiesHouseNumber) }}
+  {% elif supplier.otherCompanyRegistrationNumber %}
+    {{ summary.text(supplier.otherCompanyRegistrationNumber) }}
+  {% else %}
+    {{ summary.link(link_title="Answer required", link="/registration-number/edit") }}
   {% endif %}
-
-  {% if supplier.otherCompanyRegistrationNumber and not supplier.companiesHouseNumber and country_name != 'United Kingdom' %}
-    {% call summary.row() %}
-      {{ summary.field_name('Registration number') }}
-      {{ summary.text(supplier.otherCompanyRegistrationNumber) }}
-    {% endcall %}
-  {% endif %}
+{% endcall %}
 
 {% call summary.row() %}
   {{ summary.field_name('VAT number') }}
