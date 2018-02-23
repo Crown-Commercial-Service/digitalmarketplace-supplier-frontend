@@ -754,22 +754,11 @@ class TestSupplierDetails(BaseApplicationTest):
 
             data_api_client.get_supplier.assert_called_once_with(1234)
 
-    def test_shows_overseas_supplier_info_if_no_companies_house_number(self, data_api_client):
-        data_api_client.get_supplier.return_value = get_supplier(companiesHouseNumber=None)
-        with self.app.test_client():
-            self.login()
-
-            res = self.client.get("/suppliers/details")
-            assert res.status_code == 200
-            page_html = res.get_data(as_text=True)
-            document = html.fromstring(page_html)
-            for property_str in ("Belize", "BEL153",):
-                assert document.xpath("//*[normalize-space(string())=$t]", t=property_str), property_str
-
-    def test_does_not_show_overseas_supplier_number_if_uk_company(self, data_api_client):
+    def test_registration_number_field_shows_other_registration_num_if_no_companies_house_num(self, data_api_client):
         data_api_client.get_supplier.return_value = get_supplier(
-            companiesHouseNumber=None, registrationCountry="country:GB"
+            companiesHouseNumber=None, otherCompanyRegistrationNumber="42, EARTH"
         )
+
         with self.app.test_client():
             self.login()
 
@@ -777,8 +766,7 @@ class TestSupplierDetails(BaseApplicationTest):
             assert res.status_code == 200
             page_html = res.get_data(as_text=True)
             document = html.fromstring(page_html)
-            assert document.xpath("//*[normalize-space(string())='United Kingdom']")  # Country United Kingdom is shown
-            assert "BEL153" not in page_html  # But overseas registration field isn't
+            assert document.xpath("//span[text()='Registration number']/following::td[1]/span[text()='42, EARTH']")
 
     def test_shows_united_kingdom_for_old_style_country_code(self, data_api_client):
         data_api_client.get_supplier.return_value = get_supplier(
@@ -828,16 +816,16 @@ class TestSupplierDetails(BaseApplicationTest):
     @pytest.mark.parametrize(
         "question,null_attribute,link_address",
         [
-            ("Registered company name", {"registeredName": None}, "/registered-company-name/edit"),
-            ("Registered company address", {"registrationCountry": None}, "/registered-address/edit"),
+            ("Registered company name", {"registeredName": None}, "/suppliers/registered-company-name/edit"),
+            ("Registered company address", {"registrationCountry": None}, "/suppliers/registered-address/edit"),
             (
                 "Registration number",
                 {"companiesHouseNumber": None, "otherCompanyRegistrationNumber": None},
-                "/registration-number/edit"
+                "/suppliers/registration-number/edit"
             ),
-            ("Trading status", {"tradingStatus": None}, "/trading-status/edit"),
-            ("Company size", {"organisationSize": None}, "/organisation-size/edit"),
-            ("VAT number", {"vatNumber": None}, "/vat-number/edit"),
+            ("Trading status", {"tradingStatus": None}, "/suppliers/trading-status/edit"),
+            ("Company size", {"organisationSize": None}, "/suppliers/organisation-size/edit"),
+            ("VAT number", {"vatNumber": None}, "/suppliers/vat-number/edit"),
         ]
     )
     def test_question_field_requires_answer_if_empty(self, data_api_client, question, null_attribute, link_address):
@@ -857,10 +845,31 @@ class TestSupplierDetails(BaseApplicationTest):
             assert answer_required_link
             assert answer_required_link[0].values()[0] == link_address
 
-    def test_registration_number_field_shows_other_registration_num_if_no_companies_house_num(self, data_api_client):
-        data_api_client.get_supplier.return_value = get_supplier(
-            companiesHouseNumber=None, otherCompanyRegistrationNumber="42, EARTH"
-        )
+    @pytest.mark.parametrize(
+        "question,filled_in_attribute,link_address",
+        [
+            ("Registered company name", {"registeredName": "Digital Ponies"}, "/suppliers/registered-company-name/edit"),
+            ("Registered company address", {"registrationCountry": "country:GB"}, "/suppliers/registered-address/edit"),
+            (
+                "Registration number",
+                {"companiesHouseNumber": "CH123456", "otherCompanyRegistrationNumber": None},
+                "/suppliers/registration-number/edit"
+            ),
+            (
+                "Registration number",
+                {"companiesHouseNumber": None, "otherCompanyRegistrationNumber": "EQ789"},
+                "/suppliers/registration-number/edit"
+            ),
+            ("Trading status", {"tradingStatus": "limited company (LTD)"}, "/suppliers/trading-status/edit"),
+            ("Company size", {"organisationSize": "small"}, "/suppliers/organisation-size/edit"),
+            ("VAT number", {"vatNumber": "VAT654321"}, "/suppliers/vat-number/edit"),
+            ("DUNS number", {"dunsNumber": "123456789"}, "/suppliers/duns-number"),
+        ]
+    )
+    def test_filled_in_question_field_has_change_link(
+        self, data_api_client, question, filled_in_attribute, link_address
+    ):
+        data_api_client.get_supplier.return_value = get_supplier(**filled_in_attribute)
 
         with self.app.test_client():
             self.login()
@@ -869,7 +878,13 @@ class TestSupplierDetails(BaseApplicationTest):
             assert res.status_code == 200
             page_html = res.get_data(as_text=True)
             document = html.fromstring(page_html)
-            assert document.xpath("//span[text()='Registration number']/following::td[1]/span[text()='42, EARTH']")
+            answer_required_link = document.xpath(
+                "//span[text()='{}']/following::td[2]/span/a[text()='Change']".format(question)
+            )
+
+            assert answer_required_link
+            assert answer_required_link[0].values()[0] == link_address
+
 
 @mock.patch("app.main.views.suppliers.data_api_client", autospec=True)
 @mock.patch("app.main.views.suppliers.get_current_suppliers_users", autospec=True)

@@ -71,7 +71,8 @@
   caption='Registration information',
   field_headings=[
     'Label',
-    'Value'
+    'Value',
+    'Change'
   ],
   field_headings_visible=False
 ) %}
@@ -79,8 +80,9 @@
   {{ summary.field_name('Registered company name') }}
   {% if supplier.registeredName %}
     {{ summary.text(supplier.registeredName) }}
+    {{ summary.edit_link(label="Change", link=url_for(".edit_supplier_registered_name")) }}
   {% else %}
-    {{ summary.link(link_title="Answer required", link="/registered-company-name/edit") }}
+    {{ summary.link(link_title="Answer required", link=url_for(".edit_supplier_registered_name")) }}
   {% endif %}
 {% endcall %}
 
@@ -103,8 +105,9 @@
         {% include "toolkit/contact-details.html" %}
       {% endwith %}
     {% endcall %}
-  {%  else %}
-    {{ summary.link(link_title="Answer required", link="/registered-address/edit") }}
+    {{ summary.edit_link(label="Change", link=url_for(".edit_registered_address")) }}
+  {% else %}
+    {{ summary.link(link_title="Answer required", link=url_for(".edit_registered_address")) }}
   {% endif %}
 {% endcall %}
 
@@ -112,19 +115,12 @@
   {{ summary.field_name('Registration number') }}
   {% if supplier.companiesHouseNumber %}
     {{ summary.text(supplier.companiesHouseNumber) }}
+    {{ summary.edit_link(label="Change", link=url_for(".edit_supplier_registration_number")) }}
   {% elif supplier.otherCompanyRegistrationNumber %}
     {{ summary.text(supplier.otherCompanyRegistrationNumber) }}
+    {{ summary.edit_link(label="Change", link=url_for(".edit_supplier_registration_number")) }}
   {% else %}
-    {{ summary.link(link_title="Answer required", link="/registration-number/edit") }}
-  {% endif %}
-{% endcall %}
-
-{% call summary.row() %}
-  {{ summary.field_name('VAT number') }}
-  {% if supplier.vatNumber %}
-    {{ summary.text(supplier.vatNumber) }}
-  {% else %}
-    {{ summary.link(link_title="Answer required", link="/vat-number/edit") }}
+    {{ summary.link(link_title="Answer required", link=url_for(".edit_supplier_registration_number")) }}
   {% endif %}
 {% endcall %}
 
@@ -132,8 +128,9 @@
   {{ summary.field_name('Trading status') }}
   {% if supplier.tradingStatus %}
     {{ summary.text(supplier.tradingStatus|capitalize_first) }}
+    {{ summary.edit_link(label="Change", link=url_for(".edit_supplier_trading_status")) }}
   {% else %}
-    {{ summary.link(link_title="Answer required", link="/trading-status/edit") }}
+    {{ summary.link(link_title="Answer required", link=url_for(".edit_supplier_trading_status")) }}
   {% endif %}
 {% endcall %}
 
@@ -141,8 +138,19 @@
   {{ summary.field_name('Company size') }}
   {% if supplier.organisationSize %}
     {{ summary.text(supplier.organisationSize|capitalize_first) }}
+    {{ summary.edit_link(label="Change", link=url_for(".edit_supplier_organisation_size")) }}
   {% else %}
-    {{ summary.link(link_title="Answer required", link="/organisation-size/edit") }}
+    {{ summary.link(link_title="Answer required", link=url_for(".edit_supplier_organisation_size")) }}
+  {% endif %}
+{% endcall %}
+
+{% call summary.row() %}
+  {{ summary.field_name('VAT number') }}
+  {% if supplier.vatNumber %}
+    {{ summary.text(supplier.vatNumber) }}
+    {{ summary.edit_link(label="Change", link=url_for(".edit_supplier_vat_number")) }}
+  {% else %}
+    {{ summary.link(link_title="Answer required", link=url_for(".edit_supplier_vat_number")) }}
   {% endif %}
 {% endcall %}
 
@@ -150,6 +158,7 @@
     {% call summary.row() %}
       {{ summary.field_name('DUNS number') }}
       {{ summary.text(supplier.dunsNumber) }}
+      {{ summary.edit_link(label="Change", link=url_for(".duns_number")) }}
     {% endcall %}
   {% endif %}
 
