@@ -743,7 +743,7 @@ class TestSupplierDetails(BaseApplicationTest):
             ):
                 assert document.xpath("//*[normalize-space(string())=$t]", t=property_str), property_str
 
-            # Registration nnumber not shown if Companies House ID exists
+            # Registration number not shown if Companies House ID exists
             assert "BEL153" not in page_html
 
             data_api_client.get_supplier.assert_called_once_with(1234)

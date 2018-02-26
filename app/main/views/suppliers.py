@@ -215,7 +215,6 @@ def edit_what_buyers_will_see():
         abort(e.status_code)
 
     supplier['contact'] = supplier['contactInformation'][0]
-    error = None
     http_status = 200
 
     supplier_form = EditSupplierForm()
@@ -240,7 +239,7 @@ def edit_what_buyers_will_see():
                     current_user.email_address
                 )
             except APIError as e:
-                error = e.message
+                abort(e.status_code)
             else:
                 return redirect(url_for(".supplier_details"))
 
@@ -254,7 +253,6 @@ def edit_what_buyers_will_see():
 
     return render_template(
         "suppliers/edit_what_buyers_will_see.html",
-        error=error,
         supplier_form=supplier_form,
         contact_form=contact_form
     ), http_status

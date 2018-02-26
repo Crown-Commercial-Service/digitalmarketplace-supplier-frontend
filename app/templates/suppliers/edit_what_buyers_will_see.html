@@ -25,28 +25,11 @@
 {% endblock %}
 
 {% block main_content %}
-
-{% if error %}
-<div class="validation-masthead" aria-labelledby="validation-masthead-heading">
-  <h3 class="validation-masthead-heading" id="validation-masthead-heading">
-    {{ error }}
-  </h3>
-</div>
-{% endif %}
 {% if supplier_form.errors or contact_form.errors %}
     <div class="validation-masthead" aria-labelledby="validation-masthead-heading">
         <h3 class="validation-masthead-heading" id="validation-masthead-heading">
             There was a problem with the details you gave for:
         </h3>
-        {% if supplier_form.errors %}
-        <ul>
-        {% for field_name, field_errors in supplier_form.errors|dictsort %}
-          {% for error in field_errors %}
-            <li><a href="#{{ field_name }}" class="validation-masthead-link">{{ supplier_form[field_name].label.text }}</a>
-          {% endfor %}
-        {% endfor %}
-        </ul>
-        {% endif %}
 
         {% if contact_form.errors %}
         <ul>
@@ -57,6 +40,17 @@
         {% endfor %}
         </ul>
         {% endif %}
+
+        {% if supplier_form.errors %}
+        <ul>
+        {% for field_name, field_errors in supplier_form.errors|dictsort %}
+          {% for error in field_errors %}
+            <li><a href="#{{ field_name }}" class="validation-masthead-link">{{ supplier_form[field_name].label.text }}</a>
+          {% endfor %}
+        {% endfor %}
+        </ul>
+        {% endif %}
+
     </div>
 {% endif %}
 
@@ -75,31 +69,31 @@
     </div>
   </div>
 
-  <form action="{{ url_for('.edit_what_buyers_will_see') }}" method="post" enctype="multipart/form-data">
+  <form action="{{ url_for('.edit_what_buyers_will_see') }}" method="post">
 
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
 
   <div class="grid-row">
     <div class="column-two-thirds">
 
-      {{ forms.question_textbox('contactName', 'Contact name', contact_form.contactName.data, 'Primary contact', errors=contact_form.contactName.errors) }}
-      {{ forms.question_textbox('email', 'Contact email', contact_form.email.data, errors=contact_form.email.errors) }}
+      {{ forms.question_textbox('contactName', 'Contact name', contact_form.contactName.data, 'This can be the name of the person or team you want buyers to contact', errors=contact_form.contactName.errors) }}
+      {{ forms.question_textbox('email', 'Contact email address', contact_form.email.data, 'This is the email buyers will use to contact you', errors=contact_form.email.errors) }}
       {{ forms.question_textbox('phoneNumber', 'Contact phone number', contact_form.phoneNumber.data, errors=contact_form.phoneNumber.errors) }}
 
 
-      {{ forms.question_textarea('description', 'Supplier summary', supplier_form.description.data, '50 words max', errors=supplier_form.description.errors, max_length_in_words=50) }}
+      {{ forms.question_textarea('description', 'Supplier summary', supplier_form.description.data, '50 words maximum', errors=supplier_form.description.errors, max_length_in_words=50) }}
     </div>
   </div>
 
   {%
     with
     type = "save",
-    label = "Save and return"
+    label = "Save and continue"
   %}
     {% include "toolkit/button.html" %}
   {% endwith %}
   <p>
-    <a href="{{ url_for('.supplier_details') }}">Return without saving</a>
+    <a href="{{ url_for('.supplier_details') }}">Return to company details</a>
   </p>
   </form>
 
