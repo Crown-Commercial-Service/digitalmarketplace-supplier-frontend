@@ -2282,11 +2282,13 @@ class TestSupplierAddRegisteredCompanyName(BaseApplicationTest):
             self.login()
             data_api_client.get_supplier.return_value = get_supplier(registeredName=None)
 
-            self.client.post("/suppliers/registered-company-name/edit", data={'registered_company_name': "K-Inc"})
+            res = self.client.post("/suppliers/registered-company-name/edit", data={'registered_company_name': "K-Inc"})
 
             assert data_api_client.update_supplier.call_args_list == [
                 mock.call(supplier_id=1234, supplier={'registeredName': "K-Inc"}, user='email@email.com')
             ], 'update_supplier was called with the wrong arguments'
+            assert res.status_code == 302
+            assert res.location == 'http://localhost/suppliers/details'
 
     def test_fails_if_api_update_fails(self, data_api_client):
         with self.app.test_client():
