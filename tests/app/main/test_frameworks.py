@@ -9,7 +9,11 @@ from lxml import html
 import pytest
 from werkzeug.datastructures import MultiDict
 
-from dmapiclient import APIError, HTTPError
+from dmapiclient import (
+    api_stubs,
+    APIError,
+    HTTPError
+)
 from dmapiclient.audit import AuditTypes
 from dmutils.email.exceptions import EmailError
 from dmutils.s3 import S3ResponseError
@@ -286,6 +290,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
 
         data_api_client.get_framework.return_value = self.framework(status='open')
         data_api_client.get_supplier_framework_info.side_effect = APIError(mock.Mock(status_code=404))
+        data_api_client.get_supplier.return_value = api_stubs.supplier()
 
         res = self.client.get("/suppliers/frameworks/g-cloud-7")
         assert res.status_code == 200
@@ -1630,31 +1635,62 @@ class TestFrameworksDashboardConfidenceBannerOnPage(BaseApplicationTest):
         'You can edit your declaration and services at any time before the deadline.'
     )
 
-    def test_confidence_banner_on_page(self, data_api_client, _):
+    def test_confidence_banner_on_page(self, data_api_client_patch, _):
         """Test confidence banner appears on page happy path."""
-        data_api_client.get_framework.return_value = self.framework(status='open')
-        data_api_client.find_draft_services.return_value = {
+        data_api_client_patch.get_framework.return_value = self.framework(status='open')
+        data_api_client_patch.find_draft_services.return_value = {
             "services": [{'serviceName': 'A service', 'status': 'submitted', 'lotSlug': 'foo'}]
         }
-        data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(status='complete')
+        data_api_client_patch.get_supplier_framework_info.return_value = self.supplier_framework(status='complete')
+        data_api_client_patch.get_supplier.return_value = api_stubs.supplier()
 
         self.login()
         res = self.client.get("/suppliers/frameworks/g-cloud-8")
         assert res.status_code == 200
         assert self.expected in str(res.data)
 
-    def test_confidence_banner_not_on_page(self, data_api_client, _):
+    @pytest.mark.parametrize('declaration_status, draft_service_status, supplier_data, check_text_in_doc',
+                             (
+                                 ('started', 'submitted', api_stubs.supplier(), [
+                                     'Your company details were saved',
+                                     'No services will be submitted because you haven’t finished making the supplier '
+                                     'declaration',
+                                     'You’ve completed',
+                                 ]),
+                                 ('complete', 'not-submitted', api_stubs.supplier(), [
+                                     'Your company details were saved',
+                                     'You’ve made the supplier declaration',
+                                     'No services marked as complete',
+                                 ]),
+                                 ('complete', 'submitted', {'suppliers': {'contactInformation': [{}]}}, [
+                                     'No services will be submitted because you haven’t completed your company details',
+                                     'You’ve made the supplier declaration',
+                                     'You’ve completed'
+                                 ]),
+                             ))
+    def test_confidence_banner_not_on_page_if_sections_incomplete(self, data_api_client_patch, _,
+                                                                  declaration_status, draft_service_status,
+                                                                  supplier_data, check_text_in_doc):
         """Change value and assertt that confidence banner is not displayed."""
-        data_api_client.get_framework.return_value = self.framework(status='open')
-        data_api_client.find_draft_services.return_value = {
-            "services": [{'serviceName': 'A service', 'status': 'not-submitted', 'lotSlug': 'foo'}]
+        data_api_client_patch.get_framework.return_value = self.framework(status='open')
+        data_api_client_patch.find_draft_services.return_value = {
+            "services": [{'serviceName': 'A service', 'status': draft_service_status, 'lotSlug': 'foo'}]
         }
-        data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(status='complete')
+        data_api_client_patch.get_supplier_framework_info.return_value = self.supplier_framework(
+            status=declaration_status
+        )
+        data_api_client_patch.get_supplier.return_value = supplier_data
 
         self.login()
         res = self.client.get("/suppliers/frameworks/g-cloud-8")
         assert res.status_code == 200
-        assert self.expected not in str(res.data)
+        body = res.get_data(as_text=True)
+        assert self.expected not in body
+
+        # This confirms that the test is working correctly - i.e. the banner is not showing because a specific section
+        # is causing the application to be incomplete.
+        for text in check_text_in_doc:
+            assert text in body
 
 
 @mock.patch('app.main.views.frameworks.data_api_client', autospec=True)

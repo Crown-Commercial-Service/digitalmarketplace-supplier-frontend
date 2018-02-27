@@ -25,14 +25,38 @@
 
 {% if framework.status == 'open' %}
 <li class="browse-list-item">
-  {% if declaration_status == 'unstarted' %}
-    <a class="browse-list-item-link" href="{{ url_for('.framework_start_supplier_declaration', framework_slug=framework.slug) }}">
-    <span>Make supplier declaration</span>
-    </a>
+  <a class="browse-list-item-link"
+     href="{{ url_for('.supplier_details') }}">
+    <span>Enter your company details</span>
+  </a>
+  {% if not company_details_complete and counts.complete %}
+  <div class="browse-list-item-status-angry">
+    <p class="browse-list-item-status-title">
+    <strong>No services will be submitted because you haven’t completed your company details</strong>
+    </p>
+  </div>
+  {% elif not company_details_complete %}
+  <div class="browse-list-item-status-quiet">
+    <p class="browse-list-item-status-title">You must add your organisation’s details</p>
+  </div>
   {% else %}
-    <a class="browse-list-item-link" href="{{ url_for('.framework_supplier_declaration_overview', framework_slug=framework.slug) }}">
+  <div class="browse-list-item-status-happy">
+    <p class="browse-list-item-status-title">
+      <strong>Your company details were saved</strong>
+    </p>
+  </div>
+  {% endif %}
+</li>
+
+<li class="browse-list-item">
+  {% if declaration_status == 'unstarted' %}
+  <a class="browse-list-item-link" href="{{ url_for('.framework_start_supplier_declaration', framework_slug=framework.slug) }}">
+    <span>Make supplier declaration</span>
+  </a>
+  {% else %}
+  <a class="browse-list-item-link" href="{{ url_for('.framework_supplier_declaration_overview', framework_slug=framework.slug) }}">
     <span>Edit supplier declaration</span>
-    </a>
+  </a>
   {% endif %}
   <p class="browse-list-item-body">
     Confirm eligibility, agree to the application terms and provide supplier&nbsp;information.
@@ -58,7 +82,7 @@
     </p>
   </div>
   {% elif declaration_status == 'complete' %}
-  <div class="browse-list-item-status-happy">
+  <div class="browse-list-item-status-default">
     <p class="browse-list-item-status-title">
       <strong>You’ve made the supplier declaration</strong>
     </p>
@@ -88,7 +112,7 @@
   {% endif %}
 
   {% if counts.complete %}
-    {% if declaration_status == 'complete' %}
+    {% if declaration_status == 'complete' and company_details_complete %}
       <div class="browse-list-item-status-happy">
         <p class="browse-list-item-status-title">You’re submitting</p>
     {% else %}
