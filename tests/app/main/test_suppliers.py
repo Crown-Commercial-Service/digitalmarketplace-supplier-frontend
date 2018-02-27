@@ -2573,14 +2573,14 @@ class TestEditSupplierVatNumber(BaseApplicationTest):
 
     @pytest.mark.parametrize("vat_number, message, masthead", (
         ("GB123456789", None, None),
-        ("gb123456789012", None, None),
-        ("gBGD123", None, None),
-        ("gbHA456", None, None),
+        ("GB123456789012", None, None),
+        ("GBGD123", None, None),
+        ("GBHA456", None, None),
         ("123456789", None, None),
         ("123456789012", None, None),
         ("GD123", None, None),
-        ("Ha456", None, None),
-        ("NOTVALID", "You must provide a valid VAT number, they are usually either 9 or 12 digits.", "VAT number"),
+        ("HA456", None, None),
+        ("NOTVALID", "You must provide a valid VAT number - they are usually either 9 or 12 digits.", "VAT number"),
         ("", "You must provide a VAT number.", "VAT number")
     ))
     def test_validation_of_tax_number(self, vat_number, message, masthead):
@@ -2592,7 +2592,6 @@ class TestEditSupplierVatNumber(BaseApplicationTest):
                     "vat_number": vat_number,
                 }
             )
-            doc = html.fromstring(res.get_data(as_text=True))
 
             if message:
                 self.assert_single_question_page_validation_errors(
@@ -2609,7 +2608,43 @@ class TestEditSupplierVatNumber(BaseApplicationTest):
                     user="email@email.com",
                 )
 
-    def test_validation_of_vat_registered(self):
+    def test_whitespace_is_removed_from_vat_numbers(self):
+        with self.app.test_client():
+            res = self.client.post(
+                "/suppliers/vat-number/edit",
+                data={
+                    "vat_registered": "Yes",
+                    "vat_number": "   GB 1 2 34 567 8 9   ",
+                }
+            )
+
+            assert res.status_code == 302
+            assert res.location == "http://localhost/suppliers/details"
+            self.data_api_client.update_supplier.assert_called_once_with(
+                supplier_id=1234,
+                supplier={"vatNumber": "GB123456789"},
+                user="email@email.com",
+            )
+
+    def test_vat_numbers_are_uppercased(self):
+        with self.app.test_client():
+            res = self.client.post(
+                "/suppliers/vat-number/edit",
+                data={
+                    "vat_registered": "Yes",
+                    "vat_number": "gbHa789",
+                }
+            )
+
+            assert res.status_code == 302
+            assert res.location == "http://localhost/suppliers/details"
+            self.data_api_client.update_supplier.assert_called_once_with(
+                supplier_id=1234,
+                supplier={"vatNumber": "GBHA789"},
+                user="email@email.com",
+            )
+
+    def test_validation_of_no_answer_for_vat_registered_question(self):
         with self.app.test_client():
             res = self.client.post(
                 "/suppliers/vat-number/edit",

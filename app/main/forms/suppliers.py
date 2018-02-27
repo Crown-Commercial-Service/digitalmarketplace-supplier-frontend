@@ -1,6 +1,6 @@
-from re import IGNORECASE
+import re
 from flask_wtf import Form
-from wtforms import RadioField
+from wtforms import RadioField, StringField
 from wtforms.validators import AnyOf, InputRequired, Length, Optional, Regexp, StopValidation, ValidationError
 
 from dmutils.forms import StripWhitespaceStringField, EmailField, EmailValidator
@@ -218,13 +218,25 @@ class VatNumberForm(Form):
         if form.vat_registered.data in ('No', 'None'):
             raise StopValidation()
 
-    vat_registered = RadioField("VAT registered",
-                                validators=[InputRequired(message="You need to answer this question.")],
-                                choices=[('Yes', 'Yes'), ('No', 'No')])
-    vat_number = StripWhitespaceStringField('VAT number', default="", validators=[
-        stop_validation_if_not_registered,
-        InputRequired(message="You must provide a VAT number."),
-        Regexp(r'^([GB])*((\d{9})|(\d{12})|((GD|HA)\d{3}))$',
-               flags=IGNORECASE,
-               message="You must provide a valid VAT number, they are usually either 9 or 12 digits.")
-    ])
+    vat_registered = RadioField(
+        "VAT registered",
+        validators=[InputRequired(message="You need to answer this question.")],
+        choices=[('Yes', 'Yes'), ('No', 'No')],
+    )
+    vat_number = StringField(
+        'VAT number',
+        default="",
+        # Filters to remove internal whitespace and uppercase the string.
+        filters=[
+            lambda x: re.sub(r'\s+', '', x),
+            lambda x: x.upper(),
+        ],
+        validators=[
+            stop_validation_if_not_registered,
+            InputRequired(message="You must provide a VAT number."),
+            Regexp(
+                r'^(GB)?((\d{9})|(\d{12})|((GD|HA)\d{3}))$',
+                message="You must provide a valid VAT number - they are usually either 9 or 12 digits."
+            )
+        ],
+    )
