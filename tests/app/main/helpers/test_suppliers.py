@@ -1,5 +1,10 @@
 import pytest
-from app.main.helpers.suppliers import get_country_name_from_country_code, supplier_company_details_are_complete
+from flask_wtf import Form
+from wtforms import TextField
+from wtforms.validators import Length
+from app.main.helpers.suppliers import get_country_name_from_country_code, parse_form_errors_for_validation_masthead, \
+    supplier_company_details_are_complete
+from ...helpers import BaseApplicationTest
 
 from dmapiclient.api_stubs import supplier
 
@@ -34,3 +39,53 @@ class TestSupplierCompanyDetailsComplete:
                              ))
     def test_returns_expected_value_for_input(self, supplier_data_from_api, expected_result):
         assert supplier_company_details_are_complete(supplier_data_from_api) is expected_result
+
+
+class FormForTest(Form):
+    field_one = TextField('Field one?', validators=[
+        Length(max=5, message="Field one must be under 5 characters.")
+    ])
+    field_two = TextField('Field two?', validators=[
+        Length(max=5, message="Field two must be under 5 characters.")
+    ])
+    field_three = TextField('Field three?', validators=[
+        Length(max=5, message="Field three must be under 5 characters.")
+    ])
+
+
+class TestParseFormErrorsForValidationMasthead(BaseApplicationTest):
+    def test_returns_formatted_list_of_errors_for_single_form(self):
+        with self.app.test_request_context():
+            form = FormForTest(field_one='Too long', field_two='Too long', field_three='Good')
+            form.validate()
+
+            masthead_errors = parse_form_errors_for_validation_masthead(form)
+            assert masthead_errors == [
+                {'question': 'Field one?', 'input_name': 'field_one'},
+                {'question': 'Field two?', 'input_name': 'field_two'},
+            ]
+
+    def test_returns_formatted_list_of_errors_for_list_of_forms(self):
+        with self.app.test_request_context():
+            form_one = FormForTest(field_one='Good', field_two='Too long', field_three='Too long')
+            form_two = FormForTest(field_one='Still too long', field_two='Yes!', field_three='Also too long')
+
+            form_one.validate()
+            form_two.validate()
+            masthead_errors = parse_form_errors_for_validation_masthead([form_one, form_two])
+
+            assert masthead_errors == [
+                {'question': 'Field two?', 'input_name': 'field_two'},
+                {'question': 'Field three?', 'input_name': 'field_three'},
+                {'question': 'Field one?', 'input_name': 'field_one'},
+                {'question': 'Field three?', 'input_name': 'field_three'},
+            ]
+
+    def test_returns_falsey_if_no_errors(self):
+        with self.app.test_request_context():
+            form = FormForTest(field_one='Good', field_two='Good', field_three='Good')
+            form.validate()
+
+            masthead_errors = parse_form_errors_for_validation_masthead(form)
+
+            assert not masthead_errors
