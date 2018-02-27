@@ -36,6 +36,7 @@ $path: "/suppliers/static/images/";
 @import "toolkit/_secondary-action-link.scss";
 @import "toolkit/_service-id.scss";
 @import "toolkit/_temporary-message.scss";
+@import "toolkit/_text-diff.scss";
 @import "toolkit/forms/_combinations.scss";
 @import "toolkit/forms/_checkbox-tree.scss";  // Has to be imported after _combinations.scss, which defines the
                                               // $border-width variable that _checkbox-tree.scss relies upon. :sad:
@@ -53,7 +54,6 @@ $path: "/suppliers/static/images/";
 
 
 // App-specific styles
-@import "_variables.scss";
 @import "_assurance-question.scss";           // This could probably be removed as the only usage is in service editing
                                               // and editing expired services is not officially supported (it can be
                                               // done only by hacking URLs). However, without also removing supporting
@@ -97,22 +97,6 @@ $path: "/suppliers/static/images/";
 .padding-bottom-small {
   padding-bottom: 10px;
 }
-
-
-// These ins/del styles should be centralised in the frontend-toolkit at the next convenient opportunity.
-// Our toolkit should provides generic styling for any core HTML element types that we use - these should never be
-// app-specific.
-ins {
-  text-decoration: none;
-  background-color: $diff-insertion-green;
-  padding-right: 3px;
-}
-
-del {
-  background-color: $diff-deletion-red;
-  padding-right: 3px;
-}
-
 
 // These styles are to customise the country picker widget supplied by registers. The country picker's styles are
 // included in a separate stylesheet which is brought in by the country picker npm package. This makes is difficult
