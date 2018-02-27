@@ -1,0 +1,100 @@
+{% extends "_base_page.html" %}
+{% import "toolkit/forms/macros/forms.html" as forms %}
+
+{% block page_title %}What buyers will see – Digital Marketplace{% endblock %}
+
+{% block breadcrumb %}
+  {%
+    with items = [
+      {
+        "link": "/",
+        "label": "Digital Marketplace"
+      },
+      {
+        "link": url_for(".dashboard"),
+        "label": "Your account"
+      },
+      {
+        "link": url_for(".supplier_details"),
+        "label": "Company details"
+      }
+    ]
+  %}
+    {% include "toolkit/breadcrumb.html" %}
+  {% endwith %}
+{% endblock %}
+
+{% block main_content %}
+{% if supplier_form.errors or contact_form.errors %}
+    <div class="validation-masthead" aria-labelledby="validation-masthead-heading">
+        <h3 class="validation-masthead-heading" id="validation-masthead-heading">
+            There was a problem with the details you gave for:
+        </h3>
+
+        {% if contact_form.errors %}
+        <ul>
+        {% for field_name, field_errors in contact_form.errors|dictsort %}
+          {% for error in field_errors %}
+          <li><a href="#contact_{{ field_name }}" class="validation-masthead-link">{{ contact_form[field_name].label.text }}</a></li>
+          {% endfor %}
+        {% endfor %}
+        </ul>
+        {% endif %}
+
+        {% if supplier_form.errors %}
+        <ul>
+        {% for field_name, field_errors in supplier_form.errors|dictsort %}
+          {% for error in field_errors %}
+            <li><a href="#{{ field_name }}" class="validation-masthead-link">{{ supplier_form[field_name].label.text }}</a>
+          {% endfor %}
+        {% endfor %}
+        </ul>
+        {% endif %}
+
+    </div>
+{% endif %}
+
+  <div class="grid-row">
+    <div class="column-one-whole">
+      {% with
+        heading = "What buyers will see"
+      %}
+        {% include 'toolkit/page-heading.html' %}
+      {% endwith %}
+
+      <div class="dmspeak">
+        <p>This information will be visible on the Digital Marketplace.</p>
+        <p>You can change it at any time.</p>
+      </div>
+    </div>
+  </div>
+
+  <form action="{{ url_for('.edit_what_buyers_will_see') }}" method="post">
+
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+
+  <div class="grid-row">
+    <div class="column-two-thirds">
+
+      {{ forms.question_textbox('contactName', 'Contact name', contact_form.contactName.data, 'This can be the name of the person or team you want buyers to contact', errors=contact_form.contactName.errors) }}
+      {{ forms.question_textbox('email', 'Contact email address', contact_form.email.data, 'This is the email buyers will use to contact you', errors=contact_form.email.errors) }}
+      {{ forms.question_textbox('phoneNumber', 'Contact phone number', contact_form.phoneNumber.data, errors=contact_form.phoneNumber.errors) }}
+
+
+      {{ forms.question_textarea('description', 'Supplier summary', supplier_form.description.data, '50 words maximum', errors=supplier_form.description.errors, max_length_in_words=50) }}
+    </div>
+  </div>
+
+  {%
+    with
+    type = "save",
+    label = "Save and continue"
+  %}
+    {% include "toolkit/button.html" %}
+  {% endwith %}
+  <p>
+    <a href="{{ url_for('.supplier_details') }}">Return to company details</a>
+  </p>
+  </form>
+
+{% endblock %}

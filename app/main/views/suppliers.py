@@ -199,14 +199,14 @@ def edit_supplier_registered_name():
 
 @main.route('/edit', methods=['GET'])
 @login_required
-def edit_supplier_redirect():
+def edit_what_buyers_will_see_redirect():
     # redirect old route for this view
-    return redirect(url_for('.edit_supplier'), 302)
+    return redirect(url_for('.edit_what_buyers_will_see'), 302)
 
 
-@main.route('/details/edit', methods=['GET'])
+@main.route('/what-buyers-will-see/edit', methods=['GET', 'POST'])
 @login_required
-def edit_supplier(supplier_form=None, contact_form=None, error=None):
+def edit_what_buyers_will_see():
     try:
         supplier = data_api_client.get_supplier(
             current_user.supplier_id
@@ -214,60 +214,48 @@ def edit_supplier(supplier_form=None, contact_form=None, error=None):
     except APIError as e:
         abort(e.status_code)
 
-    if supplier_form is None:
-        supplier_form = EditSupplierForm(
-            description=supplier.get('description', None),
-            clients=supplier.get('clients', None)
-        )
-        contact_form = EditContactInformationForm(
-            prefix='contact_',
-            **supplier['contactInformation'][0]
-        )
+    supplier['contact'] = supplier['contactInformation'][0]
+    http_status = 200
+
+    supplier_form = EditSupplierForm()
+    contact_form = EditContactInformationForm()
+
+    if request.method == 'POST':
+        supplier_info_valid = supplier_form.validate_on_submit()
+        contact_info_valid = contact_form.validate_on_submit()
+
+        if supplier_info_valid and contact_info_valid:
+            try:
+                data_api_client.update_supplier(
+                    current_user.supplier_id,
+                    supplier_form.data,
+                    current_user.email_address
+                )
+
+                data_api_client.update_contact_information(
+                    current_user.supplier_id,
+                    supplier['contact']['id'],
+                    contact_form.data,
+                    current_user.email_address
+                )
+            except APIError as e:
+                abort(e.status_code)
+            else:
+                return redirect(url_for(".supplier_details"))
+
+        http_status = 400
+
+    else:
+        supplier_form.description.data = supplier.get('description', None)
+        contact_form.contactName.data = supplier['contact'].get('contactName')
+        contact_form.phoneNumber.data = supplier['contact'].get('phoneNumber')
+        contact_form.email.data = supplier['contact'].get('email')
 
     return render_template(
-        "suppliers/edit_supplier.html",
-        error=error,
+        "suppliers/edit_what_buyers_will_see.html",
         supplier_form=supplier_form,
         contact_form=contact_form
-    ), 200
-
-
-@main.route('/details/edit', methods=['POST'])
-@login_required
-def update_supplier():
-    # FieldList expects post parameter keys to have number suffixes
-    # (eg client-0, client-1 ...), which is incompatible with how
-    # JS list-entry plugin generates input names. So instead of letting
-    # the form search for request keys we pass in the values directly as data
-    supplier_form = EditSupplierForm(
-        formdata=None,
-        description=request.form['description'],
-    )
-
-    contact_form = EditContactInformationForm(prefix='contact_')
-
-    if not (supplier_form.validate_on_submit() and contact_form.validate_on_submit()):
-        return edit_supplier(supplier_form=supplier_form, contact_form=contact_form)
-
-    try:
-        data_api_client.update_supplier(
-            current_user.supplier_id,
-            supplier_form.data,
-            current_user.email_address
-        )
-
-        data_api_client.update_contact_information(
-            current_user.supplier_id,
-            contact_form.id.data,
-            contact_form.data,
-            current_user.email_address
-        )
-    except APIError as e:
-        return edit_supplier(supplier_form=supplier_form,
-                             contact_form=contact_form,
-                             error=e.message)
-
-    return redirect(url_for(".supplier_details"))
+    ), http_status
 
 
 @main.route('/organisation-size/edit', methods=['GET', 'POST'])

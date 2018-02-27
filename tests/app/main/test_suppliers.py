@@ -719,8 +719,8 @@ class TestSupplierDetails(BaseApplicationTest):
 
             assert document.xpath(
                 "//a[normalize-space(string())=$t][@href=$u][contains(@class, $c)]",
-                t="Edit",
-                u="/suppliers/details/edit",
+                t="Change",
+                u="/suppliers/what-buyers-will-see/edit",
                 c="summary-change-link",
             )
 
@@ -743,9 +743,8 @@ class TestSupplierDetails(BaseApplicationTest):
             ):
                 assert document.xpath("//*[normalize-space(string())=$t]", t=property_str), property_str
 
-            # Registration country and registration number not shown if Companies House ID exists
-            for property_str in ("Belize", "BEL153",):
-                assert property_str not in page_html
+            # Registration number not shown if Companies House ID exists
+            assert "BEL153" not in page_html
 
             data_api_client.get_supplier.assert_called_once_with(1234)
 
@@ -798,6 +797,27 @@ class TestSupplierDetails(BaseApplicationTest):
 
             res = self.client.get("/suppliers/details")
             assert res.status_code == 200
+
+    def test_shows_address_details(self, data_api_client):
+        data_api_client.get_supplier.return_value = get_supplier(registrationCountry="country:GB")
+
+        with self.app.test_client():
+            self.login()
+
+            response = self.client.get("/suppliers/details")
+            assert response.status_code == 200
+            page_html = response.get_data(as_text=True)
+            document = html.fromstring(page_html)
+
+            address1 = document.xpath("//span[text()='Registered company address']/following::td[1]/span/p/span[1]")
+            town = document.xpath("//span[text()='Registered company address']/following::td[1]/span/p/span[2]")
+            postcode = document.xpath("//span[text()='Registered company address']/following::td[1]/span/p/span[3]")
+            country = document.xpath("//span[text()='Registered company address']/following::td[1]/span/p/span[4]")
+
+            assert "1 Street" in address1[0].text
+            assert "Supplierville" in town[0].text
+            assert "11 AB" in postcode[0].text
+            assert "United Kingdom" in country[0].text
 
 
 @mock.patch("app.main.views.suppliers.data_api_client", autospec=True)
@@ -918,16 +938,12 @@ class TestSupplierUpdate(BaseApplicationTest):
         if data is None:
             data = {
                 "description": "New Description",
-                "contact_id": 2,
-                "contact_email": "supplier@user.dmdev",
-                "contact_contactName": "Supplier Person",
-                "contact_phoneNumber": "0800123123",
-                "contact_address1": "1 Street",
-                "contact_city": "Supplierville",
-                "contact_postcode": "11 AB",
+                "email": "supplier@user.dmdev",
+                "contactName": "Supplier Person",
+                "phoneNumber": "0800123123",
             }
         data.update(kwargs)
-        res = self.client.post("/suppliers/details/edit", data=data)
+        res = self.client.post("/suppliers/what-buyers-will-see/edit", data=data)
         return res.status_code, res.get_data(as_text=True)
 
     def test_should_render_edit_page_with_minimum_data(self, data_api_client):
@@ -952,12 +968,12 @@ class TestSupplierUpdate(BaseApplicationTest):
 
         data_api_client.get_supplier.side_effect = limited_supplier
 
-        response = self.client.get("/suppliers/details/edit")
+        response = self.client.get("/suppliers/what-buyers-will-see/edit")
         assert response.status_code == 200
 
     def test_update_all_supplier_fields(self, data_api_client):
         self.login()
-
+        data_api_client.get_supplier.side_effect = get_supplier
         status, _ = self.post_supplier_edit()
 
         assert status == 302
@@ -972,29 +988,21 @@ class TestSupplierUpdate(BaseApplicationTest):
         data_api_client.update_contact_information.assert_called_once_with(
             1234, 2,
             {
-                'city': u'Supplierville',
-                'address1': u'1 Street',
                 'email': u'supplier@user.dmdev',
                 'phoneNumber': u'0800123123',
-                'postcode': u'11 AB',
                 'contactName': u'Supplier Person',
-                'id': 2
             },
             'email@email.com'
         )
 
     def test_should_strip_whitespace_surrounding_supplier_update_all_fields(self, data_api_client):
         self.login()
-
+        data_api_client.get_supplier.side_effect = get_supplier
         data = {
             "description": "  New Description  ",
-            "contact_id": 2,
-            "contact_email": "  supplier@user.dmdev  ",
-            "contact_contactName": "  Supplier Person  ",
-            "contact_phoneNumber": "  0800123123  ",
-            "contact_address1": "  1 Street  ",
-            "contact_city": "  Supplierville  ",
-            "contact_postcode": "  11 AB  "
+            "email": "  supplier@user.dmdev  ",
+            "contactName": "  Supplier Person  ",
+            "phoneNumber": "  0800123123  ",
         }
 
         status, _ = self.post_supplier_edit(data=data)
@@ -1011,13 +1019,9 @@ class TestSupplierUpdate(BaseApplicationTest):
         data_api_client.update_contact_information.assert_called_once_with(
             1234, 2,
             {
-                'city': u'Supplierville',
-                'address1': u'1 Street',
                 'email': u'supplier@user.dmdev',
                 'phoneNumber': u'0800123123',
-                'postcode': u'11 AB',
                 'contactName': u'Supplier Person',
-                'id': 2
             },
             'email@email.com'
         )
@@ -1025,29 +1029,21 @@ class TestSupplierUpdate(BaseApplicationTest):
     def test_missing_required_supplier_fields(self, data_api_client):
         self.login()
 
-        status, resp = self.post_supplier_edit({
+        status, response = self.post_supplier_edit({
             "description": "New Description",
-            "contact_id": 2,
-            "contact_contactName": "Supplier Person",
-            "contact_phoneNumber": "0800123123",
-            "contact_address1": "1 Street",
-            "contact_city": "Supplierville",
-            "contact_postcode": "11 AB",
+            "contactName": "Supplier Person",
+            "phoneNumber": "0800123123",
         })
 
-        assert status == 200
-        assert 'You must provide an email address' in resp
+        assert status == 400
+        assert 'You must provide an email address' in response
 
         assert data_api_client.update_supplier.called is False
         assert data_api_client.update_contact_information.called is False
 
-        assert "New Description" in resp
-        assert 'value="2"' in resp
-        assert 'value="Supplier Person"' in resp
-        assert 'value="0800123123"' in resp
-        assert 'value="1 Street"' in resp
-        assert 'value="Supplierville"' in resp
-        assert 'value="11 AB"' in resp
+        assert "New Description" in response
+        assert 'value="Supplier Person"' in response
+        assert 'value="0800123123"' in response
 
     def test_description_below_word_length(self, data_api_client):
         self.login()
@@ -1068,16 +1064,16 @@ class TestSupplierUpdate(BaseApplicationTest):
             description="DESCR " * 51
         )
 
-        assert status == 200
+        assert status == 400
         assert 'must not be more than 50' in resp
 
         assert data_api_client.update_supplier.called is False
         assert data_api_client.update_contact_information.called is False
 
     def test_should_redirect_to_login_if_not_logged_in(self, data_api_client):
-        res = self.client.get("/suppliers/details/edit")
+        res = self.client.get("/suppliers/what-buyers-will-see/edit")
         assert res.status_code == 302
-        assert res.location == "http://localhost/user/login?next=%2Fsuppliers%2Fdetails%2Fedit"
+        assert res.location == "http://localhost/user/login?next=%2Fsuppliers%2Fwhat-buyers-will-see%2Fedit"
 
 
 class TestEditSupplierRegisteredAddress(BaseApplicationTest):
