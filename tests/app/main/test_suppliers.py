@@ -6,7 +6,7 @@ from lxml import html
 import mock
 import pytest
 
-from dmapiclient import HTTPError
+from dmapiclient import HTTPError, APIError
 from dmapiclient.audit import AuditTypes
 
 from tests.app.helpers import BaseApplicationTest, assert_args_and_return
@@ -1305,10 +1305,12 @@ class TestCreateSupplier(BaseApplicationTest):
             "/suppliers/duns-number",
             data={'duns_number': duns_number} if duns_number else {}
         )
-        assert res.status_code == 400
-        assert "You must enter a DUNS number with 9 digits." in res.get_data(as_text=True)
 
-        self.assert_validation_masthead(res)
+        self.assert_single_question_page_validation_errors(
+            res,
+            question_name="DUNS Number",
+            validation_message="You must enter a DUNS number with 9 digits."
+        )
 
     @mock.patch("app.main.suppliers.data_api_client")
     def test_should_be_an_error_if_duns_number_in_use(self, data_api_client):
@@ -1382,12 +1384,12 @@ class TestCreateSupplier(BaseApplicationTest):
             "/suppliers/companies-house-number",
             data={'companies_house_number': companies_house_number}
         )
-        assert res.status_code == 400
 
-        body = res.get_data(as_text=True)
-        assert "Companies House numbers must have either 8 digits or 2 letters followed by 6 digits." in body
-
-        self.assert_validation_masthead(res)
+        self.assert_single_question_page_validation_errors(
+            res,
+            question_name="Companies house number",
+            validation_message="Companies House numbers must have either 8 digits or 2 letters followed by 6 digits."
+        )
 
     def test_should_allow_valid_companies_house_number(self):
         with self.client as c:
@@ -1449,10 +1451,12 @@ class TestCreateSupplier(BaseApplicationTest):
             "/suppliers/company-name",
             data={}
         )
-        assert res.status_code == 400
-        assert "You must provide a company name." in res.get_data(as_text=True)
 
-        self.assert_validation_masthead(res)
+        self.assert_single_question_page_validation_errors(
+            res,
+            question_name="Company name",
+            validation_message="You must provide a company name."
+        )
 
     def test_should_be_an_error_if_company_name_too_long(self):
         twofiftysix = "a" * 256
@@ -1462,10 +1466,12 @@ class TestCreateSupplier(BaseApplicationTest):
                 'company_name': twofiftysix
             }
         )
-        assert res.status_code == 400
-        assert "You must provide a company name under 256 characters." in res.get_data(as_text=True)
 
-        self.assert_validation_masthead(res)
+        self.assert_single_question_page_validation_errors(
+            res,
+            question_name="Company name",
+            validation_message="You must provide a company name under 256 characters."
+        )
 
     def test_should_allow_valid_company_contact_details(self):
         res = self.client.post(
@@ -2209,7 +2215,11 @@ class TestSupplierEditOrganisationSize(BaseApplicationTest):
 
             assert error[0].text.strip() == expected_error, 'The validation message is not as anticipated.'
 
-            self.assert_validation_masthead(res)
+            self.assert_single_question_page_validation_errors(
+                res,
+                question_name="Organisation size",
+                validation_message=expected_error
+            )
 
     @pytest.mark.parametrize('size', (None, 'micro', 'small', 'medium', 'large'))
     def test_post_choice_triggers_api_supplier_update_and_redirect(self, data_api_client, size):
@@ -2246,3 +2256,73 @@ class TestSupplierEditOrganisationSize(BaseApplicationTest):
             doc = html.fromstring(res.get_data(as_text=True))
             selected_value = doc.xpath('//input[@name="organisation_size" and @checked="checked"]/@value')
             assert selected_value == expected_selection, 'The organisation size has not pre-populated correctly.'
+
+
+@mock.patch("app.main.views.suppliers.data_api_client", autospec=True)
+class TestSupplierAddRegisteredCompanyName(BaseApplicationTest):
+    def test_add_registered_company_name_page_loads(self, data_api_client):
+        with self.app.test_client():
+            self.login()
+            data_api_client.get_supplier.return_value = get_supplier(registeredName=None)
+
+            res = self.client.get("/suppliers/registered-company-name/edit")
+            assert res.status_code == 200, 'The add registered company name page has not loaded correctly.'
+
+    def test_no_input_triggers_input_required_validation_and_does_not_call_api_update(self, data_api_client):
+        with self.app.test_client():
+            self.login()
+            data_api_client.get_supplier.return_value = get_supplier(registeredName=None)
+
+            res = self.client.post("/suppliers/registered-company-name/edit")
+
+            self.assert_single_question_page_validation_errors(
+                res,
+                question_name="Registered company name",
+                validation_message="You must provide a registered company name."
+            )
+            assert data_api_client.update_supplier.call_args_list == []
+
+    def test_post_input_triggers_api_supplier_update_and_redirect(self, data_api_client):
+        with self.app.test_client():
+            self.login()
+            data_api_client.get_supplier.return_value = get_supplier(registeredName=None)
+
+            res = self.client.post("/suppliers/registered-company-name/edit", data={'registered_company_name': "K-Inc"})
+
+            assert data_api_client.update_supplier.call_args_list == [
+                mock.call(supplier_id=1234, supplier={'registeredName': "K-Inc"}, user='email@email.com')
+            ], 'update_supplier was called with the wrong arguments'
+            assert res.status_code == 302
+            assert res.location == 'http://localhost/suppliers/details'
+
+    def test_fails_if_api_update_fails(self, data_api_client):
+        with self.app.test_client():
+            self.login()
+            data_api_client.get_supplier.return_value = get_supplier(registeredName=None)
+            data_api_client.update_supplier.side_effect = APIError(mock.Mock(status_code=504))
+            res = self.client.post("/suppliers/registered-company-name/edit", data={'registered_company_name': "K-Inc"})
+            assert res.status_code == 504
+
+    def test_get_shows_already_entered_page_and_api_not_called_update_if_data_already_entered(self, data_api_client):
+        with self.app.test_client():
+            self.login()
+            data_api_client.get_supplier.side_effect = get_supplier
+            res = self.client.get("/suppliers/registered-company-name/edit")
+            doc = html.fromstring(res.get_data(as_text=True))
+            page_heading = doc.xpath('//h1')
+
+            assert res.status_code == 200
+            assert page_heading[0].text.strip() == "Change your registered company name"
+            assert data_api_client.update_supplier.call_args_list == []
+
+    def test_post_shows_already_entered_page_and_api_not_called_if_data_already_entered(self, data_api_client):
+        with self.app.test_client():
+            self.login()
+            data_api_client.get_supplier.side_effect = get_supplier
+            res = self.client.post("/suppliers/registered-company-name/edit", data={'registered_company_name': "K-Inc"})
+            doc = html.fromstring(res.get_data(as_text=True))
+            page_heading = doc.xpath('//h1')
+
+            assert res.status_code == 400
+            assert page_heading[0].text.strip() == "Change your registered company name"
+            assert data_api_client.update_supplier.call_args_list == []

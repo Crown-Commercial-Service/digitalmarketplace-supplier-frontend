@@ -494,10 +494,21 @@ class BaseApplicationTest(object):
         with self.client.session_transaction() as session:
             assert not session.get("_flashes")
 
-    def assert_validation_masthead(self, res, title="There was a problem with your answer to:"):
+    def assert_single_question_page_validation_errors(self,
+                                                      res,
+                                                      title="There was a problem with your answer to:",
+                                                      question_name="",
+                                                      validation_message=""
+                                                      ):
         doc = html.fromstring(res.get_data(as_text=True))
-        masthead_text = doc.xpath('//h1[@class="validation-masthead-heading"]/text()')
-        assert masthead_text and title in masthead_text[0]
+        masthead_heading = doc.xpath('normalize-space(//h1[@class="validation-masthead-heading"]/text())')
+        masthead_link_text = doc.xpath('normalize-space(string(//a[@class="validation-masthead-link"]))')
+        validation_text = doc.xpath('normalize-space(//span[@class="validation-message"]/text())')
+
+        assert res.status_code == 400
+        assert masthead_heading and title == masthead_heading
+        assert masthead_link_text and question_name == masthead_link_text
+        assert validation_text and validation_message == validation_text
 
 
 class FakeMail(object):
