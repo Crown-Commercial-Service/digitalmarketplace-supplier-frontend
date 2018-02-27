@@ -18,7 +18,7 @@ class TestSupplierRoleRequired(BaseApplicationTest):
             res = self.client.get('/suppliers')
             assert res.status_code == 302
             assert res.location == 'http://localhost/user/login?next=%2Fsuppliers'
-            self.assert_flashes('supplier-role-required', expected_category='error')
+            self.assert_flashes('You must log in with a supplier account to see this page.', expected_category='error')
 
 
 class TestInviteUser(BaseApplicationTest):

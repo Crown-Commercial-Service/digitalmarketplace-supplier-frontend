@@ -10,7 +10,7 @@ from werkzeug.http import parse_cookie
 from dmutils.formats import DATETIME_FORMAT
 
 from app import create_app, data_api_client
-from tests import login_for_tests
+from dmtestutils.login import login_for_tests
 
 
 # intended to be used as a mock's side_effect
@@ -450,7 +450,7 @@ class BaseApplicationTest(object):
             )
             self.get_user_patch.start()
 
-            response = self.client.get("/auto-login")
+            response = self.client.get("/auto-supplier-login")
             assert response.status_code == 200
 
     def login_as_buyer(self):
