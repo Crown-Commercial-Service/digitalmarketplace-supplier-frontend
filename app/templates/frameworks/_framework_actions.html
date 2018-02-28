@@ -40,7 +40,11 @@
     <p class="browse-list-item-status-title">You must add your organisation’s details</p>
   </div>
   {% else %}
+  {% if declaration_status == 'complete' and counts.complete %}
   <div class="browse-list-item-status-happy">
+  {% else %}
+    <div class="browse-list-item-status-default">
+  {% endif %}
     <p class="browse-list-item-status-title">
       <strong>Your company details were saved</strong>
     </p>
@@ -82,7 +86,11 @@
     </p>
   </div>
   {% elif declaration_status == 'complete' %}
-  <div class="browse-list-item-status-default">
+  {% if counts.complete and company_details_complete %}
+  <div class="browse-list-item-status-happy">
+  {% else %}
+    <div class="browse-list-item-status-default">
+  {% endif %}
     <p class="browse-list-item-status-title">
       <strong>You’ve made the supplier declaration</strong>
     </p>
