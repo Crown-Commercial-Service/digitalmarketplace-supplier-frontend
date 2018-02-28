@@ -35,7 +35,7 @@
         <ul>
         {% for field_name, field_errors in contact_form.errors|dictsort %}
           {% for error in field_errors %}
-          <li><a href="#contact_{{ field_name }}" class="validation-masthead-link">{{ contact_form[field_name].label.text }}</a></li>
+          <li><a href="#{{ field_name }}" class="validation-masthead-link">{{ contact_form[field_name].label.text }}</a></li>
           {% endfor %}
         {% endfor %}
         </ul>

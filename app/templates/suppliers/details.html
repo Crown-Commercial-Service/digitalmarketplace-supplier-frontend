@@ -59,7 +59,9 @@
     {{ summary.field_name('Summary') }}
     {{ summary.text(supplier.description) }}
     {% call summary.field(action=True) %}
-      Optional
+      {% if not supplier.description %}
+        Optional
+      {% endif %}
     {% endcall %}
   {% endcall %}
 {% endcall %}
