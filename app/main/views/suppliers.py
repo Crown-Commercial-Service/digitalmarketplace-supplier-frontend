@@ -27,7 +27,8 @@ from ..forms.suppliers import (
     EmailAddressForm,
 )
 from ..helpers.frameworks import get_frameworks_by_status, get_frameworks_closed_and_open_for_applications
-from ..helpers.suppliers import get_country_name_from_country_code, COUNTRY_TUPLE
+from ..helpers.suppliers import get_country_name_from_country_code, COUNTRY_TUPLE, \
+    parse_form_errors_for_validation_masthead
 from ..helpers import login_required
 from .users import get_current_suppliers_users
 
@@ -116,7 +117,6 @@ def edit_registered_address():
         abort(e.status_code)
     supplier['contact'] = supplier['contactInformation'][0]
 
-    error = None
     http_status = 200
     registered_address_form = EditRegisteredAddressForm()
     registered_country_form = EditRegisteredCountryForm()
@@ -141,10 +141,9 @@ def edit_registered_address():
                 )
 
             except APIError as e:
-                error = e.message
+                abort(e.status_code)
 
-            else:
-                return redirect(url_for(".supplier_details"))
+            return redirect(url_for(".supplier_details"))
 
         http_status = 400
 
@@ -161,7 +160,7 @@ def edit_registered_address():
         countries=COUNTRY_TUPLE,
         registered_address_form=registered_address_form,
         registered_country_form=registered_country_form,
-        error=error,
+        form_errors=parse_form_errors_for_validation_masthead([registered_address_form, registered_country_form]),
     ), http_status
 
 

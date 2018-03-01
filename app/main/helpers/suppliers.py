@@ -48,3 +48,16 @@ def supplier_company_details_are_complete(supplier_data):
              for f in
              contact_required_fields])
     )
+
+
+def parse_form_errors_for_validation_masthead(forms):
+    form_list = forms if isinstance(forms, (list, tuple)) else [forms]
+
+    errors = []
+    for form in form_list:
+        errors += [{
+            'question': form[field].label.text,
+            'input_name': form[field].name,
+        } for field in form.errors.keys()]
+
+    return errors

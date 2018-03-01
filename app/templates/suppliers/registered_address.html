@@ -30,32 +30,11 @@
 
 
 {% block main_content %}
-  {% if error %}
-  <div class="validation-masthead" aria-labelledby="validation-masthead-heading">
-    <h1 class="validation-masthead-heading" id="validation-masthead-heading">
-      {{ error }}
-    </h1>
-  </div>
-  {% endif %}
 
-  {% if registered_address_form.errors or registered_country_form.errors %}
-      <div class="validation-masthead" aria-labelledby="validation-masthead-heading">
-        <h1 class="validation-masthead-heading" id="validation-masthead-heading">
-            There was a problem with the details you gave for:
-        </h1>
-        <ul>
-          {% for field_name, field_errors in registered_address_form.errors|dictsort %}
-            {% for error in field_errors %}
-              <li><a href="#{{ field_name }}" class="validation-masthead-link">{{ registered_address_form[field_name].label.text }}</a>
-            {% endfor %}
-          {% endfor %}
-          {% for field_name, field_errors in registered_country_form.errors|dictsort %}
-            {% for error in field_errors %}
-              <li><a href="javascript:document.getElementById('location-autocomplete').focus()" class="validation-masthead-link">{{ registered_country_form[field_name].label.text }}</a></li>
-            {% endfor %}
-          {% endfor %}
-        </ul>
-      </div>
+  {% if form_errors %}
+  {% with errors = form_errors %}
+    {% include 'toolkit/forms/validation.html' %}
+  {% endwith %}
   {% endif %}
 
   <div class="grid-row">
@@ -88,7 +67,7 @@
         </style>
       {% endif %}
 
-      <div class="question">
+      <div class="question" id="registrationCountry">
         <span class="question-heading" id="country-label">Country</span>
         {{ forms.field_errors('registrationCountry', errors=registered_country_form.registrationCountry.errors) }}
         <select name="registrationCountry" id="location-autocomplete" class="location-autocomplete-fallback">
