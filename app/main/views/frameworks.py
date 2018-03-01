@@ -184,6 +184,7 @@ def framework_dashboard(framework_slug):
 @login_required
 def framework_submission_lots(framework_slug):
     framework = get_framework_or_404(data_api_client, framework_slug)
+    supplier = data_api_client.get_supplier(current_user.supplier_id)['suppliers']
 
     drafts, complete_drafts = get_drafts(data_api_client, framework_slug)
     declaration_status = get_declaration_status(data_api_client, framework_slug)
@@ -225,6 +226,7 @@ def framework_submission_lots(framework_slug):
         complete_drafts=list(reversed(complete_drafts)),
         drafts=list(reversed(drafts)),
         declaration_status=declaration_status,
+        company_details_complete=supplier_company_details_are_complete(supplier),
         framework=framework,
         lots=lots,
     ), 200
@@ -234,6 +236,7 @@ def framework_submission_lots(framework_slug):
 @login_required
 def framework_submission_services(framework_slug, lot_slug):
     framework, lot = get_framework_and_lot_or_404(data_api_client, framework_slug, lot_slug)
+    supplier = data_api_client.get_supplier(current_user.supplier_id)['suppliers']
 
     drafts, complete_drafts = get_lot_drafts(data_api_client, framework_slug, lot_slug)
     declaration_status = get_declaration_status(data_api_client, framework_slug)
@@ -268,6 +271,7 @@ def framework_submission_services(framework_slug, lot_slug):
         complete_drafts=list(reversed(complete_drafts)),
         drafts=list(reversed(drafts)),
         declaration_status=declaration_status,
+        company_details_complete=supplier_company_details_are_complete(supplier),
         framework=framework,
         lot=lot,
     ), 200

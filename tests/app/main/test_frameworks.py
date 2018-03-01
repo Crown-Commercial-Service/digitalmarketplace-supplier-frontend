@@ -3776,6 +3776,40 @@ class TestSendClarificationQuestionEmail(BaseApplicationTest):
 @mock.patch('app.main.views.frameworks.data_api_client', autospec=True)
 @mock.patch('app.main.views.frameworks.count_unanswered_questions')
 class TestG7ServicesList(BaseApplicationTest):
+    def _assert_incomplete_application_banner_not_visible(self, html):
+        assert "Your application is not complete" not in html
+
+    def _assert_incomplete_application_banner_items(self,
+                                                    response_html,
+                                                    org_info_required_is_visible=True,
+                                                    decl_required_is_visible=True,
+                                                    decl_item_href=None):
+        doc = html.fromstring(response_html)
+        assert "Your application is not complete" in response_html
+        assert doc.xpath('//*[@class="banner-information-without-action"]')
+
+        org_info_element = doc.xpath(
+            "//*    [contains(@class,'banner-content')][contains(normalize-space(string()), $text)]",
+            text="complete your company details",
+        )
+
+        if org_info_required_is_visible:
+            assert org_info_element
+        else:
+            assert not org_info_element
+
+        decl_element = doc.xpath(
+            "//*[contains(@class,'banner-content')][contains(normalize-space(string()), $text)]",
+            text="make your supplier declaration",
+        )
+
+        if decl_required_is_visible:
+            assert decl_element
+
+            if decl_item_href:
+                assert decl_element[0].xpath('.//a[@href=$url]', url=decl_item_href)
+        else:
+            assert not decl_element
 
     def test_404_when_g7_pending_and_no_complete_services(self, count_unanswered, data_api_client):
         self.login()
@@ -3816,6 +3850,7 @@ class TestG7ServicesList(BaseApplicationTest):
         self.login()
         data_api_client.get_framework.return_value = self.framework(status='pending')
         data_api_client.get_supplier_declaration.return_value = {'declaration': FULL_G7_SUBMISSION}
+        data_api_client.get_supplier.return_value = api_stubs.supplier()
         data_api_client.find_draft_services.return_value = {
             'services': [{'serviceName': 'draft', 'lotSlug': 'scs', 'status': 'submitted'}]
         }
@@ -3831,10 +3866,7 @@ class TestG7ServicesList(BaseApplicationTest):
         assert "You made your supplier declaration and submitted 1 complete service." in \
             heading[0].xpath('../p[1]/text()')[0]
 
-        assert not doc.xpath(
-            "//*[contains(@class,'banner')][contains(normalize-space(string()),$t)]",
-            t="declaration before any services can be submitted",
-        )
+        self._assert_incomplete_application_banner_not_visible(response.get_data(as_text=True))
 
     def test_drafts_list_progress_count(self, count_unanswered, data_api_client):
         self.login()
@@ -3889,25 +3921,18 @@ class TestG7ServicesList(BaseApplicationTest):
 
         submissions = self.client.get('/suppliers/frameworks/g-cloud-7/submissions')
         lot_page = self.client.get('/suppliers/frameworks/g-cloud-7/submissions/scs')
-        submissions_doc, lot_page_doc = (html.fromstring(r.get_data(as_text=True)) for r in (submissions, lot_page))
 
-        assert u'Service can be moved to complete' not in lot_page.get_data(as_text=True)
-        assert u'1 optional question unanswered' in lot_page.get_data(as_text=True)
+        submissions_html = submissions.get_data(as_text=True)
+        lot_page_html = lot_page.get_data(as_text=True)
 
-        assert u'1 service marked as complete' in submissions.get_data(as_text=True)
-        assert u'draft service' not in submissions.get_data(as_text=True)
+        assert u'Service can be moved to complete' not in lot_page_html
+        assert u'1 optional question unanswered' in lot_page_html
 
-        assert submissions_doc.xpath(
-            "//*[@class='banner-warning-without-action'][normalize-space(string())=$t][.//a[@href=$u]]",
-            t="You need to make the supplier\u00a0declaration before any services can be submitted",
-            u=expected_url
-        )
+        assert u'1 service marked as complete' in submissions_html
+        assert u'draft service' not in submissions_html
 
-        assert lot_page_doc.xpath(
-            "//*[@class='banner-warning-without-action'][normalize-space(string())=$t][.//a[@href=$u]]",
-            t="You need to make the supplier\u00a0declaration before any services can be submitted",
-            u=expected_url
-        )
+        self._assert_incomplete_application_banner_items(submissions_html, decl_item_href=expected_url)
+        self._assert_incomplete_application_banner_items(lot_page_html, decl_item_href=expected_url)
 
     def test_drafts_list_completed_with_declaration_status(self, count_unanswered, data_api_client):
         self.login()
@@ -3919,16 +3944,13 @@ class TestG7ServicesList(BaseApplicationTest):
         }
 
         submissions = self.client.get('/suppliers/frameworks/g-cloud-7/submissions')
-        doc = html.fromstring(submissions.get_data(as_text=True))
+        submissions_html = submissions.get_data(as_text=True)
 
-        assert u'1 service will be submitted' in submissions.get_data(as_text=True)
-        assert u'1 complete service was submitted' not in submissions.get_data(as_text=True)
-        assert u'browse-list-item-status-happy' in submissions.get_data(as_text=True)
+        assert u'1 service will be submitted' in submissions_html
+        assert u'1 complete service was submitted' not in submissions_html
+        assert u'browse-list-item-status-happy' in submissions_html
 
-        assert not doc.xpath(
-            "//*[contains(@class,'banner')][contains(normalize-space(string()),$t)]",
-            t="declaration before any services can be submitted",
-        )
+        self._assert_incomplete_application_banner_items(submissions_html, decl_required_is_visible=False)
 
     def test_drafts_list_services_were_submitted(self, count_unanswered, data_api_client):
         self.login()
@@ -3954,21 +3976,18 @@ class TestG7ServicesList(BaseApplicationTest):
             status='open'
         )
         data_api_client.get_supplier_declaration.return_value = {'declaration': {'status': 'complete'}}
+        data_api_client.get_supplier.return_value = api_stubs.supplier()
         data_api_client.find_draft_services.return_value = {
             'services': [{'serviceName': 'draft', 'lotSlug': 'digital-specialists', 'status': 'submitted'}]
         }
 
         submissions = self.client.get('/suppliers/frameworks/digital-outcomes-and-specialists/submissions')
-        doc = html.fromstring(submissions.get_data(as_text=True))
 
         assert u'This will be submitted' in submissions.get_data(as_text=True)
         assert u'browse-list-item-status-happy' in submissions.get_data(as_text=True)
         assert u'Apply to provide' in submissions.get_data(as_text=True)
 
-        assert not doc.xpath(
-            "//*[contains(@class,'banner')][contains(normalize-space(string()),$t)]",
-            t="declaration before any services can be submitted",
-        )
+        self._assert_incomplete_application_banner_not_visible(submissions.get_data(as_text=True))
 
     def test_dos_drafts_list_with_closed_framework(self, count_unanswered, data_api_client):
         self.login()
@@ -3990,6 +4009,52 @@ class TestG7ServicesList(BaseApplicationTest):
         assert submissions.status_code == 200
         assert u'Submitted' in submissions.get_data(as_text=True)
         assert u'Apply to provide' not in submissions.get_data(as_text=True)
+
+    @pytest.mark.parametrize('supplier_fixture,'
+                             'declaration,'
+                             'should_show_company_details_link,'
+                             'should_show_declaration_link,'
+                             'declaration_link_url',
+                             (
+                                 ({'suppliers': {}}, {'declaration': {}},
+                                  True, True, '/suppliers/frameworks/g-cloud-7/declaration/start'),
+                                 ({'suppliers': {}}, {'declaration': {'status': 'started'}},
+                                  True, True, '/suppliers/frameworks/g-cloud-7/declaration'),
+                                 (api_stubs.supplier(), {'declaration': {}},
+                                  False, True, '/suppliers/frameworks/g-cloud-7/declaration/start'),
+                                 (api_stubs.supplier(), {'declaration': {'status': 'started'}},
+                                  False, True, '/suppliers/frameworks/g-cloud-7/declaration'),
+                                 (api_stubs.supplier(), {'declaration': {'status': 'complete'}},
+                                  False, False, None),
+                                 (api_stubs.supplier(), {'declaration': {'status': 'complete'}},
+                                  False, False, None),
+                             ))
+    def test_banner_on_service_pages_shows_links_to_company_details_and_declaration(self,
+                                                                                    count_unanswered,
+                                                                                    data_api_client,
+                                                                                    supplier_fixture,
+                                                                                    declaration,
+                                                                                    should_show_company_details_link,
+                                                                                    should_show_declaration_link,
+                                                                                    declaration_link_url):
+        self.login()
+
+        data_api_client.get_framework.return_value = self.framework(status='open')
+        data_api_client.get_supplier.return_value = supplier_fixture
+        data_api_client.get_supplier_declaration.return_value = declaration
+        data_api_client.find_draft_services.return_value = {
+            'services': [{'serviceName': 'draft', 'lotSlug': 'scs', 'status': 'submitted'}]
+        }
+
+        submissions = self.client.get('/suppliers/frameworks/g-cloud-7/submissions')
+
+        if should_show_company_details_link or should_show_declaration_link:
+            self._assert_incomplete_application_banner_items(
+                submissions.get_data(as_text=True), org_info_required_is_visible=should_show_company_details_link,
+                decl_required_is_visible=should_show_declaration_link, decl_item_href=declaration_link_url)
+
+        else:
+            self._assert_incomplete_application_banner_not_visible(submissions.get_data(as_text=True))
 
 
 @mock.patch('app.main.views.frameworks.data_api_client', autospec=True)

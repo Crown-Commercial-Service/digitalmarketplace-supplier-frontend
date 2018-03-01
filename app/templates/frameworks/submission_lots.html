@@ -42,9 +42,7 @@
     {% endfor %}
   {% endwith %}
 
-  {% if complete_drafts and declaration_status != 'complete' and framework.status == 'open' %}
-    {% include "partials/service_warning.html" %}
-  {% endif %}
+  {% include "partials/service_warning.html" %}
 
   <div class="grid-row">
     <div class="column-two-thirds">
