@@ -1,0 +1,66 @@
+{% extends "_base_page.html" %}
+
+{% block page_title %}Trading status – Digital Marketplace{% endblock %}
+
+{% block breadcrumb %}
+  {% with items = [
+    {
+      "link": "/",
+      "label": "Digital Marketplace"
+    },
+    {
+       "link": url_for('.dashboard'),
+       "label": "Your account"
+    },
+    {
+      "link": url_for('.supplier_details'),
+      "label": "Company details"
+    },
+  ] %}
+    {% include "toolkit/breadcrumb.html" %}
+  {% endwith %}
+{% endblock %}
+
+{% block main_content %}
+
+<div class="single-question-page">
+  <div class="grid-row">
+    {% if form.errors %}
+      {% with errors = [{'question': form.trading_status.label, 'input_name': form.trading_status.name}] %}
+        {% include 'toolkit/forms/validation.html' %}
+      {% endwith %}
+    {% endif %}
+    
+    <div class="column-two-thirds">
+      {% with heading = "What&rsquo;s your trading status?"|safe, smaller = True %}
+        {% include "toolkit/page-heading.html" %}
+      {% endwith %}
+      
+      <form method="POST" action="{{ url_for('.edit_supplier_trading_status') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+        {% set hint %}
+          This information will be used to find out about the types of companies on frameworks.
+        {% endset %}
+        
+        {% with question = "What&rsquo;s your trading status?"|safe,
+                name = "trading_status",
+                value = form.trading_status.data,
+                error = form.trading_status.errors[0],
+                type = "radio",
+                options = form.OPTIONS,
+                hint = hint %}
+          {% include "toolkit/forms/selection-buttons.html" %}
+        {% endwith %}
+        
+        {% with type = "save",
+                label = "Save and continue" %}
+          {% include "toolkit/button.html" %}
+        {% endwith %}
+  
+        <p><a href="{{ url_for('.supplier_details') }}">Return to company details</a></p>
+      </form>
+    </div>
+  </div>
+</div>
+
+{% endblock %}

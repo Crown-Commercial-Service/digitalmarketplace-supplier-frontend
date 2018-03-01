@@ -142,3 +142,40 @@ class CompanyOrganisationSizeForm(Form):
     organisation_size = RadioField('Organisation size',
                                    validators=[InputRequired(message="You must choose an organisation size.")],
                                    choices=[(o['value'], o['label']) for o in OPTIONS])
+
+
+class CompanyTradingStatusForm(Form):
+    OPTIONS = [
+        {
+            'value': 'limited company (LTD)',
+            'label': 'limited company (LTD)',
+        },
+        {
+            'value': 'limited liability company (LLC)',
+            'label': 'limited liability company (LLC)',
+        },
+        {
+            'value': 'public limited company (PLC)',
+            'label': 'public limited company (PLC)',
+        },
+        {
+            'value': 'limited liability partnership (LLP)',
+            'label': 'limited liability partnership (LLP)',
+        },
+        {
+            'value': 'sole trader',
+            'label': 'sole trader',
+        },
+        {
+            'value': 'public body',
+            'label': 'public body',
+        },
+        {
+            'value': 'other',
+            'label': 'other',
+        },
+    ]
+
+    trading_status = RadioField('Trading status',
+                                validators=[InputRequired(message="You must choose a trading status.")],
+                                choices=[(o['value'], o['label']) for o in OPTIONS])

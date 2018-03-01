@@ -18,6 +18,7 @@ from ..forms.suppliers import (
     CompanyContactDetailsForm,
     CompanyNameForm,
     CompanyOrganisationSizeForm,
+    CompanyTradingStatusForm,
     DunsNumberForm,
     EditContactInformationForm,
     EditRegisteredAddressForm,
@@ -265,9 +266,14 @@ def edit_supplier_organisation_size():
 
     if request.method == 'POST':
         if form.validate_on_submit():
-            data_api_client.update_supplier(supplier_id=current_user.supplier_id,
-                                            supplier={"organisationSize": form.organisation_size.data},
-                                            user=current_user.email_address)
+            try:
+                data_api_client.update_supplier(supplier_id=current_user.supplier_id,
+                                                supplier={"organisationSize": form.organisation_size.data},
+                                                user=current_user.email_address)
+
+            except APIError as e:
+                abort(e.status_code)
+
             return redirect(url_for('.supplier_details'))
 
         current_app.logger.warning(
@@ -283,6 +289,45 @@ def edit_supplier_organisation_size():
     form.organisation_size.data = supplier.get('organisationSize', None)
 
     return render_template('suppliers/edit_supplier_organisation_size.html', form=form)
+
+
+@main.route('/trading-status/edit', methods=['GET', 'POST'])
+@login_required
+def edit_supplier_trading_status():
+    form = CompanyTradingStatusForm()
+
+    if request.method == 'POST':
+        api_error = None
+        if form.validate_on_submit():
+            try:
+                data_api_client.update_supplier(supplier_id=current_user.supplier_id,
+                                                supplier={"tradingStatus": form.trading_status.data},
+                                                user=current_user.email_address)
+
+            except APIError as e:
+                abort(e.status_code)
+
+            return redirect(url_for('.supplier_details'))
+
+        current_app.logger.warning(
+            "supplieredit.fail: trading-status:{tstatus}, errors:{tstatus_errors}",
+            extra={
+                'tstatus': form.trading_status.data,
+                'tstatus_errors': ",".join(form.trading_status.errors)
+            })
+
+        return render_template("suppliers/edit_supplier_trading_status.html", form=form, api_error=api_error), 400
+
+    supplier = data_api_client.get_supplier(current_user.supplier_id)['suppliers']
+
+    prefill_trading_status = None
+    if supplier.get('tradingStatus'):
+        if supplier['tradingStatus'] in map(lambda x: x['value'], form.OPTIONS):
+            prefill_trading_status = supplier['tradingStatus']
+
+    form.trading_status.data = prefill_trading_status
+
+    return render_template('suppliers/edit_supplier_trading_status.html', form=form)
 
 
 @main.route('/supply', methods=['GET'])

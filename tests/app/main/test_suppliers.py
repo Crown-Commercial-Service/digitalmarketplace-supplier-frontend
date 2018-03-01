@@ -6,10 +6,14 @@ from lxml import html
 import mock
 import pytest
 
-from dmapiclient import HTTPError, APIError
+from dmapiclient import APIError, HTTPError
 from dmapiclient.audit import AuditTypes
 
 from tests.app.helpers import BaseApplicationTest, assert_args_and_return
+from app.main.forms.suppliers import (
+    CompanyOrganisationSizeForm,
+    CompanyTradingStatusForm
+)
 
 find_frameworks_return_value = {
     "frameworks": [
@@ -2236,10 +2240,8 @@ class TestSupplierEditOrganisationSize(BaseApplicationTest):
     @pytest.mark.parametrize('existing_size, expected_selection',
                              (
                                  (None, []),
-                                 ('micro', ['micro']),
-                                 ('small', ['small']),
-                                 ('medium', ['medium']),
-                                 ('large', ['large']),
+                                 ('some unknown value', []),
+                                 *[(x['value'], [x['value']]) for x in CompanyOrganisationSizeForm.OPTIONS],
                              ))
     def test_existing_org_size_sets_current_selection(self, data_api_client, existing_size, expected_selection):
         data = {'organisationSize': existing_size} if existing_size else {}
@@ -2322,3 +2324,81 @@ class TestSupplierAddRegisteredCompanyName(BaseApplicationTest):
             assert res.status_code == 400
             assert page_heading[0].text.strip() == "Change your registered company name"
             assert data_api_client.update_supplier.call_args_list == []
+
+
+@mock.patch("app.main.views.suppliers.data_api_client", autospec=True)
+class TestSupplierEditTradingStatus(BaseApplicationTest):
+    def test_edit_organisation_size_page_loads(self, data_api_client):
+        with self.app.test_client():
+            self.login()
+
+            res = self.client.get("/suppliers/trading-status/edit")
+            assert res.status_code == 200, 'The edit trading-status page has not loaded correctly.'
+
+    @pytest.mark.parametrize('trading_status, expected_error',
+                             (
+                                 (None, "You must choose a trading status."),
+                                 ('blah', "Not a valid choice")
+                             ))
+    def test_missing_or_invalid_choice_shows_validation(self, data_api_client, trading_status, expected_error):
+        with self.app.test_client():
+            self.login()
+
+            res = self.client.post("/suppliers/trading-status/edit",
+                                   data={'trading_status': trading_status} if trading_status else {})
+            doc = html.fromstring(res.get_data(as_text=True))
+            error = doc.xpath('//span[@id="error-trading_status"]')
+
+            assert len(error) == 1, 'Only one validation message should be shown.'
+
+            assert error[0].text.strip() == expected_error, 'The validation message is not as anticipated.'
+
+            self.assert_single_question_page_validation_errors(res,
+                                                               question_name="Trading status",
+                                                               validation_message=expected_error)
+
+    @pytest.mark.parametrize('trading_status', (None, 'limited company (LTD)', 'other'))
+    def test_post_choice_triggers_api_supplier_update_and_redirect(self, data_api_client, trading_status):
+        with self.app.test_client():
+            self.login()
+
+            self.client.post("/suppliers/trading-status/edit", data={'trading_status': trading_status})
+
+            call_args_list = data_api_client.update_supplier.call_args_list
+            if trading_status:
+                assert call_args_list == [
+                    mock.call(supplier_id=1234, supplier={'tradingStatus': trading_status}, user='email@email.com')
+                ], 'update_supplier was called with the wrong arguments'
+
+            else:
+                assert call_args_list == [], 'update_supplier was called with the wrong arguments'
+
+    @pytest.mark.parametrize('existing_trading_status, expected_selection',
+                             (
+                                 (None, []),
+                                 ('some unknown value', []),
+                                 *[(x['value'], [x['value']]) for x in CompanyTradingStatusForm.OPTIONS],
+                             ))
+    def test_existing_org_size_sets_current_selection(self, data_api_client, existing_trading_status,
+                                                      expected_selection):
+        data = {'tradingStatus': existing_trading_status} if existing_trading_status else {}
+        data_api_client.get_supplier.return_value = {'suppliers': data}
+
+        with self.app.test_client():
+            self.login()
+
+            res = self.client.get("/suppliers/trading-status/edit")
+            doc = html.fromstring(res.get_data(as_text=True))
+            selected_value = doc.xpath('//input[@name="trading_status" and @checked="checked"]/@value')
+            assert selected_value == expected_selection, 'The trading status has not pre-populated correctly.'
+
+    def test_api_error_is_not_suppressed(self, data_api_client):
+        error_message = 'There was an error with the API'
+        data_api_client.update_supplier.side_effect = APIError('blah', error_message)
+
+        with self.app.test_client():
+            self.login()
+
+            res = self.client.post("/suppliers/trading-status/edit",
+                                   data={'trading_status': CompanyTradingStatusForm.OPTIONS[0]['value']})
+            assert res.status_code == 503
