@@ -66,20 +66,41 @@ class AddCompanyRegisteredNameForm(Form):
     ])
 
 
-class DunsNumberForm(Form):
-    duns_number = StripWhitespaceStringField('DUNS Number', validators=[
-        InputRequired(message="You must enter a DUNS number with 9 digits."),
-        Regexp(r'^\d{9}$', message="You must enter a DUNS number with 9 digits."),
-    ])
+class AddCompanyRegistrationNumberForm(Form):
+    has_companies_house_number = RadioField(
+        "Are you registered with Companies House?",
+        validators=[InputRequired(message="You need to answer this question.")],
+        choices=[('Yes', 'Yes'), ('No', 'No')]
+    )
+    companies_house_number = StripWhitespaceStringField(
+        'Companies House number',
+        default='',
+        validators=[
+            Optional(),
+            Regexp(r'^([0-9]{2}|[A-Za-z]{2})[0-9]{6}$',
+                   message="You must provide a valid 8 character Companies House number."
+                   )
+        ]
+    )
+    other_company_registration_number = StripWhitespaceStringField(
+        'Other company registration number',
+        default='',
+        validators=[
+            Optional(),
+            Length(min=1, max=255, message="You must provide a company registration number under 256 characters.")
+        ]
+    )
 
-
-class CompaniesHouseNumberForm(Form):
-    companies_house_number = StripWhitespaceStringField('Companies house number', validators=[
-        Optional(),
-        Regexp(r'^([0-9]{2}|[A-Za-z]{2})[0-9]{6}$',
-               message="Companies House numbers must have either 8 digits or 2 letters followed by 6 digits."
-               )
-    ])
+    def validate(self):
+        if not super(AddCompanyRegistrationNumberForm, self).validate():
+            return False
+        if self.has_companies_house_number.data == "Yes" and not self.companies_house_number.data:
+            self.companies_house_number.errors.append('You must enter a Companies House number.')
+            return False
+        if self.has_companies_house_number.data == "No" and not self.other_company_registration_number.data:
+            self.other_company_registration_number.errors.append('You must provide an answer.')
+            return False
+        return True
 
 
 class CompanyNameForm(Form):
@@ -101,6 +122,13 @@ class CompanyContactDetailsForm(Form):
     phone_number = StripWhitespaceStringField('Contact phone number', validators=[
         InputRequired(message="You must provide a phone number."),
         Length(max=20, message="You must provide a phone number under 20 characters.")
+    ])
+
+
+class DunsNumberForm(Form):
+    duns_number = StripWhitespaceStringField('DUNS Number', validators=[
+        InputRequired(message="You must enter a DUNS number with 9 digits."),
+        Regexp(r'^\d{9}$', message="You must enter a DUNS number with 9 digits."),
     ])
 
 

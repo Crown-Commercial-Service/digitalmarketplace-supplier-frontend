@@ -14,7 +14,7 @@ from ...main import main, content_loader
 from ... import data_api_client
 from ..forms.suppliers import (
     AddCompanyRegisteredNameForm,
-    CompaniesHouseNumberForm,
+    AddCompanyRegistrationNumberForm,
     CompanyContactDetailsForm,
     CompanyNameForm,
     CompanyOrganisationSizeForm,
@@ -195,6 +195,54 @@ def edit_supplier_registered_name():
             return render_template("suppliers/edit_registered_name.html", form=form), 400
 
     return render_template('suppliers/edit_registered_name.html', form=form)
+
+
+@main.route('/registration-number/edit', methods=['GET', 'POST'])
+@login_required
+def edit_supplier_registration_number():
+    form = AddCompanyRegistrationNumberForm()
+    supplier = data_api_client.get_supplier(current_user.supplier_id)['suppliers']
+    if supplier.get("companiesHouseNumber") or supplier.get("otherCompanyRegistrationNumber"):
+        return (
+            render_template(
+                "suppliers/already_completed.html",
+                completed_data_description="company registration number"
+            ),
+            200 if request.method == 'GET' else 400
+        )
+
+    if request.method == 'POST':
+        if form.validate_on_submit():
+            try:
+                if form.has_companies_house_number.data == "Yes":
+                    data_api_client.update_supplier(
+                        supplier_id=current_user.supplier_id,
+                        supplier={"companiesHouseNumber": form.companies_house_number.data.upper()},
+                        user=current_user.email_address
+                    )
+                else:
+                    data_api_client.update_supplier(
+                        supplier_id=current_user.supplier_id,
+                        supplier={"otherCompanyRegistrationNumber": form.other_company_registration_number.data},
+                        user=current_user.email_address
+                    )
+                return redirect(url_for('.supplier_details'))
+            except APIError as e:
+                abort(e.status_code)
+        else:
+            current_app.logger.warning(
+                "supplieredit.fail: has-companies-house-number:{hasnum}, companies-house-number:{chnum}, "
+                "other-registered-company-number:{rnumber}, errors:{errors}",
+                extra={
+                    'hasnum': form.has_companies_house_number.data,
+                    'chnum': form.companies_house_number.data,
+                    'rnumber': form.other_company_registration_number.data,
+                    'rnumber_errors': ",".join(form.errors)
+                })
+
+            return render_template("suppliers/edit_company_registration_number.html", form=form), 400
+
+    return render_template('suppliers/edit_company_registration_number.html', form=form)
 
 
 @main.route('/edit', methods=['GET'])
@@ -406,42 +454,6 @@ def submit_duns_number():
                 'duns_errors': ",".join(form.duns_number.errors)})
         return render_template(
             "suppliers/duns_number.html",
-            form=form
-        ), 400
-
-
-@main.route('/companies-house-number', methods=['GET'])
-def companies_house_number():
-    form = CompaniesHouseNumberForm()
-
-    if form.companies_house_number.name in session:
-        form.companies_house_number.data = session[form.companies_house_number.name]
-
-    return render_template(
-        "suppliers/companies_house_number.html",
-        form=form
-    ), 200
-
-
-@main.route('/companies-house-number', methods=['POST'])
-def submit_companies_house_number():
-    form = CompaniesHouseNumberForm()
-
-    if form.validate_on_submit():
-        if form.companies_house_number.data:
-            # TODO: below should be a statement updating database with Company House Number
-            session[form.companies_house_number.name] = form.companies_house_number.data
-        else:
-            session.pop(form.companies_house_number.name, None)
-        return redirect(url_for(".supplier_details"))
-    else:
-        current_app.logger.warning(
-            "suppliercreate.fail: duns:{duns} {duns_errors}",
-            extra={
-                'duns': session.get('duns_number'),
-                'duns_errors': ",".join(chain.from_iterable(form.errors.values()))})
-        return render_template(
-            "suppliers/companies_house_number.html",
             form=form
         ), 400
 

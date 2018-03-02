@@ -1370,64 +1370,6 @@ class TestCreateSupplier(BaseApplicationTest):
             assert "duns_number" in session
             assert session.get("duns_number") == "012345678"
 
-    def test_should_not_be_an_error_if_no_companies_house_number(self):
-        res = self.client.post(
-            "/suppliers/companies-house-number",
-            data={}
-        )
-        assert res.status_code == 302
-        assert res.location == 'http://localhost/suppliers/details'
-
-    @pytest.mark.parametrize('companies_house_number', ['1234567', '123456789', 'ABC12345'])
-    def test_should_be_an_error_if_submitted_value_bad_format_for_companies_house_number(self, companies_house_number):
-        """Ensures that validation on companies house number prevents submission of:
-        1) Values shorter/longer than 8 characters
-        2) 8-character submissions of an invalid format"""
-        res = self.client.post(
-            "/suppliers/companies-house-number",
-            data={'companies_house_number': companies_house_number}
-        )
-
-        self.assert_single_question_page_validation_errors(
-            res,
-            question_name="Companies house number",
-            validation_message="Companies House numbers must have either 8 digits or 2 letters followed by 6 digits."
-        )
-
-    def test_should_allow_valid_companies_house_number(self):
-        with self.client as c:
-            res = c.post(
-                "/suppliers/companies-house-number",
-                data={
-                    'companies_house_number': "SC001122"
-                }
-            )
-            assert res.status_code == 302
-            assert res.location == 'http://localhost/suppliers/details'
-
-    def test_should_strip_whitespace_surrounding_companies_house_number_field(self):
-        with self.client as c:
-            c.post(
-                "/suppliers/companies-house-number",
-                data={
-                    'companies_house_number': "  SC001122  "
-                }
-            )
-            assert "companies_house_number" in session
-            assert session.get("companies_house_number") == "SC001122"
-
-    def test_should_wipe_companies_house_number_if_not_supplied(self):
-        with self.client as c:
-            res = c.post(
-                "/suppliers/companies-house-number",
-                data={
-                    'companies_house_number': ""
-                }
-            )
-            assert res.status_code == 302
-            assert res.location == 'http://localhost/suppliers/details'
-            assert "companies_house_number" not in session
-
     def test_should_allow_valid_company_name(self):
         res = self.client.post(
             "/suppliers/company-name",
@@ -1594,14 +1536,6 @@ class TestCreateSupplier(BaseApplicationTest):
         assert res.status_code == 200
         assert '<inputtype="text"name="duns_number"id="input-duns_number"class="text-box"value="999"' \
             in self.strip_all_whitespace(res.get_data(as_text=True))
-
-    def test_should_populate_companies_house_from_session(self):
-        with self.client.session_transaction() as sess:
-            sess['companies_house_number'] = "999"
-        res = self.client.get("/suppliers/companies-house-number")
-        assert res.status_code == 200
-        assert '<inputtype="text"name="companies_house_number"id="input-companies_house_number"' \
-            'class="text-box"value="999"' in self.strip_all_whitespace(res.get_data(as_text=True))
 
     def test_should_populate_company_name_from_session(self):
         with self.client.session_transaction() as sess:
@@ -2405,3 +2339,160 @@ class TestSupplierEditTradingStatus(BaseApplicationTest):
             res = self.client.post("/suppliers/trading-status/edit",
                                    data={'trading_status': CompanyTradingStatusForm.OPTIONS[0]['value']})
             assert res.status_code == 503
+
+
+@mock.patch("app.main.views.suppliers.data_api_client", autospec=True)
+class TestSupplierAddRegistrationNumber(BaseApplicationTest):
+    def test_add_registration_number_page_loads(self, data_api_client):
+        with self.app.test_client():
+            self.login()
+            data_api_client.get_supplier.return_value = get_supplier(
+                companiesHouseNumber=None,
+                otherCompanyRegistrationNumber=None
+            )
+
+            res = self.client.get("/suppliers/registration-number/edit")
+            assert res.status_code == 200, 'The add registration number page has not loaded correctly.'
+
+    @pytest.mark.parametrize(
+        'incomplete_data, question_mentioned, validation_message',
+        (
+            (
+                {'has_companies_house_number': '',
+                 'companies_house_number': '',
+                 'other_company_registration_number': ''
+                 },
+                'Are you registered with Companies House?',
+                'You need to answer this question.'
+            ),
+            (
+                {'has_companies_house_number': 'Yes',
+                 'companies_house_number': '',
+                 'other_company_registration_number': ''
+                 },
+                'Companies House number',
+                'You must enter a Companies House number.'
+            ),
+            (
+                {'has_companies_house_number': 'Yes',
+                 'companies_house_number': '123456789',
+                 'other_company_registration_number': ''
+                 },
+                'Companies House number',
+                'You must provide a valid 8 character Companies House number.'
+            ),
+            (
+                {'has_companies_house_number': 'No',
+                 'companies_house_number': '',
+                 'other_company_registration_number': 'a' * 256
+                 },
+                'Other company registration number',
+                'You must provide a company registration number under 256 characters.'
+            )
+        )
+    )
+    def test_incomplete_or_invalid_input_shows_validation_error_and_does_not_update_api(
+            self, data_api_client, incomplete_data, question_mentioned, validation_message
+    ):
+        with self.app.test_client():
+            self.login()
+            data_api_client.get_supplier.return_value = get_supplier(
+                companiesHouseNumber=None,
+                otherCompanyRegistrationNumber=None
+            )
+
+            res = self.client.post("/suppliers/registration-number/edit", data=incomplete_data)
+
+            self.assert_single_question_page_validation_errors(
+                res,
+                question_name=question_mentioned,
+                validation_message=validation_message
+            )
+            assert data_api_client.update_supplier.call_args_list == []
+
+    @pytest.mark.parametrize(
+        'complete_data, expected_post',
+        (
+            (
+                {'has_companies_house_number': 'Yes',
+                 'companies_house_number': 'KK654321',
+                 'other_company_registration_number': ''
+                 },
+                {'companiesHouseNumber': 'KK654321'}
+            ),
+            (
+                {'has_companies_house_number': 'Yes',
+                 'companies_house_number': 'kk654321',
+                 'other_company_registration_number': ''
+                 },
+                {'companiesHouseNumber': 'KK654321'}
+            ),
+            (
+                {'has_companies_house_number': 'No',
+                 'companies_house_number': '',
+                 'other_company_registration_number': 'KK987654321, my special registration number'
+                 },
+                {'otherCompanyRegistrationNumber': 'KK987654321, my special registration number'}
+            ),
+        )
+    )
+    def test_post_input_triggers_api_supplier_update_and_redirect(self, data_api_client, complete_data, expected_post):
+        with self.app.test_client():
+            self.login()
+            data_api_client.get_supplier.return_value = get_supplier(
+                companiesHouseNumber=None,
+                otherCompanyRegistrationNumber=None
+            )
+
+            res = self.client.post("/suppliers/registration-number/edit", data=complete_data)
+
+            assert data_api_client.update_supplier.call_args_list == [
+                mock.call(supplier_id=1234, supplier=expected_post, user='email@email.com')
+            ], 'update_supplier was called with the wrong arguments'
+            assert res.status_code == 302
+            assert res.location == 'http://localhost/suppliers/details'
+
+    def test_fails_if_api_update_fails(self, data_api_client):
+        with self.app.test_client():
+            self.login()
+            valid_post_data = {'has_companies_house_number': 'Yes',
+                               'companies_house_number': 'KK654321',
+                               'other_company_registration_number': ''
+                               }
+            data_api_client.get_supplier.return_value = get_supplier(
+                companiesHouseNumber=None,
+                otherCompanyRegistrationNumber=None
+            )
+            data_api_client.update_supplier.side_effect = APIError(mock.Mock(status_code=504))
+            res = self.client.post("/suppliers/registration-number/edit", data=valid_post_data)
+            assert res.status_code == 504
+
+    def test_get_shows_already_entered_page_and_api_not_called_update_if_data_already_entered(self, data_api_client):
+        with self.app.test_client():
+            self.login()
+            # Default get_supplier has companiesHouseNumber and otherCompanyRegistrationNumber complete
+            data_api_client.get_supplier.side_effect = get_supplier
+            res = self.client.get("/suppliers/registration-number/edit")
+            doc = html.fromstring(res.get_data(as_text=True))
+            page_heading = doc.xpath('//h1')
+
+            assert res.status_code == 200
+            assert page_heading[0].text.strip() == "Change your company registration number"
+            assert data_api_client.update_supplier.call_args_list == []
+
+    def test_post_shows_already_entered_page_and_api_not_called_if_data_already_entered(self, data_api_client):
+        with self.app.test_client():
+            self.login()
+            valid_post_data = {'has_companies_house_number': 'Yes',
+                               'companies_house_number': 'KK654321',
+                               'other_company_registration_number': ''
+                               }
+            # Default get_supplier has companiesHouseNumber and otherCompanyRegistrationNumber complete
+            data_api_client.get_supplier.side_effect = get_supplier
+            res = self.client.post("/suppliers/registration-number/edit", data=valid_post_data)
+            doc = html.fromstring(res.get_data(as_text=True))
+            page_heading = doc.xpath('//h1')
+
+            assert res.status_code == 400
+            assert page_heading[0].text.strip() == "Change your company registration number"
+            assert data_api_client.update_supplier.call_args_list == []

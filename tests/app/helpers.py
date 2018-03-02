@@ -506,9 +506,12 @@ class BaseApplicationTest(object):
         validation_text = doc.xpath('normalize-space(//span[@class="validation-message"]/text())')
 
         assert res.status_code == 400
-        assert masthead_heading and title == masthead_heading
-        assert masthead_link_text and question_name == masthead_link_text
-        assert validation_text and validation_message == validation_text
+        assert masthead_heading and title == masthead_heading, \
+            f"Expected '{title}' == '{masthead_heading}'"
+        assert masthead_link_text and question_name == masthead_link_text, \
+            f"Expected '{question_name}' == '{masthead_link_text}'"
+        assert validation_text and validation_message == validation_text, \
+            f"Expected '{validation_message}' == '{validation_text}'"
 
 
 class FakeMail(object):
