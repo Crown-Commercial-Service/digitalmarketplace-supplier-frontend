@@ -73,7 +73,7 @@ class AddCompanyRegistrationNumberForm(Form):
         choices=[('Yes', 'Yes'), ('No', 'No')]
     )
     companies_house_number = StripWhitespaceStringField(
-        'Companies house number',
+        'Companies House number',
         default='',
         validators=[
             Optional(),

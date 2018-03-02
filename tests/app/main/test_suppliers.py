@@ -2370,7 +2370,7 @@ class TestSupplierAddRegistrationNumber(BaseApplicationTest):
                  'companies_house_number': '',
                  'other_company_registration_number': ''
                  },
-                'Companies house number',
+                'Companies House number',
                 'You must enter a Companies House number.'
             ),
             (
@@ -2378,7 +2378,7 @@ class TestSupplierAddRegistrationNumber(BaseApplicationTest):
                  'companies_house_number': '123456789',
                  'other_company_registration_number': ''
                  },
-                'Companies house number',
+                'Companies House number',
                 'You must provide a valid 8 character Companies House number.'
             ),
             (
