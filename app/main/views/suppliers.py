@@ -217,7 +217,7 @@ def edit_supplier_registration_number():
                 if form.has_companies_house_number.data == "Yes":
                     data_api_client.update_supplier(
                         supplier_id=current_user.supplier_id,
-                        supplier={"companiesHouseNumber": form.companies_house_number.data},
+                        supplier={"companiesHouseNumber": form.companies_house_number.data.upper()},
                         user=current_user.email_address
                     )
                 else:

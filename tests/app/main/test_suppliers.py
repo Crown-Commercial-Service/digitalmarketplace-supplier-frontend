@@ -2421,6 +2421,13 @@ class TestSupplierAddRegistrationNumber(BaseApplicationTest):
                 {'companiesHouseNumber': 'KK654321'}
             ),
             (
+                {'has_companies_house_number': 'Yes',
+                 'companies_house_number': 'kk654321',
+                 'other_company_registration_number': ''
+                 },
+                {'companiesHouseNumber': 'KK654321'}
+            ),
+            (
                 {'has_companies_house_number': 'No',
                  'companies_house_number': '',
                  'other_company_registration_number': 'KK987654321, my special registration number'
