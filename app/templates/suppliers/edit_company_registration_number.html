@@ -27,11 +27,12 @@
   <div class="grid-row">
     <div class="column-one-whole">
       {% if form.errors %}
-        {% for field in form.errors %}
+      {# There can only ever be one error for this form, so take the first (and only) from the errors dict #}
+        {% with field, _ = form.errors.popitem() %}
           {% with errors = [{'question': form[field].label, 'input_name': form[field].name}] %}
             {% include 'toolkit/forms/validation.html' %}
           {% endwith %}
-        {% endfor %}
+        {% endwith %}
       {% endif %}
     </div>
 
