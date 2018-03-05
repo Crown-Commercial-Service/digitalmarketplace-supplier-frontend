@@ -834,9 +834,9 @@ class TestSupplierDetails(BaseApplicationTest):
         with self.app.test_client():
             self.login()
 
-            res = self.client.get("/suppliers/details")
-            assert res.status_code == 200
-            page_html = res.get_data(as_text=True)
+            response = self.client.get("/suppliers/details")
+            assert response.status_code == 200
+            page_html = response.get_data(as_text=True)
             document = html.fromstring(page_html)
             answer_required_link = document.xpath(
                 "//span[text()='{}']/following::td[1]/span/a[text()='Answer required']".format(question)
@@ -848,7 +848,11 @@ class TestSupplierDetails(BaseApplicationTest):
     @pytest.mark.parametrize(
         "question,filled_in_attribute,link_address",
         [
-            ("Registered company name", {"registeredName": "Digital Ponies"}, "/suppliers/registered-company-name/edit"),
+            (
+                "Registered company name",
+                {"registeredName": "Digital Ponies"},
+                "/suppliers/registered-company-name/edit"
+            ),
             ("Registered company address", {"registrationCountry": "country:GB"}, "/suppliers/registered-address/edit"),
             (
                 "Registration number",
@@ -874,9 +878,9 @@ class TestSupplierDetails(BaseApplicationTest):
         with self.app.test_client():
             self.login()
 
-            res = self.client.get("/suppliers/details")
-            assert res.status_code == 200
-            page_html = res.get_data(as_text=True)
+            response = self.client.get("/suppliers/details")
+            assert response.status_code == 200
+            page_html = response.get_data(as_text=True)
             document = html.fromstring(page_html)
             answer_required_link = document.xpath(
                 "//span[text()='{}']/following::td[2]/span/a[text()='Change']".format(question)
@@ -884,6 +888,26 @@ class TestSupplierDetails(BaseApplicationTest):
 
             assert answer_required_link
             assert answer_required_link[0].values()[0] == link_address
+
+    @pytest.mark.parametrize(
+        "summary,is_hint_visible",
+        [
+            ({"description": "Our company is the best for digital ponies."}, False),
+            ({"description": ""}, True),
+        ]
+    )
+    def test_hint_text_for_summary_only_visible_if_field_empty(self, data_api_client, summary, is_hint_visible):
+        data_api_client.get_supplier.return_value = get_supplier(**summary)
+
+        with self.app.test_client():
+            self.login()
+
+            response = self.client.get("/suppliers/details")
+            assert response.status_code == 200
+            page_html = response.get_data(as_text=True)
+            document = html.fromstring(page_html)
+            optional_hint_text = (document.xpath("//span[text()='Summary']/following::td[2]/span")[0].text).strip()
+            assert bool(optional_hint_text) == is_hint_visible
 
 
 @mock.patch("app.main.views.suppliers.data_api_client", autospec=True)
