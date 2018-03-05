@@ -88,20 +88,35 @@ class AddCompanyRegistrationNumberForm(Form):
         default='',
         validators=[
             Optional(),
-            Length(min=1, max=255, message="You must provide a company registration number under 256 characters.")
+            Length(max=255, message="You must provide a company registration number under 256 characters.")
         ]
     )
 
     def validate(self):
+        # If the form has been re-submitted following an error on a field which is now hidden we need to clear the
+        # previously entered data before validating
+        # For example, a user had an error submitting CH number but is now submitting other registration number,
+        # (with CH number field hidden on the page) the previously submitted bad CH number should be cleared.
+        # Similarly, we clear any validation errors on fields that were "hidden" when the form was submitted.
+        if self.has_companies_house_number.data == "Yes":
+            self.other_company_registration_number.raw_data = None
+            self.other_company_registration_number.data = ""
+        if self.has_companies_house_number.data == "No":
+            self.companies_house_number.raw_data = None
+            self.companies_house_number.data = ""
+
+        valid = True
         if not super(AddCompanyRegistrationNumberForm, self).validate():
-            return False
+            valid = False
         if self.has_companies_house_number.data == "Yes" and not self.companies_house_number.data:
             self.companies_house_number.errors.append('You must enter a Companies House number.')
-            return False
+            valid = False
+
         if self.has_companies_house_number.data == "No" and not self.other_company_registration_number.data:
             self.other_company_registration_number.errors.append('You must provide an answer.')
-            return False
-        return True
+            valid = False
+
+        return valid
 
 
 class CompanyNameForm(Form):
