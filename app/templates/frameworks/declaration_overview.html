@@ -80,7 +80,7 @@
         {{ summary.heading(section.name, id=section.slug) }}
         {% if section.editable %}
           {% if framework.status == 'open' %}
-            {{ summary.top_link("Edit", url_for(".framework_supplier_declaration_edit", framework_slug=framework.slug, section_id=section.id)) }}
+            {{ summary.top_link("Edit", url_for(".framework_supplier_declaration_edit", framework_slug=framework.slug, section_id=section.id), hidden_text=section.name) }}
           {% endif %}
         {% endif %}
         {% if section.summary_page_description %}
