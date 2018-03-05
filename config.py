@@ -82,7 +82,6 @@ class Config(object):
     DM_PLAIN_TEXT_LOGS = False
     DM_LOG_PATH = None
     DM_APP_NAME = 'supplier-frontend'
-    DM_DOWNSTREAM_REQUEST_ID_HEADER = 'X-Amz-Cf-Id'
 
     @staticmethod
     def init_app(app):
