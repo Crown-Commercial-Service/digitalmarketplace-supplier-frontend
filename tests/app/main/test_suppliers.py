@@ -867,7 +867,7 @@ class TestSupplierDetails(BaseApplicationTest):
             ("Trading status", {"tradingStatus": "limited company (LTD)"}, "/suppliers/trading-status/edit"),
             ("Company size", {"organisationSize": "small"}, "/suppliers/organisation-size/edit"),
             ("VAT number", {"vatNumber": "VAT654321"}, "/suppliers/vat-number/edit"),
-            ("DUNS number", {"dunsNumber": "123456789"}, "/suppliers/duns-number"),
+            ("DUNS number", {"dunsNumber": "123456789"}, "/suppliers/duns-number/edit"),
         ]
     )
     def test_filled_in_question_field_has_change_link(

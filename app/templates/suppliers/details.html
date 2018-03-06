@@ -164,7 +164,7 @@
     {% call summary.row() %}
       {{ summary.field_name('DUNS number') }}
       {{ summary.text(supplier.dunsNumber) }}
-      {{ summary.edit_link(label="Change", link=url_for(".duns_number"), hidden_text="DUNS number") }}
+      {{ summary.edit_link(label="Change", link=url_for(".edit_supplier_duns_number"), hidden_text="DUNS number") }}
     {% endcall %}
   {% endif %}
 
