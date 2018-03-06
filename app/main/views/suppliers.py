@@ -207,7 +207,7 @@ def edit_supplier_registration_number():
         return (
             render_template(
                 "suppliers/already_completed.html",
-                completed_data_description="company registration number"
+                completed_data_description="registration number"
             ),
             200 if request.method == 'GET' else 400
         )

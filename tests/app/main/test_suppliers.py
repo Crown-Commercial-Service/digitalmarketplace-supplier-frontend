@@ -2388,7 +2388,7 @@ class TestSupplierAddRegistrationNumber(BaseApplicationTest):
                  'other_company_registration_number': 'a' * 256
                  },
                 'Other company registration number',
-                'You must provide a company registration number under 256 characters.'
+                'You must provide a registration number under 256 characters.'
             )
         )
     )
@@ -2478,7 +2478,7 @@ class TestSupplierAddRegistrationNumber(BaseApplicationTest):
             page_heading = doc.xpath('//h1')
 
             assert res.status_code == 200
-            assert page_heading[0].text.strip() == "Change your company registration number"
+            assert page_heading[0].text.strip() == "Change your registration number"
             assert data_api_client.update_supplier.call_args_list == []
 
     def test_post_shows_already_entered_page_and_api_not_called_if_data_already_entered(self, data_api_client):
@@ -2495,7 +2495,7 @@ class TestSupplierAddRegistrationNumber(BaseApplicationTest):
             page_heading = doc.xpath('//h1')
 
             assert res.status_code == 400
-            assert page_heading[0].text.strip() == "Change your company registration number"
+            assert page_heading[0].text.strip() == "Change your registration number"
             assert data_api_client.update_supplier.call_args_list == []
 
 
