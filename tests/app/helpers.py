@@ -258,7 +258,7 @@ class BaseApplicationTest(object):
 
     @staticmethod
     def user(id, email_address, supplier_id, supplier_name, name,
-             is_token_valid=True, locked=False, active=True, role='buyer'):
+             is_token_valid=True, locked=False, active=True, role='buyer', supplier_organisation_size=None):
 
         hours_offset = -1 if is_token_valid else 1
         date = datetime.utcnow() + timedelta(hours=hours_offset)
@@ -279,6 +279,8 @@ class BaseApplicationTest(object):
                 "supplierId": supplier_id,
                 "name": supplier_name,
             }
+            if supplier_organisation_size:
+                supplier['organisationSize'] = supplier_organisation_size
             user['role'] = 'supplier'
             user['supplier'] = supplier
         return {
@@ -440,13 +442,15 @@ class BaseApplicationTest(object):
 
     def login(self):
         with patch('app.main.views.login.data_api_client') as login_api_client:
-            login_api_client.authenticate_user.return_value = self.user(
-                123, "email@email.com", 1234, u'Supplier NĀme', u'Năme')
+            supplier_user_json = self.user(
+                123, "email@email.com", 1234, u'Supplier NĀme', u'Năme', supplier_organisation_size="small"
+            )
+            login_api_client.authenticate_user.return_value = supplier_user_json
 
             self.get_user_patch = patch.object(
                 data_api_client,
                 'get_user',
-                return_value=self.user(123, "email@email.com", 1234, u'Supplier NĀme', u'Năme')
+                return_value=supplier_user_json
             )
             self.get_user_patch.start()
 

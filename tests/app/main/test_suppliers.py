@@ -99,7 +99,8 @@ def get_user():
         'role': 'supplier',
         'supplier': {
             'name': "Supplier Name",
-            'supplierId': 1234
+            'supplierId': 1234,
+            'supplierOrganisationSize': 'small'
         }
     }]
 
@@ -935,6 +936,24 @@ class TestSupplierDashboardLogin(BaseApplicationTest):
         res = self.client.get("/suppliers")
         assert res.status_code == 302
         assert res.location == "http://localhost/user/login?next=%2Fsuppliers"
+
+    @mock.patch("app.main.views.suppliers.data_api_client")
+    @mock.patch("app.main.views.suppliers.get_current_suppliers_users")
+    def test_custom_dimension_supplier_role_and_organisation_size_is_set_if_supplier_logged_in(
+        self, get_current_suppliers_users, data_api_client
+    ):
+        get_current_suppliers_users.side_effect = get_user
+        data_api_client.find_frameworks.return_value = find_frameworks_return_value
+        data_api_client.get_supplier.side_effect = get_supplier
+
+        with self.app.test_client():
+            self.login()
+            res = self.client.get('/suppliers')
+
+            doc = html.fromstring(res.get_data(as_text=True))
+            # The default supplier details from self.login() should available as attributes of current_user
+            assert len(doc.xpath('//meta[@data-value="supplier"]')) == 1
+            assert len(doc.xpath('//meta[@data-value="small"]')) == 1
 
 
 @mock.patch("app.main.views.suppliers.data_api_client")
