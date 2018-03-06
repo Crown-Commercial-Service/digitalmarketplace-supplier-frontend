@@ -47,7 +47,7 @@ yarn-install:
 	yarn install --frozen-lockfile  # We use --frozen-lockfile here so that Travis catches dependencies which need updating.
 
 .PHONY: frontend-build
-frontend-build:
+frontend-build: yarn-install
 	yarn run --silent frontend-build:${GULP_ENVIRONMENT}
 
 .PHONY: test
