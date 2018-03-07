@@ -59,7 +59,6 @@ def get_supplier(*args, **kwargs):
         "registeredName": "Official Name Inc",
         "registrationCountry": "country:BZ",
         "otherCompanyRegistrationNumber": "BEL153",
-        "registrationDate": "1973-01-02",
         "vatNumber": "12345678",
         "organisationSize": "small",
         "tradingStatus": "Open for business",

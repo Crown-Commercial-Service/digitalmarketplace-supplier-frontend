@@ -30,8 +30,8 @@ COUNTRY_TUPLE = load_countries()
 
 
 def supplier_company_details_are_complete(supplier_data):
-    supplier_required_fields = ['dunsNumber', 'name', 'registeredName', 'registrationCountry', 'registrationDate',
-                                'organisationSize', 'tradingStatus']
+    supplier_required_fields = ['dunsNumber', 'name', 'registeredName', 'registrationCountry', 'organisationSize',
+                                'tradingStatus']
     contact_required_fields = ['address1', 'city', 'postcode']
 
     registration_country = supplier_data['registrationCountry'] if 'registrationCountry' in supplier_data else None
