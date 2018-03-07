@@ -88,7 +88,7 @@ class AddCompanyRegistrationNumberForm(Form):
         default='',
         validators=[
             Optional(),
-            Length(max=255, message="You must provide a company registration number under 256 characters.")
+            Length(max=255, message="You must provide a registration number under 256 characters.")
         ]
     )
 
