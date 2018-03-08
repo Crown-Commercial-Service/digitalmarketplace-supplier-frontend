@@ -1474,7 +1474,7 @@ class TestCreateSupplier(BaseApplicationTest):
             }
         )
         assert res.status_code == 302
-        assert res.location == 'http://localhost/suppliers/company-name'
+        assert res.location == 'http://localhost/suppliers/company-details'
 
     @mock.patch("app.main.suppliers.data_api_client")
     def test_should_allow_duns_numbers_that_start_with_zero(self, data_api_client):
@@ -1486,7 +1486,7 @@ class TestCreateSupplier(BaseApplicationTest):
             }
         )
         assert res.status_code == 302
-        assert res.location == 'http://localhost/suppliers/company-name'
+        assert res.location == 'http://localhost/suppliers/company-details'
 
     @mock.patch("app.main.suppliers.data_api_client")
     def test_should_strip_whitespace_surrounding_duns_number_field(self, data_api_client):
@@ -1501,58 +1501,11 @@ class TestCreateSupplier(BaseApplicationTest):
             assert "duns_number" in session
             assert session.get("duns_number") == "012345678"
 
-    def test_should_allow_valid_company_name(self):
-        res = self.client.post(
-            "/suppliers/company-name",
-            data={
-                'company_name': "My Company"
-            }
-        )
-        assert res.status_code == 302
-        assert res.location == 'http://localhost/suppliers/company-contact-details'
-
-    def test_should_strip_whitespace_surrounding_company_name_field(self):
-        with self.client as c:
-            c.post(
-                "/suppliers/company-name",
-                data={
-                    'company_name': "  My Company  "
-                }
-            )
-            assert "company_name" in session
-            assert session.get("company_name") == "My Company"
-
-    def test_should_be_an_error_if_no_company_name(self):
-        res = self.client.post(
-            "/suppliers/company-name",
-            data={}
-        )
-
-        self.assert_single_question_page_validation_errors(
-            res,
-            question_name="Company name",
-            validation_message="You must provide a company name."
-        )
-
-    def test_should_be_an_error_if_company_name_too_long(self):
-        twofiftysix = "a" * 256
-        res = self.client.post(
-            "/suppliers/company-name",
-            data={
-                'company_name': twofiftysix
-            }
-        )
-
-        self.assert_single_question_page_validation_errors(
-            res,
-            question_name="Company name",
-            validation_message="You must provide a company name under 256 characters."
-        )
-
     def test_should_allow_valid_company_contact_details(self):
         res = self.client.post(
-            "/suppliers/company-contact-details",
+            "/suppliers/company-details",
             data={
+                'company_name': "My Company",
                 'contact_name': "Name",
                 'email_address': "name@email.com",
                 'phone_number': "999"
@@ -1563,6 +1516,7 @@ class TestCreateSupplier(BaseApplicationTest):
 
     def test_should_strip_whitespace_surrounding_contact_details_fields(self):
         contact_details = {
+            'company_name': "  My Company  ",
             'contact_name': "  Name  ",
             'email_address': "  name@email.com  ",
             'phone_number': "  999  "
@@ -1570,7 +1524,7 @@ class TestCreateSupplier(BaseApplicationTest):
 
         with self.client as c:
             c.post(
-                "/suppliers/company-contact-details",
+                "/suppliers/company-details",
                 data=contact_details
             )
 
@@ -1578,10 +1532,37 @@ class TestCreateSupplier(BaseApplicationTest):
                 assert key in session
                 assert session.get(key) == value.strip()
 
-    def test_should_not_allow_contact_details_without_name(self):
+    def test_should_not_allow_contact_details_without_company_name(self):
         res = self.client.post(
-            "/suppliers/company-contact-details",
+            "/suppliers/company-details",
             data={
+                'contact_name': "Name",
+                'email_address': "name@email.com",
+                'phone_number': "999"
+            }
+        )
+        assert res.status_code == 400
+        assert "You must provide a company name." in res.get_data(as_text=True)
+
+    def test_should_not_allow_contact_details_with_too_long_company_name(self):
+        twofiftysix = "a" * 256
+        res = self.client.post(
+            "/suppliers/company-details",
+            data={
+                'company_name': twofiftysix,
+                'contact_name': "Name",
+                'email_address': "name@email.com",
+                'phone_number': "999"
+            }
+        )
+        assert res.status_code == 400
+        assert "You must provide a company name under 256 characters." in res.get_data(as_text=True)
+
+    def test_should_not_allow_contact_details_without_contact_name(self):
+        res = self.client.post(
+            "/suppliers/company-details",
+            data={
+                'company_name': "My Company",
                 'email_address': "name@email.com",
                 'phone_number': "999"
             }
@@ -1589,11 +1570,12 @@ class TestCreateSupplier(BaseApplicationTest):
         assert res.status_code == 400
         assert "You must provide a contact name." in res.get_data(as_text=True)
 
-    def test_should_not_allow_contact_details_with_too_long_name(self):
+    def test_should_not_allow_contact_details_with_too_long_contact_name(self):
         twofiftysix = "a" * 256
         res = self.client.post(
-            "/suppliers/company-contact-details",
+            "/suppliers/company-details",
             data={
+                'company_name': "My Company",
                 'contact_name': twofiftysix,
                 'email_address': "name@email.com",
                 'phone_number': "999"
@@ -1604,8 +1586,9 @@ class TestCreateSupplier(BaseApplicationTest):
 
     def test_should_not_allow_contact_details_without_email(self):
         res = self.client.post(
-            "/suppliers/company-contact-details",
+            "/suppliers/company-details",
             data={
+                'company_name': "My Company",
                 'contact_name': "Name",
                 'phone_number': "999"
             }
@@ -1615,8 +1598,9 @@ class TestCreateSupplier(BaseApplicationTest):
 
     def test_should_not_allow_contact_details_with_invalid_email(self):
         res = self.client.post(
-            "/suppliers/company-contact-details",
+            "/suppliers/company-details",
             data={
+                'company_name': "My Company",
                 'contact_name': "Name",
                 'email_address': "notrightatall",
                 'phone_number': "999"
@@ -1627,8 +1611,9 @@ class TestCreateSupplier(BaseApplicationTest):
 
     def test_should_not_allow_contact_details_without_phone_number(self):
         res = self.client.post(
-            "/suppliers/company-contact-details",
+            "/suppliers/company-details",
             data={
+                'company_name': "My Company",
                 'contact_name': "Name",
                 'email_address': "name@email.com"
             }
@@ -1639,8 +1624,9 @@ class TestCreateSupplier(BaseApplicationTest):
     def test_should_not_allow_contact_details_with_invalid_phone_number(self):
         twentyone = "a" * 21
         res = self.client.post(
-            "/suppliers/company-contact-details",
+            "/suppliers/company-details",
             data={
+                'company_name': "My Company",
                 'contact_name': "Name",
                 'email_address': "name@email.com",
                 'phone_number': twentyone
@@ -1651,11 +1637,12 @@ class TestCreateSupplier(BaseApplicationTest):
 
     def test_should_show_multiple_errors(self):
         res = self.client.post(
-            "/suppliers/company-contact-details",
+            "/suppliers/company-details",
             data={}
         )
 
         assert res.status_code == 400
+        assert "You must provide a company name." in res.get_data(as_text=True)
         assert "You must provide a phone number." in res.get_data(as_text=True)
         assert "You must provide an email address." in res.get_data(as_text=True)
         assert "You must provide a contact name." in res.get_data(as_text=True)
@@ -1671,7 +1658,7 @@ class TestCreateSupplier(BaseApplicationTest):
     def test_should_populate_company_name_from_session(self):
         with self.client.session_transaction() as sess:
             sess['company_name'] = "Name"
-        res = self.client.get("/suppliers/company-name")
+        res = self.client.get("/suppliers/company-details")
         assert res.status_code == 200
         assert '<inputtype="text"name="company_name"id="input-company_name"class="text-box"value="Name"' \
             in self.strip_all_whitespace(res.get_data(as_text=True))
@@ -1681,7 +1668,7 @@ class TestCreateSupplier(BaseApplicationTest):
             sess['email_address'] = "email_address"
             sess['contact_name'] = "contact_name"
             sess['phone_number'] = "phone_number"
-        res = self.client.get("/suppliers/company-contact-details")
+        res = self.client.get("/suppliers/company-details")
         assert res.status_code == 200
         stripped_page = self.strip_all_whitespace(res.get_data(as_text=True))
         assert '<inputtype="text"name="email_address"id="input-email_address"class="text-box"value="email_address"' \
