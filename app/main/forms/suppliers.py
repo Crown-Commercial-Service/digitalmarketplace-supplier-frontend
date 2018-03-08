@@ -119,14 +119,11 @@ class AddCompanyRegistrationNumberForm(Form):
         return valid
 
 
-class CompanyNameForm(Form):
+class CompanyPublicContactInformationForm(Form):
     company_name = StripWhitespaceStringField('Company name', validators=[
         InputRequired(message="You must provide a company name."),
         Length(max=255, message="You must provide a company name under 256 characters.")
     ])
-
-
-class CompanyContactDetailsForm(Form):
     contact_name = StripWhitespaceStringField('Contact name', validators=[
         InputRequired(message="You must provide a contact name."),
         Length(max=255, message="You must provide a contact name under 256 characters.")
