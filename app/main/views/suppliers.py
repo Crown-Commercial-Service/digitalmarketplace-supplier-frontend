@@ -428,6 +428,14 @@ def edit_supplier_vat_number():
     ), 200 if request.method == 'GET' else 400
 
 
+@main.route('/duns-number/edit', methods=['GET', 'POST'])
+def edit_supplier_duns_number():
+    return (
+        render_template("suppliers/already_completed.html", completed_data_description="DUNS number"),
+        200 if request.method == 'GET' else 400
+    )
+
+
 @main.route('/supply', methods=['GET'])
 def become_a_supplier():
 
