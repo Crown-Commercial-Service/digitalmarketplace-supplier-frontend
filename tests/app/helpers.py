@@ -440,10 +440,11 @@ class BaseApplicationTest(object):
         if self.get_user_patch is not None:
             self.get_user_patch.stop()
 
-    def login(self):
+    def login(self, supplier_organisation_size="small"):
         with patch('app.main.views.login.data_api_client') as login_api_client:
             supplier_user_json = self.user(
-                123, "email@email.com", 1234, u'Supplier NĀme', u'Năme', supplier_organisation_size="small"
+                123, "email@email.com", 1234, u'Supplier NĀme', u'Năme',
+                supplier_organisation_size=supplier_organisation_size
             )
             login_api_client.authenticate_user.return_value = supplier_user_json
 

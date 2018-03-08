@@ -955,6 +955,33 @@ class TestSupplierDashboardLogin(BaseApplicationTest):
             assert len(doc.xpath('//meta[@data-value="supplier"]')) == 1
             assert len(doc.xpath('//meta[@data-value="small"]')) == 1
 
+    @mock.patch("app.main.views.suppliers.data_api_client")
+    @mock.patch("app.main.views.suppliers.get_current_suppliers_users")
+    def test_custom_dimension_supplier_organisation_size_not_set_if_size_is_null(
+        self, get_current_suppliers_users, data_api_client
+    ):
+        get_current_suppliers_users.side_effect = get_user
+        data_api_client.find_frameworks.return_value = find_frameworks_return_value
+        data_api_client.get_supplier.side_effect = get_supplier
+
+        with self.app.test_client():
+            self.login(supplier_organisation_size=None)
+            res = self.client.get('/suppliers')
+
+            doc = html.fromstring(res.get_data(as_text=True))
+            # The default supplier details from self.login() should available as attributes of current_user
+            assert len(doc.xpath('//meta[@data-value="supplier"]')) == 1
+            assert len(doc.xpath('//meta[@data-value="small"]')) == 0
+
+    def test_custom_dimension_supplier_role_and_organisation_size_not_set_if_supplier_logged_out(self):
+        with self.app.test_client():
+            # View that does not require login
+            res = self.client.get('/suppliers/create')
+
+            doc = html.fromstring(res.get_data(as_text=True))
+            assert len(doc.xpath('//meta[@data-id="10"]')) == 0
+            assert len(doc.xpath('//meta[@data-id="11"]')) == 0
+
 
 @mock.patch("app.main.views.suppliers.data_api_client")
 class TestSupplierUpdate(BaseApplicationTest):
