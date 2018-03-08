@@ -169,4 +169,17 @@
   {% endif %}
 
 {% endcall %}
+
+{% if currently_applying_to %}
+  <p>You must complete your company details to make an application.</p>
+  {%
+    with
+    url = url_for(".framework_dashboard", framework_slug=currently_applying_to.slug),
+    text = "Return to your {} application".format(currently_applying_to.name),
+    bigger = false
+  %}
+    {% include "toolkit/secondary-action-link.html" %}
+  {% endwith %}
+{% endif %}
+
 {% endblock %}

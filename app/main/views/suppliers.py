@@ -99,10 +99,15 @@ def supplier_details():
     supplier['contact'] = supplier['contactInformation'][0]
     country_name = get_country_name_from_country_code(supplier.get('registrationCountry'))
 
+    framework = None
+
+    if "currently_applying_to" in session:
+        framework = data_api_client.get_framework(session["currently_applying_to"])["frameworks"]
     return render_template(
         "suppliers/details.html",
         supplier=supplier,
         country_name=country_name,
+        currently_applying_to=framework,
     ), 200
 
 

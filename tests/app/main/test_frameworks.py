@@ -5,7 +5,6 @@ from io import BytesIO
 from itertools import chain
 from urllib.parse import urljoin
 
-from flask import session
 from lxml import html
 import pytest
 from werkzeug.datastructures import MultiDict
@@ -1635,9 +1634,9 @@ class TestFrameworksDashboard(BaseApplicationTest):
         )
         data_api_client.get_supplier_framework_info.return_value = self.supplier_framework()
 
-        res = self.client.get("/suppliers/frameworks/g-cloud-9")
+        response = self.client.get("/suppliers/frameworks/g-cloud-9")
 
-        assert res.status_code == 200
+        assert response.status_code == 200
         with self.client.session_transaction() as session:
             assert session["currently_applying_to"] == "g-cloud-9"
 
@@ -1657,7 +1656,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
         )
         data_api_client.get_supplier_framework_info.return_value = self.supplier_framework()
 
-        res = self.client.get("/suppliers/frameworks/g-cloud-9")
+        self.client.get("/suppliers/frameworks/g-cloud-9")
 
         with self.client.session_transaction() as session:
             assert "currently_applying_to" not in session
