@@ -15,9 +15,8 @@ from ... import data_api_client
 from ..forms.suppliers import (
     AddCompanyRegisteredNameForm,
     AddCompanyRegistrationNumberForm,
-    CompanyContactDetailsForm,
-    CompanyNameForm,
     CompanyOrganisationSizeForm,
+    CompanyPublicContactInformationForm,
     CompanyTradingStatusForm,
     DunsNumberForm,
     EditContactInformationForm,
@@ -465,14 +464,14 @@ def become_a_supplier():
     ), 200
 
 
-@main.route('/create', methods=['GET'])
+@main.route('/create/start', methods=['GET'])
 def create_new_supplier():
     return render_template(
         "suppliers/create_new_supplier.html"
     ), 200
 
 
-@main.route('/duns-number', methods=['GET'])
+@main.route('/create/duns-number', methods=['GET'])
 def duns_number():
     form = DunsNumberForm()
 
@@ -485,7 +484,7 @@ def duns_number():
     ), 200
 
 
-@main.route('/duns-number', methods=['POST'])
+@main.route('/create/duns-number', methods=['POST'])
 def submit_duns_number():
     form = DunsNumberForm()
 
@@ -504,7 +503,7 @@ def submit_duns_number():
                 form=form
             ), 400
         session[form.duns_number.name] = form.duns_number.data
-        return redirect(url_for(".company_name"))
+        return redirect(url_for(".company_details"))
     else:
         current_app.logger.warning(
             "suppliercreate.fail: duns:{duns} {duns_errors}",
@@ -517,42 +516,34 @@ def submit_duns_number():
         ), 400
 
 
-@main.route('/company-name', methods=['GET'])
-def company_name():
-    form = CompanyNameForm()
+@main.route('/create/company-details', methods=['GET', 'POST'])
+def company_details():
+    form = CompanyPublicContactInformationForm()
+
+    if request.method == "POST":
+        if form.validate_on_submit():
+            session[form.company_name.name] = form.company_name.data
+            session[form.email_address.name] = form.email_address.data
+            session[form.phone_number.name] = form.phone_number.data
+            session[form.contact_name.name] = form.contact_name.data
+            return redirect(url_for(".create_your_account"))
+        else:
+            current_app.logger.warning(
+                "suppliercreate.fail: duns:{duns} {form_errors}",
+                extra={
+                    'duns': session.get('duns_number'),
+                    'form_errors': ",".join(chain.from_iterable(form.errors.values()))})
+            return render_template(
+                "suppliers/company_details.html",
+                form=form,
+                errors=[{'question': form[key].label, 'input_name': form[key].name} for key in form.errors]
+            ), 400
 
     if form.company_name.name in session:
         form.company_name.data = session[form.company_name.name]
 
-    return render_template(
-        "suppliers/company_name.html",
-        form=form
-    ), 200
-
-
-@main.route('/company-name', methods=['POST'])
-def submit_company_name():
-    form = CompanyNameForm()
-
-    if form.validate_on_submit():
-        session[form.company_name.name] = form.company_name.data
-        return redirect(url_for(".company_contact_details"))
-    else:
-        current_app.logger.warning(
-            "suppliercreate.fail: duns:{duns} company_name:{company_name} {duns_errors}",
-            extra={
-                'duns': session.get('duns_number'),
-                'company_name': session.get('company_name'),
-                'duns_errors': ",".join(chain.from_iterable(form.errors.values()))})
-        return render_template(
-            "suppliers/company_name.html",
-            form=form
-        ), 400
-
-
-@main.route('/company-contact-details', methods=['GET'])
-def company_contact_details():
-    form = CompanyContactDetailsForm()
+    if form.contact_name.name in session:
+        form.contact_name.data = session[form.contact_name.name]
 
     if form.email_address.name in session:
         form.email_address.data = session[form.email_address.name]
@@ -560,38 +551,13 @@ def company_contact_details():
     if form.phone_number.name in session:
         form.phone_number.data = session[form.phone_number.name]
 
-    if form.contact_name.name in session:
-        form.contact_name.data = session[form.contact_name.name]
-
     return render_template(
-        "suppliers/company_contact_details.html",
-        form=form
+        "suppliers/company_details.html",
+        form=form,
     ), 200
 
 
-@main.route('/company-contact-details', methods=['POST'])
-def submit_company_contact_details():
-    form = CompanyContactDetailsForm()
-
-    if form.validate_on_submit():
-        session[form.email_address.name] = form.email_address.data
-        session[form.phone_number.name] = form.phone_number.data
-        session[form.contact_name.name] = form.contact_name.data
-        return redirect(url_for(".create_your_account"))
-    else:
-        current_app.logger.warning(
-            "suppliercreate.fail: duns:{duns} company_name:{company_name} {duns_errors}",
-            extra={
-                'duns': session.get('duns_number'),
-                'company_name': session.get('company_name'),
-                'duns_errors': ",".join(chain.from_iterable(form.errors.values()))})
-        return render_template(
-            "suppliers/company_contact_details.html",
-            form=form
-        ), 400
-
-
-@main.route('/create-your-account', methods=['GET'])
+@main.route('/create/account', methods=['GET'])
 def create_your_account():
     current_app.logger.info(
         "suppliercreate: get create-your-account supplier_id:{}".format(
@@ -605,7 +571,7 @@ def create_your_account():
     ), 200
 
 
-@main.route('/create-your-account', methods=['POST'])
+@main.route('/create/account', methods=['POST'])
 def submit_create_your_account():
     current_app.logger.info(
         "suppliercreate: post create-your-account supplier_id:{}".format(
@@ -623,14 +589,14 @@ def submit_create_your_account():
         ), 400
 
 
-@main.route('/company-summary', methods=['GET'])
+@main.route('/create/company-summary', methods=['GET'])
 def company_summary():
     return render_template(
         "suppliers/company_summary.html"
     ), 200
 
 
-@main.route('/company-summary', methods=['POST'])
+@main.route('/create/company-summary', methods=['POST'])
 def submit_company_summary():
 
     required_fields = [
@@ -686,7 +652,7 @@ def submit_company_summary():
         ), 400
 
 
-@main.route('/create-your-account-complete', methods=['GET'])
+@main.route('/create/complete', methods=['GET'])
 def create_your_account_complete():
     if 'email_sent_to' in session:
         email_address = session['email_sent_to']
