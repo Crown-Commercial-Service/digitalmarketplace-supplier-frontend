@@ -12,7 +12,7 @@ class TestApplication(BaseApplicationTest):
         super(TestApplication, self).setup_method(method)
 
     def test_response_headers(self):
-        response = self.client.get('/suppliers/create')
+        response = self.client.get('/suppliers/create/start')
 
         assert response.status_code == 200
         assert (
@@ -50,12 +50,12 @@ class TestApplication(BaseApplicationTest):
             assert "Try again later." in res.get_data(as_text=True)
 
     def test_header_xframeoptions_set_to_deny(self):
-        res = self.client.get('/suppliers/create')
+        res = self.client.get('/suppliers/create/start')
         assert res.status_code == 200
         assert 'DENY', res.headers['X-Frame-Options']
 
     def test_should_use_local_cookie_page_on_cookie_message(self):
-        res = self.client.get('/suppliers/create')
+        res = self.client.get('/suppliers/create/start')
         assert res.status_code == 200
         assert '<p>GOV.UK uses cookies to make the site simpler. <a href="/cookies">Find ' \
             'out more about cookies</a></p>' in res.get_data(as_text=True)

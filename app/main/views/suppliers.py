@@ -464,14 +464,14 @@ def become_a_supplier():
     ), 200
 
 
-@main.route('/create', methods=['GET'])
+@main.route('/create/start', methods=['GET'])
 def create_new_supplier():
     return render_template(
         "suppliers/create_new_supplier.html"
     ), 200
 
 
-@main.route('/duns-number', methods=['GET'])
+@main.route('/create/duns-number', methods=['GET'])
 def duns_number():
     form = DunsNumberForm()
 
@@ -484,7 +484,7 @@ def duns_number():
     ), 200
 
 
-@main.route('/duns-number', methods=['POST'])
+@main.route('/create/duns-number', methods=['POST'])
 def submit_duns_number():
     form = DunsNumberForm()
 
@@ -516,7 +516,7 @@ def submit_duns_number():
         ), 400
 
 
-@main.route('/company-details', methods=['GET', 'POST'])
+@main.route('/create/company-details', methods=['GET', 'POST'])
 def company_details():
     form = CompanyPublicContactInformationForm()
 
@@ -529,11 +529,10 @@ def company_details():
             return redirect(url_for(".create_your_account"))
         else:
             current_app.logger.warning(
-                "suppliercreate.fail: duns:{duns} company_name:{company_name} {form_errors}",
+                "suppliercreate.fail: duns:{duns} {form_errors}",
                 extra={
                     'duns': session.get('duns_number'),
-                    'company_name': session.get('company_name'),
-                    'duns_errors': ",".join(chain.from_iterable(form.errors.values()))})
+                    'form_errors': ",".join(chain.from_iterable(form.errors.values()))})
             return render_template(
                 "suppliers/company_details.html",
                 form=form,
@@ -558,7 +557,7 @@ def company_details():
     ), 200
 
 
-@main.route('/create-your-account', methods=['GET'])
+@main.route('/create/account', methods=['GET'])
 def create_your_account():
     current_app.logger.info(
         "suppliercreate: get create-your-account supplier_id:{}".format(
@@ -572,7 +571,7 @@ def create_your_account():
     ), 200
 
 
-@main.route('/create-your-account', methods=['POST'])
+@main.route('/create/account', methods=['POST'])
 def submit_create_your_account():
     current_app.logger.info(
         "suppliercreate: post create-your-account supplier_id:{}".format(
@@ -590,14 +589,14 @@ def submit_create_your_account():
         ), 400
 
 
-@main.route('/company-summary', methods=['GET'])
+@main.route('/create/company-summary', methods=['GET'])
 def company_summary():
     return render_template(
         "suppliers/company_summary.html"
     ), 200
 
 
-@main.route('/company-summary', methods=['POST'])
+@main.route('/create/company-summary', methods=['POST'])
 def submit_company_summary():
 
     required_fields = [
@@ -653,7 +652,7 @@ def submit_company_summary():
         ), 400
 
 
-@main.route('/create-your-account-complete', methods=['GET'])
+@main.route('/create/complete', methods=['GET'])
 def create_your_account_complete():
     if 'email_sent_to' in session:
         email_address = session['email_sent_to']

@@ -1060,7 +1060,7 @@ class TestSupplierDashboardLogin(BaseApplicationTest):
     def test_custom_dimension_supplier_role_and_organisation_size_not_set_if_supplier_logged_out(self):
         with self.app.test_client():
             # View that does not require login
-            res = self.client.get('/suppliers/create')
+            res = self.client.get('/suppliers/create/start')
 
             doc = html.fromstring(res.get_data(as_text=True))
             assert len(doc.xpath('//meta[@data-id="10"]')) == 0
@@ -1436,7 +1436,7 @@ class TestCreateSupplier(BaseApplicationTest):
         2) Non-numerics
         3) Numerics shorter/longer than 9 characters"""
         res = self.client.post(
-            "/suppliers/duns-number",
+            "/suppliers/create/duns-number",
             data={'duns_number': duns_number} if duns_number else {}
         )
 
@@ -1454,7 +1454,7 @@ class TestCreateSupplier(BaseApplicationTest):
             ]
         }
         res = self.client.post(
-            "/suppliers/duns-number",
+            "/suppliers/create/duns-number",
             data={
                 'duns_number': "123456789"
             }
@@ -1468,32 +1468,32 @@ class TestCreateSupplier(BaseApplicationTest):
     def test_should_allow_nine_digit_duns_number(self, data_api_client):
         data_api_client.find_suppliers.return_value = {"suppliers": []}
         res = self.client.post(
-            "/suppliers/duns-number",
+            "/suppliers/create/duns-number",
             data={
                 'duns_number': "123456789"
             }
         )
         assert res.status_code == 302
-        assert res.location == 'http://localhost/suppliers/company-details'
+        assert res.location == 'http://localhost/suppliers/create/company-details'
 
     @mock.patch("app.main.suppliers.data_api_client")
     def test_should_allow_duns_numbers_that_start_with_zero(self, data_api_client):
         data_api_client.find_suppliers.return_value = {"suppliers": []}
         res = self.client.post(
-            "/suppliers/duns-number",
+            "/suppliers/create/duns-number",
             data={
                 'duns_number': "012345678"
             }
         )
         assert res.status_code == 302
-        assert res.location == 'http://localhost/suppliers/company-details'
+        assert res.location == 'http://localhost/suppliers/create/company-details'
 
     @mock.patch("app.main.suppliers.data_api_client")
     def test_should_strip_whitespace_surrounding_duns_number_field(self, data_api_client):
         data_api_client.find_suppliers.return_value = {"suppliers": []}
         with self.client as c:
             c.post(
-                "/suppliers/duns-number",
+                "/suppliers/create/duns-number",
                 data={
                     'duns_number': "  012345678  "
                 }
@@ -1503,7 +1503,7 @@ class TestCreateSupplier(BaseApplicationTest):
 
     def test_should_allow_valid_company_contact_details(self):
         res = self.client.post(
-            "/suppliers/company-details",
+            "/suppliers/create/company-details",
             data={
                 'company_name': "My Company",
                 'contact_name': "Name",
@@ -1512,7 +1512,7 @@ class TestCreateSupplier(BaseApplicationTest):
             }
         )
         assert res.status_code == 302
-        assert res.location == 'http://localhost/suppliers/create-your-account'
+        assert res.location == 'http://localhost/suppliers/create/account'
 
     def test_should_strip_whitespace_surrounding_contact_details_fields(self):
         contact_details = {
@@ -1524,7 +1524,7 @@ class TestCreateSupplier(BaseApplicationTest):
 
         with self.client as c:
             c.post(
-                "/suppliers/company-details",
+                "/suppliers/create/company-details",
                 data=contact_details
             )
 
@@ -1534,7 +1534,7 @@ class TestCreateSupplier(BaseApplicationTest):
 
     def test_should_not_allow_contact_details_without_company_name(self):
         res = self.client.post(
-            "/suppliers/company-details",
+            "/suppliers/create/company-details",
             data={
                 'contact_name': "Name",
                 'email_address': "name@email.com",
@@ -1547,7 +1547,7 @@ class TestCreateSupplier(BaseApplicationTest):
     def test_should_not_allow_contact_details_with_too_long_company_name(self):
         twofiftysix = "a" * 256
         res = self.client.post(
-            "/suppliers/company-details",
+            "/suppliers/create/company-details",
             data={
                 'company_name': twofiftysix,
                 'contact_name': "Name",
@@ -1560,7 +1560,7 @@ class TestCreateSupplier(BaseApplicationTest):
 
     def test_should_not_allow_contact_details_without_contact_name(self):
         res = self.client.post(
-            "/suppliers/company-details",
+            "/suppliers/create/company-details",
             data={
                 'company_name': "My Company",
                 'email_address': "name@email.com",
@@ -1573,7 +1573,7 @@ class TestCreateSupplier(BaseApplicationTest):
     def test_should_not_allow_contact_details_with_too_long_contact_name(self):
         twofiftysix = "a" * 256
         res = self.client.post(
-            "/suppliers/company-details",
+            "/suppliers/create/company-details",
             data={
                 'company_name': "My Company",
                 'contact_name': twofiftysix,
@@ -1586,7 +1586,7 @@ class TestCreateSupplier(BaseApplicationTest):
 
     def test_should_not_allow_contact_details_without_email(self):
         res = self.client.post(
-            "/suppliers/company-details",
+            "/suppliers/create/company-details",
             data={
                 'company_name': "My Company",
                 'contact_name': "Name",
@@ -1598,7 +1598,7 @@ class TestCreateSupplier(BaseApplicationTest):
 
     def test_should_not_allow_contact_details_with_invalid_email(self):
         res = self.client.post(
-            "/suppliers/company-details",
+            "/suppliers/create/company-details",
             data={
                 'company_name': "My Company",
                 'contact_name': "Name",
@@ -1611,7 +1611,7 @@ class TestCreateSupplier(BaseApplicationTest):
 
     def test_should_not_allow_contact_details_without_phone_number(self):
         res = self.client.post(
-            "/suppliers/company-details",
+            "/suppliers/create/company-details",
             data={
                 'company_name': "My Company",
                 'contact_name': "Name",
@@ -1621,10 +1621,10 @@ class TestCreateSupplier(BaseApplicationTest):
         assert res.status_code == 400
         assert "You must provide a phone number." in res.get_data(as_text=True)
 
-    def test_should_not_allow_contact_details_with_invalid_phone_number(self):
+    def test_should_not_allow_contact_details_with_too_long_phone_number(self):
         twentyone = "a" * 21
         res = self.client.post(
-            "/suppliers/company-details",
+            "/suppliers/create/company-details",
             data={
                 'company_name': "My Company",
                 'contact_name': "Name",
@@ -1637,7 +1637,7 @@ class TestCreateSupplier(BaseApplicationTest):
 
     def test_should_show_multiple_errors(self):
         res = self.client.post(
-            "/suppliers/company-details",
+            "/suppliers/create/company-details",
             data={}
         )
 
@@ -1650,7 +1650,7 @@ class TestCreateSupplier(BaseApplicationTest):
     def test_should_populate_duns_from_session(self):
         with self.client.session_transaction() as sess:
             sess['duns_number'] = "999"
-        res = self.client.get("/suppliers/duns-number")
+        res = self.client.get("/suppliers/create/duns-number")
         assert res.status_code == 200
         assert '<inputtype="text"name="duns_number"id="input-duns_number"class="text-box"value="999"' \
             in self.strip_all_whitespace(res.get_data(as_text=True))
@@ -1658,7 +1658,7 @@ class TestCreateSupplier(BaseApplicationTest):
     def test_should_populate_company_name_from_session(self):
         with self.client.session_transaction() as sess:
             sess['company_name'] = "Name"
-        res = self.client.get("/suppliers/company-details")
+        res = self.client.get("/suppliers/create/company-details")
         assert res.status_code == 200
         assert '<inputtype="text"name="company_name"id="input-company_name"class="text-box"value="Name"' \
             in self.strip_all_whitespace(res.get_data(as_text=True))
@@ -1668,7 +1668,7 @@ class TestCreateSupplier(BaseApplicationTest):
             sess['email_address'] = "email_address"
             sess['contact_name'] = "contact_name"
             sess['phone_number'] = "phone_number"
-        res = self.client.get("/suppliers/company-details")
+        res = self.client.get("/suppliers/create/company-details")
         assert res.status_code == 200
         stripped_page = self.strip_all_whitespace(res.get_data(as_text=True))
         assert '<inputtype="text"name="email_address"id="input-email_address"class="text-box"value="email_address"' \
@@ -1681,7 +1681,7 @@ class TestCreateSupplier(BaseApplicationTest):
             in stripped_page
 
     def test_should_be_an_error_to_be_submit_company_with_incomplete_session(self):
-        res = self.client.post("/suppliers/company-summary")
+        res = self.client.post("/suppliers/create/company-summary")
         assert res.status_code == 400
         assert 'You must answer all the questions' in res.get_data(as_text=True)
 
@@ -1698,9 +1698,9 @@ class TestCreateSupplier(BaseApplicationTest):
                 sess['account_email_address'] = "valid@email.com"
 
             data_api_client.create_supplier.return_value = self.supplier()
-            res = c.post("/suppliers/company-summary")
+            res = c.post("/suppliers/create/company-summary")
             assert res.status_code == 302
-            assert res.location == "http://localhost/suppliers/create-your-account-complete"
+            assert res.location == "http://localhost/suppliers/create/complete"
             data_api_client.create_supplier.assert_called_once_with({
                 "contactInformation": [{
                     "email": "email_address",
@@ -1731,13 +1731,13 @@ class TestCreateSupplier(BaseApplicationTest):
 
         data_api_client.create_supplier.return_value = self.supplier()
         res = self.client.post(
-            "/suppliers/company-summary",
+            "/suppliers/create/company-summary",
             data={
                 'email_address': 'valid@email.com'
             }
         )
         assert res.status_code == 302
-        assert res.location == "http://localhost/suppliers/create-your-account-complete"
+        assert res.location == "http://localhost/suppliers/create/complete"
         data_api_client.create_supplier.assert_called_once_with({
             "contactInformation": [{
                 "email": "email_address",
@@ -1757,7 +1757,7 @@ class TestCreateSupplier(BaseApplicationTest):
             sess['duns_number'] = "duns_number"
 
         data_api_client.create_supplier.return_value = True
-        res = self.client.post("/suppliers/company-summary")
+        res = self.client.post("/suppliers/create/company-summary")
         assert res.status_code == 400
         assert data_api_client.create_supplier.called is False
         assert 'You must answer all the questions' in res.get_data(as_text=True)
@@ -1773,7 +1773,7 @@ class TestCreateSupplier(BaseApplicationTest):
             sess['account_email_address'] = "account_email_address"
 
         data_api_client.create_supplier.side_effect = HTTPError("gone bad")
-        res = self.client.post("/suppliers/company-summary")
+        res = self.client.post("/suppliers/create/company-summary")
         assert res.status_code == 503
 
     def test_should_require_an_email_address(self):
@@ -1781,7 +1781,7 @@ class TestCreateSupplier(BaseApplicationTest):
             sess['email_company_name'] = "company_name"
             sess['email_supplier_id'] = 1234
         res = self.client.post(
-            "/suppliers/create-your-account",
+            "/suppliers/create/account",
             data={}
         )
         assert res.status_code == 400
@@ -1792,7 +1792,7 @@ class TestCreateSupplier(BaseApplicationTest):
             sess['email_company_name'] = "company_name"
             sess['email_supplier_id'] = 1234
         res = self.client.post(
-            "/suppliers/create-your-account",
+            "/suppliers/create/account",
             data={
                 'email_address': "bademail"
             }
@@ -1814,7 +1814,7 @@ class TestCreateSupplier(BaseApplicationTest):
 
             data_api_client.create_supplier.return_value = self.supplier()
 
-            res = c.post("/suppliers/company-summary")
+            res = c.post("/suppliers/create/company-summary")
 
             send_user_account_email.assert_called_once_with(
                 'supplier',
@@ -1827,7 +1827,7 @@ class TestCreateSupplier(BaseApplicationTest):
             )
 
             assert res.status_code == 302
-            assert res.location == 'http://localhost/suppliers/create-your-account-complete'
+            assert res.location == 'http://localhost/suppliers/create/complete'
 
     @mock.patch("app.main.suppliers.data_api_client")
     @mock.patch('dmutils.email.user_account_email.DMNotifyClient')
@@ -1843,14 +1843,14 @@ class TestCreateSupplier(BaseApplicationTest):
 
             data_api_client.create_supplier.return_value = self.supplier()
 
-            c.post("/suppliers/company-summary")
+            c.post("/suppliers/create/company-summary")
 
             assert session['email_sent_to'] == 'valid@email.com'
 
     @mock.patch("app.main.suppliers.send_user_account_email")
     def test_should_be_an_error_if_incomplete_session_on_account_creation(self, send_user_account_email):
         res = self.client.post(
-            "/suppliers/company-summary"
+            "/suppliers/create/company-summary"
         )
 
         assert send_user_account_email.called is False
@@ -1862,7 +1862,7 @@ class TestCreateSupplier(BaseApplicationTest):
                 sess['email_sent_to'] = "my@email.com"
                 sess['other_stuff'] = True
 
-            res = c.get("/suppliers/create-your-account-complete")
+            res = c.get("/suppliers/create/complete")
 
             assert res.status_code == 200
             assert 'An email has been sent to my@email.com' in res.get_data(as_text=True)
@@ -1873,12 +1873,12 @@ class TestCreateSupplier(BaseApplicationTest):
             with c.session_transaction() as sess:
                 sess['email_sent_to'] = 'my-email@example.com'
 
-            res = c.get('/suppliers/create-your-account-complete')
+            res = c.get('/suppliers/create/complete')
 
             assert res.status_code == 200
             assert 'An email has been sent to my-email@example.com' in res.get_data(as_text=True)
 
-            res = c.get('/suppliers/create-your-account-complete')
+            res = c.get('/suppliers/create/complete')
 
             assert res.status_code == 200
             assert 'An email has been sent to my-email@example.com' in res.get_data(as_text=True)
