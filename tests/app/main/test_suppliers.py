@@ -1166,19 +1166,52 @@ class TestSupplierUpdate(BaseApplicationTest):
 
         status, response = self.post_supplier_edit({
             "description": "New Description",
-            "contactName": "Supplier Person",
-            "phoneNumber": "0800123123",
         })
-
         assert status == 400
-        assert 'You must provide an email address' in response
+
+        doc = html.fromstring(response)
+
+        for content in [
+            ("validation-masthead-link", "Contact name"),
+            ("validation-masthead-link", "Contact email address"),
+            ("validation-masthead-link", "Contact phone number"),
+            ("validation-message", "You must provide a contact name."),
+            ("validation-message", "You must provide an email address."),
+            ("validation-message", "You must provide a phone number."),
+        ]:
+            assert doc.xpath(
+                "//*[@class=$t][normalize-space(string())=$c]",
+                t=content[0],
+                c=content[1],
+            )
 
         assert data_api_client.update_supplier.called is False
         assert data_api_client.update_contact_information.called is False
 
         assert "New Description" in response
-        assert 'value="Supplier Person"' in response
-        assert 'value="0800123123"' in response
+
+    def test_phone_number_above_character_length(self, data_api_client):
+        self.login()
+
+        status, response = self.post_supplier_edit(
+            phoneNumber="0" * 21
+        )
+        assert status == 400
+
+        doc = html.fromstring(response)
+
+        for content in [
+            ("validation-masthead-link", "Contact phone number"),
+            ("validation-message", "You must provide a phone number under 20 characters."),
+        ]:
+            assert doc.xpath(
+                "//*[@class=$t][normalize-space(string())=$c]",
+                t=content[0],
+                c=content[1],
+            )
+
+        assert data_api_client.update_supplier.called is False
+        assert data_api_client.update_contact_information.called is False
 
     def test_description_below_word_length(self, data_api_client):
         self.login()

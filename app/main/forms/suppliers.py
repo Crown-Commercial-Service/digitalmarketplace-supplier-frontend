@@ -29,12 +29,15 @@ class EditSupplierForm(Form):
 
 class EditContactInformationForm(Form):
     contactName = StripWhitespaceStringField('Contact name', validators=[
-        InputRequired(message="You must provide a contact name"),
+        InputRequired(message="You must provide a contact name."),
     ])
     email = EmailField('Contact email address', validators=[
-        InputRequired(message="You must provide an email address"),
+        InputRequired(message="You must provide an email address."),
     ])
-    phoneNumber = StripWhitespaceStringField('Contact phone number')
+    phoneNumber = StripWhitespaceStringField('Contact phone number', validators=[
+        InputRequired(message="You must provide a phone number."),
+        Length(max=20, message="You must provide a phone number under 20 characters.")
+    ])
 
 
 class EditRegisteredAddressForm(Form):
