@@ -909,6 +909,50 @@ class TestSupplierDetails(BaseApplicationTest):
             optional_hint_text = (document.xpath("//span[text()='Summary']/following::td[2]/span")[0].text).strip()
             assert bool(optional_hint_text) == is_hint_visible
 
+    @pytest.mark.parametrize(
+        "framework_slug,framework_name,link_address",
+        [
+            (
+                "digital-outcomes-and-specialists-2",
+                "Digital Outcomes and Specialists 2",
+                "/suppliers/frameworks/digital-outcomes-and-specialists-2"
+            ),
+            ("g-cloud-9", "G-Cloud 9", "/suppliers/frameworks/g-cloud-9")
+        ]
+    )
+    def test_back_to_application_link_is_visible_if_currently_applying_to_in_session(
+        self, data_api_client, framework_slug, framework_name, link_address
+    ):
+        data_api_client.get_supplier.return_value = get_supplier()
+        data_api_client.get_framework.return_value = {"frameworks": {"name": framework_name, "slug": framework_slug}}
+
+        with self.app.test_client():
+            self.login()
+
+            with self.client.session_transaction() as session:
+                session["currently_applying_to"] = framework_slug
+
+            response = self.client.get("/suppliers/details")
+            assert response.status_code == 200
+
+            page_html = response.get_data(as_text=True)
+            document = html.fromstring(page_html)
+            return_link = (document.xpath("//a[text()='Return to your {} application']".format(framework_name)))
+            assert return_link
+            assert return_link[0].values()[0] == link_address
+
+    def test_back_to_application_link_not_visible_if_currently_applying_to_not_in_session(self, data_api_client):
+        data_api_client.get_supplier.return_value = get_supplier()
+        with self.app.test_client():
+            self.login()
+
+            response = self.client.get("/suppliers/details")
+            assert response.status_code == 200
+
+            page_html = response.get_data(as_text=True)
+            document = html.fromstring(page_html)
+            assert "Return to your" not in document.text_content()
+
 
 @mock.patch("app.main.views.suppliers.data_api_client", autospec=True)
 @mock.patch("app.main.views.suppliers.get_current_suppliers_users", autospec=True)

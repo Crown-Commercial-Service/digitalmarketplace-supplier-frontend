@@ -51,6 +51,9 @@ CLARIFICATION_QUESTION_NAME = 'clarification_question'
 @login_required
 def framework_dashboard(framework_slug):
     framework = get_framework_or_404(data_api_client, framework_slug)
+    if framework["status"] == "open":
+        session["currently_applying_to"] = framework_slug
+
     if request.method == 'POST':
         register_interest_in_framework(data_api_client, framework_slug)
         supplier_users = data_api_client.find_users(supplier_id=current_user.supplier_id)

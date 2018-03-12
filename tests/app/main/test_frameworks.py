@@ -1624,6 +1624,43 @@ class TestFrameworksDashboard(BaseApplicationTest):
         assert len(use_of_data) == 1
         assert 'The service information you provide here:' in use_of_data[0].text_content()
 
+    def test_visit_to_framework_dashboard_saved_in_session_if_framework_open(self, data_api_client, s3):
+        self.login()
+
+        data_api_client.get_framework.return_value = self.framework(
+            slug="g-cloud-9",
+            name="G-Cloud 9",
+            status="open"
+        )
+        data_api_client.get_supplier_framework_info.return_value = self.supplier_framework()
+
+        response = self.client.get("/suppliers/frameworks/g-cloud-9")
+
+        assert response.status_code == 200
+        with self.client.session_transaction() as session:
+            assert session["currently_applying_to"] == "g-cloud-9"
+
+    @pytest.mark.parametrize(
+        "framework_status",
+        ["coming", "pending", "standstill", "live", "expired"]
+    )
+    def test_visit_to_framework_dashboard_not_saved_in_session_if_framework_not_open(
+        self, data_api_client, s3, framework_status
+    ):
+        self.login()
+
+        data_api_client.get_framework.return_value = self.framework(
+            slug="g-cloud-9",
+            name="G-Cloud 9",
+            status=framework_status
+        )
+        data_api_client.get_supplier_framework_info.return_value = self.supplier_framework()
+
+        self.client.get("/suppliers/frameworks/g-cloud-9")
+
+        with self.client.session_transaction() as session:
+            assert "currently_applying_to" not in session
+
 
 @mock.patch('dmutils.s3.S3')
 @mock.patch('app.main.views.frameworks.data_api_client', autospec=True)
