@@ -484,7 +484,7 @@ def duns_number():
         form.duns_number.data = session[form.duns_number.name]
 
     return render_template(
-        "suppliers/duns_number.html",
+        "suppliers/create_duns_number.html",
         form=form
     ), 200
 
@@ -504,7 +504,7 @@ def submit_duns_number():
                     'duns': form.duns_number.data,
                     'duns_errors': ",".join(form.duns_number.errors)})
             return render_template(
-                "suppliers/duns_number.html",
+                "suppliers/create_duns_number.html",
                 form=form
             ), 400
         session[form.duns_number.name] = form.duns_number.data
@@ -516,7 +516,7 @@ def submit_duns_number():
                 'duns': form.duns_number.data,
                 'duns_errors': ",".join(form.duns_number.errors)})
         return render_template(
-            "suppliers/duns_number.html",
+            "suppliers/create_duns_number.html",
             form=form
         ), 400
 
@@ -539,7 +539,7 @@ def company_details():
                     'duns': session.get('duns_number'),
                     'form_errors': ",".join(chain.from_iterable(form.errors.values()))})
             return render_template(
-                "suppliers/company_details.html",
+                "suppliers/create_company_details.html",
                 form=form,
                 errors=[{'question': form[key].label, 'input_name': form[key].name} for key in form.errors]
             ), 400
@@ -557,7 +557,7 @@ def company_details():
         form.phone_number.data = session[form.phone_number.name]
 
     return render_template(
-        "suppliers/company_details.html",
+        "suppliers/create_company_details.html",
         form=form,
     ), 200
 
@@ -597,7 +597,7 @@ def submit_create_your_account():
 @main.route('/create/company-summary', methods=['GET'])
 def company_summary():
     return render_template(
-        "suppliers/company_summary.html"
+        "suppliers/create_company_summary.html"
     ), 200
 
 
@@ -652,7 +652,7 @@ def submit_company_summary():
         return redirect(url_for('.create_your_account_complete'), 302)
     else:
         return render_template(
-            "suppliers/company_summary.html",
+            "suppliers/create_company_summary.html",
             missing_fields=missing_fields
         ), 400
 
