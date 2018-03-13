@@ -27,8 +27,12 @@ from ..forms.suppliers import (
     VatNumberForm,
 )
 from ..helpers.frameworks import get_frameworks_by_status, get_frameworks_closed_and_open_for_applications
-from ..helpers.suppliers import get_country_name_from_country_code, COUNTRY_TUPLE, \
-    parse_form_errors_for_validation_masthead
+from ..helpers.suppliers import (
+    COUNTRY_TUPLE,
+    get_country_name_from_country_code,
+    parse_form_errors_for_validation_masthead,
+    supplier_company_details_are_complete,
+)
 from ..helpers import login_required
 from .users import get_current_suppliers_users
 
@@ -108,7 +112,36 @@ def supplier_details():
         supplier=supplier,
         country_name=country_name,
         currently_applying_to=framework,
+        company_details_complete=supplier_company_details_are_complete(supplier),
     ), 200
+
+
+@main.route('/details', methods=['POST'])
+@login_required
+def confirm_supplier_details():
+    try:
+        supplier = data_api_client.get_supplier(
+            current_user.supplier_id
+        )['suppliers']
+    except APIError as e:
+        abort(e.status_code)
+
+    if not supplier_company_details_are_complete(supplier):
+        abort(400, "Some company details are not complete")
+    else:
+        try:
+            data_api_client.update_supplier(
+                supplier_id=current_user.supplier_id,
+                supplier={"companyDetailsConfirmed": True},
+                user=current_user.email_address
+            )
+        except APIError as e:
+            abort(e.status_code)
+
+    if "currently_applying_to" in session:
+        return redirect(url_for(".framework_dashboard", framework_slug=session["currently_applying_to"]))
+    else:
+        return redirect(url_for(".supplier_details"))
 
 
 @main.route('/registered-address/edit', methods=['GET', 'POST'])

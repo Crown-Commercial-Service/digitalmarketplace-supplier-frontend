@@ -21,6 +21,8 @@
 
 
 {% block main_content %}
+<div class='grid-row'>
+  <div class='column-one-whole padding-bottom-small'>
 {%
   with
     heading = "Company details",
@@ -170,16 +172,41 @@
 
 {% endcall %}
 
-{% if currently_applying_to %}
-  <p>You must complete your company details to make an application.</p>
-  {%
-    with
-    url = url_for(".framework_dashboard", framework_slug=currently_applying_to.slug),
-    text = "Return to your {} application".format(currently_applying_to.name),
-    bigger = false
-  %}
-    {% include "toolkit/secondary-action-link.html" %}
-  {% endwith %}
-{% endif %}
+  </div>
 
+  {% if not supplier.companyDetailsConfirmed %}
+    <div class='column-two-thirds'>
+      {% if company_details_complete  %}
+        <form method="POST" action="{{ url_for('.confirm_supplier_details') }}">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+          <p>Once you confirm your information you'll need to contact support to change your:</p>
+          <ul class="list-bullet">
+            <li>registered company name</li>
+            <li>registration number</li>
+            <li>VAT number</li>
+          </ul>
+
+          {% with type = "save", label = "Save and confirm" %}
+            {% include "toolkit/button.html" %}
+          {% endwith %}
+        </form>
+      {% elif currently_applying_to %}
+        <p>You must complete your company details to make an application.</p>
+      {% endif %}
+    </div>
+  {% endif %}
+
+    <div class='column-two-thirds'>
+  {% if currently_applying_to %}
+    {%
+       with
+       url = url_for(".framework_dashboard", framework_slug=currently_applying_to.slug),
+       text = "Return to your {} application".format(currently_applying_to.name),
+       bigger = false
+     %}
+       {% include "toolkit/secondary-action-link.html" %}
+    {% endwith %}
+  {% endif %}
+    </div>
+</div>
 {% endblock %}
