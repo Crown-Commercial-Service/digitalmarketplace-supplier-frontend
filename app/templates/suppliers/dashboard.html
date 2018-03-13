@@ -27,12 +27,6 @@
     {% endfor %}
   {% endwith %}
 
-  {% include 'suppliers/_frameworks_coming.html' %}
-  {% include 'suppliers/_frameworks_open.html' %}
-  {% include 'suppliers/_frameworks_pending.html' %}
-  {% include 'suppliers/_frameworks_standstill.html' %}
-
-
   {% if 'account-created' in get_flashed_messages(category_filter=["flag"]) %}
   <div class="grid-row" data-analytics="trackPageView" data-url="/suppliers?account-created=true">
   {% else %}
@@ -47,10 +41,13 @@
       {% endwith %}
     </div>
   </div>
-  <h2 class="visually-hidden">Your services</h2>
+
   <div class="grid-row">
-    <div class="column-two-thirds dmspeak">
-      {% include 'suppliers/_frameworks_live.html' %}
+    <div class="column-two-thirds">
+    {% include 'suppliers/_frameworks_coming.html' %}
+    {% include 'suppliers/_frameworks_open.html' %}
+    {% include 'suppliers/_frameworks_pending.html' %}
+    {% include 'suppliers/_frameworks_standstill.html' %}
     </div>
     <div class="column-one-third dmspeak">
       <h2 class="heading-xmedium">Your company</h2>
@@ -58,6 +55,13 @@
         <a href="{{ url_for('.supplier_details') }}">Supplier details</a><br/>
         <a href="{{ url_for('.list_users') }}">Contributors</a>
       </p>
+    </div>
+  </div>
+
+  <h2 class="visually-hidden">Your services</h2>
+  <div class="grid-row">
+    <div class="column-two-thirds dmspeak">
+      {% include 'suppliers/_frameworks_live.html' %}
     </div>
   </div>
 {% endblock %}
