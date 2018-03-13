@@ -12,7 +12,8 @@ from dmapiclient.audit import AuditTypes
 from tests.app.helpers import BaseApplicationTest, assert_args_and_return
 from app.main.forms.suppliers import (
     CompanyOrganisationSizeForm,
-    CompanyTradingStatusForm
+    CompanyTradingStatusForm,
+    VatNumberForm
 )
 
 find_frameworks_return_value = {
@@ -65,6 +66,7 @@ def get_supplier(*args, **kwargs):
         "name": "Supplier Name",
         "description": "Supplier Description",
         "clients": ["Client One", "Client Two"],
+        "companyDetailsConfirmed": True,
         "contactInformation": [{
             "id": 2,
             "website": "supplier.dmdev",
@@ -2433,7 +2435,24 @@ class TestSupplierAddRegisteredCompanyName(BaseApplicationTest):
             res = self.client.post("/suppliers/registered-company-name/edit", data={'registered_company_name': "K-Inc"})
             assert res.status_code == 504
 
-    def test_get_shows_already_entered_page_and_api_not_called_update_if_data_already_entered(self, data_api_client):
+    @pytest.mark.parametrize('overwrite_supplier_data',
+                             ({'companyDetailsConfirmed': False}, {'registeredName': None})
+                             )
+    def test_get_shows_form_on_page_if_supplier_data_not_complete_and_confirmed(self, data_api_client,
+                                                                                overwrite_supplier_data):
+        with self.app.test_client():
+            self.login()
+            data_api_client.get_supplier.return_value = get_supplier(**overwrite_supplier_data)
+            res = self.client.get("/suppliers/registered-company-name/edit")
+            doc = html.fromstring(res.get_data(as_text=True))
+            page_heading = doc.xpath('//h1')
+
+            assert res.status_code == 200
+            assert page_heading[0].text.strip() == "Registered company name"
+            assert doc.xpath('//form[@action="/suppliers/registered-company-name/edit"]')
+            assert data_api_client.update_supplier.call_args_list == []
+
+    def test_get_shows_already_entered_page_and_api_not_called_update_if_data_already_confirmed(self, data_api_client):
         with self.app.test_client():
             self.login()
             data_api_client.get_supplier.side_effect = get_supplier
@@ -2445,7 +2464,7 @@ class TestSupplierAddRegisteredCompanyName(BaseApplicationTest):
             assert page_heading[0].text.strip() == "Change your registered company name"
             assert data_api_client.update_supplier.call_args_list == []
 
-    def test_post_shows_already_entered_page_and_api_not_called_if_data_already_entered(self, data_api_client):
+    def test_post_shows_already_entered_page_and_api_not_called_if_data_already_confirmed(self, data_api_client):
         with self.app.test_client():
             self.login()
             data_api_client.get_supplier.side_effect = get_supplier
@@ -2613,21 +2632,22 @@ class TestSupplierAddRegistrationNumber(BaseApplicationTest):
                  'companies_house_number': 'KK654321',
                  'other_company_registration_number': ''
                  },
-                {'companiesHouseNumber': 'KK654321'}
+                {'companiesHouseNumber': 'KK654321', 'otherCompanyRegistrationNumber': None}
             ),
             (
                 {'has_companies_house_number': 'Yes',
                  'companies_house_number': 'kk654321',
                  'other_company_registration_number': ''
                  },
-                {'companiesHouseNumber': 'KK654321'}
+                {'companiesHouseNumber': 'KK654321', 'otherCompanyRegistrationNumber': None}
             ),
             (
                 {'has_companies_house_number': 'No',
                  'companies_house_number': '',
                  'other_company_registration_number': 'KK987654321, my special registration number'
                  },
-                {'otherCompanyRegistrationNumber': 'KK987654321, my special registration number'}
+                {'companiesHouseNumber': None,
+                 'otherCompanyRegistrationNumber': 'KK987654321, my special registration number'}
             ),
         )
     )
@@ -2662,7 +2682,26 @@ class TestSupplierAddRegistrationNumber(BaseApplicationTest):
             res = self.client.post("/suppliers/registration-number/edit", data=valid_post_data)
             assert res.status_code == 504
 
-    def test_get_shows_already_entered_page_and_api_not_called_update_if_data_already_entered(self, data_api_client):
+    @pytest.mark.parametrize('overwrite_supplier_data',
+                             (
+                                 {'companyDetailsConfirmed': False},
+                                 {'companiesHouseNumber': None, 'otherCompanyRegistrationNumber': None},
+                             ))
+    def test_get_shows_form_on_page_if_supplier_data_not_complete_and_confirmed(self, data_api_client,
+                                                                                overwrite_supplier_data):
+        with self.app.test_client():
+            self.login()
+            data_api_client.get_supplier.return_value = get_supplier(**overwrite_supplier_data)
+            res = self.client.get("/suppliers/registration-number/edit")
+            doc = html.fromstring(res.get_data(as_text=True))
+            page_heading = doc.xpath('//h1')
+
+            assert res.status_code == 200
+            assert page_heading[0].text.strip() == "Are you registered with Companies House?"
+            assert doc.xpath('//form[@action="/suppliers/registration-number/edit"]')
+            assert data_api_client.update_supplier.call_args_list == []
+
+    def test_get_shows_already_entered_page_and_api_not_called_update_if_data_already_confirmed(self, data_api_client):
         with self.app.test_client():
             self.login()
             # Default get_supplier has companiesHouseNumber and otherCompanyRegistrationNumber complete
@@ -2675,7 +2714,7 @@ class TestSupplierAddRegistrationNumber(BaseApplicationTest):
             assert page_heading[0].text.strip() == "Change your registration number"
             assert data_api_client.update_supplier.call_args_list == []
 
-    def test_post_shows_already_entered_page_and_api_not_called_if_data_already_entered(self, data_api_client):
+    def test_post_shows_already_entered_page_and_api_not_called_if_data_already_confirmed(self, data_api_client):
         with self.app.test_client():
             self.login()
             valid_post_data = {'has_companies_house_number': 'Yes',
@@ -2712,6 +2751,25 @@ class TestEditSupplierVatNumber(BaseApplicationTest):
 
             assert res.status_code == 200
             assert doc.xpath("//h1[normalize-space(string())='Are you registered for VAT?']")
+
+    @pytest.mark.parametrize('overwrite_supplier_data',
+                             (
+                                 {'companyDetailsConfirmed': False},
+                                 {'vatNumber': None},
+                             ))
+    def test_get_shows_form_on_page_if_supplier_data_not_complete_and_confirmed(self,
+                                                                                overwrite_supplier_data):
+        with self.app.test_client():
+            self.login()
+            self.data_api_client.get_supplier.return_value = get_supplier(**overwrite_supplier_data)
+            res = self.client.get("/suppliers/vat-number/edit")
+            doc = html.fromstring(res.get_data(as_text=True))
+            page_heading = doc.xpath('//h1')
+
+            assert res.status_code == 200
+            assert page_heading[0].text.strip() == "Are you registered for VAT?"
+            assert doc.xpath('//form[@action="/suppliers/vat-number/edit"]')
+            assert self.data_api_client.update_supplier.call_args_list == []
 
     @pytest.mark.parametrize('method, status_code', (('get', 200), ('post', 400)))
     def test_get_and_post_load_already_completed_page_and_do_not_update_supplier_with_vat_number(
@@ -2760,7 +2818,7 @@ class TestEditSupplierVatNumber(BaseApplicationTest):
             assert res.location == "http://localhost/suppliers/details"
             self.data_api_client.update_supplier.assert_called_once_with(
                 supplier_id=1234,
-                supplier={"vatNumber": "Not VAT registered"},
+                supplier={"vatNumber": VatNumberForm.NOT_VAT_REGISTERED_TEXT},
                 user="email@email.com",
             )
 
