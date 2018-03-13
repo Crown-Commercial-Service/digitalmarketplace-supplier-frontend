@@ -37,6 +37,7 @@ $path: "/suppliers/static/images/";
 @import "toolkit/_service-id.scss";
 @import "toolkit/_temporary-message.scss";
 @import "toolkit/_text-diff.scss";
+@import "toolkit/_user-research-consent-banner.scss";
 @import "toolkit/forms/_combinations.scss";
 @import "toolkit/forms/_checkbox-tree.scss";  // Has to be imported after _combinations.scss, which defines the
                                               // $border-width variable that _checkbox-tree.scss relies upon. :sad:
