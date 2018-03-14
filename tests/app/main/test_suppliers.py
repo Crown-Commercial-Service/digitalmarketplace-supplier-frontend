@@ -271,12 +271,16 @@ class TestSuppliersDashboard(BaseApplicationTest):
         with self.app.test_client():
             self.login()
 
-            res = self.client.get("/suppliers")
-            doc = html.fromstring(res.get_data(as_text=True))
+            response = self.client.get("/suppliers")
+            document = html.fromstring(response.get_data(as_text=True))
 
-            assert res.status_code == 200
-            assert 'Apply to G-Cloud 7' in doc.xpath('//h2[@class="summary-item-heading"]/text()')[0]
-            assert doc.xpath('//input[@class="button-save"]/@value')[0] == 'Start application'
+            assert response.status_code == 200
+
+            apply_button = document.xpath(
+                "//h3[normalize-space()='G-Cloud 7 is open for applications']/following::input[1]"
+            )[0]
+
+            assert apply_button.value == "Apply"
 
     def test_shows_gcloud_7_continue_link(self, get_current_suppliers_users, data_api_client):
         data_api_client.get_supplier.side_effect = get_supplier
@@ -290,12 +294,16 @@ class TestSuppliersDashboard(BaseApplicationTest):
         with self.app.test_client():
             self.login()
 
-            res = self.client.get("/suppliers")
-            doc = html.fromstring(res.get_data(as_text=True))
+            response = self.client.get("/suppliers")
+            document = html.fromstring(response.get_data(as_text=True))
 
-            assert res.status_code == 200
-            assert doc.xpath('//a[@href="/suppliers/frameworks/g-cloud-7"]/text()')[0] == \
-                "Continue your G-Cloud 7 application"
+            assert response.status_code == 200
+            continue_link = document.xpath(
+                "//h3[normalize-space()='Your G-Cloud 7 application']"
+                "/following::a[1][normalize-space()='Continue your application']"
+            )
+            assert continue_link
+            assert continue_link[0].values()[0] == "/suppliers/frameworks/g-cloud-7"
 
     def test_shows_gcloud_7_closed_message_if_pending_and_no_interest(self, get_current_suppliers_users, data_api_client):  # noqa
         data_api_client.get_framework.return_value = self.framework('pending')
@@ -669,15 +677,17 @@ class TestSuppliersDashboard(BaseApplicationTest):
         with self.app.test_client():
             self.login()
 
-            res = self.client.get("/suppliers")
-            doc = html.fromstring(res.get_data(as_text=True))
+            response = self.client.get("/suppliers")
+            document = html.fromstring(response.get_data(as_text=True))
 
-            assert res.status_code == 200
+            assert response.status_code == 200
 
-            assert "Apply to Digital Outcomes and Specialists" in doc.xpath(
-                '//div[@class="summary-item-lede"]//h2[@class="summary-item-heading"]/text()'
+            apply_button = document.xpath(
+                "//h3[normalize-space()='Digital Outcomes and Specialists is open for applications']"
+                "/following::input[1]"
             )[0]
-            assert doc.xpath('//div[@class="summary-item-lede"]//input/@value')[0] == "Start application"
+
+            assert apply_button.value == "Apply"
 
     def test_shows_continue_with_dos_link(self, get_current_suppliers_users, data_api_client):
         data_api_client.get_supplier.side_effect = get_supplier
@@ -704,13 +714,16 @@ class TestSuppliersDashboard(BaseApplicationTest):
         with self.app.test_client():
             self.login()
 
-            res = self.client.get("/suppliers")
-            doc = html.fromstring(res.get_data(as_text=True))
+            response = self.client.get("/suppliers")
+            document = html.fromstring(response.get_data(as_text=True))
 
-            assert res.status_code == 200
-            assert "Continue your Digital Outcomes and Specialists application" in doc.xpath(
-                '//a[@class="browse-list-item-link"]/text()'
-            )[0]
+            assert response.status_code == 200
+            continue_link = document.xpath(
+                "//h3[normalize-space()='Your Digital Outcomes and Specialists application']"
+                "/following::a[1][normalize-space()='Continue your application']"
+            )
+            assert continue_link
+            assert continue_link[0].values()[0] == "/suppliers/frameworks/digital-outcomes-and-specialists"
 
 
 @mock.patch("app.main.views.suppliers.data_api_client", autospec=True)
