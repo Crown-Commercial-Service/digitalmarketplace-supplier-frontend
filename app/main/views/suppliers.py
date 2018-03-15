@@ -243,7 +243,7 @@ def edit_supplier_registration_number():
         else:
             current_app.logger.warning(
                 "supplieredit.fail: has-companies-house-number:{hasnum}, companies-house-number:{chnum}, "
-                "other-registered-company-number:{rnumber}, errors:{errors}",
+                "other-registered-company-number:{rnumber}, errors:{rnumber_errors}",
                 extra={
                     'hasnum': form.has_companies_house_number.data,
                     'chnum': form.companies_house_number.data,
