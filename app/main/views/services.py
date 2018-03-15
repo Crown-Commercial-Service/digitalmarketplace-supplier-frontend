@@ -361,7 +361,7 @@ def copy_draft_service(framework_slug, lot_slug, service_id):
                             service_id=draft_copy['id'],
                             section_id=section_id_to_edit,
                             question_slug=question_slug_to_edit,
-                            return_to_summary=1
+                            force_continue_button=1
                             ))
 
 
@@ -507,8 +507,8 @@ def view_service_submission(framework_slug, lot_slug, service_id):
 @login_required
 def edit_service_submission(framework_slug, lot_slug, service_id, section_id, question_slug=None):
     """
-        Also accepts URL parameter `return_to_summary` which will remove the ability to continue to the next section
-        on submit
+        Also accepts URL parameter `force_continue_button` which will allow rendering of a 'Save and continue' button,
+        used for when copying services.
     """
     framework, lot = get_framework_and_lot_or_404(data_api_client, framework_slug, lot_slug, allowed_statuses=['open'])
 
@@ -516,9 +516,8 @@ def edit_service_submission(framework_slug, lot_slug, service_id, section_id, qu
     if not get_supplier_framework_info(data_api_client, framework_slug):
         abort(404)
 
-    force_return_to_summary = (
-        request.args.get('return_to_summary') or framework['framework'] == "digital-outcomes-and-specialists"
-    )
+    force_return_to_summary = framework['framework'] == "digital-outcomes-and-specialists"
+    force_continue_button = request.args.get('force_continue_button')
     next_question = None
 
     try:
@@ -602,6 +601,7 @@ def edit_service_submission(framework_slug, lot_slug, service_id, section_id, qu
         service_data=service_data,
         service_id=service_id,
         force_return_to_summary=force_return_to_summary,
+        force_continue_button=force_continue_button,
         errors=errors,
     )
 
