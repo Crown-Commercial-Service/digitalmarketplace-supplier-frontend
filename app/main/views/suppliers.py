@@ -174,7 +174,7 @@ def edit_registered_address():
 def edit_supplier_registered_name():
     form = AddCompanyRegisteredNameForm()
     supplier = data_api_client.get_supplier(current_user.supplier_id)['suppliers']
-    if supplier.get("registeredName"):
+    if supplier.get("registeredName") and supplier.get('companyDetailsConfirmed'):
         return (
             render_template("suppliers/already_completed.html", completed_data_description="registered company name"),
             200 if request.method == 'GET' else 400
@@ -199,6 +199,9 @@ def edit_supplier_registered_name():
 
             return render_template("suppliers/edit_registered_name.html", form=form), 400
 
+    else:
+        form.registered_company_name.data = supplier.get("registeredName")
+
     return render_template('suppliers/edit_registered_name.html', form=form)
 
 
@@ -207,7 +210,8 @@ def edit_supplier_registered_name():
 def edit_supplier_registration_number():
     form = AddCompanyRegistrationNumberForm()
     supplier = data_api_client.get_supplier(current_user.supplier_id)['suppliers']
-    if supplier.get("companiesHouseNumber") or supplier.get("otherCompanyRegistrationNumber"):
+    if (supplier.get("companiesHouseNumber") or supplier.get("otherCompanyRegistrationNumber")) \
+            and supplier.get('companyDetailsConfirmed'):
         return (
             render_template(
                 "suppliers/already_completed.html",
@@ -222,13 +226,15 @@ def edit_supplier_registration_number():
                 if form.has_companies_house_number.data == "Yes":
                     data_api_client.update_supplier(
                         supplier_id=current_user.supplier_id,
-                        supplier={"companiesHouseNumber": form.companies_house_number.data.upper()},
+                        supplier={"companiesHouseNumber": form.companies_house_number.data.upper(),
+                                  "otherCompanyRegistrationNumber": None},
                         user=current_user.email_address
                     )
                 else:
                     data_api_client.update_supplier(
                         supplier_id=current_user.supplier_id,
-                        supplier={"otherCompanyRegistrationNumber": form.other_company_registration_number.data},
+                        supplier={"companiesHouseNumber": None,
+                                  "otherCompanyRegistrationNumber": form.other_company_registration_number.data},
                         user=current_user.email_address
                     )
                 return redirect(url_for('.supplier_details'))
@@ -246,6 +252,15 @@ def edit_supplier_registration_number():
                 })
 
             return render_template("suppliers/edit_company_registration_number.html", form=form), 400
+
+    else:
+        if supplier.get('companiesHouseNumber'):
+            form.has_companies_house_number.data = "Yes"
+            form.companies_house_number.data = supplier.get('companiesHouseNumber')
+
+        elif supplier.get('otherCompanyRegistrationNumber'):
+            form.has_companies_house_number.data = "No"
+            form.other_company_registration_number.data = supplier.get('otherCompanyRegistrationNumber')
 
     return render_template('suppliers/edit_company_registration_number.html', form=form)
 
@@ -391,7 +406,7 @@ def edit_supplier_vat_number():
     except APIError as e:
         abort(e.status_code)
 
-    if supplier.get("vatNumber"):
+    if supplier.get("vatNumber") and supplier.get('companyDetailsConfirmed'):
         return (
             render_template("suppliers/already_completed.html", completed_data_description="VAT number"),
             200 if request.method == 'GET' else 400
@@ -400,7 +415,7 @@ def edit_supplier_vat_number():
     form_errors = None
     if request.method == 'POST':
         if form.validate_on_submit():
-            vat_number = form.vat_number.data if form.vat_registered.data == 'Yes' else 'Not VAT registered'
+            vat_number = form.vat_number.data if form.vat_registered.data == 'Yes' else form.NOT_VAT_REGISTERED_TEXT
 
             try:
                 data_api_client.update_supplier(supplier_id=current_user.supplier_id,
@@ -424,6 +439,14 @@ def edit_supplier_vat_number():
         form_errors = [
             {'question': form[field].label.text, 'input_name': form[field].name} for field in form.errors.keys()
         ]
+
+    else:
+        if supplier.get('vatNumber'):
+            if supplier.get('vatNumber') == form.NOT_VAT_REGISTERED_TEXT:
+                form.vat_registered.data = 'No'
+            else:
+                form.vat_registered.data = 'Yes'
+                form.vat_number.data = supplier.get('vatNumber')
 
     return render_template(
         'suppliers/edit_vat_number.html',

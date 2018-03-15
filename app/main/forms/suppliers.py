@@ -226,6 +226,8 @@ class CompanyTradingStatusForm(Form):
 
 
 class VatNumberForm(Form):
+    NOT_VAT_REGISTERED_TEXT = "Not VAT registered"
+
     def stop_validation_if_not_registered(form, field):
         # If a user is not registered for VAT we don't care about validating something they have entered in the
         # VAT number input field. If a value for `vat_registered` is not sent in the POST request, WTForms sets the
