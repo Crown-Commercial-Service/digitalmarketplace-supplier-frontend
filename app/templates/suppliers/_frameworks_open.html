@@ -2,8 +2,6 @@
     {% for framework in frameworks.open %}
       {% if framework.registered_interest %}
         {% with
-          headingId = "closed-notice",
-          grid = "column-one-third",
           main = true,
           messages = [framework.deadline],
           link = { "label": "Continue your application", "url": url_for(".framework_dashboard", framework_slug=framework.slug) },
@@ -15,8 +13,6 @@
         <form action="{{ url_for('.framework_dashboard', framework_slug=framework.slug) }}" method="POST">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
           {% with
-            headingId = "closed-notice",
-            grid = "column-one-third",
             main = true,
             messages = [
               "Starting your application means you’ll receive {} email updates.".format(framework.name)
