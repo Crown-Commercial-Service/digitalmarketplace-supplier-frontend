@@ -1236,11 +1236,12 @@ class TestSupplierUpdate(BaseApplicationTest):
 
         assert "New Description" in response
 
-    def test_phone_number_above_character_length(self, data_api_client):
+    def test_fields_above_character_length(self, data_api_client):
         self.login()
 
         status, response = self.post_supplier_edit(
-            phoneNumber="0" * 21
+            phoneNumber="0" * 21,
+            contactName="A" * 256,
         )
         assert status == 400
 
@@ -1248,7 +1249,32 @@ class TestSupplierUpdate(BaseApplicationTest):
 
         for content in [
             ("validation-masthead-link", "Contact phone number"),
+            ("validation-masthead-link", "Contact name"),
             ("validation-message", "You must provide a phone number under 20 characters."),
+            ("validation-message", "You must provide a contact name under 256 characters."),
+        ]:
+            assert doc.xpath(
+                "//*[@class=$t][normalize-space(string())=$c]",
+                t=content[0],
+                c=content[1],
+            )
+
+        assert data_api_client.update_supplier.called is False
+        assert data_api_client.update_contact_information.called is False
+
+    def test_valid_email_address_required(self, data_api_client):
+        self.login()
+
+        status, response = self.post_supplier_edit(
+            email="This is absolutely not an email address"
+        )
+        assert status == 400
+
+        doc = html.fromstring(response)
+
+        for content in [
+            ("validation-masthead-link", "Contact email address"),
+            ("validation-message", "You must provide a valid email address."),
         ]:
             assert doc.xpath(
                 "//*[@class=$t][normalize-space(string())=$c]",
