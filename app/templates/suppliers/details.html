@@ -21,8 +21,8 @@
 
 
 {% block main_content %}
-<div class='grid-row'>
-  <div class='column-one-whole padding-bottom-small'>
+  <div class='grid-row'>
+    <div class='column-one-whole padding-bottom-small'>
 {%
   with
     heading = "Company details",
@@ -162,18 +162,22 @@
   {% endif %}
 {% endcall %}
 
-  {% if supplier.dunsNumber %}
-    {% call summary.row() %}
-      {{ summary.field_name('DUNS number') }}
-      {{ summary.text(supplier.dunsNumber) }}
-      {{ summary.edit_link(label="Change", link=url_for(".edit_supplier_duns_number"), hidden_text="DUNS number") }}
-    {% endcall %}
+{% call summary.row() %}
+  {{ summary.field_name('DUNS number') }}
+   {% if supplier.dunsNumber %}
+    {{ summary.text(supplier.dunsNumber) }}
+    {{ summary.edit_link(label="Change", link=url_for(".edit_supplier_duns_number"), hidden_text="DUNS number") }}
+  {% else %}
+    {{ summary.link(link_title="Answer required", link=url_for(".edit_supplier_duns_number"), hidden_text="for DUNS number") }}
+    {{ summary.text("") }}
   {% endif %}
+{% endcall %}
 
 {% endcall %}
 
+    </div>
   </div>
-
+  <div class='grid-row'>
   {% if not supplier.companyDetailsConfirmed %}
     <div class='column-two-thirds'>
       {% if company_details_complete  %}
@@ -195,7 +199,8 @@
       {% endif %}
     </div>
   {% endif %}
-
+  </div>
+  <div class='grid-row'>
     <div class='column-two-thirds'>
   {% if currently_applying_to %}
     {%
@@ -208,5 +213,5 @@
     {% endwith %}
   {% endif %}
     </div>
-</div>
+  </div>
 {% endblock %}
