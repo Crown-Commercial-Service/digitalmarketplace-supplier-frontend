@@ -3,6 +3,7 @@
       {% if framework.registered_interest %}
         {% with
           main = true,
+          header_level = "h2",
           messages = [framework.deadline],
           link = { "label": "Continue your application", "url": url_for(".framework_dashboard", framework_slug=framework.slug) },
           heading = "Your {} application".format(framework.name)
@@ -14,6 +15,7 @@
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
           {% with
             main = true,
+            header_level = "h2",
             messages = [
               "Starting your application means you’ll receive {} email updates.".format(framework.name)
             ],

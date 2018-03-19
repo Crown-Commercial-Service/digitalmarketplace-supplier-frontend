@@ -2109,7 +2109,7 @@ class TestShowDraftService(BaseApplicationTest):
             "//input[@value='Mark as complete']"
         )[0]
 
-        assert sorted(["submit", "button-save ", "Mark as complete"]) == sorted(submit_button.values())
+        assert sorted(["submit", "button-save", "Mark as complete"]) == sorted(submit_button.values())
 
     @mock.patch('app.main.views.services.count_unanswered_questions')
     def test_no_move_to_complete_button_if_not_open(self, count_unanswered, data_api_client):

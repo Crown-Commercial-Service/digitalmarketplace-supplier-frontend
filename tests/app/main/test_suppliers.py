@@ -277,7 +277,7 @@ class TestSuppliersDashboard(BaseApplicationTest):
             assert response.status_code == 200
 
             apply_button = document.xpath(
-                "//h3[normalize-space()='G-Cloud 7 is open for applications']/following::input[1]"
+                "//h2[normalize-space()='G-Cloud 7 is open for applications']/following::input[1]"
             )[0]
 
             assert apply_button.value == "Apply"
@@ -299,7 +299,7 @@ class TestSuppliersDashboard(BaseApplicationTest):
 
             assert response.status_code == 200
             continue_link = document.xpath(
-                "//h3[normalize-space()='Your G-Cloud 7 application']"
+                "//h2[normalize-space()='Your G-Cloud 7 application']"
                 "/following::a[1][normalize-space()='Continue your application']"
             )
             assert continue_link
@@ -683,7 +683,7 @@ class TestSuppliersDashboard(BaseApplicationTest):
             assert response.status_code == 200
 
             apply_button = document.xpath(
-                "//h3[normalize-space()='Digital Outcomes and Specialists is open for applications']"
+                "//h2[normalize-space()='Digital Outcomes and Specialists is open for applications']"
                 "/following::input[1]"
             )[0]
 
@@ -719,7 +719,7 @@ class TestSuppliersDashboard(BaseApplicationTest):
 
             assert response.status_code == 200
             continue_link = document.xpath(
-                "//h3[normalize-space()='Your Digital Outcomes and Specialists application']"
+                "//h2[normalize-space()='Your Digital Outcomes and Specialists application']"
                 "/following::a[1][normalize-space()='Continue your application']"
             )
             assert continue_link
