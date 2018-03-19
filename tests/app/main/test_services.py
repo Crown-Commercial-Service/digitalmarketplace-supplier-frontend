@@ -1364,7 +1364,8 @@ class TestCopyDraft(BaseApplicationTest):
 
         res = self.client.post('/suppliers/frameworks/g-cloud-7/submissions/scs/1/copy')
         assert res.status_code == 302
-        assert '/suppliers/frameworks/g-cloud-7/submissions/scs/2/edit/service-name?return_to_summary=1' in res.location
+        assert '/suppliers/frameworks/g-cloud-7/submissions/scs/2/edit/service-name?force_continue_button=1' \
+            in res.location
 
     def test_copy_draft_with_edit_questions_sections(self, data_api_client):
         # G9 drafts use editable=False, edit_questions=True on every section, which means a different URL
@@ -1379,7 +1380,7 @@ class TestCopyDraft(BaseApplicationTest):
         res = self.client.post('/suppliers/frameworks/g-cloud-9/submissions/cloud-hosting/1/copy')
         assert res.status_code == 302
         assert '/suppliers/frameworks/g-cloud-9/submissions/cloud-hosting/2/edit/service-name/' \
-               'service-name?return_to_summary=1' in res.location
+               'service-name?force_continue_button=1' in res.location
 
     def test_copy_draft_checks_supplier_id(self, data_api_client):
         self.g7_draft['supplierId'] = 2
@@ -1767,7 +1768,7 @@ class TestEditDraftService(BaseApplicationTest):
 
         assert res.status_code == 200
         document = html.fromstring(res.get_data(as_text=True))
-        assert len(document.xpath("//input[@type='submit'][@name='continue_to_next_section']")) == 0
+        assert len(document.xpath("//input[@type='submit'][@name='save_and_continue']")) == 0
 
     def test_update_redirects_to_edit_submission_if_no_next_editable_section(self, data_api_client, s3):
         data_api_client.get_framework.return_value = self.framework(status='open')
@@ -1794,32 +1795,19 @@ class TestEditDraftService(BaseApplicationTest):
 
         assert res.status_code == 200
         document = html.fromstring(res.get_data(as_text=True))
-        assert len(document.xpath("//input[@type='submit'][@name='continue_to_next_section']")) == 0
+        assert len(document.xpath("//input[@type='submit'][@name='save_and_continue']")) == 0
 
-    def test_update_redirects_to_edit_submission_if_return_to_summary(self, data_api_client, s3):
-        data_api_client.get_framework.return_value = self.framework(status='open')
-        data_api_client.get_draft_service.return_value = self.empty_draft
-        data_api_client.update_draft_service.return_value = None
-
-        res = self.client.post(
-            '/suppliers/frameworks/g-cloud-7/submissions/scs/1/edit/service-description?return_to_summary=1',
-            data={})
-
-        assert res.status_code == 302
-        assert 'http://localhost/suppliers/frameworks/g-cloud-7/submissions/scs/1#service-description' == \
-            res.headers['Location']
-
-    def test_update_doesnt_offer_continue_to_next_editable_section_if_return_to_summary(self, data_api_client, s3):
+    def test_update_offers_continue_to_next_editable_section_if_force_continue_button(self, data_api_client, s3):
         data_api_client.get_framework.return_value = self.framework(status='open')
         data_api_client.get_draft_service.return_value = self.empty_draft
 
         res = self.client.get(
-            '/suppliers/frameworks/g-cloud-7/submissions/scs/1/edit/service-description?return_to_summary=1',
+            '/suppliers/frameworks/g-cloud-7/submissions/scs/1/edit/service-description?force_continue_button=1',
         )
 
         assert res.status_code == 200
         document = html.fromstring(res.get_data(as_text=True))
-        assert len(document.xpath("//input[@type='submit'][@name='continue_to_next_section']")) == 0
+        assert len(document.xpath("//input[@type='submit'][@name='save_and_continue']")) == 1
 
     def test_update_redirects_to_edit_submission_if_save_and_return_grey_button_clicked(self, data_api_client, s3):
         data_api_client.get_framework.return_value = self.framework(status='open')
