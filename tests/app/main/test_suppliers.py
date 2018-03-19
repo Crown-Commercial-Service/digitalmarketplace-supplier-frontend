@@ -977,8 +977,16 @@ class TestSupplierDetails(BaseApplicationTest):
             submit_button = document.xpath("//input[@value='Save and confirm']")
             assert submit_button if button_should_be_shown else not submit_button
 
-    def test_post_route_calls_api_and_redirects_when_details_are_complete(self, data_api_client):
-        data_api_client.get_supplier.return_value = get_supplier()
+    @pytest.mark.parametrize(
+        "complete_supplier",
+        (
+            get_supplier(),
+            get_supplier(companiesHouseNumber=None),
+            get_supplier(otherCompanyRegistrationNumber=None),
+        )
+    )
+    def test_post_route_calls_api_and_redirects_when_details_are_complete(self, data_api_client, complete_supplier):
+        data_api_client.get_supplier.return_value = complete_supplier
         with self.app.test_client():
             self.login()
             response = self.client.post("/suppliers/details")
@@ -987,8 +995,16 @@ class TestSupplierDetails(BaseApplicationTest):
                 mock.call(supplier={'companyDetailsConfirmed': True}, supplier_id=1234, user='email@email.com')
             ]
 
-    def test_post_route_does_not_call_api_and_returns_error_if_details_are_incomplete(self, data_api_client):
-        data_api_client.get_supplier.return_value = get_supplier(organisationSize=None)
+    @pytest.mark.parametrize(
+        "incomplete_supplier",
+        (
+            get_supplier(organisationSize=None),
+            get_supplier(vatNumber=None),
+            get_supplier(companiesHouseNumber=None, otherCompanyRegistrationNumber=None),
+        )
+    )
+    def test_post_route_does_not_call_api_and_returns_error_if_incomplete(self, data_api_client, incomplete_supplier):
+        data_api_client.get_supplier.return_value = incomplete_supplier
         with self.app.test_client():
             self.login()
             response = self.client.post("/suppliers/details")
