@@ -955,6 +955,81 @@ class TestSupplierDetails(BaseApplicationTest):
             document = html.fromstring(page_html)
             assert "Return to your" not in document.text_content()
 
+    @pytest.mark.parametrize(
+        "supplier_details,button_should_be_shown",
+        [
+            (get_supplier(companyDetailsConfirmed=False), True),  # Details complete but not confirmed
+            (get_supplier(companyDetailsConfirmed=True), False),  # Details complete and already confirmed
+            (get_supplier(companyDetailsConfirmed=False, vatNumber=None), False),  # Details not complete or confirmed
+        ]
+    )
+    def test_green_button_is_shown_only_when_details_are_complete_but_not_confirmed(
+            self, data_api_client, supplier_details, button_should_be_shown
+    ):
+        data_api_client.get_supplier.return_value = supplier_details
+        with self.app.test_client():
+            self.login()
+
+            response = self.client.get("/suppliers/details")
+            assert response.status_code == 200
+
+            document = html.fromstring(response.get_data(as_text=True))
+            submit_button = document.xpath("//input[@value='Save and confirm']")
+            assert submit_button if button_should_be_shown else not submit_button
+
+    @pytest.mark.parametrize(
+        "complete_supplier",
+        (
+            get_supplier(),
+            get_supplier(companiesHouseNumber=None),
+            get_supplier(otherCompanyRegistrationNumber=None),
+        )
+    )
+    def test_post_route_calls_api_and_redirects_when_details_are_complete(self, data_api_client, complete_supplier):
+        data_api_client.get_supplier.return_value = complete_supplier
+        with self.app.test_client():
+            self.login()
+            response = self.client.post("/suppliers/details")
+            assert response.status_code == 302
+            assert data_api_client.update_supplier.call_args_list == [
+                mock.call(supplier={'companyDetailsConfirmed': True}, supplier_id=1234, user='email@email.com')
+            ]
+
+    @pytest.mark.parametrize(
+        "incomplete_supplier",
+        (
+            get_supplier(organisationSize=None),
+            get_supplier(vatNumber=None),
+            get_supplier(companiesHouseNumber=None, otherCompanyRegistrationNumber=None),
+        )
+    )
+    def test_post_route_does_not_call_api_and_returns_error_if_incomplete(self, data_api_client, incomplete_supplier):
+        data_api_client.get_supplier.return_value = incomplete_supplier
+        with self.app.test_client():
+            self.login()
+            response = self.client.post("/suppliers/details")
+            assert response.status_code == 400
+            assert data_api_client.update_supplier.call_args_list == []
+
+    @pytest.mark.parametrize(
+        "current_fwk,expected_destination",
+        [
+            (None, "/suppliers/details"),
+            ("g-things-23", "/suppliers/frameworks/g-things-23"),
+            ("digital-widgets-and-stuff", "/suppliers/frameworks/digital-widgets-and-stuff"),
+        ]
+    )
+    def test_post_green_button_redirects_to_the_correct_place(self, data_api_client, current_fwk, expected_destination):
+        data_api_client.get_supplier.return_value = get_supplier()
+        with self.app.test_client():
+            self.login()
+            if current_fwk:
+                with self.client.session_transaction() as session:
+                    session["currently_applying_to"] = current_fwk
+            response = self.client.post("/suppliers/details")
+            assert response.status_code == 302
+            assert response.location == f"http://localhost{expected_destination}"
+
 
 @mock.patch("app.main.views.suppliers.data_api_client", autospec=True)
 @mock.patch("app.main.views.suppliers.get_current_suppliers_users", autospec=True)

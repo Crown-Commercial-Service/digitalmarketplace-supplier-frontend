@@ -1,6 +1,6 @@
 import pytest
 from flask_wtf import Form
-from wtforms import TextField
+from wtforms import StringField
 from wtforms.validators import Length
 from app.main.helpers.suppliers import get_country_name_from_country_code, parse_form_errors_for_validation_masthead, \
     supplier_company_details_are_complete
@@ -42,13 +42,13 @@ class TestSupplierCompanyDetailsComplete:
 
 
 class FormForTest(Form):
-    field_one = TextField('Field one?', validators=[
+    field_one = StringField('Field one?', validators=[
         Length(max=5, message="Field one must be under 5 characters.")
     ])
-    field_two = TextField('Field two?', validators=[
+    field_two = StringField('Field two?', validators=[
         Length(max=5, message="Field two must be under 5 characters.")
     ])
-    field_three = TextField('Field three?', validators=[
+    field_three = StringField('Field three?', validators=[
         Length(max=5, message="Field three must be under 5 characters.")
     ])
 

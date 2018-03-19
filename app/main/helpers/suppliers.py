@@ -31,14 +31,12 @@ COUNTRY_TUPLE = load_countries()
 
 def supplier_company_details_are_complete(supplier_data):
     supplier_required_fields = ['dunsNumber', 'name', 'registeredName', 'registrationCountry', 'organisationSize',
-                                'tradingStatus']
+                                'tradingStatus', 'vatNumber']
     contact_required_fields = ['address1', 'city', 'postcode']
 
-    registration_country = supplier_data['registrationCountry'] if 'registrationCountry' in supplier_data else None
-    if registration_country == 'gb' or registration_country == 'country:GB':
+    # We require one of either 'companiesHouseNumber' or 'otherCompanyRegistrationNumber'
+    if 'companiesHouseNumber' in supplier_data:
         supplier_required_fields.append('companiesHouseNumber')
-        supplier_required_fields.append('vatNumber')
-
     else:
         supplier_required_fields.append('otherCompanyRegistrationNumber')
 
