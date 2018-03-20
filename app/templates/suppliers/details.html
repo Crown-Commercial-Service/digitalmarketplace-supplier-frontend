@@ -177,10 +177,11 @@
 
     </div>
   </div>
-  <div class='grid-row'>
+
   {% if not supplier.companyDetailsConfirmed %}
-    <div class='column-two-thirds'>
-      {% if company_details_complete  %}
+    {% if company_details_complete  %}
+    <div class='grid-row'>
+      <div class='column-two-thirds'>
         <form method="POST" action="{{ url_for('.confirm_supplier_details') }}">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
           <p>Once you confirm your information you'll need to contact support to change your:</p>
@@ -194,15 +195,20 @@
             {% include "toolkit/button.html" %}
           {% endwith %}
         </form>
-      {% elif currently_applying_to %}
-        <p>You must complete your company details to make an application.</p>
-      {% endif %}
+      </div>
     </div>
+    {% elif currently_applying_to %}
+    <div class='grid-row'>
+      <div class='column-two-thirds'>
+        <p>You must complete your company details to make an application.</p>
+      </div>
+    </div>
+    {% endif %}
   {% endif %}
-  </div>
+
+  {% if currently_applying_to %}
   <div class='grid-row'>
     <div class='column-two-thirds'>
-  {% if currently_applying_to %}
     {%
        with
        url = url_for(".framework_dashboard", framework_slug=currently_applying_to.slug),
@@ -211,7 +217,7 @@
      %}
        {% include "toolkit/secondary-action-link.html" %}
     {% endwith %}
-  {% endif %}
     </div>
   </div>
+  {% endif %}
 {% endblock %}
