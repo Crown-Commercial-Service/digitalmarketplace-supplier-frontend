@@ -2101,9 +2101,15 @@ class TestShowDraftService(BaseApplicationTest):
         data_api_client.get_draft_service.return_value = self.draft_service
         count_unanswered.return_value = 0, 1
         res = self.client.get('/suppliers/frameworks/g-cloud-7/submissions/scs/1')
+        document = html.fromstring(res.get_data(as_text=True))
 
-        assert u'1 optional question unanswered' in res.get_data(as_text=True)
-        assert u'<input type="submit" class="button-save"  value="Mark as complete" />' in res.get_data(as_text=True)
+        assert '1 optional question unanswered' in res.get_data(as_text=True)
+
+        submit_button = document.xpath(
+            "//input[@value='Mark as complete']"
+        )[0]
+
+        assert sorted(["submit", "button-save", "Mark as complete"]) == sorted(submit_button.values())
 
     @mock.patch('app.main.views.services.count_unanswered_questions')
     def test_no_move_to_complete_button_if_not_open(self, count_unanswered, data_api_client):

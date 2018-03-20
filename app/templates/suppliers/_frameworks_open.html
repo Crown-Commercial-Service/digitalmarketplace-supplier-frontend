@@ -1,41 +1,29 @@
- <div class='grid-row'> 
-  <div class='column-two-thirds'>
+
     {% for framework in frameworks.open %}
       {% if framework.registered_interest %}
-        {%
-          with
-          items = [{
-            "title": "Continue your %s application" | format(framework.name),
-            "link": url_for(".framework_dashboard", framework_slug=framework.slug),
-            "body": framework.deadline,
-          }]
+        {% with
+          main = true,
+          header_level = "h2",
+          messages = [framework.deadline],
+          link = { "label": "Continue your application", "url": url_for(".framework_dashboard", framework_slug=framework.slug) },
+          heading = "Your {} application".format(framework.name)
         %}
-          {% include "toolkit/browse-list.html" %}
+          {% include "toolkit/temporary-message.html" %}
         {% endwith %}
       {% else %}
         <form action="{{ url_for('.framework_dashboard', framework_slug=framework.slug) }}" method="POST">
-            <div class="summary-item-lede">
-              <h2 class="summary-item-heading">
-                Apply to {{ framework.name }} 
-              </h2>
-              <p>
-                Deadline: {{ framework.dates.framework_close_date }}
-              </p>
-              {%
-              with
-                  type = "save",
-                  label = "Start application"
-              %}
-                  {% include "toolkit/button.html" %}
-              {% endwith %}
-
-              <p>
-                Starting your application means you’ll receive <br>{{ framework.name }} email updates.
-              </p>
-            </div>
-          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+          {% with
+            main = true,
+            header_level = "h2",
+            messages = [
+              "Starting your application means you’ll receive {} email updates.".format(framework.name)
+            ],
+            button = {"label": "Apply", "type": "save"},
+            heading = "{} is open for applications".format(framework.name)
+          %}
+            {% include "toolkit/temporary-message.html" %}
+          {% endwith %}
         </form>
       {% endif %}
     {% endfor %}
-  </div>
-</div>
