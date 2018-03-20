@@ -22,7 +22,11 @@
 
 {% block main_content %}
   <div class='grid-row'>
+  {% if currently_applying_to or (company_details_complete and not supplier.companyDetailsConfirmed) %}
     <div class='column-one-whole padding-bottom-small'>
+  {% else %}
+    <div class='column-one-whole'>
+  {% endif %}
 {%
   with
     heading = "Company details",
