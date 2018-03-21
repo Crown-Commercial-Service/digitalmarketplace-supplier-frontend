@@ -31,7 +31,7 @@ sudo easy_install virtualenv
 
 Create a virtual environment
  ```
- virtualenv ./venv
+ virtualenv -p python3 ./venv
  ```
 
 ### Activate the virtual environment
