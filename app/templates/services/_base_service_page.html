@@ -4,33 +4,6 @@
 
 {% block main_content %}
   <div class="grid-row">
-    {% with messages = get_flashed_messages(with_categories=true) %}
-      {% if messages %}
-        {% for category, message in messages %}
-          {% if category == 'error' %}
-            <div class="banner-destructive-without-action">
-          {% else %}
-            <div class="banner-success-without-action">
-          {% endif %}
-              <p class="banner-message">
-          {% if 'remove_last_attempted' in message %}
-                You must offer one of the {{ message.remove_last_attempted.lower() }} to be eligible.<br>
-                If you don&rsquo;t want to offer {{ (service_data.get('serviceName', service_data['lotName'])).lower() }}, 
-                delete this service.
-                <span data-analytics="trackPageView" data-url="{{message.virtual_pageview_url}}"></span>
-            {% elif category == 'service_deleted' %}
-                <strong>{{message.service_name}}</strong> was deleted
-            {% elif category == 'service_updated' %}
-                You&#x2019;ve edited your service. The changes are now live on the Digital Marketplace.
-            {% else %}
-                {{ message }}
-            {% endif %}
-              </p>
-            </div>
-        {% endfor %}
-      {% endif %}
-    {% endwith %}
-      
     {% if confirm_remove %}
       <form method="post" action='{{ url_for(".remove_subsection", framework_slug=framework.slug, lot_slug=service_data.lot, service_id=service_id, section_id=request.args.get("section_id"), question_slug=confirm_remove, confirm=True) }}'>
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />

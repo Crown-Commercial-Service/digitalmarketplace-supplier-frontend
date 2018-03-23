@@ -27,28 +27,6 @@
 
 {% block main_content %}
 
-{% with messages = get_flashed_messages(with_categories=true) %}
-{% if messages %}
-{% for category, message in messages %}
-    {% if category == 'error' %}
-      <div class="banner-destructive-without-action">
-    {% elif category == 'success' %}
-      <div class="banner-success-without-action">
-    {% endif %}
-    {% if message == 'user_invited' %}
-    <p class="banner-message">
-        Contributor invited
-    </p>
-    {% elif message == 'user_not_invited' %}
-    <p class="banner-message">
-        Not Invited
-    </p>
-    {% endif %}
-          </div><div class="/sc"></div>
-{% endfor %}
-{% endif %}
-{% endwith %}
-
   {% with
     heading = "Invite a contributor",
     smaller = true

@@ -15,23 +15,8 @@
 {% endblock %}
 
 {% block main_content %}
-  {% with messages = get_flashed_messages(with_categories=true, category_filter=["error", "success"]) %}
-    {% for category, message in messages %}
-      {%
-        with
-        message = message,
-        type = "destructive" if category == 'error' else "success"
-      %}
-        {% include "toolkit/notification-banner.html" %}
-      {% endwith %}
-    {% endfor %}
-  {% endwith %}
 
-  {% if 'account-created' in get_flashed_messages(category_filter=["flag"]) %}
-  <div class="grid-row" data-analytics="trackPageView" data-url="/suppliers?account-created=true">
-  {% else %}
   <div class="grid-row">
-  {% endif %}
     <div class="column-one-whole">
       {% with
         context = current_user.email_address,

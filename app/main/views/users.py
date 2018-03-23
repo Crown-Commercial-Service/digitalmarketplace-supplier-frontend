@@ -6,6 +6,9 @@ from ...main import main
 from ... import data_api_client
 
 
+DEACTIVATED_USER_MESSAGE = "{user_name} ({user_email_address}) has been removed as a contributor."
+
+
 def get_current_suppliers_users():
 
     users = data_api_client.find_users(
@@ -74,9 +77,9 @@ def deactivate_user(user_id):
 
     data_api_client.update_user(user_id=user_to_deactivate['id'], active=False, updater=current_user.email_address)
 
-    flash({
-        'deactivate_user_name': user_to_deactivate['name'],
-        'deactivate_user_email_address': user_to_deactivate['emailAddress']
-    })
+    flash(DEACTIVATED_USER_MESSAGE.format(
+        user_name=user_to_deactivate['name'],
+        user_email_address=user_to_deactivate['emailAddress'],
+    ), "success")
 
     return redirect(url_for('.list_users'))

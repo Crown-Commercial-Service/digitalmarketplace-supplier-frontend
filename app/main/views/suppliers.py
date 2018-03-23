@@ -36,6 +36,14 @@ from ..helpers.suppliers import (
 from ..helpers import login_required
 from .users import get_current_suppliers_users
 
+JOIN_OPEN_FRAMEWORK_NOTIFICATION_MAILING_LIST_SUCCESS_MESSAGE = (
+    "You will receive email notifications to {email_address} when applications are opening."
+)
+JOIN_OPEN_FRAMEWORK_NOTIFICATION_MAILING_LIST_ERROR_MESSAGE = Markup("""
+    The service is unavailable at the moment. If the problem continues please contact
+    <a href="mailto:enquiries@digitalmarketplace.service.gov.uk">enquiries@digitalmarketplace.service.gov.uk</a>
+""")
+
 
 @main.route('')
 @login_required
@@ -750,7 +758,6 @@ def join_open_framework_notification_mailing_list():
                 form.data["email_address"],
             )
 
-            # note we're signalling our flash messages in two separate ways here
             if mc_response not in (True, False,):
                 # success
                 data_api_client.create_audit_event(
@@ -767,17 +774,14 @@ def join_open_framework_notification_mailing_list():
                     },
                 )
 
-                # this message will be consumed by the buyer app which has been converted to display raw "literal"
-                # content from the session
-                flash(Markup(render_template(
-                    "flashmessages/join_open_framework_notification_mailing_list_success.html",
+                flash(JOIN_OPEN_FRAMEWORK_NOTIFICATION_MAILING_LIST_SUCCESS_MESSAGE.format(
                     email_address=form.data["email_address"],
-                )), "success")
+                ), "success")
 
                 return redirect("/")
             else:
                 # failure
-                flash("mailing_list_signup_error", "error")
+                flash(JOIN_OPEN_FRAMEWORK_NOTIFICATION_MAILING_LIST_ERROR_MESSAGE, "error")
                 if mc_response:
                     # this is a case where we think the error is *probably* the user's fault in some way
                     status = 400

@@ -47,6 +47,19 @@ from ..forms.frameworks import SignerDetailsForm, ContractReviewForm, AcceptAgre
 CLARIFICATION_QUESTION_NAME = 'clarification_question'
 
 
+MESSAGE_SENT_QS_OPEN_MESSAGE = (
+    "Your clarification question has been sent. Answers to all clarification questions will be published on this page."
+)
+MESSAGE_SENT_QS_CLOSED_MESSAGE = (
+    "Your question has been sent. You’ll get a reply from the Crown Commercial Service soon."
+)
+
+
+AGREEMENT_RETURNED_MESSAGE = (
+    "Your framework agreement has been returned to the Crown Commercial Service to be countersigned."
+)
+
+
 @main.route('/frameworks/<framework_slug>', methods=['GET', 'POST'])
 @login_required
 def framework_dashboard(framework_slug):
@@ -480,9 +493,8 @@ def framework_supplier_declaration_submit(framework_slug):
     except APIError as e:
         abort(e.status_code)
 
-    # follow existing flash message passing pattern
     flash_key = "{}/declaration_complete".format(url_for('.framework_dashboard', framework_slug=framework['slug']))
-    flash(flash_key, 'declaration_complete')
+    flash(flash_key, "track-page-view")
     return redirect(url_for('.framework_dashboard', framework_slug=framework['slug']))
 
 
@@ -745,7 +757,10 @@ def framework_updates_email_clarification_question(framework_slug):
         object_id=current_user.supplier_id,
         data={"question": clarification_question, 'framework': framework['slug']})
 
-    flash('message_sent', 'success')
+    flash(
+        MESSAGE_SENT_QS_OPEN_MESSAGE if framework["clarificationQuestionsOpen"] else MESSAGE_SENT_QS_CLOSED_MESSAGE,
+        'success',
+    )
     return framework_updates(framework['slug'])
 
 
@@ -1089,10 +1104,7 @@ def contract_review(framework_slug, agreement_id):
 
             session.pop('signature_page', None)
 
-            flash(
-                'Your framework agreement has been returned to the Crown Commercial Service to be countersigned.',
-                'success'
-            )
+            flash(AGREEMENT_RETURNED_MESSAGE, "success")
 
             if feature.is_active('CONTRACT_VARIATION'):
                 # Redirect to contract variation if it has not been signed
@@ -1148,6 +1160,11 @@ def view_contract_variation(framework_slug, variation_slug):
     form = AcceptAgreementVariationForm()
     form_errors = None
 
+    supplier_name = supplier_framework['declaration']['nameOfOrganisation']
+    variation_content = content_loader.get_message(framework_slug, variation_content_name).filter(
+        {'supplier_name': supplier_name}
+    )
+
     # Do not call API or send email if already agreed to
     if request.method == 'POST' and not agreed_details.get("agreedAt"):
         if form.validate_on_submit():
@@ -1179,7 +1196,7 @@ def view_contract_variation(framework_slug, variation_slug):
                     "Variation agreed email failed to send: {error}, supplier_id: {supplier_id}",
                     extra={'error': str(e), 'supplier_id': current_user.supplier_id}
                 )
-            flash('variation_accepted')
+            flash(variation_content.confirmation_message, "success")
             return redirect(url_for(".view_contract_variation",
                                     framework_slug=framework_slug,
                                     variation_slug=variation_slug)
@@ -1188,11 +1205,6 @@ def view_contract_variation(framework_slug, variation_slug):
             form_errors = [
                 {'question': form['accept_changes'].label.text, 'input_name': 'accept_changes'}
             ]
-
-    supplier_name = supplier_framework['declaration']['nameOfOrganisation']
-    variation_content = content_loader.get_message(framework_slug, variation_content_name).filter(
-        {'supplier_name': supplier_name}
-    )
 
     return render_template(
         "frameworks/contract_variation.html",

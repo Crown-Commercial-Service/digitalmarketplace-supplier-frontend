@@ -32,21 +32,6 @@
     {% endwith %}
   {% endif %}
 
-  {% with messages = get_flashed_messages(with_categories=true) %}
-    {% for category, message in messages %}
-      {% if message == 'variation_accepted' %}
-        {% set message = variation.confirmation_message %}
-      {% endif %}
-      {%
-        with
-        message = message,
-        type = "destructive" if category == 'error' else "success"
-      %}
-      {% include "toolkit/notification-banner.html" %}
-      {% endwith %}
-    {% endfor %}
-  {% endwith %}
-
     <div class="grid-row">
       <div class="column-one-whole">
         {% if form.errors %}

@@ -991,10 +991,10 @@ class TestSupplierEditUpdateServiceSection(BaseApplicationTest):
             '1', {'serviceName': 'The service', 'serviceSummary': 'This is the service'},
             'email@email.com')
 
-        self.assert_flashes(
-            {"updated_service_name": "The service"},
-            "service_updated",
-        )
+        assert self.get_flash_messages() == ((
+            "success",
+            "You’ve edited your service. The changes are now live on the Digital Marketplace.",
+        ),)
 
     def test_editing_readonly_section_is_not_allowed(self, data_api_client, s3):
         data_api_client.get_service.return_value = self.empty_service
@@ -1026,10 +1026,10 @@ class TestSupplierEditUpdateServiceSection(BaseApplicationTest):
         data_api_client.update_service.assert_called_once_with(
             '1', dict(), 'email@email.com')
 
-        self.assert_flashes(
-            {"updated_service_name": "Service name 123"},
-            "service_updated",
-        )
+        assert self.get_flash_messages() == ((
+            "success",
+            "You’ve edited your service. The changes are now live on the Digital Marketplace.",
+        ),)
 
     def test_edit_non_existent_service_returns_404(self, data_api_client, s3):
         data_api_client.get_service.return_value = None
@@ -1190,10 +1190,10 @@ class TestSupplierEditUpdateServiceSectionG9(BaseApplicationTest):
             'email@email.com',
         )
 
-        self.assert_flashes(
-            {"updated_service_name": "Service name 321"},
-            "service_updated",
-        )
+        assert self.get_flash_messages() == ((
+            "success",
+            "You’ve edited your service. The changes are now live on the Digital Marketplace.",
+        ),)
 
     def test_file_upload(self, data_api_client, s3):
         data_api_client.get_service.return_value = self.base_service
@@ -2101,15 +2101,11 @@ class TestShowDraftService(BaseApplicationTest):
         data_api_client.get_draft_service.return_value = self.draft_service
         count_unanswered.return_value = 0, 1
         res = self.client.get('/suppliers/frameworks/g-cloud-7/submissions/scs/1')
-        document = html.fromstring(res.get_data(as_text=True))
 
         assert '1 optional question unanswered' in res.get_data(as_text=True)
 
-        submit_button = document.xpath(
-            "//input[@value='Mark as complete']"
-        )[0]
-
-        assert sorted(["submit", "button-save", "Mark as complete"]) == sorted(submit_button.values())
+        doc = html.fromstring(res.get_data(as_text=True))
+        assert doc.xpath("//form//input[@type='submit'][contains('button-save',@class)][@value='Mark as complete']")
 
     @mock.patch('app.main.views.services.count_unanswered_questions')
     def test_no_move_to_complete_button_if_not_open(self, count_unanswered, data_api_client):
