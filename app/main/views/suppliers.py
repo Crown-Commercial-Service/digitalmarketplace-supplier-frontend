@@ -525,6 +525,12 @@ def become_a_supplier():
     ), 200
 
 
+# Redirect added 23rd March 2018 - can probably remove it in 6 months or so
+@main.route('/create', methods=['GET'])
+def redirect_to_create_new_supplier():
+    return redirect(url_for(".create_new_supplier")), 301
+
+
 @main.route('/create/start', methods=['GET'])
 def create_new_supplier():
     return render_template(

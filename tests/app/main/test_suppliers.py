@@ -1622,6 +1622,23 @@ class TestEditSupplierRegisteredAddress(BaseApplicationTest):
 
 
 class TestCreateSupplier(BaseApplicationTest):
+    def test_old_create_start_page_redirects_to_new_start_page(self):
+        res = self.client.get("/suppliers/create")
+        assert res.status_code == 301
+        assert res.location == "http://localhost/suppliers/create/start"
+
+    def test_create_start_page_get_ok(self):
+        res = self.client.get("/suppliers/create/start")
+        assert res.status_code == 200
+
+    def test_create_duns_number_page_get_ok(self):
+        res = self.client.get("/suppliers/create/duns-number")
+        assert res.status_code == 200
+
+    def test_create_company_details_page_get_ok(self):
+        res = self.client.get("/suppliers/create/company-details")
+        assert res.status_code == 200
+
     @pytest.mark.parametrize('duns_number', [None, 'invalid', '12345678', '1234567890'])
     def test_should_be_an_error_if_missing_or_invalid_duns_number(self, duns_number):
         """Ensures that validation on duns number prevents submission of:
