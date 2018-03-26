@@ -26,25 +26,6 @@
 
 {% block main_content %}
 
-  {% with messages = get_flashed_messages(with_categories=true) %}
-    {% for category, message in messages %}
-      {% if message == 'message_sent' %}
-        {% if framework.clarificationQuestionsOpen %}
-          {% set message = "Your clarification question has been sent. Answers to all clarification questions will be published on this page." %}
-        {% else %}
-          {% set message = "Your question has been sent. You'll get a reply from the Crown Commercial Service soon." %}
-        {% endif %}
-      {% endif %}
-      {%
-        with
-        message = message,
-        type = "destructive" if category == 'error' else "success"
-      %}
-        {% include "toolkit/notification-banner.html" %}
-      {% endwith %}
-    {% endfor %}
-  {% endwith %}
-
   {% if error_message %}
     {%
       with

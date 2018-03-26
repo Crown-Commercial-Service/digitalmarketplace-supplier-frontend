@@ -3715,10 +3715,12 @@ class TestSendClarificationQuestionEmail(BaseApplicationTest):
         self._assert_application_email(send_email)
 
         assert response.status_code == 200
-        assert self.strip_all_whitespace(
-            '<p class="banner-message">Your question has been sent. You&#39;ll get a reply from ' +
-            'the Crown Commercial Service soon.</p>'
-        ) in self.strip_all_whitespace(response.get_data(as_text=True))
+
+        doc = html.fromstring(response.get_data(as_text=True))
+        assert doc.xpath(
+            "//p[contains(@class, 'banner-message')][normalize-space(string())=$t]",
+            t="Your question has been sent. You’ll get a reply from the Crown Commercial Service soon."
+        )
 
     @pytest.mark.parametrize(
         'invalid_clarification_question',

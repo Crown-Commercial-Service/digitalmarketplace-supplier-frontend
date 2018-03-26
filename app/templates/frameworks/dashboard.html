@@ -30,24 +30,6 @@
 {% endblock %}
 
 {% block main_content %}
-  {% with messages = get_flashed_messages(with_categories=True) %}
-    {% for category, message in messages %}
-      {% if category == 'declaration_complete' %}
-        <div data-analytics="trackPageView"
-          data-url="{{message}}">
-        </div>
-      {% else %}
-        {%
-          with
-          message = message,
-          type = "destructive" if category == 'error' else "success"
-        %}
-          {% include "toolkit/notification-banner.html" %}
-        {% endwith %}
-      {% endif %}
-    {% endfor %}
-  {% endwith %}
-
   {# Confidence Banner #}
   {% if application_made and company_details_complete and framework.status == 'open' %}
     {% with 

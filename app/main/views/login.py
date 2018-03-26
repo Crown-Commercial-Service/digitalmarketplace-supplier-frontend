@@ -10,6 +10,9 @@ from ..helpers import login_required
 from ... import data_api_client
 
 
+USER_INVITED_FLASH_MESSAGE = "Contributor invited"
+
+
 @main.route('/invite-user', methods=["GET"])
 @login_required
 def invite_user():
@@ -48,7 +51,7 @@ def send_invite_user():
             data={'invitedEmail': form.email_address.data},
         )
 
-        flash('user_invited', 'success')
+        flash(USER_INVITED_FLASH_MESSAGE, "success")
         return redirect(url_for('.list_users'))
     else:
         return render_template(

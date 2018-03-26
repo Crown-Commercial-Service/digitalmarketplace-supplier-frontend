@@ -1,4 +1,4 @@
-from flask import render_template, request, redirect, url_for, abort, flash, current_app
+from flask import render_template, request, redirect, url_for, abort, flash, current_app, Markup
 from flask_login import current_user
 
 from dmapiclient import HTTPError
@@ -15,6 +15,17 @@ from ..helpers.frameworks import (
     get_declaration_status,
     get_supplier_framework_info,
     get_framework_or_404,
+)
+
+
+# TODO make these more consistent, content-wise
+SERVICE_REMOVED_MESSAGE = "{service_name} has been removed."
+SERVICE_UPDATED_MESSAGE = "You’ve edited your service. The changes are now live on the Digital Marketplace."
+SERVICE_COMPLETED_MESSAGE = Markup("<strong>{service_name}</strong> was marked as complete")
+SERVICE_DELETED_MESSAGE = Markup("<strong>{service_name}</strong> was deleted")
+REMOVE_LAST_SUBSECTION_ERROR_MESSAGE = Markup(
+    "You must offer one of the {section_name} to be eligible.<br>"
+    "If you don’t want to offer {service_name}, delete this service."
 )
 
 
@@ -108,9 +119,7 @@ def remove_service(framework_slug, service_id):
 
         updated_service = updated_service.get('services')
 
-        flash({
-            'updated_service_name': updated_service.get('serviceName')
-        }, 'remove_service')
+        flash(SERVICE_REMOVED_MESSAGE.format(service_name=updated_service.get('serviceName')), 'remove_service')
 
         return redirect(url_for(".list_services", framework_slug=service["frameworkSlug"]))
 
@@ -224,7 +233,7 @@ def update_section(framework_slug, service_id, section_id):
             service_id=service_id,
             errors=errors,
         ), 400
-    flash({"updated_service_name": posted_data.get("serviceName") or service.get("serviceName")}, 'service_updated')
+    flash(SERVICE_UPDATED_MESSAGE, "success")
     return redirect(url_for(".edit_service", service_id=service_id, framework_slug=service["frameworkSlug"]))
 
 
@@ -387,14 +396,12 @@ def complete_draft_service(framework_slug, lot_slug, service_id):
         current_user.email_address
     )
 
-    flash({
-        'service_name': draft.get('serviceName') or draft.get('lotName'),
-        'virtual_pageview_url': "{}/{}/{}".format(
-            url_for(".framework_submission_lots", framework_slug=framework['slug']),
-            lot_slug,
-            "complete"
-        )
-    }, 'service_completed')
+    flash(SERVICE_COMPLETED_MESSAGE.format(service_name=draft.get('serviceName') or draft.get('lotName')), "success")
+    flash("/".join((
+        url_for(".framework_submission_lots", framework_slug=framework['slug']),
+        lot_slug,
+        "complete",
+    )), "track-page-view")
 
     if lot['oneServiceLimit']:
         return redirect(url_for(".framework_submission_lots", framework_slug=framework['slug']))
@@ -428,7 +435,7 @@ def delete_draft_service(framework_slug, lot_slug, service_id):
             current_user.email_address
         )
 
-        flash({'service_name': draft.get('serviceName', draft['lotName'])}, 'service_deleted')
+        flash(SERVICE_DELETED_MESSAGE.format(service_name=draft.get('serviceName', draft['lotName'])), "success")
         if lot['oneServiceLimit']:
             return redirect(url_for(".framework_submission_lots", framework_slug=framework['slug']))
         else:
@@ -633,6 +640,25 @@ def remove_subsection(framework_slug, lot_slug, service_id, section_id, question
     question_to_remove = content.get_question_by_slug(question_slug)
     fields_to_remove = question_to_remove.form_fields
 
+    # simply defining this as an inner function so we can avoid having to manually pass around the umpteen variables
+    # it depends on instead pulling them from the outer scope
+    def set_remove_last_subsection_error_message():
+        flash(REMOVE_LAST_SUBSECTION_ERROR_MESSAGE.format(
+            section_name=containing_section.name.lower(),
+            service_name=(draft.get("serviceName") or draft.get("lotName")).lower(),
+        ), "error")
+        flash("/".join((
+            url_for(
+                ".remove_subsection",
+                framework_slug=framework_slug,
+                lot_slug=lot_slug,
+                service_id=service_id,
+                section_id=section_id,
+                question_slug=question_slug,
+            ),
+            "remove-last-subsection-attempt",
+        )), "track-page-view")
+
     if request.args.get("confirm") and request.method == "POST":
         # Remove the section
         update_json = {field: None for field in fields_to_remove}
@@ -642,14 +668,11 @@ def remove_subsection(framework_slug, lot_slug, service_id, section_id, question
                 update_json,
                 current_user.email_address
             )
-            flash({'service_name': question_to_remove.label}, 'service_deleted')
+            flash(SERVICE_DELETED_MESSAGE.format(service_name=question_to_remove.label), "success")
         except HTTPError as e:
             if e.status_code == 400:
                 # You can't remove the last one
-                flash({
-                    'remove_last_attempted': containing_section.name,
-                    'service_name': question_to_remove.label
-                }, 'error')
+                set_remove_last_subsection_error_message()
             else:
                 abort(e.status_code)
 
@@ -670,20 +693,7 @@ def remove_subsection(framework_slug, lot_slug, service_id, section_id, question
             )
         else:
             # You can't remove the last one
-            flash({
-                'remove_last_attempted': containing_section.name,
-                'service_name': question_to_remove.label,
-                'virtual_pageview_url': "{}/{}".format(
-                    url_for(".remove_subsection",
-                            framework_slug=framework_slug,
-                            lot_slug=lot_slug,
-                            service_id=service_id,
-                            section_id=section_id,
-                            question_slug=question_slug
-                            ),
-                    "remove-last-subsection-attempt"
-                )
-            }, 'error')
+            set_remove_last_subsection_error_message()
 
     return redirect(
         url_for('.view_service_submission',

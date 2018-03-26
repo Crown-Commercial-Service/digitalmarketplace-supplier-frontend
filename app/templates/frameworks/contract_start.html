@@ -26,16 +26,6 @@
 
 {% block main_content %}
 
-  {% with messages = get_flashed_messages(with_categories=True) %}
-    {% for category, message in messages %}
-      {% if category == 'declaration_complete' %}
-        <div data-analytics="trackPageView"
-          data-url="{{message}}">
-        </div>
-      {% endif %}
-    {% endfor %}
-  {% endwith %}
-
   <div class="grid-row framework-dashboard">
     <div class="column-two-thirds">
       {% with

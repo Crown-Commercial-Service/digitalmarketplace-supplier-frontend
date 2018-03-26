@@ -17,24 +17,6 @@
 
 {% block main_content %}
 
-{% with messages = get_flashed_messages(with_categories=true) %}
-  {% if messages %}
-    {% for category, message in messages %}
-      {% if category == "error" and message == "mailing_list_signup_error" %}
-        {% set message %}
-          The service is unavailable at the moment. If the problem continues please
-          contact <a href="mailto:enquiries@digitalmarketplace.service.gov.uk">enquiries@digitalmarketplace.service.gov.uk</a>
-        {% endset %}
-        {%
-          with type = "destructive"
-        %}
-          {% include "toolkit/notification-banner.html" %}
-        {% endwith %}
-      {% endif %}
-    {% endfor %}
-  {% endif %}
-{% endwith %}
-
 <div class="grid-row">
   <div class="column-two-thirds">
     {%

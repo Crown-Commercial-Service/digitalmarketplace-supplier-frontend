@@ -6,6 +6,7 @@ import re
 from mock import patch
 import pytest
 from werkzeug.http import parse_cookie
+from markupsafe import escape
 
 from dmutils.formats import DATETIME_FORMAT
 
@@ -498,6 +499,10 @@ class BaseApplicationTest(object):
     def assert_no_flashes(self):
         with self.client.session_transaction() as session:
             assert not session.get("_flashes")
+
+    def get_flash_messages(self):
+        with self.client.session_transaction() as session:
+            return tuple((category, escape(message)) for category, message in (session.get("_flashes") or ()))
 
     def assert_single_question_page_validation_errors(self,
                                                       res,

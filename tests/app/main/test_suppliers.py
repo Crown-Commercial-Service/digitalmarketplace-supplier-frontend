@@ -2301,9 +2301,8 @@ class TestJoinOpenFrameworkNotificationMailingList(BaseApplicationTest):
         assert response.location == "http://localhost/"
         assert mailchimp_client_instance.subscribe_new_email_to_list.called is True
 
-        self.assert_flashes(
-            "You will receive email notifications to qu&amp;rt@four.pence when applications are opening.",
-            "success",
+        assert self.get_flash_messages() == (
+            ("success", "You will receive email notifications to qu&amp;rt@four.pence when applications are opening.",),
         )
 
 
