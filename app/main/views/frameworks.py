@@ -33,6 +33,7 @@ from ..helpers.frameworks import (
     get_framework_or_404, get_framework_and_lot_or_404, count_drafts_by_lot, get_statuses_for_lot,
     return_supplier_framework_info_if_on_framework_or_abort, returned_agreement_email_recipients,
     check_agreement_is_related_to_supplier_framework_or_abort, get_framework_for_reuse,
+    get_supplier_registered_name_from_declaration
 )
 from ..helpers.suppliers import supplier_company_details_are_complete
 from ..helpers.services import (
@@ -802,6 +803,7 @@ def framework_agreement(framework_slug):
                 'result': lot_results[lot['slug']]
             } for lot in framework['lots']],
             supplier_framework=supplier_framework,
+            supplier_registered_name=get_supplier_registered_name_from_declaration(supplier_framework['declaration']),
         ), 200
 
     return render_template(
@@ -971,6 +973,7 @@ def signer_details(framework_slug, agreement_id):
         framework=framework,
         question_keys=question_keys,
         supplier_framework=supplier_framework,
+        supplier_registered_name=get_supplier_registered_name_from_declaration(supplier_framework['declaration']),
     ), 400 if form_errors else 200
 
 
@@ -1124,7 +1127,7 @@ def contract_review(framework_slug, agreement_id):
             ]
 
     form.authorisation.description = u"I have the authority to return this agreement on behalf of {}.".format(
-        supplier_framework['declaration']['nameOfOrganisation']
+        get_supplier_registered_name_from_declaration(supplier_framework['declaration'])
     )
 
     return render_template(
@@ -1135,6 +1138,7 @@ def contract_review(framework_slug, agreement_id):
         framework=framework,
         signature_page=signature_page,
         supplier_framework=supplier_framework,
+        supplier_registered_name=get_supplier_registered_name_from_declaration(supplier_framework['declaration']),
     ), 400 if form_errors else 200
 
 
@@ -1160,7 +1164,7 @@ def view_contract_variation(framework_slug, variation_slug):
     form = AcceptAgreementVariationForm()
     form_errors = None
 
-    supplier_name = supplier_framework['declaration']['nameOfOrganisation']
+    supplier_name = get_supplier_registered_name_from_declaration(supplier_framework['declaration'])
     variation_content = content_loader.get_message(framework_slug, variation_content_name).filter(
         {'supplier_name': supplier_name}
     )

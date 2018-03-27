@@ -8,7 +8,7 @@ from werkzeug.exceptions import HTTPException
 from app.main.helpers.frameworks import (
     check_agreement_is_related_to_supplier_framework_or_abort, get_framework_for_reuse, get_statuses_for_lot,
     return_supplier_framework_info_if_on_framework_or_abort, order_frameworks_for_reuse,
-    get_frameworks_closed_and_open_for_applications)
+    get_frameworks_closed_and_open_for_applications, get_supplier_registered_name_from_declaration)
 
 
 def get_lot_status_examples():
@@ -560,3 +560,17 @@ def test_get_frameworks_closed_and_open_for_applications():
     for case in cases:
         displayed_frameworks = get_frameworks_closed_and_open_for_applications(case["frameworks"])
         assert displayed_frameworks == case["expected"], "ERROR ON CASE {}".format(case)
+
+
+@pytest.mark.parametrize('name_of_org, supplier_reg_name, expected_result', [
+    ('G-Cloud 9 supplier', None, 'G-Cloud 9 supplier'),
+    (None, 'G-Cloud 10 supplier', 'G-Cloud 10 supplier'),
+    ('G-9 supplier', 'G-10 supplier', 'G-10 supplier'),  # Favour newer key, but in reality should NEVER exist with both
+])
+def test_get_supplier_registered_name_from_declaration(name_of_org, supplier_reg_name, expected_result):
+    declaration = {}
+    if name_of_org:
+        declaration['nameOfOrganisation'] = name_of_org
+    if supplier_reg_name:
+        declaration['supplierRegisteredName'] = supplier_reg_name
+    assert get_supplier_registered_name_from_declaration(declaration) == expected_result
