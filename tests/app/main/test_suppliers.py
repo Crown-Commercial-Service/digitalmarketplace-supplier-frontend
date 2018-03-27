@@ -117,7 +117,7 @@ class TestSuppliersDashboard(BaseApplicationTest):
             session['_flashes'] = [
                 ('error', 'This is an error'),
                 ('success', 'This is a success'),
-                ('flag', 'account-created')
+                ('track-page-view', '/suppliers?account-created=true')
             ]
 
         data_api_client.get_framework.return_value = self.framework('open')
@@ -140,7 +140,7 @@ class TestSuppliersDashboard(BaseApplicationTest):
         self, get_current_suppliers_users, data_api_client
     ):
         with self.client.session_transaction() as session:
-            session['_flashes'] = [('flag', 'account-created')]
+            session['_flashes'] = [('track-page-view', '/suppliers?account-created=true')]
 
         with self.app.test_client():
             self.login()
