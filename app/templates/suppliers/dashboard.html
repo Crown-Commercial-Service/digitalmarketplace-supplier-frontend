@@ -14,6 +14,29 @@
   {% endwith %}
 {% endblock %}
 
+{% block head %}
+  {{ super() }}
+  {% if not current_user.user_research_opted_in and not 'seen_user_research_message' in request.cookies %}
+    {%
+      with
+      custom_dimensions = [
+        {
+          "data_id": 12,
+          "data_value": "User research banner"
+        }
+      ]
+    %}
+      {% include "toolkit/custom-dimensions.html" %}
+    {% endwith %}
+  {% endif %}
+{% endblock %}
+
+{% block after_header %}
+  {% if not current_user.user_research_opted_in and not 'seen_user_research_message' in request.cookies %}
+    {% include "toolkit/user-research-consent-banner.html" %}
+  {% endif %}
+{% endblock %}
+
 {% block main_content %}
 
   <div class="grid-row">
@@ -33,6 +56,10 @@
     {% include 'suppliers/_frameworks_open.html' %}
     {% include 'suppliers/_frameworks_pending.html' %}
     {% include 'suppliers/_frameworks_standstill.html' %}
+    <h2 class="visually-hidden">Your services</h2>
+    <div class="dmspeak">
+      {% include 'suppliers/_frameworks_live.html' %}
+    </div>
     </div>
     <div class="column-one-third dmspeak">
       <h2 class="heading-xmedium">Your company</h2>
@@ -40,13 +67,24 @@
         <a href="{{ url_for('.supplier_details') }}">Supplier details</a><br/>
         <a href="{{ url_for('.list_users') }}">Contributors</a>
       </p>
+      <h2 class="heading-xmedium">Account settings</h2>
+      <p>
+        <a 
+          href="{{ url_for('external.user_research_consent') }}"
+          data-analytics="trackEvent"
+          data-analytics-category="user-research"
+          data-analytics-action="account-settings-link"
+        >
+          {% if not current_user.user_research_opted_in %}
+            Join the user research mailing list
+          {% else %}
+            Unsubscribe from the user research mailing list
+          {% endif %}
+        </a>
+      </p>
     </div>
   </div>
 
-  <h2 class="visually-hidden">Your services</h2>
-  <div class="grid-row">
-    <div class="column-two-thirds dmspeak">
-      {% include 'suppliers/_frameworks_live.html' %}
-    </div>
-  </div>
+  
+
 {% endblock %}
