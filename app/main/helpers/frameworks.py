@@ -346,3 +346,10 @@ def get_frameworks_closed_and_open_for_applications(frameworks):
             key=lambda fw_groupby: fw_groupby["framework"],
         )
     ))
+
+
+def get_supplier_registered_name_from_declaration(declaration):
+    return(
+        declaration.get('supplierRegisteredName')  # G-Cloud 10 and later declaration key
+        or declaration.get('nameOfOrganisation')  # G-Cloud 9 and earlier declaration key
+    )
