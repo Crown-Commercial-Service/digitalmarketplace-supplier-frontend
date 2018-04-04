@@ -159,6 +159,7 @@ class Live(Config):
     DM_NOTIFY_REDIRECT_DOMAINS_TO_ADDRESS = {
         "example.com": "success@simulator.amazonses.com",
         "example.gov.uk": "success@simulator.amazonses.com",
+        "user.marketplace.team": "success@simulator.amazonses.com",
     }
 
     DM_FRAMEWORK_AGREEMENTS_EMAIL = 'enquiries@digitalmarketplace.service.gov.uk'
