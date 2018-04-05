@@ -3654,7 +3654,7 @@ class TestSendClarificationQuestionEmail(BaseApplicationTest):
                 "do-not-reply@digitalmarketplace.service.gov.uk",
                 "Test Framework Supplier",
                 ["clarification-question"],
-                reply_to="suppliers+g-cloud-7@digitalmarketplace.service.gov.uk",
+                reply_to="do-not-reply@digitalmarketplace.service.gov.uk",
             )
         if succeeds:
             send_email.assert_any_call(
