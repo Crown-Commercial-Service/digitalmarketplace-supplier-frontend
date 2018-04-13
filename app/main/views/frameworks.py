@@ -262,6 +262,26 @@ def framework_submission_services(framework_slug, lot_slug):
     if framework['status'] == 'pending' and declaration_status != 'complete':
         abort(404)
 
+    try:
+        previous_framework_slug = content_loader.get_metadata(framework['slug'], 'copy_services', 'source_framework')
+    except ContentNotFoundError:
+        previous_framework_slug = None
+        previous_services = []
+        previous_framework = {}
+
+    if previous_framework_slug:
+        previous_framework = get_framework_or_404(data_api_client, previous_framework_slug)
+        previous_services = data_api_client.find_services(
+            supplier_id=current_user.supplier_id,
+            framework=previous_framework_slug,
+            lot=lot_slug,
+            status='published',
+        )["services"]
+
+    previous_services_still_to_copy = len([
+        service for service in previous_services if not service['copiedToFollowingFramework']
+    ]) > 0
+
     if lot['oneServiceLimit']:
         draft = next(iter(drafts + complete_drafts), None)
         if not draft:
@@ -287,6 +307,7 @@ def framework_submission_services(framework_slug, lot_slug):
 
     return render_template(
         "frameworks/services.html",
+        previous_framework=previous_framework if previous_services_still_to_copy else None,
         complete_drafts=list(reversed(complete_drafts)),
         drafts=list(reversed(drafts)),
         declaration_status=declaration_status,

@@ -18,6 +18,7 @@ from dmapiclient.audit import AuditTypes
 from dmutils.email.exceptions import EmailError
 from dmutils.s3 import S3ResponseError
 from app.main.views.frameworks import render_template as frameworks_render_template
+from dmcontent.errors import ContentNotFoundError
 
 from app.main.forms.frameworks import ReuseDeclarationForm
 from ..helpers import (
@@ -3822,6 +3823,16 @@ class TestSendClarificationQuestionEmail(BaseApplicationTest):
 @mock.patch('app.main.views.frameworks.data_api_client', autospec=True)
 @mock.patch('app.main.views.frameworks.count_unanswered_questions')
 class TestG7ServicesList(BaseApplicationTest):
+    def setup_method(self, method):
+        super().setup_method(method)
+        self.get_metadata_patch = mock.patch('app.main.views.frameworks.content_loader.get_metadata')
+        self.get_metadata = self.get_metadata_patch.start()
+        self.get_metadata.return_value = 'g-cloud-6'
+
+    def teardown_method(self, method):
+        super().teardown_method(method)
+        self.get_metadata_patch.stop()
+
     def _assert_incomplete_application_banner_not_visible(self, html):
         assert "Your application is not complete" not in html
 
@@ -4101,6 +4112,58 @@ class TestG7ServicesList(BaseApplicationTest):
 
         else:
             self._assert_incomplete_application_banner_not_visible(submissions.get_data(as_text=True))
+
+    @pytest.mark.parametrize(
+        ('copied', 'link_shown'),
+        (
+            ((False, False, False), True),
+            ((True, False, True), True),
+            ((True, True, True), False),
+        )
+    )
+    def test_drafts_list_has_link_to_add_published_services_if_any_services_not_yet_copied(
+        self, count_unanswered, data_api_client, copied, link_shown
+    ):
+        data_api_client.find_services.return_value = {
+            'services': [
+                {'question1': 'answer1', 'copiedToFollowingFramework': copied[0]},
+                {'question2': 'answer2', 'copiedToFollowingFramework': copied[1]},
+                {'question2': 'answer2', 'copiedToFollowingFramework': copied[2]},
+            ],
+        }
+        data_api_client.get_framework.return_value = self.framework(status='open')
+        self.login()
+
+        res = self.client.get('/suppliers/frameworks/g-cloud-7/submissions/scs')
+        doc = html.fromstring(res.get_data(as_text=True))
+        link = doc.xpath(
+            "//*[@id='content']/p[1]/a[normalize-space(string())='View and add your services from G-Cloud\xa07']"
+        )
+
+        data_api_client.find_services.assert_called_once_with(
+            supplier_id=1234,
+            framework='g-cloud-6',
+            lot='scs',
+            status='published',
+        )
+
+        if link_shown:
+            assert link
+            assert 'View and add your services from G-Cloud\xa07\n' in link[0].text
+            assert '/suppliers/frameworks/g-cloud-7/submissions/scs/previous-services' in link[0].values()
+        else:
+            assert not link
+
+    def test_link_to_add_previous_services_not_shown_if_no_defined_previous_framework(
+        self, count_unanswered, data_api_client
+    ):
+        self.get_metadata.side_effect = ContentNotFoundError('Not found')
+        self.login()
+
+        res = self.client.get('/suppliers/frameworks/g-cloud-7/submissions/scs')
+        doc = html.fromstring(res.get_data(as_text=True))
+
+        assert not doc.xpath("//a[normalize-space(string())='View and add your services from G-Cloud\xa07']")
 
 
 @mock.patch('app.main.views.frameworks.data_api_client', autospec=True)

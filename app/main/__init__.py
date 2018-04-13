@@ -38,6 +38,7 @@ content_loader.load_manifest('g-cloud-10', 'services', 'edit_service')
 content_loader.load_manifest('g-cloud-10', 'services', 'edit_submission')
 content_loader.load_manifest('g-cloud-10', 'declaration', 'declaration')
 content_loader.load_messages('g-cloud-10', ['dates', 'urls', 'advice'])
+content_loader.load_metadata('g-cloud-10', ['copy_services'])
 
 content_loader.load_manifest('digital-outcomes-and-specialists-3', 'declaration', 'declaration')
 content_loader.load_manifest('digital-outcomes-and-specialists-3', 'services', 'edit_submission')
