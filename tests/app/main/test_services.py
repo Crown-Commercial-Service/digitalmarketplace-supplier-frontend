@@ -2275,3 +2275,128 @@ class TestParseDocumentUploadTime(BaseApplicationTest):
     def test_parses_document_upload_time(self):
         file_url = "http://www.address.com/g-cloud-9/submissions/92352/70419-terms-and-conditions-2018-01-23-1103.pdf"
         assert parse_document_upload_time(file_url) == datetime(2018, 1, 23, 11, 3)
+
+
+@mock.patch('app.main.views.services.data_api_client')
+@mock.patch('app.main.views.services.content_loader.get_metadata')
+class TestListPreviousServices(BaseApplicationTest):
+    def setup_method(self, method):
+        super().setup_method(method)
+        self.login()
+
+    def test_lists_correct_services_for_previous_framework_and_lot(self, get_metadata, data_api_client):
+        data_api_client.get_framework.side_effect = [
+            self.framework(name='G-Cloud 10', slug='g-cloud-10'),
+            self.framework(name='G-Cloud 9', slug='g-cloud-9'),
+        ]
+        data_api_client.find_services.return_value = {
+            'services': [
+                {'serviceName': 'Service one', 'copiedToFollowingFramework': False},
+                {'serviceName': 'Service two', 'copiedToFollowingFramework': False},
+                {'serviceName': 'Service three', 'copiedToFollowingFramework': False},
+            ],
+        }
+        get_metadata.return_value = 'g-cloud-9'
+
+        res = self.client.get('/suppliers/frameworks/g-cloud-10/submissions/cloud-hosting/previous-services')
+        assert res.status_code == 200
+
+        assert data_api_client.find_services.call_args_list == [
+            mock.call(
+                supplier_id=1234,
+                framework='g-cloud-9',
+                lot='cloud-hosting',
+                status='published',
+            )
+        ]
+
+        doc = html.fromstring(res.get_data(as_text=True))
+
+        assert doc.xpath("//h1[normalize-space()='Previous cloud hosting services']")
+        assert doc.xpath("//h2[@class='summary-item-heading'][normalize-space()='Your services from G-Cloud 9']")
+
+        add_all_link = doc.xpath("//a[@class='summary-change-link'][normalize-space()='Add all to G-Cloud\xa010']")[0]
+        assert add_all_link.attrib['href'] == \
+            '/suppliers/frameworks/g-cloud-10/submissions/cloud-hosting/previous-services?copy_all=True'
+
+        service_links = doc.xpath("//td[@class='summary-item-field-first-half']//a")
+        assert len(service_links) == 3
+        assert [service.text for service in service_links] == ['Service one', 'Service two', 'Service three']
+
+        add_service_buttons = doc.xpath("//button[@class='button-secondary']")
+        assert len(add_service_buttons) == 3
+        assert all(button.text == 'Add to G-Cloud 10' for button in add_service_buttons)
+
+    def test_returns_404_if_framework_not_found(self, get_metadata, data_api_client):
+
+        res = self.client.get('/suppliers/frameworks/x-cloud-z/submissions/cloud-hosting/previous-services')
+        assert res.status_code == 404
+
+    def test_returns_404_if_lot_not_found(self, get_metadata, data_api_client):
+        data_api_client.get_framework.return_value = self.framework(name='G-Cloud 10', slug='g-cloud-10')
+
+        res = self.client.get('/suppliers/frameworks/g-cloud-10/submissions/not-a-lot/previous-services')
+        assert res.status_code == 404
+
+    def test_returns_404_if_source_framework_not_found(self, get_metadata, data_api_client):
+        data_api_client.get_framework.side_effect = [
+            self.framework(name='G-Cloud 10', slug='g-cloud-10'),
+            HTTPError(mock.Mock(status_code=404)),
+        ]
+
+        res = self.client.get('/suppliers/frameworks/g-cloud-10/submissions/cloud-hosting/previous-services')
+        assert res.status_code == 404
+
+    @pytest.mark.parametrize(
+        'services',
+        (
+            [
+                {'serviceName': 'Service one', 'copiedToFollowingFramework': True},
+                {'serviceName': 'Service two', 'copiedToFollowingFramework': True},
+                {'serviceName': 'Service three', 'copiedToFollowingFramework': True},
+            ],
+            [],
+        )
+    )
+    def test_redirects_to_draft_service_page_if_no_services_to_copy(self, get_metadata, data_api_client, services):
+        data_api_client.get_framework.side_effect = [
+            self.framework(name='G-Cloud 10', slug='g-cloud-10'),
+            self.framework(name='G-Cloud 9', slug='g-cloud-9'),
+        ]
+        data_api_client.find_services.return_value = {
+            'services': services,
+        }
+
+        res = self.client.get('/suppliers/frameworks/g-cloud-10/submissions/cloud-hosting/previous-services')
+
+        assert res.status_code == 302
+        assert res.location == 'http://localhost/suppliers/frameworks/g-cloud-10/submissions/cloud-hosting'
+
+    def test_shows_confirmation_banner_and_button_when_copying_all(self, get_metadata, data_api_client):
+        data_api_client.get_framework.side_effect = [
+            self.framework(name='G-Cloud 10', slug='g-cloud-10'),
+            self.framework(name='G-Cloud 9', slug='g-cloud-9'),
+        ]
+        data_api_client.find_services.return_value = {
+            'services': [
+                {'serviceName': 'Service one', 'copiedToFollowingFramework': False},
+                {'serviceName': 'Service two', 'copiedToFollowingFramework': False},
+                {'serviceName': 'Service three', 'copiedToFollowingFramework': False},
+            ],
+        }
+        get_metadata.return_value = 'g-cloud-9'
+
+        res = self.client.get(
+            '/suppliers/frameworks/g-cloud-10/submissions/cloud-hosting/previous-services?copy_all=True'
+        )
+        assert res.status_code == 200
+
+        doc = html.fromstring(res.get_data(as_text=True))
+
+        assert doc.xpath(
+            "//p[@class='banner-message']"
+            "[normalize-space()='Are you sure you want to add all your cloud hosting services?']"
+        )
+        assert doc.xpath(
+            "//button[@class='button-destructive banner-action'][normalize-space()='Yes, add all services']"
+        )

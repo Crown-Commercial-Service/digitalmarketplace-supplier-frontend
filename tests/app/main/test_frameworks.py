@@ -4140,16 +4140,17 @@ class TestG7ServicesList(BaseApplicationTest):
             "//*[@id='content']/p[1]/a[normalize-space(string())='View and add your services from G-Cloud\xa07']"
         )
 
-        data_api_client.find_services.assert_called_once_with(
-            supplier_id=1234,
-            framework='g-cloud-6',
-            lot='scs',
-            status='published',
-        )
+        assert data_api_client.find_services.call_args_list == [
+            mock.call(
+                supplier_id=1234,
+                framework='g-cloud-6',
+                lot='scs',
+                status='published',
+            )
+        ]
 
         if link_shown:
             assert link
-            assert 'View and add your services from G-Cloud\xa07\n' in link[0].text
             assert '/suppliers/frameworks/g-cloud-7/submissions/scs/previous-services' in link[0].values()
         else:
             assert not link

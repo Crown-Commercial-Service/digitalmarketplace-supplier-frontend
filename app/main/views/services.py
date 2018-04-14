@@ -702,3 +702,37 @@ def remove_subsection(framework_slug, lot_slug, service_id, section_id, question
                 service_id=service_id,
                 confirm_remove=None
                 ))
+
+
+@main.route('/frameworks/<framework_slug>/submissions/<lot_slug>/previous-services', methods=['GET'])
+@login_required
+def list_previous_services(framework_slug, lot_slug):
+    framework, lot = get_framework_and_lot_or_404(data_api_client, framework_slug, lot_slug)
+    if framework['status'] != 'open':
+        abort(404)
+
+    copy_all = request.args.get('copy_all', None)
+    source_framework_slug = content_loader.get_metadata(framework['slug'], 'copy_services', 'source_framework')
+    source_framework = get_framework_or_404(data_api_client, source_framework_slug)
+
+    previous_services = data_api_client.find_services(
+        supplier_id=current_user.supplier_id,
+        framework=source_framework_slug,
+        lot=lot_slug,
+        status='published',
+    )["services"]
+
+    previous_services_still_to_copy = [
+        service for service in previous_services if not service['copiedToFollowingFramework']
+    ]
+    if not previous_services_still_to_copy:
+        return redirect(url_for(".framework_submission_services", framework_slug=framework_slug, lot_slug=lot_slug))
+
+    return render_template(
+        "services/previous_services.html",
+        framework=framework,
+        lot=lot,
+        source_framework=source_framework,
+        previous_services=previous_services_still_to_copy,
+        copy_all=copy_all,
+    )
