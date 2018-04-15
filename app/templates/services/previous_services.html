@@ -35,21 +35,21 @@
 
 {% block main_content %}
 
-  {% include "partials/service_warning.html" %}
-
   {% if copy_all %}
     <form action="{{ url_for('.copy_all_previous_services', framework_slug=framework.slug, lot_slug=lot.slug) }}" method="POST">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
       {%
         with
         message = "Are you sure you want to add all your {} services?".format(lot.name|lower),
-        type = "destructive",
-        action = '<button type="submit" class="button-destructive banner-action">Yes, add all services'|safe
+        type = "success",
+        action = '<button type="submit" class="button-save banner-action">Yes, add all services'|safe
       %}
         {% include "toolkit/notification-banner.html" %}
       {% endwith %}
     </form>
   {% endif %}
+
+  {% include "partials/service_warning.html" %}
 
   {% with
      heading = "Previous " + lot.name|lower + " services",

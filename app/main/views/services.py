@@ -30,6 +30,10 @@ REMOVE_LAST_SUBSECTION_ERROR_MESSAGE = Markup(
 SINGLE_SERVICE_ADDED_MESSAGE = (
     "You've added a service to your {framework_name} drafts. You'll need to review it before it can be completed."
 )
+ALL_SERVICES_ADDED_MESSAGE = (
+    "You've added {draft_count} services to your {framework_name} drafts. "
+    "You'll need to review them before they can be completed."
+)
 
 
 @main.route("/frameworks/<string:framework_slug>/services")
@@ -777,3 +781,34 @@ def copy_previous_service(framework_slug, lot_slug, service_id):
     flash(SINGLE_SERVICE_ADDED_MESSAGE.format(framework_name=framework['name']), "success")
 
     return redirect(url_for(".list_previous_services", framework_slug=framework_slug, lot_slug=lot_slug))
+
+
+@main.route('/frameworks/<framework_slug>/submissions/<lot_slug>/copy-all-previous-framework-services',
+            methods=['POST'])
+@login_required
+def copy_all_previous_services(framework_slug, lot_slug):
+        framework, lot = get_framework_and_lot_or_404(
+            data_api_client, framework_slug, lot_slug, allowed_statuses=['open']
+        )
+
+        # Suppliers must have registered interest in a framework before they can edit draft services
+        if not get_supplier_framework_info(data_api_client, framework_slug):
+            abort(404)
+
+        questions_to_copy = content_loader.get_metadata(framework['slug'], 'copy_services', 'questions_to_copy')
+        source_framework_slug = content_loader.get_metadata(framework['slug'], 'copy_services', 'source_framework')
+
+        drafts = data_api_client.copy_published_from_framework(
+            framework_slug,
+            lot_slug,
+            current_user.name,
+            data={
+                "sourceFrameworkSlug": source_framework_slug,
+                "supplierId": current_user.supplier_id,
+                "questionsToCopy": questions_to_copy
+            }
+        )['services']
+
+        flash(ALL_SERVICES_ADDED_MESSAGE.format(draft_count=len(drafts), framework_name=framework['name']), "success")
+
+        return redirect(url_for(".framework_submission_services", framework_slug=framework_slug, lot_slug=lot_slug))
