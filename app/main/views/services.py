@@ -27,6 +27,9 @@ REMOVE_LAST_SUBSECTION_ERROR_MESSAGE = Markup(
     "You must offer one of the {section_name} to be eligible.<br>"
     "If you don’t want to offer {service_name}, delete this service."
 )
+SINGLE_SERVICE_ADDED_MESSAGE = (
+    "You've added a service to your {framework_name} drafts. You'll need to review it before it can be completed."
+)
 
 
 @main.route("/frameworks/<string:framework_slug>/services")
@@ -736,3 +739,41 @@ def list_previous_services(framework_slug, lot_slug):
         previous_services=previous_services_still_to_copy,
         copy_all=copy_all,
     )
+
+
+@main.route('/frameworks/<framework_slug>/submissions/<lot_slug>/copy-previous-framework-service/<service_id>',
+            methods=['POST'])
+@login_required
+def copy_previous_service(framework_slug, lot_slug, service_id):
+    framework, lot = get_framework_and_lot_or_404(
+        data_api_client, framework_slug, lot_slug, allowed_statuses=['open']
+    )
+
+    # Suppliers must have registered interest in a framework before they can edit draft services
+    if not get_supplier_framework_info(data_api_client, framework_slug):
+        abort(404)
+
+    questions_to_copy = content_loader.get_metadata(framework['slug'], 'copy_services', 'questions_to_copy')
+    source_framework_slug = content_loader.get_metadata(framework['slug'], 'copy_services', 'source_framework')
+
+    previous_service = data_api_client.get_service(service_id)['services']
+    if previous_service['lotSlug'] != lot_slug or previous_service['frameworkSlug'] != source_framework_slug \
+            or previous_service['copiedToFollowingFramework']:
+        abort(404)
+
+    if not is_service_associated_with_supplier(previous_service):
+        abort(404)
+
+    data_api_client.copy_draft_service_from_existing_service(
+        previous_service['id'],
+        current_user.name,
+        {
+            'targetFramework': framework_slug,
+            'status': 'not-submitted',
+            'questionsToCopy': questions_to_copy
+        },
+    )
+
+    flash(SINGLE_SERVICE_ADDED_MESSAGE.format(framework_name=framework['name']), "success")
+
+    return redirect(url_for(".list_previous_services", framework_slug=framework_slug, lot_slug=lot_slug))
