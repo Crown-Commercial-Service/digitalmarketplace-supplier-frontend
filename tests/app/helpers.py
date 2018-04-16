@@ -318,7 +318,7 @@ class BaseApplicationTest(object):
             framework_agreement_version=None
     ):
         if 'g-cloud-' in slug:
-            if slug == 'g-cloud-9':
+            if int(slug.split('-')[-1]) >= 9:
                 lots = [
                     {'id': 1, 'slug': 'cloud-hosting', 'name': 'Cloud hosting', 'oneServiceLimit': False,
                      'unitSingular': 'service', 'unitPlural': 'service'},

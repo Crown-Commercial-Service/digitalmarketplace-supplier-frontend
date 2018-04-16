@@ -2275,3 +2275,327 @@ class TestParseDocumentUploadTime(BaseApplicationTest):
     def test_parses_document_upload_time(self):
         file_url = "http://www.address.com/g-cloud-9/submissions/92352/70419-terms-and-conditions-2018-01-23-1103.pdf"
         assert parse_document_upload_time(file_url) == datetime(2018, 1, 23, 11, 3)
+
+
+@mock.patch('app.main.views.services.data_api_client')
+@mock.patch('app.main.views.services.content_loader.get_metadata')
+class TestListPreviousServices(BaseApplicationTest):
+    def setup_method(self, method):
+        super().setup_method(method)
+        self.login()
+
+    def test_lists_correct_services_for_previous_framework_and_lot(self, get_metadata, data_api_client):
+        data_api_client.get_framework.side_effect = [
+            self.framework(name='G-Cloud 10', slug='g-cloud-10'),
+            self.framework(name='G-Cloud 9', slug='g-cloud-9'),
+        ]
+        data_api_client.find_services.return_value = {
+            'services': [
+                {'serviceName': 'Service one', 'copiedToFollowingFramework': False},
+                {'serviceName': 'Service two', 'copiedToFollowingFramework': False},
+                {'serviceName': 'Service three', 'copiedToFollowingFramework': False},
+            ],
+        }
+        get_metadata.return_value = 'g-cloud-9'
+
+        res = self.client.get('/suppliers/frameworks/g-cloud-10/submissions/cloud-hosting/previous-services')
+        assert res.status_code == 200
+
+        assert data_api_client.find_services.call_args_list == [
+            mock.call(
+                supplier_id=1234,
+                framework='g-cloud-9',
+                lot='cloud-hosting',
+                status='published',
+            )
+        ]
+
+        doc = html.fromstring(res.get_data(as_text=True))
+
+        assert doc.xpath("//h1[normalize-space()='Previous cloud hosting services']")
+        assert doc.xpath("//h2[@class='summary-item-heading'][normalize-space()='Your services from G-Cloud 9']")
+
+        add_all_link = doc.xpath("//a[@class='summary-change-link'][normalize-space()='Add all to G-Cloud\xa010']")[0]
+        assert add_all_link.attrib['href'] == \
+            '/suppliers/frameworks/g-cloud-10/submissions/cloud-hosting/previous-services?copy_all=True'
+
+        service_links = doc.xpath("//td[@class='summary-item-field-first-half']//a")
+        assert len(service_links) == 3
+        assert [service.text for service in service_links] == ['Service one', 'Service two', 'Service three']
+
+        add_service_buttons = doc.xpath("//button[@class='button-secondary']")
+        assert len(add_service_buttons) == 3
+        assert all(button.text == 'Add to G-Cloud 10' for button in add_service_buttons)
+
+    def test_returns_404_if_framework_not_found(self, get_metadata, data_api_client):
+
+        res = self.client.get('/suppliers/frameworks/x-cloud-z/submissions/cloud-hosting/previous-services')
+        assert res.status_code == 404
+
+    def test_returns_404_if_lot_not_found(self, get_metadata, data_api_client):
+        data_api_client.get_framework.return_value = self.framework(name='G-Cloud 10', slug='g-cloud-10')
+
+        res = self.client.get('/suppliers/frameworks/g-cloud-10/submissions/not-a-lot/previous-services')
+        assert res.status_code == 404
+
+    def test_returns_404_if_source_framework_not_found(self, get_metadata, data_api_client):
+        data_api_client.get_framework.side_effect = [
+            self.framework(name='G-Cloud 10', slug='g-cloud-10'),
+            HTTPError(mock.Mock(status_code=404)),
+        ]
+
+        res = self.client.get('/suppliers/frameworks/g-cloud-10/submissions/cloud-hosting/previous-services')
+        assert res.status_code == 404
+
+    @pytest.mark.parametrize(
+        'services',
+        (
+            [
+                {'serviceName': 'Service one', 'copiedToFollowingFramework': True},
+                {'serviceName': 'Service two', 'copiedToFollowingFramework': True},
+                {'serviceName': 'Service three', 'copiedToFollowingFramework': True},
+            ],
+            [],
+        )
+    )
+    def test_redirects_to_draft_service_page_if_no_services_to_copy(self, get_metadata, data_api_client, services):
+        data_api_client.get_framework.side_effect = [
+            self.framework(name='G-Cloud 10', slug='g-cloud-10'),
+            self.framework(name='G-Cloud 9', slug='g-cloud-9'),
+        ]
+        data_api_client.find_services.return_value = {
+            'services': services,
+        }
+
+        res = self.client.get('/suppliers/frameworks/g-cloud-10/submissions/cloud-hosting/previous-services')
+
+        assert res.status_code == 302
+        assert res.location == 'http://localhost/suppliers/frameworks/g-cloud-10/submissions/cloud-hosting'
+
+    def test_shows_confirmation_banner_and_button_when_copying_all(self, get_metadata, data_api_client):
+        data_api_client.get_framework.side_effect = [
+            self.framework(name='G-Cloud 10', slug='g-cloud-10'),
+            self.framework(name='G-Cloud 9', slug='g-cloud-9'),
+        ]
+        data_api_client.find_services.return_value = {
+            'services': [
+                {'serviceName': 'Service one', 'copiedToFollowingFramework': False},
+                {'serviceName': 'Service two', 'copiedToFollowingFramework': False},
+                {'serviceName': 'Service three', 'copiedToFollowingFramework': False},
+            ],
+        }
+        get_metadata.return_value = 'g-cloud-9'
+
+        res = self.client.get(
+            '/suppliers/frameworks/g-cloud-10/submissions/cloud-hosting/previous-services?copy_all=True'
+        )
+        assert res.status_code == 200
+
+        doc = html.fromstring(res.get_data(as_text=True))
+
+        assert doc.xpath(
+            "//p[@class='banner-message']"
+            "[normalize-space()='Are you sure you want to add all your cloud hosting services?']"
+        )
+        assert doc.xpath(
+            "//button[@class='button-save banner-action'][normalize-space()='Yes, add all services']"
+        )
+
+
+class CopyingPreviousServicesSetup(BaseApplicationTest):
+    def setup_method(self, method):
+        super().setup_method(method)
+        self.data_api_client_patch = mock.patch('app.main.views.services.data_api_client')
+        self.data_api_client = self.data_api_client_patch.start()
+
+        self.get_metadata_patch = mock.patch('app.main.views.services.content_loader.get_metadata')
+        self.get_metadata = self.get_metadata_patch.start()
+
+        self.data_api_client.get_framework.return_value = self.framework(
+            name='G-Cloud 10', slug='g-cloud-10'
+        )
+        self.data_api_client.get_supplier_framework_info.return_value = self.supplier_framework()
+        self.data_api_client.get_service.return_value = {
+            'services': {
+                'lotSlug': 'cloud-hosting',
+                'frameworkSlug': 'g-cloud-9',
+                'copiedToFollowingFramework': False,
+                'id': '2000000000',
+                'supplierId': 1234,
+            },
+        }
+        self.get_metadata.side_effect = [('serviceName', 'serviceSummary'), 'g-cloud-9']
+
+        self.login()
+
+    def teardown_method(self, method):
+        super().teardown_method(method)
+        self.data_api_client_patch.stop()
+        self.get_metadata_patch.stop()
+
+
+class TestCopyPreviousService(CopyingPreviousServicesSetup):
+    def test_copys_existing_service_to_new_framework(self):
+        res = self.client.post(
+            '/suppliers/frameworks/g-cloud-10/submissions/cloud-hosting/copy-previous-framework-service/2000000000'
+        )
+
+        assert res.status_code == 302
+        assert res.location == (
+            "http://localhost/suppliers/frameworks/"
+            "g-cloud-10/submissions/cloud-hosting/previous-services"
+        )
+
+        assert self.data_api_client.copy_draft_service_from_existing_service.call_args_list == [
+            mock.call(
+                '2000000000',
+                'Năme',
+                {
+                    'targetFramework': 'g-cloud-10',
+                    'status': 'not-submitted',
+                    'questionsToCopy': ('serviceName', 'serviceSummary')
+                }
+            )
+        ]
+
+    def test_returns_404_if_framework_not_found(self):
+        self.data_api_client.get_framework.side_effect = HTTPError(mock.Mock(status_code=404))
+
+        res = self.client.post(
+            '/suppliers/frameworks/x-cloud-z/submissions/cloud-hosting/copy-previous-framework-service/2000000000'
+        )
+
+        assert res.status_code == 404
+
+    def test_returns_404_if_lot_not_found(self):
+        res = self.client.post(
+            '/suppliers/frameworks/g-cloud-10/submissions/sausages/copy-previous-framework-service/2000000000'
+        )
+
+        assert res.status_code == 404
+
+    def test_returns_404_if_no_supplier_framework_interest(self):
+        self.data_api_client.get_supplier_framework_info.return_value = {'frameworkInterest': {}}
+
+        res = self.client.post(
+            '/suppliers/frameworks/g-cloud-10/submissions/cloud-hosting/copy-previous-framework-service/2000000000'
+        )
+
+        assert res.status_code == 404
+
+    def test_returns_404_if_service_does_not_match_lot(self):
+        res = self.client.post(
+            '/suppliers/frameworks/g-cloud-10/submissions/cloud-support/copy-previous-framework-service/2000000000'
+        )
+
+        assert res.status_code == 404
+
+    def test_returns_404_if_service_does_not_match_source_framework(self):
+        self.get_metadata.side_effect = [('serviceName', 'serviceSummary'), 'a-different-framework']
+
+        res = self.client.post(
+            '/suppliers/frameworks/g-cloud-10/submissions/cloud-hosting/copy-previous-framework-service/2000000000'
+        )
+
+        assert res.status_code == 404
+
+    def test_returns_404_if_service_has_already_been_copied(self):
+        self.data_api_client.get_service.return_value = {
+            'services': {
+                'lotSlug': 'cloud-hosting',
+                'frameworkSlug': 'g-cloud-9',
+                'copiedToFollowingFramework': True,
+                'id': '2000000000',
+                'supplierId': 1234,
+            },
+        }
+        res = self.client.post(
+            '/suppliers/frameworks/g-cloud-10/submissions/cloud-hosting/copy-previous-framework-service/2000000000'
+        )
+
+        assert res.status_code == 404
+
+    @mock.patch('app.main.views.services.flash')
+    def test_the_correct_flash_message_should_be_set(self, flash):
+        res = self.client.post(
+            '/suppliers/frameworks/g-cloud-10/submissions/cloud-hosting/copy-previous-framework-service/2000000000'
+        )
+
+        assert res.status_code == 302
+
+        from app.main.views.services import SINGLE_SERVICE_ADDED_MESSAGE as message
+        assert flash.call_args_list == [
+            mock.call(
+                message.format(framework_name='G-Cloud 10'), "success"
+            )
+        ]
+
+
+class TestCopyAllPreviousServices(CopyingPreviousServicesSetup):
+    def test_copies_all_services(self):
+        res = self.client.post(
+            '/suppliers/frameworks/g-cloud-10/submissions/cloud-hosting/copy-all-previous-framework-services'
+        )
+
+        assert res.status_code == 302
+        assert res.location == 'http://localhost/suppliers/frameworks/g-cloud-10/submissions/cloud-hosting'
+
+        assert self.data_api_client.copy_published_from_framework.call_args_list == [
+            mock.call(
+                'g-cloud-10',
+                'cloud-hosting',
+                'Năme',
+                data={
+                    "sourceFrameworkSlug": 'g-cloud-9',
+                    "supplierId": 1234,
+                    "questionsToCopy": ('serviceName', 'serviceSummary'),
+                }
+            )
+        ]
+
+    def test_returns_404_if_framework_not_found(self):
+        self.data_api_client.get_framework.side_effect = HTTPError(mock.Mock(status_code=404))
+
+        res = self.client.post(
+            '/suppliers/frameworks/not-a-framework/submissions/cloud-hosting/copy-all-previous-framework-services'
+        )
+
+        assert res.status_code == 404
+
+    def test_returns_404_if_lot_not_found(self):
+        res = self.client.post(
+            '/suppliers/frameworks/g-cloud-10/submissions/sausage/copy-all-previous-framework-services'
+        )
+
+        assert res.status_code == 404
+
+    def test_returns_404_if_no_supplier_framework_interest(self):
+        self.data_api_client.get_supplier_framework_info.return_value = {'frameworkInterest': {}}
+
+        res = self.client.post(
+            '/suppliers/frameworks/g-cloud-10/submissions/cloud-hosting/copy-all-previous-framework-services'
+        )
+
+        assert res.status_code == 404
+
+    @mock.patch('app.main.views.services.flash')
+    def test_the_correct_flash_message_should_be_set(self, flash):
+        self.data_api_client.copy_published_from_framework.return_value = {
+            'services': [
+                {'serviceName': 'service one'},
+                {'serviceName': 'service two'},
+                {'serviceName': 'service three'},
+            ]
+        }
+        res = self.client.post(
+            '/suppliers/frameworks/g-cloud-10/submissions/cloud-hosting/copy-all-previous-framework-services'
+        )
+
+        assert res.status_code == 302
+
+        from app.main.views.services import ALL_SERVICES_ADDED_MESSAGE as message
+        assert flash.call_args_list == [
+            mock.call(
+                message.format(draft_count='3', framework_name='G-Cloud 10'), "success"
+            )
+        ]

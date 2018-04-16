@@ -54,6 +54,14 @@
     </div>
   {% endif %}
 
+  {% if framework.status == 'open' and previous_framework %}
+    <p>
+      <a href="{{ url_for('.list_previous_services', framework_slug=framework.slug, lot_slug=lot.slug) }}">
+        View and add your services from {{ previous_framework.name|nbsp }}
+      </a>
+    </p>
+  {% endif %}
+
   {{ summary.heading("Draft services") }}
   {% if framework.status == 'open' %}
     {{ summary.top_link("Add a service", url_for(".start_new_draft_service", framework_slug=framework.slug, lot_slug=lot.slug)) }}
