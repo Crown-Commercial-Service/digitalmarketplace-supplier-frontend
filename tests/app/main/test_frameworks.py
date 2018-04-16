@@ -172,7 +172,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
             {'emailAddress': 'email2', 'active': True},
             {'emailAddress': 'email3', 'active': False}
         ]}
-        res = self.client.post("/suppliers/frameworks/digital-outcomes-and-specialists")
+        res = self.client.post("/suppliers/frameworks/g-cloud-7")
 
         assert res.status_code == 200
         send_email.assert_called_once_with(
@@ -182,7 +182,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
             'You started a G-Cloud 7 application',
             'do-not-reply@digitalmarketplace.service.gov.uk',
             'Digital Marketplace Admin',
-            ['digital-outcomes-and-specialists-application-started']
+            ['g-cloud-7-application-started']
         )
 
     def test_interest_not_registered_in_framework_on_get(self, data_api_client, s3):

@@ -68,12 +68,17 @@ def framework_dashboard(framework_slug):
     if framework["status"] == "open":
         session["currently_applying_to"] = framework_slug
 
+    framework_dates = content_loader.get_message(framework_slug, 'dates')
+    framework_urls = content_loader.get_message(framework_slug, 'urls')
+
     if request.method == 'POST':
         register_interest_in_framework(data_api_client, framework_slug)
         supplier_users = data_api_client.find_users(supplier_id=current_user.supplier_id)
 
         try:
-            email_body = render_template('emails/{}_application_started.html'.format(framework_slug))
+            email_body = render_template(f'emails/{framework["framework"]}_application_started.html',
+                                         framework=framework,
+                                         framework_dates=framework_dates)
             send_email(
                 [user['emailAddress'] for user in supplier_users['users'] if user['active']],
                 email_body,
@@ -102,9 +107,6 @@ def framework_dashboard(framework_slug):
 
     application_made = supplier_is_on_framework or (len(complete_drafts) > 0 and declaration_status == 'complete')
     lots_with_completed_drafts = [lot for lot in framework['lots'] if count_drafts_by_lot(complete_drafts, lot['slug'])]
-
-    framework_dates = content_loader.get_message(framework_slug, 'dates')
-    framework_urls = content_loader.get_message(framework_slug, 'urls')
 
     try:
         framework_advice = content_loader.get_message(framework_slug, 'advice')
