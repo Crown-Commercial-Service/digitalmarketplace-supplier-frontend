@@ -1,5 +1,5 @@
 import pytest
-from flask_wtf import FlaskForm
+from flask_wtf import Form
 from wtforms import StringField
 from wtforms.validators import Length
 from app.main.helpers.suppliers import get_country_name_from_country_code, parse_form_errors_for_validation_masthead, \
@@ -41,7 +41,7 @@ class TestSupplierCompanyDetailsComplete:
         assert supplier_company_details_are_complete(supplier_data_from_api) is expected_result
 
 
-class FormForTest(FlaskForm):
+class FormForTest(Form):
     field_one = StringField('Field one?', validators=[
         Length(max=5, message="Field one must be under 5 characters.")
     ])
