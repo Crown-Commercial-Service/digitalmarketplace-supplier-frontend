@@ -1,6 +1,6 @@
 <div class="dmspeak">
   <div>
-    <h2 class="heading-xmedium">Guidance</h2>
+    <h2 id="guidance" class="heading-xmedium">Guidance</h2>
 
     {% if communications_files.invitation.last_modified %}
     <p>
@@ -29,7 +29,7 @@
 #}
 {% if framework.status == 'pending' or not supplier_is_on_framework %}
   <div>
-    <h2 class="heading-xmedium">Legal documents</h2>
+    <h2 id="legal-documents" class="heading-xmedium">Legal documents</h2>
 
     {% if communications_files.final_agreement.last_modified %}
     <p>
@@ -97,7 +97,7 @@
   </div>
 {% endif %}
   <div>
-    <h2 class="heading-xmedium" class="heading-xmedium">Communications</h2>
+    <h2 id="communications" class="heading-xmedium" class="heading-xmedium">Communications</h2>
 
     {% if framework.status == "open" and framework.clarificationQuestionsOpen %}
     <p>
