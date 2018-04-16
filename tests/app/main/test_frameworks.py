@@ -17,6 +17,7 @@ from dmapiclient import (
 from dmapiclient.audit import AuditTypes
 from dmutils.email.exceptions import EmailError
 from dmutils.s3 import S3ResponseError
+from app.main.views.frameworks import render_template as frameworks_render_template
 
 from app.main.forms.frameworks import ReuseDeclarationForm
 from ..helpers import (
@@ -162,7 +163,8 @@ class TestFrameworksDashboard(BaseApplicationTest):
         )
 
     @mock.patch('app.main.views.frameworks.send_email')
-    def test_email_sent_when_interest_registered_in_framework(self, send_email, data_api_client, s3):
+    @mock.patch('app.main.views.frameworks.render_template', wraps=frameworks_render_template)
+    def test_email_sent_when_interest_registered_in_framework(self, render_template, send_email, data_api_client, s3):
         self.login()
 
         data_api_client.get_framework.return_value = self.framework(status='open')
@@ -172,9 +174,14 @@ class TestFrameworksDashboard(BaseApplicationTest):
             {'emailAddress': 'email2', 'active': True},
             {'emailAddress': 'email3', 'active': False}
         ]}
-        res = self.client.post("/suppliers/frameworks/digital-outcomes-and-specialists")
+        res = self.client.post("/suppliers/frameworks/g-cloud-7")
 
         assert res.status_code == 200
+
+        # render_template calls the correct template with the correct context variables.
+        assert render_template.call_args_list[0][0] == ('emails/g-cloud_application_started.html', )
+        assert set(render_template.call_args_list[0][1].keys()) == {'framework', 'framework_dates'}
+
         send_email.assert_called_once_with(
             ['email1', 'email2'],
             mock.ANY,
@@ -182,7 +189,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
             'You started a G-Cloud 7 application',
             'do-not-reply@digitalmarketplace.service.gov.uk',
             'Digital Marketplace Admin',
-            ['digital-outcomes-and-specialists-application-started']
+            ['g-cloud-7-application-started']
         )
 
     def test_interest_not_registered_in_framework_on_get(self, data_api_client, s3):
