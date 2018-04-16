@@ -9,6 +9,7 @@ from dmapiclient.audit import AuditTypes
 from dmcontent.content_loader import ContentNotFoundError
 from dmutils.email import send_user_account_email
 from dmutils.email.dm_mailchimp import DMMailChimpClient
+from dmutils.forms import remove_csrf_token
 
 from ...main import main, content_loader
 from ... import data_api_client
@@ -175,14 +176,14 @@ def edit_registered_address():
             try:
                 data_api_client.update_supplier(
                     current_user.supplier_id,
-                    registered_country_form.data,
+                    remove_csrf_token(registered_country_form.data),
                     current_user.email_address,
                 )
 
                 data_api_client.update_contact_information(
                     current_user.supplier_id,
                     supplier['contact']['id'],
-                    registered_address_form.data,
+                    remove_csrf_token(registered_address_form.data),
                     current_user.email_address
                 )
 
@@ -337,14 +338,14 @@ def edit_what_buyers_will_see():
             try:
                 data_api_client.update_supplier(
                     current_user.supplier_id,
-                    supplier_form.data,
+                    remove_csrf_token(supplier_form.data),
                     current_user.email_address
                 )
 
                 data_api_client.update_contact_information(
                     current_user.supplier_id,
                     supplier['contact']['id'],
-                    contact_form.data,
+                    remove_csrf_token(contact_form.data),
                     current_user.email_address
                 )
             except APIError as e:
