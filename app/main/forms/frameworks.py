@@ -1,11 +1,11 @@
-from flask_wtf import FlaskForm
+from flask_wtf import Form
 from wtforms import BooleanField, HiddenField
 from wtforms.validators import DataRequired, InputRequired, Length
 
 from dmutils.forms import StripWhitespaceStringField
 
 
-class SignerDetailsForm(FlaskForm):
+class SignerDetailsForm(Form):
     signerName = StripWhitespaceStringField('Full name', validators=[
         DataRequired(message="You must provide the full name of the person signing on behalf of the company."),
         Length(max=255, message="You must provide a name under 256 characters.")
@@ -21,14 +21,14 @@ class SignerDetailsForm(FlaskForm):
     )
 
 
-class ContractReviewForm(FlaskForm):
+class ContractReviewForm(Form):
     authorisation = BooleanField(
         'Authorisation',
         validators=[DataRequired(message="You must confirm you have the authority to return the agreement.")]
     )
 
 
-class AcceptAgreementVariationForm(FlaskForm):
+class AcceptAgreementVariationForm(Form):
     accept_changes = BooleanField(
         'I accept these changes',
         validators=[
@@ -37,7 +37,7 @@ class AcceptAgreementVariationForm(FlaskForm):
     )
 
 
-class ReuseDeclarationForm(FlaskForm):
+class ReuseDeclarationForm(Form):
     """Form for the reuse declaration page. One yes no question.
 
     `reuse` is a yes no whether they want to reuse a framework.
