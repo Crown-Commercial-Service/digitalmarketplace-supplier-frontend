@@ -798,7 +798,7 @@ def copy_all_previous_services(framework_slug, lot_slug):
         questions_to_copy = content_loader.get_metadata(framework['slug'], 'copy_services', 'questions_to_copy')
         source_framework_slug = content_loader.get_metadata(framework['slug'], 'copy_services', 'source_framework')
 
-        drafts = data_api_client.copy_published_from_framework(
+        response = data_api_client.copy_published_from_framework(
             framework_slug,
             lot_slug,
             current_user.name,
@@ -809,6 +809,11 @@ def copy_all_previous_services(framework_slug, lot_slug):
             }
         )['services']
 
-        flash(ALL_SERVICES_ADDED_MESSAGE.format(draft_count=len(drafts), framework_name=framework['name']), "success")
+        flash(
+            ALL_SERVICES_ADDED_MESSAGE.format(
+                draft_count=response['draftsCreatedCount'], framework_name=framework['name']
+            ),
+            "success"
+        )
 
         return redirect(url_for(".framework_submission_services", framework_slug=framework_slug, lot_slug=lot_slug))

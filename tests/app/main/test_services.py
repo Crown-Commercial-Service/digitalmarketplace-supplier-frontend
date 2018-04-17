@@ -2581,11 +2581,9 @@ class TestCopyAllPreviousServices(CopyingPreviousServicesSetup):
     @mock.patch('app.main.views.services.flash')
     def test_the_correct_flash_message_should_be_set(self, flash):
         self.data_api_client.copy_published_from_framework.return_value = {
-            'services': [
-                {'serviceName': 'service one'},
-                {'serviceName': 'service two'},
-                {'serviceName': 'service three'},
-            ]
+            'services': {
+                'draftsCreatedCount': 3
+            }
         }
         res = self.client.post(
             '/suppliers/frameworks/g-cloud-10/submissions/cloud-hosting/copy-all-previous-framework-services'
