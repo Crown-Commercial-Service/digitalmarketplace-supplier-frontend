@@ -7,6 +7,7 @@ var manifest = {
     '../../../node_modules/digitalmarketplace-frontend-toolkit/toolkit/javascripts/analytics/_register.js',
     '../../../node_modules/digitalmarketplace-frontend-toolkit/toolkit/javascripts/analytics/_pageViews.js',
     '../../../node_modules/digitalmarketplace-frontend-toolkit/toolkit/javascripts/analytics/_virtualPageViews.js',
+    '../../../node_modules/digitalmarketplace-frontend-toolkit/toolkit/javascripts/analytics/_trackExternalLinks.js',
     '../../../node_modules/digitalmarketplace-frontend-toolkit/toolkit/javascripts/analytics/_init.js',
     '../../../app/assets/javascripts/analytics/_events.js',
   ],
