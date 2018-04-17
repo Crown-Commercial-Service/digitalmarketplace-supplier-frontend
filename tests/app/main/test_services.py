@@ -2410,9 +2410,8 @@ class TestListPreviousServices(BaseApplicationTest):
             ('incomplete', False, True, True, True),
         )
     )
-    @mock.patch('app.main.views.services.supplier_company_details_are_complete')
     def test_shows_service_warning_in_correct_conditions(
-        self, supplier_company_details_are_complete, get_metadata, data_api_client, declaration_status,
+        self, get_metadata, data_api_client, declaration_status,
         company_details_complete, banner_present, declaration_warning, details_warning
     ):
         data_api_client.get_framework.side_effect = [
@@ -2424,7 +2423,7 @@ class TestListPreviousServices(BaseApplicationTest):
         }
         get_metadata.return_value = 'g-cloud-9'
         data_api_client.get_supplier_declaration.return_value = {'declaration': {'status': declaration_status}}
-        supplier_company_details_are_complete.return_value = company_details_complete
+        data_api_client.get_supplier.return_value = {'suppliers': {'companyDetailsConfirmed': company_details_complete}}
 
         res = self.client.get(
             '/suppliers/frameworks/g-cloud-10/submissions/cloud-hosting/previous-services'

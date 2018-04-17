@@ -35,7 +35,6 @@ from ..helpers.frameworks import (
     check_agreement_is_related_to_supplier_framework_or_abort, get_framework_for_reuse,
     get_supplier_registered_name_from_declaration
 )
-from ..helpers.suppliers import supplier_company_details_are_complete
 from ..helpers.services import (
     count_unanswered_questions,
     get_drafts,
@@ -195,7 +194,7 @@ def framework_dashboard(framework_slug):
         supplier_framework=supplier_framework_info,
         supplier_is_on_framework=supplier_is_on_framework,
         framework_advice=framework_advice,
-        company_details_complete=supplier_company_details_are_complete(supplier),
+        company_details_complete=supplier['companyDetailsConfirmed'],
     ), 200
 
 
@@ -245,7 +244,7 @@ def framework_submission_lots(framework_slug):
         complete_drafts=list(reversed(complete_drafts)),
         drafts=list(reversed(drafts)),
         declaration_status=declaration_status,
-        company_details_complete=supplier_company_details_are_complete(supplier),
+        company_details_complete=supplier['companyDetailsConfirmed'],
         framework=framework,
         lots=lots,
     ), 200
@@ -311,7 +310,7 @@ def framework_submission_services(framework_slug, lot_slug):
         complete_drafts=list(reversed(complete_drafts)),
         drafts=list(reversed(drafts)),
         declaration_status=declaration_status,
-        company_details_complete=supplier_company_details_are_complete(supplier),
+        company_details_complete=supplier['companyDetailsConfirmed'],
         framework=framework,
         lot=lot,
     ), 200
