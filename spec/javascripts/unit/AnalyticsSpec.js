@@ -91,6 +91,18 @@ describe("GOVUK.Analytics", function () {
         'eventAction': 'Download guidance and legal documentation (.zip)'
       }]);
     });
+    it('sends an event requested via html attributes on example of copying service', function() {
+      $(document.body).append('<button id="copy-button" type="submit" class="button-secondary" data-analytics="trackEvent" data-analytics-category="Copy services" data-analytics-action="Copy individual" data-analytics-label="2000000000">Add to G-Cloud 10</button>');
+      GOVUK.GDM.analytics.events.init();
+      $('#copy-button').click();
+      expect(window.ga.calls.first().args).toEqual(['send', {
+        'hitType': 'event',
+        'eventCategory': "Copy services",
+        'eventAction': "Copy individual",
+        'eventLabel': "2000000000",
+        'transport': 'beacon'
+      }]);
+    });
   });
 
   describe('button tracking', function () {

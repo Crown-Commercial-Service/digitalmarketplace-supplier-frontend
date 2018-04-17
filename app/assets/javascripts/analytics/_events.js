@@ -144,11 +144,32 @@
       );
     },
     'ScrollTracker': ScrollTracker,
+    trackEvent: function (e) {
+      var $target = $(e.target);
+      var category = $target.attr('data-analytics-category');
+      var action = $target.attr('data-analytics-action');
+      var label = $target.attr('data-analytics-label');
+      var href = $target.attr('href');
+      var text = $target.text();
+
+      if ( !label && text ) label = text;
+      else if ( !label && !text && href ) label = href;
+
+      GOVUK.GDM.analytics.events.sendEvent(category, action, label);
+
+    },
+    sendEvent: function (category, action, label) {
+      GOVUK.analytics.trackEvent(category, action, {
+        'label': label,
+        'transport': 'beacon'
+      });
+    },
     'init': function () {
 
       $('body')
         .on('click', 'a', this.registerLinkClick)
-        .on('click', 'input[type=submit]', this.registerSubmitButtonClick);
+        .on('click', 'input[type=submit]', this.registerSubmitButtonClick)
+        .on('click', '[data-analytics=trackEvent]', this.trackEvent);
       var scrollTracker = new this.ScrollTracker(CONFIG);
 
     }
