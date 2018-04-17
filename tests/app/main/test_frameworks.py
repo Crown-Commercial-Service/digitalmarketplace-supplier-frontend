@@ -1694,25 +1694,27 @@ class TestFrameworksDashboardConfidenceBannerOnPage(BaseApplicationTest):
         assert res.status_code == 200
         assert self.expected in str(res.data)
 
-    @pytest.mark.parametrize('declaration_status, draft_service_status, supplier_data, check_text_in_doc',
-                             (
-                                 ('started', 'submitted', api_stubs.supplier(), [
-                                     'Your company details were saved',
-                                     'No services will be submitted because you haven’t finished making the supplier '
-                                     'declaration',
-                                     'You’ve completed',
-                                 ]),
-                                 ('complete', 'not-submitted', api_stubs.supplier(), [
-                                     'Your company details were saved',
-                                     'You’ve made the supplier declaration',
-                                     'No services marked as complete',
-                                 ]),
-                                 ('complete', 'submitted', {'suppliers': {'contactInformation': [{}]}}, [
-                                     'No services will be submitted because you haven’t completed your company details',
-                                     'You’ve made the supplier declaration',
-                                     'You’ve completed'
-                                 ]),
-                             ))
+    @pytest.mark.parametrize(
+        ('declaration_status', 'draft_service_status', 'supplier_data', 'check_text_in_doc'),
+        (
+            ('started', 'submitted', api_stubs.supplier(), [
+                'Your company details were saved',
+                'No services will be submitted because you haven’t finished making the supplier '
+                'declaration',
+                'You’ve completed',
+            ]),
+            ('complete', 'not-submitted', api_stubs.supplier(), [
+                'Your company details were saved',
+                'You’ve made the supplier declaration',
+                'No services marked as complete',
+            ]),
+            ('complete', 'submitted', {'suppliers': {'contactInformation': [{}], 'companyDetailsConfirmed': False}}, [
+                'No services will be submitted because you haven’t completed your company details',
+                'You’ve made the supplier declaration',
+                'You’ve completed'
+            ]),
+        )
+    )
     def test_confidence_banner_not_on_page_if_sections_incomplete(self, data_api_client_patch, _,
                                                                   declaration_status, draft_service_status,
                                                                   supplier_data, check_text_in_doc):
@@ -3975,6 +3977,7 @@ class TestG7ServicesList(BaseApplicationTest):
         data_api_client.find_draft_services.return_value = {
             'services': [{'serviceName': 'draft', 'lotSlug': 'scs', 'status': 'submitted'}]
         }
+        data_api_client.get_supplier.return_value = api_stubs.supplier(company_details_confirmed=False)
 
         submissions = self.client.get('/suppliers/frameworks/g-cloud-7/submissions')
         lot_page = self.client.get('/suppliers/frameworks/g-cloud-7/submissions/scs')
@@ -3999,6 +4002,7 @@ class TestG7ServicesList(BaseApplicationTest):
         data_api_client.find_draft_services.return_value = {
             'services': [{'serviceName': 'draft', 'lotSlug': 'scs', 'status': 'submitted'}]
         }
+        data_api_client.get_supplier.return_value = api_stubs.supplier(company_details_confirmed=False)
 
         submissions = self.client.get('/suppliers/frameworks/g-cloud-7/submissions')
         submissions_html = submissions.get_data(as_text=True)
@@ -4073,9 +4077,10 @@ class TestG7ServicesList(BaseApplicationTest):
                              'should_show_declaration_link,'
                              'declaration_link_url',
                              (
-                                 ({'suppliers': {}}, {'declaration': {}},
+                                 ({'suppliers': {'companyDetailsConfirmed': False}}, {'declaration': {}},
                                   True, True, '/suppliers/frameworks/g-cloud-7/declaration/start'),
-                                 ({'suppliers': {}}, {'declaration': {'status': 'started'}},
+                                 ({'suppliers': {'companyDetailsConfirmed': False}},
+                                  {'declaration': {'status': 'started'}},
                                   True, True, '/suppliers/frameworks/g-cloud-7/declaration'),
                                  (api_stubs.supplier(), {'declaration': {}},
                                   False, True, '/suppliers/frameworks/g-cloud-7/declaration/start'),
