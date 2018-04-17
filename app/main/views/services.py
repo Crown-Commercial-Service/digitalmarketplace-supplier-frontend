@@ -16,6 +16,7 @@ from ..helpers.frameworks import (
     get_supplier_framework_info,
     get_framework_or_404,
 )
+from ..helpers.suppliers import supplier_company_details_are_complete
 
 
 # TODO make these more consistent, content-wise
@@ -735,6 +736,8 @@ def list_previous_services(framework_slug, lot_slug):
     if not previous_services_still_to_copy:
         return redirect(url_for(".framework_submission_services", framework_slug=framework_slug, lot_slug=lot_slug))
 
+    supplier = data_api_client.get_supplier(current_user.supplier_id)['suppliers']
+
     return render_template(
         "services/previous_services.html",
         framework=framework,
@@ -742,6 +745,8 @@ def list_previous_services(framework_slug, lot_slug):
         source_framework=source_framework,
         previous_services=previous_services_still_to_copy,
         copy_all=copy_all,
+        declaration_status=get_declaration_status(data_api_client, framework_slug),
+        company_details_complete=supplier.get('companyDetailsConfirmed', False),
     )
 
 

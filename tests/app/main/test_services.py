@@ -2401,6 +2401,63 @@ class TestListPreviousServices(BaseApplicationTest):
             "//button[@class='button-save banner-action'][normalize-space()='Yes, add all services']"
         )
 
+    @pytest.mark.parametrize(
+        ('declaration_status', 'company_details_complete', 'banner_present', 'declaration_warning', 'details_warning'),
+        (
+            ('complete', True, False, False, False),
+            ('incomplete', True, True, True, False),
+            ('complete', False, True, False, True),
+            ('incomplete', False, True, True, True),
+        )
+    )
+    @mock.patch('app.main.views.services.supplier_company_details_are_complete')
+    def test_shows_service_warning_in_correct_conditions(
+        self, supplier_company_details_are_complete, get_metadata, data_api_client, declaration_status,
+        company_details_complete, banner_present, declaration_warning, details_warning
+    ):
+        data_api_client.get_framework.side_effect = [
+            self.framework(name='G-Cloud 10', slug='g-cloud-10'),
+            self.framework(name='G-Cloud 9', slug='g-cloud-9'),
+        ]
+        data_api_client.find_services.return_value = {
+            'services': [{'serviceName': 'Service one', 'copiedToFollowingFramework': False}]
+        }
+        get_metadata.return_value = 'g-cloud-9'
+        data_api_client.get_supplier_declaration.return_value = {'declaration': {'status': declaration_status}}
+        supplier_company_details_are_complete.return_value = company_details_complete
+
+        res = self.client.get(
+            '/suppliers/frameworks/g-cloud-10/submissions/cloud-hosting/previous-services'
+        )
+        assert res.status_code == 200
+
+        doc = html.fromstring(res.get_data(as_text=True))
+
+        banner = doc.xpath(
+            "//div[@class='banner-information-without-action']/h2[normalize-space()='Your application is not complete']"
+        )
+        declaration = doc.xpath(
+            "//div[@class='banner-information-without-action']//a[normalize-space()='make your supplier declaration']"
+        )
+        details = doc.xpath(
+            "//div[@class='banner-information-without-action']//a[normalize-space()='complete your company details']"
+        )
+
+        if banner_present:
+            assert banner
+        else:
+            assert not banner
+
+        if declaration_warning:
+            assert declaration
+        else:
+            assert not declaration
+
+        if details_warning:
+            assert details
+        else:
+            assert not details
+
 
 class CopyingPreviousServicesSetup(BaseApplicationTest):
     def setup_method(self, method):
