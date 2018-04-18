@@ -747,7 +747,7 @@ def framework_updates_email_clarification_question(framework_slug):
         email_body = render_template(
             "emails/clarification_question_submitted.html",
             user_name=current_user.name,
-            framework_name=framework['name'],
+            framework=framework,
             message=clarification_question
         )
         try:
