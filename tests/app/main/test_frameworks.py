@@ -3669,7 +3669,8 @@ class TestSendClarificationQuestionEmail(BaseApplicationTest):
         if succeeds:
             send_email.assert_any_call(
                 "email@email.com",
-                FakeMail('Thanks for sending your Test Framework clarification', 'Test Framework updates page'),
+                FakeMail('Thanks for sending your Test&nbsp;Framework clarification',
+                         'Test&nbsp;Framework updates page'),
                 "MANDRILL",
                 "Thanks for your clarification question",
                 "do-not-reply@digitalmarketplace.service.gov.uk",
