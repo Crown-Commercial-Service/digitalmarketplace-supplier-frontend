@@ -2,7 +2,7 @@ import re
 
 from flask import Flask, request, redirect, session, abort
 from flask_login import LoginManager
-from flask_wtf.csrf import CsrfProtect, CSRFError
+from flask_wtf.csrf import CSRFProtect, CSRFError
 
 import dmapiclient
 from dmutils import init_app, flask_featureflags
@@ -14,7 +14,7 @@ from config import configs
 data_api_client = dmapiclient.DataAPIClient()
 login_manager = LoginManager()
 feature_flags = flask_featureflags.FeatureFlag()
-csrf = CsrfProtect()
+csrf = CSRFProtect()
 
 
 from app.main.helpers.services import parse_document_upload_time
