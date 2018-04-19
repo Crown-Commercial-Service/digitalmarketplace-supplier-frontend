@@ -2,7 +2,7 @@ import re
 
 from flask import Flask, request, redirect, session, abort
 from flask_login import LoginManager
-from flask_wtf.csrf import CsrfProtect
+from flask_wtf.csrf import CSRFProtect, CSRFError
 
 import dmapiclient
 from dmutils import init_app, flask_featureflags
@@ -14,7 +14,7 @@ from config import configs
 data_api_client = dmapiclient.DataAPIClient()
 login_manager = LoginManager()
 feature_flags = flask_featureflags.FeatureFlag()
-csrf = CsrfProtect()
+csrf = CSRFProtect()
 
 
 from app.main.helpers.services import parse_document_upload_time
@@ -50,7 +50,7 @@ def create_app(config_name):
 
     csrf.init_app(application)
 
-    @csrf.error_handler
+    @application.errorhandler(CSRFError)
     def csrf_handler(reason):
         if 'user_id' not in session:
             application.logger.info(
