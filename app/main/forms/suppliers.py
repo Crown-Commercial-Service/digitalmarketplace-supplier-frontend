@@ -1,5 +1,5 @@
 import re
-from flask_wtf import Form
+from flask_wtf import FlaskForm
 from wtforms import RadioField, StringField
 from wtforms.validators import AnyOf, InputRequired, Length, Optional, Regexp, StopValidation, ValidationError
 
@@ -21,13 +21,13 @@ def word_length(limit=None, message=None):
     return _length
 
 
-class EditSupplierForm(Form):
+class EditSupplierForm(FlaskForm):
     description = StripWhitespaceStringField('Supplier summary', validators=[
         word_length(50, 'Your summary must not be more than %d words')
     ])
 
 
-class EditContactInformationForm(Form):
+class EditContactInformationForm(FlaskForm):
     contactName = StripWhitespaceStringField('Contact name', validators=[
         InputRequired(message="You must provide a contact name."),
         Length(max=255, message="You must provide a contact name under 256 characters."),
@@ -42,7 +42,7 @@ class EditContactInformationForm(Form):
     ])
 
 
-class EditRegisteredAddressForm(Form):
+class EditRegisteredAddressForm(FlaskForm):
     address1 = StripWhitespaceStringField('Building and street', validators=[
         InputRequired(message="You need to enter the street address."),
         Length(max=255, message="You must provide a building and street name under 256 characters."),
@@ -57,7 +57,7 @@ class EditRegisteredAddressForm(Form):
     ])
 
 
-class EditRegisteredCountryForm(Form):
+class EditRegisteredCountryForm(FlaskForm):
     registrationCountry = StripWhitespaceStringField('Country', validators=[
         InputRequired(message="You need to enter a country."),
         AnyOf(values=[country[1] for country in COUNTRY_TUPLE], message="You must enter a valid country."),
@@ -65,14 +65,14 @@ class EditRegisteredCountryForm(Form):
 
 
 # "Add" rather than "Edit" because this information can only be set once by a supplier
-class AddCompanyRegisteredNameForm(Form):
+class AddCompanyRegisteredNameForm(FlaskForm):
     registered_company_name = StripWhitespaceStringField('Registered company name', validators=[
         InputRequired(message="You must provide a registered company name."),
         Length(max=255, message="You must provide a registered company name under 256 characters.")
     ])
 
 
-class AddCompanyRegistrationNumberForm(Form):
+class AddCompanyRegistrationNumberForm(FlaskForm):
     has_companies_house_number = RadioField(
         "Are you registered with Companies House?",
         validators=[InputRequired(message="You need to answer this question.")],
@@ -124,7 +124,7 @@ class AddCompanyRegistrationNumberForm(Form):
         return valid
 
 
-class CompanyPublicContactInformationForm(Form):
+class CompanyPublicContactInformationForm(FlaskForm):
     company_name = StripWhitespaceStringField('Company name', validators=[
         InputRequired(message="You must provide a company name."),
         Length(max=255, message="You must provide a company name under 256 characters.")
@@ -143,21 +143,21 @@ class CompanyPublicContactInformationForm(Form):
     ])
 
 
-class DunsNumberForm(Form):
+class DunsNumberForm(FlaskForm):
     duns_number = StripWhitespaceStringField('DUNS Number', validators=[
         InputRequired(message="You must enter a DUNS number with 9 digits."),
         Regexp(r'^\d{9}$', message="You must enter a DUNS number with 9 digits."),
     ])
 
 
-class EmailAddressForm(Form):
+class EmailAddressForm(FlaskForm):
     email_address = StripWhitespaceStringField('Email address', validators=[
         InputRequired(message="You must provide an email address."),
         EmailValidator(message="You must provide a valid email address."),
     ])
 
 
-class CompanyOrganisationSizeForm(Form):
+class CompanyOrganisationSizeForm(FlaskForm):
     OPTIONS = [
         {
             "value": "micro",
@@ -190,7 +190,7 @@ class CompanyOrganisationSizeForm(Form):
                                    choices=[(o['value'], o['label']) for o in OPTIONS])
 
 
-class CompanyTradingStatusForm(Form):
+class CompanyTradingStatusForm(FlaskForm):
     OPTIONS = [
         {
             'value': 'limited company (LTD)',
@@ -227,7 +227,7 @@ class CompanyTradingStatusForm(Form):
                                 choices=[(o['value'], o['label']) for o in OPTIONS])
 
 
-class VatNumberForm(Form):
+class VatNumberForm(FlaskForm):
     NOT_VAT_REGISTERED_TEXT = "Not VAT registered"
 
     def stop_validation_if_not_registered(form, field):
