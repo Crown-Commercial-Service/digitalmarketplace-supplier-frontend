@@ -1030,14 +1030,20 @@ class TestSupplierDashboardLogin(BaseApplicationTest):
 
             data_api_client.get_supplier.side_effect = get_supplier
 
-            res = self.client.get("/suppliers")
+            response = self.client.get("/suppliers")
 
-            assert res.status_code == 200
+            assert response.status_code == 200
 
             assert self.strip_all_whitespace(u"<h1>Supplier NĀme</h1>") in \
-                self.strip_all_whitespace(res.get_data(as_text=True))
+                self.strip_all_whitespace(response.get_data(as_text=True))
             assert self.strip_all_whitespace("email@email.com") in \
-                self.strip_all_whitespace(res.get_data(as_text=True))
+                self.strip_all_whitespace(response.get_data(as_text=True))
+
+            assert self.strip_all_whitespace("Change your password") in \
+                self.strip_all_whitespace(response.get_data(as_text=True))
+
+            document = html.fromstring(response.get_data(as_text=True))
+            assert len(document.xpath("//a[contains(@href,'/user/change-password')]")) == 1
 
     def test_should_redirect_to_login_if_not_logged_in(self):
         res = self.client.get("/suppliers")
