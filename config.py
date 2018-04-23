@@ -50,13 +50,12 @@ class Config(object):
     INVITE_EMAIL_SUBJECT = 'Your Digital Marketplace invitation'
 
     CLARIFICATION_EMAIL_NAME = 'Digital Marketplace Admin'
-    CLARIFICATION_EMAIL_FROM = 'do-not-reply@digitalmarketplace.service.gov.uk'
     CLARIFICATION_EMAIL_SUBJECT = 'Thanks for your clarification question'
     DM_FOLLOW_UP_EMAIL_TO = 'digitalmarketplace@mailinator.com'
 
     FRAMEWORK_AGREEMENT_RETURNED_NAME = 'Digital Marketplace Admin'
 
-    DM_GENERIC_NOREPLY_EMAIL = 'do-not-reply@digitalmarketplace.service.gov.uk'
+    DM_ENQUIRIES_EMAIL_ADDRESS = 'enquiries@digitalmarketplace.service.gov.uk'
 
     SECRET_KEY = None
     SHARED_EMAIL_KEY = None
