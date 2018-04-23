@@ -188,7 +188,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
             mock.ANY,
             'MANDRILL',
             'You started a G-Cloud 7 application',
-            'do-not-reply@digitalmarketplace.service.gov.uk',
+            'enquiries@digitalmarketplace.service.gov.uk',
             'Digital Marketplace Admin',
             ['g-cloud-7-application-started']
         )
@@ -3661,10 +3661,10 @@ class TestSendClarificationQuestionEmail(BaseApplicationTest):
                 FakeMail('Supplier ID:'),
                 "MANDRILL",
                 "Test Framework clarification question",
-                "do-not-reply@digitalmarketplace.service.gov.uk",
+                "enquiries@digitalmarketplace.service.gov.uk",
                 "Test Framework Supplier",
                 ["clarification-question"],
-                reply_to="do-not-reply@digitalmarketplace.service.gov.uk",
+                reply_to="enquiries@digitalmarketplace.service.gov.uk",
             )
         if succeeds:
             send_email.assert_any_call(
@@ -3673,7 +3673,7 @@ class TestSendClarificationQuestionEmail(BaseApplicationTest):
                          'Test&nbsp;Framework updates page'),
                 "MANDRILL",
                 "Thanks for your clarification question",
-                "do-not-reply@digitalmarketplace.service.gov.uk",
+                "enquiries@digitalmarketplace.service.gov.uk",
                 "Digital Marketplace Admin",
                 ["clarification-question-confirm"]
             )
@@ -3691,7 +3691,7 @@ class TestSendClarificationQuestionEmail(BaseApplicationTest):
                 FakeMail('Test Framework question asked'),
                 "MANDRILL",
                 "Test Framework application question",
-                "do-not-reply@digitalmarketplace.service.gov.uk",
+                "enquiries@digitalmarketplace.service.gov.uk",
                 "Test Framework Supplier",
                 ["application-question"],
                 reply_to="email@email.com",
@@ -4843,7 +4843,7 @@ class TestContractReviewPage(BaseApplicationTest):
             mock.ANY,
             'MANDRILL',
             'Your G-Cloud 8 signature page has been received',
-            'do-not-reply@digitalmarketplace.service.gov.uk',
+            'enquiries@digitalmarketplace.service.gov.uk',
             'Digital Marketplace Admin',
             ['g-cloud-8-framework-agreement']
         )
@@ -4884,7 +4884,7 @@ class TestContractReviewPage(BaseApplicationTest):
             mock.ANY,
             'MANDRILL',
             'Your G-Cloud 8 signature page has been received',
-            'do-not-reply@digitalmarketplace.service.gov.uk',
+            'enquiries@digitalmarketplace.service.gov.uk',
             'Digital Marketplace Admin',
             ['g-cloud-8-framework-agreement']
         )
@@ -5299,7 +5299,7 @@ class TestContractVariation(BaseApplicationTest):
             mock.ANY,
             'MANDRILL',
             'G-Cloud 8: you have accepted the proposed contract variation',
-            'do-not-reply@digitalmarketplace.service.gov.uk',
+            'enquiries@digitalmarketplace.service.gov.uk',
             'Digital Marketplace Admin',
             ['g-cloud-8-variation-accepted']
         )
@@ -5320,7 +5320,7 @@ class TestContractVariation(BaseApplicationTest):
             mock.ANY,
             'MANDRILL',
             'G-Cloud 8: you have accepted the proposed contract variation',
-            'do-not-reply@digitalmarketplace.service.gov.uk',
+            'enquiries@digitalmarketplace.service.gov.uk',
             'Digital Marketplace Admin',
             ['g-cloud-8-variation-accepted']
         )

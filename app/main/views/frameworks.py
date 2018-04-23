@@ -83,7 +83,7 @@ def framework_dashboard(framework_slug):
                 email_body,
                 current_app.config['DM_MANDRILL_API_KEY'],
                 'You started a {} application'.format(framework['name']),
-                current_app.config['CLARIFICATION_EMAIL_FROM'],
+                current_app.config['DM_ENQUIRIES_EMAIL_ADDRESS'],
                 current_app.config['CLARIFICATION_EMAIL_NAME'],
                 ['{}-application-started'.format(framework_slug)]
             )
@@ -698,7 +698,7 @@ def framework_updates_email_clarification_question(framework_slug):
     if framework['clarificationQuestionsOpen']:
         subject = "{} clarification question".format(framework['name'])
         to_address = current_app.config['DM_CLARIFICATION_QUESTION_EMAIL']
-        from_address = current_app.config['CLARIFICATION_EMAIL_FROM']
+        from_address = current_app.config['DM_ENQUIRIES_EMAIL_ADDRESS']
         email_body = render_template(
             "emails/clarification_question.html",
             supplier_id=current_user.supplier_id,
@@ -723,7 +723,7 @@ def framework_updates_email_clarification_question(framework_slug):
             email_body,
             current_app.config['DM_MANDRILL_API_KEY'],
             subject,
-            current_app.config["DM_GENERIC_NOREPLY_EMAIL"],
+            current_app.config["DM_ENQUIRIES_EMAIL_ADDRESS"],
             "{} Supplier".format(framework['name']),
             tags,
             reply_to=from_address,
@@ -756,7 +756,7 @@ def framework_updates_email_clarification_question(framework_slug):
                 email_body,
                 current_app.config['DM_MANDRILL_API_KEY'],
                 subject,
-                current_app.config['CLARIFICATION_EMAIL_FROM'],
+                current_app.config['DM_ENQUIRIES_EMAIL_ADDRESS'],
                 current_app.config['CLARIFICATION_EMAIL_NAME'],
                 tags
             )
@@ -908,7 +908,7 @@ def upload_framework_agreement(framework_slug):
             email_body,
             current_app.config['DM_MANDRILL_API_KEY'],
             '{} framework agreement'.format(framework['name']),
-            current_app.config["DM_GENERIC_NOREPLY_EMAIL"],
+            current_app.config["DM_ENQUIRIES_EMAIL_ADDRESS"],
             '{} Supplier'.format(framework['name']),
             ['{}-framework-agreement'.format(framework_slug)],
             reply_to=current_user.email_address,
@@ -1114,7 +1114,7 @@ def contract_review(framework_slug, agreement_id):
                     email_body,
                     current_app.config['DM_MANDRILL_API_KEY'],
                     'Your {} signature page has been received'.format(framework['name']),
-                    current_app.config["DM_GENERIC_NOREPLY_EMAIL"],
+                    current_app.config["DM_ENQUIRIES_EMAIL_ADDRESS"],
                     current_app.config["FRAMEWORK_AGREEMENT_RETURNED_NAME"],
                     ['{}-framework-agreement'.format(framework_slug)],
                 )
@@ -1213,7 +1213,7 @@ def view_contract_variation(framework_slug, variation_slug):
                     email_body,
                     current_app.config['DM_MANDRILL_API_KEY'],
                     '{}: you have accepted the proposed contract variation'.format(framework['name']),
-                    current_app.config['CLARIFICATION_EMAIL_FROM'],
+                    current_app.config['DM_ENQUIRIES_EMAIL_ADDRESS'],
                     current_app.config['CLARIFICATION_EMAIL_NAME'],
                     ['{}-variation-accepted'.format(framework_slug)]
                 )
