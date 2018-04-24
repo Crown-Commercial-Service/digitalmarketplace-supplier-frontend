@@ -4,6 +4,7 @@ from flask_login import current_user
 from dmapiclient import HTTPError
 from dmcontent.content_loader import ContentNotFoundError
 from dmutils import s3
+from dmutils.dates import update_framework_with_formatted_dates
 from dmutils.documents import upload_service_documents
 
 from ... import data_api_client, flask_featureflags
@@ -479,6 +480,7 @@ def service_submission_document(framework_slug, supplier_id, document_name):
 @login_required
 def view_service_submission(framework_slug, lot_slug, service_id):
     framework, lot = get_framework_and_lot_or_404(data_api_client, framework_slug, lot_slug)
+    update_framework_with_formatted_dates(framework)
 
     try:
         data = data_api_client.get_draft_service(service_id)
@@ -512,8 +514,7 @@ def view_service_submission(framework_slug, lot_slug, service_id):
         unanswered_optional=unanswered_optional,
         can_mark_complete=not validation_errors,
         delete_requested=delete_requested,
-        declaration_status=get_declaration_status(data_api_client, framework['slug']),
-        dates=content_loader.get_message(framework_slug, 'dates')
+        declaration_status=get_declaration_status(data_api_client, framework['slug'])
     ), 200
 
 

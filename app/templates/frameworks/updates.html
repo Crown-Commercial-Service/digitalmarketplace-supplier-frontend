@@ -94,7 +94,7 @@
           All clarification questions and answers will be published here regularly. You’ll receive an email when new answers are available.
         {% else %}
           The deadline for asking clarification questions has now passed.
-          All clarification questions and answers will be published by {{ dates.clarifications_publish_date }}.
+          All clarification questions and answers will be published by {{ framework.clarificationsPublishAt }}.
           You'll receive an email when new answers are posted.
         {% endif %}
       </p>
@@ -119,7 +119,7 @@
                 {% include "toolkit/forms/textbox.html" %}
               {% endwith %}
               <p>
-                The deadline for clarification questions is {{ dates.clarifications_close_date }}. All responses will be published by {{ dates.clarifications_publish_date }}.
+                The deadline for clarification questions is {{ framework.clarificationsCloseAt }}. All responses will be published by {{ framework.clarificationsPublishAt }}.
               </p>
               {%
                 with

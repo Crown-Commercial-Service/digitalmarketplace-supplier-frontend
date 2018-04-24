@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import mock
 from collections import OrderedDict
+from datetime import datetime
 from io import BytesIO
 from itertools import chain
 from urllib.parse import urljoin
@@ -10,11 +11,11 @@ import pytest
 from werkzeug.datastructures import MultiDict
 
 from dmapiclient import (
-    api_stubs,
     APIError,
     HTTPError
 )
 from dmapiclient.audit import AuditTypes
+from dmutils import api_stubs
 from dmutils.email.exceptions import EmailError
 from dmutils.s3 import S3ResponseError
 from app.main.views.frameworks import render_template as frameworks_render_template
@@ -182,7 +183,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
 
         # render_template calls the correct template with the correct context variables.
         assert render_template.call_args_list[0][0] == ('emails/g-cloud_application_started.html', )
-        assert set(render_template.call_args_list[0][1].keys()) == {'framework', 'framework_dates'}
+        assert set(render_template.call_args_list[0][1].keys()) == {'framework'}
 
         mandrill_send_email.assert_called_once_with(
             ['email1', 'email2'],
@@ -390,7 +391,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
         )
         assert len(doc.xpath(
             "//main//p[contains(normalize-space(string()), $a)]",
-            a="until 5pm BST, 22 September 2015",
+            a="until 5pm BST, Tuesday 22 September 2015",
         )) == 1
         assert not doc.xpath(
             "//main//table[normalize-space(string(./caption))=$b]",
@@ -476,7 +477,8 @@ class TestFrameworksDashboard(BaseApplicationTest):
             for href_part
             in ("g-cloud-7-final-framework-agreement.pdf", "g-cloud-7-supplier-pack.zip")
         )
-        assert not doc.xpath("//main[contains(normalize-space(string()), $a)]", a="until 5pm BST, 22 September 2015")
+        assert not doc.xpath("//main[contains(normalize-space(string()), $a)]",
+                             a="until 5pm BST, Tuesday 22 September 2015")
         assert not doc.xpath("//main//table[normalize-space(string(./caption))=$b]", b="Agreement details")
 
     def test_final_agreement_download_shown_open_framework(self, data_api_client, s3):
@@ -559,7 +561,8 @@ class TestFrameworksDashboard(BaseApplicationTest):
             in ("g-cloud-7-proposed-framework-agreement.pdf", "g-cloud-7-supplier-pack.zip")
         )
         assert len(
-            doc.xpath("//main//p[contains(normalize-space(string()), $a)]", a="until 5pm BST, 22 September 2015")
+            doc.xpath("//main//p[contains(normalize-space(string()), $a)]",
+                      a="until 5pm BST, Tuesday 22 September 2015")
         ) == 1
         assert not doc.xpath("//main//table[normalize-space(string(./caption))=$b]", b="Agreement details")
 
@@ -594,7 +597,8 @@ class TestFrameworksDashboard(BaseApplicationTest):
             None,
         ) in extracted_guidance_links["Communications"]
         assert len(
-            doc.xpath("//main//p[contains(normalize-space(string()), $a)]", a="until 5pm BST, 22 September 2015")
+            doc.xpath("//main//p[contains(normalize-space(string()), $a)]",
+                      a="until 5pm BST, Tuesday 22 September 2015")
         ) == 1
         assert not doc.xpath("//main//table[normalize-space(string(./caption))=$b]", b="Agreement details")
 
@@ -658,7 +662,8 @@ class TestFrameworksDashboard(BaseApplicationTest):
             )
         )
         assert len(
-            doc.xpath("//main//p[contains(normalize-space(string()), $a)]", a="until 5pm BST, 22 September 2015")
+            doc.xpath("//main//p[contains(normalize-space(string()), $a)]",
+                      a="until 5pm BST, Tuesday 22 September 2015")
         ) == 1
         assert not doc.xpath("//main//table[normalize-space(string(./caption))=$b]", b="Agreement details")
 
@@ -1598,8 +1603,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
     def test_dashboard_does_not_show_use_of_service_data_if_not_available(self, data_api_client, s3):
         self.login()
 
-        data_api_client.get_framework.return_value = self.framework(slug="g-cloud-8", name="G-Cloud 8",
-                                                                    status="open")
+        data_api_client.get_framework.return_value = self.framework(slug="g-cloud-8", status="open")
         data_api_client.get_supplier_framework_info.return_value = self.supplier_framework()
 
         res = self.client.get("/suppliers/frameworks/g-cloud-8")
@@ -1615,11 +1619,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
     def test_dashboard_shows_use_of_service_data_if_available(self, data_api_client, s3):
         self.login()
 
-        data_api_client.get_framework.return_value = self.framework(
-            slug="g-cloud-9",
-            name="G-Cloud 9",
-            status="open"
-        )
+        data_api_client.get_framework.return_value = self.framework(slug="g-cloud-9", status="open")
         data_api_client.get_supplier_framework_info.return_value = self.supplier_framework()
 
         res = self.client.get("/suppliers/frameworks/g-cloud-9")
@@ -1636,11 +1636,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
     def test_visit_to_framework_dashboard_saved_in_session_if_framework_open(self, data_api_client, s3):
         self.login()
 
-        data_api_client.get_framework.return_value = self.framework(
-            slug="g-cloud-9",
-            name="G-Cloud 9",
-            status="open"
-        )
+        data_api_client.get_framework.return_value = self.framework(slug="g-cloud-9", status="open")
         data_api_client.get_supplier_framework_info.return_value = self.supplier_framework()
 
         response = self.client.get("/suppliers/frameworks/g-cloud-9")
@@ -1658,11 +1654,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
     ):
         self.login()
 
-        data_api_client.get_framework.return_value = self.framework(
-            slug="g-cloud-9",
-            name="G-Cloud 9",
-            status=framework_status
-        )
+        data_api_client.get_framework.return_value = self.framework(slug="g-cloud-9", status=framework_status)
         data_api_client.get_supplier_framework_info.return_value = self.supplier_framework()
 
         self.client.get("/suppliers/frameworks/g-cloud-9")
@@ -1677,7 +1669,7 @@ class TestFrameworksDashboardConfidenceBannerOnPage(BaseApplicationTest):
     """Tests for the confidence banner on the declaration page."""
 
     expected = (
-        'Your application will be submitted at 5pm&nbsp;BST,&nbsp;23&nbsp;June&nbsp;2016. <br> '
+        'Your application will be submitted at 5pm&nbsp;BST,&nbsp;Tuesday&nbsp;6&nbsp;October&nbsp;2015. <br> '
         'You can edit your declaration and services at any time before the deadline.'
     )
 
@@ -3515,7 +3507,8 @@ class TestFrameworkUpdatesPage(BaseApplicationTest):
         data = response.get_data(as_text=True)
 
         assert response.status_code == 200
-        assert 'All clarification questions and answers will be published by 5pm BST, 29 September 2015.' in data
+        assert 'All clarification questions and answers will be published ' \
+               'by 5pm BST, Tuesday 29 September 2015.' in data
         assert "The deadline for clarification questions is" not in data
 
     def test_dates_for_open_framework_open_for_questions(self, s3, data_api_client):
@@ -3529,7 +3522,7 @@ class TestFrameworkUpdatesPage(BaseApplicationTest):
 
         assert response.status_code == 200
         assert "All clarification questions and answers will be published by" not in data
-        assert 'The deadline for clarification questions is 5pm BST, 22 September 2015.' in data
+        assert 'The deadline for clarification questions is 5pm BST, Tuesday 22 September 2015.' in data
 
     def test_the_tables_should_be_displayed_correctly(self, s3, data_api_client):
         data_api_client.get_framework.return_value = self.framework('open')
@@ -5395,18 +5388,14 @@ class TestReuseFrameworkSupplierDeclaration(BaseApplicationTest):
     def setup_method(self, method):
         super(TestReuseFrameworkSupplierDeclaration, self).setup_method(method)
         self.login()
+        self.framework_stub = api_stubs.framework(name='g-cloud-8',
+                                                  slug='g-cloud-8',
+                                                  allow_declaration_reuse=True,
+                                                  applications_close_at=datetime(2009, 12, 3, 1, 1, 1))
 
     def test_reusable_declaration_framework_slug_param(self, data_api_client):
         """Ensure that when using the param to specify declaration we collect the correct declaration."""
-        framework = {
-            'x_field': 'foo',
-            'allowDeclarationReuse': True,
-            'applicationCloseDate': '2009-12-03T01:01:01.000000Z',
-            'slug': 'g-cloud-8',
-            'name': 'g-cloud-8'
-        }
-
-        data_api_client.get_framework.return_value = {'frameworks': framework}
+        data_api_client.get_framework.return_value = self.framework_stub
         data_api_client.get_supplier_framework_info.return_value = {
             'frameworkInterest': {'declaration': {'status': 'complete'}, 'onFramework': True}
         }
@@ -5421,8 +5410,7 @@ class TestReuseFrameworkSupplierDeclaration(BaseApplicationTest):
 
     def test_404_when_specified_declaration_not_found(self, data_api_client):
         """Fail on a 404 if declaration is specified but not found."""
-        framework = {}
-        data_api_client.get_framework.return_value = {'frameworks': framework}
+        data_api_client.get_framework.return_value = {'frameworks': {}}
         data_api_client.get_supplier_framework_info.side_effect = APIError(mock.Mock(status_code=404))
 
         resp = self.client.get(
@@ -5436,11 +5424,12 @@ class TestReuseFrameworkSupplierDeclaration(BaseApplicationTest):
 
     def test_redirect_when_declaration_not_found(self, data_api_client):
         """Redirect if a reusable declaration is not found."""
-        t09 = '2009-03-03T01:01:01.000000Z'
-
         frameworks = [
-            {'x_field': 'foo', 'allowDeclarationReuse': True, 'applicationCloseDate': t09, 'slug': 'ben-cloud-2'},
+            api_stubs.framework(slug='ben-cloud-2',
+                                allow_declaration_reuse=True,
+                                applications_close_at=datetime(2009, 3, 3, 1, 1, 1))['frameworks']
         ]
+
         supplier_declarations = []
         data_api_client.find_frameworks.return_value = {'frameworks': frameworks}
         data_api_client.find_supplier_declarations.return_value = dict(
@@ -5457,45 +5446,23 @@ class TestReuseFrameworkSupplierDeclaration(BaseApplicationTest):
 
     def test_success_reuse_g_cloud_7_for_8(self, data_api_client):
         """Test success path."""
-        t09 = '2009-03-03T01:01:01.000000Z'
-        t10 = '2010-03-03T01:01:01.000000Z'
-        t11 = '2011-03-03T01:01:01.000000Z'
-        t12 = '2012-03-03T01:01:01.000000Z'
+        t09 = datetime(2009, 3, 3, 1, 1, 1)
+        t10 = datetime(2010, 3, 3, 1, 1, 1)
+        t11 = datetime(2011, 3, 3, 1, 1, 1)
+        t12 = datetime(2012, 3, 3, 1, 1, 1)
 
         frameworks_response = [
-            {
-                'x_field': 'foo',
-                'allowDeclarationReuse': True,
-                'applicationCloseDate': t12,
-                'slug': 'g-cloud-8',
-                'name': 'G-cloud 8'
-            }, {
-                'x_field': 'foo',
-                'allowDeclarationReuse': True,
-                'applicationCloseDate': t11,
-                'slug': 'g-cloud-7',
-                'name': 'G-cloud 7'
-            }, {
-                'x_field': 'foo',
-                'allowDeclarationReuse': True,
-                'applicationCloseDate': t10,
-                'slug': 'dos',
-                'name': 'Digital'
-            }, {
-                'x_field': 'foo',
-                'allowDeclarationReuse': False,
-                'applicationCloseDate': t09,
-                'slug': 'g-cloud-6',
-                'name': 'G-cloud 6'
-            },
+            api_stubs.framework(slug='g-cloud-8', allow_declaration_reuse=True,
+                                applications_close_at=t12)['frameworks'],
+            api_stubs.framework(slug='g-cloud-7', allow_declaration_reuse=True,
+                                applications_close_at=t11)['frameworks'],
+            api_stubs.framework(slug='digital-outcomes-and-specialists', allow_declaration_reuse=True,
+                                applications_close_at=t10)['frameworks'],
+            api_stubs.framework(slug='g-cloud-6', allow_declaration_reuse=True,
+                                applications_close_at=t09)['frameworks'],
         ]
-        framework_response = {
-            'x_field': 'foo',
-            'allowDeclarationReuse': True,
-            'applicationCloseDate': t09,
-            'slug': 'g-cloud-8',
-            'name': 'G-cloud 8'
-        }
+        framework_response = api_stubs.framework(slug='g-cloud-8', allow_declaration_reuse=True,
+                                                 applications_close_at=t09)['frameworks']
         supplier_declarations_response = [
             {'x': 'foo', 'frameworkSlug': 'g-cloud-6', 'declaration': {'status': 'complete'}, 'onFramework': True},
             {'x': 'foo', 'frameworkSlug': 'g-cloud-7', 'declaration': {'status': 'complete'}, 'onFramework': True},
@@ -5510,7 +5477,7 @@ class TestReuseFrameworkSupplierDeclaration(BaseApplicationTest):
         )
 
         assert resp.status_code == 200
-        expected = 'In March&nbsp;2011, your organisation completed a declaration for G-cloud 7.'
+        expected = 'In March&nbsp;2011, your organisation completed a declaration for G-Cloud 7.'
         assert expected in str(resp.data)
         data_api_client.get_framework.assert_called_once_with('g-cloud-8')
         data_api_client.find_supplier_declarations.assert_called_once_with(1234)

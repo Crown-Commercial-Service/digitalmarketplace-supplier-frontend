@@ -163,9 +163,9 @@ class TestListServices(BaseApplicationTest):
     def _mock_get_framework_side_effect(self, framework_slug):
         try:
             return {
-                "g-cloud-909": self.framework(status="live", name="G-Cloud 909", slug="g-cloud-909"),
-                "g-cloud-890": self.framework(status="open", name="G-Cloud 890", slug="g-cloud-890"),
-                "g-cloud-870": self.framework(status="expired", name="G-Cloud 870", slug="g-cloud-870"),
+                "g-cloud-909": self.framework(status="live", slug="g-cloud-909"),
+                "g-cloud-890": self.framework(status="open", slug="g-cloud-890"),
+                "g-cloud-870": self.framework(status="expired", slug="g-cloud-870"),
             }[framework_slug]
         except KeyError:
             raise HTTPError(mock.Mock(status_code=404))
@@ -1742,11 +1742,8 @@ class TestEditDraftService(BaseApplicationTest):
             'http://localhost/suppliers/frameworks/g-cloud-9/submissions/cloud-hosting/1#pricing'
 
     def test_update_refuses_to_redirect_to_next_editable_section_if_dos(self, data_api_client, s3):
-        data_api_client.get_framework.return_value = self.framework(
-            status='open',
-            slug='digital-outcomes-and-specialists',
-            name='Digital Outcomes and Specialists',
-        )
+        data_api_client.get_framework.return_value = self.framework(status='open',
+                                                                    slug='digital-outcomes-and-specialists')
         data_api_client.get_draft_service.return_value = self.multiquestion_draft
         data_api_client.update_draft_service.return_value = None
 
@@ -1762,11 +1759,8 @@ class TestEditDraftService(BaseApplicationTest):
             'digital-specialists/1#individual-specialist-roles' == res.headers['Location']
 
     def test_page_doesnt_offer_continue_to_next_editable_section_if_dos(self, data_api_client, s3):
-        data_api_client.get_framework.return_value = self.framework(
-            status='open',
-            slug='digital-outcomes-and-specialists',
-            name='Digital Outcomes and Specialists',
-        )
+        data_api_client.get_framework.return_value = self.framework(status='open',
+                                                                    slug='digital-outcomes-and-specialists')
         data_api_client.get_draft_service.return_value = self.multiquestion_draft
 
         res = self.client.get(
@@ -2083,7 +2077,7 @@ class TestShowDraftService(BaseApplicationTest):
             self.login()
 
     def test_service_price_is_correctly_formatted(self, data_api_client):
-        data_api_client.get_framework.return_value = self.framework('open')
+        data_api_client.get_framework.return_value = self.framework(status='open')
         data_api_client.get_draft_service.return_value = self.draft_service
         res = self.client.get('/suppliers/frameworks/g-cloud-7/submissions/scs/1')
         document = html.fromstring(res.get_data(as_text=True))
@@ -2294,8 +2288,8 @@ class TestListPreviousServices(BaseApplicationTest):
 
     def test_lists_correct_services_for_previous_framework_and_lot(self, get_metadata, data_api_client):
         data_api_client.get_framework.side_effect = [
-            self.framework(name='G-Cloud 10', slug='g-cloud-10'),
-            self.framework(name='G-Cloud 9', slug='g-cloud-9'),
+            self.framework(slug='g-cloud-10'),
+            self.framework(slug='g-cloud-9'),
         ]
         data_api_client.find_services.return_value = {
             'services': [
@@ -2341,14 +2335,14 @@ class TestListPreviousServices(BaseApplicationTest):
         assert res.status_code == 404
 
     def test_returns_404_if_lot_not_found(self, get_metadata, data_api_client):
-        data_api_client.get_framework.return_value = self.framework(name='G-Cloud 10', slug='g-cloud-10')
+        data_api_client.get_framework.return_value = self.framework(slug='g-cloud-10')
 
         res = self.client.get('/suppliers/frameworks/g-cloud-10/submissions/not-a-lot/previous-services')
         assert res.status_code == 404
 
     def test_returns_404_if_source_framework_not_found(self, get_metadata, data_api_client):
         data_api_client.get_framework.side_effect = [
-            self.framework(name='G-Cloud 10', slug='g-cloud-10'),
+            self.framework(slug='g-cloud-10'),
             HTTPError(mock.Mock(status_code=404)),
         ]
 
@@ -2368,8 +2362,8 @@ class TestListPreviousServices(BaseApplicationTest):
     )
     def test_redirects_to_draft_service_page_if_no_services_to_copy(self, get_metadata, data_api_client, services):
         data_api_client.get_framework.side_effect = [
-            self.framework(name='G-Cloud 10', slug='g-cloud-10'),
-            self.framework(name='G-Cloud 9', slug='g-cloud-9'),
+            self.framework(slug='g-cloud-10'),
+            self.framework(slug='g-cloud-9'),
         ]
         data_api_client.find_services.return_value = {
             'services': services,
@@ -2382,8 +2376,8 @@ class TestListPreviousServices(BaseApplicationTest):
 
     def test_shows_confirmation_banner_and_button_when_copying_all(self, get_metadata, data_api_client):
         data_api_client.get_framework.side_effect = [
-            self.framework(name='G-Cloud 10', slug='g-cloud-10'),
-            self.framework(name='G-Cloud 9', slug='g-cloud-9'),
+            self.framework(slug='g-cloud-10'),
+            self.framework(slug='g-cloud-9'),
         ]
         data_api_client.find_services.return_value = {
             'services': [
@@ -2423,8 +2417,8 @@ class TestListPreviousServices(BaseApplicationTest):
         company_details_complete, banner_present, declaration_warning, details_warning
     ):
         data_api_client.get_framework.side_effect = [
-            self.framework(name='G-Cloud 10', slug='g-cloud-10'),
-            self.framework(name='G-Cloud 9', slug='g-cloud-9'),
+            self.framework(slug='g-cloud-10'),
+            self.framework(slug='g-cloud-9'),
         ]
         data_api_client.find_services.return_value = {
             'services': [{'serviceName': 'Service one', 'copiedToFollowingFramework': False}]
@@ -2475,9 +2469,7 @@ class CopyingPreviousServicesSetup(BaseApplicationTest):
         self.get_metadata_patch = mock.patch('app.main.views.services.content_loader.get_metadata')
         self.get_metadata = self.get_metadata_patch.start()
 
-        self.data_api_client.get_framework.return_value = self.framework(
-            name='G-Cloud 10', slug='g-cloud-10'
-        )
+        self.data_api_client.get_framework.return_value = self.framework(slug='g-cloud-10')
         self.data_api_client.get_supplier_framework_info.return_value = self.supplier_framework()
         self.data_api_client.get_service.return_value = {
             'services': {

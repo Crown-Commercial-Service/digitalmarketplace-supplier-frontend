@@ -7,6 +7,7 @@ from flask_login import current_user, current_app
 from dmapiclient import APIError
 from dmapiclient.audit import AuditTypes
 from dmcontent.content_loader import ContentNotFoundError
+from dmutils.dates import update_framework_with_formatted_dates
 from dmutils.email import send_user_account_email
 from dmutils.email.dm_mailchimp import DMMailChimpClient
 from dmutils.forms import remove_csrf_token
@@ -68,14 +69,10 @@ def dashboard():
         framework.update(
             supplier_frameworks.get(framework['slug'], {})
         )
-        dates = {}
-        try:
-            dates = content_loader.get_message(framework['slug'], 'dates')
-        except ContentNotFoundError:
-            pass
+
+        update_framework_with_formatted_dates(framework)
         framework.update({
-            'dates': dates,
-            'deadline': Markup("Deadline: {}".format(dates.get('framework_close_date', ''))),
+            'deadline': Markup(f"Deadline: {framework['applicationsCloseAt']}"),
             'registered_interest': (framework['slug'] in supplier_frameworks),
             'made_application': (
                 framework.get('declaration')
@@ -86,6 +83,7 @@ def dashboard():
                 framework.get('onFramework') and framework.get('agreementReturned') is False
             )
         })
+
     return render_template(
         "suppliers/dashboard.html",
         supplier=supplier,

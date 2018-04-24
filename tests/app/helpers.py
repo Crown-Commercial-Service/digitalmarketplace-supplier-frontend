@@ -8,6 +8,7 @@ import pytest
 from werkzeug.http import parse_cookie
 from markupsafe import escape
 
+from dmutils import api_stubs
 from dmutils.formats import DATETIME_FORMAT
 
 from app import create_app, data_api_client
@@ -312,51 +313,51 @@ class BaseApplicationTest(object):
     @staticmethod
     def framework(
             status='open',
-            name='G-Cloud 7',
             slug='g-cloud-7',
+            name=None,
             clarification_questions_open=True,
             framework_agreement_version=None
     ):
         if 'g-cloud-' in slug:
             if int(slug.split('-')[-1]) >= 9:
                 lots = [
-                    {'id': 1, 'slug': 'cloud-hosting', 'name': 'Cloud hosting', 'oneServiceLimit': False,
-                     'unitSingular': 'service', 'unitPlural': 'service'},
-                    {'id': 2, 'slug': 'cloud-software', 'name': 'Cloud software', 'oneServiceLimit': False,
-                     'unitSingular': 'service', 'unitPlural': 'service'},
-                    {'id': 3, 'slug': 'cloud-support', 'name': 'Cloud support', 'oneServiceLimit': False,
-                     'unitSingular': 'service', 'unitPlural': 'service'},
+                    api_stubs.lot(lot_id=9, slug='cloud-hosting', name='Cloud hosting', one_service_limit=False),
+                    api_stubs.lot(lot_id=10, slug='cloud-software', name='Cloud software', one_service_limit=False),
+                    api_stubs.lot(lot_id=11, slug='cloud-support', name='Cloud support', one_service_limit=False),
                 ]
             else:
                 lots = [
-                    {'id': 1, 'slug': 'iaas', 'name': 'Infrastructure as a Service', 'oneServiceLimit': False,
-                     'unitSingular': 'service', 'unitPlural': 'service'},
-                    {'id': 2, 'slug': 'scs', 'name': 'Specialist Cloud Services', 'oneServiceLimit': False,
-                     'unitSingular': 'service', 'unitPlural': 'service'},
-                    {'id': 3, 'slug': 'paas', 'name': 'Platform as a Service', 'oneServiceLimit': False,
-                     'unitSingular': 'service', 'unitPlural': 'service'},
-                    {'id': 4, 'slug': 'saas', 'name': 'Software as a Service', 'oneServiceLimit': False,
-                     'unitSingular': 'service', 'unitPlural': 'service'},
+                    api_stubs.lot(lot_id=1, slug='iaas', name='Infrastructure as a Service', one_service_limit=False),
+                    api_stubs.lot(lot_id=2, slug='scs', name='Specialist Cloud Services', one_service_limit=False),
+                    api_stubs.lot(lot_id=3, slug='paas', name='Platform as a Service', one_service_limit=False),
+                    api_stubs.lot(lot_id=4, slug='saas', name='Software as a Service', one_service_limit=False),
                 ]
-            metaframework = "g-cloud"
+
         elif 'digital-outcomes-and-specialists' in slug:
             lots = [
-                {'id': 1, 'slug': 'digital-specialists', 'name': 'Digital specialists', 'oneServiceLimit': True,
-                 'unitSingular': 'service', 'unitPlural': 'service'},
+                api_stubs.lot(lot_id=5, slug='digital-outcomes', name='Digital outcomes', one_service_limit=True),
+                api_stubs.lot(lot_id=6, slug='digital-specialists', name='Digital specialists', one_service_limit=True),
+                api_stubs.lot(lot_id=7, slug='user-research-participants', name='User research participants',
+                              one_service_limit=True),
+                api_stubs.lot(lot_id=8, slug='user-research-studios', name='User research studios',
+                              one_service_limit=True),
             ]
-            metaframework = "digital-outcomes-and-specialists"
 
-        return {
-            'frameworks': {
-                'status': status,
-                'clarificationQuestionsOpen': clarification_questions_open,
-                'name': name,
-                'slug': slug,
-                'lots': lots,
-                'frameworkAgreementVersion': framework_agreement_version,
-                'framework': metaframework,
-            }
-        }
+        else:
+            lots = []
+
+        return api_stubs.framework(status=status,
+                                   name=name,
+                                   slug=slug,
+                                   clarification_questions_open=clarification_questions_open,
+                                   lots=lots,
+                                   framework_agreement_version=framework_agreement_version,
+                                   applications_close_at=datetime(2015, 10, 6, 16),
+                                   intention_to_award_at=datetime(2015, 10, 20, 12),
+                                   clarifications_close_at=datetime(2015, 9, 22, 16),
+                                   clarifications_publish_at=datetime(2015, 9, 29, 16),
+                                   framework_live_at=datetime(2015, 11, 23, 12),
+                                   framework_expires_at=datetime(2016, 11, 23, 12))
 
     @staticmethod
     def supplier_framework(

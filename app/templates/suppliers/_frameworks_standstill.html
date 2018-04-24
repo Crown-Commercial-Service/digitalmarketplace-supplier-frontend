@@ -17,9 +17,9 @@
           <p>
             {{ framework.name }}
           </p>
-          {% if framework.onFramework and framework.dates.framework_live_date %}
+          {% if framework.onFramework %}
             <p class='second-line'>
-              Live from {{ framework.dates.framework_live_date }}
+              Live from {{ framework.frameworkLiveAt }}
             </p>
           {% endif %}
         {% endcall %}
