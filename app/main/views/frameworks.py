@@ -20,6 +20,7 @@ from dmutils.documents import (
     file_is_empty, file_is_image, file_is_pdf, sanitise_supplier_name
 )
 from dmutils.email.dm_mandrill import send_email
+from dmutils.email.dm_notify import DMNotifyClient
 from dmutils.email.exceptions import EmailError
 from dmutils.email.helpers import hash_string
 from dmutils.formats import datetimeformat
@@ -717,6 +718,7 @@ def framework_updates_email_clarification_question(framework_slug):
             message=clarification_question
         )
         tags = ["application-question"]
+
     try:
         send_email(
             to_address,
@@ -741,33 +743,32 @@ def framework_updates_email_clarification_question(framework_slug):
     if framework['clarificationQuestionsOpen']:
         # Send confirmation email to the user who submitted the question
         # No need to fail if this email does not send
-        subject = current_app.config['CLARIFICATION_EMAIL_SUBJECT']
-        tags = ["clarification-question-confirm"]
         audit_type = AuditTypes.send_clarification_question
-        email_body = render_template(
-            "emails/clarification_question_submitted.html",
-            user_name=current_user.name,
-            framework=framework,
-            message=clarification_question
-        )
+
+        notify_client = DMNotifyClient(current_app.config['DM_NOTIFY_API_KEY'])
+        confirmation_email_personalisation = {
+            'user_name': current_user.name,
+            'framework_name': framework['name'],
+            'clarification_question_text': clarification_question,
+        }
+
         try:
-            send_email(
+            notify_client.send_email(
                 current_user.email_address,
-                email_body,
-                current_app.config['DM_MANDRILL_API_KEY'],
-                subject,
-                current_app.config['DM_ENQUIRIES_EMAIL_ADDRESS'],
-                current_app.config['CLARIFICATION_EMAIL_NAME'],
-                tags
+                template_id=current_app.config['NOTIFY_TEMPLATES']['confirmation_of_clarification_question'],
+                personalisation=confirmation_email_personalisation,
+                reference='clarification-question-confirm-{}'.format(hash_string(current_user.email_address))
             )
+
         except EmailError as e:
             current_app.logger.error(
-                "{framework} clarification question confirmation email failed to send. "
-                "error {error} supplier_id {supplier_id} email_hash {email_hash}",
-                extra={'error': str(e),
-                       'framework': framework['slug'],
-                       'supplier_id': current_user.supplier_id,
-                       'email_hash': hash_string(current_user.email_address)})
+                "{code}: Clarification question confirm email for email_hash {email_hash} failed to send. "
+                "Error: {error}",
+                extra={
+                    'error': str(e),
+                    'email_hash': hash_string(current_user.email_address),
+                    'code': 'clarification-question-confirm-email.fail'
+                })
     else:
         # Do not send confirmation email to the user who submitted the question
         # Zendesk will handle this instead

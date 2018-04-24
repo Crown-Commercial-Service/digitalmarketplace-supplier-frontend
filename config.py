@@ -30,7 +30,8 @@ class Config(object):
 
     NOTIFY_TEMPLATES = {
         'create_user_account': '1d1e38a6-744a-4d5a-84af-aefccde70a6c',
-        'invite_contributor': '1cca85e8-d647-46e6-9c0d-6af90b9e69b0'
+        'invite_contributor': '1cca85e8-d647-46e6-9c0d-6af90b9e69b0',
+        'confirmation_of_clarification_question': '1a8a3408-49ef-486f-a6c9-8557d1a0dc63',
     }
 
     DM_AGREEMENTS_BUCKET = None
@@ -50,7 +51,6 @@ class Config(object):
     INVITE_EMAIL_SUBJECT = 'Your Digital Marketplace invitation'
 
     CLARIFICATION_EMAIL_NAME = 'Digital Marketplace Admin'
-    CLARIFICATION_EMAIL_SUBJECT = 'Thanks for your clarification question'
     DM_FOLLOW_UP_EMAIL_TO = 'digitalmarketplace@mailinator.com'
 
     FRAMEWORK_AGREEMENT_RETURNED_NAME = 'Digital Marketplace Admin'
@@ -175,7 +175,8 @@ class Production(Live):
 
     NOTIFY_TEMPLATES = {
         'create_user_account': '84f5d812-df9d-4ab8-804a-06f64f5abd30',
-        'invite_contributor': '5eefe42d-1694-4388-8908-991cdfba0a71'
+        'invite_contributor': '5eefe42d-1694-4388-8908-991cdfba0a71',
+        'confirmation_of_clarification_question': '1a8a3408-49ef-486f-a6c9-8557d1a0dc63',
     }
 
     # Check we didn't forget any live template IDs
