@@ -148,8 +148,8 @@ class TestFrameworksDashboard(BaseApplicationTest):
 
         assert res.status_code == 404
 
-    @mock.patch('app.main.views.frameworks.send_email')
-    def test_interest_registered_in_framework_on_post(self, send_email, data_api_client, s3):
+    @mock.patch('app.main.views.frameworks.mandrill_send_email')
+    def test_interest_registered_in_framework_on_post(self, mandrill_send_email, data_api_client, s3):
         self.login()
 
         data_api_client.get_framework.return_value = self.framework(status='open')
@@ -163,9 +163,10 @@ class TestFrameworksDashboard(BaseApplicationTest):
             "email@email.com"
         )
 
-    @mock.patch('app.main.views.frameworks.send_email')
+    @mock.patch('app.main.views.frameworks.mandrill_send_email')
     @mock.patch('app.main.views.frameworks.render_template', wraps=frameworks_render_template)
-    def test_email_sent_when_interest_registered_in_framework(self, render_template, send_email, data_api_client, s3):
+    def test_email_sent_when_interest_registered_in_framework(self, render_template, mandrill_send_email,
+                                                              data_api_client, s3):
         self.login()
 
         data_api_client.get_framework.return_value = self.framework(status='open')
@@ -183,7 +184,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
         assert render_template.call_args_list[0][0] == ('emails/g-cloud_application_started.html', )
         assert set(render_template.call_args_list[0][1].keys()) == {'framework', 'framework_dates'}
 
-        send_email.assert_called_once_with(
+        mandrill_send_email.assert_called_once_with(
             ['email1', 'email2'],
             mock.ANY,
             'MANDRILL',
@@ -1858,10 +1859,10 @@ class TestFrameworkAgreement(BaseApplicationTest):
 
 
 @mock.patch('dmutils.s3.S3')
-@mock.patch('app.main.views.frameworks.send_email')
+@mock.patch('app.main.views.frameworks.mandrill_send_email')
 @mock.patch('app.main.views.frameworks.data_api_client', autospec=True)
 class TestFrameworkAgreementUpload(BaseApplicationTest):
-    def test_page_returns_404_if_framework_in_wrong_state(self, data_api_client, send_email, s3):
+    def test_page_returns_404_if_framework_in_wrong_state(self, data_api_client, mandrill_send_email, s3):
         self.login()
 
         data_api_client.get_framework.return_value = self.framework(status='open')
@@ -1873,7 +1874,7 @@ class TestFrameworkAgreementUpload(BaseApplicationTest):
 
         assert res.status_code == 404
 
-    def test_page_returns_404_if_supplier_not_on_framework(self, data_api_client, send_email, s3):
+    def test_page_returns_404_if_supplier_not_on_framework(self, data_api_client, mandrill_send_email, s3):
         self.login()
 
         data_api_client.get_framework.return_value = self.framework(status='standstill')
@@ -1888,7 +1889,8 @@ class TestFrameworkAgreementUpload(BaseApplicationTest):
         assert res.status_code == 404
 
     @mock.patch('app.main.views.frameworks.file_is_less_than_5mb')
-    def test_page_returns_400_if_file_is_too_large(self, file_is_less_than_5mb, data_api_client, send_email, s3):
+    def test_page_returns_400_if_file_is_too_large(self, file_is_less_than_5mb, data_api_client, mandrill_send_email,
+                                                   s3):
         self.login()
 
         data_api_client.get_framework.return_value = self.framework(status='standstill')
@@ -1905,7 +1907,7 @@ class TestFrameworkAgreementUpload(BaseApplicationTest):
         assert u'Document must be less than 5MB' in res.get_data(as_text=True)
 
     @mock.patch('app.main.views.frameworks.file_is_empty')
-    def test_page_returns_400_if_file_is_empty(self, file_is_empty, data_api_client, send_email, s3):
+    def test_page_returns_400_if_file_is_empty(self, file_is_empty, data_api_client, mandrill_send_email, s3):
         self.login()
 
         data_api_client.get_framework.return_value = self.framework(status='standstill')
@@ -1923,7 +1925,7 @@ class TestFrameworkAgreementUpload(BaseApplicationTest):
 
     @mock.patch('app.main.views.frameworks.generate_timestamped_document_upload_path')
     def test_api_is_not_updated_and_email_not_sent_if_upload_fails(
-        self, generate_timestamped_document_upload_path, data_api_client, send_email, s3
+        self, generate_timestamped_document_upload_path, data_api_client, mandrill_send_email, s3
     ):
         self.login()
 
@@ -1952,11 +1954,11 @@ class TestFrameworkAgreementUpload(BaseApplicationTest):
         assert data_api_client.create_framework_agreement.called is False
         assert data_api_client.update_framework_agreement.called is False
         assert data_api_client.sign_framework_agreement.called is False
-        assert send_email.called is False
+        assert mandrill_send_email.called is False
 
     @mock.patch('app.main.views.frameworks.generate_timestamped_document_upload_path')
     def test_email_is_not_sent_if_api_create_framework_agreement_fails(
-        self, generate_timestamped_document_upload_path, data_api_client, send_email, s3
+        self, generate_timestamped_document_upload_path, data_api_client, mandrill_send_email, s3
     ):
         self.login()
 
@@ -1974,11 +1976,11 @@ class TestFrameworkAgreementUpload(BaseApplicationTest):
         assert data_api_client.create_framework_agreement.called is True
         assert data_api_client.update_framework_agreement.called is False
         assert data_api_client.sign_framework_agreement.called is False
-        assert send_email.called is False
+        assert mandrill_send_email.called is False
 
     @mock.patch('app.main.views.frameworks.generate_timestamped_document_upload_path')
     def test_email_is_not_sent_if_api_update_framework_agreement_fails(
-        self, generate_timestamped_document_upload_path, data_api_client, send_email, s3
+        self, generate_timestamped_document_upload_path, data_api_client, mandrill_send_email, s3
     ):
         self.login()
 
@@ -1996,11 +1998,11 @@ class TestFrameworkAgreementUpload(BaseApplicationTest):
         assert data_api_client.create_framework_agreement.called is True
         assert data_api_client.update_framework_agreement.called is True
         assert data_api_client.sign_framework_agreement.called is False
-        assert send_email.called is False
+        assert mandrill_send_email.called is False
 
     @mock.patch('app.main.views.frameworks.generate_timestamped_document_upload_path')
     def test_email_is_not_sent_if_api_sign_framework_agreement_fails(
-        self, generate_timestamped_document_upload_path, data_api_client, send_email, s3
+        self, generate_timestamped_document_upload_path, data_api_client, mandrill_send_email, s3
     ):
         self.login()
 
@@ -2018,11 +2020,11 @@ class TestFrameworkAgreementUpload(BaseApplicationTest):
         assert data_api_client.create_framework_agreement.called is True
         assert data_api_client.update_framework_agreement.called is True
         assert data_api_client.sign_framework_agreement.called is True
-        assert send_email.called is False
+        assert mandrill_send_email.called is False
 
     @mock.patch('app.main.views.frameworks.generate_timestamped_document_upload_path')
     def test_email_failure(
-        self, generate_timestamped_document_upload_path, data_api_client, send_email, s3
+        self, generate_timestamped_document_upload_path, data_api_client, mandrill_send_email, s3
     ):
         self.login()
 
@@ -2030,7 +2032,7 @@ class TestFrameworkAgreementUpload(BaseApplicationTest):
         data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
             on_framework=True)
         generate_timestamped_document_upload_path.return_value = 'my/path.pdf'
-        send_email.side_effect = EmailError()
+        mandrill_send_email.side_effect = EmailError()
 
         res = self.client.post(
             '/suppliers/frameworks/g-cloud-7/agreement',
@@ -2038,11 +2040,11 @@ class TestFrameworkAgreementUpload(BaseApplicationTest):
         )
 
         assert res.status_code == 503
-        assert send_email.called is True
+        assert mandrill_send_email.called is True
 
     @mock.patch('app.main.views.frameworks.generate_timestamped_document_upload_path')
     def test_upload_agreement_document(
-        self, generate_timestamped_document_upload_path, data_api_client, send_email, s3
+        self, generate_timestamped_document_upload_path, data_api_client, mandrill_send_email, s3
     ):
         self.login()
 
@@ -2082,7 +2084,7 @@ class TestFrameworkAgreementUpload(BaseApplicationTest):
 
     @mock.patch('app.main.views.frameworks.generate_timestamped_document_upload_path')
     def test_upload_jpeg_agreement_document(
-        self, generate_timestamped_document_upload_path, data_api_client, send_email, s3
+        self, generate_timestamped_document_upload_path, data_api_client, mandrill_send_email, s3
     ):
         self.login()
 
@@ -3637,7 +3639,6 @@ class TestFrameworkUpdatesPage(BaseApplicationTest):
 
 
 class TestSendClarificationQuestionEmail(BaseApplicationTest):
-
     def _send_email(self, clarification_question):
         self.login()
 
@@ -3646,17 +3647,15 @@ class TestSendClarificationQuestionEmail(BaseApplicationTest):
             data={'clarification_question': clarification_question}
         )
 
-    def _assert_clarification_email(self, send_email, is_called=True, succeeds=True):
-
-        if succeeds:
-            assert send_email.call_count == 2
-        elif is_called:
-            assert send_email.call_count == 1
+    def _assert_clarification_email(self, mandrill_send_email, notify_send_email, is_called=True, succeeds=True,
+                                    clarification_question=''):
+        if is_called:
+            assert mandrill_send_email.call_count == 1
         else:
-            assert send_email.call_count == 0
+            assert mandrill_send_email.call_count == 0
 
         if is_called:
-            send_email.assert_any_call(
+            mandrill_send_email.assert_any_call(
                 "digitalmarketplace@mailinator.com",
                 FakeMail('Supplier ID:'),
                 "MANDRILL",
@@ -3666,27 +3665,26 @@ class TestSendClarificationQuestionEmail(BaseApplicationTest):
                 ["clarification-question"],
                 reply_to="enquiries@digitalmarketplace.service.gov.uk",
             )
+
         if succeeds:
-            send_email.assert_any_call(
+            notify_send_email.assert_any_call(
+                mock.ANY,  # DMNotifyClient
                 "email@email.com",
-                FakeMail('Thanks for sending your Test&nbsp;Framework clarification',
-                         'Test&nbsp;Framework updates page'),
-                "MANDRILL",
-                "Thanks for your clarification question",
-                "enquiries@digitalmarketplace.service.gov.uk",
-                "Digital Marketplace Admin",
-                ["clarification-question-confirm"]
+                template_id=mock.ANY,
+                personalisation={'user_name': 'Năme', 'framework_name': 'Test Framework',
+                                 'clarification_question_text': clarification_question},
+                reference=mock.ANY,
             )
 
-    def _assert_application_email(self, send_email, succeeds=True):
+    def _assert_application_email(self, mandrill_send_email, succeeds=True):
 
         if succeeds:
-            assert send_email.call_count == 1
+            assert mandrill_send_email.call_count == 1
         else:
-            assert send_email.call_count == 0
+            assert mandrill_send_email.call_count == 0
 
         if succeeds:
-            send_email.assert_called_with(
+            mandrill_send_email.assert_called_with(
                 "digitalmarketplace@mailinator.com",
                 FakeMail('Test Framework question asked'),
                 "MANDRILL",
@@ -3699,14 +3697,18 @@ class TestSendClarificationQuestionEmail(BaseApplicationTest):
 
     @mock.patch('dmutils.s3.S3')
     @mock.patch('app.main.views.frameworks.data_api_client')
-    @mock.patch('app.main.views.frameworks.send_email')
-    def test_should_call_send_email_with_correct_params(self, send_email, data_api_client, s3):
+    @mock.patch('app.main.views.frameworks.DMNotifyClient.send_email', autospec=True)
+    @mock.patch('app.main.views.frameworks.mandrill_send_email')
+    def test_should_call_send_email_with_correct_params(self, mandrill_send_email, notify_send_email, data_api_client,
+
+                                                        s3):
         data_api_client.get_framework.return_value = self.framework('open', name='Test Framework')
 
         clarification_question = 'This is a clarification question.'
         response = self._send_email(clarification_question)
 
-        self._assert_clarification_email(send_email)
+        self._assert_clarification_email(mandrill_send_email, notify_send_email,
+                                         clarification_question=clarification_question)
 
         assert response.status_code == 200
         assert self.strip_all_whitespace(
@@ -3716,14 +3718,16 @@ class TestSendClarificationQuestionEmail(BaseApplicationTest):
 
     @mock.patch('dmutils.s3.S3')
     @mock.patch('app.main.views.frameworks.data_api_client')
-    @mock.patch('app.main.views.frameworks.send_email')
-    def test_should_call_send_g7_email_with_correct_params(self, send_email, data_api_client, s3):
+    @mock.patch('app.main.views.frameworks.DMNotifyClient.send_email', autospec=True)
+    @mock.patch('app.main.views.frameworks.mandrill_send_email')
+    def test_should_call_send_g7_email_with_correct_params(self, mandrill_send_email, notify_send_email,
+                                                           data_api_client, s3):
         data_api_client.get_framework.return_value = self.framework('open', name='Test Framework',
                                                                     clarification_questions_open=False)
         clarification_question = 'This is a G7 question.'
         response = self._send_email(clarification_question)
 
-        self._assert_application_email(send_email)
+        self._assert_application_email(mandrill_send_email)
 
         assert response.status_code == 200
 
@@ -3746,10 +3750,12 @@ class TestSendClarificationQuestionEmail(BaseApplicationTest):
     )
     @mock.patch('app.main.views.frameworks.data_api_client')
     @mock.patch('dmutils.s3.S3')
-    @mock.patch('app.main.views.frameworks.send_email')
+    @mock.patch('app.main.views.frameworks.DMNotifyClient.send_email', autospec=True)
+    @mock.patch('app.main.views.frameworks.mandrill_send_email')
     def test_should_not_send_email_if_invalid_clarification_question(
         self,
-        send_email,
+        mandrill_send_email,
+        notify_send_email,
         s3,
         data_api_client,
         invalid_clarification_question,
@@ -3758,7 +3764,8 @@ class TestSendClarificationQuestionEmail(BaseApplicationTest):
         data_api_client.get_supplier_framework_info.return_value = self.supplier_framework()
 
         response = self._send_email(invalid_clarification_question['question'])
-        self._assert_clarification_email(send_email, is_called=False, succeeds=False)
+        self._assert_clarification_email(mandrill_send_email, notify_send_email, is_called=False, succeeds=False,
+                                         clarification_question=invalid_clarification_question)
 
         assert response.status_code == 400
         assert (
@@ -3772,13 +3779,15 @@ class TestSendClarificationQuestionEmail(BaseApplicationTest):
 
     @mock.patch('dmutils.s3.S3')
     @mock.patch('app.main.views.frameworks.data_api_client')
-    @mock.patch('app.main.views.frameworks.send_email')
-    def test_should_create_audit_event(self, send_email, data_api_client, s3):
+    @mock.patch('app.main.views.frameworks.DMNotifyClient.send_email', autospec=True)
+    @mock.patch('app.main.views.frameworks.mandrill_send_email')
+    def test_should_create_audit_event(self, mandrill_send_email, notify_send_email, data_api_client, s3):
         data_api_client.get_framework.return_value = self.framework('open', name='Test Framework')
         clarification_question = 'This is a clarification question'
         response = self._send_email(clarification_question)
 
-        self._assert_clarification_email(send_email)
+        self._assert_clarification_email(mandrill_send_email, notify_send_email,
+                                         clarification_question=clarification_question)
 
         assert response.status_code == 200
         data_api_client.create_audit_event.assert_called_with(
@@ -3791,15 +3800,16 @@ class TestSendClarificationQuestionEmail(BaseApplicationTest):
 
     @mock.patch('dmutils.s3.S3')
     @mock.patch('app.main.views.frameworks.data_api_client')
-    @mock.patch('app.main.views.frameworks.send_email')
-    def test_should_create_g7_question_audit_event(self, send_email, data_api_client, s3):
+    @mock.patch('app.main.views.frameworks.DMNotifyClient.send_email', autospec=True)
+    @mock.patch('app.main.views.frameworks.mandrill_send_email')
+    def test_should_create_g7_question_audit_event(self, mandrill_send_email, notify_send_email, data_api_client, s3):
         data_api_client.get_framework.return_value = self.framework(
             'open', name='Test Framework', clarification_questions_open=False
         )
         clarification_question = 'This is a G7 question'
         response = self._send_email(clarification_question)
 
-        self._assert_application_email(send_email)
+        self._assert_application_email(mandrill_send_email)
 
         assert response.status_code == 200
         data_api_client.create_audit_event.assert_called_with(
@@ -3811,14 +3821,16 @@ class TestSendClarificationQuestionEmail(BaseApplicationTest):
         )
 
     @mock.patch('app.main.views.frameworks.data_api_client')
-    @mock.patch('app.main.views.frameworks.send_email')
-    def test_should_be_a_503_if_email_fails(self, send_email, data_api_client):
+    @mock.patch('app.main.views.frameworks.DMNotifyClient.send_email', autospec=True)
+    @mock.patch('app.main.views.frameworks.mandrill_send_email')
+    def test_should_be_a_503_if_email_fails(self, mandrill_send_email, notify_send_email, data_api_client):
         data_api_client.get_framework.return_value = self.framework('open', name='Test Framework')
-        send_email.side_effect = EmailError("Arrrgh")
+        mandrill_send_email.side_effect = EmailError("Arrrgh")
 
         clarification_question = 'This is a clarification question.'
         response = self._send_email(clarification_question)
-        self._assert_clarification_email(send_email, succeeds=False)
+        self._assert_clarification_email(mandrill_send_email, notify_send_email, succeeds=False,
+                                         clarification_question=clarification_question)
 
         assert response.status_code == 503
 
@@ -4774,9 +4786,9 @@ class TestContractReviewPage(BaseApplicationTest):
         )
 
     @mock.patch('dmutils.s3.S3')
-    @mock.patch('app.main.views.frameworks.send_email')
+    @mock.patch('app.main.views.frameworks.mandrill_send_email')
     def test_return_400_response_and_no_email_sent_if_authorisation_not_checked(
-            self, send_email, s3, return_supplier_framework, data_api_client
+            self, mandrill_send_email, s3, return_supplier_framework, data_api_client
     ):
         self.login()
         data_api_client.get_framework.return_value = get_g_cloud_8()
@@ -4798,13 +4810,13 @@ class TestContractReviewPage(BaseApplicationTest):
         res = self.client.post("/suppliers/frameworks/g-cloud-8/234/contract-review", data={})
         assert res.status_code == 400
         page = res.get_data(as_text=True)
-        assert send_email.called is False
+        assert mandrill_send_email.called is False
         assert "You must confirm you have the authority to return the agreement" in page
 
     @mock.patch('dmutils.s3.S3')
-    @mock.patch('app.main.views.frameworks.send_email')
+    @mock.patch('app.main.views.frameworks.mandrill_send_email')
     def test_valid_framework_agreement_returned_updates_api_and_sends_confirmation_emails_and_unsets_session(
-        self, send_email, s3, return_supplier_framework, data_api_client
+        self, mandrill_send_email, s3, return_supplier_framework, data_api_client
     ):
         self.login()
         data_api_client.get_framework.return_value = get_g_cloud_8()
@@ -4838,7 +4850,7 @@ class TestContractReviewPage(BaseApplicationTest):
         )
 
         # Delcaration primaryContactEmail and current_user.email_address are different so expect two recipients
-        send_email.assert_called_once_with(
+        mandrill_send_email.assert_called_once_with(
             ['email2@email.com', 'email@email.com'],
             mock.ANY,
             'MANDRILL',
@@ -4853,9 +4865,9 @@ class TestContractReviewPage(BaseApplicationTest):
             assert 'signature_page' not in sess
 
     @mock.patch('dmutils.s3.S3')
-    @mock.patch('app.main.views.frameworks.send_email')
+    @mock.patch('app.main.views.frameworks.mandrill_send_email')
     def test_valid_framework_agreement_returned_sends_only_one_confirmation_email_if_contact_email_addresses_are_equal(
-        self, send_email, s3, return_supplier_framework, data_api_client
+        self, mandrill_send_email, s3, return_supplier_framework, data_api_client
     ):
         self.login()
         data_api_client.get_framework.return_value = get_g_cloud_8()
@@ -4879,7 +4891,7 @@ class TestContractReviewPage(BaseApplicationTest):
             data={'authorisation': 'I have the authority to return this agreement on behalf of company name'}
         )
 
-        send_email.assert_called_once_with(
+        mandrill_send_email.assert_called_once_with(
             ['email@email.com'],
             mock.ANY,
             'MANDRILL',
@@ -4890,9 +4902,9 @@ class TestContractReviewPage(BaseApplicationTest):
         )
 
     @mock.patch('dmutils.s3.S3')
-    @mock.patch('app.main.views.frameworks.send_email')
+    @mock.patch('app.main.views.frameworks.mandrill_send_email')
     def test_return_503_response_if_mandrill_exception_raised_by_send_email(
-            self, send_email, s3, return_supplier_framework, data_api_client
+            self, mandrill_send_email, s3, return_supplier_framework, data_api_client
     ):
         self.login()
         data_api_client.get_framework.return_value = get_g_cloud_8()
@@ -4911,7 +4923,7 @@ class TestContractReviewPage(BaseApplicationTest):
         )
         s3.return_value.get_key.return_value = {'last_modified': '2016-07-10T21:18:00.000000Z'}
 
-        send_email.side_effect = EmailError()
+        mandrill_send_email.side_effect = EmailError()
 
         res = self.client.post(
             "/suppliers/frameworks/g-cloud-8/234/contract-review",
@@ -4923,9 +4935,9 @@ class TestContractReviewPage(BaseApplicationTest):
         assert res.status_code == 503
 
     @mock.patch('dmutils.s3.S3')
-    @mock.patch('app.main.views.frameworks.send_email')
+    @mock.patch('app.main.views.frameworks.mandrill_send_email')
     def test_email_not_sent_if_api_call_fails(
-            self, send_email, s3, return_supplier_framework, data_api_client
+            self, mandrill_send_email, s3, return_supplier_framework, data_api_client
     ):
         self.login()
         data_api_client.get_framework.return_value = get_g_cloud_8()
@@ -4952,12 +4964,12 @@ class TestContractReviewPage(BaseApplicationTest):
 
         assert data_api_client.sign_framework_agreement.called is True
         assert res.status_code == 500
-        assert send_email.called is False
+        assert mandrill_send_email.called is False
 
     @mock.patch('dmutils.s3.S3')
-    @mock.patch('app.main.views.frameworks.send_email')
+    @mock.patch('app.main.views.frameworks.mandrill_send_email')
     def test_framework_agreement_returned_having_signed_contract_variation_redirects_to_framework_dashboard(
-        self, send_email, s3, return_supplier_framework, data_api_client
+        self, mandrill_send_email, s3, return_supplier_framework, data_api_client
     ):
         self.login()
 
@@ -4997,9 +5009,9 @@ class TestContractReviewPage(BaseApplicationTest):
         assert res.location == 'http://localhost/suppliers/frameworks/g-cloud-8'
 
     @mock.patch('dmutils.s3.S3')
-    @mock.patch('app.main.views.frameworks.send_email')
+    @mock.patch('app.main.views.frameworks.mandrill_send_email')
     def test_framework_agreement_returned_with_feature_flag_off_redirects_to_framework_dashboard(
-        self, send_email, s3, return_supplier_framework, data_api_client
+        self, mandrill_send_email, s3, return_supplier_framework, data_api_client
     ):
         self.login()
         self.app.config['FEATURE_FLAGS_CONTRACT_VARIATION'] = False
@@ -5032,9 +5044,9 @@ class TestContractReviewPage(BaseApplicationTest):
         assert res.location == 'http://localhost/suppliers/frameworks/g-cloud-8'
 
     @mock.patch('dmutils.s3.S3')
-    @mock.patch('app.main.views.frameworks.send_email')
+    @mock.patch('app.main.views.frameworks.mandrill_send_email')
     def test_framework_agreement_returned_having_not_signed_contract_variation_redirects_to_variation(
-        self, send_email, s3, return_supplier_framework, data_api_client
+        self, mandrill_send_email, s3, return_supplier_framework, data_api_client
     ):
         self.login()
 
@@ -5068,9 +5080,9 @@ class TestContractReviewPage(BaseApplicationTest):
         assert res.location == 'http://localhost/suppliers/frameworks/g-cloud-8/contract-variation/1'
 
     @mock.patch('dmutils.s3.S3')
-    @mock.patch('app.main.views.frameworks.send_email')
+    @mock.patch('app.main.views.frameworks.mandrill_send_email')
     def test_framework_agreement_returned_for_framework_with_no_variations_redirects_to_framework_dashboard(
-        self, send_email, s3, return_supplier_framework, data_api_client
+        self, mandrill_send_email, s3, return_supplier_framework, data_api_client
     ):
         self.login()
 
@@ -5285,8 +5297,8 @@ class TestContractVariation(BaseApplicationTest):
             1234, 'g-cloud-8', '1', 123, 'email@email.com'
         )
 
-    @mock.patch('app.main.views.frameworks.send_email')
-    def test_email_is_sent_to_correct_users(self, send_email, data_api_client):
+    @mock.patch('app.main.views.frameworks.mandrill_send_email')
+    def test_email_is_sent_to_correct_users(self, mandrill_send_email, data_api_client):
         data_api_client.get_framework.return_value = self.g8_framework
         data_api_client.get_supplier_framework_info.return_value = self.good_supplier_framework
         self.client.post(
@@ -5294,7 +5306,7 @@ class TestContractVariation(BaseApplicationTest):
             data={"accept_changes": "Yes"}
         )
 
-        send_email.assert_called_once_with(
+        mandrill_send_email.assert_called_once_with(
             ['bigboss@email.com', 'email@email.com'],
             mock.ANY,
             'MANDRILL',
@@ -5304,8 +5316,8 @@ class TestContractVariation(BaseApplicationTest):
             ['g-cloud-8-variation-accepted']
         )
 
-    @mock.patch('app.main.views.frameworks.send_email')
-    def test_only_one_email_sent_if_user_is_framework_contact(self, send_email, data_api_client):
+    @mock.patch('app.main.views.frameworks.mandrill_send_email')
+    def test_only_one_email_sent_if_user_is_framework_contact(self, mandrill_send_email, data_api_client):
         same_email_as_current_user = self.good_supplier_framework.copy()
         same_email_as_current_user['frameworkInterest']['declaration']['primaryContactEmail'] = 'email@email.com'
         data_api_client.get_framework.return_value = self.g8_framework
@@ -5315,7 +5327,7 @@ class TestContractVariation(BaseApplicationTest):
             data={"accept_changes": "Yes"}
         )
 
-        send_email.assert_called_once_with(
+        mandrill_send_email.assert_called_once_with(
             ['email@email.com'],
             mock.ANY,
             'MANDRILL',
@@ -5340,8 +5352,8 @@ class TestContractVariation(BaseApplicationTest):
             doc.xpath('//p[@class="banner-message"][contains(text(), "You have accepted the proposed changes.")]')
         ) == 1, res.get_data(as_text=True)
 
-    @mock.patch('app.main.views.frameworks.send_email')
-    def test_api_is_not_called_and_no_email_sent_for_subsequent_posts(self, send_email, data_api_client):
+    @mock.patch('app.main.views.frameworks.mandrill_send_email')
+    def test_api_is_not_called_and_no_email_sent_for_subsequent_posts(self, mandrill_send_email, data_api_client):
         already_agreed = self.good_supplier_framework.copy()
         already_agreed['frameworkInterest']['agreedVariations'] = {
             "1": {
@@ -5360,7 +5372,7 @@ class TestContractVariation(BaseApplicationTest):
         )
         assert res.status_code == 200
         assert data_api_client.agree_framework_variation.called is False
-        assert send_email.called is False
+        assert mandrill_send_email.called is False
 
     def test_error_if_box_not_ticked(self, data_api_client):
         data_api_client.get_framework.return_value = self.g8_framework
