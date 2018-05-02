@@ -376,7 +376,7 @@ class _BaseTestSupplierEditRemoveService(BaseApplicationTest):
         }
 
 
-class SupplierEditServiceTestsSharedAcrossFrameworks(_BaseTestSupplierEditRemoveService):
+class _BaseSupplierEditServiceTestsSharedAcrossFrameworks(_BaseTestSupplierEditRemoveService):
     """Tests shared by both DOS and GCloud frameworks for editing a service e.g. /suppliers/services/123"""
 
     @pytest.mark.parametrize("fwk_status,expected_code", [
@@ -406,6 +406,14 @@ class SupplierEditServiceTestsSharedAcrossFrameworks(_BaseTestSupplierEditRemove
         assert res.status_code == expected_code, (
             "Unexpected response {} for {} framework state".format(res.status_code, fwk_status)
         )
+
+    def test_edit_page_returns_404_if_service_not_found(self, data_api_client):
+        self.login()
+        data_api_client.get_service.return_value = None
+
+        res = self.client.get("/suppliers/frameworks/{}/services/123".format(self.framework_kwargs["framework_slug"]))
+
+        assert res.status_code == 404
 
     def test_should_not_view_other_suppliers_services(self, data_api_client):
         self.login()
@@ -472,7 +480,7 @@ class SupplierEditServiceTestsSharedAcrossFrameworks(_BaseTestSupplierEditRemove
 
 
 @mock.patch('app.main.views.services.data_api_client')
-class TestSupplierEditGCloudService(SupplierEditServiceTestsSharedAcrossFrameworks):
+class TestSupplierEditGCloudService(_BaseSupplierEditServiceTestsSharedAcrossFrameworks):
     framework_kwargs = {
         "framework_slug": "g-cloud-9",
         "framework_framework": "g-cloud",
@@ -601,7 +609,7 @@ class TestSupplierEditGCloudService(SupplierEditServiceTestsSharedAcrossFramewor
 
 
 @mock.patch('app.main.views.services.data_api_client')
-class TestSupplierEditDosServices(SupplierEditServiceTestsSharedAcrossFrameworks):
+class TestSupplierEditDosServices(_BaseSupplierEditServiceTestsSharedAcrossFrameworks):
     """Although the route tested is the edit service page, DOS services are not editable or removable and are only
     viewable at the moment"""
     framework_kwargs = {
