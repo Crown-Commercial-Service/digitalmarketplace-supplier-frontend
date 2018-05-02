@@ -407,6 +407,14 @@ class SupplierEditServiceTestsSharedAcrossFrameworks(_BaseTestSupplierEditRemove
             "Unexpected response {} for {} framework state".format(res.status_code, fwk_status)
         )
 
+    def test_edit_page_returns_404_if_service_not_found(self, data_api_client):
+        self.login()
+        data_api_client.get_service.return_value = None
+
+        res = self.client.get("/suppliers/frameworks/{}/services/123".format(self.framework_kwargs["framework_slug"]))
+
+        assert res.status_code == 404
+
     def test_should_not_view_other_suppliers_services(self, data_api_client):
         self.login()
         self._setup_service(

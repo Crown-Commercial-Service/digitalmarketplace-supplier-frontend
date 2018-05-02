@@ -60,6 +60,9 @@ def list_services(framework_slug):
 @login_required
 def edit_service(framework_slug, service_id):
     service = data_api_client.get_service(service_id)
+    if not service:
+        abort(404)
+
     service_unavailability_information = service.get('serviceMadeUnavailableAuditEvent')
     service = service.get('services')
 
