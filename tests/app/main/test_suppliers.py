@@ -746,7 +746,7 @@ class TestSupplierDetails(BaseApplicationTest):
             )
 
             for property_str in (
-                # "Supplier details" section at the top
+                # "Company details" section at the top
                 "Supplier Person",  # Contact name
                 "supplier@user.dmdev",  # Contact email
                 "0800123123",  # Phone number
@@ -1169,7 +1169,7 @@ class TestSupplierDashboardLogin(BaseApplicationTest):
             res = self.client.get('/suppliers')
 
             doc = html.fromstring(res.get_data(as_text=True))
-            # The default supplier details from self.login() should available as attributes of current_user
+            # The default company details from self.login() should available as attributes of current_user
             assert len(doc.xpath('//meta[@data-value="supplier"]')) == 1
             assert len(doc.xpath('//meta[@data-value="small"]')) == 1
 
@@ -1187,7 +1187,7 @@ class TestSupplierDashboardLogin(BaseApplicationTest):
             res = self.client.get('/suppliers')
 
             doc = html.fromstring(res.get_data(as_text=True))
-            # The default supplier details from self.login() should available as attributes of current_user
+            # The default company details from self.login() should available as attributes of current_user
             assert len(doc.xpath('//meta[@data-value="supplier"]')) == 1
             assert len(doc.xpath('//meta[@data-value="small"]')) == 0
 
