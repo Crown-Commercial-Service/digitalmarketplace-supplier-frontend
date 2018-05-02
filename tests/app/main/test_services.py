@@ -376,7 +376,7 @@ class _BaseTestSupplierEditRemoveService(BaseApplicationTest):
         }
 
 
-class SupplierEditServiceTestsSharedAcrossFrameworks(_BaseTestSupplierEditRemoveService):
+class _BaseSupplierEditServiceTestsSharedAcrossFrameworks(_BaseTestSupplierEditRemoveService):
     """Tests shared by both DOS and GCloud frameworks for editing a service e.g. /suppliers/services/123"""
 
     @pytest.mark.parametrize("fwk_status,expected_code", [
@@ -480,7 +480,7 @@ class SupplierEditServiceTestsSharedAcrossFrameworks(_BaseTestSupplierEditRemove
 
 
 @mock.patch('app.main.views.services.data_api_client')
-class TestSupplierEditGCloudService(SupplierEditServiceTestsSharedAcrossFrameworks):
+class TestSupplierEditGCloudService(_BaseSupplierEditServiceTestsSharedAcrossFrameworks):
     framework_kwargs = {
         "framework_slug": "g-cloud-9",
         "framework_framework": "g-cloud",
@@ -609,7 +609,7 @@ class TestSupplierEditGCloudService(SupplierEditServiceTestsSharedAcrossFramewor
 
 
 @mock.patch('app.main.views.services.data_api_client')
-class TestSupplierEditDosServices(SupplierEditServiceTestsSharedAcrossFrameworks):
+class TestSupplierEditDosServices(_BaseSupplierEditServiceTestsSharedAcrossFrameworks):
     """Although the route tested is the edit service page, DOS services are not editable or removable and are only
     viewable at the moment"""
     framework_kwargs = {
