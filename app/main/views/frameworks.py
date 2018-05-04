@@ -13,6 +13,7 @@ from dmcontent.formats import format_service_price
 from dmcontent.questions import ContentQuestion
 from dmcontent.errors import ContentNotFoundError
 from dmutils import s3
+from dmutils.dates import update_framework_with_formatted_dates
 from dmutils.documents import (
     RESULT_LETTER_FILENAME, AGREEMENT_FILENAME, SIGNED_AGREEMENT_PREFIX, SIGNED_SIGNATURE_PAGE_PREFIX,
     SIGNATURE_PAGE_FILENAME, get_document_path, generate_timestamped_document_upload_path,
@@ -23,7 +24,7 @@ from dmutils.email.dm_mandrill import send_email as mandrill_send_email
 from dmutils.email.dm_notify import DMNotifyClient
 from dmutils.email.exceptions import EmailError
 from dmutils.email.helpers import hash_string
-from dmutils.formats import datetimeformat
+from dmutils.formats import datetimeformat, monthyearformat
 
 from ... import data_api_client, flask_featureflags
 from ...main import main, content_loader
@@ -65,10 +66,10 @@ AGREEMENT_RETURNED_MESSAGE = (
 @login_required
 def framework_dashboard(framework_slug):
     framework = get_framework_or_404(data_api_client, framework_slug)
+    update_framework_with_formatted_dates(framework)
     if framework["status"] == "open":
         session["currently_applying_to"] = framework_slug
 
-    framework_dates = content_loader.get_message(framework_slug, 'dates')
     framework_urls = content_loader.get_message(framework_slug, 'urls')
 
     if request.method == 'POST':
@@ -76,9 +77,10 @@ def framework_dashboard(framework_slug):
         supplier_users = data_api_client.find_users(supplier_id=current_user.supplier_id)
 
         try:
-            email_body = render_template(f'emails/{framework["framework"]}_application_started.html',
-                                         framework=framework,
-                                         framework_dates=framework_dates)
+            email_body = render_template(
+                f'emails/{framework["framework"]}_application_started.html',
+                framework=framework)
+
             mandrill_send_email(
                 [user['emailAddress'] for user in supplier_users['users'] if user['active']],
                 email_body,
@@ -189,7 +191,6 @@ def framework_dashboard(framework_slug):
         declaration_status=declaration_status,
         signed_agreement_document_name=signed_agreement_document_name,
         framework=framework,
-        framework_dates=framework_dates,
         framework_urls=framework_urls,
         result_letter_filename=result_letter_filename,
         supplier_framework=supplier_framework_info,
@@ -321,11 +322,10 @@ def framework_submission_services(framework_slug, lot_slug):
 @login_required
 def framework_start_supplier_declaration(framework_slug):
     framework = get_framework_or_404(data_api_client, framework_slug, allowed_statuses=['open'])
-    framework_close_date = content_loader.get_message(framework_slug, 'dates', 'framework_close_date')
+    update_framework_with_formatted_dates(framework)
 
     return render_template("frameworks/start_declaration.html",
-                           framework=framework,
-                           framework_close_date=framework_close_date), 200
+                           framework=framework), 200
 
 
 @main.route('/frameworks/<framework_slug>/declaration/reuse', methods=['GET'])
@@ -369,7 +369,7 @@ def reuse_framework_supplier_declaration(framework_slug):
         current_framework=current_framework,
         form=ReuseDeclarationForm(),
         old_framework=old_framework,
-        old_framework_application_close_date=date_parse(old_framework['applicationCloseDate']).strftime('%B %Y'),
+        old_framework_application_close_date=monthyearformat(old_framework['applicationsCloseAtUTC']),
     ), 200
 
 
@@ -392,7 +392,7 @@ def reuse_framework_supplier_declaration_post(framework_slug):
             form=form,
             form_errors=form_errors,
             old_framework=old_framework,
-            old_framework_application_close_date=date_parse(old_framework['applicationCloseDate']).strftime('%B %Y')
+            old_framework_application_close_date=monthyearformat(old_framework['applicationsCloseAtUTC']),
         ), 400
     if form.reuse.data:
         # They clicked OK! Check the POST data.
@@ -443,6 +443,7 @@ def framework_supplier_declaration_overview(framework_slug):
         "live",
         "expired",
     ])
+    update_framework_with_formatted_dates(framework)
 
     sf = data_api_client.get_supplier_framework_info(current_user.supplier_id, framework_slug)["frameworkInterest"]
     # ensure our declaration is a a dict
@@ -482,7 +483,6 @@ def framework_supplier_declaration_overview(framework_slug):
         supplier_framework=sf,
         sections_errors=sections_errors,
         validates=not any(errors for section, errors in sections_errors.values()),
-        framework_dates=content_loader.get_message(framework_slug, "dates"),
     ), 200
 
 
@@ -647,6 +647,7 @@ def download_agreement_file(framework_slug, document_name):
 @login_required
 def framework_updates(framework_slug, error_message=None, default_textbox_value=None):
     framework = get_framework_or_404(data_api_client, framework_slug)
+    update_framework_with_formatted_dates(framework)
     supplier_framework_info = get_supplier_framework_info(data_api_client, framework_slug)
 
     current_app.logger.info("{framework_slug}-updates.viewed: user_id {user_id} supplier_id {supplier_id}",
@@ -672,7 +673,6 @@ def framework_updates(framework_slug, error_message=None, default_textbox_value=
         clarification_question_value=default_textbox_value,
         error_message=error_message,
         files=files,
-        dates=content_loader.get_message(framework_slug, 'dates'),
         agreement_countersigned=bool(supplier_framework_info and supplier_framework_info['countersignedPath']),
     ), 200 if not error_message else 400
 
@@ -1074,6 +1074,7 @@ def signature_upload(framework_slug, agreement_id):
 @login_required
 def contract_review(framework_slug, agreement_id):
     framework = get_framework_or_404(data_api_client, framework_slug, allowed_statuses=['standstill', 'live'])
+    update_framework_with_formatted_dates(framework)
     # if there's no frameworkAgreementVersion key it means we're pre-G-Cloud 8 and shouldn't be using this route
     if not framework.get('frameworkAgreementVersion'):
         abort(404)
@@ -1107,7 +1108,6 @@ def contract_review(framework_slug, agreement_id):
                     'emails/framework_agreement_with_framework_version_returned.html',
                     framework_name=framework['name'],
                     framework_slug=framework['slug'],
-                    framework_live_date=content_loader.get_message(framework_slug, 'dates')['framework_live_date'],  # noqa
                 )
 
                 mandrill_send_email(

@@ -6,7 +6,7 @@ from app.main.helpers.suppliers import get_country_name_from_country_code, parse
     supplier_company_details_are_complete
 from ...helpers import BaseApplicationTest
 
-from dmapiclient.api_stubs import supplier
+from dmutils.api_stubs import supplier
 
 
 class TestGetCountryNameFromCountryCode:
