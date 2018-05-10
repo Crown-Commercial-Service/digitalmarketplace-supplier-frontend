@@ -106,10 +106,9 @@ def get_user():
 
 
 @mock.patch("app.main.views.suppliers.data_api_client", autospec=True)
-@mock.patch("app.main.views.suppliers.get_current_suppliers_users", autospec=True)
 class TestSuppliersDashboard(BaseApplicationTest):
     def test_error_and_success_flashed_messages_only_are_shown_in_banner_messages(
-        self, get_current_suppliers_users, data_api_client
+        self, data_api_client
     ):
         with self.client.session_transaction() as session:
             session['_flashes'] = [
@@ -123,7 +122,6 @@ class TestSuppliersDashboard(BaseApplicationTest):
         data_api_client.find_audit_events.return_value = {
             "auditEvents": []
         }
-        get_current_suppliers_users.side_effect = get_user
         with self.app.test_client():
             self.login()
 
@@ -135,7 +133,7 @@ class TestSuppliersDashboard(BaseApplicationTest):
             assert '<pclass="banner-message">account-created</p>' not in data
 
     def test_data_analytics_track_page_view_is_shown_if_account_created_flag_flash_message(
-        self, get_current_suppliers_users, data_api_client
+        self, data_api_client
     ):
         with self.client.session_transaction() as session:
             session['_flashes'] = [('track-page-view', '/suppliers?account-created=true')]
@@ -149,7 +147,7 @@ class TestSuppliersDashboard(BaseApplicationTest):
             assert 'data-analytics="trackPageView" data-url="/suppliers?account-created=true"' in data
 
     def test_data_analytics_track_page_view_is_not_shown_if_no_account_created_flag_flash_message(
-        self, get_current_suppliers_users, data_api_client
+        self, data_api_client
     ):
         with self.app.test_client():
             self.login()
@@ -159,7 +157,7 @@ class TestSuppliersDashboard(BaseApplicationTest):
 
             assert 'data-analytics="trackPageView" data-url="/suppliers?account-created=true"' not in data
 
-    def test_shows_edit_buttons(self, get_current_suppliers_users, data_api_client):
+    def test_shows_edit_buttons(self, data_api_client):
         data_api_client.get_supplier.side_effect = get_supplier
         data_api_client.find_frameworks.return_value = FIND_FRAMEWORKS_RETURN_VALUE
         data_api_client.get_supplier_frameworks.return_value = {
@@ -178,7 +176,6 @@ class TestSuppliersDashboard(BaseApplicationTest):
                 },
             ],
         }
-        get_current_suppliers_users.side_effect = get_user
         with self.app.test_client():
             self.login()
 
@@ -214,7 +211,7 @@ class TestSuppliersDashboard(BaseApplicationTest):
             assert not document.xpath("//a[@href=$u]", u="/suppliers/frameworks/digital-rhymes-and-reasons/services")
 
     def test_shows_dos_is_coming(
-        self, get_current_suppliers_users, data_api_client
+        self, data_api_client
     ):
         data_api_client.get_supplier.side_effect = get_supplier
         data_api_client.get_supplier_frameworks.return_value = {
@@ -242,7 +239,7 @@ class TestSuppliersDashboard(BaseApplicationTest):
                 message[0].xpath('p/text()')[0]
             assert u"Find out if your services are suitable" in message[0].xpath('p/a/text()')[0]
 
-    def test_shows_gcloud_7_application_button(self, get_current_suppliers_users, data_api_client):
+    def test_shows_gcloud_7_application_button(self, data_api_client):
         data_api_client.get_framework_interest.return_value = {'frameworks': []}
         data_api_client.get_supplier.side_effect = get_supplier
         data_api_client.find_frameworks.return_value = {
@@ -251,7 +248,6 @@ class TestSuppliersDashboard(BaseApplicationTest):
                 framework_stub(status='open', slug='g-cloud-7')['frameworks'],
             ]
         }
-        get_current_suppliers_users.side_effect = get_user
         with self.app.test_client():
             self.login()
 
@@ -266,7 +262,7 @@ class TestSuppliersDashboard(BaseApplicationTest):
 
             assert apply_button.value == "Apply"
 
-    def test_shows_gcloud_7_continue_link(self, get_current_suppliers_users, data_api_client):
+    def test_shows_gcloud_7_continue_link(self, data_api_client):
         data_api_client.get_supplier.side_effect = get_supplier
         data_api_client.get_supplier_frameworks.return_value = {
             'frameworkInterest': [
@@ -274,7 +270,6 @@ class TestSuppliersDashboard(BaseApplicationTest):
             ]
         }
         data_api_client.find_frameworks.return_value = FIND_FRAMEWORKS_RETURN_VALUE
-        get_current_suppliers_users.side_effect = get_user
         with self.app.test_client():
             self.login()
 
@@ -289,7 +284,7 @@ class TestSuppliersDashboard(BaseApplicationTest):
             assert continue_link
             assert continue_link[0].values()[0] == "/suppliers/frameworks/g-cloud-7"
 
-    def test_shows_gcloud_7_closed_message_if_pending_and_no_interest(self, get_current_suppliers_users, data_api_client):  # noqa
+    def test_shows_gcloud_7_closed_message_if_pending_and_no_interest(self, data_api_client):  # noqa
         data_api_client.get_framework.return_value = self.framework('pending')
         data_api_client.get_supplier.side_effect = get_supplier
         data_api_client.get_supplier_frameworks.return_value = {'frameworkInterest': []}
@@ -298,7 +293,6 @@ class TestSuppliersDashboard(BaseApplicationTest):
                 framework_stub(status='pending', slug='g-cloud-7')['frameworks'],
             ]
         }
-        get_current_suppliers_users.side_effect = get_user
         with self.app.test_client():
             self.login()
 
@@ -310,7 +304,7 @@ class TestSuppliersDashboard(BaseApplicationTest):
             assert u"G-Cloud 7 is closed for applications" in message[0].xpath('h2/text()')[0]
             assert len(message[0].xpath('p[1]/a[@href="https://digitalmarketplace.blog.gov.uk/"]')) > 0
 
-    def test_shows_gcloud_7_closed_message_if_pending_and_no_application(self, get_current_suppliers_users, data_api_client):  # noqa
+    def test_shows_gcloud_7_closed_message_if_pending_and_no_application(self, data_api_client):  # noqa
         data_api_client.get_framework.return_value = self.framework('pending')
         data_api_client.get_supplier.side_effect = get_supplier
         data_api_client.get_supplier_frameworks.return_value = {
@@ -328,7 +322,6 @@ class TestSuppliersDashboard(BaseApplicationTest):
                 framework_stub(status='pending', slug='g-cloud-7')['frameworks'],
             ]
         }
-        get_current_suppliers_users.side_effect = get_user
         with self.app.test_client():
             self.login()
 
@@ -342,7 +335,7 @@ class TestSuppliersDashboard(BaseApplicationTest):
             assert len(message[0].xpath('p[2]/a[contains(@href, "suppliers/frameworks/g-cloud-7")]')) > 0
 
     def test_shows_gcloud_7_closed_message_if_pending_and_application_done(
-        self, get_current_suppliers_users, data_api_client
+        self, data_api_client
     ):
         data_api_client.get_supplier.side_effect = get_supplier
         data_api_client.get_supplier_frameworks.return_value = {
@@ -373,7 +366,7 @@ class TestSuppliersDashboard(BaseApplicationTest):
             assert u"View your submitted application" in headings[0].xpath('../p[1]/a/text()')[0]
 
     def test_shows_gcloud_7_in_standstill_application_passed_with_message(
-        self, get_current_suppliers_users, data_api_client
+        self, data_api_client
     ):
         data_api_client.get_supplier.side_effect = get_supplier
         data_api_client.get_supplier_frameworks.return_value = {
@@ -414,7 +407,7 @@ class TestSuppliersDashboard(BaseApplicationTest):
             assert u"You must sign the framework agreement to sell these services" in first_row
 
     def test_shows_gcloud_7_in_standstill_fw_agreement_returned(
-        self, get_current_suppliers_users, data_api_client
+        self, data_api_client
     ):
         data_api_client.get_supplier.side_effect = get_supplier
         data_api_client.get_supplier_frameworks.return_value = {
@@ -454,7 +447,7 @@ class TestSuppliersDashboard(BaseApplicationTest):
             assert u"You must sign the framework agreement to sell these services" not in first_row
 
     def test_shows_gcloud_7_in_standstill_no_application(
-        self, get_current_suppliers_users, data_api_client
+        self, data_api_client
     ):
         data_api_client.get_supplier.side_effect = get_supplier
         data_api_client.get_supplier_frameworks.return_value = {
@@ -474,7 +467,7 @@ class TestSuppliersDashboard(BaseApplicationTest):
             assert not doc.xpath('//h2[normalize-space(string())=$t]', t="Pending services")
 
     def test_shows_gcloud_7_in_standstill_application_failed(
-        self, get_current_suppliers_users, data_api_client
+        self, data_api_client
     ):
         data_api_client.get_supplier.side_effect = get_supplier
         data_api_client.get_supplier_frameworks.return_value = {
@@ -517,7 +510,7 @@ class TestSuppliersDashboard(BaseApplicationTest):
             assert u"View your documents" in first_row
 
     def test_shows_gcloud_7_in_standstill_application_passed(
-        self, get_current_suppliers_users, data_api_client
+        self, data_api_client
     ):
         data_api_client.get_supplier.side_effect = get_supplier
         data_api_client.get_supplier_frameworks.return_value = {
@@ -559,7 +552,7 @@ class TestSuppliersDashboard(BaseApplicationTest):
             assert u"99 services" in first_row
             assert u"You must sign the framework agreement to sell these services" not in first_row
 
-    def test_shows_register_for_dos_button(self, get_current_suppliers_users, data_api_client):
+    def test_shows_register_for_dos_button(self, data_api_client):
         data_api_client.get_framework.return_value = self.framework(status='other')
         data_api_client.get_supplier.side_effect = get_supplier
         data_api_client.find_frameworks.return_value = {
@@ -568,7 +561,6 @@ class TestSuppliersDashboard(BaseApplicationTest):
                 framework_stub(status='live', slug='g-cloud-7')['frameworks'],
             ]
         }
-        get_current_suppliers_users.side_effect = get_user
         with self.app.test_client():
             self.login()
 
@@ -584,7 +576,7 @@ class TestSuppliersDashboard(BaseApplicationTest):
 
             assert apply_button.value == "Apply"
 
-    def test_shows_continue_with_dos_link(self, get_current_suppliers_users, data_api_client):
+    def test_shows_continue_with_dos_link(self, data_api_client):
         data_api_client.get_supplier.side_effect = get_supplier
         data_api_client.get_supplier_frameworks.return_value = {
             'frameworkInterest': [
@@ -597,7 +589,6 @@ class TestSuppliersDashboard(BaseApplicationTest):
                 framework_stub(status='live', slug='g-cloud-7')['frameworks'],
             ]
         }
-        get_current_suppliers_users.side_effect = get_user
         with self.app.test_client():
             self.login()
 
@@ -932,7 +923,6 @@ class TestSupplierDetails(BaseApplicationTest):
 
 
 @mock.patch("app.main.views.suppliers.data_api_client", autospec=True)
-@mock.patch("app.main.views.suppliers.get_current_suppliers_users", autospec=True)
 class TestSupplierOpportunitiesDashboardLink(BaseApplicationTest):
     def setup_method(self, method):
         super(TestSupplierOpportunitiesDashboardLink, self).setup_method(method)
@@ -954,7 +944,7 @@ class TestSupplierOpportunitiesDashboardLink(BaseApplicationTest):
             }
         ]}
 
-    def test_opportunities_dashboard_link(self, get_current_suppliers_users, data_api_client):
+    def test_opportunities_dashboard_link(self, data_api_client):
         data_api_client.get_supplier.side_effect = get_supplier
         data_api_client.get_supplier_frameworks.return_value = {
             'frameworkInterest': [self.get_supplier_frameworks_response]}
@@ -990,7 +980,6 @@ class TestSupplierOpportunitiesDashboardLink(BaseApplicationTest):
     )
     def test_opportunities_dashboard_link_fails_with_incomplete_data(
             self,
-            get_current_suppliers_users,
             data_api_client,
             incorrect_data
     ):
@@ -1013,11 +1002,9 @@ class TestSupplierOpportunitiesDashboardLink(BaseApplicationTest):
 
 class TestSupplierDashboardLogin(BaseApplicationTest):
     @mock.patch("app.main.views.suppliers.data_api_client")
-    @mock.patch("app.main.views.suppliers.get_current_suppliers_users")
     def test_should_show_supplier_dashboard_logged_in(
-            self, get_current_suppliers_users, data_api_client
+            self, data_api_client
     ):
-        get_current_suppliers_users.side_effect = get_user
         with self.app.test_client():
             self.login()
             data_api_client.authenticate_user.return_value = self.user(
@@ -1051,11 +1038,9 @@ class TestSupplierDashboardLogin(BaseApplicationTest):
         assert res.location == "http://localhost/user/login?next=%2Fsuppliers"
 
     @mock.patch("app.main.views.suppliers.data_api_client")
-    @mock.patch("app.main.views.suppliers.get_current_suppliers_users")
     def test_custom_dimension_supplier_role_and_organisation_size_is_set_if_supplier_logged_in(
-        self, get_current_suppliers_users, data_api_client
+        self, data_api_client
     ):
-        get_current_suppliers_users.side_effect = get_user
         data_api_client.find_frameworks.return_value = FIND_FRAMEWORKS_RETURN_VALUE
         data_api_client.get_supplier.side_effect = get_supplier
 
@@ -1069,11 +1054,9 @@ class TestSupplierDashboardLogin(BaseApplicationTest):
             assert len(doc.xpath('//meta[@data-value="small"]')) == 1
 
     @mock.patch("app.main.views.suppliers.data_api_client")
-    @mock.patch("app.main.views.suppliers.get_current_suppliers_users")
     def test_custom_dimension_supplier_organisation_size_not_set_if_size_is_null(
-        self, get_current_suppliers_users, data_api_client
+        self, data_api_client
     ):
-        get_current_suppliers_users.side_effect = get_user
         data_api_client.find_frameworks.return_value = FIND_FRAMEWORKS_RETURN_VALUE
         data_api_client.get_supplier.side_effect = get_supplier
 
