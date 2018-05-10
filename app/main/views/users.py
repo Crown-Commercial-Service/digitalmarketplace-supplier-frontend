@@ -10,10 +10,9 @@ DEACTIVATED_USER_MESSAGE = "{user_name} ({user_email_address}) has been removed 
 
 
 def get_current_suppliers_users():
-
-    users = data_api_client.find_users(
+    users = data_api_client.find_users_iter(
         supplier_id=current_user.supplier_id
-    ).get('users')
+    )
 
     active_users = [user for user in users if user['active']]
 

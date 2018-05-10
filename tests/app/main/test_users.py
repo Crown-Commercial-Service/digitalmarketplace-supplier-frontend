@@ -60,11 +60,11 @@ class TestListUsers(BaseApplicationTest):
         with self.app.test_client():
             self.login()
 
-            data_api_client.find_users.return_value = get_users()
+            data_api_client.find_users_iter.return_value = get_users()['users']
 
             res = self.client.get('/suppliers/users')
             assert res.status_code == 200
-            data_api_client.find_users.assert_called_once_with(supplier_id=1234)
+            data_api_client.find_users_iter.assert_called_once_with(supplier_id=1234)
 
             # strings we would expect to find in the output
             for string in [
