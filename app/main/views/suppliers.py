@@ -36,7 +36,6 @@ from ..helpers.suppliers import (
     supplier_company_details_are_complete,
 )
 from ..helpers import login_required
-from .users import get_current_suppliers_users
 
 JOIN_OPEN_FRAMEWORK_NOTIFICATION_MAILING_LIST_SUCCESS_MESSAGE = (
     "You will receive email notifications to {email_address} when applications are opening."
@@ -87,7 +86,6 @@ def dashboard():
     return render_template(
         "suppliers/dashboard.html",
         supplier=supplier,
-        users=get_current_suppliers_users(),
         frameworks={
             'coming': get_frameworks_by_status(all_frameworks, 'coming'),
             'open': get_frameworks_by_status(all_frameworks, 'open'),
