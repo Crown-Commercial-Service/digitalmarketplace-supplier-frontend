@@ -110,9 +110,12 @@ class TestPostUsers(BaseApplicationTest):
         with self.app.test_client():
             self.login()
 
-            data_api_client.find_users.return_value = get_users()
+            data_api_client.get_user.return_value = None
+            target_user_id = 1231231231231
 
-            res = self.client.post('/suppliers/users/1231231231231/deactivate')
+            res = self.client.post(f'/suppliers/users/{target_user_id}/deactivate')
+
+            assert data_api_client.get_user.call_args_list == [mock.call(user_id=target_user_id)]
             assert res.status_code == 404
 
     @mock.patch('app.main.views.users.data_api_client')
@@ -131,10 +134,11 @@ class TestPostUsers(BaseApplicationTest):
                     'role': 'buyer',
                 }
             ]
-            data_api_client.find_users.return_value = get_users(additional_users)
             data_api_client.get_user.return_value = get_users(additional_users, index=3)
 
             res = self.client.post('/suppliers/users/3/deactivate')
+
+            assert data_api_client.get_user.call_args_list == [mock.call(user_id=3)]
             assert res.status_code == 404
 
     @mock.patch('app.main.views.users.data_api_client')
@@ -157,10 +161,11 @@ class TestPostUsers(BaseApplicationTest):
                     }
                 }
             ]
-            data_api_client.find_users.return_value = get_users(additional_users)
             data_api_client.get_user.return_value = get_users(additional_users, index=3)
 
             res = self.client.post('/suppliers/users/4/deactivate')
+
+            assert data_api_client.get_user.call_args_list == [mock.call(user_id=4)]
             assert res.status_code == 404
 
     @mock.patch('app.main.views.users.data_api_client')
@@ -168,12 +173,16 @@ class TestPostUsers(BaseApplicationTest):
         with self.app.test_client():
             self.login()
 
-            data_api_client.find_users.return_value = get_users()
             data_api_client.get_user.return_value = get_users(index=1)
             data_api_client.update_user.return_value = True
 
             res = self.client.post(
                 '/suppliers/users/1/deactivate', follow_redirects=True)
+
+            assert data_api_client.get_user.call_args_list == [mock.call(user_id=1)]
+            assert data_api_client.update_user.call_args_list == [
+                mock.call(user_id=1, active=False, updater='email@email.com')
+            ]
             assert res.status_code == 200
             assert self.strip_all_whitespace('Don Draper (don@scdp.com) has been removed as a contributor') in \
                 self.strip_all_whitespace(res.get_data(as_text=True))

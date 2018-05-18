@@ -74,7 +74,7 @@ def framework_dashboard(framework_slug):
 
     if request.method == 'POST':
         register_interest_in_framework(data_api_client, framework_slug)
-        supplier_users = data_api_client.find_users(supplier_id=current_user.supplier_id)
+        supplier_users = data_api_client.find_users_iter(supplier_id=current_user.supplier_id)
 
         try:
             email_body = render_template(
@@ -82,7 +82,7 @@ def framework_dashboard(framework_slug):
                 framework=framework)
 
             mandrill_send_email(
-                [user['emailAddress'] for user in supplier_users['users'] if user['active']],
+                [user['emailAddress'] for user in supplier_users if user['active']],
                 email_body,
                 current_app.config['DM_MANDRILL_API_KEY'],
                 'You started a {} application'.format(framework['name']),
