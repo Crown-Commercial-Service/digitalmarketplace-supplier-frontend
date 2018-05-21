@@ -763,7 +763,7 @@ class TestSupplierDetails(BaseApplicationTest):
             ("DUNS number", {"dunsNumber": "123456789"}, "/suppliers/duns-number/edit"),
         ]
     )
-    def test_filled_in_question_field_has_change_link(
+    def test_filled_in_question_field_has_a_correct_a_mistake_link(
         self, data_api_client, question, filled_in_attribute, link_address
     ):
         data_api_client.get_supplier.return_value = get_supplier(**filled_in_attribute)
@@ -776,7 +776,7 @@ class TestSupplierDetails(BaseApplicationTest):
             page_html = response.get_data(as_text=True)
             document = html.fromstring(page_html)
             answer_required_link = document.xpath(
-                "//span[text()='{}']/following::td[2]/span/a[text()='Change']".format(question)
+                "//span[text()='{}']/following::td[2]/span/a[text()='Correct a mistake']".format(question)
             )
 
             assert answer_required_link
@@ -2421,7 +2421,7 @@ class TestSupplierAddRegisteredCompanyName(BaseApplicationTest):
             page_heading = doc.xpath('//h1')
 
             assert res.status_code == 200
-            assert page_heading[0].text.strip() == "Change your registered company name"
+            assert page_heading[0].text.strip() == "Correct a mistake in your registered company name"
             assert data_api_client.update_supplier.call_args_list == []
 
     def test_post_shows_already_entered_page_and_api_not_called_if_data_already_confirmed(self, data_api_client):
@@ -2433,7 +2433,7 @@ class TestSupplierAddRegisteredCompanyName(BaseApplicationTest):
             page_heading = doc.xpath('//h1')
 
             assert res.status_code == 400
-            assert page_heading[0].text.strip() == "Change your registered company name"
+            assert page_heading[0].text.strip() == "Correct a mistake in your registered company name"
             assert data_api_client.update_supplier.call_args_list == []
 
 
@@ -2671,7 +2671,7 @@ class TestSupplierAddRegistrationNumber(BaseApplicationTest):
             page_heading = doc.xpath('//h1')
 
             assert res.status_code == 200
-            assert page_heading[0].text.strip() == "Change your registration number"
+            assert page_heading[0].text.strip() == "Correct a mistake in your registration number"
             assert data_api_client.update_supplier.call_args_list == []
 
     def test_post_shows_already_entered_page_and_api_not_called_if_data_already_confirmed(self, data_api_client):
@@ -2688,7 +2688,7 @@ class TestSupplierAddRegistrationNumber(BaseApplicationTest):
             page_heading = doc.xpath('//h1')
 
             assert res.status_code == 400
-            assert page_heading[0].text.strip() == "Change your registration number"
+            assert page_heading[0].text.strip() == "Correct a mistake in your registration number"
             assert data_api_client.update_supplier.call_args_list == []
 
 
@@ -2742,7 +2742,7 @@ class TestEditSupplierVatNumber(BaseApplicationTest):
             doc = html.fromstring(res.get_data(as_text=True))
 
             assert res.status_code == status_code
-            assert doc.xpath("//h1[normalize-space(string())='Change your VAT number']")
+            assert doc.xpath("//h1[normalize-space(string())='Correct a mistake in your VAT number']")
             assert not self.data_api_client.update_supplier.called
 
     def test_posting_valid_vat_code_updates_supplier(self):
