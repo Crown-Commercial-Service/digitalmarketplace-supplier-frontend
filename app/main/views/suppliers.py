@@ -507,7 +507,7 @@ def become_a_supplier():
     try:
         frameworks = sorted(
             data_api_client.find_frameworks().get('frameworks'),
-            key=lambda framework: framework['slug'],
+            key=lambda framework: framework['id'],
             reverse=True
         )
         displayed_frameworks = get_frameworks_closed_and_open_for_applications(frameworks)

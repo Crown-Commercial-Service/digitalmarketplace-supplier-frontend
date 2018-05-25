@@ -2194,6 +2194,34 @@ class TestBecomeASupplier(BaseApplicationTest):
         assert self.strip_all_whitespace(u"<h1>Become a supplier</h1>") in \
             self.strip_all_whitespace(res.get_data(as_text=True))
 
+    @mock.patch('app.main.suppliers.get_frameworks_closed_and_open_for_applications', autospec=True)
+    def test_frameworks_are_sorted_correctly(self, get_frameworks_closed_and_open_for_applications, data_api_client):
+        data_api_client.find_frameworks.return_value = {
+            "frameworks": [
+                framework_stub(framework_id=3, status='live', slug='g-cloud-9')['frameworks'],
+                framework_stub(framework_id=1, status='expired', slug='g-cloud-8')['frameworks'],
+                framework_stub(framework_id=5, status='pending', slug='g-cloud-10')['frameworks'],
+                framework_stub(framework_id=2, status='live', slug='digital-outcomes-and-specialists')['frameworks'],
+                framework_stub(
+                    framework_id=4, status='coming', slug='digital-outcomes-and-specialists-2'
+                )['frameworks'],
+            ]
+        }
+
+        self.client.get("/suppliers/supply")
+
+        ordered_framework_slugs = [
+            fw['slug'] for fw in get_frameworks_closed_and_open_for_applications.call_args_list[0][0][0]
+        ]
+
+        assert ordered_framework_slugs == [
+            'g-cloud-10',
+            'digital-outcomes-and-specialists-2',
+            'g-cloud-9',
+            'digital-outcomes-and-specialists',
+            'g-cloud-8',
+        ]
+
     def test_all_open_or_coming_frameworks(self, data_api_client):
         data_api_client.find_frameworks.return_value = {
             "frameworks": [
