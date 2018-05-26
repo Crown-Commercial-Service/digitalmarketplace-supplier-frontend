@@ -17,7 +17,7 @@ from tests.app.helpers import BaseApplicationTest, empty_g7_draft_service, empty
 
 
 @pytest.fixture(params=(
-    # a tuple of framework_slug, framework_framework, framework_name, framework_editable_services
+    # a tuple of framework_slug, framework_family, framework_name, framework_editable_services
     (
         "g-cloud-9",
         "g-cloud",
@@ -53,11 +53,11 @@ def supplier_remove_service__post_data(request):
 
 
 @pytest.mark.parametrize("service_status", ("published", "enabled", "disabled",))
-@pytest.mark.parametrize("framework_framework", ("g-cloud", "digital-outcomes-and-specialists",))
+@pytest.mark.parametrize("framework_family", ("g-cloud", "digital-outcomes-and-specialists",))
 @mock.patch('app.main.views.services.data_api_client')
 class TestServiceHeirarchyRedirection(BaseApplicationTest):
     @staticmethod
-    def _mock_get_service_side_effect(service_status, framework_framework, service_belongs_to_user, service_id):
+    def _mock_get_service_side_effect(service_status, framework_family, service_belongs_to_user, service_id):
         try:
             return {"567": {
                 'services': {
@@ -66,7 +66,7 @@ class TestServiceHeirarchyRedirection(BaseApplicationTest):
                     'id': '567',
                     'frameworkName': "Q-Cloud #57",
                     'frameworkSlug': "q-cloud-57",
-                    'frameworkFramework': framework_framework,
+                    'frameworkFramework': framework_family,
                     'supplierId': 1234 if service_belongs_to_user else 1235,
                 },
             }}[str(service_id)]
@@ -78,7 +78,7 @@ class TestServiceHeirarchyRedirection(BaseApplicationTest):
             self,
             data_api_client,
             service_status,
-            framework_framework,
+            framework_family,
             suffix,
     ):
         with self.app.test_client():
@@ -87,7 +87,7 @@ class TestServiceHeirarchyRedirection(BaseApplicationTest):
             data_api_client.get_service.side_effect = partial(
                 self._mock_get_service_side_effect,
                 service_status,
-                framework_framework,
+                framework_family,
                 True,
             )
             res = self.client.get('/suppliers/services/567' + suffix)
@@ -100,7 +100,7 @@ class TestServiceHeirarchyRedirection(BaseApplicationTest):
             self,
             data_api_client,
             service_status,
-            framework_framework,
+            framework_family,
             suffix,
     ):
         with self.app.test_client():
@@ -109,7 +109,7 @@ class TestServiceHeirarchyRedirection(BaseApplicationTest):
             data_api_client.get_service.side_effect = partial(
                 self._mock_get_service_side_effect,
                 service_status,
-                framework_framework,
+                framework_family,
                 False,
             )
             res = self.client.get('/suppliers/services/567' + suffix)
@@ -121,7 +121,7 @@ class TestServiceHeirarchyRedirection(BaseApplicationTest):
             self,
             data_api_client,
             service_status,
-            framework_framework,
+            framework_family,
             suffix,
     ):
         with self.app.test_client():
@@ -130,7 +130,7 @@ class TestServiceHeirarchyRedirection(BaseApplicationTest):
             data_api_client.get_service.side_effect = partial(
                 self._mock_get_service_side_effect,
                 service_status,
-                framework_framework,
+                framework_family,
                 True,
             )
             res = self.client.get('/suppliers/services/31415' + suffix)
@@ -142,7 +142,7 @@ class TestServiceHeirarchyRedirection(BaseApplicationTest):
             self,
             data_api_client,
             service_status,
-            framework_framework,
+            framework_family,
             service_belongs_to_user,
     ):
         with self.app.test_client():
@@ -151,7 +151,7 @@ class TestServiceHeirarchyRedirection(BaseApplicationTest):
             data_api_client.get_service.side_effect = partial(
                 self._mock_get_service_side_effect,
                 service_status,
-                framework_framework,
+                framework_family,
                 service_belongs_to_user,
             )
             res = self.client.get('/suppliers/services/567/')
@@ -342,7 +342,7 @@ class _BaseTestSupplierEditRemoveService(BaseApplicationTest):
             self,
             data_api_client,
             framework_slug,
-            framework_framework,
+            framework_family,
             framework_name,
             service_status="published",
             service_belongs_to_user=True,
@@ -354,7 +354,7 @@ class _BaseTestSupplierEditRemoveService(BaseApplicationTest):
             'id': '123',
             'frameworkName': framework_name,
             'frameworkSlug': framework_slug,
-            'frameworkFramework': framework_framework,
+            'frameworkFramework': framework_family,
             'supplierId': 1234 if service_belongs_to_user else 1235,
         }
         service_data.update(kwargs)
@@ -484,7 +484,7 @@ class _BaseSupplierEditServiceTestsSharedAcrossFrameworks(_BaseTestSupplierEditR
 class TestSupplierEditGCloudService(_BaseSupplierEditServiceTestsSharedAcrossFrameworks):
     framework_kwargs = {
         "framework_slug": "g-cloud-9",
-        "framework_framework": "g-cloud",
+        "framework_family": "g-cloud",
         "framework_name": "G-Cloud 9"
     }
 
@@ -615,7 +615,7 @@ class TestSupplierEditDosServices(_BaseSupplierEditServiceTestsSharedAcrossFrame
     viewable at the moment"""
     framework_kwargs = {
         "framework_slug": "digital-outcomes-and-specialists-2",
-        "framework_framework": "digital-outcomes-and-specialists",
+        "framework_family": "digital-outcomes-and-specialists",
         "framework_name": "Digital outcomes and specialists 2"
     }
 
@@ -715,13 +715,13 @@ class TestSupplierRemoveServiceEditInterplay(_BaseTestSupplierEditRemoveService)
     def test_should_view_confirmation_message_if_first_remove_service_button_clicked(
             self, data_api_client, supplier_service_editing_fw_params
     ):
-        framework_slug, framework_framework, framework_name, framework_editable_services = \
+        framework_slug, framework_family, framework_name, framework_editable_services = \
             supplier_service_editing_fw_params
         self.login()
         self._setup_service(
             data_api_client,
             framework_slug,
-            framework_framework,
+            framework_family,
             framework_name,
             service_status='published'
         )
@@ -759,13 +759,13 @@ class TestSupplierRemoveServiceEditInterplay(_BaseTestSupplierEditRemoveService)
     def test_should_view_correct_notification_message_if_service_removed(
             self, data_api_client, supplier_service_editing_fw_params
     ):
-        framework_slug, framework_framework, framework_name, framework_editable_services = \
+        framework_slug, framework_family, framework_name, framework_editable_services = \
             supplier_service_editing_fw_params
         self.login()
         self._setup_service(
             data_api_client,
             framework_slug,
-            framework_framework,
+            framework_family,
             framework_name,
             service_status='published'
         )
@@ -836,7 +836,7 @@ class TestSupplierRemoveService(_BaseTestSupplierEditRemoveService):
             supplier_remove_service__service_status__expected_results,
             supplier_remove_service__post_data,
     ):
-        framework_slug, framework_framework, framework_name, framework_editable_services = \
+        framework_slug, framework_family, framework_name, framework_editable_services = \
             supplier_service_editing_fw_params
         service_status, service_belongs_to_user, expect_api_call_if_data, expected_status_code = \
             supplier_remove_service__service_status__expected_results
@@ -846,7 +846,7 @@ class TestSupplierRemoveService(_BaseTestSupplierEditRemoveService):
         self._setup_service(
             data_api_client,
             framework_slug,
-            framework_framework,
+            framework_family,
             framework_name,
             service_status=service_status,
             service_belongs_to_user=service_belongs_to_user,
@@ -871,13 +871,13 @@ class TestSupplierRemoveService(_BaseTestSupplierEditRemoveService):
             supplier_service_editing_fw_params,
             confirm,
     ):
-        framework_slug, framework_framework, framework_name, framework_editable_services = \
+        framework_slug, framework_family, framework_name, framework_editable_services = \
             supplier_service_editing_fw_params
         self.login()
         self._setup_service(
             data_api_client,
             framework_slug,
-            framework_framework,
+            framework_family,
             framework_name,
             service_status='published'
         )

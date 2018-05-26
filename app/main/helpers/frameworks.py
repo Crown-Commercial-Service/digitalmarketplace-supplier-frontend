@@ -343,7 +343,7 @@ def check_agreement_is_related_to_supplier_framework_or_abort(agreement, supplie
 
 
 def get_frameworks_closed_and_open_for_applications(frameworks):
-    # This will find one framework iteration per framework-framework, open > coming > closed
+    # This will find one framework iteration per framework-family, open > coming > closed
     def status_priority(status):
         if status == "open":
             return 0
@@ -354,7 +354,7 @@ def get_frameworks_closed_and_open_for_applications(frameworks):
 
     return tuple(chain.from_iterable(
         islice(grp, 1)          # take the first framework
-        for _, grp in groupby(  # from each framework_framework
+        for _, grp in groupby(  # from each framework_family
             sorted(             # listed in priority order
                 (fw for fw in frameworks),
                 key=lambda fw_sort: (fw_sort["framework"], status_priority(fw_sort["status"])),
