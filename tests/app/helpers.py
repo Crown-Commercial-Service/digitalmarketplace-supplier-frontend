@@ -340,7 +340,7 @@ class BaseApplicationTest(object):
                 api_stubs.lot(lot_id=7, slug='user-research-participants', name='User research participants',
                               one_service_limit=True),
                 api_stubs.lot(lot_id=8, slug='user-research-studios', name='User research studios',
-                              one_service_limit=True),
+                              one_service_limit=False),
             ]
 
         else:

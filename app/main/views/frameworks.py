@@ -285,7 +285,12 @@ def framework_submission_services(framework_slug, lot_slug):
 
     if lot['oneServiceLimit']:
         draft = next(iter(drafts + complete_drafts), None)
-        if not draft:
+        if not draft and previous_services_still_to_copy:
+            return redirect(
+                url_for('.list_previous_services', framework_slug=framework_slug, lot_slug=lot_slug)
+            )
+
+        elif not draft:
             draft = data_api_client.create_new_draft_service(
                 framework_slug, lot_slug, current_user.supplier_id, {}, current_user.email_address,
             )['services']

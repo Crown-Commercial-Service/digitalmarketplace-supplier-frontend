@@ -23,6 +23,7 @@ from ..helpers.frameworks import (
     get_supplier_framework_info,
     get_framework_or_404,
 )
+from ..forms.frameworks import OneServiceLimitCopyServiceForm
 
 
 # TODO make these more consistent, content-wise
@@ -721,12 +722,35 @@ def remove_subsection(framework_slug, lot_slug, service_id, section_id, question
                 ))
 
 
-@main.route('/frameworks/<framework_slug>/submissions/<lot_slug>/previous-services', methods=['GET'])
+@main.route('/frameworks/<framework_slug>/submissions/<lot_slug>/previous-services', methods=['GET', 'POST'])
 @login_required
 def list_previous_services(framework_slug, lot_slug):
     framework, lot = get_framework_and_lot_or_404(data_api_client, framework_slug, lot_slug)
     if framework['status'] != 'open':
         abort(404)
+    form = OneServiceLimitCopyServiceForm(lot['name'].lower())
+    if request.method == 'POST':
+        if lot.get('oneServiceLimit'):
+            # Don't copy a service if the lot has a one service limit and the supplier already has a draft for that lot
+            drafts, complete_drafts = get_lot_drafts(data_api_client, framework_slug, lot_slug)
+            if drafts or complete_drafts:
+                abort(400)
+            if form.validate_on_submit():
+                if form.copy_service.data is True:
+                    copy_service_from_previous_framework(
+                        data_api_client, content_loader, framework_slug, lot_slug, form.service_id.data
+                    )
+                    flash(SINGLE_SERVICE_ADDED_MESSAGE.format(framework_name=framework['name']), "success")
+                else:
+                    data_api_client.create_new_draft_service(
+                        framework_slug, lot_slug, current_user.supplier_id, {}, current_user.email_address,
+                    )
+                return redirect(
+                    url_for('.framework_submission_services', framework_slug=framework_slug, lot_slug=lot_slug)
+                )
+        else:
+            # Should not be POSTing to this view if not a one service lot
+            abort(400)
 
     copy_all = request.args.get('copy_all', None)
     source_framework_slug = content_loader.get_metadata(framework['slug'], 'copy_services', 'source_framework')
@@ -756,6 +780,8 @@ def list_previous_services(framework_slug, lot_slug):
         copy_all=copy_all,
         declaration_status=get_declaration_status(data_api_client, framework_slug),
         company_details_complete=supplier['companyDetailsConfirmed'],
+        form=form,
+        form_errors=[{'question': form[key].label.text, 'input_name': key} for key in form.errors],
     )
 
 

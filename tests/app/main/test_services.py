@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import copy
+import re
 from datetime import datetime
 from functools import partial
 from io import BytesIO
@@ -2281,7 +2282,7 @@ class TestParseDocumentUploadTime(BaseApplicationTest):
 
 @mock.patch('app.main.views.services.data_api_client')
 @mock.patch('app.main.views.services.content_loader.get_metadata')
-class TestListPreviousServices(BaseApplicationTest):
+class TestGetListPreviousServices(BaseApplicationTest):
     def setup_method(self, method):
         super().setup_method(method)
         self.login()
@@ -2317,7 +2318,7 @@ class TestListPreviousServices(BaseApplicationTest):
         assert doc.xpath("//h1[normalize-space()='Previous cloud hosting services']")
         assert doc.xpath("//h2[@class='summary-item-heading'][normalize-space()='Your services from G-Cloud 9']")
 
-        add_all_link = doc.xpath("//a[@class='summary-change-link'][normalize-space()='Add all to G-Cloud\xa010']")[0]
+        add_all_link = doc.xpath("//a[@class='summary-change-link'][normalize-space()='Add all your services']")[0]
         assert add_all_link.attrib['href'] == \
             '/suppliers/frameworks/g-cloud-10/submissions/cloud-hosting/previous-services?copy_all=True'
 
@@ -2327,7 +2328,37 @@ class TestListPreviousServices(BaseApplicationTest):
 
         add_service_buttons = doc.xpath("//button[@class='button-secondary']")
         assert len(add_service_buttons) == 3
-        assert all(button.text == 'Add to G-Cloud 10' for button in add_service_buttons)
+        assert all(button.text == 'Add' for button in add_service_buttons)
+
+    @pytest.mark.parametrize(
+        ('lot_slug', 'lot_name'),
+        (
+            ('digital-outcomes', 'digital outcomes'),
+            ('digital-specialists', 'digital specialists'),
+            ('user-research-participants', 'user research participants'),
+        )
+    )
+    def test_shows_boolean_question_for_single_service_lots(self, get_metadata, data_api_client, lot_slug, lot_name):
+        data_api_client.get_framework.side_effect = [
+            self.framework(slug='digital-outcomes-and-specialists-3'),
+            self.framework(slug='digital-outcomes-and-specialists-2'),
+        ]
+        get_metadata.return_value = 'digital-outcomes-and-specialists-2'
+        data_api_client.find_services.return_value = {
+            'services': [{'serviceName': 'Service one', 'copiedToFollowingFramework': False}],
+        }
+
+        res = self.client.get(
+            f'/suppliers/frameworks/digital-outcomes-and-specialists-3/submissions/{lot_slug}/previous-services'
+        )
+        doc = html.fromstring(res.get_data(as_text=True))
+
+        assert res.status_code == 200
+        assert doc.xpath(f"//h1[normalize-space()='Do you want to reuse your previous {lot_name} service?']")
+        assert [list_item.text for list_item in doc.xpath("//ul[@class='list-bullet']/li")] == \
+            ['review your service', 'answer any new questions']
+        assert [re.sub("\W", "", label.text) for label in doc.xpath("//label[@class='radio']")] == ["Yes", "No"]
+        assert doc.xpath("//input[@type='submit'][@value='Save and continue']")
 
     def test_returns_404_if_framework_not_found(self, get_metadata, data_api_client):
 
@@ -2458,6 +2489,113 @@ class TestListPreviousServices(BaseApplicationTest):
             assert details
         else:
             assert not details
+
+
+@mock.patch('app.main.views.services.data_api_client')
+class TestPostListPreviousService(BaseApplicationTest):
+    def setup_method(self, method):
+        super().setup_method(method)
+        self.login()
+
+    @mock.patch('app.main.views.services.content_loader')
+    @mock.patch('app.main.views.services.copy_service_from_previous_framework')
+    def test_copies_service_for_one_service_lot_if_copy_true(
+        self, copy_service_from_previous_framework, content_loader, data_api_client
+    ):
+        data_api_client.get_framework.return_value = self.framework(slug='digital-outcomes-and-specialists-3')
+        data_api_client.find_draft_services.return_value = {"services": []}
+
+        with self.app.app_context():
+            res = self.client.post(
+                '/suppliers/frameworks/digital-outcomes-and-specialists-3/'
+                'submissions/digital-outcomes/previous-services',
+                data={'copy_service': True, 'service_id': '0001'},
+            )
+
+            assert res.status_code == 302
+            assert (
+                '/suppliers/frameworks/digital-outcomes-and-specialists-3/submissions/digital-outcomes'
+            ) in res.location
+            assert copy_service_from_previous_framework.call_args_list == [
+                mock.call(
+                    data_api_client,
+                    content_loader,
+                    'digital-outcomes-and-specialists-3',
+                    'digital-outcomes',
+                    '0001'
+                )
+            ]
+            self.assert_flashes(
+                "You've added a service to your Digital Outcomes and Specialists 3 drafts. "
+                "You'll need to review it before it can be completed.",
+                expected_category='success',
+            )
+
+    @mock.patch('app.main.views.services.copy_service_from_previous_framework')
+    def test_creates_new_draft_for_one_service_lot_if_copy_false(
+        self, copy_service_from_previous_framework, data_api_client
+    ):
+        data_api_client.get_framework.return_value = self.framework(slug='digital-outcomes-and-specialists-3')
+        data_api_client.find_draft_services.return_value = {"services": []}
+
+        res = self.client.post(
+            '/suppliers/frameworks/digital-outcomes-and-specialists-3/submissions/digital-outcomes/previous-services',
+            data={'copy_service': False, 'service_id': '0001'},
+        )
+
+        assert res.status_code == 302
+        assert '/suppliers/frameworks/digital-outcomes-and-specialists-3/submissions/digital-outcomes' in res.location
+        assert copy_service_from_previous_framework.call_args_list == []
+        assert data_api_client.create_new_draft_service.call_args_list == [
+            mock.call('digital-outcomes-and-specialists-3', 'digital-outcomes', 1234, {}, 'email@email.com')
+        ]
+
+    def test_400s_if_lot_does_not_have_one_service_limit(self, data_api_client):
+        data_api_client.get_framework.return_value = self.framework(slug='digital-outcomes-and-specialists-3')
+
+        res = self.client.post(
+            '/suppliers/frameworks/digital-outcomes-and-specialists-3/'
+            'submissions/user-research-studios/previous-services',
+            data={'copy_service': False, 'service_id': '0001'},
+        )
+
+        assert res.status_code == 400
+
+    def test_400s_if_draft_already_exists(self, data_api_client):
+        data_api_client.get_framework.return_value = self.framework(slug='digital-outcomes-and-specialists-3')
+        data_api_client.find_draft_services.return_value = {
+            "services": [
+                {'status': 'not-submitted', 'lotSlug': 'digital-specialists'},
+            ]
+        }
+
+        res = self.client.post(
+            '/suppliers/frameworks/digital-outcomes-and-specialists-3/'
+            'submissions/digital-specialists/previous-services',
+            data={'copy_service': False, 'service_id': '0001'},
+        )
+
+        assert res.status_code == 400
+
+    def test_validates_that_an_answer_is_required(self, data_api_client):
+        data_api_client.get_framework.return_value = self.framework(slug='digital-outcomes-and-specialists-3')
+        data_api_client.find_draft_services.return_value = {"services": []}
+        data_api_client.find_services.return_value = {"services": [{'copiedToFollowingFramework': False}]}
+
+        res = self.client.post(
+            '/suppliers/frameworks/digital-outcomes-and-specialists-3/'
+            'submissions/digital-specialists/previous-services',
+            data={'service_id': '0001'},
+        )
+        doc = html.fromstring(res.get_data(as_text=True))
+
+        assert res.status_code == 200
+        assert "Do you want to reuse your previous digital specialists service?" == doc.xpath(
+            "//a[@class='validation-masthead-link']/text()"
+        )[0].strip()
+        assert "You must answer this question." == doc.xpath(
+            '//span[@class="validation-message"]/text()'
+        )[0].strip()
 
 
 class CopyingPreviousServicesSetup(BaseApplicationTest):

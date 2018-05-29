@@ -56,9 +56,9 @@ class OneServiceLimitCopyServiceForm(FlaskForm):
 
     def __init__(self, lot_name, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.copy.label.text = f"Do you want to reuse your previous {lot_name} service?"
+        self.copy_service.label.text = f"Do you want to reuse your previous {lot_name} service?"
 
-    copy = BooleanField(
+    copy_service = BooleanField(
         false_values={'False', 'false', ''},
         validators=[InputRequired(message='You must answer this question.')]
     )
