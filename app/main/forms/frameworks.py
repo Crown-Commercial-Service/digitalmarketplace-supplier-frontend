@@ -50,3 +50,16 @@ class ReuseDeclarationForm(FlaskForm):
         validators=[InputRequired(message='You must answer this question.')]
     )
     old_framework_slug = HiddenField()
+
+
+class OneServiceLimitCopyServiceForm(FlaskForm):
+
+    def __init__(self, lot_name, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.copy.label.text = f"Do you want to reuse your previous {lot_name} service?"
+
+    copy = BooleanField(
+        false_values={'False', 'false', ''},
+        validators=[InputRequired(message='You must answer this question.')]
+    )
+    service_id = HiddenField()
