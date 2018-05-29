@@ -6,6 +6,7 @@ from dmcontent.content_loader import ContentNotFoundError
 from dmutils import s3
 from dmutils.dates import update_framework_with_formatted_dates
 from dmutils.documents import upload_service_documents
+from dmutils.forms import get_errors_from_wtform
 
 from ... import data_api_client, flask_featureflags
 from ...main import main, content_loader
@@ -784,6 +785,8 @@ def previous_services(framework_slug, lot_slug):
     copy_all = request.args.get('copy_all', None)
     supplier = data_api_client.get_supplier(current_user.supplier_id)['suppliers']
 
+    errors = get_errors_from_wtform(form) if form else {}
+
     return render_template(
         "services/previous_services.html",
         framework=framework,
@@ -794,8 +797,8 @@ def previous_services(framework_slug, lot_slug):
         declaration_status=get_declaration_status(data_api_client, framework_slug),
         company_details_complete=supplier['companyDetailsConfirmed'],
         form=form,
-        form_errors=[{'question': form[key].label.text, 'input_name': key} for key in form.errors] if form else None,
-    )
+        errors=errors
+    ), 200 if not errors else 400
 
 
 @main.route('/frameworks/<framework_slug>/submissions/<lot_slug>/copy-previous-framework-service/<service_id>',

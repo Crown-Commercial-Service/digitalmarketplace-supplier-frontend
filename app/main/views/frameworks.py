@@ -25,6 +25,7 @@ from dmutils.email.dm_notify import DMNotifyClient
 from dmutils.email.exceptions import EmailError
 from dmutils.email.helpers import hash_string
 from dmutils.formats import datetimeformat, monthyearformat
+from dmutils.forms import get_errors_from_wtform
 
 from ... import data_api_client, flask_featureflags
 from ...main import main, content_loader
@@ -373,6 +374,7 @@ def reuse_framework_supplier_declaration(framework_slug):
         "frameworks/reuse_declaration.html",
         current_framework=current_framework,
         form=ReuseDeclarationForm(),
+        errors={},
         old_framework=old_framework,
         old_framework_application_close_date=monthyearformat(old_framework['applicationsCloseAtUTC']),
     ), 200
@@ -383,19 +385,18 @@ def reuse_framework_supplier_declaration(framework_slug):
 def reuse_framework_supplier_declaration_post(framework_slug):
     """Set the prefill preference if a reusable framework slug is provided and redirect to declaration."""
 
-    form = ReuseDeclarationForm(request.form)
+    form = ReuseDeclarationForm()
 
     # If the form isn't valid they likely didn't select either way.
     if not form.validate_on_submit():
         # Bail and re-render form with errors.
         current_framework = data_api_client.get_framework(framework_slug)['frameworks']
         old_framework = data_api_client.get_framework(form.old_framework_slug.data)['frameworks']
-        form_errors = [{'question': form[key].label.text, 'input_name': key} for key in form.errors]
         return render_template(
             "frameworks/reuse_declaration.html",
             current_framework=current_framework,
             form=form,
-            form_errors=form_errors,
+            errors=get_errors_from_wtform(form),
             old_framework=old_framework,
             old_framework_application_close_date=monthyearformat(old_framework['applicationsCloseAtUTC']),
         ), 400
@@ -954,6 +955,7 @@ def signer_details(framework_slug, agreement_id):
     # if there's no frameworkAgreementVersion key it means we're pre-G-Cloud 8 and shouldn't be using this route
     if not framework.get('frameworkAgreementVersion'):
         abort(404)
+
     supplier_framework = return_supplier_framework_info_if_on_framework_or_abort(data_api_client, framework_slug)
     agreement = data_api_client.get_framework_agreement(agreement_id)['agreement']
     check_agreement_is_related_to_supplier_framework_or_abort(agreement, supplier_framework)
@@ -961,31 +963,23 @@ def signer_details(framework_slug, agreement_id):
     form = SignerDetailsForm()
 
     question_keys = ['signerName', 'signerRole']
-    form_errors = {}
 
-    if request.method == 'POST':
-
-        if form.validate_on_submit():
-            agreement_details = {
-                "signedAgreementDetails": {
-                    question_key: form[question_key].data for question_key in question_keys
-                }
+    if form.validate_on_submit():
+        agreement_details = {
+            "signedAgreementDetails": {
+                question_key: form[question_key].data for question_key in question_keys
             }
-            data_api_client.update_framework_agreement(
-                agreement_id, agreement_details, current_user.email_address
-            )
+        }
+        data_api_client.update_framework_agreement(
+            agreement_id, agreement_details, current_user.email_address
+        )
 
-            # If they have already uploaded a file then let them go to straight to the contract review
-            # page as they are likely editing their signer details
-            if agreement.get('signedAgreementPath'):
-                return redirect(url_for(".contract_review", framework_slug=framework_slug, agreement_id=agreement_id))
+        # If they have already uploaded a file then let them go to straight to the contract review
+        # page as they are likely editing their signer details
+        if agreement.get('signedAgreementPath'):
+            return redirect(url_for(".contract_review", framework_slug=framework_slug, agreement_id=agreement_id))
 
-            return redirect(url_for(".signature_upload", framework_slug=framework_slug, agreement_id=agreement_id))
-        else:
-            error_keys_in_order = [key for key in question_keys if key in form.errors.keys()]
-            form_errors = [
-                {'question': form[key].label.text, 'input_name': key} for key in error_keys_in_order
-            ]
+        return redirect(url_for(".signature_upload", framework_slug=framework_slug, agreement_id=agreement_id))
 
     # if the signer* keys exist, prefill them in the form
     if agreement.get('signedAgreementDetails'):
@@ -993,16 +987,18 @@ def signer_details(framework_slug, agreement_id):
             if question_key in agreement['signedAgreementDetails']:
                 form[question_key].data = agreement['signedAgreementDetails'][question_key]
 
+    errors = get_errors_from_wtform(form)
+
     return render_template(
         "frameworks/signer_details.html",
         agreement=agreement,
         form=form,
-        form_errors=form_errors,
+        errors=errors,
         framework=framework,
         question_keys=question_keys,
         supplier_framework=supplier_framework,
         supplier_registered_name=get_supplier_registered_name_from_declaration(supplier_framework['declaration']),
-    ), 400 if form_errors else 200
+    ), 400 if errors else 200
 
 
 @main.route('/frameworks/<framework_slug>/<int:agreement_id>/signature-upload', methods=['GET', 'POST'])
@@ -1100,74 +1096,69 @@ def contract_review(framework_slug, agreement_id):
     signature_page = agreements_bucket.get_key(agreement['signedAgreementPath'])
 
     form = ContractReviewForm()
-    form_errors = None
 
-    if request.method == 'POST':
-        if form.validate_on_submit():
-            data_api_client.sign_framework_agreement(
-                agreement_id, current_user.email_address, {'uploaderUserId': current_user.id}
+    if form.validate_on_submit():
+        data_api_client.sign_framework_agreement(
+            agreement_id, current_user.email_address, {'uploaderUserId': current_user.id}
+        )
+
+        try:
+            email_body = render_template(
+                'emails/framework_agreement_with_framework_version_returned.html',
+                framework_name=framework['name'],
+                framework_slug=framework['slug'],
             )
 
-            try:
-                email_body = render_template(
-                    'emails/framework_agreement_with_framework_version_returned.html',
-                    framework_name=framework['name'],
-                    framework_slug=framework['slug'],
-                )
+            mandrill_send_email(
+                returned_agreement_email_recipients(supplier_framework),
+                email_body,
+                current_app.config['DM_MANDRILL_API_KEY'],
+                'Your {} signature page has been received'.format(framework['name']),
+                current_app.config["DM_ENQUIRIES_EMAIL_ADDRESS"],
+                current_app.config["FRAMEWORK_AGREEMENT_RETURNED_NAME"],
+                ['{}-framework-agreement'.format(framework_slug)],
+            )
+        except EmailError as e:
+            current_app.logger.error(
+                "Framework agreement email failed to send. "
+                "error {error} supplier_id {supplier_id} email_hash {email_hash}",
+                extra={'error': str(e),
+                       'supplier_id': current_user.supplier_id,
+                       'email_hash': hash_string(current_user.email_address)})
+            abort(503, "Framework agreement email failed to send")
 
-                mandrill_send_email(
-                    returned_agreement_email_recipients(supplier_framework),
-                    email_body,
-                    current_app.config['DM_MANDRILL_API_KEY'],
-                    'Your {} signature page has been received'.format(framework['name']),
-                    current_app.config["DM_ENQUIRIES_EMAIL_ADDRESS"],
-                    current_app.config["FRAMEWORK_AGREEMENT_RETURNED_NAME"],
-                    ['{}-framework-agreement'.format(framework_slug)],
-                )
-            except EmailError as e:
-                current_app.logger.error(
-                    "Framework agreement email failed to send. "
-                    "error {error} supplier_id {supplier_id} email_hash {email_hash}",
-                    extra={'error': str(e),
-                           'supplier_id': current_user.supplier_id,
-                           'email_hash': hash_string(current_user.email_address)})
-                abort(503, "Framework agreement email failed to send")
+        session.pop('signature_page', None)
 
-            session.pop('signature_page', None)
+        flash(AGREEMENT_RETURNED_MESSAGE, "success")
 
-            flash(AGREEMENT_RETURNED_MESSAGE, "success")
+        if feature.is_active('CONTRACT_VARIATION'):
+            # Redirect to contract variation if it has not been signed
+            if (framework.get('variations') and not supplier_framework['agreedVariations']):
+                variation_slug = list(framework['variations'].keys())[0]
+                return redirect(url_for(
+                    '.view_contract_variation',
+                    framework_slug=framework_slug,
+                    variation_slug=variation_slug
+                ))
 
-            if feature.is_active('CONTRACT_VARIATION'):
-                # Redirect to contract variation if it has not been signed
-                if (framework.get('variations') and not supplier_framework['agreedVariations']):
-                    variation_slug = list(framework['variations'].keys())[0]
-                    return redirect(url_for(
-                        '.view_contract_variation',
-                        framework_slug=framework_slug,
-                        variation_slug=variation_slug
-                    ))
-
-            return redirect(url_for(".framework_dashboard", framework_slug=framework_slug))
-
-        else:
-            form_errors = [
-                {'question': form['authorisation'].label.text, 'input_name': 'authorisation'}
-            ]
+        return redirect(url_for(".framework_dashboard", framework_slug=framework_slug))
 
     form.authorisation.description = u"I have the authority to return this agreement on behalf of {}.".format(
         get_supplier_registered_name_from_declaration(supplier_framework['declaration'])
     )
 
+    errors = get_errors_from_wtform(form)
+
     return render_template(
         "frameworks/contract_review.html",
         agreement=agreement,
         form=form,
-        form_errors=form_errors,
+        errors=errors,
         framework=framework,
         signature_page=signature_page,
         supplier_framework=supplier_framework,
         supplier_registered_name=get_supplier_registered_name_from_declaration(supplier_framework['declaration']),
-    ), 400 if form_errors else 200
+    ), 400 if errors else 200
 
 
 @main.route('/frameworks/<framework_slug>/contract-variation/<variation_slug>', methods=['GET', 'POST'])
@@ -1190,7 +1181,6 @@ def view_contract_variation(framework_slug, variation_slug):
     variation_content_name = 'contract_variation_{}'.format(variation_slug)
     content_loader.load_messages(framework_slug, [variation_content_name])
     form = AcceptAgreementVariationForm()
-    form_errors = None
 
     supplier_name = get_supplier_registered_name_from_declaration(supplier_framework['declaration'])
     variation_content = content_loader.get_message(framework_slug, variation_content_name).filter(
@@ -1198,57 +1188,54 @@ def view_contract_variation(framework_slug, variation_slug):
     )
 
     # Do not call API or send email if already agreed to
-    if request.method == 'POST' and not agreed_details.get("agreedAt"):
-        if form.validate_on_submit():
-            # Set variation as agreed to in database
-            data_api_client.agree_framework_variation(
-                current_user.supplier_id,
-                framework_slug,
-                variation_slug,
-                current_user.id,
-                current_user.email_address
-            )
+    if not agreed_details.get("agreedAt") and form.validate_on_submit():
+        # Set variation as agreed to in database
+        data_api_client.agree_framework_variation(
+            current_user.supplier_id,
+            framework_slug,
+            variation_slug,
+            current_user.id,
+            current_user.email_address
+        )
 
-            # Send email confirming accepted
-            try:
-                email_body = render_template(
-                    'emails/{}_variation_{}_agreed.html'.format(framework_slug, variation_slug)
-                )
-                mandrill_send_email(
-                    returned_agreement_email_recipients(supplier_framework),
-                    email_body,
-                    current_app.config['DM_MANDRILL_API_KEY'],
-                    '{}: you have accepted the proposed contract variation'.format(framework['name']),
-                    current_app.config['DM_ENQUIRIES_EMAIL_ADDRESS'],
-                    current_app.config['CLARIFICATION_EMAIL_NAME'],
-                    ['{}-variation-accepted'.format(framework_slug)]
-                )
-            except EmailError as e:
-                current_app.logger.error(
-                    "Variation agreed email failed to send: {error}, supplier_id: {supplier_id}",
-                    extra={'error': str(e), 'supplier_id': current_user.supplier_id}
-                )
-            flash(variation_content.confirmation_message, "success")
-            return redirect(url_for(".view_contract_variation",
-                                    framework_slug=framework_slug,
-                                    variation_slug=variation_slug)
-                            )
-        else:
-            form_errors = [
-                {'question': form['accept_changes'].label.text, 'input_name': 'accept_changes'}
-            ]
+        # Send email confirming accepted
+        try:
+            email_body = render_template(
+                'emails/{}_variation_{}_agreed.html'.format(framework_slug, variation_slug)
+            )
+            mandrill_send_email(
+                returned_agreement_email_recipients(supplier_framework),
+                email_body,
+                current_app.config['DM_MANDRILL_API_KEY'],
+                '{}: you have accepted the proposed contract variation'.format(framework['name']),
+                current_app.config['DM_ENQUIRIES_EMAIL_ADDRESS'],
+                current_app.config['CLARIFICATION_EMAIL_NAME'],
+                ['{}-variation-accepted'.format(framework_slug)]
+            )
+        except EmailError as e:
+            current_app.logger.error(
+                "Variation agreed email failed to send: {error}, supplier_id: {supplier_id}",
+                extra={'error': str(e), 'supplier_id': current_user.supplier_id}
+            )
+        flash(variation_content.confirmation_message, "success")
+        return redirect(url_for(".view_contract_variation",
+                                framework_slug=framework_slug,
+                                variation_slug=variation_slug)
+                        )
+
+    errors = get_errors_from_wtform(form)
 
     return render_template(
         "frameworks/contract_variation.html",
         form=form,
-        form_errors=form_errors,
+        errors=errors,
         framework=framework,
         supplier_framework=supplier_framework,
         variation_details=variation_details,
         variation=variation_content,
         agreed_details=agreed_details,
         supplier_name=supplier_name,
-    ), 400 if form_errors else 200
+    ), 400 if errors else 200
 
 
 @main.route('/frameworks/<framework_slug>/opportunities', methods=['GET'])

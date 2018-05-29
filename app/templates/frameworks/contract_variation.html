@@ -25,18 +25,11 @@
 {% endblock %}
 
 {% block main_content %}
-
-  {% if errors %}
-    {% with errors = errors.values() %}
-      {% include 'toolkit/forms/validation.html' %}
-    {% endwith %}
-  {% endif %}
-
     <div class="grid-row">
       <div class="column-one-whole">
-        {% if form.errors %}
+        {% if errors %}
          {% with 
-            message = "You must <a href=\"#{}\">accept the changes</a> to continue.".format(form_errors[0].input_name)|safe, type = "destructive" %} 
+            message = "You must <a href=\"#{}\">accept the changes</a> to continue.".format(errors.accept_changes.input_name)|safe, type = "destructive" %}
             {% include "toolkit/notification-banner.html" %} 
           {% endwith %}
         {% endif %}
@@ -148,7 +141,7 @@
                   "value": "Yes, I accept the changes"
                 }
                 ],
-                error=form.accept_changes.errors[0]
+                error=errors.get("accept_changes", {}).get("message", None)
               %}
               {% include "toolkit/forms/selection-buttons.html" %}
               {% endwith %}

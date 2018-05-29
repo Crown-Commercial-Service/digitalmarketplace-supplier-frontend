@@ -24,13 +24,10 @@
 {% endblock %}
 
 {% block main_content %}
-
+  {% include 'toolkit/forms/validation.html' %}
 
 <div class="grid-row">
   <div class="column-one-whole">
-    {% if errors %}
-      {% include 'toolkit/forms/validation.html' %}
-    {% endif %}
 
   </div>
     <div class="column-two-thirds">
@@ -49,7 +46,7 @@
             question = "Company name",
             name = "company_name",
             value = form.company_name.data,
-            error = form.company_name.errors[0],
+            error = errors.get("company_name", {}).get("message", None),
             hint = "This is how buyers will see your company’s name on the Digital&nbsp;Marketplace"|safe
         %}
         {% include "toolkit/forms/textbox.html" %}
@@ -60,7 +57,7 @@
             question = "Contact name",
             name = "contact_name",
             value = form.contact_name.data,
-            error = form.contact_name.errors[0],
+            error = errors.get("contact_name", {}).get("message", None),
             hint = "This can be the name of the person or team you want buyers to contact"
         %}
         {% include "toolkit/forms/textbox.html" %}
@@ -71,7 +68,7 @@
             question = "Contact email address",
             name = "email_address",
             value = form.email_address.data,
-            error = form.email_address.errors[0],
+            error = errors.get("email_address", {}).get("message", None),
             hint = "This is the email buyers will use to contact you"
         %}
         {% include "toolkit/forms/textbox.html" %}
@@ -82,7 +79,7 @@
             question = "Contact phone number",
             name = "phone_number",
             value = form.phone_number.data,
-            error = form.phone_number.errors[0]
+            error = errors.get("phone_number", {}).get("message", None)
         %}
         {% include "toolkit/forms/textbox.html" %}
         {% endwith %}

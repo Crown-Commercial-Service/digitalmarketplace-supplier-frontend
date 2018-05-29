@@ -34,17 +34,8 @@
 {% endblock %}
 
 {% block main_content %}
-
   {% if lot.oneServiceLimit %}
-
-    {% if form_errors %}
-      {%
-        with
-        errors = form_errors
-      %}
-        {% include 'toolkit/forms/validation.html' %}
-      {% endwith %}
-    {% endif %}
+    {% include 'toolkit/forms/validation.html' %}
 
     {% include "partials/service_warning.html" %}
 
@@ -65,7 +56,7 @@
               with
               name = "copy_service",
               type = "boolean",
-              error = form.copy_service.errors[0],
+              error = errors.get("copy_service", {}).get("message", None),
               question_advice = "You still have to review your service and answer any new questions."
             %}
               {% include "toolkit/forms/selection-buttons.html" %}

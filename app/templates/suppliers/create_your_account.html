@@ -25,6 +25,8 @@
 {% endblock %}
 
 {% block main_content %}
+{% include "toolkit/forms/validation.html" %}
+
 <div class="grid-row">
   <div class="column-two-thirds">
     {% with heading = "Create login", smaller = True %}
@@ -36,14 +38,14 @@
        <p>It won’t be visible on the Digital Marketplace.</p>
        <p>You can add other email addresses to your supplier account later.</p>
     </div>
-    <form method="POST" action="{{ url_for('.submit_create_your_account') }}">
+    <form method="POST" action="{{ url_for('.create_your_account') }}">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
       {%
         with
           question = "Your email address",
           name = "email_address",
           value = email_address,
-          error = form.email_address.errors[0]
+          error = errors.get("email_address", {}).get("message", None)
       %}
         {% include "toolkit/forms/textbox.html" %}
       {% endwith %}

@@ -514,7 +514,7 @@ class BaseApplicationTest(object):
                                                       validation_message=""
                                                       ):
         doc = html.fromstring(res.get_data(as_text=True))
-        masthead_heading = doc.xpath('normalize-space(//h1[@class="validation-masthead-heading"]/text())')
+        masthead_heading = doc.xpath('normalize-space(//h2[@class="validation-masthead-heading"]/text())')
         masthead_link_text = doc.xpath('normalize-space(string(//a[@class="validation-masthead-link"]))')
         validation_text = doc.xpath('normalize-space(//span[@class="validation-message"]/text())')
 

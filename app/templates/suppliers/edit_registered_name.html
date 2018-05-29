@@ -22,16 +22,9 @@
 {% endblock %}
 
 {% block main_content %}
-
+{% include "toolkit/forms/validation.html" %}
 <div class="single-question-page">
   <div class="grid-row">
-    <div class="column-one-whole">
-      {% if form.errors %}
-        {% with errors = [{'question': form.registered_company_name.label, 'input_name': form.registered_company_name.name}] %}
-          {% include 'toolkit/forms/validation.html' %}
-        {% endwith %}
-      {% endif %}
-    </div>
     <div class="column-two-thirds">
       {% with heading = "Registered company name", smaller = True %}
         {% include "toolkit/page-heading.html" %}
@@ -45,7 +38,7 @@
           name = "registered_company_name",
           question = "Registered company name",
           value = form.registered_company_name.data,
-          error = form.registered_company_name.errors[0],
+          error = errors.get("registered_company_name", {}).get("message", None),
           question_advice = "This could be different to your trading name."
         %}
           {% include "toolkit/forms/textbox.html" %}

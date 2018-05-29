@@ -26,6 +26,7 @@
 {% endblock %}
 
 {% block main_content %}
+{% include "toolkit/forms/validation.html" %}
 
   {% with
     heading = "Invite a contributor",
@@ -34,7 +35,7 @@
     {% include 'toolkit/page-heading.html' %}
   {% endwith %}
 
-<form autocomplete="off" action="{{ url_for('.send_invite_user') }}" method="POST">
+<form autocomplete="off" action="{{ url_for('.invite_user') }}" method="POST">
 
     <div class="grid-row">
         <div class="column-two-thirds">
@@ -46,7 +47,7 @@
                 name = "email_address",
                 hint = "An invite will be sent asking the recipient to register as a contributor.",
                 value = form.email_address.data,
-                error = form.email_address.errors[0]
+                error = errors.get("email_address", {}).get("message", None)
             %}
             {% include "toolkit/forms/textbox.html" %}
             {% endwith %}

@@ -22,15 +22,10 @@
 {% endblock %}
 
 {% block main_content %}
+{% include "toolkit/forms/validation.html" %}
 
 <div class="single-question-page">
   <div class="grid-row">
-    {% if form.errors %}
-      {% with errors = [{'question': form.trading_status.label, 'input_name': form.trading_status.name}] %}
-        {% include 'toolkit/forms/validation.html' %}
-      {% endwith %}
-    {% endif %}
-
     <div class="column-two-thirds">
       {% with heading = "What&rsquo;s your trading status?"|safe, smaller = True %}
         {% include "toolkit/page-heading.html" %}
@@ -45,7 +40,7 @@
         {% with question = "What&rsquo;s your trading status?"|safe,
                 name = "trading_status",
                 value = form.trading_status.data,
-                error = form.trading_status.errors[0],
+                error = errors.get("trading_status", {}).get("message", None),
                 type = "radio",
                 options = form.OPTIONS,
                 hint = hint %}

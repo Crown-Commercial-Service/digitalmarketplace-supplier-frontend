@@ -24,6 +24,8 @@
 {% endblock %}
 
 {% block main_content %}
+  {% include 'toolkit/forms/validation.html' %}
+
 <div class="grid-row">
   <div class="column-two-thirds">
     {%
@@ -34,15 +36,6 @@
       {% include "toolkit/page-heading.html" %}
     {% endwith %}
 
-    {% if form.errors %}
-      {%
-        with
-          errors = form_errors
-      %}
-        {% include 'toolkit/forms/validation.html' %}
-      {% endwith %}
-    {% endif %}
-
     <form method="POST" action="{{ url_for('.signer_details', framework_slug=framework.slug, agreement_id=agreement['id']) }}">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
         {% for question_key in question_keys %}
@@ -52,7 +45,7 @@
               name = question_key,
               value = form[question_key].data,
               hint = form[question_key].description,
-              error = form[question_key].errors[0]
+              error = errors.get(question_key, {}).get("message", None)
           %}
             {% include "toolkit/forms/textbox.html" %}
           {% endwith %}

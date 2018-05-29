@@ -22,20 +22,10 @@
 {% endblock %}
 
 {% block main_content %}
+{% include "toolkit/forms/validation.html" %}
 
 <div class="single-question-page">
   <div class="grid-row">
-    <div class="column-one-whole">
-      {% if form.errors %}
-      {# There can only ever be one error for this form, so take the first (and only) from the errors dict #}
-        {% with field, _ = form.errors.popitem() %}
-          {% with errors = [{'question': form[field].label, 'input_name': form[field].name}] %}
-            {% include 'toolkit/forms/validation.html' %}
-          {% endwith %}
-        {% endwith %}
-      {% endif %}
-    </div>
-
     <div class="column-two-thirds">
       {% with heading = "Are you registered with Companies House?", smaller = True %}
         {% include "toolkit/page-heading.html" %}
@@ -49,7 +39,7 @@
           name = "has_companies_house_number",
           type = "radio",
           value = form.has_companies_house_number.data,
-          error = form.has_companies_house_number.errors[0],
+          error = errors.get("has_companies_house_number", {}).get("message", None),
           options = [
           {
               "label": "Yes",
@@ -58,7 +48,7 @@
                 "question": "Companies House number",
                 "hint": "<a href='https://beta.companieshouse.gov.uk/search/companies'>Find your 8 digit Companies House number</a>"|safe,
                 "value": form.companies_house_number.data,
-                "error": form.companies_house_number.errors[0]
+                "error": errors.get("companies_house_number", {}).get("message", None),
               }
           },
           {
@@ -68,7 +58,7 @@
                 "question": "Enter a number that can be used to identify your business and provide details of the organisation that issued it.",
                 "hint": "For example, ‘0123456789, Unique Taxpayer Reference, HMRC, UK’",
                 "value": form.other_company_registration_number.data,
-                "error": form.other_company_registration_number.errors[0]
+                "error": errors.get("other_company_registration_number", {}).get("message", None),
               }
           }
         ]

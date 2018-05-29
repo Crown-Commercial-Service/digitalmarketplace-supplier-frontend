@@ -30,12 +30,7 @@
 
 
 {% block main_content %}
-
-  {% if form_errors %}
-  {% with errors = form_errors %}
-    {% include 'toolkit/forms/validation.html' %}
-  {% endwith %}
-  {% endif %}
+  {% include 'toolkit/forms/validation.html' %}
 
   <div class="grid-row">
     <div class="column-one-whole">
