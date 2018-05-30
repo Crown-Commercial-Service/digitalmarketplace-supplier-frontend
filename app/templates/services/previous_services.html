@@ -68,7 +68,6 @@
 
           <form method="POST" action="{{ url_for('.previous_services', framework_slug=framework.slug, lot_slug=lot.slug) }}">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-            <input type="hidden" name="service_id" value="{{ previous_services[0].id }}"/>
             {%
               with
               name = "copy_service",
@@ -104,7 +103,7 @@
           action = '<button type="submit" class="button-save banner-action" data-analytics="trackEvent"
             data-analytics-category="Copy services"
             data-analytics-action="Copy all"
-            data-analytics-label="Count: {}">Yes, add all services'.format(previous_services|length)|safe
+            data-analytics-label="Count: {}">Yes, add all services'.format(previous_services_still_to_copy|length)|safe
         %}
           {% include "toolkit/notification-banner.html" %}
         {% endwith %}
@@ -122,11 +121,11 @@
     {% endwith %}
 
     {{ summary.heading("Your services from {}".format(source_framework.name)) }}
-    {% if previous_services|length > 1 %}
+    {% if previous_services_still_to_copy|length > 1 %}
       {{ summary.top_link("Add all your services", url_for('.previous_services', framework_slug=framework.slug, lot_slug=lot.slug, copy_all=True)) }}
     {% endif %}
     {% call(service) summary.list_table(
-      previous_services,
+      previous_services_still_to_copy,
       caption="Previous framework services",
       field_headings=[
           "Service name",

@@ -2491,25 +2491,28 @@ class TestGetListPreviousServices(BaseApplicationTest):
             assert not details
 
 
-@mock.patch('app.main.views.services.data_api_client')
 class TestPostListPreviousService(BaseApplicationTest):
     def setup_method(self, method):
         super().setup_method(method)
         self.login()
 
+        self.data_api_client = mock.patch('app.main.views.services.data_api_client').start()
+        self.data_api_client.get_framework.return_value = self.framework(slug='digital-outcomes-and-specialists-3')
+        self.data_api_client.find_services.return_value = {
+            "services": [{'copiedToFollowingFramework': False, 'id': '0001'}]
+        }
+        self.data_api_client.find_draft_services.return_value = {"services": []}
+
     @mock.patch('app.main.views.services.content_loader')
     @mock.patch('app.main.views.services.copy_service_from_previous_framework')
     def test_copies_service_for_one_service_lot_if_copy_true(
-        self, copy_service_from_previous_framework, content_loader, data_api_client
+        self, copy_service_from_previous_framework, content_loader
     ):
-        data_api_client.get_framework.return_value = self.framework(slug='digital-outcomes-and-specialists-3')
-        data_api_client.find_draft_services.return_value = {"services": []}
-
         with self.app.app_context():
             res = self.client.post(
                 '/suppliers/frameworks/digital-outcomes-and-specialists-3/'
                 'submissions/digital-outcomes/previous-services',
-                data={'copy_service': True, 'service_id': '0001'},
+                data={'copy_service': True},
             )
 
             assert res.status_code == 302
@@ -2518,7 +2521,7 @@ class TestPostListPreviousService(BaseApplicationTest):
             ) in res.location
             assert copy_service_from_previous_framework.call_args_list == [
                 mock.call(
-                    data_api_client,
+                    self.data_api_client,
                     content_loader,
                     'digital-outcomes-and-specialists-3',
                     'digital-outcomes',
@@ -2532,38 +2535,30 @@ class TestPostListPreviousService(BaseApplicationTest):
             )
 
     @mock.patch('app.main.views.services.copy_service_from_previous_framework')
-    def test_creates_new_draft_for_one_service_lot_if_copy_false(
-        self, copy_service_from_previous_framework, data_api_client
-    ):
-        data_api_client.get_framework.return_value = self.framework(slug='digital-outcomes-and-specialists-3')
-        data_api_client.find_draft_services.return_value = {"services": []}
-
+    def test_creates_new_draft_for_one_service_lot_if_copy_false(self, copy_service_from_previous_framework):
         res = self.client.post(
             '/suppliers/frameworks/digital-outcomes-and-specialists-3/submissions/digital-outcomes/previous-services',
-            data={'copy_service': False, 'service_id': '0001'},
+            data={'copy_service': False},
         )
 
         assert res.status_code == 302
         assert '/suppliers/frameworks/digital-outcomes-and-specialists-3/submissions/digital-outcomes' in res.location
         assert copy_service_from_previous_framework.call_args_list == []
-        assert data_api_client.create_new_draft_service.call_args_list == [
+        assert self.data_api_client.create_new_draft_service.call_args_list == [
             mock.call('digital-outcomes-and-specialists-3', 'digital-outcomes', 1234, {}, 'email@email.com')
         ]
 
-    def test_400s_if_lot_does_not_have_one_service_limit(self, data_api_client):
-        data_api_client.get_framework.return_value = self.framework(slug='digital-outcomes-and-specialists-3')
-
+    def test_400s_if_lot_does_not_have_one_service_limit(self):
         res = self.client.post(
             '/suppliers/frameworks/digital-outcomes-and-specialists-3/'
             'submissions/user-research-studios/previous-services',
-            data={'copy_service': False, 'service_id': '0001'},
+            data={'copy_service': False},
         )
 
         assert res.status_code == 400
 
-    def test_400s_if_draft_already_exists(self, data_api_client):
-        data_api_client.get_framework.return_value = self.framework(slug='digital-outcomes-and-specialists-3')
-        data_api_client.find_draft_services.return_value = {
+    def test_400s_if_draft_already_exists(self):
+        self.data_api_client.find_draft_services.return_value = {
             "services": [
                 {'status': 'not-submitted', 'lotSlug': 'digital-specialists'},
             ]
@@ -2572,20 +2567,16 @@ class TestPostListPreviousService(BaseApplicationTest):
         res = self.client.post(
             '/suppliers/frameworks/digital-outcomes-and-specialists-3/'
             'submissions/digital-specialists/previous-services',
-            data={'copy_service': False, 'service_id': '0001'},
+            data={'copy_service': False},
         )
 
         assert res.status_code == 400
 
-    def test_validates_that_an_answer_is_required(self, data_api_client):
-        data_api_client.get_framework.return_value = self.framework(slug='digital-outcomes-and-specialists-3')
-        data_api_client.find_draft_services.return_value = {"services": []}
-        data_api_client.find_services.return_value = {"services": [{'copiedToFollowingFramework': False}]}
-
+    def test_validates_that_an_answer_is_required(self):
         res = self.client.post(
             '/suppliers/frameworks/digital-outcomes-and-specialists-3/'
             'submissions/digital-specialists/previous-services',
-            data={'service_id': '0001'},
+            data={},
         )
         doc = html.fromstring(res.get_data(as_text=True))
 

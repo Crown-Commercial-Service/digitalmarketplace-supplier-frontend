@@ -59,7 +59,7 @@ class OneServiceLimitCopyServiceForm(FlaskForm):
         self.copy_service.label.text = f"Do you want to reuse your previous {lot_name} service?"
 
     copy_service = BooleanField(
+        'Do you want to reuse your previous service?',
         false_values={'False', 'false', ''},
         validators=[InputRequired(message='You must answer this question.')]
     )
-    service_id = HiddenField()

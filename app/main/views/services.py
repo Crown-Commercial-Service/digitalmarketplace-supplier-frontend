@@ -730,6 +730,22 @@ def previous_services(framework_slug, lot_slug):
         abort(404)
 
     form = OneServiceLimitCopyServiceForm(lot['name'].lower()) if lot.get('oneServiceLimit') else None
+    source_framework_slug = content_loader.get_metadata(framework['slug'], 'copy_services', 'source_framework')
+    source_framework = get_framework_or_404(data_api_client, source_framework_slug)
+
+    previous_services_list = data_api_client.find_services(
+        supplier_id=current_user.supplier_id,
+        framework=source_framework_slug,
+        lot=lot_slug,
+        status='published',
+    )["services"]
+
+    previous_services_still_to_copy = [
+        service for service in previous_services_list if not service['copiedToFollowingFramework']
+    ]
+
+    if not previous_services_still_to_copy:
+        return redirect(url_for(".framework_submission_services", framework_slug=framework_slug, lot_slug=lot_slug))
 
     if request.method == 'POST':
         if lot.get('oneServiceLimit'):
@@ -740,7 +756,11 @@ def previous_services(framework_slug, lot_slug):
             if form.validate_on_submit():
                 if form.copy_service.data is True:
                     copy_service_from_previous_framework(
-                        data_api_client, content_loader, framework_slug, lot_slug, form.service_id.data
+                        data_api_client,
+                        content_loader,
+                        framework_slug,
+                        lot_slug,
+                        previous_services_still_to_copy[0]['id'],
                     )
                     flash(SINGLE_SERVICE_ADDED_MESSAGE.format(framework_name=framework['name']), "success")
                 else:
@@ -755,22 +775,6 @@ def previous_services(framework_slug, lot_slug):
             abort(400)
 
     copy_all = request.args.get('copy_all', None)
-    source_framework_slug = content_loader.get_metadata(framework['slug'], 'copy_services', 'source_framework')
-    source_framework = get_framework_or_404(data_api_client, source_framework_slug)
-
-    previous_services = data_api_client.find_services(
-        supplier_id=current_user.supplier_id,
-        framework=source_framework_slug,
-        lot=lot_slug,
-        status='published',
-    )["services"]
-
-    previous_services_still_to_copy = [
-        service for service in previous_services if not service['copiedToFollowingFramework']
-    ]
-    if not previous_services_still_to_copy:
-        return redirect(url_for(".framework_submission_services", framework_slug=framework_slug, lot_slug=lot_slug))
-
     supplier = data_api_client.get_supplier(current_user.supplier_id)['suppliers']
 
     return render_template(
@@ -778,7 +782,7 @@ def previous_services(framework_slug, lot_slug):
         framework=framework,
         lot=lot,
         source_framework=source_framework,
-        previous_services=previous_services_still_to_copy,
+        previous_services_still_to_copy=previous_services_still_to_copy,
         copy_all=copy_all,
         declaration_status=get_declaration_status(data_api_client, framework_slug),
         company_details_complete=supplier['companyDetailsConfirmed'],
