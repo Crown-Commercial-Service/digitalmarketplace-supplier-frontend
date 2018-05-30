@@ -728,7 +728,9 @@ def previous_services(framework_slug, lot_slug):
     framework, lot = get_framework_and_lot_or_404(data_api_client, framework_slug, lot_slug)
     if framework['status'] != 'open':
         abort(404)
-    form = OneServiceLimitCopyServiceForm(lot['name'].lower())
+
+    form = OneServiceLimitCopyServiceForm(lot['name'].lower()) if lot.get('oneServiceLimit') else None
+
     if request.method == 'POST':
         if lot.get('oneServiceLimit'):
             # Don't copy a service if the lot has a one service limit and the supplier already has a draft for that lot
@@ -781,7 +783,7 @@ def previous_services(framework_slug, lot_slug):
         declaration_status=get_declaration_status(data_api_client, framework_slug),
         company_details_complete=supplier['companyDetailsConfirmed'],
         form=form,
-        form_errors=[{'question': form[key].label.text, 'input_name': key} for key in form.errors],
+        form_errors=[{'question': form[key].label.text, 'input_name': key} for key in form.errors] if form else None,
     )
 
 
