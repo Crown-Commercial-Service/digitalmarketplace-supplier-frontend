@@ -56,7 +56,7 @@
 
   {% if framework.status == 'open' and previous_framework %}
     <p>
-      <a href="{{ url_for('.list_previous_services', framework_slug=framework.slug, lot_slug=lot.slug) }}">
+      <a href="{{ url_for('.previous_services', framework_slug=framework.slug, lot_slug=lot.slug) }}">
         View and add your services from {{ previous_framework.name|nbsp }}
       </a>
     </p>

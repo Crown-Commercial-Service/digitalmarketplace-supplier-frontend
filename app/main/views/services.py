@@ -724,7 +724,7 @@ def remove_subsection(framework_slug, lot_slug, service_id, section_id, question
 
 @main.route('/frameworks/<framework_slug>/submissions/<lot_slug>/previous-services', methods=['GET', 'POST'])
 @login_required
-def list_previous_services(framework_slug, lot_slug):
+def previous_services(framework_slug, lot_slug):
     framework, lot = get_framework_and_lot_or_404(data_api_client, framework_slug, lot_slug)
     if framework['status'] != 'open':
         abort(404)
@@ -795,7 +795,7 @@ def copy_previous_service(framework_slug, lot_slug, service_id):
     copy_service_from_previous_framework(data_api_client, content_loader, framework_slug, lot_slug, service_id)
     flash(SINGLE_SERVICE_ADDED_MESSAGE.format(framework_name=framework['name']), "success")
 
-    return redirect(url_for(".list_previous_services", framework_slug=framework_slug, lot_slug=lot_slug))
+    return redirect(url_for(".previous_services", framework_slug=framework_slug, lot_slug=lot_slug))
 
 
 @main.route('/frameworks/<framework_slug>/submissions/<lot_slug>/copy-all-previous-framework-services',
