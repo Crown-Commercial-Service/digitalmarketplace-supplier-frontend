@@ -78,7 +78,15 @@
               {% include "toolkit/forms/selection-buttons.html" %}
             {% endwith %}
 
-            {% with type = "save", label = "Save and continue" %}
+            {%
+              with
+              type = "save",
+              label = "Save and continue",
+              analytics = "trackEvent",
+              analytics_category = "Copy services",
+              analytics_action = "Copy one lot service",
+              analytics_label = lot.slug
+            %}
               {% include "toolkit/button.html" %}
             {% endwith %}
           </form>
