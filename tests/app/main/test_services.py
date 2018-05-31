@@ -2371,14 +2371,14 @@ class TestGetListPreviousServices(BaseApplicationTest):
         res = self.client.get('/suppliers/frameworks/g-cloud-10/submissions/not-a-lot/previous-services')
         assert res.status_code == 404
 
-    def test_returns_404_if_source_framework_not_found(self, get_metadata, data_api_client):
+    def test_returns_500_if_source_framework_not_found(self, get_metadata, data_api_client):
         data_api_client.get_framework.side_effect = [
             self.framework(slug='g-cloud-10'),
             HTTPError(mock.Mock(status_code=404)),
         ]
 
         res = self.client.get('/suppliers/frameworks/g-cloud-10/submissions/cloud-hosting/previous-services')
-        assert res.status_code == 404
+        assert res.status_code == 500
 
     @pytest.mark.parametrize(
         'services',

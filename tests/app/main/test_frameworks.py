@@ -4191,6 +4191,17 @@ class TestServicesList(BaseApplicationTest):
         assert res.status_code == 302
         assert '/digital-outcomes-and-specialists-3/submissions/digital-outcomes/previous-services' in res.location
 
+    def test_500s_if_previous_framework_not_found(self, count_unanswered, data_api_client):
+        data_api_client.get_framework.side_effect = [
+            self.framework(slug='g-cloud-10'),
+            HTTPError(mock.Mock(status_code=404)),
+        ]
+        data_api_client.find_draft_services.return_value = {"services": []}
+        self.login()
+
+        res = self.client.get('/suppliers/frameworks/g-cloud-10/submissions/cloud-hosting')
+        assert res.status_code == 500
+
 
 @mock.patch('app.main.views.frameworks.data_api_client', autospec=True)
 class TestCreateFrameworkAgreement(BaseApplicationTest):

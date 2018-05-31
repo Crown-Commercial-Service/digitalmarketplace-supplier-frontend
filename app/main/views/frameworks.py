@@ -271,7 +271,15 @@ def framework_submission_services(framework_slug, lot_slug):
         previous_framework = {}
 
     if previous_framework_slug:
-        previous_framework = get_framework_or_404(data_api_client, previous_framework_slug)
+        try:
+            previous_framework = data_api_client.get_framework(previous_framework_slug)['frameworks']
+        except HTTPError as e:
+            current_app.logger.error(
+                "Failed to find previous framework. Error: {error}, framework_slug: {framework_slug}",
+                extra={'error': str(e), 'framework_slug': previous_framework_slug}
+            )
+            abort(500, f'Previous framework not found: {previous_framework_slug}')
+
         previous_services = data_api_client.find_services(
             supplier_id=current_user.supplier_id,
             framework=previous_framework_slug,

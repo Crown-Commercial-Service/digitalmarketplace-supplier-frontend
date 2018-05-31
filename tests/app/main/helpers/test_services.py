@@ -52,12 +52,6 @@ class TestCopyServiceFromPreviousFramework():
             self.api_client_mock, self.content_loader_mock, 'dos-cloud-X', 'digital-sausages', 4444244
         )
 
-        assert self.content_loader_mock.get_metadata.call_args_list == [
-            mock.call('dos-cloud-X', 'copy_services', 'questions_to_copy'),
-            mock.call('dos-cloud-X', 'copy_services', 'source_framework'),
-        ]
-
-        assert self.api_client_mock.get_service.call_args_list == [mock.call(4444244)]
         assert self.api_client_mock.copy_draft_service_from_existing_service.call_args_list == [
             mock.call(
                 4444244,
