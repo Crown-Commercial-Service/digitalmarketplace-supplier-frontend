@@ -12,24 +12,6 @@ class TestUserResearch(BaseApplicationTest):
         self.data_api_client_patch.stop()
         super().teardown_method(method)
 
-    def test_should_see_banner_if_not_subscribed(self):
-        self.login(user_research_opted_in=False)
-        res = self.client.get('/suppliers')
-        assert res.status_code == 200
-        assert 'Help us improve the Digital Marketplace' in res.get_data(as_text=True)
-        assert 'Sign up to be a potential user research participant' in res.get_data(as_text=True)
-        assert 'class="user-research-banner-close-btn"' in res.get_data(as_text=True)
-        cookie_value = self.get_cookie_by_name(res, 'seen_user_research_message')
-        assert cookie_value is None
-
-    def test_should_not_see_banner_if_subscribed(self):
-        self.login(user_research_opted_in=True)
-        res = self.client.get('/suppliers')
-        assert res.status_code == 200
-        assert 'Help us improve the Digital Marketplace' not in res.get_data(as_text=True)
-        assert 'Sign up to be a potential user research participant' not in res.get_data(as_text=True)
-        assert 'class="user-research-banner-close-btn"' not in res.get_data(as_text=True)
-
     def test_should_see_subscribed_link_if_not_subscribed(self):
         self.login(user_research_opted_in=False)
         res = self.client.get('/suppliers')
