@@ -2529,7 +2529,7 @@ class TestPostListPreviousService(BaseApplicationTest):
                 )
             ]
             self.assert_flashes(
-                "You've added a service to your Digital Outcomes and Specialists 3 drafts. "
+                "You've added your service to Digital Outcomes and Specialists 3 as a draft. "
                 "You'll need to review it before it can be completed.",
                 expected_category='success',
             )
@@ -2708,7 +2708,7 @@ class TestCopyPreviousService(CopyingPreviousServicesSetup):
 
         assert res.status_code == 302
 
-        from app.main.views.services import SINGLE_SERVICE_ADDED_MESSAGE as message
+        from app.main.views.services import MULTI_SERVICE_LOT_SINGLE_SERVICE_ADDED_MESSAGE as message
         assert flash.call_args_list == [
             mock.call(
                 message.format(framework_name='G-Cloud 10'), "success"

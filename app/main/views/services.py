@@ -36,7 +36,10 @@ REMOVE_LAST_SUBSECTION_ERROR_MESSAGE = Markup(
     "You must offer one of the {section_name} to be eligible.<br>"
     "If you don’t want to offer {service_name}, delete this service."
 )
-SINGLE_SERVICE_ADDED_MESSAGE = (
+SINGLE_SERVICE_LOT_SINGLE_SERVICE_ADDED_MESSAGE = (
+    "You've added your service to {framework_name} as a draft. You'll need to review it before it can be completed."
+)
+MULTI_SERVICE_LOT_SINGLE_SERVICE_ADDED_MESSAGE = (
     "You've added a service to your {framework_name} drafts. You'll need to review it before it can be completed."
 )
 ALL_SERVICES_ADDED_MESSAGE = (
@@ -763,7 +766,10 @@ def previous_services(framework_slug, lot_slug):
                         lot_slug,
                         previous_services_still_to_copy[0]['id'],
                     )
-                    flash(SINGLE_SERVICE_ADDED_MESSAGE.format(framework_name=framework['name']), "success")
+                    flash(
+                        SINGLE_SERVICE_LOT_SINGLE_SERVICE_ADDED_MESSAGE.format(framework_name=framework['name']),
+                        "success",
+                    )
                 else:
                     data_api_client.create_new_draft_service(
                         framework_slug, lot_slug, current_user.supplier_id, {}, current_user.email_address,
@@ -800,7 +806,7 @@ def copy_previous_service(framework_slug, lot_slug, service_id):
         data_api_client, framework_slug, lot_slug, allowed_statuses=['open']
     )
     copy_service_from_previous_framework(data_api_client, content_loader, framework_slug, lot_slug, service_id)
-    flash(SINGLE_SERVICE_ADDED_MESSAGE.format(framework_name=framework['name']), "success")
+    flash(MULTI_SERVICE_LOT_SINGLE_SERVICE_ADDED_MESSAGE.format(framework_name=framework['name']), "success")
 
     return redirect(url_for(".previous_services", framework_slug=framework_slug, lot_slug=lot_slug))
 
