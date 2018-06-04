@@ -1,6 +1,8 @@
 import mock
 import pytest
 
+from dmutils.api_stubs import supplier_framework
+
 from app.main.helpers.services import copy_service_from_previous_framework
 
 
@@ -20,7 +22,9 @@ class TestCopyServiceFromPreviousFramework():
 
         self.get_supplier_framework_info_patch = mock.patch('app.main.helpers.services.get_supplier_framework_info')
         self.get_supplier_framework_info = self.get_supplier_framework_info_patch.start()
-        self.get_supplier_framework_info.return_value = True
+        self.get_supplier_framework_info.return_value = supplier_framework(
+            framework_slug='digital-outcomes-and-specialists-3'
+        )
 
         self.api_client_mock = mock.Mock()
         self.content_loader_mock = mock.Mock()
@@ -65,7 +69,7 @@ class TestCopyServiceFromPreviousFramework():
         ]
 
     def test_404s_if_no_supplier_framework_info(self):
-        self.get_supplier_framework_info.return_value = False
+        self.get_supplier_framework_info.return_value = None
 
         with pytest.raises(CustomAbortException):
             copy_service_from_previous_framework(
