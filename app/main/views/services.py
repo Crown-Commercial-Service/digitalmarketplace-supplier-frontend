@@ -22,6 +22,7 @@ from ..helpers.frameworks import (
     get_declaration_status,
     get_supplier_framework_info,
     get_framework_or_404,
+    get_framework_or_500,
 )
 from ..forms.frameworks import OneServiceLimitCopyServiceForm
 
@@ -731,15 +732,7 @@ def previous_services(framework_slug, lot_slug):
 
     form = OneServiceLimitCopyServiceForm(lot['name'].lower()) if lot.get('oneServiceLimit') else None
     source_framework_slug = content_loader.get_metadata(framework['slug'], 'copy_services', 'source_framework')
-
-    try:
-        source_framework = data_api_client.get_framework(source_framework_slug)['frameworks']
-    except HTTPError as e:
-        current_app.logger.error(
-            "Failed to find source framework to copy service from. Error: {error}, framework_slug: {framework_slug}",
-            extra={'error': str(e), 'framework_slug': source_framework_slug}
-        )
-        abort(500, f'Source framework not found: {source_framework_slug}')
+    source_framework = get_framework_or_500(data_api_client, source_framework_slug, logger=current_app.logger)
 
     previous_services_list = data_api_client.find_services(
         supplier_id=current_user.supplier_id,

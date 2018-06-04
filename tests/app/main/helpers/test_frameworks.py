@@ -5,10 +5,15 @@ import mock
 import pytest
 from werkzeug.exceptions import HTTPException
 
+from dmutils.api_stubs import framework
+from dmapiclient import HTTPError
+
 from app.main.helpers.frameworks import (
     check_agreement_is_related_to_supplier_framework_or_abort, get_framework_for_reuse, get_statuses_for_lot,
     return_supplier_framework_info_if_on_framework_or_abort, order_frameworks_for_reuse,
-    get_frameworks_closed_and_open_for_applications, get_supplier_registered_name_from_declaration)
+    get_frameworks_closed_and_open_for_applications, get_supplier_registered_name_from_declaration,
+    get_framework_or_500
+)
 
 
 def get_lot_status_examples():
@@ -574,3 +579,54 @@ def test_get_supplier_registered_name_from_declaration(name_of_org, supplier_reg
     if supplier_reg_name:
         declaration['supplierRegisteredName'] = supplier_reg_name
     assert get_supplier_registered_name_from_declaration(declaration) == expected_result
+
+
+class CustomAbortException(Exception):
+    """Custom error for testing abort"""
+    pass
+
+
+class TestGetFrameworkOr500():
+    def test_returns_framework(self):
+        data_api_client_mock = mock.Mock()
+        data_api_client_mock.get_framework.return_value = framework()
+
+        assert get_framework_or_500(data_api_client_mock, 'g-cloud-7')['slug'] == 'g-cloud-7'
+
+    @mock.patch('app.main.helpers.frameworks.abort')
+    def test_aborts_with_500_if_framework_not_found(self, abort):
+        data_api_client_mock = mock.Mock()
+        data_api_client_mock.get_framework.side_effect = HTTPError(mock.Mock(status_code=404), 'Framework not found')
+        abort.side_effect = CustomAbortException()
+
+        with pytest.raises(CustomAbortException):
+            get_framework_or_500(data_api_client_mock, 'g-cloud-7')
+
+        assert abort.call_args_list == [
+            mock.call(500, 'Framework not found: g-cloud-7')
+        ]
+
+    def test_raises_original_error_if_not_404(self):
+        data_api_client_mock = mock.Mock()
+        data_api_client_mock.get_framework.side_effect = HTTPError(mock.Mock(status_code=400), 'Original exception')
+
+        with pytest.raises(HTTPError) as original_exception:
+            get_framework_or_500(data_api_client_mock, 'g-cloud-7')
+
+        assert original_exception.value.message == 'Original exception'
+        assert original_exception.value.status_code == 400
+
+    @mock.patch('app.main.helpers.frameworks.abort')
+    def test_calls_logger_if_provided(self, abort):
+        data_api_client_mock = mock.Mock()
+        logger_mock = mock.Mock()
+        data_api_client_mock.get_framework.side_effect = HTTPError(mock.Mock(status_code=404), 'An error from the API')
+
+        get_framework_or_500(data_api_client_mock, 'g-cloud-7', logger_mock)
+
+        assert logger_mock.error.call_args_list == [
+            mock.call(
+                'Framework not found. Error: {error}, framework_slug: {framework_slug}',
+                extra={'error': 'An error from the API (status: 404)', 'framework_slug': 'g-cloud-7'},
+            )
+        ]

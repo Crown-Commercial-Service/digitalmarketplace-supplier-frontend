@@ -32,7 +32,7 @@ from ..helpers import login_required
 from ..helpers.frameworks import (
     get_declaration_status, get_last_modified_from_first_matching_file, register_interest_in_framework,
     get_supplier_on_framework_from_info, get_declaration_status_from_info, get_supplier_framework_info,
-    get_framework_or_404, get_framework_and_lot_or_404, count_drafts_by_lot, get_statuses_for_lot,
+    get_framework_or_404, get_framework_and_lot_or_404, get_framework_or_500, count_drafts_by_lot, get_statuses_for_lot,
     return_supplier_framework_info_if_on_framework_or_abort, returned_agreement_email_recipients,
     check_agreement_is_related_to_supplier_framework_or_abort, get_framework_for_reuse,
     get_supplier_registered_name_from_declaration
@@ -271,15 +271,7 @@ def framework_submission_services(framework_slug, lot_slug):
         previous_framework = {}
 
     if previous_framework_slug:
-        try:
-            previous_framework = data_api_client.get_framework(previous_framework_slug)['frameworks']
-        except HTTPError as e:
-            current_app.logger.error(
-                "Failed to find previous framework. Error: {error}, framework_slug: {framework_slug}",
-                extra={'error': str(e), 'framework_slug': previous_framework_slug}
-            )
-            abort(500, f'Previous framework not found: {previous_framework_slug}')
-
+        previous_framework = get_framework_or_500(data_api_client, previous_framework_slug, logger=current_app.logger)
         previous_services = data_api_client.find_services(
             supplier_id=current_user.supplier_id,
             framework=previous_framework_slug,
