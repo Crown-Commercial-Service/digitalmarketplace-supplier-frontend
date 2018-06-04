@@ -32,7 +32,7 @@ from ..helpers import login_required
 from ..helpers.frameworks import (
     get_declaration_status, get_last_modified_from_first_matching_file, register_interest_in_framework,
     get_supplier_on_framework_from_info, get_declaration_status_from_info, get_supplier_framework_info,
-    get_framework_or_404, get_framework_and_lot_or_404, count_drafts_by_lot, get_statuses_for_lot,
+    get_framework_or_404, get_framework_and_lot_or_404, get_framework_or_500, count_drafts_by_lot, get_statuses_for_lot,
     return_supplier_framework_info_if_on_framework_or_abort, returned_agreement_email_recipients,
     check_agreement_is_related_to_supplier_framework_or_abort, get_framework_for_reuse,
     get_supplier_registered_name_from_declaration
@@ -271,7 +271,7 @@ def framework_submission_services(framework_slug, lot_slug):
         previous_framework = {}
 
     if previous_framework_slug:
-        previous_framework = get_framework_or_404(data_api_client, previous_framework_slug)
+        previous_framework = get_framework_or_500(data_api_client, previous_framework_slug, logger=current_app.logger)
         previous_services = data_api_client.find_services(
             supplier_id=current_user.supplier_id,
             framework=previous_framework_slug,
@@ -285,7 +285,12 @@ def framework_submission_services(framework_slug, lot_slug):
 
     if lot['oneServiceLimit']:
         draft = next(iter(drafts + complete_drafts), None)
-        if not draft:
+        if not draft and previous_services_still_to_copy:
+            return redirect(
+                url_for('.previous_services', framework_slug=framework_slug, lot_slug=lot_slug)
+            )
+
+        elif not draft:
             draft = data_api_client.create_new_draft_service(
                 framework_slug, lot_slug, current_user.supplier_id, {}, current_user.email_address,
             )['services']

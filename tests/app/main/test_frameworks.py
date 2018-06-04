@@ -3830,7 +3830,7 @@ class TestSendClarificationQuestionEmail(BaseApplicationTest):
 
 @mock.patch('app.main.views.frameworks.data_api_client', autospec=True)
 @mock.patch('app.main.views.frameworks.count_unanswered_questions')
-class TestG7ServicesList(BaseApplicationTest):
+class TestServicesList(BaseApplicationTest):
     def setup_method(self, method):
         super().setup_method(method)
         self.get_metadata_patch = mock.patch('app.main.views.frameworks.content_loader.get_metadata')
@@ -4176,6 +4176,31 @@ class TestG7ServicesList(BaseApplicationTest):
         doc = html.fromstring(res.get_data(as_text=True))
 
         assert not doc.xpath("//a[normalize-space(string())='View and add your services from G-Cloud\xa07']")
+
+    def test_redirect_to_previous_services_for_lot_with_one_service_limit_and_no_drafts_and_previous_service_to_copy(
+        self, count_unanswered, data_api_client
+    ):
+        data_api_client.get_framework.return_value = self.framework(slug='digital-outcomes-and-specialists-3')
+        data_api_client.find_draft_services.return_value = {"services": []}
+        self.get_metadata.return_value = 'digital-outcomes-and-specialists-2'
+        data_api_client.find_services.return_value = {"services": [{"copiedToFollowingFramework": False}]}
+        self.login()
+
+        res = self.client.get('/suppliers/frameworks/digital-outcomes-and-specialists-3/submissions/digital-outcomes')
+
+        assert res.status_code == 302
+        assert '/digital-outcomes-and-specialists-3/submissions/digital-outcomes/previous-services' in res.location
+
+    def test_500s_if_previous_framework_not_found(self, count_unanswered, data_api_client):
+        data_api_client.get_framework.side_effect = [
+            self.framework(slug='g-cloud-10'),
+            HTTPError(mock.Mock(status_code=404)),
+        ]
+        data_api_client.find_draft_services.return_value = {"services": []}
+        self.login()
+
+        res = self.client.get('/suppliers/frameworks/g-cloud-10/submissions/cloud-hosting')
+        assert res.status_code == 500
 
 
 @mock.patch('app.main.views.frameworks.data_api_client', autospec=True)

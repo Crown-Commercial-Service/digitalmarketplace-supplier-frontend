@@ -6,7 +6,7 @@ import re
 from flask import abort
 from flask_login import current_user
 
-from dmapiclient import APIError
+from dmapiclient import APIError, HTTPError
 from dmutils.formats import DATETIME_FORMAT
 
 
@@ -20,6 +20,22 @@ def get_framework_or_404(client, framework_slug, allowed_statuses=None):
         abort(404)
 
     return framework
+
+
+def get_framework_or_500(client, framework_slug, logger=None):
+    """Return a 500 if a framework is not found that we explicitly expect to be there"""
+    try:
+        return client.get_framework(framework_slug)['frameworks']
+    except HTTPError as e:
+        if e.status_code == 404:
+            if logger:
+                logger.error(
+                    "Framework not found. Error: {error}, framework_slug: {framework_slug}",
+                    extra={'error': str(e), 'framework_slug': framework_slug}
+                )
+            abort(500, f'Framework not found: {framework_slug}')
+        else:
+            raise
 
 
 def get_framework_and_lot_or_404(client, framework_slug, lot_slug, allowed_statuses=None):

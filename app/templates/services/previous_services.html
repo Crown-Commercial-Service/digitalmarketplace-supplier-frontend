@@ -35,62 +35,124 @@
 
 {% block main_content %}
 
-  {% if copy_all %}
-    <form action="{{ url_for('.copy_all_previous_services', framework_slug=framework.slug, lot_slug=lot.slug) }}" method="POST">
-      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+  {% if lot.oneServiceLimit %}
+
+    {% if form_errors %}
       {%
         with
-        message = "Are you sure you want to add all your {} services?".format(lot.name|lower),
-        type = "success",
-        action = '<button type="submit" class="button-save banner-action" data-analytics="trackEvent"
-          data-analytics-category="Copy services"
-          data-analytics-action="Copy all"
-          data-analytics-label="Count: {}">Yes, add all services'.format(previous_services|length)|safe
+        errors = form_errors
       %}
-        {% include "toolkit/notification-banner.html" %}
+        {% include 'toolkit/forms/validation.html' %}
       {% endwith %}
-    </form>
+    {% endif %}
+
+    {% include "partials/service_warning.html" %}
+
+    <div class="grid-row">
+      <div class="column-two-thirds">
+        <div class="single-question-page">
+          {% with
+             heading = form.copy_service.label,
+             smaller = True,
+             with_breadcrumb = True
+          %}
+            {% include "toolkit/page-heading.html" %}
+          {% endwith %}
+
+          <p>You still have to:</p>
+          <ul class="list-bullet">
+            <li>review your service</li>
+            <li>answer any new questions</li>
+          </ul>
+          <br>
+
+          <form method="POST" action="{{ url_for('.previous_services', framework_slug=framework.slug, lot_slug=lot.slug) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+            {%
+              with
+              name = "copy_service",
+              type = "boolean",
+              error = form.copy_service.errors[0]
+            %}
+              {% include "toolkit/forms/selection-buttons.html" %}
+            {% endwith %}
+
+            {%
+              with
+              type = "save",
+              label = "Save and continue",
+              analytics = "trackEvent",
+              analytics_category = "Copy services",
+              analytics_action = "Copy one lot service",
+              analytics_label = lot.slug
+            %}
+              {% include "toolkit/button.html" %}
+            {% endwith %}
+          </form>
+        </div>
+      </div>
+    </div>
+  {% else %}
+    {% if copy_all %}
+      <form action="{{ url_for('.copy_all_previous_services', framework_slug=framework.slug, lot_slug=lot.slug) }}" method="POST">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+        {%
+          with
+          message = "Are you sure you want to add all your {} services?".format(lot.name|lower),
+          type = "success",
+          action = '<button type="submit" class="button-save banner-action" data-analytics="trackEvent"
+            data-analytics-category="Copy services"
+            data-analytics-action="Copy all"
+            data-analytics-label="Count: {}">Yes, add all services'.format(previous_services_still_to_copy|length)|safe
+        %}
+          {% include "toolkit/notification-banner.html" %}
+        {% endwith %}
+      </form>
+    {% endif %}
+
+    {% include "partials/service_warning.html" %}
+
+    {% with
+       heading = "Previous {} services".format(lot.name|lower),
+       smaller = True,
+       with_breadcrumb = True
+    %}
+      {% include "toolkit/page-heading.html" %}
+    {% endwith %}
+
+    {{ summary.heading("Your services from {}".format(source_framework.name)) }}
+    {% if previous_services_still_to_copy|length > 1 %}
+      {{ summary.top_link("Add all your services", url_for('.previous_services', framework_slug=framework.slug, lot_slug=lot.slug, copy_all=True)) }}
+    {% endif %}
+    {% call(service) summary.list_table(
+      previous_services_still_to_copy,
+      caption="Previous framework services",
+      field_headings=[
+          "Service name",
+          "Add to " + framework.name,
+      ],
+      field_headings_visible=False
+    ) %}
+      {% call summary.row() %}
+        {{ summary.service_link(service.serviceName,
+                                url_for(".edit_service", framework_slug=source_framework.slug, service_id=service.id)) }}
+        {{ summary.button(text="Add",
+                          action=url_for('.copy_previous_service', framework_slug=framework.slug, lot_slug=service.lot, service_id=service.id),
+                          analytics="trackEvent",
+                          analytics_category="Copy services",
+                          analytics_action="Copy individual",
+                          analytics_label="ID: {}".format(service.id)) }}
+
+      {% endcall %}
+    {% endcall %}
+
+    {%
+      with
+      url = url_for(".framework_submission_services", framework_slug=framework.slug, lot_slug=lot.slug),
+      text = "Back to services"
+    %}
+      {% include "toolkit/secondary-action-link.html" %}
+    {% endwith %}
   {% endif %}
 
-  {% include "partials/service_warning.html" %}
-
-  {% with
-     heading = "Previous " + lot.name|lower + " services",
-     smaller = True,
-     with_breadcrumb = True
-  %}
-    {% include "toolkit/page-heading.html" %}
-  {% endwith %}
-
-  {{ summary.heading("Your services from " + source_framework.name) }}
-  {{ summary.top_link("Add all to " + framework.name|nbsp, url_for('.list_previous_services', framework_slug=framework.slug, lot_slug=lot.slug, copy_all=True)) }}
-  {% call(service) summary.list_table(
-    previous_services,
-    caption="Previous framework services",
-    field_headings=[
-        "Service name",
-        "Add to " + framework.name,
-    ],
-    field_headings_visible=False
-  ) %}
-    {% call summary.row() %}
-      {{ summary.service_link(service.serviceName,
-                              url_for(".edit_service", framework_slug=source_framework.slug, service_id=service.id)) }}
-      {{ summary.button(text="Add to " + framework.name,
-                        action=url_for('.copy_previous_service', framework_slug=framework.slug, lot_slug=service.lot, service_id=service.id),
-                        analytics="trackEvent",
-                        analytics_category="Copy services",
-                        analytics_action="Copy individual",
-                        analytics_label="ID: {}".format(service.id)) }}
-
-    {% endcall %}
-  {% endcall %}
-
-  {%
-    with
-    url = url_for(".framework_submission_services", framework_slug=framework.slug, lot_slug=lot.slug),
-    text = "Back to services"
-  %}
-    {% include "toolkit/secondary-action-link.html" %}
-  {% endwith %}
 {% endblock %}

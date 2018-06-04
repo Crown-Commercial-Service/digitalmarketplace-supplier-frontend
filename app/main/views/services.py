@@ -10,13 +10,21 @@ from dmutils.documents import upload_service_documents
 from ... import data_api_client, flask_featureflags
 from ...main import main, content_loader
 from ..helpers import login_required
-from ..helpers.services import is_service_associated_with_supplier, get_signed_document_url, count_unanswered_questions
+from ..helpers.services import (
+    copy_service_from_previous_framework,
+    count_unanswered_questions,
+    get_lot_drafts,
+    get_signed_document_url,
+    is_service_associated_with_supplier,
+)
 from ..helpers.frameworks import (
     get_framework_and_lot_or_404,
     get_declaration_status,
     get_supplier_framework_info,
     get_framework_or_404,
+    get_framework_or_500,
 )
+from ..forms.frameworks import OneServiceLimitCopyServiceForm
 
 
 # TODO make these more consistent, content-wise
@@ -28,7 +36,10 @@ REMOVE_LAST_SUBSECTION_ERROR_MESSAGE = Markup(
     "You must offer one of the {section_name} to be eligible.<br>"
     "If you don’t want to offer {service_name}, delete this service."
 )
-SINGLE_SERVICE_ADDED_MESSAGE = (
+SINGLE_SERVICE_LOT_SINGLE_SERVICE_ADDED_MESSAGE = (
+    "You've added your service to {framework_name} as a draft. You'll need to review it before it can be completed."
+)
+MULTI_SERVICE_LOT_SINGLE_SERVICE_ADDED_MESSAGE = (
     "You've added a service to your {framework_name} drafts. You'll need to review it before it can be completed."
 )
 ALL_SERVICES_ADDED_MESSAGE = (
@@ -715,18 +726,18 @@ def remove_subsection(framework_slug, lot_slug, service_id, section_id, question
                 ))
 
 
-@main.route('/frameworks/<framework_slug>/submissions/<lot_slug>/previous-services', methods=['GET'])
+@main.route('/frameworks/<framework_slug>/submissions/<lot_slug>/previous-services', methods=['GET', 'POST'])
 @login_required
-def list_previous_services(framework_slug, lot_slug):
+def previous_services(framework_slug, lot_slug):
     framework, lot = get_framework_and_lot_or_404(data_api_client, framework_slug, lot_slug)
     if framework['status'] != 'open':
         abort(404)
 
-    copy_all = request.args.get('copy_all', None)
+    form = OneServiceLimitCopyServiceForm(lot['name'].lower()) if lot.get('oneServiceLimit') else None
     source_framework_slug = content_loader.get_metadata(framework['slug'], 'copy_services', 'source_framework')
-    source_framework = get_framework_or_404(data_api_client, source_framework_slug)
+    source_framework = get_framework_or_500(data_api_client, source_framework_slug, logger=current_app.logger)
 
-    previous_services = data_api_client.find_services(
+    previous_services_list = data_api_client.find_services(
         supplier_id=current_user.supplier_id,
         framework=source_framework_slug,
         lot=lot_slug,
@@ -734,11 +745,43 @@ def list_previous_services(framework_slug, lot_slug):
     )["services"]
 
     previous_services_still_to_copy = [
-        service for service in previous_services if not service['copiedToFollowingFramework']
+        service for service in previous_services_list if not service['copiedToFollowingFramework']
     ]
+
     if not previous_services_still_to_copy:
         return redirect(url_for(".framework_submission_services", framework_slug=framework_slug, lot_slug=lot_slug))
 
+    if request.method == 'POST':
+        if lot.get('oneServiceLimit'):
+            # Don't copy a service if the lot has a one service limit and the supplier already has a draft for that lot
+            drafts, complete_drafts = get_lot_drafts(data_api_client, framework_slug, lot_slug)
+            if drafts or complete_drafts:
+                abort(400)
+            if form.validate_on_submit():
+                if form.copy_service.data is True:
+                    copy_service_from_previous_framework(
+                        data_api_client,
+                        content_loader,
+                        framework_slug,
+                        lot_slug,
+                        previous_services_still_to_copy[0]['id'],
+                    )
+                    flash(
+                        SINGLE_SERVICE_LOT_SINGLE_SERVICE_ADDED_MESSAGE.format(framework_name=framework['name']),
+                        "success",
+                    )
+                else:
+                    data_api_client.create_new_draft_service(
+                        framework_slug, lot_slug, current_user.supplier_id, {}, current_user.email_address,
+                    )
+                return redirect(
+                    url_for('.framework_submission_services', framework_slug=framework_slug, lot_slug=lot_slug)
+                )
+        else:
+            # Should not be POSTing to this view if not a one service lot
+            abort(400)
+
+    copy_all = request.args.get('copy_all', None)
     supplier = data_api_client.get_supplier(current_user.supplier_id)['suppliers']
 
     return render_template(
@@ -746,10 +789,12 @@ def list_previous_services(framework_slug, lot_slug):
         framework=framework,
         lot=lot,
         source_framework=source_framework,
-        previous_services=previous_services_still_to_copy,
+        previous_services_still_to_copy=previous_services_still_to_copy,
         copy_all=copy_all,
         declaration_status=get_declaration_status(data_api_client, framework_slug),
         company_details_complete=supplier['companyDetailsConfirmed'],
+        form=form,
+        form_errors=[{'question': form[key].label.text, 'input_name': key} for key in form.errors] if form else None,
     )
 
 
@@ -760,35 +805,10 @@ def copy_previous_service(framework_slug, lot_slug, service_id):
     framework, lot = get_framework_and_lot_or_404(
         data_api_client, framework_slug, lot_slug, allowed_statuses=['open']
     )
+    copy_service_from_previous_framework(data_api_client, content_loader, framework_slug, lot_slug, service_id)
+    flash(MULTI_SERVICE_LOT_SINGLE_SERVICE_ADDED_MESSAGE.format(framework_name=framework['name']), "success")
 
-    # Suppliers must have registered interest in a framework before they can edit draft services
-    if not get_supplier_framework_info(data_api_client, framework_slug):
-        abort(404)
-
-    questions_to_copy = content_loader.get_metadata(framework['slug'], 'copy_services', 'questions_to_copy')
-    source_framework_slug = content_loader.get_metadata(framework['slug'], 'copy_services', 'source_framework')
-
-    previous_service = data_api_client.get_service(service_id)['services']
-    if previous_service['lotSlug'] != lot_slug or previous_service['frameworkSlug'] != source_framework_slug \
-            or previous_service['copiedToFollowingFramework']:
-        abort(404)
-
-    if not is_service_associated_with_supplier(previous_service):
-        abort(404)
-
-    data_api_client.copy_draft_service_from_existing_service(
-        previous_service['id'],
-        current_user.name,
-        {
-            'targetFramework': framework_slug,
-            'status': 'not-submitted',
-            'questionsToCopy': questions_to_copy
-        },
-    )
-
-    flash(SINGLE_SERVICE_ADDED_MESSAGE.format(framework_name=framework['name']), "success")
-
-    return redirect(url_for(".list_previous_services", framework_slug=framework_slug, lot_slug=lot_slug))
+    return redirect(url_for(".previous_services", framework_slug=framework_slug, lot_slug=lot_slug))
 
 
 @main.route('/frameworks/<framework_slug>/submissions/<lot_slug>/copy-all-previous-framework-services',
