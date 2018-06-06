@@ -756,7 +756,7 @@ def previous_services(framework_slug, lot_slug):
             # Don't copy a service if the lot has a one service limit and the supplier already has a draft for that lot
             drafts, complete_drafts = get_lot_drafts(data_api_client, framework_slug, lot_slug)
             if drafts or complete_drafts:
-                abort(400)
+                abort(400, f"You already have a draft {lot['name'].lower()} service.")
             if form.validate_on_submit():
                 if form.copy_service.data is True:
                     copy_service_from_previous_framework(
