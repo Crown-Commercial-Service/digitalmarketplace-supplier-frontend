@@ -11,6 +11,7 @@ import mock
 import pytest
 
 from dmapiclient import HTTPError
+from dmutils.api_stubs import lot, framework
 
 from app.main.helpers.services import parse_document_upload_time
 from tests.app.helpers import BaseApplicationTest, empty_g7_draft_service, empty_g9_draft_service
@@ -2557,20 +2558,37 @@ class TestPostListPreviousService(BaseApplicationTest):
 
         assert res.status_code == 400
 
-    def test_400s_if_draft_already_exists(self):
+    @pytest.mark.parametrize(
+        ('lot_name', 'lot_slug'),
+        (
+            ('Digital outcomes', 'digital-outcomes'),
+            ('Digital Specialists', 'digital-specialists'),
+            ('User research participants', 'user-research-participants'),
+        ),
+    )
+    def test_400s_if_draft_already_exists(self, lot_name, lot_slug):
+        self.data_api_client.get_framework.return_value = framework(
+            slug='digital-outcomes-and-specialists-3',
+            lots=[lot(name=lot_name, slug=lot_slug, one_service_limit=True)]
+        )
         self.data_api_client.find_draft_services.return_value = {
             "services": [
-                {'status': 'not-submitted', 'lotSlug': 'digital-specialists'},
+                {'status': 'not-submitted', 'lotSlug': lot_slug},
             ]
         }
 
         res = self.client.post(
             '/suppliers/frameworks/digital-outcomes-and-specialists-3/'
-            'submissions/digital-specialists/previous-services',
-            data={'copy_service': False},
+            f'submissions/{lot_slug}/previous-services',
+            data={'copy_service': True},
         )
+        doc = html.fromstring(res.get_data(as_text=True))
 
         assert res.status_code == 400
+        assert doc.xpath(
+            "//div[@class='error-page']//p[normalize-space(string())=$t]",
+            t=f"You already have a draft {lot_name.lower()} service.",
+        )
 
     def test_validates_that_an_answer_is_required(self):
         res = self.client.post(
