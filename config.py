@@ -16,8 +16,6 @@ class Config(object):
     SESSION_COOKIE_HTTPONLY = True
     SESSION_COOKIE_SECURE = True
 
-    PERMANENT_SESSION_LIFETIME = 4 * 3600
-
     WTF_CSRF_ENABLED = True
     WTF_CSRF_TIME_LIMIT = None
 
