@@ -59,20 +59,14 @@
             {% include "toolkit/page-heading.html" %}
           {% endwith %}
 
-          <p>You still have to:</p>
-          <ul class="list-bullet">
-            <li>review your service</li>
-            <li>answer any new questions</li>
-          </ul>
-          <br>
-
           <form method="POST" action="{{ url_for('.previous_services', framework_slug=framework.slug, lot_slug=lot.slug) }}">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
             {%
               with
               name = "copy_service",
               type = "boolean",
-              error = form.copy_service.errors[0]
+              error = form.copy_service.errors[0],
+              question_advice = "You still have to review your service and answer any new questions."
             %}
               {% include "toolkit/forms/selection-buttons.html" %}
             {% endwith %}
