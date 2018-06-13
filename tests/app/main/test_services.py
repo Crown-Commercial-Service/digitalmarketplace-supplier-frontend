@@ -2356,8 +2356,10 @@ class TestGetListPreviousServices(BaseApplicationTest):
 
         assert res.status_code == 200
         assert doc.xpath(f"//h1[normalize-space()='Do you want to reuse your previous {lot_name} service?']")
-        assert [list_item.text for list_item in doc.xpath("//ul[@class='list-bullet']/li")] == \
-            ['review your service', 'answer any new questions']
+        assert doc.xpath(
+            "//span[@class='question-advice']"
+            "[normalize-space()='You still have to review your service and answer any new questions.']"
+        )
         assert [re.sub("\W", "", label.text) for label in doc.xpath("//label[@class='radio']")] == ["Yes", "No"]
         assert doc.xpath("//input[@type='submit'][@value='Save and continue']")
 
