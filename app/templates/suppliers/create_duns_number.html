@@ -24,18 +24,15 @@
 {% endblock %}
 
 {% block main_content %}
-
 <div class="grid-row">
-  {% if form.duns_number.errors[0] == 'DUNS number already used' %}
+  {% if errors.get("duns_number", {}).get("message", None) == 'DUNS number already used' %}
     {% with lede = "A supplier account already exists with that DUNS number",
             description = 'If you no longer have your account details, or if you think this may be an error, email <a href="mailto:enquiries@digitalmarketplace.service.gov.uk?subject=DUNS%20number%20question" title="Please contact enquiries@digitalmarketplace.service.gov.uk">enquiries@digitalmarketplace.service.gov.uk</a>'|safe
     %}
       {% include 'toolkit/forms/validation.html' %}
     {% endwith %}
-  {% elif form.duns_number.errors %}
-    {% with errors = [{'question': form.duns_number.label, 'input_name': form.duns_number.name}] %}
-      {% include 'toolkit/forms/validation.html' %}
-    {% endwith %}
+  {% elif errors %}
+    {% include 'toolkit/forms/validation.html' %}
   {% endif %}
   
   <div class="column-two-thirds">
@@ -45,7 +42,7 @@
     {% endwith %}
   
     
-    <form method="POST" action="{{ url_for('.submit_duns_number') }}">
+    <form method="POST" action="{{ url_for('.duns_number') }}">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
       <div class="dmspeak">
         <p>If you registered your business with Companies House, you will automatically have been given a unique
@@ -63,7 +60,7 @@
       {% with question = "DUNS number",
               name = "duns_number",
               value = form.duns_number.data,
-              error = form.duns_number.errors[0],
+              error = errors.get("duns_number", {}).get("message", None),
               question_advice = question_advice,
               hint = "This is a 9 digit number" %}
         {% include "toolkit/forms/textbox.html" %}

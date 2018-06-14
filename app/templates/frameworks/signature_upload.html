@@ -34,13 +34,12 @@
   {% endwith %}
 
   {% if upload_error %}
-    {%
-      with
-        errors = [{
-          'question': 'Upload your signed signature page',
-          'input_name': 'signature_page'
-        }]
-    %}
+    {% with errors = {
+        "signature_page": {
+          "question": "Upload your signed signature page",
+          "input_name": "signature_page"
+        }
+      } %}
       {% include 'toolkit/forms/validation.html' %}
     {% endwith %}
   {% endif %}

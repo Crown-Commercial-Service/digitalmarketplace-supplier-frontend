@@ -29,12 +29,7 @@
 {% endblock %}
 
 {% block main_content %}
-
-  {% if errors %}
-    {% with errors = errors.values() %}
-      {% include 'toolkit/forms/validation.html' %}
-    {% endwith %}
-  {% elif name_of_framework_that_section_has_been_prefilled_from %}
+  {% if name_of_framework_that_section_has_been_prefilled_from %}
     {% with
        message = "Answers on this page are from an earlier declaration and need review.",
        type = "information"

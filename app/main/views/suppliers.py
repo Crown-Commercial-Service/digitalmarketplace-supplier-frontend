@@ -10,7 +10,7 @@ from dmcontent.content_loader import ContentNotFoundError
 from dmutils.dates import update_framework_with_formatted_dates
 from dmutils.email import send_user_account_email
 from dmutils.email.dm_mailchimp import DMMailChimpClient
-from dmutils.forms import remove_csrf_token
+from dmutils.forms import remove_csrf_token, get_errors_from_wtform
 
 from ...main import main, content_loader
 from ... import data_api_client
@@ -32,7 +32,6 @@ from ..helpers.frameworks import get_frameworks_by_status, get_frameworks_closed
 from ..helpers.suppliers import (
     COUNTRY_TUPLE,
     get_country_name_from_country_code,
-    parse_form_errors_for_validation_masthead,
     supplier_company_details_are_complete,
 )
 from ..helpers import login_required
@@ -160,7 +159,6 @@ def edit_registered_address():
         abort(e.status_code)
     supplier['contact'] = supplier['contactInformation'][0]
 
-    http_status = 200
     registered_address_form = EditRegisteredAddressForm()
     registered_country_form = EditRegisteredCountryForm()
 
@@ -188,8 +186,6 @@ def edit_registered_address():
 
             return redirect(url_for(".supplier_details"))
 
-        http_status = 400
-
     else:
         registered_address_form.address1.data = supplier['contact'].get('address1')
         registered_address_form.city.data = supplier['contact'].get('city')
@@ -197,14 +193,16 @@ def edit_registered_address():
 
         registered_country_form.registrationCountry.data = supplier.get('registrationCountry')
 
+    errors = {**get_errors_from_wtform(registered_address_form), **get_errors_from_wtform(registered_country_form)}
+
     return render_template(
         "suppliers/registered_address.html",
         supplier=supplier,
         countries=COUNTRY_TUPLE,
         registered_address_form=registered_address_form,
         registered_country_form=registered_country_form,
-        form_errors=parse_form_errors_for_validation_masthead([registered_address_form, registered_country_form]),
-    ), http_status
+        errors=errors,
+    ), 200 if not errors else 400
 
 
 @main.route('/registered-company-name/edit', methods=['GET', 'POST'])
@@ -235,12 +233,16 @@ def edit_supplier_registered_name():
                     'rname_errors': ",".join(form.registered_company_name.errors)
                 })
 
-            return render_template("suppliers/edit_registered_name.html", form=form), 400
-
     else:
         form.registered_company_name.data = supplier.get("registeredName")
 
-    return render_template('suppliers/edit_registered_name.html', form=form)
+    errors = get_errors_from_wtform(form)
+
+    return render_template(
+        'suppliers/edit_registered_name.html',
+        form=form,
+        errors=errors,
+    ), 200 if not errors else 400
 
 
 @main.route('/registration-number/edit', methods=['GET', 'POST'])
@@ -289,8 +291,6 @@ def edit_supplier_registration_number():
                     'rnumber_errors': ",".join(form.errors)
                 })
 
-            return render_template("suppliers/edit_company_registration_number.html", form=form), 400
-
     else:
         if supplier.get('companiesHouseNumber'):
             form.has_companies_house_number.data = "Yes"
@@ -300,7 +300,13 @@ def edit_supplier_registration_number():
             form.has_companies_house_number.data = "No"
             form.other_company_registration_number.data = supplier.get('otherCompanyRegistrationNumber')
 
-    return render_template('suppliers/edit_company_registration_number.html', form=form)
+    errors = get_errors_from_wtform(form)
+
+    return render_template(
+        'suppliers/edit_company_registration_number.html',
+        form=form,
+        errors=errors,
+    ), 200 if not errors else 400
 
 
 @main.route('/edit', methods=['GET'])
@@ -321,7 +327,6 @@ def edit_what_buyers_will_see():
         abort(e.status_code)
 
     supplier['contact'] = supplier['contactInformation'][0]
-    http_status = 200
 
     supplier_form = EditSupplierForm()
     contact_form = EditContactInformationForm()
@@ -349,19 +354,20 @@ def edit_what_buyers_will_see():
             else:
                 return redirect(url_for(".supplier_details"))
 
-        http_status = 400
-
     else:
         supplier_form.description.data = supplier.get('description', None)
         contact_form.contactName.data = supplier['contact'].get('contactName')
         contact_form.phoneNumber.data = supplier['contact'].get('phoneNumber')
         contact_form.email.data = supplier['contact'].get('email')
 
+    errors = {**get_errors_from_wtform(contact_form), **get_errors_from_wtform(supplier_form)}
+
     return render_template(
         "suppliers/edit_what_buyers_will_see.html",
         supplier_form=supplier_form,
-        contact_form=contact_form
-    ), http_status
+        contact_form=contact_form,
+        errors=errors,
+    ), 200 if not errors else 400
 
 
 @main.route('/organisation-size/edit', methods=['GET', 'POST'])
@@ -388,12 +394,16 @@ def edit_supplier_organisation_size():
                 'osize_errors': ",".join(form.organisation_size.errors)
             })
 
-        return render_template("suppliers/edit_supplier_organisation_size.html", form=form), 400
-
     supplier = data_api_client.get_supplier(current_user.supplier_id)['suppliers']
     form.organisation_size.data = supplier.get('organisationSize', None)
 
-    return render_template('suppliers/edit_supplier_organisation_size.html', form=form)
+    errors = get_errors_from_wtform(form)
+
+    return render_template(
+        'suppliers/edit_supplier_organisation_size.html',
+        form=form,
+        errors=errors
+    ), 200 if not errors else 400
 
 
 @main.route('/trading-status/edit', methods=['GET', 'POST'])
@@ -402,7 +412,6 @@ def edit_supplier_trading_status():
     form = CompanyTradingStatusForm()
 
     if request.method == 'POST':
-        api_error = None
         if form.validate_on_submit():
             try:
                 data_api_client.update_supplier(supplier_id=current_user.supplier_id,
@@ -421,18 +430,23 @@ def edit_supplier_trading_status():
                 'tstatus_errors': ",".join(form.trading_status.errors)
             })
 
-        return render_template("suppliers/edit_supplier_trading_status.html", form=form, api_error=api_error), 400
+    else:
+        supplier = data_api_client.get_supplier(current_user.supplier_id)['suppliers']
 
-    supplier = data_api_client.get_supplier(current_user.supplier_id)['suppliers']
+        prefill_trading_status = None
+        if supplier.get('tradingStatus'):
+            if supplier['tradingStatus'] in map(lambda x: x['value'], form.OPTIONS):
+                prefill_trading_status = supplier['tradingStatus']
 
-    prefill_trading_status = None
-    if supplier.get('tradingStatus'):
-        if supplier['tradingStatus'] in map(lambda x: x['value'], form.OPTIONS):
-            prefill_trading_status = supplier['tradingStatus']
+        form.trading_status.data = prefill_trading_status
 
-    form.trading_status.data = prefill_trading_status
+    errors = get_errors_from_wtform(form)
 
-    return render_template('suppliers/edit_supplier_trading_status.html', form=form)
+    return render_template(
+        'suppliers/edit_supplier_trading_status.html',
+        form=form,
+        errors=errors
+    ), 200 if not errors else 400
 
 
 @main.route('/vat-number/edit', methods=['GET', 'POST'])
@@ -450,7 +464,6 @@ def edit_supplier_vat_number():
             200 if request.method == 'GET' else 400
         )
 
-    form_errors = None
     if request.method == 'POST':
         if form.validate_on_submit():
             vat_number = form.vat_number.data if form.vat_registered.data == 'Yes' else form.NOT_VAT_REGISTERED_TEXT
@@ -474,10 +487,6 @@ def edit_supplier_vat_number():
                 "vat_registered_errors": ",".join(form.vat_registered.errors),
             })
 
-        form_errors = [
-            {'question': form[field].label.text, 'input_name': form[field].name} for field in form.errors.keys()
-        ]
-
     else:
         if supplier.get('vatNumber'):
             if supplier.get('vatNumber') == form.NOT_VAT_REGISTERED_TEXT:
@@ -486,11 +495,13 @@ def edit_supplier_vat_number():
                 form.vat_registered.data = 'Yes'
                 form.vat_number.data = supplier.get('vatNumber')
 
+    errors = get_errors_from_wtform(form)
+
     return render_template(
         'suppliers/edit_vat_number.html',
         form=form,
-        form_errors=form_errors
-    ), 200 if request.method == 'GET' else 400
+        errors=errors
+    ), 200 if not errors else 400
 
 
 @main.route('/duns-number/edit', methods=['GET', 'POST'])
@@ -543,49 +554,36 @@ def create_new_supplier():
     ), 200
 
 
-@main.route('/create/duns-number', methods=['GET'])
+@main.route('/create/duns-number', methods=['GET', 'POST'])
 def duns_number():
     form = DunsNumberForm()
 
-    if form.duns_number.name in session:
-        form.duns_number.data = session[form.duns_number.name]
+    if request.method == 'POST':
+        if form.validate_on_submit():
+            suppliers = data_api_client.find_suppliers(duns_number=form.duns_number.data)
+            if len(suppliers["suppliers"]) <= 0:
+                session[form.duns_number.name] = form.duns_number.data
+                return redirect(url_for(".company_details"))
 
-    return render_template(
-        "suppliers/create_duns_number.html",
-        form=form
-    ), 200
-
-
-@main.route('/create/duns-number', methods=['POST'])
-def submit_duns_number():
-    form = DunsNumberForm()
-
-    if form.validate_on_submit():
-
-        suppliers = data_api_client.find_suppliers(duns_number=form.duns_number.data)
-        if len(suppliers["suppliers"]) > 0:
             form.duns_number.errors = ["DUNS number already used"]
-            current_app.logger.warning(
-                "suppliercreate.fail: duns:{duns} {duns_errors}",
-                extra={
-                    'duns': form.duns_number.data,
-                    'duns_errors': ",".join(form.duns_number.errors)})
-            return render_template(
-                "suppliers/create_duns_number.html",
-                form=form
-            ), 400
-        session[form.duns_number.name] = form.duns_number.data
-        return redirect(url_for(".company_details"))
-    else:
+
         current_app.logger.warning(
             "suppliercreate.fail: duns:{duns} {duns_errors}",
             extra={
                 'duns': form.duns_number.data,
                 'duns_errors': ",".join(form.duns_number.errors)})
-        return render_template(
-            "suppliers/create_duns_number.html",
-            form=form
-        ), 400
+
+    else:
+        if form.duns_number.name in session:
+            form.duns_number.data = session[form.duns_number.name]
+
+    errors = get_errors_from_wtform(form)
+
+    return render_template(
+        "suppliers/create_duns_number.html",
+        form=form,
+        errors=errors,
+    ), 200 if not errors else 400
 
 
 @main.route('/create/company-details', methods=['GET', 'POST'])
@@ -605,60 +603,49 @@ def company_details():
                 extra={
                     'duns': session.get('duns_number'),
                     'form_errors': ",".join(chain.from_iterable(form.errors.values()))})
-            return render_template(
-                "suppliers/create_company_details.html",
-                form=form,
-                errors=[{'question': form[key].label, 'input_name': form[key].name} for key in form.errors]
-            ), 400
 
-    if form.company_name.name in session:
-        form.company_name.data = session[form.company_name.name]
+    else:
+        if form.company_name.name in session:
+            form.company_name.data = session[form.company_name.name]
 
-    if form.contact_name.name in session:
-        form.contact_name.data = session[form.contact_name.name]
+        if form.contact_name.name in session:
+            form.contact_name.data = session[form.contact_name.name]
 
-    if form.email_address.name in session:
-        form.email_address.data = session[form.email_address.name]
+        if form.email_address.name in session:
+            form.email_address.data = session[form.email_address.name]
 
-    if form.phone_number.name in session:
-        form.phone_number.data = session[form.phone_number.name]
+        if form.phone_number.name in session:
+            form.phone_number.data = session[form.phone_number.name]
+
+    errors = get_errors_from_wtform(form)
 
     return render_template(
         "suppliers/create_company_details.html",
         form=form,
-    ), 200
+        errors=errors,
+    ), 200 if not errors else 400
 
 
-@main.route('/create/account', methods=['GET'])
+@main.route('/create/account', methods=['GET', 'POST'])
 def create_your_account():
-    current_app.logger.info(
-        "suppliercreate: get create-your-account supplier_id:{}".format(
-            session.get('email_supplier_id', 'unknown')))
+    current_app.logger.info("suppliercreate: {} create-your-account supplier_id:{}".format(
+        request.method,
+        session.get('email_supplier_id', 'unknown'))
+    )
+
     form = EmailAddressForm()
+    if form.validate_on_submit():
+        session['account_email_address'] = form.email_address.data
+        return redirect(url_for(".company_summary"))
+
+    errors = get_errors_from_wtform(form)
 
     return render_template(
         "suppliers/create_your_account.html",
         form=form,
-        email_address=session.get('account_email_address', '')
-    ), 200
-
-
-@main.route('/create/account', methods=['POST'])
-def submit_create_your_account():
-    current_app.logger.info(
-        "suppliercreate: post create-your-account supplier_id:{}".format(
-            session.get('email_supplier_id', 'unknown')))
-    form = EmailAddressForm()
-
-    if form.validate_on_submit():
-        session['account_email_address'] = form.email_address.data
-        return redirect(url_for(".company_summary"))
-    else:
-        return render_template(
-            "suppliers/create_your_account.html",
-            form=form,
-            email_address=form.email_address.data
-        ), 400
+        errors=errors,
+        email_address=form.email_address.data if form.email_address.data else session.get('account_email_address', '')
+    ), 200 if not errors else 400
 
 
 @main.route('/create/company-summary', methods=['GET'])
@@ -741,58 +728,57 @@ def create_your_account_complete():
 @main.route('/mailing-list', methods=["GET", "POST"])
 def join_open_framework_notification_mailing_list():
     status = 200
-    if request.method == "POST":
-        form = EmailAddressForm(request.form)
-        if form.validate():
-            dmmc_client = DMMailChimpClient(
-                current_app.config["DM_MAILCHIMP_USERNAME"],
-                current_app.config["DM_MAILCHIMP_API_KEY"],
-                current_app.logger,
+
+    form = EmailAddressForm()
+    if form.validate_on_submit():
+        dmmc_client = DMMailChimpClient(
+            current_app.config["DM_MAILCHIMP_USERNAME"],
+            current_app.config["DM_MAILCHIMP_API_KEY"],
+            current_app.logger,
+        )
+
+        mc_response = dmmc_client.subscribe_new_email_to_list(
+            current_app.config["DM_MAILCHIMP_OPEN_FRAMEWORK_NOTIFICATION_MAILING_LIST_ID"],
+            form.data["email_address"],
+        )
+
+        if mc_response not in (True, False,):
+            # success
+            data_api_client.create_audit_event(
+                audit_type=AuditTypes.mailing_list_subscription,
+                data={
+                    "subscribedEmail": form.data["email_address"],
+                    "mailchimp": {k: mc_response.get(k) for k in (
+                        "id",
+                        "unique_email_id",
+                        "timestamp_opt",
+                        "last_changed",
+                        "list_id",
+                    )},
+                },
             )
 
-            mc_response = dmmc_client.subscribe_new_email_to_list(
-                current_app.config["DM_MAILCHIMP_OPEN_FRAMEWORK_NOTIFICATION_MAILING_LIST_ID"],
-                form.data["email_address"],
-            )
+            flash(JOIN_OPEN_FRAMEWORK_NOTIFICATION_MAILING_LIST_SUCCESS_MESSAGE.format(
+                email_address=form.data["email_address"],
+            ), "success")
 
-            if mc_response not in (True, False,):
-                # success
-                data_api_client.create_audit_event(
-                    audit_type=AuditTypes.mailing_list_subscription,
-                    data={
-                        "subscribedEmail": form.data["email_address"],
-                        "mailchimp": {k: mc_response.get(k) for k in (
-                            "id",
-                            "unique_email_id",
-                            "timestamp_opt",
-                            "last_changed",
-                            "list_id",
-                        )},
-                    },
-                )
-
-                flash(JOIN_OPEN_FRAMEWORK_NOTIFICATION_MAILING_LIST_SUCCESS_MESSAGE.format(
-                    email_address=form.data["email_address"],
-                ), "success")
-
-                return redirect("/")
-            else:
-                # failure
-                flash(JOIN_OPEN_FRAMEWORK_NOTIFICATION_MAILING_LIST_ERROR_MESSAGE, "error")
-                if mc_response:
-                    # this is a case where we think the error is *probably* the user's fault in some way
-                    status = 400
-                else:
-                    # this is a case where we have no idea so should probably be alert to it
-                    status = 503
-                # fall through to re-display form with error
+            return redirect("/")
         else:
-            status = 400
-            # fall through to re-display form with errors
+            # failure
+            flash(JOIN_OPEN_FRAMEWORK_NOTIFICATION_MAILING_LIST_ERROR_MESSAGE, "error")
+            if mc_response:
+                # this is a case where we think the error is *probably* the user's fault in some way
+                status = 400
+            else:
+                # this is a case where we have no idea so should probably be alert to it
+                status = 503
+            # fall through to re-display form with error
     else:
-        form = EmailAddressForm()
+        status = 400
+        # fall through to re-display form with errors
 
     return render_template(
         "suppliers/join_open_framework_notification_mailing_list.html",
         form=form,
+        errors=get_errors_from_wtform(form),
     ), status

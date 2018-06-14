@@ -2600,7 +2600,7 @@ class TestPostListPreviousService(BaseApplicationTest):
         )
         doc = html.fromstring(res.get_data(as_text=True))
 
-        assert res.status_code == 200
+        assert res.status_code == 400
         assert "Do you want to reuse your previous digital specialists service?" == doc.xpath(
             "//a[@class='validation-masthead-link']/text()"
         )[0].strip()

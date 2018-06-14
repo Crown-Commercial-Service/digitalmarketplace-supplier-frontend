@@ -29,12 +29,12 @@
   {% if error_message %}
     {%
       with
-      errors = [
-        {
-            "input_name": clarification_question_name,
-            "question": "Ask a {} clarification question".format(framework.name)
+      errors = {
+        "clarification_question_name": {
+          "input_name": clarification_question_name,
+          "question": "Ask a {} clarification question".format(framework.name)
         }
-    ],
+      },
       lede = "There was a problem with your submitted question"
     %}
       {% include "toolkit/forms/validation.html" %}

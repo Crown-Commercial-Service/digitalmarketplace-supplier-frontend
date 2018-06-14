@@ -24,6 +24,7 @@
 {% endblock %}
 
 {% block main_content %}
+  {% include 'toolkit/forms/validation.html' %}
 
 <div class="grid-row">
   <div class="column-two-thirds">
@@ -36,15 +37,6 @@
     {% endwith %}
   </div>
 </div>
-
-{% if form.errors %}
-  {%
-    with
-      errors = form_errors
-  %}
-    {% include 'toolkit/forms/validation.html' %}
-  {% endwith %}
-{% endif %}
 
 <div>
   {% import "toolkit/summary-table.html" as summary %}
@@ -96,7 +88,7 @@
           options = [{
               "label": form.authorisation.description,
           }],
-          error=form.authorisation.errors[0]
+          error=errors.get("authorisation", {}).get("message", None)
         %}
           {% include "toolkit/forms/selection-buttons.html" %}
         {% endwith %}

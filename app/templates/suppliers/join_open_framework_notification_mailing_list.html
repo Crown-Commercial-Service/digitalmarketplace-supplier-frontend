@@ -16,6 +16,7 @@
 {% endblock %}
 
 {% block main_content %}
+{% include "toolkit/forms/validation.html" %}
 
 <div class="grid-row">
   <div class="column-two-thirds">
@@ -41,7 +42,7 @@
             question = "Your email address",
             name = "email_address",
             value = form.email_address.data,
-            error = form.email_address.errors[0]
+            error = errors.get("email_address", {}).get("message", None)
         %}
           {% include "toolkit/forms/textbox.html" %}
         {% endwith %}

@@ -3,6 +3,7 @@ from flask_login import current_user
 
 from dmapiclient.audit import AuditTypes
 from dmutils.email import send_user_account_email
+from dmutils.forms import get_errors_from_wtform
 
 from .. import main
 from ..forms.auth_forms import EmailAddressForm
@@ -13,19 +14,9 @@ from ... import data_api_client
 USER_INVITED_FLASH_MESSAGE = "Contributor invited"
 
 
-@main.route('/invite-user', methods=["GET"])
+@main.route('/invite-user', methods=["GET", "POST"])
 @login_required
 def invite_user():
-    form = EmailAddressForm()
-
-    return render_template(
-        "auth/submit_email_address.html",
-        form=form), 200
-
-
-@main.route('/invite-user', methods=["POST"])
-@login_required
-def send_invite_user():
     form = EmailAddressForm()
 
     if form.validate_on_submit():
@@ -53,7 +44,11 @@ def send_invite_user():
 
         flash(USER_INVITED_FLASH_MESSAGE, "success")
         return redirect(url_for('.list_users'))
-    else:
-        return render_template(
-            "auth/submit_email_address.html",
-            form=form), 400
+
+    errors = get_errors_from_wtform(form)
+
+    return render_template(
+        "auth/submit_email_address.html",
+        form=form,
+        errors=errors
+    ), 200 if not errors else 400

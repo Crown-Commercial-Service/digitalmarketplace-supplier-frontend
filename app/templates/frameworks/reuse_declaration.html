@@ -28,15 +28,7 @@
 {% endblock %}
 
 {% block main_content %}
-
-  {% if form_errors %}
-    {%
-      with
-      errors = form_errors
-    %}
-      {% include 'toolkit/forms/validation.html' %}
-    {% endwith %}
-  {% endif %}
+  {% include 'toolkit/forms/validation.html' %}
 
   <div class="grid-row">
     <div class="column-two-thirds">
@@ -67,7 +59,7 @@
           question = "Do you want to reuse the answers from your earlier declaration?",
           inline = true,
           type = "boolean",
-          error = form.reuse.errors[0]
+          error = errors.get('reuse', {}).get('message', None)
         %}
           {% include "toolkit/forms/selection-buttons.html" %}
         {% endwith %}
