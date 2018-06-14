@@ -212,8 +212,11 @@ def edit_supplier_registered_name():
     supplier = data_api_client.get_supplier(current_user.supplier_id)['suppliers']
     if supplier.get("registeredName") and supplier.get('companyDetailsConfirmed'):
         return (
-            render_template("suppliers/already_completed.html", completed_data_description="registered company name"),
-            200 if request.method == 'GET' else 400
+            render_template(
+                "suppliers/already_completed.html",
+                completed_data_description="registered company name",
+                company_details_change_email=current_app.config['DM_COMPANY_DETAILS_CHANGE_EMAIL'],
+            ), 200 if request.method == 'GET' else 400
         )
 
     if request.method == 'POST':
@@ -242,6 +245,7 @@ def edit_supplier_registered_name():
         'suppliers/edit_registered_name.html',
         form=form,
         errors=errors,
+        company_details_change_email=current_app.config['DM_COMPANY_DETAILS_CHANGE_EMAIL']
     ), 200 if not errors else 400
 
 
