@@ -1635,6 +1635,7 @@ class TestFrameworksDashboardConfidenceBannerOnPage(BaseApplicationTest):
         super().setup_method(method)
         self.data_api_client_patch = mock.patch('app.main.views.frameworks.data_api_client', autospec=True)
         self.data_api_client = self.data_api_client_patch.start()
+        self.data_api_client.get_framework.return_value = self.framework(status='open')
 
     def teardown_method(self, method):
         self.data_api_client_patch.stop()
@@ -1647,7 +1648,6 @@ class TestFrameworksDashboardConfidenceBannerOnPage(BaseApplicationTest):
 
     def test_confidence_banner_on_page(self, _):
         """Test confidence banner appears on page happy path."""
-        self.data_api_client.get_framework.return_value = self.framework(status='open')
         self.data_api_client.find_draft_services.return_value = {
             "services": [{'serviceName': 'A service', 'status': 'submitted', 'lotSlug': 'foo'}]
         }
@@ -1683,8 +1683,8 @@ class TestFrameworksDashboardConfidenceBannerOnPage(BaseApplicationTest):
     def test_confidence_banner_not_on_page_if_sections_incomplete(self, _,
                                                                   declaration_status, draft_service_status,
                                                                   supplier_data, check_text_in_doc):
-        """Change value and assertt that confidence banner is not displayed."""
-        self.data_api_client.get_framework.return_value = self.framework(status='open')
+        """Change value and assert that confidence banner is not displayed."""
+
         self.data_api_client.find_draft_services.return_value = {
             "services": [{'serviceName': 'A service', 'status': draft_service_status, 'lotSlug': 'foo'}]
         }
@@ -1839,6 +1839,7 @@ class TestFrameworkAgreementUpload(BaseApplicationTest):
         super().setup_method(method)
         self.data_api_client_patch = mock.patch('app.main.views.frameworks.data_api_client', autospec=True)
         self.data_api_client = self.data_api_client_patch.start()
+        self.data_api_client.get_framework.return_value = self.framework(status='standstill')
 
     def teardown_method(self, method):
         self.data_api_client_patch.stop()
@@ -1859,7 +1860,6 @@ class TestFrameworkAgreementUpload(BaseApplicationTest):
     def test_page_returns_404_if_supplier_not_on_framework(self, mandrill_send_email, s3):
         self.login()
 
-        self.data_api_client.get_framework.return_value = self.framework(status='standstill')
         self.data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
             on_framework=False)
 
@@ -1875,7 +1875,6 @@ class TestFrameworkAgreementUpload(BaseApplicationTest):
                                                    s3):
         self.login()
 
-        self.data_api_client.get_framework.return_value = self.framework(status='standstill')
         self.data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
             on_framework=True)
         file_is_less_than_5mb.return_value = False
@@ -1892,7 +1891,6 @@ class TestFrameworkAgreementUpload(BaseApplicationTest):
     def test_page_returns_400_if_file_is_empty(self, file_is_empty, mandrill_send_email, s3):
         self.login()
 
-        self.data_api_client.get_framework.return_value = self.framework(status='standstill')
         self.data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
             on_framework=True)
         file_is_empty.return_value = True
@@ -1911,7 +1909,6 @@ class TestFrameworkAgreementUpload(BaseApplicationTest):
     ):
         self.login()
 
-        self.data_api_client.get_framework.return_value = self.framework(status='standstill')
         self.data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
             on_framework=True)
         generate_timestamped_document_upload_path.return_value = 'my/path.pdf'
@@ -1944,7 +1941,6 @@ class TestFrameworkAgreementUpload(BaseApplicationTest):
     ):
         self.login()
 
-        self.data_api_client.get_framework.return_value = self.framework(status='standstill')
         self.data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(on_framework=True)
         generate_timestamped_document_upload_path.return_value = 'my/path.pdf'
         self.data_api_client.create_framework_agreement.side_effect = APIError(mock.Mock(status_code=500))
@@ -1966,7 +1962,6 @@ class TestFrameworkAgreementUpload(BaseApplicationTest):
     ):
         self.login()
 
-        self.data_api_client.get_framework.return_value = self.framework(status='standstill')
         self.data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(on_framework=True)
         generate_timestamped_document_upload_path.return_value = 'my/path.pdf'
         self.data_api_client.update_framework_agreement.side_effect = APIError(mock.Mock(status_code=500))
@@ -1988,7 +1983,6 @@ class TestFrameworkAgreementUpload(BaseApplicationTest):
     ):
         self.login()
 
-        self.data_api_client.get_framework.return_value = self.framework(status='standstill')
         self.data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(on_framework=True)
         generate_timestamped_document_upload_path.return_value = 'my/path.pdf'
         self.data_api_client.sign_framework_agreement.side_effect = APIError(mock.Mock(status_code=500))
@@ -2010,7 +2004,6 @@ class TestFrameworkAgreementUpload(BaseApplicationTest):
     ):
         self.login()
 
-        self.data_api_client.get_framework.return_value = self.framework(status='standstill')
         self.data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
             on_framework=True)
         generate_timestamped_document_upload_path.return_value = 'my/path.pdf'
@@ -2030,7 +2023,6 @@ class TestFrameworkAgreementUpload(BaseApplicationTest):
     ):
         self.login()
 
-        self.data_api_client.get_framework.return_value = self.framework(status='standstill')
         self.data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
             on_framework=True)
         self.data_api_client.create_framework_agreement.return_value = {"agreement": {"id": 20}}
@@ -2070,8 +2062,6 @@ class TestFrameworkAgreementUpload(BaseApplicationTest):
     ):
         self.login()
 
-        self.data_api_client.get_framework.return_value = self.framework(status='standstill')
-        self.data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(on_framework=True)
         generate_timestamped_document_upload_path.return_value = 'my/path.jpg'
 
         res = self.client.post(
