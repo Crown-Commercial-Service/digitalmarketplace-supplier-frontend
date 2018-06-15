@@ -1613,9 +1613,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
         "framework_status",
         ["coming", "pending", "standstill", "live", "expired"]
     )
-    def test_visit_to_framework_dashboard_not_saved_in_session_if_framework_not_open(
-        self, s3, framework_status
-    ):
+    def test_visit_to_framework_dashboard_not_saved_in_session_if_framework_not_open(self, s3, framework_status):
         self.login()
 
         self.data_api_client.get_framework.return_value = self.framework(slug="g-cloud-9", status=framework_status)
@@ -1871,8 +1869,7 @@ class TestFrameworkAgreementUpload(BaseApplicationTest):
         assert res.status_code == 404
 
     @mock.patch('app.main.views.frameworks.file_is_less_than_5mb')
-    def test_page_returns_400_if_file_is_too_large(self, file_is_less_than_5mb, mandrill_send_email,
-                                                   s3):
+    def test_page_returns_400_if_file_is_too_large(self, file_is_less_than_5mb, mandrill_send_email, s3):
         self.login()
 
         self.data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
@@ -2735,14 +2732,7 @@ class TestDeclarationOverview(BaseApplicationTest):
         "framework_slug,declaration,decl_valid,prefill_fw_slug,expected_sections",
         _g7_parametrization
     )
-    def test_display_open(
-        self,
-        framework_slug,
-        declaration,
-        decl_valid,
-        prefill_fw_slug,
-        expected_sections,
-    ):
+    def test_display_open(self, framework_slug, declaration, decl_valid, prefill_fw_slug, expected_sections):
         self._setup_data_api_client("open", framework_slug, declaration, prefill_fw_slug)
 
         self.login()
@@ -3676,6 +3666,7 @@ class TestFrameworkUpdatesPage(BaseApplicationTest):
         assert response.status_code == 200
         assert u'Ask a question about your G-Cloud 7 application' not in data
 
+
 @mock.patch('dmutils.s3.S3')
 @mock.patch('app.main.views.frameworks.DMNotifyClient.send_email', autospec=True)
 @mock.patch('app.main.views.frameworks.mandrill_send_email')
@@ -4200,9 +4191,7 @@ class TestServicesList(BaseApplicationTest):
         else:
             assert not link
 
-    def test_link_to_add_previous_services_not_shown_if_no_defined_previous_framework(
-        self, count_unanswered
-    ):
+    def test_link_to_add_previous_services_not_shown_if_no_defined_previous_framework(self, count_unanswered):
         self.get_metadata.side_effect = ContentNotFoundError('Not found')
         self.login()
 
@@ -4379,9 +4368,7 @@ class TestSignerDetailsPage(BaseApplicationTest):
         page = res.get_data(as_text=True)
         assert "You must provide the role of the person signing on behalf of the company" in page
 
-    def test_should_be_an_error_if_signer_details_fields_more_than_255_characters(
-            self, return_supplier_framework
-    ):
+    def test_should_be_an_error_if_signer_details_fields_more_than_255_characters(self, return_supplier_framework):
         self.login()
         self.data_api_client.get_framework.return_value = get_g_cloud_8()
         self.data_api_client.get_framework_agreement.return_value = self.framework_agreement()
@@ -4424,9 +4411,7 @@ class TestSignerDetailsPage(BaseApplicationTest):
             'email@email.com'
         )
 
-    def test_provide_signer_details_form_with_valid_input_redirects_to_upload_page(
-            self, return_supplier_framework
-    ):
+    def test_provide_signer_details_form_with_valid_input_redirects_to_upload_page(self, return_supplier_framework):
         signer_details = {'signerName': 'Josh Moss', 'signerRole': 'The Boss'}
 
         self.data_api_client.get_framework.return_value = get_g_cloud_8()
@@ -4446,7 +4431,7 @@ class TestSignerDetailsPage(BaseApplicationTest):
         )
 
     def test_provide_signer_details_form_with_valid_input_redirects_to_contract_review_page_if_file_already_uploaded(
-            self, return_supplier_framework
+        self, return_supplier_framework
     ):
         signer_details = {
             'signerName': "Josh Moss",
@@ -4478,7 +4463,7 @@ class TestSignerDetailsPage(BaseApplicationTest):
         )
 
     def test_signer_details_form_redirects_to_signature_upload_page_if_file_in_session_but_no_signed_agreement_path(
-            self, return_supplier_framework
+        self, return_supplier_framework
     ):
         signer_details = {'signerName': "Josh Moss", 'signerRole': "The Boss"}
 
@@ -4770,8 +4755,8 @@ class TestContractReviewPage(BaseApplicationTest):
         assert '<tdclass="summary-item-field"><span><p>signer_name</p><p>signer_role</p></span></td>' \
             in page_without_whitespace
         assert "I have the authority to return this agreement on behalf of £unicodename" in page
-        assert "Returning the signature page will notify the Crown Commercial Service and the primary contact you "
-        "gave in your G-Cloud 8 application, contact name at email@email.com." in page
+        assert "Returning the signature page will notify the Crown Commercial Service and the primary contact you " \
+               "gave in your G-Cloud 8 application, contact name at email@email.com." in page
         assert '<tdclass="summary-item-field-first"><span>test.pdf</span></td>' in page_without_whitespace
 
     def test_contract_review_page_loads_with_uploaded_time_of_file_if_no_filename_in_session(
@@ -4851,7 +4836,6 @@ class TestContractReviewPage(BaseApplicationTest):
             self.framework_agreement(supplier_id=2345)['agreement'],
             supplier_framework
         )
-
 
     def test_return_400_response_and_no_email_sent_if_authorisation_not_checked(
         self, mandrill_send_email, s3, return_supplier_framework
