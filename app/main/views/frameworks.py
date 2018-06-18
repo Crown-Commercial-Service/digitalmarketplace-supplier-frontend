@@ -5,7 +5,6 @@ from itertools import chain
 from dateutil.parser import parse as date_parse
 from flask import render_template, request, abort, flash, redirect, url_for, current_app, session
 from flask_login import current_user
-import flask_featureflags as feature
 
 from dmapiclient import APIError, HTTPError
 from dmapiclient.audit import AuditTypes
@@ -27,7 +26,7 @@ from dmutils.email.helpers import hash_string
 from dmutils.formats import datetimeformat, monthyearformat
 from dmutils.forms import get_errors_from_wtform
 
-from ... import data_api_client, flask_featureflags
+from ... import data_api_client
 from ...main import main, content_loader
 from ..helpers import login_required
 from ..helpers.frameworks import (
@@ -1131,15 +1130,14 @@ def contract_review(framework_slug, agreement_id):
 
         flash(AGREEMENT_RETURNED_MESSAGE, "success")
 
-        if feature.is_active('CONTRACT_VARIATION'):
-            # Redirect to contract variation if it has not been signed
-            if (framework.get('variations') and not supplier_framework['agreedVariations']):
-                variation_slug = list(framework['variations'].keys())[0]
-                return redirect(url_for(
-                    '.view_contract_variation',
-                    framework_slug=framework_slug,
-                    variation_slug=variation_slug
-                ))
+        # Redirect to contract variation if it has not been signed
+        if (framework.get('variations') and not supplier_framework['agreedVariations']):
+            variation_slug = list(framework['variations'].keys())[0]
+            return redirect(url_for(
+                '.view_contract_variation',
+                framework_slug=framework_slug,
+                variation_slug=variation_slug
+            ))
 
         return redirect(url_for(".framework_dashboard", framework_slug=framework_slug))
 
@@ -1162,7 +1160,6 @@ def contract_review(framework_slug, agreement_id):
 
 
 @main.route('/frameworks/<framework_slug>/contract-variation/<variation_slug>', methods=['GET', 'POST'])
-@flask_featureflags.is_active_feature('CONTRACT_VARIATION')
 @login_required
 def view_contract_variation(framework_slug, variation_slug):
     framework = get_framework_or_404(data_api_client, framework_slug, allowed_statuses=['live'])

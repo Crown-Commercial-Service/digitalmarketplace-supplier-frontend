@@ -100,19 +100,17 @@
         </a>
       </p>
     {% endif %}
-    {% if 'CONTRACT_VARIATION' is active_feature %}
-      {% for variation in framework.variations %}
-      <p>
-        <a href="{{ url_for('.view_contract_variation', framework_slug=framework.slug, variation_slug=variation) }}">
-        {% if framework.variations[variation].get('countersignedAt') and supplier_framework.agreedVariations.get(variation).agreedAt %}
-          View the signed contract variation
-        {% else %}
-          Read the proposed contract variation
-        {% endif %}
-        </a>
-      </p>
-      {% endfor %}
-    {% endif %}
+    {% for variation in framework.variations %}
+    <p>
+      <a href="{{ url_for('.view_contract_variation', framework_slug=framework.slug, variation_slug=variation) }}">
+      {% if framework.variations[variation].get('countersignedAt') and supplier_framework.agreedVariations.get(variation).agreedAt %}
+        View the signed contract variation
+      {% else %}
+        Read the proposed contract variation
+      {% endif %}
+      </a>
+    </p>
+    {% endfor %}
     {% if communications_files.final_call_off.last_modified %}
       <p>
         <a href="{{ url_for('.download_supplier_file', filepath=communications_files.final_call_off.filename, framework_slug=framework.slug) }}">Download the call-off contract template</a>
