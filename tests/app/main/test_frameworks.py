@@ -1347,49 +1347,6 @@ class TestFrameworksDashboard(BaseApplicationTest):
             b="Your framework agreement signature page has been sent to the Crown Commercial Service",
         )
 
-    def test_does_not_show_contract_variation_link_if_feature_flagged_off(self, data_api_client, s3):
-        self.app.config['FEATURE_FLAGS_CONTRACT_VARIATION'] = False
-        self.login()
-        g8_with_variation = get_g_cloud_8()
-        g8_with_variation['frameworks']['variations'] = {"1": {"createdAt": "2018-08-16"}}
-        data_api_client.get_framework.return_value = g8_with_variation
-        data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
-            on_framework=True,
-            agreement_returned=True,
-            agreement_details=self._boring_agreement_details,
-            agreement_path='g-cloud-8/agreements/123-framework-agreement.pdf',
-            agreement_returned_at=self._boring_agreement_returned_at,
-        )
-
-        res = self.client.get("/suppliers/frameworks/g-cloud-8")
-        assert res.status_code == 200
-
-        data = res.get_data(as_text=True)
-        doc = html.fromstring(data)
-
-        assert not doc.xpath(
-            "//main//a[@href=$href or normalize-space(string())=$label]",
-            href="/frameworks/g-cloud-7/agreement",
-            label="Sign and return your framework agreement",
-        )
-
-        assert not doc.xpath(
-            "//main//a[contains(@href, $href_part) or normalize-space(string())=$label]",
-            href_part="contract-variation/1",
-            label="Read the proposed contract variation",
-        )
-        extracted_signing_details_table_rows = self._extract_signing_details_table_rows(doc)
-        assert extracted_signing_details_table_rows == self._boring_agreement_details_expected_table_results
-        assert doc.xpath("//main//p[contains(normalize-space(string()), $b)]", b="You can start selling your")
-        assert not doc.xpath(
-            "//main//p[contains(normalize-space(string()), $b)]",
-            b="Your original and counterpart signature pages",
-        )
-        assert doc.xpath(
-            "//main//p[contains(normalize-space(string()), $b)]",
-            b="Your framework agreement signature page has been sent to the Crown Commercial Service",
-        )
-
     def test_does_not_show_contract_variation_link_if_no_variation(self, data_api_client, s3):
         self.login()
         data_api_client.get_framework.return_value = get_g_cloud_8()
@@ -5010,41 +4967,6 @@ class TestContractReviewPage(BaseApplicationTest):
                     "agreedAt": "2016-06-06T00:00:00.000000Z",
                 }
             }
-        )['frameworkInterest']
-        data_api_client.get_framework_agreement.return_value = self.framework_agreement(
-            signed_agreement_details={"signerName": "signer_name", "signerRole": "signer_role"},
-            signed_agreement_path="I/have/returned/my/agreement.pdf"
-        )
-
-        s3.return_value.get_key.return_value = {'last_modified': '2016-07-10T21:18:00.000000Z'}
-
-        res = self.client.post(
-            "/suppliers/frameworks/g-cloud-8/234/contract-review",
-            data={'authorisation': 'I have the authority to return this agreement on behalf of company name'}
-        )
-
-        assert res.status_code == 302
-        assert res.location == 'http://localhost/suppliers/frameworks/g-cloud-8'
-
-    @mock.patch('dmutils.s3.S3')
-    @mock.patch('app.main.views.frameworks.mandrill_send_email')
-    def test_framework_agreement_returned_with_feature_flag_off_redirects_to_framework_dashboard(
-        self, mandrill_send_email, s3, return_supplier_framework, data_api_client
-    ):
-        self.login()
-        self.app.config['FEATURE_FLAGS_CONTRACT_VARIATION'] = False
-
-        framework = get_g_cloud_8()
-        framework['frameworks']['variations'] = {"1": {"createdAt": "2016-06-06T20:01:34.000000Z"}}
-        data_api_client.get_framework.return_value = framework
-        return_supplier_framework.return_value = self.supplier_framework(
-            framework_slug='g-cloud-8',
-            on_framework=True,
-            declaration={
-                "primaryContact": "contact name",
-                "primaryContactEmail": "email@email.com",
-                "nameOfOrganisation": "£unicodename"
-            },
         )['frameworkInterest']
         data_api_client.get_framework_agreement.return_value = self.framework_agreement(
             signed_agreement_details={"signerName": "signer_name", "signerRole": "signer_role"},
