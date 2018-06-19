@@ -8,7 +8,7 @@ from dmutils.dates import update_framework_with_formatted_dates
 from dmutils.documents import upload_service_documents
 from dmutils.forms import get_errors_from_wtform
 
-from ... import data_api_client, flask_featureflags
+from ... import data_api_client
 from ...main import main, content_loader
 from ..helpers import login_required
 from ..helpers.services import (
@@ -158,7 +158,6 @@ def remove_service(framework_slug, service_id):
     methods=['GET'],
 )
 @login_required
-@flask_featureflags.is_active_feature('EDIT_SECTIONS')
 def edit_section(framework_slug, service_id, section_id):
     service = data_api_client.get_service(service_id)
     if service is None:
@@ -195,7 +194,6 @@ def edit_section(framework_slug, service_id, section_id):
     methods=['POST'],
 )
 @login_required
-@flask_featureflags.is_active_feature('EDIT_SECTIONS')
 def update_section(framework_slug, service_id, section_id):
     service = data_api_client.get_service(service_id)
     if service is None:
