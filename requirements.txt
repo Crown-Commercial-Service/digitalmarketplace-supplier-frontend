@@ -6,7 +6,7 @@ Flask==0.10.1
 Flask-Login==0.2.11
 Flask-WTF==0.14.2
 
-git+https://github.com/alphagov/digitalmarketplace-utils.git@38.1.0#egg=digitalmarketplace-utils==38.1.0
+git+https://github.com/alphagov/digitalmarketplace-utils.git@39.3.0#egg=digitalmarketplace-utils==39.3.0
 git+https://github.com/alphagov/digitalmarketplace-content-loader.git@4.10.1#egg=digitalmarketplace-content-loader==4.10.1
 git+https://github.com/alphagov/digitalmarketplace-apiclient.git@16.0.0#egg=digitalmarketplace-apiclient==16.0.0
 
@@ -25,7 +25,7 @@ docutils==0.14
 Flask-FeatureFlags==0.6
 Flask-Script==2.0.6
 future==0.16.0
-idna==2.6
+idna==2.7
 inflection==0.3.1
 itsdangerous==0.24
 Jinja2==2.10
@@ -50,4 +50,4 @@ unicodecsv==0.14.1
 urllib3==1.22
 Werkzeug==0.14.1
 workdays==1.4
-WTForms==2.2
+WTForms==2.2.1
