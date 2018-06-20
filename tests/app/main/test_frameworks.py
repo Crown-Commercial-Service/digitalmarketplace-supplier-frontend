@@ -3686,7 +3686,9 @@ class TestFrameworkUpdatesPage(BaseApplicationTest):
         assert response.status_code == 200
         assert u'Ask a question about your G-Cloud 7 application' not in data
 
-
+@mock.patch('dmutils.s3.S3')
+@mock.patch('app.main.views.frameworks.DMNotifyClient.send_email', autospec=True)
+@mock.patch('app.main.views.frameworks.mandrill_send_email')
 class TestSendClarificationQuestionEmail(BaseApplicationTest):
 
     def setup_method(self, method):
@@ -3754,9 +3756,6 @@ class TestSendClarificationQuestionEmail(BaseApplicationTest):
                 reply_to="email@email.com",
             )
 
-    @mock.patch('dmutils.s3.S3')
-    @mock.patch('app.main.views.frameworks.DMNotifyClient.send_email', autospec=True)
-    @mock.patch('app.main.views.frameworks.mandrill_send_email')
     def test_should_call_send_email_with_correct_params(self, mandrill_send_email, notify_send_email, s3):
         self.data_api_client.get_framework.return_value = self.framework('open', name='Test Framework')
 
@@ -3772,9 +3771,6 @@ class TestSendClarificationQuestionEmail(BaseApplicationTest):
             'clarification questions will be published on this page.</p>'
         ) in self.strip_all_whitespace(response.get_data(as_text=True))
 
-    @mock.patch('dmutils.s3.S3')
-    @mock.patch('app.main.views.frameworks.DMNotifyClient.send_email', autospec=True)
-    @mock.patch('app.main.views.frameworks.mandrill_send_email')
     def test_should_call_send_g7_email_with_correct_params(self, mandrill_send_email, notify_send_email, s3):
         self.data_api_client.get_framework.return_value = self.framework(
             'open', name='Test Framework', clarification_questions_open=False
@@ -3803,9 +3799,6 @@ class TestSendClarificationQuestionEmail(BaseApplicationTest):
             {'question': ('ten__chars' * 500) + '1', 'error_message': 'Question cannot be longer than 5000 characters'}
         )
     )
-    @mock.patch('dmutils.s3.S3')
-    @mock.patch('app.main.views.frameworks.DMNotifyClient.send_email', autospec=True)
-    @mock.patch('app.main.views.frameworks.mandrill_send_email')
     def test_should_not_send_email_if_invalid_clarification_question(
         self,
         mandrill_send_email,
@@ -3830,9 +3823,6 @@ class TestSendClarificationQuestionEmail(BaseApplicationTest):
             in self.strip_all_whitespace(response.get_data(as_text=True))
         )
 
-    @mock.patch('dmutils.s3.S3')
-    @mock.patch('app.main.views.frameworks.DMNotifyClient.send_email', autospec=True)
-    @mock.patch('app.main.views.frameworks.mandrill_send_email')
     def test_should_create_audit_event(self, mandrill_send_email, notify_send_email, s3):
         self.data_api_client.get_framework.return_value = self.framework('open', name='Test Framework')
         clarification_question = 'This is a clarification question'
@@ -3850,9 +3840,6 @@ class TestSendClarificationQuestionEmail(BaseApplicationTest):
             data={"question": clarification_question, 'framework': 'g-cloud-7'}
         )
 
-    @mock.patch('dmutils.s3.S3')
-    @mock.patch('app.main.views.frameworks.DMNotifyClient.send_email', autospec=True)
-    @mock.patch('app.main.views.frameworks.mandrill_send_email')
     def test_should_create_g7_question_audit_event(self, mandrill_send_email, notify_send_email, s3):
         self.data_api_client.get_framework.return_value = self.framework(
             'open', name='Test Framework', clarification_questions_open=False
@@ -3871,9 +3858,7 @@ class TestSendClarificationQuestionEmail(BaseApplicationTest):
             data={"question": clarification_question, 'framework': 'g-cloud-7'}
         )
 
-    @mock.patch('app.main.views.frameworks.DMNotifyClient.send_email', autospec=True)
-    @mock.patch('app.main.views.frameworks.mandrill_send_email')
-    def test_should_be_a_503_if_email_fails(self, mandrill_send_email, notify_send_email):
+    def test_should_be_a_503_if_email_fails(self, mandrill_send_email, notify_send_email, s3):
         self.data_api_client.get_framework.return_value = self.framework('open', name='Test Framework')
         mandrill_send_email.side_effect = EmailError("Arrrgh")
 
@@ -4528,6 +4513,7 @@ class TestSignerDetailsPage(BaseApplicationTest):
 
 
 @mock.patch("app.main.views.frameworks.return_supplier_framework_info_if_on_framework_or_abort")
+@mock.patch('dmutils.s3.S3')
 class TestSignatureUploadPage(BaseApplicationTest):
 
     def setup_method(self, method):
@@ -4540,9 +4526,8 @@ class TestSignatureUploadPage(BaseApplicationTest):
         super().teardown_method(method)
 
     @mock.patch('app.main.views.frameworks.check_agreement_is_related_to_supplier_framework_or_abort')
-    @mock.patch('dmutils.s3.S3')
     def test_we_abort_if_agreement_does_not_match_supplier_framework(
-        self, s3, check_agreement_is_related_to_supplier_framework_or_abort, return_supplier_framework
+        self, check_agreement_is_related_to_supplier_framework_or_abort, s3, return_supplier_framework
     ):
         self.login()
         self.data_api_client.get_framework.return_value = get_g_cloud_8()
@@ -4558,7 +4543,6 @@ class TestSignatureUploadPage(BaseApplicationTest):
             supplier_framework
         )
 
-    @mock.patch('dmutils.s3.S3')
     @mock.patch('app.main.views.frameworks.generate_timestamped_document_upload_path')
     @mock.patch('app.main.views.frameworks.session', new_callable=dict)
     def test_upload_signature_page(
@@ -4603,7 +4587,6 @@ class TestSignatureUploadPage(BaseApplicationTest):
         assert res.status_code == 302
         assert res.location == 'http://localhost/suppliers/frameworks/g-cloud-8/234/contract-review'
 
-    @mock.patch('dmutils.s3.S3')
     def test_signature_upload_returns_400_if_no_file_is_chosen(self, s3, return_supplier_framework):
         self.login()
 
@@ -4623,7 +4606,6 @@ class TestSignatureUploadPage(BaseApplicationTest):
         assert res.status_code == 400
         assert 'You must choose a file to upload' in res.get_data(as_text=True)
 
-    @mock.patch('dmutils.s3.S3')
     def test_signature_upload_returns_400_if_file_is_empty(self, s3, return_supplier_framework):
         self.login()
 
@@ -4643,10 +4625,7 @@ class TestSignatureUploadPage(BaseApplicationTest):
         assert res.status_code == 400
         assert 'The file must not be empty' in res.get_data(as_text=True)
 
-    @mock.patch('dmutils.s3.S3')
-    def test_signature_upload_returns_400_if_file_is_not_image_or_pdf(
-        self, s3, return_supplier_framework
-    ):
+    def test_signature_upload_returns_400_if_file_is_not_image_or_pdf(self, s3, return_supplier_framework):
         self.login()
 
         self.data_api_client.get_framework.return_value = get_g_cloud_8()
@@ -4665,7 +4644,6 @@ class TestSignatureUploadPage(BaseApplicationTest):
         assert res.status_code == 400
         assert 'The file must be a PDF, JPG or PNG' in res.get_data(as_text=True)
 
-    @mock.patch('dmutils.s3.S3')
     @mock.patch('app.main.views.frameworks.file_is_less_than_5mb')
     def test_signature_upload_returns_400_if_file_is_larger_than_5mb(
         self, file_is_less_than_5mb, s3, return_supplier_framework
@@ -4689,10 +4667,7 @@ class TestSignatureUploadPage(BaseApplicationTest):
         assert res.status_code == 400
         assert 'The file must be less than 5MB' in res.get_data(as_text=True)
 
-    @mock.patch('dmutils.s3.S3')
-    def test_signature_page_displays_uploaded_filename_and_timestamp(
-        self, s3, return_supplier_framework
-    ):
+    def test_signature_page_displays_uploaded_filename_and_timestamp(self, s3, return_supplier_framework):
         self.data_api_client.get_framework.return_value = get_g_cloud_8()
         self.data_api_client.get_framework_agreement.return_value = self.framework_agreement(
             signed_agreement_path='already/uploaded/file/path.pdf'
@@ -4715,9 +4690,8 @@ class TestSignatureUploadPage(BaseApplicationTest):
         assert res.status_code == 200
         assert "test.pdf, uploaded Sunday 10 July 2016 at 10:18pm" in res.get_data(as_text=True)
 
-    @mock.patch('dmutils.s3.S3')
     def test_signature_page_displays_file_upload_timestamp_if_no_filename_in_session(
-            self, s3, return_supplier_framework
+        self, s3, return_supplier_framework
     ):
         self.data_api_client.get_framework.return_value = get_g_cloud_8()
         self.data_api_client.get_framework_agreement.return_value = self.framework_agreement(
@@ -4736,9 +4710,8 @@ class TestSignatureUploadPage(BaseApplicationTest):
         assert res.status_code == 200
         assert "Uploaded Sunday 10 July 2016 at 10:18pm" in res.get_data(as_text=True)
 
-    @mock.patch('dmutils.s3.S3')
     def test_signature_page_allows_continuation_without_file_chosen_to_be_uploaded_if_an_uploaded_file_already_exists(
-            self, s3, return_supplier_framework
+        self, s3, return_supplier_framework
     ):
         self.data_api_client.get_framework.return_value = get_g_cloud_8()
         self.data_api_client.get_framework_agreement.return_value = self.framework_agreement(
@@ -4762,6 +4735,8 @@ class TestSignatureUploadPage(BaseApplicationTest):
 
 
 @mock.patch("app.main.views.frameworks.return_supplier_framework_info_if_on_framework_or_abort")
+@mock.patch('dmutils.s3.S3')
+@mock.patch('app.main.views.frameworks.mandrill_send_email')
 class TestContractReviewPage(BaseApplicationTest):
 
     def setup_method(self, method):
@@ -4773,9 +4748,8 @@ class TestContractReviewPage(BaseApplicationTest):
         self.data_api_client_patch.stop()
         super().teardown_method(method)
 
-    @mock.patch('dmutils.s3.S3')
     def test_contract_review_page_loads_with_correct_supplier_and_signer_details_and_filename(
-        self, s3, return_supplier_framework
+        self, mandrill_send_email, s3, return_supplier_framework
     ):
         self.login()
         self.data_api_client.get_framework.return_value = get_g_cloud_8()
@@ -4810,9 +4784,8 @@ class TestContractReviewPage(BaseApplicationTest):
         "gave in your G-Cloud 8 application, contact name at email@email.com." in page
         assert '<tdclass="summary-item-field-first"><span>test.pdf</span></td>' in page_without_whitespace
 
-    @mock.patch('dmutils.s3.S3')
     def test_contract_review_page_loads_with_uploaded_time_of_file_if_no_filename_in_session(
-            self, s3, return_supplier_framework
+        self, mandrill_send_email, s3, return_supplier_framework
     ):
         self.login()
         self.data_api_client.get_framework.return_value = get_g_cloud_8()
@@ -4842,9 +4815,8 @@ class TestContractReviewPage(BaseApplicationTest):
             in self.strip_all_whitespace(page)
         )
 
-    @mock.patch('dmutils.s3.S3')
     def test_contract_review_page_aborts_if_visited_when_information_required_to_return_agreement_does_not_exist(
-        self, s3, return_supplier_framework
+        self, mandrill_send_email, s3, return_supplier_framework
     ):
         self.login()
         self.data_api_client.get_framework.return_value = get_g_cloud_8()
@@ -4869,9 +4841,12 @@ class TestContractReviewPage(BaseApplicationTest):
         assert res.status_code == 404
 
     @mock.patch('app.main.views.frameworks.check_agreement_is_related_to_supplier_framework_or_abort')
-    @mock.patch('dmutils.s3.S3')
     def test_we_abort_if_agreement_does_not_match_supplier_framework(
-        self, s3, check_agreement_is_related_to_supplier_framework_or_abort, return_supplier_framework
+        self,
+        check_agreement_is_related_to_supplier_framework_or_abort,
+        mandrill_send_email,
+        s3,
+        return_supplier_framework
     ):
         self.login()
         self.data_api_client.get_framework.return_value = get_g_cloud_8()
@@ -4887,10 +4862,9 @@ class TestContractReviewPage(BaseApplicationTest):
             supplier_framework
         )
 
-    @mock.patch('dmutils.s3.S3')
-    @mock.patch('app.main.views.frameworks.mandrill_send_email')
+
     def test_return_400_response_and_no_email_sent_if_authorisation_not_checked(
-            self, mandrill_send_email, s3, return_supplier_framework
+        self, mandrill_send_email, s3, return_supplier_framework
     ):
         self.login()
         self.data_api_client.get_framework.return_value = get_g_cloud_8()
@@ -4915,8 +4889,6 @@ class TestContractReviewPage(BaseApplicationTest):
         assert mandrill_send_email.called is False
         assert "You must confirm you have the authority to return the agreement" in page
 
-    @mock.patch('dmutils.s3.S3')
-    @mock.patch('app.main.views.frameworks.mandrill_send_email')
     def test_valid_framework_agreement_returned_updates_api_and_sends_confirmation_emails_and_unsets_session(
         self, mandrill_send_email, s3, return_supplier_framework
     ):
@@ -4966,8 +4938,6 @@ class TestContractReviewPage(BaseApplicationTest):
         with self.client.session_transaction() as sess:
             assert 'signature_page' not in sess
 
-    @mock.patch('dmutils.s3.S3')
-    @mock.patch('app.main.views.frameworks.mandrill_send_email')
     def test_valid_framework_agreement_returned_sends_only_one_confirmation_email_if_contact_email_addresses_are_equal(
         self, mandrill_send_email, s3, return_supplier_framework
     ):
@@ -5003,10 +4973,8 @@ class TestContractReviewPage(BaseApplicationTest):
             ['g-cloud-8-framework-agreement']
         )
 
-    @mock.patch('dmutils.s3.S3')
-    @mock.patch('app.main.views.frameworks.mandrill_send_email')
     def test_return_503_response_if_mandrill_exception_raised_by_send_email(
-            self, mandrill_send_email, s3, return_supplier_framework
+        self, mandrill_send_email, s3, return_supplier_framework
     ):
         self.login()
         self.data_api_client.get_framework.return_value = get_g_cloud_8()
@@ -5036,11 +5004,7 @@ class TestContractReviewPage(BaseApplicationTest):
 
         assert res.status_code == 503
 
-    @mock.patch('dmutils.s3.S3')
-    @mock.patch('app.main.views.frameworks.mandrill_send_email')
-    def test_email_not_sent_if_api_call_fails(
-            self, mandrill_send_email, s3, return_supplier_framework
-    ):
+    def test_email_not_sent_if_api_call_fails(self, mandrill_send_email, s3, return_supplier_framework):
         self.login()
         self.data_api_client.get_framework.return_value = get_g_cloud_8()
         self.data_api_client.sign_framework_agreement.side_effect = APIError(mock.Mock(status_code=500))
@@ -5068,8 +5032,6 @@ class TestContractReviewPage(BaseApplicationTest):
         assert res.status_code == 500
         assert mandrill_send_email.called is False
 
-    @mock.patch('dmutils.s3.S3')
-    @mock.patch('app.main.views.frameworks.mandrill_send_email')
     def test_framework_agreement_returned_having_signed_contract_variation_redirects_to_framework_dashboard(
         self, mandrill_send_email, s3, return_supplier_framework
     ):
@@ -5146,8 +5108,6 @@ class TestContractReviewPage(BaseApplicationTest):
         assert res.status_code == 302
         assert res.location == 'http://localhost/suppliers/frameworks/g-cloud-8/contract-variation/1'
 
-    @mock.patch('dmutils.s3.S3')
-    @mock.patch('app.main.views.frameworks.mandrill_send_email')
     def test_framework_agreement_returned_for_framework_with_no_variations_redirects_to_framework_dashboard(
         self, mandrill_send_email, s3, return_supplier_framework
     ):
