@@ -259,7 +259,8 @@ def edit_supplier_registration_number():
         return (
             render_template(
                 "suppliers/already_completed.html",
-                completed_data_description="registration number"
+                completed_data_description="registration number",
+                company_details_change_email=current_app.config['DM_COMPANY_DETAILS_CHANGE_EMAIL'],
             ),
             200 if request.method == 'GET' else 400
         )
@@ -464,7 +465,9 @@ def edit_supplier_vat_number():
 
     if supplier.get("vatNumber") and supplier.get('companyDetailsConfirmed'):
         return (
-            render_template("suppliers/already_completed.html", completed_data_description="VAT number"),
+            render_template("suppliers/already_completed.html",
+                            completed_data_description="VAT number",
+                            company_details_change_email=current_app.config['DM_COMPANY_DETAILS_CHANGE_EMAIL'],),
             200 if request.method == 'GET' else 400
         )
 
@@ -511,7 +514,9 @@ def edit_supplier_vat_number():
 @main.route('/duns-number/edit', methods=['GET', 'POST'])
 def edit_supplier_duns_number():
     return (
-        render_template("suppliers/already_completed.html", completed_data_description="DUNS number"),
+        render_template("suppliers/already_completed.html",
+                        completed_data_description="DUNS number",
+                        company_details_change_email=current_app.config['DM_COMPANY_DETAILS_CHANGE_EMAIL'],),
         200 if request.method == 'GET' else 400
     )
 
