@@ -5046,8 +5046,6 @@ class TestContractReviewPage(BaseApplicationTest):
         assert res.status_code == 302
         assert res.location == 'http://localhost/suppliers/frameworks/g-cloud-8'
 
-    @mock.patch('dmutils.s3.S3')
-    @mock.patch('app.main.views.frameworks.mandrill_send_email')
     def test_framework_agreement_returned_having_not_signed_contract_variation_redirects_to_variation(
         self, mandrill_send_email, s3, return_supplier_framework
     ):
