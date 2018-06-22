@@ -105,11 +105,18 @@ def get_user():
     }]
 
 
-@mock.patch("app.main.views.suppliers.data_api_client", autospec=True)
 class TestSuppliersDashboard(BaseApplicationTest):
-    def test_error_and_success_flashed_messages_only_are_shown_in_banner_messages(
-        self, data_api_client
-    ):
+
+    def setup_method(self, method):
+        super().setup_method(method)
+        self.data_api_client_patch = mock.patch('app.main.views.suppliers.data_api_client', autospec=True)
+        self.data_api_client = self.data_api_client_patch.start()
+
+    def teardown_method(self, method):
+        self.data_api_client_patch.stop()
+        super().teardown_method(method)
+
+    def test_error_and_success_flashed_messages_only_are_shown_in_banner_messages(self):
         with self.client.session_transaction() as session:
             session['_flashes'] = [
                 ('error', 'This is an error'),
@@ -117,50 +124,43 @@ class TestSuppliersDashboard(BaseApplicationTest):
                 ('track-page-view', '/suppliers?account-created=true')
             ]
 
-        data_api_client.get_framework.return_value = self.framework('open')
-        data_api_client.get_supplier.side_effect = get_supplier
-        data_api_client.find_audit_events.return_value = {
+        self.data_api_client.get_framework.return_value = self.framework('open')
+        self.data_api_client.get_supplier.side_effect = get_supplier
+        self.data_api_client.find_audit_events.return_value = {
             "auditEvents": []
         }
-        with self.app.test_client():
-            self.login()
+        self.login()
 
-            res = self.client.get("/suppliers")
-            data = self.strip_all_whitespace(res.get_data(as_text=True))
+        res = self.client.get("/suppliers")
+        data = self.strip_all_whitespace(res.get_data(as_text=True))
 
-            assert '<pclass="banner-message">Thisisanerror</p>' in data
-            assert '<pclass="banner-message">Thisisasuccess</p>' in data
-            assert '<pclass="banner-message">account-created</p>' not in data
+        assert '<pclass="banner-message">Thisisanerror</p>' in data
+        assert '<pclass="banner-message">Thisisasuccess</p>' in data
+        assert '<pclass="banner-message">account-created</p>' not in data
 
-    def test_data_analytics_track_page_view_is_shown_if_account_created_flag_flash_message(
-        self, data_api_client
-    ):
+    def test_data_analytics_track_page_view_is_shown_if_account_created_flag_flash_message(self):
         with self.client.session_transaction() as session:
             session['_flashes'] = [('track-page-view', '/suppliers?account-created=true')]
 
-        with self.app.test_client():
-            self.login()
+        self.login()
 
-            res = self.client.get("/suppliers")
-            data = res.get_data(as_text=True)
+        res = self.client.get("/suppliers")
+        data = res.get_data(as_text=True)
 
-            assert 'data-analytics="trackPageView" data-url="/suppliers?account-created=true"' in data
+        assert 'data-analytics="trackPageView" data-url="/suppliers?account-created=true"' in data
 
-    def test_data_analytics_track_page_view_is_not_shown_if_no_account_created_flag_flash_message(
-        self, data_api_client
-    ):
-        with self.app.test_client():
-            self.login()
+    def test_data_analytics_track_page_view_is_not_shown_if_no_account_created_flag_flash_message(self):
+        self.login()
 
-            res = self.client.get("/suppliers")
-            data = res.get_data(as_text=True)
+        res = self.client.get("/suppliers")
+        data = res.get_data(as_text=True)
 
-            assert 'data-analytics="trackPageView" data-url="/suppliers?account-created=true"' not in data
+        assert 'data-analytics="trackPageView" data-url="/suppliers?account-created=true"' not in data
 
-    def test_shows_edit_buttons(self, data_api_client):
-        data_api_client.get_supplier.side_effect = get_supplier
-        data_api_client.find_frameworks.return_value = FIND_FRAMEWORKS_RETURN_VALUE
-        data_api_client.get_supplier_frameworks.return_value = {
+    def test_shows_edit_buttons(self):
+        self.data_api_client.get_supplier.side_effect = get_supplier
+        self.data_api_client.find_frameworks.return_value = FIND_FRAMEWORKS_RETURN_VALUE
+        self.data_api_client.get_supplier_frameworks.return_value = {
             'frameworkInterest': [
                 {
                     'frameworkSlug': 'h-cloud-88',
@@ -176,48 +176,46 @@ class TestSuppliersDashboard(BaseApplicationTest):
                 },
             ],
         }
-        with self.app.test_client():
-            self.login()
 
-            res = self.client.get("/suppliers")
-            assert res.status_code == 200
+        self.login()
 
-            document = html.fromstring(res.get_data(as_text=True))
+        res = self.client.get("/suppliers")
+        assert res.status_code == 200
 
-            assert document.xpath(
-                "//*[(.//h3)[1][normalize-space(string())=$f]][.//a[normalize-space(string())=$t][@href=$u]]",
-                f="G-Cloud 6",
-                t="View services",
-                u="/suppliers/frameworks/g-cloud-6/services",
-            )
+        document = html.fromstring(res.get_data(as_text=True))
 
-            assert not document.xpath(
-                "//*[(.//h3)[1][normalize-space(string())=$f]][.//a[normalize-space(string())=$t]]",
-                f="G-Cloud 7",
-                t="View services",
-            )
-            assert not document.xpath("//a[@href=$u]", u="/suppliers/frameworks/g-cloud-7/services")
-            assert not document.xpath(
-                "//*[(.//h3)[1][normalize-space(string())=$f]][.//a[normalize-space(string())=$t]]",
-                f="H-Cloud 88",
-                t="View services",
-            )
-            assert not document.xpath("//a[@href=$u]", u="/suppliers/frameworks/h-cloud-88/services")
-            assert not document.xpath(
-                "//*[(.//h3)[1][normalize-space(string())=$f]][.//a[normalize-space(string())=$t]]",
-                f="Digital Rhymes and Reasons",
-                t="View services",
-            )
-            assert not document.xpath("//a[@href=$u]", u="/suppliers/frameworks/digital-rhymes-and-reasons/services")
+        assert document.xpath(
+            "//*[(.//h3)[1][normalize-space(string())=$f]][.//a[normalize-space(string())=$t][@href=$u]]",
+            f="G-Cloud 6",
+            t="View services",
+            u="/suppliers/frameworks/g-cloud-6/services",
+        )
 
-    def test_shows_dos_is_coming(
-        self, data_api_client
-    ):
-        data_api_client.get_supplier.side_effect = get_supplier
-        data_api_client.get_supplier_frameworks.return_value = {
+        assert not document.xpath(
+            "//*[(.//h3)[1][normalize-space(string())=$f]][.//a[normalize-space(string())=$t]]",
+            f="G-Cloud 7",
+            t="View services",
+        )
+        assert not document.xpath("//a[@href=$u]", u="/suppliers/frameworks/g-cloud-7/services")
+        assert not document.xpath(
+            "//*[(.//h3)[1][normalize-space(string())=$f]][.//a[normalize-space(string())=$t]]",
+            f="H-Cloud 88",
+            t="View services",
+        )
+        assert not document.xpath("//a[@href=$u]", u="/suppliers/frameworks/h-cloud-88/services")
+        assert not document.xpath(
+            "//*[(.//h3)[1][normalize-space(string())=$f]][.//a[normalize-space(string())=$t]]",
+            f="Digital Rhymes and Reasons",
+            t="View services",
+        )
+        assert not document.xpath("//a[@href=$u]", u="/suppliers/frameworks/digital-rhymes-and-reasons/services")
+
+    def test_shows_dos_is_coming(self):
+        self.data_api_client.get_supplier.side_effect = get_supplier
+        self.data_api_client.get_supplier_frameworks.return_value = {
             'frameworkInterest': []
         }
-        data_api_client.find_frameworks.return_value = {
+        self.data_api_client.find_frameworks.return_value = {
             "frameworks": [
                 framework_stub(status='coming', slug='bad-framework',
                                name='Framework that should’t have coming message')['frameworks'],
@@ -226,88 +224,85 @@ class TestSuppliersDashboard(BaseApplicationTest):
             ]
         }
 
-        with self.app.test_client():
-            self.login()
-            res = self.client.get("/suppliers")
-            doc = html.fromstring(res.get_data(as_text=True))
+        self.login()
+        res = self.client.get("/suppliers")
+        doc = html.fromstring(res.get_data(as_text=True))
 
-            message = doc.xpath('//div[@class="temporary-message"]')
-            assert len(message) == 1
-            assert u"Digital Outcomes and Specialists will be open for applications soon" in \
-                message[0].xpath('h3/text()')[0]
-            assert u"We’ll email you when you can apply to Digital Outcomes and Specialists" in \
-                message[0].xpath('p/text()')[0]
-            assert u"Find out if your services are suitable" in message[0].xpath('p/a/text()')[0]
+        message = doc.xpath('//div[@class="temporary-message"]')
+        assert len(message) == 1
+        assert u"Digital Outcomes and Specialists will be open for applications soon" in \
+            message[0].xpath('h3/text()')[0]
+        assert u"We’ll email you when you can apply to Digital Outcomes and Specialists" in \
+            message[0].xpath('p/text()')[0]
+        assert u"Find out if your services are suitable" in message[0].xpath('p/a/text()')[0]
 
-    def test_shows_gcloud_7_application_button(self, data_api_client):
-        data_api_client.get_framework_interest.return_value = {'frameworks': []}
-        data_api_client.get_supplier.side_effect = get_supplier
-        data_api_client.find_frameworks.return_value = {
+    def test_shows_gcloud_7_application_button(self):
+        self.data_api_client.get_framework_interest.return_value = {'frameworks': []}
+        self.data_api_client.get_supplier.side_effect = get_supplier
+        self.data_api_client.find_frameworks.return_value = {
             "frameworks": [
                 framework_stub(status='expired', slug='digital-outcomes-and-specialists')['frameworks'],
                 framework_stub(status='open', slug='g-cloud-7')['frameworks'],
             ]
         }
-        with self.app.test_client():
-            self.login()
 
-            response = self.client.get("/suppliers")
-            document = html.fromstring(response.get_data(as_text=True))
+        self.login()
 
-            assert response.status_code == 200
+        response = self.client.get("/suppliers")
+        document = html.fromstring(response.get_data(as_text=True))
 
-            apply_button = document.xpath(
-                "//h2[normalize-space()='G-Cloud 7 is open for applications']/following::input[1]"
-            )[0]
+        assert response.status_code == 200
 
-            assert apply_button.value == "Apply"
+        apply_button = document.xpath(
+            "//h2[normalize-space()='G-Cloud 7 is open for applications']/following::input[1]"
+        )[0]
 
-    def test_shows_gcloud_7_continue_link(self, data_api_client):
-        data_api_client.get_supplier.side_effect = get_supplier
-        data_api_client.get_supplier_frameworks.return_value = {
+        assert apply_button.value == "Apply"
+
+    def test_shows_gcloud_7_continue_link(self):
+        self.data_api_client.get_supplier.side_effect = get_supplier
+        self.data_api_client.get_supplier_frameworks.return_value = {
             'frameworkInterest': [
                 {'frameworkSlug': 'g-cloud-7'}
             ]
         }
-        data_api_client.find_frameworks.return_value = FIND_FRAMEWORKS_RETURN_VALUE
-        with self.app.test_client():
-            self.login()
+        self.data_api_client.find_frameworks.return_value = FIND_FRAMEWORKS_RETURN_VALUE
+        self.login()
 
-            response = self.client.get("/suppliers")
-            document = html.fromstring(response.get_data(as_text=True))
+        response = self.client.get("/suppliers")
+        document = html.fromstring(response.get_data(as_text=True))
 
-            assert response.status_code == 200
-            continue_link = document.xpath(
-                "//h2[normalize-space()='Your G-Cloud 7 application']"
-                "/following::a[1][normalize-space()='Continue your application']"
-            )
-            assert continue_link
-            assert continue_link[0].values()[0] == "/suppliers/frameworks/g-cloud-7"
+        assert response.status_code == 200
+        continue_link = document.xpath(
+            "//h2[normalize-space()='Your G-Cloud 7 application']"
+            "/following::a[1][normalize-space()='Continue your application']"
+        )
+        assert continue_link
+        assert continue_link[0].values()[0] == "/suppliers/frameworks/g-cloud-7"
 
-    def test_shows_gcloud_7_closed_message_if_pending_and_no_interest(self, data_api_client):  # noqa
-        data_api_client.get_framework.return_value = self.framework('pending')
-        data_api_client.get_supplier.side_effect = get_supplier
-        data_api_client.get_supplier_frameworks.return_value = {'frameworkInterest': []}
-        data_api_client.find_frameworks.return_value = {
+    def test_shows_gcloud_7_closed_message_if_pending_and_no_interest(self):  # noqa
+        self.data_api_client.get_framework.return_value = self.framework('pending')
+        self.data_api_client.get_supplier.side_effect = get_supplier
+        self.data_api_client.get_supplier_frameworks.return_value = {'frameworkInterest': []}
+        self.data_api_client.find_frameworks.return_value = {
             "frameworks": [
                 framework_stub(status='pending', slug='g-cloud-7')['frameworks'],
             ]
         }
-        with self.app.test_client():
-            self.login()
+        self.login()
 
-            res = self.client.get("/suppliers")
-            doc = html.fromstring(res.get_data(as_text=True))
+        res = self.client.get("/suppliers")
+        doc = html.fromstring(res.get_data(as_text=True))
 
-            message = doc.xpath('//aside[@class="temporary-message"]')
-            assert len(message) > 0
-            assert u"G-Cloud 7 is closed for applications" in message[0].xpath('h2/text()')[0]
-            assert len(message[0].xpath('p[1]/a[@href="https://digitalmarketplace.blog.gov.uk/"]')) > 0
+        message = doc.xpath('//aside[@class="temporary-message"]')
+        assert len(message) > 0
+        assert u"G-Cloud 7 is closed for applications" in message[0].xpath('h2/text()')[0]
+        assert len(message[0].xpath('p[1]/a[@href="https://digitalmarketplace.blog.gov.uk/"]')) > 0
 
-    def test_shows_gcloud_7_closed_message_if_pending_and_no_application(self, data_api_client):  # noqa
-        data_api_client.get_framework.return_value = self.framework('pending')
-        data_api_client.get_supplier.side_effect = get_supplier
-        data_api_client.get_supplier_frameworks.return_value = {
+    def test_shows_gcloud_7_closed_message_if_pending_and_no_application(self):  # noqa
+        self.data_api_client.get_framework.return_value = self.framework('pending')
+        self.data_api_client.get_supplier.side_effect = get_supplier
+        self.data_api_client.get_supplier_frameworks.return_value = {
             'frameworkInterest': [
                 {
                     'frameworkSlug': 'g-cloud-7',
@@ -317,28 +312,25 @@ class TestSuppliersDashboard(BaseApplicationTest):
                 }
             ]
         }
-        data_api_client.find_frameworks.return_value = {
+        self.data_api_client.find_frameworks.return_value = {
             "frameworks": [
                 framework_stub(status='pending', slug='g-cloud-7')['frameworks'],
             ]
         }
-        with self.app.test_client():
-            self.login()
+        self.login()
 
-            res = self.client.get("/suppliers")
-            doc = html.fromstring(res.get_data(as_text=True))
+        res = self.client.get("/suppliers")
+        doc = html.fromstring(res.get_data(as_text=True))
 
-            message = doc.xpath('//aside[@class="temporary-message"]')
-            assert len(message) > 0
-            assert u"G-Cloud 7 is closed for applications" in message[0].xpath('h2/text()')[0]
-            assert u"You didn’t submit an application" in message[0].xpath('p[1]/text()')[0]
-            assert len(message[0].xpath('p[2]/a[contains(@href, "suppliers/frameworks/g-cloud-7")]')) > 0
+        message = doc.xpath('//aside[@class="temporary-message"]')
+        assert len(message) > 0
+        assert u"G-Cloud 7 is closed for applications" in message[0].xpath('h2/text()')[0]
+        assert u"You didn’t submit an application" in message[0].xpath('p[1]/text()')[0]
+        assert len(message[0].xpath('p[2]/a[contains(@href, "suppliers/frameworks/g-cloud-7")]')) > 0
 
-    def test_shows_gcloud_7_closed_message_if_pending_and_application_done(
-        self, data_api_client
-    ):
-        data_api_client.get_supplier.side_effect = get_supplier
-        data_api_client.get_supplier_frameworks.return_value = {
+    def test_shows_gcloud_7_closed_message_if_pending_and_application_done(self):
+        self.data_api_client.get_supplier.side_effect = get_supplier
+        self.data_api_client.get_supplier_frameworks.return_value = {
             'frameworkInterest': [
                 {
                     'frameworkSlug': 'g-cloud-7',
@@ -348,28 +340,24 @@ class TestSuppliersDashboard(BaseApplicationTest):
                 }
             ]
         }
-        data_api_client.find_frameworks.return_value = {
+        self.data_api_client.find_frameworks.return_value = {
             "frameworks": [
                 framework_stub(status='pending', slug='g-cloud-7')['frameworks'],
             ]
         }
+        self.login()
+        res = self.client.get("/suppliers")
+        doc = html.fromstring(res.get_data(as_text=True))
+        headings = doc.xpath('//h2[@class="summary-item-heading"]')
+        assert len(headings) > 0
+        assert u"G-Cloud 7 is closed for applications" in headings[0].xpath('text()')[0]
+        assert u"You submitted 99 services for consideration" in headings[0].xpath('../p[1]/text()')[0]
+        assert len(headings[0].xpath('../p[1]/a[contains(@href, "suppliers/frameworks/g-cloud-7")]')) > 0
+        assert u"View your submitted application" in headings[0].xpath('../p[1]/a/text()')[0]
 
-        with self.app.test_client():
-            self.login()
-            res = self.client.get("/suppliers")
-            doc = html.fromstring(res.get_data(as_text=True))
-            headings = doc.xpath('//h2[@class="summary-item-heading"]')
-            assert len(headings) > 0
-            assert u"G-Cloud 7 is closed for applications" in headings[0].xpath('text()')[0]
-            assert u"You submitted 99 services for consideration" in headings[0].xpath('../p[1]/text()')[0]
-            assert len(headings[0].xpath('../p[1]/a[contains(@href, "suppliers/frameworks/g-cloud-7")]')) > 0
-            assert u"View your submitted application" in headings[0].xpath('../p[1]/a/text()')[0]
-
-    def test_shows_gcloud_7_in_standstill_application_passed_with_message(
-        self, data_api_client
-    ):
-        data_api_client.get_supplier.side_effect = get_supplier
-        data_api_client.get_supplier_frameworks.return_value = {
+    def test_shows_gcloud_7_in_standstill_application_passed_with_message(self):
+        self.data_api_client.get_supplier.side_effect = get_supplier
+        self.data_api_client.get_supplier_frameworks.return_value = {
             'frameworkInterest': [
                 {
                     'frameworkSlug': 'g-cloud-7',
@@ -381,36 +369,33 @@ class TestSuppliersDashboard(BaseApplicationTest):
                 }
             ]
         }
-        data_api_client.find_frameworks.return_value = {
+        self.data_api_client.find_frameworks.return_value = {
             'frameworks': [self.framework(status='standstill', slug='g-cloud-7')['frameworks']]
         }
 
-        with self.app.test_client():
-            self.login()
-            res = self.client.get("/suppliers")
-            doc = html.fromstring(res.get_data(as_text=True))
-            headings = doc.xpath('//h2[@class="summary-item-heading"]')
+        self.login()
+        res = self.client.get("/suppliers")
+        doc = html.fromstring(res.get_data(as_text=True))
+        headings = doc.xpath('//h2[@class="summary-item-heading"]')
 
-            assert u"Pending services" in headings[0].xpath('text()')[0]
+        assert u"Pending services" in headings[0].xpath('text()')[0]
 
-            first_table = doc.xpath(
-                '//table[@class="summary-item-body"]'
-            )
+        first_table = doc.xpath(
+            '//table[@class="summary-item-body"]'
+        )
 
-            assert u"Pending services" in first_table[0].xpath('caption/text()')[0]
+        assert u"Pending services" in first_table[0].xpath('caption/text()')[0]
 
-            first_row = "".join(first_table[0].xpath('tbody/descendant::*/text()'))
-            assert u"G-Cloud 7" in first_row
-            assert u"Live from Monday 23 November 2015" in first_row
-            assert u"99 services" in first_row
-            assert u"99 services" in first_row
-            assert u"You must sign the framework agreement to sell these services" in first_row
+        first_row = "".join(first_table[0].xpath('tbody/descendant::*/text()'))
+        assert u"G-Cloud 7" in first_row
+        assert u"Live from Monday 23 November 2015" in first_row
+        assert u"99 services" in first_row
+        assert u"99 services" in first_row
+        assert u"You must sign the framework agreement to sell these services" in first_row
 
-    def test_shows_gcloud_7_in_standstill_fw_agreement_returned(
-        self, data_api_client
-    ):
-        data_api_client.get_supplier.side_effect = get_supplier
-        data_api_client.get_supplier_frameworks.return_value = {
+    def test_shows_gcloud_7_in_standstill_fw_agreement_returned(self):
+        self.data_api_client.get_supplier.side_effect = get_supplier
+        self.data_api_client.get_supplier_frameworks.return_value = {
             'frameworkInterest': [
                 {
                     'frameworkSlug': 'g-cloud-7',
@@ -422,55 +407,49 @@ class TestSuppliersDashboard(BaseApplicationTest):
                 }
             ]
         }
-        data_api_client.find_frameworks.return_value = {
+        self.data_api_client.find_frameworks.return_value = {
             "frameworks": [self.framework(status='standstill', slug='g-cloud-7')['frameworks']]
         }
 
-        with self.app.test_client():
-            self.login()
-            res = self.client.get("/suppliers")
-            doc = html.fromstring(res.get_data(as_text=True))
-            headings = doc.xpath('//h2[@class="summary-item-heading"]')
+        self.login()
+        res = self.client.get("/suppliers")
+        doc = html.fromstring(res.get_data(as_text=True))
+        headings = doc.xpath('//h2[@class="summary-item-heading"]')
 
-            assert u"Pending services" in headings[0].xpath('text()')[0]
+        assert u"Pending services" in headings[0].xpath('text()')[0]
 
-            first_table = doc.xpath(
-                '//table[@class="summary-item-body"]'
-            )
+        first_table = doc.xpath(
+            '//table[@class="summary-item-body"]'
+        )
 
-            assert u"Pending services" in first_table[0].xpath('caption/text()')[0]
+        assert u"Pending services" in first_table[0].xpath('caption/text()')[0]
 
-            first_row = "".join(first_table[0].xpath('tbody/descendant::*/text()'))
-            assert u"G-Cloud 7" in first_row
-            assert u"Live from Monday 23 November 2015" in first_row
-            assert u"99 services" in first_row
-            assert u"You must sign the framework agreement to sell these services" not in first_row
+        first_row = "".join(first_table[0].xpath('tbody/descendant::*/text()'))
+        assert u"G-Cloud 7" in first_row
+        assert u"Live from Monday 23 November 2015" in first_row
+        assert u"99 services" in first_row
+        assert u"You must sign the framework agreement to sell these services" not in first_row
 
-    def test_shows_gcloud_7_in_standstill_no_application(
-        self, data_api_client
-    ):
-        data_api_client.get_supplier.side_effect = get_supplier
-        data_api_client.get_supplier_frameworks.return_value = {
+    def test_shows_gcloud_7_in_standstill_no_application(self):
+        self.data_api_client.get_supplier.side_effect = get_supplier
+        self.data_api_client.get_supplier_frameworks.return_value = {
             'frameworkInterest': []
         }
-        data_api_client.find_frameworks.return_value = {
+        self.data_api_client.find_frameworks.return_value = {
             "frameworks": [
                 framework_stub(status='standstill', slug='g-cloud-7')['frameworks'],
             ]
         }
 
-        with self.app.test_client():
-            self.login()
-            res = self.client.get("/suppliers")
-            doc = html.fromstring(res.get_data(as_text=True))
+        self.login()
+        res = self.client.get("/suppliers")
+        doc = html.fromstring(res.get_data(as_text=True))
 
-            assert not doc.xpath('//h2[normalize-space(string())=$t]', t="Pending services")
+        assert not doc.xpath('//h2[normalize-space(string())=$t]', t="Pending services")
 
-    def test_shows_gcloud_7_in_standstill_application_failed(
-        self, data_api_client
-    ):
-        data_api_client.get_supplier.side_effect = get_supplier
-        data_api_client.get_supplier_frameworks.return_value = {
+    def test_shows_gcloud_7_in_standstill_application_failed(self):
+        self.data_api_client.get_supplier.side_effect = get_supplier
+        self.data_api_client.get_supplier_frameworks.return_value = {
             'frameworkInterest': [
                 {
                     'frameworkSlug': 'g-cloud-7',
@@ -482,38 +461,35 @@ class TestSuppliersDashboard(BaseApplicationTest):
                 }
             ]
         }
-        data_api_client.find_frameworks.return_value = {
+        self.data_api_client.find_frameworks.return_value = {
             "frameworks": [
                 framework_stub(status='standstill', slug='g-cloud-7')['frameworks'],
             ]
         }
 
-        with self.app.test_client():
-            self.login()
-            res = self.client.get("/suppliers")
-            doc = html.fromstring(res.get_data(as_text=True))
-            headings = doc.xpath('//h2[@class="summary-item-heading"]')
+        self.login()
+        res = self.client.get("/suppliers")
+        doc = html.fromstring(res.get_data(as_text=True))
+        headings = doc.xpath('//h2[@class="summary-item-heading"]')
 
-            assert u"Pending services" in headings[0].xpath('text()')[0]
+        assert u"Pending services" in headings[0].xpath('text()')[0]
 
-            first_table = doc.xpath(
-                '//table[@class="summary-item-body"]'
-            )
+        first_table = doc.xpath(
+            '//table[@class="summary-item-body"]'
+        )
 
-            assert u"Pending services" in first_table[0].xpath('caption/text()')[0]
+        assert u"Pending services" in first_table[0].xpath('caption/text()')[0]
 
-            first_row = "".join(first_table[0].xpath('tbody/descendant::*/text()'))
-            assert u"G-Cloud 7" in first_row
-            assert u"Live from Monday 23 November 2015" not in first_row
-            assert u"99 services submitted" in first_row
-            assert u"You must sign the framework agreement to sell these services" not in first_row
-            assert u"View your documents" in first_row
+        first_row = "".join(first_table[0].xpath('tbody/descendant::*/text()'))
+        assert u"G-Cloud 7" in first_row
+        assert u"Live from Monday 23 November 2015" not in first_row
+        assert u"99 services submitted" in first_row
+        assert u"You must sign the framework agreement to sell these services" not in first_row
+        assert u"View your documents" in first_row
 
-    def test_shows_gcloud_7_in_standstill_application_passed(
-        self, data_api_client
-    ):
-        data_api_client.get_supplier.side_effect = get_supplier
-        data_api_client.get_supplier_frameworks.return_value = {
+    def test_shows_gcloud_7_in_standstill_application_passed(self):
+        self.data_api_client.get_supplier.side_effect = get_supplier
+        self.data_api_client.get_supplier_frameworks.return_value = {
             'frameworkInterest': [
                 {
                     'frameworkSlug': 'g-cloud-7',
@@ -525,186 +501,187 @@ class TestSuppliersDashboard(BaseApplicationTest):
                 }
             ]
         }
-        data_api_client.find_frameworks.return_value = {
+        self.data_api_client.find_frameworks.return_value = {
             "frameworks": [
                 framework_stub(status='standstill', slug='g-cloud-7',
                                framework_live_at=datetime(2015, 11, 23))['frameworks'],
             ]
         }
 
-        with self.app.test_client():
-            self.login()
-            res = self.client.get("/suppliers")
-            doc = html.fromstring(res.get_data(as_text=True))
-            headings = doc.xpath('//h2[@class="summary-item-heading"]')
+        self.login()
+        res = self.client.get("/suppliers")
+        doc = html.fromstring(res.get_data(as_text=True))
+        headings = doc.xpath('//h2[@class="summary-item-heading"]')
 
-            assert u"Pending services" in headings[0].xpath('text()')[0]
+        assert u"Pending services" in headings[0].xpath('text()')[0]
 
-            first_table = doc.xpath(
-                '//table[@class="summary-item-body"]'
-            )
+        first_table = doc.xpath(
+            '//table[@class="summary-item-body"]'
+        )
 
-            assert u"Pending services" in first_table[0].xpath('caption/text()')[0]
+        assert u"Pending services" in first_table[0].xpath('caption/text()')[0]
 
-            first_row = "".join(first_table[0].xpath('tbody/descendant::*/text()'))
-            assert u"G-Cloud 7" in first_row
-            assert u"Live from Monday 23 November 2015" in first_row
-            assert u"99 services" in first_row
-            assert u"You must sign the framework agreement to sell these services" not in first_row
+        first_row = "".join(first_table[0].xpath('tbody/descendant::*/text()'))
+        assert u"G-Cloud 7" in first_row
+        assert u"Live from Monday 23 November 2015" in first_row
+        assert u"99 services" in first_row
+        assert u"You must sign the framework agreement to sell these services" not in first_row
 
-    def test_shows_register_for_dos_button(self, data_api_client):
-        data_api_client.get_framework.return_value = self.framework(status='other')
-        data_api_client.get_supplier.side_effect = get_supplier
-        data_api_client.find_frameworks.return_value = {
+    def test_shows_register_for_dos_button(self):
+        self.data_api_client.get_framework.return_value = self.framework(status='other')
+        self.data_api_client.get_supplier.side_effect = get_supplier
+        self.data_api_client.find_frameworks.return_value = {
             "frameworks": [
                 framework_stub(status='open', slug='digital-outcomes-and-specialists')['frameworks'],
                 framework_stub(status='live', slug='g-cloud-7')['frameworks'],
             ]
         }
-        with self.app.test_client():
-            self.login()
+        self.login()
 
-            response = self.client.get("/suppliers")
-            document = html.fromstring(response.get_data(as_text=True))
+        response = self.client.get("/suppliers")
+        document = html.fromstring(response.get_data(as_text=True))
 
-            assert response.status_code == 200
+        assert response.status_code == 200
 
-            apply_button = document.xpath(
-                "//h2[normalize-space()='Digital Outcomes and Specialists is open for applications']"
-                "/following::input[1]"
-            )[0]
+        apply_button = document.xpath(
+            "//h2[normalize-space()='Digital Outcomes and Specialists is open for applications']"
+            "/following::input[1]"
+        )[0]
 
-            assert apply_button.value == "Apply"
+        assert apply_button.value == "Apply"
 
-    def test_shows_continue_with_dos_link(self, data_api_client):
-        data_api_client.get_supplier.side_effect = get_supplier
-        data_api_client.get_supplier_frameworks.return_value = {
+    def test_shows_continue_with_dos_link(self):
+        self.data_api_client.get_supplier.side_effect = get_supplier
+        self.data_api_client.get_supplier_frameworks.return_value = {
             'frameworkInterest': [
                 {'frameworkSlug': 'digital-outcomes-and-specialists'}
             ]
         }
-        data_api_client.find_frameworks.return_value = {
+        self.data_api_client.find_frameworks.return_value = {
             "frameworks": [
                 framework_stub(status='open', slug='digital-outcomes-and-specialists')['frameworks'],
                 framework_stub(status='live', slug='g-cloud-7')['frameworks'],
             ]
         }
-        with self.app.test_client():
-            self.login()
+        self.login()
 
-            response = self.client.get("/suppliers")
-            document = html.fromstring(response.get_data(as_text=True))
+        response = self.client.get("/suppliers")
+        document = html.fromstring(response.get_data(as_text=True))
 
-            assert response.status_code == 200
-            continue_link = document.xpath(
-                "//h2[normalize-space()='Your Digital Outcomes and Specialists application']"
-                "/following::a[1][normalize-space()='Continue your application']"
-            )
-            assert continue_link
-            assert continue_link[0].values()[0] == "/suppliers/frameworks/digital-outcomes-and-specialists"
+        assert response.status_code == 200
+        continue_link = document.xpath(
+            "//h2[normalize-space()='Your Digital Outcomes and Specialists application']"
+            "/following::a[1][normalize-space()='Continue your application']"
+        )
+        assert continue_link
+        assert continue_link[0].values()[0] == "/suppliers/frameworks/digital-outcomes-and-specialists"
 
 
-@mock.patch("app.main.views.suppliers.data_api_client", autospec=True)
 class TestSupplierDetails(BaseApplicationTest):
-    def test_shows_supplier_info(self, data_api_client):
-        data_api_client.get_supplier.side_effect = get_supplier
-        with self.app.test_client():
-            self.login()
 
-            res = self.client.get("/suppliers/details")
-            assert res.status_code == 200
-            page_html = res.get_data(as_text=True)
-            document = html.fromstring(page_html)
+    def setup_method(self, method):
+        super().setup_method(method)
+        self.data_api_client_patch = mock.patch('app.main.views.suppliers.data_api_client', autospec=True)
+        self.data_api_client = self.data_api_client_patch.start()
 
-            assert document.xpath(
-                "//a[normalize-space(string())=$t][@href=$u][contains(@class, $c)]",
-                t="Change",
-                u="/suppliers/what-buyers-will-see/edit",
-                c="summary-change-link",
-            )
+    def teardown_method(self, method):
+        self.data_api_client_patch.stop()
+        super().teardown_method(method)
 
-            for property_str in (
-                # "Company details" section at the top
-                "Supplier Person",  # Contact name
-                "supplier@user.dmdev",  # Contact email
-                "0800123123",  # Phone number
-                "1 Street",  # Address: "2 Building" and "Supplierland" are not shown, even though in contactInformation
-                "Supplierville",  # Town or City
-                "11 AB",  # Postcode
-                "Supplier Description",  # Supplier summary
-                # "Registration information" section
-                "Official Name Inc",  # Registered company name
-                "CH123456",  # Companies House number
-                "987654321",  # DUNS number
-                "12345678",  # VAT number
-                "Open for business",  # Trading status
-                "Small",  # Size
-            ):
-                assert document.xpath("//*[normalize-space(string())=$t]", t=property_str), property_str
+    def test_shows_supplier_info(self):
+        self.data_api_client.get_supplier.side_effect = get_supplier
 
-            # Registration number not shown if Companies House ID exists
-            assert "BEL153" not in page_html
+        self.login()
 
-            data_api_client.get_supplier.assert_called_once_with(1234)
+        res = self.client.get("/suppliers/details")
+        assert res.status_code == 200
+        page_html = res.get_data(as_text=True)
+        document = html.fromstring(page_html)
 
-    def test_registration_number_field_shows_other_registration_num_if_no_companies_house_num(self, data_api_client):
-        data_api_client.get_supplier.return_value = get_supplier(
+        assert document.xpath(
+            "//a[normalize-space(string())=$t][@href=$u][contains(@class, $c)]",
+            t="Change",
+            u="/suppliers/what-buyers-will-see/edit",
+            c="summary-change-link",
+        )
+
+        for property_str in (
+            # "Company details" section at the top
+            "Supplier Person",  # Contact name
+            "supplier@user.dmdev",  # Contact email
+            "0800123123",  # Phone number
+            "1 Street",  # Address: "2 Building" and "Supplierland" are not shown, even though in contactInformation
+            "Supplierville",  # Town or City
+            "11 AB",  # Postcode
+            "Supplier Description",  # Supplier summary
+            # "Registration information" section
+            "Official Name Inc",  # Registered company name
+            "CH123456",  # Companies House number
+            "987654321",  # DUNS number
+            "12345678",  # VAT number
+            "Open for business",  # Trading status
+            "Small",  # Size
+        ):
+            assert document.xpath("//*[normalize-space(string())=$t]", t=property_str), property_str
+
+        # Registration number not shown if Companies House ID exists
+        assert "BEL153" not in page_html
+
+        self.data_api_client.get_supplier.assert_called_once_with(1234)
+
+    def test_registration_number_field_shows_other_registration_num_if_no_companies_house_num(self):
+        self.data_api_client.get_supplier.return_value = get_supplier(
             companiesHouseNumber=None, otherCompanyRegistrationNumber="42, EARTH"
         )
+        self.login()
 
-        with self.app.test_client():
-            self.login()
+        res = self.client.get("/suppliers/details")
+        assert res.status_code == 200
+        page_html = res.get_data(as_text=True)
+        document = html.fromstring(page_html)
+        assert document.xpath("//span[text()='Registration number']/following::td[1]/span[text()='42, EARTH']")
 
-            res = self.client.get("/suppliers/details")
-            assert res.status_code == 200
-            page_html = res.get_data(as_text=True)
-            document = html.fromstring(page_html)
-            assert document.xpath("//span[text()='Registration number']/following::td[1]/span[text()='42, EARTH']")
-
-    def test_shows_united_kingdom_for_old_style_country_code(self, data_api_client):
-        data_api_client.get_supplier.return_value = get_supplier(
+    def test_shows_united_kingdom_for_old_style_country_code(self):
+        self.data_api_client.get_supplier.return_value = get_supplier(
             companiesHouseNumber=None, registrationCountry="gb"
         )
-        with self.app.test_client():
-            self.login()
+        self.login()
 
-            res = self.client.get("/suppliers/details")
-            assert res.status_code == 200
-            page_html = res.get_data(as_text=True)
-            document = html.fromstring(page_html)
-            assert document.xpath("//*[normalize-space(string())='United Kingdom']")  # Country United Kingdom is shown
+        res = self.client.get("/suppliers/details")
+        assert res.status_code == 200
+        page_html = res.get_data(as_text=True)
+        document = html.fromstring(page_html)
+        assert document.xpath("//*[normalize-space(string())='United Kingdom']")  # Country United Kingdom is shown
 
-    def test_handles_supplier_with_no_registration_country_key(self, data_api_client):
+    def test_handles_supplier_with_no_registration_country_key(self):
         supplier = get_supplier()
         del supplier['suppliers']['registrationCountry']
-        data_api_client.get_supplier.return_value = supplier
+        self.data_api_client.get_supplier.return_value = supplier
 
-        with self.app.test_client():
-            self.login()
+        self.login()
 
-            res = self.client.get("/suppliers/details")
-            assert res.status_code == 200
+        res = self.client.get("/suppliers/details")
+        assert res.status_code == 200
 
-    def test_shows_address_details(self, data_api_client):
-        data_api_client.get_supplier.return_value = get_supplier(registrationCountry="country:GB")
+    def test_shows_address_details(self):
+        self.data_api_client.get_supplier.return_value = get_supplier(registrationCountry="country:GB")
 
-        with self.app.test_client():
-            self.login()
+        self.login()
 
-            response = self.client.get("/suppliers/details")
-            assert response.status_code == 200
-            page_html = response.get_data(as_text=True)
-            document = html.fromstring(page_html)
+        response = self.client.get("/suppliers/details")
+        assert response.status_code == 200
+        page_html = response.get_data(as_text=True)
+        document = html.fromstring(page_html)
 
-            address1 = document.xpath("//span[text()='Registered company address']/following::td[1]/span/p/span[1]")
-            town = document.xpath("//span[text()='Registered company address']/following::td[1]/span/p/span[2]")
-            postcode = document.xpath("//span[text()='Registered company address']/following::td[1]/span/p/span[3]")
-            country = document.xpath("//span[text()='Registered company address']/following::td[1]/span/p/span[4]")
+        address1 = document.xpath("//span[text()='Registered company address']/following::td[1]/span/p/span[1]")
+        town = document.xpath("//span[text()='Registered company address']/following::td[1]/span/p/span[2]")
+        postcode = document.xpath("//span[text()='Registered company address']/following::td[1]/span/p/span[3]")
+        country = document.xpath("//span[text()='Registered company address']/following::td[1]/span/p/span[4]")
 
-            assert "1 Street" in address1[0].text
-            assert "Supplierville" in town[0].text
-            assert "11 AB" in postcode[0].text
-            assert "United Kingdom" in country[0].text
+        assert "1 Street" in address1[0].text
+        assert "Supplierville" in town[0].text
+        assert "11 AB" in postcode[0].text
+        assert "United Kingdom" in country[0].text
 
     @pytest.mark.parametrize(
         "question,null_attribute,link_address",
@@ -721,22 +698,21 @@ class TestSupplierDetails(BaseApplicationTest):
             ("VAT number", {"vatNumber": None}, "/suppliers/vat-number/edit"),
         ]
     )
-    def test_question_field_requires_answer_if_empty(self, data_api_client, question, null_attribute, link_address):
-        data_api_client.get_supplier.return_value = get_supplier(**null_attribute)
+    def test_question_field_requires_answer_if_empty(self, question, null_attribute, link_address):
+        self.data_api_client.get_supplier.return_value = get_supplier(**null_attribute)
 
-        with self.app.test_client():
-            self.login()
+        self.login()
 
-            response = self.client.get("/suppliers/details")
-            assert response.status_code == 200
-            page_html = response.get_data(as_text=True)
-            document = html.fromstring(page_html)
-            answer_required_link = document.xpath(
-                "//span[text()='{}']/following::td[1]/span/a[text()='Answer required']".format(question)
-            )
+        response = self.client.get("/suppliers/details")
+        assert response.status_code == 200
+        page_html = response.get_data(as_text=True)
+        document = html.fromstring(page_html)
+        answer_required_link = document.xpath(
+            "//span[text()='{}']/following::td[1]/span/a[text()='Answer required']".format(question)
+        )
 
-            assert answer_required_link
-            assert answer_required_link[0].values()[0] == link_address
+        assert answer_required_link
+        assert answer_required_link[0].values()[0] == link_address
 
     @pytest.mark.parametrize(
         "question,filled_in_attribute,link_address",
@@ -763,24 +739,21 @@ class TestSupplierDetails(BaseApplicationTest):
             ("DUNS number", {"dunsNumber": "123456789"}, "/suppliers/duns-number/edit"),
         ]
     )
-    def test_filled_in_question_field_has_a_correct_a_mistake_link(
-        self, data_api_client, question, filled_in_attribute, link_address
-    ):
-        data_api_client.get_supplier.return_value = get_supplier(**filled_in_attribute)
+    def test_filled_in_question_field_has_a_correct_a_mistake_link(self, question, filled_in_attribute, link_address):
+        self.data_api_client.get_supplier.return_value = get_supplier(**filled_in_attribute)
 
-        with self.app.test_client():
-            self.login()
+        self.login()
 
-            response = self.client.get("/suppliers/details")
-            assert response.status_code == 200
-            page_html = response.get_data(as_text=True)
-            document = html.fromstring(page_html)
-            answer_required_link = document.xpath(
-                "//span[text()='{}']/following::td[2]/span/a[text()='Correct a mistake']".format(question)
-            )
+        response = self.client.get("/suppliers/details")
+        assert response.status_code == 200
+        page_html = response.get_data(as_text=True)
+        document = html.fromstring(page_html)
+        answer_required_link = document.xpath(
+            "//span[text()='{}']/following::td[2]/span/a[text()='Correct a mistake']".format(question)
+        )
 
-            assert answer_required_link
-            assert answer_required_link[0].values()[0] == link_address
+        assert answer_required_link
+        assert answer_required_link[0].values()[0] == link_address
 
     @pytest.mark.parametrize(
         "summary,is_hint_visible",
@@ -789,18 +762,17 @@ class TestSupplierDetails(BaseApplicationTest):
             ({"description": ""}, True),
         ]
     )
-    def test_hint_text_for_summary_only_visible_if_field_empty(self, data_api_client, summary, is_hint_visible):
-        data_api_client.get_supplier.return_value = get_supplier(**summary)
+    def test_hint_text_for_summary_only_visible_if_field_empty(self, summary, is_hint_visible):
+        self.data_api_client.get_supplier.return_value = get_supplier(**summary)
 
-        with self.app.test_client():
-            self.login()
+        self.login()
 
-            response = self.client.get("/suppliers/details")
-            assert response.status_code == 200
-            page_html = response.get_data(as_text=True)
-            document = html.fromstring(page_html)
-            optional_hint_text = (document.xpath("//span[text()='Summary']/following::td[2]/span")[0].text).strip()
-            assert bool(optional_hint_text) == is_hint_visible
+        response = self.client.get("/suppliers/details")
+        assert response.status_code == 200
+        page_html = response.get_data(as_text=True)
+        document = html.fromstring(page_html)
+        optional_hint_text = (document.xpath("//span[text()='Summary']/following::td[2]/span")[0].text).strip()
+        assert bool(optional_hint_text) == is_hint_visible
 
     @pytest.mark.parametrize(
         "framework_slug,framework_name,link_address",
@@ -814,37 +786,38 @@ class TestSupplierDetails(BaseApplicationTest):
         ]
     )
     def test_back_to_application_link_is_visible_if_currently_applying_to_in_session(
-        self, data_api_client, framework_slug, framework_name, link_address
+        self, framework_slug, framework_name, link_address
     ):
-        data_api_client.get_supplier.return_value = get_supplier()
-        data_api_client.get_framework.return_value = {"frameworks": {"name": framework_name, "slug": framework_slug}}
+        self.data_api_client.get_supplier.return_value = get_supplier()
+        self.data_api_client.get_framework.return_value = {
+            "frameworks": {"name": framework_name, "slug": framework_slug}
+        }
 
-        with self.app.test_client():
-            self.login()
+        self.login()
 
-            with self.client.session_transaction() as session:
-                session["currently_applying_to"] = framework_slug
+        with self.client.session_transaction() as session:
+            session["currently_applying_to"] = framework_slug
 
-            response = self.client.get("/suppliers/details")
-            assert response.status_code == 200
+        response = self.client.get("/suppliers/details")
+        assert response.status_code == 200
 
-            page_html = response.get_data(as_text=True)
-            document = html.fromstring(page_html)
-            return_link = (document.xpath("//a[text()='Return to your {} application']".format(framework_name)))
-            assert return_link
-            assert return_link[0].values()[0] == link_address
+        page_html = response.get_data(as_text=True)
+        document = html.fromstring(page_html)
+        return_link = (document.xpath("//a[text()='Return to your {} application']".format(framework_name)))
+        assert return_link
+        assert return_link[0].values()[0] == link_address
 
-    def test_back_to_application_link_not_visible_if_currently_applying_to_not_in_session(self, data_api_client):
-        data_api_client.get_supplier.return_value = get_supplier()
-        with self.app.test_client():
-            self.login()
+    def test_back_to_application_link_not_visible_if_currently_applying_to_not_in_session(self):
+        self.data_api_client.get_supplier.return_value = get_supplier()
 
-            response = self.client.get("/suppliers/details")
-            assert response.status_code == 200
+        self.login()
 
-            page_html = response.get_data(as_text=True)
-            document = html.fromstring(page_html)
-            assert "Return to your" not in document.text_content()
+        response = self.client.get("/suppliers/details")
+        assert response.status_code == 200
+
+        page_html = response.get_data(as_text=True)
+        document = html.fromstring(page_html)
+        assert "Return to your" not in document.text_content()
 
     @pytest.mark.parametrize(
         "supplier_details,button_should_be_shown",
@@ -855,18 +828,18 @@ class TestSupplierDetails(BaseApplicationTest):
         ]
     )
     def test_green_button_is_shown_only_when_details_are_complete_but_not_confirmed(
-            self, data_api_client, supplier_details, button_should_be_shown
+        self, supplier_details, button_should_be_shown
     ):
-        data_api_client.get_supplier.return_value = supplier_details
-        with self.app.test_client():
-            self.login()
+        self.data_api_client.get_supplier.return_value = supplier_details
 
-            response = self.client.get("/suppliers/details")
-            assert response.status_code == 200
+        self.login()
 
-            document = html.fromstring(response.get_data(as_text=True))
-            submit_button = document.xpath("//input[@value='Save and confirm']")
-            assert submit_button if button_should_be_shown else not submit_button
+        response = self.client.get("/suppliers/details")
+        assert response.status_code == 200
+
+        document = html.fromstring(response.get_data(as_text=True))
+        submit_button = document.xpath("//input[@value='Save and confirm']")
+        assert submit_button if button_should_be_shown else not submit_button
 
     @pytest.mark.parametrize(
         "complete_supplier",
@@ -876,15 +849,15 @@ class TestSupplierDetails(BaseApplicationTest):
             get_supplier(otherCompanyRegistrationNumber=None),
         )
     )
-    def test_post_route_calls_api_and_redirects_when_details_are_complete(self, data_api_client, complete_supplier):
-        data_api_client.get_supplier.return_value = complete_supplier
-        with self.app.test_client():
-            self.login()
-            response = self.client.post("/suppliers/details")
-            assert response.status_code == 302
-            assert data_api_client.update_supplier.call_args_list == [
-                mock.call(supplier={'companyDetailsConfirmed': True}, supplier_id=1234, user='email@email.com')
-            ]
+    def test_post_route_calls_api_and_redirects_when_details_are_complete(self, complete_supplier):
+        self.data_api_client.get_supplier.return_value = complete_supplier
+
+        self.login()
+        response = self.client.post("/suppliers/details")
+        assert response.status_code == 302
+        assert self.data_api_client.update_supplier.call_args_list == [
+            mock.call(supplier={'companyDetailsConfirmed': True}, supplier_id=1234, user='email@email.com')
+        ]
 
     @pytest.mark.parametrize(
         "incomplete_supplier",
@@ -894,13 +867,13 @@ class TestSupplierDetails(BaseApplicationTest):
             get_supplier(companiesHouseNumber=None, otherCompanyRegistrationNumber=None),
         )
     )
-    def test_post_route_does_not_call_api_and_returns_error_if_incomplete(self, data_api_client, incomplete_supplier):
-        data_api_client.get_supplier.return_value = incomplete_supplier
-        with self.app.test_client():
-            self.login()
-            response = self.client.post("/suppliers/details")
-            assert response.status_code == 400
-            assert data_api_client.update_supplier.call_args_list == []
+    def test_post_route_does_not_call_api_and_returns_error_if_incomplete(self, incomplete_supplier):
+        self.data_api_client.get_supplier.return_value = incomplete_supplier
+
+        self.login()
+        response = self.client.post("/suppliers/details")
+        assert response.status_code == 400
+        assert self.data_api_client.update_supplier.call_args_list == []
 
     @pytest.mark.parametrize(
         "current_fwk,expected_destination",
@@ -910,22 +883,21 @@ class TestSupplierDetails(BaseApplicationTest):
             ("digital-widgets-and-stuff", "/suppliers/frameworks/digital-widgets-and-stuff"),
         ]
     )
-    def test_post_green_button_redirects_to_the_correct_place(self, data_api_client, current_fwk, expected_destination):
-        data_api_client.get_supplier.return_value = get_supplier()
-        with self.app.test_client():
-            self.login()
-            if current_fwk:
-                with self.client.session_transaction() as session:
-                    session["currently_applying_to"] = current_fwk
-            response = self.client.post("/suppliers/details")
-            assert response.status_code == 302
-            assert response.location == f"http://localhost{expected_destination}"
+    def test_post_green_button_redirects_to_the_correct_place(self, current_fwk, expected_destination):
+        self.data_api_client.get_supplier.return_value = get_supplier()
+
+        self.login()
+        if current_fwk:
+            with self.client.session_transaction() as session:
+                session["currently_applying_to"] = current_fwk
+        response = self.client.post("/suppliers/details")
+        assert response.status_code == 302
+        assert response.location == f"http://localhost{expected_destination}"
 
 
-@mock.patch("app.main.views.suppliers.data_api_client", autospec=True)
 class TestSupplierOpportunitiesDashboardLink(BaseApplicationTest):
     def setup_method(self, method):
-        super(TestSupplierOpportunitiesDashboardLink, self).setup_method(method)
+        super().setup_method(method)
         self.get_supplier_frameworks_response = {
             'agreementReturned': True,
             'complete_drafts_count': 2,
@@ -935,6 +907,12 @@ class TestSupplierOpportunitiesDashboardLink(BaseApplicationTest):
             'services_count': 2,
             'supplierId': 1234
         }
+        self.data_api_client_patch = mock.patch('app.main.views.suppliers.data_api_client', autospec=True)
+        self.data_api_client = self.data_api_client_patch.start()
+
+    def teardown_method(self, method):
+        self.data_api_client_patch.stop()
+        super().teardown_method(method)
 
     def find_frameworks_stub(self):
         return {'frameworks': [
@@ -944,31 +922,30 @@ class TestSupplierOpportunitiesDashboardLink(BaseApplicationTest):
             }
         ]}
 
-    def test_opportunities_dashboard_link(self, data_api_client):
-        data_api_client.get_supplier.side_effect = get_supplier
-        data_api_client.get_supplier_frameworks.return_value = {
+    def test_opportunities_dashboard_link(self):
+        self.data_api_client.get_supplier.side_effect = get_supplier
+        self.data_api_client.get_supplier_frameworks.return_value = {
             'frameworkInterest': [self.get_supplier_frameworks_response]}
-        data_api_client.find_frameworks.return_value = self.find_frameworks_stub()
+        self.data_api_client.find_frameworks.return_value = self.find_frameworks_stub()
 
-        with self.client:
-            self.login()
-            res = self.client.get("/suppliers")
-            doc = html.fromstring(res.get_data(as_text=True))
+        self.login()
+        res = self.client.get("/suppliers")
+        doc = html.fromstring(res.get_data(as_text=True))
 
-            # note how this also tests the ordering of the links
-            assert doc.xpath(
-                "//h3[normalize-space(string())=$f]"
-                "[(following::a)[1][normalize-space(string())=$t1][@href=$u1]]"
-                "[(following::a)[2][normalize-space(string())=$t2][@href=$u2]]"
-                "[(following::a)[3][normalize-space(string())=$t3][@href=$u3]]",
-                f="Digital Outcomes and Specialists 2",
-                t1="View your opportunities",
-                u1="/suppliers/opportunities/frameworks/digital-outcomes-and-specialists-2",
-                t2="View services",
-                u2="/suppliers/frameworks/digital-outcomes-and-specialists-2/services",
-                t3="View documents and ask a question",
-                u3="/suppliers/frameworks/digital-outcomes-and-specialists-2",
-            )
+        # note how this also tests the ordering of the links
+        assert doc.xpath(
+            "//h3[normalize-space(string())=$f]"
+            "[(following::a)[1][normalize-space(string())=$t1][@href=$u1]]"
+            "[(following::a)[2][normalize-space(string())=$t2][@href=$u2]]"
+            "[(following::a)[3][normalize-space(string())=$t3][@href=$u3]]",
+            f="Digital Outcomes and Specialists 2",
+            t1="View your opportunities",
+            u1="/suppliers/opportunities/frameworks/digital-outcomes-and-specialists-2",
+            t2="View services",
+            u2="/suppliers/frameworks/digital-outcomes-and-specialists-2/services",
+            t3="View documents and ask a question",
+            u3="/suppliers/frameworks/digital-outcomes-and-specialists-2",
+        )
 
     @pytest.mark.parametrize(
         'incorrect_data',
@@ -978,109 +955,111 @@ class TestSupplierOpportunitiesDashboardLink(BaseApplicationTest):
             {'frameworkSlug': 'not-dos'}
         )
     )
-    def test_opportunities_dashboard_link_fails_with_incomplete_data(
-            self,
-            data_api_client,
-            incorrect_data
-    ):
+    def test_opportunities_dashboard_link_fails_with_incomplete_data(self, incorrect_data):
         self.get_supplier_frameworks_response.update(incorrect_data)
 
-        data_api_client.get_supplier.side_effect = get_supplier
-        data_api_client.get_supplier_frameworks.return_value = {
+        self.data_api_client.get_supplier.side_effect = get_supplier
+        self.data_api_client.get_supplier_frameworks.return_value = {
             'frameworkInterest': [self.get_supplier_frameworks_response]}
-        data_api_client.find_frameworks.return_value = self.find_frameworks_stub()
+        self.data_api_client.find_frameworks.return_value = self.find_frameworks_stub()
 
-        with self.client:
-            self.login()
-            res = self.client.get("/suppliers")
-            doc = html.fromstring(res.get_data(as_text=True))
+        self.login()
+        res = self.client.get("/suppliers")
+        doc = html.fromstring(res.get_data(as_text=True))
 
-            unexpected_link = "/suppliers/frameworks/digital-outcomes-and-specialists-2/opportunities"
+        unexpected_link = "/suppliers/frameworks/digital-outcomes-and-specialists-2/opportunities"
 
-            assert not any(filter(lambda i: i[2] == unexpected_link, doc.iterlinks()))
+        assert not any(filter(lambda i: i[2] == unexpected_link, doc.iterlinks()))
 
 
 class TestSupplierDashboardLogin(BaseApplicationTest):
-    @mock.patch("app.main.views.suppliers.data_api_client")
-    def test_should_show_supplier_dashboard_logged_in(
-            self, data_api_client
-    ):
-        with self.app.test_client():
-            self.login()
-            data_api_client.authenticate_user.return_value = self.user(
-                123, "email@email.com", 1234, u'Supplier NĀme', u'Năme')
 
-            data_api_client.get_user.return_value = self.user(
-                123, "email@email.com", 1234, u'Supplier NĀme', u'Năme')
+    def setup_method(self, method):
+        super().setup_method(method)
+        self.data_api_client_patch = mock.patch('app.main.views.suppliers.data_api_client', autospec=True)
+        self.data_api_client = self.data_api_client_patch.start()
 
-            data_api_client.find_frameworks.return_value = FIND_FRAMEWORKS_RETURN_VALUE
+    def teardown_method(self, method):
+        self.data_api_client_patch.stop()
+        super().teardown_method(method)
 
-            data_api_client.get_supplier.side_effect = get_supplier
+    def test_should_show_supplier_dashboard_logged_in(self):
+        self.login()
+        self.data_api_client.authenticate_user.return_value = self.user(
+            123, "email@email.com", 1234, u'Supplier NĀme', u'Năme')
 
-            response = self.client.get("/suppliers")
+        self.data_api_client.get_user.return_value = self.user(
+            123, "email@email.com", 1234, u'Supplier NĀme', u'Năme')
 
-            assert response.status_code == 200
+        self.data_api_client.find_frameworks.return_value = FIND_FRAMEWORKS_RETURN_VALUE
 
-            assert self.strip_all_whitespace(u"<h1>Supplier NĀme</h1>") in \
-                self.strip_all_whitespace(response.get_data(as_text=True))
-            assert self.strip_all_whitespace("email@email.com") in \
-                self.strip_all_whitespace(response.get_data(as_text=True))
+        self.data_api_client.get_supplier.side_effect = get_supplier
 
-            assert self.strip_all_whitespace("Change your password") in \
-                self.strip_all_whitespace(response.get_data(as_text=True))
+        response = self.client.get("/suppliers")
 
-            document = html.fromstring(response.get_data(as_text=True))
-            assert len(document.xpath("//a[contains(@href,'/user/change-password')]")) == 1
+        assert response.status_code == 200
+
+        assert self.strip_all_whitespace(u"<h1>Supplier NĀme</h1>") in \
+            self.strip_all_whitespace(response.get_data(as_text=True))
+        assert self.strip_all_whitespace("email@email.com") in \
+            self.strip_all_whitespace(response.get_data(as_text=True))
+
+        assert self.strip_all_whitespace("Change your password") in \
+            self.strip_all_whitespace(response.get_data(as_text=True))
+
+        document = html.fromstring(response.get_data(as_text=True))
+        assert len(document.xpath("//a[contains(@href,'/user/change-password')]")) == 1
 
     def test_should_redirect_to_login_if_not_logged_in(self):
         res = self.client.get("/suppliers")
         assert res.status_code == 302
         assert res.location == "http://localhost/user/login?next=%2Fsuppliers"
 
-    @mock.patch("app.main.views.suppliers.data_api_client")
-    def test_custom_dimension_supplier_role_and_organisation_size_is_set_if_supplier_logged_in(
-        self, data_api_client
-    ):
-        data_api_client.find_frameworks.return_value = FIND_FRAMEWORKS_RETURN_VALUE
-        data_api_client.get_supplier.side_effect = get_supplier
+    def test_custom_dimension_supplier_role_and_organisation_size_is_set_if_supplier_logged_in(self):
+        self.data_api_client.find_frameworks.return_value = FIND_FRAMEWORKS_RETURN_VALUE
+        self.data_api_client.get_supplier.side_effect = get_supplier
 
-        with self.app.test_client():
-            self.login()
-            res = self.client.get('/suppliers')
+        self.login()
+        res = self.client.get('/suppliers')
 
-            doc = html.fromstring(res.get_data(as_text=True))
-            # The default company details from self.login() should available as attributes of current_user
-            assert len(doc.xpath('//meta[@data-value="supplier"]')) == 1
-            assert len(doc.xpath('//meta[@data-value="small"]')) == 1
+        doc = html.fromstring(res.get_data(as_text=True))
+        # The default company details from self.login() should available as attributes of current_user
+        assert len(doc.xpath('//meta[@data-value="supplier"]')) == 1
+        assert len(doc.xpath('//meta[@data-value="small"]')) == 1
 
-    @mock.patch("app.main.views.suppliers.data_api_client")
-    def test_custom_dimension_supplier_organisation_size_not_set_if_size_is_null(
-        self, data_api_client
-    ):
-        data_api_client.find_frameworks.return_value = FIND_FRAMEWORKS_RETURN_VALUE
-        data_api_client.get_supplier.side_effect = get_supplier
+    def test_custom_dimension_supplier_organisation_size_not_set_if_size_is_null(self):
+        self.data_api_client.find_frameworks.return_value = FIND_FRAMEWORKS_RETURN_VALUE
+        self.data_api_client.get_supplier.side_effect = get_supplier
 
-        with self.app.test_client():
-            self.login(supplier_organisation_size=None)
-            res = self.client.get('/suppliers')
+        self.login(supplier_organisation_size=None)
+        res = self.client.get('/suppliers')
 
-            doc = html.fromstring(res.get_data(as_text=True))
-            # The default company details from self.login() should available as attributes of current_user
-            assert len(doc.xpath('//meta[@data-value="supplier"]')) == 1
-            assert len(doc.xpath('//meta[@data-value="small"]')) == 0
+        doc = html.fromstring(res.get_data(as_text=True))
+        # The default company details from self.login() should available as attributes of current_user
+        assert len(doc.xpath('//meta[@data-value="supplier"]')) == 1
+        assert len(doc.xpath('//meta[@data-value="small"]')) == 0
 
     def test_custom_dimension_supplier_role_and_organisation_size_not_set_if_supplier_logged_out(self):
-        with self.app.test_client():
-            # View that does not require login
-            res = self.client.get('/suppliers/create/start')
 
-            doc = html.fromstring(res.get_data(as_text=True))
-            assert len(doc.xpath('//meta[@data-id="10"]')) == 0
-            assert len(doc.xpath('//meta[@data-id="11"]')) == 0
+        # View that does not require login
+        res = self.client.get('/suppliers/create/start')
+
+        doc = html.fromstring(res.get_data(as_text=True))
+        assert len(doc.xpath('//meta[@data-id="10"]')) == 0
+        assert len(doc.xpath('//meta[@data-id="11"]')) == 0
 
 
-@mock.patch("app.main.views.suppliers.data_api_client")
 class TestSupplierUpdate(BaseApplicationTest):
+
+    def setup_method(self, method):
+        super().setup_method(method)
+        self.data_api_client_patch = mock.patch('app.main.views.suppliers.data_api_client', autospec=True)
+        self.data_api_client = self.data_api_client_patch.start()
+
+    def teardown_method(self, method):
+        self.data_api_client_patch.stop()
+        super().teardown_method(method)
+
     def post_supplier_edit(self, data=None, **kwargs):
         if data is None:
             data = {
@@ -1093,7 +1072,7 @@ class TestSupplierUpdate(BaseApplicationTest):
         res = self.client.post("/suppliers/what-buyers-will-see/edit", data=data)
         return res.status_code, res.get_data(as_text=True)
 
-    def test_should_render_edit_page_with_minimum_data(self, data_api_client):
+    def test_should_render_edit_page_with_minimum_data(self):
         self.login()
 
         def limited_supplier(self):
@@ -1113,26 +1092,26 @@ class TestSupplierUpdate(BaseApplicationTest):
                 }
             }
 
-        data_api_client.get_supplier.side_effect = limited_supplier
+        self.data_api_client.get_supplier.side_effect = limited_supplier
 
         response = self.client.get("/suppliers/what-buyers-will-see/edit")
         assert response.status_code == 200
 
-    def test_update_all_supplier_fields(self, data_api_client):
+    def test_update_all_supplier_fields(self):
         self.login()
-        data_api_client.get_supplier.side_effect = get_supplier
+        self.data_api_client.get_supplier.side_effect = get_supplier
         status, _ = self.post_supplier_edit()
 
         assert status == 302
 
-        data_api_client.update_supplier.assert_called_once_with(
+        self.data_api_client.update_supplier.assert_called_once_with(
             1234,
             {
                 'description': u'New Description'
             },
             'email@email.com'
         )
-        data_api_client.update_contact_information.assert_called_once_with(
+        self.data_api_client.update_contact_information.assert_called_once_with(
             1234, 2,
             {
                 'email': u'supplier@user.dmdev',
@@ -1142,9 +1121,9 @@ class TestSupplierUpdate(BaseApplicationTest):
             'email@email.com'
         )
 
-    def test_should_strip_whitespace_surrounding_supplier_update_all_fields(self, data_api_client):
+    def test_should_strip_whitespace_surrounding_supplier_update_all_fields(self):
         self.login()
-        data_api_client.get_supplier.side_effect = get_supplier
+        self.data_api_client.get_supplier.side_effect = get_supplier
         data = {
             "description": "  New Description  ",
             "email": "  supplier@user.dmdev  ",
@@ -1156,14 +1135,14 @@ class TestSupplierUpdate(BaseApplicationTest):
 
         assert status == 302
 
-        data_api_client.update_supplier.assert_called_once_with(
+        self.data_api_client.update_supplier.assert_called_once_with(
             1234,
             {
                 'description': u'New Description'
             },
             'email@email.com'
         )
-        data_api_client.update_contact_information.assert_called_once_with(
+        self.data_api_client.update_contact_information.assert_called_once_with(
             1234, 2,
             {
                 'email': u'supplier@user.dmdev',
@@ -1173,7 +1152,7 @@ class TestSupplierUpdate(BaseApplicationTest):
             'email@email.com'
         )
 
-    def test_missing_required_supplier_fields(self, data_api_client):
+    def test_missing_required_supplier_fields(self):
         self.login()
 
         status, response = self.post_supplier_edit({
@@ -1197,12 +1176,12 @@ class TestSupplierUpdate(BaseApplicationTest):
                 c=content[1],
             )
 
-        assert data_api_client.update_supplier.called is False
-        assert data_api_client.update_contact_information.called is False
+        assert self.data_api_client.update_supplier.called is False
+        assert self.data_api_client.update_contact_information.called is False
 
         assert "New Description" in response
 
-    def test_fields_above_character_length(self, data_api_client):
+    def test_fields_above_character_length(self):
         self.login()
 
         status, response = self.post_supplier_edit(
@@ -1225,10 +1204,10 @@ class TestSupplierUpdate(BaseApplicationTest):
                 c=content[1],
             )
 
-        assert data_api_client.update_supplier.called is False
-        assert data_api_client.update_contact_information.called is False
+        assert self.data_api_client.update_supplier.called is False
+        assert self.data_api_client.update_contact_information.called is False
 
-    def test_valid_email_address_required(self, data_api_client):
+    def test_valid_email_address_required(self):
         self.login()
 
         status, response = self.post_supplier_edit(
@@ -1248,10 +1227,10 @@ class TestSupplierUpdate(BaseApplicationTest):
                 c=content[1],
             )
 
-        assert data_api_client.update_supplier.called is False
-        assert data_api_client.update_contact_information.called is False
+        assert self.data_api_client.update_supplier.called is False
+        assert self.data_api_client.update_contact_information.called is False
 
-    def test_description_below_word_length(self, data_api_client):
+    def test_description_below_word_length(self):
         self.login()
 
         status, resp = self.post_supplier_edit(
@@ -1260,10 +1239,10 @@ class TestSupplierUpdate(BaseApplicationTest):
 
         assert status == 302
 
-        assert data_api_client.update_supplier.called is True
-        assert data_api_client.update_contact_information.called is True
+        assert self.data_api_client.update_supplier.called is True
+        assert self.data_api_client.update_contact_information.called is True
 
-    def test_description_above_word_length(self, data_api_client):
+    def test_description_above_word_length(self):
         self.login()
 
         status, resp = self.post_supplier_edit(
@@ -1273,22 +1252,22 @@ class TestSupplierUpdate(BaseApplicationTest):
         assert status == 400
         assert 'must not be more than 50' in resp
 
-        assert data_api_client.update_supplier.called is False
-        assert data_api_client.update_contact_information.called is False
+        assert self.data_api_client.update_supplier.called is False
+        assert self.data_api_client.update_contact_information.called is False
 
-    def test_should_redirect_to_login_if_not_logged_in(self, data_api_client):
+    def test_should_redirect_to_login_if_not_logged_in(self):
         res = self.client.get("/suppliers/what-buyers-will-see/edit")
         assert res.status_code == 302
         assert res.location == "http://localhost/user/login?next=%2Fsuppliers%2Fwhat-buyers-will-see%2Fedit"
 
 
 class TestEditSupplierRegisteredAddress(BaseApplicationTest):
-    def setup_method(self):
+    def setup_method(self, method):
         super().setup_method(self)
         self.data_api_client_patch = mock.patch("app.main.views.suppliers.data_api_client")
         self.data_api_client = self.data_api_client_patch.start()
 
-    def teardown_method(self):
+    def teardown_method(self, method):
         super().teardown_method(self)
         self.data_api_client_patch.stop()
 
@@ -1500,6 +1479,16 @@ class TestEditSupplierRegisteredAddress(BaseApplicationTest):
 
 
 class TestCreateSupplier(BaseApplicationTest):
+
+    def setup_method(self, method):
+        super().setup_method(method)
+        self.data_api_client_patch = mock.patch('app.main.views.suppliers.data_api_client', autospec=True)
+        self.data_api_client = self.data_api_client_patch.start()
+
+    def teardown_method(self, method):
+        self.data_api_client_patch.stop()
+        super().teardown_method(method)
+
     def test_old_create_start_page_redirects_to_new_start_page(self):
         res = self.client.get("/suppliers/create")
         assert res.status_code == 301
@@ -1534,9 +1523,8 @@ class TestCreateSupplier(BaseApplicationTest):
             validation_message="You must enter a DUNS number with 9 digits."
         )
 
-    @mock.patch("app.main.suppliers.data_api_client")
-    def test_should_be_an_error_if_duns_number_in_use(self, data_api_client):
-        data_api_client.find_suppliers.return_value = {
+    def test_should_be_an_error_if_duns_number_in_use(self):
+        self.data_api_client.find_suppliers.return_value = {
             "suppliers": [
                 "one supplier", "two suppliers"
             ]
@@ -1552,9 +1540,8 @@ class TestCreateSupplier(BaseApplicationTest):
         assert "A supplier account already exists with that DUNS number" in page
         assert "DUNS number already used" in page
 
-    @mock.patch("app.main.suppliers.data_api_client")
-    def test_should_allow_nine_digit_duns_number(self, data_api_client):
-        data_api_client.find_suppliers.return_value = {"suppliers": []}
+    def test_should_allow_nine_digit_duns_number(self):
+        self.data_api_client.find_suppliers.return_value = {"suppliers": []}
         res = self.client.post(
             "/suppliers/create/duns-number",
             data={
@@ -1564,9 +1551,8 @@ class TestCreateSupplier(BaseApplicationTest):
         assert res.status_code == 302
         assert res.location == 'http://localhost/suppliers/create/company-details'
 
-    @mock.patch("app.main.suppliers.data_api_client")
-    def test_should_allow_duns_numbers_that_start_with_zero(self, data_api_client):
-        data_api_client.find_suppliers.return_value = {"suppliers": []}
+    def test_should_allow_duns_numbers_that_start_with_zero(self):
+        self.data_api_client.find_suppliers.return_value = {"suppliers": []}
         res = self.client.post(
             "/suppliers/create/duns-number",
             data={
@@ -1576,9 +1562,8 @@ class TestCreateSupplier(BaseApplicationTest):
         assert res.status_code == 302
         assert res.location == 'http://localhost/suppliers/create/company-details'
 
-    @mock.patch("app.main.suppliers.data_api_client")
-    def test_should_strip_whitespace_surrounding_duns_number_field(self, data_api_client):
-        data_api_client.find_suppliers.return_value = {"suppliers": []}
+    def test_should_strip_whitespace_surrounding_duns_number_field(self):
+        self.data_api_client.find_suppliers.return_value = {"suppliers": []}
         with self.client as c:
             c.post(
                 "/suppliers/create/duns-number",
@@ -1773,9 +1758,8 @@ class TestCreateSupplier(BaseApplicationTest):
         assert res.status_code == 400
         assert 'You must answer all the questions' in res.get_data(as_text=True)
 
-    @mock.patch("app.main.suppliers.data_api_client")
     @mock.patch("app.main.suppliers.send_user_account_email")
-    def test_should_redirect_to_create_your_account_if_valid_session(self, send_user_account_email, data_api_client):
+    def test_should_redirect_to_create_your_account_if_valid_session(self, send_user_account_email):
         with self.client as c:
             with c.session_transaction() as sess:
                 sess['email_address'] = "email_address"
@@ -1785,11 +1769,11 @@ class TestCreateSupplier(BaseApplicationTest):
                 sess['company_name'] = "company_name"
                 sess['account_email_address'] = "valid@email.com"
 
-            data_api_client.create_supplier.return_value = self.supplier()
+            self.data_api_client.create_supplier.return_value = self.supplier()
             res = c.post("/suppliers/create/company-summary")
             assert res.status_code == 302
             assert res.location == "http://localhost/suppliers/create/complete"
-            data_api_client.create_supplier.assert_called_once_with({
+            self.data_api_client.create_supplier.assert_called_once_with({
                 "contactInformation": [{
                     "email": "email_address",
                     "phoneNumber": "phone_number",
@@ -1806,9 +1790,8 @@ class TestCreateSupplier(BaseApplicationTest):
             assert session['email_supplier_id'] == 12345
             assert session['email_company_name'] == 'Supplier Name'
 
-    @mock.patch("app.main.suppliers.data_api_client")
     @mock.patch("app.main.suppliers.send_user_account_email")
-    def test_should_allow_missing_companies_house_number(self, send_user_account_email, data_api_client):
+    def test_should_allow_missing_companies_house_number(self, send_user_account_email):
         with self.client.session_transaction() as sess:
             sess['email_address'] = "email_address"
             sess['phone_number'] = "phone_number"
@@ -1817,7 +1800,7 @@ class TestCreateSupplier(BaseApplicationTest):
             sess['company_name'] = "company_name"
             sess['account_email_address'] = "account_email_address"
 
-        data_api_client.create_supplier.return_value = self.supplier()
+        self.data_api_client.create_supplier.return_value = self.supplier()
         res = self.client.post(
             "/suppliers/create/company-summary",
             data={
@@ -1826,7 +1809,7 @@ class TestCreateSupplier(BaseApplicationTest):
         )
         assert res.status_code == 302
         assert res.location == "http://localhost/suppliers/create/complete"
-        data_api_client.create_supplier.assert_called_once_with({
+        self.data_api_client.create_supplier.assert_called_once_with({
             "contactInformation": [{
                 "email": "email_address",
                 "phoneNumber": "phone_number",
@@ -1836,22 +1819,20 @@ class TestCreateSupplier(BaseApplicationTest):
             "name": "company_name"
         })
 
-    @mock.patch("app.main.suppliers.data_api_client")
-    def test_should_be_an_error_if_missing_a_field_in_session(self, data_api_client):
+    def test_should_be_an_error_if_missing_a_field_in_session(self):
         with self.client.session_transaction() as sess:
             sess['email_address'] = "email_address"
             sess['phone_number'] = "phone_number"
             sess['contact_name'] = "contact_name"
             sess['duns_number'] = "duns_number"
 
-        data_api_client.create_supplier.return_value = True
+        self.data_api_client.create_supplier.return_value = True
         res = self.client.post("/suppliers/create/company-summary")
         assert res.status_code == 400
-        assert data_api_client.create_supplier.called is False
+        assert self.data_api_client.create_supplier.called is False
         assert 'You must answer all the questions' in res.get_data(as_text=True)
 
-    @mock.patch("app.main.suppliers.data_api_client")
-    def test_should_return_503_if_api_error(self, data_api_client):
+    def test_should_return_503_if_api_error(self):
         with self.client.session_transaction() as sess:
             sess['email_address'] = "email_address"
             sess['phone_number'] = "phone_number"
@@ -1860,7 +1841,7 @@ class TestCreateSupplier(BaseApplicationTest):
             sess['company_name'] = "company_name"
             sess['account_email_address'] = "account_email_address"
 
-        data_api_client.create_supplier.side_effect = HTTPError("gone bad")
+        self.data_api_client.create_supplier.side_effect = HTTPError("gone bad")
         res = self.client.post("/suppliers/create/company-summary")
         assert res.status_code == 503
 
@@ -1888,9 +1869,8 @@ class TestCreateSupplier(BaseApplicationTest):
         assert res.status_code == 400
         assert "You must provide a valid email address." in res.get_data(as_text=True)
 
-    @mock.patch("app.main.suppliers.data_api_client")
     @mock.patch("app.main.suppliers.send_user_account_email")
-    def test_should_allow_correct_email_address(self, send_user_account_email, data_api_client):
+    def test_should_allow_correct_email_address(self, send_user_account_email):
         with self.client as c:
             with c.session_transaction() as sess:
                 sess['email_address'] = "email_address"
@@ -1900,7 +1880,7 @@ class TestCreateSupplier(BaseApplicationTest):
                 sess['company_name'] = "company_name"
                 sess['account_email_address'] = "valid@email.com"
 
-            data_api_client.create_supplier.return_value = self.supplier()
+            self.data_api_client.create_supplier.return_value = self.supplier()
 
             res = c.post("/suppliers/create/company-summary")
 
@@ -1917,9 +1897,8 @@ class TestCreateSupplier(BaseApplicationTest):
             assert res.status_code == 302
             assert res.location == 'http://localhost/suppliers/create/complete'
 
-    @mock.patch("app.main.suppliers.data_api_client")
     @mock.patch('dmutils.email.user_account_email.DMNotifyClient')
-    def test_should_correctly_store_email_address_in_session(self, DMNotifyClient, data_api_client):
+    def test_should_correctly_store_email_address_in_session(self, DMNotifyClient):
         with self.client as c:
             with c.session_transaction() as sess:
                 sess['email_address'] = "email_address"
@@ -1929,7 +1908,7 @@ class TestCreateSupplier(BaseApplicationTest):
                 sess['company_name'] = "company_name"
                 sess['account_email_address'] = "valid@email.com"
 
-            data_api_client.create_supplier.return_value = self.supplier()
+            self.data_api_client.create_supplier.return_value = self.supplier()
 
             c.post("/suppliers/create/company-summary")
 
@@ -1972,8 +1951,17 @@ class TestCreateSupplier(BaseApplicationTest):
             assert 'An email has been sent to my-email@example.com' in res.get_data(as_text=True)
 
 
-@mock.patch("app.main.suppliers.data_api_client")
 class TestJoinOpenFrameworkNotificationMailingList(BaseApplicationTest):
+
+    def setup_method(self, method):
+        super().setup_method(method)
+        self.data_api_client_patch = mock.patch('app.main.views.suppliers.data_api_client', autospec=True)
+        self.data_api_client = self.data_api_client_patch.start()
+
+    def teardown_method(self, method):
+        self.data_api_client_patch.stop()
+        super().teardown_method(method)
+
     @staticmethod
     def _common_page_asserts_and_get_form(doc):
         assert tuple(h1.xpath("normalize-space(string())") for h1 in doc.xpath("//h1")) == (
@@ -1991,8 +1979,8 @@ class TestJoinOpenFrameworkNotificationMailingList(BaseApplicationTest):
         return form
 
     @mock.patch("app.main.views.suppliers.DMMailChimpClient")
-    def test_get(self, mailchimp_client_class, data_api_client):
-        data_api_client.create_audit_event.side_effect = AssertionError("This should not be called")
+    def test_get(self, mailchimp_client_class):
+        self.data_api_client.create_audit_event.side_effect = AssertionError("This should not be called")
         mailchimp_client_instance = mock.Mock(spec=("subscribe_new_email_to_list",))
         mailchimp_client_instance.subscribe_new_email_to_list.side_effect = AssertionError("This should not be called")
 
@@ -2034,11 +2022,10 @@ class TestJoinOpenFrameworkNotificationMailingList(BaseApplicationTest):
     def test_post_invalid_email(
         self,
         mailchimp_client_class,
-        data_api_client,
         email_address_value,
         expected_validation_message,
     ):
-        data_api_client.create_audit_event.side_effect = AssertionError("This should not be called")
+        self.data_api_client.create_audit_event.side_effect = AssertionError("This should not be called")
         mailchimp_client_instance = mock.Mock(spec=("subscribe_new_email_to_list",))
         mailchimp_client_instance.subscribe_new_email_to_list.side_effect = AssertionError("This should not be called")
 
@@ -2076,8 +2063,8 @@ class TestJoinOpenFrameworkNotificationMailingList(BaseApplicationTest):
         (False, 503),
     ))
     @mock.patch("app.main.views.suppliers.DMMailChimpClient")
-    def test_post_valid_email_failure(self, mailchimp_client_class, data_api_client, mc_retval, expected_status):
-        data_api_client.create_audit_event.side_effect = AssertionError("This should not be called")
+    def test_post_valid_email_failure(self, mailchimp_client_class, mc_retval, expected_status):
+        self.data_api_client.create_audit_event.side_effect = AssertionError("This should not be called")
         mailchimp_client_instance = mock.Mock(spec=("subscribe_new_email_to_list",))
         mailchimp_client_instance.subscribe_new_email_to_list.side_effect = assert_args_and_return(
             mc_retval,
@@ -2130,8 +2117,8 @@ class TestJoinOpenFrameworkNotificationMailingList(BaseApplicationTest):
         self.assert_no_flashes()
 
     @mock.patch("app.main.views.suppliers.DMMailChimpClient")
-    def test_post_valid_email_success(self, mailchimp_client_class, data_api_client):
-        data_api_client.create_audit_event.side_effect = assert_args_and_return(
+    def test_post_valid_email_success(self, mailchimp_client_class):
+        self.data_api_client.create_audit_event.side_effect = assert_args_and_return(
             {"convincing": "response"},
             audit_type=AuditTypes.mailing_list_subscription,
             data={
@@ -2184,10 +2171,18 @@ class TestJoinOpenFrameworkNotificationMailingList(BaseApplicationTest):
         )
 
 
-@mock.patch("app.main.suppliers.data_api_client", autospec=True)
 class TestBecomeASupplier(BaseApplicationTest):
 
-    def test_become_a_supplier_page_loads_ok(self, data_api_client):
+    def setup_method(self, method):
+        super().setup_method(method)
+        self.data_api_client_patch = mock.patch('app.main.views.suppliers.data_api_client', autospec=True)
+        self.data_api_client = self.data_api_client_patch.start()
+
+    def teardown_method(self, method):
+        self.data_api_client_patch.stop()
+        super().teardown_method(method)
+
+    def test_become_a_supplier_page_loads_ok(self):
         res = self.client.get("/suppliers/supply")
 
         assert res.status_code == 200
@@ -2195,8 +2190,8 @@ class TestBecomeASupplier(BaseApplicationTest):
             self.strip_all_whitespace(res.get_data(as_text=True))
 
     @mock.patch('app.main.suppliers.get_frameworks_closed_and_open_for_applications', autospec=True)
-    def test_frameworks_are_sorted_correctly(self, get_frameworks_closed_and_open_for_applications, data_api_client):
-        data_api_client.find_frameworks.return_value = {
+    def test_frameworks_are_sorted_correctly(self, get_frameworks_closed_and_open_for_applications):
+        self.data_api_client.find_frameworks.return_value = {
             "frameworks": [
                 framework_stub(framework_id=3, status='live', slug='g-cloud-9')['frameworks'],
                 framework_stub(framework_id=1, status='expired', slug='g-cloud-8')['frameworks'],
@@ -2222,8 +2217,8 @@ class TestBecomeASupplier(BaseApplicationTest):
             'g-cloud-8',
         ]
 
-    def test_all_open_or_coming_frameworks(self, data_api_client):
-        data_api_client.find_frameworks.return_value = {
+    def test_all_open_or_coming_frameworks(self):
+        self.data_api_client.find_frameworks.return_value = {
             "frameworks": [
                 framework_stub(status='open', slug='g-cloud-9')['frameworks'],
                 framework_stub(status='live', slug='g-cloud-8')['frameworks'],
@@ -2232,27 +2227,26 @@ class TestBecomeASupplier(BaseApplicationTest):
             ]
         }
 
-        with self.app.test_client():
-            res = self.client.get("/suppliers/supply")
-            data = res.get_data(as_text=True)
+        res = self.client.get("/suppliers/supply")
+        data = res.get_data(as_text=True)
 
-            data_api_client.find_frameworks.assert_called_once_with()
+        self.data_api_client.find_frameworks.assert_called_once_with()
 
-            # Check right headings are there
-            assert u'Services you can apply to sell' in data
-            assert u'Services you can’t apply to sell at the moment' not in data
-            assert u'You can’t apply to sell anything at the moment' not in data
+        # Check right headings are there
+        assert u'Services you can apply to sell' in data
+        assert u'Services you can’t apply to sell at the moment' not in data
+        assert u'You can’t apply to sell anything at the moment' not in data
 
-            # Check the right framework content is there
-            assert u'Digital Outcomes and Specialists is opening for applications.' in data
-            assert u'G-Cloud is open for applications.' in data
+        # Check the right framework content is there
+        assert u'Digital Outcomes and Specialists is opening for applications.' in data
+        assert u'G-Cloud is open for applications.' in data
 
-            # Check the right calls to action are there
-            assert 'Create a supplier account' in data
-            assert 'Get notifications when applications are opening' not in data
+        # Check the right calls to action are there
+        assert 'Create a supplier account' in data
+        assert 'Get notifications when applications are opening' not in data
 
-    def test_all_closed_frameworks(self, data_api_client):
-        data_api_client.find_frameworks.return_value = {
+    def test_all_closed_frameworks(self):
+        self.data_api_client.find_frameworks.return_value = {
             "frameworks": [
                 framework_stub(status='live', slug='g-cloud-9')['frameworks'],
                 framework_stub(status='expired', slug='g-cloud-8')['frameworks'],
@@ -2261,27 +2255,26 @@ class TestBecomeASupplier(BaseApplicationTest):
             ]
         }
 
-        with self.app.test_client():
-            res = self.client.get("/suppliers/supply")
-            data = res.get_data(as_text=True)
+        res = self.client.get("/suppliers/supply")
+        data = res.get_data(as_text=True)
 
-            data_api_client.find_frameworks.assert_called_once_with()
+        self.data_api_client.find_frameworks.assert_called_once_with()
 
-            # Check right headings are there
-            assert u'You can’t apply to sell anything at the moment' in data
-            assert u'Services you can apply to sell' not in data
-            assert u'Services you can’t apply to sell at the moment' not in data
+        # Check right headings are there
+        assert u'You can’t apply to sell anything at the moment' in data
+        assert u'Services you can apply to sell' not in data
+        assert u'Services you can’t apply to sell at the moment' not in data
 
-            # Check the right framework content is there
-            assert u'Digital Outcomes and Specialists is closed for applications.' in data
-            assert u'G-Cloud is closed for applications.' in data
+        # Check the right framework content is there
+        assert u'Digital Outcomes and Specialists is closed for applications.' in data
+        assert u'G-Cloud is closed for applications.' in data
 
-            # Check the right calls to action are there
-            assert 'Create a supplier account' not in data
-            assert 'Get notifications when applications are opening' in data
+        # Check the right calls to action are there
+        assert 'Create a supplier account' not in data
+        assert 'Get notifications when applications are opening' in data
 
-    def test_one_open_one_closed_framework(self, data_api_client):
-        data_api_client.find_frameworks.return_value = {
+    def test_one_open_one_closed_framework(self):
+        self.data_api_client.find_frameworks.return_value = {
             "frameworks": [
                 framework_stub(status='open', slug='g-cloud-9')['frameworks'],
                 framework_stub(status='live', slug='g-cloud-8')['frameworks'],
@@ -2290,74 +2283,79 @@ class TestBecomeASupplier(BaseApplicationTest):
             ]
         }
 
-        with self.app.test_client():
-            res = self.client.get("/suppliers/supply")
-            data = res.get_data(as_text=True)
+        res = self.client.get("/suppliers/supply")
+        data = res.get_data(as_text=True)
 
-            data_api_client.find_frameworks.assert_called_once_with()
+        self.data_api_client.find_frameworks.assert_called_once_with()
 
-            # Check right headings are there
-            assert u'Services you can apply to sell' in data
-            assert u'Services you can’t apply to sell at the moment' in data
-            assert u'You can’t apply to sell anything at the moment' not in data
+        # Check right headings are there
+        assert u'Services you can apply to sell' in data
+        assert u'Services you can’t apply to sell at the moment' in data
+        assert u'You can’t apply to sell anything at the moment' not in data
 
-            # Check the right framework content is there
-            assert u'Digital Outcomes and Specialists is closed for applications.' in data
-            assert u'G-Cloud is open for applications.' in data
+        # Check the right framework content is there
+        assert u'Digital Outcomes and Specialists is closed for applications.' in data
+        assert u'G-Cloud is open for applications.' in data
 
-            # Check the right calls to action are there
-            assert 'Create a supplier account' in data
-            assert 'Get notifications when applications are opening' in data
+        # Check the right calls to action are there
+        assert 'Create a supplier account' in data
+        assert 'Get notifications when applications are opening' in data
 
 
-@mock.patch("app.main.views.suppliers.data_api_client", autospec=True)
 class TestSupplierEditOrganisationSize(BaseApplicationTest):
-    def test_edit_organisation_size_page_loads(self, data_api_client):
-        with self.app.test_client():
-            self.login()
 
-            res = self.client.get("/suppliers/organisation-size/edit")
-            assert res.status_code == 200, 'The edit organisation-size page has not loaded correctly.'
+    def setup_method(self, method):
+        super().setup_method(method)
+        self.data_api_client_patch = mock.patch('app.main.views.suppliers.data_api_client', autospec=True)
+        self.data_api_client = self.data_api_client_patch.start()
+
+    def teardown_method(self, method):
+        self.data_api_client_patch.stop()
+        super().teardown_method(method)
+
+    def test_edit_organisation_size_page_loads(self):
+        self.login()
+
+        res = self.client.get("/suppliers/organisation-size/edit")
+        assert res.status_code == 200, 'The edit organisation-size page has not loaded correctly.'
 
     @pytest.mark.parametrize('organisation_size, expected_error',
                              (
                                  (None, "You must choose an organisation size."),
                                  ('blah', "Not a valid choice")
                              ))
-    def test_missing_or_invalid_choice_shows_validation(self, data_api_client, organisation_size, expected_error):
-        with self.app.test_client():
-            self.login()
+    def test_missing_or_invalid_choice_shows_validation(self, organisation_size, expected_error):
+        self.login()
 
-            res = self.client.post("/suppliers/organisation-size/edit",
-                                   data={'organisation_size': organisation_size} if organisation_size else {})
-            doc = html.fromstring(res.get_data(as_text=True))
-            error = doc.xpath('//span[@id="error-organisation_size"]')
+        res = self.client.post("/suppliers/organisation-size/edit",
+                               data={'organisation_size': organisation_size} if organisation_size else {})
+        doc = html.fromstring(res.get_data(as_text=True))
+        error = doc.xpath('//span[@id="error-organisation_size"]')
 
-            assert len(error) == 1, 'Only one validation message should be shown.'
+        assert len(error) == 1, 'Only one validation message should be shown.'
 
-            assert error[0].text.strip() == expected_error, 'The validation message is not as anticipated.'
+        assert error[0].text.strip() == expected_error, 'The validation message is not as anticipated.'
 
-            self.assert_single_question_page_validation_errors(
-                res,
-                question_name="Organisation size",
-                validation_message=expected_error
-            )
+        self.assert_single_question_page_validation_errors(
+            res,
+            question_name="Organisation size",
+            validation_message=expected_error
+        )
 
     @pytest.mark.parametrize('size', (None, 'micro', 'small', 'medium', 'large'))
-    def test_post_choice_triggers_api_supplier_update_and_redirect(self, data_api_client, size):
-        with self.app.test_client():
-            self.login()
+    def test_post_choice_triggers_api_supplier_update_and_redirect(self, size):
+        self.login()
 
-            self.client.post("/suppliers/organisation-size/edit", data={'organisation_size': size})
+        self.client.post("/suppliers/organisation-size/edit", data={'organisation_size': size})
 
-            call_args_list = data_api_client.update_supplier.call_args_list
-            if size:
-                assert call_args_list == [
-                    mock.call(supplier_id=1234, supplier={'organisationSize': size}, user='email@email.com')
-                ], 'update_supplier was called with the wrong arguments'
+        call_args_list = self.data_api_client.update_supplier.call_args_list
+        if size:
+            assert call_args_list == [
+                mock.call(supplier_id=1234, supplier={'organisationSize': size}, user='email@email.com')
+            ], 'update_supplier was called with the wrong arguments'
 
-            else:
-                assert call_args_list == [], 'update_supplier was called with the wrong arguments'
+        else:
+            assert call_args_list == [], 'update_supplier was called with the wrong arguments'
 
     @pytest.mark.parametrize('existing_size, expected_selection',
                              (
@@ -2365,152 +2363,158 @@ class TestSupplierEditOrganisationSize(BaseApplicationTest):
                                  ('some unknown value', []),
                                  *[(x['value'], [x['value']]) for x in CompanyOrganisationSizeForm.OPTIONS],
                              ))
-    def test_existing_org_size_sets_current_selection(self, data_api_client, existing_size, expected_selection):
+    def test_existing_org_size_sets_current_selection(self, existing_size, expected_selection):
         data = {'organisationSize': existing_size} if existing_size else {}
-        data_api_client.get_supplier.return_value = {'suppliers': data}
+        self.data_api_client.get_supplier.return_value = {'suppliers': data}
 
-        with self.app.test_client():
-            self.login()
+        self.login()
 
-            res = self.client.get("/suppliers/organisation-size/edit")
-            doc = html.fromstring(res.get_data(as_text=True))
-            selected_value = doc.xpath('//input[@name="organisation_size" and @checked="checked"]/@value')
-            assert selected_value == expected_selection, 'The organisation size has not pre-populated correctly.'
+        res = self.client.get("/suppliers/organisation-size/edit")
+        doc = html.fromstring(res.get_data(as_text=True))
+        selected_value = doc.xpath('//input[@name="organisation_size" and @checked="checked"]/@value')
+        assert selected_value == expected_selection, 'The organisation size has not pre-populated correctly.'
 
 
-@mock.patch("app.main.views.suppliers.data_api_client", autospec=True)
 class TestSupplierAddRegisteredCompanyName(BaseApplicationTest):
-    def test_add_registered_company_name_page_loads(self, data_api_client):
-        with self.app.test_client():
-            self.login()
-            data_api_client.get_supplier.return_value = get_supplier(registeredName=None)
 
-            res = self.client.get("/suppliers/registered-company-name/edit")
-            assert res.status_code == 200, 'The add registered company name page has not loaded correctly.'
+    def setup_method(self, method):
+        super().setup_method(method)
+        self.data_api_client_patch = mock.patch('app.main.views.suppliers.data_api_client', autospec=True)
+        self.data_api_client = self.data_api_client_patch.start()
 
-    def test_no_input_triggers_input_required_validation_and_does_not_call_api_update(self, data_api_client):
-        with self.app.test_client():
-            self.login()
-            data_api_client.get_supplier.return_value = get_supplier(registeredName=None)
+    def teardown_method(self, method):
+        self.data_api_client_patch.stop()
+        super().teardown_method(method)
 
-            res = self.client.post("/suppliers/registered-company-name/edit")
+    def test_add_registered_company_name_page_loads(self):
+        self.login()
+        self.data_api_client.get_supplier.return_value = get_supplier(registeredName=None)
 
-            self.assert_single_question_page_validation_errors(
-                res,
-                question_name="Registered company name",
-                validation_message="You must provide a registered company name."
-            )
-            assert data_api_client.update_supplier.call_args_list == []
+        res = self.client.get("/suppliers/registered-company-name/edit")
+        assert res.status_code == 200, 'The add registered company name page has not loaded correctly.'
 
-    def test_post_input_triggers_api_supplier_update_and_redirect(self, data_api_client):
-        with self.app.test_client():
-            self.login()
-            data_api_client.get_supplier.return_value = get_supplier(registeredName=None)
+    def test_no_input_triggers_input_required_validation_and_does_not_call_api_update(self):
+        self.login()
+        self.data_api_client.get_supplier.return_value = get_supplier(registeredName=None)
 
-            res = self.client.post("/suppliers/registered-company-name/edit", data={'registered_company_name': "K-Inc"})
+        res = self.client.post("/suppliers/registered-company-name/edit")
 
-            assert data_api_client.update_supplier.call_args_list == [
-                mock.call(supplier_id=1234, supplier={'registeredName': "K-Inc"}, user='email@email.com')
-            ], 'update_supplier was called with the wrong arguments'
-            assert res.status_code == 302
-            assert res.location == 'http://localhost/suppliers/details'
+        self.assert_single_question_page_validation_errors(
+            res,
+            question_name="Registered company name",
+            validation_message="You must provide a registered company name."
+        )
+        assert self.data_api_client.update_supplier.call_args_list == []
 
-    def test_fails_if_api_update_fails(self, data_api_client):
-        with self.app.test_client():
-            self.login()
-            data_api_client.get_supplier.return_value = get_supplier(registeredName=None)
-            data_api_client.update_supplier.side_effect = APIError(mock.Mock(status_code=504))
-            res = self.client.post("/suppliers/registered-company-name/edit", data={'registered_company_name': "K-Inc"})
-            assert res.status_code == 504
+    def test_post_input_triggers_api_supplier_update_and_redirect(self):
+        self.login()
+        self.data_api_client.get_supplier.return_value = get_supplier(registeredName=None)
+
+        res = self.client.post("/suppliers/registered-company-name/edit", data={'registered_company_name': "K-Inc"})
+
+        assert self.data_api_client.update_supplier.call_args_list == [
+            mock.call(supplier_id=1234, supplier={'registeredName': "K-Inc"}, user='email@email.com')
+        ], 'update_supplier was called with the wrong arguments'
+        assert res.status_code == 302
+        assert res.location == 'http://localhost/suppliers/details'
+
+    def test_fails_if_api_update_fails(self):
+        self.login()
+        self.data_api_client.get_supplier.return_value = get_supplier(registeredName=None)
+        self.data_api_client.update_supplier.side_effect = APIError(mock.Mock(status_code=504))
+        res = self.client.post("/suppliers/registered-company-name/edit", data={'registered_company_name': "K-Inc"})
+        assert res.status_code == 504
 
     @pytest.mark.parametrize('overwrite_supplier_data',
                              ({'companyDetailsConfirmed': False}, {'registeredName': None})
                              )
-    def test_get_shows_form_on_page_if_supplier_data_not_complete_and_confirmed(self, data_api_client,
-                                                                                overwrite_supplier_data):
-        with self.app.test_client():
-            self.login()
-            data_api_client.get_supplier.return_value = get_supplier(**overwrite_supplier_data)
-            res = self.client.get("/suppliers/registered-company-name/edit")
-            doc = html.fromstring(res.get_data(as_text=True))
-            page_heading = doc.xpath('//h1')
+    def test_get_shows_form_on_page_if_supplier_data_not_complete_and_confirmed(self, overwrite_supplier_data):
+        self.login()
+        self.data_api_client.get_supplier.return_value = get_supplier(**overwrite_supplier_data)
+        res = self.client.get("/suppliers/registered-company-name/edit")
+        doc = html.fromstring(res.get_data(as_text=True))
+        page_heading = doc.xpath('//h1')
 
-            assert res.status_code == 200
-            assert page_heading[0].text.strip() == "Registered company name"
-            assert doc.xpath('//form[@action="/suppliers/registered-company-name/edit"]')
-            assert data_api_client.update_supplier.call_args_list == []
+        assert res.status_code == 200
+        assert page_heading[0].text.strip() == "Registered company name"
+        assert doc.xpath('//form[@action="/suppliers/registered-company-name/edit"]')
+        assert self.data_api_client.update_supplier.call_args_list == []
 
-    def test_get_shows_already_entered_page_and_api_not_called_update_if_data_already_confirmed(self, data_api_client):
-        with self.app.test_client():
-            self.login()
-            data_api_client.get_supplier.side_effect = get_supplier
-            res = self.client.get("/suppliers/registered-company-name/edit")
-            doc = html.fromstring(res.get_data(as_text=True))
-            page_heading = doc.xpath('//h1')
+    def test_get_shows_already_entered_page_and_api_not_called_update_if_data_already_confirmed(self):
+        self.login()
+        self.data_api_client.get_supplier.side_effect = get_supplier
+        res = self.client.get("/suppliers/registered-company-name/edit")
+        doc = html.fromstring(res.get_data(as_text=True))
+        page_heading = doc.xpath('//h1')
 
-            assert res.status_code == 200
-            assert page_heading[0].text.strip() == "Correct a mistake in your registered company name"
-            assert data_api_client.update_supplier.call_args_list == []
+        assert res.status_code == 200
+        assert page_heading[0].text.strip() == "Correct a mistake in your registered company name"
+        assert self.data_api_client.update_supplier.call_args_list == []
 
-    def test_post_shows_already_entered_page_and_api_not_called_if_data_already_confirmed(self, data_api_client):
-        with self.app.test_client():
-            self.login()
-            data_api_client.get_supplier.side_effect = get_supplier
-            res = self.client.post("/suppliers/registered-company-name/edit", data={'registered_company_name': "K-Inc"})
-            doc = html.fromstring(res.get_data(as_text=True))
-            page_heading = doc.xpath('//h1')
+    def test_post_shows_already_entered_page_and_api_not_called_if_data_already_confirmed(self):
+        self.login()
+        self.data_api_client.get_supplier.side_effect = get_supplier
+        res = self.client.post("/suppliers/registered-company-name/edit", data={'registered_company_name': "K-Inc"})
+        doc = html.fromstring(res.get_data(as_text=True))
+        page_heading = doc.xpath('//h1')
 
-            assert res.status_code == 400
-            assert page_heading[0].text.strip() == "Correct a mistake in your registered company name"
-            assert data_api_client.update_supplier.call_args_list == []
+        assert res.status_code == 400
+        assert page_heading[0].text.strip() == "Correct a mistake in your registered company name"
+        assert self.data_api_client.update_supplier.call_args_list == []
 
 
-@mock.patch("app.main.views.suppliers.data_api_client", autospec=True)
 class TestSupplierEditTradingStatus(BaseApplicationTest):
-    def test_edit_organisation_size_page_loads(self, data_api_client):
-        with self.app.test_client():
-            self.login()
 
-            res = self.client.get("/suppliers/trading-status/edit")
-            assert res.status_code == 200, 'The edit trading-status page has not loaded correctly.'
+    def setup_method(self, method):
+        super().setup_method(method)
+        self.data_api_client_patch = mock.patch('app.main.views.suppliers.data_api_client', autospec=True)
+        self.data_api_client = self.data_api_client_patch.start()
+
+    def teardown_method(self, method):
+        self.data_api_client_patch.stop()
+        super().teardown_method(method)
+
+    def test_edit_organisation_size_page_loads(self):
+        self.login()
+
+        res = self.client.get("/suppliers/trading-status/edit")
+        assert res.status_code == 200, 'The edit trading-status page has not loaded correctly.'
 
     @pytest.mark.parametrize('trading_status, expected_error',
                              (
                                  (None, "You must choose a trading status."),
                                  ('blah', "Not a valid choice")
                              ))
-    def test_missing_or_invalid_choice_shows_validation(self, data_api_client, trading_status, expected_error):
-        with self.app.test_client():
-            self.login()
+    def test_missing_or_invalid_choice_shows_validation(self, trading_status, expected_error):
+        self.login()
 
-            res = self.client.post("/suppliers/trading-status/edit",
-                                   data={'trading_status': trading_status} if trading_status else {})
-            doc = html.fromstring(res.get_data(as_text=True))
-            error = doc.xpath('//span[@id="error-trading_status"]')
+        res = self.client.post("/suppliers/trading-status/edit",
+                               data={'trading_status': trading_status} if trading_status else {})
+        doc = html.fromstring(res.get_data(as_text=True))
+        error = doc.xpath('//span[@id="error-trading_status"]')
 
-            assert len(error) == 1, 'Only one validation message should be shown.'
+        assert len(error) == 1, 'Only one validation message should be shown.'
 
-            assert error[0].text.strip() == expected_error, 'The validation message is not as anticipated.'
+        assert error[0].text.strip() == expected_error, 'The validation message is not as anticipated.'
 
-            self.assert_single_question_page_validation_errors(res,
-                                                               question_name="Trading status",
-                                                               validation_message=expected_error)
+        self.assert_single_question_page_validation_errors(res,
+                                                           question_name="Trading status",
+                                                           validation_message=expected_error)
 
     @pytest.mark.parametrize('trading_status', (None, 'limited company (LTD)', 'other'))
-    def test_post_choice_triggers_api_supplier_update_and_redirect(self, data_api_client, trading_status):
-        with self.app.test_client():
-            self.login()
+    def test_post_choice_triggers_api_supplier_update_and_redirect(self, trading_status):
+        self.login()
 
-            self.client.post("/suppliers/trading-status/edit", data={'trading_status': trading_status})
+        self.client.post("/suppliers/trading-status/edit", data={'trading_status': trading_status})
 
-            call_args_list = data_api_client.update_supplier.call_args_list
-            if trading_status:
-                assert call_args_list == [
-                    mock.call(supplier_id=1234, supplier={'tradingStatus': trading_status}, user='email@email.com')
-                ], 'update_supplier was called with the wrong arguments'
+        call_args_list = self.data_api_client.update_supplier.call_args_list
+        if trading_status:
+            assert call_args_list == [
+                mock.call(supplier_id=1234, supplier={'tradingStatus': trading_status}, user='email@email.com')
+            ], 'update_supplier was called with the wrong arguments'
 
-            else:
-                assert call_args_list == [], 'update_supplier was called with the wrong arguments'
+        else:
+            assert call_args_list == [], 'update_supplier was called with the wrong arguments'
 
     @pytest.mark.parametrize('existing_trading_status, expected_selection',
                              (
@@ -2518,43 +2522,48 @@ class TestSupplierEditTradingStatus(BaseApplicationTest):
                                  ('some unknown value', []),
                                  *[(x['value'], [x['value']]) for x in CompanyTradingStatusForm.OPTIONS],
                              ))
-    def test_existing_org_size_sets_current_selection(self, data_api_client, existing_trading_status,
-                                                      expected_selection):
+    def test_existing_org_size_sets_current_selection(self, existing_trading_status, expected_selection):
         data = {'tradingStatus': existing_trading_status} if existing_trading_status else {}
-        data_api_client.get_supplier.return_value = {'suppliers': data}
+        self.data_api_client.get_supplier.return_value = {'suppliers': data}
 
-        with self.app.test_client():
-            self.login()
+        self.login()
 
-            res = self.client.get("/suppliers/trading-status/edit")
-            doc = html.fromstring(res.get_data(as_text=True))
-            selected_value = doc.xpath('//input[@name="trading_status" and @checked="checked"]/@value')
-            assert selected_value == expected_selection, 'The trading status has not pre-populated correctly.'
+        res = self.client.get("/suppliers/trading-status/edit")
+        doc = html.fromstring(res.get_data(as_text=True))
+        selected_value = doc.xpath('//input[@name="trading_status" and @checked="checked"]/@value')
+        assert selected_value == expected_selection, 'The trading status has not pre-populated correctly.'
 
-    def test_api_error_is_not_suppressed(self, data_api_client):
+    def test_api_error_is_not_suppressed(self):
         error_message = 'There was an error with the API'
-        data_api_client.update_supplier.side_effect = APIError('blah', error_message)
+        self.data_api_client.update_supplier.side_effect = APIError('blah', error_message)
 
-        with self.app.test_client():
-            self.login()
+        self.login()
 
-            res = self.client.post("/suppliers/trading-status/edit",
-                                   data={'trading_status': CompanyTradingStatusForm.OPTIONS[0]['value']})
-            assert res.status_code == 503
+        res = self.client.post("/suppliers/trading-status/edit",
+                               data={'trading_status': CompanyTradingStatusForm.OPTIONS[0]['value']})
+        assert res.status_code == 503
 
 
-@mock.patch("app.main.views.suppliers.data_api_client", autospec=True)
 class TestSupplierAddRegistrationNumber(BaseApplicationTest):
-    def test_add_registration_number_page_loads(self, data_api_client):
-        with self.app.test_client():
-            self.login()
-            data_api_client.get_supplier.return_value = get_supplier(
-                companiesHouseNumber=None,
-                otherCompanyRegistrationNumber=None
-            )
 
-            res = self.client.get("/suppliers/registration-number/edit")
-            assert res.status_code == 200, 'The add registration number page has not loaded correctly.'
+    def setup_method(self, method):
+        super().setup_method(method)
+        self.data_api_client_patch = mock.patch('app.main.views.suppliers.data_api_client', autospec=True)
+        self.data_api_client = self.data_api_client_patch.start()
+
+    def teardown_method(self, method):
+        self.data_api_client_patch.stop()
+        super().teardown_method(method)
+
+    def test_add_registration_number_page_loads(self):
+        self.login()
+        self.data_api_client.get_supplier.return_value = get_supplier(
+            companiesHouseNumber=None,
+            otherCompanyRegistrationNumber=None
+        )
+
+        res = self.client.get("/suppliers/registration-number/edit")
+        assert res.status_code == 200, 'The add registration number page has not loaded correctly.'
 
     @pytest.mark.parametrize(
         'incomplete_data, question_mentioned, validation_message',
@@ -2594,23 +2603,22 @@ class TestSupplierAddRegistrationNumber(BaseApplicationTest):
         )
     )
     def test_incomplete_or_invalid_input_shows_validation_error_and_does_not_update_api(
-            self, data_api_client, incomplete_data, question_mentioned, validation_message
+        self, incomplete_data, question_mentioned, validation_message
     ):
-        with self.app.test_client():
-            self.login()
-            data_api_client.get_supplier.return_value = get_supplier(
-                companiesHouseNumber=None,
-                otherCompanyRegistrationNumber=None
-            )
+        self.login()
+        self.data_api_client.get_supplier.return_value = get_supplier(
+            companiesHouseNumber=None,
+            otherCompanyRegistrationNumber=None
+        )
 
-            res = self.client.post("/suppliers/registration-number/edit", data=incomplete_data)
+        res = self.client.post("/suppliers/registration-number/edit", data=incomplete_data)
 
-            self.assert_single_question_page_validation_errors(
-                res,
-                question_name=question_mentioned,
-                validation_message=validation_message
-            )
-            assert data_api_client.update_supplier.call_args_list == []
+        self.assert_single_question_page_validation_errors(
+            res,
+            question_name=question_mentioned,
+            validation_message=validation_message
+        )
+        assert self.data_api_client.update_supplier.call_args_list == []
 
     @pytest.mark.parametrize(
         'complete_data, expected_post',
@@ -2639,85 +2647,79 @@ class TestSupplierAddRegistrationNumber(BaseApplicationTest):
             ),
         )
     )
-    def test_post_input_triggers_api_supplier_update_and_redirect(self, data_api_client, complete_data, expected_post):
-        with self.app.test_client():
-            self.login()
-            data_api_client.get_supplier.return_value = get_supplier(
-                companiesHouseNumber=None,
-                otherCompanyRegistrationNumber=None
-            )
+    def test_post_input_triggers_api_supplier_update_and_redirect(self, complete_data, expected_post):
+        self.login()
+        self.data_api_client.get_supplier.return_value = get_supplier(
+            companiesHouseNumber=None,
+            otherCompanyRegistrationNumber=None
+        )
 
-            res = self.client.post("/suppliers/registration-number/edit", data=complete_data)
+        res = self.client.post("/suppliers/registration-number/edit", data=complete_data)
 
-            assert data_api_client.update_supplier.call_args_list == [
-                mock.call(supplier_id=1234, supplier=expected_post, user='email@email.com')
-            ], 'update_supplier was called with the wrong arguments'
-            assert res.status_code == 302
-            assert res.location == 'http://localhost/suppliers/details'
+        assert self.data_api_client.update_supplier.call_args_list == [
+            mock.call(supplier_id=1234, supplier=expected_post, user='email@email.com')
+        ], 'update_supplier was called with the wrong arguments'
+        assert res.status_code == 302
+        assert res.location == 'http://localhost/suppliers/details'
 
-    def test_fails_if_api_update_fails(self, data_api_client):
-        with self.app.test_client():
-            self.login()
-            valid_post_data = {'has_companies_house_number': 'Yes',
-                               'companies_house_number': 'KK654321',
-                               'other_company_registration_number': ''
-                               }
-            data_api_client.get_supplier.return_value = get_supplier(
-                companiesHouseNumber=None,
-                otherCompanyRegistrationNumber=None
-            )
-            data_api_client.update_supplier.side_effect = APIError(mock.Mock(status_code=504))
-            res = self.client.post("/suppliers/registration-number/edit", data=valid_post_data)
-            assert res.status_code == 504
+    def test_fails_if_api_update_fails(self):
+        self.login()
+        valid_post_data = {'has_companies_house_number': 'Yes',
+                           'companies_house_number': 'KK654321',
+                           'other_company_registration_number': ''
+                           }
+        self.data_api_client.get_supplier.return_value = get_supplier(
+            companiesHouseNumber=None,
+            otherCompanyRegistrationNumber=None
+        )
+        self.data_api_client.update_supplier.side_effect = APIError(mock.Mock(status_code=504))
+        res = self.client.post("/suppliers/registration-number/edit", data=valid_post_data)
+        assert res.status_code == 504
 
     @pytest.mark.parametrize('overwrite_supplier_data',
                              (
                                  {'companyDetailsConfirmed': False},
                                  {'companiesHouseNumber': None, 'otherCompanyRegistrationNumber': None},
                              ))
-    def test_get_shows_form_on_page_if_supplier_data_not_complete_and_confirmed(self, data_api_client,
-                                                                                overwrite_supplier_data):
-        with self.app.test_client():
-            self.login()
-            data_api_client.get_supplier.return_value = get_supplier(**overwrite_supplier_data)
-            res = self.client.get("/suppliers/registration-number/edit")
-            doc = html.fromstring(res.get_data(as_text=True))
-            page_heading = doc.xpath('//h1')
+    def test_get_shows_form_on_page_if_supplier_data_not_complete_and_confirmed(self, overwrite_supplier_data):
+        self.login()
+        self.data_api_client.get_supplier.return_value = get_supplier(**overwrite_supplier_data)
+        res = self.client.get("/suppliers/registration-number/edit")
+        doc = html.fromstring(res.get_data(as_text=True))
+        page_heading = doc.xpath('//h1')
 
-            assert res.status_code == 200
-            assert page_heading[0].text.strip() == "Are you registered with Companies House?"
-            assert doc.xpath('//form[@action="/suppliers/registration-number/edit"]')
-            assert data_api_client.update_supplier.call_args_list == []
+        assert res.status_code == 200
+        assert page_heading[0].text.strip() == "Are you registered with Companies House?"
+        assert doc.xpath('//form[@action="/suppliers/registration-number/edit"]')
+        assert self.data_api_client.update_supplier.call_args_list == []
 
-    def test_get_shows_already_entered_page_and_api_not_called_update_if_data_already_confirmed(self, data_api_client):
-        with self.app.test_client():
-            self.login()
-            # Default get_supplier has companiesHouseNumber and otherCompanyRegistrationNumber complete
-            data_api_client.get_supplier.side_effect = get_supplier
-            res = self.client.get("/suppliers/registration-number/edit")
-            doc = html.fromstring(res.get_data(as_text=True))
-            page_heading = doc.xpath('//h1')
+    def test_get_shows_already_entered_page_and_api_not_called_update_if_data_already_confirmed(self):
+        self.login()
+        # Default get_supplier has companiesHouseNumber and otherCompanyRegistrationNumber complete
+        self.data_api_client.get_supplier.side_effect = get_supplier
+        res = self.client.get("/suppliers/registration-number/edit")
+        doc = html.fromstring(res.get_data(as_text=True))
+        page_heading = doc.xpath('//h1')
 
-            assert res.status_code == 200
-            assert page_heading[0].text.strip() == "Correct a mistake in your registration number"
-            assert data_api_client.update_supplier.call_args_list == []
+        assert res.status_code == 200
+        assert page_heading[0].text.strip() == "Correct a mistake in your registration number"
+        assert self.data_api_client.update_supplier.call_args_list == []
 
-    def test_post_shows_already_entered_page_and_api_not_called_if_data_already_confirmed(self, data_api_client):
-        with self.app.test_client():
-            self.login()
-            valid_post_data = {'has_companies_house_number': 'Yes',
-                               'companies_house_number': 'KK654321',
-                               'other_company_registration_number': ''
-                               }
-            # Default get_supplier has companiesHouseNumber and otherCompanyRegistrationNumber complete
-            data_api_client.get_supplier.side_effect = get_supplier
-            res = self.client.post("/suppliers/registration-number/edit", data=valid_post_data)
-            doc = html.fromstring(res.get_data(as_text=True))
-            page_heading = doc.xpath('//h1')
+    def test_post_shows_already_entered_page_and_api_not_called_if_data_already_confirmed(self):
+        self.login()
+        valid_post_data = {'has_companies_house_number': 'Yes',
+                           'companies_house_number': 'KK654321',
+                           'other_company_registration_number': ''
+                           }
+        # Default get_supplier has companiesHouseNumber and otherCompanyRegistrationNumber complete
+        self.data_api_client.get_supplier.side_effect = get_supplier
+        res = self.client.post("/suppliers/registration-number/edit", data=valid_post_data)
+        doc = html.fromstring(res.get_data(as_text=True))
+        page_heading = doc.xpath('//h1')
 
-            assert res.status_code == 400
-            assert page_heading[0].text.strip() == "Correct a mistake in your registration number"
-            assert data_api_client.update_supplier.call_args_list == []
+        assert res.status_code == 400
+        assert page_heading[0].text.strip() == "Correct a mistake in your registration number"
+        assert self.data_api_client.update_supplier.call_args_list == []
 
 
 class TestEditSupplierVatNumber(BaseApplicationTest):
@@ -2733,82 +2735,76 @@ class TestEditSupplierVatNumber(BaseApplicationTest):
         self.data_api_client_patch.stop()
 
     def test_loads_page_for_supplier_with_no_vat_number(self):
-        with self.app.test_client():
-            res = self.client.get("/suppliers/vat-number/edit")
-            doc = html.fromstring(res.get_data(as_text=True))
+        res = self.client.get("/suppliers/vat-number/edit")
+        doc = html.fromstring(res.get_data(as_text=True))
 
-            assert res.status_code == 200
-            assert doc.xpath("//h1[normalize-space(string())='Are you registered for VAT?']")
+        assert res.status_code == 200
+        assert doc.xpath("//h1[normalize-space(string())='Are you registered for VAT?']")
 
     @pytest.mark.parametrize('overwrite_supplier_data',
                              (
                                  {'companyDetailsConfirmed': False},
                                  {'vatNumber': None},
                              ))
-    def test_get_shows_form_on_page_if_supplier_data_not_complete_and_confirmed(self,
-                                                                                overwrite_supplier_data):
-        with self.app.test_client():
-            self.login()
-            self.data_api_client.get_supplier.return_value = get_supplier(**overwrite_supplier_data)
-            res = self.client.get("/suppliers/vat-number/edit")
-            doc = html.fromstring(res.get_data(as_text=True))
-            page_heading = doc.xpath('//h1')
+    def test_get_shows_form_on_page_if_supplier_data_not_complete_and_confirmed(self, overwrite_supplier_data):
+        self.login()
+        self.data_api_client.get_supplier.return_value = get_supplier(**overwrite_supplier_data)
+        res = self.client.get("/suppliers/vat-number/edit")
+        doc = html.fromstring(res.get_data(as_text=True))
+        page_heading = doc.xpath('//h1')
 
-            assert res.status_code == 200
-            assert page_heading[0].text.strip() == "Are you registered for VAT?"
-            assert doc.xpath('//form[@action="/suppliers/vat-number/edit"]')
-            assert self.data_api_client.update_supplier.call_args_list == []
+        assert res.status_code == 200
+        assert page_heading[0].text.strip() == "Are you registered for VAT?"
+        assert doc.xpath('//form[@action="/suppliers/vat-number/edit"]')
+        assert self.data_api_client.update_supplier.call_args_list == []
 
     @pytest.mark.parametrize('method, status_code', (('get', 200), ('post', 400)))
     def test_get_and_post_load_already_completed_page_and_do_not_update_supplier_with_vat_number(
         self, method, status_code
     ):
-        with self.app.test_client():
-            self.data_api_client.get_supplier.return_value = get_supplier()
+        self.data_api_client.get_supplier.return_value = get_supplier()
 
-            res = getattr(self.client, method)("/suppliers/vat-number/edit")
-            doc = html.fromstring(res.get_data(as_text=True))
+        res = getattr(self.client, method)("/suppliers/vat-number/edit")
+        doc = html.fromstring(res.get_data(as_text=True))
 
-            assert res.status_code == status_code
-            assert doc.xpath("//h1[normalize-space(string())='Correct a mistake in your VAT number']")
-            assert not self.data_api_client.update_supplier.called
+        assert res.status_code == status_code
+        assert doc.xpath("//h1[normalize-space(string())='Correct a mistake in your VAT number']")
+        assert not self.data_api_client.update_supplier.called
 
     def test_posting_valid_vat_code_updates_supplier(self):
-        with self.app.test_client():
-            res = self.client.post(
-                "/suppliers/vat-number/edit",
-                data={
-                    "vat_registered": "Yes",
-                    "vat_number": "GB123456789",
-                }
-            )
+        res = self.client.post(
+            "/suppliers/vat-number/edit",
+            data={
+                "vat_registered": "Yes",
+                "vat_number": "GB123456789",
+            }
+        )
 
-            assert res.status_code == 302
-            assert res.location == "http://localhost/suppliers/details"
-            self.data_api_client.update_supplier.assert_called_once_with(
-                supplier_id=1234,
-                supplier={"vatNumber": "GB123456789"},
-                user="email@email.com"
-            )
+        assert res.status_code == 302
+        assert res.location == "http://localhost/suppliers/details"
+        self.data_api_client.update_supplier.assert_called_once_with(
+            supplier_id=1234,
+            supplier={"vatNumber": "GB123456789"},
+            user="email@email.com"
+        )
 
     @pytest.mark.parametrize('vat_number', ("", "Not a VAT number"))
     def test_posting_not_vat_registered_correctly_updates_supplier(self, vat_number):
-        with self.app.test_client():
-            res = self.client.post(
-                "/suppliers/vat-number/edit",
-                data={
-                    "vat_registered": "No",
-                    "vat_number": vat_number,
-                }
-            )
+        res = self.client.post(
+            "/suppliers/vat-number/edit",
+            data={
+                "vat_registered": "No",
+                "vat_number": vat_number,
+            }
+        )
 
-            assert res.status_code == 302
-            assert res.location == "http://localhost/suppliers/details"
-            self.data_api_client.update_supplier.assert_called_once_with(
-                supplier_id=1234,
-                supplier={"vatNumber": VatNumberForm.NOT_VAT_REGISTERED_TEXT},
-                user="email@email.com",
-            )
+        assert res.status_code == 302
+        assert res.location == "http://localhost/suppliers/details"
+        self.data_api_client.update_supplier.assert_called_once_with(
+            supplier_id=1234,
+            supplier={"vatNumber": VatNumberForm.NOT_VAT_REGISTERED_TEXT},
+            user="email@email.com",
+        )
 
     @pytest.mark.parametrize("vat_number, message, masthead", (
         ("GB123456789", None, None),
@@ -2823,97 +2819,92 @@ class TestEditSupplierVatNumber(BaseApplicationTest):
         ("", "You must provide a VAT number.", "VAT number")
     ))
     def test_validation_of_tax_number(self, vat_number, message, masthead):
-        with self.app.test_client():
-            res = self.client.post(
-                "/suppliers/vat-number/edit",
-                data={
-                    "vat_registered": "Yes",
-                    "vat_number": vat_number,
-                }
-            )
+        res = self.client.post(
+            "/suppliers/vat-number/edit",
+            data={
+                "vat_registered": "Yes",
+                "vat_number": vat_number,
+            }
+        )
 
-            if message:
-                self.assert_single_question_page_validation_errors(
-                    res,
-                    question_name=masthead,
-                    validation_message=message,
-                )
-                assert not self.data_api_client.update_supplier.called
-            else:
-                assert res.status_code == 302
-                self.data_api_client.update_supplier.assert_called_once_with(
-                    supplier_id=1234,
-                    supplier={"vatNumber": vat_number},
-                    user="email@email.com",
-                )
-
-    def test_whitespace_is_removed_from_vat_numbers(self):
-        with self.app.test_client():
-            res = self.client.post(
-                "/suppliers/vat-number/edit",
-                data={
-                    "vat_registered": "Yes",
-                    "vat_number": "   GB 1 2 34 567 8 9   ",
-                }
-            )
-
-            assert res.status_code == 302
-            assert res.location == "http://localhost/suppliers/details"
-            self.data_api_client.update_supplier.assert_called_once_with(
-                supplier_id=1234,
-                supplier={"vatNumber": "GB123456789"},
-                user="email@email.com",
-            )
-
-    def test_vat_numbers_are_uppercased(self):
-        with self.app.test_client():
-            res = self.client.post(
-                "/suppliers/vat-number/edit",
-                data={
-                    "vat_registered": "Yes",
-                    "vat_number": "gbHa789",
-                }
-            )
-
-            assert res.status_code == 302
-            assert res.location == "http://localhost/suppliers/details"
-            self.data_api_client.update_supplier.assert_called_once_with(
-                supplier_id=1234,
-                supplier={"vatNumber": "GBHA789"},
-                user="email@email.com",
-            )
-
-    def test_validation_of_no_answer_for_vat_registered_question(self):
-        with self.app.test_client():
-            res = self.client.post(
-                "/suppliers/vat-number/edit",
-                data={
-                    "vat_number": "",
-                }
-            )
-            doc = html.fromstring(res.get_data(as_text=True))
-
-            assert res.status_code == 400
-            assert doc.xpath(
-                "//div[@class='validation-masthead'][normalize-space(string())=$masthead]",
-                masthead="There was a problem with your answer to: VAT registered"
-            )
-            assert doc.xpath(
-                "//span[@class='validation-message'][normalize-space(string())=$message]",
-                message="You need to answer this question."
+        if message:
+            self.assert_single_question_page_validation_errors(
+                res,
+                question_name=masthead,
+                validation_message=message,
             )
             assert not self.data_api_client.update_supplier.called
-
-    def test_post_response_fails_if_api_error(self):
-        with self.app.test_client():
-            self.data_api_client.update_supplier.side_effect = APIError(mock.Mock(status_code=504))
-
-            res = self.client.post(
-                "/suppliers/vat-number/edit",
-                data={
-                    "vat_registered": "Yes",
-                    "vat_number": "GB123456789",
-                }
+        else:
+            assert res.status_code == 302
+            self.data_api_client.update_supplier.assert_called_once_with(
+                supplier_id=1234,
+                supplier={"vatNumber": vat_number},
+                user="email@email.com",
             )
 
-            assert res.status_code == 504
+    def test_whitespace_is_removed_from_vat_numbers(self):
+        res = self.client.post(
+            "/suppliers/vat-number/edit",
+            data={
+                "vat_registered": "Yes",
+                "vat_number": "   GB 1 2 34 567 8 9   ",
+            }
+        )
+
+        assert res.status_code == 302
+        assert res.location == "http://localhost/suppliers/details"
+        self.data_api_client.update_supplier.assert_called_once_with(
+            supplier_id=1234,
+            supplier={"vatNumber": "GB123456789"},
+            user="email@email.com",
+        )
+
+    def test_vat_numbers_are_uppercased(self):
+        res = self.client.post(
+            "/suppliers/vat-number/edit",
+            data={
+                "vat_registered": "Yes",
+                "vat_number": "gbHa789",
+            }
+        )
+
+        assert res.status_code == 302
+        assert res.location == "http://localhost/suppliers/details"
+        self.data_api_client.update_supplier.assert_called_once_with(
+            supplier_id=1234,
+            supplier={"vatNumber": "GBHA789"},
+            user="email@email.com",
+        )
+
+    def test_validation_of_no_answer_for_vat_registered_question(self):
+        res = self.client.post(
+            "/suppliers/vat-number/edit",
+            data={
+                "vat_number": "",
+            }
+        )
+        doc = html.fromstring(res.get_data(as_text=True))
+
+        assert res.status_code == 400
+        assert doc.xpath(
+            "//div[@class='validation-masthead'][normalize-space(string())=$masthead]",
+            masthead="There was a problem with your answer to: VAT registered"
+        )
+        assert doc.xpath(
+            "//span[@class='validation-message'][normalize-space(string())=$message]",
+            message="You need to answer this question."
+        )
+        assert not self.data_api_client.update_supplier.called
+
+    def test_post_response_fails_if_api_error(self):
+        self.data_api_client.update_supplier.side_effect = APIError(mock.Mock(status_code=504))
+
+        res = self.client.post(
+            "/suppliers/vat-number/edit",
+            data={
+                "vat_registered": "Yes",
+                "vat_number": "GB123456789",
+            }
+        )
+
+        assert res.status_code == 504
