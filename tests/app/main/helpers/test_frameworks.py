@@ -313,202 +313,210 @@ def test_get_status_for_lot(parameters, expected_result):
 
 
 @mock.patch("app.main.helpers.frameworks.current_user")
-def test_return_supplier_framework_info_if_on_framework_or_abort_aborts_if_no_supplier_framework_exists(current_user):
-    data_api_client = mock.Mock()
-    data_api_client.get_supplier_framework_info.return_value = {'frameworkInterest': {}}
-    with pytest.raises(HTTPException):
-        return_supplier_framework_info_if_on_framework_or_abort(data_api_client, 'g-cloud-8')
+class TestReturnSupplierFrameworkInfoIfOnFrameworkorAbort:
+
+    def test_return_supplier_framework_info_if_on_framework_or_abort_aborts_if_no_supplier_framework_exists(
+        self, current_user
+    ):
+        data_api_client = mock.Mock()
+        data_api_client.get_supplier_framework_info.return_value = {'frameworkInterest': {}}
+        with pytest.raises(HTTPException):
+            return_supplier_framework_info_if_on_framework_or_abort(data_api_client, 'g-cloud-8')
+
+    def test_return_supplier_framework_info_if_on_framework_or_abort_aborts_if_on_framework_false(self, current_user):
+        data_api_client = mock.Mock()
+        data_api_client.get_supplier_framework_info.return_value = {'frameworkInterest': {'onFramework': None}}
+        with pytest.raises(HTTPException):
+            return_supplier_framework_info_if_on_framework_or_abort(data_api_client, 'g-cloud-8')
+
+    def test_return_supplier_framework_info_if_on_framework_or_abort_returns_supplier_framework_if_on_framework(
+        self, current_user
+    ):
+        supplier_framework_response = {'frameworkInterest': {'onFramework': True}}
+        data_api_client = mock.Mock()
+        data_api_client.get_supplier_framework_info.return_value = supplier_framework_response
+        assert return_supplier_framework_info_if_on_framework_or_abort(data_api_client, 'g-cloud-8') == \
+            supplier_framework_response['frameworkInterest']
 
 
-@mock.patch("app.main.helpers.frameworks.current_user")
-def test_return_supplier_framework_info_if_on_framework_or_abort_aborts_if_on_framework_false(current_user):
-    data_api_client = mock.Mock()
-    data_api_client.get_supplier_framework_info.return_value = {'frameworkInterest': {'onFramework': None}}
-    with pytest.raises(HTTPException):
-        return_supplier_framework_info_if_on_framework_or_abort(data_api_client, 'g-cloud-8')
+class TestCheckAgreementRelatedToSupplierFrameworkOrAbort:
 
+    def test_check_agreement_is_related_to_supplier_framework_or_abort_does_abort_for_supplier_mismatch(self):
+        supplier_framework = {"supplierId": 200, "frameworkSlug": 'g-cloud-8'}
+        agreement = {"supplierId": 201, "frameworkSlug": 'g-cloud-8'}
+        with pytest.raises(HTTPException):
+            check_agreement_is_related_to_supplier_framework_or_abort(agreement, supplier_framework)
 
-@mock.patch("app.main.helpers.frameworks.current_user")
-def test_return_supplier_framework_info_if_on_framework_or_abort_returns_supplier_framework_if_on_framework(
-        current_user
-):
-    supplier_framework_response = {'frameworkInterest': {'onFramework': True}}
-    data_api_client = mock.Mock()
-    data_api_client.get_supplier_framework_info.return_value = supplier_framework_response
-    assert return_supplier_framework_info_if_on_framework_or_abort(data_api_client, 'g-cloud-8') == \
-        supplier_framework_response['frameworkInterest']
+    def test_check_agreement_is_related_to_supplier_framework_or_abort_does_abort_for_framework_mismatch(self):
+        supplier_framework = {"supplierId": 200, "frameworkSlug": 'g-cloud-8'}
+        agreement = {"supplierId": 200, "frameworkSlug": 'g-cloud-7'}
+        with pytest.raises(HTTPException):
+            check_agreement_is_related_to_supplier_framework_or_abort(agreement, supplier_framework)
 
+    def test_check_agreement_is_related_to_supplier_framework_or_abort_does_abort_if_supplier_ids_are_none(self):
+        supplier_framework = {"supplierId": None, "frameworkSlug": 'g-cloud-8'}
+        agreement = {"supplierId": None, "frameworkSlug": 'g-cloud-8'}
+        with pytest.raises(HTTPException):
+            check_agreement_is_related_to_supplier_framework_or_abort(agreement, supplier_framework)
 
-def test_check_agreement_is_related_to_supplier_framework_or_abort_does_abort_for_supplier_mismatch():
-    supplier_framework = {"supplierId": 200, "frameworkSlug": 'g-cloud-8'}
-    agreement = {"supplierId": 201, "frameworkSlug": 'g-cloud-8'}
-    with pytest.raises(HTTPException):
+    def test_check_agreement_is_related_to_supplier_framework_or_abort_does_abort_if_framework_slugs_are_none(self):
+        supplier_framework = {"supplierId": 212, "frameworkSlug": None}
+        agreement = {"supplierId": 212, "frameworkSlug": None}
+        with pytest.raises(HTTPException):
+            check_agreement_is_related_to_supplier_framework_or_abort(agreement, supplier_framework)
+
+    def test_check_agreement_is_related_to_supplier_framework_or_abort_does_not_abort_for_match(self):
+        supplier_framework = {"supplierId": 212, "frameworkSlug": 'g-cloud-8'}
+        agreement = {"supplierId": 212, "frameworkSlug": 'g-cloud-8'}
         check_agreement_is_related_to_supplier_framework_or_abort(agreement, supplier_framework)
 
 
-def test_check_agreement_is_related_to_supplier_framework_or_abort_does_abort_for_framework_mismatch():
-    supplier_framework = {"supplierId": 200, "frameworkSlug": 'g-cloud-8'}
-    agreement = {"supplierId": 200, "frameworkSlug": 'g-cloud-7'}
-    with pytest.raises(HTTPException):
-        check_agreement_is_related_to_supplier_framework_or_abort(agreement, supplier_framework)
+class TestOrderFrameworksForReuse:
+
+    def test_order_frameworks_for_reuse(self):
+        """Test happy path. Should return 2 frameworks, closest date first."""
+        t09 = '2009-03-03T01:01:01.000000Z'
+        t07 = '2007-03-03T01:01:01.000000Z'
+        t12 = '2012-03-03T01:01:01.000000Z'
+
+        fake_frameworks = [
+            {'allowDeclarationReuse': False, 'applicationsCloseAtUTC': t09, 'extraneousField': 'foo'},
+            {'allowDeclarationReuse': True, 'applicationsCloseAtUTC': t12, 'extraneousField': 'foo'},
+            {'allowDeclarationReuse': True, 'applicationsCloseAtUTC': t07, 'extraneousField': 'foo'},
+        ]
+        ordered = order_frameworks_for_reuse(fake_frameworks)
+        assert len(ordered) == 2, "order_frameworks_for_reuse should only filter out inappropriate frameworks."
+        assert ordered == [
+            {'allowDeclarationReuse': True, 'applicationsCloseAtUTC': t12, 'extraneousField': 'foo'},
+            {'allowDeclarationReuse': True, 'applicationsCloseAtUTC': t07, 'extraneousField': 'foo'}
+        ], "order_frameworks_for_reuse should return appropriate frameworks."
+
+    def test_order_frameworks_for_reuse_none(self):
+        """Test no suitable frameworks returns an empty list."""
+        t09 = '2009-03-03T01:01:01.000000Z'
+        t07 = '2007-03-03T01:01:01.000000Z'
+        t12 = '2012-03-03T01:01:01.000000Z'
+
+        fake_frameworks = [
+            {'allowDeclarationReuse': False, 'applicationsCloseAtUTC': t12, 'extraneousField': 'foo'},
+            {'allowDeclarationReuse': False, 'applicationsCloseAtUTC': t09, 'extraneousField': 'foo'},
+            {'allowDeclarationReuse': False, 'applicationsCloseAtUTC': t07, 'extraneousField': 'foo'},
+        ]
+        ordered = order_frameworks_for_reuse(fake_frameworks)
+
+        assert ordered == []
+
+    def test_order_frameworks_for_reuse_one(self):
+        """Test that the function returns a list of 1 when given a single suitable framework."""
+        t09 = '2009-03-03T01:01:01.000000Z'
+        t07 = '2007-03-03T01:01:01.000000Z'
+        t12 = '2012-03-03T01:01:01.000000Z'
+
+        fake_frameworks = [
+            {'allowDeclarationReuse': False, 'applicationsCloseAtUTC': t12, 'extraneousField': 'foo'},
+            {'allowDeclarationReuse': False, 'applicationsCloseAtUTC': t09, 'extraneousField': 'foo'},
+            {'allowDeclarationReuse': True, 'applicationsCloseAtUTC': t07, 'extraneousField': 'foo'},
+        ]
+        ordered = order_frameworks_for_reuse(fake_frameworks)
+
+        assert ordered == [{'allowDeclarationReuse': True, 'applicationsCloseAtUTC': t07, 'extraneousField': 'foo'}]
+
+    def test_order_frameworks_for_reuse_unordered(self):
+        """Test crazy order passed in is ordered correctly."""
+        t09 = '2009-03-03T01:01:01.000000Z'
+        t07 = '2007-03-03T01:01:01.000000Z'
+        t11 = '2011-03-03T01:01:01.000000Z'
+        t12 = '2012-03-03T01:01:01.000000Z'
+        t13 = '2013-03-03T01:01:01.000000Z'
+        t14 = '2014-03-03T01:01:01.000000Z'
+
+        fake_frameworks = [
+            {'allowDeclarationReuse': True, 'applicationsCloseAtUTC': t07, 'extraneousField': 'foo'},
+            {'allowDeclarationReuse': True, 'applicationsCloseAtUTC': t13, 'extraneousField': 'foo'},
+            {'allowDeclarationReuse': True, 'applicationsCloseAtUTC': t09, 'extraneousField': 'foo'},
+            {'allowDeclarationReuse': True, 'applicationsCloseAtUTC': t14, 'extraneousField': 'foo'},
+            {'allowDeclarationReuse': True, 'applicationsCloseAtUTC': t12, 'extraneousField': 'foo'},
+            {'allowDeclarationReuse': True, 'applicationsCloseAtUTC': t11, 'extraneousField': 'foo'},
+        ]
+        ordered = order_frameworks_for_reuse(fake_frameworks)
+
+        expected = [
+            {'allowDeclarationReuse': True, 'applicationsCloseAtUTC': t14, 'extraneousField': 'foo'},
+            {'allowDeclarationReuse': True, 'applicationsCloseAtUTC': t13, 'extraneousField': 'foo'},
+            {'allowDeclarationReuse': True, 'applicationsCloseAtUTC': t12, 'extraneousField': 'foo'},
+            {'allowDeclarationReuse': True, 'applicationsCloseAtUTC': t11, 'extraneousField': 'foo'},
+            {'allowDeclarationReuse': True, 'applicationsCloseAtUTC': t09, 'extraneousField': 'foo'},
+            {'allowDeclarationReuse': True, 'applicationsCloseAtUTC': t07, 'extraneousField': 'foo'}
+        ]
+
+        assert ordered == expected
 
 
-def test_check_agreement_is_related_to_supplier_framework_or_abort_does_abort_if_supplier_ids_are_none():
-    supplier_framework = {"supplierId": None, "frameworkSlug": 'g-cloud-8'}
-    agreement = {"supplierId": None, "frameworkSlug": 'g-cloud-8'}
-    with pytest.raises(HTTPException):
-        check_agreement_is_related_to_supplier_framework_or_abort(agreement, supplier_framework)
+class TestGetReusableDeclaration:
 
+    def setup_method(self, method):
+        self.data_api_client_patch = mock.patch('app.main.views.frameworks.data_api_client', autospec=True)
+        self.data_api_client = self.data_api_client_patch.start()
 
-def test_check_agreement_is_related_to_supplier_framework_or_abort_does_abort_if_framework_slugs_are_none():
-    supplier_framework = {"supplierId": 212, "frameworkSlug": None}
-    agreement = {"supplierId": 212, "frameworkSlug": None}
-    with pytest.raises(HTTPException):
-        check_agreement_is_related_to_supplier_framework_or_abort(agreement, supplier_framework)
+    def teardown_method(self, method):
+        self.data_api_client_patch.stop()
 
+    def test_get_reusable_declaration(self):
+        """Test happy path, should return the framework and declaration where
+        allowDeclarationReuse == True
+        applicationsCloseAtUTC is closest to today
+        and declaration exists for that framework
+        and declaration status is completed
+        """
+        t09 = '2009-03-03T01:01:01.000000Z'
+        t07 = '2007-03-03T01:01:01.000000Z'
+        t11 = '2011-03-03T01:01:01.000000Z'
+        t12 = '2012-03-03T01:01:01.000000Z'
+        t13 = '2013-03-03T01:01:01.000000Z'
+        t14 = '2014-03-03T01:01:01.000000Z'
 
-def test_check_agreement_is_related_to_supplier_framework_or_abort_does_not_abort_for_match():
-    supplier_framework = {"supplierId": 212, "frameworkSlug": 'g-cloud-8'}
-    agreement = {"supplierId": 212, "frameworkSlug": 'g-cloud-8'}
-    check_agreement_is_related_to_supplier_framework_or_abort(agreement, supplier_framework)
+        frameworks = [
+            {'x_field': 'foo', 'allowDeclarationReuse': True, 'applicationsCloseAtUTC': t07, 'slug': 'ben-cloud-1'},
+            {'x_field': 'foo', 'allowDeclarationReuse': True, 'applicationsCloseAtUTC': t09, 'slug': 'ben-cloud-2'},
+            {'x_field': 'foo', 'allowDeclarationReuse': True, 'applicationsCloseAtUTC': t11, 'slug': 'ben-cloud-3'},
+            {'x_field': 'foo', 'allowDeclarationReuse': True, 'applicationsCloseAtUTC': t12, 'slug': 'ben-cloud-4'},
+            {'x_field': 'foo', 'allowDeclarationReuse': True, 'applicationsCloseAtUTC': t13, 'slug': 'ben-cloud-5'},
+            {
+                'x_field': 'foo',
+                'allowDeclarationReuse': False,
+                'applicationsCloseAtUTC': t14,
+                'slug': 'ben-cloud-alpha'
+            },
+        ]
+        declarations = [
+            {'x_field': 'foo', 'frameworkSlug': 'ben-cloud-4', 'onFramework': True},
+            {'x_field': 'foo', 'frameworkSlug': 'ben-cloud-1000000', 'onFramework': True},
+            {'x_field': 'foo', 'frameworkSlug': 'ben-cloud-2', 'onFramework': True},
+            {'x_field': 'foo', 'frameworkSlug': 'ben-cloud-alpha', 'onFramework': True},
+        ]
 
+        self.data_api_client.find_frameworks.return_value = {'frameworks': frameworks}
+        self.data_api_client.find_supplier_declarations.return_value = {'frameworkInterest': declarations}
+        framework = get_framework_for_reuse(declarations, self.data_api_client)
 
-def test_order_frameworks_for_reuse():
-    """Test happy path. Should return 2 frameworks, closest date first."""
-    t09 = '2009-03-03T01:01:01.000000Z'
-    t07 = '2007-03-03T01:01:01.000000Z'
-    t12 = '2012-03-03T01:01:01.000000Z'
+        assert framework['slug'] == 'ben-cloud-4'
 
-    fake_frameworks = [
-        {'allowDeclarationReuse': False, 'applicationsCloseAtUTC': t09, 'extraneousField': 'foo'},
-        {'allowDeclarationReuse': True, 'applicationsCloseAtUTC': t12, 'extraneousField': 'foo'},
-        {'allowDeclarationReuse': True, 'applicationsCloseAtUTC': t07, 'extraneousField': 'foo'},
-    ]
-    ordered = order_frameworks_for_reuse(fake_frameworks)
-    assert len(ordered) == 2, "order_frameworks_for_reuse should only filter out inappropriate frameworks."
-    assert ordered == [
-        {'allowDeclarationReuse': True, 'applicationsCloseAtUTC': t12, 'extraneousField': 'foo'},
-        {'allowDeclarationReuse': True, 'applicationsCloseAtUTC': t07, 'extraneousField': 'foo'}
-    ], "order_frameworks_for_reuse should return appropriate frameworks."
+    def test_get_reusable_declaration_none(self):
+        """Test returning None.
+        """
+        t14 = '2014-03-05T01:01:01.000000Z'
 
+        frameworks = [
+            {'x_field': 'foo', 'allowDeclarationReuse': True, 'applicationsCloseAtUTC': t14, 'slug': 'ben-cloud-5'},
+        ]
+        declarations = [
+            {'x_field': 'foo', 'frameworkSlug': 'ben-cloud-4', 'onFramework': True},
+        ]
 
-def test_order_frameworks_for_reuse_none():
-    """Test no suitable frameworks returns an empty list."""
-    t09 = '2009-03-03T01:01:01.000000Z'
-    t07 = '2007-03-03T01:01:01.000000Z'
-    t12 = '2012-03-03T01:01:01.000000Z'
+        self.data_api_client.find_frameworks.return_value = {'frameworks': frameworks}
+        framework = get_framework_for_reuse(declarations, client=self.data_api_client)
 
-    fake_frameworks = [
-        {'allowDeclarationReuse': False, 'applicationsCloseAtUTC': t12, 'extraneousField': 'foo'},
-        {'allowDeclarationReuse': False, 'applicationsCloseAtUTC': t09, 'extraneousField': 'foo'},
-        {'allowDeclarationReuse': False, 'applicationsCloseAtUTC': t07, 'extraneousField': 'foo'},
-    ]
-    ordered = order_frameworks_for_reuse(fake_frameworks)
-
-    assert ordered == []
-
-
-def test_order_frameworks_for_reuse_one():
-    """Test that the function returns a list of 1 when given a single suitable framework."""
-    t09 = '2009-03-03T01:01:01.000000Z'
-    t07 = '2007-03-03T01:01:01.000000Z'
-    t12 = '2012-03-03T01:01:01.000000Z'
-
-    fake_frameworks = [
-        {'allowDeclarationReuse': False, 'applicationsCloseAtUTC': t12, 'extraneousField': 'foo'},
-        {'allowDeclarationReuse': False, 'applicationsCloseAtUTC': t09, 'extraneousField': 'foo'},
-        {'allowDeclarationReuse': True, 'applicationsCloseAtUTC': t07, 'extraneousField': 'foo'},
-    ]
-    ordered = order_frameworks_for_reuse(fake_frameworks)
-
-    assert ordered == [{'allowDeclarationReuse': True, 'applicationsCloseAtUTC': t07, 'extraneousField': 'foo'}]
-
-
-def test_order_frameworks_for_reuse_unordered():
-    """Test crazy order passed in is ordered correctly."""
-    t09 = '2009-03-03T01:01:01.000000Z'
-    t07 = '2007-03-03T01:01:01.000000Z'
-    t11 = '2011-03-03T01:01:01.000000Z'
-    t12 = '2012-03-03T01:01:01.000000Z'
-    t13 = '2013-03-03T01:01:01.000000Z'
-    t14 = '2014-03-03T01:01:01.000000Z'
-
-    fake_frameworks = [
-        {'allowDeclarationReuse': True, 'applicationsCloseAtUTC': t07, 'extraneousField': 'foo'},
-        {'allowDeclarationReuse': True, 'applicationsCloseAtUTC': t13, 'extraneousField': 'foo'},
-        {'allowDeclarationReuse': True, 'applicationsCloseAtUTC': t09, 'extraneousField': 'foo'},
-        {'allowDeclarationReuse': True, 'applicationsCloseAtUTC': t14, 'extraneousField': 'foo'},
-        {'allowDeclarationReuse': True, 'applicationsCloseAtUTC': t12, 'extraneousField': 'foo'},
-        {'allowDeclarationReuse': True, 'applicationsCloseAtUTC': t11, 'extraneousField': 'foo'},
-    ]
-    ordered = order_frameworks_for_reuse(fake_frameworks)
-
-    expected = [
-        {'allowDeclarationReuse': True, 'applicationsCloseAtUTC': t14, 'extraneousField': 'foo'},
-        {'allowDeclarationReuse': True, 'applicationsCloseAtUTC': t13, 'extraneousField': 'foo'},
-        {'allowDeclarationReuse': True, 'applicationsCloseAtUTC': t12, 'extraneousField': 'foo'},
-        {'allowDeclarationReuse': True, 'applicationsCloseAtUTC': t11, 'extraneousField': 'foo'},
-        {'allowDeclarationReuse': True, 'applicationsCloseAtUTC': t09, 'extraneousField': 'foo'},
-        {'allowDeclarationReuse': True, 'applicationsCloseAtUTC': t07, 'extraneousField': 'foo'}
-    ]
-
-    assert ordered == expected
-
-
-@mock.patch('app.main.views.frameworks.data_api_client', autospec=True)
-def test_get_reusable_declaration(data_api_client):
-    """Test happy path, should return the framework and declaration where
-    allowDeclarationReuse == True
-    applicationsCloseAtUTC is closest to today
-    and declaration exists for that framework
-    and declaration status is completed
-    """
-    t09 = '2009-03-03T01:01:01.000000Z'
-    t07 = '2007-03-03T01:01:01.000000Z'
-    t11 = '2011-03-03T01:01:01.000000Z'
-    t12 = '2012-03-03T01:01:01.000000Z'
-    t13 = '2013-03-03T01:01:01.000000Z'
-    t14 = '2014-03-03T01:01:01.000000Z'
-
-    frameworks = [
-        {'x_field': 'foo', 'allowDeclarationReuse': True, 'applicationsCloseAtUTC': t07, 'slug': 'ben-cloud-1'},
-        {'x_field': 'foo', 'allowDeclarationReuse': True, 'applicationsCloseAtUTC': t09, 'slug': 'ben-cloud-2'},
-        {'x_field': 'foo', 'allowDeclarationReuse': True, 'applicationsCloseAtUTC': t11, 'slug': 'ben-cloud-3'},
-        {'x_field': 'foo', 'allowDeclarationReuse': True, 'applicationsCloseAtUTC': t12, 'slug': 'ben-cloud-4'},
-        {'x_field': 'foo', 'allowDeclarationReuse': True, 'applicationsCloseAtUTC': t13, 'slug': 'ben-cloud-5'},
-        {'x_field': 'foo', 'allowDeclarationReuse': False, 'applicationsCloseAtUTC': t14, 'slug': 'ben-cloud-alpha'},
-    ]
-    declarations = [
-        {'x_field': 'foo', 'frameworkSlug': 'ben-cloud-4', 'onFramework': True},
-        {'x_field': 'foo', 'frameworkSlug': 'ben-cloud-1000000', 'onFramework': True},
-        {'x_field': 'foo', 'frameworkSlug': 'ben-cloud-2', 'onFramework': True},
-        {'x_field': 'foo', 'frameworkSlug': 'ben-cloud-alpha', 'onFramework': True},
-    ]
-
-    data_api_client.find_frameworks.return_value = {'frameworks': frameworks}
-    data_api_client.find_supplier_declarations.return_value = {'frameworkInterest': declarations}
-    framework = get_framework_for_reuse(declarations, data_api_client)
-
-    assert framework['slug'] == 'ben-cloud-4'
-
-
-@mock.patch('app.main.views.frameworks.data_api_client', autospec=True)
-def test_get_reusable_declaration_none(data_api_client):
-    """Test returning None.
-    """
-    t14 = '2014-03-05T01:01:01.000000Z'
-
-    frameworks = [
-        {'x_field': 'foo', 'allowDeclarationReuse': True, 'applicationsCloseAtUTC': t14, 'slug': 'ben-cloud-5'},
-    ]
-    declarations = [
-        {'x_field': 'foo', 'frameworkSlug': 'ben-cloud-4', 'onFramework': True},
-    ]
-
-    data_api_client.find_frameworks.return_value = {'frameworks': frameworks}
-    framework = get_framework_for_reuse(declarations, client=data_api_client)
-
-    assert framework is None
+        assert framework is None
 
 
 def test_get_frameworks_closed_and_open_for_applications():
