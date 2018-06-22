@@ -13,7 +13,7 @@ class TestUserResearch(BaseApplicationTest):
         super().teardown_method(method)
 
     def test_should_see_banner_if_not_subscribed(self):
-        self.login(supplier_organisation_size=None, user_researh_opted_in=False)
+        self.login(user_research_opted_in=False)
         res = self.client.get('/suppliers')
         assert res.status_code == 200
         assert 'Help us improve the Digital Marketplace' in res.get_data(as_text=True)
@@ -23,7 +23,7 @@ class TestUserResearch(BaseApplicationTest):
         assert cookie_value is None
 
     def test_should_not_see_banner_if_subscribed(self):
-        self.login(supplier_organisation_size=None, user_researh_opted_in=True)
+        self.login(user_research_opted_in=True)
         res = self.client.get('/suppliers')
         assert res.status_code == 200
         assert 'Help us improve the Digital Marketplace' not in res.get_data(as_text=True)
@@ -31,7 +31,7 @@ class TestUserResearch(BaseApplicationTest):
         assert 'class="user-research-banner-close-btn"' not in res.get_data(as_text=True)
 
     def test_should_see_subscribed_link_if_not_subscribed(self):
-        self.login(supplier_organisation_size=None, user_researh_opted_in=False)
+        self.login(user_research_opted_in=False)
         res = self.client.get('/suppliers')
         assert res.status_code == 200
         assert "href=\"/user/notifications/user-research\"" in res.get_data(as_text=True)
@@ -39,7 +39,7 @@ class TestUserResearch(BaseApplicationTest):
         assert "Unsubscribe from the user research mailing list" not in res.get_data(as_text=True)
 
     def test_should_see_unsubscribed_link_if_subscribed(self):
-        self.login(supplier_organisation_size=None, user_researh_opted_in=True)
+        self.login(user_research_opted_in=True)
         res = self.client.get('/suppliers')
         assert res.status_code == 200
         assert "href=\"/user/notifications/user-research\"" in res.get_data(as_text=True)
