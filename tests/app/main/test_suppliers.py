@@ -2739,7 +2739,7 @@ class TestEditSupplierVatNumber(BaseApplicationTest):
         doc = html.fromstring(res.get_data(as_text=True))
 
         assert res.status_code == 200
-        assert doc.xpath("//h1[normalize-space(string())='Are you registered for VAT?']")
+        assert doc.xpath("//h1[normalize-space(string())='Are you registered for VAT in the UK?']")
 
     @pytest.mark.parametrize('overwrite_supplier_data',
                              (
@@ -2754,7 +2754,7 @@ class TestEditSupplierVatNumber(BaseApplicationTest):
         page_heading = doc.xpath('//h1')
 
         assert res.status_code == 200
-        assert page_heading[0].text.strip() == "Are you registered for VAT?"
+        assert page_heading[0].text.strip() == "Are you registered for VAT in the UK?"
         assert doc.xpath('//form[@action="/suppliers/vat-number/edit"]')
         assert self.data_api_client.update_supplier.call_args_list == []
 
