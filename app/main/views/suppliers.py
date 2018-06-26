@@ -117,6 +117,7 @@ def supplier_details():
         country_name=country_name,
         currently_applying_to=framework,
         company_details_complete=supplier_company_details_are_complete(supplier),
+        supplier_company_details_confirmed=supplier['companyDetailsConfirmed'],
     ), 200
 
 

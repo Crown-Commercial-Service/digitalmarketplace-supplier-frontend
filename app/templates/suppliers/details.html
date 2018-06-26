@@ -22,11 +22,7 @@
 
 {% block main_content %}
   <div class='grid-row'>
-  {% if currently_applying_to or (company_details_complete and not supplier.companyDetailsConfirmed) %}
-    <div class='column-one-whole padding-bottom-small'>
-  {% else %}
-    <div class='column-one-whole'>
-  {% endif %}
+    <div class='column-one-whole{% if currently_applying_to or (company_details_complete and not supplier_company_details_confirmed) %} padding-bottom-small{% endif %}'>
 {%
   with
     heading = "Company details",
@@ -86,7 +82,7 @@
   {{ summary.field_name('Registered company name') }}
   {% if supplier.registeredName %}
     {{ summary.text(supplier.registeredName) }}
-    {{ summary.edit_link(label="Correct a mistake", link=url_for(".edit_supplier_registered_name"), hidden_text="Registered company name") }}
+    {{ summary.edit_link(label="Correct a mistake" if supplier_company_details_confirmed else "Change", link=url_for(".edit_supplier_registered_name"), hidden_text="Registered company name") }}
   {% else %}
     {{ summary.link(link_title="Answer required", link=url_for(".edit_supplier_registered_name"), hidden_text="for registered company name") }}
     {{ summary.text("") }}
@@ -112,7 +108,7 @@
         {% include "toolkit/contact-details.html" %}
       {% endwith %}
     {% endcall %}
-    {{ summary.edit_link(label="Correct a mistake", link=url_for(".edit_registered_address"), hidden_text="Registered company address") }}
+    {{ summary.edit_link(label="Change", link=url_for(".edit_registered_address"), hidden_text="Registered company address") }}
   {% else %}
     {{ summary.link(link_title="Answer required", link=url_for(".edit_registered_address"), hidden_text=" for registered company address") }}
     {{ summary.text("") }}
@@ -123,10 +119,10 @@
   {{ summary.field_name('Registration number') }}
   {% if supplier.companiesHouseNumber %}
     {{ summary.text(supplier.companiesHouseNumber) }}
-    {{ summary.edit_link(label="Correct a mistake", link=url_for(".edit_supplier_registration_number"), hidden_text="Registration number") }}
+    {{ summary.edit_link(label="Correct a mistake" if supplier_company_details_confirmed else "Change", link=url_for(".edit_supplier_registration_number"), hidden_text="Registration number") }}
   {% elif supplier.otherCompanyRegistrationNumber %}
     {{ summary.text(supplier.otherCompanyRegistrationNumber) }}
-    {{ summary.edit_link(label="Correct a mistake", link=url_for(".edit_supplier_registration_number"), hidden_text="Registration number") }}
+    {{ summary.edit_link(label="Correct a mistake" if supplier_company_details_confirmed else "Change", link=url_for(".edit_supplier_registration_number"), hidden_text="Registration number") }}
   {% else %}
     {{ summary.link(link_title="Answer required", link=url_for(".edit_supplier_registration_number"), hidden_text="for registration number") }}
     {{ summary.text("") }}
@@ -137,7 +133,7 @@
   {{ summary.field_name('Trading status') }}
   {% if supplier.tradingStatus %}
     {{ summary.text(supplier.tradingStatus|capitalize_first) }}
-    {{ summary.edit_link(label="Correct a mistake", link=url_for(".edit_supplier_trading_status"), hidden_text="Trading status") }}
+    {{ summary.edit_link(label="Change", link=url_for(".edit_supplier_trading_status"), hidden_text="Trading status") }}
   {% else %}
     {{ summary.link(link_title="Answer required", link=url_for(".edit_supplier_trading_status"), hidden_text="for trading status") }}
     {{ summary.text("") }}
@@ -148,7 +144,7 @@
   {{ summary.field_name('Company size') }}
   {% if supplier.organisationSize %}
     {{ summary.text(supplier.organisationSize|capitalize_first) }}
-    {{ summary.edit_link(label="Correct a mistake", link=url_for(".edit_supplier_organisation_size"), hidden_text="Company size") }}
+    {{ summary.edit_link(label="Change", link=url_for(".edit_supplier_organisation_size"), hidden_text="Company size") }}
   {% else %}
     {{ summary.link(link_title="Answer required", link=url_for(".edit_supplier_organisation_size"), hidden_text="for company size") }}
     {{ summary.text("") }}
@@ -159,7 +155,7 @@
   {{ summary.field_name('VAT number') }}
   {% if supplier.vatNumber %}
     {{ summary.text(supplier.vatNumber) }}
-    {{ summary.edit_link(label="Correct a mistake", link=url_for(".edit_supplier_vat_number"), hidden_text="VAT number") }}
+    {{ summary.edit_link(label="Correct a mistake" if supplier_company_details_confirmed else "Change", link=url_for(".edit_supplier_vat_number"), hidden_text="VAT number") }}
   {% else %}
     {{ summary.link(link_title="Answer required", link=url_for(".edit_supplier_vat_number"), hidden_text="for VAT number") }}
     {{ summary.text("") }}
@@ -182,12 +178,13 @@
     </div>
   </div>
 
-  {% if not supplier.companyDetailsConfirmed %}
+  {% if supplier_company_details_confirmed == False %}
     {% if company_details_complete  %}
     <div class='grid-row'>
       <div class='column-two-thirds'>
         <form method="POST" action="{{ url_for('.confirm_supplier_details') }}">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+          {% if supplier_company_details_confirmed == False %}
           <p>Once you confirm your information you'll need to contact support to correct a mistake in your:</p>
           <ul class="list-bullet">
             <li>registered company name</li>
@@ -195,6 +192,7 @@
             <li>VAT number</li>
             <li>DUNS number</li>
           </ul>
+          {% endif %}
 
           {% with type = "save", label = "Save and confirm" %}
             {% include "toolkit/button.html" %}

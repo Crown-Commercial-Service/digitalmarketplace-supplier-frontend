@@ -715,31 +715,73 @@ class TestSupplierDetails(BaseApplicationTest):
         assert answer_required_link[0].values()[0] == link_address
 
     @pytest.mark.parametrize(
-        "question,filled_in_attribute,link_address",
+        "question,filled_in_attribute,link_address,expected_link_text",
         [
             (
-                "Registered company name",
-                {"registeredName": "Digital Ponies"},
-                "/suppliers/registered-company-name/edit"
-            ),
-            ("Registered company address", {"registrationCountry": "country:GB"}, "/suppliers/registered-address/edit"),
-            (
-                "Registration number",
-                {"companiesHouseNumber": "CH123456", "otherCompanyRegistrationNumber": None},
-                "/suppliers/registration-number/edit"
+                "Registered company name", {"companyDetailsConfirmed": True, "registeredName": "Digital Ponies"},
+                "/suppliers/registered-company-name/edit", 'Correct a mistake',
             ),
             (
-                "Registration number",
-                {"companiesHouseNumber": None, "otherCompanyRegistrationNumber": "EQ789"},
-                "/suppliers/registration-number/edit"
+                "Registered company name", {"companyDetailsConfirmed": False, "registeredName": "Digital Ponies"},
+                "/suppliers/registered-company-name/edit", 'Change',
             ),
-            ("Trading status", {"tradingStatus": "limited company (LTD)"}, "/suppliers/trading-status/edit"),
-            ("Company size", {"organisationSize": "small"}, "/suppliers/organisation-size/edit"),
-            ("VAT number", {"vatNumber": "VAT654321"}, "/suppliers/vat-number/edit"),
-            ("DUNS number", {"dunsNumber": "123456789"}, "/suppliers/duns-number/edit"),
+            ("Registered company address", {"companyDetailsConfirmed": True, "registrationCountry": "country:GB"},
+             "/suppliers/registered-address/edit", 'Change',),
+            ("Registered company address", {"companyDetailsConfirmed": False, "registrationCountry": "country:GB"},
+             "/suppliers/registered-address/edit", 'Change',),
+            (
+                "Registration number",
+                {
+                    "companyDetailsConfirmed": True, "companiesHouseNumber": "CH123456",
+                    "otherCompanyRegistrationNumber": None
+                },
+                "/suppliers/registration-number/edit",
+                'Correct a mistake',
+            ),
+            (
+                "Registration number",
+                {
+                    "companyDetailsConfirmed": False, "companiesHouseNumber": "CH123456",
+                    "otherCompanyRegistrationNumber": None
+                },
+                "/suppliers/registration-number/edit",
+                'Change',
+            ),
+            (
+                "Registration number",
+                {
+                    "companyDetailsConfirmed": True, "companiesHouseNumber": None,
+                    "otherCompanyRegistrationNumber": "EQ789"
+                },
+                "/suppliers/registration-number/edit",
+                'Correct a mistake',
+            ),
+            (
+                "Registration number",
+                {
+                    "companyDetailsConfirmed": False, "companiesHouseNumber": None,
+                    "otherCompanyRegistrationNumber": "EQ789"
+                },
+                "/suppliers/registration-number/edit",
+                'Change',
+            ),
+            ("Trading status", {"companyDetailsConfirmed": False, "tradingStatus": "limited company (LTD)"},
+             "/suppliers/trading-status/edit", "Change"),
+            ("Company size", {"companyDetailsConfirmed": False, "organisationSize": "small"},
+             "/suppliers/organisation-size/edit", "Change"),
+            ("VAT number", {"companyDetailsConfirmed": True, "vatNumber": "VAT654321"},
+             "/suppliers/vat-number/edit", 'Correct a mistake',),
+            ("VAT number", {"companyDetailsConfirmed": False, "vatNumber": "VAT654321"},
+             "/suppliers/vat-number/edit", 'Change',),
+            ("DUNS number", {"companyDetailsConfirmed": True, "dunsNumber": "123456789"},
+             "/suppliers/duns-number/edit", 'Correct a mistake',),
+            ("DUNS number", {"companyDetailsConfirmed": False, "dunsNumber": "123456789"},
+             "/suppliers/duns-number/edit", 'Correct a mistake',),
         ]
     )
-    def test_filled_in_question_field_has_a_correct_a_mistake_link(self, question, filled_in_attribute, link_address):
+    def test_filled_in_question_field_has_a_change_or_correct_a_mistake_link(
+        self, question, filled_in_attribute, link_address, expected_link_text
+    ):
         self.data_api_client.get_supplier.return_value = get_supplier(**filled_in_attribute)
 
         self.login()
@@ -749,7 +791,7 @@ class TestSupplierDetails(BaseApplicationTest):
         page_html = response.get_data(as_text=True)
         document = html.fromstring(page_html)
         answer_required_link = document.xpath(
-            "//span[text()='{}']/following::td[2]/span/a[text()='Correct a mistake']".format(question)
+            "//span[text()='{}']/following::td[2]/span/a[text()='{}']".format(question, expected_link_text)
         )
 
         assert answer_required_link
