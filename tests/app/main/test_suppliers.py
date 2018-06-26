@@ -1436,7 +1436,7 @@ class TestEditSupplierRegisteredAddress(BaseApplicationTest):
         status, response = self.post_supplier_address_edit({
             "address1": "A" * length,
             "city": "C" * length,
-            "postcode": "P" * length,
+            "postcode": "P" * (length - 245),
             "registrationCountry": "country:GB",
         })
 
@@ -1445,7 +1445,7 @@ class TestEditSupplierRegisteredAddress(BaseApplicationTest):
         validation_messages = [
             "You must provide a building and street name under 256 characters.",
             "You must provide a town or city name under 256 characters.",
-            "You must provide a valid postcode.",
+            "You must provide a valid postcode under 10 characters.",
         ]
         for message in validation_messages:
             assert (message in response) == validation_error_returned
@@ -1456,7 +1456,7 @@ class TestEditSupplierRegisteredAddress(BaseApplicationTest):
         data_values = [
             f"value=\"{'A' * length}\"",
             f"value=\"{'C' * length}\"",
-            f"value=\"{'P' * length}\"",
+            f"value=\"{'P' * (length - 245)}\"",
         ]
         for value in data_values:
             assert (value in response) == validation_error_returned
