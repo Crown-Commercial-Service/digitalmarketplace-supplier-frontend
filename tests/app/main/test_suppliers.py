@@ -2815,8 +2815,9 @@ class TestEditSupplierVatNumber(BaseApplicationTest):
         ("123456789012", None, None),
         ("GD123", None, None),
         ("HA456", None, None),
-        ("NOTVALID", "You must provide a valid VAT number - they are usually either 9 or 12 digits.", "VAT number"),
-        ("", "You must provide a VAT number.", "VAT number")
+        ("NOTVALID", "You must provide a valid VAT number from the UK - they are usually either 9 or 12 digits.",
+         "VAT number"),
+        ("", "You must provide a VAT number from the UK.", "VAT number")
     ))
     def test_validation_of_tax_number(self, vat_number, message, masthead):
         res = self.client.post(
