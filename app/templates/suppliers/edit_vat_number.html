@@ -26,7 +26,7 @@
 
 <div class="grid-row">
   <div class="column-two-thirds">
-    {% with heading = "Are you registered for VAT?", smaller = True %}
+    {% with heading = "Are you registered for VAT in the UK?", smaller = True %}
       {% include "toolkit/page-heading.html" %}
     {% endwith %}
 
@@ -43,7 +43,7 @@
               "label": "Yes",
               "reveal": {
                 "name": "vat_number",
-                "question": "What is your VAT number?",
+                "question": "What is your UK VAT number?",
                 "value": form.vat_number.data,
                 "error": errors.get('vat_number', {}).get('message', None)
               }

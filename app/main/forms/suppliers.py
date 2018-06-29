@@ -252,10 +252,10 @@ class VatNumberForm(FlaskForm):
         ],
         validators=[
             stop_validation_if_not_registered,
-            InputRequired(message="You must provide a VAT number."),
+            InputRequired(message="You must provide a VAT number from the UK."),
             Regexp(
                 r'^(GB)?((\d{9})|(\d{12})|((GD|HA)\d{3}))$',
-                message="You must provide a valid VAT number - they are usually either 9 or 12 digits."
+                message="You must provide a valid VAT number from the UK - they are usually either 9 or 12 digits."
             )
         ],
     )

@@ -2739,7 +2739,7 @@ class TestEditSupplierVatNumber(BaseApplicationTest):
         doc = html.fromstring(res.get_data(as_text=True))
 
         assert res.status_code == 200
-        assert doc.xpath("//h1[normalize-space(string())='Are you registered for VAT?']")
+        assert doc.xpath("//h1[normalize-space(string())='Are you registered for VAT in the UK?']")
 
     @pytest.mark.parametrize('overwrite_supplier_data',
                              (
@@ -2754,7 +2754,7 @@ class TestEditSupplierVatNumber(BaseApplicationTest):
         page_heading = doc.xpath('//h1')
 
         assert res.status_code == 200
-        assert page_heading[0].text.strip() == "Are you registered for VAT?"
+        assert page_heading[0].text.strip() == "Are you registered for VAT in the UK?"
         assert doc.xpath('//form[@action="/suppliers/vat-number/edit"]')
         assert self.data_api_client.update_supplier.call_args_list == []
 
@@ -2815,8 +2815,9 @@ class TestEditSupplierVatNumber(BaseApplicationTest):
         ("123456789012", None, None),
         ("GD123", None, None),
         ("HA456", None, None),
-        ("NOTVALID", "You must provide a valid VAT number - they are usually either 9 or 12 digits.", "VAT number"),
-        ("", "You must provide a VAT number.", "VAT number")
+        ("NOTVALID", "You must provide a valid VAT number from the UK - they are usually either 9 or 12 digits.",
+         "VAT number"),
+        ("", "You must provide a VAT number from the UK.", "VAT number")
     ))
     def test_validation_of_tax_number(self, vat_number, message, masthead):
         res = self.client.post(
