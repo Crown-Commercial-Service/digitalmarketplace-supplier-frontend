@@ -53,7 +53,7 @@ class EditRegisteredAddressForm(FlaskForm):
     ])
     postcode = StripWhitespaceStringField('Postcode', validators=[
         InputRequired(message="You need to enter the postcode."),
-        Length(max=10, message="You must provide a valid postcode under 10 characters."),
+        Length(max=15, message="You must provide a valid postcode under 15 characters."),
     ])
 
 
