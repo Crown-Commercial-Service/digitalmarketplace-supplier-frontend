@@ -649,8 +649,6 @@ class TestEnsureApplicationCompanyDetailsHaveBeenConfirmed(BaseApplicationTest):
 
         from app import data_api_client
         self.data_api_client_mock = mock.Mock(spec_set=data_api_client)
-        self.decorator = EnsureApplicationCompanyDetailsHaveBeenConfirmed(self.data_api_client_mock)
-        # self.login()
 
     def test_validator_raises_500_if_framework_slug_missing(self):
         @EnsureApplicationCompanyDetailsHaveBeenConfirmed(self.data_api_client_mock)
@@ -698,15 +696,6 @@ class TestEnsureApplicationCompanyDetailsHaveBeenConfirmed(BaseApplicationTest):
             current_user_patch.supplier_id.return_value = 1
 
             assert decorator.validator(framework_slug='g-cloud-10') is True
-
-    def test_validator_can_be_reassigned(self):
-        def raise_successful_override():
-            return 'overriden'
-
-        decorator = EnsureApplicationCompanyDetailsHaveBeenConfirmed(self.data_api_client_mock)
-
-        with mock.patch.object(decorator, 'validator', raise_successful_override):
-            assert decorator.validator() == 'overriden'
 
     def test_only_known_decorated_views_are_protected(self):
         """This checks _all_ registered routes and asserts that the views listed in `decorated_views`, below, are all
