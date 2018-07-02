@@ -11,10 +11,15 @@ import mock
 import pytest
 
 from dmapiclient import HTTPError
-from dmutils.api_stubs import lot, framework
+from dmutils import api_stubs
 
 from app.main.helpers.services import parse_document_upload_time
-from tests.app.helpers import BaseApplicationTest, empty_g7_draft_service, empty_g9_draft_service
+from tests.app.helpers import (
+    BaseApplicationTest,
+    empty_g7_draft_service,
+    empty_g9_draft_service,
+    MockEnsureApplicationCompanyDetailsHaveBeenConfirmedMixin
+)
 
 
 @pytest.fixture(params=(
@@ -1221,7 +1226,7 @@ class TestSupplierEditUpdateServiceSectionG9(BaseApplicationTest):
         self.data_api_client.update_service.assert_called_once_with('321', {}, 'email@email.com')
 
 
-class TestCreateDraftService(BaseApplicationTest):
+class TestCreateDraftService(BaseApplicationTest, MockEnsureApplicationCompanyDetailsHaveBeenConfirmedMixin):
     def setup_method(self, method):
         super().setup_method(method)
         self._answer_required = 'Answer is required'
@@ -1297,7 +1302,7 @@ class TestCreateDraftService(BaseApplicationTest):
         assert res.status_code == 404
 
 
-class TestCopyDraft(BaseApplicationTest):
+class TestCopyDraft(BaseApplicationTest, MockEnsureApplicationCompanyDetailsHaveBeenConfirmedMixin):
 
     def setup_method(self, method):
         super().setup_method(method)
@@ -1364,7 +1369,7 @@ class TestCopyDraft(BaseApplicationTest):
         assert res.status_code == 404
 
 
-class TestCompleteDraft(BaseApplicationTest):
+class TestCompleteDraft(BaseApplicationTest, MockEnsureApplicationCompanyDetailsHaveBeenConfirmedMixin):
 
     def setup_method(self, method):
         super().setup_method(method)
@@ -1408,7 +1413,7 @@ class TestCompleteDraft(BaseApplicationTest):
 
 
 @mock.patch('dmutils.s3.S3')
-class TestEditDraftService(BaseApplicationTest):
+class TestEditDraftService(BaseApplicationTest, MockEnsureApplicationCompanyDetailsHaveBeenConfirmedMixin):
 
     def setup_method(self, method):
         super().setup_method(method)
@@ -2000,7 +2005,7 @@ class TestEditDraftService(BaseApplicationTest):
         assert res.status_code == 504
 
 
-class TestShowDraftService(BaseApplicationTest):
+class TestShowDraftService(BaseApplicationTest, MockEnsureApplicationCompanyDetailsHaveBeenConfirmedMixin):
 
     draft_service_data = empty_g7_draft_service()
     draft_service_data.update({
@@ -2124,7 +2129,7 @@ class TestShowDraftService(BaseApplicationTest):
             u"G-Cloud 7 goes live." in message[0].xpath('p[@class="temporary-message-message"]/text()')[0]
 
 
-class TestDeleteDraftService(BaseApplicationTest):
+class TestDeleteDraftService(BaseApplicationTest, MockEnsureApplicationCompanyDetailsHaveBeenConfirmedMixin):
 
     draft_service_data = empty_g7_draft_service()
     draft_service_data.update({
@@ -2201,7 +2206,7 @@ class TestDeleteDraftService(BaseApplicationTest):
 
 
 @mock.patch('dmutils.s3.S3')
-class TestSubmissionDocuments(BaseApplicationTest):
+class TestSubmissionDocuments(BaseApplicationTest, MockEnsureApplicationCompanyDetailsHaveBeenConfirmedMixin):
     def setup_method(self, method):
         super().setup_method(method)
         self.login()
@@ -2246,7 +2251,7 @@ class TestParseDocumentUploadTime(BaseApplicationTest):
 
 
 @mock.patch('app.main.views.services.content_loader.get_metadata')
-class TestGetListPreviousServices(BaseApplicationTest):
+class TestGetListPreviousServices(BaseApplicationTest, MockEnsureApplicationCompanyDetailsHaveBeenConfirmedMixin):
     def setup_method(self, method):
         super().setup_method(method)
         self.login()
@@ -2406,18 +2411,9 @@ class TestGetListPreviousServices(BaseApplicationTest):
             "//button[@class='button-save banner-action'][normalize-space()='Yes, add all services']"
         )
 
-    @pytest.mark.parametrize(
-        ('declaration_status', 'company_details_complete', 'banner_present', 'declaration_warning', 'details_warning'),
-        (
-            ('complete', True, False, False, False),
-            ('incomplete', True, True, True, False),
-            ('complete', False, True, False, True),
-            ('incomplete', False, True, True, True),
-        )
-    )
+    @pytest.mark.parametrize('declaration_status,banner_present', (('complete', False), ('incomplete', True)))
     def test_shows_service_warning_in_correct_conditions(
-        self, get_metadata, declaration_status,
-        company_details_complete, banner_present, declaration_warning, details_warning
+        self, get_metadata, declaration_status, banner_present
     ):
         self.data_api_client.get_framework.side_effect = [
             self.framework(slug='g-cloud-10'),
@@ -2428,9 +2424,7 @@ class TestGetListPreviousServices(BaseApplicationTest):
         }
         get_metadata.return_value = 'g-cloud-9'
         self.data_api_client.get_supplier_declaration.return_value = {'declaration': {'status': declaration_status}}
-        self.data_api_client.get_supplier.return_value = {
-            'suppliers': {'companyDetailsConfirmed': company_details_complete}
-        }
+        self.data_api_client.get_supplier.return_value = api_stubs.supplier()
 
         res = self.client.get(
             '/suppliers/frameworks/g-cloud-10/submissions/cloud-hosting/previous-services'
@@ -2445,27 +2439,16 @@ class TestGetListPreviousServices(BaseApplicationTest):
         declaration = doc.xpath(
             "//div[@class='banner-information-without-action']//a[normalize-space()='make your supplier declaration']"
         )
-        details = doc.xpath(
-            "//div[@class='banner-information-without-action']//a[normalize-space()='complete your company details']"
-        )
 
         if banner_present:
             assert banner
-        else:
-            assert not banner
-
-        if declaration_warning:
             assert declaration
         else:
+            assert not banner
             assert not declaration
 
-        if details_warning:
-            assert details
-        else:
-            assert not details
 
-
-class TestPostListPreviousService(BaseApplicationTest):
+class TestPostListPreviousService(BaseApplicationTest, MockEnsureApplicationCompanyDetailsHaveBeenConfirmedMixin):
     def setup_method(self, method):
         super().setup_method(method)
         self.login()
@@ -2544,9 +2527,9 @@ class TestPostListPreviousService(BaseApplicationTest):
         ),
     )
     def test_400s_if_draft_already_exists(self, lot_name, lot_slug):
-        self.data_api_client.get_framework.return_value = framework(
+        self.data_api_client.get_framework.return_value = api_stubs.framework(
             slug='digital-outcomes-and-specialists-3',
-            lots=[lot(name=lot_name, slug=lot_slug, one_service_limit=True)]
+            lots=[api_stubs.lot(name=lot_name, slug=lot_slug, one_service_limit=True)]
         )
         self.data_api_client.find_draft_services.return_value = {
             "services": [
@@ -2614,7 +2597,7 @@ class CopyingPreviousServicesSetup(BaseApplicationTest):
         self.get_metadata_patch.stop()
 
 
-class TestCopyPreviousService(CopyingPreviousServicesSetup):
+class TestCopyPreviousService(CopyingPreviousServicesSetup, MockEnsureApplicationCompanyDetailsHaveBeenConfirmedMixin):
     def test_copys_existing_service_to_new_framework(self):
         res = self.client.post(
             '/suppliers/frameworks/g-cloud-10/submissions/cloud-hosting/copy-previous-framework-service/2000000000'
@@ -2711,7 +2694,8 @@ class TestCopyPreviousService(CopyingPreviousServicesSetup):
         ]
 
 
-class TestCopyAllPreviousServices(CopyingPreviousServicesSetup):
+class TestCopyAllPreviousServices(CopyingPreviousServicesSetup,
+                                  MockEnsureApplicationCompanyDetailsHaveBeenConfirmedMixin):
     def test_copies_all_services(self):
         res = self.client.post(
             '/suppliers/frameworks/g-cloud-10/submissions/cloud-hosting/copy-all-previous-framework-services'

@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
 from datetime import datetime
+from functools import wraps
 from itertools import chain, islice, groupby
 import re
 
 from flask import abort
-from flask_login import current_user
+from flask_login import current_user, current_app
 
 from dmapiclient import APIError, HTTPError
 from dmutils.formats import DATETIME_FORMAT
@@ -367,3 +368,60 @@ def get_supplier_registered_name_from_declaration(declaration):
         declaration.get('supplierRegisteredName')  # G-Cloud 10 and later declaration key
         or declaration.get('nameOfOrganisation')  # G-Cloud 9 and earlier declaration key
     )
+
+
+def get_unconfirmed_open_supplier_frameworks(data_api_client, supplier_id):
+    frameworks = data_api_client.find_frameworks().get('frameworks')
+    open_framework_slugs = [framework['slug'] for framework in frameworks if framework['status'] == 'open']
+    unconfirmed_open_supplier_frameworks = [
+        sf for sf in
+        data_api_client.get_supplier_frameworks(supplier_id=supplier_id)['frameworkInterest']
+        if sf['frameworkSlug'] in open_framework_slugs and sf['applicationCompanyDetailsConfirmed'] is False
+    ]
+
+    framework_slug_map = {framework['slug']: framework for framework in frameworks}
+    for fw in unconfirmed_open_supplier_frameworks:
+        if 'frameworkName' not in fw:
+            fw['frameworkName'] = framework_slug_map[fw['frameworkSlug']]['name']
+
+    return unconfirmed_open_supplier_frameworks
+
+
+class EnsureApplicationCompanyDetailsHaveBeenConfirmed:
+    """A decorator for framework application views that should not be accessible before company details have
+    been confirmed for that application.
+
+    This is a class-based decorator primarily so that it's possible to mock out the validator for the majority of tests
+    which aren't actively testing that the view requires suppliers to be in a certain application state."""
+
+    def __init__(self, data_api_client):
+        self.data_api_client = data_api_client
+
+    def __call__(self, func):
+        @wraps(func)
+        def decorated_view(*args, **kwargs):
+            if self.validator(*args, **kwargs):
+                return func(*args, **kwargs)
+
+            # Shouldn't be able to get here
+            abort(500, "There was a problem accessing this page of your application. Please try again later.")
+
+        return decorated_view
+
+    def validator(self, *args, **kwargs):
+        """Performs the actual validation that ensures the logged-in supplier has confirmed their company details
+        are correct for this application"""
+        if 'framework_slug' not in kwargs:
+            current_app.logger.error("Required parameter `framework_slug` is undefined for the calling view.")
+            abort(500, "There was a problem accessing this page of your application. Please try again later.")
+
+        if current_user.is_authenticated() and current_user.supplier_id:
+            supplier_framework = self.data_api_client.get_supplier_framework_info(
+                current_user.supplier_id, kwargs['framework_slug']
+            )['frameworkInterest']
+
+            if supplier_framework['applicationCompanyDetailsConfirmed'] is False:
+                return abort(400, "You cannot access this part of your application until you have confirmed your "
+                                  "company details.")
+
+        return True

@@ -1,19 +1,22 @@
 # -*- coding: utf-8 -*-
 """Test for app/main/helpers/frameworks.py"""
 
+import inspect
 import mock
 import pytest
 from werkzeug.exceptions import HTTPException
 
-from dmutils.api_stubs import framework
+from dmutils import api_stubs
 from dmapiclient import HTTPError
 
 from app.main.helpers.frameworks import (
     check_agreement_is_related_to_supplier_framework_or_abort, get_framework_for_reuse, get_statuses_for_lot,
     return_supplier_framework_info_if_on_framework_or_abort, order_frameworks_for_reuse,
     get_frameworks_closed_and_open_for_applications, get_supplier_registered_name_from_declaration,
-    get_framework_or_500
+    get_framework_or_500, EnsureApplicationCompanyDetailsHaveBeenConfirmed
 )
+
+from ...helpers import BaseApplicationTest
 
 
 def get_lot_status_examples():
@@ -597,7 +600,7 @@ class CustomAbortException(Exception):
 class TestGetFrameworkOr500():
     def test_returns_framework(self):
         data_api_client_mock = mock.Mock()
-        data_api_client_mock.get_framework.return_value = framework()
+        data_api_client_mock.get_framework.return_value = api_stubs.framework()
 
         assert get_framework_or_500(data_api_client_mock, 'g-cloud-7')['slug'] == 'g-cloud-7'
 
@@ -638,3 +641,131 @@ class TestGetFrameworkOr500():
                 extra={'error': 'An error from the API (status: 404)', 'framework_slug': 'g-cloud-7'},
             )
         ]
+
+
+class TestEnsureApplicationCompanyDetailsHaveBeenConfirmed(BaseApplicationTest):
+    def setup_method(self, method):
+        super().setup_method(method)
+
+        from app import data_api_client
+        self.data_api_client_mock = mock.Mock(spec_set=data_api_client)
+        self.decorator = EnsureApplicationCompanyDetailsHaveBeenConfirmed(self.data_api_client_mock)
+        # self.login()
+
+    def test_validator_raises_500_if_framework_slug_missing(self):
+        @EnsureApplicationCompanyDetailsHaveBeenConfirmed(self.data_api_client_mock)
+        def some_func():
+            pass
+
+        with mock.patch('app.main.helpers.frameworks.current_app') as current_app_patch:
+            with pytest.raises(HTTPException) as e:
+                some_func()
+
+        assert e.value.code == 500
+        assert current_app_patch.logger.error.call_args_list == [
+            mock.call("Required parameter `framework_slug` is undefined for the calling view.")
+        ]
+
+    def test_validator_raises_400_if_application_company_details_not_confirmed(self):
+        @EnsureApplicationCompanyDetailsHaveBeenConfirmed(self.data_api_client_mock)
+        def some_func(framework_slug):
+            pass
+
+        self.data_api_client_mock.get_supplier_framework_info.return_value = api_stubs.supplier_framework(
+            framework_slug='g-cloud-10',
+            application_company_details_confirmed=False
+        )
+
+        with mock.patch('app.main.helpers.frameworks.current_user') as current_user_patch:
+            current_user_patch.is_authenticated.return_value = True
+            current_user_patch.supplier_id.return_value = 1
+
+            with pytest.raises(HTTPException) as e:
+                some_func(framework_slug='g-cloud-10')
+
+        assert e.value.code == 400
+
+    def test_validator_returns_true_if_application_company_details_are_confirmed(self):
+        decorator = EnsureApplicationCompanyDetailsHaveBeenConfirmed(self.data_api_client_mock)
+
+        self.data_api_client_mock.get_supplier_framework_info.return_value = api_stubs.supplier_framework(
+            framework_slug='g-cloud-10',
+            application_company_details_confirmed=True
+        )
+
+        with mock.patch('app.main.helpers.frameworks.current_user') as current_user_patch:
+            current_user_patch.is_authenticated.return_value = True
+            current_user_patch.supplier_id.return_value = 1
+
+            assert decorator.validator(framework_slug='g-cloud-10') is True
+
+    def test_validator_can_be_reassigned(self):
+        def raise_successful_override():
+            return 'overriden'
+
+        decorator = EnsureApplicationCompanyDetailsHaveBeenConfirmed(self.data_api_client_mock)
+
+        with mock.patch.object(decorator, 'validator', raise_successful_override):
+            assert decorator.validator() == 'overriden'
+
+    def test_only_known_decorated_views_are_protected(self):
+        """This checks _all_ registered routes and asserts that the views listed in `decorated_views`, below, are all
+        protected by the check on application company details needing confirmation. For any views not in
+        `decorated_views`, it asserts that it is _not_ protected by the same check."""
+        decorated_views = {
+            'main.start_new_draft_service',
+            'main.copy_draft_service',
+            'main.complete_draft_service',
+            'main.delete_draft_service',
+            'main.service_submission_document',
+            'main.view_service_submission',
+            'main.edit_service_submission',
+            'main.remove_subsection',
+            'main.previous_services',
+            'main.copy_previous_service',
+            'main.copy_all_previous_services',
+            'main.framework_submission_lots',
+            'main.framework_submission_services',
+            'main.framework_start_supplier_declaration',
+            'main.reuse_framework_supplier_declaration',
+            'main.reuse_framework_supplier_declaration_post',
+            'main.framework_supplier_declaration_overview',
+            'main.framework_supplier_declaration_submit',
+            'main.framework_supplier_declaration_edit',
+        }
+
+        from app.main.helpers.frameworks import EnsureApplicationCompanyDetailsHaveBeenConfirmed as decorator_class
+
+        for view_name, view_callable in self.app.view_functions.items():
+            if inspect.isfunction(view_callable):
+                with mock.patch.object(decorator_class, 'validator', mock.MagicMock()) as validator_mock:
+                    validator_mock.return_value = False
+
+                    with self.app.app_context():
+                        with mock.patch('app.main.helpers.require_login') as require_login_patch:
+                            require_login_patch.return_value = False
+
+                            if view_name in decorated_views:
+                                with pytest.raises(HTTPException) as e:
+                                    view_callable()
+
+                                assert validator_mock.call_count == 1
+                                assert e.value.code == 500
+                                assert e.value.description == (
+                                    "There was a problem accessing this page of your application. Please try again "
+                                    "later."
+                                )
+
+                            else:
+                                # If it's not decorated, we don't care what error is raised as long as it's not our 500
+                                try:
+                                    view_callable()
+
+                                except Exception as e:
+                                    if type(e) == HTTPException:
+                                        assert e.value.code != 500 and e.value.description != (
+                                            "There was a problem accessing this page of your application. Please try "
+                                            "again later."
+                                        )
+
+                                assert validator_mock.call_count == 0

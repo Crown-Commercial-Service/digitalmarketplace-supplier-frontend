@@ -10,6 +10,7 @@ import pytest
 from dmapiclient import APIError, HTTPError
 from dmapiclient.audit import AuditTypes
 from dmutils.api_stubs import framework as framework_stub
+from dmutils import api_stubs
 
 from tests.app.helpers import BaseApplicationTest, assert_args_and_return
 from app.main.forms.suppliers import (
@@ -831,8 +832,15 @@ class TestSupplierDetails(BaseApplicationTest):
         self, framework_slug, framework_name, link_address
     ):
         self.data_api_client.get_supplier.return_value = get_supplier()
-        self.data_api_client.get_framework.return_value = {
-            "frameworks": {"name": framework_name, "slug": framework_slug}
+        framework = framework_stub(name=framework_name, slug=framework_slug, status='open')
+        self.data_api_client.find_frameworks.return_value = {
+            "frameworks": [framework['frameworks']],
+        }
+        self.data_api_client.get_framework.return_value = framework
+        self.data_api_client.get_supplier_frameworks.return_value = {
+            'frameworkInterest': [
+                api_stubs.supplier_framework(framework_slug=framework_slug)['frameworkInterest']
+            ]
         }
 
         self.login()
@@ -879,17 +887,25 @@ class TestSupplierDetails(BaseApplicationTest):
             assert "currently_applying_to" not in session
 
     @pytest.mark.parametrize(
-        "supplier_details,button_should_be_shown",
+        "supplier_details,open_application,button_should_be_shown",
         [
-            (get_supplier(companyDetailsConfirmed=False), True),  # Details complete but not confirmed
-            (get_supplier(companyDetailsConfirmed=True), False),  # Details complete and already confirmed
-            (get_supplier(companyDetailsConfirmed=False, vatNumber=None), False),  # Details not complete or confirmed
+            # Details complete but not confirmed
+            (get_supplier(companyDetailsConfirmed=False), False, True),
+            # Details complete and already confirmed
+            (get_supplier(companyDetailsConfirmed=True), False, False),
+            # Details not complete or confirmed
+            (get_supplier(companyDetailsConfirmed=False, vatNumber=None), False, False),
         ]
     )
-    def test_green_button_is_shown_only_when_details_are_complete_but_not_confirmed(
-        self, supplier_details, button_should_be_shown
+    def test_green_button_is_shown_when_details_are_complete_but_not_confirmed(
+        self, supplier_details, open_application, button_should_be_shown
     ):
         self.data_api_client.get_supplier.return_value = supplier_details
+        self.data_api_client.get_supplier_frameworks.return_value = {
+            'frameworkInterest': [
+                api_stubs.supplier_framework()['frameworkInterest']
+            ]
+        }
 
         self.login()
 
@@ -899,6 +915,77 @@ class TestSupplierDetails(BaseApplicationTest):
         document = html.fromstring(response.get_data(as_text=True))
         submit_button = document.xpath("//input[@value='Save and confirm']")
         assert submit_button if button_should_be_shown else not submit_button
+
+    def test_green_button_is_shown_when_company_details_confirmed_for_account_but_not_application(self):
+        self.data_api_client.get_supplier.return_value = get_supplier(companyDetailsConfirmed=True)
+        self.data_api_client.find_frameworks.return_value = {
+            "frameworks": [framework_stub(status='open', slug='g-cloud-9')['frameworks']]
+        }
+        self.data_api_client.get_supplier_frameworks.return_value = {
+            'frameworkInterest': [
+                api_stubs.supplier_framework(framework_slug='g-cloud-9',
+                                             application_company_details_confirmed=False)['frameworkInterest'],
+            ]
+        }
+
+        self.login()
+        response = self.client.get('/suppliers/details')
+
+        assert response.status_code == 200
+        assert (
+            "You must confirm that your company details are correct for your application to G-Cloud 9"
+            in
+            response.get_data(as_text=True)
+        )
+        document = html.fromstring(response.get_data(as_text=True))
+        submit_button = document.xpath("//input[@value='Save and confirm']")
+        assert submit_button
+
+    def test_post_confirms_company_details_for_all_open_framework_applications(self):
+        self.data_api_client.get_supplier.return_value = get_supplier(companyDetailsConfirmed=False)
+        self.data_api_client.find_frameworks.return_value = {
+            "frameworks": [
+                framework_stub(status='live', slug='g-cloud-8')['frameworks'],
+                framework_stub(status='open', slug='g-cloud-9')['frameworks'],
+                framework_stub(status='live', slug='digital-outcomes-and-specialists')['frameworks'],
+                framework_stub(status='open', slug='digital-outcomes-and-specialists-2')['frameworks'],
+            ]
+        }
+        self.data_api_client.get_supplier_frameworks.return_value = {
+            'frameworkInterest': [
+                api_stubs.supplier_framework(framework_slug='g-cloud-8',
+                                             application_company_details_confirmed=False)['frameworkInterest'],
+                api_stubs.supplier_framework(framework_slug='g-cloud-9',
+                                             application_company_details_confirmed=False)['frameworkInterest'],
+                api_stubs.supplier_framework(framework_slug='digital-outcomes-and-specialists',
+                                             application_company_details_confirmed=False)['frameworkInterest'],
+                api_stubs.supplier_framework(framework_slug='digital-outcomes-and-specialists-2',
+                                             application_company_details_confirmed=False)['frameworkInterest'],
+            ]
+        }
+
+        self.login()
+        response = self.client.post('/suppliers/details')
+
+        assert response.status_code == 302
+        assert response.location == f"http://localhost/suppliers/details"
+        assert self.data_api_client.update_supplier.call_args_list == [
+            mock.call(supplier_id=1234, supplier={'companyDetailsConfirmed': True}, user="email@email.com"),
+        ]
+        assert self.data_api_client.set_supplier_framework_application_company_details_confirmed.call_args_list == [
+            mock.call(
+                supplier_id=1234,
+                framework_slug='g-cloud-9',
+                application_company_details_confirmed=True,
+                user='email@email.com'
+            ),
+            mock.call(
+                supplier_id=1234,
+                framework_slug='digital-outcomes-and-specialists-2',
+                application_company_details_confirmed=True,
+                user='email@email.com'
+            ),
+        ]
 
     @pytest.mark.parametrize(
         "complete_supplier",

@@ -27,17 +27,11 @@
 <li class="browse-list-item">
   <a class="browse-list-item-link"
      href="{{ url_for('.supplier_details') }}">
-    <span>Enter your company details</span>
+    <h2>1. Enter your company details</h2>
   </a>
-  {% if not company_details_complete and counts.complete %}
-  <div class="browse-list-item-status-angry">
-    <p class="browse-list-item-status-title">
-    <strong>No services will be submitted because you haven’t completed your company details</strong>
-    </p>
-  </div>
-  {% elif not company_details_complete %}
+  {% if not application_company_details_confirmed %}
   <div class="browse-list-item-status-quiet">
-    <p class="browse-list-item-status-title">You must add your organisation’s details</p>
+    <p class="browse-list-item-status-title">You must {% if supplier_company_details_complete %}confirm{% else %}add{% endif %} your organisation’s details</p>
   </div>
   {% else %}
   {% if declaration_status == 'complete' and counts.complete %}
@@ -53,96 +47,105 @@
 </li>
 
 <li class="browse-list-item">
-  {% if declaration_status == 'unstarted' %}
-  <a class="browse-list-item-link" href="{{ url_for('.framework_start_supplier_declaration', framework_slug=framework.slug) }}">
-    <span>Make supplier declaration</span>
-  </a>
+  {% if not application_company_details_confirmed %}
+    <h2>2. Make supplier declaration</h2>
+    <p class="instruction-list-item-box inactive">Can't start yet</p>
   {% else %}
-  <a class="browse-list-item-link" href="{{ url_for('.framework_supplier_declaration_overview', framework_slug=framework.slug) }}">
-    <span>Edit supplier declaration</span>
-  </a>
-  {% endif %}
-  <p class="browse-list-item-body">
-    Confirm eligibility, agree to the application terms and provide supplier&nbsp;information.
-  </p>
-  {% if declaration_status == 'unstarted' and not counts.complete %}
-  <div class="browse-list-item-status-quiet">
-    <p class="browse-list-item-status-title">You need to make the supplier declaration</p>
-  </div>
-  {% elif declaration_status == 'started' and not counts.complete %}
-  <div class="browse-list-item-status-quiet">
-    <p class="browse-list-item-status-title">You need to finish making the supplier declaration</p>
-  </div>
-  {% elif declaration_status == 'unstarted' and counts.complete %}
-  <div class="browse-list-item-status-angry">
-    <p class="browse-list-item-status-title">
-      <strong>No services will be submitted because you haven’t made the supplier declaration</strong>
+    {% if declaration_status == 'unstarted' %}
+    <a class="browse-list-item-link" href="{{ url_for('.framework_start_supplier_declaration', framework_slug=framework.slug) }}">
+      <h2>2. Make supplier declaration</h2>
+    </a>
+    {% else %}
+    <a class="browse-list-item-link" href="{{ url_for('.framework_supplier_declaration_overview', framework_slug=framework.slug) }}">
+      <h2>2. Edit supplier declaration</h2>
+    </a>
+    {% endif %}
+    <p class="browse-list-item-body">
+      Confirm eligibility, agree to the application terms and provide supplier&nbsp;information.
     </p>
-  </div>
-  {% elif declaration_status == 'started' and counts.complete %}
-  <div class="browse-list-item-status-angry">
-    <p class="browse-list-item-status-title">
-      <strong>No services will be submitted because you haven’t finished making the supplier declaration</strong>
-    </p>
-  </div>
-  {% elif declaration_status == 'complete' %}
-  {% if counts.complete and company_details_complete %}
-  <div class="browse-list-item-status-happy">
-  {% else %}
-    <div class="browse-list-item-status-default">
-  {% endif %}
-    <p class="browse-list-item-status-title">
-      <strong>You’ve made the supplier declaration</strong>
-    </p>
-  </div>
+    {% if declaration_status == 'unstarted' and not counts.complete %}
+      <div class="browse-list-item-status-quiet">
+        <p class="browse-list-item-status-title">You need to make the supplier declaration</p>
+      </div>
+    {% elif declaration_status == 'started' and not counts.complete %}
+      <div class="browse-list-item-status-quiet">
+        <p class="browse-list-item-status-title">You need to finish making the supplier declaration</p>
+      </div>
+    {% elif declaration_status == 'unstarted' and counts.complete %}
+      <div class="browse-list-item-status-angry">
+        <p class="browse-list-item-status-title">
+          <strong>No services will be submitted because you haven’t made the supplier declaration</strong>
+        </p>
+      </div>
+    {% elif declaration_status == 'started' and counts.complete %}
+      <div class="browse-list-item-status-angry">
+        <p class="browse-list-item-status-title">
+          <strong>No services will be submitted because you haven’t finished making the supplier declaration</strong>
+        </p>
+      </div>
+    {% elif declaration_status == 'complete' %}
+      {% if counts.complete and application_company_details_confirmed %}
+        <div class="browse-list-item-status-happy">
+      {% else %}
+        <div class="browse-list-item-status-default">
+      {% endif %}
+        <p class="browse-list-item-status-title">
+          <strong>You’ve made the supplier declaration</strong>
+        </p>
+      </div>
+    {% endif %}
   {% endif %}
 </li>
 
 <li class="browse-list-item">
-  <a class="browse-list-item-link" href="{{ url_for('.framework_submission_lots', framework_slug=framework.slug) }}">
-    <span>Add, edit and complete services</span>
-  </a>
-  {% if framework_advice.use_of_service_data %}
-    <div class="browse-list-item-body">
+  {% if not application_company_details_confirmed %}
+    <h2>3. Add, edit and complete services</h2>
+    <p class="instruction-list-item-box inactive">Can't start yet</p>
+  {% else %}
+    <a class="browse-list-item-link" href="{{ url_for('.framework_submission_lots', framework_slug=framework.slug) }}">
+      <h2>3. Add, edit and complete services</h2>
+    </a>
+    {% if framework_advice.use_of_service_data %}
+    <div class="browse-list-item-body use-of-service-data">
       {{ framework_advice.use_of_service_data }}
     </div>
-  {% endif %}
-  {% if not counts.complete and not counts.draft %}
-  <div class="browse-list-item-status-quiet">
-    <p class="browse-list-item-status-title">You need to add and complete services</p>
-  </div>
-  {% endif %}
-
-  {% if counts.draft and not counts.complete %}
-  <div class="browse-list-item-status-quiet">
-    <p class="browse-list-item-status-title">No services marked as complete</p>
-  </div>
-  {% endif %}
-
-  {% if counts.complete %}
-    {% if declaration_status == 'complete' and company_details_complete %}
-      <div class="browse-list-item-status-happy">
-        <p class="browse-list-item-status-title">You’re submitting</p>
+    {% endif %}
+  
+    {% if not counts.complete %}
+      {% if not counts.draft %}
+    <div class="browse-list-item-status-quiet">
+      <p class="browse-list-item-status-title">You need to add and complete services</p>
+    </div>
+      {% else %}
+    <div class="browse-list-item-status-quiet">
+      <p class="browse-list-item-status-title">No services marked as complete</p>
+    </div>
+      {% endif %}
     {% else %}
-      <div class="browse-list-item-status-default">
-        <p class="browse-list-item-status-title">You’ve completed:</p>
+      {% if declaration_status == 'complete' %}
+    <div class="browse-list-item-status-happy">
+      <p class="browse-list-item-status-title">You’re submitting</p>
+      {% else %}
+    <div class="browse-list-item-status-default">
+      <p class="browse-list-item-status-title">You’ve completed:</p>
+      {% endif %}
+      <ul class="browse-list-item-status-list">
+        {% for lot in completed_lots %}
+          {% if lot.one_service_limit %}
+        <li>
+            {{lot.name|lower}}
+        </li>
+          {% else %}
+        <li>
+          {{ lot.complete_count }}
+          {{ lot.unitSingular if (1 == lot.complete_count) else lot.unitPlural }} in
+          {{ lot.name|lower }}
+        </li>
+          {% endif %}
+        {% endfor %}
+      </ul>
+    </div>
     {% endif %}
-        <ul class="browse-list-item-status-list">
-          {% for lot in completed_lots %}
-            {% if lot.one_service_limit %}
-            <li>
-              {{lot.name|lower}}
-            </li>
-            {% else %}
-            <li>
-              {{ lot.complete_count }}
-              {{ lot.unitSingular if (1 == lot.complete_count) else lot.unitPlural }} in
-              {{ lot.name|lower }}
-            </li>
-            {% endif %}
-          {% endfor %}
-        </ul>
-      </div>
-    {% endif %}
+  {% endif %}
 </li>
 {% endif %}

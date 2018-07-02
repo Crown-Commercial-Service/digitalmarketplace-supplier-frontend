@@ -178,7 +178,7 @@
     </div>
   </div>
 
-  {% if supplier_company_details_confirmed == False %}
+  {% if supplier_company_details_confirmed == False or unconfirmed_open_supplier_framework_names|length > 0 %}
     {% if supplier_company_details_complete %}
     <br>
     <div class='grid-row'>
@@ -193,6 +193,9 @@
             <li>VAT number</li>
             <li>DUNS number</li>
           </ul>
+          {% else %}
+          <p>You must confirm that your company details are correct for your {{ pluralize(unconfirmed_open_supplier_framework_names|length, 'application', 'applications') }} to {{
+            unconfirmed_open_supplier_framework_names|smartjoin }}.</p>
           {% endif %}
 
           {% with type = "save", label = "Save and confirm" %}
