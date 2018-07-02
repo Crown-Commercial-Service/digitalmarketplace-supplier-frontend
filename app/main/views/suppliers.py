@@ -113,17 +113,21 @@ def supplier_details():
     supplier['contact'] = supplier['contactInformation'][0]
     country_name = get_country_name_from_country_code(supplier.get('registrationCountry'))
 
-    framework = None
+    supplier_company_details_confirmed = supplier['companyDetailsConfirmed']
 
-    if "currently_applying_to" in session:
-        framework = data_api_client.get_framework(session["currently_applying_to"])["frameworks"]
+    currently_applying_to_framework = (
+        data_api_client.get_framework(session["currently_applying_to"])['frameworks']
+        if "currently_applying_to" in session else
+        None
+    )
+
     return render_template(
         "suppliers/details.html",
         supplier=supplier,
         country_name=country_name,
-        currently_applying_to=framework,
-        company_details_complete=supplier_company_details_are_complete(supplier),
-        supplier_company_details_confirmed=supplier['companyDetailsConfirmed'],
+        currently_applying_to=currently_applying_to_framework,
+        supplier_company_details_complete=supplier_company_details_are_complete(supplier),
+        supplier_company_details_confirmed=supplier_company_details_confirmed,
     ), 200
 
 
