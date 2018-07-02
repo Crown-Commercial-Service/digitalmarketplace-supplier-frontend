@@ -215,7 +215,6 @@ def get_statuses_for_lot(
     unit,
     unit_plural
 ):
-
     if not drafts_count and not complete_drafts_count:
         return []
 
@@ -283,7 +282,6 @@ def get_status_for_one_service_lot(
 def get_status_for_multi_service_lot_and_service_type(
     count, services_status, framework_is_open, declaration_complete, unit, unit_plural
 ):
-
     singular = (1 == count)
     description_of_services = u'{} {} {}'.format(
         count, services_status, unit if singular else unit_plural
@@ -365,7 +363,7 @@ def get_frameworks_closed_and_open_for_applications(frameworks):
 
 
 def get_supplier_registered_name_from_declaration(declaration):
-    return(
+    return (
         declaration.get('supplierRegisteredName')  # G-Cloud 10 and later declaration key
         or declaration.get('nameOfOrganisation')  # G-Cloud 9 and earlier declaration key
     )

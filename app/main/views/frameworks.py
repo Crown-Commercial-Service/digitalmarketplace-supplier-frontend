@@ -30,12 +30,22 @@ from ... import data_api_client
 from ...main import main, content_loader
 from ..helpers import login_required
 from ..helpers.frameworks import (
-    get_declaration_status, get_last_modified_from_first_matching_file, register_interest_in_framework,
-    get_supplier_on_framework_from_info, get_declaration_status_from_info, get_supplier_framework_info,
-    get_framework_or_404, get_framework_and_lot_or_404, get_framework_or_500, count_drafts_by_lot, get_statuses_for_lot,
-    return_supplier_framework_info_if_on_framework_or_abort, returned_agreement_email_recipients,
-    check_agreement_is_related_to_supplier_framework_or_abort, get_framework_for_reuse,
-    get_supplier_registered_name_from_declaration
+    check_agreement_is_related_to_supplier_framework_or_abort,
+    count_drafts_by_lot,
+    get_declaration_status,
+    get_declaration_status_from_info,
+    get_framework_and_lot_or_404,
+    get_framework_for_reuse,
+    get_framework_or_404,
+    get_framework_or_500,
+    get_last_modified_from_first_matching_file,
+    get_statuses_for_lot,
+    get_supplier_framework_info,
+    get_supplier_on_framework_from_info,
+    get_supplier_registered_name_from_declaration,
+    register_interest_in_framework,
+    return_supplier_framework_info_if_on_framework_or_abort,
+    returned_agreement_email_recipients,
 )
 from ..helpers.services import (
     count_unanswered_questions,

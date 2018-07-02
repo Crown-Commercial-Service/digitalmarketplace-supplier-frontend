@@ -28,7 +28,10 @@ from ..forms.suppliers import (
     EmailAddressForm,
     VatNumberForm,
 )
-from ..helpers.frameworks import get_frameworks_by_status, get_frameworks_closed_and_open_for_applications
+from ..helpers.frameworks import (
+    get_frameworks_by_status,
+    get_frameworks_closed_and_open_for_applications,
+)
 from ..helpers.suppliers import (
     COUNTRY_TUPLE,
     get_country_name_from_country_code,
