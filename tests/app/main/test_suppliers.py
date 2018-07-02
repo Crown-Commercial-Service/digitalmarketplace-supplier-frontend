@@ -861,6 +861,23 @@ class TestSupplierDetails(BaseApplicationTest):
         document = html.fromstring(page_html)
         assert "Return to your" not in document.text_content()
 
+    def test_currently_applying_to_removed_from_session_after_account_dashboard_visit(self):
+        self.data_api_client.get_supplier.return_value = get_supplier()
+
+        self.login()
+
+        with self.client.session_transaction() as session:
+            session["currently_applying_to"] = 'g-bork-2'
+
+        with self.client.session_transaction() as session:
+            assert "currently_applying_to" in session
+
+        response = self.client.get("/suppliers")
+        assert response.status_code == 200
+
+        with self.client.session_transaction() as session:
+            assert "currently_applying_to" not in session
+
     @pytest.mark.parametrize(
         "supplier_details,button_should_be_shown",
         [

@@ -85,6 +85,9 @@ def dashboard():
             )
         })
 
+    if "currently_applying_to" in session:
+        del session["currently_applying_to"]
+
     return render_template(
         "suppliers/dashboard.html",
         supplier=supplier,
