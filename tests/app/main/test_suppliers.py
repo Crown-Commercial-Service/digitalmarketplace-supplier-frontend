@@ -10,6 +10,7 @@ import pytest
 from dmapiclient import APIError, HTTPError
 from dmapiclient.audit import AuditTypes
 from dmutils.api_stubs import framework as framework_stub
+from dmutils import api_stubs
 
 from tests.app.helpers import BaseApplicationTest, assert_args_and_return
 from app.main.forms.suppliers import (
@@ -715,31 +716,73 @@ class TestSupplierDetails(BaseApplicationTest):
         assert answer_required_link[0].values()[0] == link_address
 
     @pytest.mark.parametrize(
-        "question,filled_in_attribute,link_address",
+        "question,filled_in_attribute,link_address,expected_link_text",
         [
             (
-                "Registered company name",
-                {"registeredName": "Digital Ponies"},
-                "/suppliers/registered-company-name/edit"
-            ),
-            ("Registered company address", {"registrationCountry": "country:GB"}, "/suppliers/registered-address/edit"),
-            (
-                "Registration number",
-                {"companiesHouseNumber": "CH123456", "otherCompanyRegistrationNumber": None},
-                "/suppliers/registration-number/edit"
+                "Registered company name", {"companyDetailsConfirmed": True, "registeredName": "Digital Ponies"},
+                "/suppliers/registered-company-name/edit", 'Correct a mistake',
             ),
             (
-                "Registration number",
-                {"companiesHouseNumber": None, "otherCompanyRegistrationNumber": "EQ789"},
-                "/suppliers/registration-number/edit"
+                "Registered company name", {"companyDetailsConfirmed": False, "registeredName": "Digital Ponies"},
+                "/suppliers/registered-company-name/edit", 'Change',
             ),
-            ("Trading status", {"tradingStatus": "limited company (LTD)"}, "/suppliers/trading-status/edit"),
-            ("Company size", {"organisationSize": "small"}, "/suppliers/organisation-size/edit"),
-            ("VAT number", {"vatNumber": "VAT654321"}, "/suppliers/vat-number/edit"),
-            ("DUNS number", {"dunsNumber": "123456789"}, "/suppliers/duns-number/edit"),
+            ("Registered company address", {"companyDetailsConfirmed": True, "registrationCountry": "country:GB"},
+             "/suppliers/registered-address/edit", 'Change',),
+            ("Registered company address", {"companyDetailsConfirmed": False, "registrationCountry": "country:GB"},
+             "/suppliers/registered-address/edit", 'Change',),
+            (
+                "Registration number",
+                {
+                    "companyDetailsConfirmed": True, "companiesHouseNumber": "CH123456",
+                    "otherCompanyRegistrationNumber": None
+                },
+                "/suppliers/registration-number/edit",
+                'Correct a mistake',
+            ),
+            (
+                "Registration number",
+                {
+                    "companyDetailsConfirmed": False, "companiesHouseNumber": "CH123456",
+                    "otherCompanyRegistrationNumber": None
+                },
+                "/suppliers/registration-number/edit",
+                'Change',
+            ),
+            (
+                "Registration number",
+                {
+                    "companyDetailsConfirmed": True, "companiesHouseNumber": None,
+                    "otherCompanyRegistrationNumber": "EQ789"
+                },
+                "/suppliers/registration-number/edit",
+                'Correct a mistake',
+            ),
+            (
+                "Registration number",
+                {
+                    "companyDetailsConfirmed": False, "companiesHouseNumber": None,
+                    "otherCompanyRegistrationNumber": "EQ789"
+                },
+                "/suppliers/registration-number/edit",
+                'Change',
+            ),
+            ("Trading status", {"companyDetailsConfirmed": False, "tradingStatus": "limited company (LTD)"},
+             "/suppliers/trading-status/edit", "Change"),
+            ("Company size", {"companyDetailsConfirmed": False, "organisationSize": "small"},
+             "/suppliers/organisation-size/edit", "Change"),
+            ("VAT number", {"companyDetailsConfirmed": True, "vatNumber": "VAT654321"},
+             "/suppliers/vat-number/edit", 'Correct a mistake',),
+            ("VAT number", {"companyDetailsConfirmed": False, "vatNumber": "VAT654321"},
+             "/suppliers/vat-number/edit", 'Change',),
+            ("DUNS number", {"companyDetailsConfirmed": True, "dunsNumber": "123456789"},
+             "/suppliers/duns-number/edit", 'Correct a mistake',),
+            ("DUNS number", {"companyDetailsConfirmed": False, "dunsNumber": "123456789"},
+             "/suppliers/duns-number/edit", 'Correct a mistake',),
         ]
     )
-    def test_filled_in_question_field_has_a_correct_a_mistake_link(self, question, filled_in_attribute, link_address):
+    def test_filled_in_question_field_has_a_change_or_correct_a_mistake_link(
+        self, question, filled_in_attribute, link_address, expected_link_text
+    ):
         self.data_api_client.get_supplier.return_value = get_supplier(**filled_in_attribute)
 
         self.login()
@@ -749,7 +792,7 @@ class TestSupplierDetails(BaseApplicationTest):
         page_html = response.get_data(as_text=True)
         document = html.fromstring(page_html)
         answer_required_link = document.xpath(
-            "//span[text()='{}']/following::td[2]/span/a[text()='Correct a mistake']".format(question)
+            "//span[text()='{}']/following::td[2]/span/a[text()='{}']".format(question, expected_link_text)
         )
 
         assert answer_required_link
@@ -789,8 +832,15 @@ class TestSupplierDetails(BaseApplicationTest):
         self, framework_slug, framework_name, link_address
     ):
         self.data_api_client.get_supplier.return_value = get_supplier()
-        self.data_api_client.get_framework.return_value = {
-            "frameworks": {"name": framework_name, "slug": framework_slug}
+        framework = framework_stub(name=framework_name, slug=framework_slug, status='open')
+        self.data_api_client.find_frameworks.return_value = {
+            "frameworks": [framework['frameworks']],
+        }
+        self.data_api_client.get_framework.return_value = framework
+        self.data_api_client.get_supplier_frameworks.return_value = {
+            'frameworkInterest': [
+                api_stubs.supplier_framework(framework_slug=framework_slug)['frameworkInterest']
+            ]
         }
 
         self.login()
@@ -819,18 +869,43 @@ class TestSupplierDetails(BaseApplicationTest):
         document = html.fromstring(page_html)
         assert "Return to your" not in document.text_content()
 
+    def test_currently_applying_to_removed_from_session_after_account_dashboard_visit(self):
+        self.data_api_client.get_supplier.return_value = get_supplier()
+
+        self.login()
+
+        with self.client.session_transaction() as session:
+            session["currently_applying_to"] = 'g-bork-2'
+
+        with self.client.session_transaction() as session:
+            assert "currently_applying_to" in session
+
+        response = self.client.get("/suppliers")
+        assert response.status_code == 200
+
+        with self.client.session_transaction() as session:
+            assert "currently_applying_to" not in session
+
     @pytest.mark.parametrize(
-        "supplier_details,button_should_be_shown",
+        "supplier_details,open_application,button_should_be_shown",
         [
-            (get_supplier(companyDetailsConfirmed=False), True),  # Details complete but not confirmed
-            (get_supplier(companyDetailsConfirmed=True), False),  # Details complete and already confirmed
-            (get_supplier(companyDetailsConfirmed=False, vatNumber=None), False),  # Details not complete or confirmed
+            # Details complete but not confirmed
+            (get_supplier(companyDetailsConfirmed=False), False, True),
+            # Details complete and already confirmed
+            (get_supplier(companyDetailsConfirmed=True), False, False),
+            # Details not complete or confirmed
+            (get_supplier(companyDetailsConfirmed=False, vatNumber=None), False, False),
         ]
     )
-    def test_green_button_is_shown_only_when_details_are_complete_but_not_confirmed(
-        self, supplier_details, button_should_be_shown
+    def test_green_button_is_shown_when_details_are_complete_but_not_confirmed(
+        self, supplier_details, open_application, button_should_be_shown
     ):
         self.data_api_client.get_supplier.return_value = supplier_details
+        self.data_api_client.get_supplier_frameworks.return_value = {
+            'frameworkInterest': [
+                api_stubs.supplier_framework()['frameworkInterest']
+            ]
+        }
 
         self.login()
 
@@ -840,6 +915,77 @@ class TestSupplierDetails(BaseApplicationTest):
         document = html.fromstring(response.get_data(as_text=True))
         submit_button = document.xpath("//input[@value='Save and confirm']")
         assert submit_button if button_should_be_shown else not submit_button
+
+    def test_green_button_is_shown_when_company_details_confirmed_for_account_but_not_application(self):
+        self.data_api_client.get_supplier.return_value = get_supplier(companyDetailsConfirmed=True)
+        self.data_api_client.find_frameworks.return_value = {
+            "frameworks": [framework_stub(status='open', slug='g-cloud-9')['frameworks']]
+        }
+        self.data_api_client.get_supplier_frameworks.return_value = {
+            'frameworkInterest': [
+                api_stubs.supplier_framework(framework_slug='g-cloud-9',
+                                             application_company_details_confirmed=False)['frameworkInterest'],
+            ]
+        }
+
+        self.login()
+        response = self.client.get('/suppliers/details')
+
+        assert response.status_code == 200
+        assert (
+            "You must confirm that your company details are correct for your application to G-Cloud 9"
+            in
+            response.get_data(as_text=True)
+        )
+        document = html.fromstring(response.get_data(as_text=True))
+        submit_button = document.xpath("//input[@value='Save and confirm']")
+        assert submit_button
+
+    def test_post_confirms_company_details_for_all_open_framework_applications(self):
+        self.data_api_client.get_supplier.return_value = get_supplier(companyDetailsConfirmed=False)
+        self.data_api_client.find_frameworks.return_value = {
+            "frameworks": [
+                framework_stub(status='live', slug='g-cloud-8')['frameworks'],
+                framework_stub(status='open', slug='g-cloud-9')['frameworks'],
+                framework_stub(status='live', slug='digital-outcomes-and-specialists')['frameworks'],
+                framework_stub(status='open', slug='digital-outcomes-and-specialists-2')['frameworks'],
+            ]
+        }
+        self.data_api_client.get_supplier_frameworks.return_value = {
+            'frameworkInterest': [
+                api_stubs.supplier_framework(framework_slug='g-cloud-8',
+                                             application_company_details_confirmed=False)['frameworkInterest'],
+                api_stubs.supplier_framework(framework_slug='g-cloud-9',
+                                             application_company_details_confirmed=False)['frameworkInterest'],
+                api_stubs.supplier_framework(framework_slug='digital-outcomes-and-specialists',
+                                             application_company_details_confirmed=False)['frameworkInterest'],
+                api_stubs.supplier_framework(framework_slug='digital-outcomes-and-specialists-2',
+                                             application_company_details_confirmed=False)['frameworkInterest'],
+            ]
+        }
+
+        self.login()
+        response = self.client.post('/suppliers/details')
+
+        assert response.status_code == 302
+        assert response.location == f"http://localhost/suppliers/details"
+        assert self.data_api_client.update_supplier.call_args_list == [
+            mock.call(supplier_id=1234, supplier={'companyDetailsConfirmed': True}, user="email@email.com"),
+        ]
+        assert self.data_api_client.set_supplier_framework_application_company_details_confirmed.call_args_list == [
+            mock.call(
+                supplier_id=1234,
+                framework_slug='g-cloud-9',
+                application_company_details_confirmed=True,
+                user='email@email.com'
+            ),
+            mock.call(
+                supplier_id=1234,
+                framework_slug='digital-outcomes-and-specialists-2',
+                application_company_details_confirmed=True,
+                user='email@email.com'
+            ),
+        ]
 
     @pytest.mark.parametrize(
         "complete_supplier",

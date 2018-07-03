@@ -30,12 +30,23 @@ from ... import data_api_client
 from ...main import main, content_loader
 from ..helpers import login_required
 from ..helpers.frameworks import (
-    get_declaration_status, get_last_modified_from_first_matching_file, register_interest_in_framework,
-    get_supplier_on_framework_from_info, get_declaration_status_from_info, get_supplier_framework_info,
-    get_framework_or_404, get_framework_and_lot_or_404, get_framework_or_500, count_drafts_by_lot, get_statuses_for_lot,
-    return_supplier_framework_info_if_on_framework_or_abort, returned_agreement_email_recipients,
-    check_agreement_is_related_to_supplier_framework_or_abort, get_framework_for_reuse,
-    get_supplier_registered_name_from_declaration
+    check_agreement_is_related_to_supplier_framework_or_abort,
+    count_drafts_by_lot,
+    EnsureApplicationCompanyDetailsHaveBeenConfirmed,
+    get_declaration_status,
+    get_declaration_status_from_info,
+    get_framework_and_lot_or_404,
+    get_framework_for_reuse,
+    get_framework_or_404,
+    get_framework_or_500,
+    get_last_modified_from_first_matching_file,
+    get_statuses_for_lot,
+    get_supplier_framework_info,
+    get_supplier_on_framework_from_info,
+    get_supplier_registered_name_from_declaration,
+    register_interest_in_framework,
+    return_supplier_framework_info_if_on_framework_or_abort,
+    returned_agreement_email_recipients,
 )
 from ..helpers.services import (
     count_unanswered_questions,
@@ -43,6 +54,7 @@ from ..helpers.services import (
     get_lot_drafts,
     get_signed_document_url,
 )
+from ..helpers.suppliers import supplier_company_details_are_complete
 from ..helpers.validation import get_validator
 from ..forms.frameworks import SignerDetailsForm, ContractReviewForm, AcceptAgreementVariationForm, ReuseDeclarationForm
 
@@ -107,7 +119,16 @@ def framework_dashboard(framework_slug):
     if declaration_status == 'unstarted' and framework['status'] == 'live':
         abort(404)
 
-    application_made = supplier_is_on_framework or (len(complete_drafts) > 0 and declaration_status == 'complete')
+    application_company_details_confirmed = (
+        supplier_framework_info and supplier_framework_info['applicationCompanyDetailsConfirmed']
+    )
+    application_made = (
+        supplier_is_on_framework or (
+            len(complete_drafts) > 0
+            and declaration_status == 'complete'
+            and application_company_details_confirmed
+        )
+    )
     lots_with_completed_drafts = [lot for lot in framework['lots'] if count_drafts_by_lot(complete_drafts, lot['slug'])]
 
     try:
@@ -196,15 +217,16 @@ def framework_dashboard(framework_slug):
         supplier_framework=supplier_framework_info,
         supplier_is_on_framework=supplier_is_on_framework,
         framework_advice=framework_advice,
-        company_details_complete=supplier['companyDetailsConfirmed'],
+        supplier_company_details_complete=supplier_company_details_are_complete(supplier),
+        application_company_details_confirmed=application_company_details_confirmed,
     ), 200
 
 
 @main.route('/frameworks/<framework_slug>/submissions', methods=['GET'])
 @login_required
+@EnsureApplicationCompanyDetailsHaveBeenConfirmed(data_api_client)
 def framework_submission_lots(framework_slug):
     framework = get_framework_or_404(data_api_client, framework_slug)
-    supplier = data_api_client.get_supplier(current_user.supplier_id)['suppliers']
 
     drafts, complete_drafts = get_drafts(data_api_client, framework_slug)
     declaration_status = get_declaration_status(data_api_client, framework_slug)
@@ -246,7 +268,6 @@ def framework_submission_lots(framework_slug):
         complete_drafts=list(reversed(complete_drafts)),
         drafts=list(reversed(drafts)),
         declaration_status=declaration_status,
-        company_details_complete=supplier['companyDetailsConfirmed'],
         framework=framework,
         lots=lots,
     ), 200
@@ -254,9 +275,9 @@ def framework_submission_lots(framework_slug):
 
 @main.route('/frameworks/<framework_slug>/submissions/<lot_slug>', methods=['GET'])
 @login_required
+@EnsureApplicationCompanyDetailsHaveBeenConfirmed(data_api_client)
 def framework_submission_services(framework_slug, lot_slug):
     framework, lot = get_framework_and_lot_or_404(data_api_client, framework_slug, lot_slug)
-    supplier = data_api_client.get_supplier(current_user.supplier_id)['suppliers']
 
     drafts, complete_drafts = get_lot_drafts(data_api_client, framework_slug, lot_slug)
     declaration_status = get_declaration_status(data_api_client, framework_slug)
@@ -317,7 +338,6 @@ def framework_submission_services(framework_slug, lot_slug):
         complete_drafts=list(reversed(complete_drafts)),
         drafts=list(reversed(drafts)),
         declaration_status=declaration_status,
-        company_details_complete=supplier['companyDetailsConfirmed'],
         framework=framework,
         lot=lot,
     ), 200
@@ -325,6 +345,7 @@ def framework_submission_services(framework_slug, lot_slug):
 
 @main.route('/frameworks/<framework_slug>/declaration/start', methods=['GET'])
 @login_required
+@EnsureApplicationCompanyDetailsHaveBeenConfirmed(data_api_client)
 def framework_start_supplier_declaration(framework_slug):
     framework = get_framework_or_404(data_api_client, framework_slug, allowed_statuses=['open'])
     update_framework_with_formatted_dates(framework)
@@ -335,6 +356,7 @@ def framework_start_supplier_declaration(framework_slug):
 
 @main.route('/frameworks/<framework_slug>/declaration/reuse', methods=['GET'])
 @login_required
+@EnsureApplicationCompanyDetailsHaveBeenConfirmed(data_api_client)
 def reuse_framework_supplier_declaration(framework_slug):
     """Attempt to find a supplier framework declaration that we can reuse.
 
@@ -381,6 +403,7 @@ def reuse_framework_supplier_declaration(framework_slug):
 
 @main.route('/frameworks/<framework_slug>/declaration/reuse', methods=['POST'])
 @login_required
+@EnsureApplicationCompanyDetailsHaveBeenConfirmed(data_api_client)
 def reuse_framework_supplier_declaration_post(framework_slug):
     """Set the prefill preference if a reusable framework slug is provided and redirect to declaration."""
 
@@ -440,6 +463,7 @@ def reuse_framework_supplier_declaration_post(framework_slug):
 
 @main.route('/frameworks/<framework_slug>/declaration', methods=['GET'])
 @login_required
+@EnsureApplicationCompanyDetailsHaveBeenConfirmed(data_api_client)
 def framework_supplier_declaration_overview(framework_slug):
     framework = get_framework_or_404(data_api_client, framework_slug, allowed_statuses=[
         "open",
@@ -493,6 +517,7 @@ def framework_supplier_declaration_overview(framework_slug):
 
 @main.route('/frameworks/<framework_slug>/declaration', methods=['POST'])
 @login_required
+@EnsureApplicationCompanyDetailsHaveBeenConfirmed(data_api_client)
 def framework_supplier_declaration_submit(framework_slug):
     framework = get_framework_or_404(data_api_client, framework_slug, allowed_statuses=['open'])
 
@@ -529,6 +554,7 @@ def framework_supplier_declaration_submit(framework_slug):
 
 @main.route('/frameworks/<framework_slug>/declaration/edit/<string:section_id>', methods=['GET', 'POST'])
 @login_required
+@EnsureApplicationCompanyDetailsHaveBeenConfirmed(data_api_client)
 def framework_supplier_declaration_edit(framework_slug, section_id):
     framework = get_framework_or_404(data_api_client, framework_slug, allowed_statuses=['open'])
 

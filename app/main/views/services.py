@@ -24,6 +24,7 @@ from ..helpers.frameworks import (
     get_supplier_framework_info,
     get_framework_or_404,
     get_framework_or_500,
+    EnsureApplicationCompanyDetailsHaveBeenConfirmed,
 )
 from ..forms.frameworks import OneServiceLimitCopyServiceForm
 
@@ -289,6 +290,7 @@ def redirect_direct_service_urls(service_id, trailing_path):
 
 @main.route('/frameworks/<framework_slug>/submissions/<lot_slug>/create', methods=['GET', 'POST'])
 @login_required
+@EnsureApplicationCompanyDetailsHaveBeenConfirmed(data_api_client)
 def start_new_draft_service(framework_slug, lot_slug):
     """Page to kick off creation of a new service."""
 
@@ -351,6 +353,7 @@ def start_new_draft_service(framework_slug, lot_slug):
 
 @main.route('/frameworks/<framework_slug>/submissions/<lot_slug>/<service_id>/copy', methods=['POST'])
 @login_required
+@EnsureApplicationCompanyDetailsHaveBeenConfirmed(data_api_client)
 def copy_draft_service(framework_slug, lot_slug, service_id):
     framework, lot = get_framework_and_lot_or_404(data_api_client, framework_slug, lot_slug, allowed_statuses=['open'])
 
@@ -397,6 +400,7 @@ def copy_draft_service(framework_slug, lot_slug, service_id):
 
 @main.route('/frameworks/<framework_slug>/submissions/<lot_slug>/<service_id>/complete', methods=['POST'])
 @login_required
+@EnsureApplicationCompanyDetailsHaveBeenConfirmed(data_api_client)
 def complete_draft_service(framework_slug, lot_slug, service_id):
     framework, lot = get_framework_and_lot_or_404(data_api_client, framework_slug, lot_slug, allowed_statuses=['open'])
 
@@ -435,6 +439,7 @@ def complete_draft_service(framework_slug, lot_slug, service_id):
 
 @main.route('/frameworks/<framework_slug>/submissions/<lot_slug>/<service_id>/delete', methods=['POST'])
 @login_required
+@EnsureApplicationCompanyDetailsHaveBeenConfirmed(data_api_client)
 def delete_draft_service(framework_slug, lot_slug, service_id):
     framework, lot = get_framework_and_lot_or_404(data_api_client, framework_slug, lot_slug, allowed_statuses=['open'])
 
@@ -473,6 +478,7 @@ def delete_draft_service(framework_slug, lot_slug, service_id):
 
 @main.route('/assets/<framework_slug>/submissions/<int:supplier_id>/<document_name>', methods=['GET'])
 @login_required
+@EnsureApplicationCompanyDetailsHaveBeenConfirmed(data_api_client)
 def service_submission_document(framework_slug, supplier_id, document_name):
     if current_user.supplier_id != supplier_id:
         abort(404)
@@ -488,6 +494,7 @@ def service_submission_document(framework_slug, supplier_id, document_name):
 
 @main.route('/frameworks/<framework_slug>/submissions/<lot_slug>/<service_id>', methods=['GET'])
 @login_required
+@EnsureApplicationCompanyDetailsHaveBeenConfirmed(data_api_client)
 def view_service_submission(framework_slug, lot_slug, service_id):
     framework, lot = get_framework_and_lot_or_404(data_api_client, framework_slug, lot_slug)
     update_framework_with_formatted_dates(framework)
@@ -533,6 +540,7 @@ def view_service_submission(framework_slug, lot_slug, service_id):
 @main.route('/frameworks/<framework_slug>/submissions/<lot_slug>/<service_id>/edit/<section_id>/<question_slug>',
             methods=('GET', 'POST',))
 @login_required
+@EnsureApplicationCompanyDetailsHaveBeenConfirmed(data_api_client)
 def edit_service_submission(framework_slug, lot_slug, service_id, section_id, question_slug=None):
     """
         Also accepts URL parameter `force_continue_button` which will allow rendering of a 'Save and continue' button,
@@ -637,6 +645,7 @@ def edit_service_submission(framework_slug, lot_slug, service_id, section_id, qu
 @main.route('/frameworks/<framework_slug>/submissions/<lot_slug>/<service_id>/remove/<section_id>/<question_slug>',
             methods=['GET', 'POST'])
 @login_required
+@EnsureApplicationCompanyDetailsHaveBeenConfirmed(data_api_client)
 def remove_subsection(framework_slug, lot_slug, service_id, section_id, question_slug):
     # Suppliers must have registered interest in a framework before they can edit draft services
     if not get_supplier_framework_info(data_api_client, framework_slug):
@@ -727,6 +736,7 @@ def remove_subsection(framework_slug, lot_slug, service_id, section_id, question
 
 @main.route('/frameworks/<framework_slug>/submissions/<lot_slug>/previous-services', methods=['GET', 'POST'])
 @login_required
+@EnsureApplicationCompanyDetailsHaveBeenConfirmed(data_api_client)
 def previous_services(framework_slug, lot_slug):
     framework, lot = get_framework_and_lot_or_404(data_api_client, framework_slug, lot_slug)
     if framework['status'] != 'open':
@@ -781,7 +791,6 @@ def previous_services(framework_slug, lot_slug):
             abort(400)
 
     copy_all = request.args.get('copy_all', None)
-    supplier = data_api_client.get_supplier(current_user.supplier_id)['suppliers']
 
     errors = get_errors_from_wtform(form) if form else {}
 
@@ -793,7 +802,6 @@ def previous_services(framework_slug, lot_slug):
         previous_services_still_to_copy=previous_services_still_to_copy,
         copy_all=copy_all,
         declaration_status=get_declaration_status(data_api_client, framework_slug),
-        company_details_complete=supplier['companyDetailsConfirmed'],
         form=form,
         errors=errors
     ), 200 if not errors else 400
@@ -802,6 +810,7 @@ def previous_services(framework_slug, lot_slug):
 @main.route('/frameworks/<framework_slug>/submissions/<lot_slug>/copy-previous-framework-service/<service_id>',
             methods=['POST'])
 @login_required
+@EnsureApplicationCompanyDetailsHaveBeenConfirmed(data_api_client)
 def copy_previous_service(framework_slug, lot_slug, service_id):
     framework, lot = get_framework_and_lot_or_404(
         data_api_client, framework_slug, lot_slug, allowed_statuses=['open']
@@ -815,6 +824,7 @@ def copy_previous_service(framework_slug, lot_slug, service_id):
 @main.route('/frameworks/<framework_slug>/submissions/<lot_slug>/copy-all-previous-framework-services',
             methods=['POST'])
 @login_required
+@EnsureApplicationCompanyDetailsHaveBeenConfirmed(data_api_client)
 def copy_all_previous_services(framework_slug, lot_slug):
         framework, lot = get_framework_and_lot_or_404(
             data_api_client, framework_slug, lot_slug, allowed_statuses=['open']

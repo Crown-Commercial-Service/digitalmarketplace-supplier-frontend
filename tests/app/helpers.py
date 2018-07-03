@@ -3,8 +3,10 @@ from datetime import datetime, timedelta
 from lxml import html
 import re
 
+import jinja2
 from mock import patch
 import pytest
+from werkzeug.datastructures import ImmutableDict
 from werkzeug.http import parse_cookie
 from markupsafe import escape
 
@@ -220,9 +222,28 @@ def empty_g9_draft_service():
     }
 
 
-class BaseApplicationTest(object):
+class MockEnsureApplicationCompanyDetailsHaveBeenConfirmedMixin:
+    @staticmethod
+    def return_true(*args, **kwargs):
+        return True
+
+    def setup(self):
+        from app.main.helpers.frameworks import EnsureApplicationCompanyDetailsHaveBeenConfirmed as decorator
+        self.decorator = decorator
+        self._original_validator = decorator.validator
+        decorator.validator = self.return_true
+
+    def teardown(self):
+        self.reset_application_company_details_confirmed_decorator()
+
+    def reset_application_company_details_confirmed_decorator(self):
+        self.decorator.validator = self._original_validator
+
+
+class BaseApplicationTest:
     def setup_method(self, method):
         self.app = create_app('test')
+        self.app.jinja_options = ImmutableDict({**self.app.jinja_options, 'undefined': jinja2.StrictUndefined})
         self.app.register_blueprint(login_for_tests)
         self.client = self.app.test_client()
         self.get_user_patch = None
@@ -377,30 +398,43 @@ class BaseApplicationTest(object):
         agreed_variations={},
         agreement_id=None,
         prefill_declaration_from_framework_slug=None,
+        application_company_details_confirmed=True,
     ):
+        stub_kwargs = dict(
+            agreed_variations=False,
+            supplier_id=supplier_id,
+            framework_slug=framework_slug,
+            on_framework=on_framework,
+            prefill_declaration_from_slug=prefill_declaration_from_framework_slug,
+            with_declaration=True,
+            declaration_status=status,
+            application_company_details_confirmed=application_company_details_confirmed,
+        )
+        supplier_framework = api_stubs.supplier_framework(**{k: v for k, v in stub_kwargs.items() if v is not None})
+
         if declaration == 'default':
-            declaration = FULL_G7_SUBMISSION.copy()
-        if status is not None:
-            declaration['status'] = status
-        return {
-            'frameworkInterest': {
-                'supplierId': supplier_id,
-                'frameworkSlug': framework_slug,
-                'declaration': declaration,
-                'onFramework': on_framework,
-                'agreementReturned': agreement_returned,
-                'agreementReturnedAt': agreement_returned_at,
-                'agreementDetails': agreement_details,
-                'agreementPath': agreement_path,
-                'countersigned': countersigned,
-                'countersignedAt': countersigned_at,
-                'countersignedDetails': countersigned_details,
-                'countersignedPath': countersigned_path,
-                'agreementId': agreement_id,
-                'agreedVariations': agreed_variations,
-                'prefillDeclarationFromFrameworkSlug': prefill_declaration_from_framework_slug,
-            }
+            supplier_framework['frameworkInterest']['declaration'] = FULL_G7_SUBMISSION.copy()
+        else:
+            supplier_framework['frameworkInterest']['declaration'] = declaration
+            if status:
+                supplier_framework['frameworkInterest']['declaration']['status'] = status
+
+        override_attributes = {
+            'agreementReturned': agreement_returned,
+            'agreementReturnedAt': agreement_returned_at,
+            'agreementDetails': agreement_details,
+            'agreementPath': agreement_path,
+            'countersigned': countersigned,
+            'countersignedAt': countersigned_at,
+            'countersignedDetails': countersigned_details,
+            'countersignedPath': countersigned_path,
+            'agreementId': agreement_id,
+            'agreedVariations': agreed_variations
         }
+
+        supplier_framework['frameworkInterest'].update(override_attributes)
+
+        return supplier_framework
 
     @staticmethod
     def framework_agreement(

@@ -24,6 +24,7 @@ from dmcontent.errors import ContentNotFoundError
 from app.main.forms.frameworks import ReuseDeclarationForm
 from ..helpers import (
     BaseApplicationTest,
+    MockEnsureApplicationCompanyDetailsHaveBeenConfirmedMixin,
     FULL_G7_SUBMISSION,
     FakeMail,
     valid_g9_declaration_base,
@@ -314,7 +315,10 @@ class TestFrameworksDashboard(BaseApplicationTest):
         assert res.status_code == 200
 
         doc = html.fromstring(res.get_data(as_text=True))
-        assert len(doc.xpath('//p[contains(text(), "You need to make the supplier declaration")]')) == 1
+        assert len(doc.xpath('//h2[contains(text(), $header)]'
+                             '/following-sibling::p[contains(text(), $declaration_status)]',
+                             header="Make supplier declaration",
+                             declaration_status="Can't start yet")) == 1
 
     def test_downloads_shown_open_framework(self, s3):
         files = [
@@ -1554,48 +1558,37 @@ class TestFrameworksDashboard(BaseApplicationTest):
 
         self.data_api_client.get_framework.return_value = self.framework(status='open')
         self.data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
-            **supplier_framework_kwargs
+            application_company_details_confirmed=True,
+            **supplier_framework_kwargs,
         )
 
         response = self.client.get('/suppliers/frameworks/g-cloud-7')
         document = html.fromstring(response.get_data(as_text=True))
 
         assert (
-            document.xpath("//a[normalize-space(string())=$link_label]/@href", link_label=link_label)[0]
+            document.xpath("//a[contains(normalize-space(string()), $link_label)]/@href", link_label=link_label)[0]
         ) == link_href
 
-    def test_dashboard_does_not_show_use_of_service_data_if_not_available(self, s3):
+    @pytest.mark.parametrize('framework_slug, expect_service_data', (('g-cloud-8', False), ('g-cloud-9', True),))
+    def test_dashboard_shows_use_of_service_data_if_available(self, s3, framework_slug, expect_service_data):
         self.login()
 
-        self.data_api_client.get_framework.return_value = self.framework(slug="g-cloud-8", status="open")
-        self.data_api_client.get_supplier_framework_info.return_value = self.supplier_framework()
+        self.data_api_client.get_framework.return_value = self.framework(slug=framework_slug, status="open")
+        self.data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
+            framework_slug=framework_slug
+        )
 
-        res = self.client.get("/suppliers/frameworks/g-cloud-8")
+        res = self.client.get(f"/suppliers/frameworks/{framework_slug}")
         assert res.status_code == 200
 
         doc = html.fromstring(res.get_data(as_text=True))
+        use_of_data = doc.xpath('//div[contains(@class, "use-of-service-data")]')
 
-        add_edit_complete_services = doc.xpath('//div[contains(@class, "framework-dashboard")]/div/li')[1]
-        use_of_data = add_edit_complete_services.xpath('//div[@class="browse-list-item-body"]')
-
-        assert len(use_of_data) == 0
-
-    def test_dashboard_shows_use_of_service_data_if_available(self, s3):
-        self.login()
-
-        self.data_api_client.get_framework.return_value = self.framework(slug="g-cloud-9", status="open")
-        self.data_api_client.get_supplier_framework_info.return_value = self.supplier_framework()
-
-        res = self.client.get("/suppliers/frameworks/g-cloud-9")
-        assert res.status_code == 200
-
-        doc = html.fromstring(res.get_data(as_text=True))
-
-        add_edit_complete_services = doc.xpath('//div[contains(@class, "framework-dashboard")]/div/li')[1]
-        use_of_data = add_edit_complete_services.xpath('//div[@class="browse-list-item-body"]')
-
-        assert len(use_of_data) == 1
-        assert 'The service information you provide here:' in use_of_data[0].text_content()
+        if expect_service_data:
+            assert len(use_of_data) == 1
+            assert 'The service information you provide here:' in use_of_data[0].text_content()
+        else:
+            assert len(use_of_data) == 0
 
     def test_visit_to_framework_dashboard_saved_in_session_if_framework_open(self, s3):
         self.login()
@@ -1660,21 +1653,21 @@ class TestFrameworksDashboardConfidenceBannerOnPage(BaseApplicationTest):
     @pytest.mark.parametrize(
         ('declaration_status', 'draft_service_status', 'supplier_data', 'check_text_in_doc'),
         (
-            ('started', 'submitted', api_stubs.supplier(), [
+            ('started', 'submitted', api_stubs.supplier(company_details_confirmed=True), [
                 'Your company details were saved',
                 'No services will be submitted because you haven’t finished making the supplier '
                 'declaration',
                 'You’ve completed',
             ]),
-            ('complete', 'not-submitted', api_stubs.supplier(), [
+            ('complete', 'not-submitted', api_stubs.supplier(company_details_confirmed=True), [
                 'Your company details were saved',
                 'You’ve made the supplier declaration',
                 'No services marked as complete',
             ]),
-            ('complete', 'submitted', {'suppliers': {'contactInformation': [{}], 'companyDetailsConfirmed': False}}, [
-                'No services will be submitted because you haven’t completed your company details',
-                'You’ve made the supplier declaration',
-                'You’ve completed'
+            ('unstarted', 'not-submitted', api_stubs.supplier(company_details_confirmed=False), [
+                'You must confirm your organisation’s details',
+                'Can\'t start yet',
+                'Can\'t start yet'
             ]),
         )
     )
@@ -1687,7 +1680,9 @@ class TestFrameworksDashboardConfidenceBannerOnPage(BaseApplicationTest):
             "services": [{'serviceName': 'A service', 'status': draft_service_status, 'lotSlug': 'foo'}]
         }
         self.data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
-            status=declaration_status
+            status=declaration_status,
+            declaration={'status': declaration_status},
+            application_company_details_confirmed=supplier_data['suppliers']['companyDetailsConfirmed'],
         )
         self.data_api_client.get_supplier.return_value = supplier_data
 
@@ -2165,7 +2160,7 @@ class TestFrameworkDocumentDownload(BaseApplicationTest):
         assert res.status_code == 404
 
 
-class TestStartSupplierDeclaration(BaseApplicationTest):
+class TestStartSupplierDeclaration(BaseApplicationTest, MockEnsureApplicationCompanyDetailsHaveBeenConfirmedMixin):
 
     def setup_method(self, method):
         super().setup_method(method)
@@ -2192,7 +2187,7 @@ class TestStartSupplierDeclaration(BaseApplicationTest):
 
 
 @pytest.mark.parametrize('method', ('get', 'post'))
-class TestDeclarationOverviewSubmit(BaseApplicationTest):
+class TestDeclarationOverviewSubmit(BaseApplicationTest, MockEnsureApplicationCompanyDetailsHaveBeenConfirmedMixin):
     """Behaviour common to both GET and POST views on path /suppliers/frameworks/g-cloud-7/declaration."""
 
     def setup_method(self, method):
@@ -2258,7 +2253,7 @@ class TestDeclarationOverviewSubmit(BaseApplicationTest):
         assert response.status_code == 404
 
 
-class TestDeclarationOverview(BaseApplicationTest):
+class TestDeclarationOverview(BaseApplicationTest, MockEnsureApplicationCompanyDetailsHaveBeenConfirmedMixin):
 
     def setup_method(self, method):
         super().setup_method(method)
@@ -2921,7 +2916,7 @@ class TestDeclarationOverview(BaseApplicationTest):
         assert response.status_code == 404
 
 
-class TestDeclarationSubmit(BaseApplicationTest):
+class TestDeclarationSubmit(BaseApplicationTest, MockEnsureApplicationCompanyDetailsHaveBeenConfirmedMixin):
 
     def setup_method(self, method):
         super().setup_method(method)
@@ -3028,7 +3023,7 @@ class TestDeclarationSubmit(BaseApplicationTest):
         assert response.status_code == 404
 
 
-class TestSupplierDeclaration(BaseApplicationTest):
+class TestSupplierDeclaration(BaseApplicationTest, MockEnsureApplicationCompanyDetailsHaveBeenConfirmedMixin):
 
     def setup_method(self, method):
         super().setup_method(method)
@@ -3852,7 +3847,7 @@ class TestSendClarificationQuestionEmail(BaseApplicationTest):
 
 
 @mock.patch('app.main.views.frameworks.count_unanswered_questions')
-class TestServicesList(BaseApplicationTest):
+class TestServicesList(BaseApplicationTest, MockEnsureApplicationCompanyDetailsHaveBeenConfirmedMixin):
 
     def setup_method(self, method):
         super().setup_method(method)
@@ -3870,37 +3865,22 @@ class TestServicesList(BaseApplicationTest):
     def _assert_incomplete_application_banner_not_visible(self, html):
         assert "Your application is not complete" not in html
 
-    def _assert_incomplete_application_banner_items(self,
-                                                    response_html,
-                                                    org_info_required_is_visible=True,
-                                                    decl_required_is_visible=True,
-                                                    decl_item_href=None):
+    def _assert_incomplete_application_banner(self,
+                                              response_html,
+                                              decl_item_href=None):
         doc = html.fromstring(response_html)
         assert "Your application is not complete" in response_html
         assert doc.xpath('//*[@class="banner-information-without-action"]')
-
-        org_info_element = doc.xpath(
-            "//*    [contains(@class,'banner-content')][contains(normalize-space(string()), $text)]",
-            text="complete your company details",
-        )
-
-        if org_info_required_is_visible:
-            assert org_info_element
-        else:
-            assert not org_info_element
 
         decl_element = doc.xpath(
             "//*[contains(@class,'banner-content')][contains(normalize-space(string()), $text)]",
             text="make your supplier declaration",
         )
 
-        if decl_required_is_visible:
-            assert decl_element
+        assert decl_element
 
-            if decl_item_href:
-                assert decl_element[0].xpath('.//a[@href=$url]', url=decl_item_href)
-        else:
-            assert not decl_element
+        if decl_item_href:
+            assert decl_element[0].xpath('.//a[@href=$url]', url=decl_item_href)
 
     def test_404_when_g7_pending_and_no_complete_services(self, count_unanswered):
         self.login()
@@ -3940,7 +3920,7 @@ class TestServicesList(BaseApplicationTest):
     def test_shows_g7_message_if_pending_and_application_made(self, count_unanswered):
         self.login()
         self.data_api_client.get_framework.return_value = self.framework(status='pending')
-        self.data_api_client.get_supplier_declaration.return_value = {'declaration': FULL_G7_SUBMISSION}
+        self.data_api_client.get_supplier_declaration.return_value = self.supplier_framework()['frameworkInterest']
         self.data_api_client.get_supplier.return_value = api_stubs.supplier()
         self.data_api_client.find_draft_services.return_value = {
             'services': [{'serviceName': 'draft', 'lotSlug': 'scs', 'status': 'submitted'}]
@@ -4023,8 +4003,8 @@ class TestServicesList(BaseApplicationTest):
         assert u'1 service marked as complete' in submissions_html
         assert u'draft service' not in submissions_html
 
-        self._assert_incomplete_application_banner_items(submissions_html, decl_item_href=expected_url)
-        self._assert_incomplete_application_banner_items(lot_page_html, decl_item_href=expected_url)
+        self._assert_incomplete_application_banner(submissions_html, decl_item_href=expected_url)
+        self._assert_incomplete_application_banner(lot_page_html, decl_item_href=expected_url)
 
     def test_drafts_list_completed_with_declaration_status(self, count_unanswered):
         self.login()
@@ -4043,7 +4023,7 @@ class TestServicesList(BaseApplicationTest):
         assert u'1 complete service was submitted' not in submissions_html
         assert u'browse-list-item-status-happy' in submissions_html
 
-        self._assert_incomplete_application_banner_items(submissions_html, decl_required_is_visible=False)
+        self._assert_incomplete_application_banner_not_visible(submissions_html)
 
     def test_drafts_list_services_were_submitted(self, count_unanswered):
         self.login()
@@ -4103,37 +4083,32 @@ class TestServicesList(BaseApplicationTest):
         assert u'Submitted' in submissions.get_data(as_text=True)
         assert u'Apply to provide' not in submissions.get_data(as_text=True)
 
-    @pytest.mark.parametrize('supplier_fixture,'
-                             'declaration,'
-                             'should_show_company_details_link,'
+    @pytest.mark.parametrize('declaration,'
                              'should_show_declaration_link,'
                              'declaration_link_url',
                              (
-                                 ({'suppliers': {'companyDetailsConfirmed': False}}, {'declaration': {}},
-                                  True, True, '/suppliers/frameworks/g-cloud-7/declaration/start'),
-                                 ({'suppliers': {'companyDetailsConfirmed': False}},
-                                  {'declaration': {'status': 'started'}},
-                                  True, True, '/suppliers/frameworks/g-cloud-7/declaration'),
-                                 (api_stubs.supplier(), {'declaration': {}},
-                                  False, True, '/suppliers/frameworks/g-cloud-7/declaration/start'),
-                                 (api_stubs.supplier(), {'declaration': {'status': 'started'}},
-                                  False, True, '/suppliers/frameworks/g-cloud-7/declaration'),
-                                 (api_stubs.supplier(), {'declaration': {'status': 'complete'}},
-                                  False, False, None),
-                                 (api_stubs.supplier(), {'declaration': {'status': 'complete'}},
-                                  False, False, None),
+                                 ({'declaration': {}},
+                                  True, '/suppliers/frameworks/g-cloud-7/declaration/start'),
+                                 ({'declaration': {'status': 'started'}},
+                                  True, '/suppliers/frameworks/g-cloud-7/declaration'),
+                                 ({'declaration': {}},
+                                  True, '/suppliers/frameworks/g-cloud-7/declaration/start'),
+                                 ({'declaration': {'status': 'started'}},
+                                  True, '/suppliers/frameworks/g-cloud-7/declaration'),
+                                 ({'declaration': {'status': 'complete'}},
+                                  False, None),
+                                 ({'declaration': {'status': 'complete'}},
+                                  False, None),
                              ))
-    def test_banner_on_service_pages_shows_links_to_company_details_and_declaration(self,
-                                                                                    count_unanswered,
-                                                                                    supplier_fixture,
-                                                                                    declaration,
-                                                                                    should_show_company_details_link,
-                                                                                    should_show_declaration_link,
-                                                                                    declaration_link_url):
+    def test_banner_on_service_pages_shows_link_to_declaration(self,
+                                                               count_unanswered,
+                                                               declaration,
+                                                               should_show_declaration_link,
+                                                               declaration_link_url):
         self.login()
 
         self.data_api_client.get_framework.return_value = self.framework(status='open')
-        self.data_api_client.get_supplier.return_value = supplier_fixture
+        self.data_api_client.get_supplier.return_value = api_stubs.supplier()
         self.data_api_client.get_supplier_declaration.return_value = declaration
         self.data_api_client.find_draft_services.return_value = {
             'services': [{'serviceName': 'draft', 'lotSlug': 'scs', 'status': 'submitted'}]
@@ -4141,10 +4116,11 @@ class TestServicesList(BaseApplicationTest):
 
         submissions = self.client.get('/suppliers/frameworks/g-cloud-7/submissions')
 
-        if should_show_company_details_link or should_show_declaration_link:
-            self._assert_incomplete_application_banner_items(
-                submissions.get_data(as_text=True), org_info_required_is_visible=should_show_company_details_link,
-                decl_required_is_visible=should_show_declaration_link, decl_item_href=declaration_link_url)
+        if should_show_declaration_link:
+            self._assert_incomplete_application_banner(
+                submissions.get_data(as_text=True),
+                decl_item_href=declaration_link_url
+            )
 
         else:
             self._assert_incomplete_application_banner_not_visible(submissions.get_data(as_text=True))
@@ -5392,7 +5368,8 @@ class TestContractVariation(BaseApplicationTest):
         ) == 1
 
 
-class TestReuseFrameworkSupplierDeclaration(BaseApplicationTest):
+class TestReuseFrameworkSupplierDeclaration(BaseApplicationTest,
+                                            MockEnsureApplicationCompanyDetailsHaveBeenConfirmedMixin):
     """Tests for frameworks/<framework_slug>/declaration/reuse view."""
 
     def setup_method(self, method):
@@ -5501,7 +5478,8 @@ class TestReuseFrameworkSupplierDeclaration(BaseApplicationTest):
         self.data_api_client.find_supplier_declarations.assert_called_once_with(1234)
 
 
-class TestReuseFrameworkSupplierDeclarationPost(BaseApplicationTest):
+class TestReuseFrameworkSupplierDeclarationPost(BaseApplicationTest,
+                                                MockEnsureApplicationCompanyDetailsHaveBeenConfirmedMixin):
     """Tests for frameworks/<framework_slug>/declaration/reuse POST view."""
 
     def setup_method(self, method):

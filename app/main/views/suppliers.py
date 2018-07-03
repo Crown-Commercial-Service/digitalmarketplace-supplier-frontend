@@ -28,7 +28,11 @@ from ..forms.suppliers import (
     EmailAddressForm,
     VatNumberForm,
 )
-from ..helpers.frameworks import get_frameworks_by_status, get_frameworks_closed_and_open_for_applications
+from ..helpers.frameworks import (
+    get_frameworks_by_status,
+    get_frameworks_closed_and_open_for_applications,
+    get_unconfirmed_open_supplier_frameworks,
+)
 from ..helpers.suppliers import (
     COUNTRY_TUPLE,
     get_country_name_from_country_code,
@@ -82,6 +86,9 @@ def dashboard():
             )
         })
 
+    if "currently_applying_to" in session:
+        del session["currently_applying_to"]
+
     return render_template(
         "suppliers/dashboard.html",
         supplier=supplier,
@@ -107,16 +114,29 @@ def supplier_details():
     supplier['contact'] = supplier['contactInformation'][0]
     country_name = get_country_name_from_country_code(supplier.get('registrationCountry'))
 
-    framework = None
+    supplier_company_details_confirmed = supplier['companyDetailsConfirmed']
+    application_company_details_confirmed = None
 
-    if "currently_applying_to" in session:
-        framework = data_api_client.get_framework(session["currently_applying_to"])["frameworks"]
+    unconfirmed_open_supplier_frameworks = get_unconfirmed_open_supplier_frameworks(data_api_client,
+                                                                                    current_user.supplier_id)
+
+    currently_applying_to_framework = (
+        data_api_client.get_framework(session["currently_applying_to"])['frameworks']
+        if "currently_applying_to" in session else
+        None
+    )
+
     return render_template(
         "suppliers/details.html",
         supplier=supplier,
         country_name=country_name,
-        currently_applying_to=framework,
-        company_details_complete=supplier_company_details_are_complete(supplier),
+        currently_applying_to=currently_applying_to_framework,
+        supplier_company_details_complete=supplier_company_details_are_complete(supplier),
+        supplier_company_details_confirmed=supplier_company_details_confirmed,
+        application_company_details_confirmed=application_company_details_confirmed,
+        unconfirmed_open_supplier_framework_names=[
+            fw['frameworkName'] for fw in unconfirmed_open_supplier_frameworks
+        ],
     ), 200
 
 
@@ -130,8 +150,12 @@ def confirm_supplier_details():
     except APIError as e:
         abort(e.status_code)
 
+    unconfirmed_open_supplier_frameworks = get_unconfirmed_open_supplier_frameworks(data_api_client,
+                                                                                    current_user.supplier_id)
+
     if not supplier_company_details_are_complete(supplier):
         abort(400, "Some company details are not complete")
+
     else:
         try:
             data_api_client.update_supplier(
@@ -139,6 +163,13 @@ def confirm_supplier_details():
                 supplier={"companyDetailsConfirmed": True},
                 user=current_user.email_address
             )
+
+            for supplier_framework in unconfirmed_open_supplier_frameworks:
+                data_api_client.set_supplier_framework_application_company_details_confirmed(
+                    supplier_id=current_user.supplier_id,
+                    framework_slug=supplier_framework['frameworkSlug'],
+                    application_company_details_confirmed=True,
+                    user=current_user.email_address)
         except APIError as e:
             abort(e.status_code)
 
