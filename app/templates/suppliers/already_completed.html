@@ -40,7 +40,9 @@
         <li>VAT number</li>
         <li>DUNS number</li>
       </ul>
-      <p>If you want to change your {{ completed_data_description }}, you must <a href="{{ url_for('.create_new_supplier') }}">create a new supplier account</a> using a different login email address.</p>
+      <h2 class="heading-xmedium">If you have a new {{ completed_data_description }}</h2>
+      <p>You must <a href="{{ url_for('.create_new_supplier') }}">create a new supplier account</a> using a different login email address
+        if you want to change your {{ completed_data_description }}.</p>
       </div>
 
       {%

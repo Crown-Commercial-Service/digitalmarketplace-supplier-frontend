@@ -716,20 +716,20 @@ class TestSupplierDetails(BaseApplicationTest):
         assert answer_required_link[0].values()[0] == link_address
 
     @pytest.mark.parametrize(
-        "question,filled_in_attribute,link_address,expected_link_text",
+        "question,filled_in_attribute,link_address",
         [
             (
                 "Registered company name", {"companyDetailsConfirmed": True, "registeredName": "Digital Ponies"},
-                "/suppliers/registered-company-name/edit", 'Correct a mistake',
+                "/suppliers/registered-company-name/edit",
             ),
             (
                 "Registered company name", {"companyDetailsConfirmed": False, "registeredName": "Digital Ponies"},
-                "/suppliers/registered-company-name/edit", 'Change',
+                "/suppliers/registered-company-name/edit",
             ),
             ("Registered company address", {"companyDetailsConfirmed": True, "registrationCountry": "country:GB"},
-             "/suppliers/registered-address/edit", 'Change',),
+             "/suppliers/registered-address/edit",),
             ("Registered company address", {"companyDetailsConfirmed": False, "registrationCountry": "country:GB"},
-             "/suppliers/registered-address/edit", 'Change',),
+             "/suppliers/registered-address/edit",),
             (
                 "Registration number",
                 {
@@ -737,7 +737,6 @@ class TestSupplierDetails(BaseApplicationTest):
                     "otherCompanyRegistrationNumber": None
                 },
                 "/suppliers/registration-number/edit",
-                'Correct a mistake',
             ),
             (
                 "Registration number",
@@ -746,7 +745,6 @@ class TestSupplierDetails(BaseApplicationTest):
                     "otherCompanyRegistrationNumber": None
                 },
                 "/suppliers/registration-number/edit",
-                'Change',
             ),
             (
                 "Registration number",
@@ -755,7 +753,6 @@ class TestSupplierDetails(BaseApplicationTest):
                     "otherCompanyRegistrationNumber": "EQ789"
                 },
                 "/suppliers/registration-number/edit",
-                'Correct a mistake',
             ),
             (
                 "Registration number",
@@ -764,24 +761,23 @@ class TestSupplierDetails(BaseApplicationTest):
                     "otherCompanyRegistrationNumber": "EQ789"
                 },
                 "/suppliers/registration-number/edit",
-                'Change',
             ),
             ("Trading status", {"companyDetailsConfirmed": False, "tradingStatus": "limited company (LTD)"},
-             "/suppliers/trading-status/edit", "Change"),
+             "/suppliers/trading-status/edit",),
             ("Company size", {"companyDetailsConfirmed": False, "organisationSize": "small"},
-             "/suppliers/organisation-size/edit", "Change"),
+             "/suppliers/organisation-size/edit",),
             ("VAT number", {"companyDetailsConfirmed": True, "vatNumber": "VAT654321"},
-             "/suppliers/vat-number/edit", 'Correct a mistake',),
+             "/suppliers/vat-number/edit",),
             ("VAT number", {"companyDetailsConfirmed": False, "vatNumber": "VAT654321"},
-             "/suppliers/vat-number/edit", 'Change',),
+             "/suppliers/vat-number/edit",),
             ("DUNS number", {"companyDetailsConfirmed": True, "dunsNumber": "123456789"},
-             "/suppliers/duns-number/edit", 'Correct a mistake',),
+             "/suppliers/duns-number/edit",),
             ("DUNS number", {"companyDetailsConfirmed": False, "dunsNumber": "123456789"},
-             "/suppliers/duns-number/edit", 'Correct a mistake',),
+             "/suppliers/duns-number/edit",),
         ]
     )
     def test_filled_in_question_field_has_a_change_or_correct_a_mistake_link(
-        self, question, filled_in_attribute, link_address, expected_link_text
+        self, question, filled_in_attribute, link_address
     ):
         self.data_api_client.get_supplier.return_value = get_supplier(**filled_in_attribute)
 
@@ -792,7 +788,7 @@ class TestSupplierDetails(BaseApplicationTest):
         page_html = response.get_data(as_text=True)
         document = html.fromstring(page_html)
         answer_required_link = document.xpath(
-            "//span[text()='{}']/following::td[2]/span/a[text()='{}']".format(question, expected_link_text)
+            "//span[text()='{}']/following::td[2]/span/a[text()='Change']".format(question)
         )
 
         assert answer_required_link
