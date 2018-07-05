@@ -912,15 +912,20 @@ class TestSupplierDetails(BaseApplicationTest):
         submit_button = document.xpath("//input[@value='Save and confirm']")
         assert submit_button if button_should_be_shown else not submit_button
 
-    def test_green_button_is_shown_when_company_details_confirmed_for_account_but_not_application(self):
+    @pytest.mark.parametrize('application_company_details_confirmed', (False, None))
+    def test_green_button_is_shown_when_company_details_confirmed_for_account_but_not_application(
+        self, application_company_details_confirmed
+    ):
         self.data_api_client.get_supplier.return_value = get_supplier(companyDetailsConfirmed=True)
         self.data_api_client.find_frameworks.return_value = {
             "frameworks": [framework_stub(status='open', slug='g-cloud-9')['frameworks']]
         }
         self.data_api_client.get_supplier_frameworks.return_value = {
             'frameworkInterest': [
-                api_stubs.supplier_framework(framework_slug='g-cloud-9',
-                                             application_company_details_confirmed=False)['frameworkInterest'],
+                api_stubs.supplier_framework(
+                    framework_slug='g-cloud-9',
+                    application_company_details_confirmed=application_company_details_confirmed
+                )['frameworkInterest'],
             ]
         }
 
