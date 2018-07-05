@@ -376,7 +376,7 @@ def get_unconfirmed_open_supplier_frameworks(data_api_client, supplier_id):
     unconfirmed_open_supplier_frameworks = [
         sf for sf in
         data_api_client.get_supplier_frameworks(supplier_id=supplier_id)['frameworkInterest']
-        if sf['frameworkSlug'] in open_framework_slugs and sf['applicationCompanyDetailsConfirmed'] is False
+        if sf['frameworkSlug'] in open_framework_slugs and sf['applicationCompanyDetailsConfirmed'] is not True
     ]
 
     framework_slug_map = {framework['slug']: framework for framework in frameworks}
@@ -420,7 +420,7 @@ class EnsureApplicationCompanyDetailsHaveBeenConfirmed:
                 current_user.supplier_id, kwargs['framework_slug']
             )['frameworkInterest']
 
-            if supplier_framework['applicationCompanyDetailsConfirmed'] is False:
+            if supplier_framework['applicationCompanyDetailsConfirmed'] is not True:
                 return abort(400, "You cannot access this part of your application until you have confirmed your "
                                   "company details.")
 
