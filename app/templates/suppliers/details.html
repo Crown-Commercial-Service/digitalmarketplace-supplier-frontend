@@ -82,7 +82,7 @@
   {{ summary.field_name('Registered company name') }}
   {% if supplier.registeredName %}
     {{ summary.text(supplier.registeredName) }}
-    {{ summary.edit_link(label="Correct a mistake" if supplier_company_details_confirmed else "Change", link=url_for(".edit_supplier_registered_name"), hidden_text="Registered company name") }}
+    {{ summary.edit_link(label="Change", link=url_for(".edit_supplier_registered_name"), hidden_text="Registered company name") }}
   {% else %}
     {{ summary.link(link_title="Answer required", link=url_for(".edit_supplier_registered_name"), hidden_text="for registered company name") }}
     {{ summary.text("") }}
@@ -119,10 +119,10 @@
   {{ summary.field_name('Registration number') }}
   {% if supplier.companiesHouseNumber %}
     {{ summary.text(supplier.companiesHouseNumber) }}
-    {{ summary.edit_link(label="Correct a mistake" if supplier_company_details_confirmed else "Change", link=url_for(".edit_supplier_registration_number"), hidden_text="Registration number") }}
+    {{ summary.edit_link(label="Change", link=url_for(".edit_supplier_registration_number"), hidden_text="Registration number") }}
   {% elif supplier.otherCompanyRegistrationNumber %}
     {{ summary.text(supplier.otherCompanyRegistrationNumber) }}
-    {{ summary.edit_link(label="Correct a mistake" if supplier_company_details_confirmed else "Change", link=url_for(".edit_supplier_registration_number"), hidden_text="Registration number") }}
+    {{ summary.edit_link(label="Change", link=url_for(".edit_supplier_registration_number"), hidden_text="Registration number") }}
   {% else %}
     {{ summary.link(link_title="Answer required", link=url_for(".edit_supplier_registration_number"), hidden_text="for registration number") }}
     {{ summary.text("") }}
@@ -155,7 +155,7 @@
   {{ summary.field_name('VAT number') }}
   {% if supplier.vatNumber %}
     {{ summary.text(supplier.vatNumber) }}
-    {{ summary.edit_link(label="Correct a mistake" if supplier_company_details_confirmed else "Change", link=url_for(".edit_supplier_vat_number"), hidden_text="VAT number") }}
+    {{ summary.edit_link(label="Change", link=url_for(".edit_supplier_vat_number"), hidden_text="VAT number") }}
   {% else %}
     {{ summary.link(link_title="Answer required", link=url_for(".edit_supplier_vat_number"), hidden_text="for VAT number") }}
     {{ summary.text("") }}
@@ -166,7 +166,7 @@
   {{ summary.field_name('DUNS number') }}
    {% if supplier.dunsNumber %}
     {{ summary.text(supplier.dunsNumber) }}
-    {{ summary.edit_link(label="Correct a mistake", link=url_for(".edit_supplier_duns_number"), hidden_text="DUNS number") }}
+    {{ summary.edit_link(label="Change", link=url_for(".edit_supplier_duns_number"), hidden_text="DUNS number") }}
   {% else %}
     {{ summary.link(link_title="Answer required", link=url_for(".edit_supplier_duns_number"), hidden_text="for DUNS number") }}
     {{ summary.text("") }}
