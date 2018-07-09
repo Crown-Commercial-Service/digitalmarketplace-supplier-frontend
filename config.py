@@ -27,7 +27,7 @@ class Config(object):
     DM_NOTIFY_API_KEY = None
     DM_CLARIFICATION_QUESTION_EMAIL = 'digitalmarketplace@mailinator.com'
     DM_FRAMEWORK_AGREEMENTS_EMAIL = 'enquiries@example.com'
-    DM_COMPANY_DETAILS_CHANGE_EMAIL = 'enquiries@digitalmarketplace.service.gov.uk'
+    DM_COMPANY_DETAILS_CHANGE_EMAIL = 'cloud_digital@crowncommercial.gov.uk'
 
     NOTIFY_TEMPLATES = {
         'create_user_account': '1d1e38a6-744a-4d5a-84af-aefccde70a6c',
