@@ -1,4 +1,4 @@
-{% extends "_base_page.html" %}
+{% extends "toolkit/layouts/_base_page.html" %}
 {% block page_title %}Your account – Digital Marketplace{% endblock %}
 
 {% block breadcrumb %}
@@ -12,29 +12,6 @@
   %}
     {% include "toolkit/breadcrumb.html" %}
   {% endwith %}
-{% endblock %}
-
-{% block head %}
-  {{ super() }}
-  {% if not current_user.user_research_opted_in and not 'seen_user_research_message' in request.cookies %}
-    {%
-      with
-      custom_dimensions = [
-        {
-          "data_id": 12,
-          "data_value": "User research banner"
-        }
-      ]
-    %}
-      {% include "toolkit/custom-dimensions.html" %}
-    {% endwith %}
-  {% endif %}
-{% endblock %}
-
-{% block after_header %}
-  {% if not current_user.user_research_opted_in and not 'seen_user_research_message' in request.cookies %}
-    {% include "toolkit/user-research-consent-banner.html" %}
-  {% endif %}
 {% endblock %}
 
 {% block main_content %}
