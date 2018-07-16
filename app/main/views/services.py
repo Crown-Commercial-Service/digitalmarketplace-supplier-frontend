@@ -1,4 +1,4 @@
-from flask import render_template, request, redirect, url_for, abort, flash, current_app, Markup
+from flask import request, redirect, url_for, abort, flash, current_app, Markup
 from flask_login import current_user
 
 from dmapiclient import HTTPError
@@ -6,6 +6,7 @@ from dmcontent.content_loader import ContentNotFoundError
 from dmutils import s3
 from dmutils.dates import update_framework_with_formatted_dates
 from dmutils.documents import upload_service_documents
+from dmutils.flask import timed_render_template as render_template
 from dmutils.forms import get_errors_from_wtform
 
 from ... import data_api_client
