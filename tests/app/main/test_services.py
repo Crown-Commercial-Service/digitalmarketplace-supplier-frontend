@@ -334,6 +334,7 @@ class _BaseTestSupplierEditRemoveService(BaseApplicationTest):
             'frameworkName': framework_name,
             'frameworkSlug': framework_slug,
             'frameworkFramework': framework_family,
+            'frameworkFamily': framework_family,
             'supplierId': 1234 if service_belongs_to_user else 1235,
         }
         service_data.update(kwargs)

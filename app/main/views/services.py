@@ -117,7 +117,7 @@ def remove_service(framework_slug, service_id):
         abort(404)
 
     # dos services should not be removable
-    if service["frameworkFramework"] == 'digital-outcomes-and-specialists':
+    if service["frameworkFamily"] == 'digital-outcomes-and-specialists':
         abort(404)
 
     # we don't actually need the framework here; using this to 404 if framework for the service is not live

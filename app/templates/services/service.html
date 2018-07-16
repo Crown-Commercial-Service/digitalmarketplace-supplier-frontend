@@ -35,7 +35,7 @@
       %}
         {% include "toolkit/notification-banner.html" %}
       {% endwith %}
-    {% elif remove_requested and service_data.frameworkFramework != "digital-outcomes-and-specialists" %}
+    {% elif remove_requested and service_data.frameworkFamily != "digital-outcomes-and-specialists" %}
       <div class="banner-destructive-with-action">
         <p class="banner-message">
           Are you sure you want to remove your service?
@@ -60,7 +60,7 @@
 {% endblock %}
 
 {% block before_sections %}
-  {% if service_data.frameworkFramework != "digital-outcomes-and-specialists" %}
+  {% if service_data.frameworkFamily != "digital-outcomes-and-specialists" %}
     <div class="column-two-thirds">
       <div class="view-service-link">
         {%
@@ -108,7 +108,7 @@
 {% endblock %}
 
 {% block after_sections %}
-  {% if service_data.status == 'published' and not remove_requested and service_data.frameworkFramework != "digital-outcomes-and-specialists" %}
+  {% if service_data.status == 'published' and not remove_requested and service_data.frameworkFamily != "digital-outcomes-and-specialists" %}
     <div class="column-two-thirds">
       <div class="edit-service-status-panel">
         <h2>Remove this service</h2>
