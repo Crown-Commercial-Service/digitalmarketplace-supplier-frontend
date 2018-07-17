@@ -1,5 +1,7 @@
-from flask import render_template, abort, flash, url_for, redirect, current_app
+from flask import abort, flash, url_for, redirect, current_app
 from flask_login import current_user
+
+from dmutils.flask import timed_render_template as render_template
 
 from ..helpers import login_required
 from ...main import main

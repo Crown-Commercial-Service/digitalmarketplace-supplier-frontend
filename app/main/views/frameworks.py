@@ -3,7 +3,7 @@ from collections import OrderedDict
 from itertools import chain
 
 from dateutil.parser import parse as date_parse
-from flask import render_template, request, abort, flash, redirect, url_for, current_app, session
+from flask import request, abort, flash, redirect, url_for, current_app, session
 from flask_login import current_user
 
 from dmapiclient import APIError, HTTPError
@@ -23,6 +23,7 @@ from dmutils.email.dm_mandrill import send_email as mandrill_send_email
 from dmutils.email.dm_notify import DMNotifyClient
 from dmutils.email.exceptions import EmailError
 from dmutils.email.helpers import hash_string
+from dmutils.flask import timed_render_template as render_template
 from dmutils.formats import datetimeformat, monthyearformat
 from dmutils.forms import get_errors_from_wtform
 

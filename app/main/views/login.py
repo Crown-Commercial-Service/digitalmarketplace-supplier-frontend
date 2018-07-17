@@ -1,8 +1,9 @@
-from flask import flash, redirect, render_template, url_for, current_app
+from flask import flash, redirect, url_for, current_app
 from flask_login import current_user
 
 from dmapiclient.audit import AuditTypes
 from dmutils.email import send_user_account_email
+from dmutils.flask import timed_render_template as render_template
 from dmutils.forms import get_errors_from_wtform
 
 from .. import main
