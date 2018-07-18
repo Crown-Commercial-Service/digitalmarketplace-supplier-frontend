@@ -2184,6 +2184,11 @@ class TestStartSupplierDeclaration(BaseApplicationTest, MockEnsureApplicationCom
             document.xpath("//a[normalize-space(string(.))='Start your declaration']/@href")[0]
             == '/suppliers/frameworks/g-cloud-7/declaration/reuse'
         )
+        assert document.xpath(
+            "//p[contains(normalize-space(string()), $t)]",
+            t="change your answers before the application deadline at "
+            "5pm\u00a0BST,\u00a0Tuesday\u00a06\u00a0October\u00a02015.",
+        )
 
 
 @pytest.mark.parametrize('method', ('get', 'post'))
