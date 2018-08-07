@@ -746,6 +746,7 @@ def framework_updates_email_clarification_question(framework_slug):
             "emails/follow_up_question.html",
             supplier_name=current_user.supplier_name,
             user_name=current_user.name,
+            user_email=current_user.email_address,
             framework_name=framework['name'],
             message=clarification_question
         )

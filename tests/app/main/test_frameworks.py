@@ -3718,7 +3718,7 @@ class TestSendClarificationQuestionEmail(BaseApplicationTest):
                 reference=mock.ANY,
             )
 
-    def _assert_application_email(self, mandrill_send_email, succeeds=True):
+    def _assert_application_email(self, mandrill_send_email, *email_body_content, succeeds=True):
 
         if succeeds:
             assert mandrill_send_email.call_count == 1
@@ -3728,7 +3728,7 @@ class TestSendClarificationQuestionEmail(BaseApplicationTest):
         if succeeds:
             mandrill_send_email.assert_called_with(
                 "digitalmarketplace@mailinator.com",
-                FakeMail('Test Framework question asked'),
+                FakeMail(*email_body_content),
                 "MANDRILL",
                 "Test Framework application question",
                 "enquiries@digitalmarketplace.service.gov.uk",
@@ -3759,7 +3759,14 @@ class TestSendClarificationQuestionEmail(BaseApplicationTest):
         clarification_question = 'This is a G7 question.'
         response = self._send_email(clarification_question)
 
-        self._assert_application_email(mandrill_send_email)
+        self._assert_application_email(
+            mandrill_send_email,
+            'Supplier name: Supplier NĀme',
+            'User name: Năme',
+            'User email: email@email.com',
+            'Test Framework question asked:',
+            'This is a G7 question',
+        )
 
         assert response.status_code == 200
 
@@ -3828,7 +3835,14 @@ class TestSendClarificationQuestionEmail(BaseApplicationTest):
         clarification_question = 'This is a G7 question'
         response = self._send_email(clarification_question)
 
-        self._assert_application_email(mandrill_send_email)
+        self._assert_application_email(
+            mandrill_send_email,
+            'Supplier name: Supplier NĀme',
+            'User name: Năme',
+            'User email: email@email.com',
+            'Test Framework question asked:',
+            'This is a G7 question',
+        )
 
         assert response.status_code == 200
         self.data_api_client.create_audit_event.assert_called_with(
