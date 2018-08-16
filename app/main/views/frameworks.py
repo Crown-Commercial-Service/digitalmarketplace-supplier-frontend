@@ -538,15 +538,12 @@ def framework_supplier_declaration_submit(framework_slug):
     # unfortunately this can't be totally transactionally safe, but we can worry about that less because it should be
     # "impossible" to move a previously-"complete" declaration back to being non-"complete"
 
-    try:
-        data_api_client.set_supplier_declaration(
-            current_user.supplier_id,
-            framework["slug"],
-            sf["declaration"],
-            current_user.email_address,
-        )
-    except APIError as e:
-        abort(e.status_code)
+    data_api_client.set_supplier_declaration(
+        current_user.supplier_id,
+        framework["slug"],
+        sf["declaration"],
+        current_user.email_address,
+    )
 
     flash_key = "{}/declaration_complete".format(url_for('.framework_dashboard', framework_slug=framework['slug']))
     flash(flash_key, "track-page-view")
@@ -614,27 +611,25 @@ def framework_supplier_declaration_edit(framework_slug, section_id):
         else:
             if not all_answers.get("status"):
                 all_answers.update({"status": "started"})
-            try:
-                data_api_client.set_supplier_declaration(
-                    current_user.supplier_id,
-                    framework_slug,
-                    all_answers,
-                    current_user.email_address
-                )
 
-                if next_section and not request.form.get('save_and_return_to_overview', False):
-                    # Go to the next section.
-                    return redirect(url_for(
-                        '.framework_supplier_declaration_edit',
-                        framework_slug=framework['slug'],
-                        section_id=next_section.id
-                    ))
-                else:
-                    # Otherwise they have reached the last page of their declaration.
-                    # Return to the overview.
-                    return redirect(url_for('.framework_supplier_declaration_overview', framework_slug=framework_slug))
-            except APIError as e:
-                abort(e.status_code)
+            data_api_client.set_supplier_declaration(
+                current_user.supplier_id,
+                framework_slug,
+                all_answers,
+                current_user.email_address
+            )
+
+            if next_section and not request.form.get('save_and_return_to_overview', False):
+                # Go to the next section.
+                return redirect(url_for(
+                    '.framework_supplier_declaration_edit',
+                    framework_slug=framework['slug'],
+                    section_id=next_section.id
+                ))
+            else:
+                # Otherwise they have reached the last page of their declaration.
+                # Return to the overview.
+                return redirect(url_for('.framework_supplier_declaration_overview', framework_slug=framework_slug))
 
     return render_template(
         "frameworks/edit_declaration_section.html",

@@ -4,7 +4,6 @@ from itertools import chain
 from flask import request, redirect, url_for, abort, session, Markup, flash
 from flask_login import current_user, current_app
 
-from dmapiclient import APIError
 from dmapiclient.audit import AuditTypes
 from dmcontent.content_loader import ContentNotFoundError
 from dmutils.dates import update_framework_with_formatted_dates
@@ -107,12 +106,9 @@ def dashboard():
 @main.route('/details', methods=['GET'])
 @login_required
 def supplier_details():
-    try:
-        supplier = data_api_client.get_supplier(
-            current_user.supplier_id
-        )['suppliers']
-    except APIError as e:
-        abort(e.status_code)
+    supplier = data_api_client.get_supplier(
+        current_user.supplier_id
+    )['suppliers']
     supplier['contact'] = supplier['contactInformation'][0]
     country_name = get_country_name_from_country_code(supplier.get('registrationCountry'))
 
@@ -145,12 +141,9 @@ def supplier_details():
 @main.route('/details', methods=['POST'])
 @login_required
 def confirm_supplier_details():
-    try:
-        supplier = data_api_client.get_supplier(
-            current_user.supplier_id
-        )['suppliers']
-    except APIError as e:
-        abort(e.status_code)
+    supplier = data_api_client.get_supplier(
+        current_user.supplier_id
+    )['suppliers']
 
     unconfirmed_open_supplier_frameworks = get_unconfirmed_open_supplier_frameworks(data_api_client,
                                                                                     current_user.supplier_id)
@@ -159,21 +152,18 @@ def confirm_supplier_details():
         return render_error_page(status_code=400, error_message="Some company details are not complete")
 
     else:
-        try:
-            data_api_client.update_supplier(
-                supplier_id=current_user.supplier_id,
-                supplier={"companyDetailsConfirmed": True},
-                user=current_user.email_address
-            )
+        data_api_client.update_supplier(
+            supplier_id=current_user.supplier_id,
+            supplier={"companyDetailsConfirmed": True},
+            user=current_user.email_address
+        )
 
-            for supplier_framework in unconfirmed_open_supplier_frameworks:
-                data_api_client.set_supplier_framework_application_company_details_confirmed(
-                    supplier_id=current_user.supplier_id,
-                    framework_slug=supplier_framework['frameworkSlug'],
-                    application_company_details_confirmed=True,
-                    user=current_user.email_address)
-        except APIError as e:
-            abort(e.status_code)
+        for supplier_framework in unconfirmed_open_supplier_frameworks:
+            data_api_client.set_supplier_framework_application_company_details_confirmed(
+                supplier_id=current_user.supplier_id,
+                framework_slug=supplier_framework['frameworkSlug'],
+                application_company_details_confirmed=True,
+                user=current_user.email_address)
 
     if "currently_applying_to" in session:
         return redirect(url_for(".framework_dashboard", framework_slug=session["currently_applying_to"]))
@@ -184,12 +174,9 @@ def confirm_supplier_details():
 @main.route('/registered-address/edit', methods=['GET', 'POST'])
 @login_required
 def edit_registered_address():
-    try:
-        supplier = data_api_client.get_supplier(
-            current_user.supplier_id
-        )['suppliers']
-    except APIError as e:
-        abort(e.status_code)
+    supplier = data_api_client.get_supplier(
+        current_user.supplier_id
+    )['suppliers']
     supplier['contact'] = supplier['contactInformation'][0]
 
     registered_address_form = EditRegisteredAddressForm()
@@ -200,22 +187,18 @@ def edit_registered_address():
         country_valid = registered_country_form.validate_on_submit()
 
         if address_valid and country_valid:
-            try:
-                data_api_client.update_supplier(
-                    current_user.supplier_id,
-                    remove_csrf_token(registered_country_form.data),
-                    current_user.email_address,
-                )
+            data_api_client.update_supplier(
+                current_user.supplier_id,
+                remove_csrf_token(registered_country_form.data),
+                current_user.email_address,
+            )
 
-                data_api_client.update_contact_information(
-                    current_user.supplier_id,
-                    supplier['contact']['id'],
-                    remove_csrf_token(registered_address_form.data),
-                    current_user.email_address
-                )
-
-            except APIError as e:
-                abort(e.status_code)
+            data_api_client.update_contact_information(
+                current_user.supplier_id,
+                supplier['contact']['id'],
+                remove_csrf_token(registered_address_form.data),
+                current_user.email_address
+            )
 
             return redirect(url_for(".supplier_details"))
 
@@ -254,13 +237,10 @@ def edit_supplier_registered_name():
 
     if request.method == 'POST':
         if form.validate_on_submit():
-            try:
-                data_api_client.update_supplier(supplier_id=current_user.supplier_id,
-                                                supplier={"registeredName": form.registered_company_name.data},
-                                                user=current_user.email_address)
-                return redirect(url_for('.supplier_details'))
-            except APIError as e:
-                abort(e.status_code)
+            data_api_client.update_supplier(supplier_id=current_user.supplier_id,
+                                            supplier={"registeredName": form.registered_company_name.data},
+                                            user=current_user.email_address)
+            return redirect(url_for('.supplier_details'))
         else:
             current_app.logger.warning(
                 "supplieredit.fail: registered-name:{rname}, errors:{rname_errors}",
@@ -300,24 +280,21 @@ def edit_supplier_registration_number():
 
     if request.method == 'POST':
         if form.validate_on_submit():
-            try:
-                if form.has_companies_house_number.data == "Yes":
-                    data_api_client.update_supplier(
-                        supplier_id=current_user.supplier_id,
-                        supplier={"companiesHouseNumber": form.companies_house_number.data.upper(),
-                                  "otherCompanyRegistrationNumber": None},
-                        user=current_user.email_address
-                    )
-                else:
-                    data_api_client.update_supplier(
-                        supplier_id=current_user.supplier_id,
-                        supplier={"companiesHouseNumber": None,
-                                  "otherCompanyRegistrationNumber": form.other_company_registration_number.data},
-                        user=current_user.email_address
-                    )
-                return redirect(url_for('.supplier_details'))
-            except APIError as e:
-                abort(e.status_code)
+            if form.has_companies_house_number.data == "Yes":
+                data_api_client.update_supplier(
+                    supplier_id=current_user.supplier_id,
+                    supplier={"companiesHouseNumber": form.companies_house_number.data.upper(),
+                              "otherCompanyRegistrationNumber": None},
+                    user=current_user.email_address
+                )
+            else:
+                data_api_client.update_supplier(
+                    supplier_id=current_user.supplier_id,
+                    supplier={"companiesHouseNumber": None,
+                              "otherCompanyRegistrationNumber": form.other_company_registration_number.data},
+                    user=current_user.email_address
+                )
+            return redirect(url_for('.supplier_details'))
         else:
             current_app.logger.warning(
                 "supplieredit.fail: has-companies-house-number:{hasnum}, companies-house-number:{chnum}, "
@@ -357,12 +334,10 @@ def edit_what_buyers_will_see_redirect():
 @main.route('/what-buyers-will-see/edit', methods=['GET', 'POST'])
 @login_required
 def edit_what_buyers_will_see():
-    try:
-        supplier = data_api_client.get_supplier(
-            current_user.supplier_id
-        )['suppliers']
-    except APIError as e:
-        abort(e.status_code)
+
+    supplier = data_api_client.get_supplier(
+        current_user.supplier_id
+    )['suppliers']
 
     supplier['contact'] = supplier['contactInformation'][0]
 
@@ -374,23 +349,19 @@ def edit_what_buyers_will_see():
         contact_info_valid = contact_form.validate_on_submit()
 
         if supplier_info_valid and contact_info_valid:
-            try:
-                data_api_client.update_supplier(
-                    current_user.supplier_id,
-                    remove_csrf_token(supplier_form.data),
-                    current_user.email_address
-                )
+            data_api_client.update_supplier(
+                current_user.supplier_id,
+                remove_csrf_token(supplier_form.data),
+                current_user.email_address
+            )
 
-                data_api_client.update_contact_information(
-                    current_user.supplier_id,
-                    supplier['contact']['id'],
-                    remove_csrf_token(contact_form.data),
-                    current_user.email_address
-                )
-            except APIError as e:
-                abort(e.status_code)
-            else:
-                return redirect(url_for(".supplier_details"))
+            data_api_client.update_contact_information(
+                current_user.supplier_id,
+                supplier['contact']['id'],
+                remove_csrf_token(contact_form.data),
+                current_user.email_address
+            )
+            return redirect(url_for(".supplier_details"))
 
     else:
         supplier_form.description.data = supplier.get('description', None)
@@ -415,13 +386,9 @@ def edit_supplier_organisation_size():
 
     if request.method == 'POST':
         if form.validate_on_submit():
-            try:
-                data_api_client.update_supplier(supplier_id=current_user.supplier_id,
-                                                supplier={"organisationSize": form.organisation_size.data},
-                                                user=current_user.email_address)
-
-            except APIError as e:
-                abort(e.status_code)
+            data_api_client.update_supplier(supplier_id=current_user.supplier_id,
+                                            supplier={"organisationSize": form.organisation_size.data},
+                                            user=current_user.email_address)
 
             return redirect(url_for('.supplier_details'))
 
@@ -451,13 +418,9 @@ def edit_supplier_trading_status():
 
     if request.method == 'POST':
         if form.validate_on_submit():
-            try:
-                data_api_client.update_supplier(supplier_id=current_user.supplier_id,
-                                                supplier={"tradingStatus": form.trading_status.data},
-                                                user=current_user.email_address)
-
-            except APIError as e:
-                abort(e.status_code)
+            data_api_client.update_supplier(supplier_id=current_user.supplier_id,
+                                            supplier={"tradingStatus": form.trading_status.data},
+                                            user=current_user.email_address)
 
             return redirect(url_for('.supplier_details'))
 
@@ -491,10 +454,7 @@ def edit_supplier_trading_status():
 @login_required
 def edit_supplier_vat_number():
     form = VatNumberForm()
-    try:
-        supplier = data_api_client.get_supplier(current_user.supplier_id)['suppliers']
-    except APIError as e:
-        abort(e.status_code)
+    supplier = data_api_client.get_supplier(current_user.supplier_id)['suppliers']
 
     if supplier.get("vatNumber") and supplier.get('companyDetailsConfirmed'):
         return (
@@ -507,14 +467,9 @@ def edit_supplier_vat_number():
     if request.method == 'POST':
         if form.validate_on_submit():
             vat_number = form.vat_number.data if form.vat_registered.data == 'Yes' else form.NOT_VAT_REGISTERED_TEXT
-
-            try:
-                data_api_client.update_supplier(supplier_id=current_user.supplier_id,
-                                                supplier={"vatNumber": vat_number},
-                                                user=current_user.email_address)
-            except APIError as e:
-                abort(e.status_code)
-
+            data_api_client.update_supplier(supplier_id=current_user.supplier_id,
+                                            supplier={"vatNumber": vat_number},
+                                            user=current_user.email_address)
             return redirect(url_for('.supplier_details'))
 
         current_app.logger.warning(
