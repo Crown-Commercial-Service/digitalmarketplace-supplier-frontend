@@ -25,7 +25,7 @@ from dmutils.email.exceptions import EmailError
 from dmutils.email.helpers import hash_string
 from dmutils.flask import timed_render_template as render_template
 from dmutils.formats import datetimeformat, monthyearformat
-from dmutils.forms import get_errors_from_wtform
+from dmutils.forms.helpers import get_errors_from_wtform
 
 from ... import data_api_client
 from ...main import main, content_loader

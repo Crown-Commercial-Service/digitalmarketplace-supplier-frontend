@@ -7,7 +7,7 @@ from dmutils import s3
 from dmutils.dates import update_framework_with_formatted_dates
 from dmutils.documents import upload_service_documents
 from dmutils.flask import timed_render_template as render_template
-from dmutils.forms import get_errors_from_wtform
+from dmutils.forms.helpers import get_errors_from_wtform
 
 from ... import data_api_client
 from ...main import main, content_loader

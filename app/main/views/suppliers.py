@@ -11,7 +11,7 @@ from dmutils.dates import update_framework_with_formatted_dates
 from dmutils.email import send_user_account_email
 from dmutils.email.dm_mailchimp import DMMailChimpClient
 from dmutils.flask import timed_render_template as render_template
-from dmutils.forms import remove_csrf_token, get_errors_from_wtform
+from dmutils.forms.helpers import remove_csrf_token, get_errors_from_wtform
 
 from ...main import main, content_loader
 from ... import data_api_client
