@@ -1,6 +1,7 @@
 # coding=utf-8
 import mock
 
+from wtforms import ValidationError
 from dmapiclient.errors import HTTPError
 
 from app.main.helpers.frameworks import question_references
@@ -59,6 +60,26 @@ class TestApplication(BaseApplicationTest):
         assert res.status_code == 200
         assert '<p>GOV.UK uses cookies to make the site simpler. <a href="/cookies">Find ' \
             'out more about cookies</a></p>' in res.get_data(as_text=True)
+
+    @mock.patch('flask_wtf.csrf.validate_csrf', autospec=True)
+    @mock.patch('app.main.views.suppliers.data_api_client')
+    def test_csrf_handler_redirects_to_login(self, data_api_client, validate_csrf):
+        self.login()
+        with self.app.test_client():
+            self.app.config['WTF_CSRF_ENABLED'] = True
+            data_api_client.get_supplier.return_value = {'suppliers': {'contactInformation': ['something']}}
+
+            # This will raise a CSRFError for us when the form is validated
+            validate_csrf.side_effect = ValidationError('The CSRF session token is missing.')
+
+            res = self.client.post('/suppliers/registered-address/edit', data={'anything': 'really'})
+
+            self.assert_flashes("Your session has expired. Please log in again.", expected_category="error")
+            assert res.status_code == 302
+
+            # POST requests will not preserve the request path on redirect
+            assert res.location == 'http://localhost/user/login'
+            assert validate_csrf.call_args_list == [mock.call(None)]
 
 
 class TestQuestionReferences(object):
