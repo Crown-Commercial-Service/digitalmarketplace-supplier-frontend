@@ -10,7 +10,6 @@ from dmutils.user import User
 
 from config import configs
 
-
 data_api_client = dmapiclient.DataAPIClient()
 login_manager = LoginManager()
 feature_flags = flask_featureflags.FeatureFlag()
