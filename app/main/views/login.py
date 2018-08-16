@@ -4,7 +4,7 @@ from flask_login import current_user
 from dmapiclient.audit import AuditTypes
 from dmutils.email import send_user_account_email
 from dmutils.flask import timed_render_template as render_template
-from dmutils.forms import get_errors_from_wtform
+from dmutils.forms.helpers import get_errors_from_wtform
 
 from .. import main
 from ..forms.auth_forms import EmailAddressForm

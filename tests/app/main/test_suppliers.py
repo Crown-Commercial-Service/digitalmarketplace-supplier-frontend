@@ -6,6 +6,7 @@ from flask import session, current_app
 from lxml import html
 import mock
 import pytest
+from werkzeug.exceptions import ServiceUnavailable
 
 from dmapiclient import APIError, HTTPError
 from dmapiclient.audit import AuditTypes
@@ -2568,9 +2569,9 @@ class TestSupplierAddRegisteredCompanyName(BaseApplicationTest):
     def test_fails_if_api_update_fails(self):
         self.login()
         self.data_api_client.get_supplier.return_value = get_supplier(registeredName=None)
-        self.data_api_client.update_supplier.side_effect = APIError(mock.Mock(status_code=504))
+        self.data_api_client.update_supplier.side_effect = APIError(ServiceUnavailable())
         res = self.client.post("/suppliers/registered-company-name/edit", data={'registered_company_name': "K-Inc"})
-        assert res.status_code == 504
+        assert res.status_code == 503
 
     @pytest.mark.parametrize('overwrite_supplier_data',
                              ({'companyDetailsConfirmed': False}, {'registeredName': None})
@@ -2819,9 +2820,9 @@ class TestSupplierAddRegistrationNumber(BaseApplicationTest):
             companiesHouseNumber=None,
             otherCompanyRegistrationNumber=None
         )
-        self.data_api_client.update_supplier.side_effect = APIError(mock.Mock(status_code=504))
+        self.data_api_client.update_supplier.side_effect = APIError(ServiceUnavailable())
         res = self.client.post("/suppliers/registration-number/edit", data=valid_post_data)
-        assert res.status_code == 504
+        assert res.status_code == 503
 
     @pytest.mark.parametrize('overwrite_supplier_data',
                              (
@@ -3045,7 +3046,7 @@ class TestEditSupplierVatNumber(BaseApplicationTest):
         assert not self.data_api_client.update_supplier.called
 
     def test_post_response_fails_if_api_error(self):
-        self.data_api_client.update_supplier.side_effect = APIError(mock.Mock(status_code=504))
+        self.data_api_client.update_supplier.side_effect = APIError(ServiceUnavailable())
 
         res = self.client.post(
             "/suppliers/vat-number/edit",
@@ -3055,4 +3056,4 @@ class TestEditSupplierVatNumber(BaseApplicationTest):
             }
         )
 
-        assert res.status_code == 504
+        assert res.status_code == 503

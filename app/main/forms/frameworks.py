@@ -2,15 +2,15 @@ from flask_wtf import FlaskForm
 from wtforms import BooleanField, HiddenField
 from wtforms.validators import DataRequired, InputRequired, Length
 
-from dmutils.forms import StripWhitespaceStringField
+from dmutils.forms.fields import DMStripWhitespaceStringField
 
 
 class SignerDetailsForm(FlaskForm):
-    signerName = StripWhitespaceStringField('Full name', validators=[
+    signerName = DMStripWhitespaceStringField('Full name', validators=[
         DataRequired(message="You must provide the full name of the person signing on behalf of the company."),
         Length(max=255, message="You must provide a name under 256 characters.")
     ])
-    signerRole = StripWhitespaceStringField(
+    signerRole = DMStripWhitespaceStringField(
         'Role at the company',
         validators=[
             DataRequired(message="You must provide the role of the person signing on behalf of the company."),

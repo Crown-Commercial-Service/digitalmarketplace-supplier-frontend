@@ -1,15 +1,14 @@
 import re
 
-from flask import Flask, request, redirect, session, abort
+from flask import Flask, request, redirect, session
 from flask_login import LoginManager
-from flask_wtf.csrf import CSRFProtect, CSRFError
+from flask_wtf.csrf import CSRFProtect
 
 import dmapiclient
 from dmutils import init_app, flask_featureflags
 from dmutils.user import User
 
 from config import configs
-
 
 data_api_client = dmapiclient.DataAPIClient()
 login_manager = LoginManager()
@@ -49,21 +48,6 @@ def create_app(config_name):
     main_blueprint.config = application.config.copy()
 
     csrf.init_app(application)
-
-    @application.errorhandler(CSRFError)
-    def csrf_handler(reason):
-        if 'user_id' not in session:
-            application.logger.info(
-                u'csrf.session_expired: Redirecting user to log in page'
-            )
-
-            return application.login_manager.unauthorized()
-
-        application.logger.info(
-            u'csrf.invalid_token: Aborting request, user_id: {user_id}',
-            extra={'user_id': session['user_id']})
-
-        abort(400, reason)
 
     @application.before_request
     def remove_trailing_slash():

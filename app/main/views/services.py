@@ -7,7 +7,8 @@ from dmutils import s3
 from dmutils.dates import update_framework_with_formatted_dates
 from dmutils.documents import upload_service_documents
 from dmutils.flask import timed_render_template as render_template
-from dmutils.forms import get_errors_from_wtform
+from dmutils.forms.helpers import get_errors_from_wtform
+from dmutils.errors import render_error_page
 
 from ... import data_api_client
 from ...main import main, content_loader
@@ -766,7 +767,10 @@ def previous_services(framework_slug, lot_slug):
             # Don't copy a service if the lot has a one service limit and the supplier already has a draft for that lot
             drafts, complete_drafts = get_lot_drafts(data_api_client, framework_slug, lot_slug)
             if drafts or complete_drafts:
-                abort(400, f"You already have a draft {lot['name'].lower()} service.")
+                return render_error_page(
+                    status_code=400,
+                    error_message=f"You already have a draft {lot['name'].lower()} service."
+                )
             if form.validate_on_submit():
                 if form.copy_service.data is True:
                     copy_service_from_previous_framework(

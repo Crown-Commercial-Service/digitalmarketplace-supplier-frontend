@@ -5,20 +5,14 @@ import urllib.parse as urlparse
 from flask import abort, current_app
 from flask_login import current_user
 
-from dmapiclient import APIError
-
 from .frameworks import get_supplier_framework_info
 
 
 def get_drafts(apiclient, framework_slug):
-    try:
-        drafts = apiclient.find_draft_services(
-            current_user.supplier_id,
-            framework=framework_slug
-        )['services']
-
-    except APIError as e:
-        abort(e.status_code)
+    drafts = apiclient.find_draft_services(
+        current_user.supplier_id,
+        framework=framework_slug
+    )['services']
 
     complete_drafts = [draft for draft in drafts if draft['status'] in ('submitted', 'failed')]
     drafts = [draft for draft in drafts if draft['status'] == 'not-submitted']
