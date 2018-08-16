@@ -12,6 +12,7 @@ from dmutils.email import send_user_account_email
 from dmutils.email.dm_mailchimp import DMMailChimpClient
 from dmutils.flask import timed_render_template as render_template
 from dmutils.forms.helpers import remove_csrf_token, get_errors_from_wtform
+from dmutils.errors import render_error_page
 
 from ...main import main, content_loader
 from ... import data_api_client
@@ -155,7 +156,7 @@ def confirm_supplier_details():
                                                                                     current_user.supplier_id)
 
     if not supplier_company_details_are_complete(supplier):
-        abort(400, "Some company details are not complete")
+        return render_error_page(status_code=400, error_message="Some company details are not complete")
 
     else:
         try:
