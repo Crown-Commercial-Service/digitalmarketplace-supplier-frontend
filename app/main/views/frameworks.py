@@ -48,6 +48,7 @@ from ..helpers.frameworks import (
     register_interest_in_framework,
     return_supplier_framework_info_if_on_framework_or_abort,
     returned_agreement_email_recipients,
+    return_404_if_applications_closed
 )
 from ..helpers.services import (
     count_unanswered_questions,
@@ -347,6 +348,7 @@ def framework_submission_services(framework_slug, lot_slug):
 @main.route('/frameworks/<framework_slug>/declaration/start', methods=['GET'])
 @login_required
 @EnsureApplicationCompanyDetailsHaveBeenConfirmed(data_api_client)
+@return_404_if_applications_closed(lambda: data_api_client)
 def framework_start_supplier_declaration(framework_slug):
     framework = get_framework_or_404(data_api_client, framework_slug, allowed_statuses=['open'])
     update_framework_with_formatted_dates(framework)
@@ -358,6 +360,7 @@ def framework_start_supplier_declaration(framework_slug):
 @main.route('/frameworks/<framework_slug>/declaration/reuse', methods=['GET'])
 @login_required
 @EnsureApplicationCompanyDetailsHaveBeenConfirmed(data_api_client)
+@return_404_if_applications_closed(lambda: data_api_client)
 def reuse_framework_supplier_declaration(framework_slug):
     """Attempt to find a supplier framework declaration that we can reuse.
 
@@ -405,6 +408,7 @@ def reuse_framework_supplier_declaration(framework_slug):
 @main.route('/frameworks/<framework_slug>/declaration/reuse', methods=['POST'])
 @login_required
 @EnsureApplicationCompanyDetailsHaveBeenConfirmed(data_api_client)
+@return_404_if_applications_closed(lambda: data_api_client)
 def reuse_framework_supplier_declaration_post(framework_slug):
     """Set the prefill preference if a reusable framework slug is provided and redirect to declaration."""
 
@@ -519,6 +523,7 @@ def framework_supplier_declaration_overview(framework_slug):
 @main.route('/frameworks/<framework_slug>/declaration', methods=['POST'])
 @login_required
 @EnsureApplicationCompanyDetailsHaveBeenConfirmed(data_api_client)
+@return_404_if_applications_closed(lambda: data_api_client)
 def framework_supplier_declaration_submit(framework_slug):
     framework = get_framework_or_404(data_api_client, framework_slug, allowed_statuses=['open'])
 
@@ -553,6 +558,7 @@ def framework_supplier_declaration_submit(framework_slug):
 @main.route('/frameworks/<framework_slug>/declaration/edit/<string:section_id>', methods=['GET', 'POST'])
 @login_required
 @EnsureApplicationCompanyDetailsHaveBeenConfirmed(data_api_client)
+@return_404_if_applications_closed(lambda: data_api_client)
 def framework_supplier_declaration_edit(framework_slug, section_id):
     framework = get_framework_or_404(data_api_client, framework_slug, allowed_statuses=['open'])
 

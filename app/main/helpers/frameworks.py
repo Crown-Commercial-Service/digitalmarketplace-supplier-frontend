@@ -4,17 +4,20 @@ from functools import wraps
 from itertools import chain, islice, groupby
 import re
 
-from flask import abort
+from flask import abort, render_template, request
 from flask_login import current_user, current_app
 
 from dmapiclient import APIError, HTTPError
+from dmutils.dates import update_framework_with_formatted_dates
 from dmutils.formats import DATETIME_FORMAT
+from dmcontent.errors import ContentNotFoundError
+
+from ...main import content_loader
 
 
 def get_framework_or_404(client, framework_slug, allowed_statuses=None):
     if allowed_statuses is None:
         allowed_statuses = ['open', 'pending', 'standstill', 'live']
-
     framework = client.get_framework(framework_slug)['frameworks']
 
     if allowed_statuses and framework['status'] not in allowed_statuses:
@@ -425,3 +428,46 @@ class EnsureApplicationCompanyDetailsHaveBeenConfirmed:
                                   "company details.")
 
         return True
+
+
+def return_404_if_applications_closed(data_api_client_callable):
+    def real_decorator(func):
+        @wraps(func)
+        def decorated_view(*args, **kwargs):
+            data_api_client = data_api_client_callable()
+            if 'framework_slug' not in kwargs:
+                current_app.logger.error("Required parameter `framework_slug` is undefined for the calling view.")
+                abort(500)
+
+            framework_slug = kwargs['framework_slug']
+            framework = get_framework_or_404(data_api_client, framework_slug)
+
+            if not framework['status'] == 'open':
+                current_app.logger.info(
+                    'Supplier {supplier_id} requested "{method} {path}" after {framework_slug} applications closed.',
+                    extra={
+                        'supplier_id': current_user.supplier_id,
+                        'method': request.method,
+                        'path': request.path,
+                        'framework_slug': framework_slug
+                    }
+                )
+
+                update_framework_with_formatted_dates(framework)
+
+                try:
+                    following_framework_content = content_loader.get_metadata(
+                        framework_slug, 'following_framework', 'framework'
+                    )
+                except ContentNotFoundError:
+                    following_framework_content = None
+
+                return render_template(
+                    'errors/applications_closed.html',
+                    framework=framework,
+                    following_framework_content=following_framework_content,
+                ), 404
+            else:
+                return func(*args, **kwargs)
+        return decorated_view
+    return real_decorator

@@ -1,0 +1,29 @@
+{% extends "toolkit/layouts/_base_page.html" %}
+
+{% block page_title %}Applications closed - Digital Marketplace{% endblock %}
+
+{% block main_content %}
+
+<div class="error-page">
+  <header class="page-heading-smaller">
+    <h1>You can no longer apply to {{ framework['name'] }}</h1>
+  </header>
+
+  <div class="dmspeak">
+    <p>
+        The deadline for applying was {{ framework['applicationsCloseAt'] }}.
+    </p>
+    {% if following_framework_content %}
+      <p>
+          {{ following_framework_content.name }} is expected to open in {{ following_framework_content.coming }}. <a href="{{ url_for('.join_open_framework_notification_mailing_list') }}">Sign up for emails</a> about when you can apply.
+      </p>
+    {% endif %}
+  </div>
+  <div class="secondary-action-link">
+    <p>
+      <a href="{{ url_for('.dashboard') }}">Return to your account</a>.
+    </p>
+  </div>
+</div>
+
+{% endblock %}
