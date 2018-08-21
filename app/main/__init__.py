@@ -45,7 +45,7 @@ content_loader.load_manifest('digital-outcomes-and-specialists-3', 'services', '
 content_loader.load_manifest('digital-outcomes-and-specialists-3', 'services', 'edit_service')
 content_loader.load_manifest('digital-outcomes-and-specialists-3', 'briefs', 'edit_brief')
 content_loader.load_messages('digital-outcomes-and-specialists-3', ['urls'])
-content_loader.load_metadata('digital-outcomes-and-specialists-3', ['copy_services'])
+content_loader.load_metadata('digital-outcomes-and-specialists-3', ['copy_services', 'following_framework'])
 
 
 @main.after_request

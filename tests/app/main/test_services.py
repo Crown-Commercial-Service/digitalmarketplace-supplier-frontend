@@ -1314,6 +1314,7 @@ class TestCopyDraft(BaseApplicationTest, MockEnsureApplicationCompanyDetailsHave
 
         self.data_api_client_patch = mock.patch('app.main.views.services.data_api_client', autospec=True)
         self.data_api_client = self.data_api_client_patch.start()
+        self.data_api_client.get_framework.return_value = self.framework(status='open')
 
     def teardown_method(self, method):
         self.data_api_client_patch.stop()
@@ -1322,7 +1323,6 @@ class TestCopyDraft(BaseApplicationTest, MockEnsureApplicationCompanyDetailsHave
     def test_copy_draft_with_editable_sections(self):
         # G7 drafts use editable=True, edit_questions=False on every section, which should emit a URL without
         # a question-slug parameter.
-        self.data_api_client.get_framework.return_value = self.framework(status='open')
         self.data_api_client.get_draft_service.return_value = {'services': self.g7_draft}
 
         copy_of_draft = empty_g7_draft_service()
@@ -1363,7 +1363,6 @@ class TestCopyDraft(BaseApplicationTest, MockEnsureApplicationCompanyDetailsHave
         assert res.status_code == 404
 
     def test_cannot_copy_draft_if_no_supplier_framework(self):
-        self.data_api_client.get_framework.return_value = self.framework(status='open')
         self.data_api_client.get_supplier_framework_info.return_value = {'frameworkInterest': {}}
 
         res = self.client.post('/suppliers/frameworks/g-cloud-7/submissions/scs/1/copy')
@@ -1379,13 +1378,13 @@ class TestCompleteDraft(BaseApplicationTest, MockEnsureApplicationCompanyDetails
         self.draft = empty_g7_draft_service()
         self.data_api_client_patch = mock.patch('app.main.views.services.data_api_client', autospec=True)
         self.data_api_client = self.data_api_client_patch.start()
+        self.data_api_client.get_framework.return_value = self.framework(status='open')
 
     def teardown_method(self, method):
         self.data_api_client_patch.stop()
         super().teardown_method(method)
 
     def test_complete_draft(self):
-        self.data_api_client.get_framework.return_value = self.framework(status='open')
         self.data_api_client.get_draft_service.return_value = {'services': self.draft}
         res = self.client.post('/suppliers/frameworks/g-cloud-7/submissions/scs/1/complete')
         assert res.status_code == 302
@@ -1406,7 +1405,6 @@ class TestCompleteDraft(BaseApplicationTest, MockEnsureApplicationCompanyDetails
         assert res.status_code == 404
 
     def test_cannot_complete_draft_if_no_supplier_framework(self):
-        self.data_api_client.get_framework.return_value = self.framework(status='open')
         self.data_api_client.get_supplier_framework_info.return_value = {'frameworkInterest': {}}
 
         res = self.client.post('/suppliers/frameworks/g-cloud-7/submissions/scs/1/complete')
@@ -1448,13 +1446,13 @@ class TestEditDraftService(BaseApplicationTest, MockEnsureApplicationCompanyDeta
         }
         self.data_api_client_patch = mock.patch('app.main.views.services.data_api_client', autospec=True)
         self.data_api_client = self.data_api_client_patch.start()
+        self.data_api_client.get_framework.return_value = self.framework(status='open')
 
     def teardown_method(self, method):
         self.data_api_client_patch.stop()
         super().teardown_method(method)
 
     def test_questions_for_this_draft_section_can_be_changed(self, s3):
-        self.data_api_client.get_framework.return_value = self.framework(status='open')
         self.data_api_client.get_draft_service.return_value = self.empty_draft
         res = self.client.post(
             '/suppliers/frameworks/g-cloud-7/submissions/scs/1/edit/service-description',
@@ -1473,7 +1471,6 @@ class TestEditDraftService(BaseApplicationTest, MockEnsureApplicationCompanyDeta
     def test_update_without_changes_is_not_sent_to_the_api(self, s3):
         draft = self.empty_draft['services'].copy()
         draft.update({'serviceSummary': u"summary"})
-        self.data_api_client.get_framework.return_value = self.framework(status='open')
         self.data_api_client.get_draft_service.return_value = {'services': draft}
 
         res = self.client.post(
@@ -1488,7 +1485,6 @@ class TestEditDraftService(BaseApplicationTest, MockEnsureApplicationCompanyDeta
     def test_S3_should_not_be_called_if_there_are_no_files(self, s3):
         uploader = mock.Mock()
         s3.return_value = uploader
-        self.data_api_client.get_framework.return_value = self.framework(status='open')
         self.data_api_client.get_draft_service.return_value = self.empty_draft
         res = self.client.post(
             '/suppliers/frameworks/g-cloud-7/submissions/scs/1/edit/service-description',
@@ -1524,7 +1520,6 @@ class TestEditDraftService(BaseApplicationTest, MockEnsureApplicationCompanyDeta
         assert res.status_code == 404
 
     def test_draft_section_cannot_be_edited_if_no_supplier_framework(self, s3):
-        self.data_api_client.get_framework.return_value = self.framework(status='open')
         self.data_api_client.get_supplier_framework_info.return_value = {'frameworkInterest': {}}
         res = self.client.post(
             '/suppliers/frameworks/g-cloud-7/submissions/scs/1/edit/service-description',
@@ -1534,7 +1529,6 @@ class TestEditDraftService(BaseApplicationTest, MockEnsureApplicationCompanyDeta
         assert res.status_code == 404
 
     def test_only_questions_for_this_draft_section_can_be_changed(self, s3):
-        self.data_api_client.get_framework.return_value = self.framework(status='open')
         self.data_api_client.get_draft_service.return_value = self.empty_draft
         res = self.client.post(
             '/suppliers/frameworks/g-cloud-7/submissions/scs/1/edit/service-description',
@@ -1551,7 +1545,6 @@ class TestEditDraftService(BaseApplicationTest, MockEnsureApplicationCompanyDeta
     def test_display_file_upload_with_existing_file(self, s3):
         draft = copy.deepcopy(self.empty_draft)
         draft['services']['serviceDefinitionDocumentURL'] = 'http://localhost/fooo-2012-12-12-1212.pdf'
-        self.data_api_client.get_framework.return_value = self.framework(status='open')
         self.data_api_client.get_draft_service.return_value = draft
         response = self.client.get(
             '/suppliers/frameworks/g-cloud-7/submissions/scs/1/edit/service-definition'
@@ -1562,7 +1555,6 @@ class TestEditDraftService(BaseApplicationTest, MockEnsureApplicationCompanyDeta
         assert len(document.cssselect('p.file-upload-existing-value')) == 1
 
     def test_display_file_upload_with_no_existing_file(self, s3):
-        self.data_api_client.get_framework.return_value = self.framework(status='open')
         self.data_api_client.get_draft_service.return_value = self.empty_draft
         response = self.client.get(
             '/suppliers/frameworks/g-cloud-7/submissions/scs/1/edit/service-definition'
@@ -1573,7 +1565,6 @@ class TestEditDraftService(BaseApplicationTest, MockEnsureApplicationCompanyDeta
         assert len(document.cssselect('p.file-upload-existing-value')) == 0
 
     def test_file_upload(self, s3):
-        self.data_api_client.get_framework.return_value = self.framework(status='open')
         self.data_api_client.get_draft_service.return_value = self.empty_draft
         with freeze_time('2015-01-02 03:04:05'):
             res = self.client.post(
@@ -1597,7 +1588,6 @@ class TestEditDraftService(BaseApplicationTest, MockEnsureApplicationCompanyDeta
         )
 
     def test_file_upload_filters_empty_and_unknown_files(self, s3):
-        self.data_api_client.get_framework.return_value = self.framework(status='open')
         self.data_api_client.get_draft_service.return_value = self.empty_draft
         res = self.client.post(
             '/suppliers/frameworks/g-cloud-7/submissions/scs/1/edit/service-definition',
@@ -1616,7 +1606,6 @@ class TestEditDraftService(BaseApplicationTest, MockEnsureApplicationCompanyDeta
         assert s3.return_value.save.called is False
 
     def test_upload_question_not_accepted_as_form_data(self, s3):
-        self.data_api_client.get_framework.return_value = self.framework(status='open')
         self.data_api_client.get_draft_service.return_value = self.empty_draft
         res = self.client.post(
             '/suppliers/frameworks/g-cloud-7/submissions/scs/1/edit/service-definition',
@@ -1631,7 +1620,6 @@ class TestEditDraftService(BaseApplicationTest, MockEnsureApplicationCompanyDeta
         )
 
     def test_pricing_fields_are_added_correctly(self, s3):
-        self.data_api_client.get_framework.return_value = self.framework(status='open')
         self.data_api_client.get_draft_service.return_value = self.empty_draft
         res = self.client.post(
             '/suppliers/frameworks/g-cloud-7/submissions/scs/1/edit/pricing',
@@ -1668,7 +1656,6 @@ class TestEditDraftService(BaseApplicationTest, MockEnsureApplicationCompanyDeta
         assert res.status_code == 404
 
     def test_edit_draft_section_with_no_supplier_framework_404(self, s3):
-        self.data_api_client.get_framework.return_value = self.framework(status='open')
         self.data_api_client.get_draft_service.return_value = self.empty_draft
         self.data_api_client.get_supplier_framework_info.return_value = {'frameworkInterest': {}}
 
@@ -1741,7 +1728,6 @@ class TestEditDraftService(BaseApplicationTest, MockEnsureApplicationCompanyDeta
         assert len(document.xpath("//input[@type='submit'][@name='save_and_continue']")) == 0
 
     def test_update_redirects_to_edit_submission_if_no_next_editable_section(self, s3):
-        self.data_api_client.get_framework.return_value = self.framework(status='open')
         self.data_api_client.get_draft_service.return_value = self.empty_draft
         self.data_api_client.update_draft_service.return_value = None
 
@@ -1754,7 +1740,6 @@ class TestEditDraftService(BaseApplicationTest, MockEnsureApplicationCompanyDeta
             res.headers['Location']
 
     def test_update_doesnt_offer_continue_to_next_editable_section_if_no_next_editable_section(self, s3):
-        self.data_api_client.get_framework.return_value = self.framework(status='open')
         self.data_api_client.get_draft_service.return_value = self.empty_draft
 
         res = self.client.get(
@@ -1766,7 +1751,6 @@ class TestEditDraftService(BaseApplicationTest, MockEnsureApplicationCompanyDeta
         assert len(document.xpath("//input[@type='submit'][@name='save_and_continue']")) == 0
 
     def test_update_offers_continue_to_next_editable_section_if_force_continue_button(self, s3):
-        self.data_api_client.get_framework.return_value = self.framework(status='open')
         self.data_api_client.get_draft_service.return_value = self.empty_draft
 
         res = self.client.get(
@@ -1778,7 +1762,6 @@ class TestEditDraftService(BaseApplicationTest, MockEnsureApplicationCompanyDeta
         assert len(document.xpath("//input[@type='submit'][@name='save_and_continue']")) == 1
 
     def test_update_redirects_to_edit_submission_if_save_and_return_grey_button_clicked(self, s3):
-        self.data_api_client.get_framework.return_value = self.framework(status='open')
         self.data_api_client.get_draft_service.return_value = self.empty_draft
         self.data_api_client.update_draft_service.return_value = None
 
@@ -1791,7 +1774,6 @@ class TestEditDraftService(BaseApplicationTest, MockEnsureApplicationCompanyDeta
             res.headers['Location']
 
     def test_update_with_answer_required_error(self, s3):
-        self.data_api_client.get_framework.return_value = self.framework(status='open')
         self.data_api_client.get_draft_service.return_value = self.empty_draft
         self.data_api_client.update_draft_service.side_effect = HTTPError(
             mock.Mock(status_code=400),
@@ -1807,7 +1789,6 @@ class TestEditDraftService(BaseApplicationTest, MockEnsureApplicationCompanyDeta
         )[0].strip()
 
     def test_update_with_under_50_words_error(self, s3):
-        self.data_api_client.get_framework.return_value = self.framework(status='open')
         self.data_api_client.get_draft_service.return_value = self.empty_draft
         self.data_api_client.update_draft_service.side_effect = HTTPError(
             mock.Mock(status_code=400),
@@ -2151,13 +2132,13 @@ class TestDeleteDraftService(BaseApplicationTest, MockEnsureApplicationCompanyDe
         self.login()
         self.data_api_client_patch = mock.patch('app.main.views.services.data_api_client', autospec=True)
         self.data_api_client = self.data_api_client_patch.start()
+        self.data_api_client.get_framework.return_value = self.framework(status='open')
 
     def teardown_method(self, method):
         self.data_api_client_patch.stop()
         super().teardown_method(method)
 
     def test_delete_button_redirects_with_are_you_sure(self):
-        self.data_api_client.get_framework.return_value = self.framework(status='open')
         self.data_api_client.get_draft_service.return_value = self.draft_to_delete
 
         res = self.client.post(
@@ -2178,14 +2159,12 @@ class TestDeleteDraftService(BaseApplicationTest, MockEnsureApplicationCompanyDe
         assert res.status_code == 404
 
     def test_cannot_delete_draft_if_no_supplier_framework(self):
-        self.data_api_client.get_framework.return_value = self.framework(status='open')
         self.data_api_client.get_supplier_framework_info.return_value = {'frameworkInterest': {}}
 
         res = self.client.post('/suppliers/frameworks/g-cloud-7/submissions/scs/1/delete')
         assert res.status_code == 404
 
     def test_confirm_delete_button_deletes_and_redirects_to_dashboard(self):
-        self.data_api_client.get_framework.return_value = self.framework(status='open')
         self.data_api_client.get_draft_service.return_value = self.draft_to_delete
         res = self.client.post(
             '/suppliers/frameworks/g-cloud-7/submissions/scs/1/delete',
@@ -2266,6 +2245,7 @@ class TestGetListPreviousServices(BaseApplicationTest, MockEnsureApplicationComp
     def test_lists_correct_services_for_previous_framework_and_lot(self, get_metadata):
         self.data_api_client.get_framework.side_effect = [
             self.framework(slug='g-cloud-10'),
+            self.framework(slug='g-cloud-10'),
             self.framework(slug='g-cloud-9'),
         ]
         self.data_api_client.find_services.return_value = {
@@ -2317,6 +2297,7 @@ class TestGetListPreviousServices(BaseApplicationTest, MockEnsureApplicationComp
     def test_shows_boolean_question_for_single_service_lots(self, get_metadata, lot_slug, lot_name):
         self.data_api_client.get_framework.side_effect = [
             self.framework(slug='digital-outcomes-and-specialists-3'),
+            self.framework(slug='digital-outcomes-and-specialists-3'),
             self.framework(slug='digital-outcomes-and-specialists-2'),
         ]
         get_metadata.return_value = 'digital-outcomes-and-specialists-2'
@@ -2352,6 +2333,7 @@ class TestGetListPreviousServices(BaseApplicationTest, MockEnsureApplicationComp
     def test_returns_500_if_source_framework_not_found(self, get_metadata):
         self.data_api_client.get_framework.side_effect = [
             self.framework(slug='g-cloud-10'),
+            self.framework(slug='g-cloud-10'),
             HTTPError(mock.Mock(status_code=404)),
         ]
 
@@ -2372,6 +2354,7 @@ class TestGetListPreviousServices(BaseApplicationTest, MockEnsureApplicationComp
     def test_redirects_to_draft_service_page_if_no_services_to_copy(self, get_metadata, services):
         self.data_api_client.get_framework.side_effect = [
             self.framework(slug='g-cloud-10'),
+            self.framework(slug='g-cloud-10'),
             self.framework(slug='g-cloud-9'),
         ]
         self.data_api_client.find_services.return_value = {
@@ -2385,6 +2368,7 @@ class TestGetListPreviousServices(BaseApplicationTest, MockEnsureApplicationComp
 
     def test_shows_confirmation_banner_and_button_when_copying_all(self, get_metadata):
         self.data_api_client.get_framework.side_effect = [
+            self.framework(slug='g-cloud-10'),
             self.framework(slug='g-cloud-10'),
             self.framework(slug='g-cloud-9'),
         ]
@@ -2417,6 +2401,7 @@ class TestGetListPreviousServices(BaseApplicationTest, MockEnsureApplicationComp
         self, get_metadata, declaration_status, banner_present
     ):
         self.data_api_client.get_framework.side_effect = [
+            self.framework(slug='g-cloud-10'),
             self.framework(slug='g-cloud-10'),
             self.framework(slug='g-cloud-9'),
         ]

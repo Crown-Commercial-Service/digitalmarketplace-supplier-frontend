@@ -4,16 +4,18 @@
 import inspect
 import mock
 import pytest
+from lxml import html
 from werkzeug.exceptions import HTTPException
 
 from dmutils import api_stubs
-from dmapiclient import HTTPError
+from dmapiclient import DataAPIClient, HTTPError
+from dmcontent.errors import ContentNotFoundError
 
 from app.main.helpers.frameworks import (
     check_agreement_is_related_to_supplier_framework_or_abort, get_framework_for_reuse, get_statuses_for_lot,
     return_supplier_framework_info_if_on_framework_or_abort, order_frameworks_for_reuse,
     get_frameworks_closed_and_open_for_applications, get_supplier_registered_name_from_declaration,
-    get_framework_or_500, EnsureApplicationCompanyDetailsHaveBeenConfirmed
+    get_framework_or_500, EnsureApplicationCompanyDetailsHaveBeenConfirmed, return_404_if_applications_closed
 )
 
 from ...helpers import BaseApplicationTest
@@ -758,3 +760,174 @@ class TestEnsureApplicationCompanyDetailsHaveBeenConfirmed(BaseApplicationTest):
                                         )
 
                                 assert validator_mock.call_count == 0
+
+
+class TestReturn404IfApplicationClosed(BaseApplicationTest):
+    def setup_method(self, method):
+        self.data_api_client_mock = mock.Mock(spec_set=DataAPIClient)
+        super().setup_method(method)
+
+    def test_aborts_with_500_and_logs_if_framwork_slug_not_in_kwargs(self):
+
+        @return_404_if_applications_closed(lambda: self.data_api_client_mock)
+        def view_function(framework_slug):
+            pass
+
+        with mock.patch('app.main.helpers.frameworks.current_app') as current_app_mock:
+            with pytest.raises(HTTPException) as e:
+                view_function()
+
+        assert e.value.code == 500
+        assert current_app_mock.logger.error.call_args_list == [
+            mock.call("Required parameter `framework_slug` is undefined for the calling view.")
+        ]
+
+    def test_aborts_with_404_if_framework_not_found(self):
+        self.data_api_client_mock.get_framework.side_effect = HTTPError(
+            mock.Mock(status_code=404), 'Framework not found'
+        )
+
+        @return_404_if_applications_closed(lambda: self.data_api_client_mock)
+        def view_function(framework_slug):
+            pass
+
+        with pytest.raises(HTTPError) as e:
+            view_function(framework_slug='not_a_framework')
+
+        assert e.value.status_code == 404
+        assert e.value.message == "Framework not found"
+
+    @pytest.mark.parametrize('status', ('pending', 'standstill', 'live'))
+    @mock.patch('app.main.helpers.frameworks.current_user')
+    def test_returns_404_and_logs_if_framework_status_not_open(self, current_user_mock, status):
+        # 'coming' and 'expired' frameworks are caught by `get_framework_or_404`
+        self.data_api_client_mock.get_framework.return_value = api_stubs.framework(status=status)
+        current_user_mock.supplier_id = 123
+
+        @return_404_if_applications_closed(lambda: self.data_api_client_mock)
+        def view_function(framework_slug):
+            pass
+
+        with mock.patch('app.main.helpers.frameworks.current_app') as current_app_mock:
+            with self.app.test_request_context('/suppliers'):
+                response = view_function(framework_slug='g-cloud-9')
+
+        assert current_app_mock.logger.info.call_args_list == [
+            mock.call(
+                'Supplier {supplier_id} requested "{method} {path}" after {framework_slug} applications closed.',
+                extra={
+                    'supplier_id': 123,
+                    'method': 'GET',
+                    'path': '/suppliers',
+                    'framework_slug': 'g-cloud-9'
+                }
+            )
+        ]
+        assert response[1] == 404
+
+    @pytest.mark.parametrize('status', ('pending', 'standstill', 'live'))
+    @pytest.mark.parametrize('content_set', (True, False))
+    @mock.patch('app.main.helpers.frameworks.content_loader', autospec=True)
+    def test_renders_error_page_correctly_if_following_framework_content_set(
+        self, content_loader_mock, content_set, status
+    ):
+        self.data_api_client_mock.get_framework.return_value = api_stubs.framework(status=status)
+        if content_set:
+            content_loader_mock.get_metadata.return_value = {
+                'name': 'Next Framework 2', 'slug': 'n-f-2', 'coming': '2042'
+            }
+        else:
+            content_loader_mock.get_metadata.side_effect = ContentNotFoundError()
+
+        @return_404_if_applications_closed(lambda: self.data_api_client_mock)
+        def view_function(framework_slug):
+            pass
+
+        with mock.patch('app.main.helpers.frameworks.current_user'):
+            with mock.patch('app.main.helpers.frameworks.current_app'):
+                with self.app.test_request_context('/suppliers'):
+                    response = view_function(framework_slug='g-cloud-9')
+
+        document = html.fromstring(response[0])
+        assert response[1] == 404
+        assert document.xpath('//title/text()')[0] == "Applications closed - Digital Marketplace"
+        assert document.xpath('//h1/text()')[0] == "You can no longer apply to G-Cloud 7"
+        assert "The deadline for applying was 12am GMT, Monday 3 January 2000." in \
+            document.xpath('//div[@class="dmspeak"]/p/text()')[0]
+
+        if content_set:
+            assert "Next Framework 2 is expected to open in 2042." in \
+                document.xpath('//div[@class="dmspeak"]/p/text()')[1]
+        else:
+            assert "is expected to open in" not in response[0]
+
+    def test_returns_the_view_function_if_framework_is_open(self):
+        self.data_api_client_mock.get_framework.return_value = api_stubs.framework(status='open')
+
+        @return_404_if_applications_closed(lambda: self.data_api_client_mock)
+        def view_function(framework_slug):
+            return f'{framework_slug} - OK!'
+
+        response = view_function(framework_slug='g-cloud-7')
+
+        assert response == 'g-cloud-7 - OK!'
+
+    @mock.patch('app.main.views.frameworks.data_api_client')
+    @mock.patch('app.main.views.services.data_api_client')
+    @mock.patch('app.main.helpers.require_login')
+    @mock.patch('app.main.helpers.frameworks.current_user')
+    def test_only_known_application_editing_decorated_views_are_protected(
+        self, current_user_mock, require_login_mock, services_data_api_client, frameworks_data_api_client,
+    ):
+        decorated_views = {
+            'main.edit_service_submission',
+            'main.remove_subsection',
+            'main.delete_draft_service',
+            'main.start_new_draft_service',
+            'main.previous_services',
+            'main.complete_draft_service',
+            'main.copy_draft_service',
+            'main.copy_previous_service',
+            'main.copy_all_previous_services',
+            'main.framework_supplier_declaration_submit',
+            'main.framework_start_supplier_declaration',
+            'main.reuse_framework_supplier_declaration',
+            'main.reuse_framework_supplier_declaration_post',
+            'main.framework_supplier_declaration_edit',
+        }
+
+        services_data_api_client.get_framework.return_value = api_stubs.framework(status='pending')
+        frameworks_data_api_client.get_framework.return_value = api_stubs.framework(status='pending')
+        current_user_mock.supplier_id = 123
+        require_login_mock.return_value = False
+
+        from app.main.helpers.frameworks import EnsureApplicationCompanyDetailsHaveBeenConfirmed as \
+            company_details_decorator_class
+
+        for view_name, view_callable in self.app.view_functions.items():
+            if inspect.isfunction(view_callable):
+                with mock.patch.object(
+                    company_details_decorator_class, 'validator', mock.MagicMock()
+                ) as validator_mock:
+                    # Always validate true to bypass EnsureApplicationCompanyDetailsHaveBeenConfirmed decorator
+                    validator_mock.return_value = True
+
+                    with self.app.test_request_context('/suppliers'):
+                        if view_name in decorated_views:
+                            response = view_callable(framework_slug='Sausage-Cloud 6')
+
+                            assert response[1] == 404
+                            assert "Applications closed - Digital Marketplace" in response[0]
+
+                        else:
+                            # If it's not decorated, we don't care if the call is succesful or errors, as long it
+                            # doesn't use our decorator. This call will ALWAYS error if the decorator is used.
+                            try:
+                                response = view_callable()
+
+                            except Exception as e:
+                                if type(e) == HTTPException:
+                                    assert e.value.code != 500 and e.value.description != (
+                                        "There was a problem accessing this page of your application. Please try "
+                                        "again later."
+                                    )

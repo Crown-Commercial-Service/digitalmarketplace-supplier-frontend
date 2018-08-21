@@ -27,6 +27,7 @@ from ..helpers.frameworks import (
     get_framework_or_404,
     get_framework_or_500,
     EnsureApplicationCompanyDetailsHaveBeenConfirmed,
+    return_404_if_applications_closed,
 )
 from ..forms.frameworks import OneServiceLimitCopyServiceForm
 
@@ -293,6 +294,7 @@ def redirect_direct_service_urls(service_id, trailing_path):
 @main.route('/frameworks/<framework_slug>/submissions/<lot_slug>/create', methods=['GET', 'POST'])
 @login_required
 @EnsureApplicationCompanyDetailsHaveBeenConfirmed(data_api_client)
+@return_404_if_applications_closed(lambda: data_api_client)
 def start_new_draft_service(framework_slug, lot_slug):
     """Page to kick off creation of a new service."""
 
@@ -356,6 +358,7 @@ def start_new_draft_service(framework_slug, lot_slug):
 @main.route('/frameworks/<framework_slug>/submissions/<lot_slug>/<service_id>/copy', methods=['POST'])
 @login_required
 @EnsureApplicationCompanyDetailsHaveBeenConfirmed(data_api_client)
+@return_404_if_applications_closed(lambda: data_api_client)
 def copy_draft_service(framework_slug, lot_slug, service_id):
     framework, lot = get_framework_and_lot_or_404(data_api_client, framework_slug, lot_slug, allowed_statuses=['open'])
 
@@ -403,6 +406,7 @@ def copy_draft_service(framework_slug, lot_slug, service_id):
 @main.route('/frameworks/<framework_slug>/submissions/<lot_slug>/<service_id>/complete', methods=['POST'])
 @login_required
 @EnsureApplicationCompanyDetailsHaveBeenConfirmed(data_api_client)
+@return_404_if_applications_closed(lambda: data_api_client)
 def complete_draft_service(framework_slug, lot_slug, service_id):
     framework, lot = get_framework_and_lot_or_404(data_api_client, framework_slug, lot_slug, allowed_statuses=['open'])
 
@@ -442,6 +446,7 @@ def complete_draft_service(framework_slug, lot_slug, service_id):
 @main.route('/frameworks/<framework_slug>/submissions/<lot_slug>/<service_id>/delete', methods=['POST'])
 @login_required
 @EnsureApplicationCompanyDetailsHaveBeenConfirmed(data_api_client)
+@return_404_if_applications_closed(lambda: data_api_client)
 def delete_draft_service(framework_slug, lot_slug, service_id):
     framework, lot = get_framework_and_lot_or_404(data_api_client, framework_slug, lot_slug, allowed_statuses=['open'])
 
@@ -543,6 +548,7 @@ def view_service_submission(framework_slug, lot_slug, service_id):
             methods=('GET', 'POST',))
 @login_required
 @EnsureApplicationCompanyDetailsHaveBeenConfirmed(data_api_client)
+@return_404_if_applications_closed(lambda: data_api_client)
 def edit_service_submission(framework_slug, lot_slug, service_id, section_id, question_slug=None):
     """
         Also accepts URL parameter `force_continue_button` which will allow rendering of a 'Save and continue' button,
@@ -648,6 +654,7 @@ def edit_service_submission(framework_slug, lot_slug, service_id, section_id, qu
             methods=['GET', 'POST'])
 @login_required
 @EnsureApplicationCompanyDetailsHaveBeenConfirmed(data_api_client)
+@return_404_if_applications_closed(lambda: data_api_client)
 def remove_subsection(framework_slug, lot_slug, service_id, section_id, question_slug):
     # Suppliers must have registered interest in a framework before they can edit draft services
     if not get_supplier_framework_info(data_api_client, framework_slug):
@@ -739,10 +746,9 @@ def remove_subsection(framework_slug, lot_slug, service_id, section_id, question
 @main.route('/frameworks/<framework_slug>/submissions/<lot_slug>/previous-services', methods=['GET', 'POST'])
 @login_required
 @EnsureApplicationCompanyDetailsHaveBeenConfirmed(data_api_client)
+@return_404_if_applications_closed(lambda: data_api_client)
 def previous_services(framework_slug, lot_slug):
-    framework, lot = get_framework_and_lot_or_404(data_api_client, framework_slug, lot_slug)
-    if framework['status'] != 'open':
-        abort(404)
+    framework, lot = get_framework_and_lot_or_404(data_api_client, framework_slug, lot_slug, allowed_statuses=['open'])
 
     form = OneServiceLimitCopyServiceForm(lot['name'].lower()) if lot.get('oneServiceLimit') else None
     source_framework_slug = content_loader.get_metadata(framework['slug'], 'copy_services', 'source_framework')
@@ -816,6 +822,7 @@ def previous_services(framework_slug, lot_slug):
             methods=['POST'])
 @login_required
 @EnsureApplicationCompanyDetailsHaveBeenConfirmed(data_api_client)
+@return_404_if_applications_closed(lambda: data_api_client)
 def copy_previous_service(framework_slug, lot_slug, service_id):
     framework, lot = get_framework_and_lot_or_404(
         data_api_client, framework_slug, lot_slug, allowed_statuses=['open']
@@ -830,6 +837,7 @@ def copy_previous_service(framework_slug, lot_slug, service_id):
             methods=['POST'])
 @login_required
 @EnsureApplicationCompanyDetailsHaveBeenConfirmed(data_api_client)
+@return_404_if_applications_closed(lambda: data_api_client)
 def copy_all_previous_services(framework_slug, lot_slug):
         framework, lot = get_framework_and_lot_or_404(
             data_api_client, framework_slug, lot_slug, allowed_statuses=['open']
