@@ -4,6 +4,7 @@ from wtforms.validators import AnyOf, InputRequired, Length, Optional, Regexp, V
 
 from dmutils.forms.fields import DMStripWhitespaceStringField, DMEmailField
 from dmutils.forms.validators import EmailValidator
+from dmutils.forms.widgets import DMTextArea
 from ..helpers.suppliers import COUNTRY_TUPLE
 
 
@@ -21,25 +22,34 @@ def word_length(limit=None, message=None):
     return _length
 
 
-class EditSupplierForm(FlaskForm):
-    description = DMStripWhitespaceStringField('Supplier summary', validators=[
-        word_length(50, 'Your summary must not be more than %d words')
-    ])
-
-
-class EditContactInformationForm(FlaskForm):
-    contactName = DMStripWhitespaceStringField('Contact name', validators=[
-        InputRequired(message="You must provide a contact name."),
-        Length(max=255, message="You must provide a contact name under 256 characters."),
-    ])
-    email = DMEmailField('Contact email address', validators=[
-        InputRequired(message="You must provide an email address."),
-        EmailValidator(message="You must provide a valid email address."),
-    ])
-    phoneNumber = DMStripWhitespaceStringField('Contact phone number', validators=[
-        InputRequired(message="You must provide a phone number."),
-        Length(max=20, message="You must provide a phone number under 20 characters.")
-    ])
+class EditSupplierInformationForm(FlaskForm):
+    contactName = DMStripWhitespaceStringField(
+        "Contact name",
+        hint="This can be the name of the person or team you want buyers to contact",
+        validators=[
+            InputRequired(message="You must provide a contact name."),
+            Length(max=255, message="You must provide a contact name under 256 characters."),
+        ])
+    email = DMEmailField(
+        "Contact email address",
+        hint="This is the email buyers will use to contact you",
+        validators=[
+            InputRequired(message="You must provide an email address."),
+            EmailValidator(message="You must provide a valid email address."),
+        ])
+    phoneNumber = DMStripWhitespaceStringField(
+        "Contact phone number",
+        validators=[
+            InputRequired(message="You must provide a phone number."),
+            Length(max=20, message="You must provide a phone number under 20 characters.")
+        ])
+    description = DMStripWhitespaceStringField(
+        "Supplier summary",
+        hint="50 words maximum",
+        widget=DMTextArea(max_length_in_words=50),
+        validators=[
+            word_length(50, "Your summary must not be more than %d words"),
+        ])
 
 
 class EditRegisteredAddressForm(FlaskForm):

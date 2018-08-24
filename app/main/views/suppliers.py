@@ -22,10 +22,9 @@ from ..forms.suppliers import (
     CompanyPublicContactInformationForm,
     CompanyTradingStatusForm,
     DunsNumberForm,
-    EditContactInformationForm,
     EditRegisteredAddressForm,
     EditRegisteredCountryForm,
-    EditSupplierForm,
+    EditSupplierInformationForm,
     EmailAddressForm,
 )
 from ..helpers.frameworks import (
@@ -343,42 +342,43 @@ def edit_what_buyers_will_see():
         current_user.supplier_id
     )['suppliers']
 
-    supplier['contact'] = supplier['contactInformation'][0]
+    contact = supplier["contactInformation"][0]
 
-    supplier_form = EditSupplierForm()
-    contact_form = EditContactInformationForm()
+    prefill_data = {
+        "contactName": contact.get("contactName"),
+        "phoneNumber": contact.get("phoneNumber"),
+        "email": contact.get("email"),
+        "description": supplier.get("description"),
+    }
 
-    if request.method == 'POST':
-        supplier_info_valid = supplier_form.validate_on_submit()
-        contact_info_valid = contact_form.validate_on_submit()
+    form = EditSupplierInformationForm(data=prefill_data)
 
-        if supplier_info_valid and contact_info_valid:
-            data_api_client.update_supplier(
-                current_user.supplier_id,
-                remove_csrf_token(supplier_form.data),
-                current_user.email_address
-            )
+    if form.validate_on_submit():
+        data_api_client.update_supplier(
+            current_user.supplier_id,
+            {
+                "description": form.description.data,
+            },
+            current_user.email_address
+        )
 
-            data_api_client.update_contact_information(
-                current_user.supplier_id,
-                supplier['contact']['id'],
-                remove_csrf_token(contact_form.data),
-                current_user.email_address
-            )
-            return redirect(url_for(".supplier_details"))
+        data_api_client.update_contact_information(
+            current_user.supplier_id,
+            contact["id"],
+            {
+                "contactName": form.contactName.data,
+                "phoneNumber": form.phoneNumber.data,
+                "email": form.email.data,
+            },
+            current_user.email_address
+        )
+        return redirect(url_for(".supplier_details"))
 
-    else:
-        supplier_form.description.data = supplier.get('description', None)
-        contact_form.contactName.data = supplier['contact'].get('contactName')
-        contact_form.phoneNumber.data = supplier['contact'].get('phoneNumber')
-        contact_form.email.data = supplier['contact'].get('email')
-
-    errors = {**get_errors_from_wtform(contact_form), **get_errors_from_wtform(supplier_form)}
+    errors = get_errors_from_wtform(form)
 
     return render_template(
         "suppliers/edit_what_buyers_will_see.html",
-        supplier_form=supplier_form,
-        contact_form=contact_form,
+        form=form,
         errors=errors,
     ), 200 if not errors else 400
 
