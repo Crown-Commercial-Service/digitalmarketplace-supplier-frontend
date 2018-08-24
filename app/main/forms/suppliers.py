@@ -53,22 +53,19 @@ class EditSupplierInformationForm(FlaskForm):
 
 
 class EditRegisteredAddressForm(FlaskForm):
-    address1 = DMStripWhitespaceStringField('Building and street', validators=[
+    street = DMStripWhitespaceStringField("Building and street", validators=[
         InputRequired(message="You need to enter the street address."),
         Length(max=255, message="You must provide a building and street name under 256 characters."),
     ])
-    city = DMStripWhitespaceStringField('Town or city', validators=[
+    city = DMStripWhitespaceStringField("Town or city", validators=[
         InputRequired(message="You need to enter the town or city."),
         Length(max=255, message="You must provide a town or city name under 256 characters."),
     ])
-    postcode = DMStripWhitespaceStringField('Postcode', validators=[
+    postcode = DMStripWhitespaceStringField("Postcode", validators=[
         InputRequired(message="You need to enter the postcode."),
         Length(max=15, message="You must provide a valid postcode under 15 characters."),
     ])
-
-
-class EditRegisteredCountryForm(FlaskForm):
-    registrationCountry = DMStripWhitespaceStringField('Country', validators=[
+    country = DMStripWhitespaceStringField("Country", validators=[
         InputRequired(message="You need to enter a country."),
         AnyOf(values=[country[1] for country in COUNTRY_TUPLE], message="You must enter a valid country."),
     ])
