@@ -5,14 +5,13 @@ from flask_login import LoginManager
 from flask_wtf.csrf import CSRFProtect
 
 import dmapiclient
-from dmutils import init_app, flask_featureflags
+from dmutils import init_app
 from dmutils.user import User
 
 from config import configs
 
 data_api_client = dmapiclient.DataAPIClient()
 login_manager = LoginManager()
-feature_flags = flask_featureflags.FeatureFlag()
 csrf = CSRFProtect()
 
 
@@ -29,7 +28,6 @@ def create_app(config_name):
         application,
         configs[config_name],
         data_api_client=data_api_client,
-        feature_flags=feature_flags,
         login_manager=login_manager,
     )
 
