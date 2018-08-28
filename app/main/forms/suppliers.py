@@ -232,6 +232,8 @@ class CompanyTradingStatusForm(FlaskForm):
         },
     ]
 
-    trading_status = RadioField('Trading status',
-                                validators=[InputRequired(message="You must choose a trading status.")],
-                                choices=[(o['value'], o['label']) for o in OPTIONS])
+    trading_status = DMRadioField(
+        "What’s your trading status?",
+        hint="This information will be used to find out about the types of companies on frameworks.",
+        validators=[InputRequired(message="You must choose a trading status.")],
+        options=OPTIONS)

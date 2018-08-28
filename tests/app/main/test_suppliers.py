@@ -2687,7 +2687,7 @@ class TestSupplierEditTradingStatus(BaseApplicationTest):
         assert error[0].text.strip() == expected_error, 'The validation message is not as anticipated.'
 
         self.assert_single_question_page_validation_errors(res,
-                                                           question_name="Trading status",
+                                                           question_name="What’s your trading status?",
                                                            validation_message=expected_error)
 
     @pytest.mark.parametrize('trading_status', (None, 'limited company (LTD)', 'other'))

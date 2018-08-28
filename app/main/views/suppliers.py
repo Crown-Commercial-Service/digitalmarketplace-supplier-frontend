@@ -416,7 +416,13 @@ def edit_supplier_organisation_size():
 @main.route('/trading-status/edit', methods=['GET', 'POST'])
 @login_required
 def edit_supplier_trading_status():
-    form = CompanyTradingStatusForm()
+
+    prefill_data = {}
+    if request.method == "GET":
+        supplier = data_api_client.get_supplier(current_user.supplier_id)['suppliers']
+        prefill_data = {"trading_status": supplier.get("tradingStatus")}
+
+    form = CompanyTradingStatusForm(data=prefill_data)
 
     if request.method == 'POST':
         if form.validate_on_submit():
@@ -432,16 +438,6 @@ def edit_supplier_trading_status():
                 'tstatus': form.trading_status.data,
                 'tstatus_errors': ",".join(form.trading_status.errors)
             })
-
-    else:
-        supplier = data_api_client.get_supplier(current_user.supplier_id)['suppliers']
-
-        prefill_trading_status = None
-        if supplier.get('tradingStatus'):
-            if supplier['tradingStatus'] in map(lambda x: x['value'], form.OPTIONS):
-                prefill_trading_status = supplier['tradingStatus']
-
-        form.trading_status.data = prefill_trading_status
 
     errors = get_errors_from_wtform(form)
 
