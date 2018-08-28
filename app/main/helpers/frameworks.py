@@ -4,8 +4,8 @@ from functools import wraps
 from itertools import chain, islice, groupby
 import re
 
-from flask import abort, render_template, request
-from flask_login import current_user, current_app
+from flask import abort, current_app, render_template, request
+from flask_login import current_user
 
 from dmapiclient import APIError, HTTPError
 from dmutils.dates import update_framework_with_formatted_dates
@@ -418,7 +418,7 @@ class EnsureApplicationCompanyDetailsHaveBeenConfirmed:
             current_app.logger.error("Required parameter `framework_slug` is undefined for the calling view.")
             abort(500, "There was a problem accessing this page of your application. Please try again later.")
 
-        if current_user.is_authenticated() and current_user.supplier_id:
+        if current_user.is_authenticated and current_user.supplier_id:
             supplier_framework = self.data_api_client.get_supplier_framework_info(
                 current_user.supplier_id, kwargs['framework_slug']
             )['frameworkInterest']
