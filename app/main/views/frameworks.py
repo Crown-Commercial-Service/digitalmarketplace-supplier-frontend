@@ -1114,7 +1114,9 @@ def contract_review(framework_slug, agreement_id):
     agreements_bucket = s3.S3(current_app.config['DM_AGREEMENTS_BUCKET'])
     signature_page = agreements_bucket.get_key(agreement['signedAgreementPath'])
 
-    form = ContractReviewForm()
+    supplier_registered_name = get_supplier_registered_name_from_declaration(supplier_framework['declaration'])
+
+    form = ContractReviewForm(supplier_registered_name=supplier_registered_name)
 
     if form.validate_on_submit():
         data_api_client.sign_framework_agreement(
@@ -1160,10 +1162,6 @@ def contract_review(framework_slug, agreement_id):
 
         return redirect(url_for(".framework_dashboard", framework_slug=framework_slug))
 
-    form.authorisation.description = u"I have the authority to return this agreement on behalf of {}.".format(
-        get_supplier_registered_name_from_declaration(supplier_framework['declaration'])
-    )
-
     errors = get_errors_from_wtform(form)
 
     return render_template(
@@ -1174,7 +1172,7 @@ def contract_review(framework_slug, agreement_id):
         framework=framework,
         signature_page=signature_page,
         supplier_framework=supplier_framework,
-        supplier_registered_name=get_supplier_registered_name_from_declaration(supplier_framework['declaration']),
+        supplier_registered_name=supplier_registered_name,
     ), 400 if errors else 200
 
 

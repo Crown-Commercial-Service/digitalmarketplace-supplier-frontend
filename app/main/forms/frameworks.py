@@ -2,7 +2,7 @@ from flask_wtf import FlaskForm
 from wtforms import BooleanField, HiddenField
 from wtforms.validators import DataRequired, InputRequired, Length
 
-from dmutils.forms.fields import DMStripWhitespaceStringField
+from dmutils.forms.fields import DMBooleanField, DMStripWhitespaceStringField
 
 
 class SignerDetailsForm(FlaskForm):
@@ -25,10 +25,16 @@ class SignerDetailsForm(FlaskForm):
 
 
 class ContractReviewForm(FlaskForm):
-    authorisation = BooleanField(
-        'Authorisation',
-        validators=[DataRequired(message="You must confirm you have the authority to return the agreement.")]
+    authorisation = DMBooleanField(
+        "I have the authority to return this agreement on behalf of {supplier_registered_name}",
+        validators=[DataRequired(message="You must confirm you have the authority to return the agreement.")],
     )
+
+    def __init__(self, supplier_registered_name, **kwargs):
+        super().__init__(**kwargs)
+        self.authorisation.question = self.authorisation.question.format(
+            supplier_registered_name=supplier_registered_name
+        )
 
 
 class AcceptAgreementVariationForm(FlaskForm):

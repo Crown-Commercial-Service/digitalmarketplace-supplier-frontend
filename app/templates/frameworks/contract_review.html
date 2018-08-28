@@ -80,18 +80,8 @@
 
     <form method="POST" action="{{ url_for('.contract_review', framework_slug=framework.slug, agreement_id=agreement.id) }}">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-        {%
-          with
-          type = "checkbox",
-          name = "authorisation",
-          question = form.authorisation.label,
-          options = [{
-              "label": form.authorisation.description,
-          }],
-          error=errors.get("authorisation", {}).get("message", None)
-        %}
-          {% include "toolkit/forms/selection-buttons.html" %}
-        {% endwith %}
+
+        {{ form.authorisation }}
 
         {%
           with
