@@ -393,6 +393,7 @@ def edit_supplier_organisation_size():
 
             return redirect(url_for('.supplier_details'))
 
+        # TODO: see if we can remove this
         current_app.logger.warning(
             "supplieredit.fail: organisation-size:{osize}, errors:{osize_errors}",
             extra={

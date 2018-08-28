@@ -2,7 +2,7 @@ from flask_wtf import FlaskForm
 from wtforms import RadioField
 from wtforms.validators import AnyOf, InputRequired, Length, Optional, Regexp, ValidationError
 
-from dmutils.forms.fields import DMStripWhitespaceStringField, DMEmailField
+from dmutils.forms.fields import DMStripWhitespaceStringField, DMEmailField, DMRadioField
 from dmutils.forms.validators import EmailValidator
 from dmutils.forms.widgets import DMTextArea
 from ..helpers.suppliers import COUNTRY_TUPLE
@@ -192,9 +192,12 @@ class CompanyOrganisationSizeForm(FlaskForm):
         },
     ]
 
-    organisation_size = RadioField('Organisation size',
-                                   validators=[InputRequired(message="You must choose an organisation size.")],
-                                   choices=[(o['value'], o['label']) for o in OPTIONS])
+    organisation_size = DMRadioField(
+        "What size is your organisation?",
+        hint="This information will be used to report on the number of contracts that go"
+        " to small and medium sized enterprises (SMEs).",
+        validators=[InputRequired(message="You must choose an organisation size.")],
+        options=OPTIONS)
 
 
 class CompanyTradingStatusForm(FlaskForm):

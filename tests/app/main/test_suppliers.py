@@ -2527,7 +2527,7 @@ class TestSupplierEditOrganisationSize(BaseApplicationTest):
 
         self.assert_single_question_page_validation_errors(
             res,
-            question_name="Organisation size",
+            question_name="What size is your organisation?",
             validation_message=expected_error
         )
 
