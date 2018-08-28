@@ -6,18 +6,21 @@ from dmutils.forms.fields import DMStripWhitespaceStringField
 
 
 class SignerDetailsForm(FlaskForm):
-    signerName = DMStripWhitespaceStringField('Full name', validators=[
-        DataRequired(message="You must provide the full name of the person signing on behalf of the company."),
-        Length(max=255, message="You must provide a name under 256 characters.")
-    ])
+    signerName = DMStripWhitespaceStringField(
+        "Full name",
+        validators=[
+            DataRequired(message="You must provide the full name of the person signing on behalf of the company."),
+            Length(max=255, message="You must provide a name under 256 characters."),
+        ],
+    )
     signerRole = DMStripWhitespaceStringField(
-        'Role at the company',
+        "Role at the company",
+        hint="The person signing must have the authority to agree to the framework terms,"
+             " eg director or company secretary.",
         validators=[
             DataRequired(message="You must provide the role of the person signing on behalf of the company."),
-            Length(max=255, message="You must provide a role under 256 characters.")
+            Length(max=255, message="You must provide a role under 256 characters."),
         ],
-        description='The person signing must have the authority to agree to the framework terms, '
-                    'eg director or company secretary.'
     )
 
 

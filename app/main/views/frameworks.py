@@ -25,7 +25,7 @@ from dmutils.email.exceptions import EmailError
 from dmutils.email.helpers import hash_string
 from dmutils.flask import timed_render_template as render_template
 from dmutils.formats import datetimeformat, monthyearformat
-from dmutils.forms.helpers import get_errors_from_wtform
+from dmutils.forms.helpers import get_errors_from_wtform, remove_csrf_token
 
 from ... import data_api_client
 from ...main import main, content_loader
@@ -988,15 +988,13 @@ def signer_details(framework_slug, agreement_id):
     agreement = data_api_client.get_framework_agreement(agreement_id)['agreement']
     check_agreement_is_related_to_supplier_framework_or_abort(agreement, supplier_framework)
 
-    form = SignerDetailsForm()
+    prefill_data = agreement.get("signedAgreementDetails", {})
 
-    question_keys = ['signerName', 'signerRole']
+    form = SignerDetailsForm(data=prefill_data)
 
     if form.validate_on_submit():
         agreement_details = {
-            "signedAgreementDetails": {
-                question_key: form[question_key].data for question_key in question_keys
-            }
+            "signedAgreementDetails": remove_csrf_token(form.data)
         }
         data_api_client.update_framework_agreement(
             agreement_id, agreement_details, current_user.email_address
@@ -1009,12 +1007,6 @@ def signer_details(framework_slug, agreement_id):
 
         return redirect(url_for(".signature_upload", framework_slug=framework_slug, agreement_id=agreement_id))
 
-    # if the signer* keys exist, prefill them in the form
-    if agreement.get('signedAgreementDetails'):
-        for question_key in question_keys:
-            if question_key in agreement['signedAgreementDetails']:
-                form[question_key].data = agreement['signedAgreementDetails'][question_key]
-
     errors = get_errors_from_wtform(form)
 
     return render_template(
@@ -1023,7 +1015,6 @@ def signer_details(framework_slug, agreement_id):
         form=form,
         errors=errors,
         framework=framework,
-        question_keys=question_keys,
         supplier_framework=supplier_framework,
         supplier_registered_name=get_supplier_registered_name_from_declaration(supplier_framework['declaration']),
     ), 400 if errors else 200
