@@ -1,8 +1,8 @@
 # coding=utf-8
 from itertools import chain
 
-from flask import request, redirect, url_for, abort, session, Markup, flash
-from flask_login import current_user, current_app
+from flask import current_app, request, redirect, url_for, abort, session, Markup, flash
+from flask_login import current_user
 
 from dmapiclient.audit import AuditTypes
 from dmcontent.content_loader import ContentNotFoundError

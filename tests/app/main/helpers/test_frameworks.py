@@ -677,7 +677,7 @@ class TestEnsureApplicationCompanyDetailsHaveBeenConfirmed(BaseApplicationTest):
         )
 
         with mock.patch('app.main.helpers.frameworks.current_user') as current_user_patch:
-            current_user_patch.is_authenticated.return_value = True
+            current_user_patch.return_value.is_authenticated = True
             current_user_patch.supplier_id.return_value = 1
 
             with pytest.raises(HTTPException) as e:
@@ -694,7 +694,7 @@ class TestEnsureApplicationCompanyDetailsHaveBeenConfirmed(BaseApplicationTest):
         )
 
         with mock.patch('app.main.helpers.frameworks.current_user') as current_user_patch:
-            current_user_patch.is_authenticated.return_value = True
+            current_user_patch.return_value.is_authenticated = True
             current_user_patch.supplier_id.return_value = 1
 
             assert decorator.validator(framework_slug='g-cloud-10') is True
