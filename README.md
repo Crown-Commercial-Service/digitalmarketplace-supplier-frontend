@@ -10,11 +10,6 @@ Frontend supplier application for the digital marketplace.
 
 ## Quickstart
 
-Install [Virtualenv](https://virtualenv.pypa.io/en/latest/)
-```
-sudo easy_install virtualenv
-```
-
 Install dependencies, build assets and run the app
 ```
 make run-all
@@ -24,14 +19,9 @@ Debian (jessie) users will need `libxslt1-dev` and `libxml2-dev` installed for `
 
 ## Full setup
 
-Install [Virtualenv](https://virtualenv.pypa.io/en/latest/)
-```
-sudo easy_install virtualenv
-```
-
 Create a virtual environment
  ```
- virtualenv -p python3 ./venv
+ python3 -m venv ./venv
  ```
 
 ### Activate the virtual environment
