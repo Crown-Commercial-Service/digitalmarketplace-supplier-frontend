@@ -30,9 +30,9 @@ class Config(object):
     DM_COMPANY_DETAILS_CHANGE_EMAIL = 'cloud_digital@crowncommercial.gov.uk'
 
     NOTIFY_TEMPLATES = {
-        'create_user_account': '1d1e38a6-744a-4d5a-84af-aefccde70a6c',
-        'invite_contributor': '1cca85e8-d647-46e6-9c0d-6af90b9e69b0',
-        'confirmation_of_clarification_question': '1a8a3408-49ef-486f-a6c9-8557d1a0dc63',
+        "confirmation_of_clarification_question": "1a8a3408-49ef-486f-a6c9-8557d1a0dc63",
+        "create_user_account": "84f5d812-df9d-4ab8-804a-06f64f5abd30",
+        "invite_contributor": "5eefe42d-1694-4388-8908-991cdfba0a71",
     }
 
     DM_AGREEMENTS_BUCKET = None
@@ -156,23 +156,12 @@ class Preview(Live):
     pass
 
 
+class Staging(Live):
+    WTF_CSRF_ENABLED = False
+
+
 class Production(Live):
     pass
-
-
-class Production(Live): # noqa
-    NOTIFY_TEMPLATES = {
-        'create_user_account': '84f5d812-df9d-4ab8-804a-06f64f5abd30',
-        'invite_contributor': '5eefe42d-1694-4388-8908-991cdfba0a71',
-        'confirmation_of_clarification_question': '1a8a3408-49ef-486f-a6c9-8557d1a0dc63',
-    }
-
-    # Check we didn't forget any live template IDs
-    assert NOTIFY_TEMPLATES.keys() == Config.NOTIFY_TEMPLATES.keys()
-
-
-class Staging(Production):
-    WTF_CSRF_ENABLED = False
 
 
 configs = {
