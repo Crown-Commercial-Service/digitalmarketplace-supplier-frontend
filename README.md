@@ -126,11 +126,6 @@ make freeze-requirements
 
 `requirements.txt` should be commited alongside `requirements-app.txt` changes.
 
-### Using FeatureFlags
-
-To use feature flags, check out the documentation in (the README of)
-[digitalmarketplace-utils](https://github.com/alphagov/digitalmarketplace-utils#using-featureflags).
-
 ### Configuring boto
 
 [boto](https://github.com/boto/boto) provides a Python interface to Amazon Web Services; it's what we're using to download from and upload to our s3 buckets.
