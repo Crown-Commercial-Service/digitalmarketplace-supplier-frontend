@@ -19,7 +19,7 @@ from dmutils.documents import (
     degenerate_document_path_and_return_doc_name, get_signed_url, get_extension, file_is_less_than_5mb,
     file_is_empty, file_is_image, file_is_pdf, sanitise_supplier_name
 )
-from dmutils.email.dm_mandrill import send_email as mandrill_send_email
+from dmutils.email.dm_mandrill import DMMandrillClient
 from dmutils.email.dm_notify import DMNotifyClient
 from dmutils.email.exceptions import EmailError
 from dmutils.email.helpers import hash_string
@@ -90,12 +90,13 @@ def framework_dashboard(framework_slug):
         register_interest_in_framework(data_api_client, framework_slug)
         supplier_users = data_api_client.find_users_iter(supplier_id=current_user.supplier_id)
 
+        mandrill_client = DMMandrillClient()
+        email_body = render_template(
+            f'emails/{framework["framework"]}_application_started.html',
+            framework=framework
+        )
         try:
-            email_body = render_template(
-                f'emails/{framework["framework"]}_application_started.html',
-                framework=framework)
-
-            mandrill_send_email(
+            mandrill_client.send_email(
                 [user['emailAddress'] for user in supplier_users if user['active']],
                 email_body,
                 current_app.config['DM_MANDRILL_API_KEY'],
@@ -753,8 +754,9 @@ def framework_updates_email_clarification_question(framework_slug):
         )
         tags = ["application-question"]
 
+    mandrill_client = DMMandrillClient()
     try:
-        mandrill_send_email(
+        mandrill_client.send_email(
             to_address,
             email_body,
             current_app.config['DM_MANDRILL_API_KEY'],
@@ -930,15 +932,16 @@ def upload_framework_agreement(framework_slug):
         agreement_id, current_user.email_address, {"uploaderUserId": current_user.id}
     )
 
+    mandrill_client = DMMandrillClient()
+    email_body = render_template(
+        'emails/framework_agreement_uploaded.html',
+        framework_name=framework['name'],
+        supplier_name=current_user.supplier_name,
+        supplier_id=current_user.supplier_id,
+        user_name=current_user.name
+    )
     try:
-        email_body = render_template(
-            'emails/framework_agreement_uploaded.html',
-            framework_name=framework['name'],
-            supplier_name=current_user.supplier_name,
-            supplier_id=current_user.supplier_id,
-            user_name=current_user.name
-        )
-        mandrill_send_email(
+        mandrill_client.send_email(
             current_app.config['DM_FRAMEWORK_AGREEMENTS_EMAIL'],
             email_body,
             current_app.config['DM_MANDRILL_API_KEY'],
@@ -1130,14 +1133,14 @@ def contract_review(framework_slug, agreement_id):
             agreement_id, current_user.email_address, {'uploaderUserId': current_user.id}
         )
 
+        mandrill_client = DMMandrillClient()
+        email_body = render_template(
+            'emails/framework_agreement_with_framework_version_returned.html',
+            framework_name=framework['name'],
+            framework_slug=framework['slug'],
+        )
         try:
-            email_body = render_template(
-                'emails/framework_agreement_with_framework_version_returned.html',
-                framework_name=framework['name'],
-                framework_slug=framework['slug'],
-            )
-
-            mandrill_send_email(
+            mandrill_client.send_email(
                 returned_agreement_email_recipients(supplier_framework),
                 email_body,
                 current_app.config['DM_MANDRILL_API_KEY'],
@@ -1225,11 +1228,12 @@ def view_contract_variation(framework_slug, variation_slug):
         )
 
         # Send email confirming accepted
+        mandrill_client = DMMandrillClient()
+        email_body = render_template(
+            'emails/{}_variation_{}_agreed.html'.format(framework_slug, variation_slug)
+        )
         try:
-            email_body = render_template(
-                'emails/{}_variation_{}_agreed.html'.format(framework_slug, variation_slug)
-            )
-            mandrill_send_email(
+            mandrill_client.send_email(
                 returned_agreement_email_recipients(supplier_framework),
                 email_body,
                 current_app.config['DM_MANDRILL_API_KEY'],
