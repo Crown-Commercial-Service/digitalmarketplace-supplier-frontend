@@ -3716,7 +3716,7 @@ class TestSendClarificationQuestionEmail(BaseApplicationTest):
             notify_send_email.assert_any_call(
                 mock.ANY,  # DMNotifyClient
                 "email@email.com",
-                template_id=mock.ANY,
+                template_name_or_id=mock.ANY,
                 personalisation={'user_name': 'Năme', 'framework_name': 'Test Framework',
                                  'clarification_question_text': clarification_question},
                 reference=mock.ANY,

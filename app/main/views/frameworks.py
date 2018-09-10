@@ -791,7 +791,7 @@ def framework_updates_email_clarification_question(framework_slug):
         try:
             notify_client.send_email(
                 current_user.email_address,
-                template_id=current_app.config['NOTIFY_TEMPLATES']['confirmation_of_clarification_question'],
+                template_name_or_id=current_app.config['NOTIFY_TEMPLATES']['confirmation_of_clarification_question'],
                 personalisation=confirmation_email_personalisation,
                 reference='clarification-question-confirm-{}'.format(hash_string(current_user.email_address))
             )
