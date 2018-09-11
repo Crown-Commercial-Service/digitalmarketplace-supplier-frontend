@@ -159,7 +159,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
 
         assert res.status_code == 404
 
-    @mock.patch('app.main.views.frameworks.mandrill_send_email')
+    @mock.patch('app.main.views.frameworks.DMMandrillClient.send_email')
     def test_interest_registered_in_framework_on_post(self, mandrill_send_email, s3):
         self.login()
 
@@ -174,7 +174,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
             "email@email.com"
         )
 
-    @mock.patch('app.main.views.frameworks.mandrill_send_email')
+    @mock.patch('app.main.views.frameworks.DMMandrillClient.send_email')
     @mock.patch('app.main.views.frameworks.render_template', wraps=frameworks_render_template)
     def test_email_sent_when_interest_registered_in_framework(self, render_template, mandrill_send_email, s3):
         self.login()
@@ -1825,7 +1825,7 @@ class TestFrameworkAgreement(BaseApplicationTest):
 
 
 @mock.patch('dmutils.s3.S3')
-@mock.patch('app.main.views.frameworks.mandrill_send_email')
+@mock.patch('app.main.views.frameworks.DMMandrillClient.send_email')
 class TestFrameworkAgreementUpload(BaseApplicationTest):
 
     def setup_method(self, method):
@@ -3673,7 +3673,7 @@ class TestFrameworkUpdatesPage(BaseApplicationTest):
 
 @mock.patch('dmutils.s3.S3')
 @mock.patch('app.main.views.frameworks.DMNotifyClient.send_email', autospec=True)
-@mock.patch('app.main.views.frameworks.mandrill_send_email')
+@mock.patch('app.main.views.frameworks.DMMandrillClient.send_email')
 class TestSendClarificationQuestionEmail(BaseApplicationTest):
 
     def setup_method(self, method):
@@ -4710,7 +4710,7 @@ class TestSignatureUploadPage(BaseApplicationTest):
 
 @mock.patch("app.main.views.frameworks.return_supplier_framework_info_if_on_framework_or_abort")
 @mock.patch('dmutils.s3.S3')
-@mock.patch('app.main.views.frameworks.mandrill_send_email')
+@mock.patch('app.main.views.frameworks.DMMandrillClient.send_email')
 class TestContractReviewPage(BaseApplicationTest):
 
     def setup_method(self, method):
@@ -5300,7 +5300,7 @@ class TestContractVariation(BaseApplicationTest):
             1234, 'g-cloud-8', '1', 123, 'email@email.com'
         )
 
-    @mock.patch('app.main.views.frameworks.mandrill_send_email')
+    @mock.patch('app.main.views.frameworks.DMMandrillClient.send_email')
     def test_email_is_sent_to_correct_users(self, mandrill_send_email):
         self.data_api_client.get_framework.return_value = self.g8_framework
         self.data_api_client.get_supplier_framework_info.return_value = self.good_supplier_framework
@@ -5319,7 +5319,7 @@ class TestContractVariation(BaseApplicationTest):
             ['g-cloud-8-variation-accepted']
         )
 
-    @mock.patch('app.main.views.frameworks.mandrill_send_email')
+    @mock.patch('app.main.views.frameworks.DMMandrillClient.send_email')
     def test_only_one_email_sent_if_user_is_framework_contact(self, mandrill_send_email):
         same_email_as_current_user = self.good_supplier_framework.copy()
         same_email_as_current_user['frameworkInterest']['declaration']['primaryContactEmail'] = 'email@email.com'
@@ -5355,7 +5355,7 @@ class TestContractVariation(BaseApplicationTest):
             doc.xpath('//p[@class="banner-message"][contains(text(), "You have accepted the proposed changes.")]')
         ) == 1, res.get_data(as_text=True)
 
-    @mock.patch('app.main.views.frameworks.mandrill_send_email')
+    @mock.patch('app.main.views.frameworks.DMMandrillClient.send_email')
     def test_api_is_not_called_and_no_email_sent_for_subsequent_posts(self, mandrill_send_email):
         already_agreed = self.good_supplier_framework.copy()
         already_agreed['frameworkInterest']['agreedVariations'] = {
