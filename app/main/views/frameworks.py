@@ -97,13 +97,12 @@ def framework_dashboard(framework_slug):
         )
         try:
             mandrill_client.send_email(
-                [user['emailAddress'] for user in supplier_users if user['active']],
-                email_body,
-                current_app.config['DM_MANDRILL_API_KEY'],
-                'You started a {} application'.format(framework['name']),
-                current_app.config['DM_ENQUIRIES_EMAIL_ADDRESS'],
-                current_app.config['CLARIFICATION_EMAIL_NAME'],
-                ['{}-application-started'.format(framework_slug)]
+                to_email_addresses=[user['emailAddress'] for user in supplier_users if user['active']],
+                email_body=email_body,
+                subject='You started a {} application'.format(framework['name']),
+                from_email_address=current_app.config['DM_ENQUIRIES_EMAIL_ADDRESS'],
+                from_name=current_app.config['CLARIFICATION_EMAIL_NAME'],
+                tags=['{}-application-started'.format(framework_slug)],
             )
         except EmailError as e:
             current_app.logger.error(
@@ -757,13 +756,12 @@ def framework_updates_email_clarification_question(framework_slug):
     mandrill_client = DMMandrillClient()
     try:
         mandrill_client.send_email(
-            to_address,
-            email_body,
-            current_app.config['DM_MANDRILL_API_KEY'],
-            subject,
-            current_app.config["DM_ENQUIRIES_EMAIL_ADDRESS"],
-            "{} Supplier".format(framework['name']),
-            tags,
+            to_email_addresses=to_address,
+            email_body=email_body,
+            subject=subject,
+            from_email_address=current_app.config["DM_ENQUIRIES_EMAIL_ADDRESS"],
+            from_name="{} Supplier".format(framework['name']),
+            tags=tags,
             reply_to=from_address,
         )
     except EmailError as e:
@@ -942,13 +940,12 @@ def upload_framework_agreement(framework_slug):
     )
     try:
         mandrill_client.send_email(
-            current_app.config['DM_FRAMEWORK_AGREEMENTS_EMAIL'],
-            email_body,
-            current_app.config['DM_MANDRILL_API_KEY'],
-            '{} framework agreement'.format(framework['name']),
-            current_app.config["DM_ENQUIRIES_EMAIL_ADDRESS"],
-            '{} Supplier'.format(framework['name']),
-            ['{}-framework-agreement'.format(framework_slug)],
+            to_email_addresses=current_app.config['DM_FRAMEWORK_AGREEMENTS_EMAIL'],
+            email_body=email_body,
+            subject='{} framework agreement'.format(framework['name']),
+            from_email_address=current_app.config["DM_ENQUIRIES_EMAIL_ADDRESS"],
+            from_name='{} Supplier'.format(framework['name']),
+            tags=['{}-framework-agreement'.format(framework_slug)],
             reply_to=current_user.email_address,
         )
     except EmailError as e:
@@ -1141,13 +1138,12 @@ def contract_review(framework_slug, agreement_id):
         )
         try:
             mandrill_client.send_email(
-                returned_agreement_email_recipients(supplier_framework),
-                email_body,
-                current_app.config['DM_MANDRILL_API_KEY'],
-                'Your {} signature page has been received'.format(framework['name']),
-                current_app.config["DM_ENQUIRIES_EMAIL_ADDRESS"],
-                current_app.config["FRAMEWORK_AGREEMENT_RETURNED_NAME"],
-                ['{}-framework-agreement'.format(framework_slug)],
+                to_email_addresses=returned_agreement_email_recipients(supplier_framework),
+                email_body=email_body,
+                subject='Your {} signature page has been received'.format(framework['name']),
+                from_email_address=current_app.config["DM_ENQUIRIES_EMAIL_ADDRESS"],
+                from_name=current_app.config["FRAMEWORK_AGREEMENT_RETURNED_NAME"],
+                tags=['{}-framework-agreement'.format(framework_slug)],
             )
         except EmailError as e:
             current_app.logger.error(
@@ -1234,13 +1230,12 @@ def view_contract_variation(framework_slug, variation_slug):
         )
         try:
             mandrill_client.send_email(
-                returned_agreement_email_recipients(supplier_framework),
-                email_body,
-                current_app.config['DM_MANDRILL_API_KEY'],
-                '{}: you have accepted the proposed contract variation'.format(framework['name']),
-                current_app.config['DM_ENQUIRIES_EMAIL_ADDRESS'],
-                current_app.config['CLARIFICATION_EMAIL_NAME'],
-                ['{}-variation-accepted'.format(framework_slug)]
+                to_email_addresses=returned_agreement_email_recipients(supplier_framework),
+                email_body=email_body,
+                subject='{}: you have accepted the proposed contract variation'.format(framework['name']),
+                from_email_address=current_app.config['DM_ENQUIRIES_EMAIL_ADDRESS'],
+                from_name=current_app.config['CLARIFICATION_EMAIL_NAME'],
+                tags=['{}-variation-accepted'.format(framework_slug)]
             )
         except EmailError as e:
             current_app.logger.error(
