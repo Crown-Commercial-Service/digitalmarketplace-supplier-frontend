@@ -38,11 +38,8 @@ class ContractReviewForm(FlaskForm):
 
 
 class AcceptAgreementVariationForm(FlaskForm):
-    accept_changes = BooleanField(
-        'I accept these changes',
-        validators=[
-            DataRequired(message="You need to accept these changes to continue.")
-        ]
+    accept_changes = DMBooleanField(
+        "I accept these changes", validators=[DataRequired(message="You need to accept these changes to continue.")]
     )
 
 
