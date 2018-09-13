@@ -357,6 +357,7 @@ def framework_start_supplier_declaration(framework_slug):
                            framework=framework), 200
 
 
+# TODO: refactor this view to combine with reuse_framework_supplier_declaration_post
 @main.route('/frameworks/<framework_slug>/declaration/reuse', methods=['GET'])
 @login_required
 @EnsureApplicationCompanyDetailsHaveBeenConfirmed(data_api_client)

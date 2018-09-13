@@ -50,10 +50,11 @@ class ReuseDeclarationForm(FlaskForm):
     `old_framework` is a hidden field allowing us to pass back the framework slug of the framework they are choosing to
     reuse.
     """
-    reuse = BooleanField(
-        'Do you want to reuse the answers from your earlier declaration?',
-        false_values={'False', 'false', ''},
-        validators=[InputRequired(message='You must answer this question.')]
+
+    reuse = DMBooleanField(
+        "Do you want to reuse the answers from your earlier declaration?",
+        false_values=("False", "false", ""),
+        validators=[InputRequired(message="You must answer this question.")],
     )
     old_framework_slug = HiddenField()
 
