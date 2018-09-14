@@ -159,7 +159,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
 
         assert res.status_code == 404
 
-    @mock.patch('app.main.views.frameworks.mandrill_send_email')
+    @mock.patch('app.main.views.frameworks.DMMandrillClient.send_email', autospec=True)
     def test_interest_registered_in_framework_on_post(self, mandrill_send_email, s3):
         self.login()
 
@@ -174,7 +174,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
             "email@email.com"
         )
 
-    @mock.patch('app.main.views.frameworks.mandrill_send_email')
+    @mock.patch('app.main.views.frameworks.DMMandrillClient.send_email', autospec=True)
     @mock.patch('app.main.views.frameworks.render_template', wraps=frameworks_render_template)
     def test_email_sent_when_interest_registered_in_framework(self, render_template, mandrill_send_email, s3):
         self.login()
@@ -194,15 +194,8 @@ class TestFrameworksDashboard(BaseApplicationTest):
         assert render_template.call_args_list[0][0] == ('emails/g-cloud_application_started.html', )
         assert set(render_template.call_args_list[0][1].keys()) == {'framework'}
 
-        mandrill_send_email.assert_called_once_with(
-            ['email1', 'email2'],
-            mock.ANY,
-            'MANDRILL',
-            'You started a G-Cloud 7 application',
-            'enquiries@digitalmarketplace.service.gov.uk',
-            'Digital Marketplace Admin',
-            ['g-cloud-7-application-started']
-        )
+        assert mandrill_send_email.call_count == 1
+        assert mandrill_send_email.call_args[1]["to_email_addresses"] == ["email1", "email2"]
 
     def test_interest_not_registered_in_framework_on_get(self, s3):
         self.login()
@@ -1825,7 +1818,7 @@ class TestFrameworkAgreement(BaseApplicationTest):
 
 
 @mock.patch('dmutils.s3.S3')
-@mock.patch('app.main.views.frameworks.mandrill_send_email')
+@mock.patch('app.main.views.frameworks.DMMandrillClient.send_email', autospec=True)
 class TestFrameworkAgreementUpload(BaseApplicationTest):
 
     def setup_method(self, method):
@@ -3673,7 +3666,7 @@ class TestFrameworkUpdatesPage(BaseApplicationTest):
 
 @mock.patch('dmutils.s3.S3')
 @mock.patch('app.main.views.frameworks.DMNotifyClient.send_email', autospec=True)
-@mock.patch('app.main.views.frameworks.mandrill_send_email')
+@mock.patch('app.main.views.frameworks.DMMandrillClient.send_email', autospec=True)
 class TestSendClarificationQuestionEmail(BaseApplicationTest):
 
     def setup_method(self, method):
@@ -3702,13 +3695,13 @@ class TestSendClarificationQuestionEmail(BaseApplicationTest):
 
         if is_called:
             mandrill_send_email.assert_any_call(
-                "digitalmarketplace@mailinator.com",
-                FakeMail('Supplier ID:'),
-                "MANDRILL",
-                "Test Framework clarification question",
-                "enquiries@digitalmarketplace.service.gov.uk",
-                "Test Framework Supplier",
-                ["clarification-question"],
+                mock.ANY,  # self
+                to_email_addresses="digitalmarketplace@mailinator.com",
+                from_email_address="enquiries@digitalmarketplace.service.gov.uk",
+                from_name="Test Framework Supplier",
+                subject="Test Framework clarification question",
+                email_body=FakeMail('Supplier ID:'),
+                tags=["clarification-question"],
                 reply_to="enquiries@digitalmarketplace.service.gov.uk",
             )
 
@@ -3716,7 +3709,7 @@ class TestSendClarificationQuestionEmail(BaseApplicationTest):
             notify_send_email.assert_any_call(
                 mock.ANY,  # DMNotifyClient
                 "email@email.com",
-                template_id=mock.ANY,
+                template_name_or_id=mock.ANY,
                 personalisation={'user_name': 'Năme', 'framework_name': 'Test Framework',
                                  'clarification_question_text': clarification_question},
                 reference=mock.ANY,
@@ -3731,13 +3724,13 @@ class TestSendClarificationQuestionEmail(BaseApplicationTest):
 
         if succeeds:
             mandrill_send_email.assert_called_with(
-                "digitalmarketplace@mailinator.com",
-                FakeMail(*email_body_content),
-                "MANDRILL",
-                "Test Framework application question",
-                "enquiries@digitalmarketplace.service.gov.uk",
-                "Test Framework Supplier",
-                ["application-question"],
+                mock.ANY,  # self
+                to_email_addresses="digitalmarketplace@mailinator.com",
+                from_email_address="enquiries@digitalmarketplace.service.gov.uk",
+                from_name="Test Framework Supplier",
+                subject="Test Framework application question",
+                email_body=FakeMail(*email_body_content),
+                tags=["application-question"],
                 reply_to="email@email.com",
             )
 
@@ -4710,7 +4703,7 @@ class TestSignatureUploadPage(BaseApplicationTest):
 
 @mock.patch("app.main.views.frameworks.return_supplier_framework_info_if_on_framework_or_abort")
 @mock.patch('dmutils.s3.S3')
-@mock.patch('app.main.views.frameworks.mandrill_send_email')
+@mock.patch('app.main.views.frameworks.DMMandrillClient.send_email', autospec=True)
 class TestContractReviewPage(BaseApplicationTest):
 
     def setup_method(self, method):
@@ -4898,13 +4891,13 @@ class TestContractReviewPage(BaseApplicationTest):
 
         # Delcaration primaryContactEmail and current_user.email_address are different so expect two recipients
         mandrill_send_email.assert_called_once_with(
-            ['email2@email.com', 'email@email.com'],
-            mock.ANY,
-            'MANDRILL',
-            'Your G-Cloud 8 signature page has been received',
-            'enquiries@digitalmarketplace.service.gov.uk',
-            'Digital Marketplace Admin',
-            ['g-cloud-8-framework-agreement']
+            mock.ANY,  # self
+            to_email_addresses=['email2@email.com', 'email@email.com'],
+            email_body=mock.ANY,
+            subject='Your G-Cloud 8 signature page has been received',
+            from_email_address='enquiries@digitalmarketplace.service.gov.uk',
+            from_name='Digital Marketplace Admin',
+            tags=['g-cloud-8-framework-agreement']
         )
 
         # Check 'signature_page' has been removed from session
@@ -4937,13 +4930,13 @@ class TestContractReviewPage(BaseApplicationTest):
         )
 
         mandrill_send_email.assert_called_once_with(
-            ['email@email.com'],
-            mock.ANY,
-            'MANDRILL',
-            'Your G-Cloud 8 signature page has been received',
-            'enquiries@digitalmarketplace.service.gov.uk',
-            'Digital Marketplace Admin',
-            ['g-cloud-8-framework-agreement']
+            mock.ANY,  # self
+            to_email_addresses=['email@email.com'],
+            email_body=mock.ANY,
+            subject='Your G-Cloud 8 signature page has been received',
+            from_email_address='enquiries@digitalmarketplace.service.gov.uk',
+            from_name='Digital Marketplace Admin',
+            tags=['g-cloud-8-framework-agreement']
         )
 
     def test_return_503_response_if_mandrill_exception_raised_by_send_email(
@@ -5300,7 +5293,7 @@ class TestContractVariation(BaseApplicationTest):
             1234, 'g-cloud-8', '1', 123, 'email@email.com'
         )
 
-    @mock.patch('app.main.views.frameworks.mandrill_send_email')
+    @mock.patch('app.main.views.frameworks.DMMandrillClient.send_email', autospec=True)
     def test_email_is_sent_to_correct_users(self, mandrill_send_email):
         self.data_api_client.get_framework.return_value = self.g8_framework
         self.data_api_client.get_supplier_framework_info.return_value = self.good_supplier_framework
@@ -5310,16 +5303,16 @@ class TestContractVariation(BaseApplicationTest):
         )
 
         mandrill_send_email.assert_called_once_with(
-            ['bigboss@email.com', 'email@email.com'],
-            mock.ANY,
-            'MANDRILL',
-            'G-Cloud 8: you have accepted the proposed contract variation',
-            'enquiries@digitalmarketplace.service.gov.uk',
-            'Digital Marketplace Admin',
-            ['g-cloud-8-variation-accepted']
+            mock.ANY,  # self
+            to_email_addresses=['bigboss@email.com', 'email@email.com'],
+            email_body=mock.ANY,
+            subject='G-Cloud 8: you have accepted the proposed contract variation',
+            from_email_address='enquiries@digitalmarketplace.service.gov.uk',
+            from_name='Digital Marketplace Admin',
+            tags=['g-cloud-8-variation-accepted'],
         )
 
-    @mock.patch('app.main.views.frameworks.mandrill_send_email')
+    @mock.patch('app.main.views.frameworks.DMMandrillClient.send_email', autospec=True)
     def test_only_one_email_sent_if_user_is_framework_contact(self, mandrill_send_email):
         same_email_as_current_user = self.good_supplier_framework.copy()
         same_email_as_current_user['frameworkInterest']['declaration']['primaryContactEmail'] = 'email@email.com'
@@ -5331,13 +5324,13 @@ class TestContractVariation(BaseApplicationTest):
         )
 
         mandrill_send_email.assert_called_once_with(
-            ['email@email.com'],
-            mock.ANY,
-            'MANDRILL',
-            'G-Cloud 8: you have accepted the proposed contract variation',
-            'enquiries@digitalmarketplace.service.gov.uk',
-            'Digital Marketplace Admin',
-            ['g-cloud-8-variation-accepted']
+            mock.ANY,  # self
+            to_email_addresses=['email@email.com'],
+            email_body=mock.ANY,
+            subject='G-Cloud 8: you have accepted the proposed contract variation',
+            from_email_address='enquiries@digitalmarketplace.service.gov.uk',
+            from_name='Digital Marketplace Admin',
+            tags=['g-cloud-8-variation-accepted'],
         )
 
     def test_success_message_is_displayed_on_success(self):
@@ -5355,7 +5348,7 @@ class TestContractVariation(BaseApplicationTest):
             doc.xpath('//p[@class="banner-message"][contains(text(), "You have accepted the proposed changes.")]')
         ) == 1, res.get_data(as_text=True)
 
-    @mock.patch('app.main.views.frameworks.mandrill_send_email')
+    @mock.patch('app.main.views.frameworks.DMMandrillClient.send_email')
     def test_api_is_not_called_and_no_email_sent_for_subsequent_posts(self, mandrill_send_email):
         already_agreed = self.good_supplier_framework.copy()
         already_agreed['frameworkInterest']['agreedVariations'] = {
