@@ -1,8 +1,9 @@
 from flask_wtf import FlaskForm
-from wtforms import BooleanField, HiddenField
+from wtforms import HiddenField
 from wtforms.validators import DataRequired, InputRequired, Length
 
 from dmutils.forms.fields import DMBooleanField, DMStripWhitespaceStringField
+from dmutils.forms.widgets import DMSelectionButtonBase
 
 
 class SignerDetailsForm(FlaskForm):
@@ -61,12 +62,14 @@ class ReuseDeclarationForm(FlaskForm):
 
 class OneServiceLimitCopyServiceForm(FlaskForm):
 
+    copy_service = DMBooleanField(
+        "Do you want to reuse your previous {lot_name} service?",
+        question_advice="You still have to review your service and answer any new questions.",
+        false_values=("False", "false", ""),
+        validators=[InputRequired(message="You must answer this question.")],
+        widget=DMSelectionButtonBase(type="boolean"),
+    )
+
     def __init__(self, lot_name, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.copy_service.label.text = f"Do you want to reuse your previous {lot_name} service?"
-
-    copy_service = BooleanField(
-        'Do you want to reuse your previous service?',
-        false_values={'False', 'false', ''},
-        validators=[InputRequired(message='You must answer this question.')]
-    )
+        self.copy_service.question = self.copy_service.question.format(lot_name=lot_name)
