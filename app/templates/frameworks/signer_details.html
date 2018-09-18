@@ -38,20 +38,9 @@
 
     <form method="POST" action="{{ url_for('.signer_details', framework_slug=framework.slug, agreement_id=agreement['id']) }}">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-        {% for question_key in question_keys %}
-          {%
-            with
-              question = form[question_key].label,
-              name = question_key,
-              value = form[question_key].data,
-              hint = form[question_key].description,
-              error = errors.get(question_key, {}).get("message", None)
-          %}
-            {% include "toolkit/forms/textbox.html" %}
-          {% endwith %}
 
-        {% endfor %}
-
+        {{ form.signerName }}
+        {{ form.signerRole }}
 
         {%
           with

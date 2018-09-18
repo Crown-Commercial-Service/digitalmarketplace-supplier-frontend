@@ -25,7 +25,7 @@ from dmutils.email.exceptions import EmailError
 from dmutils.email.helpers import hash_string
 from dmutils.flask import timed_render_template as render_template
 from dmutils.formats import datetimeformat, monthyearformat
-from dmutils.forms.helpers import get_errors_from_wtform
+from dmutils.forms.helpers import get_errors_from_wtform, remove_csrf_token
 
 from ... import data_api_client
 from ...main import main, content_loader
@@ -357,6 +357,7 @@ def framework_start_supplier_declaration(framework_slug):
                            framework=framework), 200
 
 
+# TODO: refactor this view to combine with reuse_framework_supplier_declaration_post
 @main.route('/frameworks/<framework_slug>/declaration/reuse', methods=['GET'])
 @login_required
 @EnsureApplicationCompanyDetailsHaveBeenConfirmed(data_api_client)
@@ -988,15 +989,13 @@ def signer_details(framework_slug, agreement_id):
     agreement = data_api_client.get_framework_agreement(agreement_id)['agreement']
     check_agreement_is_related_to_supplier_framework_or_abort(agreement, supplier_framework)
 
-    form = SignerDetailsForm()
+    prefill_data = agreement.get("signedAgreementDetails", {})
 
-    question_keys = ['signerName', 'signerRole']
+    form = SignerDetailsForm(data=prefill_data)
 
     if form.validate_on_submit():
         agreement_details = {
-            "signedAgreementDetails": {
-                question_key: form[question_key].data for question_key in question_keys
-            }
+            "signedAgreementDetails": remove_csrf_token(form.data)
         }
         data_api_client.update_framework_agreement(
             agreement_id, agreement_details, current_user.email_address
@@ -1009,12 +1008,6 @@ def signer_details(framework_slug, agreement_id):
 
         return redirect(url_for(".signature_upload", framework_slug=framework_slug, agreement_id=agreement_id))
 
-    # if the signer* keys exist, prefill them in the form
-    if agreement.get('signedAgreementDetails'):
-        for question_key in question_keys:
-            if question_key in agreement['signedAgreementDetails']:
-                form[question_key].data = agreement['signedAgreementDetails'][question_key]
-
     errors = get_errors_from_wtform(form)
 
     return render_template(
@@ -1023,7 +1016,6 @@ def signer_details(framework_slug, agreement_id):
         form=form,
         errors=errors,
         framework=framework,
-        question_keys=question_keys,
         supplier_framework=supplier_framework,
         supplier_registered_name=get_supplier_registered_name_from_declaration(supplier_framework['declaration']),
     ), 400 if errors else 200
@@ -1123,7 +1115,9 @@ def contract_review(framework_slug, agreement_id):
     agreements_bucket = s3.S3(current_app.config['DM_AGREEMENTS_BUCKET'])
     signature_page = agreements_bucket.get_key(agreement['signedAgreementPath'])
 
-    form = ContractReviewForm()
+    supplier_registered_name = get_supplier_registered_name_from_declaration(supplier_framework['declaration'])
+
+    form = ContractReviewForm(supplier_registered_name=supplier_registered_name)
 
     if form.validate_on_submit():
         data_api_client.sign_framework_agreement(
@@ -1169,10 +1163,6 @@ def contract_review(framework_slug, agreement_id):
 
         return redirect(url_for(".framework_dashboard", framework_slug=framework_slug))
 
-    form.authorisation.description = u"I have the authority to return this agreement on behalf of {}.".format(
-        get_supplier_registered_name_from_declaration(supplier_framework['declaration'])
-    )
-
     errors = get_errors_from_wtform(form)
 
     return render_template(
@@ -1183,7 +1173,7 @@ def contract_review(framework_slug, agreement_id):
         framework=framework,
         signature_page=signature_page,
         supplier_framework=supplier_framework,
-        supplier_registered_name=get_supplier_registered_name_from_declaration(supplier_framework['declaration']),
+        supplier_registered_name=supplier_registered_name,
     ), 400 if errors else 200
 
 

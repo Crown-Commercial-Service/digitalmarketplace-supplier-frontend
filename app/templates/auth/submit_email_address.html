@@ -41,16 +41,7 @@
         <div class="column-two-thirds">
             {{ form.hidden_tag() }}
 
-            {%
-              with
-                question = "Email address",
-                name = "email_address",
-                hint = "An invite will be sent asking the recipient to register as a contributor.",
-                value = form.email_address.data,
-                error = errors.get("email_address", {}).get("message", None)
-            %}
-            {% include "toolkit/forms/textbox.html" %}
-            {% endwith %}
+            {{ form.email_address }}
 
             {%
               with

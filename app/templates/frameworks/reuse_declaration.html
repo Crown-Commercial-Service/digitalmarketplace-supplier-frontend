@@ -53,16 +53,9 @@
       <form method="POST" action="{{ url_for(".reuse_framework_supplier_declaration_post", framework_slug=current_framework.slug) }}">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
         <input type="hidden" name="old_framework_slug" value="{{ old_framework.slug }}"/>
-        {%
-          with
-          name = "reuse",
-          question = "Do you want to reuse the answers from your earlier declaration?",
-          inline = true,
-          type = "boolean",
-          error = errors.get('reuse', {}).get('message', None)
-        %}
-          {% include "toolkit/forms/selection-buttons.html" %}
-        {% endwith %}
+
+        {{ form.reuse }}
+
         {% with type = "save", label = "Save and continue" %}
           {% include "toolkit/button.html" %}
         {% endwith %}

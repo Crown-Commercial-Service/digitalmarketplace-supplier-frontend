@@ -28,16 +28,16 @@
     <div class="grid-row">
       <div class="column-one-whole">
         {% if errors %}
-         {% with 
+         {% with
             message = "You must <a href=\"#{}\">accept the changes</a> to continue.".format(errors.accept_changes.input_name)|safe, type = "destructive" %}
-            {% include "toolkit/notification-banner.html" %} 
+            {% include "toolkit/notification-banner.html" %}
           {% endwith %}
         {% endif %}
       </div>
     </div>
     <div class="grid-row">
         <div class="column-two-thirds">
-          
+
           {% with
             heading = "{} contract variation for {}".format(
                "The" if variation_details.get('countersignedAt') or agreed_details
@@ -71,10 +71,10 @@
             {% call(item) summary.list_table(
               [
                 {"key": "Agreed by", "value": ("%s<br />%s<br />%s" % (agreed_details.agreedUserName, agreed_details.agreedUserEmail, agreed_details.agreedAt|datetimeformat))|safe},
-                {"key": "Countersigned by", "value": ("%s<br />%s<br />%s" % 
+                {"key": "Countersigned by", "value": ("%s<br />%s<br />%s" %
                   (
-                    variation_details.countersignerName, 
-                    variation_details.countersignerRole, 
+                    variation_details.countersignerName,
+                    variation_details.countersignerRole,
                     variation_details.countersignedAt|dateformat
                   )
                 )|safe if variation_details.get('countersignedAt') else "Waiting for CCS to countersign"}
@@ -132,24 +132,13 @@
 
             <form method="post" class="supplier-declaration">
               <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
-              {%
-                with
-                type = "checkbox",
-                name = "accept_changes",
-                options = [
-                { "label": variation.variation_agreement_label or form.accept_changes.label.text,
-                  "value": "Yes, I accept the changes"
-                }
-                ],
-                error=errors.get("accept_changes", {}).get("message", None)
-              %}
-              {% include "toolkit/forms/selection-buttons.html" %}
-              {% endwith %}
+
+              {{ form.accept_changes }}
 
               <p>
-                {% if variation.variation_comes_in_effect_description %} 
-                  {{ variation.variation_comes_in_effect_description }} 
-                {% else%} 
+                {% if variation.variation_comes_in_effect_description %}
+                  {{ variation.variation_comes_in_effect_description }}
+                {% else%}
                   We’ll tell you when CCS has countersigned the changes and they come into effect.
                 {% endif %}
               </p>

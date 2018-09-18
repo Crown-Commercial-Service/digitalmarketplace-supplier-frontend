@@ -52,15 +52,8 @@
 
           <form method="POST" action="{{ url_for('.previous_services', framework_slug=framework.slug, lot_slug=lot.slug) }}">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-            {%
-              with
-              name = "copy_service",
-              type = "boolean",
-              error = errors.get("copy_service", {}).get("message", None),
-              question_advice = "You still have to review your service and answer any new questions."
-            %}
-              {% include "toolkit/forms/selection-buttons.html" %}
-            {% endwith %}
+
+            {{ form.copy_service }}
 
             {%
               with
