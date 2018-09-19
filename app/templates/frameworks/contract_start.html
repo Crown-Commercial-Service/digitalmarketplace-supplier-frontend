@@ -69,30 +69,30 @@
             verbose = true,
             items = [
               {
-                  "body": "Sign your framework agreement signature page.", 
+                  "body": "Sign your framework agreement signature page.",
                   "top": "The person signing must have the authority to agree to the framework terms, eg director or company secretary.",
                   "documents": [
                       {
-                          "title": "Signature page", 
-                          "link": (url_for('.download_agreement_file', framework_slug=framework.slug, document_name=signature_page_filename)), 
+                          "title": "Signature page",
+                          "link": (url_for('.download_agreement_file', framework_slug=framework.slug, document_name=signature_page_filename)),
                           "file_type": "PDF",
                           "download": True
                       }
                   ],
-                  "bottom": "You can review the rest of the <a href='{}'>framework agreement</a> on GOV.UK.".format(framework_urls.framework_agreement_pdf_url)|safe
-              }, 
+                  "bottom": "You can review the rest of the <a href='{}'>framework agreement</a> on GOV.UK.".format(framework_urls.framework_agreement_url)|safe
+              },
               {
                   "body": "Return your signed signature page and give the details of the person who signed it.",
                   "bottom": "<input type='submit' class='button-save-with-advice' value='Return your signed signature page'>"|safe
-              } 
+              }
             ]
           %}
             {% include "toolkit/instruction-list.html" %}
           {% endwith %}
         </form>
 
-      </div>  
-      
+      </div>
+
     </div>
   </div>
 {% endblock %}
