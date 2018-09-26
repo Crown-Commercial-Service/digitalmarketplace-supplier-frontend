@@ -33,6 +33,7 @@ class Config(object):
         "confirmation_of_clarification_question": "1a8a3408-49ef-486f-a6c9-8557d1a0dc63",
         "create_user_account": "84f5d812-df9d-4ab8-804a-06f64f5abd30",
         "invite_contributor": "5eefe42d-1694-4388-8908-991cdfba0a71",
+        "framework_agreement_signature_page": "08929c93-f9e7-4b40-b75f-418659308324",
     }
 
     DM_AGREEMENTS_BUCKET = None

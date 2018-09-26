@@ -4710,8 +4710,11 @@ class TestContractReviewPage(BaseApplicationTest):
         super().setup_method(method)
         self.data_api_client_patch = mock.patch('app.main.views.frameworks.data_api_client', autospec=True)
         self.data_api_client = self.data_api_client_patch.start()
+        self.notify_send_email_patch = mock.patch('app.main.views.frameworks.DMNotifyClient.send_email', autospec=True)
+        self.notify_send_email = self.notify_send_email_patch.start()
 
     def teardown_method(self, method):
+        self.notify_send_email_patch.stop()
         self.data_api_client_patch.stop()
         super().teardown_method(method)
 
@@ -4890,15 +4893,16 @@ class TestContractReviewPage(BaseApplicationTest):
         )
 
         # Delcaration primaryContactEmail and current_user.email_address are different so expect two recipients
-        mandrill_send_email.assert_called_once_with(
-            mock.ANY,  # self
-            to_email_addresses=['email2@email.com', 'email@email.com'],
-            email_body=mock.ANY,
-            subject='Your G-Cloud 8 signature page has been received',
-            from_email_address='enquiries@digitalmarketplace.service.gov.uk',
-            from_name='Digital Marketplace Admin',
-            tags=['g-cloud-8-framework-agreement']
-        )
+        assert self.notify_send_email.call_count == 2
+        assert self.notify_send_email.call_args_list[0][1]["to_email_address"] == "email2@email.com"
+        assert self.notify_send_email.call_args_list[1][1]["to_email_address"] == "email@email.com"
+
+        assert self.notify_send_email.call_args[1]["personalisation"]["framework_name"] == "G-Cloud 8"
+
+        # Check that email url is valid
+        framework_updates_url = self.notify_send_email.call_args[1]["personalisation"]["framework_updates_url"]
+        assert framework_updates_url.endswith("/suppliers/frameworks/g-cloud-8/updates")
+        assert self.client.get(framework_updates_url).status_code == 200
 
         # Check 'signature_page' has been removed from session
         with self.client.session_transaction() as sess:
@@ -4929,17 +4933,9 @@ class TestContractReviewPage(BaseApplicationTest):
             data={'authorisation': 'I have the authority to return this agreement on behalf of company name'}
         )
 
-        mandrill_send_email.assert_called_once_with(
-            mock.ANY,  # self
-            to_email_addresses=['email@email.com'],
-            email_body=mock.ANY,
-            subject='Your G-Cloud 8 signature page has been received',
-            from_email_address='enquiries@digitalmarketplace.service.gov.uk',
-            from_name='Digital Marketplace Admin',
-            tags=['g-cloud-8-framework-agreement']
-        )
+        assert self.notify_send_email.call_count == 1
 
-    def test_return_503_response_if_mandrill_exception_raised_by_send_email(
+    def test_return_normal_response_if_email_exception_raised_by_send_email(
         self, mandrill_send_email, s3, return_supplier_framework
     ):
         self.login()
@@ -4959,7 +4955,7 @@ class TestContractReviewPage(BaseApplicationTest):
         )
         s3.return_value.get_key.return_value = {'last_modified': '2016-07-10T21:18:00.000000Z'}
 
-        mandrill_send_email.side_effect = EmailError()
+        self.notify_send_email.side_effect = EmailError()
 
         res = self.client.post(
             "/suppliers/frameworks/g-cloud-8/234/contract-review",
@@ -4968,7 +4964,7 @@ class TestContractReviewPage(BaseApplicationTest):
             }
         )
 
-        assert res.status_code == 503
+        assert res.status_code == 302
 
     def test_email_not_sent_if_api_call_fails(self, mandrill_send_email, s3, return_supplier_framework):
         self.login()

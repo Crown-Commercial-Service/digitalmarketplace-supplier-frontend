@@ -23,6 +23,7 @@ from dmutils.email.dm_mandrill import DMMandrillClient
 from dmutils.email.dm_notify import DMNotifyClient
 from dmutils.email.exceptions import EmailError
 from dmutils.email.helpers import hash_string
+from dmutils.env_helpers import get_web_url_from_stage
 from dmutils.flask import timed_render_template as render_template
 from dmutils.formats import datetimeformat, monthyearformat
 from dmutils.forms.helpers import get_errors_from_wtform, remove_csrf_token
@@ -1124,29 +1125,25 @@ def contract_review(framework_slug, agreement_id):
             agreement_id, current_user.email_address, {'uploaderUserId': current_user.id}
         )
 
-        mandrill_client = DMMandrillClient()
-        email_body = render_template(
-            'emails/framework_agreement_with_framework_version_returned.html',
-            framework_name=framework['name'],
-            framework_slug=framework['slug'],
-        )
-        try:
-            mandrill_client.send_email(
-                to_email_addresses=returned_agreement_email_recipients(supplier_framework),
-                email_body=email_body,
-                subject='Your {} signature page has been received'.format(framework['name']),
-                from_email_address=current_app.config["DM_ENQUIRIES_EMAIL_ADDRESS"],
-                from_name=current_app.config["FRAMEWORK_AGREEMENT_RETURNED_NAME"],
-                tags=['{}-framework-agreement'.format(framework_slug)],
-            )
-        except EmailError as e:
-            current_app.logger.error(
-                "Framework agreement email failed to send. "
-                "error {error} supplier_id {supplier_id} email_hash {email_hash}",
-                extra={'error': str(e),
-                       'supplier_id': current_user.supplier_id,
-                       'email_hash': hash_string(current_user.email_address)})
-            abort(503, "Framework agreement email failed to send")
+        email_client = DMNotifyClient()
+        for email_address in returned_agreement_email_recipients(supplier_framework):
+            try:
+                email_client.send_email(
+                    to_email_address=email_address,
+                    template_name_or_id="framework_agreement_signature_page",
+                    personalisation={
+                        "framework_name": framework['name'],
+                        "framework_slug": framework['slug'],
+                        "framework_updates_url": (
+                            get_web_url_from_stage(current_app.config["DM_ENVIRONMENT"])
+                            + url_for(".framework_updates", framework_slug=framework["slug"])
+                        ),
+                    }
+                )
+            except EmailError:
+                # We don't need to handle this as the email is only informational,
+                # and failures are already logged by DMNotifyClient
+                pass
 
         session.pop('signature_page', None)
 
