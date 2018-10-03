@@ -1,5 +1,4 @@
 .company-information-summary {
-  padding-top: $gutter-half;
   margin-bottom: (2 * $gutter);
 
   .summary-item-field-first,
@@ -9,8 +8,4 @@
     @include core-19;
   }
 
-  .banner-warning-without-action {
-    margin-top: 0;
-    margin-bottom: $gutter;
-  }
 }
