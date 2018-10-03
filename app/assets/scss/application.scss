@@ -27,6 +27,7 @@ $path: "/suppliers/static/images/";
 @import "toolkit/_contact-details";
 @import "toolkit/_digital-marketplace-colours.scss";
 @import "toolkit/_document";
+@import "toolkit/_footer.scss";
 @import "toolkit/_grids.scss";
 @import "toolkit/_instruction-list.scss";
 @import "toolkit/_notification-banners.scss";
@@ -62,7 +63,6 @@ $path: "/suppliers/static/images/";
                                               // HTML and/or code that allows assurance questions to go in, it doesn't
                                               // make sense to remove the styling.
 @import "_create_supplier.scss";
-@import "_footer.scss";
 @import "_framework-application.scss";
 @import "_service-status.scss";
 @import "_service_submission.scss";

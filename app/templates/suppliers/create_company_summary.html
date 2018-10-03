@@ -26,24 +26,22 @@
 
 {% block main_content %}
 
+  {% if missing_fields %}
+  <div class="banner-destructive-without-action">
+    <p class="banner-message">
+      You must answer all the questions.
+    </p>
+  </div>
+  {% endif %}
+
+<div class="company-information-summary">
+
 {%
   with heading = "Check your information ",
        smaller = True
 %}
-{% include "toolkit/page-heading.html" %}
+  {% include "toolkit/page-heading.html" %}
 {% endwith %}
-
-
-
-<div class="company-information-summary">
-
-  {% if missing_fields|length > 0%}
-  <div class="banner-warning-without-action">
-    <p class="banner-message">
-      You must answer all the questions
-    </p>
-  </div>
-  {% endif %}
 
   {{ summary.heading('Your company details') }}
   {% call summary.mapping_table(
@@ -54,31 +52,24 @@
     ],
     field_headings_visible=False
   ) %}
-  {% call summary.row(complete=session.get("duns_number", None)) %}
-  {{ summary.field_name("DUNS number") }}
-  {{ summary.text(session.get("duns_number", "You must answer this question.")) }}
-  {{ summary.edit_link("Edit", url_for(".duns_number", _anchor="duns_number"), hidden_text="DUNS number") }}
-  {% endcall %}
-  {% call summary.row(complete=session.get("company_name", None)) %}
-  {{ summary.field_name("Company name") }}
-  {{ summary.text(session.get("company_name", "You must answer this question.")) }}
-  {{ summary.edit_link("Edit", url_for(".company_details", _anchor="company_name"), hidden_text="company name") }}
-  {% endcall %}
-  {% call summary.row(complete=session.get("contact_name", None)) %}
-  {{ summary.field_name("Contact name") }}
-  {{ summary.text(session.get("contact_name", "You must answer this question.")) }}
-  {{ summary.edit_link("Edit", url_for(".company_details", _anchor="contact_name"), hidden_text="contact name") }}
-  {% endcall %}
-  {% call summary.row(complete=session.get("email_address", None)) %}
-  {{ summary.field_name("Contact email") }}
-  {{ summary.text(session.get("email_address", "You must answer this question.")) }}
-  {{ summary.edit_link("Edit", url_for(".company_details", _anchor="email_address"), hidden_text="contact email") }}
-  {% endcall %}
-  {% call summary.row(complete=session.get("phone_number", None)) %}
-  {{ summary.field_name("Contact phone number") }}
-  {{ summary.text(session.get("phone_number", "You must answer this question.")) }}
-  {{ summary.edit_link("Edit", url_for(".company_details", _anchor="phone_number"), hidden_text="contact phone number") }}
-  {% endcall %}
+
+  {% set required_company_fields = [
+      ("duns_number", "DUNS number", url_for(".duns_number", _anchor="duns_number")),
+      ("company_name", "Company name", url_for(".company_details", _anchor="company_name")),
+      ("contact_name", "Contact name", url_for(".company_details", _anchor="contact_name")),
+      ("email_address", "Contact email", url_for(".company_details", _anchor="email_address")),
+      ("phone_number", "Contact phone number", url_for(".company_details", _anchor="phone_number"))
+    ]
+  %}
+
+  {% for field, label, url in required_company_fields %}
+    {% call summary.row(complete=session.get(field)) %}
+      {{ summary.field_name(label) }}
+      {{ summary.text(session.get(field, "You must answer this question.")) }}
+      {{ summary.edit_link("Edit", url, hidden_text=label) }}
+    {% endcall %}
+  {% endfor %}
+
   {% endcall %}
 
   {{ summary.heading('Your login details') }}
