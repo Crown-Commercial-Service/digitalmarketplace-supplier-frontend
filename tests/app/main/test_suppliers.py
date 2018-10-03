@@ -265,16 +265,22 @@ class TestSuppliersDashboard(BaseApplicationTest):
         if on_framework:
             assert document.xpath(
                 "//h3[normalize-space(string())=$f]"
-                "[(following::a)[1][normalize-space(string())=$t1][@href=$u1]]"
-                "[(following::a)[2][normalize-space(string())=$t2][@href=$u2]]"
-                "[(following::a)[3][normalize-space(string())=$t3][@href=$u3]]",
+                "[(following::a)[1][normalize-space(string())=$t1][@href=$u1]]",
                 f="Digital Outcomes and Specialists 2",
                 t1="View your opportunities",
                 u1="/suppliers/opportunities/frameworks/digital-outcomes-and-specialists-2",
-                t2="View services",
-                u2="/suppliers/frameworks/digital-outcomes-and-specialists-2/services",
-                t3="View documents and ask a question",
-                u3="/suppliers/frameworks/digital-outcomes-and-specialists-2",
+            )
+            assert not document.xpath(
+                "//h3[normalize-space(string())=$f]"
+                "/..//a[normalize-space(string())=$t1]",
+                f="Digital Outcomes and Specialists 2",
+                t1="View services",
+            )
+            assert not document.xpath(
+                "//h3[normalize-space(string())=$f]"
+                "/..//a[normalize-space(string())=$t1]",
+                f="Digital Outcomes and Specialists 2",
+                t1="View documents and ask a question",
             )
         else:
             assert not document.xpath("//h3[normalize-space(string())='Digital Outcomes and Specialists 2']")
@@ -1091,7 +1097,7 @@ class TestSupplierOpportunitiesDashboardLink(BaseApplicationTest):
             'agreementReturned': True,
             'complete_drafts_count': 2,
             'declaration': {'status': 'complete'},
-            'frameworkSlug': 'digital-outcomes-and-specialists-2',
+            'frameworkSlug': 'digital-outcomes-and-specialists-3',
             'onFramework': True,
             'services_count': 2,
             'supplierId': 1234
@@ -1106,7 +1112,7 @@ class TestSupplierOpportunitiesDashboardLink(BaseApplicationTest):
     def find_frameworks_stub(self):
         return {'frameworks': [
             {
-                **framework_stub(status='live', slug='digital-outcomes-and-specialists-2')['frameworks'],
+                **framework_stub(status='live', slug='digital-outcomes-and-specialists-3')['frameworks'],
                 'framework': 'digital-outcomes-and-specialists'
             }
         ]}
@@ -1127,13 +1133,13 @@ class TestSupplierOpportunitiesDashboardLink(BaseApplicationTest):
             "[(following::a)[1][normalize-space(string())=$t1][@href=$u1]]"
             "[(following::a)[2][normalize-space(string())=$t2][@href=$u2]]"
             "[(following::a)[3][normalize-space(string())=$t3][@href=$u3]]",
-            f="Digital Outcomes and Specialists 2",
+            f="Digital Outcomes and Specialists 3",
             t1="View your opportunities",
-            u1="/suppliers/opportunities/frameworks/digital-outcomes-and-specialists-2",
+            u1="/suppliers/opportunities/frameworks/digital-outcomes-and-specialists-3",
             t2="View services",
-            u2="/suppliers/frameworks/digital-outcomes-and-specialists-2/services",
+            u2="/suppliers/frameworks/digital-outcomes-and-specialists-3/services",
             t3="View documents and ask a question",
-            u3="/suppliers/frameworks/digital-outcomes-and-specialists-2",
+            u3="/suppliers/frameworks/digital-outcomes-and-specialists-3",
         )
 
     @pytest.mark.parametrize(
@@ -1156,7 +1162,7 @@ class TestSupplierOpportunitiesDashboardLink(BaseApplicationTest):
         res = self.client.get("/suppliers")
         doc = html.fromstring(res.get_data(as_text=True))
 
-        unexpected_link = "/suppliers/frameworks/digital-outcomes-and-specialists-2/opportunities"
+        unexpected_link = "/suppliers/opportunities/frameworks/digital-outcomes-and-specialists-3"
 
         assert not any(filter(lambda i: i[2] == unexpected_link, doc.iterlinks()))
 
