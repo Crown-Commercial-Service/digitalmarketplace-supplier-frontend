@@ -238,6 +238,47 @@ class TestSuppliersDashboard(BaseApplicationTest):
             message[0].xpath('p/text()')[0]
         assert u"Find out if your services are suitable" in message[0].xpath('p/a/text()')[0]
 
+    @pytest.mark.parametrize('on_framework', (True, False))
+    def test_only_shows_expired_dos2_if_supplier_was_on_framework(self, on_framework):
+        self.data_api_client.get_supplier.side_effect = get_supplier
+        self.data_api_client.find_frameworks.return_value = {
+            "frameworks": [
+                framework_stub(status='expired', slug='digital-outcomes-and-specialists-2')['frameworks'],
+            ]
+        }
+        self.data_api_client.get_supplier_frameworks.return_value = {
+            'frameworkInterest': [
+                {
+                    'frameworkSlug': 'digital-outcomes-and-specialists-2',
+                    'onFramework': on_framework,
+                }
+            ]
+        }
+
+        self.login()
+
+        response = self.client.get("/suppliers")
+        assert response.status_code == 200
+
+        document = html.fromstring(response.get_data(as_text=True))
+
+        if on_framework:
+            assert document.xpath(
+                "//h3[normalize-space(string())=$f]"
+                "[(following::a)[1][normalize-space(string())=$t1][@href=$u1]]"
+                "[(following::a)[2][normalize-space(string())=$t2][@href=$u2]]"
+                "[(following::a)[3][normalize-space(string())=$t3][@href=$u3]]",
+                f="Digital Outcomes and Specialists 2",
+                t1="View your opportunities",
+                u1="/suppliers/opportunities/frameworks/digital-outcomes-and-specialists-2",
+                t2="View services",
+                u2="/suppliers/frameworks/digital-outcomes-and-specialists-2/services",
+                t3="View documents and ask a question",
+                u3="/suppliers/frameworks/digital-outcomes-and-specialists-2",
+            )
+        else:
+            assert not document.xpath("//h3[normalize-space(string())='Digital Outcomes and Specialists 2']")
+
     def test_shows_gcloud_7_application_button(self):
         self.data_api_client.get_framework_interest.return_value = {'frameworks': []}
         self.data_api_client.get_supplier.side_effect = get_supplier
