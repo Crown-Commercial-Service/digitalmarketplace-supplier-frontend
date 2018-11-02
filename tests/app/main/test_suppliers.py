@@ -14,11 +14,7 @@ from dmutils.api_stubs import framework as framework_stub
 from dmutils import api_stubs
 
 from tests.app.helpers import BaseApplicationTest, assert_args_and_return
-from app.main.forms.suppliers import (
-    CompanyOrganisationSizeForm,
-    CompanyTradingStatusForm,
-    VatNumberForm
-)
+from app.main.forms.suppliers import CompanyOrganisationSizeForm, CompanyTradingStatusForm
 
 
 def framework_stub_dates(month):
@@ -60,7 +56,6 @@ def get_supplier(*args, **kwargs):
         "registeredName": "Official Name Inc",
         "registrationCountry": "country:BZ",
         "otherCompanyRegistrationNumber": "BEL153",
-        "vatNumber": "12345678",
         "organisationSize": "small",
         "tradingStatus": "Open for business",
         "name": "Supplier Name",
@@ -667,7 +662,6 @@ class TestSupplierDetails(BaseApplicationTest):
             "Official Name Inc",  # Registered company name
             "CH123456",  # Companies House number
             "987654321",  # DUNS number
-            "12345678",  # VAT number
             "Open for business",  # Trading status
             "Small",  # Size
         ):
@@ -744,7 +738,6 @@ class TestSupplierDetails(BaseApplicationTest):
             ),
             ("Trading status", {"tradingStatus": None}, "/suppliers/trading-status/edit"),
             ("Company size", {"organisationSize": None}, "/suppliers/organisation-size/edit"),
-            ("VAT number", {"vatNumber": None}, "/suppliers/vat-number/edit"),
         ]
     )
     def test_question_field_requires_answer_if_empty(self, question, null_attribute, link_address):
@@ -814,10 +807,6 @@ class TestSupplierDetails(BaseApplicationTest):
              "/suppliers/trading-status/edit",),
             ("Company size", {"companyDetailsConfirmed": False, "organisationSize": "small"},
              "/suppliers/organisation-size/edit",),
-            ("VAT number", {"companyDetailsConfirmed": True, "vatNumber": "VAT654321"},
-             "/suppliers/vat-number/edit",),
-            ("VAT number", {"companyDetailsConfirmed": False, "vatNumber": "VAT654321"},
-             "/suppliers/vat-number/edit",),
             ("DUNS number", {"companyDetailsConfirmed": True, "dunsNumber": "123456789"},
              "/suppliers/duns-number/edit",),
             ("DUNS number", {"companyDetailsConfirmed": False, "dunsNumber": "123456789"},
@@ -2915,192 +2904,3 @@ class TestSupplierAddRegistrationNumber(BaseApplicationTest):
         assert res.status_code == 400
         assert page_heading[0].text.strip() == "Correct a mistake in your registration number"
         assert self.data_api_client.update_supplier.call_args_list == []
-
-
-class TestEditSupplierVatNumber(BaseApplicationTest):
-    def setup_method(self, method):
-        super().setup_method(method)
-        self.data_api_client_patch = mock.patch("app.main.views.suppliers.data_api_client", autospec=True)
-        self.data_api_client = self.data_api_client_patch.start()
-        self.data_api_client.get_supplier.return_value = get_supplier(vatNumber=None)
-        self.login()
-
-    def teardown_method(self, method):
-        super().setup_method(method)
-        self.data_api_client_patch.stop()
-
-    def test_loads_page_for_supplier_with_no_vat_number(self):
-        res = self.client.get("/suppliers/vat-number/edit")
-        doc = html.fromstring(res.get_data(as_text=True))
-
-        assert res.status_code == 200
-        assert doc.xpath("//h1[normalize-space(string())='Are you registered for VAT in the UK?']")
-
-    @pytest.mark.parametrize('overwrite_supplier_data',
-                             (
-                                 {'companyDetailsConfirmed': False},
-                                 {'vatNumber': None},
-                             ))
-    def test_get_shows_form_on_page_if_supplier_data_not_complete_and_confirmed(self, overwrite_supplier_data):
-        self.login()
-        self.data_api_client.get_supplier.return_value = get_supplier(**overwrite_supplier_data)
-        res = self.client.get("/suppliers/vat-number/edit")
-        doc = html.fromstring(res.get_data(as_text=True))
-        page_heading = doc.xpath('//h1')
-
-        assert res.status_code == 200
-        assert page_heading[0].text.strip() == "Are you registered for VAT in the UK?"
-        assert doc.xpath('//form[@action="/suppliers/vat-number/edit"]')
-        assert self.data_api_client.update_supplier.call_args_list == []
-
-    @pytest.mark.parametrize('method, status_code', (('get', 200), ('post', 400)))
-    def test_get_and_post_load_already_completed_page_and_do_not_update_supplier_with_vat_number(
-        self, method, status_code
-    ):
-        self.data_api_client.get_supplier.return_value = get_supplier()
-
-        res = getattr(self.client, method)("/suppliers/vat-number/edit")
-        doc = html.fromstring(res.get_data(as_text=True))
-
-        assert res.status_code == status_code
-        assert doc.xpath("//h1[normalize-space(string())='Correct a mistake in your VAT number']")
-        assert not self.data_api_client.update_supplier.called
-
-    def test_posting_valid_vat_code_updates_supplier(self):
-        res = self.client.post(
-            "/suppliers/vat-number/edit",
-            data={
-                "vat_registered": "Yes",
-                "vat_number": "GB123456789",
-            }
-        )
-
-        assert res.status_code == 302
-        assert res.location == "http://localhost/suppliers/details"
-        self.data_api_client.update_supplier.assert_called_once_with(
-            supplier_id=1234,
-            supplier={"vatNumber": "GB123456789"},
-            user="email@email.com"
-        )
-
-    @pytest.mark.parametrize('vat_number', ("", "Not a VAT number"))
-    def test_posting_not_vat_registered_correctly_updates_supplier(self, vat_number):
-        res = self.client.post(
-            "/suppliers/vat-number/edit",
-            data={
-                "vat_registered": "No",
-                "vat_number": vat_number,
-            }
-        )
-
-        assert res.status_code == 302
-        assert res.location == "http://localhost/suppliers/details"
-        self.data_api_client.update_supplier.assert_called_once_with(
-            supplier_id=1234,
-            supplier={"vatNumber": VatNumberForm.NOT_VAT_REGISTERED_TEXT},
-            user="email@email.com",
-        )
-
-    @pytest.mark.parametrize("vat_number, message, masthead", (
-        ("GB123456789", None, None),
-        ("GB123456789012", None, None),
-        ("GBGD123", None, None),
-        ("GBHA456", None, None),
-        ("123456789", None, None),
-        ("123456789012", None, None),
-        ("GD123", None, None),
-        ("HA456", None, None),
-        ("NOTVALID", "You must provide a valid VAT number from the UK - they are usually either 9 or 12 digits.",
-         "VAT number"),
-        ("", "You must provide a VAT number from the UK.", "VAT number")
-    ))
-    def test_validation_of_tax_number(self, vat_number, message, masthead):
-        res = self.client.post(
-            "/suppliers/vat-number/edit",
-            data={
-                "vat_registered": "Yes",
-                "vat_number": vat_number,
-            }
-        )
-
-        if message:
-            self.assert_single_question_page_validation_errors(
-                res,
-                question_name=masthead,
-                validation_message=message,
-            )
-            assert not self.data_api_client.update_supplier.called
-        else:
-            assert res.status_code == 302
-            self.data_api_client.update_supplier.assert_called_once_with(
-                supplier_id=1234,
-                supplier={"vatNumber": vat_number},
-                user="email@email.com",
-            )
-
-    def test_whitespace_is_removed_from_vat_numbers(self):
-        res = self.client.post(
-            "/suppliers/vat-number/edit",
-            data={
-                "vat_registered": "Yes",
-                "vat_number": "   GB 1 2 34 567 8 9   ",
-            }
-        )
-
-        assert res.status_code == 302
-        assert res.location == "http://localhost/suppliers/details"
-        self.data_api_client.update_supplier.assert_called_once_with(
-            supplier_id=1234,
-            supplier={"vatNumber": "GB123456789"},
-            user="email@email.com",
-        )
-
-    def test_vat_numbers_are_uppercased(self):
-        res = self.client.post(
-            "/suppliers/vat-number/edit",
-            data={
-                "vat_registered": "Yes",
-                "vat_number": "gbHa789",
-            }
-        )
-
-        assert res.status_code == 302
-        assert res.location == "http://localhost/suppliers/details"
-        self.data_api_client.update_supplier.assert_called_once_with(
-            supplier_id=1234,
-            supplier={"vatNumber": "GBHA789"},
-            user="email@email.com",
-        )
-
-    def test_validation_of_no_answer_for_vat_registered_question(self):
-        res = self.client.post(
-            "/suppliers/vat-number/edit",
-            data={
-                "vat_number": "",
-            }
-        )
-        doc = html.fromstring(res.get_data(as_text=True))
-
-        assert res.status_code == 400
-        assert doc.xpath(
-            "//div[@class='validation-masthead'][normalize-space(string())=$masthead]",
-            masthead="There was a problem with your answer to: VAT registered"
-        )
-        assert doc.xpath(
-            "//span[@class='validation-message'][normalize-space(string())=$message]",
-            message="You need to answer this question."
-        )
-        assert not self.data_api_client.update_supplier.called
-
-    def test_post_response_fails_if_api_error(self):
-        self.data_api_client.update_supplier.side_effect = APIError(ServiceUnavailable())
-
-        res = self.client.post(
-            "/suppliers/vat-number/edit",
-            data={
-                "vat_registered": "Yes",
-                "vat_number": "GB123456789",
-            }
-        )
-
-        assert res.status_code == 503

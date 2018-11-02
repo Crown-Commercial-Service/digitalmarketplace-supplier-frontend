@@ -27,7 +27,6 @@ from ..forms.suppliers import (
     EditRegisteredCountryForm,
     EditSupplierForm,
     EmailAddressForm,
-    VatNumberForm,
 )
 from ..helpers.frameworks import (
     get_frameworks_by_status,
@@ -450,55 +449,6 @@ def edit_supplier_trading_status():
 
     return render_template(
         'suppliers/edit_supplier_trading_status.html',
-        form=form,
-        errors=errors
-    ), 200 if not errors else 400
-
-
-@main.route('/vat-number/edit', methods=['GET', 'POST'])
-@login_required
-def edit_supplier_vat_number():
-    form = VatNumberForm()
-    supplier = data_api_client.get_supplier(current_user.supplier_id)['suppliers']
-
-    if supplier.get("vatNumber") and supplier.get('companyDetailsConfirmed'):
-        return (
-            render_template("suppliers/already_completed.html",
-                            completed_data_description="VAT number",
-                            company_details_change_email=current_app.config['DM_COMPANY_DETAILS_CHANGE_EMAIL'],),
-            200 if request.method == 'GET' else 400
-        )
-
-    if request.method == 'POST':
-        if form.validate_on_submit():
-            vat_number = form.vat_number.data if form.vat_registered.data == 'Yes' else form.NOT_VAT_REGISTERED_TEXT
-            data_api_client.update_supplier(supplier_id=current_user.supplier_id,
-                                            supplier={"vatNumber": vat_number},
-                                            user=current_user.email_address)
-            return redirect(url_for('.supplier_details'))
-
-        current_app.logger.warning(
-            "supplieredit.fail: vat-number:{vat_number}, vat-number-errors:{vat_number_errors}, "
-            "vat-registered:{vat_registered}, vat-registered-errors{vat_registered_errors}",
-            extra={
-                "vat_number": form.vat_number.data,
-                "vat_number_errors": ",".join(form.vat_number.errors),
-                "vat_registered": form.vat_registered.data,
-                "vat_registered_errors": ",".join(form.vat_registered.errors),
-            })
-
-    else:
-        if supplier.get('vatNumber'):
-            if supplier.get('vatNumber') == form.NOT_VAT_REGISTERED_TEXT:
-                form.vat_registered.data = 'No'
-            else:
-                form.vat_registered.data = 'Yes'
-                form.vat_number.data = supplier.get('vatNumber')
-
-    errors = get_errors_from_wtform(form)
-
-    return render_template(
-        'suppliers/edit_vat_number.html',
         form=form,
         errors=errors
     ), 200 if not errors else 400

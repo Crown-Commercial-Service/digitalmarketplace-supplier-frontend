@@ -1,7 +1,6 @@
-import re
 from flask_wtf import FlaskForm
-from wtforms import RadioField, StringField
-from wtforms.validators import AnyOf, InputRequired, Length, Optional, Regexp, StopValidation, ValidationError
+from wtforms import RadioField
+from wtforms.validators import AnyOf, InputRequired, Length, Optional, Regexp, ValidationError
 
 from dmutils.forms.fields import DMStripWhitespaceStringField, DMEmailField
 from dmutils.forms.validators import EmailValidator
@@ -226,37 +225,3 @@ class CompanyTradingStatusForm(FlaskForm):
     trading_status = RadioField('Trading status',
                                 validators=[InputRequired(message="You must choose a trading status.")],
                                 choices=[(o['value'], o['label']) for o in OPTIONS])
-
-
-class VatNumberForm(FlaskForm):
-    NOT_VAT_REGISTERED_TEXT = "Not VAT registered"
-
-    def stop_validation_if_not_registered(form, field):
-        # If a user is not registered for VAT we don't care about validating something they have entered in the
-        # VAT number input field. If a value for `vat_registered` is not sent in the POST request, WTForms sets the
-        # value to `None`, hence its inclusion here
-        if form.vat_registered.data in ('No', 'None'):
-            raise StopValidation()
-
-    vat_registered = RadioField(
-        "VAT registered",
-        validators=[InputRequired(message="You need to answer this question.")],
-        choices=[('Yes', 'Yes'), ('No', 'No')],
-    )
-    vat_number = StringField(
-        'VAT number',
-        default="",
-        # Filters to remove internal whitespace and uppercase the string.
-        filters=[
-            lambda x: re.sub(r'\s+', '', x),
-            lambda x: x.upper(),
-        ],
-        validators=[
-            stop_validation_if_not_registered,
-            InputRequired(message="You must provide a VAT number from the UK."),
-            Regexp(
-                r'^(GB)?((\d{9})|(\d{12})|((GD|HA)\d{3}))$',
-                message="You must provide a valid VAT number from the UK - they are usually either 9 or 12 digits."
-            )
-        ],
-    )
