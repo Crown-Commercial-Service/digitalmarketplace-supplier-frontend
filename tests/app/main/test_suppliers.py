@@ -938,7 +938,7 @@ class TestSupplierDetails(BaseApplicationTest):
             # Details complete and already confirmed
             (get_supplier(companyDetailsConfirmed=True), False, False),
             # Details not complete or confirmed
-            (get_supplier(companyDetailsConfirmed=False, vatNumber=None), False, False),
+            (get_supplier(companyDetailsConfirmed=False, dunsNumber=None), False, False),
         ]
     )
     def test_green_button_is_shown_when_details_are_complete_but_not_confirmed(
@@ -1058,7 +1058,7 @@ class TestSupplierDetails(BaseApplicationTest):
         "incomplete_supplier",
         (
             get_supplier(organisationSize=None),
-            get_supplier(vatNumber=None),
+            get_supplier(dunsNumber=None),
             get_supplier(companiesHouseNumber=None, otherCompanyRegistrationNumber=None),
         )
     )

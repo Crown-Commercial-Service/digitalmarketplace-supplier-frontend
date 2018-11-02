@@ -27,7 +27,7 @@ class TestSupplierCompanyDetailsComplete:
                              (
                                  ({}, False),
                                  ({**supplier()['suppliers'], 'dunsNumber': None}, False),
-                                 ({**supplier()['suppliers'], 'vatNumber': None}, False),
+                                 ({**supplier()['suppliers'], 'name': None}, False),
                                  ({**supplier()['suppliers'], 'companiesHouseNumber': None}, False),
                                  ({**supplier()['suppliers'], 'contactInformation': [{}]}, False),
 

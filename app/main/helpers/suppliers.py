@@ -31,7 +31,7 @@ COUNTRY_TUPLE = load_countries()
 
 def supplier_company_details_are_complete(supplier_data):
     supplier_required_fields = ['dunsNumber', 'name', 'registeredName', 'registrationCountry', 'organisationSize',
-                                'tradingStatus', 'vatNumber']
+                                'tradingStatus']
     contact_required_fields = ['address1', 'city', 'postcode']
 
     # We require one of either 'companiesHouseNumber' or 'otherCompanyRegistrationNumber'
