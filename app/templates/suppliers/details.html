@@ -152,17 +152,6 @@
 {% endcall %}
 
 {% call summary.row() %}
-  {{ summary.field_name('VAT number') }}
-  {% if supplier.vatNumber %}
-    {{ summary.text(supplier.vatNumber) }}
-    {{ summary.edit_link(label="Change", link=url_for(".edit_supplier_vat_number"), hidden_text="VAT number") }}
-  {% else %}
-    {{ summary.link(link_title="Answer required", link=url_for(".edit_supplier_vat_number"), hidden_text="for VAT number") }}
-    {{ summary.text("") }}
-  {% endif %}
-{% endcall %}
-
-{% call summary.row() %}
   {{ summary.field_name('DUNS number') }}
    {% if supplier.dunsNumber %}
     {{ summary.text(supplier.dunsNumber) }}
@@ -190,7 +179,6 @@
           <ul class="list-bullet">
             <li>registered company name</li>
             <li>registration number</li>
-            <li>VAT number</li>
             <li>DUNS number</li>
           </ul>
           {% else %}
