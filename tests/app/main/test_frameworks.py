@@ -4527,7 +4527,7 @@ class TestSignatureUploadPage(BaseApplicationTest):
 
         res = self.client.post(
             '/suppliers/frameworks/g-cloud-8/234/signature-upload',
-            data={'signature_page': (BytesIO(b'asdf'), 'test.jpg')}
+            data={'signature_page': (BytesIO(b'\xff\xd8\xff\xff\xff\xff\xff\xff'), 'test.jpg')}
         )
 
         generate_timestamped_document_upload_path.assert_called_once_with(
@@ -4573,25 +4573,6 @@ class TestSignatureUploadPage(BaseApplicationTest):
         assert res.status_code == 400
         assert 'You must choose a file to upload' in res.get_data(as_text=True)
 
-    def test_signature_upload_returns_400_if_file_is_empty(self, s3, return_supplier_framework):
-        self.login()
-
-        self.data_api_client.get_framework.return_value = get_g_cloud_8()
-        self.data_api_client.get_framework_agreement.return_value = self.framework_agreement()
-        return_supplier_framework.return_value = self.supplier_framework(
-            framework_slug='g-cloud-8',
-            on_framework=True
-        )['frameworkInterest']
-        s3.return_value.get_key.return_value = None   # No signature file has been previously uploaded
-
-        res = self.client.post(
-            '/suppliers/frameworks/g-cloud-8/234/signature-upload',
-            data={'signature_page': (BytesIO(b''), 'test.pdf')}  # Empty file called test.pdf
-        )
-
-        assert res.status_code == 400
-        assert 'The file must not be empty' in res.get_data(as_text=True)
-
     def test_signature_upload_returns_400_if_file_is_not_image_or_pdf(self, s3, return_supplier_framework):
         self.login()
 
@@ -4611,9 +4592,10 @@ class TestSignatureUploadPage(BaseApplicationTest):
         assert res.status_code == 400
         assert 'The file must be a PDF, JPG or PNG' in res.get_data(as_text=True)
 
-    @mock.patch('app.main.views.frameworks.file_is_less_than_5mb')
+    @mock.patch('app.main.views.frameworks.file_is_less_than_5mb', return_value=False)
+    @mock.patch('app.main.views.frameworks.file_is_image', return_value=True)
     def test_signature_upload_returns_400_if_file_is_larger_than_5mb(
-        self, file_is_less_than_5mb, s3, return_supplier_framework
+        self, file_is_less_than_5mb, file_is_image, s3, return_supplier_framework
     ):
         self.login()
 
@@ -4624,11 +4606,10 @@ class TestSignatureUploadPage(BaseApplicationTest):
             on_framework=True
         )['frameworkInterest']
         s3.return_value.get_key.return_value = None   # No signature file has been previously uploaded
-        file_is_less_than_5mb.return_value = False
 
         res = self.client.post(
             '/suppliers/frameworks/g-cloud-8/234/signature-upload',
-            data={'signature_page': (BytesIO(b'asdf'), 'test.jpg')}
+            data={'signature_page': (BytesIO(b'\xff\xd8\xff\xff\xff\xff\xff\xff'), 'test.jpg')}
         )
 
         assert res.status_code == 400
@@ -4694,7 +4675,7 @@ class TestSignatureUploadPage(BaseApplicationTest):
         self.login()
         res = self.client.post(
             '/suppliers/frameworks/g-cloud-8/234/signature-upload',
-            data={'signature_page': (BytesIO(b''), '')}
+            data={'signature_page': (BytesIO(b'\xff\xd8\xff\xff\xff\xff\xff\xff'), '')}
         )
         s3.return_value.get_key.assert_called_with('already/uploaded/file/path.pdf')
         assert res.status_code == 302

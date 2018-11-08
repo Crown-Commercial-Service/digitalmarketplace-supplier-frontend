@@ -1051,8 +1051,6 @@ def signature_upload(framework_slug, agreement_id):
             upload_error = "The file must be a PDF, JPG or PNG"
         elif not file_is_less_than_5mb(fresh_signature_page):
             upload_error = "The file must be less than 5MB"
-        elif file_is_empty(fresh_signature_page):
-            upload_error = "The file must not be empty"
 
         # If all looks good then upload the file and proceed to next step of signing
         if not upload_error:
