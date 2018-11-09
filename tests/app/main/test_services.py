@@ -1168,7 +1168,7 @@ class TestSupplierEditUpdateServiceSectionG9(BaseApplicationTest):
             res = self.client.post(
                 '/suppliers/frameworks/g-cloud-9/services/321/edit/documents',
                 data={
-                    'serviceDefinitionDocumentURL': (BytesIO(b'doc'), 'document.pdf'),
+                    'serviceDefinitionDocumentURL': (BytesIO(b'\x25\x50\x44\x46\xff\xff\xff\xff'), 'document.pdf'),
                 }
             )
 
@@ -1570,7 +1570,7 @@ class TestEditDraftService(BaseApplicationTest, MockEnsureApplicationCompanyDeta
             res = self.client.post(
                 '/suppliers/frameworks/g-cloud-7/submissions/scs/1/edit/service-definition',
                 data={
-                    'serviceDefinitionDocumentURL': (BytesIO(b'doc'), 'document.pdf'),
+                    'serviceDefinitionDocumentURL': (BytesIO(b'\x25\x50\x44\x46\xff\xff\xff\xff'), 'document.pdf'),
                 }
             )
 
