@@ -12,6 +12,7 @@ import pytest
 
 from dmapiclient import HTTPError
 from dmutils import api_stubs
+from dmtestutils.fixtures import valid_pdf_bytes
 
 from app.main.helpers.services import parse_document_upload_time
 from tests.app.helpers import (
@@ -1168,7 +1169,7 @@ class TestSupplierEditUpdateServiceSectionG9(BaseApplicationTest):
             res = self.client.post(
                 '/suppliers/frameworks/g-cloud-9/services/321/edit/documents',
                 data={
-                    'serviceDefinitionDocumentURL': (BytesIO(b'\x25\x50\x44\x46\xff\xff\xff\xff'), 'document.pdf'),
+                    'serviceDefinitionDocumentURL': (BytesIO(valid_pdf_bytes), 'document.pdf'),
                 }
             )
 
@@ -1570,7 +1571,7 @@ class TestEditDraftService(BaseApplicationTest, MockEnsureApplicationCompanyDeta
             res = self.client.post(
                 '/suppliers/frameworks/g-cloud-7/submissions/scs/1/edit/service-definition',
                 data={
-                    'serviceDefinitionDocumentURL': (BytesIO(b'\x25\x50\x44\x46\xff\xff\xff\xff'), 'document.pdf'),
+                    'serviceDefinitionDocumentURL': (BytesIO(valid_pdf_bytes), 'document.pdf'),
                 }
             )
 

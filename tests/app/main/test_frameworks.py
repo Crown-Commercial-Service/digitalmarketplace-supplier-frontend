@@ -15,12 +15,13 @@ from dmapiclient import (
     HTTPError
 )
 from dmapiclient.audit import AuditTypes
+from dmcontent.errors import ContentNotFoundError
+from dmtestutils.fixtures import valid_jpeg_bytes
 from dmutils import api_stubs
 from dmutils.email.exceptions import EmailError
 from dmutils.s3 import S3ResponseError
-from app.main.views.frameworks import render_template as frameworks_render_template
-from dmcontent.errors import ContentNotFoundError
 
+from app.main.views.frameworks import render_template as frameworks_render_template
 from app.main.forms.frameworks import ReuseDeclarationForm
 from ..helpers import (
     BaseApplicationTest,
@@ -4527,7 +4528,7 @@ class TestSignatureUploadPage(BaseApplicationTest):
 
         res = self.client.post(
             '/suppliers/frameworks/g-cloud-8/234/signature-upload',
-            data={'signature_page': (BytesIO(b'\xff\xd8\xff\xff\xff\xff\xff\xff'), 'test.jpg')}
+            data={'signature_page': (BytesIO(valid_jpeg_bytes), 'test.jpg')}
         )
 
         generate_timestamped_document_upload_path.assert_called_once_with(
@@ -4609,7 +4610,7 @@ class TestSignatureUploadPage(BaseApplicationTest):
 
         res = self.client.post(
             '/suppliers/frameworks/g-cloud-8/234/signature-upload',
-            data={'signature_page': (BytesIO(b'\xff\xd8\xff\xff\xff\xff\xff\xff'), 'test.jpg')}
+            data={'signature_page': (BytesIO(valid_jpeg_bytes), 'test.jpg')}
         )
 
         assert res.status_code == 400
@@ -4675,7 +4676,7 @@ class TestSignatureUploadPage(BaseApplicationTest):
         self.login()
         res = self.client.post(
             '/suppliers/frameworks/g-cloud-8/234/signature-upload',
-            data={'signature_page': (BytesIO(b'\xff\xd8\xff\xff\xff\xff\xff\xff'), '')}
+            data={'signature_page': (BytesIO(valid_jpeg_bytes), '')}
         )
         s3.return_value.get_key.assert_called_with('already/uploaded/file/path.pdf')
         assert res.status_code == 302
