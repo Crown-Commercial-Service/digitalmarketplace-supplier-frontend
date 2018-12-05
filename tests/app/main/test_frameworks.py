@@ -5151,16 +5151,6 @@ class TestContractVariation(BaseApplicationTest):
 
         assert res.status_code == 404
 
-    @pytest.mark.parametrize("framework_status", ("live", "expired"))
-    def test_is_available_after_framework_goes_live(self, framework_status):
-        self.g8_framework["frameworks"]["status"] = framework_status
-        self.data_api_client.get_framework.return_value = self.g8_framework
-        self.data_api_client.get_supplier_framework_info.return_value = self.good_supplier_framework
-
-        res = self.client.get("/suppliers/frameworks/g-cloud-8/contract-variation/1")
-
-        assert res.status_code == 200
-
     def test_agreement_must_be_returned_already(self):
         agreement_not_returned = self.good_supplier_framework.copy()
         agreement_not_returned['frameworkInterest']['agreementReturned'] = False
