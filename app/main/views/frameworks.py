@@ -1175,7 +1175,7 @@ def contract_review(framework_slug, agreement_id):
 @main.route('/frameworks/<framework_slug>/contract-variation/<variation_slug>', methods=['GET', 'POST'])
 @login_required
 def view_contract_variation(framework_slug, variation_slug):
-    framework = get_framework_or_404(data_api_client, framework_slug, allowed_statuses=['live', 'expired'])
+    framework = get_framework_or_404(data_api_client, framework_slug, allowed_statuses=['live'])
     supplier_framework = return_supplier_framework_info_if_on_framework_or_abort(data_api_client, framework_slug)
     variation_details = framework.get('variations', {}).get(variation_slug)
 
