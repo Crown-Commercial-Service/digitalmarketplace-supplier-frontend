@@ -9,6 +9,8 @@ from dmutils import init_app
 from dmutils.user import User
 
 from config import configs
+from gds_metrics import GDSMetrics
+
 
 data_api_client = dmapiclient.DataAPIClient()
 login_manager = LoginManager()
@@ -44,6 +46,10 @@ def create_app(config_name):
 
     login_manager.login_message_category = "must_login"
     main_blueprint.config = application.config.copy()
+
+    # Temporaty initialisation of metrics within app rather than utils to test flask (app) level metrics
+    metrics = GDSMetrics()
+    metrics.init_app(application)
 
     csrf.init_app(application)
 
