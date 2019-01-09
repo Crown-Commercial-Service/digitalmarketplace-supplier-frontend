@@ -61,7 +61,6 @@ def get_supplier(*args, **kwargs):
         "tradingStatus": "Open for business",
         "name": "Supplier Name",
         "description": "Supplier Description",
-        "clients": ["Client One", "Client Two"],
         "companyDetailsConfirmed": True,
         "contactInformation": [{
             "id": 2,

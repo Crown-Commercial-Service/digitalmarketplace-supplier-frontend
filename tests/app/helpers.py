@@ -13,7 +13,7 @@ from markupsafe import escape
 from dmutils.formats import DATETIME_FORMAT
 
 from app import create_app, data_api_client
-from dmtestutils.api_model_stubs import FrameworkStub, SupplierFrameworkStub
+from dmtestutils.api_model_stubs import FrameworkStub, SupplierFrameworkStub, SupplierStub
 from dmtestutils.api_model_stubs.lot import cloud_lots, as_a_service_lots, dos_lots
 from dmtestutils.login import login_for_tests
 
@@ -262,23 +262,23 @@ class BaseApplicationTest:
 
     @staticmethod
     def supplier():
-        return {
-            "suppliers": {
+        supplier = SupplierStub(
+            **{
                 "id": 12345,
                 "name": "Supplier Name",
                 'description': 'Supplier Description',
                 'dunsNumber': '999999999',
                 'companiesHouseId': 'SC009988',
-                'contactInformation': [{
-                    'id': 1234,
-                    'contactName': 'contact name',
-                    'phoneNumber': '099887',
-                    'email': 'email@email.com',
-                    'website': 'http://myweb.com',
-                }],
-                'clients': ['one client', 'two clients']
             }
-        }
+        ).single_result_response()
+        supplier['suppliers']['contactInformation'] = [{
+            'id': 1234,
+            'contactName': 'contact name',
+            'phoneNumber': '099887',
+            'email': 'email@email.com',
+            'website': 'http://myweb.com',
+        }]
+        return supplier
 
     @staticmethod
     def user(id, email_address, supplier_id, supplier_name, name,
