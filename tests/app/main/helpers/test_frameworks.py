@@ -7,7 +7,7 @@ import pytest
 from lxml import html
 from werkzeug.exceptions import HTTPException
 
-from dmutils import api_stubs
+from dmtestutils.api_model_stubs import FrameworkStub, SupplierFrameworkStub
 from dmapiclient import DataAPIClient, HTTPError
 from dmcontent.errors import ContentNotFoundError
 
@@ -602,9 +602,9 @@ class CustomAbortException(Exception):
 class TestGetFrameworkOr500():
     def test_returns_framework(self):
         data_api_client_mock = mock.Mock()
-        data_api_client_mock.get_framework.return_value = api_stubs.framework()
+        data_api_client_mock.get_framework.return_value = FrameworkStub().single_result_response()
 
-        assert get_framework_or_500(data_api_client_mock, 'g-cloud-7')['slug'] == 'g-cloud-7'
+        assert get_framework_or_500(data_api_client_mock, 'g-cloud-10')['slug'] == 'g-cloud-10'
 
     @mock.patch('app.main.helpers.frameworks.abort')
     def test_aborts_with_500_if_framework_not_found(self, abort):
@@ -671,10 +671,10 @@ class TestEnsureApplicationCompanyDetailsHaveBeenConfirmed(BaseApplicationTest):
         def some_func(framework_slug):
             pass
 
-        self.data_api_client_mock.get_supplier_framework_info.return_value = api_stubs.supplier_framework(
+        self.data_api_client_mock.get_supplier_framework_info.return_value = SupplierFrameworkStub(
             framework_slug='g-cloud-10',
             application_company_details_confirmed=False
-        )
+        ).single_result_response()
 
         with mock.patch('app.main.helpers.frameworks.current_user') as current_user_patch:
             current_user_patch.return_value.is_authenticated = True
@@ -688,10 +688,10 @@ class TestEnsureApplicationCompanyDetailsHaveBeenConfirmed(BaseApplicationTest):
     def test_validator_returns_true_if_application_company_details_are_confirmed(self):
         decorator = EnsureApplicationCompanyDetailsHaveBeenConfirmed(self.data_api_client_mock)
 
-        self.data_api_client_mock.get_supplier_framework_info.return_value = api_stubs.supplier_framework(
+        self.data_api_client_mock.get_supplier_framework_info.return_value = SupplierFrameworkStub(
             framework_slug='g-cloud-10',
             application_company_details_confirmed=True
-        )
+        ).single_result_response()
 
         with mock.patch('app.main.helpers.frameworks.current_user') as current_user_patch:
             current_user_patch.return_value.is_authenticated = True
@@ -801,7 +801,7 @@ class TestReturn404IfApplicationClosed(BaseApplicationTest):
     @mock.patch('app.main.helpers.frameworks.current_user')
     def test_returns_404_and_logs_if_framework_status_not_open(self, current_user_mock, status):
         # 'coming' and 'expired' frameworks are caught by `get_framework_or_404`
-        self.data_api_client_mock.get_framework.return_value = api_stubs.framework(status=status)
+        self.data_api_client_mock.get_framework.return_value = FrameworkStub(status=status).single_result_response()
         current_user_mock.supplier_id = 123
 
         @return_404_if_applications_closed(lambda: self.data_api_client_mock)
@@ -831,7 +831,7 @@ class TestReturn404IfApplicationClosed(BaseApplicationTest):
     def test_renders_error_page_correctly_if_following_framework_content_set(
         self, content_loader_mock, content_set, status
     ):
-        self.data_api_client_mock.get_framework.return_value = api_stubs.framework(status=status)
+        self.data_api_client_mock.get_framework.return_value = FrameworkStub(status=status).single_result_response()
         if content_set:
             content_loader_mock.get_metadata.return_value = {
                 'name': 'Next Framework 2', 'slug': 'n-f-2', 'coming': '2042'
@@ -851,7 +851,7 @@ class TestReturn404IfApplicationClosed(BaseApplicationTest):
         document = html.fromstring(response[0])
         assert response[1] == 404
         assert document.xpath('//title/text()')[0] == "Applications closed - Digital Marketplace"
-        assert document.xpath('//h1/text()')[0] == "You can no longer apply to G-Cloud 7"
+        assert document.xpath('//h1/text()')[0] == "You can no longer apply to G-Cloud 10"
         assert "The deadline for applying was 12am GMT, Monday 3 January 2000." in \
             document.xpath('//div[@class="dmspeak"]/p/text()')[0]
 
@@ -862,7 +862,7 @@ class TestReturn404IfApplicationClosed(BaseApplicationTest):
             assert "is expected to open in" not in response[0]
 
     def test_returns_the_view_function_if_framework_is_open(self):
-        self.data_api_client_mock.get_framework.return_value = api_stubs.framework(status='open')
+        self.data_api_client_mock.get_framework.return_value = FrameworkStub(status='open').single_result_response()
 
         @return_404_if_applications_closed(lambda: self.data_api_client_mock)
         def view_function(framework_slug):
@@ -896,8 +896,8 @@ class TestReturn404IfApplicationClosed(BaseApplicationTest):
             'main.framework_supplier_declaration_edit',
         }
 
-        services_data_api_client.get_framework.return_value = api_stubs.framework(status='pending')
-        frameworks_data_api_client.get_framework.return_value = api_stubs.framework(status='pending')
+        services_data_api_client.get_framework.return_value = FrameworkStub(status='pending').single_result_response()
+        frameworks_data_api_client.get_framework.return_value = FrameworkStub(status='pending').single_result_response()
         current_user_mock.supplier_id = 123
         require_login_mock.return_value = False
 

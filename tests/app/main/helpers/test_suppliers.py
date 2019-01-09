@@ -4,7 +4,7 @@ from wtforms import StringField
 from wtforms.validators import Length
 from app.main.helpers.suppliers import get_country_name_from_country_code, supplier_company_details_are_complete
 
-from dmutils.api_stubs import supplier
+from dmtestutils.api_model_stubs import SupplierStub
 
 
 class TestGetCountryNameFromCountryCode:
@@ -26,14 +26,14 @@ class TestSupplierCompanyDetailsComplete:
     @pytest.mark.parametrize('supplier_data_from_api, expected_result',
                              (
                                  ({}, False),
-                                 ({**supplier()['suppliers'], 'dunsNumber': None}, False),
-                                 ({**supplier()['suppliers'], 'name': None}, False),
-                                 ({**supplier()['suppliers'], 'companiesHouseNumber': None}, False),
-                                 ({**supplier()['suppliers'], 'contactInformation': [{}]}, False),
+                                 ({**SupplierStub().response(), 'dunsNumber': None}, False),
+                                 ({**SupplierStub().response(), 'name': None}, False),
+                                 ({**SupplierStub().response(), 'companiesHouseNumber': None}, False),
+                                 ({**SupplierStub().response(), 'contactInformation': [{}]}, False),
 
-                                 (supplier()['suppliers'], True),
-                                 ({**supplier()['suppliers'], 'registrationCountry': 'gb'}, True),
-                                 (supplier(other_company_registration_number=12345)['suppliers'], True),
+                                 (SupplierStub().response(), True),
+                                 ({**SupplierStub().response(), 'registrationCountry': 'gb'}, True),
+                                 (SupplierStub(other_company_registration_number=12345).response(), True),
                              ))
     def test_returns_expected_value_for_input(self, supplier_data_from_api, expected_result):
         assert supplier_company_details_are_complete(supplier_data_from_api) is expected_result

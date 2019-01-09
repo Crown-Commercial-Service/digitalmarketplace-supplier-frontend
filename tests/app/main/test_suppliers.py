@@ -10,8 +10,7 @@ from werkzeug.exceptions import ServiceUnavailable
 
 from dmapiclient import APIError, HTTPError
 from dmapiclient.audit import AuditTypes
-from dmutils.api_stubs import framework as framework_stub
-from dmutils import api_stubs
+from dmtestutils.api_model_stubs import FrameworkStub, SupplierFrameworkStub
 
 from tests.app.helpers import BaseApplicationTest, assert_args_and_return
 from app.main.forms.suppliers import CompanyOrganisationSizeForm, CompanyTradingStatusForm
@@ -29,21 +28,23 @@ def framework_stub_dates(month):
 
 FIND_FRAMEWORKS_RETURN_VALUE = {
     "frameworks": [
-        framework_stub(status='expired', slug='h-cloud-88', name='H-Cloud 88', framework_family='g-cloud',
-                       **framework_stub_dates(1))['frameworks'],
-
-        framework_stub(status='live', slug='g-cloud-6',
-                       **framework_stub_dates(2))['frameworks'],
-
-        framework_stub(status='open', slug='digital-outcomes-and-specialists',
-                       **framework_stub_dates(4))['frameworks'],
-
-        framework_stub(status='live', slug='digital-rhymes-and-reasons', name='Digital Rhymes and Reasons',
-                       framework_family='digital-outcomes-and-specialists',
-                       **framework_stub_dates(3))['frameworks'],
-
-        framework_stub(status='open', slug='g-cloud-7',
-                       **framework_stub_dates(5))['frameworks'],
+        FrameworkStub(
+            status='expired',
+            slug='h-cloud-88',
+            name='H-Cloud 88',
+            framework_family='g-cloud',
+            **framework_stub_dates(1)
+        ).response(),
+        FrameworkStub(status='live', slug='g-cloud-6', **framework_stub_dates(2)).response(),
+        FrameworkStub(status='open', slug='digital-outcomes-and-specialists', **framework_stub_dates(4)).response(),
+        FrameworkStub(
+            status='live',
+            slug='digital-rhymes-and-reasons',
+            name='Digital Rhymes and Reasons',
+            framework_family='digital-outcomes-and-specialists',
+            **framework_stub_dates(3)
+        ).response(),
+        FrameworkStub(status='open', slug='g-cloud-7', **framework_stub_dates(5)).response(),
     ]
 }
 
@@ -214,10 +215,12 @@ class TestSuppliersDashboard(BaseApplicationTest):
         }
         self.data_api_client.find_frameworks.return_value = {
             "frameworks": [
-                framework_stub(status='coming', slug='bad-framework',
-                               name='Framework that should’t have coming message')['frameworks'],
-                framework_stub(status='coming', slug='digital-outcomes-and-specialists',
-                               name='Digital Outcomes and Specialists')['frameworks'],
+                FrameworkStub(
+                    status='coming', slug='bad-framework', name='Framework that should’t have coming message'
+                ).response(),
+                FrameworkStub(
+                    status='coming', slug='digital-outcomes-and-specialists', name='Digital Outcomes and Specialists'
+                ).response(),
             ]
         }
 
@@ -238,7 +241,7 @@ class TestSuppliersDashboard(BaseApplicationTest):
         self.data_api_client.get_supplier.side_effect = get_supplier
         self.data_api_client.find_frameworks.return_value = {
             "frameworks": [
-                framework_stub(status='expired', slug='digital-outcomes-and-specialists-2')['frameworks'],
+                FrameworkStub(status='expired', slug='digital-outcomes-and-specialists-2').response(),
             ]
         }
         self.data_api_client.get_supplier_frameworks.return_value = {
@@ -285,8 +288,8 @@ class TestSuppliersDashboard(BaseApplicationTest):
         self.data_api_client.get_supplier.side_effect = get_supplier
         self.data_api_client.find_frameworks.return_value = {
             "frameworks": [
-                framework_stub(status='expired', slug='digital-outcomes-and-specialists')['frameworks'],
-                framework_stub(status='open', slug='g-cloud-7')['frameworks'],
+                FrameworkStub(status='expired', slug='digital-outcomes-and-specialists').response(),
+                FrameworkStub(status='open', slug='g-cloud-7').response(),
             ]
         }
 
@@ -330,7 +333,7 @@ class TestSuppliersDashboard(BaseApplicationTest):
         self.data_api_client.get_supplier_frameworks.return_value = {'frameworkInterest': []}
         self.data_api_client.find_frameworks.return_value = {
             "frameworks": [
-                framework_stub(status='pending', slug='g-cloud-7')['frameworks'],
+                FrameworkStub(status='pending', slug='g-cloud-7').response(),
             ]
         }
         self.login()
@@ -358,7 +361,7 @@ class TestSuppliersDashboard(BaseApplicationTest):
         }
         self.data_api_client.find_frameworks.return_value = {
             "frameworks": [
-                framework_stub(status='pending', slug='g-cloud-7')['frameworks'],
+                FrameworkStub(status='pending', slug='g-cloud-7').response(),
             ]
         }
         self.login()
@@ -386,7 +389,7 @@ class TestSuppliersDashboard(BaseApplicationTest):
         }
         self.data_api_client.find_frameworks.return_value = {
             "frameworks": [
-                framework_stub(status='pending', slug='g-cloud-7')['frameworks'],
+                FrameworkStub(status='pending', slug='g-cloud-7').response(),
             ]
         }
         self.login()
@@ -481,7 +484,7 @@ class TestSuppliersDashboard(BaseApplicationTest):
         }
         self.data_api_client.find_frameworks.return_value = {
             "frameworks": [
-                framework_stub(status='standstill', slug='g-cloud-7')['frameworks'],
+                FrameworkStub(status='standstill', slug='g-cloud-7').response(),
             ]
         }
 
@@ -507,7 +510,7 @@ class TestSuppliersDashboard(BaseApplicationTest):
         }
         self.data_api_client.find_frameworks.return_value = {
             "frameworks": [
-                framework_stub(status='standstill', slug='g-cloud-7')['frameworks'],
+                FrameworkStub(status='standstill', slug='g-cloud-7').response(),
             ]
         }
 
@@ -547,8 +550,9 @@ class TestSuppliersDashboard(BaseApplicationTest):
         }
         self.data_api_client.find_frameworks.return_value = {
             "frameworks": [
-                framework_stub(status='standstill', slug='g-cloud-7',
-                               framework_live_at=datetime(2015, 11, 23))['frameworks'],
+                FrameworkStub(
+                    status='standstill', slug='g-cloud-7', framework_live_at=datetime(2015, 11, 23)
+                ).response(),
             ]
         }
 
@@ -576,8 +580,8 @@ class TestSuppliersDashboard(BaseApplicationTest):
         self.data_api_client.get_supplier.side_effect = get_supplier
         self.data_api_client.find_frameworks.return_value = {
             "frameworks": [
-                framework_stub(status='open', slug='digital-outcomes-and-specialists')['frameworks'],
-                framework_stub(status='live', slug='g-cloud-7')['frameworks'],
+                FrameworkStub(status='open', slug='digital-outcomes-and-specialists').response(),
+                FrameworkStub(status='live', slug='g-cloud-7').response(),
             ]
         }
         self.login()
@@ -603,8 +607,8 @@ class TestSuppliersDashboard(BaseApplicationTest):
         }
         self.data_api_client.find_frameworks.return_value = {
             "frameworks": [
-                framework_stub(status='open', slug='digital-outcomes-and-specialists')['frameworks'],
-                framework_stub(status='live', slug='g-cloud-7')['frameworks'],
+                FrameworkStub(status='open', slug='digital-outcomes-and-specialists').response(),
+                FrameworkStub(status='live', slug='g-cloud-7').response(),
             ]
         }
         self.login()
@@ -865,14 +869,14 @@ class TestSupplierDetails(BaseApplicationTest):
         self, framework_slug, framework_name, link_address
     ):
         self.data_api_client.get_supplier.return_value = get_supplier()
-        framework = framework_stub(name=framework_name, slug=framework_slug, status='open')
+        framework = FrameworkStub(name=framework_name, slug=framework_slug, status='open')
         self.data_api_client.find_frameworks.return_value = {
-            "frameworks": [framework['frameworks']],
+            "frameworks": [framework.response()],
         }
-        self.data_api_client.get_framework.return_value = framework
+        self.data_api_client.get_framework.return_value = framework.single_result_response()
         self.data_api_client.get_supplier_frameworks.return_value = {
             'frameworkInterest': [
-                api_stubs.supplier_framework(framework_slug=framework_slug)['frameworkInterest']
+                SupplierFrameworkStub(framework_slug=framework_slug).response()
             ]
         }
 
@@ -936,7 +940,7 @@ class TestSupplierDetails(BaseApplicationTest):
         self.data_api_client.get_supplier.return_value = supplier_details
         self.data_api_client.get_supplier_frameworks.return_value = {
             'frameworkInterest': [
-                api_stubs.supplier_framework()['frameworkInterest']
+                SupplierFrameworkStub().response()
             ]
         }
 
@@ -955,14 +959,14 @@ class TestSupplierDetails(BaseApplicationTest):
     ):
         self.data_api_client.get_supplier.return_value = get_supplier(companyDetailsConfirmed=True)
         self.data_api_client.find_frameworks.return_value = {
-            "frameworks": [framework_stub(status='open', slug='g-cloud-9')['frameworks']]
+            "frameworks": [FrameworkStub(status='open', slug='g-cloud-9').response()]
         }
         self.data_api_client.get_supplier_frameworks.return_value = {
             'frameworkInterest': [
-                api_stubs.supplier_framework(
+                SupplierFrameworkStub(
                     framework_slug='g-cloud-9',
                     application_company_details_confirmed=application_company_details_confirmed
-                )['frameworkInterest'],
+                ).response(),
             ]
         }
 
@@ -983,22 +987,26 @@ class TestSupplierDetails(BaseApplicationTest):
         self.data_api_client.get_supplier.return_value = get_supplier(companyDetailsConfirmed=False)
         self.data_api_client.find_frameworks.return_value = {
             "frameworks": [
-                framework_stub(status='live', slug='g-cloud-8')['frameworks'],
-                framework_stub(status='open', slug='g-cloud-9')['frameworks'],
-                framework_stub(status='live', slug='digital-outcomes-and-specialists')['frameworks'],
-                framework_stub(status='open', slug='digital-outcomes-and-specialists-2')['frameworks'],
+                FrameworkStub(status='live', slug='g-cloud-8').response(),
+                FrameworkStub(status='open', slug='g-cloud-9').response(),
+                FrameworkStub(status='live', slug='digital-outcomes-and-specialists').response(),
+                FrameworkStub(status='open', slug='digital-outcomes-and-specialists-2').response(),
             ]
         }
         self.data_api_client.get_supplier_frameworks.return_value = {
             'frameworkInterest': [
-                api_stubs.supplier_framework(framework_slug='g-cloud-8',
-                                             application_company_details_confirmed=False)['frameworkInterest'],
-                api_stubs.supplier_framework(framework_slug='g-cloud-9',
-                                             application_company_details_confirmed=False)['frameworkInterest'],
-                api_stubs.supplier_framework(framework_slug='digital-outcomes-and-specialists',
-                                             application_company_details_confirmed=False)['frameworkInterest'],
-                api_stubs.supplier_framework(framework_slug='digital-outcomes-and-specialists-2',
-                                             application_company_details_confirmed=False)['frameworkInterest'],
+                SupplierFrameworkStub(
+                    framework_slug='g-cloud-8', application_company_details_confirmed=False
+                ).response(),
+                SupplierFrameworkStub(
+                    framework_slug='g-cloud-9', application_company_details_confirmed=False
+                ).response(),
+                SupplierFrameworkStub(
+                    framework_slug='digital-outcomes-and-specialists', application_company_details_confirmed=False
+                ).response(),
+                SupplierFrameworkStub(
+                    framework_slug='digital-outcomes-and-specialists-2', application_company_details_confirmed=False
+                ).response(),
             ]
         }
 
@@ -1101,7 +1109,7 @@ class TestSupplierOpportunitiesDashboardLink(BaseApplicationTest):
     def find_frameworks_stub(self):
         return {'frameworks': [
             {
-                **framework_stub(status='live', slug='digital-outcomes-and-specialists-3')['frameworks'],
+                **FrameworkStub(status='live', slug='digital-outcomes-and-specialists-3').response(),
                 'framework': 'digital-outcomes-and-specialists'
             }
         ]}
@@ -2377,13 +2385,11 @@ class TestBecomeASupplier(BaseApplicationTest):
     def test_frameworks_are_sorted_correctly(self, get_frameworks_closed_and_open_for_applications):
         self.data_api_client.find_frameworks.return_value = {
             "frameworks": [
-                framework_stub(framework_id=3, status='live', slug='g-cloud-9')['frameworks'],
-                framework_stub(framework_id=1, status='expired', slug='g-cloud-8')['frameworks'],
-                framework_stub(framework_id=5, status='pending', slug='g-cloud-10')['frameworks'],
-                framework_stub(framework_id=2, status='live', slug='digital-outcomes-and-specialists')['frameworks'],
-                framework_stub(
-                    framework_id=4, status='coming', slug='digital-outcomes-and-specialists-2'
-                )['frameworks'],
+                FrameworkStub(id=3, status='live', slug='g-cloud-9').response(),
+                FrameworkStub(id=1, status='expired', slug='g-cloud-8').response(),
+                FrameworkStub(id=5, status='pending', slug='g-cloud-10').response(),
+                FrameworkStub(id=2, status='live', slug='digital-outcomes-and-specialists').response(),
+                FrameworkStub(id=4, status='coming', slug='digital-outcomes-and-specialists-2').response(),
             ]
         }
 
@@ -2404,10 +2410,10 @@ class TestBecomeASupplier(BaseApplicationTest):
     def test_all_open_or_coming_frameworks(self):
         self.data_api_client.find_frameworks.return_value = {
             "frameworks": [
-                framework_stub(status='open', slug='g-cloud-9')['frameworks'],
-                framework_stub(status='live', slug='g-cloud-8')['frameworks'],
-                framework_stub(status='coming', slug='digital-outcomes-and-specialists-2')['frameworks'],
-                framework_stub(status='live', slug='digital-outcomes-and-specialists')['frameworks'],
+                FrameworkStub(status='open', slug='g-cloud-9').response(),
+                FrameworkStub(status='live', slug='g-cloud-8').response(),
+                FrameworkStub(status='coming', slug='digital-outcomes-and-specialists-2').response(),
+                FrameworkStub(status='live', slug='digital-outcomes-and-specialists').response(),
             ]
         }
 
@@ -2432,10 +2438,10 @@ class TestBecomeASupplier(BaseApplicationTest):
     def test_all_closed_frameworks(self):
         self.data_api_client.find_frameworks.return_value = {
             "frameworks": [
-                framework_stub(status='live', slug='g-cloud-9')['frameworks'],
-                framework_stub(status='expired', slug='g-cloud-8')['frameworks'],
-                framework_stub(status='standstill', slug='digital-outcomes-and-specialists-2')['frameworks'],
-                framework_stub(status='live', slug='digital-outcomes-and-specialists')['frameworks'],
+                FrameworkStub(status='live', slug='g-cloud-9').response(),
+                FrameworkStub(status='expired', slug='g-cloud-8').response(),
+                FrameworkStub(status='standstill', slug='digital-outcomes-and-specialists-2').response(),
+                FrameworkStub(status='live', slug='digital-outcomes-and-specialists').response(),
             ]
         }
 
@@ -2460,10 +2466,10 @@ class TestBecomeASupplier(BaseApplicationTest):
     def test_one_open_one_closed_framework(self):
         self.data_api_client.find_frameworks.return_value = {
             "frameworks": [
-                framework_stub(status='open', slug='g-cloud-9')['frameworks'],
-                framework_stub(status='live', slug='g-cloud-8')['frameworks'],
-                framework_stub(status='live', slug='digital-outcomes-and-specialists-2')['frameworks'],
-                framework_stub(status='expired', slug='digital-outcomes-and-specialists')['frameworks'],
+                FrameworkStub(status='open', slug='g-cloud-9').response(),
+                FrameworkStub(status='live', slug='g-cloud-8').response(),
+                FrameworkStub(status='live', slug='digital-outcomes-and-specialists-2').response(),
+                FrameworkStub(status='expired', slug='digital-outcomes-and-specialists').response(),
             ]
         }
 

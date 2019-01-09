@@ -16,8 +16,8 @@ from dmapiclient import (
 )
 from dmapiclient.audit import AuditTypes
 from dmcontent.errors import ContentNotFoundError
+from dmtestutils.api_model_stubs import FrameworkStub, SupplierStub
 from dmtestutils.fixtures import valid_jpeg_bytes
-from dmutils import api_stubs
 from dmutils.email.exceptions import EmailError
 from dmutils.s3 import S3ResponseError
 
@@ -303,7 +303,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
 
         self.data_api_client.get_framework.return_value = self.framework(status='open')
         self.data_api_client.get_supplier_framework_info.side_effect = APIError(mock.Mock(status_code=404))
-        self.data_api_client.get_supplier.return_value = api_stubs.supplier()
+        self.data_api_client.get_supplier.return_value = SupplierStub().single_result_response()
 
         res = self.client.get("/suppliers/frameworks/g-cloud-7")
         assert res.status_code == 200
@@ -746,7 +746,9 @@ class TestFrameworksDashboard(BaseApplicationTest):
     def test_pending_success_message_is_explicit_if_supplier_is_on_framework(self, s3):
         self.login()
 
-        self.data_api_client.get_framework.return_value = self.framework(status='standstill')
+        self.data_api_client.get_framework.return_value = self.framework(
+            status='standstill', framework_agreement_version=None
+        )
         self.data_api_client.find_draft_services.return_value = {
             "services": [{'serviceName': 'A service', 'status': 'submitted', 'lotSlug': 'iaas'}]
         }
@@ -1637,7 +1639,7 @@ class TestFrameworksDashboardConfidenceBannerOnPage(BaseApplicationTest):
             "services": [{'serviceName': 'A service', 'status': 'submitted', 'lotSlug': 'foo'}]
         }
         self.data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(status='complete')
-        self.data_api_client.get_supplier.return_value = api_stubs.supplier()
+        self.data_api_client.get_supplier.return_value = SupplierStub().single_result_response()
 
         self.login()
         res = self.client.get("/suppliers/frameworks/g-cloud-8")
@@ -1645,30 +1647,31 @@ class TestFrameworksDashboardConfidenceBannerOnPage(BaseApplicationTest):
         assert self.expected in str(res.data)
 
     @pytest.mark.parametrize(
-        ('declaration_status', 'draft_service_status', 'supplier_data', 'check_text_in_doc'),
+        ('declaration_status', 'draft_service_status', 'details_confirmed', 'check_text_in_doc'),
         (
-            ('started', 'submitted', api_stubs.supplier(company_details_confirmed=True), [
+            ('started', 'submitted', True, [
                 'Your company details were saved',
                 'No services will be submitted because you haven’t finished making the supplier '
                 'declaration',
                 'You’ve completed',
             ]),
-            ('complete', 'not-submitted', api_stubs.supplier(company_details_confirmed=True), [
+            ('complete', 'not-submitted', True, [
                 'Your company details were saved',
                 'You’ve made the supplier declaration',
                 'No services marked as complete',
             ]),
-            ('unstarted', 'not-submitted', api_stubs.supplier(company_details_confirmed=False), [
+            ('unstarted', 'not-submitted', False, [
                 'You must confirm your organisation’s details',
                 'Can\'t start yet',
                 'Can\'t start yet'
             ]),
         )
     )
-    def test_confidence_banner_not_on_page_if_sections_incomplete(self, _,
-                                                                  declaration_status, draft_service_status,
-                                                                  supplier_data, check_text_in_doc):
+    def test_confidence_banner_not_on_page_if_sections_incomplete(
+        self, _, declaration_status, draft_service_status, details_confirmed, check_text_in_doc
+    ):
         """Change value and assert that confidence banner is not displayed."""
+        supplier_data = SupplierStub(company_details_confirmed=details_confirmed).single_result_response()
 
         self.data_api_client.find_draft_services.return_value = {
             "services": [{'serviceName': 'A service', 'status': draft_service_status, 'lotSlug': 'foo'}]
@@ -3938,7 +3941,7 @@ class TestServicesList(BaseApplicationTest, MockEnsureApplicationCompanyDetailsH
         self.login()
         self.data_api_client.get_framework.return_value = self.framework(status='pending')
         self.data_api_client.get_supplier_declaration.return_value = self.supplier_framework()['frameworkInterest']
-        self.data_api_client.get_supplier.return_value = api_stubs.supplier()
+        self.data_api_client.get_supplier.return_value = SupplierStub().single_result_response()
         self.data_api_client.find_draft_services.return_value = {
             'services': [{'serviceName': 'draft', 'lotSlug': 'scs', 'status': 'submitted'}]
         }
@@ -4006,7 +4009,9 @@ class TestServicesList(BaseApplicationTest, MockEnsureApplicationCompanyDetailsH
         self.data_api_client.find_draft_services.return_value = {
             'services': [{'serviceName': 'draft', 'lotSlug': 'scs', 'status': 'submitted'}]
         }
-        self.data_api_client.get_supplier.return_value = api_stubs.supplier(company_details_confirmed=False)
+        self.data_api_client.get_supplier.return_value = SupplierStub(
+            company_details_confirmed=False
+        ).single_result_response()
 
         submissions = self.client.get('/suppliers/frameworks/g-cloud-7/submissions')
         lot_page = self.client.get('/suppliers/frameworks/g-cloud-7/submissions/scs')
@@ -4031,7 +4036,9 @@ class TestServicesList(BaseApplicationTest, MockEnsureApplicationCompanyDetailsH
         self.data_api_client.find_draft_services.return_value = {
             'services': [{'serviceName': 'draft', 'lotSlug': 'scs', 'status': 'submitted'}]
         }
-        self.data_api_client.get_supplier.return_value = api_stubs.supplier(company_details_confirmed=False)
+        self.data_api_client.get_supplier.return_value = SupplierStub(
+            company_details_confirmed=False
+        ).single_result_response()
 
         submissions = self.client.get('/suppliers/frameworks/g-cloud-7/submissions')
         submissions_html = submissions.get_data(as_text=True)
@@ -4066,7 +4073,7 @@ class TestServicesList(BaseApplicationTest, MockEnsureApplicationCompanyDetailsH
             status='open'
         )
         self.data_api_client.get_supplier_declaration.return_value = {'declaration': {'status': 'complete'}}
-        self.data_api_client.get_supplier.return_value = api_stubs.supplier()
+        self.data_api_client.get_supplier.return_value = SupplierStub().single_result_response()
         self.data_api_client.find_draft_services.return_value = {
             'services': [{'serviceName': 'draft', 'lotSlug': 'digital-specialists', 'status': 'submitted'}]
         }
@@ -4125,7 +4132,7 @@ class TestServicesList(BaseApplicationTest, MockEnsureApplicationCompanyDetailsH
         self.login()
 
         self.data_api_client.get_framework.return_value = self.framework(status='open')
-        self.data_api_client.get_supplier.return_value = api_stubs.supplier()
+        self.data_api_client.get_supplier.return_value = SupplierStub().single_result_response()
         self.data_api_client.get_supplier_declaration.return_value = declaration
         self.data_api_client.find_draft_services.return_value = {
             'services': [{'serviceName': 'draft', 'lotSlug': 'scs', 'status': 'submitted'}]
@@ -5371,10 +5378,12 @@ class TestReuseFrameworkSupplierDeclaration(BaseApplicationTest,
         self.login()
         self.data_api_client_patch = mock.patch('app.main.views.frameworks.data_api_client', autospec=True)
         self.data_api_client = self.data_api_client_patch.start()
-        self.framework_stub = api_stubs.framework(name='g-cloud-8',
-                                                  slug='g-cloud-8',
-                                                  allow_declaration_reuse=True,
-                                                  applications_close_at=datetime(2009, 12, 3, 1, 1, 1))
+        self.framework_stub = FrameworkStub(
+            name='g-cloud-8',
+            slug='g-cloud-8',
+            allow_declaration_reuse=True,
+            applications_close_at=datetime(2009, 12, 3, 1, 1, 1)
+        ).single_result_response()
 
     def teardown_method(self, method):
         self.data_api_client_patch.stop()
@@ -5416,9 +5425,11 @@ class TestReuseFrameworkSupplierDeclaration(BaseApplicationTest,
         """Redirect if a reusable declaration is not found."""
         self.data_api_client.get_framework.return_value = self.framework_stub
         frameworks = [
-            api_stubs.framework(slug='ben-cloud-2',
-                                allow_declaration_reuse=True,
-                                applications_close_at=datetime(2009, 3, 3, 1, 1, 1))['frameworks']
+            FrameworkStub(
+                name='ben-cloud-2',
+                allow_declaration_reuse=True,
+                applications_close_at=datetime(2009, 3, 3, 1, 1, 1)
+            ).response()
         ]
 
         supplier_declarations = []
@@ -5446,17 +5457,16 @@ class TestReuseFrameworkSupplierDeclaration(BaseApplicationTest,
         t12 = datetime(2012, 3, 3, 1, 1, 1)
 
         frameworks_response = [
-            api_stubs.framework(slug='g-cloud-8', allow_declaration_reuse=True,
-                                applications_close_at=t12)['frameworks'],
-            api_stubs.framework(slug='g-cloud-7', allow_declaration_reuse=True,
-                                applications_close_at=t11)['frameworks'],
-            api_stubs.framework(slug='digital-outcomes-and-specialists', allow_declaration_reuse=True,
-                                applications_close_at=t10)['frameworks'],
-            api_stubs.framework(slug='g-cloud-6', allow_declaration_reuse=True,
-                                applications_close_at=t09)['frameworks'],
+            FrameworkStub(slug='g-cloud-8', allow_declaration_reuse=True, applications_close_at=t12).response(),
+            FrameworkStub(slug='g-cloud-7', allow_declaration_reuse=True, applications_close_at=t11).response(),
+            FrameworkStub(
+                slug='digital-outcomes-and-specialists', allow_declaration_reuse=True, applications_close_at=t10
+            ).response(),
+            FrameworkStub(slug='g-cloud-6', allow_declaration_reuse=True, applications_close_at=t09).response(),
         ]
-        framework_response = api_stubs.framework(slug='g-cloud-8', allow_declaration_reuse=True,
-                                                 applications_close_at=t09)['frameworks']
+        framework_response = FrameworkStub(
+            slug='g-cloud-8', allow_declaration_reuse=True, applications_close_at=t09).response()
+
         supplier_declarations_response = [
             {'x': 'foo', 'frameworkSlug': 'g-cloud-6', 'declaration': {'status': 'complete'}, 'onFramework': True},
             {'x': 'foo', 'frameworkSlug': 'g-cloud-7', 'declaration': {'status': 'complete'}, 'onFramework': True},
