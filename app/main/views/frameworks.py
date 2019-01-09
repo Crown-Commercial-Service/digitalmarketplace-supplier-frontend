@@ -17,7 +17,7 @@ from dmutils.documents import (
     RESULT_LETTER_FILENAME, AGREEMENT_FILENAME, SIGNED_AGREEMENT_PREFIX, SIGNED_SIGNATURE_PAGE_PREFIX,
     SIGNATURE_PAGE_FILENAME, get_document_path, generate_timestamped_document_upload_path,
     degenerate_document_path_and_return_doc_name, get_signed_url, get_extension, file_is_less_than_5mb,
-    file_is_empty, file_is_image, file_is_pdf, sanitise_supplier_name
+    file_is_image, file_is_pdf, sanitise_supplier_name
 )
 from dmutils.email.dm_mandrill import DMMandrillClient
 from dmutils.email.dm_notify import DMNotifyClient
@@ -871,95 +871,6 @@ def framework_agreement(framework_slug):
         supplier_framework=supplier_framework,
         agreement_filename=AGREEMENT_FILENAME,
     ), 200
-
-
-@main.route('/frameworks/<framework_slug>/agreement', methods=['POST'])
-@login_required
-def upload_framework_agreement(framework_slug):
-    """
-    This is the route used to upload agreements for pre-G-Cloud 8 frameworks
-    """
-    framework = get_framework_or_404(data_api_client, framework_slug, allowed_statuses=['standstill', 'live'])
-    # if there's a frameworkAgreementVersion key it means we're on G-Cloud 8 or higher and shouldn't be using this route
-    if framework.get('frameworkAgreementVersion'):
-        abort(404)
-
-    supplier_framework = return_supplier_framework_info_if_on_framework_or_abort(data_api_client, framework_slug)
-
-    upload_error = None
-    if not file_is_less_than_5mb(request.files['agreement']):
-        upload_error = "Document must be less than 5MB"
-    elif file_is_empty(request.files['agreement']):
-        upload_error = "Document must not be empty"
-
-    if upload_error is not None:
-        return render_template(
-            "frameworks/agreement.html",
-            framework=framework,
-            supplier_framework=supplier_framework,
-            upload_error=upload_error,
-            agreement_filename=AGREEMENT_FILENAME,
-        ), 400
-
-    agreements_bucket = s3.S3(current_app.config['DM_AGREEMENTS_BUCKET'])
-    extension = get_extension(request.files['agreement'].filename)
-
-    path = generate_timestamped_document_upload_path(
-        framework_slug,
-        current_user.supplier_id,
-        'agreements',
-        '{}{}'.format(SIGNED_AGREEMENT_PREFIX, extension)
-    )
-    agreements_bucket.save(
-        path,
-        request.files['agreement'],
-        acl='bucket-owner-full-control',
-        download_filename='{}-{}-{}{}'.format(
-            sanitise_supplier_name(current_user.supplier_name),
-            current_user.supplier_id,
-            SIGNED_AGREEMENT_PREFIX,
-            extension
-        )
-    )
-
-    agreement_id = data_api_client.create_framework_agreement(
-        current_user.supplier_id, framework_slug, current_user.email_address
-    )['agreement']['id']
-    data_api_client.update_framework_agreement(
-        agreement_id, {"signedAgreementPath": path}, current_user.email_address
-    )
-    data_api_client.sign_framework_agreement(
-        agreement_id, current_user.email_address, {"uploaderUserId": current_user.id}
-    )
-
-    mandrill_client = DMMandrillClient()
-    email_body = render_template(
-        'emails/framework_agreement_uploaded.html',
-        framework_name=framework['name'],
-        supplier_name=current_user.supplier_name,
-        supplier_id=current_user.supplier_id,
-        user_name=current_user.name
-    )
-    try:
-        mandrill_client.send_email(
-            to_email_addresses=current_app.config['DM_FRAMEWORK_AGREEMENTS_EMAIL'],
-            email_body=email_body,
-            subject='{} framework agreement'.format(framework['name']),
-            from_email_address=current_app.config["DM_ENQUIRIES_EMAIL_ADDRESS"],
-            from_name='{} Supplier'.format(framework['name']),
-            tags=['{}-framework-agreement'.format(framework_slug)],
-            reply_to=current_user.email_address,
-        )
-    except EmailError as e:
-        current_app.logger.error(
-            "Framework agreement email failed to send. "
-            "error {error} supplier_id {supplier_id} email_hash {email_hash}",
-            extra={'error': str(e),
-                   'supplier_id': current_user.supplier_id,
-                   'email_hash': hash_string(current_user.email_address)})
-        abort(503, "Framework agreement email failed to send")
-
-    return redirect(url_for('.framework_agreement', framework_slug=framework_slug))
 
 
 @main.route('/frameworks/<framework_slug>/create-agreement', methods=['POST'])
