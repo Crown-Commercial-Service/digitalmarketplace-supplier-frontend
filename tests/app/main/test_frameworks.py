@@ -3470,6 +3470,7 @@ class TestSendClarificationQuestionEmail(BaseApplicationTest):
                 personalisation={'user_name': 'Năme', 'framework_name': 'Test Framework',
                                  'clarification_question_text': clarification_question},
                 reference=mock.ANY,
+                reply_to_address_id=mock.ANY
             )
 
     def _assert_application_email(self, mandrill_send_email, *email_body_content, succeeds=True):
