@@ -21,7 +21,6 @@ from dmtestutils.fixtures import valid_jpeg_bytes
 from dmutils.email.exceptions import EmailError
 from dmutils.s3 import S3ResponseError
 
-from app.main.views.frameworks import render_template as frameworks_render_template
 from app.main.forms.frameworks import ReuseDeclarationForm
 from ..helpers import (
     BaseApplicationTest,
@@ -160,24 +159,8 @@ class TestFrameworksDashboard(BaseApplicationTest):
 
         assert res.status_code == 404
 
-    @mock.patch('app.main.views.frameworks.DMMandrillClient.send_email', autospec=True)
-    def test_interest_registered_in_framework_on_post(self, mandrill_send_email, s3):
-        self.login()
-
-        self.data_api_client.get_framework.return_value = self.framework(status='open')
-        self.data_api_client.get_supplier_framework_info.return_value = self.supplier_framework()
-        res = self.client.post("/suppliers/frameworks/digital-outcomes-and-specialists")
-
-        assert res.status_code == 200
-        self.data_api_client.register_framework_interest.assert_called_once_with(
-            1234,
-            "digital-outcomes-and-specialists",
-            "email@email.com"
-        )
-
-    @mock.patch('app.main.views.frameworks.DMMandrillClient.send_email', autospec=True)
-    @mock.patch('app.main.views.frameworks.render_template', wraps=frameworks_render_template)
-    def test_email_sent_when_interest_registered_in_framework(self, render_template, mandrill_send_email, s3):
+    @mock.patch('app.main.views.frameworks.DMNotifyClient', autospec=True)
+    def test_email_sent_when_interest_registered_in_framework(self, mock_dmnotifyclient_class, s3):
         self.login()
 
         self.data_api_client.get_framework.return_value = self.framework(status='open')
@@ -187,16 +170,19 @@ class TestFrameworksDashboard(BaseApplicationTest):
             {'emailAddress': 'email2', 'active': True},
             {'emailAddress': 'email3', 'active': False}
         ]
+        mock_dmnotifyclient_instance = mock_dmnotifyclient_class.return_value
+        mock_dmnotifyclient_instance.templates = {'g-cloud': '123456789'}
         res = self.client.post("/suppliers/frameworks/g-cloud-7")
 
+        self.data_api_client.register_framework_interest.assert_called_once_with(
+            1234,
+            "g-cloud-7",
+            "email@email.com"
+        )
         assert res.status_code == 200
 
-        # render_template calls the correct template with the correct context variables.
-        assert render_template.call_args_list[0][0] == ('emails/g-cloud_application_started.html', )
-        assert set(render_template.call_args_list[0][1].keys()) == {'framework'}
-
-        assert mandrill_send_email.call_count == 1
-        assert mandrill_send_email.call_args[1]["to_email_addresses"] == ["email1", "email2"]
+        assert mock_dmnotifyclient_instance.send_email.call_count == 2
+        assert mock_dmnotifyclient_instance.send_email.call_args[1].get('template_name_or_id') == '123456789'
 
     def test_interest_not_registered_in_framework_on_get(self, s3):
         self.login()

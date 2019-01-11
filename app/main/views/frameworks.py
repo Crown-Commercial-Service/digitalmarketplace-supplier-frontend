@@ -91,24 +91,25 @@ def framework_dashboard(framework_slug):
         register_interest_in_framework(data_api_client, framework_slug)
         supplier_users = data_api_client.find_users_iter(supplier_id=current_user.supplier_id)
 
-        mandrill_client = DMMandrillClient()
-        email_body = render_template(
-            f'emails/{framework["framework"]}_application_started.html',
-            framework=framework
+        notify_client = DMNotifyClient(
+            current_app.config['DM_NOTIFY_API_KEY'],
+            templates={
+                'g-cloud': '7362aad7-1ffa-4e36-8ddd-d16cc5305175',
+                'digital-outcomes-and-specialists': '1920c708-66a9-466e-a0ae-3bd13d31e32d'
+            }
         )
-        try:
-            mandrill_client.send_email(
-                to_email_addresses=[user['emailAddress'] for user in supplier_users if user['active']],
-                email_body=email_body,
-                subject='You started a {} application'.format(framework['name']),
-                from_email_address=current_app.config['DM_ENQUIRIES_EMAIL_ADDRESS'],
-                from_name=current_app.config['CLARIFICATION_EMAIL_NAME'],
-                tags=['{}-application-started'.format(framework_slug)],
-            )
-        except EmailError as e:
-            current_app.logger.error(
-                "Application started email failed to send: {error}, supplier_id: {supplier_id}",
-                extra={'error': str(e), 'supplier_id': current_user.supplier_id}
+
+        for address in [user['emailAddress'] for user in supplier_users if user['active']]:
+            # this has no try block as any error is caught and handled by the DMNotifyClient
+            notify_client.send_email(
+                to_email_address=address,
+                template_name_or_id=notify_client.templates[framework['family']],
+                personalisation={
+                    'framework_name': framework['name'],
+                    'framework_applications_close_date': framework['applicationsCloseAt'],
+                    'framework_clarification_questions_close_date': framework['clarificationsCloseAt'],
+                },
+                reply_to_address_id='24908180-b64e-513d-ab48-fdca677cec52'  # this is enquiries@...
             )
 
     drafts, complete_drafts = get_drafts(data_api_client, framework_slug)
@@ -1034,10 +1035,10 @@ def contract_review(framework_slug, agreement_id):
             agreement_id, current_user.email_address, {'uploaderUserId': current_user.id}
         )
 
-        email_client = DMNotifyClient()
+        notify_client = DMNotifyClient()
         for email_address in returned_agreement_email_recipients(supplier_framework):
             try:
-                email_client.send_email(
+                notify_client.send_email(
                     to_email_address=email_address,
                     template_name_or_id="framework_agreement_signature_page",
                     personalisation={
