@@ -91,13 +91,7 @@ def framework_dashboard(framework_slug):
         register_interest_in_framework(data_api_client, framework_slug)
         supplier_users = data_api_client.find_users_iter(supplier_id=current_user.supplier_id)
 
-        notify_client = DMNotifyClient(
-            current_app.config['DM_NOTIFY_API_KEY'],
-            templates={
-                'g-cloud': '7362aad7-1ffa-4e36-8ddd-d16cc5305175',
-                'digital-outcomes-and-specialists': '1920c708-66a9-466e-a0ae-3bd13d31e32d'
-            }
-        )
+        notify_client = DMNotifyClient()
 
         for address in [user['emailAddress'] for user in supplier_users if user['active']]:
             # this has no try block as any error is caught and handled by the DMNotifyClient
@@ -781,7 +775,7 @@ def framework_updates_email_clarification_question(framework_slug):
         # No need to fail if this email does not send
         audit_type = AuditTypes.send_clarification_question
 
-        notify_client = DMNotifyClient(current_app.config['DM_NOTIFY_API_KEY'])
+        notify_client = DMNotifyClient()
         confirmation_email_personalisation = {
             'user_name': current_user.name,
             'framework_name': framework['name'],
@@ -1047,7 +1041,8 @@ def contract_review(framework_slug, agreement_id):
                             get_web_url_from_stage(current_app.config["DM_ENVIRONMENT"])
                             + url_for(".framework_updates", framework_slug=framework["slug"])
                         ),
-                    }
+                    },
+                    reference=f"contract-review-agreement-{hash_string(email_address)}"
                 )
             except EmailError:
                 # We don't need to handle this as the email is only informational,
@@ -1086,6 +1081,9 @@ def contract_review(framework_slug, agreement_id):
 @main.route('/frameworks/<framework_slug>/contract-variation/<variation_slug>', methods=['GET', 'POST'])
 @login_required
 def view_contract_variation(framework_slug, variation_slug):
+    """
+    This view asks suppliers to agree to a framework variation and then generates a confirmation email  when they do.
+    """
     framework = get_framework_or_404(data_api_client, framework_slug, allowed_statuses=['live'])
     supplier_framework = return_supplier_framework_info_if_on_framework_or_abort(data_api_client, framework_slug)
     variation_details = framework.get('variations', {}).get(variation_slug)
@@ -1120,23 +1118,13 @@ def view_contract_variation(framework_slug, variation_slug):
         )
 
         # Send email confirming accepted
-        mandrill_client = DMMandrillClient()
-        email_body = render_template(
-            'emails/{}_variation_{}_agreed.html'.format(framework_slug, variation_slug)
-        )
-        try:
-            mandrill_client.send_email(
-                to_email_addresses=returned_agreement_email_recipients(supplier_framework),
-                email_body=email_body,
-                subject='{}: you have accepted the proposed contract variation'.format(framework['name']),
-                from_email_address=current_app.config['DM_ENQUIRIES_EMAIL_ADDRESS'],
-                from_name=current_app.config['CLARIFICATION_EMAIL_NAME'],
-                tags=['{}-variation-accepted'.format(framework_slug)]
-            )
-        except EmailError as e:
-            current_app.logger.error(
-                "Variation agreed email failed to send: {error}, supplier_id: {supplier_id}",
-                extra={'error': str(e), 'supplier_id': current_user.supplier_id}
+        notify_client = DMNotifyClient()
+        for address in returned_agreement_email_recipients(supplier_framework):
+            notify_client.send_email(
+                to_email_address=address,
+                template_name_or_id=notify_client.templates[f'{framework_slug}_variation_{variation_slug}_agreed'],
+                personalisation={'framework_name': framework_slug},
+                reference=f"contract-variation-agreed-confirmation-{hash_string(address)}"
             )
         flash(variation_content.confirmation_message, "success")
         return redirect(url_for(".view_contract_variation",
