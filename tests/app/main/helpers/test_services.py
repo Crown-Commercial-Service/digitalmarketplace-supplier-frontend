@@ -1,7 +1,7 @@
 import mock
 import pytest
 
-from dmutils.api_stubs import supplier_framework
+from dmtestutils.api_model_stubs import SupplierFrameworkStub
 
 from app.main.helpers.services import copy_service_from_previous_framework
 
@@ -22,9 +22,9 @@ class TestCopyServiceFromPreviousFramework():
 
         self.get_supplier_framework_info_patch = mock.patch('app.main.helpers.services.get_supplier_framework_info')
         self.get_supplier_framework_info = self.get_supplier_framework_info_patch.start()
-        self.get_supplier_framework_info.return_value = supplier_framework(
+        self.get_supplier_framework_info.return_value = SupplierFrameworkStub(
             framework_slug='digital-outcomes-and-specialists-3'
-        )
+        ).single_result_response()
 
         self.api_client_mock = mock.Mock()
         self.content_loader_mock = mock.Mock()

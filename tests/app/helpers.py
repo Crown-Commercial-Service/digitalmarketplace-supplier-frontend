@@ -10,10 +10,11 @@ from werkzeug.datastructures import ImmutableDict
 from werkzeug.http import parse_cookie
 from markupsafe import escape
 
-from dmutils import api_stubs
 from dmutils.formats import DATETIME_FORMAT
 
 from app import create_app, data_api_client
+from dmtestutils.api_model_stubs import FrameworkStub, SupplierFrameworkStub, SupplierStub
+from dmtestutils.api_model_stubs.lot import cloud_lots, as_a_service_lots, dos_lots
 from dmtestutils.login import login_for_tests
 
 
@@ -261,23 +262,23 @@ class BaseApplicationTest:
 
     @staticmethod
     def supplier():
-        return {
-            "suppliers": {
+        supplier = SupplierStub(
+            **{
                 "id": 12345,
                 "name": "Supplier Name",
                 'description': 'Supplier Description',
                 'dunsNumber': '999999999',
                 'companiesHouseId': 'SC009988',
-                'contactInformation': [{
-                    'id': 1234,
-                    'contactName': 'contact name',
-                    'phoneNumber': '099887',
-                    'email': 'email@email.com',
-                    'website': 'http://myweb.com',
-                }],
-                'clients': ['one client', 'two clients']
             }
-        }
+        ).single_result_response()
+        supplier['suppliers']['contactInformation'] = [{
+            'id': 1234,
+            'contactName': 'contact name',
+            'phoneNumber': '099887',
+            'email': 'email@email.com',
+            'website': 'http://myweb.com',
+        }]
+        return supplier
 
     @staticmethod
     def user(id, email_address, supplier_id, supplier_name, name,
@@ -341,44 +342,28 @@ class BaseApplicationTest:
     ):
         if 'g-cloud-' in slug:
             if int(slug.split('-')[-1]) >= 9:
-                lots = [
-                    api_stubs.lot(lot_id=9, slug='cloud-hosting', name='Cloud hosting', one_service_limit=False),
-                    api_stubs.lot(lot_id=10, slug='cloud-software', name='Cloud software', one_service_limit=False),
-                    api_stubs.lot(lot_id=11, slug='cloud-support', name='Cloud support', one_service_limit=False),
-                ]
+                lots = cloud_lots()
             else:
-                lots = [
-                    api_stubs.lot(lot_id=1, slug='iaas', name='Infrastructure as a Service', one_service_limit=False),
-                    api_stubs.lot(lot_id=2, slug='scs', name='Specialist Cloud Services', one_service_limit=False),
-                    api_stubs.lot(lot_id=3, slug='paas', name='Platform as a Service', one_service_limit=False),
-                    api_stubs.lot(lot_id=4, slug='saas', name='Software as a Service', one_service_limit=False),
-                ]
-
+                lots = as_a_service_lots()
         elif 'digital-outcomes-and-specialists' in slug:
-            lots = [
-                api_stubs.lot(lot_id=5, slug='digital-outcomes', name='Digital outcomes', one_service_limit=True),
-                api_stubs.lot(lot_id=6, slug='digital-specialists', name='Digital specialists', one_service_limit=True),
-                api_stubs.lot(lot_id=7, slug='user-research-participants', name='User research participants',
-                              one_service_limit=True),
-                api_stubs.lot(lot_id=8, slug='user-research-studios', name='User research studios',
-                              one_service_limit=False),
-            ]
-
+            lots = dos_lots()
         else:
             lots = []
 
-        return api_stubs.framework(status=status,
-                                   name=name,
-                                   slug=slug,
-                                   clarification_questions_open=clarification_questions_open,
-                                   lots=lots,
-                                   framework_agreement_version=framework_agreement_version,
-                                   applications_close_at=datetime(2015, 10, 6, 16),
-                                   intention_to_award_at=datetime(2015, 10, 20, 12),
-                                   clarifications_close_at=datetime(2015, 9, 22, 16),
-                                   clarifications_publish_at=datetime(2015, 9, 29, 16),
-                                   framework_live_at=datetime(2015, 11, 23, 12),
-                                   framework_expires_at=datetime(2016, 11, 23, 12))
+        return FrameworkStub(
+            status=status,
+            name=name,
+            slug=slug,
+            clarification_questions_open=clarification_questions_open,
+            lots=lots,
+            framework_agreement_version=framework_agreement_version,
+            applications_close_at=datetime(2015, 10, 6, 16),
+            intention_to_award_at=datetime(2015, 10, 20, 12),
+            clarifications_close_at=datetime(2015, 9, 22, 16),
+            clarifications_publish_at=datetime(2015, 9, 29, 16),
+            framework_live_at=datetime(2015, 11, 23, 12),
+            framework_expires_at=datetime(2016, 11, 23, 12)
+        ).single_result_response()
 
     @staticmethod
     def supplier_framework(
@@ -410,7 +395,9 @@ class BaseApplicationTest:
             declaration_status=status,
             application_company_details_confirmed=application_company_details_confirmed,
         )
-        supplier_framework = api_stubs.supplier_framework(**{k: v for k, v in stub_kwargs.items() if v is not None})
+        supplier_framework = SupplierFrameworkStub(
+            **{k: v for k, v in stub_kwargs.items()}
+        ).single_result_response()
 
         if declaration == 'default':
             supplier_framework['frameworkInterest']['declaration'] = FULL_G7_SUBMISSION.copy()

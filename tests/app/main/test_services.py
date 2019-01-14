@@ -11,7 +11,7 @@ import mock
 import pytest
 
 from dmapiclient import HTTPError
-from dmutils import api_stubs
+from dmtestutils.api_model_stubs import FrameworkStub, LotStub, SupplierStub
 from dmtestutils.fixtures import valid_pdf_bytes
 
 from app.main.helpers.services import parse_document_upload_time
@@ -2411,7 +2411,7 @@ class TestGetListPreviousServices(BaseApplicationTest, MockEnsureApplicationComp
         }
         get_metadata.return_value = 'g-cloud-9'
         self.data_api_client.get_supplier_declaration.return_value = {'declaration': {'status': declaration_status}}
-        self.data_api_client.get_supplier.return_value = api_stubs.supplier()
+        self.data_api_client.get_supplier.return_value = SupplierStub().single_result_response()
 
         res = self.client.get(
             '/suppliers/frameworks/g-cloud-10/submissions/cloud-hosting/previous-services'
@@ -2514,10 +2514,10 @@ class TestPostListPreviousService(BaseApplicationTest, MockEnsureApplicationComp
         ),
     )
     def test_400s_if_draft_already_exists(self, lot_name, lot_slug):
-        self.data_api_client.get_framework.return_value = api_stubs.framework(
+        self.data_api_client.get_framework.return_value = FrameworkStub(
             slug='digital-outcomes-and-specialists-3',
-            lots=[api_stubs.lot(name=lot_name, slug=lot_slug, one_service_limit=True)]
-        )
+            lots=[LotStub(name=lot_name, slug=lot_slug, one_service_limit=True).response()]
+        ).single_result_response()
         self.data_api_client.find_draft_services.return_value = {
             "services": [
                 {'status': 'not-submitted', 'lotSlug': lot_slug},
