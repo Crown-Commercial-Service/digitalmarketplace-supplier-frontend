@@ -105,7 +105,6 @@ def framework_dashboard(framework_slug):
                 to_email_address=address,
                 template_name_or_id=notify_client.templates[framework['family']],
                 personalisation={
-                    'framework_name': framework['name'],
                     'framework_applications_close_date': framework['applicationsCloseAt'],
                     'framework_clarification_questions_close_date': framework['clarificationsCloseAt'],
                 },

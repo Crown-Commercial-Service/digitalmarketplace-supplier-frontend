@@ -4562,7 +4562,7 @@ class TestContractReviewPage(BaseApplicationTest):
         )
 
     def test_return_400_response_and_no_email_sent_if_authorisation_not_checked(
-        self, mandrill_send_email, s3, return_supplier_framework
+        self, s3, return_supplier_framework
     ):
         self.login()
         self.data_api_client.get_framework.return_value = get_g_cloud_8()
@@ -4584,7 +4584,7 @@ class TestContractReviewPage(BaseApplicationTest):
         res = self.client.post("/suppliers/frameworks/g-cloud-8/234/contract-review", data={})
         assert res.status_code == 400
         page = res.get_data(as_text=True)
-        assert mandrill_send_email.called is False
+        assert self.notify_send_email.called is False
         assert "You must confirm you have the authority to return the agreement" in page
 
     def test_valid_framework_agreement_returned_updates_api_and_sends_confirmation_emails_and_unsets_session(
@@ -4695,7 +4695,7 @@ class TestContractReviewPage(BaseApplicationTest):
 
         assert res.status_code == 302
 
-    def test_email_not_sent_if_api_call_fails(self, mandrill_send_email, s3, return_supplier_framework):
+    def test_email_not_sent_if_api_call_fails(self, s3, return_supplier_framework):
         self.login()
         self.data_api_client.get_framework.return_value = get_g_cloud_8()
         self.data_api_client.sign_framework_agreement.side_effect = APIError(mock.Mock(status_code=500))
@@ -4721,7 +4721,7 @@ class TestContractReviewPage(BaseApplicationTest):
 
         assert self.data_api_client.sign_framework_agreement.called is True
         assert res.status_code == 500
-        assert mandrill_send_email.called is False
+        assert self.notify_send_email.called is False
 
     def test_framework_agreement_returned_having_signed_contract_variation_redirects_to_framework_dashboard(
         self, mandrill_send_email, s3, return_supplier_framework
@@ -5003,10 +5003,12 @@ class TestContractVariation(BaseApplicationTest):
         assert len(doc.xpath('//label[contains(text(), "I accept these proposed changes")]')) == 0
         assert len(doc.xpath('//input[@value="I accept"]')) == 0
 
-    def test_api_is_called_to_agree(self):
+    @mock.patch('app.main.views.frameworks.DMNotifyClient', autospec=True, create=True)
+    def test_email_is_sent_to_correct_users(self, mocked_notify_class):
+        mocked_notify_client = mocked_notify_class.return_value
+        mocked_notify_client.templates = {'g-cloud-8_variation_1': 123456789}
         self.data_api_client.get_framework.return_value = self.g8_framework
         self.data_api_client.get_supplier_framework_info.return_value = self.good_supplier_framework
-
         res = self.client.post(
             "/suppliers/frameworks/g-cloud-8/contract-variation/1",
             data={"accept_changes": "Yes"}
@@ -5017,48 +5019,33 @@ class TestContractVariation(BaseApplicationTest):
         self.data_api_client.agree_framework_variation.assert_called_once_with(
             1234, 'g-cloud-8', '1', 123, 'email@email.com'
         )
+        boss_email = mock.call('bigboss@email.com', 123456789, personalisation={'framework_name': 'g-cloud-8'})
+        regular_email = mock.call('email@email.com', 123456789, personalisation={'framework_name': 'g-cloud-8'})
+        mocked_notify_client.send_email.assert_has_calls([boss_email, regular_email], any_order=True)
 
-    @mock.patch('app.main.views.frameworks.DMMandrillClient.send_email', autospec=True)
-    def test_email_is_sent_to_correct_users(self, mandrill_send_email):
-        self.data_api_client.get_framework.return_value = self.g8_framework
-        self.data_api_client.get_supplier_framework_info.return_value = self.good_supplier_framework
-        self.client.post(
-            "/suppliers/frameworks/g-cloud-8/contract-variation/1",
-            data={"accept_changes": "Yes"}
-        )
-
-        mandrill_send_email.assert_called_once_with(
-            mock.ANY,  # self
-            to_email_addresses=['bigboss@email.com', 'email@email.com'],
-            email_body=mock.ANY,
-            subject='G-Cloud 8: you have accepted the proposed contract variation',
-            from_email_address='enquiries@digitalmarketplace.service.gov.uk',
-            from_name='Digital Marketplace Admin',
-            tags=['g-cloud-8-variation-accepted'],
-        )
-
-    @mock.patch('app.main.views.frameworks.DMMandrillClient.send_email', autospec=True)
-    def test_only_one_email_sent_if_user_is_framework_contact(self, mandrill_send_email):
+    @mock.patch('app.main.views.frameworks.DMNotifyClient', autospec=True)
+    def test_only_one_email_sent_if_user_is_framework_contact(self, mocked_notify_class):
         same_email_as_current_user = self.good_supplier_framework.copy()
         same_email_as_current_user['frameworkInterest']['declaration']['primaryContactEmail'] = 'email@email.com'
         self.data_api_client.get_framework.return_value = self.g8_framework
         self.data_api_client.get_supplier_framework_info.return_value = same_email_as_current_user
+        mocked_notify_client = mocked_notify_class.return_value
+        mocked_notify_client.templates = {'g-cloud-8_variation_1': 123456789}
         self.client.post(
             "/suppliers/frameworks/g-cloud-8/contract-variation/1",
             data={"accept_changes": "Yes"}
         )
 
-        mandrill_send_email.assert_called_once_with(
-            mock.ANY,  # self
-            to_email_addresses=['email@email.com'],
-            email_body=mock.ANY,
-            subject='G-Cloud 8: you have accepted the proposed contract variation',
-            from_email_address='enquiries@digitalmarketplace.service.gov.uk',
-            from_name='Digital Marketplace Admin',
-            tags=['g-cloud-8-variation-accepted'],
+        mocked_notify_client.send_email.assert_called_once_with(
+            to_email_address='email@email.com',
+            personalisation={'framework_name': 'g-cloud-8'},
+            template_name_or_id=123456789
         )
 
-    def test_success_message_is_displayed_on_success(self):
+    @mock.patch('app.main.views.frameworks.DMNotifyClient', autospec=True)
+    def test_success_message_is_displayed_on_success(self, mocked_notify_class):
+        mocked_notify_client = mocked_notify_class.return_value
+        mocked_notify_client.templates = {'g-cloud-8_variation_1': 123456789}
         self.data_api_client.get_framework.return_value = self.g8_framework
         self.data_api_client.get_supplier_framework_info.return_value = self.good_supplier_framework
         res = self.client.post(
@@ -5073,8 +5060,9 @@ class TestContractVariation(BaseApplicationTest):
             doc.xpath('//p[@class="banner-message"][contains(text(), "You have accepted the proposed changes.")]')
         ) == 1, res.get_data(as_text=True)
 
-    @mock.patch('app.main.views.frameworks.DMMandrillClient.send_email')
-    def test_api_is_not_called_and_no_email_sent_for_subsequent_posts(self, mandrill_send_email):
+    @mock.patch('app.main.views.frameworks.DMNotifyClient', autospec=True)
+    def test_api_is_not_called_and_no_email_sent_for_subsequent_posts(self, mocked_notify_class):
+        mocked_notify_client = mocked_notify_class.return_value
         already_agreed = self.good_supplier_framework.copy()
         already_agreed['frameworkInterest']['agreedVariations'] = {
             "1": {
@@ -5093,7 +5081,7 @@ class TestContractVariation(BaseApplicationTest):
         )
         assert res.status_code == 200
         assert self.data_api_client.agree_framework_variation.called is False
-        assert mandrill_send_email.called is False
+        assert mocked_notify_client.called is False
 
     def test_error_if_box_not_ticked(self):
         self.data_api_client.get_framework.return_value = self.g8_framework
