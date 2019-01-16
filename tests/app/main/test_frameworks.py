@@ -4398,7 +4398,6 @@ class TestSignatureUploadPage(BaseApplicationTest):
 
 @mock.patch("app.main.views.frameworks.return_supplier_framework_info_if_on_framework_or_abort")
 @mock.patch('dmutils.s3.S3')
-@mock.patch('app.main.views.frameworks.DMMandrillClient.send_email', autospec=True)
 class TestContractReviewPage(BaseApplicationTest):
 
     def setup_method(self, method):
@@ -4414,7 +4413,7 @@ class TestContractReviewPage(BaseApplicationTest):
         super().teardown_method(method)
 
     def test_contract_review_page_loads_with_correct_supplier_and_signer_details_and_filename(
-        self, mandrill_send_email, s3, return_supplier_framework
+        self, s3, return_supplier_framework
     ):
         self.login()
         self.data_api_client.get_framework.return_value = get_g_cloud_8()
@@ -4450,7 +4449,7 @@ class TestContractReviewPage(BaseApplicationTest):
         assert '<tdclass="summary-item-field-first"><span>test.pdf</span></td>' in page_without_whitespace
 
     def test_contract_review_page_loads_with_uploaded_time_of_file_if_no_filename_in_session(
-        self, mandrill_send_email, s3, return_supplier_framework
+        self, s3, return_supplier_framework
     ):
         self.login()
         self.data_api_client.get_framework.return_value = get_g_cloud_8()
@@ -4481,7 +4480,7 @@ class TestContractReviewPage(BaseApplicationTest):
         )
 
     def test_contract_review_page_aborts_if_visited_when_information_required_to_return_agreement_does_not_exist(
-        self, mandrill_send_email, s3, return_supplier_framework
+        self, s3, return_supplier_framework
     ):
         self.login()
         self.data_api_client.get_framework.return_value = get_g_cloud_8()
@@ -4509,7 +4508,6 @@ class TestContractReviewPage(BaseApplicationTest):
     def test_we_abort_if_agreement_does_not_match_supplier_framework(
         self,
         check_agreement_is_related_to_supplier_framework_or_abort,
-        mandrill_send_email,
         s3,
         return_supplier_framework
     ):
@@ -4554,7 +4552,7 @@ class TestContractReviewPage(BaseApplicationTest):
         assert "You must confirm you have the authority to return the agreement" in page
 
     def test_valid_framework_agreement_returned_updates_api_and_sends_confirmation_emails_and_unsets_session(
-        self, mandrill_send_email, s3, return_supplier_framework
+        self, s3, return_supplier_framework
     ):
         self.login()
         self.data_api_client.get_framework.return_value = get_g_cloud_8()
@@ -4604,7 +4602,7 @@ class TestContractReviewPage(BaseApplicationTest):
             assert 'signature_page' not in sess
 
     def test_valid_framework_agreement_returned_sends_only_one_confirmation_email_if_contact_email_addresses_are_equal(
-        self, mandrill_send_email, s3, return_supplier_framework
+        self, s3, return_supplier_framework
     ):
         self.login()
         self.data_api_client.get_framework.return_value = get_g_cloud_8()
@@ -4631,7 +4629,7 @@ class TestContractReviewPage(BaseApplicationTest):
         assert self.notify_send_email.call_count == 1
 
     def test_return_normal_response_if_email_exception_raised_by_send_email(
-        self, mandrill_send_email, s3, return_supplier_framework
+        self, s3, return_supplier_framework
     ):
         self.login()
         self.data_api_client.get_framework.return_value = get_g_cloud_8()
@@ -4690,7 +4688,7 @@ class TestContractReviewPage(BaseApplicationTest):
         assert self.notify_send_email.called is False
 
     def test_framework_agreement_returned_having_signed_contract_variation_redirects_to_framework_dashboard(
-        self, mandrill_send_email, s3, return_supplier_framework
+        self, s3, return_supplier_framework
     ):
         self.login()
 
@@ -4730,7 +4728,7 @@ class TestContractReviewPage(BaseApplicationTest):
         assert res.location == 'http://localhost/suppliers/frameworks/g-cloud-8'
 
     def test_framework_agreement_returned_having_not_signed_contract_variation_redirects_to_variation(
-        self, mandrill_send_email, s3, return_supplier_framework
+        self, s3, return_supplier_framework
     ):
         self.login()
 
@@ -4764,7 +4762,7 @@ class TestContractReviewPage(BaseApplicationTest):
         assert res.location == 'http://localhost/suppliers/frameworks/g-cloud-8/contract-variation/1'
 
     def test_framework_agreement_returned_for_framework_with_no_variations_redirects_to_framework_dashboard(
-        self, mandrill_send_email, s3, return_supplier_framework
+        self, s3, return_supplier_framework
     ):
         self.login()
 
