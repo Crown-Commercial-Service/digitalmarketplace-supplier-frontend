@@ -34,6 +34,8 @@ class Config(object):
         "create_user_account": "84f5d812-df9d-4ab8-804a-06f64f5abd30",
         "invite_contributor": "5eefe42d-1694-4388-8908-991cdfba0a71",
         "framework_agreement_signature_page": "08929c93-f9e7-4b40-b75f-418659308324",
+        'g-cloud-application-started': '7362aad7-1ffa-4e36-8ddd-d16cc5305175',
+        'digital-outcomes-and-specialists-application-started': '1920c708-66a9-466e-a0ae-3bd13d31e32d'
     }
 
     DM_AGREEMENTS_BUCKET = None
@@ -58,6 +60,7 @@ class Config(object):
     FRAMEWORK_AGREEMENT_RETURNED_NAME = 'Digital Marketplace Admin'
 
     DM_ENQUIRIES_EMAIL_ADDRESS = 'enquiries@digitalmarketplace.service.gov.uk'
+    DM_ENQUIRIES_EMAIL_ADDRESS_UUID = '24908180-b64e-513d-ab48-fdca677cec52'
 
     SECRET_KEY = None
     SHARED_EMAIL_KEY = None

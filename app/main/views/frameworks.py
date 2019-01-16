@@ -94,15 +94,14 @@ def framework_dashboard(framework_slug):
         notify_client = DMNotifyClient()
 
         for address in [user['emailAddress'] for user in supplier_users if user['active']]:
-            # this has no try block as any error is caught and handled by the DMNotifyClient
             notify_client.send_email(
                 to_email_address=address,
-                template_name_or_id=notify_client.templates[framework['family']],
+                template_name_or_id=notify_client.templates[f"{framework['family']}-application-started"],
                 personalisation={
                     'framework_applications_close_date': framework['applicationsCloseAt'],
                     'framework_clarification_questions_close_date': framework['clarificationsCloseAt'],
                 },
-                reply_to_address_id='24908180-b64e-513d-ab48-fdca677cec52'  # this is enquiries@...
+                reply_to_address_id=current_app.config['DM_ENQUIRIES_EMAIL_ADDRESS_UUID']
             )
 
     drafts, complete_drafts = get_drafts(data_api_client, framework_slug)

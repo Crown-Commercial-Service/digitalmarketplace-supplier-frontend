@@ -171,7 +171,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
             {'emailAddress': 'email3', 'active': False}
         ]
         mock_dmnotifyclient_instance = mock_dmnotifyclient_class.return_value
-        mock_dmnotifyclient_instance.templates = {'g-cloud': '123456789'}
+        mock_dmnotifyclient_instance.templates = {'g-cloud-application-started': '123456789'}
         res = self.client.post("/suppliers/frameworks/g-cloud-7")
 
         self.data_api_client.register_framework_interest.assert_called_once_with(
@@ -4972,7 +4972,7 @@ class TestContractVariation(BaseApplicationTest):
     @mock.patch('app.main.views.frameworks.DMNotifyClient', autospec=True, create=True)
     def test_email_is_sent_to_correct_users(self, mocked_notify_class):
         mocked_notify_client = mocked_notify_class.return_value
-        mocked_notify_client.templates = {'g-cloud-8_variation_1': 123456789}
+        mocked_notify_client.templates = {'g-cloud-8_variation_1_agreed': 123456789}
         self.data_api_client.get_framework.return_value = self.g8_framework
         self.data_api_client.get_supplier_framework_info.return_value = self.good_supplier_framework
         res = self.client.post(
@@ -5002,7 +5002,7 @@ class TestContractVariation(BaseApplicationTest):
         self.data_api_client.get_framework.return_value = self.g8_framework
         self.data_api_client.get_supplier_framework_info.return_value = same_email_as_current_user
         mocked_notify_client = mocked_notify_class.return_value
-        mocked_notify_client.templates = {'g-cloud-8_variation_1': 123456789}
+        mocked_notify_client.templates = {'g-cloud-8_variation_1_agreed': 123456789}
         self.client.post(
             "/suppliers/frameworks/g-cloud-8/contract-variation/1",
             data={"accept_changes": "Yes"}
@@ -5018,7 +5018,7 @@ class TestContractVariation(BaseApplicationTest):
     @mock.patch('app.main.views.frameworks.DMNotifyClient', autospec=True)
     def test_success_message_is_displayed_on_success(self, mocked_notify_class):
         mocked_notify_client = mocked_notify_class.return_value
-        mocked_notify_client.templates = {'g-cloud-8_variation_1': 123456789}
+        mocked_notify_client.templates = {'g-cloud-8_variation_1_agreed': 123456789}
         self.data_api_client.get_framework.return_value = self.g8_framework
         self.data_api_client.get_supplier_framework_info.return_value = self.good_supplier_framework
         res = self.client.post(
