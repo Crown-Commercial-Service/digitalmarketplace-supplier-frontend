@@ -14,7 +14,7 @@ from dmcontent.errors import ContentNotFoundError
 from dmutils import s3
 from dmutils.dates import update_framework_with_formatted_dates
 from dmutils.documents import (
-    RESULT_LETTER_FILENAME, AGREEMENT_FILENAME, SIGNED_AGREEMENT_PREFIX, SIGNED_SIGNATURE_PAGE_PREFIX,
+    RESULT_LETTER_FILENAME, SIGNED_AGREEMENT_PREFIX, SIGNED_SIGNATURE_PAGE_PREFIX,
     SIGNATURE_PAGE_FILENAME, get_document_path, generate_timestamped_document_upload_path,
     degenerate_document_path_and_return_doc_name, get_signed_url, get_extension, file_is_less_than_5mb,
     file_is_image, file_is_pdf, sanitise_supplier_name
@@ -785,11 +785,11 @@ def framework_updates_email_clarification_question(framework_slug):
         try:
             notify_client.send_email(
                 current_user.email_address,
-                template_name_or_id=current_app.config['NOTIFY_TEMPLATES']['confirmation_of_clarification_question'],
+                template_name_or_id=notify_client.templates['confirmation_of_clarification_question'],
                 personalisation=confirmation_email_personalisation,
-                reference='clarification-question-confirm-{}'.format(hash_string(current_user.email_address))
+                reference='clarification-question-confirm-{}'.format(hash_string(current_user.email_address)),
+                reply_to_address_id=current_app.config['DM_ENQUIRIES_EMAIL_ADDRESS_UUID']
             )
-
         except EmailError as e:
             current_app.logger.error(
                 "{code}: Clarification question confirm email for email_hash {email_hash} failed to send. "
@@ -829,41 +829,29 @@ def framework_agreement(framework_slug):
             date_parse(supplier_framework['agreementReturnedAt'])
         )
 
-    # if there's a frameworkAgreementVersion key, it means we're on G-Cloud 8 or higher
-    if framework.get('frameworkAgreementVersion'):
-        def lot_result(drafts_for_lot):
-            if any(draft['status'] == 'submitted' for draft in drafts_for_lot):
-                return 'Successful'
-            elif any(draft['status'] == 'failed' for draft in drafts_for_lot):
-                return 'Unsuccessful'
-            else:
-                return 'No application'
+    def lot_result(drafts_for_lot):
+        if any(draft['status'] == 'submitted' for draft in drafts_for_lot):
+            return 'Successful'
+        elif any(draft['status'] == 'failed' for draft in drafts_for_lot):
+            return 'Unsuccessful'
+        else:
+            return 'No application'
 
-        drafts, complete_drafts = get_drafts(data_api_client, framework_slug)
-        complete_drafts_by_lot = {
-            lot['slug']: [draft for draft in complete_drafts if draft['lotSlug'] == lot['slug']]
-            for lot in framework['lots']
-        }
-        lot_results = {k: lot_result(v) for k, v in complete_drafts_by_lot.items()}
-
-        return render_template(
-            'frameworks/contract_start.html',
-            signature_page_filename=SIGNATURE_PAGE_FILENAME,
-            framework=framework,
-            framework_urls=content_loader.get_message(framework_slug, 'urls'),
-            lots=[{
-                'name': lot['name'],
-                'result': lot_results[lot['slug']]
-            } for lot in framework['lots']],
-            supplier_framework=supplier_framework,
-            supplier_registered_name=get_supplier_registered_name_from_declaration(supplier_framework['declaration']),
-        ), 200
+    drafts, complete_drafts = get_drafts(data_api_client, framework_slug)
+    complete_drafts_by_lot = {
+        lot['slug']: [draft for draft in complete_drafts if draft['lotSlug'] == lot['slug']]
+        for lot in framework['lots']
+    }
+    lot_results = {k: lot_result(v) for k, v in complete_drafts_by_lot.items()}
 
     return render_template(
-        "frameworks/agreement.html",
+        'frameworks/contract_start.html',
+        signature_page_filename=SIGNATURE_PAGE_FILENAME,
         framework=framework,
+        framework_urls=content_loader.get_message(framework_slug, 'urls'),
+        lots=[{'name': lot['name'], 'result': lot_results[lot['slug']]} for lot in framework['lots']],
         supplier_framework=supplier_framework,
-        agreement_filename=AGREEMENT_FILENAME,
+        supplier_registered_name=get_supplier_registered_name_from_declaration(supplier_framework['declaration']),
     ), 200
 
 
@@ -1084,6 +1072,7 @@ def view_contract_variation(framework_slug, variation_slug):
     """
     This view asks suppliers to agree to a framework variation and then generates a confirmation email  when they do.
     """
+    # TODO: create a variation template in Notify web UI before adding a variation to a framework in the API
     framework = get_framework_or_404(data_api_client, framework_slug, allowed_statuses=['live'])
     supplier_framework = return_supplier_framework_info_if_on_framework_or_abort(data_api_client, framework_slug)
     variation_details = framework.get('variations', {}).get(variation_slug)

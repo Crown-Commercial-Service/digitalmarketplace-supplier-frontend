@@ -1701,8 +1701,7 @@ class TestFrameworkAgreement(BaseApplicationTest):
         data = res.get_data(as_text=True)
 
         assert res.status_code == 200
-        assert u'Send document to CCS' in data
-        assert u'Return your signed signature page' not in data
+        assert u'Return your signed signature page' in data
 
     def test_page_returns_404_if_framework_in_wrong_state(self):
         self.login()
@@ -1724,39 +1723,6 @@ class TestFrameworkAgreement(BaseApplicationTest):
         res = self.client.get("/suppliers/frameworks/g-cloud-7/agreement")
 
         assert res.status_code == 404
-
-    @mock.patch('dmutils.s3.S3')
-    def test_upload_message_if_agreement_is_returned(self, s3):
-        self.login()
-
-        self.data_api_client.get_framework.return_value = self.framework(status='standstill')
-        self.data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
-            on_framework=True, agreement_returned=True, agreement_returned_at='2015-11-02T15:25:56.000000Z'
-        )
-
-        res = self.client.get('/suppliers/frameworks/g-cloud-7/agreement')
-        data = res.get_data(as_text=True)
-        doc = html.fromstring(data)
-
-        assert res.status_code == 200
-        assert u'/suppliers/frameworks/g-cloud-7/agreement' == doc.xpath('//form')[1].action
-        assert u'Document uploaded Monday 2 November 2015 at 3:25pm' in data
-        assert u'Your document has been uploaded' in data
-
-    def test_upload_message_if_agreement_is_not_returned(self):
-        self.login()
-
-        self.data_api_client.get_framework.return_value = self.framework(status='standstill')
-        self.data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(on_framework=True)
-
-        res = self.client.get('/suppliers/frameworks/g-cloud-7/agreement')
-        data = res.get_data(as_text=True)
-        doc = html.fromstring(data)
-
-        assert res.status_code == 200
-        assert u'/suppliers/frameworks/g-cloud-7/agreement' == doc.xpath('//form')[1].action
-        assert u'Document uploaded' not in data
-        assert u'Your document has been uploaded' not in data
 
     def test_loads_contract_start_page_if_framework_agreement_version_exists(self):
         self.login()
@@ -5019,9 +4985,15 @@ class TestContractVariation(BaseApplicationTest):
         self.data_api_client.agree_framework_variation.assert_called_once_with(
             1234, 'g-cloud-8', '1', 123, 'email@email.com'
         )
-        boss_email = mock.call('bigboss@email.com', 123456789, personalisation={'framework_name': 'g-cloud-8'})
-        regular_email = mock.call('email@email.com', 123456789, personalisation={'framework_name': 'g-cloud-8'})
-        mocked_notify_client.send_email.assert_has_calls([boss_email, regular_email], any_order=True)
+        boss_email = mock.call(
+            'bigboss@email.com', template_name_or_id=123456789, personalisation={'framework_name': 'g-cloud-8'},
+            reference="contract-variation-agreed-confirmation-ouj_ZOpWHvitNdb7O7DDQGEB-lstuMfj9oEl5oWU4C0="
+        )
+        regular_email = mock.call(
+            'email@email.com', template_name_or_id=123456789, personalisation={'framework_name': 'g-cloud-8'},
+            reference="contract-variation-agreed-confirmation-8yc90Y2VvBnVHT5jVuSmeebxOCRJcnKicOe7VAsKu50="
+        )
+        mocked_notify_client.send_email.assert_has_calls([boss_email, regular_email], any_order=False)
 
     @mock.patch('app.main.views.frameworks.DMNotifyClient', autospec=True)
     def test_only_one_email_sent_if_user_is_framework_contact(self, mocked_notify_class):
@@ -5039,7 +5011,8 @@ class TestContractVariation(BaseApplicationTest):
         mocked_notify_client.send_email.assert_called_once_with(
             to_email_address='email@email.com',
             personalisation={'framework_name': 'g-cloud-8'},
-            template_name_or_id=123456789
+            template_name_or_id=123456789,
+            reference='contract-variation-agreed-confirmation-8yc90Y2VvBnVHT5jVuSmeebxOCRJcnKicOe7VAsKu50='
         )
 
     @mock.patch('app.main.views.frameworks.DMNotifyClient', autospec=True)
@@ -5055,6 +5028,7 @@ class TestContractVariation(BaseApplicationTest):
         )
         doc = html.fromstring(res.get_data(as_text=True))
 
+        assert mocked_notify_client.send_email.called
         assert res.status_code == 200
         assert len(
             doc.xpath('//p[@class="banner-message"][contains(text(), "You have accepted the proposed changes.")]')
