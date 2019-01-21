@@ -19,7 +19,6 @@ from dmutils.documents import (
     degenerate_document_path_and_return_doc_name, get_signed_url, get_extension, file_is_less_than_5mb,
     file_is_image, file_is_pdf, sanitise_supplier_name
 )
-from dmutils.email.dm_mandrill import DMMandrillClient
 from dmutils.email.dm_notify import DMNotifyClient
 from dmutils.email.exceptions import EmailError
 from dmutils.email.helpers import hash_string
@@ -722,42 +721,33 @@ def framework_updates_email_clarification_question(framework_slug):
             default_textbox_value=clarification_question
         )
 
-    # Submit email to Zendesk so the question can be answered
+    # Submit email to CCS so the question can be answered
     # Fail if this email does not send
     if framework['clarificationQuestionsOpen']:
-        subject = "{} clarification question".format(framework['name'])
         to_address = current_app.config['DM_CLARIFICATION_QUESTION_EMAIL']
-        from_address = current_app.config['DM_ENQUIRIES_EMAIL_ADDRESS']
-        email_body = render_template(
-            "emails/clarification_question.html",
-            supplier_id=current_user.supplier_id,
-            message=clarification_question
-        )
-        tags = ["clarification-question"]
+        personalisation = {
+            "framework_name": framework['name'],
+            "supplier_id": current_user.supplier_id,
+            "clarification_question": clarification_question
+        }
+        template = 'framework-clarification-question'
     else:
-        subject = "{} application question".format(framework['name'])
         to_address = current_app.config['DM_FOLLOW_UP_EMAIL_TO']
-        from_address = current_user.email_address
-        email_body = render_template(
-            "emails/follow_up_question.html",
-            supplier_name=current_user.supplier_name,
-            user_name=current_user.name,
-            user_email=current_user.email_address,
-            framework_name=framework['name'],
-            message=clarification_question
-        )
-        tags = ["application-question"]
+        personalisation = {
+            "framework_name": framework['name'],
+            "supplier_name": current_user.supplier_name,
+            "user_name": current_user.name,
+            "user_email": current_user.email_address,
+            "application_question": clarification_question
+        }
+        template = "framework-application-question"
 
-    mandrill_client = DMMandrillClient()
+    notify_client = DMNotifyClient()
     try:
-        mandrill_client.send_email(
-            to_email_addresses=to_address,
-            email_body=email_body,
-            subject=subject,
-            from_email_address=current_app.config["DM_ENQUIRIES_EMAIL_ADDRESS"],
-            from_name="{} Supplier".format(framework['name']),
-            tags=tags,
-            reply_to=from_address,
+        notify_client.send_email(
+            to_email_address=to_address,
+            template_name_or_id=template,
+            personalisation=personalisation,
         )
     except EmailError as e:
         current_app.logger.error(
@@ -784,7 +774,7 @@ def framework_updates_email_clarification_question(framework_slug):
         try:
             notify_client.send_email(
                 current_user.email_address,
-                template_name_or_id=notify_client.templates['confirmation_of_clarification_question'],
+                template_name_or_id='confirmation_of_clarification_question',
                 personalisation=confirmation_email_personalisation,
                 reference='clarification-question-confirm-{}'.format(hash_string(current_user.email_address)),
                 reply_to_address_id=current_app.config['DM_ENQUIRIES_EMAIL_ADDRESS_UUID']
