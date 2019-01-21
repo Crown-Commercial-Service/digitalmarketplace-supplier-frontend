@@ -14,10 +14,10 @@ from dmcontent.errors import ContentNotFoundError
 from dmutils import s3
 from dmutils.dates import update_framework_with_formatted_dates
 from dmutils.documents import (
-    RESULT_LETTER_FILENAME, AGREEMENT_FILENAME, SIGNED_AGREEMENT_PREFIX, SIGNED_SIGNATURE_PAGE_PREFIX,
+    RESULT_LETTER_FILENAME, SIGNED_AGREEMENT_PREFIX, SIGNED_SIGNATURE_PAGE_PREFIX,
     SIGNATURE_PAGE_FILENAME, get_document_path, generate_timestamped_document_upload_path,
     degenerate_document_path_and_return_doc_name, get_signed_url, get_extension, file_is_less_than_5mb,
-    file_is_empty, file_is_image, file_is_pdf, sanitise_supplier_name
+    file_is_image, file_is_pdf, sanitise_supplier_name
 )
 from dmutils.email.dm_mandrill import DMMandrillClient
 from dmutils.email.dm_notify import DMNotifyClient
@@ -91,24 +91,17 @@ def framework_dashboard(framework_slug):
         register_interest_in_framework(data_api_client, framework_slug)
         supplier_users = data_api_client.find_users_iter(supplier_id=current_user.supplier_id)
 
-        mandrill_client = DMMandrillClient()
-        email_body = render_template(
-            f'emails/{framework["framework"]}_application_started.html',
-            framework=framework
-        )
-        try:
-            mandrill_client.send_email(
-                to_email_addresses=[user['emailAddress'] for user in supplier_users if user['active']],
-                email_body=email_body,
-                subject='You started a {} application'.format(framework['name']),
-                from_email_address=current_app.config['DM_ENQUIRIES_EMAIL_ADDRESS'],
-                from_name=current_app.config['CLARIFICATION_EMAIL_NAME'],
-                tags=['{}-application-started'.format(framework_slug)],
-            )
-        except EmailError as e:
-            current_app.logger.error(
-                "Application started email failed to send: {error}, supplier_id: {supplier_id}",
-                extra={'error': str(e), 'supplier_id': current_user.supplier_id}
+        notify_client = DMNotifyClient()
+
+        for address in [user['emailAddress'] for user in supplier_users if user['active']]:
+            notify_client.send_email(
+                to_email_address=address,
+                template_name_or_id=notify_client.templates[f"{framework['family']}-application-started"],
+                personalisation={
+                    'framework_applications_close_date': framework['applicationsCloseAt'],
+                    'framework_clarification_questions_close_date': framework['clarificationsCloseAt'],
+                },
+                reply_to_address_id=current_app.config['DM_ENQUIRIES_EMAIL_ADDRESS_UUID']
             )
 
     drafts, complete_drafts = get_drafts(data_api_client, framework_slug)
@@ -781,7 +774,7 @@ def framework_updates_email_clarification_question(framework_slug):
         # No need to fail if this email does not send
         audit_type = AuditTypes.send_clarification_question
 
-        notify_client = DMNotifyClient(current_app.config['DM_NOTIFY_API_KEY'])
+        notify_client = DMNotifyClient()
         confirmation_email_personalisation = {
             'user_name': current_user.name,
             'framework_name': framework['name'],
@@ -791,11 +784,11 @@ def framework_updates_email_clarification_question(framework_slug):
         try:
             notify_client.send_email(
                 current_user.email_address,
-                template_name_or_id=current_app.config['NOTIFY_TEMPLATES']['confirmation_of_clarification_question'],
+                template_name_or_id=notify_client.templates['confirmation_of_clarification_question'],
                 personalisation=confirmation_email_personalisation,
-                reference='clarification-question-confirm-{}'.format(hash_string(current_user.email_address))
+                reference='clarification-question-confirm-{}'.format(hash_string(current_user.email_address)),
+                reply_to_address_id=current_app.config['DM_ENQUIRIES_EMAIL_ADDRESS_UUID']
             )
-
         except EmailError as e:
             current_app.logger.error(
                 "{code}: Clarification question confirm email for email_hash {email_hash} failed to send. "
@@ -835,131 +828,30 @@ def framework_agreement(framework_slug):
             date_parse(supplier_framework['agreementReturnedAt'])
         )
 
-    # if there's a frameworkAgreementVersion key, it means we're on G-Cloud 8 or higher
-    if framework.get('frameworkAgreementVersion'):
-        def lot_result(drafts_for_lot):
-            if any(draft['status'] == 'submitted' for draft in drafts_for_lot):
-                return 'Successful'
-            elif any(draft['status'] == 'failed' for draft in drafts_for_lot):
-                return 'Unsuccessful'
-            else:
-                return 'No application'
+    def lot_result(drafts_for_lot):
+        if any(draft['status'] == 'submitted' for draft in drafts_for_lot):
+            return 'Successful'
+        elif any(draft['status'] == 'failed' for draft in drafts_for_lot):
+            return 'Unsuccessful'
+        else:
+            return 'No application'
 
-        drafts, complete_drafts = get_drafts(data_api_client, framework_slug)
-        complete_drafts_by_lot = {
-            lot['slug']: [draft for draft in complete_drafts if draft['lotSlug'] == lot['slug']]
-            for lot in framework['lots']
-        }
-        lot_results = {k: lot_result(v) for k, v in complete_drafts_by_lot.items()}
-
-        return render_template(
-            'frameworks/contract_start.html',
-            signature_page_filename=SIGNATURE_PAGE_FILENAME,
-            framework=framework,
-            framework_urls=content_loader.get_message(framework_slug, 'urls'),
-            lots=[{
-                'name': lot['name'],
-                'result': lot_results[lot['slug']]
-            } for lot in framework['lots']],
-            supplier_framework=supplier_framework,
-            supplier_registered_name=get_supplier_registered_name_from_declaration(supplier_framework['declaration']),
-        ), 200
+    drafts, complete_drafts = get_drafts(data_api_client, framework_slug)
+    complete_drafts_by_lot = {
+        lot['slug']: [draft for draft in complete_drafts if draft['lotSlug'] == lot['slug']]
+        for lot in framework['lots']
+    }
+    lot_results = {k: lot_result(v) for k, v in complete_drafts_by_lot.items()}
 
     return render_template(
-        "frameworks/agreement.html",
+        'frameworks/contract_start.html',
+        signature_page_filename=SIGNATURE_PAGE_FILENAME,
         framework=framework,
+        framework_urls=content_loader.get_message(framework_slug, 'urls'),
+        lots=[{'name': lot['name'], 'result': lot_results[lot['slug']]} for lot in framework['lots']],
         supplier_framework=supplier_framework,
-        agreement_filename=AGREEMENT_FILENAME,
+        supplier_registered_name=get_supplier_registered_name_from_declaration(supplier_framework['declaration']),
     ), 200
-
-
-@main.route('/frameworks/<framework_slug>/agreement', methods=['POST'])
-@login_required
-def upload_framework_agreement(framework_slug):
-    """
-    This is the route used to upload agreements for pre-G-Cloud 8 frameworks
-    """
-    framework = get_framework_or_404(data_api_client, framework_slug, allowed_statuses=['standstill', 'live'])
-    # if there's a frameworkAgreementVersion key it means we're on G-Cloud 8 or higher and shouldn't be using this route
-    if framework.get('frameworkAgreementVersion'):
-        abort(404)
-
-    supplier_framework = return_supplier_framework_info_if_on_framework_or_abort(data_api_client, framework_slug)
-
-    upload_error = None
-    if not file_is_less_than_5mb(request.files['agreement']):
-        upload_error = "Document must be less than 5MB"
-    elif file_is_empty(request.files['agreement']):
-        upload_error = "Document must not be empty"
-
-    if upload_error is not None:
-        return render_template(
-            "frameworks/agreement.html",
-            framework=framework,
-            supplier_framework=supplier_framework,
-            upload_error=upload_error,
-            agreement_filename=AGREEMENT_FILENAME,
-        ), 400
-
-    agreements_bucket = s3.S3(current_app.config['DM_AGREEMENTS_BUCKET'])
-    extension = get_extension(request.files['agreement'].filename)
-
-    path = generate_timestamped_document_upload_path(
-        framework_slug,
-        current_user.supplier_id,
-        'agreements',
-        '{}{}'.format(SIGNED_AGREEMENT_PREFIX, extension)
-    )
-    agreements_bucket.save(
-        path,
-        request.files['agreement'],
-        acl='bucket-owner-full-control',
-        download_filename='{}-{}-{}{}'.format(
-            sanitise_supplier_name(current_user.supplier_name),
-            current_user.supplier_id,
-            SIGNED_AGREEMENT_PREFIX,
-            extension
-        )
-    )
-
-    agreement_id = data_api_client.create_framework_agreement(
-        current_user.supplier_id, framework_slug, current_user.email_address
-    )['agreement']['id']
-    data_api_client.update_framework_agreement(
-        agreement_id, {"signedAgreementPath": path}, current_user.email_address
-    )
-    data_api_client.sign_framework_agreement(
-        agreement_id, current_user.email_address, {"uploaderUserId": current_user.id}
-    )
-
-    mandrill_client = DMMandrillClient()
-    email_body = render_template(
-        'emails/framework_agreement_uploaded.html',
-        framework_name=framework['name'],
-        supplier_name=current_user.supplier_name,
-        supplier_id=current_user.supplier_id,
-        user_name=current_user.name
-    )
-    try:
-        mandrill_client.send_email(
-            to_email_addresses=current_app.config['DM_FRAMEWORK_AGREEMENTS_EMAIL'],
-            email_body=email_body,
-            subject='{} framework agreement'.format(framework['name']),
-            from_email_address=current_app.config["DM_ENQUIRIES_EMAIL_ADDRESS"],
-            from_name='{} Supplier'.format(framework['name']),
-            tags=['{}-framework-agreement'.format(framework_slug)],
-            reply_to=current_user.email_address,
-        )
-    except EmailError as e:
-        current_app.logger.error(
-            "Framework agreement email failed to send. "
-            "error {error} supplier_id {supplier_id} email_hash {email_hash}",
-            extra={'error': str(e),
-                   'supplier_id': current_user.supplier_id,
-                   'email_hash': hash_string(current_user.email_address)})
-        abort(503, "Framework agreement email failed to send")
-
-    return redirect(url_for('.framework_agreement', framework_slug=framework_slug))
 
 
 @main.route('/frameworks/<framework_slug>/create-agreement', methods=['POST'])
@@ -1123,10 +1015,10 @@ def contract_review(framework_slug, agreement_id):
             agreement_id, current_user.email_address, {'uploaderUserId': current_user.id}
         )
 
-        email_client = DMNotifyClient()
+        notify_client = DMNotifyClient()
         for email_address in returned_agreement_email_recipients(supplier_framework):
             try:
-                email_client.send_email(
+                notify_client.send_email(
                     to_email_address=email_address,
                     template_name_or_id="framework_agreement_signature_page",
                     personalisation={
@@ -1136,7 +1028,8 @@ def contract_review(framework_slug, agreement_id):
                             get_web_url_from_stage(current_app.config["DM_ENVIRONMENT"])
                             + url_for(".framework_updates", framework_slug=framework["slug"])
                         ),
-                    }
+                    },
+                    reference=f"contract-review-agreement-{hash_string(email_address)}"
                 )
             except EmailError:
                 # We don't need to handle this as the email is only informational,
@@ -1175,6 +1068,10 @@ def contract_review(framework_slug, agreement_id):
 @main.route('/frameworks/<framework_slug>/contract-variation/<variation_slug>', methods=['GET', 'POST'])
 @login_required
 def view_contract_variation(framework_slug, variation_slug):
+    """
+    This view asks suppliers to agree to a framework variation and then generates a confirmation email  when they do.
+    """
+    # TODO: create a variation template in Notify web UI before adding a variation to a framework in the API
     framework = get_framework_or_404(data_api_client, framework_slug, allowed_statuses=['live'])
     supplier_framework = return_supplier_framework_info_if_on_framework_or_abort(data_api_client, framework_slug)
     variation_details = framework.get('variations', {}).get(variation_slug)
@@ -1209,23 +1106,13 @@ def view_contract_variation(framework_slug, variation_slug):
         )
 
         # Send email confirming accepted
-        mandrill_client = DMMandrillClient()
-        email_body = render_template(
-            'emails/{}_variation_{}_agreed.html'.format(framework_slug, variation_slug)
-        )
-        try:
-            mandrill_client.send_email(
-                to_email_addresses=returned_agreement_email_recipients(supplier_framework),
-                email_body=email_body,
-                subject='{}: you have accepted the proposed contract variation'.format(framework['name']),
-                from_email_address=current_app.config['DM_ENQUIRIES_EMAIL_ADDRESS'],
-                from_name=current_app.config['CLARIFICATION_EMAIL_NAME'],
-                tags=['{}-variation-accepted'.format(framework_slug)]
-            )
-        except EmailError as e:
-            current_app.logger.error(
-                "Variation agreed email failed to send: {error}, supplier_id: {supplier_id}",
-                extra={'error': str(e), 'supplier_id': current_user.supplier_id}
+        notify_client = DMNotifyClient()
+        for address in returned_agreement_email_recipients(supplier_framework):
+            notify_client.send_email(
+                to_email_address=address,
+                template_name_or_id=notify_client.templates[f'{framework_slug}_variation_{variation_slug}_agreed'],
+                personalisation={'framework_name': framework_slug},
+                reference=f"contract-variation-agreed-confirmation-{hash_string(address)}"
             )
         flash(variation_content.confirmation_message, "success")
         return redirect(url_for(".view_contract_variation",

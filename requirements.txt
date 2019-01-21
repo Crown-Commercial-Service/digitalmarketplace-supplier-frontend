@@ -7,7 +7,7 @@ Flask-Login==0.4.1
 Flask-WTF==0.14.2
 itsdangerous==0.24
 
-git+https://github.com/alphagov/digitalmarketplace-utils.git@45.0.2#egg=digitalmarketplace-utils==45.1.1
+git+https://github.com/alphagov/digitalmarketplace-utils.git@45.4.0#egg=digitalmarketplace-utils==45.4.0
 git+https://github.com/alphagov/digitalmarketplace-content-loader.git@5.0.0#egg=digitalmarketplace-content-loader==5.0.0
 git+https://github.com/alphagov/digitalmarketplace-apiclient.git@19.7.0#egg=digitalmarketplace-apiclient==19.7.0
 
@@ -31,7 +31,7 @@ idna==2.8
 inflection==0.3.1
 Jinja2==2.10
 jmespath==0.9.3
-mailchimp3==2.0.18
+mailchimp3==3.0.6
 mandrill==1.0.57
 Markdown==2.6.7
 MarkupSafe==1.1.0
@@ -39,14 +39,14 @@ monotonic==1.5
 notifications-python-client==5.2.0
 odfpy==1.4.0
 pycparser==2.19
-PyJWT==1.7.0
+PyJWT==1.7.1
 python-dateutil==2.7.5
 python-json-logger==0.1.10
-pytz==2018.7
+pytz==2018.9
 PyYAML==3.11
-requests==2.20.1
+requests==2.21.0
 s3transfer==0.1.13
-six==1.11.0
+six==1.12.0
 unicodecsv==0.14.1
 urllib3==1.24.1
 Werkzeug==0.14.1

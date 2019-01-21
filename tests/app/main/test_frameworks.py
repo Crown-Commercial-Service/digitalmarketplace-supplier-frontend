@@ -21,7 +21,6 @@ from dmtestutils.fixtures import valid_jpeg_bytes
 from dmutils.email.exceptions import EmailError
 from dmutils.s3 import S3ResponseError
 
-from app.main.views.frameworks import render_template as frameworks_render_template
 from app.main.forms.frameworks import ReuseDeclarationForm
 from ..helpers import (
     BaseApplicationTest,
@@ -160,24 +159,8 @@ class TestFrameworksDashboard(BaseApplicationTest):
 
         assert res.status_code == 404
 
-    @mock.patch('app.main.views.frameworks.DMMandrillClient.send_email', autospec=True)
-    def test_interest_registered_in_framework_on_post(self, mandrill_send_email, s3):
-        self.login()
-
-        self.data_api_client.get_framework.return_value = self.framework(status='open')
-        self.data_api_client.get_supplier_framework_info.return_value = self.supplier_framework()
-        res = self.client.post("/suppliers/frameworks/digital-outcomes-and-specialists")
-
-        assert res.status_code == 200
-        self.data_api_client.register_framework_interest.assert_called_once_with(
-            1234,
-            "digital-outcomes-and-specialists",
-            "email@email.com"
-        )
-
-    @mock.patch('app.main.views.frameworks.DMMandrillClient.send_email', autospec=True)
-    @mock.patch('app.main.views.frameworks.render_template', wraps=frameworks_render_template)
-    def test_email_sent_when_interest_registered_in_framework(self, render_template, mandrill_send_email, s3):
+    @mock.patch('app.main.views.frameworks.DMNotifyClient', autospec=True)
+    def test_email_sent_when_interest_registered_in_framework(self, mock_dmnotifyclient_class, s3):
         self.login()
 
         self.data_api_client.get_framework.return_value = self.framework(status='open')
@@ -187,16 +170,19 @@ class TestFrameworksDashboard(BaseApplicationTest):
             {'emailAddress': 'email2', 'active': True},
             {'emailAddress': 'email3', 'active': False}
         ]
+        mock_dmnotifyclient_instance = mock_dmnotifyclient_class.return_value
+        mock_dmnotifyclient_instance.templates = {'g-cloud-application-started': '123456789'}
         res = self.client.post("/suppliers/frameworks/g-cloud-7")
 
+        self.data_api_client.register_framework_interest.assert_called_once_with(
+            1234,
+            "g-cloud-7",
+            "email@email.com"
+        )
         assert res.status_code == 200
 
-        # render_template calls the correct template with the correct context variables.
-        assert render_template.call_args_list[0][0] == ('emails/g-cloud_application_started.html', )
-        assert set(render_template.call_args_list[0][1].keys()) == {'framework'}
-
-        assert mandrill_send_email.call_count == 1
-        assert mandrill_send_email.call_args[1]["to_email_addresses"] == ["email1", "email2"]
+        assert mock_dmnotifyclient_instance.send_email.call_count == 2
+        assert mock_dmnotifyclient_instance.send_email.call_args[1].get('template_name_or_id') == '123456789'
 
     def test_interest_not_registered_in_framework_on_get(self, s3):
         self.login()
@@ -1708,7 +1694,6 @@ class TestFrameworkAgreement(BaseApplicationTest):
 
     def test_page_renders_if_all_ok(self):
         self.login()
-
         self.data_api_client.get_framework.return_value = self.framework(status='standstill')
         self.data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(on_framework=True)
 
@@ -1716,13 +1701,13 @@ class TestFrameworkAgreement(BaseApplicationTest):
         data = res.get_data(as_text=True)
 
         assert res.status_code == 200
-        assert u'Send document to CCS' in data
-        assert u'Return your signed signature page' not in data
+        assert u'Return your signed signature page' in data
 
     def test_page_returns_404_if_framework_in_wrong_state(self):
         self.login()
 
         self.data_api_client.get_framework.return_value = self.framework(status='open')
+
         self.data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(on_framework=True)
 
         res = self.client.get("/suppliers/frameworks/g-cloud-7/agreement")
@@ -1738,39 +1723,6 @@ class TestFrameworkAgreement(BaseApplicationTest):
         res = self.client.get("/suppliers/frameworks/g-cloud-7/agreement")
 
         assert res.status_code == 404
-
-    @mock.patch('dmutils.s3.S3')
-    def test_upload_message_if_agreement_is_returned(self, s3):
-        self.login()
-
-        self.data_api_client.get_framework.return_value = self.framework(status='standstill')
-        self.data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
-            on_framework=True, agreement_returned=True, agreement_returned_at='2015-11-02T15:25:56.000000Z'
-        )
-
-        res = self.client.get('/suppliers/frameworks/g-cloud-7/agreement')
-        data = res.get_data(as_text=True)
-        doc = html.fromstring(data)
-
-        assert res.status_code == 200
-        assert u'/suppliers/frameworks/g-cloud-7/agreement' == doc.xpath('//form')[1].action
-        assert u'Document uploaded Monday 2 November 2015 at 3:25pm' in data
-        assert u'Your document has been uploaded' in data
-
-    def test_upload_message_if_agreement_is_not_returned(self):
-        self.login()
-
-        self.data_api_client.get_framework.return_value = self.framework(status='standstill')
-        self.data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(on_framework=True)
-
-        res = self.client.get('/suppliers/frameworks/g-cloud-7/agreement')
-        data = res.get_data(as_text=True)
-        doc = html.fromstring(data)
-
-        assert res.status_code == 200
-        assert u'/suppliers/frameworks/g-cloud-7/agreement' == doc.xpath('//form')[1].action
-        assert u'Document uploaded' not in data
-        assert u'Your document has been uploaded' not in data
 
     def test_loads_contract_start_page_if_framework_agreement_version_exists(self):
         self.login()
@@ -1819,253 +1771,6 @@ class TestFrameworkAgreement(BaseApplicationTest):
         assert len(lots_and_statuses) == len(expected_lots_and_statuses)
         for lot_and_status in lots_and_statuses:
             assert lot_and_status in expected_lots_and_statuses
-
-
-@mock.patch('dmutils.s3.S3')
-@mock.patch('app.main.views.frameworks.DMMandrillClient.send_email', autospec=True)
-class TestFrameworkAgreementUpload(BaseApplicationTest):
-
-    def setup_method(self, method):
-        super().setup_method(method)
-        self.data_api_client_patch = mock.patch('app.main.views.frameworks.data_api_client', autospec=True)
-        self.data_api_client = self.data_api_client_patch.start()
-        self.data_api_client.get_framework.return_value = self.framework(status='standstill')
-
-    def teardown_method(self, method):
-        self.data_api_client_patch.stop()
-        super().teardown_method(method)
-
-    def test_page_returns_404_if_framework_in_wrong_state(self, mandrill_send_email, s3):
-        self.login()
-
-        self.data_api_client.get_framework.return_value = self.framework(status='open')
-
-        res = self.client.post(
-            '/suppliers/frameworks/g-cloud-7/agreement',
-            data={'agreement': (BytesIO(b'doc'), 'test.pdf')}
-        )
-
-        assert res.status_code == 404
-
-    def test_page_returns_404_if_supplier_not_on_framework(self, mandrill_send_email, s3):
-        self.login()
-
-        self.data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
-            on_framework=False)
-
-        res = self.client.post(
-            '/suppliers/frameworks/g-cloud-7/agreement',
-            data={'agreement': (BytesIO(b'doc'), 'test.pdf')}
-        )
-
-        assert res.status_code == 404
-
-    @mock.patch('app.main.views.frameworks.file_is_less_than_5mb')
-    def test_page_returns_400_if_file_is_too_large(self, file_is_less_than_5mb, mandrill_send_email, s3):
-        self.login()
-
-        self.data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
-            on_framework=True)
-        file_is_less_than_5mb.return_value = False
-
-        res = self.client.post(
-            '/suppliers/frameworks/g-cloud-7/agreement',
-            data={'agreement': (BytesIO(b'doc'), 'test.pdf')}
-        )
-
-        assert res.status_code == 400
-        assert u'Document must be less than 5MB' in res.get_data(as_text=True)
-
-    @mock.patch('app.main.views.frameworks.file_is_empty')
-    def test_page_returns_400_if_file_is_empty(self, file_is_empty, mandrill_send_email, s3):
-        self.login()
-
-        self.data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
-            on_framework=True)
-        file_is_empty.return_value = True
-
-        res = self.client.post(
-            '/suppliers/frameworks/g-cloud-7/agreement',
-            data={'agreement': (BytesIO(b''), 'test.pdf')}
-        )
-
-        assert res.status_code == 400
-        assert u'Document must not be empty' in res.get_data(as_text=True)
-
-    @mock.patch('app.main.views.frameworks.generate_timestamped_document_upload_path')
-    def test_api_is_not_updated_and_email_not_sent_if_upload_fails(
-        self, generate_timestamped_document_upload_path, mandrill_send_email, s3
-    ):
-        self.login()
-
-        self.data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
-            on_framework=True)
-        generate_timestamped_document_upload_path.return_value = 'my/path.pdf'
-        s3.return_value.save.side_effect = S3ResponseError(
-            {'Error': {'Code': 500, 'Message': 'All fail'}},
-            'test_api_is_not_updated_and_email_not_sent_if_upload_fails'
-        )
-
-        res = self.client.post(
-            '/suppliers/frameworks/g-cloud-7/agreement',
-            data={'agreement': (BytesIO(b'doc'), 'test.pdf')}
-        )
-
-        assert res.status_code == 503
-        s3.return_value.save.assert_called_with(
-            'my/path.pdf',
-            mock.ANY,
-            acl='bucket-owner-full-control',
-            download_filename='Supplier_Nme-1234-signed-framework-agreement.pdf'
-        )
-
-        assert self.data_api_client.create_framework_agreement.called is False
-        assert self.data_api_client.update_framework_agreement.called is False
-        assert self.data_api_client.sign_framework_agreement.called is False
-        assert mandrill_send_email.called is False
-
-    @mock.patch('app.main.views.frameworks.generate_timestamped_document_upload_path')
-    def test_email_is_not_sent_if_api_create_framework_agreement_fails(
-        self, generate_timestamped_document_upload_path, mandrill_send_email, s3
-    ):
-        self.login()
-
-        self.data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(on_framework=True)
-        generate_timestamped_document_upload_path.return_value = 'my/path.pdf'
-        self.data_api_client.create_framework_agreement.side_effect = APIError(mock.Mock(status_code=500))
-
-        res = self.client.post(
-            '/suppliers/frameworks/g-cloud-7/agreement',
-            data={'agreement': (BytesIO(b'doc'), 'test.pdf')}
-        )
-
-        assert res.status_code == 500
-        assert self.data_api_client.create_framework_agreement.called is True
-        assert self.data_api_client.update_framework_agreement.called is False
-        assert self.data_api_client.sign_framework_agreement.called is False
-        assert mandrill_send_email.called is False
-
-    @mock.patch('app.main.views.frameworks.generate_timestamped_document_upload_path')
-    def test_email_is_not_sent_if_api_update_framework_agreement_fails(
-        self, generate_timestamped_document_upload_path, mandrill_send_email, s3
-    ):
-        self.login()
-
-        self.data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(on_framework=True)
-        generate_timestamped_document_upload_path.return_value = 'my/path.pdf'
-        self.data_api_client.update_framework_agreement.side_effect = APIError(mock.Mock(status_code=500))
-
-        res = self.client.post(
-            '/suppliers/frameworks/g-cloud-7/agreement',
-            data={'agreement': (BytesIO(b'doc'), 'test.pdf')}
-        )
-
-        assert res.status_code == 500
-        assert self.data_api_client.create_framework_agreement.called is True
-        assert self.data_api_client.update_framework_agreement.called is True
-        assert self.data_api_client.sign_framework_agreement.called is False
-        assert mandrill_send_email.called is False
-
-    @mock.patch('app.main.views.frameworks.generate_timestamped_document_upload_path')
-    def test_email_is_not_sent_if_api_sign_framework_agreement_fails(
-        self, generate_timestamped_document_upload_path, mandrill_send_email, s3
-    ):
-        self.login()
-
-        self.data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(on_framework=True)
-        generate_timestamped_document_upload_path.return_value = 'my/path.pdf'
-        self.data_api_client.sign_framework_agreement.side_effect = APIError(mock.Mock(status_code=500))
-
-        res = self.client.post(
-            '/suppliers/frameworks/g-cloud-7/agreement',
-            data={'agreement': (BytesIO(b'doc'), 'test.pdf')}
-        )
-
-        assert res.status_code == 500
-        assert self.data_api_client.create_framework_agreement.called is True
-        assert self.data_api_client.update_framework_agreement.called is True
-        assert self.data_api_client.sign_framework_agreement.called is True
-        assert mandrill_send_email.called is False
-
-    @mock.patch('app.main.views.frameworks.generate_timestamped_document_upload_path')
-    def test_email_failure(
-        self, generate_timestamped_document_upload_path, mandrill_send_email, s3
-    ):
-        self.login()
-
-        self.data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
-            on_framework=True)
-        generate_timestamped_document_upload_path.return_value = 'my/path.pdf'
-        mandrill_send_email.side_effect = EmailError()
-
-        res = self.client.post(
-            '/suppliers/frameworks/g-cloud-7/agreement',
-            data={'agreement': (BytesIO(b'doc'), 'test.pdf')}
-        )
-
-        assert res.status_code == 503
-        assert mandrill_send_email.called is True
-
-    @mock.patch('app.main.views.frameworks.generate_timestamped_document_upload_path')
-    def test_upload_agreement_document(
-        self, generate_timestamped_document_upload_path, mandrill_send_email, s3
-    ):
-        self.login()
-
-        self.data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
-            on_framework=True)
-        self.data_api_client.create_framework_agreement.return_value = {"agreement": {"id": 20}}
-        generate_timestamped_document_upload_path.return_value = 'my/path.pdf'
-
-        res = self.client.post(
-            '/suppliers/frameworks/g-cloud-7/agreement',
-            data={'agreement': (BytesIO(b'doc'), 'test.pdf')}
-        )
-
-        generate_timestamped_document_upload_path.assert_called_once_with(
-            'g-cloud-7',
-            1234,
-            'agreements',
-            'signed-framework-agreement.pdf'
-        )
-
-        s3.return_value.save.assert_called_with(
-            'my/path.pdf',
-            mock.ANY,
-            acl='bucket-owner-full-control',
-            download_filename='Supplier_Nme-1234-signed-framework-agreement.pdf'
-        )
-        self.data_api_client.create_framework_agreement.assert_called_with(1234, 'g-cloud-7', 'email@email.com')
-        self.data_api_client.update_framework_agreement.assert_called_with(
-            20,
-            {"signedAgreementPath": 'my/path.pdf'},
-            'email@email.com'
-        )
-        self.data_api_client.sign_framework_agreement.assert_called_with(20, 'email@email.com', {"uploaderUserId": 123})
-        assert res.status_code == 302
-        assert res.location == 'http://localhost/suppliers/frameworks/g-cloud-7/agreement'
-
-    @mock.patch('app.main.views.frameworks.generate_timestamped_document_upload_path')
-    def test_upload_jpeg_agreement_document(
-        self, generate_timestamped_document_upload_path, mandrill_send_email, s3
-    ):
-        self.login()
-
-        generate_timestamped_document_upload_path.return_value = 'my/path.jpg'
-
-        res = self.client.post(
-            '/suppliers/frameworks/g-cloud-7/agreement',
-            data={'agreement': (BytesIO(b'doc'), 'test.jpg')}
-        )
-
-        s3.return_value.save.assert_called_with(
-            'my/path.jpg',
-            mock.ANY,
-            acl='bucket-owner-full-control',
-            download_filename='Supplier_Nme-1234-signed-framework-agreement.jpg'
-        )
-        assert res.status_code == 302
-        assert res.location == 'http://localhost/suppliers/frameworks/g-cloud-7/agreement'
 
 
 @mock.patch('dmutils.s3.S3')
@@ -3717,6 +3422,7 @@ class TestSendClarificationQuestionEmail(BaseApplicationTest):
                 personalisation={'user_name': 'Năme', 'framework_name': 'Test Framework',
                                  'clarification_question_text': clarification_question},
                 reference=mock.ANY,
+                reply_to_address_id=mock.ANY
             )
 
     def _assert_application_email(self, mandrill_send_email, *email_body_content, succeeds=True):
@@ -4692,7 +4398,6 @@ class TestSignatureUploadPage(BaseApplicationTest):
 
 @mock.patch("app.main.views.frameworks.return_supplier_framework_info_if_on_framework_or_abort")
 @mock.patch('dmutils.s3.S3')
-@mock.patch('app.main.views.frameworks.DMMandrillClient.send_email', autospec=True)
 class TestContractReviewPage(BaseApplicationTest):
 
     def setup_method(self, method):
@@ -4708,7 +4413,7 @@ class TestContractReviewPage(BaseApplicationTest):
         super().teardown_method(method)
 
     def test_contract_review_page_loads_with_correct_supplier_and_signer_details_and_filename(
-        self, mandrill_send_email, s3, return_supplier_framework
+        self, s3, return_supplier_framework
     ):
         self.login()
         self.data_api_client.get_framework.return_value = get_g_cloud_8()
@@ -4744,7 +4449,7 @@ class TestContractReviewPage(BaseApplicationTest):
         assert '<tdclass="summary-item-field-first"><span>test.pdf</span></td>' in page_without_whitespace
 
     def test_contract_review_page_loads_with_uploaded_time_of_file_if_no_filename_in_session(
-        self, mandrill_send_email, s3, return_supplier_framework
+        self, s3, return_supplier_framework
     ):
         self.login()
         self.data_api_client.get_framework.return_value = get_g_cloud_8()
@@ -4775,7 +4480,7 @@ class TestContractReviewPage(BaseApplicationTest):
         )
 
     def test_contract_review_page_aborts_if_visited_when_information_required_to_return_agreement_does_not_exist(
-        self, mandrill_send_email, s3, return_supplier_framework
+        self, s3, return_supplier_framework
     ):
         self.login()
         self.data_api_client.get_framework.return_value = get_g_cloud_8()
@@ -4803,7 +4508,6 @@ class TestContractReviewPage(BaseApplicationTest):
     def test_we_abort_if_agreement_does_not_match_supplier_framework(
         self,
         check_agreement_is_related_to_supplier_framework_or_abort,
-        mandrill_send_email,
         s3,
         return_supplier_framework
     ):
@@ -4822,7 +4526,7 @@ class TestContractReviewPage(BaseApplicationTest):
         )
 
     def test_return_400_response_and_no_email_sent_if_authorisation_not_checked(
-        self, mandrill_send_email, s3, return_supplier_framework
+        self, s3, return_supplier_framework
     ):
         self.login()
         self.data_api_client.get_framework.return_value = get_g_cloud_8()
@@ -4844,11 +4548,11 @@ class TestContractReviewPage(BaseApplicationTest):
         res = self.client.post("/suppliers/frameworks/g-cloud-8/234/contract-review", data={})
         assert res.status_code == 400
         page = res.get_data(as_text=True)
-        assert mandrill_send_email.called is False
+        assert self.notify_send_email.called is False
         assert "You must confirm you have the authority to return the agreement" in page
 
     def test_valid_framework_agreement_returned_updates_api_and_sends_confirmation_emails_and_unsets_session(
-        self, mandrill_send_email, s3, return_supplier_framework
+        self, s3, return_supplier_framework
     ):
         self.login()
         self.data_api_client.get_framework.return_value = get_g_cloud_8()
@@ -4898,7 +4602,7 @@ class TestContractReviewPage(BaseApplicationTest):
             assert 'signature_page' not in sess
 
     def test_valid_framework_agreement_returned_sends_only_one_confirmation_email_if_contact_email_addresses_are_equal(
-        self, mandrill_send_email, s3, return_supplier_framework
+        self, s3, return_supplier_framework
     ):
         self.login()
         self.data_api_client.get_framework.return_value = get_g_cloud_8()
@@ -4925,7 +4629,7 @@ class TestContractReviewPage(BaseApplicationTest):
         assert self.notify_send_email.call_count == 1
 
     def test_return_normal_response_if_email_exception_raised_by_send_email(
-        self, mandrill_send_email, s3, return_supplier_framework
+        self, s3, return_supplier_framework
     ):
         self.login()
         self.data_api_client.get_framework.return_value = get_g_cloud_8()
@@ -4955,7 +4659,7 @@ class TestContractReviewPage(BaseApplicationTest):
 
         assert res.status_code == 302
 
-    def test_email_not_sent_if_api_call_fails(self, mandrill_send_email, s3, return_supplier_framework):
+    def test_email_not_sent_if_api_call_fails(self, s3, return_supplier_framework):
         self.login()
         self.data_api_client.get_framework.return_value = get_g_cloud_8()
         self.data_api_client.sign_framework_agreement.side_effect = APIError(mock.Mock(status_code=500))
@@ -4981,10 +4685,10 @@ class TestContractReviewPage(BaseApplicationTest):
 
         assert self.data_api_client.sign_framework_agreement.called is True
         assert res.status_code == 500
-        assert mandrill_send_email.called is False
+        assert self.notify_send_email.called is False
 
     def test_framework_agreement_returned_having_signed_contract_variation_redirects_to_framework_dashboard(
-        self, mandrill_send_email, s3, return_supplier_framework
+        self, s3, return_supplier_framework
     ):
         self.login()
 
@@ -5024,7 +4728,7 @@ class TestContractReviewPage(BaseApplicationTest):
         assert res.location == 'http://localhost/suppliers/frameworks/g-cloud-8'
 
     def test_framework_agreement_returned_having_not_signed_contract_variation_redirects_to_variation(
-        self, mandrill_send_email, s3, return_supplier_framework
+        self, s3, return_supplier_framework
     ):
         self.login()
 
@@ -5058,7 +4762,7 @@ class TestContractReviewPage(BaseApplicationTest):
         assert res.location == 'http://localhost/suppliers/frameworks/g-cloud-8/contract-variation/1'
 
     def test_framework_agreement_returned_for_framework_with_no_variations_redirects_to_framework_dashboard(
-        self, mandrill_send_email, s3, return_supplier_framework
+        self, s3, return_supplier_framework
     ):
         self.login()
 
@@ -5263,10 +4967,12 @@ class TestContractVariation(BaseApplicationTest):
         assert len(doc.xpath('//label[contains(text(), "I accept these proposed changes")]')) == 0
         assert len(doc.xpath('//input[@value="I accept"]')) == 0
 
-    def test_api_is_called_to_agree(self):
+    @mock.patch('app.main.views.frameworks.DMNotifyClient', autospec=True, create=True)
+    def test_email_is_sent_to_correct_users(self, mocked_notify_class):
+        mocked_notify_client = mocked_notify_class.return_value
+        mocked_notify_client.templates = {'g-cloud-8_variation_1_agreed': 123456789}
         self.data_api_client.get_framework.return_value = self.g8_framework
         self.data_api_client.get_supplier_framework_info.return_value = self.good_supplier_framework
-
         res = self.client.post(
             "/suppliers/frameworks/g-cloud-8/contract-variation/1",
             data={"accept_changes": "Yes"}
@@ -5277,48 +4983,40 @@ class TestContractVariation(BaseApplicationTest):
         self.data_api_client.agree_framework_variation.assert_called_once_with(
             1234, 'g-cloud-8', '1', 123, 'email@email.com'
         )
-
-    @mock.patch('app.main.views.frameworks.DMMandrillClient.send_email', autospec=True)
-    def test_email_is_sent_to_correct_users(self, mandrill_send_email):
-        self.data_api_client.get_framework.return_value = self.g8_framework
-        self.data_api_client.get_supplier_framework_info.return_value = self.good_supplier_framework
-        self.client.post(
-            "/suppliers/frameworks/g-cloud-8/contract-variation/1",
-            data={"accept_changes": "Yes"}
+        boss_email = mock.call(
+            'bigboss@email.com', template_name_or_id=123456789, personalisation={'framework_name': 'g-cloud-8'},
+            reference="contract-variation-agreed-confirmation-ouj_ZOpWHvitNdb7O7DDQGEB-lstuMfj9oEl5oWU4C0="
         )
-
-        mandrill_send_email.assert_called_once_with(
-            mock.ANY,  # self
-            to_email_addresses=['bigboss@email.com', 'email@email.com'],
-            email_body=mock.ANY,
-            subject='G-Cloud 8: you have accepted the proposed contract variation',
-            from_email_address='enquiries@digitalmarketplace.service.gov.uk',
-            from_name='Digital Marketplace Admin',
-            tags=['g-cloud-8-variation-accepted'],
+        regular_email = mock.call(
+            'email@email.com', template_name_or_id=123456789, personalisation={'framework_name': 'g-cloud-8'},
+            reference="contract-variation-agreed-confirmation-8yc90Y2VvBnVHT5jVuSmeebxOCRJcnKicOe7VAsKu50="
         )
+        mocked_notify_client.send_email.assert_has_calls([boss_email, regular_email], any_order=False)
 
-    @mock.patch('app.main.views.frameworks.DMMandrillClient.send_email', autospec=True)
-    def test_only_one_email_sent_if_user_is_framework_contact(self, mandrill_send_email):
+    @mock.patch('app.main.views.frameworks.DMNotifyClient', autospec=True)
+    def test_only_one_email_sent_if_user_is_framework_contact(self, mocked_notify_class):
         same_email_as_current_user = self.good_supplier_framework.copy()
         same_email_as_current_user['frameworkInterest']['declaration']['primaryContactEmail'] = 'email@email.com'
         self.data_api_client.get_framework.return_value = self.g8_framework
         self.data_api_client.get_supplier_framework_info.return_value = same_email_as_current_user
+        mocked_notify_client = mocked_notify_class.return_value
+        mocked_notify_client.templates = {'g-cloud-8_variation_1_agreed': 123456789}
         self.client.post(
             "/suppliers/frameworks/g-cloud-8/contract-variation/1",
             data={"accept_changes": "Yes"}
         )
 
-        mandrill_send_email.assert_called_once_with(
-            mock.ANY,  # self
-            to_email_addresses=['email@email.com'],
-            email_body=mock.ANY,
-            subject='G-Cloud 8: you have accepted the proposed contract variation',
-            from_email_address='enquiries@digitalmarketplace.service.gov.uk',
-            from_name='Digital Marketplace Admin',
-            tags=['g-cloud-8-variation-accepted'],
+        mocked_notify_client.send_email.assert_called_once_with(
+            to_email_address='email@email.com',
+            personalisation={'framework_name': 'g-cloud-8'},
+            template_name_or_id=123456789,
+            reference='contract-variation-agreed-confirmation-8yc90Y2VvBnVHT5jVuSmeebxOCRJcnKicOe7VAsKu50='
         )
 
-    def test_success_message_is_displayed_on_success(self):
+    @mock.patch('app.main.views.frameworks.DMNotifyClient', autospec=True)
+    def test_success_message_is_displayed_on_success(self, mocked_notify_class):
+        mocked_notify_client = mocked_notify_class.return_value
+        mocked_notify_client.templates = {'g-cloud-8_variation_1_agreed': 123456789}
         self.data_api_client.get_framework.return_value = self.g8_framework
         self.data_api_client.get_supplier_framework_info.return_value = self.good_supplier_framework
         res = self.client.post(
@@ -5328,13 +5026,15 @@ class TestContractVariation(BaseApplicationTest):
         )
         doc = html.fromstring(res.get_data(as_text=True))
 
+        assert mocked_notify_client.send_email.called
         assert res.status_code == 200
         assert len(
             doc.xpath('//p[@class="banner-message"][contains(text(), "You have accepted the proposed changes.")]')
         ) == 1, res.get_data(as_text=True)
 
-    @mock.patch('app.main.views.frameworks.DMMandrillClient.send_email')
-    def test_api_is_not_called_and_no_email_sent_for_subsequent_posts(self, mandrill_send_email):
+    @mock.patch('app.main.views.frameworks.DMNotifyClient', autospec=True)
+    def test_api_is_not_called_and_no_email_sent_for_subsequent_posts(self, mocked_notify_class):
+        mocked_notify_client = mocked_notify_class.return_value
         already_agreed = self.good_supplier_framework.copy()
         already_agreed['frameworkInterest']['agreedVariations'] = {
             "1": {
@@ -5353,7 +5053,7 @@ class TestContractVariation(BaseApplicationTest):
         )
         assert res.status_code == 200
         assert self.data_api_client.agree_framework_variation.called is False
-        assert mandrill_send_email.called is False
+        assert mocked_notify_client.called is False
 
     def test_error_if_box_not_ticked(self):
         self.data_api_client.get_framework.return_value = self.g8_framework
