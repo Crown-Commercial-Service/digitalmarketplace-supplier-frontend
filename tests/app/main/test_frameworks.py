@@ -3393,36 +3393,6 @@ class TestSendClarificationQuestionEmail(BaseApplicationTest):
             data={'clarification_question': message}
         )
 
-    def _assert_clarification_email(self, mandrill_send_email, notify_send_email, is_called=True, succeeds=True,
-                                    clarification_question=''):
-        if is_called:
-            assert mandrill_send_email.call_count == 1
-        else:
-            assert mandrill_send_email.call_count == 0
-
-        if is_called:
-            mandrill_send_email.assert_any_call(
-                mock.ANY,  # self
-                to_email_addresses="digitalmarketplace@mailinator.com",
-                from_email_address="enquiries@digitalmarketplace.service.gov.uk",
-                from_name="Test Framework Supplier",
-                subject="Test Framework clarification question",
-                email_body=FakeMail('Supplier ID:'),
-                tags=["clarification-question"],
-                reply_to="enquiries@digitalmarketplace.service.gov.uk",
-            )
-
-        if succeeds:
-            notify_send_email.assert_any_call(
-                mock.ANY,  # DMNotifyClient
-                "email@email.com",
-                template_name_or_id=mock.ANY,
-                personalisation={'user_name': 'Năme', 'framework_name': 'Test Framework',
-                                 'clarification_question_text': clarification_question},
-                reference=mock.ANY,
-                reply_to_address_id=mock.ANY
-            )
-
     def test_should_call_send_email_with_correct_params_if_clarification_questions_open(self, notify_send_email):
         self.data_api_client.get_framework.return_value = self.framework(
             'open', name='Test Framework', clarification_questions_open=True
