@@ -5,8 +5,9 @@
 # E402: module level import not at top of file
 # C901: too complex
 # W503: line break before binary operator
+# W504: line break after binary operator
 exclude = venv*,__pycache__,node_modules
-ignore = D203,W503
+ignore = D203,W503,W504
 max-complexity = 7
 max-line-length = 120
 per-file-ignores =

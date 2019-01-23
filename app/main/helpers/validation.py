@@ -106,7 +106,7 @@ class DeclarationValidator(object):
         if self.number_string_fields is not None and len(self.number_string_fields) > 0:
             for field, length in self.number_string_fields:
                 if self.answers.get(field) is None or not re.match(
-                        '^\d{{{0}}}$'.format(length), self.answers.get(field, '')
+                        r'^\d{{{0}}}$'.format(length), self.answers.get(field, '')
                 ):
                     errors_map[field] = 'invalid_format'
         return errors_map
