@@ -3531,11 +3531,15 @@ class TestSendClarificationQuestionEmail(BaseApplicationTest):
         self.data_api_client.get_framework.return_value = self.framework('open')
         self.data_api_client.get_supplier_framework_info.return_value = self.supplier_framework()
 
-        response = self._send_email(invalid_clarification_question['question'])
-        self._assert_clarification_email(mandrill_send_email, notify_send_email, is_called=False, succeeds=False,
-                                         clarification_question=invalid_clarification_question)
+        response = self._send_email(message=invalid_clarification_question['question'])
+
+        # Assert no audit
+        assert self.data_api_client.create_audit_event.call_count == 0
+        # Assert no emails sent
+        assert notify_send_email.call_count == 0
 
         assert response.status_code == 400
+        # Assert error message shown
         assert (
             self.strip_all_whitespace('There was a problem with your submitted question')
             in self.strip_all_whitespace(response.get_data(as_text=True))
@@ -3545,58 +3549,52 @@ class TestSendClarificationQuestionEmail(BaseApplicationTest):
             in self.strip_all_whitespace(response.get_data(as_text=True))
         )
 
-    def test_should_create_audit_event(self, mandrill_send_email, notify_send_email, s3):
-        self.data_api_client.get_framework.return_value = self.framework('open', name='Test Framework')
-        clarification_question = 'This is a clarification question'
-        response = self._send_email(clarification_question)
-
-        self._assert_clarification_email(mandrill_send_email, notify_send_email,
-                                         clarification_question=clarification_question)
-
-        assert response.status_code == 200
-        self.data_api_client.create_audit_event.assert_called_with(
-            audit_type=AuditTypes.send_clarification_question,
-            user="email@email.com",
-            object_type="suppliers",
-            object_id=1234,
-            data={"question": clarification_question, 'framework': 'g-cloud-7'}
-        )
-
-    def test_should_create_g7_question_audit_event(self, mandrill_send_email, notify_send_email, s3):
-        self.data_api_client.get_framework.return_value = self.framework(
-            'open', name='Test Framework', clarification_questions_open=False
-        )
-        clarification_question = 'This is a G7 question'
-        response = self._send_email(clarification_question)
-
-        self._assert_application_email(
-            mandrill_send_email,
-            'Supplier name: Supplier NĀme',
-            'User name: Năme',
-            'User email: email@email.com',
-            'Test Framework question asked:',
-            'This is a G7 question',
-        )
-
-        assert response.status_code == 200
-        self.data_api_client.create_audit_event.assert_called_with(
-            audit_type=AuditTypes.send_application_question,
-            user="email@email.com",
-            object_type="suppliers",
-            object_id=1234,
-            data={"question": clarification_question, 'framework': 'g-cloud-7'}
-        )
-
-    def test_should_be_a_503_if_email_fails(self, mandrill_send_email, notify_send_email, s3):
+    def test_should_be_a_503_if_email_fails(self, notify_send_email):
         self.data_api_client.get_framework.return_value = self.framework('open', name='Test Framework')
         mandrill_send_email.side_effect = EmailError("Arrrgh")
 
         clarification_question = 'This is a clarification question.'
-        response = self._send_email(clarification_question)
-        self._assert_clarification_email(mandrill_send_email, notify_send_email, succeeds=False,
-                                         clarification_question=clarification_question)
-
+        response = self._send_email(message=clarification_question)
+        # Assert send_email is called only once
+        notify_send_email.assert_called_once_with(
+            mock.ANY, to_email_address="digitalmarketplace@mailinator.com",
+            template_name_or_id='framework-clarification-question',
+            personalisation={"framework_name": "Test Framework", "supplier_id": 1234,
+                             "clarification_question": clarification_question}
+        )
+        # Assert no audit
+        assert self.data_api_client.create_audit_event.call_count == 0
         assert response.status_code == 503
+
+    @mock.patch('dmutils.s3.S3')
+    def test_should_fail_silently_if_receipt_email_fails(self, s3, notify_send_email):
+        notify_send_email.side_effect = [None, EmailError("Arrrgh")]
+        self.data_api_client.get_framework.return_value = self.framework('open', name='Test Framework',
+                                                                         clarification_questions_open=True)
+        clarification_question = 'This is a clarification question.'
+        response = self._send_email(message=clarification_question)
+        # first email sends, second email fails
+        notify_send_email.assert_has_calls(
+            [
+                mock.call(
+                    mock.ANY, to_email_address="digitalmarketplace@mailinator.com",
+                    template_name_or_id="framework-clarification-question",
+                    personalisation={"framework_name": "Test Framework", "supplier_id": 1234,
+                                     "clarification_question": clarification_question}
+                ),
+                mock.call(
+                    mock.ANY,  # DMNotifyClient
+                    to_email_address="email@email.com",
+                    template_name_or_id='confirmation_of_clarification_question',
+                    personalisation={'user_name': 'Năme', 'framework_name': 'Test Framework',
+                                     'clarification_question_text': clarification_question},
+                    reference='clarification-question-confirm-8yc90Y2VvBnVHT5jVuSmeebxOCRJcnKicOe7VAsKu50=',
+                    reply_to_address_id='24908180-b64e-513d-ab48-fdca677cec52'
+                )
+            ]
+        )
+        # assert reached end of view and redirected
+        assert response.status_code == 200
 
 
 @mock.patch('app.main.views.frameworks.count_unanswered_questions')
