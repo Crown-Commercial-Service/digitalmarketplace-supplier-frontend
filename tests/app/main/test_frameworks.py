@@ -3372,9 +3372,7 @@ class TestFrameworkUpdatesPage(BaseApplicationTest):
         assert u'Ask a question about your G-Cloud 7 application' not in data
 
 
-@mock.patch('dmutils.s3.S3')
 @mock.patch('app.main.views.frameworks.DMNotifyClient.send_email', autospec=True)
-@mock.patch('app.main.views.frameworks.DMMandrillClient.send_email', autospec=True)
 class TestSendClarificationQuestionEmail(BaseApplicationTest):
 
     def setup_method(self, method):
@@ -3386,7 +3384,8 @@ class TestSendClarificationQuestionEmail(BaseApplicationTest):
         self.data_api_client_patch.stop()
         super().teardown_method(method)
 
-    def _send_email(self, message):
+    @mock.patch('dmutils.s3.S3')
+    def _send_email(self, s3, message):
         self.login()
 
         return self.client.post(
@@ -3424,8 +3423,7 @@ class TestSendClarificationQuestionEmail(BaseApplicationTest):
                 reply_to_address_id=mock.ANY
             )
 
-    @mock.patch('dmutils.s3.S3')
-    def test_should_call_send_email_with_correct_params_if_clarification_questions_open(self, s3, notify_send_email):
+    def test_should_call_send_email_with_correct_params_if_clarification_questions_open(self, notify_send_email):
         self.data_api_client.get_framework.return_value = self.framework(
             'open', name='Test Framework', clarification_questions_open=True
         )
@@ -3471,8 +3469,7 @@ class TestSendClarificationQuestionEmail(BaseApplicationTest):
             'clarification questions will be published on this page.</p>'
         ) in self.strip_all_whitespace(response.get_data(as_text=True))
 
-    @mock.patch('dmutils.s3.S3')
-    def test_followup_email_sent_with_correct_params_if_clarification_questions_closed(self, s3, notify_send_email):
+    def test_followup_email_sent_with_correct_params_if_clarification_questions_closed(self, notify_send_email):
         self.data_api_client.get_framework.return_value = self.framework(
             'open', name='Test Framework', clarification_questions_open=False
         )
@@ -3523,9 +3520,7 @@ class TestSendClarificationQuestionEmail(BaseApplicationTest):
     )
     def test_should_not_send_email_if_invalid_clarification_question(
         self,
-        mandrill_send_email,
         notify_send_email,
-        s3,
         invalid_clarification_question,
     ):
         self.data_api_client.get_framework.return_value = self.framework('open')
@@ -3551,7 +3546,7 @@ class TestSendClarificationQuestionEmail(BaseApplicationTest):
 
     def test_should_be_a_503_if_email_fails(self, notify_send_email):
         self.data_api_client.get_framework.return_value = self.framework('open', name='Test Framework')
-        mandrill_send_email.side_effect = EmailError("Arrrgh")
+        notify_send_email.side_effect = EmailError("Arrrgh")
 
         clarification_question = 'This is a clarification question.'
         response = self._send_email(message=clarification_question)
@@ -3566,8 +3561,7 @@ class TestSendClarificationQuestionEmail(BaseApplicationTest):
         assert self.data_api_client.create_audit_event.call_count == 0
         assert response.status_code == 503
 
-    @mock.patch('dmutils.s3.S3')
-    def test_should_fail_silently_if_receipt_email_fails(self, s3, notify_send_email):
+    def test_should_fail_silently_if_receipt_email_fails(self, notify_send_email):
         notify_send_email.side_effect = [None, EmailError("Arrrgh")]
         self.data_api_client.get_framework.return_value = self.framework('open', name='Test Framework',
                                                                          clarification_questions_open=True)
