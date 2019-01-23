@@ -1,5 +1,5 @@
 -r requirements.txt
-coverage==3.7.1
+coverage==4.5.2
 cssselect==0.9.1
 flake8==3.5.0
 flake8-per-file-ignores==0.4.0
