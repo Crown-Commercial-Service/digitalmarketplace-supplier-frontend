@@ -2317,7 +2317,7 @@ class TestGetListPreviousServices(BaseApplicationTest, MockEnsureApplicationComp
             "//span[@class='question-advice']"
             "[normalize-space()='You still have to review your service and answer any new questions.']"
         )
-        assert [re.sub("\W", "", label.text) for label in doc.xpath("//label[@class='radio']")] == ["Yes", "No"]
+        assert [re.sub(r"\W", "", label.text) for label in doc.xpath("//label[@class='radio']")] == ["Yes", "No"]
         assert doc.xpath("//input[@type='submit'][@value='Save and continue']")
 
     def test_returns_404_if_framework_not_found(self, get_metadata):
