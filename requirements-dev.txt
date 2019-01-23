@@ -9,7 +9,7 @@ mock==2.0.0
 pytest==3.2.3
 pytest-cov==2.5.1
 python-coveralls==2.5.0
-requests-mock==0.6.0
+requests-mock==1.5.2
 watchdog==0.8.3
 
 git+https://github.com/alphagov/digitalmarketplace-test-utils.git@2.1.0#egg=digitalmarketplace-test-utils==2.1.0
