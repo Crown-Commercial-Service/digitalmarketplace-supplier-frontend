@@ -52,7 +52,7 @@ in (with args; {
         ${pythonPackages.python}/bin/python -m venv $VIRTUALENV_ROOT
       fi
       source $VIRTUALENV_ROOT/bin/activate
-      make -C ${(./.)} requirements${pkgs.stdenv.lib.optionalString forDev "-dev"}
+      make -C ${toString (./.)} requirements${pkgs.stdenv.lib.optionalString forDev "-dev"}
     '';
   }).overrideAttrs (if builtins.pathExists localOverridesPath then (import localOverridesPath args) else (x: x));
 })
