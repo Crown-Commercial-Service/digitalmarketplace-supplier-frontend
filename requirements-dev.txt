@@ -6,7 +6,7 @@ flake8-per-file-ignores==0.7.0
 freezegun==0.3.11
 lxml==4.3.0
 mock==2.0.0
-pytest==4.1.1
+pytest==4.2.0
 pytest-cov==2.6.1
 python-coveralls==2.9.1
 requests-mock==1.5.2
