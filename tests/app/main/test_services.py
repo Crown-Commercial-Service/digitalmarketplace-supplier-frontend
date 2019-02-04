@@ -897,16 +897,45 @@ class TestSupplierEditUpdateServiceSection(BaseApplicationTest):
             "Unexpected response {} for {} framework state".format(res.status_code, fwk_status)
         )
 
-    def test_return_to_service_summary_link_present(self, s3):
+    def test_edit_page(self, s3):
         self.data_api_client.get_service.return_value = self.empty_service
         self.data_api_client.get_framework.return_value = self._get_framework_response()
         res = self.client.get('/suppliers/frameworks/g-cloud-6/services/1/edit/description')
+
         assert res.status_code == 200
-        assert self.strip_all_whitespace(
-            '<a href="/suppliers/frameworks/g-cloud-6/services/1">Return to service summary</a>'
-        ) in self.strip_all_whitespace(res.get_data(as_text=True))
+        document = html.fromstring(res.get_data(as_text=True))
+
+        form = document.xpath(
+            "//form[@method='post'][.//input[@type='submit'][@value=$v]]",
+            v="Save and return",
+        )[0]
+        assert form.xpath(
+            ".//input[@name=$n][@value=$v]",
+            n="serviceName",
+            v="Service name 123",
+        )
+        assert form.xpath(
+            ".//textarea[@name=$n]",
+            n="serviceSummary",
+        )
+        assert document.xpath(
+            "//a[@href=$u][normalize-space(string())]",
+            u="/suppliers/frameworks/g-cloud-6/services/1",
+            t="Return to service summary",
+        )
+
         assert self.data_api_client.update_service.called is False
         self.assert_no_flashes()
+
+        assert tuple(
+            (a.xpath("normalize-space(string())"), a.attrib["href"],)
+            for a in document.xpath("//nav//ol[@role='breadcrumbs']/li//a[1]")
+        ) == (
+            ('Digital Marketplace', '/'),
+            ('Your account', '/suppliers'),
+            ('Your G-Cloud 6 services', '/suppliers/frameworks/g-cloud-6/services'),
+            ('Service name 123', '/suppliers/frameworks/g-cloud-6/services/1'),
+        )
 
     def test_edit_service_incorrect_framework(self, s3):
         self.data_api_client.get_service.return_value = self.empty_service
@@ -1015,17 +1044,52 @@ class TestSupplierEditUpdateServiceSection(BaseApplicationTest):
         self.data_api_client.get_framework.return_value = self._get_framework_response()
         self.data_api_client.update_service.side_effect = HTTPError(
             mock.Mock(status_code=400),
-            {'serviceSummary': 'answer_required'})
+            {
+                'serviceSummary': 'answer_required',
+                'serviceName': 'answer_required',
+            },
+        )
         res = self.client.post(
             '/suppliers/frameworks/g-cloud-6/services/1/edit/description',
             data={})
 
         assert res.status_code == 400
         document = html.fromstring(res.get_data(as_text=True))
+
+        form = document.xpath(
+            "//form[@method='post'][.//input[@type='submit'][@value=$v]]",
+            v="Save and return",
+        )[0]
+        assert form.xpath(
+            ".//input[@name=$n]",
+            n="serviceName",
+        )
+        assert form.xpath(
+            ".//textarea[@name=$n]",
+            n="serviceSummary",
+        )
         assert document.xpath(
-            '//span[@class="validation-message"]/text()'
-        )[0].strip() == "You need to answer this question."
+            "//a[@href=$u][normalize-space(string())]",
+            u="/suppliers/frameworks/g-cloud-6/services/1",
+            t="Return to service summary",
+        )
+
+        assert len(document.xpath('//span[@class="validation-message"]')) == 2
+        assert len(document.xpath(
+            '//span[@class="validation-message"][normalize-space(string())=$t]',
+            t="You need to answer this question.",
+        )) == 2
         self.assert_no_flashes()
+
+        assert tuple(
+            (a.xpath("normalize-space(string())"), a.attrib["href"],)
+            for a in document.xpath("//nav//ol[@role='breadcrumbs']/li//a[1]")
+        ) == (
+            ('Digital Marketplace', '/'),
+            ('Your account', '/suppliers'),
+            ('Your G-Cloud 6 services', '/suppliers/frameworks/g-cloud-6/services'),
+            ('Service name 123', '/suppliers/frameworks/g-cloud-6/services/1'),
+        )
 
     def test_update_with_under_50_words_error(self, s3):
         self.data_api_client.get_service.return_value = self.empty_service
