@@ -149,9 +149,11 @@ class G7Validator(DeclarationValidator):
 
         #  If you answered 'licensed' or 'a member of a relevant organisation' in question 29
         answer_29 = self.answers.get('SQ1-1j-i', [])
-        if answer_29 and len(answer_29) > 0 and \
-                ('licensed' in answer_29 or 'a member of a relevant organisation' in answer_29):
-                req_fields.add('SQ1-1j-ii')
+        if answer_29 and len(answer_29) > 0 and (
+            'licensed' in answer_29
+            or 'a member of a relevant organisation' in answer_29
+        ):
+            req_fields.add('SQ1-1j-ii')
 
         # If you answered yes to either question 53 or 54 (tax returns)
         if self.answers.get('SQ4-1a', False) or self.answers.get('SQ4-1b', False):
