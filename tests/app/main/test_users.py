@@ -4,53 +4,53 @@ from tests.app.helpers import BaseApplicationTest
 
 def get_users(additional_users=None, index=None):
 
-        users = [
-            {
-                'id': 123,
-                'name': "User Name",
-                'emailAddress': "email@email.com",
-                'loggedInAt': "2015-05-06T11:57:28.008690Z",
-                'locked': False,
-                'active': True,
-                'role': 'supplier',
-                'supplier': {
-                    'name': "Supplier Name",
-                    'supplierId': 1234
-                }
-            },
-            {
-                'id': 1,
-                'name': "Don Draper",
-                'emailAddress': "don@scdp.com",
-                'loggedInAt': "2015-05-06T11:57:28.008690Z",
-                'locked': False,
-                'active': True,
-                'role': 'supplier',
-                'supplier': {
-                    'name': "Supplier Name",
-                    'supplierId': 1234
-                }
-            },
-            # inactive user
-            {
-                'id': 2,
-                'name': "Lane Pryce",
-                'emailAddress': "lane@scdp.com",
-                'loggedInAt': "2012-06-03T11:57:28.008690Z",
-                'locked': False,
-                'active': False,
-                'role': 'supplier',
-                'supplier': {
-                    'name': "Supplier Name",
-                    'supplierId': 1234
-                }
+    users = [
+        {
+            'id': 123,
+            'name': "User Name",
+            'emailAddress': "email@email.com",
+            'loggedInAt': "2015-05-06T11:57:28.008690Z",
+            'locked': False,
+            'active': True,
+            'role': 'supplier',
+            'supplier': {
+                'name': "Supplier Name",
+                'supplierId': 1234
             }
-        ]
+        },
+        {
+            'id': 1,
+            'name': "Don Draper",
+            'emailAddress': "don@scdp.com",
+            'loggedInAt': "2015-05-06T11:57:28.008690Z",
+            'locked': False,
+            'active': True,
+            'role': 'supplier',
+            'supplier': {
+                'name': "Supplier Name",
+                'supplierId': 1234
+            }
+        },
+        # inactive user
+        {
+            'id': 2,
+            'name': "Lane Pryce",
+            'emailAddress': "lane@scdp.com",
+            'loggedInAt': "2012-06-03T11:57:28.008690Z",
+            'locked': False,
+            'active': False,
+            'role': 'supplier',
+            'supplier': {
+                'name': "Supplier Name",
+                'supplierId': 1234
+            }
+        }
+    ]
 
-        if additional_users is not None and isinstance(additional_users, list):
-            users += additional_users
+    if additional_users is not None and isinstance(additional_users, list):
+        users += additional_users
 
-        return {'users': users} if index is None else {'users': users[index]}
+    return {'users': users} if index is None else {'users': users[index]}
 
 
 class TestListUsers(BaseApplicationTest):

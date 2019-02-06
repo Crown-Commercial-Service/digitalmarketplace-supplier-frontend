@@ -836,33 +836,33 @@ def copy_previous_service(framework_slug, lot_slug, service_id):
 @EnsureApplicationCompanyDetailsHaveBeenConfirmed(data_api_client)
 @return_404_if_applications_closed(lambda: data_api_client)
 def copy_all_previous_services(framework_slug, lot_slug):
-        framework, lot = get_framework_and_lot_or_404(
-            data_api_client, framework_slug, lot_slug, allowed_statuses=['open']
-        )
+    framework, lot = get_framework_and_lot_or_404(
+        data_api_client, framework_slug, lot_slug, allowed_statuses=['open']
+    )
 
-        # Suppliers must have registered interest in a framework before they can edit draft services
-        if not get_supplier_framework_info(data_api_client, framework_slug):
-            abort(404)
+    # Suppliers must have registered interest in a framework before they can edit draft services
+    if not get_supplier_framework_info(data_api_client, framework_slug):
+        abort(404)
 
-        questions_to_copy = content_loader.get_metadata(framework['slug'], 'copy_services', 'questions_to_copy')
-        source_framework_slug = content_loader.get_metadata(framework['slug'], 'copy_services', 'source_framework')
+    questions_to_copy = content_loader.get_metadata(framework['slug'], 'copy_services', 'questions_to_copy')
+    source_framework_slug = content_loader.get_metadata(framework['slug'], 'copy_services', 'source_framework')
 
-        response = data_api_client.copy_published_from_framework(
-            framework_slug,
-            lot_slug,
-            current_user.name,
-            data={
-                "sourceFrameworkSlug": source_framework_slug,
-                "supplierId": current_user.supplier_id,
-                "questionsToCopy": questions_to_copy
-            }
-        )['services']
+    response = data_api_client.copy_published_from_framework(
+        framework_slug,
+        lot_slug,
+        current_user.name,
+        data={
+            "sourceFrameworkSlug": source_framework_slug,
+            "supplierId": current_user.supplier_id,
+            "questionsToCopy": questions_to_copy
+        }
+    )['services']
 
-        flash(
-            ALL_SERVICES_ADDED_MESSAGE.format(
-                draft_count=response['draftsCreatedCount'], framework_name=framework['name']
-            ),
-            "success"
-        )
+    flash(
+        ALL_SERVICES_ADDED_MESSAGE.format(
+            draft_count=response['draftsCreatedCount'], framework_name=framework['name']
+        ),
+        "success"
+    )
 
-        return redirect(url_for(".framework_submission_services", framework_slug=framework_slug, lot_slug=lot_slug))
+    return redirect(url_for(".framework_submission_services", framework_slug=framework_slug, lot_slug=lot_slug))
