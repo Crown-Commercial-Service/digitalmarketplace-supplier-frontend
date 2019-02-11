@@ -65,7 +65,6 @@ class OneServiceLimitCopyServiceForm(FlaskForm):
         "Do you want to reuse your previous {lot_name} service?",
         question_advice="You still have to review your service and answer any new questions.",
         false_values=("False", "false", ""),
-        validators=[InputRequired(message="You must answer this question.")],
         widget=DMSelectionButtonBase(type="boolean"),
     )
 

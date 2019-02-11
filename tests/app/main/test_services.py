@@ -2601,21 +2601,17 @@ class TestPostListPreviousService(BaseApplicationTest, MockEnsureApplicationComp
             t=f"You already have a draft {lot_name.lower()} service.",
         )
 
-    def test_validates_that_an_answer_is_required(self):
+    @mock.patch('app.main.views.services.copy_service_from_previous_framework')
+    def test_form_validation_treats_a_blank_answer_as_a_no(self, copy_service_from_previous_framework):
         res = self.client.post(
             '/suppliers/frameworks/digital-outcomes-and-specialists-3/'
-            'submissions/digital-specialists/previous-services',
+            'submissions/digital-outcomes/previous-services',
             data={},
         )
-        doc = html.fromstring(res.get_data(as_text=True))
 
-        assert res.status_code == 400
-        assert "Do you want to reuse your previous digital specialists service?" == doc.xpath(
-            "//a[@class='validation-masthead-link']/text()"
-        )[0].strip()
-        assert "You must answer this question." == doc.xpath(
-            '//span[@class="validation-message"]/text()'
-        )[0].strip()
+        assert res.status_code == 302
+        assert '/suppliers/frameworks/digital-outcomes-and-specialists-3/submissions/digital-outcomes' in res.location
+        assert copy_service_from_previous_framework.call_args_list == []
 
 
 class CopyingPreviousServicesSetup(BaseApplicationTest):
