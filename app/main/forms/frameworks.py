@@ -1,6 +1,6 @@
 from flask_wtf import FlaskForm
 from wtforms import HiddenField
-from wtforms.validators import DataRequired, InputRequired, Length
+from wtforms.validators import DataRequired, Length
 
 from dmutils.forms.fields import DMBooleanField, DMStripWhitespaceStringField
 from dmutils.forms.widgets import DMSelectionButtonBase
@@ -55,7 +55,6 @@ class ReuseDeclarationForm(FlaskForm):
     reuse = DMBooleanField(
         "Do you want to reuse the answers from your earlier declaration?",
         false_values=("False", "false", ""),
-        validators=[InputRequired(message="You must answer this question.")],
     )
     old_framework_slug = HiddenField()
 
@@ -66,7 +65,6 @@ class OneServiceLimitCopyServiceForm(FlaskForm):
         "Do you want to reuse your previous {lot_name} service?",
         question_advice="You still have to review your service and answer any new questions.",
         false_values=("False", "false", ""),
-        validators=[InputRequired(message="You must answer this question.")],
         widget=DMSelectionButtonBase(type="boolean"),
     )
 
