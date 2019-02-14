@@ -3406,7 +3406,7 @@ class TestSendClarificationQuestionEmail(BaseApplicationTest):
         notify_send_email.assert_has_calls(
             [
                 mock.call(
-                    mock.ANY, to_email_address="digitalmarketplace@mailinator.com",
+                    mock.ANY, to_email_address="clarification-questions@example.gov.uk",
                     template_name_or_id='framework-clarification-question',
                     personalisation={"framework_name": "Test Framework", "supplier_id": 1234,
                                      "clarification_question": clarification_question}
@@ -3450,7 +3450,7 @@ class TestSendClarificationQuestionEmail(BaseApplicationTest):
         # Assert Notify email 2 is not sent (no receipt)
         notify_send_email.assert_called_once_with(
             mock.ANY,
-            to_email_address="digitalmarketplace@mailinator.com",
+            to_email_address="follow-up@example.gov.uk",
             personalisation={
                 "framework_name": "Test Framework",
                 "supplier_name": "Supplier NĀme",
@@ -3522,7 +3522,7 @@ class TestSendClarificationQuestionEmail(BaseApplicationTest):
         response = self._send_email(message=clarification_question)
         # Assert send_email is called only once
         notify_send_email.assert_called_once_with(
-            mock.ANY, to_email_address="digitalmarketplace@mailinator.com",
+            mock.ANY, to_email_address="clarification-questions@example.gov.uk",
             template_name_or_id='framework-clarification-question',
             personalisation={"framework_name": "Test Framework", "supplier_id": 1234,
                              "clarification_question": clarification_question}
@@ -3541,7 +3541,7 @@ class TestSendClarificationQuestionEmail(BaseApplicationTest):
         notify_send_email.assert_has_calls(
             [
                 mock.call(
-                    mock.ANY, to_email_address="digitalmarketplace@mailinator.com",
+                    mock.ANY, to_email_address="clarification-questions@example.gov.uk",
                     template_name_or_id="framework-clarification-question",
                     personalisation={"framework_name": "Test Framework", "supplier_id": 1234,
                                      "clarification_question": clarification_question}
