@@ -3406,19 +3406,36 @@ class TestSendClarificationQuestionEmail(BaseApplicationTest):
         notify_send_email.assert_has_calls(
             [
                 mock.call(
-                    mock.ANY, to_email_address="digitalmarketplace@mailinator.com",
+                    mock.ANY,
+                    to_email_address="clarification-questions@example.gov.uk",
                     template_name_or_id='framework-clarification-question',
-                    personalisation={"framework_name": "Test Framework", "supplier_id": 1234,
-                                     "clarification_question": clarification_question}
+                    personalisation={
+                        "framework_name": "Test Framework",
+                        "supplier_id": 1234,
+                        "clarification_question": clarification_question,
+                    },
+                    reference=(
+                        "fw-clarification-question-"
+                        "42c1W5KnFy1IaDtDEnNsOChYYluckBo_mzTuRxQawFo=-"
+                        "9B7i7y6lXFmVCHXyU7sP0nkdNK6l8B98xRimoHMzpAw="
+                    ),
+                    allow_resend=True,
                 ),
                 mock.call(
                     mock.ANY,  # DMNotifyClient
                     to_email_address="email@email.com",
                     template_name_or_id='confirmation_of_clarification_question',
-                    personalisation={'user_name': 'Năme', 'framework_name': 'Test Framework',
-                                     'clarification_question_text': clarification_question},
-                    reference='clarification-question-confirm-8yc90Y2VvBnVHT5jVuSmeebxOCRJcnKicOe7VAsKu50=',
-                    reply_to_address_id='24908180-b64e-513d-ab48-fdca677cec52'
+                    personalisation={
+                        'user_name': 'Năme',
+                        'framework_name': 'Test Framework',
+                        'clarification_question_text': clarification_question,
+                    },
+                    reference=(
+                        "fw-clarification-question-confirm-"
+                        "42c1W5KnFy1IaDtDEnNsOChYYluckBo_mzTuRxQawFo=-"
+                        "8yc90Y2VvBnVHT5jVuSmeebxOCRJcnKicOe7VAsKu50="
+                    ),
+                    reply_to_address_id='24908180-b64e-513d-ab48-fdca677cec52',
                 )
             ]
         )
@@ -3450,15 +3467,21 @@ class TestSendClarificationQuestionEmail(BaseApplicationTest):
         # Assert Notify email 2 is not sent (no receipt)
         notify_send_email.assert_called_once_with(
             mock.ANY,
-            to_email_address="digitalmarketplace@mailinator.com",
+            to_email_address="follow-up@example.gov.uk",
             personalisation={
                 "framework_name": "Test Framework",
                 "supplier_name": "Supplier NĀme",
                 "user_name": "Năme",
                 "user_email": "email@email.com",
-                "application_question": followup_question
+                "application_question": followup_question,
             },
-            template_name_or_id="framework-application-question"
+            template_name_or_id="framework-application-question",
+            reference=(
+                "fw-follow-up-question-"
+                "GxKP1-LMUIsHUGQacK5G_O8X5SIpTBprpHOZz7GTMqY=-"
+                "mh7AWnayIfWYNRIERoJLVCBKia340VBzg1wakX2q64E="
+            ),
+            allow_resend=True,
         )
         # Assert audit event
         self.data_api_client.create_audit_event.assert_called_with(
@@ -3522,10 +3545,20 @@ class TestSendClarificationQuestionEmail(BaseApplicationTest):
         response = self._send_email(message=clarification_question)
         # Assert send_email is called only once
         notify_send_email.assert_called_once_with(
-            mock.ANY, to_email_address="digitalmarketplace@mailinator.com",
+            mock.ANY,
+            to_email_address="clarification-questions@example.gov.uk",
             template_name_or_id='framework-clarification-question',
-            personalisation={"framework_name": "Test Framework", "supplier_id": 1234,
-                             "clarification_question": clarification_question}
+            personalisation={
+                "framework_name": "Test Framework",
+                "supplier_id": 1234,
+                "clarification_question": clarification_question,
+            },
+            reference=(
+                "fw-clarification-question-"
+                "42c1W5KnFy1IaDtDEnNsOChYYluckBo_mzTuRxQawFo=-"
+                "9B7i7y6lXFmVCHXyU7sP0nkdNK6l8B98xRimoHMzpAw="
+            ),
+            allow_resend=True,
         )
         # Assert no audit
         assert self.data_api_client.create_audit_event.call_count == 0
@@ -3541,19 +3574,36 @@ class TestSendClarificationQuestionEmail(BaseApplicationTest):
         notify_send_email.assert_has_calls(
             [
                 mock.call(
-                    mock.ANY, to_email_address="digitalmarketplace@mailinator.com",
+                    mock.ANY,
+                    to_email_address="clarification-questions@example.gov.uk",
                     template_name_or_id="framework-clarification-question",
-                    personalisation={"framework_name": "Test Framework", "supplier_id": 1234,
-                                     "clarification_question": clarification_question}
+                    personalisation={
+                        "framework_name": "Test Framework",
+                        "supplier_id": 1234,
+                        "clarification_question": clarification_question,
+                    },
+                    reference=(
+                        "fw-clarification-question-"
+                        "42c1W5KnFy1IaDtDEnNsOChYYluckBo_mzTuRxQawFo=-"
+                        "9B7i7y6lXFmVCHXyU7sP0nkdNK6l8B98xRimoHMzpAw="
+                    ),
+                    allow_resend=True,
                 ),
                 mock.call(
                     mock.ANY,  # DMNotifyClient
                     to_email_address="email@email.com",
                     template_name_or_id='confirmation_of_clarification_question',
-                    personalisation={'user_name': 'Năme', 'framework_name': 'Test Framework',
-                                     'clarification_question_text': clarification_question},
-                    reference='clarification-question-confirm-8yc90Y2VvBnVHT5jVuSmeebxOCRJcnKicOe7VAsKu50=',
-                    reply_to_address_id='24908180-b64e-513d-ab48-fdca677cec52'
+                    personalisation={
+                        'user_name': 'Năme',
+                        'framework_name': 'Test Framework',
+                        'clarification_question_text': clarification_question,
+                    },
+                    reference=(
+                        "fw-clarification-question-confirm-"
+                        "42c1W5KnFy1IaDtDEnNsOChYYluckBo_mzTuRxQawFo=-"
+                        "8yc90Y2VvBnVHT5jVuSmeebxOCRJcnKicOe7VAsKu50="
+                    ),
+                    reply_to_address_id='24908180-b64e-513d-ab48-fdca677cec52',
                 )
             ]
         )

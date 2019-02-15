@@ -731,6 +731,10 @@ def framework_updates_email_clarification_question(framework_slug):
             "clarification_question": clarification_question
         }
         template = 'framework-clarification-question'
+        reference = "fw-clarification-question-{}-{}".format(
+            hash_string(clarification_question),
+            hash_string(to_address),
+        )
     else:
         to_address = current_app.config['DM_FOLLOW_UP_EMAIL_TO']
         personalisation = {
@@ -741,6 +745,10 @@ def framework_updates_email_clarification_question(framework_slug):
             "application_question": clarification_question
         }
         template = "framework-application-question"
+        reference = "fw-follow-up-question-{}-{}".format(
+            hash_string(clarification_question),
+            hash_string(to_address),
+        )
 
     notify_client = DMNotifyClient()
     try:
@@ -748,6 +756,8 @@ def framework_updates_email_clarification_question(framework_slug):
             to_email_address=to_address,
             template_name_or_id=template,
             personalisation=personalisation,
+            reference=reference,
+            allow_resend=True,  # don't risk message getting swallowed
         )
     except EmailError as e:
         current_app.logger.error(
@@ -764,7 +774,6 @@ def framework_updates_email_clarification_question(framework_slug):
         # No need to fail if this email does not send
         audit_type = AuditTypes.send_clarification_question
 
-        notify_client = DMNotifyClient()
         confirmation_email_personalisation = {
             'user_name': current_user.name,
             'framework_name': framework['name'],
@@ -776,8 +785,11 @@ def framework_updates_email_clarification_question(framework_slug):
                 current_user.email_address,
                 template_name_or_id='confirmation_of_clarification_question',
                 personalisation=confirmation_email_personalisation,
-                reference='clarification-question-confirm-{}'.format(hash_string(current_user.email_address)),
-                reply_to_address_id=current_app.config['DM_ENQUIRIES_EMAIL_ADDRESS_UUID']
+                reference="fw-clarification-question-confirm-{}-{}".format(
+                    hash_string(clarification_question),
+                    hash_string(current_user.email_address),
+                ),
+                reply_to_address_id=current_app.config['DM_ENQUIRIES_EMAIL_ADDRESS_UUID'],
             )
         except EmailError as e:
             current_app.logger.error(
