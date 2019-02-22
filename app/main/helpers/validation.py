@@ -177,7 +177,8 @@ class G7Validator(DeclarationValidator):
 
 class DOSValidator(DeclarationValidator):
     optional_fields = set([
-        "mitigatingFactors", "mitigatingFactors2", "tradingStatusOther",
+        "mitigatingFactors", "mitigatingFactors2", "mitigatingFactors3", "tradingStatusOther",
+        "modernSlaveryStatement", "modernSlaveryStatementOptional", "modernSlaveryReportingRequirements",
         # Registered in UK = no
         "appropriateTradeRegisters", "appropriateTradeRegistersNumber",
         "licenceOrMemberRequired", "licenceOrMemberRequiredDetails",
@@ -199,6 +200,13 @@ class DOSValidator(DeclarationValidator):
             # If you responded yes to either 36 or 37
             "mitigatingFactors2": [
                 "unspentTaxConvictions", "GAAR"
+            ],
+            # If you responded yes to 50 (Modern Slavery)
+            "modernSlaveryStatement": [
+                "modernSlaveryTurnover",
+            ],
+            "modernSlaveryReportingRequirements": [
+                "modernSlaveryTurnover"
             ],
         }
         for target_field, fields in dependent_fields.items():
