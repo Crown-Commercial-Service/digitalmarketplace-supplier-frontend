@@ -17,7 +17,7 @@ from dmutils.documents import (
     RESULT_LETTER_FILENAME, SIGNED_AGREEMENT_PREFIX, SIGNED_SIGNATURE_PAGE_PREFIX,
     SIGNATURE_PAGE_FILENAME, get_document_path, generate_timestamped_document_upload_path,
     degenerate_document_path_and_return_doc_name, get_signed_url, get_extension, file_is_less_than_5mb,
-    file_is_image, file_is_pdf, sanitise_supplier_name
+    file_is_image, file_is_pdf, sanitise_supplier_name, upload_declaration_documents
 )
 from dmutils.email.dm_notify import DMNotifyClient
 from dmutils.email.exceptions import EmailError
@@ -571,9 +571,8 @@ def framework_supplier_declaration_edit(framework_slug, section_id):
     saved_declaration = supplier_framework.get('declaration') or {}
     name_of_framework_that_section_has_been_prefilled_from = ""
 
+    errors = {}
     if request.method == 'GET':
-        errors = {}
-
         section_errors = get_validator(
             framework,
             content,
@@ -601,10 +600,34 @@ def framework_supplier_declaration_edit(framework_slug, section_id):
             all_answers = saved_declaration
     else:
         submitted_answers = section.get_data(request.form)
-        all_answers = dict(saved_declaration, **submitted_answers)
+
+        # File fields won't be returned by `section.get_data` so handle these separately
+        if request.files:
+            documents_url = url_for('.dashboard', _external=True) + '/assets/'
+            # This utils method filters out any empty documents and validates against service document rules
+            uploaded_documents, document_errors = upload_declaration_documents(
+                s3.S3(current_app.config['DM_DOCUMENTS_BUCKET']),
+                'documents',
+                documents_url,
+                request.files,
+                section,
+                framework_slug,
+                supplier_framework["supplierId"]
+            )
+
+            if document_errors:
+                errors = section.get_error_messages(document_errors, question_descriptor_from="question")
+            else:
+                submitted_answers.update(uploaded_documents)
 
         validator = get_validator(framework, content, submitted_answers)
-        errors = validator.get_error_messages_for_page(section)
+
+        # TODO: combine document errors with other validation errors
+        # If no document errors, look for other errors
+        if not errors:
+            errors = validator.get_error_messages_for_page(section)
+
+        all_answers = dict(saved_declaration, **submitted_answers)
 
         if len(errors) > 0:
             status_code = 400
