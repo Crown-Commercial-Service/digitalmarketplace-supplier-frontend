@@ -75,12 +75,17 @@ AGREEMENT_RETURNED_MESSAGE = (
     "Your framework agreement has been returned to the Crown Commercial Service to be countersigned."
 )
 
+CUSTOM_DIMENSION_IDENTIFIERS = {
+    "supplierFrameworkApplicationStage": 29
+}
+
 
 @main.route('/frameworks/<framework_slug>', methods=['GET', 'POST'])
 @login_required
 def framework_dashboard(framework_slug):
     framework = get_framework_or_404(data_api_client, framework_slug)
     update_framework_with_formatted_dates(framework)
+    custom_dimensions, custom_dimension_stage = [], None
     if framework["status"] == "open":
         session["currently_applying_to"] = framework_slug
 
@@ -130,6 +135,25 @@ def framework_dashboard(framework_slug):
         framework_advice = content_loader.get_message(framework_slug, 'advice')
     except ContentNotFoundError:
         framework_advice = None
+
+    # GA custom dimension stages for the application
+    if supplier_framework_info and not supplier_framework_info['applicationCompanyDetailsConfirmed']:
+        custom_dimension_stage = "application_started"
+    if application_company_details_confirmed:
+        custom_dimension_stage = "company_details_confirmed"
+    if declaration_status == 'complete':
+        custom_dimension_stage = "declaration_confirmed"
+    if complete_drafts:
+        # At least one service has been confirmed
+        custom_dimension_stage = "services_confirmed"
+    if application_made:
+        custom_dimension_stage = "application_confirmed"
+
+    if custom_dimension_stage:
+        custom_dimensions = [{
+            'data_id': CUSTOM_DIMENSION_IDENTIFIERS['supplierFrameworkApplicationStage'],
+            'data_value': custom_dimension_stage
+        }]
 
     # filenames
     result_letter_filename = RESULT_LETTER_FILENAME
@@ -214,6 +238,7 @@ def framework_dashboard(framework_slug):
         framework_advice=framework_advice,
         supplier_company_details_complete=supplier_company_details_are_complete(supplier),
         application_company_details_confirmed=application_company_details_confirmed,
+        custom_dimensions=custom_dimensions
     ), 200
 
 
