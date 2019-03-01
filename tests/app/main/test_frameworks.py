@@ -6,6 +6,7 @@ from io import BytesIO
 from itertools import chain
 from urllib.parse import urljoin
 
+from freezegun import freeze_time
 from lxml import html
 import pytest
 from werkzeug.datastructures import MultiDict
@@ -17,7 +18,7 @@ from dmapiclient import (
 from dmapiclient.audit import AuditTypes
 from dmcontent.errors import ContentNotFoundError
 from dmtestutils.api_model_stubs import FrameworkStub, SupplierStub
-from dmtestutils.fixtures import valid_jpeg_bytes
+from dmtestutils.fixtures import valid_jpeg_bytes, valid_pdf_bytes
 from dmutils.email.exceptions import EmailError
 from dmutils.s3 import S3ResponseError
 
@@ -3057,6 +3058,48 @@ class TestSupplierDeclaration(BaseApplicationTest, MockEnsureApplicationCompanyD
         assert res.status_code == 302
         assert self.data_api_client.set_supplier_declaration.called is True
 
+    @mock.patch('dmutils.s3.S3')
+    def test_post_valid_data_with_document_upload(self, s3):
+        self.login()
+
+        self.data_api_client.get_framework.return_value = self.framework(status='open', slug="g-cloud-11")
+        self.data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
+            framework_slug="g-cloud-11",
+            declaration={"status": "started"}
+        )
+        with freeze_time('2017-11-12 13:14:15'):
+            res = self.client.post(
+                '/suppliers/frameworks/g-cloud-11/declaration/edit/modern-slavery',
+                data={
+                    'modernSlaveryTurnover': False,
+                    'modernSlaveryReportingRequirements': None,
+                    'mitigatingFactors3': None,
+                    'modernSlaveryStatement': None,
+                    'modernSlaveryStatementOptional': (BytesIO(valid_pdf_bytes), 'document.pdf')
+                }
+            )
+
+        assert res.status_code == 302
+        assert self.data_api_client.set_supplier_declaration.call_args_list == [
+            mock.call(
+                1234,
+                "g-cloud-11",
+                {
+                    'status': 'started',
+                    'modernSlaveryTurnover': False,
+                    'modernSlaveryReportingRequirements': None,
+                    'mitigatingFactors3': None,
+                    'modernSlaveryStatement': None,
+                    'modernSlaveryStatementOptional': 'http://localhost/suppliers/assets/g-cloud-11/documents/1234/modern-slavery-statement-2017-11-12-1314.pdf'  # noqa
+                },
+                "email@email.com"
+            )
+        ]
+        s3.return_value.save.assert_called_once_with(
+            'g-cloud-11/documents/1234/modern-slavery-statement-2017-11-12-1314.pdf',
+            mock.ANY, acl='public-read'
+        )
+
     def test_post_valid_data_to_complete_declaration(self):
         self.login()
 
@@ -3165,6 +3208,36 @@ class TestSupplierDeclaration(BaseApplicationTest, MockEnsureApplicationCompanyD
 
         assert res.status_code == 404
         assert self.data_api_client.set_supplier_declaration.called is False
+
+    @mock.patch('dmutils.s3.S3')
+    def test_post_declaration_answer_with_document_upload_errors(self, s3):
+        self.login()
+
+        self.data_api_client.get_framework.return_value = self.framework(status='open', slug="g-cloud-11")
+        self.data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
+            framework_slug="g-cloud-11",
+            declaration={"status": "started"}
+        )
+        with freeze_time('2017-11-12 13:14:15'):
+            res = self.client.post(
+                '/suppliers/frameworks/g-cloud-11/declaration/edit/modern-slavery',
+                data={
+                    'modernSlaveryTurnover': False,
+                    'modernSlaveryReportingRequirements': None,
+                    'mitigatingFactors3': None,
+                    'modernSlaveryStatement': None,
+                    'modernSlaveryStatementOptional': (BytesIO(b"doc"), 'document.doc')
+                }
+            )
+
+        assert res.status_code == 400
+        doc = html.fromstring(res.get_data(as_text=True))
+        assert len(doc.xpath(
+            "//*[contains(@class,'validation-message')][contains(normalize-space(string()), $text)]",
+            text="Your document is not in an open format.",
+        )) == 1
+        assert self.data_api_client.set_supplier_declaration.called is False
+        assert s3.return_value.save.called is False
 
 
 @mock.patch('dmutils.s3.S3')
