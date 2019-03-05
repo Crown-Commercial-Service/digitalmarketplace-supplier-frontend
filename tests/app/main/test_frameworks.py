@@ -1632,29 +1632,37 @@ class TestFrameworksDashboardConfidenceBannerOnPage(BaseApplicationTest):
         assert res.status_code == 200
         assert self.expected in str(res.data)
 
+        # Check GA custom dimension values
+        doc = html.fromstring(res.get_data(as_text=True))
+        assert len(doc.xpath("//meta[@data-id='29' and @data-value='application_confirmed']")) == 1
+
     @pytest.mark.parametrize(
-        ('declaration_status', 'draft_service_status', 'details_confirmed', 'check_text_in_doc'),
+        ('declaration_status', 'draft_service_status', 'details_confirmed', 'check_text_in_doc', 'ga_value'),
         (
             ('started', 'submitted', True, [
                 'Your company details were saved',
-                'No services will be submitted because you haven’t finished making the supplier '
-                'declaration',
+                'No services will be submitted because you haven’t finished making the supplier declaration',
                 'You’ve completed',
-            ]),
+            ], 'services_confirmed'),
             ('complete', 'not-submitted', True, [
                 'Your company details were saved',
                 'You’ve made the supplier declaration',
                 'No services marked as complete',
-            ]),
+            ], 'declaration_confirmed'),
+            ('unstarted', 'not-submitted', True, [
+                'Your company details were saved',
+                'You need to make the supplier declaration',
+                'No services marked as complete'
+            ], 'company_details_confirmed'),
             ('unstarted', 'not-submitted', False, [
                 'You must confirm your organisation’s details',
                 'Can\'t start yet',
                 'Can\'t start yet'
-            ]),
+            ], 'application_started'),
         )
     )
     def test_confidence_banner_not_on_page_if_sections_incomplete(
-        self, _, declaration_status, draft_service_status, details_confirmed, check_text_in_doc
+        self, _, declaration_status, draft_service_status, details_confirmed, check_text_in_doc, ga_value
     ):
         """Change value and assert that confidence banner is not displayed."""
         supplier_data = SupplierStub(company_details_confirmed=details_confirmed).single_result_response()
@@ -1679,6 +1687,10 @@ class TestFrameworksDashboardConfidenceBannerOnPage(BaseApplicationTest):
         # is causing the application to be incomplete.
         for text in check_text_in_doc:
             assert text in body
+
+        # Check GA custom dimension values
+        doc = html.fromstring(res.get_data(as_text=True))
+        assert len(doc.xpath("//meta[@data-id='29' and @data-value='{}']".format(ga_value))) == 1
 
 
 class TestFrameworkAgreement(BaseApplicationTest):
