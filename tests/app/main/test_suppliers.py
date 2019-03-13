@@ -719,12 +719,12 @@ class TestSupplierDetails(BaseApplicationTest):
         page_html = response.get_data(as_text=True)
         document = html.fromstring(page_html)
 
-        address1 = document.xpath("//span[text()='Registered company address']/following::td[1]/span/p/span[1]")
+        street = document.xpath("//span[text()='Registered company address']/following::td[1]/span/p/span[1]")
         town = document.xpath("//span[text()='Registered company address']/following::td[1]/span/p/span[2]")
         postcode = document.xpath("//span[text()='Registered company address']/following::td[1]/span/p/span[3]")
         country = document.xpath("//span[text()='Registered company address']/following::td[1]/span/p/span[4]")
 
-        assert "1 Street" in address1[0].text
+        assert "1 Street" in street[0].text
         assert "Supplierville" in town[0].text
         assert "11 AB" in postcode[0].text
         assert "United Kingdom" in country[0].text
@@ -1465,10 +1465,10 @@ class TestEditSupplierRegisteredAddress(BaseApplicationTest):
     def post_supplier_address_edit(self, data=None, **kwargs):
         if data is None:
             data = {
-                "address1": "1 Street",
+                "street": "1 Street",
                 "city": "Supplierville",
                 "postcode": "11 AB",
-                "registrationCountry": "country:GB",
+                "country": "country:GB",
             }
         data.update(kwargs)
         res = self.client.post("/suppliers/registered-address/edit", data=data)
@@ -1553,10 +1553,10 @@ class TestEditSupplierRegisteredAddress(BaseApplicationTest):
         }
 
         data = {
-            "address1": "  1 Street  ",
+            "street": "  1 Street  ",
             "city": "  Supplierville  ",
             "postcode": "  11 AB  ",
-            "registrationCountry": "country:GB",
+            "country": "country:GB",
         }
 
         status, _ = self.post_supplier_address_edit(data=data)
@@ -1577,7 +1577,7 @@ class TestEditSupplierRegisteredAddress(BaseApplicationTest):
         self.login()
 
         status, response = self.post_supplier_address_edit({
-            "address1": "SomeStreet",
+            "street": "SomeStreet",
             "city": "",
             "postcode": "11 AB",
             "registeredCountry": "",
@@ -1604,10 +1604,10 @@ class TestEditSupplierRegisteredAddress(BaseApplicationTest):
         self.login()
 
         status, response = self.post_supplier_address_edit({
-            "address1": "A" * length,
+            "street": "A" * length,
             "city": "C" * length,
             "postcode": "P" * (length - 240),
-            "registrationCountry": "country:GB",
+            "country": "country:GB",
         })
 
         assert status == status_code
@@ -1635,7 +1635,7 @@ class TestEditSupplierRegisteredAddress(BaseApplicationTest):
         self.login()
 
         status, response = self.post_supplier_address_edit({
-            "address1": "SomeStreet",
+            "street": "SomeStreet",
             "city": "Florence",
             "postcode": "11 AB",
             "registeredCountry": "country:BLAH",
@@ -2527,7 +2527,7 @@ class TestSupplierEditOrganisationSize(BaseApplicationTest):
 
         self.assert_single_question_page_validation_errors(
             res,
-            question_name="Organisation size",
+            question_name="What size is your organisation?",
             validation_message=expected_error
         )
 
@@ -2687,7 +2687,7 @@ class TestSupplierEditTradingStatus(BaseApplicationTest):
         assert error[0].text.strip() == expected_error, 'The validation message is not as anticipated.'
 
         self.assert_single_question_page_validation_errors(res,
-                                                           question_name="Trading status",
+                                                           question_name="What’s your trading status?",
                                                            validation_message=expected_error)
 
     @pytest.mark.parametrize('trading_status', (None, 'limited company (LTD)', 'other'))

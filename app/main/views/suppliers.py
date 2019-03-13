@@ -10,7 +10,7 @@ from dmutils.dates import update_framework_with_formatted_dates
 from dmutils.email import send_user_account_email
 from dmutils.email.dm_mailchimp import DMMailChimpClient
 from dmutils.flask import timed_render_template as render_template
-from dmutils.forms.helpers import remove_csrf_token, get_errors_from_wtform
+from dmutils.forms.helpers import get_errors_from_wtform
 from dmutils.errors import render_error_page
 
 from ...main import main, content_loader
@@ -22,10 +22,8 @@ from ..forms.suppliers import (
     CompanyPublicContactInformationForm,
     CompanyTradingStatusForm,
     DunsNumberForm,
-    EditContactInformationForm,
     EditRegisteredAddressForm,
-    EditRegisteredCountryForm,
-    EditSupplierForm,
+    EditSupplierInformationForm,
     EmailAddressForm,
 )
 from ..helpers.frameworks import (
@@ -175,52 +173,50 @@ def confirm_supplier_details():
         return redirect(url_for(".supplier_details"))
 
 
-@main.route('/registered-address/edit', methods=['GET', 'POST'])
+@main.route("/registered-address/edit", methods=["GET", "POST"])
 @login_required
 def edit_registered_address():
-    supplier = data_api_client.get_supplier(
-        current_user.supplier_id
-    )['suppliers']
-    supplier['contact'] = supplier['contactInformation'][0]
+    supplier = data_api_client.get_supplier(current_user.supplier_id)["suppliers"]
+    contact = supplier["contactInformation"][0]
 
-    registered_address_form = EditRegisteredAddressForm()
-    registered_country_form = EditRegisteredCountryForm()
+    prefill_data = {
+        "street": contact.get("address1"),
+        "city": contact.get("city"),
+        "postcode": contact.get("postcode"),
+        "country": supplier.get("registrationCountry"),
+    }
 
-    if request.method == 'POST':
-        address_valid = registered_address_form.validate_on_submit()
-        country_valid = registered_country_form.validate_on_submit()
+    registered_address_form = EditRegisteredAddressForm(data=prefill_data)
 
-        if address_valid and country_valid:
-            data_api_client.update_supplier(
-                current_user.supplier_id,
-                remove_csrf_token(registered_country_form.data),
-                current_user.email_address,
-            )
+    if registered_address_form.validate_on_submit():
+        data_api_client.update_supplier(
+            current_user.supplier_id,
+            {
+                "registrationCountry": registered_address_form.country.data,
+            },
+            current_user.email_address,
+        )
 
-            data_api_client.update_contact_information(
-                current_user.supplier_id,
-                supplier['contact']['id'],
-                remove_csrf_token(registered_address_form.data),
-                current_user.email_address
-            )
+        data_api_client.update_contact_information(
+            current_user.supplier_id,
+            contact["id"],
+            {
+                "address1": registered_address_form.street.data,
+                "city": registered_address_form.city.data,
+                "postcode": registered_address_form.postcode.data,
+            },
+            current_user.email_address
+        )
 
-            return redirect(url_for(".supplier_details"))
+        return redirect(url_for(".supplier_details"))
 
-    else:
-        registered_address_form.address1.data = supplier['contact'].get('address1')
-        registered_address_form.city.data = supplier['contact'].get('city')
-        registered_address_form.postcode.data = supplier['contact'].get('postcode')
-
-        registered_country_form.registrationCountry.data = supplier.get('registrationCountry')
-
-    errors = {**get_errors_from_wtform(registered_address_form), **get_errors_from_wtform(registered_country_form)}
+    errors = get_errors_from_wtform(registered_address_form)
 
     return render_template(
         "suppliers/registered_address.html",
         supplier=supplier,
         countries=COUNTRY_TUPLE,
-        registered_address_form=registered_address_form,
-        registered_country_form=registered_country_form,
+        form=registered_address_form,
         errors=errors,
     ), 200 if not errors else 400
 
@@ -343,42 +339,43 @@ def edit_what_buyers_will_see():
         current_user.supplier_id
     )['suppliers']
 
-    supplier['contact'] = supplier['contactInformation'][0]
+    contact = supplier["contactInformation"][0]
 
-    supplier_form = EditSupplierForm()
-    contact_form = EditContactInformationForm()
+    prefill_data = {
+        "contactName": contact.get("contactName"),
+        "phoneNumber": contact.get("phoneNumber"),
+        "email": contact.get("email"),
+        "description": supplier.get("description"),
+    }
 
-    if request.method == 'POST':
-        supplier_info_valid = supplier_form.validate_on_submit()
-        contact_info_valid = contact_form.validate_on_submit()
+    form = EditSupplierInformationForm(data=prefill_data)
 
-        if supplier_info_valid and contact_info_valid:
-            data_api_client.update_supplier(
-                current_user.supplier_id,
-                remove_csrf_token(supplier_form.data),
-                current_user.email_address
-            )
+    if form.validate_on_submit():
+        data_api_client.update_supplier(
+            current_user.supplier_id,
+            {
+                "description": form.description.data,
+            },
+            current_user.email_address
+        )
 
-            data_api_client.update_contact_information(
-                current_user.supplier_id,
-                supplier['contact']['id'],
-                remove_csrf_token(contact_form.data),
-                current_user.email_address
-            )
-            return redirect(url_for(".supplier_details"))
+        data_api_client.update_contact_information(
+            current_user.supplier_id,
+            contact["id"],
+            {
+                "contactName": form.contactName.data,
+                "phoneNumber": form.phoneNumber.data,
+                "email": form.email.data,
+            },
+            current_user.email_address
+        )
+        return redirect(url_for(".supplier_details"))
 
-    else:
-        supplier_form.description.data = supplier.get('description', None)
-        contact_form.contactName.data = supplier['contact'].get('contactName')
-        contact_form.phoneNumber.data = supplier['contact'].get('phoneNumber')
-        contact_form.email.data = supplier['contact'].get('email')
-
-    errors = {**get_errors_from_wtform(contact_form), **get_errors_from_wtform(supplier_form)}
+    errors = get_errors_from_wtform(form)
 
     return render_template(
         "suppliers/edit_what_buyers_will_see.html",
-        supplier_form=supplier_form,
-        contact_form=contact_form,
+        form=form,
         errors=errors,
     ), 200 if not errors else 400
 
@@ -396,6 +393,7 @@ def edit_supplier_organisation_size():
 
             return redirect(url_for('.supplier_details'))
 
+        # TODO: see if we can remove this
         current_app.logger.warning(
             "supplieredit.fail: organisation-size:{osize}, errors:{osize_errors}",
             extra={
@@ -418,7 +416,13 @@ def edit_supplier_organisation_size():
 @main.route('/trading-status/edit', methods=['GET', 'POST'])
 @login_required
 def edit_supplier_trading_status():
-    form = CompanyTradingStatusForm()
+
+    prefill_data = {}
+    if request.method == "GET":
+        supplier = data_api_client.get_supplier(current_user.supplier_id)['suppliers']
+        prefill_data = {"trading_status": supplier.get("tradingStatus")}
+
+    form = CompanyTradingStatusForm(data=prefill_data)
 
     if request.method == 'POST':
         if form.validate_on_submit():
@@ -434,16 +438,6 @@ def edit_supplier_trading_status():
                 'tstatus': form.trading_status.data,
                 'tstatus_errors': ",".join(form.trading_status.errors)
             })
-
-    else:
-        supplier = data_api_client.get_supplier(current_user.supplier_id)['suppliers']
-
-        prefill_trading_status = None
-        if supplier.get('tradingStatus'):
-            if supplier['tradingStatus'] in map(lambda x: x['value'], form.OPTIONS):
-                prefill_trading_status = supplier['tradingStatus']
-
-        form.trading_status.data = prefill_trading_status
 
     errors = get_errors_from_wtform(form)
 

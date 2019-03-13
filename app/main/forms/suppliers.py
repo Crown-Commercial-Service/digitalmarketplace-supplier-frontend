@@ -2,8 +2,9 @@ from flask_wtf import FlaskForm
 from wtforms import RadioField
 from wtforms.validators import AnyOf, InputRequired, Length, Optional, Regexp, ValidationError
 
-from dmutils.forms.fields import DMStripWhitespaceStringField, DMEmailField
+from dmutils.forms.fields import DMStripWhitespaceStringField, DMEmailField, DMRadioField
 from dmutils.forms.validators import EmailValidator
+from dmutils.forms.widgets import DMTextArea
 from ..helpers.suppliers import COUNTRY_TUPLE
 
 
@@ -21,44 +22,50 @@ def word_length(limit=None, message=None):
     return _length
 
 
-class EditSupplierForm(FlaskForm):
-    description = DMStripWhitespaceStringField('Supplier summary', validators=[
-        word_length(50, 'Your summary must not be more than %d words')
-    ])
-
-
-class EditContactInformationForm(FlaskForm):
-    contactName = DMStripWhitespaceStringField('Contact name', validators=[
-        InputRequired(message="You must provide a contact name."),
-        Length(max=255, message="You must provide a contact name under 256 characters."),
-    ])
-    email = DMEmailField('Contact email address', validators=[
-        InputRequired(message="You must provide an email address."),
-        EmailValidator(message="You must provide a valid email address."),
-    ])
-    phoneNumber = DMStripWhitespaceStringField('Contact phone number', validators=[
-        InputRequired(message="You must provide a phone number."),
-        Length(max=20, message="You must provide a phone number under 20 characters.")
-    ])
+class EditSupplierInformationForm(FlaskForm):
+    contactName = DMStripWhitespaceStringField(
+        "Contact name",
+        hint="This can be the name of the person or team you want buyers to contact",
+        validators=[
+            InputRequired(message="You must provide a contact name."),
+            Length(max=255, message="You must provide a contact name under 256 characters."),
+        ])
+    email = DMEmailField(
+        "Contact email address",
+        hint="This is the email buyers will use to contact you",
+        validators=[
+            InputRequired(message="You must provide an email address."),
+            EmailValidator(message="You must provide a valid email address."),
+        ])
+    phoneNumber = DMStripWhitespaceStringField(
+        "Contact phone number",
+        validators=[
+            InputRequired(message="You must provide a phone number."),
+            Length(max=20, message="You must provide a phone number under 20 characters.")
+        ])
+    description = DMStripWhitespaceStringField(
+        "Supplier summary",
+        hint="50 words maximum",
+        widget=DMTextArea(max_length_in_words=50),
+        validators=[
+            word_length(50, "Your summary must not be more than %d words"),
+        ])
 
 
 class EditRegisteredAddressForm(FlaskForm):
-    address1 = DMStripWhitespaceStringField('Building and street', validators=[
+    street = DMStripWhitespaceStringField("Building and street", validators=[
         InputRequired(message="You need to enter the street address."),
         Length(max=255, message="You must provide a building and street name under 256 characters."),
     ])
-    city = DMStripWhitespaceStringField('Town or city', validators=[
+    city = DMStripWhitespaceStringField("Town or city", validators=[
         InputRequired(message="You need to enter the town or city."),
         Length(max=255, message="You must provide a town or city name under 256 characters."),
     ])
-    postcode = DMStripWhitespaceStringField('Postcode', validators=[
+    postcode = DMStripWhitespaceStringField("Postcode", validators=[
         InputRequired(message="You need to enter the postcode."),
         Length(max=15, message="You must provide a valid postcode under 15 characters."),
     ])
-
-
-class EditRegisteredCountryForm(FlaskForm):
-    registrationCountry = DMStripWhitespaceStringField('Country', validators=[
+    country = DMStripWhitespaceStringField("Country", validators=[
         InputRequired(message="You need to enter a country."),
         AnyOf(values=[country[1] for country in COUNTRY_TUPLE], message="You must enter a valid country."),
     ])
@@ -185,9 +192,12 @@ class CompanyOrganisationSizeForm(FlaskForm):
         },
     ]
 
-    organisation_size = RadioField('Organisation size',
-                                   validators=[InputRequired(message="You must choose an organisation size.")],
-                                   choices=[(o['value'], o['label']) for o in OPTIONS])
+    organisation_size = DMRadioField(
+        "What size is your organisation?",
+        hint="This information will be used to report on the number of contracts that go"
+        " to small and medium sized enterprises (SMEs).",
+        validators=[InputRequired(message="You must choose an organisation size.")],
+        options=OPTIONS)
 
 
 class CompanyTradingStatusForm(FlaskForm):
@@ -222,6 +232,8 @@ class CompanyTradingStatusForm(FlaskForm):
         },
     ]
 
-    trading_status = RadioField('Trading status',
-                                validators=[InputRequired(message="You must choose a trading status.")],
-                                choices=[(o['value'], o['label']) for o in OPTIONS])
+    trading_status = DMRadioField(
+        "What’s your trading status?",
+        hint="This information will be used to find out about the types of companies on frameworks.",
+        validators=[InputRequired(message="You must choose a trading status.")],
+        options=OPTIONS)

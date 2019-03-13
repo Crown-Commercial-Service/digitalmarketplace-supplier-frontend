@@ -45,16 +45,15 @@
   <form action="{{ url_for('.edit_what_buyers_will_see') }}" method="post">
 
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
-  
+
   <div class="grid-row">
     <div class="column-two-thirds">
 
-      {{ forms.question_textbox('contactName', 'Contact name', contact_form.contactName.data, 'This can be the name of the person or team you want buyers to contact', errors=[errors.get("contactName", {}).get("message", None)]) }}
-      {{ forms.question_textbox('email', 'Contact email address', contact_form.email.data, 'This is the email buyers will use to contact you', errors=[errors.get("email", {}).get("message", None)]) }}
-      {{ forms.question_textbox('phoneNumber', 'Contact phone number', contact_form.phoneNumber.data, errors=[errors.get("phoneNumber", {}).get("message", None)]) }}
+      {{ form.contactName }}
+      {{ form.email }}
+      {{ form.phoneNumber }}
+      {{ form.description }}
 
-
-      {{ forms.question_textarea('description', 'Supplier summary', supplier_form.description.data, '50 words maximum', errors=[errors.get("description", {}).get("message", None)], max_length_in_words=50) }}
     </div>
   </div>
 

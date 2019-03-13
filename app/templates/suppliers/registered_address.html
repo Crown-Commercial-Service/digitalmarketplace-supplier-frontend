@@ -50,11 +50,12 @@
   <div class="grid-row">
     <div class="column-two-thirds">
 
-      {{ forms.question_textbox('address1', 'Building and street', value=registered_address_form.address1.data, errors=registered_address_form.address1.errors) }}
-      {{ forms.question_textbox('city', 'Town or city', value=registered_address_form.city.data, errors=registered_address_form.city.errors) }}
-      {{ forms.question_textbox('postcode', 'Postcode', value=registered_address_form.postcode.data, errors=registered_address_form.postcode.errors) }}
+      {{ form.street }}
+      {{ form.city }}
+      {{ form.postcode }}
 
-      {% if registered_country_form.registrationCountry.errors %}
+      {# TODO: make sure this is using the standard GOV.UK design system location autocomplete #}
+      {% if form.country.errors %}
       <div class="validation-wrapper">
         <style>
           #location-autocomplete {border: 5px solid #B10E1E;}
@@ -62,19 +63,19 @@
         </style>
       {% endif %}
 
-      <div class="question" id="registrationCountry">
+      <div class="question" id="country">
         <span class="question-heading" id="country-label">Country</span>
-        {{ forms.field_errors('registrationCountry', errors=registered_country_form.registrationCountry.errors) }}
-        <select name="registrationCountry" id="location-autocomplete" class="location-autocomplete-fallback">
-        {% if not registered_country_form.registrationCountry.data %}
+        {{ forms.field_errors(form.country.name, errors=form.country.errors) }}
+        <select name="country" id="location-autocomplete" class="location-autocomplete-fallback">
+        {% if not form.country.data %}
           <option value="" selected="selected"></option>
         {% endif %}
         {% for country in countries %}
-          <option value="{{country[1]}}"{% if registered_country_form.registrationCountry.data == country[1]%} selected="selected"{% endif %}>{{country[0]}}</option>
+          <option value="{{country[1]}}"{% if form.country.data == country[1]%} selected="selected"{% endif %}>{{country[0]}}</option>
         {% endfor %}
         </select>
       </div>
-      {% if registered_country_form.registrationCountry.errors %}
+      {% if form.country.errors %}
       </div>
       {% endif %}
 
