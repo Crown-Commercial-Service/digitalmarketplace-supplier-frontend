@@ -229,6 +229,12 @@ class DOSValidator(DeclarationValidator):
             if self.answers.get('licenceOrMemberRequired') in ['licensed', 'a member of a relevant organisation']:
                 req_fields.add('licenceOrMemberRequiredDetails')
 
+        # If supplier doesn't meet the Modern Slavery reporting requirements, they don't need to upload a statement
+        # but must have mitigatingFactors3 explanation
+        if self.answers.get('modernSlaveryReportingRequirements') is False:
+            req_fields.add('mitigatingFactors3')
+            req_fields.remove('modernSlaveryStatement')
+
         return req_fields
 
 
