@@ -183,33 +183,35 @@ class DOSValidator(DeclarationValidator):
         "appropriateTradeRegisters", "appropriateTradeRegistersNumber",
         "licenceOrMemberRequired", "licenceOrMemberRequiredDetails",
     ])
+
+    dependent_fields = {
+        # If you responded yes to any of questions 22 to 34
+        "mitigatingFactors": [
+            'misleadingInformation', 'confidentialInformation', 'influencedContractingAuthority',
+            'witheldSupportingDocuments', 'seriousMisrepresentation', 'significantOrPersistentDeficiencies',
+            'distortedCompetition', 'conflictOfInterest', 'distortingCompetition', 'graveProfessionalMisconduct',
+            'bankrupt', 'environmentalSocialLabourLaw', 'taxEvasion'
+        ],
+        # If you responded yes to either 36 or 37
+        "mitigatingFactors2": [
+            "unspentTaxConvictions", "GAAR"
+        ],
+        # If you responded yes to 50 (Modern Slavery)
+        "modernSlaveryStatement": [
+            "modernSlaveryTurnover",
+        ],
+        "modernSlaveryReportingRequirements": [
+            "modernSlaveryTurnover"
+        ],
+    }
+
     email_validation_fields = set(["contactEmailContractNotice", "primaryContactEmail"])
     character_limit = 5000
 
     def get_required_fields(self):
         req_fields = super(DOSValidator, self).get_required_fields()
 
-        dependent_fields = {
-            # If you responded yes to any of questions 22 to 34
-            "mitigatingFactors": [
-                'misleadingInformation', 'confidentialInformation', 'influencedContractingAuthority',
-                'witheldSupportingDocuments', 'seriousMisrepresentation', 'significantOrPersistentDeficiencies',
-                'distortedCompetition', 'conflictOfInterest', 'distortingCompetition', 'graveProfessionalMisconduct',
-                'bankrupt', 'environmentalSocialLabourLaw', 'taxEvasion'
-            ],
-            # If you responded yes to either 36 or 37
-            "mitigatingFactors2": [
-                "unspentTaxConvictions", "GAAR"
-            ],
-            # If you responded yes to 50 (Modern Slavery)
-            "modernSlaveryStatement": [
-                "modernSlaveryTurnover",
-            ],
-            "modernSlaveryReportingRequirements": [
-                "modernSlaveryTurnover"
-            ],
-        }
-        for target_field, fields in dependent_fields.items():
+        for target_field, fields in self.dependent_fields.items():
             if any(self.answers.get(field) for field in fields):
                 req_fields.add(target_field)
 
@@ -228,6 +230,12 @@ class DOSValidator(DeclarationValidator):
             # If not 'none of the above' to licenceOrMemberRequired
             if self.answers.get('licenceOrMemberRequired') in ['licensed', 'a member of a relevant organisation']:
                 req_fields.add('licenceOrMemberRequiredDetails')
+
+        # If supplier doesn't meet the Modern Slavery reporting requirements, they don't need to upload a statement
+        # but must have mitigatingFactors3 explanation
+        if self.answers.get('modernSlaveryReportingRequirements') is False:
+            req_fields.add('mitigatingFactors3')
+            req_fields.remove('modernSlaveryStatement')
 
         return req_fields
 

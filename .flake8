@@ -8,7 +8,7 @@
 # W504: line break after binary operator
 exclude = venv*,__pycache__,node_modules
 ignore = D203,W503,W504
-max-complexity = 7
+max-complexity = 8
 max-line-length = 120
 per-file-ignores =
     app/__init__.py : E402
