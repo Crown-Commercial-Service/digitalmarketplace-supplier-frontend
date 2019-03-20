@@ -1,3 +1,5 @@
+from datetime import datetime, timedelta
+
 from flask import request, redirect, url_for, abort, flash, current_app, Markup
 from flask_login import current_user
 
@@ -6,6 +8,7 @@ from dmcontent.content_loader import ContentNotFoundError
 from dmutils import s3
 from dmutils.dates import update_framework_with_formatted_dates
 from dmutils.documents import upload_service_documents
+from dmutils.formats import displaytimeformat
 from dmutils.flask import timed_render_template as render_template
 from dmutils.forms.helpers import get_errors_from_wtform
 from dmutils.errors import render_error_page
@@ -633,6 +636,8 @@ def edit_service_submission(framework_slug, lot_slug, service_id, section_id, qu
     else:
         service_data = section.unformat_data(draft)
 
+    session_timeout = displaytimeformat(datetime.utcnow() + timedelta(hours=1))
+
     return render_template(
         "services/edit_submission_section.html",
         section=section,
@@ -643,6 +648,7 @@ def edit_service_submission(framework_slug, lot_slug, service_id, section_id, qu
         service_id=service_id,
         force_return_to_summary=force_return_to_summary,
         force_continue_button=force_continue_button,
+        session_timeout=session_timeout,
         errors=errors,
     )
 

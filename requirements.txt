@@ -7,14 +7,14 @@ Flask-Login==0.4.1
 Flask-WTF==0.14.2
 itsdangerous==0.24 # pyup: ignore
 
-git+https://github.com/alphagov/digitalmarketplace-utils.git@46.3.1#egg=digitalmarketplace-utils==46.3.1
+git+https://github.com/alphagov/digitalmarketplace-utils.git@47.1.0#egg=digitalmarketplace-utils==47.1.0
 git+https://github.com/alphagov/digitalmarketplace-content-loader.git@5.2.0#egg=digitalmarketplace-content-loader==5.2.0
 git+https://github.com/alphagov/digitalmarketplace-apiclient.git@19.15.1#egg=digitalmarketplace-apiclient==19.15.1
 
 ## The following requirements were added by pip freeze:
 asn1crypto==0.24.0
-boto3==1.9.116
-botocore==1.12.116
+boto3==1.9.117
+botocore==1.12.117
 certifi==2019.3.9
 cffi==1.12.2
 chardet==3.0.4
@@ -49,6 +49,6 @@ s3transfer==0.2.0
 six==1.12.0
 unicodecsv==0.14.1
 urllib3==1.24.1
-Werkzeug==0.14.1
+Werkzeug==0.15.0
 workdays==1.4
 WTForms==2.2.1

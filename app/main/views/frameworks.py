@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from collections import OrderedDict
+from datetime import datetime, timedelta
 from itertools import chain
 
 from dateutil.parser import parse as date_parse
@@ -24,7 +25,7 @@ from dmutils.email.exceptions import EmailError
 from dmutils.email.helpers import hash_string
 from dmutils.env_helpers import get_web_url_from_stage
 from dmutils.flask import timed_render_template as render_template
-from dmutils.formats import datetimeformat, monthyearformat
+from dmutils.formats import datetimeformat, displaytimeformat, monthyearformat
 from dmutils.forms.helpers import get_errors_from_wtform, remove_csrf_token
 
 from ... import data_api_client
@@ -679,6 +680,7 @@ def framework_supplier_declaration_edit(framework_slug, section_id):
                 # Return to the overview.
                 return redirect(url_for('.framework_supplier_declaration_overview', framework_slug=framework_slug))
 
+    session_timeout = displaytimeformat(datetime.utcnow() + timedelta(hours=1))
     return render_template(
         "frameworks/edit_declaration_section.html",
         framework=framework,
@@ -687,7 +689,8 @@ def framework_supplier_declaration_edit(framework_slug, section_id):
         name_of_framework_that_section_has_been_prefilled_from=name_of_framework_that_section_has_been_prefilled_from,
         declaration_answers=all_answers,
         get_question=content.get_question,
-        errors=errors
+        errors=errors,
+        session_timeout=session_timeout
     ), status_code
 
 

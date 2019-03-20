@@ -3251,6 +3251,22 @@ class TestSupplierDeclaration(BaseApplicationTest, MockEnsureApplicationCompanyD
         assert self.data_api_client.set_supplier_declaration.called is False
         assert s3.return_value.save.called is False
 
+    def test_has_session_timeout_warning(self):
+        self.data_api_client.get_framework.return_value = self.framework(status='open', slug="g-cloud-11")
+        self.data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
+            framework_slug="g-cloud-11",
+            declaration={"status": "started"}
+        )
+
+        with freeze_time("2019-11-12 13:14:15"):
+            self.login()  # need to login after freezing time
+
+            doc = html.fromstring(
+                self.client.get(f"/suppliers/frameworks/g-cloud-11/declaration/edit/contact-details").data
+            )
+
+        assert "2:14pm GMT" in doc.xpath("string(.//div[@id='session-timeout-warning'])")
+
 
 @mock.patch('dmutils.s3.S3')
 class TestFrameworkUpdatesPage(BaseApplicationTest):

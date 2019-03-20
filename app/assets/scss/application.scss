@@ -55,6 +55,14 @@ $path: "/suppliers/static/images/";
 @import "toolkit/search/_search-result.scss";
 @import "toolkit/_report-a-problem.scss";
 
+// GOV.UK Design System (compatible with old toolkit/elements)
+$govuk-assets-path: '/admin/static/';
+$govuk-images-path: '/admin/static/images/';
+$govuk-fonts-path: '/admin/static/fonts/';
+$govuk-compatibility-govukfrontendtoolkit: true;
+$govuk-compatibility-govuktemplate: true;
+$govuk-compatibility-govukelements: true;
+@import "node_modules/govuk-frontend/all";
 
 // App-specific styles
 @import "_assurance-question.scss";           // This could probably be removed as the only usage is in service editing
