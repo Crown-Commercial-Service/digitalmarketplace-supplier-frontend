@@ -1291,6 +1291,21 @@ class TestSupplierEditUpdateServiceSectionG9(BaseApplicationTest):
         assert res.status_code == 302
         self.data_api_client.update_service.assert_called_once_with('321', {}, 'email@email.com')
 
+    def test_has_session_timeout_warning(self, s3):
+        self.data_api_client.get_service.return_value = self.base_service
+        self.data_api_client.get_framework.return_value = self._get_framework_response()
+
+        with freeze_time("2019-04-03 13:14:14"):
+            self.login()  # need to login after freezing time
+
+            doc = html.fromstring(
+                self.client.get(
+                    f"/suppliers/frameworks/g-cloud-9/services/321/edit/documents",
+                ).data
+            )
+
+            assert "3:14pm BST" in doc.xpath("string(.//div[@id='session-timeout-warning'])")
+
 
 class TestCreateDraftService(BaseApplicationTest, MockEnsureApplicationCompanyDetailsHaveBeenConfirmedMixin):
     def setup_method(self, method):
@@ -2051,7 +2066,14 @@ class TestEditDraftService(BaseApplicationTest, MockEnsureApplicationCompanyDeta
             'digital-specialists/1/remove/individual-specialist-roles/agile-coach?confirm=True')
         assert res.status_code == 504
 
-    def test_has_session_timeout_warning(self, s3):
+    @pytest.mark.parametrize(
+        "page",
+        (
+            "1/edit/about-your-service/service-categories",
+            "create",
+        )
+    )
+    def test_has_session_timeout_warning(self, s3, page):
         self.data_api_client.get_framework.return_value = self.framework(slug='g-cloud-9', status='open')
         self.data_api_client.get_draft_service.return_value = self.empty_g9_draft
 
@@ -2060,8 +2082,7 @@ class TestEditDraftService(BaseApplicationTest, MockEnsureApplicationCompanyDeta
 
             doc = html.fromstring(
                 self.client.get(
-                    f"/suppliers/frameworks/g-cloud-9/submissions/cloud-hosting/1/"
-                    "edit/about-your-service/service-categories"
+                    f"/suppliers/frameworks/g-cloud-9/submissions/cloud-hosting/{page}"
                 ).data
             )
 
