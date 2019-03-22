@@ -188,11 +188,14 @@ def edit_section(framework_slug, service_id, section_id):
     if section is None or not section.editable:
         abort(404)
 
+    session_timeout = displaytimeformat(datetime.utcnow() + timedelta(hours=1))
+
     return render_template(
         "services/edit_section.html",
         section=section,
         service_data=service,
         service_id=service_id,
+        session_timeout=session_timeout,
     )
 
 
@@ -251,11 +254,13 @@ def update_section(framework_slug, service_id, section_id):
             errors = section.get_error_messages(e.message)
 
     if errors:
+        session_timeout = displaytimeformat(datetime.utcnow() + timedelta(hours=1))
         return render_template(
             "services/edit_section.html",
             section=section,
             service_data=service,
             service_id=service_id,
+            session_timeout=session_timeout,
             errors=errors,
         ), 400
     flash(SERVICE_UPDATED_MESSAGE, "success")
@@ -316,6 +321,8 @@ def start_new_draft_service(framework_slug, lot_slug):
 
         section = section.get_question_as_section(section.get_next_question_slug())
 
+    session_timeout = displaytimeformat(datetime.utcnow() + timedelta(hours=1))
+
     if request.method == 'POST':
         update_data = section.get_data(request.form)
 
@@ -332,6 +339,7 @@ def start_new_draft_service(framework_slug, lot_slug):
                 "services/edit_submission_section.html",
                 framework=framework,
                 section=section,
+                session_timeout=session_timeout,
                 service_data=update_data,
                 errors=errors
             ), 400
@@ -351,6 +359,7 @@ def start_new_draft_service(framework_slug, lot_slug):
         lot=lot,
         service_data={},
         section=section,
+        session_timeout=session_timeout,
         force_continue_button=True,
     ), 200
 
