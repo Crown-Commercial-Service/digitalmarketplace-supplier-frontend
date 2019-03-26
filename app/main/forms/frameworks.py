@@ -55,6 +55,7 @@ class ReuseDeclarationForm(FlaskForm):
     reuse = DMBooleanField(
         "Do you want to reuse the answers from your earlier declaration?",
         false_values=("False", "false", ""),
+        widget=DMSelectionButtonBase(type="boolean"),
     )
     old_framework_slug = HiddenField()
 
