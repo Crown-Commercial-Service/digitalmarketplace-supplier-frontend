@@ -2249,12 +2249,26 @@ class TestJoinOpenFrameworkNotificationMailingList(BaseApplicationTest):
 
         self.assert_no_flashes()
 
-    @pytest.mark.parametrize("mc_retval,expected_status", (
-        (True, 400),
-        (False, 503),
+    @pytest.mark.parametrize("mc_retval, expected_status, expected_message", (
+        (
+            {'error_type': 'already_subscribed', 'status_code': 400, 'status': 'error'},
+            400, "This email address has already been used to sign up"
+        ),
+        (
+            {'error_type': 'deleted_user', 'status_code': 400, 'status': 'error'},
+            400, "This email address cannot be used to sign up"
+        ),
+        (
+            {'error_type': 'invalid_email', 'status_code': 400, 'status': 'error'},
+            400, "This email address cannot be used to sign up"
+        ),
+        (
+            {'error_type': 'unexpected_error', 'status_code': 503, 'status': 'error'},
+            503, "The service is unavailable at the moment"
+        ),
     ))
     @mock.patch("app.main.views.suppliers.DMMailChimpClient")
-    def test_post_valid_email_failure(self, mailchimp_client_class, mc_retval, expected_status):
+    def test_post_valid_email_failure(self, mailchimp_client_class, mc_retval, expected_status, expected_message):
         self.data_api_client.create_audit_event.side_effect = AssertionError("This should not be called")
         mailchimp_client_instance = mock.Mock(spec=("subscribe_new_email_to_list",))
         mailchimp_client_instance.subscribe_new_email_to_list.side_effect = assert_args_and_return(
@@ -2299,7 +2313,7 @@ class TestJoinOpenFrameworkNotificationMailingList(BaseApplicationTest):
         assert doc.xpath(
             "//*[contains(@class, 'banner-destructive-without-action')][contains(normalize-space(string()), $t)]//"
             "a[@href=$m][normalize-space(string())=$e]",
-            t="The service is unavailable at the moment",
+            t=expected_message,
             m="mailto:enquiries@digitalmarketplace.service.gov.uk",
             e="enquiries@digitalmarketplace.service.gov.uk",
         )
@@ -2332,6 +2346,9 @@ class TestJoinOpenFrameworkNotificationMailingList(BaseApplicationTest):
                 "last_changed": "1904-06-16T16:00:00+00:00",
                 "list_id": "flowered-tables",
                 "has-he-forgotten": "perhaps-a-trick",  # should be ignored
+                "status": "success",
+                "status_code": 200,
+                "error_type": None,
             },
             "not_a_real_mailing_list",
             "qu&rt@four.pence",

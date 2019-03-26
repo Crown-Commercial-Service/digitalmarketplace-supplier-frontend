@@ -45,6 +45,16 @@ JOIN_OPEN_FRAMEWORK_NOTIFICATION_MAILING_LIST_ERROR_MESSAGE = Markup("""
     The service is unavailable at the moment. If the problem continues please contact
     <a href="mailto:enquiries@digitalmarketplace.service.gov.uk">enquiries@digitalmarketplace.service.gov.uk</a>
 """)
+JOIN_OPEN_FRAMEWORK_NOTIFICATION_MAILING_LIST_ALREADY_SUBSCRIBED_MESSAGE = Markup("""
+    This email address has already been used to sign up for Digital Marketplace alerts. Please use a different
+     email address or contact
+    <a href="mailto:enquiries@digitalmarketplace.service.gov.uk">enquiries@digitalmarketplace.service.gov.uk</a>.
+""")
+JOIN_OPEN_FRAMEWORK_NOTIFICATION_MAILING_LIST_UNSUBSCRIBED_MESSAGE = Markup("""
+    This email address cannot be used to sign up for Digital Marketplace alerts. Please use a different
+     email address or contact
+    <a href="mailto:enquiries@digitalmarketplace.service.gov.uk">enquiries@digitalmarketplace.service.gov.uk</a>.
+""")
 
 
 @main.route('')
@@ -687,9 +697,7 @@ def join_open_framework_notification_mailing_list():
             current_app.config["DM_MAILCHIMP_OPEN_FRAMEWORK_NOTIFICATION_MAILING_LIST_ID"],
             form.data["email_address"],
         )
-
-        if mc_response not in (True, False,):
-            # success
+        if mc_response.get('status') == 'success':
             data_api_client.create_audit_event(
                 audit_type=AuditTypes.mailing_list_subscription,
                 data={
@@ -710,14 +718,14 @@ def join_open_framework_notification_mailing_list():
 
             return redirect("/")
         else:
-            # failure
-            flash(JOIN_OPEN_FRAMEWORK_NOTIFICATION_MAILING_LIST_ERROR_MESSAGE, "error")
-            if mc_response:
-                # this is a case where we think the error is *probably* the user's fault in some way
-                status = 400
+            if mc_response.get('error_type') == 'already_subscribed':
+                flash(JOIN_OPEN_FRAMEWORK_NOTIFICATION_MAILING_LIST_ALREADY_SUBSCRIBED_MESSAGE, "error")
+            elif mc_response.get('error_type') in ['deleted_user', 'invalid_email']:
+                flash(JOIN_OPEN_FRAMEWORK_NOTIFICATION_MAILING_LIST_UNSUBSCRIBED_MESSAGE, "error")
             else:
-                # this is a case where we have no idea so should probably be alert to it
-                status = 503
+                flash(JOIN_OPEN_FRAMEWORK_NOTIFICATION_MAILING_LIST_ERROR_MESSAGE, "error")
+            # If no status code supplied, something has probably gone wrong
+            status = mc_response.get('status_code', 503)
             # fall through to re-display form with error
     else:
         status = 400
