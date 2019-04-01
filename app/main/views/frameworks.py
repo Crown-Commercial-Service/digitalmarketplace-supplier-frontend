@@ -721,6 +721,24 @@ def download_agreement_file(framework_slug, document_name):
     return redirect(url)
 
 
+@main.route('/assets/<framework_slug>/documents/<int:supplier_id>/<document_name>', methods=['GET'])
+@login_required
+@EnsureApplicationCompanyDetailsHaveBeenConfirmed(data_api_client)
+def download_declaration_document(framework_slug, supplier_id, document_name):
+    """
+    Equivalent to services.service_submission_document for retrieving declaration files uploaded to S3
+    """
+    if current_user.supplier_id != supplier_id:
+        abort(404)
+
+    uploader = s3.S3(current_app.config['DM_DOCUMENTS_BUCKET'])
+    s3_url = get_signed_document_url(uploader, "{}/documents/{}/{}".format(framework_slug, supplier_id, document_name))
+    if not s3_url:
+        abort(404)
+
+    return redirect(s3_url)
+
+
 @main.route('/frameworks/<framework_slug>/updates', methods=['GET'])
 @login_required
 def framework_updates(framework_slug, error_message=None, default_textbox_value=None):
