@@ -709,6 +709,7 @@ class TestEnsureApplicationCompanyDetailsHaveBeenConfirmed(BaseApplicationTest):
             'main.complete_draft_service',
             'main.delete_draft_service',
             'main.service_submission_document',
+            'main.download_declaration_document',
             'main.view_service_submission',
             'main.edit_service_submission',
             'main.remove_subsection',

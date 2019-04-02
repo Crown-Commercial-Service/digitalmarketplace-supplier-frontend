@@ -1874,6 +1874,45 @@ class TestFrameworkDocumentDownload(BaseApplicationTest):
         assert res.status_code == 404
 
 
+@mock.patch('dmutils.s3.S3')
+class TestDownloadDeclarationDocument(BaseApplicationTest, MockEnsureApplicationCompanyDetailsHaveBeenConfirmedMixin):
+    def setup_method(self, method):
+        super().setup_method(method)
+        self.login()
+        self.data_api_client_patch = mock.patch('app.main.views.services.data_api_client', autospec=True)
+        self.data_api_client = self.data_api_client_patch.start()
+
+    def teardown_method(self, method):
+        self.data_api_client_patch.stop()
+        super().teardown_method(method)
+
+    def test_document_url(self, s3):
+        s3.return_value.get_signed_url.return_value = 'http://example.com/modern-slavery-statement.pdf'
+
+        res = self.client.get(
+            '/suppliers/assets/g-cloud-11/documents/1234/modern-slavery-statement.pdf'
+        )
+
+        assert res.status_code == 302
+        assert res.headers['Location'] == 'http://asset-host/modern-slavery-statement.pdf'
+
+    def test_missing_document_url(self, s3):
+        s3.return_value.get_signed_url.return_value = None
+
+        res = self.client.get(
+            '/suppliers/frameworks/g-cloud-11/documents/1234/modern-slavery-statement.pdf'
+        )
+
+        assert res.status_code == 404
+
+    def test_document_url_not_matching_user_supplier(self, s3):
+        res = self.client.get(
+            '/suppliers/frameworks/g-cloud-11/documents/999/modern-slavery-statement.pdf'
+        )
+
+        assert res.status_code == 404
+
+
 class TestStartSupplierDeclaration(BaseApplicationTest, MockEnsureApplicationCompanyDetailsHaveBeenConfirmedMixin):
 
     def setup_method(self, method):
