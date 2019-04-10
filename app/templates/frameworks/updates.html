@@ -92,6 +92,8 @@
       <p class="hint">
         {% if framework.clarificationQuestionsOpen %}
           All clarification questions and answers will be published here regularly. You’ll receive an email when new answers are available.
+        
+       
         {% else %}
           The deadline for asking clarification questions has now passed.
           All clarification questions and answers will be published by {{ framework.clarificationsPublishAt }}.
@@ -118,7 +120,9 @@
               %}
                 {% include "toolkit/forms/textbox.html" %}
               {% endwith %}
-              <p>
+            <p>You can also read the <a href="https://www.gov.uk/guidance/g-cloud-suppliers-guide" rel="noopener noreferrer" target="_blank">guidance on the the application process and information you must provide.</a></p> 
+             <br>
+            <p>
                 The deadline for clarification questions is {{ framework.clarificationsCloseAt }}. All responses will be published by {{ framework.clarificationsPublishAt }}.
               </p>
               {%
