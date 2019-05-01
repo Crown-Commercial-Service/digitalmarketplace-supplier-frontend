@@ -31,10 +31,12 @@ def create_app(config_name):
         login_manager=login_manager,
     )
 
+    from .metrics import metrics as metrics_blueprint, gds_metrics
     from .main import main as main_blueprint
     from .status import status as status_blueprint
     from dmutils.external import external as external_blueprint
 
+    application.register_blueprint(metrics_blueprint, url_prefix='/suppliers')
     application.register_blueprint(main_blueprint, url_prefix='/suppliers')
     application.register_blueprint(status_blueprint, url_prefix='/suppliers')
 
@@ -45,6 +47,7 @@ def create_app(config_name):
     login_manager.login_message_category = "must_login"
     main_blueprint.config = application.config.copy()
 
+    gds_metrics.init_app(application)
     csrf.init_app(application)
 
     @application.before_request
