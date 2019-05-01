@@ -322,12 +322,12 @@ def framework_submission_services(framework_slug, lot_slug):
             status='published',
         )["services"]
 
-    previous_services_still_to_copy = len([
-        service for service in previous_services if not service['copiedToFollowingFramework']
-    ]) > 0
+    previous_services_still_to_copy = not all(
+        service['copiedToFollowingFramework'] for service in previous_services
+    )
 
     if lot['oneServiceLimit']:
-        draft = next(iter(drafts + complete_drafts), None)
+        draft = next(chain(drafts, complete_drafts), None)
         if not draft and previous_services_still_to_copy:
             return redirect(
                 url_for('.previous_services', framework_slug=framework_slug, lot_slug=lot_slug)
