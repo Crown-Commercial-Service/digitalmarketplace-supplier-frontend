@@ -27,6 +27,7 @@ from dmutils.env_helpers import get_web_url_from_stage
 from dmutils.flask import timed_render_template as render_template
 from dmutils.formats import datetimeformat, displaytimeformat, monthyearformat
 from dmutils.forms.helpers import get_errors_from_wtform, remove_csrf_token
+from dmutils.timing import logged_duration
 
 from ... import data_api_client
 from ...main import main, content_loader
@@ -342,16 +343,17 @@ def framework_submission_services(framework_slug, lot_slug):
                     framework_slug=framework_slug, lot_slug=lot_slug, service_id=draft['id'])
         )
 
-    for draft in chain(drafts, complete_drafts):
-        draft['priceString'] = format_service_price(draft)
-        content = content_loader.get_manifest(framework_slug, 'edit_submission').filter(draft)
-        sections = content.summary(draft)
+    with logged_duration(message="Annotated draft details in {duration_real}s"):
+        for draft in chain(drafts, complete_drafts):
+            draft['priceString'] = format_service_price(draft)
+            content = content_loader.get_manifest(framework_slug, 'edit_submission').filter(draft)
+            sections = content.summary(draft)
 
-        unanswered_required, unanswered_optional = count_unanswered_questions(sections)
-        draft.update({
-            'unanswered_required': unanswered_required,
-            'unanswered_optional': unanswered_optional,
-        })
+            unanswered_required, unanswered_optional = count_unanswered_questions(sections)
+            draft.update({
+                'unanswered_required': unanswered_required,
+                'unanswered_optional': unanswered_optional,
+            })
 
     return render_template(
         "frameworks/services.html",
