@@ -243,6 +243,9 @@ class MockEnsureApplicationCompanyDetailsHaveBeenConfirmedMixin:
 
 class BaseApplicationTest:
     def setup_method(self, method):
+        self.app_env_var_mock = patch.dict('gds_metrics.os.environ', {'PROMETHEUS_METRICS_PATH': '_metrics'})
+        self.app_env_var_mock.start()
+
         self.app = create_app('test')
         self.app.jinja_options = ImmutableDict({**self.app.jinja_options, 'undefined': jinja2.StrictUndefined})
         self.app.register_blueprint(login_for_tests)
@@ -251,6 +254,7 @@ class BaseApplicationTest:
 
     def teardown_method(self, method):
         self.teardown_login()
+        self.app_env_var_mock.stop()
 
     @staticmethod
     def get_cookie_by_name(response, name):
