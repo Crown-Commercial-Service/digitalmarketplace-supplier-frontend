@@ -13,6 +13,7 @@ in (with args; {
     shortName = "dm-sup-fe";
     buildInputs = [
       pythonPackages.python
+      pkgs.glibcLocales
       pkgs.nodejs-8_x
       pkgs.yarn
       pkgs.libffi
