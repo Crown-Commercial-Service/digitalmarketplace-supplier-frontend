@@ -13,11 +13,14 @@ def get_drafts(apiclient, framework_slug):
         current_user.supplier_id,
         framework=framework_slug
     )
+    complete_drafts, unsubmitted_drafts = [], []
+    for draft in drafts:
+        if draft['status'] in ('submitted', 'failed'):
+            complete_drafts.append(draft)
+        if draft['status'] == 'not-submitted':
+            unsubmitted_drafts.append(draft)
 
-    complete_drafts = [draft for draft in drafts if draft['status'] in ('submitted', 'failed')]
-    drafts = [draft for draft in drafts if draft['status'] == 'not-submitted']
-
-    return drafts, complete_drafts
+    return unsubmitted_drafts, complete_drafts
 
 
 def get_lot_drafts(apiclient, framework_slug, lot_slug):
