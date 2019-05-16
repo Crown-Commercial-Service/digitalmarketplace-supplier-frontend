@@ -199,11 +199,10 @@ class TestFrameworksDashboard(BaseApplicationTest):
 
         self.data_api_client.get_framework.return_value = self.framework(status='pending')
         self.data_api_client.get_framework_interest.return_value = {'frameworks': ['g-cloud-7']}
-        self.data_api_client.find_draft_services.return_value = {
-            "services": [
-                {'serviceName': 'A service', 'status': 'submitted', 'lotSlug': 'iaas'}
-            ]
-        }
+        self.data_api_client.find_draft_services_iter.return_value = [
+            {'serviceName': 'A service', 'status': 'submitted', 'lotSlug': 'iaas'}
+        ]
+
         self.data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(declaration=None)
 
         res = self.client.get("/suppliers/frameworks/g-cloud-7")
@@ -215,9 +214,9 @@ class TestFrameworksDashboard(BaseApplicationTest):
 
         self.data_api_client.get_framework.return_value = self.framework(status='pending')
         self.data_api_client.get_framework_interest.return_value = {'frameworks': ['g-cloud-7']}
-        self.data_api_client.find_draft_services.return_value = {
-            "services": [{'serviceName': 'A service', 'status': 'not-submitted'}]
-        }
+        self.data_api_client.find_draft_services_iter.return_value = [
+            {'serviceName': 'A service', 'status': 'not-submitted'}
+        ]
         self.data_api_client.get_supplier_framework_info.return_value = self.supplier_framework()
 
         res = self.client.get("/suppliers/frameworks/g-cloud-7")
@@ -235,9 +234,9 @@ class TestFrameworksDashboard(BaseApplicationTest):
 
         self.data_api_client.get_framework.return_value = self.framework(status='pending')
         self.data_api_client.get_framework_interest.return_value = {'frameworks': ['g-cloud-7']}
-        self.data_api_client.find_draft_services.return_value = {
-            "services": [{'serviceName': 'A service', 'status': 'submitted', 'lotSlug': 'iaas'}]
-        }
+        self.data_api_client.find_draft_services_iter.return_value = [
+            {'serviceName': 'A service', 'status': 'submitted', 'lotSlug': 'iaas'}
+        ]
         self.data_api_client.get_supplier_framework_info.return_value = self.supplier_framework()
 
         res = self.client.get("/suppliers/frameworks/g-cloud-7")
@@ -673,9 +672,9 @@ class TestFrameworksDashboard(BaseApplicationTest):
         self.login()
 
         self.data_api_client.get_framework.return_value = self.framework(status='standstill')
-        self.data_api_client.find_draft_services.return_value = {
-            "services": [{'serviceName': 'A service', 'status': 'submitted', 'lotSlug': 'iaas'}]
-        }
+        self.data_api_client.find_draft_services_iter.return_value = [
+            {'serviceName': 'A service', 'status': 'submitted', 'lotSlug': 'iaas'}
+        ]
         self.data_api_client.get_supplier_framework_info.return_value = self.supplier_framework()
 
         res = self.client.get("/suppliers/frameworks/g-cloud-7")
@@ -688,9 +687,9 @@ class TestFrameworksDashboard(BaseApplicationTest):
         self.login()
 
         self.data_api_client.get_framework.return_value = self.framework(status='pending')
-        self.data_api_client.find_draft_services.return_value = {
-            "services": [{'serviceName': 'A service', 'status': 'submitted', 'lotSlug': 'iaas'}]
-        }
+        self.data_api_client.find_draft_services_iter.return_value = [
+            {'serviceName': 'A service', 'status': 'submitted', 'lotSlug': 'iaas'}
+        ]
         self.data_api_client.get_supplier_framework_info.return_value = self.supplier_framework()
 
         res = self.client.get("/suppliers/frameworks/g-cloud-7")
@@ -702,9 +701,9 @@ class TestFrameworksDashboard(BaseApplicationTest):
     def test_result_letter_is_not_shown_when_no_application(self, s3):
         self.login()
         self.data_api_client.get_framework.return_value = self.framework(status='standstill')
-        self.data_api_client.find_draft_services.return_value = {
-            "services": [{'serviceName': 'A service', 'status': 'not-submitted'}]
-        }
+        self.data_api_client.find_draft_services_iter.return_value = [
+            {'serviceName': 'A service', 'status': 'not-submitted'}
+        ]
         self.data_api_client.get_supplier_framework_info.return_value = self.supplier_framework()
 
         res = self.client.get("/suppliers/frameworks/g-cloud-7")
@@ -716,9 +715,9 @@ class TestFrameworksDashboard(BaseApplicationTest):
     def test_link_to_unsigned_framework_agreement_is_shown_if_supplier_is_on_framework(self, s3):
         self.login()
         self.data_api_client.get_framework.return_value = self.framework(status='standstill')
-        self.data_api_client.find_draft_services.return_value = {
-            "services": [{'serviceName': 'A service', 'status': 'submitted', 'lotSlug': 'iaas'}]
-        }
+        self.data_api_client.find_draft_services_iter.return_value = [
+            {'serviceName': 'A service', 'status': 'submitted', 'lotSlug': 'iaas'}
+        ]
         self.data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
             on_framework=True)
 
@@ -735,9 +734,9 @@ class TestFrameworksDashboard(BaseApplicationTest):
         self.data_api_client.get_framework.return_value = self.framework(
             status='standstill', framework_agreement_version=None
         )
-        self.data_api_client.find_draft_services.return_value = {
-            "services": [{'serviceName': 'A service', 'status': 'submitted', 'lotSlug': 'iaas'}]
-        }
+        self.data_api_client.find_draft_services.return_value = [
+            {'serviceName': 'A service', 'status': 'submitted', 'lotSlug': 'iaas'}
+        ]
         self.data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(on_framework=True)
         res = self.client.get("/suppliers/frameworks/g-cloud-7")
         assert res.status_code == 200
@@ -758,9 +757,9 @@ class TestFrameworksDashboard(BaseApplicationTest):
     def test_link_to_framework_agreement_is_not_shown_if_supplier_is_not_on_framework(self, s3):
         self.login()
 
-        self.data_api_client.find_draft_services.return_value = {
-            "services": [{'serviceName': 'A service', 'status': 'submitted', 'lotSlug': 'iaas'}]
-        }
+        self.data_api_client.find_draft_services_iter.return_value = [
+            {'serviceName': 'A service', 'status': 'submitted', 'lotSlug': 'iaas'}
+        ]
         self.data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(on_framework=False)
 
         res = self.client.get("/suppliers/frameworks/g-cloud-7")
@@ -773,9 +772,9 @@ class TestFrameworksDashboard(BaseApplicationTest):
         self.login()
 
         self.data_api_client.get_framework.return_value = self.framework(status='standstill')
-        self.data_api_client.find_draft_services.return_value = {
-            "services": [{'serviceName': 'A service', 'status': 'submitted', 'lotSlug': 'iaas'}]
-        }
+        self.data_api_client.find_draft_services_iter.return_value = [
+            {'serviceName': 'A service', 'status': 'submitted', 'lotSlug': 'iaas'}
+        ]
         self.data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(on_framework=False)
         res = self.client.get("/suppliers/frameworks/g-cloud-7")
         assert res.status_code == 200
@@ -809,9 +808,9 @@ class TestFrameworksDashboard(BaseApplicationTest):
 
         self.login()
         self.data_api_client.get_framework.return_value = self.framework(status='standstill')
-        self.data_api_client.find_draft_services.return_value = {
-            "services": [{'serviceName': 'A service', 'status': 'submitted', 'lotSlug': 'iaas'}]
-        }
+        self.data_api_client.find_draft_services_iter.return_value = [
+            {'serviceName': 'A service', 'status': 'submitted', 'lotSlug': 'iaas'}
+        ]
         self.data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
             on_framework=True,
             agreement_returned=True,
@@ -949,9 +948,9 @@ class TestFrameworksDashboard(BaseApplicationTest):
 
         self.login()
         self.data_api_client.get_framework.return_value = get_g_cloud_8()
-        self.data_api_client.find_draft_services.return_value = {
-            "services": [{'serviceName': 'A service', 'status': 'submitted', 'lotSlug': 'iaas'}]
-        }
+        self.data_api_client.find_draft_services_iter.return_value = [
+            {'serviceName': 'A service', 'status': 'submitted', 'lotSlug': 'iaas'}
+        ]
         self.data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
             on_framework=True,
             agreement_returned=True,
@@ -1068,9 +1067,9 @@ class TestFrameworksDashboard(BaseApplicationTest):
     def test_shows_returned_agreement_details(self, s3):
         self.login()
         self.data_api_client.get_framework.return_value = get_g_cloud_8()
-        self.data_api_client.find_draft_services.return_value = {
-            "services": [{'serviceName': 'A service', 'status': 'submitted', 'lotSlug': 'iaas'}]
-        }
+        self.data_api_client.find_draft_services_iter.return_value = [
+            {'serviceName': 'A service', 'status': 'submitted', 'lotSlug': 'iaas'}
+        ]
         self.data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
             on_framework=True,
             agreement_returned=True,
@@ -1163,9 +1162,9 @@ class TestFrameworksDashboard(BaseApplicationTest):
     def test_countersigned_but_no_countersigned_path(self, s3):
         self.login()
         self.data_api_client.get_framework.return_value = get_g_cloud_8()
-        self.data_api_client.find_draft_services.return_value = {
-            "services": [{'serviceName': 'A service', 'status': 'submitted', 'lotSlug': 'iaas'}]
-        }
+        self.data_api_client.find_draft_services_iter.return_value = [
+            {'serviceName': 'A service', 'status': 'submitted', 'lotSlug': 'iaas'}
+        ]
         self.data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
             on_framework=True,
             agreement_returned=True,
@@ -1621,9 +1620,9 @@ class TestFrameworksDashboardConfidenceBannerOnPage(BaseApplicationTest):
 
     def test_confidence_banner_on_page(self, _):
         """Test confidence banner appears on page happy path."""
-        self.data_api_client.find_draft_services.return_value = {
-            "services": [{'serviceName': 'A service', 'status': 'submitted', 'lotSlug': 'foo'}]
-        }
+        self.data_api_client.find_draft_services_iter.return_value = [
+            {'serviceName': 'A service', 'status': 'submitted', 'lotSlug': 'foo'}
+        ]
         self.data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(status='complete')
         self.data_api_client.get_supplier.return_value = SupplierStub().single_result_response()
 
@@ -1667,9 +1666,9 @@ class TestFrameworksDashboardConfidenceBannerOnPage(BaseApplicationTest):
         """Change value and assert that confidence banner is not displayed."""
         supplier_data = SupplierStub(company_details_confirmed=details_confirmed).single_result_response()
 
-        self.data_api_client.find_draft_services.return_value = {
-            "services": [{'serviceName': 'A service', 'status': draft_service_status, 'lotSlug': 'foo'}]
-        }
+        self.data_api_client.find_draft_services_iter.return_value = [
+            {'serviceName': 'A service', 'status': draft_service_status, 'lotSlug': 'foo'}
+        ]
         self.data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
             status=declaration_status,
             declaration={'status': declaration_status},
@@ -1754,14 +1753,13 @@ class TestFrameworkAgreement(BaseApplicationTest):
 
         self.data_api_client.get_framework.return_value = get_g_cloud_8()
         self.data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(on_framework=True)
-        self.data_api_client.find_draft_services.return_value = {
-            'services': [
-                {'lotSlug': 'saas', 'status': 'submitted'},
-                {'lotSlug': 'saas', 'status': 'not-submitted'},
-                {'lotSlug': 'paas', 'status': 'failed'},
-                {'lotSlug': 'scs', 'status': 'submitted'}
-            ]
-        }
+        self.data_api_client.find_draft_services_iter.return_value = [
+            {'lotSlug': 'saas', 'status': 'submitted'},
+            {'lotSlug': 'saas', 'status': 'not-submitted'},
+            {'lotSlug': 'paas', 'status': 'failed'},
+            {'lotSlug': 'scs', 'status': 'submitted'}
+        ]
+
         expected_lots_and_statuses = [
             ('Software as a Service', 'Successful'),
             ('Platform as a Service', 'Unsuccessful'),
@@ -3790,7 +3788,7 @@ class TestServicesList(BaseApplicationTest, MockEnsureApplicationCompanyDetailsH
     def test_404_when_g7_pending_and_no_complete_services(self, count_unanswered):
         self.login()
         self.data_api_client.get_framework.return_value = self.framework(status='pending')
-        self.data_api_client.find_draft_services.return_value = {'services': []}
+        self.data_api_client.find_draft_services_iter.return_value = []
         count_unanswered.return_value = 0
         response = self.client.get('/suppliers/frameworks/g-cloud-7/submissions/iaas')
         assert response.status_code == 404
@@ -3807,7 +3805,7 @@ class TestServicesList(BaseApplicationTest, MockEnsureApplicationCompanyDetailsH
     def test_no_404_when_g7_open_and_no_complete_services(self, count_unanswered):
         self.login()
         self.data_api_client.get_framework.return_value = self.framework(status='open')
-        self.data_api_client.find_draft_services.return_value = {'services': []}
+        self.data_api_client.find_draft_services_iter.return_value = []
         count_unanswered.return_value = 0
         response = self.client.get('/suppliers/frameworks/g-cloud-7/submissions/iaas')
         assert response.status_code == 200
@@ -3827,9 +3825,9 @@ class TestServicesList(BaseApplicationTest, MockEnsureApplicationCompanyDetailsH
         self.data_api_client.get_framework.return_value = self.framework(status='pending')
         self.data_api_client.get_supplier_declaration.return_value = self.supplier_framework()['frameworkInterest']
         self.data_api_client.get_supplier.return_value = SupplierStub().single_result_response()
-        self.data_api_client.find_draft_services.return_value = {
-            'services': [{'serviceName': 'draft', 'lotSlug': 'scs', 'status': 'submitted'}]
-        }
+        self.data_api_client.find_draft_services_iter.return_value = [
+            {'serviceName': 'draft', 'lotSlug': 'scs', 'status': 'submitted'}
+        ]
         count_unanswered.return_value = 0, 1
 
         response = self.client.get('/suppliers/frameworks/g-cloud-7/submissions/scs')
@@ -3849,9 +3847,9 @@ class TestServicesList(BaseApplicationTest, MockEnsureApplicationCompanyDetailsH
 
         count_unanswered.return_value = 3, 1
         self.data_api_client.get_framework.return_value = self.framework(status='open')
-        self.data_api_client.find_draft_services.return_value = {
-            'services': [{'serviceName': 'draft', 'lotSlug': 'scs', 'status': 'not-submitted'}]
-        }
+        self.data_api_client.find_draft_services_iter.return_value = [
+            {'serviceName': 'draft', 'lotSlug': 'scs', 'status': 'not-submitted'}
+        ]
 
         submissions = self.client.get('/suppliers/frameworks/g-cloud-7/submissions')
         lot_page = self.client.get('/suppliers/frameworks/g-cloud-7/submissions/scs')
@@ -3868,9 +3866,9 @@ class TestServicesList(BaseApplicationTest, MockEnsureApplicationCompanyDetailsH
         count_unanswered.return_value = 0, 1
 
         self.data_api_client.get_framework.return_value = self.framework(status='open')
-        self.data_api_client.find_draft_services.return_value = {
-            'services': [{'serviceName': 'draft', 'lotSlug': 'scs', 'status': 'not-submitted'}]
-        }
+        self.data_api_client.find_draft_services_iter.return_value = [
+            {'serviceName': 'draft', 'lotSlug': 'scs', 'status': 'not-submitted'}
+        ]
 
         res = self.client.get('/suppliers/frameworks/g-cloud-7/submissions/scs')
 
@@ -3891,9 +3889,9 @@ class TestServicesList(BaseApplicationTest, MockEnsureApplicationCompanyDetailsH
 
         self.data_api_client.get_framework.return_value = self.framework(status='open')
         self.data_api_client.get_supplier_declaration.return_value = {'declaration': incomplete_declaration}
-        self.data_api_client.find_draft_services.return_value = {
-            'services': [{'serviceName': 'draft', 'lotSlug': 'scs', 'status': 'submitted'}]
-        }
+        self.data_api_client.find_draft_services_iter.return_value = [
+            {'serviceName': 'draft', 'lotSlug': 'scs', 'status': 'submitted'}
+        ]
         self.data_api_client.get_supplier.return_value = SupplierStub(
             company_details_confirmed=False
         ).single_result_response()
@@ -3918,9 +3916,9 @@ class TestServicesList(BaseApplicationTest, MockEnsureApplicationCompanyDetailsH
 
         self.data_api_client.get_framework.return_value = self.framework(status='open')
         self.data_api_client.get_supplier_declaration.return_value = {'declaration': {'status': 'complete'}}
-        self.data_api_client.find_draft_services.return_value = {
-            'services': [{'serviceName': 'draft', 'lotSlug': 'scs', 'status': 'submitted'}]
-        }
+        self.data_api_client.find_draft_services_iter.return_value = [
+            {'serviceName': 'draft', 'lotSlug': 'scs', 'status': 'submitted'}
+        ]
         self.data_api_client.get_supplier.return_value = SupplierStub(
             company_details_confirmed=False
         ).single_result_response()
@@ -3939,12 +3937,10 @@ class TestServicesList(BaseApplicationTest, MockEnsureApplicationCompanyDetailsH
 
         self.data_api_client.get_framework.return_value = self.framework(status='standstill')
         self.data_api_client.get_supplier_declaration.return_value = {'declaration': {'status': 'complete'}}
-        self.data_api_client.find_draft_services.return_value = {
-            'services': [
-                {'serviceName': 'draft', 'lotSlug': 'scs', 'status': 'not-submitted'},
-                {'serviceName': 'draft', 'lotSlug': 'scs', 'status': 'submitted'},
-            ]
-        }
+        self.data_api_client.find_draft_services_iter.return_value = [
+            {'serviceName': 'draft', 'lotSlug': 'scs', 'status': 'not-submitted'},
+            {'serviceName': 'draft', 'lotSlug': 'scs', 'status': 'submitted'},
+        ]
 
         submissions = self.client.get('/suppliers/frameworks/g-cloud-7/submissions')
 
@@ -3959,9 +3955,9 @@ class TestServicesList(BaseApplicationTest, MockEnsureApplicationCompanyDetailsH
         )
         self.data_api_client.get_supplier_declaration.return_value = {'declaration': {'status': 'complete'}}
         self.data_api_client.get_supplier.return_value = SupplierStub().single_result_response()
-        self.data_api_client.find_draft_services.return_value = {
-            'services': [{'serviceName': 'draft', 'lotSlug': 'digital-specialists', 'status': 'submitted'}]
-        }
+        self.data_api_client.find_draft_services_iter.return_value = [
+            {'serviceName': 'draft', 'lotSlug': 'digital-specialists', 'status': 'submitted'}
+        ]
 
         submissions = self.client.get('/suppliers/frameworks/digital-outcomes-and-specialists/submissions')
 
@@ -3979,12 +3975,10 @@ class TestServicesList(BaseApplicationTest, MockEnsureApplicationCompanyDetailsH
             status='pending'
         )
         self.data_api_client.get_supplier_declaration.return_value = {'declaration': {'status': 'complete'}}
-        self.data_api_client.find_draft_services.return_value = {
-            'services': [
-                {'serviceName': 'draft', 'lotSlug': 'digital-specialists', 'status': 'not-submitted'},
-                {'serviceName': 'draft', 'lotSlug': 'digital-specialists', 'status': 'submitted'},
-            ]
-        }
+        self.data_api_client.find_draft_services_iter.return_value = [
+            {'serviceName': 'draft', 'lotSlug': 'digital-specialists', 'status': 'not-submitted'},
+            {'serviceName': 'draft', 'lotSlug': 'digital-specialists', 'status': 'submitted'},
+        ]
 
         submissions = self.client.get('/suppliers/frameworks/digital-outcomes-and-specialists/submissions')
 
@@ -4019,9 +4013,9 @@ class TestServicesList(BaseApplicationTest, MockEnsureApplicationCompanyDetailsH
         self.data_api_client.get_framework.return_value = self.framework(status='open')
         self.data_api_client.get_supplier.return_value = SupplierStub().single_result_response()
         self.data_api_client.get_supplier_declaration.return_value = declaration
-        self.data_api_client.find_draft_services.return_value = {
-            'services': [{'serviceName': 'draft', 'lotSlug': 'scs', 'status': 'submitted'}]
-        }
+        self.data_api_client.find_draft_services_iter.return_value = [
+            {'serviceName': 'draft', 'lotSlug': 'scs', 'status': 'submitted'}
+        ]
 
         submissions = self.client.get('/suppliers/frameworks/g-cloud-7/submissions')
 
@@ -4089,7 +4083,7 @@ class TestServicesList(BaseApplicationTest, MockEnsureApplicationCompanyDetailsH
         self, count_unanswered
     ):
         self.data_api_client.get_framework.return_value = self.framework(slug='digital-outcomes-and-specialists-3')
-        self.data_api_client.find_draft_services.return_value = {"services": []}
+        self.data_api_client.find_draft_services_iter.return_value = []
         self.get_metadata.return_value = 'digital-outcomes-and-specialists-2'
         self.data_api_client.find_services.return_value = {"services": [{"copiedToFollowingFramework": False}]}
         self.login()
@@ -4104,7 +4098,7 @@ class TestServicesList(BaseApplicationTest, MockEnsureApplicationCompanyDetailsH
             self.framework(slug='g-cloud-10'),
             HTTPError(mock.Mock(status_code=404)),
         ]
-        self.data_api_client.find_draft_services.return_value = {"services": []}
+        self.data_api_client.find_draft_services_iter.return_value = []
         self.login()
 
         res = self.client.get('/suppliers/frameworks/g-cloud-10/submissions/cloud-hosting')

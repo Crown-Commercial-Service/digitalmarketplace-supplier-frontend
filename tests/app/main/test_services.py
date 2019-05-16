@@ -2547,7 +2547,7 @@ class TestPostListPreviousService(BaseApplicationTest, MockEnsureApplicationComp
         self.data_api_client.find_services.return_value = {
             "services": [{'copiedToFollowingFramework': False, 'id': '0001'}]
         }
-        self.data_api_client.find_draft_services.return_value = {"services": []}
+        self.data_api_client.find_draft_services_iter.return_value = []
 
     def teardown_method(self, method):
         self.data_api_client_patch.stop()
@@ -2619,11 +2619,9 @@ class TestPostListPreviousService(BaseApplicationTest, MockEnsureApplicationComp
             slug='digital-outcomes-and-specialists-3',
             lots=[LotStub(name=lot_name, slug=lot_slug, one_service_limit=True).response()]
         ).single_result_response()
-        self.data_api_client.find_draft_services.return_value = {
-            "services": [
-                {'status': 'not-submitted', 'lotSlug': lot_slug},
-            ]
-        }
+        self.data_api_client.find_draft_services_iter.return_value = [
+            {'status': 'not-submitted', 'lotSlug': lot_slug},
+        ]
 
         res = self.client.post(
             '/suppliers/frameworks/digital-outcomes-and-specialists-3/'
