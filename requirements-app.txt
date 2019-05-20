@@ -1,7 +1,7 @@
 # Run `make freeze-requirements` to update requirements.txt
 # with package version changes made in requirements-app.txt
 
-Flask==1.0.2
+Flask==1.0.3
 Flask-Login==0.4.1
 Flask-WTF==0.14.2
 itsdangerous==0.24 # pyup: ignore
