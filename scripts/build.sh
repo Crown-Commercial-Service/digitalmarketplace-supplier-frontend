@@ -11,3 +11,7 @@ echo "app/templates/govuk"
 echo "app/content"
 
 cp supervisord.conf /etc/supervisord.conf
+cp uwsgi.py /bin/uwsgi
+chmod +x /bin/uwsgi
+cp run_nginx.py /nginx.py
+chmod +x /nginx.py
