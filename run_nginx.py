@@ -12,6 +12,7 @@ if environ.get("PROXY_AUTH_CREDENTIALS"):
 with open("/etc/nginx/nginx.conf", "r+") as f:
     contents = f.read()
     contents = contents.replace("{DM_APP_NAME}", environ.get("DM_APP_NAME"))
+    f.seek(0)
     f.truncate()
     f.write(contents)
 
@@ -19,6 +20,7 @@ if isfile("/etc/nginx/sites-enabled/api"):
     with open("/etc/nginx/sites-enabled/api", "r+") as f:
         contents = f.read()
         contents = contents.replace("{PORT}", environ.get("PORT", ""))
+        f.seek(0)
         f.truncate()
         f.write(contents)
 
@@ -26,6 +28,7 @@ if isfile("/etc/nginx/sites-enabled/frontend"):
     with open("/etc/nginx/sites-enabled/frontend", "r+") as f:
         contents = f.read()
         contents = contents.replace("{PORT}", environ.get("PORT", ""))
+        f.seek(0)
         f.truncate()
         f.write(contents)
 
