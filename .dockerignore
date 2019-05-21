@@ -10,3 +10,5 @@
 !scripts/build.sh
 !yarn.lock
 !supervisord.conf
+!uwsgi.py
+!run_nginx.py
