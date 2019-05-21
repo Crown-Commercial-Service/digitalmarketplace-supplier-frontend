@@ -9,3 +9,6 @@
 !requirements.txt
 !scripts/build.sh
 !yarn.lock
+!nosigterm.py
+!run_nginx.sh
+!supervisord.conf
