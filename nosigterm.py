@@ -17,4 +17,7 @@ libc.sigemptyset(ctypes.byref(sigset))
 libc.sigaddset(ctypes.byref(sigset), SIGTERM)
 libc.sigprocmask(SIG_BLOCK, ctypes.byref(sigset), null_int)
 
+with open("/nosigterm.out", "w") as f:
+    f.write("Ran for {}".format(argv))
+
 execvp(argv[1], argv[1:])
