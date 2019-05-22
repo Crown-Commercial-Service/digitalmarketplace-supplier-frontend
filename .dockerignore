@@ -9,3 +9,5 @@
 !requirements.txt
 !scripts/build.sh
 !yarn.lock
+!supervisord.conf
+!uwsgi.conf
