@@ -343,7 +343,6 @@ class TestSuppliersDashboard(BaseApplicationTest):
         message = doc.xpath('//aside[@class="temporary-message"]')
         assert len(message) > 0
         assert u"G-Cloud 7 is closed for applications" in message[0].xpath('h2/text()')[0]
-        assert len(message[0].xpath('p[1]/a[@href="https://digitalmarketplace.blog.gov.uk/"]')) > 0
 
     def test_shows_gcloud_7_closed_message_if_pending_and_no_application(self):  # noqa
         self.data_api_client.get_framework.return_value = self.framework('pending')
