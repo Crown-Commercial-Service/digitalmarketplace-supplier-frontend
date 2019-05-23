@@ -62,3 +62,10 @@ def add_cache_control(response):
 
 from .views import services, suppliers, login, frameworks, users
 from . import errors
+
+import time
+from flask import request
+
+@main.route("/waste-time", methods=("GET",))
+def waste_time():
+    time.sleep(float(request.args.get("for", "2")))
