@@ -69,3 +69,4 @@ from flask import request
 @main.route("/waste-time", methods=("GET",))
 def waste_time():
     time.sleep(float(request.args.get("for", "2")))
+    return "ok"
