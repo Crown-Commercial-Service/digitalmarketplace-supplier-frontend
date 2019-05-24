@@ -11,3 +11,4 @@
 !yarn.lock
 !supervisord.conf
 !uwsgi.conf
+!run_awslogs.sh
