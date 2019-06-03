@@ -17,6 +17,7 @@ csrf = CSRFProtect()
 
 from app.main.helpers.services import parse_document_upload_time
 from app.main.helpers.frameworks import question_references
+from app.main import get_content_loader
 
 
 def create_app(config_name):
