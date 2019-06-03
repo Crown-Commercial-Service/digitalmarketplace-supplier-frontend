@@ -17,6 +17,7 @@ csrf = CSRFProtect()
 
 from app.main.helpers.services import parse_document_upload_time
 from app.main.helpers.frameworks import question_references
+from app.main import get_content_loader
 
 
 def create_app(config_name):
@@ -62,6 +63,10 @@ def create_app(config_name):
 
     application.add_template_filter(question_references)
     application.add_template_filter(parse_document_upload_time)
+
+    # the lucky thread that gets to do create_app also gets to pre-load its content_loader, in the process
+    # asserting that all required content files are present and in good order
+    get_content_loader()
 
     return application
 
