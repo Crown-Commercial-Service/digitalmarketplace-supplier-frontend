@@ -1,6 +1,6 @@
 import pytest
 
-from app.main.helpers.validation import get_validator, G8Validator
+from app.main.helpers.validation import get_validator, SharedValidator
 from app.main import content_loader
 
 
@@ -92,10 +92,10 @@ def test_duns_number_validation(content, submission):
 
     for val, errors in test_cases:
         submission['dunsNumber'] = val
-        validator = G8Validator(content, submission)
+        validator = SharedValidator(content, submission)
         assert validator.errors() == errors
 
 
 def test_get_validator():
     validator = get_validator({"slug": "g-cloud-8"}, None, None)
-    assert isinstance(validator, G8Validator)
+    assert isinstance(validator, SharedValidator)

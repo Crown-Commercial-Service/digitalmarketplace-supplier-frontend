@@ -240,22 +240,19 @@ class DOSValidator(DeclarationValidator):
         return req_fields
 
 
-class G8Validator(DOSValidator):
+class SharedValidator(DOSValidator):
+    # From DOS2 and G8 onwards, validate DUNS number length
     number_string_fields = [('dunsNumber', 9)]
-
-
-class DOS2Validator(G8Validator):
-    pass
 
 
 VALIDATORS = {
     "g-cloud-7": G7Validator,
-    "g-cloud-8": G8Validator,
+    "g-cloud-8": SharedValidator,
     "digital-outcomes-and-specialists": DOSValidator,
-    "digital-outcomes-and-specialists-2": DOS2Validator,
-    "g-cloud-9": DOS2Validator,
-    "g-cloud-10": DOS2Validator,
-    "digital-outcomes-and-specialists-3": DOS2Validator,
-    "g-cloud-11": DOS2Validator,
-    "digital-outcomes-and-specialists-4": DOS2Validator,
+    "digital-outcomes-and-specialists-2": SharedValidator,
+    "g-cloud-9": SharedValidator,
+    "g-cloud-10": SharedValidator,
+    "digital-outcomes-and-specialists-3": SharedValidator,
+    "g-cloud-11": SharedValidator,
+    "digital-outcomes-and-specialists-4": SharedValidator,
 }
