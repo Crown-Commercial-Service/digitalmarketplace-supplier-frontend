@@ -96,6 +96,91 @@ def test_duns_number_validation(content, submission):
         assert validator.errors() == errors
 
 
-def test_get_validator():
-    validator = get_validator({"slug": "g-cloud-8"}, None, None)
+MODERN_FRAMEWORK_SLUGS = [
+    'g-cloud-8',
+    'g-cloud-9',
+    'g-cloud-10',
+    'g-cloud-11',
+    'digital-outcomes-and-specialists-2',
+    'digital-outcomes-and-specialists-3',
+    'digital-outcomes-and-specialists-4',
+]
+
+
+@pytest.mark.parametrize('framework_slug', MODERN_FRAMEWORK_SLUGS)
+def test_get_validator_for_modern_frameworks(framework_slug):
+    validator = get_validator({"slug": framework_slug}, None, None)
     assert isinstance(validator, SharedValidator)
+    assert validator.character_limit == 5000
+
+
+@pytest.mark.parametrize('licence_type', ['licensed', 'a member of a relevant organisation'])
+@pytest.mark.parametrize('framework_slug', MODERN_FRAMEWORK_SLUGS)
+def test_validator_includes_dependent_fields(framework_slug, licence_type):
+    content = content_loader.get_builder(framework_slug, 'declaration')
+    submission = {
+        "tradingStatus": "other (please specify)",
+        "establishedInTheUK": False,
+        "appropriateTradeRegisters": True,
+        "licenceOrMemberRequired": licence_type
+    }
+
+    validator = get_validator({"slug": framework_slug}, content, submission)
+    required_fields = validator.get_required_fields()
+
+    for expected_dependent_field in [
+        "tradingStatusOther",
+        "appropriateTradeRegisters",
+        "appropriateTradeRegistersNumber",
+        "licenceOrMemberRequiredDetails"
+    ]:
+        assert expected_dependent_field in required_fields
+
+
+@pytest.mark.parametrize(
+    'discretionary_field, expected_required_field',
+    [
+        ('misleadingInformation', 'mitigatingFactors'),
+        ('confidentialInformation', 'mitigatingFactors'),
+        ('influencedContractingAuthority', 'mitigatingFactors'),
+        ('witheldSupportingDocuments', 'mitigatingFactors'),
+        ('seriousMisrepresentation', 'mitigatingFactors'),
+        ('significantOrPersistentDeficiencies', 'mitigatingFactors'),
+        ('distortedCompetition', 'mitigatingFactors'),
+        ('conflictOfInterest', 'mitigatingFactors'),
+        ('distortingCompetition', 'mitigatingFactors'),
+        ('graveProfessionalMisconduct', 'mitigatingFactors'),
+        ('bankrupt', 'mitigatingFactors'),
+        ('environmentalSocialLabourLaw', 'mitigatingFactors'),
+        ('taxEvasion', 'mitigatingFactors'),
+        ('unspentTaxConvictions', 'mitigatingFactors2'),
+        ('GAAR', 'mitigatingFactors2'),
+        ('modernSlaveryTurnover', 'modernSlaveryStatement'),
+        ('modernSlaveryTurnover', 'modernSlaveryReportingRequirements'),
+    ]
+)
+def test_validator_adds_dependency_for_discretionary_fields(discretionary_field, expected_required_field):
+    g11_content = content_loader.get_builder('g-cloud-11', 'declaration')
+    g11_submission = {discretionary_field: True}
+
+    validator = get_validator({"slug": 'g-cloud-11'}, g11_content, g11_submission)
+
+    required_fields = validator.get_required_fields()
+    assert expected_required_field in required_fields
+
+
+@pytest.mark.parametrize('framework_slug', ['g-cloud-11', 'digital-outcomes-and-specialists-4'])
+def test_validator_handles_multiquestion_fields(framework_slug):
+    # Currently only DOS4 and G11 have multiquestion declaration questions (for modernSlavery)
+    g11_content = content_loader.get_builder(framework_slug, 'declaration')
+
+    g11_submission = {
+        "modernSlaveryTurnover": True,
+        "modernSlaveryReportingRequirements": False,
+    }
+
+    validator = get_validator({"slug": framework_slug}, g11_content, g11_submission)
+    required_fields = validator.get_required_fields()
+
+    assert 'mitigatingFactors3' in required_fields
+    assert 'modernSlaveryStatement' not in required_fields
