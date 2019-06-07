@@ -9,3 +9,5 @@ echo "app/static"
 echo "app/templates/toolkit"
 echo "app/templates/govuk"
 echo "app/content"
+
+cp uwsgi.conf /etc/uwsgi.conf
