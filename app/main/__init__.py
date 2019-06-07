@@ -3,6 +3,8 @@ from werkzeug.local import Local, LocalProxy
 
 from dmcontent.content_loader import ContentLoader
 
+from dmutils.timing import logged_duration
+
 main = Blueprint('main', __name__)
 
 # we use our own Local for objects we explicitly want to be able to retain between requests but shouldn't
@@ -10,6 +12,7 @@ main = Blueprint('main', __name__)
 _local = Local()
 
 
+@logged_duration(message="Spent {duration_real}s in get_content_loader")
 def get_content_loader():
     if hasattr(_local, "content_loader"):
         return _local.content_loader
