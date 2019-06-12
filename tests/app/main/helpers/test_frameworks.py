@@ -468,10 +468,12 @@ class TestGetReusableDeclaration:
 
     def test_get_reusable_declaration(self):
         """Test happy path, should return the framework and declaration where
-        allowDeclarationReuse == True
+        framework.allowDeclarationReuse == True
+        supplierFramework.allowDeclarationReuse == True
         applicationsCloseAtUTC is closest to today
         and declaration exists for that framework
         and declaration status is completed
+        and supplier is 'onFramework'
         """
         t09 = '2009-03-03T01:01:01.000000Z'
         t07 = '2007-03-03T01:01:01.000000Z'
@@ -479,6 +481,8 @@ class TestGetReusableDeclaration:
         t12 = '2012-03-03T01:01:01.000000Z'
         t13 = '2013-03-03T01:01:01.000000Z'
         t14 = '2014-03-03T01:01:01.000000Z'
+        t15 = '2015-03-03T01:01:01.000000Z'
+        t16 = '2015-03-03T01:01:01.000000Z'
 
         frameworks = [
             {'x_field': 'foo', 'allowDeclarationReuse': True, 'applicationsCloseAtUTC': t07, 'slug': 'ben-cloud-1'},
@@ -490,14 +494,33 @@ class TestGetReusableDeclaration:
                 'x_field': 'foo',
                 'allowDeclarationReuse': False,
                 'applicationsCloseAtUTC': t14,
-                'slug': 'ben-cloud-alpha'
+                'slug': 'ben-cloud-alpha',
+            },
+            {
+                'x_field': 'bar',
+                'allowDeclarationReuse': True,
+                'applicationsCloseAtUTC': t15,
+                'slug': 'bun-cloud-beta',
+            },
+            {
+                'x_field': 'bar',
+                'allowDeclarationReuse': True,
+                'applicationsCloseAtUTC': t16,
+                'slug': 'bean-cloud-gamma',
             },
         ]
         declarations = [
             {'x_field': 'foo', 'frameworkSlug': 'ben-cloud-4', 'onFramework': True},
             {'x_field': 'foo', 'frameworkSlug': 'ben-cloud-1000000', 'onFramework': True},
-            {'x_field': 'foo', 'frameworkSlug': 'ben-cloud-2', 'onFramework': True},
+            {'x_field': 'foo', 'frameworkSlug': 'ben-cloud-2', 'onFramework': True, 'allowDeclarationReuse': True},
             {'x_field': 'foo', 'frameworkSlug': 'ben-cloud-alpha', 'onFramework': True},
+            {'x_field': 'foo', 'frameworkSlug': 'bun-cloud-beta', 'onFramework': False},
+            {
+                'x_field': 'foo',
+                'frameworkSlug': 'bean-cloud-gamma',
+                'onFramework': True,
+                'allowDeclarationReuse': False,
+            },
         ]
 
         self.data_api_client.find_frameworks.return_value = {'frameworks': frameworks}
@@ -509,13 +532,32 @@ class TestGetReusableDeclaration:
     def test_get_reusable_declaration_none(self):
         """Test returning None.
         """
+        t09 = '2009-03-03T01:01:01.000000Z'
+        t11 = '2011-03-03T01:01:01.000000Z'
         t14 = '2014-03-05T01:01:01.000000Z'
+        t16 = '2015-03-03T01:01:01.000000Z'
 
         frameworks = [
+            {'x_field': 'foo', 'allowDeclarationReuse': False, 'applicationsCloseAtUTC': t09, 'slug': 'ben-cloud-2'},
+            {'x_field': 'foo', 'allowDeclarationReuse': True, 'applicationsCloseAtUTC': t11, 'slug': 'ben-cloud-3'},
             {'x_field': 'foo', 'allowDeclarationReuse': True, 'applicationsCloseAtUTC': t14, 'slug': 'ben-cloud-5'},
+            {
+                'x_field': 'bar',
+                'allowDeclarationReuse': True,
+                'applicationsCloseAtUTC': t16,
+                'slug': 'bean-cloud-gamma',
+            },
         ]
         declarations = [
+            {'x_field': 'foo', 'frameworkSlug': 'ben-cloud-2', 'onFramework': True, 'allowDeclarationReuse': True},
+            {'x_field': 'foo', 'frameworkSlug': 'ben-cloud-3', 'onFramework': False, 'allowDeclarationReuse': True},
             {'x_field': 'foo', 'frameworkSlug': 'ben-cloud-4', 'onFramework': True},
+            {
+                'x_field': 'foo',
+                'frameworkSlug': 'bean-cloud-gamma',
+                'onFramework': True,
+                'allowDeclarationReuse': False,
+            },
         ]
 
         self.data_api_client.find_frameworks.return_value = {'frameworks': frameworks}
