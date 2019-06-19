@@ -3,11 +3,12 @@ from datetime import datetime
 from functools import wraps
 from itertools import chain, islice, groupby
 import re
+from typing import Optional, Container
 
 from flask import abort, current_app, render_template, request
 from flask_login import current_user
 
-from dmapiclient import APIError, HTTPError
+from dmapiclient import DataAPIClient, APIError, HTTPError
 from dmutils.dates import update_framework_with_formatted_dates
 from dmutils.formats import DATETIME_FORMAT
 from dmcontent.errors import ContentNotFoundError
@@ -118,26 +119,27 @@ def get_declaration_status(data_api_client, framework_slug):
         return declaration.get('status', 'unstarted')
 
 
-def get_framework_for_reuse(supplier_id, client, exclude_framework_slugs=None):
+def get_framework_for_reuse(
+    supplier_id: int,
+    client: DataAPIClient,
+    exclude_framework_slugs: Optional[Container[str]] = None,
+) -> Optional[dict]:
     """Given a list of declarations find the most suitable for reuse.
 
      :param supplier_id: supplier whose declarations we are inspecting
-     :param client: data client if not frameworks
+     :param client: data client
      :param exclude_framework_slugs: list of framework slugs to exclude from results
      :return: framework
-     """
-    exclude_framework_slugs = exclude_framework_slugs or []
-    supplier_frameworks = client.find_supplier_declarations(supplier_id)['frameworkInterest']
-    supplier_frameworks_on_framework = filter(
-        lambda i: i['onFramework'],
-        supplier_frameworks
-    )
-    declarations = {i['frameworkSlug']: i for i in supplier_frameworks_on_framework}
-    frameworks = client.find_frameworks()['frameworks']
-    for framework in order_frameworks_for_reuse(frameworks):
-        if framework['slug'] in declarations and framework['slug'] not in exclude_framework_slugs:
-            return framework
-    return None
+    """
+    declarations = {
+        sf['frameworkSlug']: sf
+        for sf in client.find_supplier_declarations(supplier_id)['frameworkInterest']
+        if sf['onFramework'] and sf.get('allowDeclarationReuse') is not False
+    }
+    return next((
+        framework for framework in order_frameworks_for_reuse(client.find_frameworks()['frameworks'])
+        if framework['slug'] in declarations and framework['slug'] not in (exclude_framework_slugs or ())
+    ), None)
 
 
 def get_supplier_framework_info(data_api_client, framework_slug):
