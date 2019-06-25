@@ -22,6 +22,7 @@ class DeclarationValidator(object):
     email_validation_fields = []
     number_string_fields = []
     character_limit = None
+    word_limit = None
     optional_fields = set([])
 
     def __init__(self, content, answers):
@@ -72,6 +73,7 @@ class DeclarationValidator(object):
     def errors(self):
         errors_map = {}
         errors_map.update(self.character_limit_errors())
+        errors_map.update(self.word_limit_errors())
         errors_map.update(self.formatting_errors(self.answers))
         errors_map.update(self.answer_required_errors())
         return errors_map
@@ -93,6 +95,16 @@ class DeclarationValidator(object):
                 answer = self.answers.get(question_id) or ''
                 if self.character_limit is not None and len(answer) > self.character_limit:
                     errors_map[question_id] = "under_character_limit"
+
+        return errors_map
+
+    def word_limit_errors(self):
+        errors_map = {}
+        for question_id in self.all_fields():
+            if self.content.get_question(question_id).get('type') in ['text', 'textbox_large']:
+                answer = self.answers.get(question_id) or ''
+                if self.word_limit is not None and len(answer.split(" ")) > self.word_limit:
+                    errors_map[question_id] = "under_word_limit"
 
         return errors_map
 
@@ -243,6 +255,7 @@ class DOSValidator(DeclarationValidator):
 class SharedValidator(DOSValidator):
     # From DOS2 and G8 onwards, validate DUNS number length
     number_string_fields = [('dunsNumber', 9)]
+    word_limit = 500
 
 
 VALIDATORS = {
