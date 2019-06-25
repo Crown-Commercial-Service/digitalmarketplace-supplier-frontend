@@ -3386,7 +3386,7 @@ class TestFrameworkUpdatesPage(BaseApplicationTest):
         assert response.status_code == 200
         assert 'All clarification questions and answers will be published ' \
                'by 5pm BST, Tuesday 29 September 2015.' in data
-        assert "The deadline for clarification questions is" not in data
+        assert "You can ask clarification questions until " not in data
 
     def test_dates_for_open_framework_open_for_questions(self, s3):
         self.data_api_client.get_framework.return_value = self.framework('open', clarification_questions_open=True)
@@ -3399,7 +3399,7 @@ class TestFrameworkUpdatesPage(BaseApplicationTest):
 
         assert response.status_code == 200
         assert "All clarification questions and answers will be published by" not in data
-        assert 'The deadline for clarification questions is 5pm BST, Tuesday 22 September 2015.' in data
+        assert 'You can ask clarification questions until 5pm BST, Tuesday 22 September 2015.' in data
 
     def test_the_tables_should_be_displayed_correctly(self, s3):
         self.data_api_client.get_framework.return_value = self.framework('open')
@@ -3483,7 +3483,7 @@ class TestFrameworkUpdatesPage(BaseApplicationTest):
                     ext,
                 )
 
-    def test_question_box_is_shown_if_countersigned_agreement_is_not_yet_returned(self, s3):
+    def test_contact_link_is_shown_if_countersigned_agreement_is_not_yet_returned(self, s3):
         self.data_api_client.get_framework.return_value = self.framework('live', clarification_questions_open=False)
         self.data_api_client.get_supplier_framework_info.return_value = self.supplier_framework()
 
@@ -3493,7 +3493,7 @@ class TestFrameworkUpdatesPage(BaseApplicationTest):
         data = response.get_data(as_text=True)
 
         assert response.status_code == 200
-        assert u'Ask a question about your G-Cloud 7 application' in data
+        assert u'Contact the support team' in data
 
     def test_no_question_box_shown_if_countersigned_agreement_is_returned(self, s3):
         self.data_api_client.get_framework.return_value = self.framework('live', clarification_questions_open=False)
@@ -3507,7 +3507,7 @@ class TestFrameworkUpdatesPage(BaseApplicationTest):
         data = response.get_data(as_text=True)
 
         assert response.status_code == 200
-        assert u'Ask a question about your G-Cloud 7 application' not in data
+        assert u'Contact the support team' not in data
 
 
 @mock.patch('app.main.views.frameworks.DMNotifyClient.send_email', autospec=True)
