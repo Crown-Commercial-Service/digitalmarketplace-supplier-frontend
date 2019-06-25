@@ -3398,7 +3398,8 @@ class TestFrameworkUpdatesPage(BaseApplicationTest):
         data = response.get_data(as_text=True)
 
         assert response.status_code == 200
-        assert "All clarification questions and answers will be published by" not in data
+        assert 'All clarification questions and answers will be published ' \
+               'by 5pm BST, Tuesday 29 September 2015.' not in data
         assert 'You can ask clarification questions until 5pm BST, Tuesday 22 September 2015.' in data
 
     def test_the_tables_should_be_displayed_correctly(self, s3):
@@ -3483,22 +3484,13 @@ class TestFrameworkUpdatesPage(BaseApplicationTest):
                     ext,
                 )
 
-    def test_contact_link_is_shown_if_countersigned_agreement_is_not_yet_returned(self, s3):
-        self.data_api_client.get_framework.return_value = self.framework('live', clarification_questions_open=False)
-        self.data_api_client.get_supplier_framework_info.return_value = self.supplier_framework()
-
-        self.login()
-
-        response = self.client.get('/suppliers/frameworks/g-cloud-7/updates')
-        data = response.get_data(as_text=True)
-
-        assert response.status_code == 200
-        assert u'Contact the support team' in data
-
-    def test_no_question_box_shown_if_countersigned_agreement_is_returned(self, s3):
+    @pytest.mark.parametrize('countersigned_path, contact_link_shown', [("path", False), (None, True)])
+    def test_contact_link_only_shown_if_countersigned_agreement_is_not_yet_returned(
+        self, s3, countersigned_path, contact_link_shown
+    ):
         self.data_api_client.get_framework.return_value = self.framework('live', clarification_questions_open=False)
         self.data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
-            countersigned_path="path"
+            countersigned_path=countersigned_path
         )
 
         self.login()
@@ -3507,7 +3499,7 @@ class TestFrameworkUpdatesPage(BaseApplicationTest):
         data = response.get_data(as_text=True)
 
         assert response.status_code == 200
-        assert u'Contact the support team' not in data
+        assert ('Contact the support team' in data) == contact_link_shown
 
 
 @mock.patch('app.main.views.frameworks.DMNotifyClient.send_email', autospec=True)
