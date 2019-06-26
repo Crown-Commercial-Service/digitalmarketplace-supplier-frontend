@@ -68,10 +68,6 @@ CLARIFICATION_QUESTION_NAME = 'clarification_question'
 MESSAGE_SENT_QS_OPEN_MESSAGE = (
     "Your clarification question has been sent. Answers to all clarification questions will be published on this page."
 )
-MESSAGE_SENT_QS_CLOSED_MESSAGE = (
-    "Your question has been sent. You’ll get a reply from the Crown Commercial Service soon."
-)
-
 
 AGREEMENT_RETURNED_MESSAGE = (
     "Your framework agreement has been returned to the Crown Commercial Service to be countersigned."
@@ -780,6 +776,12 @@ def framework_updates(framework_slug, error_message=None, default_textbox_value=
 def framework_updates_email_clarification_question(framework_slug):
     framework = get_framework_or_404(data_api_client, framework_slug)
 
+    if not framework['clarificationQuestionsOpen']:
+        # As of June 2019 suppliers cannot ask questions through the site after the deadline - a link to
+        # the support page is shown instead.
+        current_app.logger.warning("Attempted to send a clarification question after the deadline.")
+        abort(400)
+
     # Stripped input should not empty
     clarification_question = request.form.get(CLARIFICATION_QUESTION_NAME, '').strip()
 
@@ -792,34 +794,19 @@ def framework_updates_email_clarification_question(framework_slug):
             default_textbox_value=clarification_question
         )
 
-    # Submit email to CCS so the question can be answered
-    # Fail if this email does not send
-    if framework['clarificationQuestionsOpen']:
-        to_address = current_app.config['DM_CLARIFICATION_QUESTION_EMAIL']
-        personalisation = {
-            "framework_name": framework['name'],
-            "supplier_id": current_user.supplier_id,
-            "clarification_question": clarification_question
-        }
-        template = 'framework-clarification-question'
-        reference = "fw-clarification-question-{}-{}".format(
-            hash_string(clarification_question),
-            hash_string(to_address),
-        )
-    else:
-        to_address = current_app.config['DM_FOLLOW_UP_EMAIL_TO']
-        personalisation = {
-            "framework_name": framework['name'],
-            "supplier_name": current_user.supplier_name,
-            "user_name": current_user.name,
-            "user_email": current_user.email_address,
-            "application_question": clarification_question
-        }
-        template = "framework-application-question"
-        reference = "fw-follow-up-question-{}-{}".format(
-            hash_string(clarification_question),
-            hash_string(to_address),
-        )
+    # Submit clarification email to CCS so the question can be answered
+    # Fail noisily if this email does not send
+    to_address = current_app.config['DM_CLARIFICATION_QUESTION_EMAIL']
+    personalisation = {
+        "framework_name": framework['name'],
+        "supplier_id": current_user.supplier_id,
+        "clarification_question": clarification_question
+    }
+    template = 'framework-clarification-question'
+    reference = "fw-clarification-question-{}-{}".format(
+        hash_string(clarification_question),
+        hash_string(to_address),
+    )
 
     notify_client = DMNotifyClient()
     try:
@@ -840,53 +827,43 @@ def framework_updates_email_clarification_question(framework_slug):
                    'email_hash': hash_string(current_user.email_address)})
         abort(503, "Clarification question email failed to send")
 
-    if framework['clarificationQuestionsOpen']:
-        # Send confirmation email to the user who submitted the question
-        # No need to fail if this email does not send
-        audit_type = AuditTypes.send_clarification_question
+    # Send confirmation email to the user who submitted the question
+    # No need to fail if this email does not send
+    confirmation_email_personalisation = {
+        'user_name': current_user.name,
+        'framework_name': framework['name'],
+        'clarification_question_text': clarification_question,
+    }
 
-        confirmation_email_personalisation = {
-            'user_name': current_user.name,
-            'framework_name': framework['name'],
-            'clarification_question_text': clarification_question,
-        }
-
-        try:
-            notify_client.send_email(
-                current_user.email_address,
-                template_name_or_id='confirmation_of_clarification_question',
-                personalisation=confirmation_email_personalisation,
-                reference="fw-clarification-question-confirm-{}-{}".format(
-                    hash_string(clarification_question),
-                    hash_string(current_user.email_address),
-                ),
-                reply_to_address_id=current_app.config['DM_ENQUIRIES_EMAIL_ADDRESS_UUID'],
-            )
-        except EmailError as e:
-            current_app.logger.error(
-                "{code}: Clarification question confirm email for email_hash {email_hash} failed to send. "
-                "Error: {error}",
-                extra={
-                    'error': str(e),
-                    'email_hash': hash_string(current_user.email_address),
-                    'code': 'clarification-question-confirm-email.fail'
-                })
-    else:
-        # Do not send confirmation email to the user who submitted the question
-        # Zendesk will handle this instead
-        audit_type = AuditTypes.send_application_question
+    try:
+        notify_client.send_email(
+            current_user.email_address,
+            template_name_or_id='confirmation_of_clarification_question',
+            personalisation=confirmation_email_personalisation,
+            reference="fw-clarification-question-confirm-{}-{}".format(
+                hash_string(clarification_question),
+                hash_string(current_user.email_address),
+            ),
+            reply_to_address_id=current_app.config['DM_ENQUIRIES_EMAIL_ADDRESS_UUID'],
+        )
+    except EmailError as e:
+        current_app.logger.error(
+            "{code}: Clarification question confirm email for email_hash {email_hash} failed to send. "
+            "Error: {error}",
+            extra={
+                'error': str(e),
+                'email_hash': hash_string(current_user.email_address),
+                'code': 'clarification-question-confirm-email.fail'
+            })
 
     data_api_client.create_audit_event(
-        audit_type=audit_type,
+        audit_type=AuditTypes.send_clarification_question,
         user=current_user.email_address,
         object_type="suppliers",
         object_id=current_user.supplier_id,
         data={"question": clarification_question, 'framework': framework['slug']})
 
-    flash(
-        MESSAGE_SENT_QS_OPEN_MESSAGE if framework["clarificationQuestionsOpen"] else MESSAGE_SENT_QS_CLOSED_MESSAGE,
-        'success',
-    )
+    flash(MESSAGE_SENT_QS_OPEN_MESSAGE, 'success')
     return framework_updates(framework['slug'])
 
 

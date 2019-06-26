@@ -3386,7 +3386,7 @@ class TestFrameworkUpdatesPage(BaseApplicationTest):
         assert response.status_code == 200
         assert 'All clarification questions and answers will be published ' \
                'by 5pm BST, Tuesday 29 September 2015.' in data
-        assert "The deadline for clarification questions is" not in data
+        assert "You can ask clarification questions until " not in data
 
     def test_dates_for_open_framework_open_for_questions(self, s3):
         self.data_api_client.get_framework.return_value = self.framework('open', clarification_questions_open=True)
@@ -3398,8 +3398,9 @@ class TestFrameworkUpdatesPage(BaseApplicationTest):
         data = response.get_data(as_text=True)
 
         assert response.status_code == 200
-        assert "All clarification questions and answers will be published by" not in data
-        assert 'The deadline for clarification questions is 5pm BST, Tuesday 22 September 2015.' in data
+        assert 'All clarification questions and answers will be published ' \
+               'by 5pm BST, Tuesday 29 September 2015.' not in data
+        assert 'You can ask clarification questions until 5pm BST, Tuesday 22 September 2015.' in data
 
     def test_the_tables_should_be_displayed_correctly(self, s3):
         self.data_api_client.get_framework.return_value = self.framework('open')
@@ -3483,22 +3484,13 @@ class TestFrameworkUpdatesPage(BaseApplicationTest):
                     ext,
                 )
 
-    def test_question_box_is_shown_if_countersigned_agreement_is_not_yet_returned(self, s3):
-        self.data_api_client.get_framework.return_value = self.framework('live', clarification_questions_open=False)
-        self.data_api_client.get_supplier_framework_info.return_value = self.supplier_framework()
-
-        self.login()
-
-        response = self.client.get('/suppliers/frameworks/g-cloud-7/updates')
-        data = response.get_data(as_text=True)
-
-        assert response.status_code == 200
-        assert u'Ask a question about your G-Cloud 7 application' in data
-
-    def test_no_question_box_shown_if_countersigned_agreement_is_returned(self, s3):
+    @pytest.mark.parametrize('countersigned_path, contact_link_shown', [("path", False), (None, True)])
+    def test_contact_link_only_shown_if_countersigned_agreement_is_not_yet_returned(
+        self, s3, countersigned_path, contact_link_shown
+    ):
         self.data_api_client.get_framework.return_value = self.framework('live', clarification_questions_open=False)
         self.data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
-            countersigned_path="path"
+            countersigned_path=countersigned_path
         )
 
         self.login()
@@ -3507,7 +3499,7 @@ class TestFrameworkUpdatesPage(BaseApplicationTest):
         data = response.get_data(as_text=True)
 
         assert response.status_code == 200
-        assert u'Ask a question about your G-Cloud 7 application' not in data
+        assert ('Contact the support team' in data) == contact_link_shown
 
 
 @mock.patch('app.main.views.frameworks.DMNotifyClient.send_email', autospec=True)
@@ -3594,49 +3586,15 @@ class TestSendClarificationQuestionEmail(BaseApplicationTest):
             'clarification questions will be published on this page.</p>'
         ) in self.strip_all_whitespace(response.get_data(as_text=True))
 
-    def test_followup_email_sent_with_correct_params_if_clarification_questions_closed(self, notify_send_email):
+    def test_email_not_sent_if_clarification_questions_closed(self, notify_send_email):
         self.data_api_client.get_framework.return_value = self.framework(
             'open', name='Test Framework', clarification_questions_open=False
         )
-        followup_question = 'This is a followup question.'
-        response = self._send_email(message=followup_question)
+        response = self._send_email(message='I have missed the clarification question deadline!')
 
-        # Assert Notify email 1 is sent (followup question)
-        # Assert Notify email 2 is not sent (no receipt)
-        notify_send_email.assert_called_once_with(
-            mock.ANY,
-            to_email_address="follow-up@example.gov.uk",
-            personalisation={
-                "framework_name": "Test Framework",
-                "supplier_name": "Supplier NĀme",
-                "user_name": "Năme",
-                "user_email": "email@email.com",
-                "application_question": followup_question,
-            },
-            template_name_or_id="framework-application-question",
-            reference=(
-                "fw-follow-up-question-"
-                "GxKP1-LMUIsHUGQacK5G_O8X5SIpTBprpHOZz7GTMqY=-"
-                "mh7AWnayIfWYNRIERoJLVCBKia340VBzg1wakX2q64E="
-            ),
-            allow_resend=True,
-        )
-        # Assert audit event
-        self.data_api_client.create_audit_event.assert_called_with(
-            audit_type=AuditTypes.send_application_question,
-            user="email@email.com",
-            object_type="suppliers",
-            object_id=1234,
-            data={"question": followup_question, 'framework': 'g-cloud-7'}
-        )
-
-        assert response.status_code == 200
-        # Assert flash message
-        doc = html.fromstring(response.get_data(as_text=True))
-        assert len(doc.xpath(
-            "//*[contains(@class,'banner-success-without-action')][contains(normalize-space(string()), $text)]",
-            text="Your question has been sent. You’ll get a reply from the Crown Commercial Service soon.",
-        )) == 1
+        assert response.status_code == 400
+        assert notify_send_email.called is False
+        assert self.data_api_client.create_audit_event.called is False
 
     @pytest.mark.parametrize(
         'invalid_clarification_question',
