@@ -101,9 +101,12 @@ class DeclarationValidator(object):
     def word_limit_errors(self):
         errors_map = {}
         for question_id in self.all_fields():
-            if self.content.get_question(question_id).get('type') in ['text', 'textbox_large']:
+            question = self.content.get_question(question_id)
+            if question.get('type') in ['text', 'textbox_large']:
+                # Get word limit from question content, fall back to class attribute
+                word_limit = question.get('max_length_in_words', self.word_limit)
                 answer = self.answers.get(question_id) or ''
-                if self.word_limit is not None and len(answer.split(" ")) > self.word_limit:
+                if word_limit is not None and len(answer.split()) > word_limit:
                     errors_map[question_id] = "under_word_limit"
 
         return errors_map

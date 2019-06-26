@@ -29,10 +29,10 @@ def test_word_limit_errors(dos4_submission):
     ]
 
     for field in textbox_fields:
-        dos4_submission[field] = "a " * 500
+        dos4_submission[field] = "a " * 501
         validator = SharedValidator(content, dos4_submission)
         assert validator.errors() == {field: "under_word_limit"}
 
-        dos4_submission[field] = "a " * 499
+        dos4_submission[field] = "a " * 500
         validator = SharedValidator(content, dos4_submission)
         assert validator.errors() == {}
