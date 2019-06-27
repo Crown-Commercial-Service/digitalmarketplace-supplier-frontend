@@ -817,13 +817,13 @@ detect-libc@^1.0.2:
   resolved "https://registry.yarnpkg.com/detect-libc/-/detect-libc-1.0.3.tgz#fa137c4bd698edf55cd5cd02ac559f91a4c4ba9b"
   integrity sha1-+hN8S9aY7fVc1c0CrFWfkaTEups=
 
-"digitalmarketplace-frameworks@https://github.com/alphagov/digitalmarketplace-frameworks.git#16.0.2":
-  version "16.0.2"
-  resolved "https://github.com/alphagov/digitalmarketplace-frameworks.git#a2dee95441da190c3d09dbe09b59f5dbe42cf090"
+"digitalmarketplace-frameworks@https://github.com/alphagov/digitalmarketplace-frameworks.git#16.0.5":
+  version "16.0.5"
+  resolved "https://github.com/alphagov/digitalmarketplace-frameworks.git#3d11cd3ca259fec1e9c283fee86bb31693aa713f"
 
-"digitalmarketplace-frontend-toolkit@https://github.com/alphagov/digitalmarketplace-frontend-toolkit.git#v33.0.0":
-  version "33.0.0"
-  resolved "https://github.com/alphagov/digitalmarketplace-frontend-toolkit.git#87b965996196069d3ae7aeb55cc6cb9e3bcb0127"
+"digitalmarketplace-frontend-toolkit@https://github.com/alphagov/digitalmarketplace-frontend-toolkit.git#v33.0.2":
+  version "33.0.2"
+  resolved "https://github.com/alphagov/digitalmarketplace-frontend-toolkit.git#4dbdc9783ed661040ae801846f9ab86c3c05ebf4"
   dependencies:
     del "^4.1.0"
     govuk-elements-sass "3.0.3"
