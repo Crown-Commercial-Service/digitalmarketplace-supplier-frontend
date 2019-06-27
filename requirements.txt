@@ -29,7 +29,7 @@ Flask-Script==2.0.6
 fleep==1.0.1
 future==0.17.1
 gds-metrics==0.2.0
-govuk-country-register==0.3.0
+govuk-country-register==0.4.0
 idna==2.8
 inflection==0.3.1
 Jinja2==2.10.1
