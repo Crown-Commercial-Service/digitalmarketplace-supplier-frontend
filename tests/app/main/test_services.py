@@ -2389,14 +2389,26 @@ class TestGetListPreviousServices(BaseApplicationTest, MockEnsureApplicationComp
         assert all(button.text == 'Add' for button in add_service_buttons)
 
     @pytest.mark.parametrize(
-        ('lot_slug', 'lot_name'),
+        ('lot_slug', 'lot_name', 'question_advice'),
         (
-            ('digital-outcomes', 'digital outcomes'),
-            ('digital-specialists', 'digital specialists'),
-            ('user-research-participants', 'user research participants'),
+            (
+                'digital-outcomes',
+                'digital outcomes',
+                'You still have to review your service and answer any new questions.'
+            ),
+            (
+                'digital-specialists',
+                'digital specialists',
+                'You’ll need to review your previous answers. Roles won’t be copied if they have new questions.'
+            ),
+            (
+                'user-research-participants',
+                'user research participants',
+                'You still have to review your service and answer any new questions.'
+            ),
         )
     )
-    def test_shows_boolean_question_for_single_service_lots(self, get_metadata, lot_slug, lot_name):
+    def test_shows_boolean_question_for_single_service_lots(self, get_metadata, lot_slug, lot_name, question_advice):
         self.data_api_client.get_framework.side_effect = [
             self.framework(slug='digital-outcomes-and-specialists-3'),
             self.framework(slug='digital-outcomes-and-specialists-3'),
@@ -2414,10 +2426,7 @@ class TestGetListPreviousServices(BaseApplicationTest, MockEnsureApplicationComp
 
         assert res.status_code == 200
         assert doc.xpath(f"//h1[normalize-space()='Do you want to reuse your previous {lot_name} service?']")
-        assert doc.xpath(
-            "//span[@class='question-advice']"
-            "[normalize-space()='You still have to review your service and answer any new questions.']"
-        )
+        assert doc.xpath(f"//span[@class='question-advice'][normalize-space()='{question_advice}']")
         assert [re.sub(r"\W", "", label.text) for label in doc.xpath("//label[@class='radio']")] == ["Yes", "No"]
         assert doc.xpath("//input[@type='submit'][@value='Save and continue']")
 
