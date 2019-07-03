@@ -3509,6 +3509,7 @@ class TestSendClarificationQuestionEmail(BaseApplicationTest):
         super().setup_method(method)
         self.data_api_client_patch = mock.patch('app.main.views.frameworks.data_api_client', autospec=True)
         self.data_api_client = self.data_api_client_patch.start()
+        self.data_api_client.get_supplier.return_value = SupplierStub().single_result_response()
 
     def teardown_method(self, method):
         self.data_api_client_patch.stop()
@@ -3529,7 +3530,8 @@ class TestSendClarificationQuestionEmail(BaseApplicationTest):
         )
 
         clarification_question = 'This is a clarification question.'
-        response = self._send_email(message=clarification_question)
+        with freeze_time('2019-07-02 01:02:03'):
+            response = self._send_email(message=clarification_question)
 
         # Assert Notify email 1 is sent (clarification question)
         # Assert Notify email 2 is sent (receipt)
@@ -3542,6 +3544,8 @@ class TestSendClarificationQuestionEmail(BaseApplicationTest):
                     personalisation={
                         "framework_name": "Test Framework",
                         "supplier_id": 1234,
+                        "supplier_name": "My Little Company",
+                        "supplier_reference": "2019-07-02-JRX8IN",
                         "clarification_question": clarification_question,
                     },
                     reference=(
@@ -3558,6 +3562,7 @@ class TestSendClarificationQuestionEmail(BaseApplicationTest):
                     personalisation={
                         'user_name': 'Năme',
                         'framework_name': 'Test Framework',
+                        "supplier_reference": "2019-07-02-JRX8IN",
                         'clarification_question_text': clarification_question,
                     },
                     reference=(
@@ -3638,7 +3643,8 @@ class TestSendClarificationQuestionEmail(BaseApplicationTest):
         notify_send_email.side_effect = EmailError("Arrrgh")
 
         clarification_question = 'This is a clarification question.'
-        response = self._send_email(message=clarification_question)
+        with freeze_time('2019-07-02 01:02:03'):
+            response = self._send_email(message=clarification_question)
         # Assert send_email is called only once
         notify_send_email.assert_called_once_with(
             mock.ANY,
@@ -3647,6 +3653,8 @@ class TestSendClarificationQuestionEmail(BaseApplicationTest):
             personalisation={
                 "framework_name": "Test Framework",
                 "supplier_id": 1234,
+                "supplier_name": "My Little Company",
+                "supplier_reference": "2019-07-02-JRX8IN",
                 "clarification_question": clarification_question,
             },
             reference=(
@@ -3665,7 +3673,8 @@ class TestSendClarificationQuestionEmail(BaseApplicationTest):
         self.data_api_client.get_framework.return_value = self.framework('open', name='Test Framework',
                                                                          clarification_questions_open=True)
         clarification_question = 'This is a clarification question.'
-        response = self._send_email(message=clarification_question)
+        with freeze_time('2019-07-02 01:02:03'):
+            response = self._send_email(message=clarification_question)
         # first email sends, second email fails
         notify_send_email.assert_has_calls(
             [
@@ -3676,6 +3685,8 @@ class TestSendClarificationQuestionEmail(BaseApplicationTest):
                     personalisation={
                         "framework_name": "Test Framework",
                         "supplier_id": 1234,
+                        "supplier_name": "My Little Company",
+                        "supplier_reference": "2019-07-02-JRX8IN",
                         "clarification_question": clarification_question,
                     },
                     reference=(
@@ -3692,6 +3703,7 @@ class TestSendClarificationQuestionEmail(BaseApplicationTest):
                     personalisation={
                         'user_name': 'Năme',
                         'framework_name': 'Test Framework',
+                        "supplier_reference": "2019-07-02-JRX8IN",
                         'clarification_question_text': clarification_question,
                     },
                     reference=(
