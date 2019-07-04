@@ -797,9 +797,23 @@ def framework_updates_email_clarification_question(framework_slug):
     # Submit clarification email to CCS so the question can be answered
     # Fail noisily if this email does not send
     to_address = current_app.config['DM_CLARIFICATION_QUESTION_EMAIL']
+    supplier = data_api_client.get_supplier(current_user.supplier_id)['suppliers']
+
+    # Construct a reference ID from the date (YYYY-MM-DD) and a 'unique' hash of the time + question text.
+    # e.g. 2019-07-01-8A99B2
+    # This is a bit of a fudge as the users want a dated, anonymous reference that isn't too long.
+    # Recent rates of question-asking are around 20/day, so truncating the hash to 6 characters shouldn't introduce
+    # too many collisions, and is more likely to be unique than anything we can come up with on our own. If the platform
+    # scales up to a higher rate of question-asking then we should review how this reference is constructed.
+    now = datetime.utcnow()
+    suffix = hash_string(now.strftime("%H:%M:%S.%f") + clarification_question)[:6].replace("_", "Z")
+    supplier_reference = "{}-{}".format(now.strftime("%Y-%m-%d"), suffix).upper()
+
     personalisation = {
         "framework_name": framework['name'],
         "supplier_id": current_user.supplier_id,
+        "supplier_name": supplier['name'],
+        "supplier_reference": supplier_reference,
         "clarification_question": clarification_question
     }
     template = 'framework-clarification-question'
@@ -832,6 +846,7 @@ def framework_updates_email_clarification_question(framework_slug):
     confirmation_email_personalisation = {
         'user_name': current_user.name,
         'framework_name': framework['name'],
+        "supplier_reference": supplier_reference,
         'clarification_question_text': clarification_question,
     }
 
