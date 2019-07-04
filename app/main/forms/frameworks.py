@@ -64,7 +64,6 @@ class OneServiceLimitCopyServiceForm(FlaskForm):
 
     copy_service = DMBooleanField(
         "Do you want to reuse your previous {lot_name} service?",
-        question_advice="You still have to review your service and answer any new questions.",
         false_values=("False", "false", ""),
         widget=DMSelectionButtonBase(type="boolean"),
     )
@@ -72,3 +71,8 @@ class OneServiceLimitCopyServiceForm(FlaskForm):
     def __init__(self, lot_name, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.copy_service.question = self.copy_service.question.format(lot_name=lot_name)
+        if lot_name == 'digital specialists':
+            self.copy_service.question_advice = "You’ll need to review your previous answers. " \
+                                                "Roles won’t be copied if they have new questions."
+        else:
+            self.copy_service.question_advice = "You still have to review your service and answer any new questions."

@@ -95,7 +95,7 @@
         {% else %}
           The deadline for asking clarification questions has now passed.
           All clarification questions and answers will be published by {{ framework.clarificationsPublishAt }}.
-          You'll receive an email when new answers are posted.
+          You’ll receive an email when new answers are posted.
         {% endif %}
       </p>
     </div>
@@ -108,23 +108,31 @@
 
           <div class="column-two-thirds">
             {{ summary.heading("Ask a clarification question") }}
-
+            <br />
             <p>Ask a clarification question if you need a better understanding of:</p>
+            <br />
             <ul class="list-bullet">
               <li>the legal documents</li>
               <li>your responsibilities as a supplier</li>
             </ul>
             <br />
-            <p>Find out about the <a href="https://www.gov.uk/guidance/digital-outcomes-and-specialists-suppliers-guide">application process, what you need to apply and what services are eligible</a> in the guidance.
-            <br /><br />
-              <a href="{{ url_for('external.help') }}">Get help if there's a problem with your account</a>
-            </p>
+            <p>There’s a different way to:</p>
+            <br />
+            <ul class="list-bullet">
+              <li>
+                <a href="https://www.gov.uk/guidance/digital-outcomes-and-specialists-suppliers-guide">find out about the application process and eligibility</a>
+              </li>
+              <li>
+                <a href="{{ url_for('external.help') }}">get help if there’s a problem with your account</a>
+              </li>
+            </ul>
+
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
               {%
                 with
                 large=true,
                 name = clarification_question_name,
-                hint = "Maximum 5000 characters per question",
+                hint = "Maximum 5000 characters per question.",
                 error = error_message,
                 value = clarification_question_value
               %}
@@ -132,7 +140,7 @@
               {% endwith %}
             <p>You can ask clarification questions until {{ framework.clarificationsCloseAt }}.</p>
             <br />
-            <p>Answers are published to this page around twice a week, alongside other supplier questions and answers.</p>
+            <p>Answers are published to this page around twice a week, alongside answers to questions from other suppliers.</p>
             <br />
             <p>All responses will be published by {{ framework.clarificationsPublishAt }}.</p>
               {%
