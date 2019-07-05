@@ -809,6 +809,11 @@ def framework_updates_email_clarification_question(framework_slug):
     suffix = hash_string(now.strftime("%H:%M:%S.%f") + clarification_question)[:6].replace("_", "Z")
     supplier_reference = "{}-{}".format(now.strftime("%Y-%m-%d"), suffix).upper()
 
+    current_app.logger.info(
+        "Preparing to send clarification question with supplier_reference {supplier_reference}",
+        extra={"supplier_reference": supplier_reference},
+    )
+
     personalisation = {
         "framework_name": framework['name'],
         "supplier_id": current_user.supplier_id,
