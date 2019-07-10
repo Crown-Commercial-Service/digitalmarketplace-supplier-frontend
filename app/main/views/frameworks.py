@@ -806,7 +806,7 @@ def framework_updates_email_clarification_question(framework_slug):
     # too many collisions, and is more likely to be unique than anything we can come up with on our own. If the platform
     # scales up to a higher rate of question-asking then we should review how this reference is constructed.
     now = datetime.utcnow()
-    suffix = hash_string(now.strftime("%H:%M:%S.%f") + clarification_question)[:6].replace("_", "Z")
+    suffix = hash_string(now.strftime("%H:%M:%S.%f") + clarification_question)[:6].replace("-", "Y").replace("_", "Z")
     supplier_reference = "{}-{}".format(now.strftime("%Y-%m-%d"), suffix).upper()
 
     current_app.logger.info(
