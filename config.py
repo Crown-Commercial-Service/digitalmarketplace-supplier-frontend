@@ -53,7 +53,7 @@ class Config(object):
     DEBUG = False
 
     INVITE_EMAIL_NAME = 'Digital Marketplace Admin'
-    INVITE_EMAIL_FROM = 'enquiries@digitalmarketplace.service.gov.uk'
+    INVITE_EMAIL_FROM = 'cloud_digital@crowncommercial.gov.uk'
     INVITE_EMAIL_SUBJECT = 'Your Digital Marketplace invitation'
 
     CLARIFICATION_EMAIL_NAME = 'Digital Marketplace Admin'
@@ -61,7 +61,7 @@ class Config(object):
 
     FRAMEWORK_AGREEMENT_RETURNED_NAME = 'Digital Marketplace Admin'
 
-    DM_ENQUIRIES_EMAIL_ADDRESS = 'enquiries@digitalmarketplace.service.gov.uk'
+    DM_ENQUIRIES_EMAIL_ADDRESS = 'cloud_digital@crowncommercial.gov.uk'
     DM_ENQUIRIES_EMAIL_ADDRESS_UUID = '24908180-b64e-513d-ab48-fdca677cec52'
 
     SECRET_KEY = None
@@ -151,7 +151,7 @@ class Live(Config):
         "user.marketplace.team": "success@simulator.amazonses.com",
     }
 
-    DM_FRAMEWORK_AGREEMENTS_EMAIL = 'enquiries@digitalmarketplace.service.gov.uk'
+    DM_FRAMEWORK_AGREEMENTS_EMAIL = 'cloud_digital@crowncommercial.gov.uk'
 
 
 class Preview(Live):
