@@ -108,6 +108,7 @@ def edit_service(framework_slug, service_id):
         framework=framework,
         sections=content.summary(service),
         remove_requested=remove_requested,
+        support_email_address=current_app.config['SUPPORT_EMAIL_ADDRESS']
     )
 
 

@@ -27,6 +27,7 @@ class Config(object):
     DM_CLARIFICATION_QUESTION_EMAIL = 'clarification-questions@example.gov.uk'
     DM_FRAMEWORK_AGREEMENTS_EMAIL = 'enquiries@example.com'
     DM_COMPANY_DETAILS_CHANGE_EMAIL = 'cloud_digital@crowncommercial.gov.uk'
+    SUPPORT_EMAIL_ADDRESS = "cloud_digital@crowncommercial.gov.uk"
 
     NOTIFY_TEMPLATES = {
         "confirmation_of_clarification_question": "1a8a3408-49ef-486f-a6c9-8557d1a0dc63",

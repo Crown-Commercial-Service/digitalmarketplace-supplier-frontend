@@ -29,13 +29,9 @@ class TestApplication(BaseApplicationTest):
     def test_404(self):
         res = self.client.get('/service/1234')
         assert res.status_code == 404
-        assert u"Check you’ve entered the correct web " \
-            u"address or start again on the Digital Marketplace homepage." in res.get_data(as_text=True)
-        assert u"If you can’t find what you’re looking for, contact us at " \
-            u"<a href=\"mailto:enquiries@digitalmarketplace.service.gov.uk?" \
-            u"subject=Digital%20Marketplace%20feedback\" title=\"Please " \
-            u"send feedback to enquiries@digitalmarketplace.service.gov.uk\">" \
-            u"enquiries@digitalmarketplace.service.gov.uk</a>" in res.get_data(as_text=True)
+        assert "Check you’ve entered the correct web " \
+               "address or start again on the Digital Marketplace homepage." in res.get_data(as_text=True)
+        assert "If you can’t find what you’re looking for, contact us at " in res.get_data(as_text=True)
 
     @mock.patch('app.main.views.suppliers.data_api_client')
     def test_503(self, data_api_client):

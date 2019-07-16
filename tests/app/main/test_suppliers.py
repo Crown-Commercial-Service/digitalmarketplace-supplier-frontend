@@ -2283,42 +2283,44 @@ class TestJoinOpenFrameworkNotificationMailingList(BaseApplicationTest):
             mock.ANY,
         )
 
-        response = self.client.post(
-            "/suppliers/mailing-list",
-            data={
-                "email_address": "squinting@ger.ty",
-            },
-        )
-        assert response.status_code == expected_status
-        doc = html.fromstring(response.get_data(as_text=True), base_url="/suppliers/mailing-list")
+        with self.app.app_context():
+            response = self.client.post(
+                "/suppliers/mailing-list",
+                data={
+                    "email_address": "squinting@ger.ty",
+                },
+            )
 
-        assert mailchimp_client_instance.subscribe_new_email_to_list.called is True
+            assert response.status_code == expected_status
+            doc = html.fromstring(response.get_data(as_text=True), base_url="/suppliers/mailing-list")
 
-        form = self._common_page_asserts_and_get_form(doc)
-        assert tuple(inp.value for inp in form.xpath(".//input[@name='email_address']")) == (
-            "squinting@ger.ty",
-        )
+            assert mailchimp_client_instance.subscribe_new_email_to_list.called is True
 
-        assert not doc.xpath(
-            "//*[normalize-space(string())=$t]",
-            t="You must provide a valid email address.",
-        )
-        assert not doc.xpath(
-            "//*[normalize-space(string())=$t]",
-            t="You must provide an email address.",
-        )
-        assert not doc.xpath("//*[contains(@class, 'validation-message')]")
+            form = self._common_page_asserts_and_get_form(doc)
+            assert tuple(inp.value for inp in form.xpath(".//input[@name='email_address']")) == (
+                "squinting@ger.ty",
+            )
 
-        assert doc.xpath(
-            "//*[contains(@class, 'banner-destructive-without-action')][contains(normalize-space(string()), $t)]//"
-            "a[@href=$m][normalize-space(string())=$e]",
-            t=expected_message,
-            m="mailto:enquiries@digitalmarketplace.service.gov.uk",
-            e="enquiries@digitalmarketplace.service.gov.uk",
-        )
+            assert not doc.xpath(
+                "//*[normalize-space(string())=$t]",
+                t="You must provide a valid email address.",
+            )
+            assert not doc.xpath(
+                "//*[normalize-space(string())=$t]",
+                t="You must provide an email address.",
+            )
+            assert not doc.xpath("//*[contains(@class, 'validation-message')]")
 
-        # flash message should have been consumed by view's own page rendering
-        self.assert_no_flashes()
+            assert doc.xpath(
+                "//*[contains(@class, 'banner-destructive-without-action')][contains(normalize-space(string()), $t)]//"
+                "a[@href=$m][normalize-space(string())=$e]",
+                t=expected_message,
+                m=f"mailto:{current_app.config['SUPPORT_EMAIL_ADDRESS']}",
+                e=f"{current_app.config['SUPPORT_EMAIL_ADDRESS']}",
+            )
+
+            # flash message should have been consumed by view's own page rendering
+            self.assert_no_flashes()
 
     @mock.patch("app.main.views.suppliers.DMMailChimpClient")
     def test_post_valid_email_success(self, mailchimp_client_class):
