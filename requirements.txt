@@ -2,7 +2,7 @@
 # Run `make freeze-requirements` to update requirements.txt
 # with package version changes made in requirements-app.txt
 
-Flask==1.0.3 # pyup: >=1.0.0,<1.1.0
+Flask==1.0.4 # pyup: >=1.0.0,<1.1.0
 Flask-Login==0.4.1
 Flask-WTF==0.14.2
 itsdangerous==0.24 # pyup: ignore
@@ -14,8 +14,8 @@ git+https://github.com/alphagov/digitalmarketplace-apiclient.git@21.0.0#egg=digi
 ## The following requirements were added by pip freeze:
 asn1crypto==0.24.0
 blinker==1.4
-boto3==1.9.201
-botocore==1.12.201
+boto3==1.9.205
+botocore==1.12.205
 certifi==2019.6.16
 cffi==1.12.3
 chardet==3.0.4
