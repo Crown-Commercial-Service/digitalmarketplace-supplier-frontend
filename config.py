@@ -4,7 +4,7 @@ import os
 import jinja2
 from dmutils.status import get_version_label
 from dmutils.asset_fingerprint import AssetFingerprinter
-
+import govuk_frontend.templates
 
 class Config(object):
 
@@ -87,11 +87,19 @@ class Config(object):
     def init_app(app):
         repo_root = os.path.abspath(os.path.dirname(__file__))
         template_folders = [
-            os.path.join(repo_root, 'app/templates')
+            os.path.join(repo_root, 'app/templates'),
+            os.path.join(repo_root, 'node_modules/govuk-frontend/'),
+            os.path.join(repo_root, 'node_modules/govuk-frontend/components')
         ]
         jinja_loader = jinja2.FileSystemLoader(template_folders)
         app.jinja_loader = jinja_loader
-
+        class MyEnvironment(govuk_frontend.templates.Environment):
+            def __init__(self, app, **options):
+                if "loader" not in options:
+                    options["loader"] = app.create_global_jinja_loader()
+                super().__init__(**options)
+                self.app = app
+        app.jinja_environment = MyEnvironment
 
 class Test(Config):
     DEBUG = True
