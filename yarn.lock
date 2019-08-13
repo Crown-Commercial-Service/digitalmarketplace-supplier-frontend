@@ -1430,10 +1430,10 @@ govuk-elements-sass@3.0.3:
   dependencies:
     govuk_frontend_toolkit "^6.0.2"
 
-govuk-frontend@^2.8.0:
-  version "2.8.0"
-  resolved "https://registry.yarnpkg.com/govuk-frontend/-/govuk-frontend-2.8.0.tgz#e4cecf7365ca38d65ed514867d11ff3a35b1c361"
-  integrity sha512-yGjvE9HlIRUb5IxpF19h+IMIX8ATlCsyXLIY/KTvCRnHMMOd0RNlTtHyhD7YMP3k1yP+mqlyoQYcNH9XC8Qwqw==
+govuk-frontend@^2.13.0:
+  version "2.13.0"
+  resolved "https://registry.yarnpkg.com/govuk-frontend/-/govuk-frontend-2.13.0.tgz#0273f7c92070abd6450c73a006ebb3ddc793463a"
+  integrity sha512-6XDtTt5plSrPQvPgLFN4LCtb9ULuqoXCgkHy5c7XE/70/sVm47RPbLR11tYGPcmV8cOApBhW0wL8y8ryspHfpw==
 
 govuk_frontend_toolkit@5.0.3:
   version "5.0.3"
