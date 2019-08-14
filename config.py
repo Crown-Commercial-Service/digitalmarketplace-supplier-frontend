@@ -97,6 +97,7 @@ class Config(object):
             def __init__(self, app, **options):
                 if "loader" not in options:
                     options["loader"] = app.create_global_jinja_loader()
+                options["extensions"].append(govuk_frontend.templates.NunjucksExtension)
                 super().__init__(**options)
                 self.app = app
         app.jinja_environment = MyEnvironment
