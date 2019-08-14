@@ -6,6 +6,31 @@
   <link type="text/css" rel="stylesheet" media="screen" href="{{ asset_fingerprinter.get_url('stylesheets/application.css') }}" />
 {% endblock %}
 
+{% block header %}
+  {{
+    govukHeader({
+      'productName': 'Digital Marketplace',
+      'navigation': [
+        {
+          'text': 'Guidance',
+          'href': '#',
+          'active': False
+        },
+        {
+          'text': 'Help',
+          'href': '#',
+          'active': False
+        },
+        {
+          'text': 'Log in',
+          'href': '#',
+          'active': False
+        }
+      ]
+    })
+  }}
+{% endblock %}
+
 {% block content %}
   <div class="govuk-width-container">
     <main class="govuk-main-wrapper" id="content" role="main">
@@ -13,4 +38,81 @@
       {% endblock %}
     </main>
   </div>
+{% endblock %}
+
+{% block footer %}
+  {{
+    govukFooter({
+      'meta': {
+        'items': [
+          {
+            'href': url_for('external.help'),
+            'text': 'Digital Marketplace help'
+          }
+        ]
+      },
+      'navigation': [
+        {
+          'title': 'About the Digital Marketplace',
+          'columns': 1,
+          'items': [
+            {
+              'href': 'https://www.gov.uk/government/collections/digital-marketplace-buyers-and-suppliers-information',
+              'text': 'Digital Marketplace information'
+            },
+            {
+              'href': 'https://www.gov.uk/guidance/the-g-cloud-framework-on-the-digital-marketplace',
+              'text': 'G-Cloud framework'
+            },
+            {
+              'href': url_for('external.suppliers_list_by_prefix'),
+              'text': 'G-Cloud supplier A–Z'
+            },
+            {
+              'href': 'https://www.gov.uk/guidance/the-crown-hosting-data-centres-framework-on-the-digital-marketplace',
+              'text': 'Crown Hosting framework'
+            },
+            {
+              'href': 'https://www.gov.uk/government/organisations/crown-commercial-service',
+              'text': 'Crown Commercial Service'
+            }
+          ]
+        },
+        {
+          'title': 'Guidance',
+          'columns': 1,
+          'items': [
+            {
+              'href': 'https://www.gov.uk/guidance/digital-marketplace-buyers-guide',
+              'text': 'Digital Marketplace buyers’ guide'
+            },
+            {
+              'href': 'https://www.gov.uk/guidance/digital-marketplace-suppliers-guide',
+              'text': 'Digital Marketplace suppliers’ guide'
+            },
+            {
+              'href': 'https://www.gov.uk/guidance/g-cloud-buyers-guide',
+              'text': 'G-Cloud buyers’ guide'
+            },
+            {
+              'href': 'https://www.gov.uk/guidance/g-cloud-suppliers-guide',
+              'text': 'G-Cloud suppliers’ guide'
+            },
+            {
+              'href': 'https://www.gov.uk/guidance/digital-outcomes-and-specialists-buyers-guide',
+              'text': 'Digital Outcomes and Specialists buyers’ guide'
+            },
+            {
+              'href': 'https://www.gov.uk/guidance/how-to-hire-user-research-labs-on-the-digital-marketplace',
+              'text': 'Digital Outcomes and Specialists user research labs buyers’ guide'
+            },
+            {
+              'href': 'https://www.gov.uk/guidance/digital-outcomes-and-specialists-suppliers-guide',
+              'text': 'Digital Outcomes and Specialists suppliers’ guide'
+            }
+          ]
+        }
+      ]
+    })
+  }}
 {% endblock %}

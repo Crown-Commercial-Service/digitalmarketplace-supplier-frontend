@@ -1,0 +1,10 @@
+.govuk-header__content {
+  text-align: right;
+}
+
+@include govuk-media-query(tablet) {
+  .govuk-header__logo,
+  .govuk-header__content {
+    width: 50%;
+  }
+}
