@@ -1,18 +1,19 @@
 {% extends "suppliers/layout.html" %}
+{% from "components/breadcrumbs/macro.njk" import govukBreadcrumbs %}
 
 {% block pageTitle %}Become a supplier – Digital Marketplace{% endblock %}
 
-{% block breadcrumb %}
-  {%
-    with items = [
+{% block beforeContent %}
+{{
+  govukBreadcrumbs({
+    'items': [
       {
-        "link": "/",
-        "label": "Digital Marketplace"
+        'href': '/',
+        'text': 'Digital Marketplace'
       }
     ]
-  %}
-    {% include "toolkit/breadcrumb.html" %}
-  {% endwith %}
+  })
+}}
 {% endblock %}
 
 {% block mainContent %}
