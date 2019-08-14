@@ -26,9 +26,7 @@
 {% block main_content %}
   <div class="grid-row">
     <div class="column-two-thirds">
-      {% with heading = "Create login", smaller = True %}
-        {% include "toolkit/page-heading.html" %}
-      {% endwith %}
+      <h1 class="govuk-heading-l">Create login</h1>
       
       <div class="dmspeak">
         <p>An email has been sent to {{ email_address }}.</p>

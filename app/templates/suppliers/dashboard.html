@@ -1,4 +1,4 @@
-{% extends "toolkit/layouts/_base_page.html" %}
+{% extends "layout.html" %}
 {% block page_title %}Your account – Digital Marketplace{% endblock %}
 
 {% block breadcrumb %}
@@ -14,10 +14,9 @@
   {% endwith %}
 {% endblock %}
 
-{% block main_content %}
-
-  <div class="grid-row">
-    <div class="column-one-whole">
+{% block main %}
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-one-whole">
       {% with
         context = current_user.email_address,
         heading = current_user.supplier_name
@@ -27,18 +26,18 @@
     </div>
   </div>
 
-  <div class="grid-row">
-    <div class="column-two-thirds">
-    {% include 'suppliers/_frameworks_coming.html' %}
-    {% include 'suppliers/_frameworks_open.html' %}
-    {% include 'suppliers/_frameworks_pending.html' %}
-    {% include 'suppliers/_frameworks_standstill.html' %}
-    <h2 class="visually-hidden">Your services</h2>
-    <div class="dmspeak">
-      {% include 'suppliers/_frameworks_live.html' %}
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+      {% include 'suppliers/_frameworks_coming.html' %}
+      {% include 'suppliers/_frameworks_open.html' %}
+      {% include 'suppliers/_frameworks_pending.html' %}
+      {% include 'suppliers/_frameworks_standstill.html' %}
+      <h2 class="visually-hidden">Your services</h2>
+      <div class="dmspeak">
+        {% include 'suppliers/_frameworks_live.html' %}
+      </div>
     </div>
-    </div>
-    <div class="column-one-third dmspeak">
+    <div class="govuk-grid-column-one-third dmspeak">
       <h2 class="heading-xmedium">Your company</h2>
       <p>
         <a href="{{ url_for('.supplier_details') }}">Company details</a>
@@ -66,7 +65,4 @@
       </p>
     </div>
   </div>
-
-
-
 {% endblock %}

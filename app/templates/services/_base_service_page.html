@@ -1,9 +1,9 @@
-{% extends "toolkit/layouts/_base_page.html" %}
+{% extends "template.njk" %}
 
 {% block page_title %}{{ service_data.serviceName or service_data.lotName }} – Digital Marketplace{% endblock %}
 
 {% block main_content %}
-  <div class="grid-row">
+  <div class="govuk-grid-row">
     {% if confirm_remove %}
       <form method="post" action='{{ url_for(".remove_subsection", framework_slug=framework.slug, lot_slug=service_data.lot, service_id=service_id, section_id=request.args.get("section_id"), question_slug=confirm_remove, confirm=True) }}'>
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
@@ -19,7 +19,7 @@
     {% endif %}
 
     {% block before_heading %}{% endblock %}
-    <div class="column-two-thirds">
+    <div class="govuk-grid-column-two-thirds">
       {% with
         heading = service_data.get('serviceName', service_data['lotName']),
         smaller = true
@@ -28,7 +28,7 @@
       {% endwith %}
     </div>
     {% block before_sections %}{% endblock %}
-    <div class="column-one-whole">
+    <div class="govuk-grid-column-full">
       {% import "toolkit/summary-table.html" as summary %}
       {% for section in sections %}
         {{ summary.heading(section.name, id=section.slug) }}
