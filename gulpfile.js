@@ -13,17 +13,12 @@ var environment;
 var repoRoot = __dirname + '/';
 var npmRoot = repoRoot + 'node_modules';
 var govukCountryPickerDist = npmRoot + '/govuk-country-and-territory-autocomplete/dist';
-var govukToolkitRoot = npmRoot + '/govuk_frontend_toolkit';
-var govukElementsRoot = npmRoot + '/govuk-elements-sass';
 var govukFrontendRoot = npmRoot + '/govuk-frontend';
-var dmToolkitRoot = npmRoot + '/digitalmarketplace-frontend-toolkit/toolkit';
 var sspContentRoot = npmRoot + '/digitalmarketplace-frameworks';
 var assetsFolder = repoRoot + 'app/assets';
 var staticFolder = repoRoot + 'app/static';
-var govukTemplateFolder = repoRoot + 'node_modules/govuk_template';
-var govukTemplateAssetsFolder = govukTemplateFolder + '/assets';
-var govukTemplateLayoutsFolder = govukTemplateFolder + '/views/layouts';
 var govukFrontendFontsFolder = govukFrontendRoot + '/assets/fonts';
+var govukFrontendImagesFolder = govukFrontendRoot + '/assets/images';
 
 // JavaScript paths
 var jsSourceFile = assetsFolder + '/javascripts/application.js';
@@ -41,10 +36,7 @@ var sassOptions = {
     outputStyle: 'expanded',
     lineNumbers: true,
     includePaths: [
-      assetsFolder + '/scss',
-      dmToolkitRoot + '/scss',
-      govukToolkitRoot + '/stylesheets',
-      govukElementsRoot + '/public/sass',
+      assetsFolder + '/scss'
     ],
     sourceComments: true,
     errLogToConsole: true
@@ -53,10 +45,7 @@ var sassOptions = {
     outputStyle: 'compressed',
     lineNumbers: true,
     includePaths: [
-      assetsFolder + '/scss',
-      dmToolkitRoot + '/scss',
-      govukToolkitRoot + '/stylesheets',
-      govukElementsRoot + '/public/sass',
+      assetsFolder + '/scss'
     ],
   },
 };
@@ -173,83 +162,11 @@ function copyFiletypeFactory(resourceName, sourceFolder, sourceFileExtension, ta
 }
 
 gulp.task(
-  'copy:template_assets:stylesheets',
-  copyFactory(
-    "GOV.UK template stylesheets",
-    govukTemplateAssetsFolder + '/stylesheets',
-    staticFolder + '/stylesheets'
-  )
-);
-
-gulp.task(
-  'copy:template_assets:images',
-  copyFactory(
-    "GOV.UK template images",
-    govukTemplateAssetsFolder + '/images',
-    staticFolder + '/images'
-  )
-);
-
-gulp.task(
-  'copy:template_assets:javascripts',
-  copyFactory(
-    'GOV.UK template Javascript files',
-    govukTemplateAssetsFolder + '/javascripts',
-    staticFolder + '/javascripts'
-  )
-);
-
-gulp.task(
-  'copy:dm_toolkit_assets:stylesheets',
-  copyFactory(
-    "stylesheets from the Digital Marketplace frontend toolkit",
-    dmToolkitRoot + '/scss',
-    'app/assets/scss/toolkit'
-  )
-);
-
-gulp.task(
-  'copy:dm_toolkit_assets:images',
-  copyFactory(
-    "images from the Digital Marketplace frontend toolkit",
-    dmToolkitRoot + '/images',
-    staticFolder + '/images'
-  )
-);
-
-gulp.task(
-  'copy:govuk_toolkit_assets:images',
-  copyFactory(
-    "images from the GOVUK frontend toolkit",
-    govukToolkitRoot + '/images',
-    staticFolder + '/images'
-  )
-);
-
-gulp.task(
-  'copy:dm_toolkit_assets:templates',
-  copyFactory(
-    "templates from the Digital Marketplace frontend toolkit",
-    dmToolkitRoot + '/templates',
-    'app/templates/toolkit'
-  )
-);
-
-gulp.task(
   'copy:images',
   copyFactory(
     "image assets from app to static folder",
     assetsFolder + '/images',
     staticFolder + '/images'
-  )
-);
-
-gulp.task(
-  'copy:govuk_template',
-  copyFactory(
-    "GOV.UK template into app folder",
-    govukTemplateLayoutsFolder,
-    'app/templates/govuk'
   )
 );
 
@@ -266,7 +183,16 @@ gulp.task(
   copyFactory(
     "fonts from the GOVUK frontend assets",
     govukFrontendFontsFolder,
-    staticFolder + '/fonts'
+    staticFolder + '/govuk-frontend/fonts'
+  )
+);
+
+gulp.task(
+  'copy:govuk_frontend_assets:images',
+  copyFactory(
+    "fonts from the GOVUK frontend assets",
+    govukFrontendImagesFolder,
+    staticFolder + '/govuk-frontend/images'
   )
 );
 
@@ -354,20 +280,13 @@ gulp.task(
   'copy',
   [
     'copy:frameworks',
-    'copy:template_assets:images',
-    'copy:template_assets:stylesheets',
-    'copy:template_assets:javascripts',
-    'copy:govuk_toolkit_assets:images',
-    'copy:dm_toolkit_assets:stylesheets',
-    'copy:dm_toolkit_assets:images',
-    'copy:dm_toolkit_assets:templates',
     'copy:images',
-    'copy:govuk_template',
     'copy:country_picker:jsons',
     'copy:country_picker:stylesheets',
     'copy:country_picker_package:javascripts',
     'copy:page_specific:javascripts',
-    'copy:govuk_frontend_assets:fonts'
+    'copy:govuk_frontend_assets:fonts',
+    'copy:govuk_frontend_assets:images'
   ]
 );
 
