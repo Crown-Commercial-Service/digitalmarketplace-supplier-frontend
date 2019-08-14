@@ -69,3 +69,6 @@ app/static
 
 # local environment customizations
 local.nix
+
+# VS Code config
+.vscode/
