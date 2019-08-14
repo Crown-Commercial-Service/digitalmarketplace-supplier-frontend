@@ -1,0 +1,16 @@
+{% extends "template.njk" %}
+
+{% set assetPath = '/suppliers/static/govuk-frontend' %}
+
+{% block head %}
+  <link type="text/css" rel="stylesheet" media="screen" href="{{ asset_fingerprinter.get_url('stylesheets/application.css') }}" />
+{% endblock %}
+
+{% block content %}
+  <div class="govuk-width-container">
+    <main class="govuk-main-wrapper" id="content" role="main">
+      {% block mainContent %}
+      {% endblock %}
+    </main>
+  </div>
+{% endblock %}
