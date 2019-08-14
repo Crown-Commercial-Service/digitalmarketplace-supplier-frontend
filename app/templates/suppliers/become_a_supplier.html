@@ -1,6 +1,6 @@
-{% extends "toolkit/layouts/_base_page.html" %}
+{% extends "suppliers/layout.html" %}
 
-{% block page_title %}Become a supplier – Digital Marketplace{% endblock %}
+{% block pageTitle %}Become a supplier – Digital Marketplace{% endblock %}
 
 {% block breadcrumb %}
   {%
@@ -15,47 +15,37 @@
   {% endwith %}
 {% endblock %}
 
-{% block main_content %}
-  <div class="grid-row">
-    <div class="column-two-thirds">
-      {% with heading = "Become a supplier", smaller = True %}
-        {% include "toolkit/page-heading.html" %}
-      {% endwith %}
+{% block mainContent %}
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
+      <h1 class="govuk-heading-l">Become a supplier</h1>
 
       {% if open_fwks or opening_fwks %}
-        <div class="dmspeak">
-          <h2 class="heading-xmedium padding-bottom-small">Services you can apply to sell</h2>
+        <div class="govuk-body">
+          <h2 class="govuk-heading-m">Services you can apply to sell</h2>
 
-        {% for framework in open_fwks + opening_fwks %}
-          <div {% if not loop.last %} class="padding-bottom-small"{% endif %}>
-            {{ content_loader.get_message(framework.slug, 'become-a-supplier', framework.status) }}
-          </div>
-        {% endfor %}
-
-        {%
-          with
-          url = url_for("main.create_new_supplier"),
-          text = "Create a supplier account"
-        %}
-          {% include "toolkit/secondary-action-link.html" %}
-        {% endwith %}
-
-        {% if closed_fwks %}
-
-            <h2 class="heading-xmedium padding-bottom-small">Services you can’t apply to sell at the moment</h2>
-
-          {% for framework in closed_fwks %}
+          {% for framework in open_fwks + opening_fwks %}
             <div {% if not loop.last %} class="padding-bottom-small"{% endif %}>
               {{ content_loader.get_message(framework.slug, 'become-a-supplier', framework.status) }}
             </div>
           {% endfor %}
 
-        {% endif %}
+          <a class="govuk-link" href="{{ url_for('main.create_new_supplier') }}">Create a supplier account</a>
+
+          {% if closed_fwks %}
+            <h2 class="govuk-heading-m govuk-!-margin-top-9">Services you can’t apply to sell at the moment</h2>
+
+            {% for framework in closed_fwks %}
+              <div {% if not loop.last %} class="padding-bottom-small"{% endif %}>
+                {{ content_loader.get_message(framework.slug, 'become-a-supplier', framework.status) }}
+              </div>
+            {% endfor %}
+          {% endif %}
         </div>
 
       {% else %}
-        <div class="dmspeak">
-          <h2 class="heading-xmedium padding-bottom-small">You can’t apply to sell anything at the moment</h2>
+        <div class="govuk-body">
+          <h2 class="govuk-heading-m">You can’t apply to sell anything at the moment</h2>
 
           {% for framework in closed_fwks %}
             <div {% if not loop.last %} class="padding-bottom-small"{% endif %}>
@@ -67,13 +57,9 @@
       {% endif %}
 
       {% if closed_fwks %}
-        {%
-          with
-          url = url_for("main.join_open_framework_notification_mailing_list"),
-          text = "Get notifications when applications are opening"
-        %}
-          {% include "toolkit/secondary-action-link.html" %}
-        {% endwith %}
+        <p class="govuk-body">
+          <a class="govuk-link" href="{{ url_for('main.join_open_framework_notification_mailing_list') }}">Get notifications when applications are opening</a>
+        </p>
       {% endif %}
     </div>
   </div>
