@@ -1,95 +1,122 @@
-{% extends "toolkit/layouts/_base_page.html" %}
+{% extends "suppliers/layout.html" %}
+{% from "components/breadcrumbs/macro.njk" import govukBreadcrumbs %}
+{% from "components/button/macro.njk" import govukButton %}
+{% from "components/input/macro.njk" import govukInput %}
+{% from "components/error-summary/macro.njk" import govukErrorSummary %}
 
-{% block page_title %}Company details – Create a supplier account – Digital Marketplace{% endblock %}
+{% block pageTitle %}Company details – Create a supplier account – Digital Marketplace{% endblock %}
 
-{% block breadcrumb %}
-{%
-  with items = [
-    {
-      "link": "/",
-      "label": "Digital Marketplace"
-    },
-    {
-      "link": url_for('.become_a_supplier'),
-      "label": "Become a supplier"
-    },
-    {
-      "link": url_for('.create_new_supplier'),
-      "label": "Create an account"
-    }
-  ]
-%}
-{% include "toolkit/breadcrumb.html" %}
-{% endwith %}
+{% block beforeContent %}
+{{
+  govukBreadcrumbs({
+    'items': [
+      {
+        'href': '/',
+        'text': 'Digital Marketplace'
+      },
+      {
+        'href': url_for('.become_a_supplier'),
+        'text': 'Become a supplier'
+      },
+      {
+        'href': url_for('.create_new_supplier'),
+        'text': 'Create an account'
+      }
+    ]
+  })
+}}
 {% endblock %}
 
-{% block main_content %}
-  {% include 'toolkit/forms/validation.html' %}
+{% block mainContent %}
+  {% if errors %}
+    {{
+      govukErrorSummary({
+        'titleText': lede or 'There is a problem',
+        'descriptionText': description,
+        'errorList': govuk_errors(errors)
+      })
+    }}
+  {% endif %}
 
-<div class="grid-row">
-  <div class="column-one-whole">
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-two-thirds">
+    <h1 class="govuk-heading-l">What buyers will see</h1>
 
-  </div>
-    <div class="column-two-thirds">
-      <h1 class="govuk-heading-l">What buyers will see</h1>
+    <p class="govuk-body">This information will be visible on the Digital Marketplace.</p>
 
-      <div class="dmspeak">
-        <p>This information will be visible on the Digital Marketplace.</p>
-      </div>
+    <form method="POST" action="{{ url_for('.company_details') }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
 
-      <form method="POST" action="{{ url_for('.company_details') }}">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-        {%
-          with
-            question = "Company name",
-            name = "company_name",
-            value = form.company_name.data,
-            error = errors.get("company_name", {}).get("message", None),
-            hint = "This is how buyers will see your company’s name on the Digital&nbsp;Marketplace"|safe
-        %}
-        {% include "toolkit/forms/textbox.html" %}
-        {% endwith %}
+      {{
+        govukInput({
+          'id': 'input-company_name',
+          'name': 'company_name',
+          'label': {
+            'text': 'Company name',
+            'classes': 'govuk-!-margin-top-6 govuk-label--s'
+          },
+          'value': form.company_name.data,
+          'hint': {
+            'text': 'This is how buyers will see your company’s name on the Digital Marketplace'
+          },
+          'errorMessage': govuk_error(errors.get("company_name", {}))
+        })
+      }}
 
-        {%
-          with
-            question = "Contact name",
-            name = "contact_name",
-            value = form.contact_name.data,
-            error = errors.get("contact_name", {}).get("message", None),
-            hint = "This can be the name of the person or team you want buyers to contact"
-        %}
-        {% include "toolkit/forms/textbox.html" %}
-        {% endwith %}
+      {{
+        govukInput({
+          'id': 'input-contact_name',
+          'name': 'contact_name',
+          'label': {
+            'text': 'Contact name',
+            'classes': 'govuk-label--s'
+          },
+          'value': form.contact_name.data,
+          'hint': {
+            'text': 'This can be the name of the person or team you want buyers to contact'
+          },
+          'errorMessage': govuk_error(errors.get("contact_name", {}))
+        })
+      }}
 
-        {%
-          with
-            question = "Contact email address",
-            name = "email_address",
-            value = form.email_address.data,
-            error = errors.get("email_address", {}).get("message", None),
-            hint = "This is the email buyers will use to contact you"
-        %}
-        {% include "toolkit/forms/textbox.html" %}
-        {% endwith %}
+      {{
+        govukInput({
+          'id': 'input-email_address',
+          'name': 'email_address',
+          'type': 'email',
+          'label': {
+            'text': 'Contact email address',
+            'classes': 'govuk-label--s'
+          },
+          'value': form.email_address.data,
+          'hint': {
+            'text': 'This is the email buyers will use to contact you'
+          },
+          'errorMessage': govuk_error(errors.get("email_address", {}))
+        })
+      }}
 
-        {%
-          with
-            question = "Contact phone number",
-            name = "phone_number",
-            value = form.phone_number.data,
-            error = errors.get("phone_number", {}).get("message", None)
-        %}
-        {% include "toolkit/forms/textbox.html" %}
-        {% endwith %}
-        {%
-          with
-            type = "save",
-            label = "Save and continue"
-        %}
-        {% include "toolkit/button.html" %}
-        {% endwith %}
-      </form>
-    </div>
+      {{
+        govukInput({
+          'id': 'input-phone_number',
+          'name': 'phone_number',
+          'type': 'tel',
+          'label': {
+            'text': 'Contact phone number',
+            'classes': 'govuk-label--s'
+          },
+          'value': form.phone_number.data,
+          'errorMessage': govuk_error(errors.get("phone_number", {}))
+        })
+      }}
+
+      {{
+        govukButton({
+          'text': 'Save and continue'
+        })
+      }}
+
+    </form>
   </div>
 </div>
 
