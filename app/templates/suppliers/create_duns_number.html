@@ -53,6 +53,13 @@
           a DUNS number</a> if you don&rsquo;t have one</li>
       </ul>
 
+      {% set dunsError = false %}
+      {% if errors.get("duns_number", {}).get("message", None) %}
+        {% set dunsError = {
+          'text': errors.get("duns_number", {}).get("message", None)
+        } %}
+      {% endif %}
+
       {{
         govukInput({
           'id': 'input-duns_number',
@@ -65,7 +72,8 @@
           'value': form.duns_number.data,
           'hint': {
             'text': 'This is a 9 digit number'
-          }
+          },
+          'errorMessage': dunsError
         })
       }}
 
