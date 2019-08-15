@@ -1,59 +1,72 @@
-{% extends "toolkit/layouts/_base_page.html" %}
+{% extends "suppliers/layout.html" %}
+{% from "components/breadcrumbs/macro.njk" import govukBreadcrumbs %}
+{% from "components/button/macro.njk" import govukButton %}
+{% from "components/input/macro.njk" import govukInput %}
+{% from "components/error-summary/macro.njk" import govukErrorSummary %}
 
-{% block page_title %}DUNS number – Create a supplier account – Digital Marketplace{% endblock %}
+{% block pageTitle %}DUNS number – Create a supplier account – Digital Marketplace{% endblock %}
 
-{% block breadcrumb %}
-{%
-  with items = [
-    {
-      "link": "/",
-      "label": "Digital Marketplace"
-    },
-    {
-      "link": url_for('.become_a_supplier'),
-      "label": "Become a supplier"
-    },
-    {
-      "link": url_for('.create_new_supplier'),
-      "label": "Create an account"
-    }
-  ]
-%}
-{% include "toolkit/breadcrumb.html" %}
-{% endwith %}
+{% block beforeContent %}
+{{
+  govukBreadcrumbs({
+    'items': [
+      {
+        'href': '/',
+        'text': 'Digital Marketplace'
+      },
+      {
+        'href': url_for('.become_a_supplier'),
+        'text': 'Become a supplier'
+      },
+      {
+        'href': url_for('.create_new_supplier'),
+        'text': 'Create an account'
+      }
+    ]
+  })
+}}
 {% endblock %}
 
-{% block main_content %}
-<div class="grid-row">
-  {% if errors.get("duns_number", {}).get("message", None) == 'DUNS number already used' %}
-    {% with lede = "A supplier account already exists with that DUNS number",
-            description = 'If you no longer have your account details, or if you think this may be an error, email <a href="mailto:{support_email_address}?subject=DUNS%20number%20question" title="Please contact {support_email_address}">{support_email_address}</a>'.format(support_email_address=support_email_address)|safe
-    %}
-      {% include 'toolkit/forms/validation.html' %}
-    {% endwith %}
-  {% elif errors %}
-    {% include 'toolkit/forms/validation.html' %}
-  {% endif %}
-  
-  <div class="column-two-thirds">
+{% block mainContent %}
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-two-thirds">
+    {% if errors.get("duns_number", {}).get("message", None) == 'DUNS number already used' %}
+    {{
+      govukErrorSummary({
+        'titleText': "A supplier account already exists with that DUNS number",
+        'descriptionHtml': 'If you no longer have your account details, or if you think this may be an error, email <a class="govuk-link" href="mailto:{support_email_address}?subject=DUNS%20number%20question" title="Please contact {support_email_address}">{support_email_address}</a>'.format(support_email_address=support_email_address)|safe
+      })
+    }}
+    {% endif %}
+
     <h1 class="govuk-heading-l">Enter your DUNS number</h1>
-  
-    
+
     <form method="POST" action="{{ url_for('.duns_number') }}">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-      <div class="dmspeak">
-        <p>If you registered your business with Companies House, you will automatically have been given a unique
-          DUNS number.</p>
-        <p>The Digital Marketplace uses this to check if your business already has a supplier account.</p>
-      </div>
-        <p class="lead">You can either:</p>
-        <ul class="list-bullet">
-          <li><a href="https://www.dnb.co.uk/duns-number/lookup.html" rel="external">find your DUNS number</a> on the
-            Dun &amp; Bradstreet website</li>
-          <li><a href="https://www.dnb.co.uk/duns-number/lookup/request-a-duns-number.html" rel="external">apply for
-            a DUNS number</a> if you don&rsquo;t have one</li>
-        </ul>
-      
+      <p class="govuk-body">If you registered your business with Companies House, you will automatically have been given a unique DUNS number.</p>
+      <p class="govuk-body">The Digital Marketplace uses this to check if your business already has a supplier account.</p>
+      <p class="govuk-body">You can either:</p>
+      <ul class="govuk-list govuk-list-bullet">
+        <li><a class="govuk-link" href="https://www.dnb.co.uk/duns-number/lookup.html" rel="external">find your DUNS number</a> on the
+          Dun &amp; Bradstreet website</li>
+        <li><a class="govuk-link" href="https://www.dnb.co.uk/duns-number/lookup/request-a-duns-number.html" rel="external">apply for
+          a DUNS number</a> if you don&rsquo;t have one</li>
+      </ul>
+
+      {{
+        govukInput({
+          'id': 'input-duns_number',
+          'name': 'duns_number',
+          'label': {
+            'text': 'DUNS number'
+          },
+          'value': form.duns_number.data,
+          'hint': {
+            'text': 'This is a 9 digit number'
+          }
+        })
+      }}
+
       {% with question = "DUNS number",
               name = "duns_number",
               value = form.duns_number.data,
@@ -63,10 +76,11 @@
         {% include "toolkit/forms/textbox.html" %}
       {% endwith %}
 
-      {% with type = "save",
-              label = "Save and continue" %}
-        {% include "toolkit/button.html" %}
-      {% endwith %}
+      {{
+        govukButton({
+          'text': 'Save and continue'
+        })
+      }}
     </form>
   </div>
 </div>
