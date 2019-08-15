@@ -78,6 +78,21 @@ CUSTOM_DIMENSION_IDENTIFIERS = {
 }
 
 
+@main.app_template_global('govuk_error')
+def govuk_error(error):
+    if error:
+        return {
+            "text": error.get("message", error.get("question", "")),
+            "href": f"#input-{error['input_name']}",
+        }
+    else:
+        return False
+
+@main.app_template_global('govuk_errors')
+def govuk_errors(errors):
+    return [govuk_error(error) for error in errors.values()]
+
+
 @main.route('/frameworks/<framework_slug>', methods=['GET', 'POST'])
 @login_required
 def framework_dashboard(framework_slug):
