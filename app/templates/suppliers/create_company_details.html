@@ -28,18 +28,18 @@
 {% endblock %}
 
 {% block mainContent %}
-  {% if errors %}
-    {{
-      govukErrorSummary({
-        'titleText': lede or 'There is a problem',
-        'descriptionText': description,
-        'errorList': govuk_errors(errors)
-      })
-    }}
-  {% endif %}
-
 <div class="govuk-grid-row">
   <div class="govuk-grid-column-two-thirds">
+    {% if errors %}
+      {{
+        govukErrorSummary({
+          'titleText': lede or 'There is a problem',
+          'descriptionText': description,
+          'errorList': govuk_errors(errors)
+        })
+      }}
+    {% endif %}
+
     <h1 class="govuk-heading-l">What buyers will see</h1>
 
     <p class="govuk-body">This information will be visible on the Digital Marketplace.</p>

@@ -1,59 +1,76 @@
-{% extends "toolkit/layouts/_base_page.html" %}
-{% import "toolkit/summary-table.html" as summary %}
+{% extends "suppliers/layout.html" %}
+{% from "components/breadcrumbs/macro.njk" import govukBreadcrumbs %}
+{% from "components/error-summary/macro.njk" import govukErrorSummary %}
+{% from "components/button/macro.njk" import govukButton %}
+{% from "components/input/macro.njk" import govukInput %}
 
-{% block page_title %}Create login — Create a supplier account – Digital Marketplace{% endblock %}
+{% block pageTitle %}Create login — Create a supplier account – Digital Marketplace{% endblock %}
 
-{% block breadcrumb %}
-{%
-  with items = [
-    {
-      "link": "/",
-      "label": "Digital Marketplace"
-    },
-    {
-      "link": url_for('.become_a_supplier'),
-      "label": "Become a supplier"
-    },
-    {
-      "link": url_for('.create_new_supplier'),
-      "label": "Create an account"
-    }
-  ]
-%}
-{% include "toolkit/breadcrumb.html" %}
-{% endwith %}
+{% block beforeContent %}
+{{
+  govukBreadcrumbs({
+    'items': [
+      {
+        'href': '/',
+        'text': 'Digital Marketplace'
+      },
+      {
+        'href': url_for('.become_a_supplier'),
+        'text': 'Become a supplier'
+      },
+      {
+        'href': url_for('.create_new_supplier'),
+        'text': 'Create an account'
+      }
+    ]
+  })
+}}
 {% endblock %}
 
-{% block main_content %}
-{% include "toolkit/forms/validation.html" %}
+{% block mainContent %}
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-two-thirds">
+    {% if errors %}
+      {{
+        govukErrorSummary({
+          'titleText': lede or 'There is a problem',
+          'descriptionText': description,
+          'errorList': govuk_errors(errors)
+        })
+      }}
+    {% endif %}
 
-<div class="grid-row">
-  <div class="column-two-thirds">
     <h1 class="govuk-heading-l">Create login</h1>
 
-    <div class="dmspeak">
-       <p>You’ll use this to sign in to your company’s supplier account.</p>
-       <p>It won’t be visible on the Digital Marketplace.</p>
-       <p>You can add other email addresses to your supplier account later.</p>
-    </div>
+    <ul class="govuk-list">
+      <li>You’ll use this to sign in to your company’s supplier account.</li>
+      <li>It won’t be visible on the Digital Marketplace.</li>
+      <li>You can add other email addresses to your supplier account later.</li>
+    </ul>
+
     <form method="POST" action="{{ url_for('.create_your_account') }}">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-      {%
-        with
-          question = "Your email address",
-          name = "email_address",
-          value = email_address,
-          error = errors.get("email_address", {}).get("message", None)
-      %}
-        {% include "toolkit/forms/textbox.html" %}
-      {% endwith %}
-      {%
-        with
-          type = "save",
-          label = "Save and continue"
-      %}
-      {% include "toolkit/button.html" %}
-      {% endwith %}
+
+      {{
+        govukInput({
+          'id': 'input-email_address',
+          'name': 'email_address',
+          'type': 'email',
+          'label': {
+            'text': 'Your email address',
+            'classes': 'govuk-label--s'
+          },
+          'classes': 'govuk-!-width-two-thirds',
+          'value': email_address,
+          'errorMessage': govuk_error(errors.get("email_address", {}))
+        })
+      }}
+
+      {{
+        govukButton({
+          'text': 'Save and continue'
+        })
+      }}
     </form>
   </div>
 </div>
