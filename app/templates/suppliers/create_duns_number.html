@@ -58,23 +58,16 @@
           'id': 'input-duns_number',
           'name': 'duns_number',
           'label': {
-            'text': 'DUNS number'
+            'text': 'DUNS number',
+            'classes': 'govuk-!-margin-top-9 govuk-label--s'
           },
+          'classes': 'govuk-input--width-10',
           'value': form.duns_number.data,
           'hint': {
             'text': 'This is a 9 digit number'
           }
         })
       }}
-
-      {% with question = "DUNS number",
-              name = "duns_number",
-              value = form.duns_number.data,
-              error = errors.get("duns_number", {}).get("message", None),
-              question_advice = question_advice,
-              hint = "This is a 9 digit number" %}
-        {% include "toolkit/forms/textbox.html" %}
-      {% endwith %}
 
       {{
         govukButton({
