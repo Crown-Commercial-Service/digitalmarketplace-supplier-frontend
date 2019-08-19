@@ -82,9 +82,10 @@
           {% call summary.row() %}
             {{ summary.field_name(item.last_modified|dateformat) }}
             {% call summary.field() %}
-               <a href="{{ url_for('.download_supplier_file', filepath=item.path, framework_slug=framework.slug) }}" class="document-link-with-icon">
+              <a href="{{ url_for('.download_supplier_file', filepath=item.path, framework_slug=framework.slug) }}" class="document-link-with-icon">
                 <span class='document-icon'>{{ item.ext }}<span> document:</span></span>
                 {{ item.filename }}
+              </a>
             {% endcall %}
           {% endcall %}
         {% endcall %}
