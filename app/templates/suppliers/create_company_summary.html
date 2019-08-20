@@ -1,101 +1,173 @@
-{% extends "toolkit/layouts/_base_page.html" %}
+{% extends "suppliers/layout.html" %}
+{% from "components/breadcrumbs/macro.njk" import govukBreadcrumbs %}
+{% from "components/button/macro.njk" import govukButton %}
+{% from "components/summary-list/macro.njk" import govukSummaryList %}
+
 {% import "toolkit/summary-table.html" as summary %}
 
-{% block page_title %}Check your information – Create a supplier account – Digital Marketplace{% endblock %}
+{% block pageTitle %}Check your information – Create a supplier account – Digital Marketplace{% endblock %}
 
-{% block breadcrumb %}
-{%
-  with items = [
-    {
-      "link": "/",
-      "label": "Digital Marketplace"
-    },
-    {
-      "link": url_for('.become_a_supplier'),
-      "label": "Become a supplier"
-    },
-    {
-      "link": url_for('.create_new_supplier'),
-      "label": "Create an account"
-    }
-  ]
-%}
-{% include "toolkit/breadcrumb.html" %}
-{% endwith %}
+{% block beforeContent %}
+{{
+  govukBreadcrumbs({
+    'items': [
+      {
+        'href': '/',
+        'text': 'Digital Marketplace'
+      },
+      {
+        'href': url_for('.become_a_supplier'),
+        'text': 'Become a supplier'
+      },
+      {
+        'href': url_for('.create_new_supplier'),
+        'text': 'Create an account'
+      }
+    ]
+  })
+}}
 {% endblock %}
 
-{% block main_content %}
+{% block mainContent %}
+    <div class="govuk-grid-row">
+      <div class="govuk-grid-column-two-thirds">
+      {% if missing_fields %}
+      <div class="banner-destructive-without-action">
+        <p class="banner-message">
+          You must answer all the questions.
+        </p>
+      </div>
+      {% endif %}
 
-  {% if missing_fields %}
-  <div class="banner-destructive-without-action">
-    <p class="banner-message">
-      You must answer all the questions.
-    </p>
+    <div class="company-information-summary">
+      <h1 class="govuk-heading-l">Check your information</h1>
+
+      <h2 class="govuk-heading-m">Your company details</h2>
+      {{
+        govukSummaryList({
+          'rows': [
+            {
+              'key': {
+                'text': "DUNS number"
+              },
+              'value': {
+                'text': session.get('duns_number', "You must answer this question.")
+              },
+              'actions': {
+                'items': [
+                  {
+                    'href': url_for(".duns_number", _anchor="input-duns_number"),
+                    'text': "Change",
+                    'visuallyHiddenText': "DUNS number"
+                  }
+                ]
+              }
+            },
+            {
+              'key': {
+                'text': "Company name"
+              },
+              'value': {
+                'text': session.get('company_name', "You must answer this question.")
+              },
+              'actions': {
+                'items': [
+                  {
+                    'href': url_for(".company_details", _anchor="input-company_name"),
+                    'text': "Change",
+                    'visuallyHiddenText': "Company name"
+                  }
+                ]
+              }
+            },
+            {
+              'key': {
+                'text': "Contact name"
+              },
+              'value': {
+                'text': session.get('contact_name', "You must answer this question.")
+              },
+              'actions': {
+                'items': [
+                  {
+                    'href': url_for(".company_details", _anchor="input-contact_name"),
+                    'text': "Change",
+                    'visuallyHiddenText': "Contact name"
+                  }
+                ]
+              }
+            },
+            {
+              'key': {
+                'text': "Contact email"
+              },
+              'value': {
+                'text': session.get('email_address', "You must answer this question.")
+              },
+              'actions': {
+                'items': [
+                  {
+                    'href': url_for(".company_details", _anchor="input-email_address"),
+                    'text': "Change",
+                    'visuallyHiddenText': "Contact email"
+                  }
+                ]
+              }
+            },
+            {
+              'key': {
+                'text': "Contact phone number"
+              },
+              'value': {
+                'text': session.get('phone_number', "You must answer this question.")
+              },
+              'actions': {
+                'items': [
+                  {
+                    'href': url_for(".company_details", _anchor="input-phone_number"),
+                    'text': "Change",
+                    'visuallyHiddenText': "Contact phone number"
+                  }
+                ]
+              }
+            }
+          ]
+        })
+      }}
+
+      <h2 class="govuk-heading-m">Your login details</h2>
+      {{
+        govukSummaryList({
+          'rows': [
+            {
+              'key': {
+                'text': "Email address"
+              },
+              'value': {
+                'text': session.get('account_email_address', "You must answer this question.")
+              },
+              'actions': {
+                'items': [
+                  {
+                    'href': url_for(".create_your_account", _anchor="input-email_address"),
+                    'text': "Change",
+                    'visuallyHiddenText': "Email address"
+                  }
+                ]
+              }
+            }
+          ]
+        })
+      }}
+    </div>
+    <form action="{{ url_for('.submit_company_summary')}}" method="POST">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+      {{
+        govukButton({
+          'text': 'Create account'
+        })
+      }}
+    </form>
   </div>
-  {% endif %}
-
-<div class="company-information-summary">
-
-{%
-  with heading = "Check your information ",
-       smaller = True
-%}
-  {% include "toolkit/page-heading.html" %}
-{% endwith %}
-
-  {{ summary.heading('Your company details') }}
-  {% call summary.mapping_table(
-    caption="Your company details",
-    field_headings=[
-      "Label",
-      "Value",
-    ],
-    field_headings_visible=False
-  ) %}
-
-  {% set required_company_fields = [
-      ("duns_number", "DUNS number", url_for(".duns_number", _anchor="duns_number")),
-      ("company_name", "Company name", url_for(".company_details", _anchor="company_name")),
-      ("contact_name", "Contact name", url_for(".company_details", _anchor="contact_name")),
-      ("email_address", "Contact email", url_for(".company_details", _anchor="email_address")),
-      ("phone_number", "Contact phone number", url_for(".company_details", _anchor="phone_number"))
-    ]
-  %}
-
-  {% for field, label, url in required_company_fields %}
-    {% call summary.row(complete=session.get(field)) %}
-      {{ summary.field_name(label) }}
-      {{ summary.text(session.get(field, "You must answer this question.")) }}
-      {{ summary.edit_link("Edit", url, hidden_text=label) }}
-    {% endcall %}
-  {% endfor %}
-
-  {% endcall %}
-
-  {{ summary.heading('Your login details') }}
-  {% call summary.mapping_table(
-    caption="Your login details",
-    field_headings=[
-      "Label",
-      "Value",
-    ],
-    field_headings_visible=False
-  ) %}
-    {% call summary.row(complete=session.get("account_email_address", None)) %}
-    {{ summary.field_name("Email address") }}
-    {{ summary.text(session.get("account_email_address", "You must answer this question.")) }}
-    {{ summary.edit_link("Edit", url_for(".create_your_account", _anchor="email_address", hidden_text="login email address")) }}
-    {% endcall %}
-  {% endcall %}
 </div>
-<form action="{{ url_for('.submit_company_summary')}}" method="POST">
-  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-  {%
-    with
-      type = "save",
-      label = "Create account"
-  %}
-  {% include "toolkit/button.html" %}
-  {% endwith %}
-</form>
 {% endblock %}
