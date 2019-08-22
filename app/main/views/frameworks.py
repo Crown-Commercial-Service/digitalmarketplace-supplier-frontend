@@ -82,6 +82,7 @@ CUSTOM_DIMENSION_IDENTIFIERS = {
 @login_required
 def framework_dashboard(framework_slug):
     framework = get_framework_or_404(data_api_client, framework_slug)
+    framework_slug = framework['slug']  # cleaned slug from the API response that strips reserved characters
     update_framework_with_formatted_dates(framework)
     custom_dimensions, custom_dimension_stage = [], None
     if framework["status"] == "open":
