@@ -2689,7 +2689,7 @@ class CopyingPreviousServicesSetup(BaseApplicationTest):
 
 
 class TestCopyPreviousService(CopyingPreviousServicesSetup, MockEnsureApplicationCompanyDetailsHaveBeenConfirmedMixin):
-    def test_copys_existing_service_to_new_framework(self):
+    def test_copies_existing_service_to_new_framework(self):
         res = self.client.post(
             '/suppliers/frameworks/g-cloud-10/submissions/cloud-hosting/copy-previous-framework-service/2000000000'
         )
@@ -2703,7 +2703,7 @@ class TestCopyPreviousService(CopyingPreviousServicesSetup, MockEnsureApplicatio
         assert self.data_api_client.copy_draft_service_from_existing_service.call_args_list == [
             mock.call(
                 '2000000000',
-                'Năme',
+                'email@email.com',
                 {
                     'targetFramework': 'g-cloud-10',
                     'status': 'not-submitted',
@@ -2799,7 +2799,7 @@ class TestCopyAllPreviousServices(CopyingPreviousServicesSetup,
             mock.call(
                 'g-cloud-10',
                 'cloud-hosting',
-                'Năme',
+                'email@email.com',
                 data={
                     "sourceFrameworkSlug": 'g-cloud-9',
                     "supplierId": 1234,
