@@ -47,7 +47,7 @@ class TestCopyServiceFromPreviousFramework():
 
     @mock.patch('app.main.helpers.services.current_user')
     def test_correctly_calls_api_client(self, current_user):
-        current_user.name = 'Mr Sausages'
+        current_user.email_address = 'sausage@pink.net'
         current_user.supplier_id = 1234
 
         self.api_client_mock.get_service.return_value = self.previous_service()
@@ -59,7 +59,7 @@ class TestCopyServiceFromPreviousFramework():
         assert self.api_client_mock.copy_draft_service_from_existing_service.call_args_list == [
             mock.call(
                 4444244,
-                'Mr Sausages',
+                "sausage@pink.net",
                 {
                     'targetFramework': 'dos-cloud-X',
                     'status': 'not-submitted',
