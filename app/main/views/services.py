@@ -866,7 +866,7 @@ def copy_all_previous_services(framework_slug, lot_slug):
     response = data_api_client.copy_published_from_framework(
         framework_slug,
         lot_slug,
-        current_user.name,
+        current_user.email_address,
         data={
             "sourceFrameworkSlug": source_framework_slug,
             "supplierId": current_user.supplier_id,

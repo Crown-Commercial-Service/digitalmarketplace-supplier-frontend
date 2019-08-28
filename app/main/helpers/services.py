@@ -85,7 +85,7 @@ def copy_service_from_previous_framework(data_api_client, content_loader, framew
 
     data_api_client.copy_draft_service_from_existing_service(
         previous_service['id'],
-        current_user.name,
+        current_user.email_address,
         {
             'targetFramework': framework_slug,
             'status': 'not-submitted',
