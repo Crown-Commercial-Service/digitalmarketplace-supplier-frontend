@@ -4,7 +4,7 @@ import os
 import jinja2
 from dmutils.status import get_version_label
 from dmutils.asset_fingerprint import AssetFingerprinter
-import govuk_frontend.templates
+import govuk_frontend_jinja.templates
 
 class Config(object):
 
@@ -93,11 +93,11 @@ class Config(object):
         ]
         jinja_loader = jinja2.FileSystemLoader(template_folders)
         app.jinja_loader = jinja_loader
-        class MyEnvironment(govuk_frontend.templates.Environment):
+        class MyEnvironment(govuk_frontend_jinja.templates.Environment):
             def __init__(self, app, **options):
                 if "loader" not in options:
                     options["loader"] = app.create_global_jinja_loader()
-                options["extensions"].append(govuk_frontend.templates.NunjucksExtension)
+                options["extensions"].append(govuk_frontend_jinja.templates.NunjucksExtension)
                 super().__init__(**options)
                 self.app = app
         app.jinja_environment = MyEnvironment
