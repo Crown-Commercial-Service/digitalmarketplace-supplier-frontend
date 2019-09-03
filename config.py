@@ -18,6 +18,8 @@ class Config(object):
 
     PERMANENT_SESSION_LIFETIME = 3600  # 1 hour
 
+    DM_COOKIE_PROBE_COOKIE_EXPECT_PRESENT = True
+
     WTF_CSRF_ENABLED = True
     WTF_CSRF_TIME_LIMIT = None
 
