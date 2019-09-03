@@ -1548,6 +1548,17 @@ gulp-jasmine-phantom@3.0.0:
     lodash "^4.3.0"
     through2 "^0.6.1"
 
+gulp-jasmine-phantom@alphagov/gulp-jasmine-phantom#node-10-fs-unlink:
+  version "3.0.0"
+  resolved "https://codeload.github.com/alphagov/gulp-jasmine-phantom/tar.gz/c77be76883afb56466e32565566bed8f045b44cb"
+  dependencies:
+    glob "^4.0.6"
+    gulp-util "^3.0.0"
+    handlebars "^2.0.0"
+    jasmine dflynn15/jasmine-npm
+    lodash "^4.3.0"
+    through2 "^0.6.1"
+
 gulp-sass@3.1.0:
   version "3.1.0"
   resolved "https://registry.yarnpkg.com/gulp-sass/-/gulp-sass-3.1.0.tgz#53dc4b68a1f5ddfe4424ab4c247655269a8b74b7"
@@ -2104,7 +2115,7 @@ jasmine-core@~2.4.0:
   resolved "https://registry.yarnpkg.com/jasmine-core/-/jasmine-core-2.4.1.tgz#6f83ab3a0f16951722ce07d206c773d57cc838be"
   integrity sha1-b4OrOg8WlRcizgfSBsdz1XzIOL4=
 
-"jasmine@github:dflynn15/jasmine-npm":
+jasmine@dflynn15/jasmine-npm:
   version "2.4.1"
   resolved "https://codeload.github.com/dflynn15/jasmine-npm/tar.gz/5f74e4336b247e67bbc509a8f82f3c4fa6b52964"
   dependencies:
