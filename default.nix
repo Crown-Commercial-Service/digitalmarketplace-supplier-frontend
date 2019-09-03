@@ -22,11 +22,13 @@ in (with args; {
   digitalMarketplaceSupplierFrontendEnv = (pkgs.stdenv.mkDerivation rec {
     name = "digitalmarketplace-supplier-frontend-env";
     shortName = "dm-sup-fe";
-    buildInputs = [
+    buildInputs = let
+      nodejs = pkgs.nodejs-10_x;
+    in [
       pythonPackages.python
       sitePrioNonNix
       pkgs.glibcLocales
-      pkgs.nodejs-8_x
+      (pkgs.yarn.override { inherit nodejs; })
       pkgs.yarn
       pkgs.libffi
       pkgs.libyaml
