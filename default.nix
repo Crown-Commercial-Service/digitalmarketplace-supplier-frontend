@@ -26,7 +26,7 @@ in (with args; {
       pythonPackages.python
       sitePrioNonNix
       pkgs.glibcLocales
-      pkgs.nodejs-8_x
+      pkgs.nodejs-10_x
       pkgs.yarn
       pkgs.libffi
       pkgs.libyaml
