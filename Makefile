@@ -9,7 +9,7 @@ else
 endif
 
 .PHONY: run-all
-run-all: requirements yarn-install frontend-build run-app
+run-all: requirements npm-install frontend-build run-app
 
 .PHONY: run-app
 run-app: show-environment virtualenv
@@ -35,13 +35,13 @@ requirements-dev: virtualenv requirements-dev.txt
 freeze-requirements: virtualenv requirements-dev requirements-app.txt
 	${VIRTUALENV_ROOT}/bin/python -m dmutils.repoutils.freeze_requirements requirements-app.txt
 
-.PHONY: yarn-install
-yarn-install:
-	yarn install --frozen-lockfile  # We use --frozen-lockfile here so that Travis catches dependencies which need updating.
+.PHONY: npm-install
+npm-install:
+	npm ci # If dependencies in the package lock do not match those in package.json, npm ci will exit with an error, instead of updating the package lock. (https://docs.npmjs.com/cli/ci.html)
 
 .PHONY: frontend-build
-frontend-build: yarn-install
-	yarn run --silent frontend-build:${GULP_ENVIRONMENT}
+frontend-build: npm-install
+	npm run --silent frontend-build:${GULP_ENVIRONMENT}
 
 .PHONY: test
 test: show-environment test-requirements frontend-build test-flake8 test-python test-javascript
@@ -63,7 +63,7 @@ test-python: virtualenv requirements-dev
 
 .PHONY: test-javascript
 test-javascript: frontend-build
-	yarn test
+	npm test
 
 .PHONY: show-environment
 show-environment:

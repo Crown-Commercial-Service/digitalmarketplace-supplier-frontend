@@ -29,7 +29,6 @@ in (with args; {
       sitePrioNonNix
       pkgs.glibcLocales
       nodejs
-      (pkgs.yarn.override { inherit nodejs; })
       pkgs.libffi
       pkgs.libyaml
       # pip requires git to fetch some of its dependencies

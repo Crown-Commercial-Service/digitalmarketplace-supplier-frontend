@@ -2,7 +2,7 @@
 
 set -e
 
-yarn run frontend-build:production 1>&2
+npm run frontend-build:production 1>&2
 
 # Non-Git paths that should be included when deploying
 echo "app/static"
