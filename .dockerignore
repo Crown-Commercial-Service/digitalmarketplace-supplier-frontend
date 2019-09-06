@@ -8,4 +8,4 @@
 !package.json
 !requirements.txt
 !scripts/build.sh
-!yarn.lock
+!package-lock.json

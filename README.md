@@ -53,22 +53,13 @@ To check the version you're running, type:
 node --version
 ```
 
-### Installation
-
-[How to install yarn](https://yarnpkg.com/en/docs/install)
-To install the required Node modules, type:
-
-```
-yarn
-```
-
 ## Frontend tasks
 
-[YARN](https://yarnpkg.com/en/) is used for all frontend build tasks. The commands available are:
+[NPM](https://docs.npmjs.com/cli/run-script) is used for all frontend build tasks. The commands available are:
 
-- `yarn run frontend-build:development` (compile the frontend files for development)
-- `yarn run frontend-build:production` (compile the frontend files for production)
-- `yarn run frontend-build:watch` (watch all frontend files & rebuild when anything changes)
+- `npm run frontend-build:development` (compile the frontend files for development)
+- `npm run frontend-build:production` (compile the frontend files for production)
+- `npm run frontend-build:watch` (watch all frontend files & rebuild when anything changes)
 
 
 
