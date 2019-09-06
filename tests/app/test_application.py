@@ -63,6 +63,11 @@ class TestApplication(BaseApplicationTest):
         self.login()
         with self.app.test_client():
             self.app.config['WTF_CSRF_ENABLED'] = True
+            self.client.set_cookie(
+                "localhost",
+                self.app.config['DM_COOKIE_PROBE_COOKIE_NAME'],
+                self.app.config['DM_COOKIE_PROBE_COOKIE_VALUE'],
+            )
             data_api_client.get_supplier.return_value = {'suppliers': {'contactInformation': ['something']}}
 
             # This will raise a CSRFError for us when the form is validated
