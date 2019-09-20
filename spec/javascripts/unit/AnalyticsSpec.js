@@ -33,7 +33,7 @@ describe("GOVUK.Analytics", function () {
 
     it('configures a universal tracker', function() {
       var trackerId = 'UA-49258698-1';
-      expect(universalSetupArguments[0]).toEqual(['create', trackerId, {
+      expect(universalSetupArguments).toContain(['create', trackerId, {
         'cookieDomain': document.domain
       }]);
     });
@@ -49,7 +49,7 @@ describe("GOVUK.Analytics", function () {
 
       window.GOVUK.GDM.analytics.pageViews.init();
 
-      expect(window.ga.calls.argsFor(0)).toEqual(['send', 'pageview']);
+      expect(window.ga.calls.allArgs()).toContain(['send', 'pageview']);
     });
   });
 
@@ -65,7 +65,7 @@ describe("GOVUK.Analytics", function () {
       mockLink.appendChild(document.createTextNode('Suppliers guide'));
       mockLink.href = window.location.hostname + '/suppliers/frameworks/g-cloud-7/download-supplier-pack';
       GOVUK.GDM.analytics.events.registerLinkClick({ 'target': mockLink });
-      expect(window.ga.calls.first().args).toEqual(['send', {
+      expect(window.ga.calls.allArgs()).toContain(['send', {
         'hitType': 'event',
         'eventCategory': 'internal-link',
         'eventAction': 'Suppliers guide'
@@ -75,7 +75,7 @@ describe("GOVUK.Analytics", function () {
       mockLink.appendChild(document.createTextNode('Open Government Licence v3.0'));
       mockLink.href = 'https://www.nationalarchives.gov.uk/doc/open-government-licence/version/3/';
       GOVUK.GDM.analytics.events.registerLinkClick({ 'target': mockLink });
-      expect(window.ga.calls.first().args).toEqual(['send', {
+      expect(window.ga.calls.allArgs()).toContain(['send', {
         'hitType': 'event',
         'eventCategory': 'external-link',
         'eventAction': 'Open Government Licence v3.0'
@@ -85,7 +85,7 @@ describe("GOVUK.Analytics", function () {
       mockLink.appendChild(document.createTextNode('Download guidance and legal documentation (.zip)'));
       mockLink.href = window.location.hostname + '/suppliers/frameworks/g-cloud-7/g-cloud-7-supplier-pack.zip';
       GOVUK.GDM.analytics.events.registerLinkClick({ 'target': mockLink });
-      expect(window.ga.calls.first().args).toEqual(['send', {
+      expect(window.ga.calls.allArgs()).toContain(['send', {
         'hitType': 'event',
         'eventCategory': 'download',
         'eventAction': 'Download guidance and legal documentation (.zip)'
@@ -95,7 +95,7 @@ describe("GOVUK.Analytics", function () {
       $(document.body).append('<button id="copy-button" type="submit" class="button-secondary" data-analytics="trackEvent" data-analytics-category="Copy services" data-analytics-action="Copy individual" data-analytics-label="2000000000">Add to G-Cloud 10</button>');
       GOVUK.GDM.analytics.events.init();
       $('#copy-button').click();
-      expect(window.ga.calls.first().args).toEqual(['send', {
+      expect(window.ga.calls.allArgs()).toContain(['send', {
         'hitType': 'event',
         'eventCategory': "Copy services",
         'eventAction': "Copy individual",
@@ -118,7 +118,7 @@ describe("GOVUK.Analytics", function () {
       mockButton.setAttribute('value', 'Save and continue');
       document.title = 'Features and benefits';
       GOVUK.GDM.analytics.events.registerSubmitButtonClick.call(mockButton);
-      expect(window.ga.calls.first().args).toEqual(['send', {
+      expect(window.ga.calls.allArgs()).toContain(['send', {
           'hitType': 'event',
           'eventCategory': 'button',
           'eventAction': 'Save and continue',
@@ -172,22 +172,21 @@ describe("GOVUK.Analytics", function () {
         $analyticsString = $("<div data-analytics='trackPageView' data-url='http://example.com'/>");
         $(document.body).append($analyticsString);
         window.GOVUK.GDM.analytics.virtualPageViews();
-        expect(window.ga.calls.first().args).toEqual([ 'send', 'pageview', { page: 'http://example.com/vpv' } ]);
-        expect(window.ga.calls.count()).toEqual(1);
+        expect(window.ga.calls.allArgs()).toContain([ 'send', 'pageview', { page: 'http://example.com/vpv' } ]);
       });
 
       it("Should add '/vpv/' to url before question mark", function () {
         $analyticsString = $('<div data-analytics="trackPageView" data-url="http:/testing.co.uk/testrubbs?sweet"/>');
         $(document.body).append($analyticsString);
         window.GOVUK.GDM.analytics.virtualPageViews();
-        expect(window.ga.calls.first().args[2]).toEqual({page: "http:/testing.co.uk/testrubbs/vpv?sweet"});
+        expect(window.ga.calls.allArgs()).toContain(['send', 'pageview', {page: "http:/testing.co.uk/testrubbs/vpv?sweet"}]);
       });
 
       it("Should add '/vpv/' to url at the end if no question mark", function () {
         $analyticsString = $("<div data-analytics='trackPageView' data-url='http://example.com'/>");
         $(document.body).append($analyticsString);
         window.GOVUK.GDM.analytics.virtualPageViews();
-        expect(window.ga.calls.first().args[2]).toEqual({page: "http://example.com/vpv"});
+        expect(window.ga.calls.allArgs()).toContain(['send', 'pageview', {page: "http://example.com/vpv"}]);
       });
     });
 
