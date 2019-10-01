@@ -95,7 +95,7 @@ def dashboard():
     if "currently_applying_to" in session:
         del session["currently_applying_to"]
 
-    # TODO remove the `dos2` key from the frameworks dict below. It's a temporary fix until a better designed solution
+    # TODO remove the `dos3` key from the frameworks dict below. It's a temporary fix until a better designed solution
     # can be implemented.
     return render_template(
         "suppliers/dashboard.html",
@@ -106,8 +106,8 @@ def dashboard():
             'pending': get_frameworks_by_status(all_frameworks, 'pending'),
             'standstill': get_frameworks_by_status(all_frameworks, 'standstill', 'made_application'),
             'live': get_frameworks_by_status(all_frameworks, 'live', 'services_count'),
-            'dos2': [
-                f for f in all_frameworks if f['slug'] == 'digital-outcomes-and-specialists-2' and f.get('onFramework')
+            'dos3': [
+                f for f in all_frameworks if f['slug'] == 'digital-outcomes-and-specialists-3' and f.get('onFramework')
             ],
         }
     ), 200
