@@ -236,17 +236,17 @@ class TestSuppliersDashboard(BaseApplicationTest):
         assert u"Find out if your services are suitable" in message[0].xpath('p/a/text()')[0]
 
     @pytest.mark.parametrize('on_framework', (True, False))
-    def test_only_shows_expired_dos2_if_supplier_was_on_framework(self, on_framework):
+    def test_only_shows_expired_dos3_if_supplier_was_on_framework(self, on_framework):
         self.data_api_client.get_supplier.side_effect = get_supplier
         self.data_api_client.find_frameworks.return_value = {
             "frameworks": [
-                FrameworkStub(status='expired', slug='digital-outcomes-and-specialists-2').response(),
+                FrameworkStub(status='expired', slug='digital-outcomes-and-specialists-3').response(),
             ]
         }
         self.data_api_client.get_supplier_frameworks.return_value = {
             'frameworkInterest': [
                 {
-                    'frameworkSlug': 'digital-outcomes-and-specialists-2',
+                    'frameworkSlug': 'digital-outcomes-and-specialists-3',
                     'onFramework': on_framework,
                 }
             ]
@@ -263,24 +263,24 @@ class TestSuppliersDashboard(BaseApplicationTest):
             assert document.xpath(
                 "//h3[normalize-space(string())=$f]"
                 "[(following::a)[1][normalize-space(string())=$t1][@href=$u1]]",
-                f="Digital Outcomes and Specialists 2",
+                f="Digital Outcomes and Specialists 3",
                 t1="View your opportunities",
-                u1="/suppliers/opportunities/frameworks/digital-outcomes-and-specialists-2",
+                u1="/suppliers/opportunities/frameworks/digital-outcomes-and-specialists-3",
             )
             assert not document.xpath(
                 "//h3[normalize-space(string())=$f]"
                 "/..//a[normalize-space(string())=$t1]",
-                f="Digital Outcomes and Specialists 2",
+                f="Digital Outcomes and Specialists 3",
                 t1="View services",
             )
             assert not document.xpath(
                 "//h3[normalize-space(string())=$f]"
                 "/..//a[normalize-space(string())=$t1]",
-                f="Digital Outcomes and Specialists 2",
+                f="Digital Outcomes and Specialists 3",
                 t1="View documents and ask a question",
             )
         else:
-            assert not document.xpath("//h3[normalize-space(string())='Digital Outcomes and Specialists 2']")
+            assert not document.xpath("//h3[normalize-space(string())='Digital Outcomes and Specialists 3']")
 
     def test_shows_gcloud_7_application_button(self):
         self.data_api_client.get_framework_interest.return_value = {'frameworks': []}
@@ -1092,7 +1092,7 @@ class TestSupplierOpportunitiesDashboardLink(BaseApplicationTest):
             'agreementReturned': True,
             'complete_drafts_count': 2,
             'declaration': {'status': 'complete'},
-            'frameworkSlug': 'digital-outcomes-and-specialists-3',
+            'frameworkSlug': 'digital-outcomes-and-specialists-4',
             'onFramework': True,
             'services_count': 2,
             'supplierId': 1234
@@ -1107,7 +1107,7 @@ class TestSupplierOpportunitiesDashboardLink(BaseApplicationTest):
     def find_frameworks_stub(self):
         return {'frameworks': [
             {
-                **FrameworkStub(status='live', slug='digital-outcomes-and-specialists-3').response(),
+                **FrameworkStub(status='live', slug='digital-outcomes-and-specialists-4').response(),
                 'framework': 'digital-outcomes-and-specialists'
             }
         ]}
@@ -1128,13 +1128,13 @@ class TestSupplierOpportunitiesDashboardLink(BaseApplicationTest):
             "[(following::a)[1][normalize-space(string())=$t1][@href=$u1]]"
             "[(following::a)[2][normalize-space(string())=$t2][@href=$u2]]"
             "[(following::a)[3][normalize-space(string())=$t3][@href=$u3]]",
-            f="Digital Outcomes and Specialists 3",
+            f="Digital Outcomes and Specialists 4",
             t1="View your opportunities",
-            u1="/suppliers/opportunities/frameworks/digital-outcomes-and-specialists-3",
+            u1="/suppliers/opportunities/frameworks/digital-outcomes-and-specialists-4",
             t2="View services",
-            u2="/suppliers/frameworks/digital-outcomes-and-specialists-3/services",
+            u2="/suppliers/frameworks/digital-outcomes-and-specialists-4/services",
             t3="View documents and ask a question",
-            u3="/suppliers/frameworks/digital-outcomes-and-specialists-3",
+            u3="/suppliers/frameworks/digital-outcomes-and-specialists-4",
         )
 
     @pytest.mark.parametrize(
@@ -1157,7 +1157,7 @@ class TestSupplierOpportunitiesDashboardLink(BaseApplicationTest):
         res = self.client.get("/suppliers")
         doc = html.fromstring(res.get_data(as_text=True))
 
-        unexpected_link = "/suppliers/opportunities/frameworks/digital-outcomes-and-specialists-3"
+        unexpected_link = "/suppliers/opportunities/frameworks/digital-outcomes-and-specialists-4"
 
         assert not any(filter(lambda i: i[2] == unexpected_link, doc.iterlinks()))
 
