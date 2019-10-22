@@ -1,6 +1,6 @@
 const gulp = require('gulp')
 const uglify = require('gulp-uglify')
-const deleteFiles = require('del')
+const del = require('del')
 const sass = require('gulp-sass')
 const filelog = require('gulp-filelog')
 const include = require('gulp-include')
@@ -89,26 +89,19 @@ const logErrorAndExit = function logErrorAndExit (err) {
   process.exit(1)
 }
 
-gulp.task('clean', function (cb) {
-  var fileTypes = []
-  const complete = function (fileType) {
-    fileTypes.push(fileType)
-    if (fileTypes.length === 2) {
-      cb()
-    }
-  }
-  const logOutputFor = function (fileType) {
-    return function (_, paths) {
-      if (paths !== undefined) {
-        console.log('💥  Deleted the following ' + fileType + ' files:\n', paths.join('\n'))
-      }
-      complete(fileType)
-    }
-  }
-
-  deleteFiles(path.join(jsDistributionFolder, '**', '*'), logOutputFor('JavaScript'))
-  deleteFiles(path.join(cssDistributionFolder, '**', '*'), logOutputFor('CSS'))
+gulp.task('clean:js', function () {
+  return del(path.join(jsDistributionFolder, '**', '*')).then(function (paths) {
+    console.log('💥  Deleted the following JavaScript files:\n', paths.join('\n'))
+  })
 })
+
+gulp.task('clean:css', function () {
+  return del(path.join(cssDistributionFolder, '**', '*')).then(function (paths) {
+    console.log('💥  Deleted the following CSS files:\n', paths.join('\n'))
+  })
+})
+
+gulp.task('clean', gulp.parallel('clean:js', 'clean:css'))
 
 gulp.task('sass', function () {
   const stream = gulp.src(cssSourceGlob)
