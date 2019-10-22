@@ -31,6 +31,9 @@
     "frontend-build:development": "gulp build:development",
     "frontend-build:production": "gulp build:production",
     "frontend-build:watch": "gulp watch",
-    "test": "gulp test"
+    "test": "standard gulpfile.js && gulp test"
+  },
+  "devDependencies": {
+    "standard": "^14.3.1"
   }
 }
