@@ -8,7 +8,7 @@
   },
   "dependencies": {
     "colors": "1.1.2",
-    "del": "1.2.0",
+    "del": "^5.1.0",
     "digitalmarketplace-frameworks": "https://github.com/alphagov/digitalmarketplace-frameworks.git#v16.0.10",
     "digitalmarketplace-frontend-toolkit": "https://github.com/alphagov/digitalmarketplace-frontend-toolkit.git#v35.0.1",
     "govuk-country-and-territory-autocomplete": "0.4.0",
@@ -16,14 +16,14 @@
     "govuk-frontend": "^2.8.0",
     "govuk_frontend_toolkit": "5.0.3",
     "govuk_template": "https://github.com/alphagov/govuk_template/releases/download/v0.19.2/jinja_govuk_template-0.19.2.tgz",
-    "gulp": "3.8.11",
+    "gulp": "^4.0.2",
     "gulp-filelog": "0.4.1",
-    "gulp-include": "2.3.1",
+    "gulp-include": "^2.4.1",
     "gulp-jasmine-phantom": "alphagov/gulp-jasmine-phantom#node-10-fs-unlink",
-    "gulp-sass": "3.1.0",
-    "gulp-shell": "0.2.9",
-    "gulp-sourcemaps": "1.5.2",
-    "gulp-uglify": "1.5.1",
+    "gulp-sass": "^4.0.2",
+    "gulp-shell": "^0.7.1",
+    "gulp-sourcemaps": "^2.6.5",
+    "gulp-uglify": "^3.0.2",
     "hogan.js": "3.0.2",
     "jquery": "1.12.0"
   },
@@ -31,6 +31,9 @@
     "frontend-build:development": "gulp build:development",
     "frontend-build:production": "gulp build:production",
     "frontend-build:watch": "gulp watch",
-    "test": "gulp test"
+    "test": "standard gulpfile.js && gulp test"
+  },
+  "devDependencies": {
+    "standard": "^14.3.1"
   }
 }
