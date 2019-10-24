@@ -13,7 +13,7 @@ run-all: requirements npm-install frontend-build run-app
 
 .PHONY: run-app
 run-app: show-environment virtualenv
-	${VIRTUALENV_ROOT}/bin/python application.py runserver
+	${VIRTUALENV_ROOT}/bin/flask run
 
 .PHONY: virtualenv
 virtualenv:
