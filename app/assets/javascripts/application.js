@@ -15,7 +15,6 @@
 //= require ../../../node_modules/govuk_frontend_toolkit/javascripts/govuk/selection-buttons.js
 //= require ../../../node_modules/govuk_frontend_toolkit/javascripts/govuk/shim-links-with-button-role.js
 //= require ../../../node_modules/govuk_frontend_toolkit/javascripts/govuk/stick-at-top-when-scrolling.js
-//= require ../../../node_modules/govuk_frontend_toolkit/javascripts/govuk/stop-scrolling-at-footer.js
 //= require ../../../node_modules/digitalmarketplace-frontend-toolkit/toolkit/javascripts/shim-links-with-button-role.js
 //= require ../../../node_modules/digitalmarketplace-frontend-toolkit/toolkit/javascripts/show-hide-content.js
 //= require ../../../node_modules/digitalmarketplace-frontend-toolkit/toolkit/javascripts/user-research-consent-banner.js
@@ -23,6 +22,7 @@
 //= require _analytics.js
 //= require _selection-buttons.js
 //= require _stick-at-top-when-scrolling.js
+//= require _stop-scrolling-at-footer.js
 //= require category-picker.js
 
 (function(GOVUK, GDM) {
