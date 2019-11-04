@@ -62,7 +62,7 @@ $govuk-fonts-path: '/suppliers/static/fonts/';
 $govuk-compatibility-govukfrontendtoolkit: true;
 $govuk-compatibility-govuktemplate: true;
 $govuk-compatibility-govukelements: true;
-@import "node_modules/govuk-frontend/all";
+@import "node_modules/digitalmarketplace-govuk-frontend/govuk-frontend/all";
 
 // App-specific styles
 @import "_assurance-question.scss";           // This could probably be removed as the only usage is in service editing
