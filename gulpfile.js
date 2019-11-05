@@ -16,7 +16,7 @@ const npmRoot = path.join(repoRoot, 'node_modules')
 const govukCountryPickerDist = path.join(npmRoot, 'govuk-country-and-territory-autocomplete', 'dist')
 const govukToolkitRoot = path.join(npmRoot, 'govuk_frontend_toolkit')
 const govukElementsRoot = path.join(npmRoot, 'govuk-elements-sass')
-const govukFrontendRoot = path.join(npmRoot, 'govuk-frontend')
+const govukFrontendRoot = path.join(npmRoot, 'digitalmarketplace-govuk-fronted', 'govuk-frontend')
 const dmToolkitRoot = path.join(npmRoot, 'digitalmarketplace-frontend-toolkit', 'toolkit')
 const sspContentRoot = path.join(npmRoot, 'digitalmarketplace-frameworks')
 const assetsFolder = path.join(repoRoot, 'app', 'assets')
@@ -25,6 +25,7 @@ const govukTemplateFolder = path.join(repoRoot, 'node_modules', 'govuk_template'
 const govukTemplateAssetsFolder = path.join(govukTemplateFolder, 'assets')
 const govukTemplateLayoutsFolder = path.join(govukTemplateFolder, 'views', 'layouts')
 const govukFrontendFontsFolder = path.join(govukFrontendRoot, 'assets', 'fonts')
+const govukFrontendImagesFolder = path.join(govukFrontendRoot, 'assets', 'images')
 
 // JavaScript paths
 const jsSourceFile = path.join(assetsFolder, 'javascripts', 'application.js')
@@ -251,9 +252,18 @@ gulp.task(
 gulp.task(
   'copy:govuk_frontend_assets:fonts',
   copyFactory(
-    'fonts from the GOVUK frontend assets',
+    'fonts from GOV.UK Frontend assets',
     govukFrontendFontsFolder,
     path.join(staticFolder, 'fonts')
+  )
+)
+
+gulp.task(
+  'copy:govuk_frontend_assets:images',
+  copyFactory(
+    'images from GOV.UK Frontend assets',
+    govukFrontendImagesFolder,
+    path.join(staticFolder, 'images', 'govuk-frontend')
   )
 )
 
@@ -340,7 +350,8 @@ gulp.task('copy', gulp.parallel(
   'copy:country_picker:stylesheets',
   'copy:country_picker_package:javascripts',
   'copy:page_specific:javascripts',
-  'copy:govuk_frontend_assets:fonts'
+  'copy:govuk_frontend_assets:fonts',
+  'copy:govuk_frontend_assets:images'
 ))
 
 gulp.task('compile', gulp.series('copy', gulp.parallel('sass', 'js')))

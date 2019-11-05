@@ -89,7 +89,8 @@ class Config(object):
     def init_app(app):
         repo_root = os.path.abspath(os.path.dirname(__file__))
         template_folders = [
-            os.path.join(repo_root, 'app/templates')
+            os.path.join(repo_root, "app", "templates"),
+            os.path.join(repo_root, "node_modules", "digitalmarketplace-govuk-frontend", "govuk-frontend"),
         ]
         jinja_loader = jinja2.FileSystemLoader(template_folders)
         app.jinja_loader = jinja_loader

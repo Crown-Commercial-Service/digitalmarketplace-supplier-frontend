@@ -10,14 +10,15 @@ itsdangerous==0.24 # pyup: ignore
 git+https://github.com/alphagov/digitalmarketplace-utils.git@48.5.0#egg=digitalmarketplace-utils==48.5.0
 git+https://github.com/alphagov/digitalmarketplace-content-loader.git@7.0.0#egg=digitalmarketplace-content-loader==7.0.0
 git+https://github.com/alphagov/digitalmarketplace-apiclient.git@21.0.0#egg=digitalmarketplace-apiclient==21.0.0
+git+https://github.com/alphagov/govuk-frontend-jinja.git@v0.5.1-alpha#egg=govuk-frontend-jinja==0.5.1-alpha
 
 ## The following requirements were added by pip freeze:
 asn1crypto==1.2.0
 blinker==1.4
-boto3==1.10.6
-botocore==1.13.6
+boto3==1.10.8
+botocore==1.13.8
 certifi==2019.9.11
-cffi==1.13.1
+cffi==1.13.2
 chardet==3.0.4
 Click==7.0
 contextlib2==0.6.0.post1
@@ -43,7 +44,7 @@ odfpy==1.4.0
 prometheus-client==0.2.0
 pycparser==2.19
 PyJWT==1.7.1
-python-dateutil==2.8.0
+python-dateutil==2.8.1
 python-json-logger==0.1.11
 pytz==2019.3
 PyYAML==5.1.2
