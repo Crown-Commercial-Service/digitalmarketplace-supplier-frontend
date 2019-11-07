@@ -94,6 +94,11 @@ To just run the application use the `run-app` target.
 Use the app at http://127.0.0.1:5003/suppliers.
 
 When using the development server the supplier frontend listens on port 5003 by default.
+This can be changed by setting the `DM_SUPPLIER_PORT` environment variable, e.g.
+to set the port number to 9003:
+```
+export DM_SUPPLIER_PORT=9003
+```
 
 Note: The login is located in the user frontend application, so this needs to be running as well to login as a supplier.
 
