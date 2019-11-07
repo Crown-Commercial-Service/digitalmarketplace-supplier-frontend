@@ -91,19 +91,37 @@ make run-all
 
 To just run the application use the `run-app` target.
 
-The supplier frontend runs on port 5003. Use the app at [http://127.0.0.1:5003/suppliers](http://127.0.0.1:5003/suppliers)
+Use the app at http://127.0.0.1:5003/suppliers.
 
-Note:  The login is located in the buyer frontend application, so this needs to be running as well to login as a supplier.
+When using the development server the supplier frontend listens on port 5003 by default.
+This can be changed by setting the `DM_SUPPLIER_PORT` environment variable, e.g.
+to set the port number to 9003:
+```
+export DM_SUPPLIER_PORT=9003
+```
 
-If the application is running on port 5003 as described above, login from http://127.0.0.1:5002/login (buyer frontend) as a supplier and then you will be logged in as a supplier on http://127.0.0.1:5003/suppliers
+Note: The login is located in the user frontend application, so this needs to be running as well to login as a supplier.
 
-It is easier to use the apps if nginx is configured to run them through one port.  As described in the Digital Marketplace Manual:
+If the application is running on port 5003 as described above, login from
+http://127.0.0.1:5007/login (user frontend) as a supplier and then you will be
+logged in as a supplier on http://127.0.0.1:5003/suppliers.
 
-The frontend applications are hyperlinked together but are running on different ports. This can cause links to error when they link between different applications. The way around this is to set up nginx so all front end applications can be accessed through port 80.
+It is easier to use the apps if nginx is configured to run them through one port.
+As described in the Digital Marketplace manual section on [accessing frontend
+applications as a single website][manual-nginx]:
 
-To do this use the bootstrap.sh script in the nginx folder from [digitalmarketplace-functional-tests](https://github.com/alphagov/digitalmarketplace-functional-tests) to set up nginx aliases.
+> The frontend applications are hyperlinked together but are running on
+> different ports. This can cause links to error when they link between
+> different applications. The way around this is to set up nginx so all front
+> end applications can be accessed through port 80.
 
-In this case both the buyer frontend application and supplier applications will available from port 80 usually aliased to localhost and supplier application can be accessed from [localhost/suppliers](localhost/suppliers)
+The easiest way to do this is to use [`dmrunner`](https://github.com/alphagov/digitalmarketplace-runner).
+
+In this case all the frontend applications will available from port 80 (usually
+aliased to localhost) and the supplier frontend can be accessed from
+http://localhost/suppliers.
+
+[manual-nginx]: https://alphagov.github.io/digitalmarketplace-manual/developing-the-digital-marketplace/developer-setup.html#accessing-frontend-applications-as-a-single-website
 
 ### Updating application dependencies
 
