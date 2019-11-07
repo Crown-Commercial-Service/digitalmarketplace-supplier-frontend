@@ -948,8 +948,8 @@ class TestSupplierDetails(BaseApplicationTest):
         assert response.status_code == 200
 
         document = html.fromstring(response.get_data(as_text=True))
-        submit_button = document.xpath("//input[@value='Save and confirm']")
-        assert submit_button if button_should_be_shown else not submit_button
+        submit_button = document.xpath("//form//button[normalize-space(string())=$t]", t="Save and confirm")
+        assert bool(submit_button) == button_should_be_shown
 
     @pytest.mark.parametrize('application_company_details_confirmed', (False, None))
     def test_green_button_is_shown_when_company_details_confirmed_for_account_but_not_application(
@@ -978,7 +978,7 @@ class TestSupplierDetails(BaseApplicationTest):
             response.get_data(as_text=True)
         )
         document = html.fromstring(response.get_data(as_text=True))
-        submit_button = document.xpath("//input[@value='Save and confirm']")
+        submit_button = document.xpath("//form//button[normalize-space(string())=$t]", t="Save and confirm")
         assert submit_button
 
     def test_post_confirms_company_details_for_all_open_framework_applications(self):
@@ -2164,7 +2164,7 @@ class TestJoinOpenFrameworkNotificationMailingList(BaseApplicationTest):
             form.xpath(".//input[@name='email_address']")
         )
         assert form.xpath(".//input[@name='csrf_token']")
-        assert form.xpath(".//input[@type='submit'][@value='Subscribe']")
+        assert form.xpath(".//button[normalize-space(string())=$t]", t="Subscribe")
 
         return form
 

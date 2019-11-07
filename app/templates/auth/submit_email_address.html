@@ -43,13 +43,9 @@
 
             {{ form.email_address }}
 
-            {%
-              with
-              type = "save",
-              label = "Send invite"
-            %}
-              {% include "toolkit/button.html" %}
-            {% endwith %}
+            {{ govukButton({
+              "text": "Send invite",
+            }) }}
         </div>
     </div>
 </form>

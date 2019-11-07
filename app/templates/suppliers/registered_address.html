@@ -79,13 +79,9 @@
       </div>
       {% endif %}
 
-    {%
-      with
-      type = "save",
-      label = "Save and return"
-    %}
-      {% include "toolkit/button.html" %}
-    {% endwith %}
+      {{ govukButton({
+        "text": "Save and return",
+      }) }}
 
     </div>
   </div>

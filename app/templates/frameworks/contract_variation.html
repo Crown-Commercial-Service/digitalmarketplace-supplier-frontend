@@ -142,14 +142,10 @@
                   We’ll tell you when CCS has countersigned the changes and they come into effect.
                 {% endif %}
               </p>
-                {%
-                  with
-                  label="I accept",
-                  type="save"
-                %}
-                  {% include "toolkit/button.html" %}
-                {% endwith %}
-              </form>
+              {{ govukButton({
+                "text": "I accept",
+              }) }}
+            </form>
 
           {% else %}
 

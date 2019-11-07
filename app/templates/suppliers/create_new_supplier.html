@@ -51,7 +51,10 @@
         </p>
       </div>
       <br />
-      <a href='{{ url_for(".duns_number") }}' class="button-save" role="button">Start</a>
+      {{ govukButton({
+        "text": "Start",
+        "href": url_for(".duns_number"),
+      }) }}
     </div>
   </div>
 </div>

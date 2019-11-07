@@ -44,10 +44,9 @@
           {% include "toolkit/forms/textbox.html" %}
         {% endwith %}
 
-        {% with type = "save",
-                label = "Save and return" %}
-          {% include "toolkit/button.html" %}
-        {% endwith %}
+        {{ govukButton({
+          "text": "Save and return",
+        }) }}
 
         <p class="govuk-body"><a class="govuk-link" href="{{ url_for('.supplier_details') }}">Return to company details</a></p>
       </form>

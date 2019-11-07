@@ -36,14 +36,11 @@
 {% block save_button %}
 
   {% if force_continue_button or (next_question and not force_return_to_summary) %}
-    {%
-      with
-      label="Save and continue",
-      name="save_and_continue",
-      type="save"
-    %}
-      {% include "toolkit/button.html" %}
-    {% endwith %}
+    {{ govukButton({
+      "text": "Save and continue",
+      "name": "save_and_continue",
+      "value": "1",
+    }) }}
 
     {% if next_question %}
       <p class="next-page-message">
@@ -51,14 +48,11 @@
       </p>
     {% endif %}
   {% else %}
-    {%
-      with
-      label=("Save and return to " + lot.unitSingular + " summary") if lot else "Save and return to summary",
-      name="save_and_return",
-      type="save"
-    %}
-      {% include "toolkit/button.html" %}
-    {% endwith %}
+    {{ govukButton({
+      "text": ("Save and return to " + lot.unitSingular + " summary") if lot else "Save and return to summary",
+      "name": "save_and_return",
+      "value": "1",
+    }) }}
   {% endif %}
 
 {% endblock %}

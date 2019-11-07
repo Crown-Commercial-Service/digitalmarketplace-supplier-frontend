@@ -2541,7 +2541,8 @@ class TestDeclarationOverview(BaseApplicationTest, MockEnsureApplicationCompanyD
 
         if decl_valid and declaration.get("status") != "complete":
             mdf_actions = doc.xpath(
-                "//form[@method='POST'][.//input[@value=$t][@type='submit']][.//input[@name='csrf_token']]/@action",
+                "//form[@method='POST'][.//button[normalize-space(string())=$t]]"
+                "[.//input[@name='csrf_token']]/@action",
                 t="Make declaration",
             )
             assert len(mdf_actions) == 2
@@ -2551,7 +2552,7 @@ class TestDeclarationOverview(BaseApplicationTest, MockEnsureApplicationCompanyD
                 for action in mdf_actions
             )
         else:
-            assert not doc.xpath("//input[@value=$t]", t="Make declaration")
+            assert not doc.xpath("//button[normalize-space(string())=$t]", t="Make declaration")
 
         assert doc.xpath(
             "//a[normalize-space(string())=$t][@href=$u]",
@@ -2614,7 +2615,7 @@ class TestDeclarationOverview(BaseApplicationTest, MockEnsureApplicationCompanyD
                 "/suppliers/frameworks/{}/declaration".format(framework_slug),
                 form.attrib["action"],
             ) == "/suppliers/frameworks/{}/declaration".format(framework_slug)
-            for form in doc.xpath("//form[.//input[@type='submit']]")
+            for form in doc.xpath("//form[.//input[@type='submit'] or .//button]")
         )
 
         assert not doc.xpath("//a[@href][normalize-space(string())=$label]", label="Answer question")
@@ -5024,7 +5025,7 @@ class TestContractVariation(BaseApplicationTest):
 
         assert res.status_code == 200
         assert len(doc.xpath('//label[contains(text(), "I accept these changes")]')) == 1
-        assert len(doc.xpath('//input[@value="I accept"]')) == 1
+        assert len(doc.xpath('//button[normalize-space(string())=$t]', t="I accept")) == 1
 
     def test_shows_signer_details_and_no_form_if_already_agreed(self):
         already_agreed = self.good_supplier_framework.copy()

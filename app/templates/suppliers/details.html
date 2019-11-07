@@ -186,9 +186,9 @@
             unconfirmed_open_supplier_framework_names|smartjoin }}.</p>
           {% endif %}
 
-          {% with type = "save", label = "Save and confirm" %}
-            {% include "toolkit/button.html" %}
-          {% endwith %}
+          {{ govukButton({
+            "text": "Save and confirm",
+          }) }}
         </form>
       </div>
     </div>

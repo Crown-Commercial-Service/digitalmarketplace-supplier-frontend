@@ -11,7 +11,7 @@ import mock
 import pytest
 
 from dmapiclient import HTTPError
-from dmtestutils.api_model_stubs import FrameworkStub, LotStub, SupplierStub
+from dmtestutils.api_model_stubs import FrameworkStub, LotStub, SupplierStub, ServiceStub
 from dmtestutils.fixtures import valid_pdf_bytes
 
 from app.main.helpers.services import parse_document_upload_time
@@ -906,8 +906,8 @@ class TestSupplierEditUpdateServiceSection(BaseApplicationTest):
         document = html.fromstring(res.get_data(as_text=True))
 
         form = document.xpath(
-            "//form[@method='post'][.//input[@type='submit'][@value=$v]]",
-            v="Save and return",
+            "//form[@method='post'][.//button[normalize-space(string())=$t]]",
+            t="Save and return",
         )[0]
         assert form.xpath(
             ".//input[@name=$n][@value=$v]",
@@ -1057,8 +1057,8 @@ class TestSupplierEditUpdateServiceSection(BaseApplicationTest):
         document = html.fromstring(res.get_data(as_text=True))
 
         form = document.xpath(
-            "//form[@method='post'][.//input[@type='submit'][@value=$v]]",
-            v="Save and return",
+            "//form[@method='post'][.//button[normalize-space(string())=$t]]",
+            t="Save and return",
         )[0]
         assert form.xpath(
             ".//input[@name=$n]",
@@ -1839,7 +1839,11 @@ class TestEditDraftService(BaseApplicationTest, MockEnsureApplicationCompanyDeta
 
         assert res.status_code == 200
         document = html.fromstring(res.get_data(as_text=True))
-        assert len(document.xpath("//input[@type='submit'][@name='save_and_continue']")) == 1
+        assert len(document.xpath(
+            "//form[@method='post']//button[@name=$n][normalize-space(string())=$t]",
+            n="save_and_continue",
+            t="Save and continue",
+        )) == 1
 
     def test_update_redirects_to_edit_submission_if_save_and_return_grey_button_clicked(self, s3):
         self.data_api_client.get_draft_service.return_value = self.empty_draft
@@ -2153,7 +2157,7 @@ class TestShowDraftService(BaseApplicationTest, MockEnsureApplicationCompanyDeta
         assert '1 optional question unanswered' in res.get_data(as_text=True)
 
         doc = html.fromstring(res.get_data(as_text=True))
-        assert doc.xpath("//form//input[@type='submit'][contains('button-save',@class)][@value='Mark as complete']")
+        assert doc.xpath("//form//button[normalize-space(string())=$t]", t="Mark as complete")
 
     @mock.patch('app.main.views.services.count_unanswered_questions')
     def test_no_move_to_complete_button_if_not_open(self, count_unanswered):
@@ -2162,8 +2166,8 @@ class TestShowDraftService(BaseApplicationTest, MockEnsureApplicationCompanyDeta
         count_unanswered.return_value = 0, 1
         res = self.client.get('/suppliers/frameworks/g-cloud-7/submissions/scs/1')
 
-        assert u'<input type="submit" class="button-save"  value="Mark as complete" />' not in \
-            res.get_data(as_text=True)
+        doc = html.fromstring(res.get_data(as_text=True))
+        assert not doc.xpath("//form//button[normalize-space(string())=$t]", t="Mark as complete")
 
     @mock.patch('app.main.views.services.count_unanswered_questions')
     def test_no_move_to_complete_button_if_validation_errors(self, count_unanswered):
@@ -2176,8 +2180,8 @@ class TestShowDraftService(BaseApplicationTest, MockEnsureApplicationCompanyDeta
 
         res = self.client.get('/suppliers/frameworks/g-cloud-7/submissions/scs/1')
 
-        assert u'<input type="submit" class="button-save"  value="Mark as complete" />' not in \
-            res.get_data(as_text=True)
+        doc = html.fromstring(res.get_data(as_text=True))
+        assert not doc.xpath("//form//button[normalize-space(string())=$t]", t="Mark as complete")
 
     @mock.patch('app.main.views.services.count_unanswered_questions')
     def test_shows_g7_message_if_pending_and_service_is_in_draft(self, count_unanswered):
@@ -2345,16 +2349,27 @@ class TestGetListPreviousServices(BaseApplicationTest, MockEnsureApplicationComp
         super().teardown_method(method)
 
     def test_lists_correct_services_for_previous_framework_and_lot(self, get_metadata):
-        self.data_api_client.get_framework.side_effect = [
-            self.framework(slug='g-cloud-10'),
-            self.framework(slug='g-cloud-10'),
-            self.framework(slug='g-cloud-9'),
-        ]
+        self.data_api_client.get_framework.side_effect = lambda slug: self.framework(slug=slug)
         self.data_api_client.find_services.return_value = {
             'services': [
-                {'serviceName': 'Service one', 'copiedToFollowingFramework': False},
-                {'serviceName': 'Service two', 'copiedToFollowingFramework': False},
-                {'serviceName': 'Service three', 'copiedToFollowingFramework': False},
+                ServiceStub(
+                    service_id="12",
+                    service_name="One",
+                    lot="cloud-hosting",
+                    copied_to_following_framework=False,
+                ).response(),
+                ServiceStub(
+                    service_id="34",
+                    service_name="Two",
+                    lot="cloud-hosting",
+                    copied_to_following_framework=False,
+                ).response(),
+                ServiceStub(
+                    service_id="56",
+                    service_name="Three",
+                    lot="cloud-hosting",
+                    copied_to_following_framework=False,
+                ).response(),
             ],
         }
         get_metadata.return_value = 'g-cloud-9'
@@ -2381,12 +2396,19 @@ class TestGetListPreviousServices(BaseApplicationTest, MockEnsureApplicationComp
             '/suppliers/frameworks/g-cloud-10/submissions/cloud-hosting/previous-services?copy_all=True'
 
         service_links = doc.xpath("//td[@class='summary-item-field-first-half']//a")
-        assert len(service_links) == 3
-        assert [service.text for service in service_links] == ['Service one', 'Service two', 'Service three']
+        assert [service.text for service in service_links] == ['One', 'Two', 'Three']
 
-        add_service_buttons = doc.xpath("//button[@class='button-secondary']")
-        assert len(add_service_buttons) == 3
-        assert all(button.text == 'Add' for button in add_service_buttons)
+        add_service_forms = doc.xpath(
+            "//form[@method='post'][.//button[normalize-space(string())=$t]][.//input[@name='csrf_token']]",
+            t="Add",
+        )
+        assert len(add_service_forms) == 3
+        assert all(
+            re.match(
+                r"/suppliers/frameworks/g-cloud-10/submissions/cloud-hosting/copy-previous-framework-service/\d+",
+                form.attrib["action"],
+            ) for form in add_service_forms
+        )
 
     @pytest.mark.parametrize(
         ('lot_slug', 'lot_name', 'question_advice'),
@@ -2428,7 +2450,7 @@ class TestGetListPreviousServices(BaseApplicationTest, MockEnsureApplicationComp
         assert doc.xpath(f"//h1[normalize-space()='Do you want to reuse your previous {lot_name} service?']")
         assert doc.xpath(f"//span[@class='question-advice'][normalize-space()='{question_advice}']")
         assert [re.sub(r"\W", "", label.text) for label in doc.xpath("//label[@class='radio']")] == ["Yes", "No"]
-        assert doc.xpath("//input[@type='submit'][@value='Save and continue']")
+        assert doc.xpath("//form//button[normalize-space(string())=$t]", t="Save and continue")
 
     def test_returns_404_if_framework_not_found(self, get_metadata):
 
@@ -2504,7 +2526,8 @@ class TestGetListPreviousServices(BaseApplicationTest, MockEnsureApplicationComp
             "[normalize-space()='Are you sure you want to add all your cloud hosting services?']"
         )
         assert doc.xpath(
-            "//button[@class='button-save banner-action'][normalize-space()='Yes, add all services']"
+            "//form[@method='POST']//button[normalize-space(string())=$t]",
+            t="Yes, add all services",
         )
 
     @pytest.mark.parametrize('declaration_status,banner_present', (('complete', False), ('incomplete', True)))

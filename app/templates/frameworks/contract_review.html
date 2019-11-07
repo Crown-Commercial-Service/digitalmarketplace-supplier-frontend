@@ -83,13 +83,9 @@
 
         {{ form.authorisation }}
 
-        {%
-          with
-            type = "save",
-            label = "Return signed signature page"
-        %}
-          {% include "toolkit/button.html" %}
-        {% endwith %}
+        {{ govukButton({
+          "text": "Return signed signature page",
+        }) }}
     </form>
 
   </div>
