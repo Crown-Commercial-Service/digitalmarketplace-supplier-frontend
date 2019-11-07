@@ -1,7 +1,7 @@
 {% if framework.status in ['pending', 'standstill'] and application_made %}
 <li class="browse-list-item">
   <h2>You submitted:</h2>
-  <ul class="list-bullet">
+  <ul class="govuk-list govuk-list--bullet">
     {% for lot in completed_lots %}
       {% if lot.one_service_limit %}
         <li>{{ lot.name }}</li>
