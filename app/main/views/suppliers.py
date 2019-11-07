@@ -43,15 +43,15 @@ JOIN_OPEN_FRAMEWORK_NOTIFICATION_MAILING_LIST_SUCCESS_MESSAGE = (
 )
 JOIN_OPEN_FRAMEWORK_NOTIFICATION_MAILING_LIST_ERROR_MESSAGE = Markup("""
     The service is unavailable at the moment. If the problem continues please contact
-    <a href="mailto:{support_email_address}">{support_email_address}</a>.
+    <a class="govuk-link" href="mailto:{support_email_address}">{support_email_address}</a>.
 """)
 JOIN_OPEN_FRAMEWORK_NOTIFICATION_MAILING_LIST_ALREADY_SUBSCRIBED_MESSAGE = Markup("""
     This email address has already been used to sign up for Digital Marketplace alerts. Please use a different
-     email address or contact <a href="mailto:{support_email_address}">{support_email_address}</a>.
+     email address or contact <a class="govuk-link" href="mailto:{support_email_address}">{support_email_address}</a>.
 """)
 JOIN_OPEN_FRAMEWORK_NOTIFICATION_MAILING_LIST_UNSUBSCRIBED_MESSAGE = Markup("""
     This email address cannot be used to sign up for Digital Marketplace alerts. Please use a different
-     email address or contact <a href="mailto:{support_email_address}">{support_email_address}</a>.
+     email address or contact <a class="govuk-link" href="mailto:{support_email_address}">{support_email_address}</a>.
 """)
 
 

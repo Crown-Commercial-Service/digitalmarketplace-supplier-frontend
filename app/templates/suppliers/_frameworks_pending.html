@@ -4,7 +4,7 @@
       <h2 class="summary-item-heading">{{ framework.name }} is closed for applications</h2>
       <p>
         You submitted {{ framework.complete_drafts_count }} service{{ 's' if framework.complete_drafts_count != 1 }} for consideration
-        <a href="{{ url_for('.framework_dashboard', framework_slug=framework.slug) }}">View your submitted application</a>
+        <a class="govuk-link" href="{{ url_for('.framework_dashboard', framework_slug=framework.slug) }}">View your submitted application</a>
       </p>
     </div>
   {% elif framework.registered_interest %}
@@ -16,7 +16,7 @@
         You didn’t submit an application.
       </p>
       <p class="temporary-message-message">
-        <a href="{{ url_for('.framework_dashboard', framework_slug=framework.slug) }}">View {{ framework.name }} information</a>
+        <a class="govuk-link" href="{{ url_for('.framework_dashboard', framework_slug=framework.slug) }}">View {{ framework.name }} information</a>
       </p>
     </aside>
   {% else %}

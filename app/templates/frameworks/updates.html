@@ -121,10 +121,10 @@
             <br />
             <ul class="govuk-list govuk-list--bullet">
               <li>
-                <a href="https://www.gov.uk/guidance/digital-outcomes-and-specialists-suppliers-guide">find out about the application process and eligibility</a>
+                <a class="govuk-link" href="https://www.gov.uk/guidance/digital-outcomes-and-specialists-suppliers-guide">find out about the application process and eligibility</a>
               </li>
               <li>
-                <a href="{{ url_for('external.help') }}">get help if there’s a problem with your account</a>
+                <a class="govuk-link" href="{{ url_for('external.help') }}">get help if there’s a problem with your account</a>
               </li>
             </ul>
 
@@ -152,7 +152,7 @@
                 {% include "toolkit/button.html" %}
               {% endwith %}
   
-              <a href="{{ url_for('.framework_dashboard', framework_slug=framework.slug) }}">Return to {{ framework.name }} application</a>
+              <a class="govuk-link" href="{{ url_for('.framework_dashboard', framework_slug=framework.slug) }}">Return to {{ framework.name }} application</a>
   
             </div>
           </div>
@@ -163,9 +163,9 @@
           <div class="column-two-thirds">
             {{ summary.heading("Contact us") }}
 
-            <p>Contact the support team if <a href="{{ url_for('external.help') }}">there’s a problem with your account or to update your details</a>.</p>
+            <p>Contact the support team if <a class="govuk-link" href="{{ url_for('external.help') }}">there’s a problem with your account or to update your details</a>.</p>
             <br />
-            <p><a href="{{ url_for('.framework_dashboard', framework_slug=framework.slug) }}">Return to {{ framework.name }} application</a></p>
+            <p><a class="govuk-link" href="{{ url_for('.framework_dashboard', framework_slug=framework.slug) }}">Return to {{ framework.name }} application</a></p>
   
           </div>
         </div>

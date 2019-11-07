@@ -46,7 +46,7 @@
               "reveal": {
                 "name": "companies_house_number",
                 "question": "Companies House number",
-                "hint": "<a href='https://beta.companieshouse.gov.uk/search/companies'>Find your 8 digit Companies House number</a>"|safe,
+                "hint": "<a class='govuk-link' href='https://beta.companieshouse.gov.uk/search/companies'>Find your 8 digit Companies House number</a>"|safe,
                 "value": form.companies_house_number.data,
                 "error": errors.get("companies_house_number", {}).get("message", None),
               }
@@ -71,7 +71,7 @@
           {% include "toolkit/button.html" %}
         {% endwith %}
 
-        <p><a href="{{ url_for('.supplier_details') }}">Return to company details</a></p>
+        <p><a class="govuk-link" href="{{ url_for('.supplier_details') }}">Return to company details</a></p>
       </form>
     </div>
   </div>

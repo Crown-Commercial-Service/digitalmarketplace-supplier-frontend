@@ -4,14 +4,14 @@
 
     {% if communications_files.invitation.last_modified %}
     <p>
-      <a href="{{ url_for('.download_supplier_file', filepath=communications_files.invitation.filename, framework_slug=framework.slug) }}">
+      <a class="govuk-link" href="{{ url_for('.download_supplier_file', filepath=communications_files.invitation.filename, framework_slug=framework.slug) }}">
         Download the invitation to apply
       </a>
     </p>
     {% endif %}
 
     <p>
-      <a href="{{ framework_urls.supplier_guide_url }}">
+      <a class="govuk-link" href="{{ framework_urls.supplier_guide_url }}">
         Read about how to 
         {% if supplier_framework.agreementReturned %}
           sell your services
@@ -33,7 +33,7 @@
 
     {% if communications_files.final_agreement.last_modified %}
     <p>
-      <a href="{{ url_for('.download_supplier_file', filepath=communications_files.final_agreement.filename, framework_slug=framework.slug) }}">
+      <a class="govuk-link" href="{{ url_for('.download_supplier_file', filepath=communications_files.final_agreement.filename, framework_slug=framework.slug) }}">
         Download the framework agreement
       </a>
       <br/>
@@ -48,7 +48,7 @@
     </p>
     {% elif communications_files.proposed_agreement.last_modified %}
     <p>
-      <a href="{{ url_for('.download_supplier_file', filepath=communications_files.proposed_agreement.filename, framework_slug=framework.slug) }}">
+      <a class="govuk-link" href="{{ url_for('.download_supplier_file', filepath=communications_files.proposed_agreement.filename, framework_slug=framework.slug) }}">
         Download the proposed framework agreement
       </a>
       <br/>
@@ -65,7 +65,7 @@
 
     {% if communications_files.final_call_off.last_modified %}
     <p>
-      <a href="{{ url_for('.download_supplier_file', filepath=communications_files.final_call_off.filename, framework_slug=framework.slug) }}">
+      <a class="govuk-link" href="{{ url_for('.download_supplier_file', filepath=communications_files.final_call_off.filename, framework_slug=framework.slug) }}">
         Download the ‘call-off’ contract
       </a>
       <br/>
@@ -80,7 +80,7 @@
     </p>
     {% elif communications_files.proposed_call_off.last_modified %}
     <p>
-      <a href="{{ url_for('.download_supplier_file', filepath=communications_files.proposed_call_off.filename, framework_slug=framework.slug) }}">
+      <a class="govuk-link" href="{{ url_for('.download_supplier_file', filepath=communications_files.proposed_call_off.filename, framework_slug=framework.slug) }}">
         Download the proposed ‘call-off’ contract
       </a>
       <br/>
@@ -107,7 +107,7 @@
     {% endif %}
 
     <p>
-      <a href="{{ url_for('.framework_updates', framework_slug=framework.slug) }}">
+      <a class="govuk-link" href="{{ url_for('.framework_updates', framework_slug=framework.slug) }}">
         View communications and
         {% if framework.status == "open" and framework.clarificationQuestionsOpen %}ask{% endif %}
         clarification questions
@@ -126,7 +126,7 @@
   <div>
   <h2 id="reporting" class="heading-xmedium">Reporting</h2>
     <p>
-      <a href="{{ url_for('.download_supplier_file', filepath=communications_files.reporting_template.filename, framework_slug=framework.slug) }}">
+      <a class="govuk-link" href="{{ url_for('.download_supplier_file', filepath=communications_files.reporting_template.filename, framework_slug=framework.slug) }}">
         Download the reporting template
       </a>
       <br/>

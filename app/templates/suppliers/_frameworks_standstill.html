@@ -29,7 +29,7 @@
           </p>
           {% if framework.needs_to_complete_declaration %}
             <p class="second-line">
-              <a href="{{ url_for('.framework_agreement', framework_slug=framework.slug) }}">
+              <a class="govuk-link" href="{{ url_for('.framework_agreement', framework_slug=framework.slug) }}">
                 You must sign the framework agreement to sell these services
               </a>
             </p>

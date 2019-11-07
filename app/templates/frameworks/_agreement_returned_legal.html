@@ -57,20 +57,20 @@
     {% if framework_urls.framework_agreement_url %}
       {# newer frameworks should have the final agreement published as a web page #}
       <p>
-        <a href="{{ framework_urls.framework_agreement_url }}">
+        <a class="govuk-link" href="{{ framework_urls.framework_agreement_url }}">
           Read the standard framework agreement
         </a>
       </p>
     {% elif communications_files.final_agreement.last_modified %}
       {# older frameworks will still have to point to a file that came from the old supplier pack #}
       <p>
-        <a href="{{ url_for('.download_supplier_file', filepath=communications_files.final_agreement.filename, framework_slug=framework.slug) }}">
+        <a class="govuk-link" href="{{ url_for('.download_supplier_file', filepath=communications_files.final_agreement.filename, framework_slug=framework.slug) }}">
           Download the standard framework agreement
         </a>
       </p>
     {% endif %}
       <p>
-        <a href="{{ url_for('.download_agreement_file', framework_slug=framework.slug, document_name=signed_agreement_document_name) }}" target="_blank">
+        <a class="govuk-link" href="{{ url_for('.download_agreement_file', framework_slug=framework.slug, document_name=signed_agreement_document_name) }}" target="_blank">
           {% if framework.frameworkAgreementVersion %}
             Download your ‘original’ framework agreement signature page
           {% else %}
@@ -82,7 +82,7 @@
       </p>
     {% if countersigned_agreement_file %}
       <p>
-        <a href="{{ url_for('.download_agreement_file', framework_slug=framework.slug, document_name=countersigned_agreement_file) }}" target="_blank">
+        <a class="govuk-link" href="{{ url_for('.download_agreement_file', framework_slug=framework.slug, document_name=countersigned_agreement_file) }}" target="_blank">
           {% if framework.frameworkAgreementVersion %}
             Download your ‘counterpart’ framework agreement signature page
           {% else %}
@@ -95,14 +95,14 @@
     {% endif %}
     {% if countersigned_agreement_file and not framework.frameworkAgreementVersion %}
       <p>
-        <a href="{{ url_for('.download_agreement_file', framework_slug=framework.slug, document_name=result_letter_filename) }}" target="_blank">
+        <a class="govuk-link" href="{{ url_for('.download_agreement_file', framework_slug=framework.slug, document_name=result_letter_filename) }}" target="_blank">
           Download your application result letter
         </a>
       </p>
     {% endif %}
     {% for variation in framework.variations %}
     <p>
-      <a href="{{ url_for('.view_contract_variation', framework_slug=framework.slug, variation_slug=variation) }}">
+      <a class="govuk-link" href="{{ url_for('.view_contract_variation', framework_slug=framework.slug, variation_slug=variation) }}">
       {% if framework.variations[variation].get('countersignedAt') and supplier_framework.agreedVariations.get(variation).agreedAt %}
         View the signed contract variation
       {% else %}
@@ -113,7 +113,7 @@
     {% endfor %}
     {% if communications_files.final_call_off.last_modified %}
       <p>
-        <a href="{{ url_for('.download_supplier_file', filepath=communications_files.final_call_off.filename, framework_slug=framework.slug) }}">Download the call-off contract template</a>
+        <a class="govuk-link" href="{{ url_for('.download_supplier_file', filepath=communications_files.final_call_off.filename, framework_slug=framework.slug) }}">Download the call-off contract template</a>
       </p>
     {% endif %}
     {% if not countersigned_agreement_file %}
