@@ -2,7 +2,7 @@
   {% if framework.made_application %}
     <div class="summary-item-lede">
       <h2 class="summary-item-heading">{{ framework.name }} is closed for applications</h2>
-      <p>
+      <p class="govuk-body">
         You submitted {{ framework.complete_drafts_count }} service{{ 's' if framework.complete_drafts_count != 1 }} for consideration
         <a class="govuk-link" href="{{ url_for('.framework_dashboard', framework_slug=framework.slug) }}">View your submitted application</a>
       </p>

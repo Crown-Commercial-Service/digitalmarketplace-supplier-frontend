@@ -13,12 +13,12 @@
       {% endif %}
     {% endfor %}
   </ul>
-  <p>
+  <p class="govuk-body">
     <a class="govuk-link" href="{{ url_for('.framework_submission_lots', framework_slug=framework.slug) }}">
       View submitted services
     </a>
   </p>
-  <p>
+  <p class="govuk-body">
     <a class="govuk-link" href="{{ url_for('.framework_supplier_declaration_overview', framework_slug=framework.slug) }}">
       View your declaration
     </a>

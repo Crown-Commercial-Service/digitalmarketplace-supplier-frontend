@@ -1,7 +1,7 @@
 {% for framework in frameworks.dos3 + frameworks.live %}
 {% if framework.onFramework %}
   <h3 class="heading-xmedium">{{ framework.name }}</h2>
-  <p>
+  <p class="govuk-body">
   {% if framework.needs_to_complete_declaration %}
     <a class="govuk-link" href="{{ url_for('.framework_agreement', framework_slug=framework.slug) }}">
       You must sign the framework agreement to sell these services
@@ -18,7 +18,7 @@
   </p>
 {% endif %}
 {% else %}
-  <p>
+  <p class="govuk-body">
     You don't have any services on the Digital Marketplace
   </p>
 {% endfor %}

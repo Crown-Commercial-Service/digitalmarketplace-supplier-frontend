@@ -4584,8 +4584,8 @@ class TestContractReviewPage(BaseApplicationTest):
         page = res.get_data(as_text=True)
         page_without_whitespace = self.strip_all_whitespace(page)
         assert u'Check the details you’ve given before returning the signature page for £unicodename' in page
-        assert '<tdclass="summary-item-field"><span><p>signer_name</p><p>signer_role</p></span></td>' \
-            in page_without_whitespace
+        assert '<tdclass="summary-item-field"><span><pclass="govuk-body">signer_name</p>' \
+               '<pclass="govuk-body">signer_role</p></span></td>' in page_without_whitespace
         assert "I have the authority to return this agreement on behalf of £unicodename" in page
         assert "Returning the signature page will notify the Crown Commercial Service and the primary contact you " \
                "gave in your G-Cloud 8 application, contact name at email@email.com." in page

@@ -37,11 +37,11 @@
         {% include "toolkit/page-heading.html" %}
       {% endwith %}
 
-      <p>You must make the supplier declaration to confirm you’re eligible to provide services through {{ framework.name }}.</p>
+      <p class="govuk-body">You must make the supplier declaration to confirm you’re eligible to provide services through {{ framework.name }}.</p>
       <br>
-      <p>You can come back and change your answers before the application deadline at {{ framework.applicationsCloseAt | nbsp }}.</p>
+      <p class="govuk-body">You can come back and change your answers before the application deadline at {{ framework.applicationsCloseAt | nbsp }}.</p>
       <br>
-      <p>After the application deadline, the Crown Commercial Service will review your answers and let you know if your application has been successful.</p>
+      <p class="govuk-body">After the application deadline, the Crown Commercial Service will review your answers and let you know if your application has been successful.</p>
       <br><br>
       <a href='{{ url_for(".reuse_framework_supplier_declaration", framework_slug=framework.slug) }}' class="button-save" role="button">Start your declaration</a>
 

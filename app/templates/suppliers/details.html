@@ -175,14 +175,14 @@
         <form method="POST" action="{{ url_for('.confirm_supplier_details') }}">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
           {% if supplier_company_details_confirmed == False %}
-          <p>Once you confirm your information you'll need to contact support to correct a mistake in your:</p>
+          <p class="govuk-body">Once you confirm your information you'll need to contact support to correct a mistake in your:</p>
           <ul class="govuk-list govuk-list--bullet">
             <li>registered company name</li>
             <li>registration number</li>
             <li>DUNS number</li>
           </ul>
           {% else %}
-          <p>You must confirm that your company details are correct for your {{ pluralize(unconfirmed_open_supplier_framework_names|length, 'application', 'applications') }} to {{
+          <p class="govuk-body">You must confirm that your company details are correct for your {{ pluralize(unconfirmed_open_supplier_framework_names|length, 'application', 'applications') }} to {{
             unconfirmed_open_supplier_framework_names|smartjoin }}.</p>
           {% endif %}
 
@@ -195,7 +195,7 @@
     {% elif currently_applying_to %}
     <div class='grid-row'>
       <div class='column-two-thirds'>
-        <p>You must complete your company details to make an application.</p>
+        <p class="govuk-body">You must complete your company details to make an application.</p>
       </div>
     </div>
     {% endif %}

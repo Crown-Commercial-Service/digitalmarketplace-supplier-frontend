@@ -72,7 +72,7 @@
         {% endwith %}
       </div>
       <div class="dmspeak">
-        <p>You can edit how you describe your service but you can’t change the service itself or how it works.</p>
+        <p class="govuk-body">You can edit how you describe your service but you can’t change the service itself or how it works.</p>
       </div>
     </div>
   {% endif %}
@@ -112,11 +112,11 @@
     <div class="column-two-thirds">
       <div class="edit-service-status-panel">
         <h2>Remove this service</h2>
-        <p>If you remove a service, it won’t be available to buy on the Digital Marketplace
+        <p class="govuk-body">If you remove a service, it won’t be available to buy on the Digital Marketplace
           and it won’t appear in search results.</p>
-        <p>Your service page will be updated to include a message showing users that the service
+        <p class="govuk-body">Your service page will be updated to include a message showing users that the service
           is no longer available to buy.</p>
-        <p>You’ll need to email
+        <p class="govuk-body">You’ll need to email
           <a class="govuk-link" href="mailto:{{ support_email_address }}">{{ support_email_address }}</a>
            to reinstate your service.</p>
         <form action="{{ url_for('.remove_service', framework_slug=service_data["frameworkSlug"], service_id=service_id ) }}" method="POST">

@@ -10,17 +10,17 @@
   </header>
 
   <div class="dmspeak">
-    <p>
+    <p class="govuk-body">
         The deadline for applying was {{ framework['applicationsCloseAt'] }}.
     </p>
     {% if following_framework_content %}
-      <p>
+      <p class="govuk-body">
           {{ following_framework_content.name }} is expected to open in {{ following_framework_content.coming }}. <a class="govuk-link" href="{{ url_for('.join_open_framework_notification_mailing_list') }}">Sign up for emails</a> about when you can apply.
       </p>
     {% endif %}
   </div>
   <div class="secondary-action-link">
-    <p>
+    <p class="govuk-body">
       <a class="govuk-link" href="{{ url_for('.dashboard') }}">Return to your account</a>.
     </p>
   </div>
