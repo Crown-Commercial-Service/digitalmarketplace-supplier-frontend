@@ -5,9 +5,9 @@
       <span>Download your application {% if supplier_is_on_framework %}award{% else %}result{% endif %} letter (.pdf)</span>
     </a>
     {% if supplier_is_on_framework %}
-      <p>This letter is a record of your successful {{ framework.name }} application.</p>
+      <p class="govuk-body">This letter is a record of your successful {{ framework.name }} application.</p>
     {% else %}
-      <p>This letter informs you if your {{ framework.name }} application has been successful.</p>
+      <p class="govuk-body">This letter informs you if your {{ framework.name }} application has been successful.</p>
     {% endif %}
 
   </li>
@@ -18,7 +18,7 @@
     <a class="browse-list-item-link" href="{{ url_for('.framework_agreement', framework_slug=framework.slug) }}">
       <span>Sign and return your framework agreement</span>
     </a>
-    <p>Your agreement will need to be signed by both you and the Crown Commercial Service before you can sell {{framework.name}} services.</p>
+    <p class="govuk-body">Your agreement will need to be signed by both you and the Crown Commercial Service before you can sell {{framework.name}} services.</p>
   </li>
   {% endif %}
 {% endif %}

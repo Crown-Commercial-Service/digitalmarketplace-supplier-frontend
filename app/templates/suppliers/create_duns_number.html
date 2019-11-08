@@ -27,7 +27,7 @@
 <div class="grid-row">
   {% if errors.get("duns_number", {}).get("message", None) == 'DUNS number already used' %}
     {% with lede = "A supplier account already exists with that DUNS number",
-            description = 'If you no longer have your account details, or if you think this may be an error, email <a href="mailto:{support_email_address}?subject=DUNS%20number%20question" title="Please contact {support_email_address}">{support_email_address}</a>'.format(support_email_address=support_email_address)|safe
+            description = 'If you no longer have your account details, or if you think this may be an error, email <a class="govuk-link" href="mailto:{support_email_address}?subject=DUNS%20number%20question" title="Please contact {support_email_address}">{support_email_address}</a>'.format(support_email_address=support_email_address)|safe
     %}
       {% include 'toolkit/forms/validation.html' %}
     {% endwith %}
@@ -45,15 +45,15 @@
     <form method="POST" action="{{ url_for('.duns_number') }}">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
       <div class="dmspeak">
-        <p>If you registered your business with Companies House, you will automatically have been given a unique
+        <p class="govuk-body">If you registered your business with Companies House, you will automatically have been given a unique
           DUNS number.</p>
-        <p>The Digital Marketplace uses this to check if your business already has a supplier account.</p>
+        <p class="govuk-body">The Digital Marketplace uses this to check if your business already has a supplier account.</p>
       </div>
-        <p class="lead">You can either:</p>
-        <ul class="list-bullet">
-          <li><a href="https://www.dnb.co.uk/duns-number/lookup.html" rel="external">find your DUNS number</a> on the
+        <p class="govuk-body-l">You can either:</p>
+        <ul class="govuk-list govuk-list--bullet">
+          <li><a class="govuk-link" href="https://www.dnb.co.uk/duns-number/lookup.html" rel="external">find your DUNS number</a> on the
             Dun &amp; Bradstreet website</li>
-          <li><a href="https://www.dnb.co.uk/duns-number/lookup/request-a-duns-number.html" rel="external">apply for
+          <li><a class="govuk-link" href="https://www.dnb.co.uk/duns-number/lookup/request-a-duns-number.html" rel="external">apply for
             a DUNS number</a> if you don&rsquo;t have one</li>
         </ul>
       

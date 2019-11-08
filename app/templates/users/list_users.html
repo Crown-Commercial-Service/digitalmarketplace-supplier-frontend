@@ -29,7 +29,7 @@
     %}
       {% include 'toolkit/page-heading.html' %}
     {% endwith %}
-    <a class="summary-change-link" href="{{ url_for('.invite_user') }}">Invite a contributor</a>
+    <a class="govuk-link" class="summary-change-link" href="{{ url_for('.invite_user') }}">Invite a contributor</a>
     {% call(item) summary.table(
       users,
       caption="Contributors for " + current_user.supplier_name,

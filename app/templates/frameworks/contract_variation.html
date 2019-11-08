@@ -29,7 +29,7 @@
       <div class="column-one-whole">
         {% if errors %}
          {% with
-            message = "You must <a href=\"#{}\">accept the changes</a> to continue.".format(errors.accept_changes.input_name)|safe, type = "destructive" %}
+            message = "You must <a class=\"govuk-link\" href=\"#{}\">accept the changes</a> to continue.".format(errors.accept_changes.input_name)|safe, type = "destructive" %}
             {% include "toolkit/notification-banner.html" %}
           {% endwith %}
         {% endif %}

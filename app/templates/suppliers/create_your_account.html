@@ -34,9 +34,9 @@
     {% endwith %}
 
     <div class="dmspeak">
-       <p>You’ll use this to sign in to your company’s supplier account.</p>
-       <p>It won’t be visible on the Digital Marketplace.</p>
-       <p>You can add other email addresses to your supplier account later.</p>
+       <p class="govuk-body">You’ll use this to sign in to your company’s supplier account.</p>
+       <p class="govuk-body">It won’t be visible on the Digital Marketplace.</p>
+       <p class="govuk-body">You can add other email addresses to your supplier account later.</p>
     </div>
     <form method="POST" action="{{ url_for('.create_your_account') }}">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>

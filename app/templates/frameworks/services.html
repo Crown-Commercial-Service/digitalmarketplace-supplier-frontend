@@ -46,7 +46,7 @@
       <div class="grid-row">
         <div class="column-two-thirds">
           <h2 class="summary-item-heading">{{ framework.name }} is closed for applications</h2>
-          <p>
+          <p class="govuk-body">
             You made your supplier declaration and submitted {{ complete_drafts|length }} complete {{ 'service' if complete_drafts|length == 1 else 'services' }}.
           </p>
         </div>
@@ -55,8 +55,8 @@
   {% endif %}
 
   {% if framework.status == 'open' and previous_framework %}
-    <p>
-      <a href="{{ url_for('.previous_services', framework_slug=framework.slug, lot_slug=lot.slug) }}">
+    <p class="govuk-body">
+      <a class="govuk-link" href="{{ url_for('.previous_services', framework_slug=framework.slug, lot_slug=lot.slug) }}">
         View and add your services from {{ previous_framework.name|nbsp }}
       </a>
     </p>

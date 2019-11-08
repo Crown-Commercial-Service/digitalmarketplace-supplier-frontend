@@ -52,7 +52,7 @@
     {% call summary.row() %}
       {{ summary.field_name('Person who signed') }}
       {% call summary.field() %}
-        <p>{{ agreement.signedAgreementDetails.signerName }}</p><p>{{ agreement.signedAgreementDetails.signerRole }}</p>
+        <p class="govuk-body">{{ agreement.signedAgreementDetails.signerName }}</p><p class="govuk-body">{{ agreement.signedAgreementDetails.signerRole }}</p>
       {% endcall %}
       {{ summary.edit_link("Edit", url_for('.signer_details', framework_slug=framework.slug, agreement_id=agreement.id), hidden_text="person who signed") }}
     {% endcall %}
@@ -73,9 +73,9 @@
   <div class="column-two-thirds">
 
      <div class="dmspeak">
-      <p>Returning the signature page will notify the Crown Commercial Service and the primary contact you gave in your {{ framework.name }} application, {{ supplier_framework.declaration.primaryContact }} at {{ supplier_framework.declaration.primaryContactEmail }}.</p>
+      <p class="govuk-body">Returning the signature page will notify the Crown Commercial Service and the primary contact you gave in your {{ framework.name }} application, {{ supplier_framework.declaration.primaryContact }} at {{ supplier_framework.declaration.primaryContactEmail }}.</p>
 
-      <p>You’ll also receive an email to confirm that the signature page has been returned.</p>
+      <p class="govuk-body">You’ll also receive an email to confirm that the signature page has been returned.</p>
     </div>
 
     <form method="POST" action="{{ url_for('.contract_review', framework_slug=framework.slug, agreement_id=agreement.id) }}">

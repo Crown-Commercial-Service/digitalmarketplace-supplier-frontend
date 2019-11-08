@@ -14,7 +14,7 @@
     ) %}
       {% call summary.row(complete=not framework.needs_to_complete_declaration) %}
         {% call summary.field(first=True) %}
-          <p>
+          <p class="govuk-body">
             {{ framework.name }}
           </p>
           {% if framework.onFramework %}
@@ -24,12 +24,12 @@
           {% endif %}
         {% endcall %}
         {% call summary.field() %}
-          <p>
+          <p class="govuk-body">
             {{ framework.complete_drafts_count }} service{{ 's' if framework.complete_drafts_count != 1 }} {{ 'submitted' if not framework.onFramework }}
           </p>
           {% if framework.needs_to_complete_declaration %}
             <p class="second-line">
-              <a href="{{ url_for('.framework_agreement', framework_slug=framework.slug) }}">
+              <a class="govuk-link" href="{{ url_for('.framework_agreement', framework_slug=framework.slug) }}">
                 You must sign the framework agreement to sell these services
               </a>
             </p>

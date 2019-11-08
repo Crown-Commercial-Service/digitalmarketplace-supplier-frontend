@@ -1,6 +1,6 @@
 {% if declaration_status != 'complete' %}
   {% set banner_content %}
-  You still need to <a href="{% if declaration_status == 'unstarted' %}{{ url_for('.framework_start_supplier_declaration', framework_slug=framework.slug) }}{% else %}{{ url_for('.framework_supplier_declaration_overview', framework_slug=framework.slug) }}{% endif %}">make your supplier declaration</a>.
+  You still need to <a class="govuk-link" href="{% if declaration_status == 'unstarted' %}{{ url_for('.framework_start_supplier_declaration', framework_slug=framework.slug) }}{% else %}{{ url_for('.framework_supplier_declaration_overview', framework_slug=framework.slug) }}{% endif %}">make your supplier declaration</a>.
   {% endset %}
 
   {% with declaration_url = url_for('.framework_start_supplier_declaration' if declaration_status == 'unstarted' else '.framework_supplier_declaration_overview', framework_slug=framework.slug) %}

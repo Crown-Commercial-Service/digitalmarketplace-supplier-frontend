@@ -8,18 +8,18 @@
     {% if framework.status == 'pending' %}<h2 class="summary-item-heading">{{ framework.name }} is closed for applications</h2>{% endif %}
 
     {% if not application_made %}
-      <p>You didn't submit an application.</p>
+      <p class="govuk-body">You didn't submit an application.</p>
 
     {% elif framework.status == 'pending' %}
       {# supplier_is_on_framework should never be true before standstill #}
-      <p>You made your supplier declaration and submitted {{ counts.complete }} {{ 'service' if counts.complete == 1 else 'services' }} for consideration.</p>
-      <p>We’ll let you know the result of your application by {{ framework.intentionToAwardAt }}.</p>
+      <p class="govuk-body">You made your supplier declaration and submitted {{ counts.complete }} {{ 'service' if counts.complete == 1 else 'services' }} for consideration.</p>
+      <p class="govuk-body">We’ll let you know the result of your application by {{ framework.intentionToAwardAt }}.</p>
 
     {% elif framework.status == 'standstill' %}
       {% if supplier_is_on_framework %}
-        <p>Your application was successful. You must return a signed framework agreement signature page before you can sell services on the Digital Marketplace.</p>
+        <p class="govuk-body">Your application was successful. You must return a signed framework agreement signature page before you can sell services on the Digital Marketplace.</p>
       {% else %}
-        <p>You made your supplier declaration and submitted {{ counts.complete }} {{ 'service' if counts.complete == 1 else 'services' }}.</p>
+        <p class="govuk-body">You made your supplier declaration and submitted {{ counts.complete }} {{ 'service' if counts.complete == 1 else 'services' }}.</p>
       {% endif %}
 
     {% endif %}

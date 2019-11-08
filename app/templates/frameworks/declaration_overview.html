@@ -42,7 +42,7 @@
         {% endwith %}
       </form>
       {% endif %}
-      <p>
+      <p class="govuk-body">
         You can come back and edit your answers at any time before
         {% if supplier_framework.declaration.status == "complete" %}
           {{ framework.applicationsCloseAt | nbsp }}.
@@ -67,7 +67,7 @@
     </div>
     <div class="column-two-thirds">
       {% if framework.status == "open" and supplier_framework.declaration.status != "complete" %}
-        <p>
+        <p class="govuk-body">
           You must {% if not validates %}answer all questions and{% endif %} make your declaration 
           before {{ framework.applicationsCloseAt | nbsp }} to apply to {{ framework.name }}.
         </p>
@@ -103,9 +103,9 @@
                   {# We don't want a question anchor on the first question of each section; it should take them
                      to the top of the page so all content is visible #}
                   {% if section.questions[0].id == question.id -%}
-                    <a href="{{ url_for(".framework_supplier_declaration_edit", framework_slug=framework.slug, section_id=section.id) }}">
+                    <a class="govuk-link" href="{{ url_for(".framework_supplier_declaration_edit", framework_slug=framework.slug, section_id=section.id) }}">
                   {% else -%}
-                    <a href="{{ url_for(".framework_supplier_declaration_edit", framework_slug=framework.slug, section_id=section.id, _anchor=question.id) }}">
+                    <a class="govuk-link" href="{{ url_for(".framework_supplier_declaration_edit", framework_slug=framework.slug, section_id=section.id, _anchor=question.id) }}">
                   {%- endif -%}
                   {% if supplier_framework.prefillDeclarationFromFrameworkSlug and section.prefill %}
                     Review answer

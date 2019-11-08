@@ -29,7 +29,7 @@
     {% if service_data.status != 'published' and service_unavailability_information %}
       {%
         with
-        message = "If you don’t know why this service was removed or you want to reinstate it, contact <a href='mailto:{support_email_address}'>{support_email_address}</a>.".format(support_email_address=support_email_address) | safe,
+        message = "If you don’t know why this service was removed or you want to reinstate it, contact <a class='govuk-link' href='mailto:{support_email_address}'>{support_email_address}</a>.".format(support_email_address=support_email_address) | safe,
         type = "temporary-message",
         heading = "This service was removed on {}".format(service_unavailability_information.createdAt|dateformat)
       %}
@@ -41,9 +41,9 @@
           Are you sure you want to remove your service?
         </p>
         <p class="banner-message">
-          When you remove a service, you can only reinstate it by emailing <a href='mailto:{{ support_email_address }}'>{{ support_email_address }}</a>.
+          When you remove a service, you can only reinstate it by emailing <a class="govuk-link" href='mailto:{{ support_email_address }}'>{{ support_email_address }}</a>.
         </p>
-        <form class="banner-action" action="{{ url_for('.remove_service', framework_slug=service_data["frameworkSlug"], service_id=service_id ) }}" method="POST">
+        <form class="banner-action" action="{{ url_for('.remove_service', framework_slug=service_data['frameworkSlug'], service_id=service_id ) }}" method="POST">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
           <input type="hidden" name="remove_confirmed" value="true" />
             {%
@@ -72,7 +72,7 @@
         {% endwith %}
       </div>
       <div class="dmspeak">
-        <p>You can edit how you describe your service but you can’t change the service itself or how it works.</p>
+        <p class="govuk-body">You can edit how you describe your service but you can’t change the service itself or how it works.</p>
       </div>
     </div>
   {% endif %}
@@ -112,12 +112,12 @@
     <div class="column-two-thirds">
       <div class="edit-service-status-panel">
         <h2>Remove this service</h2>
-        <p>If you remove a service, it won’t be available to buy on the Digital Marketplace
+        <p class="govuk-body">If you remove a service, it won’t be available to buy on the Digital Marketplace
           and it won’t appear in search results.</p>
-        <p>Your service page will be updated to include a message showing users that the service
+        <p class="govuk-body">Your service page will be updated to include a message showing users that the service
           is no longer available to buy.</p>
-        <p>You’ll need to email
-          <a href="mailto:{{ support_email_address }}">{{ support_email_address }}</a>
+        <p class="govuk-body">You’ll need to email
+          <a class="govuk-link" href="mailto:{{ support_email_address }}">{{ support_email_address }}</a>
            to reinstate your service.</p>
         <form action="{{ url_for('.remove_service', framework_slug=service_data["frameworkSlug"], service_id=service_id ) }}" method="POST">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />

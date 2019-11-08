@@ -44,8 +44,8 @@
       {% with items = lots %}
         {% include "toolkit/browse-list.html" %}
       {% endwith %}
-<p>&nbsp;</p>
-    <a href="{{ url_for('.framework_dashboard', framework_slug=framework.slug) }}">Back to {{ framework.name }} application</a>
+<p class="govuk-body">&nbsp;</p>
+    <a class="govuk-link" href="{{ url_for('.framework_dashboard', framework_slug=framework.slug) }}">Back to {{ framework.name }} application</a>
 
     </div>
   </div>
