@@ -118,7 +118,10 @@
           <p class="banner-message">
             Are you sure you want to delete {{ service_data.lotName.lower() if lot.oneServiceLimit else 'this {}'.format(lot.unitSingular) }}?
           </p>
-          <button type="submit" class="button-destructive banner-action">Yes, delete</button>
+          {{ govukButton({
+            "text": "Yes, delete",
+            "classes": "govuk-button--warning app-banner-action",
+          }) }}
         </div>
       </form>
     </div>
@@ -188,12 +191,10 @@
         {% if framework.status == 'open' %}
         <form action="{{ url_for('.delete_draft_service', framework_slug=framework.slug, lot_slug=service_data.lot, service_id=service_id ) }}" method="POST">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
-          {% with
-            type = "destructive",
-            label = "Delete"
-          %}
-            {% include "toolkit/button.html" %}
-          {% endwith %}
+          {{ govukButton({
+            "text": "Delete",
+            "classes": "govuk-button--warning",
+          }) }}
         </form>
         {% endif %}
       </div>

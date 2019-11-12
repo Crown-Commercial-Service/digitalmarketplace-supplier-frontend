@@ -42,13 +42,9 @@
         {{ form.signerName }}
         {{ form.signerRole }}
 
-        {%
-          with
-            type = "save",
-            label = "Save and continue"
-        %}
-          {% include "toolkit/button.html" %}
-        {% endwith %}
+        {{ govukButton({
+          "text": "Save and continue"
+        }) }}
     </form>
   </div>
 </div>

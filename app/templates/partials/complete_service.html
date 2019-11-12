@@ -1,8 +1,8 @@
 <form action="{{ url_for('.complete_draft_service', framework_slug=framework.slug, lot_slug=service_data.lot, service_id=service_id) }}" method="POST">
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
-  {% with type = "save", label = "Mark as complete" %}
-    {% include "toolkit/button.html" %}
-  {% endwith %}
+  {{ govukButton({
+    "text": "Mark as complete",
+  }) }}
 </form>
 <p class="last-edited move-to-complete-hint">
   You can still edit services once they're complete.

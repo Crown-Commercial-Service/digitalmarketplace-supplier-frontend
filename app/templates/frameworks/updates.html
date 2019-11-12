@@ -144,13 +144,9 @@
             <p class="govuk-body">Answers are published to this page around twice a week, alongside answers to questions from other suppliers.</p>
             <br />
             <p class="govuk-body">All responses will be published by {{ framework.clarificationsPublishAt }}.</p>
-              {%
-                with
-                label="Ask question",
-                type="save"
-              %}
-                {% include "toolkit/button.html" %}
-              {% endwith %}
+              {{ govukButton({
+                "text": "Ask a question"
+              }) }}
   
               <a class="govuk-link" href="{{ url_for('.framework_dashboard', framework_slug=framework.slug) }}">Return to {{ framework.name }} application</a>
   

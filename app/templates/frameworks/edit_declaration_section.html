@@ -80,13 +80,9 @@
 
             {% if next_section %}
               {# If there is a next page show the 'continue' button' #}
-              {%
-                with
-                label="Save and continue",
-                type="save"
-              %}
-                {% include "toolkit/button.html" %}
-              {% endwith %}
+              {{ govukButton({
+                "text": "Save and continue"
+              }) }}
 
               {# If there is a next page show the 'next page' info #}
               <p class="next-page-message">
@@ -96,13 +92,12 @@
             {% endif %}
 
             {# Always show the 'save and return' button but if there is a next page make it secondary #}
-            {% with
-              type="secondary" if next_section else "save",
-              name = 'save_and_return_to_overview',
-              label = "Save and return to declaration overview"
-            %}
-              {% include "toolkit/button.html" %}
-            {% endwith %}
+            {{ govukButton({
+              "text": "Save and return to declaration overview",
+              "name": "save_and_return_to_overview",
+              "value": "1",
+              "classes": "govuk-button--secondary" if next_section else "",
+            }) }}
 
           </div>
       </div>

@@ -44,7 +44,15 @@
         {{ summary.field_name(item.name) }}
         {{ summary.text(item.emailAddress) }}
         {% if item.id != current_user.id %}
-          {{ summary.button("Remove", url_for('main.deactivate_user', user_id=item.id), csrf_token_value=csrf_token()) }}
+          {% call summary.field(action=True) %}
+            <form method="post" action="{{ url_for('main.deactivate_user', user_id=item.id) }}">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token_value or csrf_token() }}" />
+              {{ govukButton({
+                "text": "Remove",
+                "classes": "govuk-button--secondary govuk-!-margin-0",
+              }) }}
+            </form>
+          {% endcall %}
         {% else %}
           {{ summary.text('') }}
         {% endif %}

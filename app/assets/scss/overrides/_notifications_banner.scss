@@ -1,0 +1,7 @@
+// Currently needed to force more margin between notification banner's
+// content and action buttons
+
+.app-banner-action {
+  @include govuk-responsive-margin(1, "top");
+  @include govuk-responsive-margin(0, "bottom");
+}

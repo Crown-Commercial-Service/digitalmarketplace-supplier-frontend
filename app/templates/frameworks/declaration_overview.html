@@ -32,14 +32,10 @@
       {% if supplier_framework.declaration.status != "complete" %}
       <form method="POST" action="">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
-        {%
-          with
-          advice = true,
-          type = "save",
-          label = "Make declaration"
-        %}
-          {% include "toolkit/button.html" %}
-        {% endwith %}
+
+        {{ govukButton({
+          "text": "Make declaration"
+        }) }}
       </form>
       {% endif %}
       <p class="govuk-body">
