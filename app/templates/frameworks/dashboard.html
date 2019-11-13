@@ -1,6 +1,6 @@
 {% extends "_base_page.html" %}
 
-{% block page_title %}
+{% block pageTitle %}
   {% block page_title_inner %}
     {% if framework.status == "open" %}
       Apply to {{ framework.name }}
@@ -32,7 +32,7 @@
 {% block main_content %}
   {# Confidence Banner #}
   {% if application_made and framework.status == 'open' %}
-    {% with 
+    {% with
       message = "Your application will be submitted at %s. <br> You can edit your declaration and services at any time before the deadline."|safe % (framework.applicationsCloseAt | nbsp),
       type="success"
     %}
