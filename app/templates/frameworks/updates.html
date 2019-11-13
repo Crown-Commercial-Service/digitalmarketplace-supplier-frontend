@@ -1,7 +1,9 @@
 {% extends "_base_page.html" %}
 {% import "toolkit/summary-table.html" as summary %}
 
-{% block page_title %}{{ framework.name }} updates – Digital Marketplace{% endblock %}
+{% block pageTitle %}
+  {{ framework.name }} updates – Digital Marketplace
+{% endblock %}
 
 {% block breadcrumb %}
   {%
@@ -147,9 +149,9 @@
               {{ govukButton({
                 "text": "Ask a question"
               }) }}
-  
+
               <a class="govuk-link" href="{{ url_for('.framework_dashboard', framework_slug=framework.slug) }}">Return to {{ framework.name }} application</a>
-  
+
             </div>
           </div>
         </form>
@@ -162,7 +164,7 @@
             <p class="govuk-body">Contact the support team if <a class="govuk-link" href="{{ url_for('external.help') }}">there’s a problem with your account or to update your details</a>.</p>
             <br />
             <p class="govuk-body"><a class="govuk-link" href="{{ url_for('.framework_dashboard', framework_slug=framework.slug) }}">Return to {{ framework.name }} application</a></p>
-  
+
           </div>
         </div>
 

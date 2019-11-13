@@ -3,3 +3,7 @@
 // Insert line for each component module import
 
 {% from "components/button/macro.njk" import govukButton %}
+
+{# TODO: Remove once we start removing govuk_template, GOV.UK Frontend template uses pageTitle #}
+{% block page_title %}{% block pageTitle %}{% endblock %}{% endblock %}
+

@@ -1,6 +1,8 @@
 {% extends "_base_page.html" %}
 
-{% block page_title %}Activate your account - Create a supplier account – Digital Marketplace{% endblock %}
+{% block pageTitle %}
+  Activate your account - Create a supplier account – Digital Marketplace
+{% endblock %}
 
 {% block breadcrumb %}
 {%
@@ -29,7 +31,7 @@
       {% with heading = "Create login", smaller = True %}
         {% include "toolkit/page-heading.html" %}
       {% endwith %}
-      
+
       <div class="dmspeak">
         <p class="govuk-body">An email has been sent to {{ email_address }}.</p>
         <p class="govuk-body">You must click on the link in the email to activate your account.</p>

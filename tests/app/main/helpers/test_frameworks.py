@@ -893,7 +893,7 @@ class TestReturn404IfApplicationClosed(BaseApplicationTest):
 
         document = html.fromstring(response[0])
         assert response[1] == 404
-        assert document.xpath('//title/text()')[0] == "Applications closed - Digital Marketplace"
+        assert document.xpath('//title/text()')[0].strip() == "Applications closed - Digital Marketplace"
         assert document.xpath('//h1/text()')[0] == "You can no longer apply to G-Cloud 10"
         assert "The deadline for applying was 12am GMT, Monday 3 January 2000." in \
             document.xpath('//div[@class="dmspeak"]/p/text()')[0]

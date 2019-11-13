@@ -1,6 +1,8 @@
 {% extends "_base_page.html" %}
 
-{% block page_title %}DUNS number – Create a supplier account – Digital Marketplace{% endblock %}
+{% block pageTitle %}
+  DUNS number – Create a supplier account – Digital Marketplace
+{% endblock %}
 
 {% block breadcrumb %}
 {%
@@ -34,14 +36,14 @@
   {% elif errors %}
     {% include 'toolkit/forms/validation.html' %}
   {% endif %}
-  
+
   <div class="column-two-thirds">
     {% with heading = "Enter your DUNS number",
             smaller = True %}
       {% include "toolkit/page-heading.html" %}
     {% endwith %}
-  
-    
+
+
     <form method="POST" action="{{ url_for('.duns_number') }}">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
       <div class="dmspeak">
@@ -56,7 +58,7 @@
           <li><a class="govuk-link" href="https://www.dnb.co.uk/duns-number/lookup/request-a-duns-number.html" rel="external">apply for
             a DUNS number</a> if you don&rsquo;t have one</li>
         </ul>
-      
+
       {% with question = "DUNS number",
               name = "duns_number",
               value = form.duns_number.data,

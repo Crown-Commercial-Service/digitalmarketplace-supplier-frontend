@@ -1,7 +1,9 @@
 {% extends "_base_page.html" %}
 
 
-{% block page_title %}Your {{ framework.name }} declaration – Digital Marketplace{% endblock %}
+{% block pageTitle %}
+  Your {{ framework.name }} declaration – Digital Marketplace
+{% endblock %}
 
 
 {% block breadcrumb %}
@@ -64,7 +66,7 @@
     <div class="column-two-thirds">
       {% if framework.status == "open" and supplier_framework.declaration.status != "complete" %}
         <p class="govuk-body">
-          You must {% if not validates %}answer all questions and{% endif %} make your declaration 
+          You must {% if not validates %}answer all questions and{% endif %} make your declaration
           before {{ framework.applicationsCloseAt | nbsp }} to apply to {{ framework.name }}.
         </p>
       {% endif %}
