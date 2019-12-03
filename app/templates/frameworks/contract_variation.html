@@ -40,14 +40,7 @@
     <div class="grid-row">
         <div class="column-two-thirds">
 
-          {% with
-            heading = "{} contract variation for {}".format(
-               "The" if variation_details.get('countersignedAt') or agreed_details
-               else "Accept the", framework.name),
-            smaller = True
-          %}
-            {% include 'toolkit/page-heading.html' %}
-          {% endwith %}
+          <h1 class="govuk-heading-l">{{ '{} contract variation for {}'.format('The' if variation_details.get('countersignedAt') or agreed_details else 'Accept the', framework.name) }}</h1>
 
           <div class="section-description">
           {% if variation_details.get('countersignedAt') and agreed_details %}

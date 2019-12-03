@@ -56,12 +56,7 @@
 {% block main_content %}
   <div class="grid-row">
     <div class="column-two-thirds">
-      {% with
-        heading = "Your declaration overview",
-        smaller = true
-      %}
-        {% include "toolkit/page-heading.html" %}
-      {% endwith %}
+      <h1 class="govuk-heading-l">Your declaration overview</h1>
     </div>
     <div class="column-two-thirds">
       {% if framework.status == "open" and supplier_framework.declaration.status != "complete" %}

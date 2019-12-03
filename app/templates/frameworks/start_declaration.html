@@ -30,12 +30,7 @@
 {% block main_content %}
   <div class="grid-row framework-dashboard">
     <div class="column-two-thirds">
-      {% with
-         heading = self.page_title_inner(),
-         smaller = True
-      %}
-        {% include "toolkit/page-heading.html" %}
-      {% endwith %}
+      <h1 class="govuk-heading-l">{{ self.page_title_inner() }}</h1>
 
       <p class="govuk-body">You must make the supplier declaration to confirm you’re eligible to provide services through {{ framework.name }}.</p>
       <br>

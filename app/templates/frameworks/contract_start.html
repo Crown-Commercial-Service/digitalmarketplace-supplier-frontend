@@ -30,14 +30,7 @@
 
   <div class="grid-row framework-dashboard">
     <div class="column-two-thirds">
-      {% with
-         heading = (
-           framework.name + " framework agreement"
-         ),
-         smaller = True
-      %}
-        {% include "toolkit/page-heading.html" %}
-      {% endwith %}
+      <h1 class="govuk-heading-l">{{ framework.name }} framework agreement</h1>
 
       <div class="summary-item-lede">
         <p class="govuk-body">Your application was successful. You must return a signed framework agreement signature page before you can sell services on the Digital Marketplace.</p>

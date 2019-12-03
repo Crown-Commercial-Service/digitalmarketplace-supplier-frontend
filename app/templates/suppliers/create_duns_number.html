@@ -38,10 +38,7 @@
   {% endif %}
 
   <div class="column-two-thirds">
-    {% with heading = "Enter your DUNS number",
-            smaller = True %}
-      {% include "toolkit/page-heading.html" %}
-    {% endwith %}
+    <h1 class="govuk-heading-l">Enter your DUNS number</h1>
 
 
     <form method="POST" action="{{ url_for('.duns_number') }}">

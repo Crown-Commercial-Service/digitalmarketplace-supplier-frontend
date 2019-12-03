@@ -32,12 +32,7 @@
 
   <div class="grid-row">
     <div class="column-two-thirds">
-      {% with
-         heading = self.page_title_inner(),
-         smaller = True
-      %}
-        {% include "toolkit/page-heading.html" %}
-      {% endwith %}
+      <h1 class="govuk-heading-l">{{ self.page_title_inner() }}</h1>
 
       <p class="govuk-body">In {{ old_framework_application_close_date|nbsp }}, your organisation completed a declaration for {{ old_framework.name }}.</p>
       <p class="govuk-body">You can reuse some of the answers from that declaration.</p>

@@ -44,13 +44,7 @@
     <div class="grid-row">
       <div class="column-two-thirds">
         <div class="single-question-page">
-          {% with
-             heading = form.copy_service.label,
-             smaller = True,
-             with_breadcrumb = True
-          %}
-            {% include "toolkit/page-heading.html" %}
-          {% endwith %}
+          <h1 class="govuk-heading-l">{{ form.copy_service.label }}</h1>
 
           <form method="POST" action="{{ url_for('.previous_services', framework_slug=framework.slug, lot_slug=lot.slug) }}">
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>

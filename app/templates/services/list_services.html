@@ -25,12 +25,7 @@
 {% block main_content %}
   <div class="grid-row">
     <div class="column-two-thirds">
-      {% set heading %}
-        Your {{ framework.name }} services
-      {% endset %}
-      {% with smaller=true %}
-        {% include 'toolkit/page-heading.html' %}
-      {% endwith %}
+      <h1 class="govuk-heading-l">Your {{ framework.name }} services</h1>
     </div>
   </div>
 

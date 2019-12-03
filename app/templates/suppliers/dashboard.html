@@ -20,12 +20,8 @@
 
   <div class="grid-row">
     <div class="column-one-whole">
-      {% with
-        context = current_user.email_address,
-        heading = current_user.supplier_name
-      %}
-        {% include 'toolkit/page-heading.html' %}
-      {% endwith %}
+      <span class="govuk-caption-xl">{{ current_user.email_address }}</span>
+      <h1 class="govuk-heading-xl">{{ current_user.supplier_name }}</h1>
     </div>
   </div>
 

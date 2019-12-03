@@ -25,13 +25,7 @@
 {% block main_content %}
   <div class='grid-row'>
     <div class='column-one-whole{% if currently_applying_to or (supplier_company_details_complete and not supplier_company_details_confirmed) %} padding-bottom-small{% endif %}'>
-{%
-  with
-    heading = "Company details",
-    smaller = true
-%}
-  {% include "toolkit/page-heading.html" %}
-{% endwith %}
+      <h1 class="govuk-heading-l">Company details</h1>
 
 {{ summary.heading("What buyers will see", id="what_buyers_will_see") }}
 {{ summary.top_link('Change', url_for('.edit_what_buyers_will_see')) }}
