@@ -90,13 +90,7 @@
 
     {% include "partials/service_warning.html" %}
 
-    {% with
-       heading = "Previous {} services".format(lot.name|lower),
-       smaller = True,
-       with_breadcrumb = True
-    %}
-      {% include "toolkit/page-heading.html" %}
-    {% endwith %}
+    <h1 class="govuk-heading-l">Previous {{ lot.name|lower }} services</h1>
 
     {{ summary.heading("Your services from {}".format(source_framework.name)) }}
     {% if previous_services_still_to_copy|length > 1 %}
