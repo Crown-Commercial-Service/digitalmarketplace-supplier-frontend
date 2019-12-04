@@ -30,13 +30,6 @@
 
 <div class="grid-row">
   <div class="column-two-thirds">
-    {%
-      with
-      heading = "Check the details you’ve given before returning the signature page for %s" | format(supplier_registered_name),
-      smaller = True
-    %}
-      {% include "toolkit/page-heading.html" %}
-    {% endwith %}
     <h1 class="govuk-heading-l">{{ 'Check the details you’ve given before returning the signature page for {}'.format(supplier_registered_name) }}</h1>
   </div>
 </div>
