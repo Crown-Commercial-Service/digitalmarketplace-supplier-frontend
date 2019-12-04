@@ -80,6 +80,7 @@ $govuk-compatibility-govukelements: true;
 
 // Overrides
 @import "overrides/_notifications_banner";
+@import "overrides/_page_headings.scss";
 
 // Misc styles
 // TODO: Move misc styling into their own partial files or the Digital Marketplace FE Toolkit
