@@ -1189,7 +1189,7 @@ class TestSupplierDashboardLogin(BaseApplicationTest):
 
         assert response.status_code == 200
 
-        assert self.strip_all_whitespace(u"<h1>Supplier NĀme</h1>") in \
+        assert self.strip_all_whitespace(u'<h1 class="govuk-heading-xl">Supplier NĀme</h1>') in \
             self.strip_all_whitespace(response.get_data(as_text=True))
         assert self.strip_all_whitespace("email@email.com") in \
             self.strip_all_whitespace(response.get_data(as_text=True))
@@ -2395,7 +2395,7 @@ class TestBecomeASupplier(BaseApplicationTest):
         res = self.client.get("/suppliers/supply")
 
         assert res.status_code == 200
-        assert self.strip_all_whitespace(u"<h1>Become a supplier</h1>") in \
+        assert self.strip_all_whitespace(u'<h1 class="govuk-heading-l">Become a supplier</h1>') in \
             self.strip_all_whitespace(res.get_data(as_text=True))
 
     @mock.patch('app.main.suppliers.get_frameworks_closed_and_open_for_applications', autospec=True)

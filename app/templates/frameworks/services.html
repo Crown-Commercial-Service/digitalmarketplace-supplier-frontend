@@ -35,13 +35,7 @@
 
   {% include "partials/service_warning.html" %}
 
-  {% with
-     heading = lot.name + " services",
-     smaller = True,
-     with_breadcrumb = True
-  %}
-    {% include "toolkit/page-heading.html" %}
-  {% endwith %}
+  <h1 class="govuk-heading-l">{{ lot.name }} services</h1>
 
   {% if framework.status == 'pending' %}
     <div class="summary-item-lede">

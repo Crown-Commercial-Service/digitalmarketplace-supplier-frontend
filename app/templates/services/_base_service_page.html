@@ -25,12 +25,7 @@
 
     {% block before_heading %}{% endblock %}
     <div class="column-two-thirds">
-      {% with
-        heading = service_data.get('serviceName', service_data['lotName']),
-        smaller = true
-      %}
-        {% include "toolkit/page-heading.html" %}
-      {% endwith %}
+      <h1 class="govuk-heading-l">{{ service_data.get('serviceName', service_data['lotName']) }}</h1>
     </div>
     {% block before_sections %}{% endblock %}
     <div class="column-one-whole">

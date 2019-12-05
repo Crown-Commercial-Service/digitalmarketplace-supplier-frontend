@@ -29,9 +29,7 @@
   <div class="grid-row">
 
     <div class="column-two-thirds dmspeak">
-      {% with heading = "Correct a mistake in your {}".format(completed_data_description), smaller = True %}
-        {% include "toolkit/page-heading.html" %}
-      {% endwith %}
+      <h1 class="govuk-heading-l">{{ 'Correct a mistake in your {}'.format(completed_data_description) }}</h1>
 
       <div class="explanation-list">
       <p class="govuk-body-l">Contact <a class="govuk-link" href="mailto:{{ company_details_change_email }}">{{ company_details_change_email }}</a> to correct a mistake in your:</p>

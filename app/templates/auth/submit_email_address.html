@@ -30,12 +30,7 @@
 {% block main_content %}
 {% include "toolkit/forms/validation.html" %}
 
-  {% with
-    heading = "Invite a contributor",
-    smaller = true
-  %}
-    {% include 'toolkit/page-heading.html' %}
-  {% endwith %}
+<h1 class="govuk-heading-l">Invite a contributor</h1>
 
 <form autocomplete="off" action="{{ url_for('.invite_user') }}" method="POST">
 

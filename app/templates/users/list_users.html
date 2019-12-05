@@ -24,13 +24,9 @@
 
 {% block main_content %}
   <div class="single-summary-page">
-    {% with
-      context = current_user.email_address,
-      heading = "Invite or remove contributors",
-      smaller = true
-    %}
-      {% include 'toolkit/page-heading.html' %}
-    {% endwith %}
+    <span class="govuk-caption-l">{{ current_user.email_address }}</span>
+    <h1 class="govuk-heading-l">Invite or remove contributors</h1>
+
     <a class="govuk-link" class="summary-change-link" href="{{ url_for('.invite_user') }}">Invite a contributor</a>
     {% call(item) summary.table(
       users,

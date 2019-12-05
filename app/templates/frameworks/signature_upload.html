@@ -27,13 +27,7 @@
 
 {% block main_content %}
 <div class="single-question-page">
-  {%
-    with
-    heading = "Upload your signed signature page",
-    smaller = True
-  %}
-    {% include "toolkit/page-heading.html" %}
-  {% endwith %}
+  <h1 class="govuk-heading-l">Upload your signed signature page</h1>
 
   {% if upload_error %}
     {% with errors = {

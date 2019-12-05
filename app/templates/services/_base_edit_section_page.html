@@ -13,12 +13,7 @@
     <div class="column-two-thirds">
       {% include 'frameworks/_session_timeout.html' %}
 
-      {% with
-        heading = section.name,
-        smaller = true
-      %}
-        {% include 'toolkit/page-heading.html' %}
-      {% endwith %}
+      <h1 class="govuk-heading-l">{{ section.name }}</h1>
 
       {% if section.description %}
         <div class="section-description">

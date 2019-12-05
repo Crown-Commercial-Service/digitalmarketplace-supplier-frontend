@@ -5,3 +5,62 @@
   @include govuk-responsive-margin(1, "top");
   @include govuk-responsive-margin(0, "bottom");
 }
+
+
+// FIXME: Only needed to give vertical spacing between notifications
+// and page heading.
+//
+// Can remove this once notifications, temporary messages have been
+// standardised
+
+%banner {
+  @include govuk-responsive-margin(6, "bottom");
+}
+
+%banner-destructive {
+  @extend %banner;
+}
+
+.banner-destructive-without-action {
+  @extend %banner-destructive;
+}
+
+.banner-destructive-with-action {
+  @extend %banner-destructive;
+}
+
+%banner-warning {
+  @extend %banner;
+}
+
+.banner-warning-with-action {
+  @extend %banner-warning;
+}
+
+.banner-warning-without-action {
+  @extend %banner-warning;
+}
+
+%banner-success {
+  @extend %banner;
+}
+
+.banner-success-with-action {
+  @extend %banner-success;
+}
+
+.banner-success-without-action {
+  @extend %banner-success;
+}
+
+%banner-information {
+  @extend %banner;
+}
+
+.banner-information-with-action {
+  @extend %banner-information;
+}
+
+.banner-information-without-action {
+  @extend %banner-information;
+}

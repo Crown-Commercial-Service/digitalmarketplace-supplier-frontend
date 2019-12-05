@@ -42,12 +42,7 @@
 
   <div class="grid-row framework-dashboard">
     <div class="column-two-thirds">
-      {% with
-         heading = self.page_title_inner(),
-         smaller = True
-      %}
-        {% include "toolkit/page-heading.html" %}
-      {% endwith %}
+      <h1 class="govuk-heading-l">{{ self.page_title_inner() }}</h1>
 
       {% include 'frameworks/_dashboard_lede.html' %}
 

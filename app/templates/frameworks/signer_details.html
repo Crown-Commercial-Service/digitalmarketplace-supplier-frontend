@@ -30,13 +30,7 @@
 
 <div class="grid-row">
   <div class="column-two-thirds">
-    {%
-    with
-      heading = "Details of the person who is signing on behalf of %s" | format(supplier_registered_name),
-      smaller = True
-    %}
-      {% include "toolkit/page-heading.html" %}
-    {% endwith %}
+    <h1 class="govuk-heading-l">{{ 'Details of the person who is signing on behalf of {}'.format(supplier_registered_name) }}</h1>
 
     <form method="POST" action="{{ url_for('.signer_details', framework_slug=framework.slug, agreement_id=agreement['id']) }}">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
