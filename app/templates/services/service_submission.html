@@ -156,7 +156,7 @@
       {% endcall %}
     {% endif %}
   {% else %}
-    {{ summary[question.type](question.value, question.assurance) }}
+    {{ summary[question.type](question.value) }}
   {% endif %}
   {% if framework.status == 'open' %}
     {% if section.edit_questions and not question.is_empty %}
