@@ -99,7 +99,7 @@
         <span class="summary-item-field-answer-required" align="left">{{ question.empty_message }}</span>
       {% endcall %}
     {% else %}
-      {{ summary[question.type](question.value, question.assurance) }}
+      {{ summary[question.type](question.value) }}
     {% endif %}
   {% endif %}
 {% endblock %}

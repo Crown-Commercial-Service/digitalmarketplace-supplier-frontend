@@ -1,6 +1,5 @@
 {% extends "_base_page.html" %}
 {% import "macros/toolkit_forms.html" as forms %}
-{% from "macros/assurance.html" import assurance_question %}
 
 {% block pageTitle %}
   {{ section.name }} – Digital Marketplace
@@ -35,16 +34,6 @@
                 {{ forms[question.type](question, service_data, errors) }}
               {% else %}
                 {{ forms[question.type](question, service_data, {}) }}
-              {% endif %}
-              {% if question.assuranceApproach %}
-                <div class='assurance-question'>
-                  {{ assurance_question(
-                    name=question.id,
-                    service_data=service_data,
-                    type=question.assuranceApproach,
-                    errors=errors if errors else {}
-                  ) }}
-                </div>
               {% endif %}
             {% endfor %}
 

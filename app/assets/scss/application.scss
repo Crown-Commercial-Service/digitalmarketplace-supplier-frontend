@@ -65,11 +65,6 @@ $govuk-compatibility-govukelements: true;
 @import "node_modules/digitalmarketplace-govuk-frontend/govuk-frontend/all";
 
 // App-specific styles
-@import "_assurance-question.scss";           // This could probably be removed as the only usage is in service editing
-                                              // and editing expired services is not officially supported (it can be
-                                              // done only by hacking URLs). However, without also removing supporting
-                                              // HTML and/or code that allows assurance questions to go in, it doesn't
-                                              // make sense to remove the styling.
 @import "_create_supplier.scss";
 @import "_framework-application.scss";
 @import "_service-status.scss";
