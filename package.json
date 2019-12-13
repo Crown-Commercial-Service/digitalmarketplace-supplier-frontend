@@ -24,7 +24,6 @@
     "gulp-shell": "^0.7.1",
     "gulp-sourcemaps": "^2.6.5",
     "gulp-uglify": "^3.0.2",
-    "hogan.js": "3.0.2",
     "jquery": "3.4.1"
   },
   "scripts": {
