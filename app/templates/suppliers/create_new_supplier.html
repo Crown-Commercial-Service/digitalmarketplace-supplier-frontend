@@ -5,20 +5,21 @@
 {% endblock %}
 
 {% block breadcrumb %}
-  {%
-    with items = [
+  {{ govukBreadcrumbs({
+    "items": [
       {
-        "link": "/",
-        "label": "Digital Marketplace"
+        "text": "Digital Marketplace",
+        "href": "/"
       },
       {
-        "link": url_for('.become_a_supplier'),
-        "label": "Become a supplier"
+        "text": "Become a supplier",
+        "href": url_for('.become_a_supplier')
+      },
+      {
+        "text": "Create a supplier account"
       }
     ]
-  %}
-    {% include "toolkit/breadcrumb.html" %}
-  {% endwith %}
+  }) }}
 {% endblock %}
 
 {% block main_content %}

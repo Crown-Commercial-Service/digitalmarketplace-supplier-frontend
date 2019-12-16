@@ -2492,11 +2492,19 @@ class TestDeclarationOverview(BaseApplicationTest, MockEnsureApplicationCompanyD
         assert response.status_code == 200
         doc = html.fromstring(response.get_data(as_text=True))
 
-        breadcrumb_texts = [e.xpath("normalize-space(string())") for e in doc.xpath("//nav//*[@role='breadcrumbs']//a")]
-        assert breadcrumb_texts == ["Digital Marketplace", "Your account", "Apply to F-Cumulus 0"]
-
-        breadcrumb_hrefs = doc.xpath("//nav//*[@role='breadcrumbs']//a/@href")
-        assert breadcrumb_hrefs == ["/", "/suppliers", "/suppliers/frameworks/{}".format(framework_slug)]
+        breadcrumbs = doc.xpath("//div[@class='govuk-breadcrumbs']/ol/li")
+        assert tuple(li.xpath("normalize-space(string())") for li in breadcrumbs) == (
+            "Digital Marketplace",
+            "Your account",
+            "Apply to F-Cumulus 0",
+            "Your declaration overview",
+        )
+        assert tuple(li.xpath(".//a/@href") for li in breadcrumbs) == (
+            ['/'],
+            ['/suppliers'],
+            [f'/suppliers/frameworks/{framework_slug}'],
+            [],
+        )
 
         assert bool(doc.xpath(
             "//p[contains(normalize-space(string()), $t)][contains(normalize-space(string()), $f)]",
@@ -2596,10 +2604,19 @@ class TestDeclarationOverview(BaseApplicationTest, MockEnsureApplicationCompanyD
         assert response.status_code == 200
         doc = html.fromstring(response.get_data(as_text=True))
 
-        breadcrumb_texts = [e.xpath("normalize-space(string())") for e in doc.xpath("//nav//*[@role='breadcrumbs']//a")]
-        assert breadcrumb_texts == ["Digital Marketplace", "Your account", "Your F-Cumulus 0 application"]
-        breadcrumb_hrefs = doc.xpath("//nav//*[@role='breadcrumbs']//a/@href")
-        assert breadcrumb_hrefs == ["/", "/suppliers", "/suppliers/frameworks/{}".format(framework_slug)]
+        breadcrumbs = doc.xpath("//div[@class='govuk-breadcrumbs']/ol/li")
+        assert tuple(li.xpath("normalize-space(string())") for li in breadcrumbs) == (
+            "Digital Marketplace",
+            "Your account",
+            "Your F-Cumulus 0 application",
+            "Your declaration overview",
+        )
+        assert tuple(li.xpath(".//a/@href") for li in breadcrumbs) == (
+            ['/'],
+            ['/suppliers'],
+            [f'/suppliers/frameworks/{framework_slug}'],
+            [],
+        )
 
         # there shouldn't be any links to the "edit" page
         assert not any(

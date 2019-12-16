@@ -5,19 +5,30 @@
 {% endblock %}
 
 {% block breadcrumb %}
-  {%
-    with items = [
+  {% with items = [
       {
-        "link": "/",
-        "label": "Digital Marketplace"
+        "text": "Digital Marketplace",
+        "href": "/"
       },
       {
-        "link": url_for(".dashboard"),
-        "label": "Your account"
-      }
+        "text": "Your account",
+        "href": url_for('.dashboard')
+      },
     ]
   %}
-    {% include "toolkit/breadcrumb.html" %}
+    {% if currently_applying_to %}
+      {{ govukBreadcrumbs({"items": items + [
+        {
+          "text": "Apply to " + framework.name,
+          "href": url_for(".framework_dashboard", framework_slug=framework.slug)
+        },
+        {
+          "text": "Company details"
+        }
+      ]}) }}
+    {% else %}
+      {{ govukBreadcrumbs({"items": items + [{"text": "Company details"}]}) }}
+    {% endif %}
   {% endwith %}
 {% endblock %}
 

@@ -7,32 +7,40 @@
 {% import "macros/submission.html" as submission %}
 
 {% block breadcrumb %}
-  {%
-    with items = [
+  {% with items = [
       {
-        "link": "/",
-        "label": "Digital Marketplace"
+        "text": "Digital Marketplace",
+        "href": "/"
       },
       {
-        "link": url_for(".dashboard"),
-        "label": "Your account"
+        "text": "Your account",
+        "href": url_for('.dashboard')
       },
       {
-        "link": url_for(".framework_dashboard", framework_slug=framework.slug),
-        "label": "Apply to " + framework.name
+        "text": "Apply to " + framework.name,
+        "href": url_for(".framework_dashboard", framework_slug=framework.slug)
       },
       {
-        "link": url_for(".framework_submission_lots", framework_slug=framework.slug),
-        "label": "Services"
-      },
-      {
-        "link": url_for(".framework_submission_services", framework_slug=framework.slug, lot_slug=service_data.lot),
-        "label": service_data.lotName
-      } if not lot.oneServiceLimit else {}
+        "text": "Services",
+        "href": url_for(".framework_submission_lots", framework_slug=framework.slug)
+      }
     ]
   %}
-    {% include "toolkit/breadcrumb.html" %}
+    {% if lot.oneServiceLimit %}
+      {{ govukBreadcrumbs({"items": items + [{"text": service_data.get('serviceName', service_data['lotName'])}]}) }}
+    {% else %}
+      {{ govukBreadcrumbs({"items": items + [
+        {
+          "text": service_data.lotName,
+          "href": url_for(".framework_submission_services", framework_slug=framework.slug, lot_slug=service_data.lot)
+          },
+        {
+          "text": service_data.get('serviceName', service_data['lotName'])
+        }
+      ]}) }}
+    {% endif %}
   {% endwith %}
+
   {% if service_data.status == 'submitted' and declaration_status != 'complete' and framework.status == 'open' %}
     <div class="wrapper">
       {%
@@ -65,7 +73,6 @@
         {% endif %}
       </aside>
     </div>
-
   {% endif %}
 {% endblock %}
 
