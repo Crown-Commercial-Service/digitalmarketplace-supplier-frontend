@@ -7,7 +7,7 @@ Flask-Login==0.4.1
 Flask-WTF==0.14.2
 itsdangerous==0.24 # pyup: ignore
 
-git+https://github.com/alphagov/digitalmarketplace-utils.git@50.1.0#egg=digitalmarketplace-utils==50.1.0
+git+https://github.com/alphagov/digitalmarketplace-utils.git@51.1.0#egg=digitalmarketplace-utils==51.1.0
 git+https://github.com/alphagov/digitalmarketplace-content-loader.git@7.1.1#egg=digitalmarketplace-content-loader==7.1.1
 git+https://github.com/alphagov/digitalmarketplace-apiclient.git@21.4.1#egg=digitalmarketplace-apiclient==21.4.1
 git+https://github.com/alphagov/govuk-frontend-jinja.git@v0.5.1-alpha#egg=govuk-frontend-jinja==0.5.1-alpha
@@ -15,9 +15,9 @@ git+https://github.com/alphagov/govuk-frontend-jinja.git@v0.5.1-alpha#egg=govuk-
 ## The following requirements were added by pip freeze:
 asn1crypto==1.2.0
 blinker==1.4
-boto3==1.10.27
-botocore==1.13.27
-certifi==2019.9.11
+boto3==1.10.41
+botocore==1.13.41
+certifi==2019.11.28
 cffi==1.13.2
 chardet==3.0.4
 Click==7.0
@@ -40,7 +40,7 @@ mailchimp3==3.0.6
 Markdown==2.6.11
 MarkupSafe==1.1.1
 monotonic==1.5
-notifications-python-client==5.4.0
+notifications-python-client==5.4.1
 odfpy==1.4.0
 prometheus-client==0.2.0
 pycparser==2.19
@@ -48,7 +48,7 @@ PyJWT==1.7.1
 python-dateutil==2.8.0
 python-json-logger==0.1.11
 pytz==2019.3
-PyYAML==5.1.2
+PyYAML==5.2
 requests==2.22.0
 s3transfer==0.2.1
 six==1.13.0
