@@ -29,10 +29,19 @@
     "frontend-build:development": "gulp build:development",
     "frontend-build:production": "gulp build:production",
     "frontend-build:watch": "gulp watch",
-    "test": "standard gulpfile.js && gulp test"
+    "test": "standard \"gulpfile.js\" \"spec/**/*.js\" && jest"
   },
   "devDependencies": {
     "jest": "^24.9.0",
     "standard": "^14.3.1"
+  },
+  "standard": {
+    "env": {
+      "jest": true
+    },
+    "globals": [
+      "GOVUK",
+      "spyOn"
+    ]
   }
 }
