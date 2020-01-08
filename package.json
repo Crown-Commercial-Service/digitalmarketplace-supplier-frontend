@@ -19,7 +19,6 @@
     "gulp": "^4.0.2",
     "gulp-filelog": "0.4.1",
     "gulp-include": "^2.4.1",
-    "gulp-jasmine-phantom": "alphagov/gulp-jasmine-phantom#node-10-fs-unlink",
     "gulp-sass": "^4.0.2",
     "gulp-shell": "^0.7.1",
     "gulp-sourcemaps": "^2.6.5",
