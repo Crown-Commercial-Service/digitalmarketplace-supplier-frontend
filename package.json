@@ -33,6 +33,7 @@
     "test": "standard gulpfile.js && gulp test"
   },
   "devDependencies": {
+    "jest": "^24.9.0",
     "standard": "^14.3.1"
   }
 }
