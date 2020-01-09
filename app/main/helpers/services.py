@@ -31,18 +31,6 @@ def get_lot_drafts(apiclient, framework_slug, lot_slug):
     )
 
 
-def count_unanswered_questions(service_attributes):
-    unanswered_required, unanswered_optional = (0, 0)
-    for section in service_attributes:
-        for question in section.questions:
-            if question.answer_required:
-                unanswered_required += 1
-            elif question.value in ['', [], None]:
-                unanswered_optional += 1
-
-    return unanswered_required, unanswered_optional
-
-
 def is_service_associated_with_supplier(service):
     return service.get('supplierId') == current_user.supplier_id
 
