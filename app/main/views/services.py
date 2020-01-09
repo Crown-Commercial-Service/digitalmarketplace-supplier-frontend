@@ -5,6 +5,7 @@ from flask_login import current_user
 
 from dmapiclient import HTTPError
 from dmcontent.content_loader import ContentNotFoundError
+from dmcontent.utils import count_unanswered_questions
 from dmutils import s3
 from dmutils.dates import update_framework_with_formatted_dates
 from dmutils.documents import upload_service_documents
@@ -18,7 +19,6 @@ from ...main import main, content_loader
 from ..helpers import login_required
 from ..helpers.services import (
     copy_service_from_previous_framework,
-    count_unanswered_questions,
     get_lot_drafts,
     get_signed_document_url,
     is_service_associated_with_supplier,

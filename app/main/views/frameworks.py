@@ -12,6 +12,7 @@ from dmapiclient.audit import AuditTypes
 from dmcontent.formats import format_service_price
 from dmcontent.questions import ContentQuestion
 from dmcontent.errors import ContentNotFoundError
+from dmcontent.utils import count_unanswered_questions
 from dmutils import s3
 from dmutils.dates import update_framework_with_formatted_dates
 from dmutils.documents import (
@@ -53,7 +54,6 @@ from ..helpers.frameworks import (
     return_404_if_applications_closed
 )
 from ..helpers.services import (
-    count_unanswered_questions,
     get_drafts,
     get_lot_drafts,
     get_signed_document_url,
