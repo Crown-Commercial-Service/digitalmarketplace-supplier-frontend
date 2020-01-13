@@ -6,20 +6,21 @@
 {% endblock %}
 
 {% block breadcrumb %}
-  {%
-    with items = [
+  {{ govukBreadcrumbs({
+    "items": [
       {
-        "link": "/",
-        "label": "Digital Marketplace"
+        "text": "Digital Marketplace",
+        "href": "/"
       },
       {
-        "link": url_for(".dashboard"),
-        "label": "Your account"
+        "text": "Your account",
+        "href": url_for('.dashboard')
+      },
+      {
+        "text": "Add or remove contributors"
       }
     ]
-  %}
-    {% include "toolkit/breadcrumb.html" %}
-  {% endwith %}
+  }) }}
 {% endblock %}
 
 {% block main_content %}

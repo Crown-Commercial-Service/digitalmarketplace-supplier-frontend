@@ -7,32 +7,33 @@
 {% endblock %}
 
 {% block breadcrumb %}
-  {%
-    with items = [
+  {{ govukBreadcrumbs({
+    "items": [
       {
-        "link": "/",
-        "label": "Digital Marketplace",
+        "text": "Digital Marketplace",
+        "href": "/"
       },
       {
-        "link": url_for(".dashboard"),
-        "label": "Your account",
+        "text": "Your account",
+        "href": url_for('.dashboard')
       },
       {
-        "link": url_for(".framework_dashboard", framework_slug=framework.slug),
-        "label": "Apply to " + framework.name,
+        "text": "Apply to " + framework.name,
+        "href": url_for(".framework_dashboard", framework_slug=framework.slug)
       },
       {
-        "link": url_for(".framework_submission_lots", framework_slug=framework.slug),
-        "label": "Services",
+        "text": "Services",
+        "href": url_for(".framework_submission_lots", framework_slug=framework.slug)
       },
       {
-        "link": url_for(".framework_submission_services", framework_slug=framework.slug, lot_slug=lot.slug),
-        "label": lot.name,
+        "text": lot.name,
+        "href": url_for(".framework_submission_services", framework_slug=framework.slug, lot_slug=lot.slug)
+      },
+      {
+        "text": "Copy your {} services".format(framework.name)
       }
     ]
-  %}
-    {% include "toolkit/breadcrumb.html" %}
-  {% endwith %}
+  }) }}
 {% endblock %}
 
 {% block main_content %}

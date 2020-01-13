@@ -4,16 +4,17 @@
 {% endblock %}
 
 {% block breadcrumb %}
-  {%
-    with items = [
+  {{ govukBreadcrumbs({
+    "items": [
       {
-        "link": "/",
-        "label": "Digital Marketplace"
+        "text": "Digital Marketplace",
+        "href": "/"
+      },
+      {
+        "text": "Your account"
       }
     ]
-  %}
-    {% include "toolkit/breadcrumb.html" %}
-  {% endwith %}
+  }) }}
 {% endblock %}
 
 {% block main_content %}

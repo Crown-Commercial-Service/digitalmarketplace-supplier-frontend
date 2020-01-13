@@ -1,27 +1,25 @@
 {% extends "services/_base_service_page.html" %}
 
 {% block breadcrumb %}
-  {% set your_services_text %}
-    Your {{ service_data["frameworkName"] }} services
-  {% endset %}
-  {%
-    with items = [
+  {{ govukBreadcrumbs({
+    "items": [
       {
-        "link": "/",
-        "label": "Digital Marketplace"
+        "text": "Digital Marketplace",
+        "href": "/"
       },
       {
-        "link": url_for(".dashboard"),
-        "label": "Your account"
+        "text": "Your account",
+        "href": url_for('.dashboard')
       },
       {
-        "link": url_for(".list_services", framework_slug=service_data["frameworkSlug"]),
-        "label": your_services_text
+        "text": "Your " + service_data["frameworkName"] + " services",
+        "href": url_for(".list_services", framework_slug=service_data["frameworkSlug"])
+      },
+      {
+        "text": service_data.get('serviceName', service_data['lotName'])
       }
     ]
-  %}
-    {% include "toolkit/breadcrumb.html" %}
-  {% endwith %}
+  }) }}
 {% endblock %}
 
 {% block before_heading %}

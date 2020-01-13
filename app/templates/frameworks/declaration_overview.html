@@ -5,26 +5,26 @@
   Your {{ framework.name }} declaration – Digital Marketplace
 {% endblock %}
 
-
 {% block breadcrumb %}
-  {%
-    with items = [
+  {{ govukBreadcrumbs({
+    "items": [
       {
-        "link": "/",
-        "label": "Digital Marketplace"
+        "text": "Digital Marketplace",
+        "href": "/"
       },
       {
-        "link": url_for(".dashboard"),
-        "label": "Your account"
+        "text": "Your account",
+        "href": url_for('.dashboard')
       },
       {
-        "link": url_for(".framework_dashboard", framework_slug=framework.slug),
-        "label": ("Apply to "+framework.name) if framework.status == "open" else ("Your "+framework.name+" application")
+        "text": ("Apply to "+framework.name) if framework.status == "open" else ("Your "+framework.name+" application"),
+        "href": url_for(".framework_dashboard", framework_slug=framework.slug)
+      },
+      {
+        "text": "Your declaration overview"
       }
     ]
-  %}
-    {% include "toolkit/breadcrumb.html" %}
-  {% endwith %}
+  }) }}
 {% endblock %}
 
 

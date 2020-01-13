@@ -7,24 +7,25 @@
 {% endblock %}
 
 {% block breadcrumb %}
-  {%
-    with items = [
+  {{ govukBreadcrumbs({
+    "items": [
       {
-        "link": "/",
-        "label": "Digital Marketplace"
+        "text": "Digital Marketplace",
+        "href": "/"
       },
       {
-        "link": url_for(".dashboard"),
-        "label": "Your account"
+        "text": "Your account",
+        "href": url_for('.dashboard')
       },
       {
-        "link": url_for(".list_users"),
-        "label": "Add or remove contributors"
+        "text": "Add or remove contributors",
+        "href": url_for('.list_users')
+      },
+      {
+        "text": "Invite a contributor"
       }
     ]
-  %}
-    {% include "toolkit/breadcrumb.html" %}
-  {% endwith %}
+  }) }}
 {% endblock %}
 
 {% block main_content %}

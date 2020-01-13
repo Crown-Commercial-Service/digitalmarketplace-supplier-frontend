@@ -927,14 +927,21 @@ class TestSupplierEditUpdateServiceSection(BaseApplicationTest):
         assert self.data_api_client.update_service.called is False
         self.assert_no_flashes()
 
-        assert tuple(
-            (a.xpath("normalize-space(string())"), a.attrib["href"],)
-            for a in document.xpath("//nav//ol[@role='breadcrumbs']/li//a[1]")
-        ) == (
-            ('Digital Marketplace', '/'),
-            ('Your account', '/suppliers'),
-            ('Your G-Cloud 6 services', '/suppliers/frameworks/g-cloud-6/services'),
-            ('Service name 123', '/suppliers/frameworks/g-cloud-6/services/1'),
+        breadcrumbs = document.xpath("//div[@class='govuk-breadcrumbs']/ol/li")
+
+        assert tuple(li.xpath("normalize-space(string())") for li in breadcrumbs) == (
+            "Digital Marketplace",
+            "Your account",
+            "Your G-Cloud 6 services",
+            "Service name 123",
+            "Description",
+        )
+        assert tuple(li.xpath(".//a/@href") for li in breadcrumbs) == (
+            ['/'],
+            ['/suppliers'],
+            ['/suppliers/frameworks/g-cloud-6/services'],
+            ['/suppliers/frameworks/g-cloud-6/services/1'],
+            [],
         )
 
     def test_edit_service_incorrect_framework(self, s3):
@@ -1081,14 +1088,21 @@ class TestSupplierEditUpdateServiceSection(BaseApplicationTest):
         )) == 2
         self.assert_no_flashes()
 
-        assert tuple(
-            (a.xpath("normalize-space(string())"), a.attrib["href"],)
-            for a in document.xpath("//nav//ol[@role='breadcrumbs']/li//a[1]")
-        ) == (
-            ('Digital Marketplace', '/'),
-            ('Your account', '/suppliers'),
-            ('Your G-Cloud 6 services', '/suppliers/frameworks/g-cloud-6/services'),
-            ('Service name 123', '/suppliers/frameworks/g-cloud-6/services/1'),
+        breadcrumbs = document.xpath("//div[@class='govuk-breadcrumbs']/ol/li")
+
+        assert tuple(li.xpath("normalize-space(string())") for li in breadcrumbs) == (
+            "Digital Marketplace",
+            "Your account",
+            "Your G-Cloud 6 services",
+            "Service name 123",
+            "Description",
+        )
+        assert tuple(li.xpath(".//a/@href") for li in breadcrumbs) == (
+            ['/'],
+            ['/suppliers'],
+            ['/suppliers/frameworks/g-cloud-6/services'],
+            ['/suppliers/frameworks/g-cloud-6/services/1'],
+            [],
         )
 
     def test_update_with_under_50_words_error(self, s3):
