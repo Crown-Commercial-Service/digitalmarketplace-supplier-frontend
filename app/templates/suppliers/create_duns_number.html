@@ -26,7 +26,7 @@
   }) }}
 {% endblock %}
 
-{% block main_content %}
+{% block mainContent %}
 <div class="grid-row">
   {% if errors.get("duns_number", {}).get("message", None) == 'DUNS number already used' %}
     {% with lede = "A supplier account already exists with that DUNS number",

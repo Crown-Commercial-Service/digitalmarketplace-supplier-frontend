@@ -4,7 +4,7 @@
   {{ service_data.serviceName or service_data.lotName }} – Digital Marketplace
 {% endblock %}
 
-{% block main_content %}
+{% block mainContent %}
   <div class="grid-row">
     {% if confirm_remove %}
       <form method="post" action='{{ url_for(".remove_subsection", framework_slug=framework.slug, lot_slug=service_data.lot, service_id=service_id, section_id=request.args.get("section_id"), question_slug=confirm_remove, confirm=True) }}'>
