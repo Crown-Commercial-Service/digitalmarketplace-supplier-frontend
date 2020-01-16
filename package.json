@@ -4,7 +4,7 @@
   "version": "1.0.0",
   "private": true,
   "engines": {
-    "node": "^ 10.15"
+    "node": "^10.16.3"
   },
   "dependencies": {
     "colors": "1.1.2",
