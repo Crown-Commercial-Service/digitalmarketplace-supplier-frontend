@@ -343,8 +343,10 @@ def framework_submission_services(framework_slug, lot_slug):
     with logged_duration(message="Annotated draft details in {duration_real}s"):
         for draft in chain(drafts, complete_drafts):
             draft['priceString'] = format_service_price(draft)
-            content = content_loader.get_manifest(framework_slug, 'edit_submission').filter(draft)
-            sections = content.summary(draft)
+            sections = content_loader.get_manifest(
+                framework_slug,
+                'edit_submission',
+            ).filter(draft, inplace_allowed=True).summary(draft, inplace_allowed=True)
 
             unanswered_required, unanswered_optional = count_unanswered_questions(sections)
             draft.update({
@@ -508,7 +510,10 @@ def framework_supplier_declaration_overview(framework_slug):
         abort(410)
 
     try:
-        content = content_loader.get_manifest(framework_slug, 'declaration').filter(sf["declaration"])
+        content = content_loader.get_manifest(
+            framework_slug,
+            'declaration',
+        ).filter(sf["declaration"], inplace_allowed=True)
     except ContentNotFoundError:
         abort(404)
 
@@ -550,7 +555,10 @@ def framework_supplier_declaration_submit(framework_slug):
     # ensure our declaration is at least a dict
     sf["declaration"] = sf.get("declaration") or {}
 
-    content = content_loader.get_manifest(framework_slug, 'declaration').filter(sf["declaration"])
+    content = content_loader.get_manifest(
+        framework_slug,
+        'declaration',
+    ).filter(sf["declaration"], inplace_allowed=True)
 
     validator = get_validator(framework, content, sf["declaration"])
     errors = validator.get_error_messages()
@@ -581,7 +589,7 @@ def framework_supplier_declaration_submit(framework_slug):
 def framework_supplier_declaration_edit(framework_slug, section_id):
     framework = get_framework_or_404(data_api_client, framework_slug, allowed_statuses=['open'])
 
-    content = content_loader.get_manifest(framework_slug, 'declaration').filter({})
+    content = content_loader.get_manifest(framework_slug, 'declaration').filter({}, inplace_allowed=True)
     status_code = 200
 
     # Get and check the current section.

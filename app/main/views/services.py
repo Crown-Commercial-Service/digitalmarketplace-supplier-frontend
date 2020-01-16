@@ -95,7 +95,10 @@ def edit_service(framework_slug, service_id):
     framework = get_framework_or_404(data_api_client, service['frameworkSlug'], allowed_statuses=['live'])
 
     try:
-        content = content_loader.get_manifest(framework['slug'], 'edit_service').filter(service)
+        content = content_loader.get_manifest(framework['slug'], 'edit_service').filter(
+            service,
+            inplace_allowed=True,
+        )
     except ContentNotFoundError:
         abort(404)
     remove_requested = bool(request.args.get('remove_requested'))
@@ -106,7 +109,7 @@ def edit_service(framework_slug, service_id):
         service_data=service,
         service_unavailability_information=service_unavailability_information,
         framework=framework,
-        sections=content.summary(service),
+        sections=content.summary(service, inplace_allowed=True),
         remove_requested=remove_requested,
         support_email_address=current_app.config['SUPPORT_EMAIL_ADDRESS']
     )
@@ -182,7 +185,10 @@ def edit_section(framework_slug, service_id, section_id):
     get_framework_or_404(data_api_client, service['frameworkSlug'], allowed_statuses=['live'])
 
     try:
-        content = content_loader.get_manifest(service["frameworkSlug"], 'edit_service').filter(service)
+        content = content_loader.get_manifest(service["frameworkSlug"], 'edit_service').filter(
+            service,
+            inplace_allowed=True,
+        )
     except ContentNotFoundError:
         abort(404)
     section = content.get_section(section_id)
@@ -221,7 +227,10 @@ def update_section(framework_slug, service_id, section_id):
     get_framework_or_404(data_api_client, service['frameworkSlug'], allowed_statuses=['live'])
 
     try:
-        content = content_loader.get_manifest(service["frameworkSlug"], 'edit_service').filter(service)
+        content = content_loader.get_manifest(service["frameworkSlug"], 'edit_service').filter(
+            service,
+            inplace_allowed=True,
+        )
     except ContentNotFoundError:
         abort(404)
     section = content.get_section(section_id)
@@ -311,7 +320,8 @@ def start_new_draft_service(framework_slug, lot_slug):
         abort(404)
 
     content = content_loader.get_manifest(framework_slug, 'edit_submission').filter(
-        {'lot': lot['slug']}
+        {'lot': lot['slug']},
+        inplace_allowed=True,
     )
 
     section = content.get_section(content.get_next_editable_section_id())
@@ -385,7 +395,8 @@ def copy_draft_service(framework_slug, lot_slug, service_id):
         abort(404)
 
     content = content_loader.get_manifest(framework_slug, 'edit_submission').filter(
-        {'lot': lot['slug']}
+        {'lot': lot['slug']},
+        inplace_allowed=True,
     )
 
     draft_copy = data_api_client.copy_draft_service(
@@ -528,9 +539,10 @@ def view_service_submission(framework_slug, lot_slug, service_id):
     if not is_service_associated_with_supplier(draft):
         abort(404)
 
-    content = content_loader.get_manifest(framework['slug'], 'edit_submission').filter(draft)
-
-    sections = content.summary(draft)
+    sections = content_loader.get_manifest(
+        framework['slug'],
+        'edit_submission',
+    ).filter(draft, inplace_allowed=True).summary(draft, inplace_allowed=True)
 
     unanswered_required, unanswered_optional = count_unanswered_questions(sections)
     delete_requested = True if request.args.get('delete_requested') else False
@@ -585,7 +597,7 @@ def edit_service_submission(framework_slug, lot_slug, service_id, section_id, qu
     if not is_service_associated_with_supplier(draft):
         abort(404)
 
-    content = content_loader.get_manifest(framework_slug, 'edit_submission').filter(draft)
+    content = content_loader.get_manifest(framework_slug, 'edit_submission').filter(draft, inplace_allowed=True)
     section = content.get_section(section_id)
     if section and (question_slug is not None):
         next_question = section.get_question_by_slug(section.get_next_question_slug(question_slug))
@@ -681,7 +693,7 @@ def remove_subsection(framework_slug, lot_slug, service_id, section_id, question
     if not is_service_associated_with_supplier(draft):
         abort(404)
 
-    content = content_loader.get_manifest(framework_slug, 'edit_submission').filter(draft)
+    content = content_loader.get_manifest(framework_slug, 'edit_submission').filter(draft, inplace_allowed=True)
     section = content.get_section(section_id)
     containing_section = section
     if section and (question_slug is not None):
