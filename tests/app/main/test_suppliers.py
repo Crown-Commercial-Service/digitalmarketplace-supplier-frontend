@@ -1670,6 +1670,8 @@ class TestEditSupplierRegisteredAddress(BaseApplicationTest):
 
 class TestCreateSupplier(BaseApplicationTest):
 
+    direct_plus_api_method = 'app.main.views.suppliers.direct_plus_client.get_organization_by_duns_number'
+
     def setup_method(self, method):
         super().setup_method(method)
         self.data_api_client_patch = mock.patch('app.main.views.suppliers.data_api_client', autospec=True)
@@ -1714,55 +1716,60 @@ class TestCreateSupplier(BaseApplicationTest):
         )
 
     def test_should_be_an_error_if_duns_number_in_use(self):
-        self.data_api_client.find_suppliers.return_value = {
-            "suppliers": [
-                "one supplier", "two suppliers"
-            ]
-        }
-        res = self.client.post(
-            "/suppliers/create/duns-number",
-            data={
-                'duns_number': "123456789"
-            }
-        )
+        with self.app.app_context():
+            with mock.patch(self.direct_plus_api_method, return_value={'primaryName': 'COMPANY LTD'}):
+                self.data_api_client.find_suppliers.return_value = {"suppliers": ["one supplier", "two suppliers"]}
+                res = self.client.post("/suppliers/create/duns-number", data={'duns_number': "123456789"})
+
         assert res.status_code == 400
         page = res.get_data(as_text=True)
         assert "A supplier account already exists with that DUNS number" in page
         assert "Enter a different DUNS number" in page
 
-    def test_should_allow_nine_digit_duns_number(self):
-        self.data_api_client.find_suppliers.return_value = {"suppliers": []}
-        res = self.client.post(
-            "/suppliers/create/duns-number",
-            data={
-                'duns_number': "123456789"
-            }
-        )
+    def test_should_be_an_error_if_duns_number_not_found(self):
+        with self.app.app_context():
+            with mock.patch(self.direct_plus_api_method, return_value=None):
+                res = self.client.post("/suppliers/create/duns-number", data={'duns_number': "123456789"})
+
+        assert res.status_code == 400
+        page = res.get_data(as_text=True)
+        assert "DUNS number not found" in page
+
+    def test_skips_dnb_api_validation_if_unexpected_response(self):
+        with self.app.app_context():
+            with mock.patch(self.direct_plus_api_method, return_value={'error': {'errorCode': '90000'}}):
+                self.data_api_client.find_suppliers.return_value = {"suppliers": []}
+                res = self.client.post("/suppliers/create/duns-number", data={'duns_number': "123456789"})
+
         assert res.status_code == 302
         assert res.location == 'http://localhost/suppliers/create/company-details'
+
+    def test_should_allow_nine_digit_duns_number(self):
+        self.data_api_client.find_suppliers.return_value = {"suppliers": []}
+        with self.app.app_context():
+            with mock.patch(self.direct_plus_api_method, return_value={'primaryName': 'COMPANY LTD'}):
+                res = self.client.post("/suppliers/create/duns-number", data={'duns_number': "123456789"})
+
+        assert res.status_code == 302
+        assert res.location == 'http://localhost/suppliers/create/lookup'
 
     def test_should_allow_duns_numbers_that_start_with_zero(self):
         self.data_api_client.find_suppliers.return_value = {"suppliers": []}
-        res = self.client.post(
-            "/suppliers/create/duns-number",
-            data={
-                'duns_number': "012345678"
-            }
-        )
+        with self.app.app_context():
+            with mock.patch(self.direct_plus_api_method, return_value={'primaryName': '0 COMPANY LTD'}):
+                res = self.client.post("/suppliers/create/duns-number", data={'duns_number': "012345678"})
+
         assert res.status_code == 302
-        assert res.location == 'http://localhost/suppliers/create/company-details'
+        assert res.location == 'http://localhost/suppliers/create/lookup'
 
     def test_should_strip_whitespace_surrounding_duns_number_field(self):
         self.data_api_client.find_suppliers.return_value = {"suppliers": []}
-        with self.client as c:
-            c.post(
-                "/suppliers/create/duns-number",
-                data={
-                    'duns_number': "  012345678  "
-                }
-            )
-            assert "duns_number" in session
-            assert session.get("duns_number") == "012345678"
+        with self.app.app_context(), self.client as c:
+            with mock.patch(self.direct_plus_api_method, return_value={'primaryName': '0 COMPANY LTD'}):
+                c.post("/suppliers/create/duns-number", data={'duns_number': "  012345678  "})
+
+                assert "duns_number" in session
+                assert session.get("duns_number") == "012345678"
 
     def test_should_allow_valid_company_contact_details(self):
         res = self.client.post(

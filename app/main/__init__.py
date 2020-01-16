@@ -1,7 +1,9 @@
 from copy import deepcopy
 
-from flask import Blueprint
+from flask import Blueprint, current_app
 from werkzeug.local import Local, LocalProxy
+
+from dmutils.direct_plus_client import DirectPlusClient
 
 from dmcontent.content_loader import ContentLoader
 
@@ -85,7 +87,19 @@ def get_content_loader():
     return _local.content_loader
 
 
+@logged_duration(message="Spent {duration_real}s in get_direct_plus_client")
+def get_direct_plus_client():
+
+    if not hasattr(_local, "direct_plus_client"):
+        _local.direct_plus_client = DirectPlusClient(
+            current_app.config['DM_DNB_API_USERNAME'],
+            current_app.config['DM_DNB_API_PASSWORD']
+        )
+    return _local.direct_plus_client
+
+
 content_loader = LocalProxy(get_content_loader)
+direct_plus_client = LocalProxy(get_direct_plus_client)
 
 
 @main.after_request

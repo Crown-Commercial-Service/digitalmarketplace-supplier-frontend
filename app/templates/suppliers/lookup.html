@@ -1,0 +1,71 @@
+{% extends "_base_page.html" %}
+{% import "toolkit/summary-table.html" as summary %}
+
+{% block page_title %}Lookup – Create a supplier account – Digital Marketplace{% endblock %}
+
+{% block breadcrumb %}
+  {{ govukBreadcrumbs({
+    "items": [
+      {
+        "href": "/",
+        "text": "Digital Marketplace"
+      },
+      {
+        "href": url_for('.become_a_supplier'),
+        "text": "Become a supplier"
+      },
+      {
+        "href": url_for('.create_new_supplier'),
+        "text": "Create an account"
+      }
+    ]
+  }) }}
+{% endblock %}
+
+{% block main_content %}
+
+  <div class="grid-row">
+
+  {% if errors %}
+    {% include 'toolkit/forms/validation.html' %}
+  {% endif %}
+
+    <div class="column-two-thirds">
+
+      {% with heading = "We found these details", smaller = True %}
+        {% include "toolkit/page-heading.html" %}
+      {% endwith %}
+
+      {% call summary.mapping_table(field_headings=["Label", "Value"], field_headings_visible=False) %}
+
+        {% for field, label in [("duns_number", "DUNS number"), ("company_name", "Company name")] %}
+          {% call summary.row(complete=True) %}
+            {% call summary.field(first=True, bold=True) %}{{ label }}{% endcall %}
+            {{ summary.text(session.get(field)) }}
+          {% endcall %}
+        {% endfor %}
+
+      {% endcall %}
+
+      <form method="POST" action="{{ url_for('.lookup') }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+
+        {% with question = "Is this the company you want to create an account for?",
+          name = "confirmed",
+          value = form.confirmed.value,
+          error = errors.get("confirmed", {}).get("message", None),
+          hint = 'You can change how the name appears later on.',
+          hint_underneath = true,
+          type = 'boolean'
+        %}
+          {% include "toolkit/forms/selection-buttons.html" %}
+        {% endwith %}
+
+        {{ govukButton({"text": "Continue"}) }}
+
+      </form>
+
+    </div>
+  </div>
+
+{% endblock %}
