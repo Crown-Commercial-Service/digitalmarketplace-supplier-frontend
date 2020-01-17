@@ -19,8 +19,8 @@
     {% if currently_applying_to %}
       {{ govukBreadcrumbs({"items": items + [
         {
-          "text": "Apply to " + framework.name,
-          "href": url_for(".framework_dashboard", framework_slug=framework.slug)
+          "text": "Apply to " + currently_applying_to.name,
+          "href": url_for(".framework_dashboard", framework_slug=currently_applying_to.slug)
         },
         {
           "text": "Company details"
