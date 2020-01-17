@@ -26,7 +26,7 @@
   }) }}
 {% endblock %}
 
-{% block main_content %}
+{% block mainContent %}
 <div class="grid-row">
   {% if errors.get("duns_number", {}).get("message", None) == 'DUNS number already used' %}
     {% with lede = "A supplier account already exists with that DUNS number",
@@ -49,7 +49,7 @@
           DUNS number.</p>
         <p class="govuk-body">The Digital Marketplace uses this to check if your business already has a supplier account.</p>
       </div>
-        <p class="govuk-body-l">You can either:</p>
+        <p class="govuk-body-m">You can either:</p>
         <ul class="govuk-list govuk-list--bullet">
           <li><a class="govuk-link" href="https://www.dnb.co.uk/duns-number/lookup.html" rel="external">find your DUNS number</a> on the
             Dun &amp; Bradstreet website</li>

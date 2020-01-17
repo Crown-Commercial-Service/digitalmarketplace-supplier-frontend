@@ -2267,7 +2267,7 @@ class TestDeleteDraftService(BaseApplicationTest, MockEnsureApplicationCompanyDe
         assert res.status_code == 302
         assert '/frameworks/g-cloud-7/submissions/scs/1?delete_requested=True' in res.location
         res2 = self.client.get('/suppliers/frameworks/g-cloud-7/submissions/scs/1?delete_requested=True')
-        assert b"Are you sure you want to delete this service?" in res2.get_data()
+        assert b"Are you sure you want to remove this service?" in res2.get_data()
 
     def test_cannot_delete_if_not_open(self):
         self.data_api_client.get_framework.return_value = self.framework(status='other')

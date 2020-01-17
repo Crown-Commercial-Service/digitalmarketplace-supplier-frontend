@@ -23,12 +23,14 @@
   }) }}
 {% endblock %}
 
-{% block main_content %}
+{% block mainContent %}
   <div class="single-summary-page">
     <span class="govuk-caption-l">{{ current_user.email_address }}</span>
     <h1 class="govuk-heading-l">Invite or remove contributors</h1>
 
-    <a class="govuk-link" class="summary-change-link" href="{{ url_for('.invite_user') }}">Invite a contributor</a>
+    <p class="govuk-body">
+      <a class="govuk-link" class="summary-change-link" href="{{ url_for('.invite_user') }}">Invite a contributor</a>
+    </p>
     {% call(item) summary.table(
       users,
       caption="Contributors for " + current_user.supplier_name,

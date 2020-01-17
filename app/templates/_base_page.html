@@ -16,7 +16,11 @@
     {% endblock %}
     <main id="content" role="main">
       {% include "toolkit/flash_messages.html" %}
-      {% block main_content %}{% endblock %}
+      {# TODO: Remove this block when we start removing govuk_template but be sure #}
+      {#       To keep the inner block mainContent otherwise no content will be rendered #}
+      {% block main_content %}
+        {% block mainContent %}{% endblock %}
+      {% endblock %}
     </main>
   </div>
 {% endblock %}

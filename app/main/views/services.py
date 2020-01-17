@@ -39,10 +39,10 @@ from ..forms.frameworks import OneServiceLimitCopyServiceForm
 SERVICE_REMOVED_MESSAGE = "{service_name} has been removed."
 SERVICE_UPDATED_MESSAGE = "You’ve edited your service. The changes are now live on the Digital Marketplace."
 SERVICE_COMPLETED_MESSAGE = Markup("<strong>{service_name}</strong> was marked as complete")
-SERVICE_DELETED_MESSAGE = Markup("<strong>{service_name}</strong> was deleted")
+SERVICE_DELETED_MESSAGE = Markup("<strong>{service_name}</strong> was removed")
 REMOVE_LAST_SUBSECTION_ERROR_MESSAGE = Markup(
     "You must offer one of the {section_name} to be eligible.<br>"
-    "If you don’t want to offer {service_name}, delete this service."
+    "If you don’t want to offer {service_name}, remove this service."
 )
 SINGLE_SERVICE_LOT_SINGLE_SERVICE_ADDED_MESSAGE = (
     "You've added your service to {framework_name} as a draft. You'll need to review it before it can be completed."

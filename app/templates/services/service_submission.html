@@ -125,10 +125,10 @@
         <input type="hidden" name="delete_confirmed" value="true" />
         <div class="banner-destructive-with-action">
           <p class="banner-message">
-            Are you sure you want to delete {{ service_data.lotName.lower() if lot.oneServiceLimit else 'this {}'.format(lot.unitSingular) }}?
+            Are you sure you want to remove {{ service_data.lotName.lower() if lot.oneServiceLimit else 'this {}'.format(lot.unitSingular) }}?
           </p>
           {{ govukButton({
-            "text": "Yes, delete",
+            "text": "Yes, remove",
             "classes": "govuk-button--warning app-banner-action",
           }) }}
         </div>
@@ -187,7 +187,7 @@
 
 {% block after_sections %}
   {% if not delete_requested %}
-    <div class="grid-row">
+
       <div class="column-two-thirds">
         &nbsp;
       </div>
@@ -201,8 +201,8 @@
         <form action="{{ url_for('.delete_draft_service', framework_slug=framework.slug, lot_slug=service_data.lot, service_id=service_id ) }}" method="POST">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
           {{ govukButton({
-            "text": "Delete",
-            "classes": "govuk-button--warning",
+            "text": "Remove draft service",
+            "classes": "govuk-button--warning button-destructive",
           }) }}
         </form>
         {% endif %}
@@ -223,6 +223,6 @@
             {% include "toolkit/secondary-action-link.html" %}
           {% endwith %}
       </div>
-    </div>
+
   {% endif %}
 {% endblock %}
