@@ -2678,7 +2678,7 @@ class TestPostListPreviousService(BaseApplicationTest, MockEnsureApplicationComp
 
         assert res.status_code == 400
         assert doc.xpath(
-            "//div[@class='error-page']//p[normalize-space(string())=$t]",
+            "//div//p[normalize-space(string())=$t]",
             t=f"You already have a draft {lot_name.lower()} service.",
         )
 

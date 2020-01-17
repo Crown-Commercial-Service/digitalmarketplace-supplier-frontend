@@ -3364,10 +3364,8 @@ class TestFrameworkUpdatesPage(BaseApplicationTest):
         response = self.client.get('/suppliers/frameworks/g-cloud-7/updates')
 
         assert response.status_code == 503
-        assert (
-            self.strip_all_whitespace("<h1>Sorry, we’re experiencing technical difficulties</h1>")
-            in self.strip_all_whitespace(response.get_data(as_text=True))
-        )
+        doc = html.fromstring(response.get_data(as_text=True))
+        assert doc.xpath('//h1/text()')[0] == "Sorry, we’re experiencing technical difficulties"
 
     def test_empty_messages_exist_if_no_files_returned(self, s3):
         self.data_api_client.get_framework.return_value = self.framework('open')
