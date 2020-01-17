@@ -125,10 +125,10 @@
         <input type="hidden" name="delete_confirmed" value="true" />
         <div class="banner-destructive-with-action">
           <p class="banner-message">
-            Are you sure you want to delete {{ service_data.lotName.lower() if lot.oneServiceLimit else 'this {}'.format(lot.unitSingular) }}?
+            Are you sure you want to remove {{ service_data.lotName.lower() if lot.oneServiceLimit else 'this {}'.format(lot.unitSingular) }}?
           </p>
           {{ govukButton({
-            "text": "Yes, delete",
+            "text": "Yes, remove",
             "classes": "govuk-button--warning app-banner-action",
           }) }}
         </div>
