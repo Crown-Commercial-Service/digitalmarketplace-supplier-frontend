@@ -52,6 +52,9 @@ class Config(object):
     DM_MAILCHIMP_API_KEY = None
     DM_MAILCHIMP_OPEN_FRAMEWORK_NOTIFICATION_MAILING_LIST_ID = None
 
+    DM_DNB_API_USERNAME = None
+    DM_DNB_API_PASSWORD = None
+
     DEBUG = False
 
     INVITE_EMAIL_NAME = 'Digital Marketplace Admin'
@@ -142,6 +145,9 @@ class Development(Config):
     DM_MAILCHIMP_USERNAME = 'not_a_real_username'
     DM_MAILCHIMP_API_KEY = 'not_a_real_key'
     DM_MAILCHIMP_OPEN_FRAMEWORK_NOTIFICATION_MAILING_LIST_ID = "not_a_real_mailing_list"
+
+    DM_DNB_API_USERNAME = 'not_a_real_username'
+    DM_DNB_API_PASSWORD = 'not_a_real_password'
 
 
 class Live(Config):
