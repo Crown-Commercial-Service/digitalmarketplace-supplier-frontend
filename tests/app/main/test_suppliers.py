@@ -1356,9 +1356,9 @@ class TestSupplierUpdate(BaseApplicationTest):
             ("validation-masthead-link", "Contact name"),
             ("validation-masthead-link", "Contact email address"),
             ("validation-masthead-link", "Contact phone number"),
-            ("validation-message", "You must provide a contact name."),
-            ("validation-message", "You must provide an email address."),
-            ("validation-message", "You must provide a phone number."),
+            ("validation-message", "Enter a contact name."),
+            ("validation-message", "Enter an email address."),
+            ("validation-message", "Enter a phone number."),
         ]:
             assert doc.xpath(
                 "//*[@class=$t][normalize-space(string())=$c]",
@@ -1385,8 +1385,8 @@ class TestSupplierUpdate(BaseApplicationTest):
         for content in [
             ("validation-masthead-link", "Contact phone number"),
             ("validation-masthead-link", "Contact name"),
-            ("validation-message", "You must provide a phone number under 20 characters."),
-            ("validation-message", "You must provide a contact name under 256 characters."),
+            ("validation-message", "Enter a phone number under 20 characters."),
+            ("validation-message", "Enter a contact name under 256 characters."),
         ]:
             assert doc.xpath(
                 "//*[@class=$t][normalize-space(string())=$c]",
@@ -1409,7 +1409,7 @@ class TestSupplierUpdate(BaseApplicationTest):
 
         for content in [
             ("validation-masthead-link", "Contact email address"),
-            ("validation-message", "You must provide a valid email address."),
+            ("validation-message", "Enter a valid email address."),
         ]:
             assert doc.xpath(
                 "//*[@class=$t][normalize-space(string())=$c]",
@@ -1583,8 +1583,8 @@ class TestEditSupplierRegisteredAddress(BaseApplicationTest):
         })
 
         assert status == 400
-        assert "You need to enter the town or city." in response
-        assert "You need to enter a country." in response
+        assert "Enter a town or city." in response
+        assert "Enter a country." in response
 
         assert self.data_api_client.update_supplier.called is False
         assert self.data_api_client.update_contact_information.called is False
@@ -1612,9 +1612,9 @@ class TestEditSupplierRegisteredAddress(BaseApplicationTest):
         assert status == status_code
 
         validation_messages = [
-            "You must provide a building and street name under 256 characters.",
-            "You must provide a town or city name under 256 characters.",
-            "You must provide a valid postcode under 15 characters.",
+            "Enter a building and street name under 256 characters.",
+            "Enter a town or city name under 256 characters.",
+            "Enter a valid postcode under 15 characters.",
         ]
         for message in validation_messages:
             assert (message in response) == validation_error_returned
@@ -1641,7 +1641,7 @@ class TestEditSupplierRegisteredAddress(BaseApplicationTest):
         })
 
         assert status == 400
-        assert "You need to enter a country." in response
+        assert "Enter a country." in response
 
         assert self.data_api_client.update_supplier.called is False
         assert self.data_api_client.update_contact_information.called is False
@@ -1710,7 +1710,7 @@ class TestCreateSupplier(BaseApplicationTest):
         self.assert_single_question_page_validation_errors(
             res,
             question_name="DUNS Number",
-            validation_message="You must enter a DUNS number with 9 digits."
+            validation_message="Enter a DUNS number with 9 digits."
         )
 
     def test_should_be_an_error_if_duns_number_in_use(self):
@@ -1728,7 +1728,7 @@ class TestCreateSupplier(BaseApplicationTest):
         assert res.status_code == 400
         page = res.get_data(as_text=True)
         assert "A supplier account already exists with that DUNS number" in page
-        assert "DUNS number already used" in page
+        assert "Enter a different DUNS number" in page
 
     def test_should_allow_nine_digit_duns_number(self):
         self.data_api_client.find_suppliers.return_value = {"suppliers": []}
@@ -1805,7 +1805,7 @@ class TestCreateSupplier(BaseApplicationTest):
             }
         )
         assert res.status_code == 400
-        assert "You must provide a company name." in res.get_data(as_text=True)
+        assert "Enter a company name." in res.get_data(as_text=True)
 
     def test_should_not_allow_contact_details_with_too_long_company_name(self):
         twofiftysix = "a" * 256
@@ -1819,7 +1819,7 @@ class TestCreateSupplier(BaseApplicationTest):
             }
         )
         assert res.status_code == 400
-        assert "You must provide a company name under 256 characters." in res.get_data(as_text=True)
+        assert "Enter a company name under 256 characters." in res.get_data(as_text=True)
 
     def test_should_not_allow_contact_details_without_contact_name(self):
         res = self.client.post(
@@ -1831,7 +1831,7 @@ class TestCreateSupplier(BaseApplicationTest):
             }
         )
         assert res.status_code == 400
-        assert "You must provide a contact name." in res.get_data(as_text=True)
+        assert "Enter a contact name." in res.get_data(as_text=True)
 
     def test_should_not_allow_contact_details_with_too_long_contact_name(self):
         twofiftysix = "a" * 256
@@ -1845,7 +1845,7 @@ class TestCreateSupplier(BaseApplicationTest):
             }
         )
         assert res.status_code == 400
-        assert "You must provide a contact name under 256 characters." in res.get_data(as_text=True)
+        assert "Enter a contact name under 256 characters." in res.get_data(as_text=True)
 
     def test_should_not_allow_contact_details_without_email(self):
         res = self.client.post(
@@ -1857,7 +1857,7 @@ class TestCreateSupplier(BaseApplicationTest):
             }
         )
         assert res.status_code == 400
-        assert "You must provide an email address." in res.get_data(as_text=True)
+        assert "Enter an email address." in res.get_data(as_text=True)
 
     def test_should_not_allow_contact_details_with_invalid_email(self):
         res = self.client.post(
@@ -1870,7 +1870,7 @@ class TestCreateSupplier(BaseApplicationTest):
             }
         )
         assert res.status_code == 400
-        assert "You must provide a valid email address." in res.get_data(as_text=True)
+        assert "Enter a valid email address." in res.get_data(as_text=True)
 
     def test_should_not_allow_contact_details_without_phone_number(self):
         res = self.client.post(
@@ -1882,7 +1882,7 @@ class TestCreateSupplier(BaseApplicationTest):
             }
         )
         assert res.status_code == 400
-        assert "You must provide a phone number." in res.get_data(as_text=True)
+        assert "Enter a phone number." in res.get_data(as_text=True)
 
     def test_should_not_allow_contact_details_with_too_long_phone_number(self):
         twentyone = "a" * 21
@@ -1896,7 +1896,7 @@ class TestCreateSupplier(BaseApplicationTest):
             }
         )
         assert res.status_code == 400
-        assert "You must provide a phone number under 20 characters." in res.get_data(as_text=True)
+        assert "Enter a phone number under 20 characters." in res.get_data(as_text=True)
 
     def test_should_show_multiple_errors(self):
         res = self.client.post(
@@ -1905,10 +1905,10 @@ class TestCreateSupplier(BaseApplicationTest):
         )
 
         assert res.status_code == 400
-        assert "You must provide a company name." in res.get_data(as_text=True)
-        assert "You must provide a phone number." in res.get_data(as_text=True)
-        assert "You must provide an email address." in res.get_data(as_text=True)
-        assert "You must provide a contact name." in res.get_data(as_text=True)
+        assert "Enter a company name." in res.get_data(as_text=True)
+        assert "Enter a phone number." in res.get_data(as_text=True)
+        assert "Enter an email address." in res.get_data(as_text=True)
+        assert "Enter a contact name." in res.get_data(as_text=True)
 
     def test_should_populate_duns_from_session(self):
         with self.client.session_transaction() as sess:
@@ -2044,7 +2044,7 @@ class TestCreateSupplier(BaseApplicationTest):
             data={}
         )
         assert res.status_code == 400
-        assert "You must provide an email address." in res.get_data(as_text=True)
+        assert "Enter an email address." in res.get_data(as_text=True)
 
     def test_should_not_allow_incorrect_email_address(self):
         with self.client.session_transaction() as sess:
@@ -2057,7 +2057,7 @@ class TestCreateSupplier(BaseApplicationTest):
             }
         )
         assert res.status_code == 400
-        assert "You must provide a valid email address." in res.get_data(as_text=True)
+        assert "Enter a valid email address." in res.get_data(as_text=True)
 
     @mock.patch("app.main.suppliers.send_user_account_email")
     def test_should_allow_correct_email_address(self, send_user_account_email):
@@ -2189,11 +2189,11 @@ class TestJoinOpenFrameworkNotificationMailingList(BaseApplicationTest):
 
         assert not doc.xpath(
             "//*[normalize-space(string())=$t]",
-            t="You must provide a valid email address.",
+            t="Provide a valid email address.",
         )
         assert not doc.xpath(
             "//*[normalize-space(string())=$t]",
-            t="You must provide an email address.",
+            t="Provide an email address.",
         )
         assert not doc.xpath("//*[contains(@class, 'validation-message')]")
 
@@ -2205,8 +2205,8 @@ class TestJoinOpenFrameworkNotificationMailingList(BaseApplicationTest):
         self.assert_no_flashes()
 
     @pytest.mark.parametrize("email_address_value,expected_validation_message", (
-        ("pint@twopence", "You must provide a valid email address.",),
-        ("", "You must provide an email address.",),
+        ("pint@twopence", "Enter a valid email address.",),
+        ("", "Enter an email address.",),
     ))
     @mock.patch("app.main.views.suppliers.DMMailChimpClient")
     def test_post_invalid_email(
@@ -2303,11 +2303,11 @@ class TestJoinOpenFrameworkNotificationMailingList(BaseApplicationTest):
 
             assert not doc.xpath(
                 "//*[normalize-space(string())=$t]",
-                t="You must provide a valid email address.",
+                t="Provide a valid email address.",
             )
             assert not doc.xpath(
                 "//*[normalize-space(string())=$t]",
-                t="You must provide an email address.",
+                t="Provide an email address.",
             )
             assert not doc.xpath("//*[contains(@class, 'validation-message')]")
 
@@ -2609,7 +2609,7 @@ class TestSupplierAddRegisteredCompanyName(BaseApplicationTest):
         self.assert_single_question_page_validation_errors(
             res,
             question_name="Registered company name",
-            validation_message="You must provide a registered company name."
+            validation_message="Enter a registered company name."
         )
         assert self.data_api_client.update_supplier.call_args_list == []
 
@@ -2789,7 +2789,7 @@ class TestSupplierAddRegistrationNumber(BaseApplicationTest):
                  'other_company_registration_number': ''
                  },
                 'Companies House number',
-                'You must enter a Companies House number.'
+                'Enter a Companies House number.'
             ),
             (
                 {'has_companies_house_number': 'Yes',
@@ -2797,7 +2797,7 @@ class TestSupplierAddRegistrationNumber(BaseApplicationTest):
                  'other_company_registration_number': ''
                  },
                 'Companies House number',
-                'You must provide a valid 8 character Companies House number.'
+                'Enter an 8 character Companies House number.'
             ),
             (
                 {'has_companies_house_number': 'No',
@@ -2805,7 +2805,7 @@ class TestSupplierAddRegistrationNumber(BaseApplicationTest):
                  'other_company_registration_number': 'a' * 256
                  },
                 'Other company registration number',
-                'You must provide a registration number under 256 characters.'
+                'Enter a registration number under 256 characters.'
             )
         )
     )
