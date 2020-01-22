@@ -1726,6 +1726,16 @@ class TestCreateSupplier(BaseApplicationTest):
         assert "A supplier account already exists with that DUNS number" in page
         assert "Enter a different DUNS number" in page
 
+    def test_direct_plus_api_call(self):
+        with self.app.app_context(), mock.patch(self.direct_plus_api_method, return_value=None) as client_call_mock:
+            self.client.post("/suppliers/create/duns-number", data={'duns_number': "123456789"})
+            client_call_mock.assert_called_once_with('123456789')
+
+    def test_marketplace_data_api_call(self):
+        with self.app.app_context(), mock.patch(self.direct_plus_api_method, return_value=None):
+            self.client.post("/suppliers/create/duns-number", data={'duns_number': "123456789"})
+            self.data_api_client.find_suppliers.assert_called_once_with(duns_number="123456789")
+
     def test_should_be_an_error_if_duns_number_not_found(self):
         with self.app.app_context():
             with mock.patch(self.direct_plus_api_method, return_value=None):
