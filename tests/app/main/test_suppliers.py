@@ -1771,6 +1771,17 @@ class TestCreateSupplier(BaseApplicationTest):
                 assert "duns_number" in session
                 assert session.get("duns_number") == "012345678"
 
+    def test_should_add_company_name_to_session(self):
+        with self.app.app_context(), self.client as c:
+            with mock.patch(self.direct_plus_api_method, return_value={'primaryName': '0 COMPANY LTD'}):
+                with c.session_transaction() as sess:
+                    with pytest.raises(KeyError):
+                        sess['company_name']
+
+                self.data_api_client.find_suppliers.return_value = {"suppliers": []}
+                c.post("/suppliers/create/duns-number", data={'duns_number': "123456789"})
+            assert session['company_name'] == '0 COMPANY LTD'
+
     def test_should_allow_valid_company_contact_details(self):
         res = self.client.post(
             "/suppliers/create/company-details",

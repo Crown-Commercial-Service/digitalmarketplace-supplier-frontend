@@ -533,7 +533,8 @@ def duns_number():
             # Otherwise the number is good, add the 'primaryName' to the session and continue
             try:
                 organization = direct_plus_client.get_organization_by_duns_number(form.duns_number.data)
-                company_name = organization['primaryName']
+                if organization is not None:
+                    company_name = organization['primaryName']
             except KeyError:
                 # An unexpected error. Something other than supplier data in the response. Skip this part of sign up.
                 return redirect(url_for(".company_details"))
