@@ -47,7 +47,7 @@
 
       {% endcall %}
 
-      <form method="POST" action="{{ url_for('.lookup') }}">
+      <form method="POST" action="{{ url_for('.lookup_confirm') }}">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
 
         {% with question = "Is this the company you want to create an account for?",

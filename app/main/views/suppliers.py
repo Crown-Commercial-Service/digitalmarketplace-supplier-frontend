@@ -515,7 +515,7 @@ def duns_number():
 
     if request.method == 'GET':
         if request.args.get('retry', None) == 'true':
-            # When redirected back from the lookup page
+            # When redirected back from the lookup_confirm page
             form.duns_number.errors = ["Enter a different DUNS number"]
         elif form.duns_number.name in session:
             # Likely a back click or unexpected navigation, refill form data
@@ -545,7 +545,7 @@ def duns_number():
                 # Success
                 session[form.duns_number.name] = form.duns_number.data
                 session['company_name'] = company_name
-                return redirect(url_for(".lookup"))
+                return redirect(url_for(".lookup_confirm"))
 
         current_app.logger.warning(
             "suppliercreate.fail: duns:{duns} {duns_errors}",
@@ -564,7 +564,7 @@ def duns_number():
 
 
 @main.route('/create/lookup', methods=['GET', 'POST'])
-def lookup():
+def lookup_confirm():
     form = LookupConfirmForm()
     duns_number = session.get('duns_number', None)
     if request.method == 'GET':
@@ -584,7 +584,7 @@ def lookup():
     errors = get_errors_from_wtform(form)
 
     return render_template(
-        "suppliers/lookup.html",
+        "suppliers/lookup_confirm.html",
         form=form,
         errors=errors,
     ), 200 if not errors else 400
