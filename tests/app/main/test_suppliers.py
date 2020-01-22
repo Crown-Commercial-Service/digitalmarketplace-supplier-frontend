@@ -1710,7 +1710,7 @@ class TestCreateSupplier(BaseApplicationTest):
         self.assert_single_question_page_validation_errors(
             res,
             question_name="DUNS Number",
-            validation_message="Enter a DUNS number with 9 digits."
+            validation_message="Enter your 9 digit DUNS number."
         )
 
     def test_should_be_an_error_if_duns_number_in_use(self):
@@ -1805,7 +1805,7 @@ class TestCreateSupplier(BaseApplicationTest):
             }
         )
         assert res.status_code == 400
-        assert "Enter a company name." in res.get_data(as_text=True)
+        assert "Enter your company name." in res.get_data(as_text=True)
 
     def test_should_not_allow_contact_details_with_too_long_company_name(self):
         twofiftysix = "a" * 256
@@ -1905,7 +1905,7 @@ class TestCreateSupplier(BaseApplicationTest):
         )
 
         assert res.status_code == 400
-        assert "Enter a company name." in res.get_data(as_text=True)
+        assert "Enter your company name." in res.get_data(as_text=True)
         assert "Enter a phone number." in res.get_data(as_text=True)
         assert "Enter an email address." in res.get_data(as_text=True)
         assert "Enter a contact name." in res.get_data(as_text=True)
@@ -2609,7 +2609,7 @@ class TestSupplierAddRegisteredCompanyName(BaseApplicationTest):
         self.assert_single_question_page_validation_errors(
             res,
             question_name="Registered company name",
-            validation_message="Enter a registered company name."
+            validation_message="Enter your registered company name."
         )
         assert self.data_api_client.update_supplier.call_args_list == []
 
@@ -2797,7 +2797,7 @@ class TestSupplierAddRegistrationNumber(BaseApplicationTest):
                  'other_company_registration_number': ''
                  },
                 'Companies House number',
-                'Enter an 8 character Companies House number.'
+                'Enter your 8 digit Companies House number.'
             ),
             (
                 {'has_companies_house_number': 'No',

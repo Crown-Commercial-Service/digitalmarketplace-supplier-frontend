@@ -34,10 +34,10 @@
 
   </div>
     <div class="column-two-thirds">
-      <h1 class="govuk-heading-l">What buyers will see</h1>
+      <h1 class="govuk-heading-l">Your company details</h1>
 
       <div class="dmspeak">
-        <p class="govuk-body">This information will be visible on the Digital Marketplace.</p>
+        <p class="govuk-body">This information is what buyers will see on the Digital Marketplace.</p>
       </div>
 
       <form method="POST" action="{{ url_for('.company_details') }}">
@@ -85,7 +85,7 @@
         {% include "toolkit/forms/textbox.html" %}
         {% endwith %}
         {{ govukButton({
-          "text": "Save and continue",
+          "text": "Continue",
         }) }}
       </form>
     </div>

@@ -83,7 +83,7 @@ class EditRegisteredAddressForm(FlaskForm):
 # "Add" rather than "Edit" because this information can only be set once by a supplier
 class AddCompanyRegisteredNameForm(FlaskForm):
     registered_company_name = DMStripWhitespaceStringField('Registered company name', validators=[
-        InputRequired(message="Enter a registered company name."),
+        InputRequired(message="Enter your registered company name."),
         Length(max=255, message="Enter a registered company name under 256 characters.")
     ])
 
@@ -100,7 +100,7 @@ class AddCompanyRegistrationNumberForm(FlaskForm):
         validators=[
             Optional(),
             Regexp(r'^([0-9]{2}|[A-Za-z]{2})[0-9]{6}$',
-                   message="Enter an 8 character Companies House number."
+                   message="Enter your 8 digit Companies House number."
                    )
         ]
     )
@@ -142,7 +142,7 @@ class AddCompanyRegistrationNumberForm(FlaskForm):
 
 class CompanyPublicContactInformationForm(FlaskForm):
     company_name = DMStripWhitespaceStringField('Company name', validators=[
-        InputRequired(message="Enter a company name."),
+        InputRequired(message="Enter your company name."),
         Length(max=255, message="Enter a company name under 256 characters.")
     ])
     contact_name = DMStripWhitespaceStringField('Contact name', validators=[
@@ -161,8 +161,8 @@ class CompanyPublicContactInformationForm(FlaskForm):
 
 class DunsNumberForm(FlaskForm):
     duns_number = DMStripWhitespaceStringField('DUNS Number', validators=[
-        InputRequired(message="Enter a DUNS number with 9 digits."),
-        Regexp(r'^\d{9}$', message="Enter a DUNS number with 9 digits."),
+        InputRequired(message="Enter your 9 digit DUNS number."),
+        Regexp(r'^\d{9}$', message="Enter your 9 digit DUNS number."),
     ])
 
 
