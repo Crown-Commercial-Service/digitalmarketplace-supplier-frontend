@@ -166,7 +166,7 @@ class DunsNumberForm(FlaskForm):
     ])
 
 
-class LookupConfirmForm(FlaskForm):
+class ConfirmCompanyForm(FlaskForm):
     confirmed = DMBooleanField(
         'Is this the company you want to create an account for?',
         false_values=("False", "false", ""),

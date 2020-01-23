@@ -25,7 +25,7 @@ from ..forms.suppliers import (
     EditRegisteredAddressForm,
     EditSupplierInformationForm,
     EmailAddressForm,
-    LookupConfirmForm,
+    ConfirmCompanyForm,
 )
 from ..helpers.frameworks import (
     get_frameworks_by_status,
@@ -515,7 +515,7 @@ def duns_number():
 
     if request.method == 'GET':
         if request.args.get('retry', None) == 'true':
-            # When redirected back from the lookup_confirm page
+            # When redirected back from the confirm_company page
             form.duns_number.errors = ["Enter a different DUNS number"]
         elif form.duns_number.name in session:
             # Likely a back click or unexpected navigation, refill form data
@@ -545,7 +545,7 @@ def duns_number():
                 # Success
                 session[form.duns_number.name] = form.duns_number.data
                 session['company_name'] = company_name
-                return redirect(url_for(".lookup_confirm"))
+                return redirect(url_for(".confirm_company"))
 
         current_app.logger.warning(
             "suppliercreate.fail: duns:{duns} {duns_errors}",
@@ -563,9 +563,9 @@ def duns_number():
     ), 200 if not errors else 400
 
 
-@main.route('/create/lookup', methods=['GET', 'POST'])
-def lookup_confirm():
-    form = LookupConfirmForm()
+@main.route('/create/confirm-company', methods=['GET', 'POST'])
+def confirm_company():
+    form = ConfirmCompanyForm()
     duns_number = session.get('duns_number', None)
     if request.method == 'GET':
         if not duns_number:
@@ -584,7 +584,7 @@ def lookup_confirm():
     errors = get_errors_from_wtform(form)
 
     return render_template(
-        "suppliers/lookup_confirm.html",
+        "suppliers/create_confirm_company.html",
         form=form,
         errors=errors,
     ), 200 if not errors else 400

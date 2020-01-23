@@ -1,7 +1,7 @@
 {% extends "_base_page.html" %}
 {% import "toolkit/summary-table.html" as summary %}
 
-{% block page_title %}Lookup – Create a supplier account – Digital Marketplace{% endblock %}
+{% block page_title %}Confirm company – Create a supplier account – Digital Marketplace{% endblock %}
 
 {% block breadcrumb %}
   {{ govukBreadcrumbs({
@@ -17,7 +17,11 @@
       {
         "href": url_for('.create_new_supplier'),
         "text": "Create an account"
-      }
+      },
+      {
+        "text": "Confirm company"
+      },
+
     ]
   }) }}
 {% endblock %}
@@ -47,7 +51,7 @@
 
       {% endcall %}
 
-      <form method="POST" action="{{ url_for('.lookup_confirm') }}">
+      <form method="POST" action="{{ url_for('.confirm_company') }}">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
 
         {% with question = "Is this the company you want to create an account for?",

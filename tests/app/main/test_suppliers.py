@@ -1724,7 +1724,7 @@ class TestCreateSupplier(BaseApplicationTest):
         assert res.status_code == 400
         page = res.get_data(as_text=True)
         assert "A supplier account already exists with that DUNS number" in page
-        assert "Enter a different DUNS number" in page
+        assert "DUNS number already used" in page
 
     def test_direct_plus_api_call(self):
         with self.app.app_context(), mock.patch(self.direct_plus_api_method, return_value=None) as client_call_mock:
@@ -1761,7 +1761,7 @@ class TestCreateSupplier(BaseApplicationTest):
                 res = self.client.post("/suppliers/create/duns-number", data={'duns_number': "123456789"})
 
         assert res.status_code == 302
-        assert res.location == 'http://localhost/suppliers/create/lookup'
+        assert res.location == 'http://localhost/suppliers/create/confirm-company'
 
     def test_should_allow_duns_numbers_that_start_with_zero(self):
         self.data_api_client.find_suppliers.return_value = {"suppliers": []}
@@ -1770,7 +1770,7 @@ class TestCreateSupplier(BaseApplicationTest):
                 res = self.client.post("/suppliers/create/duns-number", data={'duns_number': "012345678"})
 
         assert res.status_code == 302
-        assert res.location == 'http://localhost/suppliers/create/lookup'
+        assert res.location == 'http://localhost/suppliers/create/confirm-company'
 
     def test_should_strip_whitespace_surrounding_duns_number_field(self):
         self.data_api_client.find_suppliers.return_value = {"suppliers": []}
