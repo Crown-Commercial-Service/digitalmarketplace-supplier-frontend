@@ -1,5 +1,6 @@
 # coding=utf-8
 import mock
+import pytest
 
 from wtforms import ValidationError
 from dmapiclient.errors import HTTPError
@@ -51,6 +52,8 @@ class TestApplication(BaseApplicationTest):
         assert res.status_code == 200
         assert 'DENY', res.headers['X-Frame-Options']
 
+    # Analytics temporarily disabled
+    @pytest.mark.skip
     def test_should_use_local_cookie_page_on_cookie_message(self):
         res = self.client.get('/suppliers/create/start')
         assert res.status_code == 200

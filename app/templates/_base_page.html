@@ -1,26 +1,51 @@
-{% extends "toolkit/layouts/_base_page.html" %}
+{% extends "govuk-frontend/template.njk" %}
 
-{# Import GOV.UK Frontend components for globale usage#}
-{% from "components/breadcrumbs/macro.njk" import govukBreadcrumbs %}
-{% from "components/button/macro.njk" import govukButton %}
+{# Import GOV.UK Frontend components for globale usage #}
+{% from "govuk-frontend/components/breadcrumbs/macro.njk" import govukBreadcrumbs %}
+{% from "govuk-frontend/components/button/macro.njk" import govukButton %}
+{% from "govuk-frontend/components/error-summary/macro.njk" import govukErrorSummary %}
+{% from "govuk-frontend/components/input/macro.njk" import govukInput %}
+{% from "govuk-frontend/components/phase-banner/macro.njk" import govukPhaseBanner %}
 
-{# TODO: Remove once we start removing govuk_template, GOV.UK Frontend template uses pageTitle #}
-{% block page_title %}{% block pageTitle %}{% endblock %}{% endblock %}
+{# Import DM components #}
+{% from "digitalmarketplace/components/header/macro.njk" import dmHeader %}
+{% from "digitalmarketplace/components/footer/macro.njk" import dmFooter %}
 
-{# override content block to add a beforeContent block like the one in govuk-frontend template #}
+{% set assetPath = '/user/static' %}
+
+{% block head %}
+  {% include "layouts/_custom_dimensions.html" %}
+  {% include "layouts/_site_verification.html" %}
+  <link type="text/css" rel="stylesheet" href="{{ asset_fingerprinter.get_url('stylesheets/application.css') }}" />
+  {% block pageStyles %}{% endblock%}
+{% endblock %}
+
+{% block header %}
+  {{ dmHeader({
+    "role": current_user.role | default(None)
+  }) }}
+{% endblock %}
+
+{% block beforeContent %}
+  {{ govukPhaseBanner({
+    "tag": {
+      "text": "beta"
+    },
+    "html": 'Help us improve the Digital Marketplace - <a class="govuk-link" href="'  + url_for('external.help') + '">send your feedback</a>'
+  }) }}
+  {% block breadcrumb %}{% endblock%}
+{% endblock %}
+
 {% block content %}
-  {% block top_header %}{% endblock %}
-  <div id="wrapper">
-    {% block beforeContent %}
-      {% block breadcrumb %}{% endblock %}
-    {% endblock %}
-    <main id="content" role="main">
-      {% include "toolkit/flash_messages.html" %}
-      {# TODO: Remove this block when we start removing govuk_template but be sure #}
-      {#       To keep the inner block mainContent otherwise no content will be rendered #}
-      {% block main_content %}
-        {% block mainContent %}{% endblock %}
-      {% endblock %}
-    </main>
-  </div>
+  {% include "toolkit/flash_messages.html" %}
+  {% block mainContent %}{% endblock %}
+{% endblock %}
+
+{% block footer %}
+  {{ dmFooter({}) }}
+{% endblock %}
+
+{% block bodyEnd %}
+  <script src="{{ asset_fingerprinter.get_url('javascripts/application.js') }}"></script>
+  {% block pageScripts %}{% endblock%}
 {% endblock %}

@@ -1773,7 +1773,7 @@ class TestFrameworkAgreement(BaseApplicationTest):
         assert res.status_code == 200
 
         lots_and_statuses = []
-        lot_table_rows = doc.xpath('//*[@id="content"]//table/tbody/tr')
+        lot_table_rows = doc.xpath('//*[@id="main-content"]//table/tbody/tr')
         for row in lot_table_rows:
             cells = row.findall('./td')
             lots_and_statuses.append((cells[0].text_content().strip(), cells[1].text_content().strip()))
@@ -4038,7 +4038,7 @@ class TestServicesList(BaseApplicationTest, MockEnsureApplicationCompanyDetailsH
         res = self.client.get('/suppliers/frameworks/g-cloud-7/submissions/scs')
         doc = html.fromstring(res.get_data(as_text=True))
         link = doc.xpath(
-            "//*[@id='content']/p[1]/a[normalize-space(string())='View and add your services from G-Cloud\xa07']"
+            "//*[@id='main-content']/p[1]/a[normalize-space(string())='View and add your services from G-Cloud\xa07']"
         )
 
         assert self.data_api_client.find_services.call_args_list == [
