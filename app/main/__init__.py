@@ -73,6 +73,12 @@ def _make_content_loader_factory():
     master_cl.load_messages('digital-outcomes-and-specialists-4', ['urls'])
     master_cl.load_metadata('digital-outcomes-and-specialists-4', ['copy_services', 'following_framework'])
 
+    master_cl.load_manifest('g-cloud-12', 'services', 'edit_service')
+    master_cl.load_manifest('g-cloud-12', 'services', 'edit_submission')
+    master_cl.load_manifest('g-cloud-12', 'declaration', 'declaration')
+    master_cl.load_messages('g-cloud-12', ['urls', 'advice'])
+    master_cl.load_metadata('g-cloud-12', ['copy_services', 'following_framework'])
+
     # seal master_cl in a closure by returning a function which will only ever return an independent copy of it
     return lambda: deepcopy(master_cl)
 
