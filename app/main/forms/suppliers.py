@@ -27,21 +27,21 @@ class EditSupplierInformationForm(FlaskForm):
         "Contact name",
         hint="This can be the name of the person or team you want buyers to contact",
         validators=[
-            InputRequired(message="You must provide a contact name."),
-            Length(max=255, message="You must provide a contact name under 256 characters."),
+            InputRequired(message="Enter a contact name."),
+            Length(max=255, message="Enter a contact name under 256 characters."),
         ])
     email = DMEmailField(
         "Contact email address",
         hint="This is the email buyers will use to contact you",
         validators=[
-            InputRequired(message="You must provide an email address."),
-            EmailValidator(message="You must provide a valid email address."),
+            InputRequired(message="Enter an email address."),
+            EmailValidator(message="Enter a valid email address."),
         ])
     phoneNumber = DMStripWhitespaceStringField(
         "Contact phone number",
         validators=[
-            InputRequired(message="You must provide a phone number."),
-            Length(max=20, message="You must provide a phone number under 20 characters.")
+            InputRequired(message="Enter a phone number."),
+            Length(max=20, message="Enter a phone number under 20 characters.")
         ])
     description = DMStripWhitespaceStringField(
         "Supplier summary",
@@ -54,20 +54,20 @@ class EditSupplierInformationForm(FlaskForm):
 
 class EditRegisteredAddressForm(FlaskForm):
     street = DMStripWhitespaceStringField("Building and street", validators=[
-        InputRequired(message="You need to enter the street address."),
-        Length(max=255, message="You must provide a building and street name under 256 characters."),
+        InputRequired(message="Enter a street address."),
+        Length(max=255, message="Enter a building and street name under 256 characters."),
     ])
     city = DMStripWhitespaceStringField("Town or city", validators=[
-        InputRequired(message="You need to enter the town or city."),
-        Length(max=255, message="You must provide a town or city name under 256 characters."),
+        InputRequired(message="Enter a town or city."),
+        Length(max=255, message="Enter a town or city name under 256 characters."),
     ])
     postcode = DMStripWhitespaceStringField("Postcode", validators=[
-        InputRequired(message="You need to enter the postcode."),
-        Length(max=15, message="You must provide a valid postcode under 15 characters."),
+        InputRequired(message="Enter a postcode."),
+        Length(max=15, message="Enter a valid postcode under 15 characters."),
     ])
     country = DMStripWhitespaceStringField("Country", validators=[
-        InputRequired(message="You need to enter a country."),
-        AnyOf(values=[country[1] for country in COUNTRY_TUPLE], message="You must enter a valid country."),
+        InputRequired(message="Enter a country."),
+        AnyOf(values=[country[1] for country in COUNTRY_TUPLE], message="Enter a valid country."),
     ])
 
     def validate(self):
@@ -83,8 +83,8 @@ class EditRegisteredAddressForm(FlaskForm):
 # "Add" rather than "Edit" because this information can only be set once by a supplier
 class AddCompanyRegisteredNameForm(FlaskForm):
     registered_company_name = DMStripWhitespaceStringField('Registered company name', validators=[
-        InputRequired(message="You must provide a registered company name."),
-        Length(max=255, message="You must provide a registered company name under 256 characters.")
+        InputRequired(message="Enter your registered company name."),
+        Length(max=255, message="Enter a registered company name under 256 characters.")
     ])
 
 
@@ -100,7 +100,7 @@ class AddCompanyRegistrationNumberForm(FlaskForm):
         validators=[
             Optional(),
             Regexp(r'^([0-9]{2}|[A-Za-z]{2})[0-9]{6}$',
-                   message="You must provide a valid 8 character Companies House number."
+                   message="Enter your 8 digit Companies House number."
                    )
         ]
     )
@@ -109,7 +109,7 @@ class AddCompanyRegistrationNumberForm(FlaskForm):
         default='',
         validators=[
             Optional(),
-            Length(max=255, message="You must provide a registration number under 256 characters.")
+            Length(max=255, message="Enter a registration number under 256 characters.")
         ]
     )
 
@@ -130,11 +130,11 @@ class AddCompanyRegistrationNumberForm(FlaskForm):
         if not super(AddCompanyRegistrationNumberForm, self).validate():
             valid = False
         if self.has_companies_house_number.data == "Yes" and not self.companies_house_number.data:
-            self.companies_house_number.errors.append('You must enter a Companies House number.')
+            self.companies_house_number.errors.append('Enter a Companies House number.')
             valid = False
 
         if self.has_companies_house_number.data == "No" and not self.other_company_registration_number.data:
-            self.other_company_registration_number.errors.append('You must provide an answer.')
+            self.other_company_registration_number.errors.append('Enter a company registration number.')
             valid = False
 
         return valid
@@ -142,34 +142,34 @@ class AddCompanyRegistrationNumberForm(FlaskForm):
 
 class CompanyPublicContactInformationForm(FlaskForm):
     company_name = DMStripWhitespaceStringField('Company name', validators=[
-        InputRequired(message="You must provide a company name."),
-        Length(max=255, message="You must provide a company name under 256 characters.")
+        InputRequired(message="Enter your company name."),
+        Length(max=255, message="Enter a company name under 256 characters.")
     ])
     contact_name = DMStripWhitespaceStringField('Contact name', validators=[
-        InputRequired(message="You must provide a contact name."),
-        Length(max=255, message="You must provide a contact name under 256 characters.")
+        InputRequired(message="Enter a contact name."),
+        Length(max=255, message="Enter a contact name under 256 characters.")
     ])
     email_address = DMStripWhitespaceStringField('Contact email address', validators=[
-        InputRequired(message="You must provide an email address."),
-        EmailValidator(message="You must provide a valid email address."),
+        InputRequired(message="Enter an email address."),
+        EmailValidator(message="Enter a valid email address."),
     ])
     phone_number = DMStripWhitespaceStringField('Contact phone number', validators=[
-        InputRequired(message="You must provide a phone number."),
-        Length(max=20, message="You must provide a phone number under 20 characters.")
+        InputRequired(message="Enter a phone number."),
+        Length(max=20, message="Enter a phone number under 20 characters.")
     ])
 
 
 class DunsNumberForm(FlaskForm):
     duns_number = DMStripWhitespaceStringField('DUNS Number', validators=[
-        InputRequired(message="You must enter a DUNS number with 9 digits."),
-        Regexp(r'^\d{9}$', message="You must enter a DUNS number with 9 digits."),
+        InputRequired(message="Enter your 9 digit DUNS number."),
+        Regexp(r'^\d{9}$', message="Enter your 9 digit DUNS number."),
     ])
 
 
 class EmailAddressForm(FlaskForm):
     email_address = DMStripWhitespaceStringField('Email address', validators=[
-        InputRequired(message="You must provide an email address."),
-        EmailValidator(message="You must provide a valid email address."),
+        InputRequired(message="Enter an email address."),
+        EmailValidator(message="Enter a valid email address."),
     ])
 
 

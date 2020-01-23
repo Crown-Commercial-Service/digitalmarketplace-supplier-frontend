@@ -519,7 +519,7 @@ def duns_number():
                 session[form.duns_number.name] = form.duns_number.data
                 return redirect(url_for(".company_details"))
 
-            form.duns_number.errors = ["DUNS number already used"]
+            form.duns_number.errors = ["Enter a different DUNS number"]
 
         current_app.logger.warning(
             "suppliercreate.fail: duns:{duns} {duns_errors}",
