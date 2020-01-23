@@ -1,14 +1,9 @@
-// Reset styles on core HTML elements that might be injected by eg a user's browser, so that we have a known clean base
-// for DM styles to build on.
-@import "toolkit/shared_scss/_reset.scss";
-
-// GOVUK Front-end toolkit variables, mixins and functions
-@import "_grid_layout.scss";
-@import "_typography.scss";
-@import "_url-helpers.scss";
-
 // Path to assets for use with file-url()
 $path: "/suppliers/static/images/";
+
+// Temporarily needed until all components have migrated to govuk-frontend
+// and elements which need to be styled should have class names associated to them
+@import "overrides/govuk-template/_govuk-template";
 
 // Digital Marketplace Front-end toolkit shared CSS placeholders used by other DM toolkit styles
 @import "toolkit/shared_placeholders/_dm-typography.scss";
@@ -22,22 +17,17 @@ $path: "/suppliers/static/images/";
 
 // Digital Marketplace Front-end toolkit styles (only import the files you need)
 @import "toolkit/_browse-list.scss";
-@import "toolkit/_buttons.scss";
+@import "toolkit/_buttons.scss";  // Can remove after upgrading temporary-message component
 @import "toolkit/_contact-details";
-@import "toolkit/_digital-marketplace-colours.scss";
 @import "toolkit/_document";
-@import "toolkit/_footer.scss";
 @import "toolkit/_grids.scss";
 @import "toolkit/_instruction-list.scss";
 @import "toolkit/_notification-banners.scss";
-@import "toolkit/_page-headings.scss";
-@import "toolkit/_phase-banner.scss";
 @import "toolkit/_proposition-header.scss";
 @import "toolkit/_secondary-action-link.scss";
 @import "toolkit/_service-id.scss";
 @import "toolkit/_temporary-message.scss";
 @import "toolkit/_text-diff.scss";
-@import "toolkit/_user-research-consent-banner.scss";
 @import "toolkit/forms/_combinations.scss";
 @import "toolkit/forms/_checkbox-tree.scss";  // Has to be imported after _combinations.scss, which defines the
                                               // $border-width variable that _checkbox-tree.scss relies upon. :sad:
@@ -51,17 +41,22 @@ $path: "/suppliers/static/images/";
 @import "toolkit/forms/_upload.scss";
 @import "toolkit/forms/_validation.scss";
 @import "toolkit/forms/_word-counter.scss";
-@import "toolkit/search/_search-result.scss";
-@import "toolkit/_report-a-problem.scss";
 
 // GOV.UK Design System (compatible with old toolkit/elements)
 $govuk-assets-path: '/suppliers/static/';
 $govuk-images-path: '/suppliers/static/images/';
 $govuk-fonts-path: '/suppliers/static/fonts/';
 $govuk-compatibility-govukfrontendtoolkit: true;
-$govuk-compatibility-govuktemplate: true;
 $govuk-compatibility-govukelements: true;
+// $govuk-global-styles Only affects the font colour of <a> without govuk-link class
+// and padding/font size of any <p> without govuk-body classname
+// https://github.com/alphagov/govuk-frontend/blob/v2.13.0/src/settings/_global-styles.scss
+// https://github.com/alphagov/govuk-frontend/blob/v2.13.0/src/core/_global-styles.scss
+$govuk-global-styles: true;
 @import "node_modules/digitalmarketplace-govuk-frontend/govuk-frontend/all";
+
+// Digital Marketplace Components
+@import "node_modules/digitalmarketplace-govuk-frontend/digitalmarketplace/all";
 
 // App-specific styles
 @import "_create_supplier.scss";
@@ -75,20 +70,8 @@ $govuk-compatibility-govukelements: true;
 
 // Overrides
 @import "overrides/_notifications_banner";
-@import "overrides/_page_headings.scss";
 
 // Misc styles
-// TODO: Move misc styling into their own partial files or the Digital Marketplace FE Toolkit
-#wrapper, .wrapper {
-  @extend %site-width-container;
-}
-
-#content {
-  @extend %contain-floats;
-  clear: both;
-  margin-bottom: $gutter * 2;
-}
-
 .authorisation-form-wrapper {
 
   margin-top: 40px;
