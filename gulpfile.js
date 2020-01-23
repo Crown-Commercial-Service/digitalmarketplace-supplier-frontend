@@ -20,9 +20,6 @@ const dmToolkitRoot = path.join(npmRoot, 'digitalmarketplace-frontend-toolkit', 
 const sspContentRoot = path.join(npmRoot, 'digitalmarketplace-frameworks')
 const assetsFolder = path.join(repoRoot, 'app', 'assets')
 const staticFolder = path.join(repoRoot, 'app', 'static')
-const govukTemplateFolder = path.join(repoRoot, 'node_modules', 'govuk_template')
-const govukTemplateAssetsFolder = path.join(govukTemplateFolder, 'assets')
-const govukTemplateLayoutsFolder = path.join(govukTemplateFolder, 'views', 'layouts')
 const govukFrontendFontsFolder = path.join(govukFrontendRoot, 'assets', 'fonts')
 const govukFrontendImagesFolder = path.join(govukFrontendRoot, 'assets', 'images')
 
@@ -159,33 +156,6 @@ function copyFiletypeFactory (resourceName, sourceFolder, sourceFileExtension, t
 }
 
 gulp.task(
-  'copy:template_assets:stylesheets',
-  copyFactory(
-    'GOV.UK template stylesheets',
-    path.join(govukTemplateAssetsFolder, 'stylesheets'),
-    path.join(staticFolder, 'stylesheets')
-  )
-)
-
-gulp.task(
-  'copy:template_assets:images',
-  copyFactory(
-    'GOV.UK template images',
-    path.join(govukTemplateAssetsFolder, 'images'),
-    path.join(staticFolder, 'images')
-  )
-)
-
-gulp.task(
-  'copy:template_assets:javascripts',
-  copyFactory(
-    'GOV.UK template Javascript files',
-    path.join(govukTemplateAssetsFolder, 'javascripts'),
-    path.join(staticFolder, 'javascripts')
-  )
-)
-
-gulp.task(
   'copy:dm_toolkit_assets:stylesheets',
   copyFactory(
     'stylesheets from the Digital Marketplace frontend toolkit',
@@ -227,15 +197,6 @@ gulp.task(
     'image assets from app to static folder',
     path.join(assetsFolder, 'images'),
     path.join(staticFolder, 'images')
-  )
-)
-
-gulp.task(
-  'copy:govuk_template',
-  copyFactory(
-    'GOV.UK template into app folder',
-    govukTemplateLayoutsFolder,
-    path.join('app', 'templates', 'govuk')
   )
 )
 
@@ -317,15 +278,10 @@ gulp.task('set_environment_to_production', function (cb) {
 
 gulp.task('copy', gulp.parallel(
   'copy:frameworks',
-  'copy:template_assets:images',
-  'copy:template_assets:stylesheets',
-  'copy:template_assets:javascripts',
-  'copy:govuk_toolkit_assets:images',
   'copy:dm_toolkit_assets:stylesheets',
   'copy:dm_toolkit_assets:images',
   'copy:dm_toolkit_assets:templates',
   'copy:images',
-  'copy:govuk_template',
   'copy:country_picker:jsons',
   'copy:country_picker:stylesheets',
   'copy:country_picker_package:javascripts',
