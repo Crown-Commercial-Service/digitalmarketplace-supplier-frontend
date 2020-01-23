@@ -13,7 +13,7 @@ from dmutils.flask import timed_render_template as render_template
 from dmutils.forms.helpers import get_errors_from_wtform
 from dmutils.errors import render_error_page
 
-from ...main import main, content_loader
+from ...main import main, content_loader, direct_plus_client
 from ... import data_api_client
 from ..forms.suppliers import (
     AddCompanyRegisteredNameForm,
@@ -25,6 +25,7 @@ from ..forms.suppliers import (
     EditRegisteredAddressForm,
     EditSupplierInformationForm,
     EmailAddressForm,
+    ConfirmCompanyForm,
 )
 from ..helpers.frameworks import (
     get_frameworks_by_status,
@@ -512,24 +513,45 @@ def create_new_supplier():
 def duns_number():
     form = DunsNumberForm()
 
-    if request.method == 'POST':
-        if form.validate_on_submit():
-            suppliers = data_api_client.find_suppliers(duns_number=form.duns_number.data)
-            if len(suppliers["suppliers"]) <= 0:
-                session[form.duns_number.name] = form.duns_number.data
+    if request.method == 'GET':
+        if request.args.get('retry', None) == 'true':
+            # When redirected back from the confirm_company page
+            form.duns_number.errors = ["Enter a different DUNS number"]
+        elif form.duns_number.name in session:
+            # Likely a back click or unexpected navigation, refill form data
+            form.duns_number.data = session[form.duns_number.name]
+
+    if form.validate_on_submit():
+        # Valid duns number
+        # Fail on existing account with this duns number first
+        if len(data_api_client.find_suppliers(duns_number=form.duns_number.data)['suppliers']) > 0:
+            form.duns_number.errors = ["DUNS number already used"]
+        else:
+            # Check for number in Direct Plus API
+            # If we cannot contact the API then skip this step
+            # If the client doesn't return an organization then there is not a record for that DUNs
+            # Otherwise the number is good, add the 'primaryName' to the session and continue
+            try:
+                organization = direct_plus_client.get_organization_by_duns_number(form.duns_number.data)
+                if organization is not None:
+                    company_name = organization['primaryName']
+            except KeyError:
+                # An unexpected error. Something other than supplier data in the response. Skip this part of sign up.
                 return redirect(url_for(".company_details"))
 
-            form.duns_number.errors = ["Enter a different DUNS number"]
+            if organization is None:
+                form.duns_number.errors = ["DUNS number not found"]
+            else:
+                # Success
+                session[form.duns_number.name] = form.duns_number.data
+                session['company_name'] = company_name
+                return redirect(url_for(".confirm_company"))
 
         current_app.logger.warning(
             "suppliercreate.fail: duns:{duns} {duns_errors}",
             extra={
                 'duns': form.duns_number.data,
                 'duns_errors': ",".join(form.duns_number.errors)})
-
-    else:
-        if form.duns_number.name in session:
-            form.duns_number.data = session[form.duns_number.name]
 
     errors = get_errors_from_wtform(form)
 
@@ -538,6 +560,33 @@ def duns_number():
         form=form,
         errors=errors,
         support_email_address=current_app.config['SUPPORT_EMAIL_ADDRESS']
+    ), 200 if not errors else 400
+
+
+@main.route('/create/confirm-company', methods=['GET', 'POST'])
+def confirm_company():
+    form = ConfirmCompanyForm()
+    duns_number = session.get('duns_number', None)
+    if request.method == 'GET':
+        if not duns_number:
+            # We require users to enter a duns_number to use this page
+            # Users could otherwise navigate to this page via URL
+            return redirect(url_for(".duns_number"))
+
+    if form.validate_on_submit():
+        # If this isn't the right company get them to enter a new duns number.
+        if form.confirmed.data is False:
+            for field in ('duns_number', 'company_name'):
+                session.pop(field, None)
+            return redirect(url_for(".duns_number", retry='true'))
+        return redirect(url_for(".company_details"))
+
+    errors = get_errors_from_wtform(form)
+
+    return render_template(
+        "suppliers/create_confirm_company.html",
+        form=form,
+        errors=errors,
     ), 200 if not errors else 400
 
 

@@ -2,7 +2,7 @@ from flask_wtf import FlaskForm
 from wtforms import RadioField
 from wtforms.validators import AnyOf, InputRequired, Length, Optional, Regexp, ValidationError
 
-from dmutils.forms.fields import DMStripWhitespaceStringField, DMEmailField, DMRadioField
+from dmutils.forms.fields import DMBooleanField, DMStripWhitespaceStringField, DMEmailField, DMRadioField
 from dmutils.forms.validators import EmailValidator
 from dmutils.forms.widgets import DMTextArea
 from ..helpers.suppliers import COUNTRY_TUPLE
@@ -164,6 +164,14 @@ class DunsNumberForm(FlaskForm):
         InputRequired(message="Enter your 9 digit DUNS number."),
         Regexp(r'^\d{9}$', message="Enter your 9 digit DUNS number."),
     ])
+
+
+class ConfirmCompanyForm(FlaskForm):
+    confirmed = DMBooleanField(
+        'Is this the company you want to create an account for?',
+        false_values=("False", "false", ""),
+        validators=[InputRequired(message="Choose 'Yes' or 'No'.")]
+    )
 
 
 class EmailAddressForm(FlaskForm):
