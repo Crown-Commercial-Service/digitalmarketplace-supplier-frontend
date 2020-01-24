@@ -536,7 +536,9 @@ def duns_number():
                 if organization is not None:
                     company_name = organization['primaryName']
             except KeyError:
-                # An unexpected error. Something other than supplier data in the response. Skip this part of sign up.
+                # An unexpected error. Something other than supplier data in the response.
+                # Allow the user to proceed with the entered duns numer and skip this part of sign up.
+                session[form.duns_number.name] = form.duns_number.data
                 return redirect(url_for(".company_details"))
 
             if organization is None:
