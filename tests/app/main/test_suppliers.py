@@ -1745,14 +1745,39 @@ class TestCreateSupplier(BaseApplicationTest):
         page = res.get_data(as_text=True)
         assert "DUNS number not found" in page
 
-    def test_skips_dnb_api_validation_if_unexpected_response(self):
+    unexpected_responses = (
+        {'error': {'errorCode': '90000'}},
+        {'error': {
+            'errorCode': '40105',
+            'errorMessage': 'Requested product not available due to insufficient data'
+        }},
+        {'error': {
+            'errorCode': '40002',
+            'errorMessage': 'The requested D-U-N-S Number cannot be returned as it has been deleted'
+        }}
+    )
+
+    @pytest.mark.parametrize('return_value', unexpected_responses)
+    def test_skips_dnb_api_validation_if_unexpected_response(self, return_value):
         with self.app.app_context():
-            with mock.patch(self.direct_plus_api_method, return_value={'error': {'errorCode': '90000'}}):
+            with mock.patch(self.direct_plus_api_method, return_value=return_value):
                 self.data_api_client.find_suppliers.return_value = {"suppliers": []}
                 res = self.client.post("/suppliers/create/duns-number", data={'duns_number': "123456789"})
 
         assert res.status_code == 302
         assert res.location == 'http://localhost/suppliers/create/company-details'
+
+    @pytest.mark.parametrize('return_value', unexpected_responses)
+    def test_duns_added_to_session_if_unexpected_response(self, return_value):
+        with self.app.app_context(), self.client as c:
+            with mock.patch(self.direct_plus_api_method, return_value=return_value):
+                with c.session_transaction() as sess:
+                    with pytest.raises(KeyError):
+                        sess['duns_number']
+                self.data_api_client.find_suppliers.return_value = {"suppliers": []}
+                c.post("/suppliers/create/duns-number", data={'duns_number': "123456789"})
+
+            assert session['duns_number'] == '123456789'
 
     def test_should_allow_nine_digit_duns_number(self):
         self.data_api_client.find_suppliers.return_value = {"suppliers": []}
@@ -1791,6 +1816,19 @@ class TestCreateSupplier(BaseApplicationTest):
                 self.data_api_client.find_suppliers.return_value = {"suppliers": []}
                 c.post("/suppliers/create/duns-number", data={'duns_number': "123456789"})
             assert session['company_name'] == '0 COMPANY LTD'
+
+    @pytest.mark.parametrize('return_value', unexpected_responses)
+    def test_should_not_add_company_name_to_session_if_unexpected_response(self, return_value):
+        with self.app.app_context(), self.client as c:
+            with mock.patch(self.direct_plus_api_method, return_value=return_value):
+                with c.session_transaction() as sess:
+                    with pytest.raises(KeyError):
+                        sess['company_name']
+                self.data_api_client.find_suppliers.return_value = {"suppliers": []}
+                c.post("/suppliers/create/duns-number", data={'duns_number': "123456789"})
+
+            with pytest.raises(KeyError):
+                session['company_name']
 
     def test_should_allow_valid_company_contact_details(self):
         res = self.client.post(
