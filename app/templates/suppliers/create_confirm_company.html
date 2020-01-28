@@ -26,8 +26,7 @@
   }) }}
 {% endblock %}
 
-{% block main_content %}
-
+{% block mainContent %}
   <div class="grid-row">
 
   {% if errors %}
@@ -35,12 +34,13 @@
   {% endif %}
 
     <div class="column-two-thirds">
+      <h1 class="govuk-heading-l">We found these details</h1>
 
-      {% with heading = "We found these details", smaller = True %}
-        {% include "toolkit/page-heading.html" %}
-      {% endwith %}
-
-      {% call summary.mapping_table(field_headings=["Label", "Value"], field_headings_visible=False) %}
+      {% call summary.mapping_table(
+        field_headings=["Label", "Value"],
+        field_headings_visible=False,
+        caption="We found these details"
+      ) %}
 
         {% for field, label in [("duns_number", "DUNS number"), ("company_name", "Company name")] %}
           {% call summary.row(complete=True) %}
