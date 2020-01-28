@@ -1,0 +1,17 @@
+// TODO: Remove when temporary message banners have been replaced
+
+// Ensure that text within banners contrasts with blue background
+.banner-temporary-message-without-action {
+  p.banner-message,
+  p.banner-message {
+    color: $white;
+
+    a, a:visited {
+      color: $white;
+    }
+
+    a:hover, a:active {
+      color: $light-blue-50;
+    }
+  }
+}
