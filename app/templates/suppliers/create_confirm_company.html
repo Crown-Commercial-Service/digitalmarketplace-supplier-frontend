@@ -36,7 +36,11 @@
     <div class="column-two-thirds">
       <h1 class="govuk-heading-l">We found these details</h1>
 
-      {% call summary.mapping_table(field_headings=["Label", "Value"], field_headings_visible=False) %}
+      {% call summary.mapping_table(
+        field_headings=["Label", "Value"],
+        field_headings_visible=False,
+        caption="We found these details"
+      ) %}
 
         {% for field, label in [("duns_number", "DUNS number"), ("company_name", "Company name")] %}
           {% call summary.row(complete=True) %}
