@@ -34,10 +34,7 @@
   {% endif %}
 
     <div class="column-two-thirds">
-
-      {% with heading = "We found these details", smaller = True %}
-        {% include "toolkit/page-heading.html" %}
-      {% endwith %}
+      <h1 class="govuk-heading-l">We found these details</h1>
 
       {% call summary.mapping_table(field_headings=["Label", "Value"], field_headings_visible=False) %}
 
