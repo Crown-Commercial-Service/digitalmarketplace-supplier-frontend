@@ -15,3 +15,17 @@
     }
   }
 }
+
+.temporary-message {
+  p.temporary-message-message {
+    color: $white;
+
+    a, a:visited {
+      color: $white;
+    }
+
+    a:hover, a:active {
+      color: $light-blue-50;
+    }
+  }
+}
