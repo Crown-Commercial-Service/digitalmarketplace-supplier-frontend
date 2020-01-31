@@ -207,34 +207,6 @@ class TestSuppliersDashboard(BaseApplicationTest):
         )
         assert not document.xpath("//a[@href=$u]", u="/suppliers/frameworks/digital-rhymes-and-reasons/services")
 
-    def test_shows_dos_is_coming(self):
-        self.data_api_client.get_supplier.side_effect = get_supplier
-        self.data_api_client.get_supplier_frameworks.return_value = {
-            'frameworkInterest': []
-        }
-        self.data_api_client.find_frameworks.return_value = {
-            "frameworks": [
-                FrameworkStub(
-                    status='coming', slug='bad-framework', name='Framework that should’t have coming message'
-                ).response(),
-                FrameworkStub(
-                    status='coming', slug='digital-outcomes-and-specialists', name='Digital Outcomes and Specialists'
-                ).response(),
-            ]
-        }
-
-        self.login()
-        res = self.client.get("/suppliers")
-        doc = html.fromstring(res.get_data(as_text=True))
-
-        message = doc.xpath('//div[@class="temporary-message"]')
-        assert len(message) == 1
-        assert u"Digital Outcomes and Specialists will be open for applications soon" in \
-            message[0].xpath('h3/text()')[0]
-        assert u"We’ll email you when you can apply to Digital Outcomes and Specialists" in \
-            message[0].xpath('p/text()')[0]
-        assert u"Find out if your services are suitable" in message[0].xpath('p/a/text()')[0]
-
     @pytest.mark.parametrize('on_framework', (True, False))
     def test_only_shows_expired_dos3_if_supplier_was_on_framework(self, on_framework):
         self.data_api_client.get_supplier.side_effect = get_supplier
