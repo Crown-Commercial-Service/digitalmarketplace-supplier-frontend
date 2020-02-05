@@ -34,8 +34,8 @@
 
 
 {% block mainContent %}
-  <div class='grid-row'>
-    <div class='column-one-whole{% if currently_applying_to or (supplier_company_details_complete and not supplier_company_details_confirmed) %} padding-bottom-small{% endif %}'>
+  <div class='govuk-grid-row'>
+    <div class='govuk-grid-column-full{% if currently_applying_to or (supplier_company_details_complete and not supplier_company_details_confirmed) %} padding-bottom-small{% endif %}'>
       <h1 class="govuk-heading-l">Company details</h1>
 
 {{ summary.heading("What buyers will see", id="what_buyers_will_see") }}
@@ -177,8 +177,8 @@
   {% if supplier_company_details_confirmed == False or unconfirmed_open_supplier_framework_names|length > 0 %}
     {% if supplier_company_details_complete %}
     <br>
-    <div class='grid-row'>
-      <div class='column-two-thirds'>
+    <div class='govuk-grid-row'>
+      <div class='govuk-grid-column-two-thirds'>
         <form method="POST" action="{{ url_for('.confirm_supplier_details') }}">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
           {% if supplier_company_details_confirmed == False %}
@@ -200,8 +200,8 @@
       </div>
     </div>
     {% elif currently_applying_to %}
-    <div class='grid-row'>
-      <div class='column-two-thirds'>
+    <div class='govuk-grid-row'>
+      <div class='govuk-grid-column-two-thirds'>
         <p class="govuk-body">You must complete your company details to make an application.</p>
       </div>
     </div>
@@ -209,8 +209,8 @@
   {% endif %}
 
   {% if currently_applying_to %}
-  <div class='grid-row'>
-    <div class='column-two-thirds'>
+  <div class='govuk-grid-row'>
+    <div class='govuk-grid-column-two-thirds'>
     {%
        with
        url = url_for(".framework_dashboard", framework_slug=currently_applying_to.slug),

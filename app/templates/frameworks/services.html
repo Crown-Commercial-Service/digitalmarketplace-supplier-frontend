@@ -40,8 +40,8 @@
 
   {% if framework.status == 'pending' %}
     <div class="summary-item-lede">
-      <div class="grid-row">
-        <div class="column-two-thirds">
+      <div class="govuk-grid-row">
+        <div class="govuk-grid-column-two-thirds">
           <h2 class="summary-item-heading">{{ framework.name }} is closed for applications</h2>
           <p class="govuk-body">
             You made your supplier declaration and submitted {{ complete_drafts|length }} complete {{ 'service' if complete_drafts|length == 1 else 'services' }}.

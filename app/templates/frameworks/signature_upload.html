@@ -41,8 +41,8 @@
     {% endwith %}
   {% endif %}
 
-  <div class="grid-row">
-    <div class="column-two-thirds">
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
       <form method="POST" enctype="multipart/form-data" action="{{ url_for('.signature_upload', framework_slug=framework.slug, agreement_id=agreement.id) }}">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
           {% set value = None %}

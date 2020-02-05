@@ -35,8 +35,8 @@
 
 <form autocomplete="off" action="{{ url_for('.invite_user') }}" method="POST">
 
-    <div class="grid-row">
-        <div class="column-two-thirds">
+    <div class="govuk-grid-row">
+        <div class="govuk-grid-column-two-thirds">
             {{ form.hidden_tag() }}
 
             {{ form.email_address }}

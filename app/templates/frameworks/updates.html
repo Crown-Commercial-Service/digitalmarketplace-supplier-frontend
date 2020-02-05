@@ -44,14 +44,14 @@
     {% endwith %}
   {% endif %}
 
-  <div class="grid-row">
-    <div class="column-two-thirds">
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
       <h1 class="govuk-heading-l">{{ framework.name }} updates</h1>
     </div>
   </div>
 
-  <div class="grid-row">
-    <div class="column-one-whole updates-document-tables">
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-full updates-document-tables">
       {% set sections = [
         {
           "heading": "Communications",
@@ -103,9 +103,9 @@
   {% if not agreement_countersigned %}
     {% if framework.clarificationQuestionsOpen %}
       <form method="post">
-        <div class="grid-row">
+        <div class="govuk-grid-row">
 
-          <div class="column-two-thirds">
+          <div class="govuk-grid-column-two-thirds">
             {{ summary.heading("Ask a clarification question") }}
             <br />
             <p class="govuk-body">Ask a clarification question if you need a better understanding of:</p>
@@ -153,8 +153,8 @@
         </form>
     {% else %}
 
-        <div class="grid-row">
-          <div class="column-two-thirds">
+        <div class="govuk-grid-row">
+          <div class="govuk-grid-column-two-thirds">
             {{ summary.heading("Contact us") }}
 
             <p class="govuk-body">Contact the support team if <a class="govuk-link" href="{{ url_for('external.help') }}">there’s a problem with your account or to update your details</a>.</p>

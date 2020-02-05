@@ -78,7 +78,7 @@
 
 {% block before_sections %}
 
-<div class="column-one-third align-with-heading">
+<div class="govuk-grid-column-one-third align-with-heading">
   <p class='last-edited hint'>
     Last edited:
     {{ last_edit.createdAt|datetimeformat }}
@@ -119,7 +119,7 @@
 
 {% block before_heading %}
   {% if delete_requested %}
-    <div class="column-one-whole">
+    <div class="govuk-grid-column-full">
       <form action="{{ url_for('.delete_draft_service', framework_slug=framework.slug, lot_slug=service_data.lot, service_id=service_id ) }}" method="POST">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
         <input type="hidden" name="delete_confirmed" value="true" />
@@ -188,10 +188,10 @@
 {% block after_sections %}
   {% if not delete_requested %}
 
-      <div class="column-two-thirds">
+      <div class="govuk-grid-column-two-thirds">
         &nbsp;
       </div>
-      <div class="column-one-third delete-draft-button">
+      <div class="govuk-grid-column-one-third delete-draft-button">
         {% if service_data.status == 'not-submitted' and can_mark_complete and framework.status == 'open' %}
           <div class="space-underneath">
             {% include "partials/complete_service.html" %}
@@ -214,7 +214,7 @@
         {% set back_to_service_url = url_for(".framework_submission_services", framework_slug=framework.slug, lot_slug=service_data.lot) %}
         {% set back_to_service_link_text = 'Back to {}'.format(service_data['lotName']|lower) %}
       {% endif %}
-      <div class="column-two-thirds">
+      <div class="govuk-grid-column-two-thirds">
           {%
             with
             url = back_to_service_url,
