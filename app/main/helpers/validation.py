@@ -14,7 +14,7 @@ def get_validator(framework, content, answers):
     if framework is None:
         raise ValueError("a framework dictionary must be provided")
     if framework is not None:
-        validator_cls = VALIDATORS.get(framework['slug'])
+        validator_cls = VALIDATORS.get(framework['slug'], SharedValidator)
         return validator_cls(content, answers)
 
 
