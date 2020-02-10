@@ -28,8 +28,8 @@
 {% endblock %}
 
 {% block mainContent %}
-    <div class="grid-row">
-      <div class="column-one-whole">
+    <div class="govuk-grid-row">
+      <div class="govuk-grid-column-full">
         {% if errors %}
          {% with
             message = "You must <a class=\"govuk-link\" href=\"#{}\">accept the changes</a> to continue.".format(errors.accept_changes.input_name)|safe, type = "destructive" %}
@@ -38,8 +38,8 @@
         {% endif %}
       </div>
     </div>
-    <div class="grid-row">
-        <div class="column-two-thirds">
+    <div class="govuk-grid-row">
+        <div class="govuk-grid-column-two-thirds">
 
           <h1 class="govuk-heading-l">{{ '{} contract variation for {}'.format('The' if variation_details.get('countersignedAt') or agreed_details else 'Accept the', framework.name) }}</h1>
 
@@ -58,8 +58,8 @@
 
       </div>
     </div>
-    <div class="grid-row">
-      <div class="column-one-whole">
+    <div class="govuk-grid-row">
+      <div class="govuk-grid-column-full">
 
           {% if agreed_details %}
           <div class="section-summary">

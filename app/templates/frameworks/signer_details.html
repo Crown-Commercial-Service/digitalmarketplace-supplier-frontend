@@ -29,8 +29,8 @@
 {% block mainContent %}
   {% include 'toolkit/forms/validation.html' %}
 
-<div class="grid-row">
-  <div class="column-two-thirds">
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-two-thirds">
     <h1 class="govuk-heading-l">{{ 'Details of the person who is signing on behalf of {}'.format(supplier_registered_name) }}</h1>
 
     <form method="POST" action="{{ url_for('.signer_details', framework_slug=framework.slug, agreement_id=agreement['id']) }}">

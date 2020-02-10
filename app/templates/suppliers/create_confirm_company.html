@@ -27,13 +27,13 @@
 {% endblock %}
 
 {% block mainContent %}
-  <div class="grid-row">
+  <div class="govuk-grid-row">
 
   {% if errors %}
     {% include 'toolkit/forms/validation.html' %}
   {% endif %}
 
-    <div class="column-two-thirds">
+    <div class="govuk-grid-column-two-thirds">
       <h1 class="govuk-heading-l">We found these details</h1>
 
       {% call summary.mapping_table(

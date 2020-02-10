@@ -30,8 +30,8 @@
 {% block mainContent %}
 {% include "toolkit/forms/validation.html" %}
 
-  <div class="grid-row">
-    <div class="column-one-whole">
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-full">
       <h1 class="govuk-heading-xl">What buyers will see</h1>
 
       <div class="dmspeak">
@@ -45,8 +45,8 @@
 
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
 
-  <div class="grid-row">
-    <div class="column-two-thirds">
+  <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
 
       {{ form.contactName }}
       {{ form.email }}

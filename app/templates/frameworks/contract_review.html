@@ -29,8 +29,8 @@
 {% block mainContent %}
   {% include 'toolkit/forms/validation.html' %}
 
-<div class="grid-row">
-  <div class="column-two-thirds">
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-two-thirds">
     <h1 class="govuk-heading-l">{{ 'Check the details you’ve given before returning the signature page for {}'.format(supplier_registered_name) }}</h1>
   </div>
 </div>
@@ -66,8 +66,8 @@
 </div>
 
 <div class="single-question-page authorisation-form-wrapper">
-<div class="grid-row">
-  <div class="column-two-thirds">
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-two-thirds">
 
      <div class="dmspeak">
       <p class="govuk-body">Returning the signature page will notify the Crown Commercial Service and the primary contact you gave in your {{ framework.name }} application, {{ supplier_framework.declaration.primaryContact }} at {{ supplier_framework.declaration.primaryContactEmail }}.</p>
