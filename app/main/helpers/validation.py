@@ -261,6 +261,27 @@ class SharedValidator(DOSValidator):
     word_limit = 500
 
 
+class G12Validator(SharedValidator):
+
+    def errors(self):
+
+        errors_map = super().errors()
+
+        q1_answer = self.answers.get('servicesHaveOrSupportCloudHostingCloudSoftware')
+        q2_answer = self.answers.get('servicesHaveOrSupportCloudSupport')
+
+        q1_negative = "My organisation isn't submitting cloud hosting (lot 1) or cloud software (lot 2) services"
+        q2_negative = "My organisation isn't submitting cloud support (lot 3) services"
+
+        if q1_answer == q1_negative and q2_answer == q2_negative:
+            errors_map.update({
+                'servicesHaveOrSupportCloudHostingCloudSoftware': 'dependent_question_error',
+                'servicesHaveOrSupportCloudSupport': 'dependent_question_error',
+            })
+
+        return errors_map
+
+
 VALIDATORS = {
     "g-cloud-7": G7Validator,
     "g-cloud-8": SharedValidator,
@@ -271,5 +292,5 @@ VALIDATORS = {
     "digital-outcomes-and-specialists-3": SharedValidator,
     "g-cloud-11": SharedValidator,
     "digital-outcomes-and-specialists-4": SharedValidator,
-    "g-cloud-12": SharedValidator,
+    "g-cloud-12": G12Validator,
 }
