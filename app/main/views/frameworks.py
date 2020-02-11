@@ -518,22 +518,16 @@ def framework_supplier_declaration_overview(framework_slug):
         abort(404)
 
     # generate an (ordered) dict of the form {section_slug: (section, section_errors)}.
-    # we must perform an actual validation for each section rather than rely on .answer_required as the latter won't
-    # take into account declarations custom question dependencies
-    sections_errors = OrderedDict(
-        (
-            section.slug,
-            (
-                section,
-                section.editable and get_validator(
-                    framework,
-                    content,
-                    sf["declaration"],
-                ).get_error_messages_for_page(section),
-            ),
-        )
-        for section in content.summary(sf["declaration"])
-    )
+    # to perform validation per section.
+    declaration_validator = get_validator(framework, content, sf["declaration"])
+
+    sections_errors = OrderedDict()
+    for section in content.summary(sf["declaration"]):
+        errors = None
+        if section.editable:
+            errors = declaration_validator.get_error_messages_for_page(section)
+
+        sections_errors[section.slug] = (section, errors)
 
     return render_template(
         "frameworks/declaration_overview.html",
