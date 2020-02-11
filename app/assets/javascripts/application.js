@@ -16,12 +16,14 @@
 //= require ../../../node_modules/digitalmarketplace-frontend-toolkit/toolkit/javascripts/shim-links-with-button-role.js
 //= require ../../../node_modules/digitalmarketplace-frontend-toolkit/toolkit/javascripts/show-hide-content.js
 //= require ../../../node_modules/digitalmarketplace-govuk-frontend/govuk-frontend/all.js
+//= require ../../../node_modules/digitalmarketplace-govuk-frontend/digitalmarketplace/digitalmarketplace-govuk-frontend.js
 //= require _selection-buttons.js
 //= require _stick-at-top-when-scrolling.js
 //= require _stop-scrolling-at-footer.js
 //= require category-picker.js
 
 GOVUKFrontend.initAll();
+DMGOVUKFrontend.initAll();
 
 (function(GOVUK, GDM) {
 
