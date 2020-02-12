@@ -1171,6 +1171,9 @@ class TestSupplierDashboardLogin(BaseApplicationTest):
 
         document = html.fromstring(response.get_data(as_text=True))
         assert len(document.xpath("//a[contains(@href,'/user/change-password')]")) == 1
+        # the cookie settings link will appear twice, once in the banner on top
+        # and again on the side of the page next to account settings
+        assert len(document.xpath("//a[contains(@href,'/user/cookie-settings')]")) == 2
 
     def test_should_redirect_to_login_if_not_logged_in(self):
         res = self.client.get("/suppliers")
