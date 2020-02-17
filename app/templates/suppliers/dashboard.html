@@ -39,34 +39,38 @@
     </div>
     <div class="govuk-grid-column-one-third dmspeak">
       <h2 class="heading-xmedium">Your company</h2>
-      <p class="govuk-body">
-        <a class="govuk-link" href="{{ url_for('.supplier_details') }}">Company details</a>
-      </p>
-      <p class="govuk-body">
-        <a class="govuk-link" href="{{ url_for('.list_users') }}">Contributors</a>
-      </p>
+      <ul class="govuk-list">
+        <li>
+          <a class="govuk-link" href="{{ url_for('.supplier_details') }}">Company details</a>
+        </li>
+        <li>
+          <a class="govuk-link" href="{{ url_for('.list_users') }}">Contributors</a>
+        </li>
+      </ul>
       <h2 class="heading-xmedium">Account settings</h2>
-      <p class="govuk-body">
-        <a class="govuk-link" href="{{ url_for('external.change_password') }}">Change your password</a>
-      </p>
-      <p class="govuk-body">
-        <a class="govuk-link" href="{{ url_for('external.cookie_settings') }}">Change your cookie settings</a>
-      </p>
-      <p class="govuk-body">
-        <a
-          class="govuk-link"
-          href="{{ url_for('external.user_research_consent') }}"
-          data-analytics="trackEvent"
-          data-analytics-category="user-research"
-          data-analytics-action="account-settings-link"
-        >
-          {% if not current_user.user_research_opted_in %}
-            Join the user research mailing list
-          {% else %}
-            Unsubscribe from the user research mailing list
-          {% endif %}
-        </a>
-      </p>
+      <ul class="govuk-list">
+        <li>
+          <a class="govuk-link" href="{{ url_for('external.change_password') }}">Change your password</a>
+        </li>
+        <li>
+          <a class="govuk-link" href="{{ url_for('external.cookie_settings') }}">Change your cookie settings</a>
+        </li>
+        <li>
+          <a
+            class="govuk-link"
+            href="{{ url_for('external.user_research_consent') }}"
+            data-analytics="trackEvent"
+            data-analytics-category="user-research"
+            data-analytics-action="account-settings-link"
+          >
+            {% if not current_user.user_research_opted_in %}
+              Join the user research mailing list
+            {% else %}
+              Unsubscribe from the user research mailing list
+            {% endif %}
+          </a>
+        </li>
+      </ul>
     </div>
   </div>
 
