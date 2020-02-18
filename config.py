@@ -72,8 +72,8 @@ class Config(object):
 
     SECRET_KEY = None
     SHARED_EMAIL_KEY = None
-    RESET_PASSWORD_SALT = 'ResetPasswordSalt'
-    INVITE_EMAIL_SALT = 'InviteEmailSalt'
+    RESET_PASSWORD_TOKEN_NS = 'ResetPasswordSalt'
+    INVITE_EMAIL_TOKEN_NS = 'InviteEmailSalt'
 
     STATIC_URL_PATH = '/suppliers/static'
     ASSET_PATH = STATIC_URL_PATH + '/'
