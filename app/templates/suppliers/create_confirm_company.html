@@ -58,12 +58,12 @@
           name = "confirmed",
           value = form.confirmed.value,
           error = errors.get("confirmed", {}).get("message", None),
-          hint = 'You can change how the name appears later on.',
-          hint_underneath = true,
           type = 'boolean'
         %}
           {% include "toolkit/forms/selection-buttons.html" %}
         {% endwith %}
+
+        <p>You can change how the name appears later on.</p>
 
         {{ govukButton({"text": "Continue"}) }}
 

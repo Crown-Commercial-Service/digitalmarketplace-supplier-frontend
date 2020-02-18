@@ -35,6 +35,7 @@
         <ul class="govuk-list govuk-list--bullet">
           <li>a company name and company details that buyers may use to contact you</li>
           <li>your own details to create a login</li>
+          <li>a DUNS number</li>
         </ul>
 
         <p class="govuk-body">It will take about 5 minutes to create your account.</p>
@@ -55,6 +56,7 @@
       {{ govukButton({
         "text": "Start",
         "href": url_for(".duns_number"),
+        "classes": "govuk-button--start",
       }) }}
     </div>
   </div>
