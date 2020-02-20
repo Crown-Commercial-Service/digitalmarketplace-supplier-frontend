@@ -36,20 +36,15 @@
     <div class="govuk-grid-column-two-thirds">
       <h1 class="govuk-heading-l">We found these details</h1>
 
-      {% call summary.mapping_table(
-        field_headings=["Label", "Value"],
-        field_headings_visible=False,
-        caption="We found these details"
-      ) %}
-
-        {% for field, label in [("duns_number", "DUNS number"), ("company_name", "Company name")] %}
-          {% call summary.row(complete=True) %}
-            {% call summary.field(first=True, bold=True) %}{{ label }}{% endcall %}
-            {{ summary.text(session.get(field)) }}
-          {% endcall %}
-        {% endfor %}
-
-      {% endcall %}
+      {{ govukSummaryList({
+        "rows": [{
+          "key": {"text": "DUNS number"},
+          "value": {"text": session.get("duns_number")},
+        }, {
+          "key": {"text": "Company name"},
+          "value": {"text": session.get("company_name")},
+        }],
+      }) }}
 
       <form method="POST" action="{{ url_for('.confirm_company') }}">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
