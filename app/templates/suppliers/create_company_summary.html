@@ -41,50 +41,75 @@
 
   <h1 class="govuk-heading-l">Check your information </h1>
 
-  {{ summary.heading('Your company details') }}
-  {% call summary.mapping_table(
-    caption="Your company details",
-    field_headings=[
-      "Label",
-      "Value",
-    ],
-    field_headings_visible=False
-  ) %}
+  <h2 class="govuk-heading-m">Your company details</h2>
+  {{ govukSummaryList({
+    "rows": [{
+      "key": {"text": "DUNS number"},
+      "value": {"text": session.get("duns_number", "You must answer this question.")},
+      "actions": {
+        "items": [{
+          "href": url_for(".duns_number", _anchor="duns_number"),
+          "text": "Change",
+          "visuallyHiddenText": "DUNS number",
+        }],
+      },
+    }, {
+      "key": {"text": "Company name"},
+      "value": {"text": session.get("company_name", "You must answer this question.")},
+      "actions": {
+        "items": [{
+          "href": url_for(".company_details", _anchor="company_name"),
+          "text": "Change",
+          "visuallyHiddenText": "company name",
+        }],
+      },
+    }, {
+      "key": {"text": "Contact name"},
+      "value": {"text": session.get("contact_name", "You must answer this question.")},
+      "actions": {
+        "items": [{
+          "href": url_for(".company_details", _anchor="contact_name"),
+          "text": "Change",
+          "visuallyHiddenText": "contact name",
+        }],
+      },
+    }, {
+      "key": {"text": "Contact email"},
+      "value": {"text": session.get("email_address", "You must answer this question.")},
+      "actions": {
+        "items": [{
+          "href": url_for(".company_details", _anchor="email_address"),
+          "text": "Change",
+          "visuallyHiddenText": "contact email",
+        }],
+      },
+    }, {
+      "key": {"text": "Contact phone number"},
+      "value": {"text": session.get("phone_number", "You must answer this question.")},
+      "actions": {
+        "items": [{
+          "href": url_for(".company_details", _anchor="phone_number"),
+          "text": "Change",
+          "visuallyHiddenText": "contact phone number",
+        }],
+      },
+    }],
+  }) }}
 
-  {% set required_company_fields = [
-      ("duns_number", "DUNS number", url_for(".duns_number", _anchor="duns_number")),
-      ("company_name", "Company name", url_for(".company_details", _anchor="company_name")),
-      ("contact_name", "Contact name", url_for(".company_details", _anchor="contact_name")),
-      ("email_address", "Contact email", url_for(".company_details", _anchor="email_address")),
-      ("phone_number", "Contact phone number", url_for(".company_details", _anchor="phone_number"))
-    ]
-  %}
-
-  {% for field, label, url in required_company_fields %}
-    {% call summary.row(complete=session.get(field)) %}
-      {{ summary.field_name(label) }}
-      {{ summary.text(session.get(field, "You must answer this question.")) }}
-      {{ summary.edit_link("Edit", url, hidden_text=label) }}
-    {% endcall %}
-  {% endfor %}
-
-  {% endcall %}
-
-  {{ summary.heading('Your login details') }}
-  {% call summary.mapping_table(
-    caption="Your login details",
-    field_headings=[
-      "Label",
-      "Value",
-    ],
-    field_headings_visible=False
-  ) %}
-    {% call summary.row(complete=session.get("account_email_address", None)) %}
-    {{ summary.field_name("Email address") }}
-    {{ summary.text(session.get("account_email_address", "You must answer this question.")) }}
-    {{ summary.edit_link("Edit", url_for(".create_your_account", _anchor="email_address", hidden_text="login email address")) }}
-    {% endcall %}
-  {% endcall %}
+  <h2 class="govuk-heading-m">Your login details</h2>
+  {{ govukSummaryList({
+    "rows": [{
+      "key": {"text": "Email address"},
+      "value": {"text": session.get("account_email_address", "You must answer this question.")},
+      "actions": {
+        "items": [{
+          "href": url_for(".create_your_account", _anchor="email_address"),
+          "text": "Change",
+          "visuallyHiddenText": "login email address",
+        }],
+      },
+    }],
+  }) }}
 </div>
 <form action="{{ url_for('.submit_company_summary')}}" method="POST">
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
