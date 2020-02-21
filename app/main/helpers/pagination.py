@@ -1,4 +1,4 @@
-### Copied from https://github.com/alphagov/digitalmarketplace-buyer-frontend/blob/master/app/main/helpers/search_helpers.py#L231
+# Copied from https://github.com/alphagov/digitalmarketplace-buyer-frontend/blob/master/app/main/helpers/search_helpers.py#L231  # noqa
 from math import ceil
 
 
@@ -9,7 +9,7 @@ def total_pages(total, page_size):
         return 1
 
 
-def pagination(num_services, page_size, page=None):
+def pagination(num_services, page_size, page=None):  # noqa
     total_num_pages = total_pages(num_services, page_size)
     next_page = None
     prev_page = None
