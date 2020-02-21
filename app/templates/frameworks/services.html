@@ -1,6 +1,7 @@
 {% extends "_base_page.html" %}
 {% import "toolkit/summary-table.html" as summary %}
 {% import "macros/submission.html" as submission %}
+{% import "macros/pagination.html" as pagination %}
 
 {% block pageTitle %}
   {{ lot.name }} services – Digital Marketplace
@@ -101,6 +102,11 @@
       {% endif %}
     {% endcall %}
   {% endcall %}
+  {{ pagination.pagination(
+    drafts_pagination,
+    url_for('.framework_submission_services', framework_slug=framework.slug, lot_slug=lot.slug,  drafts_page=drafts_pagination['next_page']),
+    url_for('.framework_submission_services', framework_slug=framework.slug, lot_slug=lot.slug,  drafts_page=drafts_pagination['prev_page'])
+  ) }}
 
   {% if framework.status == 'open' %}
     {{ summary.heading("Complete services") }}
@@ -139,6 +145,12 @@
       {% endif %}
     {% endcall %}
   {% endcall %}
+
+  {{ pagination.pagination(
+    complete_drafts_pagination,
+    url_for('.framework_submission_services', framework_slug=framework.slug, lot_slug=lot.slug,  complete_drafts_page=complete_drafts_pagination['next_page']),
+    url_for('.framework_submission_services', framework_slug=framework.slug, lot_slug=lot.slug,  complete_drafts_page=complete_drafts_pagination['prev_page'])
+  ) }}
 
   {%
     with

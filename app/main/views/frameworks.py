@@ -53,6 +53,7 @@ from ..helpers.frameworks import (
     returned_agreement_email_recipients,
     return_404_if_applications_closed
 )
+from ..helpers.pagination import pagination
 from ..helpers.services import (
     get_drafts,
     get_lot_drafts,
@@ -299,6 +300,8 @@ def framework_submission_services(framework_slug, lot_slug):
     framework, lot = get_framework_and_lot_or_404(data_api_client, framework_slug, lot_slug)
 
     drafts, complete_drafts = get_lot_drafts(data_api_client, framework_slug, lot_slug)
+    drafts, complete_drafts = list(drafts), list(complete_drafts)
+
     declaration_status = get_declaration_status(data_api_client, framework_slug)
     if framework['status'] == 'pending' and declaration_status != 'complete':
         abort(404)
@@ -340,8 +343,26 @@ def framework_submission_services(framework_slug, lot_slug):
                     framework_slug=framework_slug, lot_slug=lot_slug, service_id=draft['id'])
         )
 
+    pag_num = 10
+
+    drafts_pagination = None
+    if len(drafts) > pag_num:
+        drafts_page = int(request.args.get('drafts_page') or 1)
+        drafts_pagination = pagination(len(drafts), pag_num, drafts_page)
+        si = 0 if drafts_page < 2 else (drafts_page - 1) * pag_num
+        ei = pag_num if drafts_page < 2 else drafts_page * pag_num
+        drafts = drafts[si:ei]
+
+    complete_drafts_pagination = None
+    if len(complete_drafts) > pag_num:
+        complete_drafts_page = int(request.args.get('complete_drafts_page') or 1)
+        complete_drafts_pagination = pagination(len(complete_drafts), pag_num, complete_drafts_page)
+        si = 0 if complete_drafts_page < 2 else (complete_drafts_page - 1) * pag_num
+        ei = pag_num if complete_drafts_page < 2 else complete_drafts_page * pag_num
+        complete_drafts = complete_drafts[si:ei]
+
     with logged_duration(message="Annotated draft details in {duration_real}s"):
-        for draft in chain(drafts, complete_drafts):
+        for draft in drafts + complete_drafts:
             draft['priceString'] = format_service_price(draft)
             sections = content_loader.get_manifest(
                 framework_slug,
@@ -357,8 +378,10 @@ def framework_submission_services(framework_slug, lot_slug):
     return render_template(
         "frameworks/services.html",
         previous_framework=previous_framework if previous_services_still_to_copy else None,
-        complete_drafts=list(reversed(complete_drafts)),
-        drafts=list(reversed(drafts)),
+        complete_drafts=reversed(complete_drafts),
+        complete_drafts_pagination=complete_drafts_pagination,
+        drafts=reversed(drafts),
+        drafts_pagination=drafts_pagination,
         declaration_status=declaration_status,
         framework=framework,
         lot=lot,

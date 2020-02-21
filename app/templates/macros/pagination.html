@@ -1,0 +1,31 @@
+{% macro pagination(pagination_object, next_url, prev_url) %}
+{% if pagination_object %}
+  <nav role="navigation">
+    <ul class="previous-next-navigation">
+
+    {% if pagination_object['show_prev'] %}
+      <li class="previous">
+        <a class="govuk-link" href="{{ prev_url }}">
+
+          Previous <span class="visuallyhidden">page</span>
+          <span class="page-numbers">
+            {{ pagination_object['prev_page'] }} of {{ pagination_object['total_pages'] }}
+          </span>
+        </a>
+      </li>
+    {% endif %}
+
+    {% if pagination_object['show_next'] %}
+      <li class="next">
+        <a class="govuk-link" href="{{ next_url }}">
+          Next <span class="visuallyhidden">page</span>
+          <span class="page-numbers">
+            {{ pagination_object['next_page'] }} of {{ pagination_object['total_pages'] }}
+          </span>
+        </a>
+      </li>
+    {% endif %}
+    </ul>
+  </nav>
+{% endif %}
+{% endmacro %}
