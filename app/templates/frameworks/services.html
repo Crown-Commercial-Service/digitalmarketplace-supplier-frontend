@@ -104,8 +104,8 @@
   {% endcall %}
   {{ pagination.pagination(
     drafts_pagination,
-    url_for('.framework_submission_services', framework_slug=framework.slug, lot_slug=lot.slug,  drafts_page=drafts_pagination['next_page']),
-    url_for('.framework_submission_services', framework_slug=framework.slug, lot_slug=lot.slug,  drafts_page=drafts_pagination['prev_page'])
+    url_for('.framework_submission_services', framework_slug=framework.slug, lot_slug=lot.slug,  drafts_page=drafts_pagination['next_page'], complete_drafts_page=request.args.get('complete_drafts_page')),
+    url_for('.framework_submission_services', framework_slug=framework.slug, lot_slug=lot.slug,  drafts_page=drafts_pagination['prev_page'], complete_drafts_page=request.args.get('complete_drafts_page'))
   ) }}
 
   {% if framework.status == 'open' %}
@@ -148,8 +148,8 @@
 
   {{ pagination.pagination(
     complete_drafts_pagination,
-    url_for('.framework_submission_services', framework_slug=framework.slug, lot_slug=lot.slug,  complete_drafts_page=complete_drafts_pagination['next_page']),
-    url_for('.framework_submission_services', framework_slug=framework.slug, lot_slug=lot.slug,  complete_drafts_page=complete_drafts_pagination['prev_page'])
+    url_for('.framework_submission_services', framework_slug=framework.slug, lot_slug=lot.slug, drafts_page=request.args.get('drafts_page'), complete_drafts_page=complete_drafts_pagination['next_page']),
+    url_for('.framework_submission_services', framework_slug=framework.slug, lot_slug=lot.slug, drafts_page=request.args.get('drafts_page'), complete_drafts_page=complete_drafts_pagination['prev_page'])
   ) }}
 
   {%
