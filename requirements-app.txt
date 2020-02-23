@@ -2,7 +2,7 @@
 # with package version changes made in requirements-app.txt
 
 Flask==1.0.4 # pyup: >=1.0.0,<1.1.0
-Flask-Login==0.4.1
+Flask-Login==0.5.0
 Flask-WTF==0.14.3
 itsdangerous==0.24 # pyup: ignore
 
