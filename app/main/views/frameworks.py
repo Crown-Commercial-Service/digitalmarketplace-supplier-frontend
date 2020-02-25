@@ -340,13 +340,15 @@ def framework_submission_services(framework_slug, lot_slug):
                     framework_slug=framework_slug, lot_slug=lot_slug, service_id=draft['id'])
         )
 
+    lot_service_sections = content_loader.get_manifest(
+        framework_slug,
+        'edit_submission',
+    ).filter(context={'lot': lot_slug}, inplace_allowed=True)
+
     with logged_duration(message="Annotated draft details in {duration_real}s"):
         for draft in chain(drafts, complete_drafts):
             draft['priceString'] = format_service_price(draft)
-            sections = content_loader.get_manifest(
-                framework_slug,
-                'edit_submission',
-            ).filter(draft, inplace_allowed=True).summary(draft, inplace_allowed=True)
+            sections = lot_service_sections.summary(draft, inplace_allowed=True)
 
             unanswered_required, unanswered_optional = count_unanswered_questions(sections)
             draft.update({
