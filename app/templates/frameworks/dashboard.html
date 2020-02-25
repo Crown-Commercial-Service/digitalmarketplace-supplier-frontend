@@ -31,15 +31,6 @@
 {% endblock %}
 
 {% block mainContent %}
-  {# Confidence Banner #}
-  {% if application_made and framework.status == 'open' %}
-    {% with
-      message = "Your application will be submitted at %s. <br> You can edit your declaration and services at any time before the deadline."|safe % (framework.applicationsCloseAt | nbsp),
-      type="success"
-    %}
-      {% include "toolkit/notification-banner.html" %}
-    {% endwith %}
-  {% endif %}
 
   <div class="govuk-grid-row framework-dashboard">
     <div class="govuk-grid-column-two-thirds">

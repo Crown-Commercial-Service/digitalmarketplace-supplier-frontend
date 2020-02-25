@@ -24,128 +24,80 @@
 {% endif %}
 
 {% if framework.status == 'open' %}
-<li class="browse-list-item">
-  <a class="browse-list-item-link"
-     href="{{ url_for('.supplier_details') }}">
-    <h2>1. Enter your company details</h2>
-  </a>
-  {% if not application_company_details_confirmed %}
-  <div class="browse-list-item-status-quiet">
-    <p class="browse-list-item-status-title">You must {% if supplier_company_details_complete %}confirm{% else %}add{% endif %} your organisation’s details</p>
-  </div>
-  {% else %}
-  {% if declaration_status == 'complete' and counts.complete %}
-  <div class="browse-list-item-status-happy">
-  {% else %}
-    <div class="browse-list-item-status-default">
-  {% endif %}
-    <p class="browse-list-item-status-title">
-      <strong>Your company details were saved</strong>
-    </p>
-  </div>
-  {% endif %}
-</li>
-
-<li class="browse-list-item">
-  {% if not application_company_details_confirmed %}
-    <h2>2. Make supplier declaration</h2>
-    <p class="instruction-list-item-box inactive">Can't start yet</p>
-  {% else %}
-    {% if declaration_status == 'unstarted' %}
-    <a class="browse-list-item-link" href="{{ url_for('.framework_start_supplier_declaration', framework_slug=framework.slug) }}">
-      <h2>2. Make supplier declaration</h2>
-    </a>
+ {% if application_made %}
+    {% if counts.draft %}
+      {{ dmAlert({
+        "titleText": "Your application is complete, and will be automatically submitted.",
+        "text": "You still have {count} unsubmitted draft {service_string}. You can edit or remove draft services at any time before the deadline.".format(count=counts.draft, service_string=pluralize(counts.draft, 'service', 'services')),
+        "type" : "success"
+        })
+      }}
     {% else %}
-    <a class="browse-list-item-link" href="{{ url_for('.framework_supplier_declaration_overview', framework_slug=framework.slug) }}">
-      <h2>2. Edit supplier declaration</h2>
-    </a>
-    {% endif %}
-    <p class="browse-list-item-body">
-      Confirm eligibility, agree to the application terms and provide supplier&nbsp;information.
-    </p>
-    {% if declaration_status == 'unstarted' and not counts.complete %}
-      <div class="browse-list-item-status-quiet">
-        <p class="browse-list-item-status-title">You need to make the supplier declaration</p>
-      </div>
-    {% elif declaration_status == 'started' and not counts.complete %}
-      <div class="browse-list-item-status-quiet">
-        <p class="browse-list-item-status-title">You need to finish making the supplier declaration</p>
-      </div>
-    {% elif declaration_status == 'unstarted' and counts.complete %}
-      <div class="browse-list-item-status-angry">
-        <p class="browse-list-item-status-title">
-          <strong>No services will be submitted because you haven’t made the supplier declaration</strong>
-        </p>
-      </div>
-    {% elif declaration_status == 'started' and counts.complete %}
-      <div class="browse-list-item-status-angry">
-        <p class="browse-list-item-status-title">
-          <strong>No services will be submitted because you haven’t finished making the supplier declaration</strong>
-        </p>
-      </div>
-    {% elif declaration_status == 'complete' %}
-      {% if counts.complete and application_company_details_confirmed %}
-        <div class="browse-list-item-status-happy">
-      {% else %}
-        <div class="browse-list-item-status-default">
-      {% endif %}
-        <p class="browse-list-item-status-title">
-          <strong>You’ve made the supplier declaration</strong>
-        </p>
-      </div>
+      {{ dmAlert({
+        "titleText": "Your application is complete, and will be automatically submitted.",
+        "text": "You can change it at any time before the deadline.",
+        "type" : "success"
+        })
+      }}
     {% endif %}
   {% endif %}
-</li>
-
-<li class="browse-list-item">
-  {% if not application_company_details_confirmed %}
-    <h2>3. Add, edit and complete services</h2>
-    <p class="instruction-list-item-box inactive">Can't start yet</p>
-  {% else %}
-    <a class="browse-list-item-link" href="{{ url_for('.framework_submission_lots', framework_slug=framework.slug) }}">
-      <h2>3. Add, edit and complete services</h2>
-    </a>
-    {% if framework_advice.use_of_service_data %}
-    <div class="browse-list-item-body use-of-service-data">
-      {{ framework_advice.use_of_service_data }}
-    </div>
-    {% endif %}
-  
-    {% if not counts.complete %}
-      {% if not counts.draft %}
-    <div class="browse-list-item-status-quiet">
-      <p class="browse-list-item-status-title">You need to add and complete services</p>
-    </div>
+  <ul class="dm-task-list">
+    <li class="dm-task-list-item">
+      <span class="dm-task-list__task-name">
+        <a href="{{ url_for('.supplier_details') }}">
+          Confirm your company details
+        </a>
+      </span>
+      {% if application_company_details_confirmed %}
+        <strong class="dm-task-list-indicator-completed" id="dm-companydetails-done">Done</strong>
+      {% elif supplier_company_details_complete %}
+        {# Supplier details exist from a previous framework application, but haven't yet been confirmed for this one #}
+        <strong class="dm-task-list-indicator-completed" id="dm-companydetails-inprogress">In Progress</strong>
       {% else %}
-    <div class="browse-list-item-status-quiet">
-      <p class="browse-list-item-status-title">No services marked as complete</p>
-    </div>
+        <strong class="dm-task-list-indicator-not-completed" id="dm-companydetails-todo">To do</strong>
       {% endif %}
-    {% else %}
-      {% if declaration_status == 'complete' %}
-    <div class="browse-list-item-status-happy">
-      <p class="browse-list-item-status-title">You’re submitting</p>
-      {% else %}
-    <div class="browse-list-item-status-default">
-      <p class="browse-list-item-status-title">You’ve completed:</p>
-      {% endif %}
-      <ul class="browse-list-item-status-list">
-        {% for lot in completed_lots %}
-          {% if lot.one_service_limit %}
-        <li>
-            {{lot.name|lower}}
-        </li>
+    </li>
+    <li class="dm-task-list-item">
+      <span class="app-task-list__task-name">
+        {% if application_company_details_confirmed %}
+          {% if declaration_status == 'unstarted' %}
+            <a href="{{ url_for('.framework_start_supplier_declaration', framework_slug=framework.slug) }}">Make your supplier declaration</a>
           {% else %}
-        <li>
-          {{ lot.complete_count }}
-          {{ lot.unitSingular if (1 == lot.complete_count) else lot.unitPlural }} in
-          {{ lot.name|lower }}
-        </li>
+            <a href="{{ url_for('.framework_supplier_declaration_overview', framework_slug=framework.slug) }}">Make your supplier declaration</a>
           {% endif %}
-        {% endfor %}
-      </ul>
-    </div>
-    {% endif %}
-  {% endif %}
-</li>
+        {% else %}
+          Make your supplier declaration
+        {% endif %}
+      </span>
+      {% if not application_company_details_confirmed %}
+        <strong class="dm-task-list-indicator-not-completed" id="dm-declaration-cantstart">Can't start yet</strong>
+      {% elif declaration_status == 'unstarted' %}
+        <strong class="dm-task-list-indicator-not-completed" id="dm-declaration-todo">To do</strong>
+      {% elif declaration_status == 'started' %}
+        <strong class="dm-task-list-indicator-not-completed" id="dm-declaration-inprogress">In progress</strong>
+      {% elif declaration_status == 'complete' %}
+        <strong class="dm-task-list-indicator-completed" id="dm-declaration-done">Done</strong>
+      {% endif %}
+    </li>
+    <li class="dm-task-list-item">
+
+        {% if application_company_details_confirmed %}
+        <a href="{{ url_for('.framework_submission_lots', framework_slug=framework.slug) }}">
+          Add, edit and complete services
+        </a>
+        {% else %}
+          Add, edit and complete services
+        {% endif %}
+
+      {% if not application_company_details_confirmed %}
+        <strong class="dm-task-list-indicator-not-completed" id="dm-services-cantstart">Can't start yet</strong>
+      {% elif not counts.draft and not counts.complete %}
+        <strong class="dm-task-list-indicator-not-completed" id="dm-services-todo">To Do</strong>
+      {% elif counts.draft %}
+        <strong class="dm-task-list-indicator-not-completed" id="dm-services-inprogress">In progress</strong>
+      {% else %}
+        <strong class="dm-task-list-indicator-completed" id="dm-services-done">{{ counts.complete }} {{ pluralize(counts.complete, 'service', 'services') }}</strong>
+      {% endif %}
+    </li>
+  </ul>
 {% endif %}

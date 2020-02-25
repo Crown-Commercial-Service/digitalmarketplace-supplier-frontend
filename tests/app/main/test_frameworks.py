@@ -251,7 +251,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
         assert (expected_string in lede[0].xpath('./p[1]/text()')[0])
         assert "We’ll let you know the result of your application by " in lede[0].xpath('./p[2]/text()')[0]
 
-    def test_declaration_status_when_complete(self, s3):
+    def test_declaration_status_when_complete_for_open_framework(self, s3):
         self.login()
 
         self.data_api_client.get_framework.return_value = self.framework(status='open')
@@ -261,9 +261,9 @@ class TestFrameworksDashboard(BaseApplicationTest):
         assert res.status_code == 200
 
         doc = html.fromstring(res.get_data(as_text=True))
-        assert len(doc.xpath(u'//p/strong[contains(text(), "You’ve made the supplier declaration")]')) == 1
+        assert len(doc.xpath('//main//strong[@id="dm-declaration-done"][contains(text(), "Done")]')) == 1
 
-    def test_declaration_status_when_started(self, s3):
+    def test_declaration_status_when_started_for_open_framework(self, s3):
         self.login()
 
         submission = FULL_G7_SUBMISSION.copy()
@@ -281,9 +281,9 @@ class TestFrameworksDashboard(BaseApplicationTest):
         assert res.status_code == 200
 
         doc = html.fromstring(res.get_data(as_text=True))
-        assert len(doc.xpath('//p[contains(text(), "You need to finish making the supplier declaration")]')) == 1
+        assert len(doc.xpath('//main//strong[@id="dm-declaration-inprogress"][contains(text(), "In progress")]')) == 1
 
-    def test_declaration_status_when_not_complete(self, s3):
+    def test_declaration_status_when_company_details_not_complete_for_open_framework(self, s3):
         self.login()
 
         self.data_api_client.get_framework.return_value = self.framework(status='open')
@@ -294,12 +294,9 @@ class TestFrameworksDashboard(BaseApplicationTest):
         assert res.status_code == 200
 
         doc = html.fromstring(res.get_data(as_text=True))
-        assert len(doc.xpath('//h2[contains(text(), $header)]'
-                             '/following-sibling::p[contains(text(), $declaration_status)]',
-                             header="Make supplier declaration",
-                             declaration_status="Can't start yet")) == 1
+        assert len(doc.xpath('//main//strong[@id="dm-declaration-cantstart"]')) == 1
 
-    def test_downloads_shown_open_framework(self, s3):
+    def test_downloads_shown_for_open_framework(self, s3):
         files = [
             ('updates/communications/', 'file 1', 'odt', '2015-01-01T14:00:00.000Z'),
             ('updates/clarifications/', 'file 2', 'odt', '2015-02-02T14:00:00.000Z'),
@@ -1526,14 +1523,14 @@ class TestFrameworksDashboard(BaseApplicationTest):
         )
 
     @pytest.mark.parametrize(
-        'supplier_framework_kwargs,link_label,link_href',
+        'supplier_framework_kwargs,link_href',
         (
-            ({'declaration': None}, 'Make supplier declaration', '/suppliers/frameworks/g-cloud-7/declaration/start'),
-            ({}, 'Edit supplier declaration', '/suppliers/frameworks/g-cloud-7/declaration')
+            ({'declaration': None}, '/suppliers/frameworks/g-cloud-7/declaration/start'),
+            ({}, '/suppliers/frameworks/g-cloud-7/declaration')
         )
     )
-    def test_make_or_edit_supplier_declaration_shows_correct_page(
-        self, s3, supplier_framework_kwargs, link_label, link_href
+    def test_make_supplier_declaration_links_to_correct_page(
+        self, s3, supplier_framework_kwargs, link_href
     ):
         self.login()
 
@@ -1547,9 +1544,13 @@ class TestFrameworksDashboard(BaseApplicationTest):
         document = html.fromstring(response.get_data(as_text=True))
 
         assert (
-            document.xpath("//a[contains(normalize-space(string()), $link_label)]/@href", link_label=link_label)[0]
+            document.xpath(
+                "//a[contains(normalize-space(string()), $link_label)]/@href",
+                link_label="Make your supplier declaration"
+            )[0]
         ) == link_href
 
+    @pytest.mark.skip("Move this to submission lots view")
     @pytest.mark.parametrize('framework_slug, expect_service_data', (('g-cloud-8', False), ('g-cloud-9', True),))
     def test_dashboard_shows_use_of_service_data_if_available(self, s3, framework_slug, expect_service_data):
         self.login()
@@ -1600,7 +1601,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
 
 
 @mock.patch('dmutils.s3.S3')
-class TestFrameworksDashboardConfidenceBannerOnPage(BaseApplicationTest):
+class TestFrameworksDashboardSuccessBanner(BaseApplicationTest):
     """Tests for the confidence banner on the declaration page."""
 
     def setup_method(self, method):
@@ -1613,55 +1614,81 @@ class TestFrameworksDashboardConfidenceBannerOnPage(BaseApplicationTest):
         self.data_api_client_patch.stop()
         super().teardown_method(method)
 
-    expected = (
-        'Your application will be submitted at 5pm&nbsp;BST,&nbsp;Tuesday&nbsp;6&nbsp;October&nbsp;2015. <br> '
-        'You can edit your declaration and services at any time before the deadline.'
-    )
-
-    def test_confidence_banner_on_page(self, _):
-        """Test confidence banner appears on page happy path."""
+    def test_success_banner_on_page_for_open_framework(self, _):
         self.data_api_client.find_draft_services_iter.return_value = [
             {'serviceName': 'A service', 'status': 'submitted', 'lotSlug': 'foo'}
         ]
-        self.data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(status='complete')
-        self.data_api_client.get_supplier.return_value = SupplierStub().single_result_response()
+        self.data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
+            status='complete',
+            application_company_details_confirmed=True,
+        )
+        self.data_api_client.get_supplier.return_value = SupplierStub(
+            company_details_confirmed=True).single_result_response()
 
         self.login()
         res = self.client.get("/suppliers/frameworks/g-cloud-8")
         assert res.status_code == 200
-        assert self.expected in str(res.data)
+
+        document = html.fromstring(res.get_data(as_text=True))
+
+        alert_banner = document.xpath('//div[@class="dm-alert dm-alert--success"]')
+        assert len(alert_banner) == 1
+        assert alert_banner[0].xpath(
+            "//h2[contains(normalize-space(string()), $t)]",
+            t="Your application is complete, and will be automatically submitted.",
+        )
+        assert alert_banner[0].xpath(
+            "//div[contains(normalize-space(string()), $t)]",
+            t="You can change it at any time before the deadline."
+        )
 
         # Check GA custom dimension values
-        doc = html.fromstring(res.get_data(as_text=True))
-        assert len(doc.xpath("//meta[@data-id='29' and @data-value='application_confirmed']")) == 1
+        assert len(document.xpath("//meta[@data-id='29' and @data-value='application_confirmed']")) == 1
+
+    def test_success_banner_with_unsubmitted_drafts_shows_different_message(self, _):
+        self.data_api_client.find_draft_services_iter.return_value = [
+            {'serviceName': 'A service', 'status': 'submitted', 'lotSlug': 'foo'},
+            {'serviceName': 'A service', 'status': 'not-submitted', 'lotSlug': 'foo'}
+        ]
+        self.data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
+            status='complete',
+            application_company_details_confirmed=True,
+        )
+        self.data_api_client.get_supplier.return_value = SupplierStub(
+            company_details_confirmed=True).single_result_response()
+
+        self.login()
+        res = self.client.get("/suppliers/frameworks/g-cloud-8")
+        assert res.status_code == 200
+
+        document = html.fromstring(res.get_data(as_text=True))
+
+        alert_banner = document.xpath('//div[@class="dm-alert dm-alert--success"]')
+        assert len(alert_banner) == 1
+        assert alert_banner[0].xpath(
+            "//h2[contains(normalize-space(string()), $t)]",
+            t="Your application is complete, and will be automatically submitted.",
+        )
+        assert alert_banner[0].xpath(
+            "//div[contains(normalize-space(string()), $t)]",
+            t="You still have 1 unsubmitted draft service. "
+              "You can edit or remove draft services at any time before the deadline.",
+        )
+
+        # Check GA custom dimension values
+        assert len(document.xpath("//meta[@data-id='29' and @data-value='application_confirmed']")) == 1
 
     @pytest.mark.parametrize(
-        ('declaration_status', 'draft_service_status', 'details_confirmed', 'check_text_in_doc', 'ga_value'),
+        ('declaration_status', 'draft_service_status', 'details_confirmed', 'ga_value'),
         (
-            ('started', 'submitted', True, [
-                'Your company details were saved',
-                'No services will be submitted because you haven’t finished making the supplier declaration',
-                'You’ve completed',
-            ], 'services_confirmed'),
-            ('complete', 'not-submitted', True, [
-                'Your company details were saved',
-                'You’ve made the supplier declaration',
-                'No services marked as complete',
-            ], 'declaration_confirmed'),
-            ('unstarted', 'not-submitted', True, [
-                'Your company details were saved',
-                'You need to make the supplier declaration',
-                'No services marked as complete'
-            ], 'company_details_confirmed'),
-            ('unstarted', 'not-submitted', False, [
-                'You must confirm your organisation’s details',
-                'Can\'t start yet',
-                'Can\'t start yet'
-            ], 'application_started'),
+            ('started', 'submitted', True, 'services_confirmed'),
+            ('complete', 'not-submitted', True, 'declaration_confirmed'),
+            ('unstarted', 'not-submitted', True, 'company_details_confirmed'),
+            ('unstarted', 'not-submitted', False, 'application_started'),
         )
     )
-    def test_confidence_banner_not_on_page_if_sections_incomplete(
-        self, _, declaration_status, draft_service_status, details_confirmed, check_text_in_doc, ga_value
+    def test_success_banner_not_on_page_if_sections_incomplete(
+        self, _, declaration_status, draft_service_status, details_confirmed, ga_value
     ):
         """Change value and assert that confidence banner is not displayed."""
         supplier_data = SupplierStub(company_details_confirmed=details_confirmed).single_result_response()
@@ -1679,13 +1706,13 @@ class TestFrameworksDashboardConfidenceBannerOnPage(BaseApplicationTest):
         self.login()
         res = self.client.get("/suppliers/frameworks/g-cloud-8")
         assert res.status_code == 200
-        body = res.get_data(as_text=True)
-        assert self.expected not in body
 
-        # This confirms that the test is working correctly - i.e. the banner is not showing because a specific section
-        # is causing the application to be incomplete.
-        for text in check_text_in_doc:
-            assert text in body
+        document = html.fromstring(res.get_data(as_text=True))
+
+        # Alert banner should not be shown
+        alert_banner = document.xpath('//div[@class="dm-alert dm-alert--success"]')
+        assert len(alert_banner) == 0
+        assert 'Your application is complete, and will be automatically submitted.' not in res.get_data(as_text=True)
 
         # Check GA custom dimension values
         doc = html.fromstring(res.get_data(as_text=True))
