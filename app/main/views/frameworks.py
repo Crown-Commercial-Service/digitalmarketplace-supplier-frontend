@@ -129,11 +129,6 @@ def framework_dashboard(framework_slug):
     )
     lots_with_completed_drafts = [lot for lot in framework['lots'] if count_drafts_by_lot(complete_drafts, lot['slug'])]
 
-    try:
-        framework_advice = content_loader.get_message(framework_slug, 'advice')
-    except ContentNotFoundError:
-        framework_advice = None
-
     # GA custom dimension stages for the application
     if supplier_framework_info and not supplier_framework_info['applicationCompanyDetailsConfirmed']:
         custom_dimension_stage = "application_started"
@@ -233,7 +228,6 @@ def framework_dashboard(framework_slug):
         result_letter_filename=result_letter_filename,
         supplier_framework=supplier_framework_info,
         supplier_is_on_framework=supplier_is_on_framework,
-        framework_advice=framework_advice,
         supplier_company_details_complete=supplier_company_details_are_complete(supplier),
         application_company_details_confirmed=application_company_details_confirmed,
         custom_dimensions=custom_dimensions

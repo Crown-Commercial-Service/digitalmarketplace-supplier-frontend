@@ -1550,28 +1550,6 @@ class TestFrameworksDashboard(BaseApplicationTest):
             )[0]
         ) == link_href
 
-    @pytest.mark.skip("Move this to submission lots view")
-    @pytest.mark.parametrize('framework_slug, expect_service_data', (('g-cloud-8', False), ('g-cloud-9', True),))
-    def test_dashboard_shows_use_of_service_data_if_available(self, s3, framework_slug, expect_service_data):
-        self.login()
-
-        self.data_api_client.get_framework.return_value = self.framework(slug=framework_slug, status="open")
-        self.data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
-            framework_slug=framework_slug
-        )
-
-        res = self.client.get(f"/suppliers/frameworks/{framework_slug}")
-        assert res.status_code == 200
-
-        doc = html.fromstring(res.get_data(as_text=True))
-        use_of_data = doc.xpath('//div[contains(@class, "use-of-service-data")]')
-
-        if expect_service_data:
-            assert len(use_of_data) == 1
-            assert 'The service information you provide here:' in use_of_data[0].text_content()
-        else:
-            assert len(use_of_data) == 0
-
     def test_visit_to_framework_dashboard_saved_in_session_if_framework_open(self, s3):
         self.login()
 
@@ -3872,6 +3850,29 @@ class TestServicesList(BaseApplicationTest, MockEnsureApplicationCompanyDetailsH
 
         assert u'1 draft service' in submissions.get_data(as_text=True)
         assert u'complete service' not in submissions.get_data(as_text=True)
+
+    @pytest.mark.parametrize('framework_slug, show_service_data', (
+        ('digital-outcomes-and-specialists-2', 0),
+        ('g-cloud-9', 1),
+    ))
+    def test_submission_lots_page_shows_use_of_service_data_if_g_cloud_family(
+        self, count_unanswered, framework_slug, show_service_data
+    ):
+        self.login()
+        self.data_api_client.get_framework.return_value = self.framework(slug=framework_slug, status="open")
+        self.data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
+            framework_slug=framework_slug
+        )
+
+        res = self.client.get(f"/suppliers/frameworks/{framework_slug}/submissions")
+        assert res.status_code == 200
+
+        doc = html.fromstring(res.get_data(as_text=True))
+        use_of_data = doc.xpath('//div[contains(@class, "use-of-service-data")]')
+        assert len(use_of_data) == show_service_data
+
+        if show_service_data:
+            assert 'The service information you provide here:' in use_of_data[0].text_content()
 
     def test_drafts_list_can_be_completed(self, count_unanswered):
         self.login()
