@@ -9,7 +9,6 @@ from flask_login import current_user
 
 from dmapiclient import APIError, HTTPError
 from dmapiclient.audit import AuditTypes
-from dmcontent.formats import format_service_price
 from dmcontent.questions import ContentQuestion
 from dmcontent.errors import ContentNotFoundError
 from dmcontent.utils import count_unanswered_questions
