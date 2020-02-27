@@ -24,16 +24,17 @@ upgrade-pip: virtualenv
 	${VIRTUALENV_ROOT}/bin/pip install --upgrade pip
 
 .PHONY: requirements
-requirements: virtualenv test-requirements upgrade-pip requirements.txt
+requirements: virtualenv upgrade-pip requirements.txt
 	${VIRTUALENV_ROOT}/bin/pip install -r requirements.txt
 
 .PHONY: requirements-dev
 requirements-dev: virtualenv requirements-dev.txt
-	${VIRTUALENV_ROOT}/bin/pip install -r requirements-dev.txt
+	${VIRTUALENV_ROOT}/bin/pip install -r requirements.txt -r requirements-dev.txt
 
 .PHONY: freeze-requirements
-freeze-requirements: virtualenv requirements-dev requirements-app.txt
-	${VIRTUALENV_ROOT}/bin/python -m dmutils.repoutils.freeze_requirements requirements-app.txt
+freeze-requirements: virtualenv requirements-dev requirements.in
+	${VIRTUALENV_ROOT}/bin/pip-compile requirements.in
+	${VIRTUALENV_ROOT}/bin/pip-compile requirements-dev.in
 
 .PHONY: npm-install
 npm-install:
@@ -44,14 +45,7 @@ frontend-build: npm-install
 	npm run --silent frontend-build:${GULP_ENVIRONMENT}
 
 .PHONY: test
-test: show-environment test-requirements frontend-build test-flake8 test-python test-javascript
-
-.PHONY: test-requirements
-test-requirements:
-	@diff requirements-app.txt requirements.txt | grep '<' \
-	    && { echo "requirements.txt doesn't match requirements-app.txt."; \
-	         echo "Run 'make freeze-requirements' to update."; exit 1; } \
-	    || { echo "requirements.txt is up to date"; exit 0; }
+test: show-environment frontend-build test-flake8 test-python test-javascript
 
 .PHONY: test-flake8
 test-flake8: virtualenv requirements-dev
