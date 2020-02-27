@@ -347,7 +347,6 @@ def framework_submission_services(framework_slug, lot_slug):
 
     with logged_duration(message="Annotated draft details in {duration_real}s"):
         for draft in chain(drafts, complete_drafts):
-            draft['priceString'] = format_service_price(draft)
             sections = lot_service_sections.summary(draft, inplace_allowed=True)
 
             unanswered_required, unanswered_optional = count_unanswered_questions(sections)
