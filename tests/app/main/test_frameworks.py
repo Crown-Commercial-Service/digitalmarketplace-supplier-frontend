@@ -696,7 +696,7 @@ class TestFrameworksDashboardSuccessBanner(BaseApplicationTest):
         assert len(alert_banner) == 1
         assert alert_banner[0].xpath(
             "//h2[contains(normalize-space(string()), $t)]",
-            t="Your application is complete, and will be automatically submitted.",
+            t="Your application is complete and will be submitted automatically.",
         )
         assert alert_banner[0].xpath(
             "//div[contains(normalize-space(string()), $t)]",
@@ -728,7 +728,7 @@ class TestFrameworksDashboardSuccessBanner(BaseApplicationTest):
         assert len(alert_banner) == 1
         assert alert_banner[0].xpath(
             "//h2[contains(normalize-space(string()), $t)]",
-            t="Your application is complete, and will be automatically submitted.",
+            t="Your application is complete and will be submitted automatically.",
         )
         assert alert_banner[0].xpath(
             "//div[contains(normalize-space(string()), $t)]",
@@ -773,7 +773,7 @@ class TestFrameworksDashboardSuccessBanner(BaseApplicationTest):
         # Alert banner should not be shown
         alert_banner = document.xpath('//div[@class="dm-alert dm-alert--success"]')
         assert len(alert_banner) == 0
-        assert 'Your application is complete, and will be automatically submitted.' not in res.get_data(as_text=True)
+        assert 'Your application is complete and will be submitted automatically.' not in res.get_data(as_text=True)
 
         # Check GA custom dimension values
         doc = html.fromstring(res.get_data(as_text=True))

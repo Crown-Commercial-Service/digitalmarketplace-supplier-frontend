@@ -27,14 +27,14 @@
  {% if application_made %}
     {% if counts.draft %}
       {{ dmAlert({
-        "titleText": "Your application is complete, and will be automatically submitted.",
+        "titleText": "Your application is complete and will be submitted automatically.",
         "text": "You still have {count} unsubmitted draft {service_string}. You can edit or remove draft services at any time before the deadline.".format(count=counts.draft, service_string=pluralize(counts.draft, 'service', 'services')),
         "type" : "success"
         })
       }}
     {% else %}
       {{ dmAlert({
-        "titleText": "Your application is complete, and will be automatically submitted.",
+        "titleText": "Your application is complete and will be submitted automatically.",
         "text": "You can change it at any time before the deadline.",
         "type" : "success"
         })
