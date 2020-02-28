@@ -3889,7 +3889,6 @@ class TestServicesList(BaseApplicationTest, MockEnsureApplicationCompanyDetailsH
         lot_page_html = lot_page.get_data(as_text=True)
 
         assert u'Service can be moved to complete' not in lot_page_html
-        assert u'1 optional question unanswered' in lot_page_html
 
         assert u'1 service marked as complete' in submissions_html
         assert u'draft service' not in submissions_html

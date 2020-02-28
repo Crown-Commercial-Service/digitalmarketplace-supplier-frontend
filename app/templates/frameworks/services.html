@@ -119,10 +119,9 @@
     field_headings_visible=False
   ) %}
     {% call summary.row() %}
-      {{ summary.service_link(draft.serviceName,
-                              url_for(".view_service_submission", framework_slug=framework.slug, lot_slug=draft.lot, service_id=draft.id)) }}
-      {{ summary.text(
-        submission.unanswered_optional_text(draft.unanswered_required, draft.unanswered_optional)
+      {{ summary.service_link(
+          draft.serviceName,
+          url_for(".view_service_submission", framework_slug=framework.slug, lot_slug=draft.lot, service_id=draft.id)
       ) }}
       {% if framework.status == 'open' %}
         {% call summary.field(action=True) %}
