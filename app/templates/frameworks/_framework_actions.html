@@ -52,7 +52,7 @@
         <strong class="dm-task-list-indicator-completed" id="dm-companydetails-done">Done</strong>
       {% elif supplier_company_details_complete %}
         {# Supplier details exist from a previous framework application, but haven't yet been confirmed for this one #}
-        <strong class="dm-task-list-indicator-completed" id="dm-companydetails-inprogress">In Progress</strong>
+        <strong class="dm-task-list-indicator-completed" id="dm-companydetails-inprogress">In progress</strong>
       {% else %}
         <strong class="dm-task-list-indicator-not-completed" id="dm-companydetails-todo">To do</strong>
       {% endif %}
@@ -92,7 +92,7 @@
       {% if not application_company_details_confirmed %}
         <strong class="dm-task-list-indicator-not-completed" id="dm-services-cantstart">Can't start yet</strong>
       {% elif not counts.draft and not counts.complete %}
-        <strong class="dm-task-list-indicator-not-completed" id="dm-services-todo">To Do</strong>
+        <strong class="dm-task-list-indicator-not-completed" id="dm-services-todo">To do</strong>
       {% elif counts.draft %}
         <strong class="dm-task-list-indicator-not-completed" id="dm-services-inprogress">In progress</strong>
       {% else %}
