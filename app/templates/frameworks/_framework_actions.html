@@ -58,7 +58,7 @@
       {% endif %}
     </li>
     <li class="dm-task-list-item">
-      <span class="app-task-list__task-name">
+      <span class="dm-task-list__task-name">
         {% if application_company_details_confirmed %}
           {% if declaration_status == 'unstarted' %}
             <a href="{{ url_for('.framework_start_supplier_declaration', framework_slug=framework.slug) }}">Make your supplier declaration</a>
@@ -66,7 +66,7 @@
             <a href="{{ url_for('.framework_supplier_declaration_overview', framework_slug=framework.slug) }}">Make your supplier declaration</a>
           {% endif %}
         {% else %}
-          Make your supplier declaration
+        <span class="dm-task-list__text">Make your supplier declaration</span>
         {% endif %}
       </span>
       {% if not application_company_details_confirmed %}
@@ -80,15 +80,15 @@
       {% endif %}
     </li>
     <li class="dm-task-list-item">
-
+      <span class="dm-task-list__task-name">
         {% if application_company_details_confirmed %}
         <a href="{{ url_for('.framework_submission_lots', framework_slug=framework.slug) }}">
           Add, edit and complete services
         </a>
         {% else %}
-          Add, edit and complete services
+        <span class="dm-task-list__text">Add, edit and complete services</span>
         {% endif %}
-
+      </span>
       {% if not application_company_details_confirmed %}
         <strong class="dm-task-list-indicator-not-completed" id="dm-services-cantstart">Can't start yet</strong>
       {% elif not counts.draft and not counts.complete %}

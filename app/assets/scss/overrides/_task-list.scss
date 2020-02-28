@@ -50,6 +50,14 @@ $indicator-colour: $black;
 
     }
 
+    span.dm-task-list__text {
+      border-bottom: 1px solid $border-colour;
+      display: block;
+      padding: $gutter-half 0;
+      padding-right: 20%;
+      position: relative;
+    }
+
   }
 
   &-indicator-completed {
