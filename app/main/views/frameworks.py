@@ -647,6 +647,15 @@ def framework_supplier_declaration_edit(framework_slug, section_id):
         # If no document errors, look for other errors
         if not errors:
             errors = validator.get_error_messages_for_page(section)
+            # Handle bug for pre-existing files - the filepath value is not included in the POST data,
+            # so this fails validation if the user has resubmitted without changes (or changed a different field).
+            # If the user *does* change the file, any errors will be picked up by the 'document_errors' section above
+            # (and this code won't be reached)
+            if 'modernSlaveryStatement' in errors and saved_declaration.get('modernSlaveryStatement'):
+                current_app.logger.info("Existing modern slavery statement file is unchanged")
+                mutable_errors = {k: v for k, v in errors.items()}
+                mutable_errors.pop('modernSlaveryStatement')
+                errors = mutable_errors
 
         all_answers = dict(saved_declaration, **submitted_answers)
 
