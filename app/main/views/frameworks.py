@@ -769,6 +769,7 @@ def framework_updates(framework_slug, error_message=None, default_textbox_value=
     return render_template(
         "frameworks/updates.html",
         framework=framework,
+        framework_urls=content_loader.get_message(framework_slug, 'urls'),
         clarification_question_name=CLARIFICATION_QUESTION_NAME,
         clarification_question_value=default_textbox_value,
         error_message=error_message,
