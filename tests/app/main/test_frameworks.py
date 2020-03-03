@@ -3337,6 +3337,29 @@ class TestSupplierDeclaration(BaseApplicationTest, MockEnsureApplicationCompanyD
         assert self.data_api_client.set_supplier_declaration.called is False
         assert s3.return_value.save.called is False
 
+    @mock.patch('dmutils.s3.S3')
+    def test_post_declaration_answer_with_existing_document(self, s3):
+        self.login()
+
+        self.data_api_client.get_framework.return_value = self.framework(status='open', slug="g-cloud-11")
+        self.data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
+            framework_slug="g-cloud-11",
+            declaration={"status": "started", "modernSlaveryStatement": "path/to/existing/upload"}
+        )
+        with freeze_time('2017-11-12 13:14:15'):
+            res = self.client.post(
+                '/suppliers/frameworks/g-cloud-11/declaration/edit/modern-slavery',
+                data={
+                    'modernSlaveryTurnover': True,
+                    'modernSlaveryReportingRequirements': True,
+                    'mitigatingFactors3': None,
+                }
+            )
+
+        assert res.status_code == 302
+        assert self.data_api_client.set_supplier_declaration.called
+        assert s3.return_value.save.called is False
+
     def test_has_session_timeout_warning(self):
         self.data_api_client.get_framework.return_value = self.framework(status='open', slug="g-cloud-11")
         self.data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
