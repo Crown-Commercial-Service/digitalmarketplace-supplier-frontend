@@ -7,38 +7,40 @@
 argh==0.26.2              # via watchdog
 atomicwrites==1.3.0       # via pytest
 attrs==19.3.0             # via pytest
-certifi==2019.11.28       # via requests
-chardet==3.0.4            # via requests
-coverage==4.5.3
-coveralls==1.8.1
-cssselect==1.0.3
-git+https://github.com/alphagov/digitalmarketplace-test-utils.git@2.6.1#egg=digitalmarketplace-test-utils==2.6.1
-docopt==0.6.2             # via coveralls
+certifi==2019.11.28       # via -c requirements.txt, requests
+chardet==3.0.4            # via -c requirements.txt, requests
+click==7.0                # via -c requirements.txt, pip-tools
+coverage==4.5.3           # via -r requirements-dev.in, coveralls, pytest-cov
+coveralls==1.8.1          # via -r requirements-dev.in
+cssselect==1.0.3          # via -r requirements-dev.in
+git+https://github.com/alphagov/digitalmarketplace-test-utils.git@2.6.1#egg=digitalmarketplace-test-utils==2.6.1  # via -r requirements-dev.in
+docopt==0.6.2             # via -c requirements.txt, coveralls
 entrypoints==0.3          # via flake8
-flake8==3.7.7
-freezegun==0.3.12
-idna==2.9                 # via requests
+flake8==3.7.7             # via -r requirements-dev.in
+freezegun==0.3.12         # via -r requirements-dev.in
+idna==2.9                 # via -c requirements.txt, requests
 importlib-metadata==1.5.0  # via pluggy, pytest
-lxml==4.4.1
+lxml==4.4.1               # via -r requirements-dev.in
 mccabe==0.6.1             # via flake8
-mock==3.0.5
+mock==3.0.5               # via -r requirements-dev.in
 more-itertools==8.2.0     # via pytest
 packaging==20.1           # via pytest
 pathtools==0.1.2          # via watchdog
+pip-tools==4.5.1          # via -r requirements-dev.in
 pluggy==0.13.1            # via pytest
 py==1.8.1                 # via pytest
 pycodestyle==2.5.0        # via flake8
 pyflakes==2.1.1           # via flake8
 pyparsing==2.4.6          # via packaging
-pytest-cov==2.7.1
-pytest==4.6.3
-python-dateutil==2.8.1    # via freezegun
-python-dotenv==0.10.3
-pyyaml==5.3               # via watchdog
-requests-mock==1.6.0
-requests==2.23.0          # via coveralls, requests-mock
-six==1.14.0               # via freezegun, mock, packaging, pytest, python-dateutil, requests-mock
-urllib3==1.25.8           # via requests
-watchdog==0.9.0
+pytest-cov==2.7.1         # via -r requirements-dev.in
+pytest==4.6.3             # via -r requirements-dev.in, pytest-cov
+python-dateutil==2.8.1    # via -c requirements.txt, freezegun
+python-dotenv==0.10.3     # via -r requirements-dev.in
+pyyaml==5.3               # via -c requirements.txt, watchdog
+requests-mock==1.6.0      # via -r requirements-dev.in
+requests==2.23.0          # via -c requirements.txt, coveralls, requests-mock
+six==1.14.0               # via -c requirements.txt, freezegun, mock, packaging, pip-tools, pytest, python-dateutil, requests-mock
+urllib3==1.25.8           # via -c requirements.txt, requests
+watchdog==0.9.0           # via -r requirements-dev.in
 wcwidth==0.1.8            # via pytest
 zipp==3.0.0               # via importlib-metadata
