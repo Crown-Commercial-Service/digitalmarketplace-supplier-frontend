@@ -172,7 +172,7 @@ class Preview(Live):
 
 
 class Staging(Live):
-    WTF_CSRF_ENABLED = False
+    pass
 
 
 class Production(Live):
