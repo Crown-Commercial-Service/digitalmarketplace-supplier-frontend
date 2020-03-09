@@ -1,0 +1,10 @@
+// TODO: Remove when list entry component has been replaced
+
+/* overrides line 106, node_modules/govuk_frontend_toolkit/stylesheets/design-patterns/_buttons.scss */
+
+.list-entry {
+  .button-secondary:before,
+  .button-secondary-with-advice:before {
+    position: relative;
+  }
+}

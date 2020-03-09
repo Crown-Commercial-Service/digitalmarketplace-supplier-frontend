@@ -69,6 +69,7 @@ $govuk-global-styles: true;
 @import "_view-service-link.scss";
 
 // Overrides
+@import "overrides/_list-entry";
 @import "overrides/_notifications_banner";
 @import "overrides/_temporary-messages";
 @import "overrides/_task-list";
