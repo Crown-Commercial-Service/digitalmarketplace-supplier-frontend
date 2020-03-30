@@ -47,7 +47,7 @@ pyjwt==1.7.1              # via notifications-python-client
 python-dateutil==2.8.1    # via botocore
 python-json-logger==0.1.11  # via digitalmarketplace-utils
 pytz==2019.3              # via digitalmarketplace-utils
-pyyaml==5.3               # via digitalmarketplace-content-loader
+pyyaml==5.3.1             # via digitalmarketplace-content-loader
 requests==2.23.0          # via digitalmarketplace-apiclient, digitalmarketplace-utils, mailchimp3, notifications-python-client
 s3transfer==0.3.3         # via boto3
 six==1.14.0               # via cryptography, python-dateutil
