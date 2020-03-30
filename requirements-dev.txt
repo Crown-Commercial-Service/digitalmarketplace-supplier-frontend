@@ -36,7 +36,7 @@ pytest-cov==2.7.1         # via -r requirements-dev.in
 pytest==4.6.3             # via -r requirements-dev.in, pytest-cov
 python-dateutil==2.8.1    # via -c requirements.txt, freezegun
 python-dotenv==0.10.3     # via -r requirements-dev.in
-pyyaml==5.3               # via -c requirements.txt, watchdog
+pyyaml==5.3.1             # via -c requirements.txt, watchdog
 requests-mock==1.6.0      # via -r requirements-dev.in
 requests==2.23.0          # via -c requirements.txt, coveralls, requests-mock
 six==1.14.0               # via -c requirements.txt, freezegun, mock, packaging, pip-tools, pytest, python-dateutil, requests-mock
