@@ -1,44 +1,103 @@
-# Digital Marketplace Supplier frontend
+# Digital Marketplace Supplier Frontend
 
-[![Build Status](https://travis-ci.org/alphagov/digitalmarketplace-supplier-frontend.svg)](https://travis-ci.org/alphagov/digitalmarketplace-supplier-frontend)
 [![Coverage Status](https://coveralls.io/repos/alphagov/digitalmarketplace-supplier-frontend/badge.svg?branch=master&service=github)](https://coveralls.io/github/alphagov/digitalmarketplace-supplier-frontend?branch=master)
-[![Requirements Status](https://requires.io/github/alphagov/digitalmarketplace-supplier-frontend/requirements.svg?branch=master)](https://requires.io/github/alphagov/digitalmarketplace-supplier-frontend/requirements/?branch=master)
 ![Python 3.6](https://img.shields.io/badge/python-3.6-blue.svg)
 
-Frontend supplier application for the digital marketplace.
+Frontend application for the Digital Marketplace.
 
 - Python app, based on the [Flask framework](http://flask.pocoo.org/)
 
+This app contains:
+
+- the supplier dashboard
+- the supplier framework application journey
+
 ## Quickstart
 
-Install dependencies, build assets and run the app
+It's recommended to use the [DM Runner](https://github.com/alphagov/digitalmarketplace-runner)
+tool, which will install and run the app as part of the full suite of apps.
+
+If you want to run the app as a stand-alone process, clone the repo then run:
+
 ```
 make run-all
 ```
 
-Debian (jessie) users will need `libxslt1-dev` and `libxml2-dev` installed for `requirements-dev`.
+This command will install dependencies and start the app.
 
-## Full setup
+By default, the app will be served at [http://127.0.0.1:5003/suppliers](http://127.0.0.1:5003/suppliers).
 
-Create a virtual environment
- ```
- python3 -m venv ./venv
- ```
 
-### Activate the virtual environment
+### API dependencies
+
+(If you are using DM Runner you can skip this section.)
+
+The Supplier Frontend app requires access to the [API app](https://github.com/alphagov/digitalmarketplace-api). The location and access token for
+this service are set with environment variables in `config.py`.
+
+For development, you can either point the environment variables to use the
+preview environment's `API` box, or use a local API instance if you have one running:
 
 ```
-source ./venv/bin/activate
+export DM_DATA_API_URL=http://localhost:5000
+export DM_DATA_API_AUTH_TOKEN=<auth_token_accepted_by_api>
 ```
 
-### Upgrade dependencies
+Where `DM_DATA_API_AUTH_TOKEN` is a token accepted by the Data API instance pointed to by `DM_API_URL`.
 
-Install new Python dependencies with pip
+Note: The login is handled in the [User Frontend app](https://github.com/alphagov/digitalmarketplace-user-frontend),
+so this needs to be running as well, to login as a supplier.
 
-```make requirements-dev```
+
+### Configuring AWS access
+
+The Supplier Frontend app uses [boto](https://github.com/boto/boto) as a Python interface for our AWS S3 buckets.
+
+You will need to have AWS access keys set up on your local machine (which `boto` will automatically detect), otherwise
+some pages in the app will give an error message.
+
+Full instructions on how to do this can be found in the
+[Developer Manual](https://alphagov.github.io/digitalmarketplace-manual/infrastructure/aws-accounts.html#programmatic-access).
+
+If you're experiencing problems connecting, make sure to `unset` any `env` variables used by boto (e.g. `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`,
+`AWS_SECURITY_TOKEN` and `AWS_PROFILE`) as they may be overriding the values in your credentials file.
 
 
-## Front-end
+## Testing
+
+Run the full test suite:
+
+```
+make test
+```
+
+To only run the Python or Javascript tests:
+
+```
+make test-python
+make test-javascript
+```
+
+To run the `flake8` linter:
+
+```
+make test-flake8
+```
+
+### Updating Python dependencies
+
+`requirements.txt` file is generated from the `requirements.in` in order to pin
+versions of all nested dependencies. If `requirements.in` has been changed (or
+we want to update the unpinned nested dependencies) `requirements.txt` should be
+regenerated with
+
+```
+make freeze-requirements
+```
+
+`requirements.txt` should be committed alongside `requirements.in` changes.
+
+## Frontend assets
 
 Front-end code (both development and production) is compiled using [Node](http://nodejs.org/) and [Gulp](http://gulpjs.com/).
 
@@ -53,111 +112,39 @@ To check the version you're running, type:
 node --version
 ```
 
-## Frontend tasks
+### Frontend tasks
 
-[NPM](https://docs.npmjs.com/cli/run-script) is used for all frontend build tasks. The commands available are:
+[npm](https://docs.npmjs.com/cli/run-script) is used for all frontend build tasks. The commands available are:
 
 - `npm run frontend-build:development` (compile the frontend files for development)
 - `npm run frontend-build:production` (compile the frontend files for production)
-- `npm run frontend-build:watch` (watch all frontend files & rebuild when anything changes)
+- `npm run frontend-build:watch` (watch all frontend+framework files & rebuild when anything changes)
 
+### Updating NPM dependencies
 
-
-
-### Run the tests
-
-To run the whole testsuite:
+Update the relevant version numbers in `package.json`, then run
 
 ```
-make test
+npm install
 ```
 
-To test individual parts of the test stack use the `test_flake8`, `test_python`
-or `test-javascript` targets.
+Commit the changes to `package.json` and `package-lock.json`.
 
-eg.
-```
-make test-javascript
-```
+You can also run `npm audit fix` to make minor updates to `package-lock.json`.
 
-### Run the development server
+## Contributing
 
-To run the Supplier Frontend App for local development use the `run-all` target.
-This will install requirements, build assets and run the app.
+This repository is maintained by the Digital Marketplace team at the [Government Digital Service](https://github.com/alphagov).
 
-```
-make run-all
-```
+If you have a suggestion for improvement, please raise an issue on this repo.
 
-To just run the application use the `run-app` target.
+### Reporting Vulnerabilities
 
-Use the app at http://127.0.0.1:5003/suppliers.
+If you have discovered a security vulnerability in this code, we appreciate your help in disclosing it to us in a
+responsible manner.
 
-When using the development server the supplier frontend listens on port 5003 by default.
-This can be changed by setting the `DM_SUPPLIER_PORT` environment variable, e.g.
-to set the port number to 9003:
-```
-export DM_SUPPLIER_PORT=9003
-```
-
-Note: The login is located in the user frontend application, so this needs to be running as well to login as a supplier.
-
-If the application is running on port 5003 as described above, login from
-http://127.0.0.1:5007/login (user frontend) as a supplier and then you will be
-logged in as a supplier on http://127.0.0.1:5003/suppliers.
-
-It is easier to use the apps if nginx is configured to run them through one port.
-As described in the Digital Marketplace manual section on [accessing frontend
-applications as a single website][manual-nginx]:
-
-> The frontend applications are hyperlinked together but are running on
-> different ports. This can cause links to error when they link between
-> different applications. The way around this is to set up nginx so all front
-> end applications can be accessed through port 80.
-
-The easiest way to do this is to use [`dmrunner`](https://github.com/alphagov/digitalmarketplace-runner).
-
-In this case all the frontend applications will available from port 80 (usually
-aliased to localhost) and the supplier frontend can be accessed from
-http://localhost/suppliers.
-
-[manual-nginx]: https://alphagov.github.io/digitalmarketplace-manual/developing-the-digital-marketplace/developer-setup.html#accessing-frontend-applications-as-a-single-website
-
-### Updating application dependencies
-
-`requirements.txt` file is generated from the `requirements-app.txt` in order to pin
-versions of all nested dependecies. If `requirements-app.txt` has been changed (or
-we want to update the unpinned nested dependencies) `requirements.txt` should be
-regenerated with
-
-```
-make freeze-requirements
-```
-
-`requirements.txt` should be committed alongside `requirements-app.txt` changes.
-
-### Configuring boto
-
-[boto](https://github.com/boto/boto) provides a Python interface to Amazon Web Services; it's what we're using to download from and upload to our s3 buckets.
-
-If you don't [configure your AWS credentials correctly](http://boto.readthedocs.org/en/latest/boto_config_tut.html?highlight=~/.aws/credentials#credentials)
-on your local machine, you'll probably run into a nasty-looking `boto.exception.NoAuthHandlerFound` page at some point.
-
-The short version is that you should create an `~/.aws/credentials` file formatted like so:
-```bash
-[default]
-aws_access_key_id = ...
-aws_secret_access_key = ...
-```
-
-AWS access keys can be found/configured in the Identity and Access Management (IAM) section of the
-[digitalmarketplace-development AWS console](https://digitalmarketplace-development.signin.aws.amazon.com/console).
-
-
-#### Troubleshooting
-
-If you're experiencing problems connecting, make sure to `unset` any `env` variables used by boto (e.g. `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`,
-`AWS_SECURITY_TOKEN` and `AWS_PROFILE`) as they may be overriding the values in your credentials file.
+Please follow the [GDS vulnerability reporting steps](https://github.com/alphagov/.github/blob/master/SECURITY.md),
+giving details of any issue you find. Appropriate credit will be given to those reporting confirmed issues.
 
 ## Licence
 
