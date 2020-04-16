@@ -11,7 +11,7 @@
     "del": "^5.1.0",
     "digitalmarketplace-frameworks": "github:alphagov/digitalmarketplace-frameworks#v17.8.2",
     "digitalmarketplace-frontend-toolkit": "https://github.com/alphagov/digitalmarketplace-frontend-toolkit.git#v36.1.0",
-    "digitalmarketplace-govuk-frontend": "^0.6.5",
+    "digitalmarketplace-govuk-frontend": "^0.8.1",
     "govuk-country-and-territory-autocomplete": "0.4.0",
     "govuk-elements-sass": "3.0.3",
     "govuk_frontend_toolkit": "5.0.3",
@@ -28,7 +28,7 @@
     "frontend-build:development": "gulp build:development",
     "frontend-build:production": "gulp build:production",
     "frontend-build:watch": "gulp watch",
-    "test": "standard \"gulpfile.js\" \"spec/**/*.js\" && jest"
+    "test": "standard \"gulpfile.js\""
   },
   "devDependencies": {
     "jest": "^24.9.0",
