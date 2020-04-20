@@ -15,6 +15,8 @@ set a custom filter on its value.
 
 {% import "toolkit/forms/macros/forms.html" as upstream_forms %}
 
+{% from "./pricing-input/content-loader-macro.j2" import clPricingInput %}
+
 {% macro text(question_content, service_data, errors) -%}
   {{ upstream_forms.text(question_content, service_data, errors,
     error=errors.get(question_content.id)['message']|question_references(kwargs.get_question),
@@ -91,7 +93,7 @@ set a custom filter on its value.
 {%- endmacro %}
 
 {% macro pricing(question_content, service_data, errors) -%}
-  {{ upstream_forms.pricing(question_content, service_data, errors,
+  {{ clPricingInput(question_content, service_data, errors,
     error=errors.get(question_content.id)['message']|question_references(kwargs.get_question),
     hint=(question_content.hint or '')|question_references(kwargs.get_question),
     question=question_content.question|question_references(kwargs.get_question),
