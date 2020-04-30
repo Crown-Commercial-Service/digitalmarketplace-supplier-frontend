@@ -21,7 +21,7 @@ git+https://github.com/alphagov/digitalmarketplace-utils.git@51.5.0#egg=digitalm
 docopt==0.6.2             # via notifications-python-client
 docutils==0.15.2          # via botocore
 flask-gzip==0.2           # via digitalmarketplace-utils
-flask-login==0.4.1        # via -r requirements.in, digitalmarketplace-utils
+flask-login==0.5.0        # via -r requirements.in, digitalmarketplace-utils
 flask-script==2.0.6       # via digitalmarketplace-utils
 flask-wtf==0.14.3         # via -r requirements.in, digitalmarketplace-utils
 flask==1.0.4              # via -r requirements.in, digitalmarketplace-content-loader, digitalmarketplace-utils, flask-gzip, flask-login, flask-script, flask-wtf, gds-metrics
