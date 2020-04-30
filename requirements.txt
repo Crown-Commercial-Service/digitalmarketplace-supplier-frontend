@@ -21,7 +21,7 @@ git+https://github.com/alphagov/digitalmarketplace-utils.git@51.5.0#egg=digitalm
 docopt==0.6.2             # via notifications-python-client
 docutils==0.15.2          # via botocore
 flask-gzip==0.2           # via digitalmarketplace-utils
-flask-login==0.4.1        # via -r requirements.in, digitalmarketplace-utils
+flask-login==0.5.0        # via -r requirements.in, digitalmarketplace-utils
 flask-script==2.0.6       # via digitalmarketplace-utils
 flask-wtf==0.14.3         # via -r requirements.in, digitalmarketplace-utils
 flask==1.0.4              # via -r requirements.in, digitalmarketplace-content-loader, digitalmarketplace-utils, flask-gzip, flask-login, flask-script, flask-wtf, gds-metrics
@@ -32,7 +32,7 @@ govuk-country-register==0.5.0  # via digitalmarketplace-utils
 git+https://github.com/alphagov/govuk-frontend-jinja.git@v0.5.1-alpha#egg=govuk-frontend-jinja==0.5.1-alpha  # via -r requirements.in
 idna==2.9                 # via cryptography, requests
 inflection==0.3.1         # via digitalmarketplace-content-loader
-itsdangerous==0.24        # via -r requirements.in, flask, flask-wtf
+itsdangerous==1.1.0       # via -r requirements.in, flask, flask-wtf
 jinja2==2.10.3            # via digitalmarketplace-content-loader, flask, govuk-frontend-jinja
 jmespath==0.9.4           # via boto3, botocore
 mailchimp3==3.0.6         # via digitalmarketplace-utils
