@@ -1902,12 +1902,12 @@ class TestEditDraftService(BaseApplicationTest, MockEnsureApplicationCompanyDeta
         )[0].strip()
 
     @pytest.mark.parametrize("field,error,expected_message", (
-        ('priceMin', 'answer_required', 'Minimum price requires an answer.',),
+        ('priceMin', 'answer_required', 'Error: Minimum price requires an answer.',),
         ('priceUnit', 'answer_required',
-            u"Pricing unit requires an answer. If none of the provided units apply, please choose ‘Unit’."),
-        ('priceMin', 'not_money_format', 'Minimum price must be a number, without units, eg 99.95',),
-        ('priceMax', 'not_money_format', 'Maximum price must be a number, without units, eg 99.95',),
-        ('priceMax', 'max_less_than_min', 'Minimum price must be less than maximum price.',),
+            u"Error: Pricing unit requires an answer. If none of the provided units apply, please choose ‘Unit’."),
+        ('priceMin', 'not_money_format', 'Error: Minimum price must be a number, without units, eg 99.95',),
+        ('priceMax', 'not_money_format', 'Error: Maximum price must be a number, without units, eg 99.95',),
+        ('priceMax', 'max_less_than_min', 'Error: Minimum price must be less than maximum price.',),
     ))
     def test_update_with_pricing_errors(self, s3, field, error, expected_message):
         self.data_api_client.get_framework.return_value = self.framework(slug='g-cloud-9', status='open')
@@ -1921,7 +1921,7 @@ class TestEditDraftService(BaseApplicationTest, MockEnsureApplicationCompanyDeta
 
         assert res.status_code == 200
         document = html.fromstring(res.get_data(as_text=True))
-        assert document.xpath("normalize-space(string(//*[@class='validation-message']))") == expected_message
+        assert document.xpath("normalize-space(string(//*[@class='govuk-error-message']))") == expected_message
         assert document.xpath("normalize-space(string(//*[@class='validation-masthead']//a))") == \
             "How much does the service cost (excluding VAT)?"
 
