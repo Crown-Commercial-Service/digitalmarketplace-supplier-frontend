@@ -13,7 +13,7 @@ click==7.0                # via -c requirements.txt, pip-tools
 coverage==4.5.3           # via -r requirements-dev.in, coveralls, pytest-cov
 coveralls==1.8.1          # via -r requirements-dev.in
 cssselect==1.0.3          # via -r requirements-dev.in
-git+https://github.com/alphagov/digitalmarketplace-test-utils.git@2.6.1#egg=digitalmarketplace-test-utils==2.6.1  # via -r requirements-dev.in
+git+https://github.com/alphagov/digitalmarketplace-test-utils.git@2.8.0#egg=digitalmarketplace-test-utils==2.8.0  # via -r requirements-dev.in
 docopt==0.6.2             # via -c requirements.txt, coveralls
 entrypoints==0.3          # via flake8
 flake8==3.7.7             # via -r requirements-dev.in

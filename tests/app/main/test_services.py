@@ -12,7 +12,7 @@ import pytest
 
 from dmapiclient import HTTPError
 from dmtestutils.api_model_stubs import FrameworkStub, LotStub, SupplierStub, ServiceStub
-from dmtestutils.fixtures import valid_pdf_bytes
+from dmtestutils.fixtures import valid_pdf_bytes, valid_odt_bytes
 
 from app.main.helpers.services import parse_document_upload_time
 from tests.app.helpers import (
@@ -1238,31 +1238,38 @@ class TestSupplierEditUpdateServiceSectionG9(BaseApplicationTest):
         assert self.get_flash_messages() == ((
             "success",
             "You’ve edited your service. The changes are now live on the Digital Marketplace.",
-        ),)
+        ),
+        )
 
-    def test_file_upload(self, s3):
+    @pytest.mark.parametrize("file_extension,valid_bytes", (
+        ('pdf', valid_pdf_bytes),
+        ('odt', valid_odt_bytes)
+    ))
+    def test_file_upload(self, s3, file_extension, valid_bytes):
         self.data_api_client.get_service.return_value = self.base_service
         self.data_api_client.get_framework.return_value = self._get_framework_response()
         with freeze_time('2017-11-12 13:14:15'):
             res = self.client.post(
                 '/suppliers/frameworks/g-cloud-9/services/321/edit/documents',
                 data={
-                    'serviceDefinitionDocumentURL': (BytesIO(valid_pdf_bytes), 'document.pdf'),
+                    'serviceDefinitionDocumentURL': (BytesIO(valid_bytes
+                                                             ), f"document.{file_extension}"),
                 }
             )
 
         assert res.status_code == 302
+        slug = '321-service-definition-document-2017-11-12-1314'
         self.data_api_client.update_service.assert_called_once_with(
             '321',
             {
                 'serviceDefinitionDocumentURL':
-                'http://asset-host/g-cloud-9/documents/1234/321-service-definition-document-2017-11-12-1314.pdf'
+                f"http://asset-host/g-cloud-9/documents/1234/{slug}.{file_extension}"
             },
             'email@email.com',
         )
 
         s3.return_value.save.assert_called_once_with(
-            'g-cloud-9/documents/1234/321-service-definition-document-2017-11-12-1314.pdf',
+            f"g-cloud-9/documents/1234/321-service-definition-document-2017-11-12-1314.{file_extension}",
             mock.ANY, acl='public-read'
         )
 
