@@ -1,0 +1,63 @@
+{% from "govuk-frontend/components/fieldset/macro.njk" import govukFieldset %}
+
+{% from "./macro.njk" import dmPricingInput %}
+
+{% macro clPricingInput(question_content, data, errors) %}
+{% with
+  errors = kwargs.get("errors", errors.get(question_content.id)),
+  fields = kwargs.get("fields", question_content.fields),
+  id = kwargs.get("name", question_content.id),
+  optional = kwargs.get("optional", question_content.optional),
+  optional_fields = kwargs.get("optional_fields", question_content.optional_fields),
+  question = kwargs.get("question", question_content.question),
+  question_advice = kwargs.get("question_advice", question_content.question_advice),
+  question_number = kwargs.question_number
+%}
+
+  {% set errorMessage = {
+    "text": errors.message
+    } if errors else None
+  %}
+  {% set paramItems = {} %}
+
+  {%- for itemname, fieldname, label in (
+    ("unit", "price_unit", "Unit"),
+    ("time", "price_interval", "Time"),
+    ("minimumPrice", "minimum_price", "Minimum price"),
+    ("maximumPrice", "maximum_price", "Maximum price"),
+  ) %}
+    {% if fieldname in fields %}
+      {% with name = fields[fieldname] %}
+      {% set _ = paramItems.update({
+        itemname: {
+          "name": name,
+          "label": label
+            + (" (optional)" if fieldname in optional_fields else ""),
+          "error": True if errors.field == name else None,
+          "value": kwargs.get(fieldname, data.get(name))
+        }
+      }) %}
+      {% endwith %}
+    {% endif %}
+  {% endfor %}
+
+  {% call govukFieldset({
+    "legend": {
+      "text": question + (" (optional)" if optional else ""),
+      "classes": "govuk-fieldset__legend--m",
+    }
+  }) %}
+
+    <p class="govuk-body dm-question-advice">
+      {{ question_advice }}
+    </p>
+
+    {{ dmPricingInput({
+      "errorMessage": errorMessage,
+      "id": id,
+      "items": paramItems,
+    }) }}
+
+  {% endcall %}
+{% endwith %}
+{% endmacro %}
