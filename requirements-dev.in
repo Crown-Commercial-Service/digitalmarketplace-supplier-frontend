@@ -15,4 +15,4 @@ python-dotenv==0.10.3  # used to load .flaskenv
 requests-mock==1.6.0
 watchdog==0.9.0
 
-git+https://github.com/alphagov/digitalmarketplace-test-utils.git@2.6.1#egg=digitalmarketplace-test-utils==2.6.1
+git+https://github.com/alphagov/digitalmarketplace-test-utils.git@2.8.0#egg=digitalmarketplace-test-utils==2.8.0
