@@ -60,6 +60,7 @@ def copy_service_from_previous_framework(data_api_client, content_loader, framew
     # Suppliers must have registered interest in a framework before they can edit draft services
     if not get_supplier_framework_info(data_api_client, framework_slug):
         abort(404)
+    questions_to_exclude = content_loader.get_metadata(framework_slug, 'copy_services', 'questions_to_exclude')
     questions_to_copy = content_loader.get_metadata(framework_slug, 'copy_services', 'questions_to_copy')
     source_framework_slug = content_loader.get_metadata(framework_slug, 'copy_services', 'source_framework')
 
@@ -71,13 +72,18 @@ def copy_service_from_previous_framework(data_api_client, content_loader, framew
     if not is_service_associated_with_supplier(previous_service):
         abort(404)
 
+    copy_options = {
+        'targetFramework': framework_slug,
+        'status': 'not-submitted'
+    }
+    # Use questions_to_exclude if available in metadata, otherwise fall back to (deprecated) questions_to_copy
+    if questions_to_exclude:
+        copy_options['questionsToExclude'] = questions_to_exclude
+    elif questions_to_copy:
+        copy_options['questionsToCopy'] = questions_to_copy
+
     data_api_client.copy_draft_service_from_existing_service(
         previous_service['id'],
         current_user.email_address,
-        {
-            'targetFramework': framework_slug,
-            'status': 'not-submitted',
-            'questionsToCopy': questions_to_copy
-        },
-
+        copy_options,
     )

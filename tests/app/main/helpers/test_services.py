@@ -28,7 +28,11 @@ class TestCopyServiceFromPreviousFramework():
 
         self.api_client_mock = mock.Mock()
         self.content_loader_mock = mock.Mock()
-        self.content_loader_mock.get_metadata.side_effect = [['list', 'of', 'questions'], 'dos-cloud-IX']
+        self.content_loader_mock.get_metadata.side_effect = [
+            ['list', 'of', 'questions', 'to', 'exclude'],
+            ['list', 'of', 'questions', 'to', 'copy'],
+            'dos-cloud-IX'
+        ]
 
     def previous_service(self, **kwargs):
         service_data = {
@@ -46,7 +50,7 @@ class TestCopyServiceFromPreviousFramework():
         assert self.api_client_mock.copy_draft_service_from_existing_service.call_args_list == []
 
     @mock.patch('app.main.helpers.services.current_user')
-    def test_correctly_calls_api_client(self, current_user):
+    def test_correctly_calls_api_client_for_excluded_questions(self, current_user):
         current_user.email_address = 'sausage@pink.net'
         current_user.supplier_id = 1234
 
@@ -63,7 +67,35 @@ class TestCopyServiceFromPreviousFramework():
                 {
                     'targetFramework': 'dos-cloud-X',
                     'status': 'not-submitted',
-                    'questionsToCopy': ['list', 'of', 'questions']
+                    'questionsToExclude': ['list', 'of', 'questions', 'to', 'exclude']
+                },
+            )
+        ]
+
+    @mock.patch('app.main.helpers.services.current_user')
+    def test_correctly_calls_api_client_for_copied_questions(self, current_user):
+        self.content_loader_mock.get_metadata.side_effect = [
+            None,  # Backwards compatibility for frameworks without excluded questions list
+            ['list', 'of', 'questions', 'to', 'copy'],
+            'dos-cloud-IX'
+        ]
+        current_user.email_address = 'sausage@pink.net'
+        current_user.supplier_id = 1234
+
+        self.api_client_mock.get_service.return_value = self.previous_service()
+
+        copy_service_from_previous_framework(
+            self.api_client_mock, self.content_loader_mock, 'dos-cloud-X', 'digital-sausages', 4444244
+        )
+
+        assert self.api_client_mock.copy_draft_service_from_existing_service.call_args_list == [
+            mock.call(
+                4444244,
+                "sausage@pink.net",
+                {
+                    'targetFramework': 'dos-cloud-X',
+                    'status': 'not-submitted',
+                    'questionsToCopy': ['list', 'of', 'questions', 'to', 'copy']
                 },
             )
         ]
