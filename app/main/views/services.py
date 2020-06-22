@@ -872,18 +872,24 @@ def copy_all_previous_services(framework_slug, lot_slug):
     if not get_supplier_framework_info(data_api_client, framework_slug):
         abort(404)
 
+    questions_to_exclude = content_loader.get_metadata(framework['slug'], 'copy_services', 'questions_to_exclude')
     questions_to_copy = content_loader.get_metadata(framework['slug'], 'copy_services', 'questions_to_copy')
     source_framework_slug = content_loader.get_metadata(framework['slug'], 'copy_services', 'source_framework')
+
+    copy_options = {
+        "sourceFrameworkSlug": source_framework_slug,
+        "supplierId": current_user.supplier_id
+    }
+    if questions_to_exclude:
+        copy_options['questionsToExclude'] = questions_to_exclude
+    elif questions_to_copy:
+        copy_options['questionsToCopy'] = questions_to_copy
 
     response = data_api_client.copy_published_from_framework(
         framework_slug,
         lot_slug,
         current_user.email_address,
-        data={
-            "sourceFrameworkSlug": source_framework_slug,
-            "supplierId": current_user.supplier_id,
-            "questionsToCopy": questions_to_copy
-        }
+        data=copy_options
     )['services']
 
     flash(

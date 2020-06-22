@@ -2722,7 +2722,11 @@ class CopyingPreviousServicesSetup(BaseApplicationTest):
                 'supplierId': 1234,
             },
         }
-        self.get_metadata.side_effect = [('serviceName', 'serviceSummary'), 'g-cloud-9']
+        self.get_metadata.side_effect = [
+            None,
+            ('serviceName', 'serviceSummary'),
+            'g-cloud-9'
+        ]
 
         self.login()
 
@@ -2733,7 +2737,7 @@ class CopyingPreviousServicesSetup(BaseApplicationTest):
 
 
 class TestCopyPreviousService(CopyingPreviousServicesSetup, MockEnsureApplicationCompanyDetailsHaveBeenConfirmedMixin):
-    def test_copies_existing_service_to_new_framework(self):
+    def test_copies_existing_service_to_new_framework_with_questions_to_copy(self):
         res = self.client.post(
             '/suppliers/frameworks/g-cloud-10/submissions/cloud-hosting/copy-previous-framework-service/2000000000'
         )
@@ -2752,6 +2756,36 @@ class TestCopyPreviousService(CopyingPreviousServicesSetup, MockEnsureApplicatio
                     'targetFramework': 'g-cloud-10',
                     'status': 'not-submitted',
                     'questionsToCopy': ('serviceName', 'serviceSummary')
+                }
+            )
+        ]
+
+    @pytest.mark.parametrize('questions_to_copy', (None, ['serviceName', 'serviceSummary']))
+    def test_copies_existing_service_to_new_framework_with_questions_to_exclude(self, questions_to_copy):
+        self.get_metadata.side_effect = [
+            ('termsAndConditionsDocumentURL', 'serviceDefinitionDocumentURL'),
+            questions_to_copy,
+            'g-cloud-9'
+        ]
+
+        res = self.client.post(
+            '/suppliers/frameworks/g-cloud-10/submissions/cloud-hosting/copy-previous-framework-service/2000000000'
+        )
+
+        assert res.status_code == 302
+        assert res.location == (
+            "http://localhost/suppliers/frameworks/"
+            "g-cloud-10/submissions/cloud-hosting/previous-services"
+        )
+
+        assert self.data_api_client.copy_draft_service_from_existing_service.call_args_list == [
+            mock.call(
+                '2000000000',
+                'email@email.com',
+                {
+                    'targetFramework': 'g-cloud-10',
+                    'status': 'not-submitted',
+                    'questionsToExclude': ('termsAndConditionsDocumentURL', 'serviceDefinitionDocumentURL')
                 }
             )
         ]
@@ -2789,7 +2823,11 @@ class TestCopyPreviousService(CopyingPreviousServicesSetup, MockEnsureApplicatio
         assert res.status_code == 404
 
     def test_returns_404_if_service_does_not_match_source_framework(self):
-        self.get_metadata.side_effect = [('serviceName', 'serviceSummary'), 'a-different-framework']
+        self.get_metadata.side_effect = [
+            None,
+            ['serviceName', 'serviceSummary'],
+            'a-different-framework'
+        ]
 
         res = self.client.post(
             '/suppliers/frameworks/g-cloud-10/submissions/cloud-hosting/copy-previous-framework-service/2000000000'
@@ -2831,7 +2869,7 @@ class TestCopyPreviousService(CopyingPreviousServicesSetup, MockEnsureApplicatio
 
 class TestCopyAllPreviousServices(CopyingPreviousServicesSetup,
                                   MockEnsureApplicationCompanyDetailsHaveBeenConfirmedMixin):
-    def test_copies_all_services(self):
+    def test_copies_all_services_with_questions_to_copy(self):
         res = self.client.post(
             '/suppliers/frameworks/g-cloud-10/submissions/cloud-hosting/copy-all-previous-framework-services'
         )
@@ -2848,6 +2886,34 @@ class TestCopyAllPreviousServices(CopyingPreviousServicesSetup,
                     "sourceFrameworkSlug": 'g-cloud-9',
                     "supplierId": 1234,
                     "questionsToCopy": ('serviceName', 'serviceSummary'),
+                }
+            )
+        ]
+
+    @pytest.mark.parametrize('questions_to_copy', (None, ['serviceName', 'serviceSummary']))
+    def test_copies_all_services_with_questions_to_exclude(self, questions_to_copy):
+        self.get_metadata.side_effect = [
+            ['termsAndConditionsDocumentURL', 'serviceDefinitionDocumentURL'],
+            questions_to_copy,
+            'g-cloud-9'
+        ]
+
+        res = self.client.post(
+            '/suppliers/frameworks/g-cloud-10/submissions/cloud-hosting/copy-all-previous-framework-services'
+        )
+
+        assert res.status_code == 302
+        assert res.location == 'http://localhost/suppliers/frameworks/g-cloud-10/submissions/cloud-hosting'
+
+        assert self.data_api_client.copy_published_from_framework.call_args_list == [
+            mock.call(
+                'g-cloud-10',
+                'cloud-hosting',
+                'email@email.com',
+                data={
+                    "sourceFrameworkSlug": 'g-cloud-9',
+                    "supplierId": 1234,
+                    "questionsToExclude": ['termsAndConditionsDocumentURL', 'serviceDefinitionDocumentURL']
                 }
             )
         ]
