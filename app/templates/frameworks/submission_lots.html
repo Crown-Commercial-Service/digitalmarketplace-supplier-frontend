@@ -30,7 +30,9 @@
 
 {% block mainContent %}
 
+{% if framework.status == 'open' %}
   {% include "partials/service_warning.html" %}
+{% endif %}
 
   <div class="govuk-grid-row">
     <div class="govuk-grid-column-two-thirds">

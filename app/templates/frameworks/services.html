@@ -34,7 +34,9 @@
 
 {% block mainContent %}
 
-  {% include "partials/service_warning.html" %}
+  {% if framework.status == 'open' %}
+    {% include "partials/service_warning.html" %}
+  {% endif %}
 
   <h1 class="govuk-heading-l">{{ lot.name }} services</h1>
 
