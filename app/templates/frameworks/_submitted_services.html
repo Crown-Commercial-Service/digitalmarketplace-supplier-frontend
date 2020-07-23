@@ -1,27 +1,37 @@
-{% if framework.status in ['pending', 'standstill'] and application_made %}
+{% if framework.status in ['pending', 'standstill'] %}
 <li class="browse-list-item">
-  <h2>You submitted:</h2>
-  <ul class="govuk-list govuk-list--bullet">
-    {% for lot in completed_lots %}
-      {% if lot.one_service_limit %}
-        <li>{{ lot.name }}</li>
-      {% else %}
-        <li>
-          {{ lot.complete_count }} {{ lot.name }}
-          {{ lot.unitSingular if (1 == lot.complete_count) else lot.unitPlural }}
-        </li>
-      {% endif %}
-    {% endfor %}
-  </ul>
+  {% if application_made %}
+    <h2>You submitted:</h2>
+    <ul class="govuk-list govuk-list--bullet">
+      {% for lot in completed_lots %}
+        {% if lot.one_service_limit %}
+          <li>{{ lot.name }}</li>
+        {% else %}
+          <li>
+            {{ lot.complete_count }} {{ lot.name }}
+            {{ lot.unitSingular if (1 == lot.complete_count) else lot.unitPlural }}
+          </li>
+        {% endif %}
+      {% endfor %}
+    </ul>
+  {% endif %}
   <p class="govuk-body">
     <a class="govuk-link" href="{{ url_for('.framework_submission_lots', framework_slug=framework.slug) }}">
-      View submitted services
+      {% if application_made %}
+        View submitted services
+      {% else %}
+        View draft services
+      {% endif %}
     </a>
   </p>
   <p class="govuk-body">
-    <a class="govuk-link" href="{{ url_for('.framework_supplier_declaration_overview', framework_slug=framework.slug) }}">
-      View your declaration
-    </a>
+    {% if declaration_status == 'unstarted' %}
+      You did not make a supplier declaration.
+    {% else %}
+      <a class="govuk-link" href="{{ url_for('.framework_supplier_declaration_overview', framework_slug=framework.slug) }}">
+        View your declaration
+      </a>
+    {% endif %}
   </p>
 </li>
 {% endif %}
