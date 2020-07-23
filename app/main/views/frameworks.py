@@ -293,8 +293,6 @@ def framework_submission_services(framework_slug, lot_slug):
 
     drafts, complete_drafts = get_lot_drafts(data_api_client, framework_slug, lot_slug)
     declaration_status = get_declaration_status(data_api_client, framework_slug)
-    if framework['status'] == 'pending' and declaration_status != 'complete':
-        abort(404)
 
     try:
         previous_framework_slug = content_loader.get_metadata(framework['slug'], 'copy_services', 'source_framework')

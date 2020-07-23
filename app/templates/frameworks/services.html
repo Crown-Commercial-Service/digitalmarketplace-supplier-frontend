@@ -44,7 +44,11 @@
         <div class="govuk-grid-column-two-thirds">
           <h2 class="summary-item-heading">{{ framework.name }} is closed for applications</h2>
           <p class="govuk-body">
-            You made your supplier declaration and submitted {{ complete_drafts|length }} complete {{ 'service' if complete_drafts|length == 1 else 'services' }}.
+            {% if declaration_status == 'complete' %}
+              You made your supplier declaration and submitted {{ complete_drafts|length }} complete {{ 'service' if complete_drafts|length == 1 else 'services' }}.
+            {% else %}
+              You submitted {{ complete_drafts|length }} complete {{ 'service' if complete_drafts|length == 1 else 'services' }}.
+            {% endif %}
           </p>
         </div>
       </div>
