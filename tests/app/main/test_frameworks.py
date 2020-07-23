@@ -3882,42 +3882,35 @@ class TestServicesList(BaseApplicationTest, MockEnsureApplicationCompanyDetailsH
         if decl_item_href:
             assert decl_element[0].xpath('.//a[@href=$url]', url=decl_item_href)
 
-    def test_404_when_g7_pending_and_no_complete_services(self, count_unanswered):
+    @pytest.mark.parametrize(
+        'framework_status, msg',
+        [
+            ('open', 'Add a service'),
+            ('pending', 'You didn’t mark any services as complete.')
+        ]
+    )
+    def test_services_list_open_or_pending_no_complete_services(self, count_unanswered, framework_status, msg):
         self.login()
-        self.data_api_client.get_framework.return_value = self.framework(status='pending')
-        self.data_api_client.find_draft_services_iter.return_value = []
-        count_unanswered.return_value = 0
-        response = self.client.get('/suppliers/frameworks/g-cloud-7/submissions/iaas')
-        assert response.status_code == 404
-
-    def test_404_when_g7_pending_and_no_declaration(self, count_unanswered):
-        self.login()
-        self.data_api_client.get_framework.return_value = self.framework(status='pending')
-        self.data_api_client.get_supplier_declaration.return_value = {
-            "declaration": {"status": "started"}
-        }
-        response = self.client.get('/suppliers/frameworks/g-cloud-7/submissions/iaas')
-        assert response.status_code == 404
-
-    def test_no_404_when_g7_open_and_no_complete_services(self, count_unanswered):
-        self.login()
-        self.data_api_client.get_framework.return_value = self.framework(status='open')
+        self.data_api_client.get_framework.return_value = self.framework(status=framework_status)
         self.data_api_client.find_draft_services_iter.return_value = []
         count_unanswered.return_value = 0
         response = self.client.get('/suppliers/frameworks/g-cloud-7/submissions/iaas')
         assert response.status_code == 200
+        assert msg in response.get_data(as_text=True)
 
-    def test_no_404_when_g7_open_and_no_declaration(self, count_unanswered):
+    @pytest.mark.parametrize('framework_status', ['open', 'pending'])
+    def test_services_list_open_or_pending_and_no_declaration(self, count_unanswered, framework_status):
         self.login()
 
-        self.data_api_client.get_framework.return_value = self.framework(status='open')
+        self.data_api_client.get_framework.return_value = self.framework(status=framework_status)
         self.data_api_client.get_supplier_declaration.return_value = {
             "declaration": {"status": "started"}
         }
         response = self.client.get('/suppliers/frameworks/g-cloud-7/submissions/iaas')
         assert response.status_code == 200
+        assert 'You made your supplier declaration' not in response.get_data(as_text=True)
 
-    def test_shows_g7_message_if_pending_and_application_made(self, count_unanswered):
+    def test_services_list_shows_g7_message_if_pending_and_application_made(self, count_unanswered):
         self.login()
         self.data_api_client.get_framework.return_value = self.framework(status='pending')
         self.data_api_client.get_supplier_declaration.return_value = self.supplier_framework()['frameworkInterest']
@@ -3936,6 +3929,29 @@ class TestServicesList(BaseApplicationTest, MockEnsureApplicationCompanyDetailsH
         assert "G-Cloud 7 is closed for applications" in heading[0].xpath('text()')[0]
         assert "You made your supplier declaration and submitted 1 complete service." in \
             heading[0].xpath('../p[1]/text()')[0]
+
+        self._assert_incomplete_application_banner_not_visible(response.get_data(as_text=True))
+
+    def test_shows_g7_message_if_pending_and_services_not_submitted(self, count_unanswered):
+        self.login()
+        self.data_api_client.get_framework.return_value = self.framework(status='pending')
+        self.data_api_client.get_supplier_declaration.return_value = self.supplier_framework()['frameworkInterest']
+        self.data_api_client.get_supplier.return_value = SupplierStub().single_result_response()
+        self.data_api_client.find_draft_services_iter.return_value = [
+            {'serviceName': 'draft', 'lotSlug': 'scs', 'status': 'not-submitted'}
+        ]
+        count_unanswered.return_value = 0, 1
+
+        response = self.client.get('/suppliers/frameworks/g-cloud-7/submissions/scs')
+        doc = html.fromstring(response.get_data(as_text=True))
+
+        assert response.status_code == 200
+        heading = doc.xpath('//div[@class="summary-item-lede"]//h2[@class="summary-item-heading"]')
+        assert len(heading) > 0
+        assert "G-Cloud 7 is closed for applications" in heading[0].xpath('text()')[0]
+        assert "You made your supplier declaration and submitted 0 complete services." in \
+            heading[0].xpath('../p[1]/text()')[0]
+        assert "These services were not submitted" in doc.xpath('//main//p[@class="hint"]')[0].xpath('text()')[0]
 
         self._assert_incomplete_application_banner_not_visible(response.get_data(as_text=True))
 
