@@ -4227,7 +4227,7 @@ class TestFrameworkSubmissionServices(BaseApplicationTest, MockEnsureApplication
         assert "G-Cloud 7 is closed for applications" in heading[0].xpath('text()')[0]
         assert "You made your supplier declaration and submitted 0 complete services." in \
             heading[0].xpath('../p[1]/text()')[0]
-        assert "These services were not submitted" in doc.xpath('//main//p[@class="hint"]')[0].xpath('text()')[0]
+        assert "These services were not completed" in doc.xpath('//main//p[@class="hint"]')[0].xpath('text()')[0]
 
         self._assert_incomplete_application_banner_not_visible(response.get_data(as_text=True))
 

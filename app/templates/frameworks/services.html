@@ -49,7 +49,7 @@
             {% if declaration_status == 'complete' %}
               You made your supplier declaration and submitted {{ complete_drafts|length }} complete {{ 'service' if complete_drafts|length == 1 else 'services' }}.
             {% else %}
-              You submitted {{ complete_drafts|length }} complete {{ 'service' if complete_drafts|length == 1 else 'services' }}.
+              You completed {{ complete_drafts|length }} {{ 'service' if complete_drafts|length == 1 else 'services' }}.
             {% endif %}
           </p>
         </div>
@@ -69,7 +69,7 @@
   {% if framework.status == 'open' %}
     {{ summary.top_link("Add a service", url_for(".start_new_draft_service", framework_slug=framework.slug, lot_slug=lot.slug)) }}
   {% elif framework.status == 'pending' %}
-    <p class="hint">These services were not submitted</p>
+    <p class="hint">These services were not completed</p>
   {% endif %}
   {% call(draft) summary.list_table(
     drafts,
@@ -111,7 +111,11 @@
   {% if framework.status == 'open' %}
     {{ summary.heading("Complete services") }}
   {% elif framework.status == 'pending' or 'standstill' %}
-    {{ summary.heading("Submitted services") }}
+    {% if declaration_status == 'complete' %}
+      {{ summary.heading("Submitted services") }}
+    {% else %}
+      {{ summary.heading("Completed services") }}
+    {% endif %}
   {% endif %}
   {% call(draft) summary.list_table(
     complete_drafts,
