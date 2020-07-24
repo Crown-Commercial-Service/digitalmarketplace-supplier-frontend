@@ -837,7 +837,33 @@ class TestFrameworksDashboardPendingStandstill(BaseApplicationTest):
             ),
         )
 
-    def test_dashboard_pending_before_award_no_declaration(self, s3):
+    def test_dashboard_pending_before_award_company_details_not_confirmed(self, s3):
+        self.login()
+
+        self.data_api_client.get_framework.return_value = self.framework(status='pending')
+        self.data_api_client.find_draft_services_iter.return_value = []
+        self.data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
+            declaration={}, application_company_details_confirmed=False
+        )
+
+        res = self.client.get("/suppliers/frameworks/g-cloud-7")
+        assert res.status_code == 200
+
+        doc = html.fromstring(res.get_data(as_text=True))
+        assert doc.xpath(
+            "//main//p[contains(normalize-space(string()), $details_text)]",
+            details_text="You did not confirm your company details.",
+        )
+        assert doc.xpath(
+            "//main//p[contains(normalize-space(string()), $declaration_text)]",
+            declaration_text="You did not make a supplier declaration.",
+        )
+        assert doc.xpath(
+            "//main//p[contains(normalize-space(string()), $drafts_text)]",
+            drafts_text="You did not create any services.",
+        )
+
+    def test_dashboard_pending_before_award_services_but_no_declaration(self, s3):
         self.login()
 
         self.data_api_client.get_framework.return_value = self.framework(status='pending')
@@ -863,7 +889,7 @@ class TestFrameworksDashboardPendingStandstill(BaseApplicationTest):
         )
 
     @pytest.mark.parametrize('declaration_status', ('started', 'complete'))
-    def test_dashboard_pending_before_award_with_declaration(self, s3, declaration_status):
+    def test_dashboard_pending_before_award_with_services_and_declaration(self, s3, declaration_status):
         self.login()
 
         self.data_api_client.get_framework.return_value = self.framework(status='pending')
@@ -877,7 +903,6 @@ class TestFrameworksDashboardPendingStandstill(BaseApplicationTest):
         res = self.client.get("/suppliers/frameworks/g-cloud-7")
 
         doc = html.fromstring(res.get_data(as_text=True))
-
         assert doc.xpath(
             "//main//a[@href=$href or normalize-space(string())=$label]",
             href="/frameworks/g-cloud-7/declaration",
@@ -893,6 +918,55 @@ class TestFrameworksDashboardPendingStandstill(BaseApplicationTest):
                 href="/frameworks/g-cloud-7/submissions",
                 label="View submitted services",
             )
+
+    @pytest.mark.parametrize('declaration_status', ('started', 'complete'))
+    def test_dashboard_pending_before_award_with_declaration_incomplete_services(self, s3, declaration_status):
+        self.login()
+
+        self.data_api_client.get_framework.return_value = self.framework(status='pending')
+        self.data_api_client.find_draft_services_iter.return_value = [
+            {'serviceName': 'A service', 'status': 'not-submitted', 'lotSlug': 'iaas'}
+        ]
+        self.data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
+            declaration={'status': declaration_status}
+        )
+
+        res = self.client.get("/suppliers/frameworks/g-cloud-7")
+
+        doc = html.fromstring(res.get_data(as_text=True))
+        assert doc.xpath(
+            "//main//a[@href=$href or normalize-space(string())=$label]",
+            href="/frameworks/g-cloud-7/declaration",
+            label="View your declaration",
+        )
+        assert doc.xpath(
+            "//main//a[@href=$href or normalize-space(string())=$label]",
+            href="/frameworks/g-cloud-7/submissions",
+            label="View draft services",
+        )
+
+    @pytest.mark.parametrize('declaration_status', ('started', 'complete'))
+    def test_dashboard_pending_before_award_with_declaration_no_services(self, s3, declaration_status):
+        self.login()
+
+        self.data_api_client.get_framework.return_value = self.framework(status='pending')
+        self.data_api_client.find_draft_services_iter.return_value = []
+        self.data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
+            declaration={'status': declaration_status}
+        )
+
+        res = self.client.get("/suppliers/frameworks/g-cloud-7")
+
+        doc = html.fromstring(res.get_data(as_text=True))
+        assert doc.xpath(
+            "//main//a[@href=$href or normalize-space(string())=$label]",
+            href="/frameworks/g-cloud-7/declaration",
+            label="View your declaration",
+        )
+        assert doc.xpath(
+            "//main//p[contains(normalize-space(string()), $drafts_text)]",
+            drafts_text="You did not create any services.",
+        )
 
     def test_result_letter_is_shown_when_is_in_standstill(self, s3):
         self.login()
