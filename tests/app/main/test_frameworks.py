@@ -3847,7 +3847,7 @@ class TestSendClarificationQuestionEmail(BaseApplicationTest):
 
 
 @mock.patch('app.main.views.frameworks.count_unanswered_questions')
-class TestSubmissionLotsPage(BaseApplicationTest, MockEnsureApplicationCompanyDetailsHaveBeenConfirmedMixin):
+class TestFrameworkSubmissionLots(BaseApplicationTest, MockEnsureApplicationCompanyDetailsHaveBeenConfirmedMixin):
 
     def setup_method(self, method):
         super().setup_method(method)
@@ -4049,7 +4049,7 @@ class TestSubmissionLotsPage(BaseApplicationTest, MockEnsureApplicationCompanyDe
 
 
 @mock.patch('app.main.views.frameworks.count_unanswered_questions')
-class TestServicesList(BaseApplicationTest, MockEnsureApplicationCompanyDetailsHaveBeenConfirmedMixin):
+class TestFrameworkSubmissionServices(BaseApplicationTest, MockEnsureApplicationCompanyDetailsHaveBeenConfirmedMixin):
 
     def setup_method(self, method):
         super().setup_method(method)
