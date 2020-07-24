@@ -3847,6 +3847,208 @@ class TestSendClarificationQuestionEmail(BaseApplicationTest):
 
 
 @mock.patch('app.main.views.frameworks.count_unanswered_questions')
+class TestSubmissionLotsPage(BaseApplicationTest, MockEnsureApplicationCompanyDetailsHaveBeenConfirmedMixin):
+
+    def setup_method(self, method):
+        super().setup_method(method)
+        self.get_metadata_patch = mock.patch('app.main.views.frameworks.content_loader.get_metadata')
+        self.get_metadata = self.get_metadata_patch.start()
+        self.get_metadata.return_value = 'g-cloud-6'
+        self.data_api_client_patch = mock.patch('app.main.views.frameworks.data_api_client', autospec=True)
+        self.data_api_client = self.data_api_client_patch.start()
+
+    def teardown_method(self, method):
+        self.data_api_client_patch.stop()
+        super().teardown_method(method)
+        self.get_metadata_patch.stop()
+
+    def test_drafts_list_progress_count(self, count_unanswered):
+        self.login()
+
+        count_unanswered.return_value = 3, 1
+        self.data_api_client.get_framework.return_value = self.framework(status='open')
+        self.data_api_client.find_draft_services_iter.return_value = [
+            {'serviceName': 'draft', 'lotSlug': 'scs', 'status': 'not-submitted'}
+        ]
+
+        submissions = self.client.get('/suppliers/frameworks/g-cloud-7/submissions')
+
+        assert u'1 draft service' in submissions.get_data(as_text=True)
+        assert u'complete service' not in submissions.get_data(as_text=True)
+
+    @pytest.mark.parametrize('framework_slug, show_service_data', (
+        ('digital-outcomes-and-specialists-2', 0),
+        ('g-cloud-9', 1),
+    ))
+    def test_submission_lots_page_shows_use_of_service_data_if_g_cloud_family(
+        self, count_unanswered, framework_slug, show_service_data
+    ):
+        self.login()
+        self.data_api_client.get_framework.return_value = self.framework(slug=framework_slug, status="open")
+        self.data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
+            framework_slug=framework_slug
+        )
+
+        res = self.client.get(f"/suppliers/frameworks/{framework_slug}/submissions")
+        assert res.status_code == 200
+
+        doc = html.fromstring(res.get_data(as_text=True))
+        use_of_data = doc.xpath('//div[contains(@class, "use-of-service-data")]')
+        assert len(use_of_data) == show_service_data
+
+        if show_service_data:
+            assert 'The service information you provide here:' in use_of_data[0].text_content()
+
+    @pytest.mark.parametrize(
+        'declaration, should_show_declaration_link, declaration_link_url',
+        (
+            ({'declaration': {}}, True, '/suppliers/frameworks/g-cloud-7/declaration/start'),
+            ({'declaration': {'status': 'started'}}, True, '/suppliers/frameworks/g-cloud-7/declaration'),
+            ({'declaration': {}}, True, '/suppliers/frameworks/g-cloud-7/declaration/start'),
+            ({'declaration': {'status': 'started'}}, True, '/suppliers/frameworks/g-cloud-7/declaration'),
+            ({'declaration': {'status': 'complete'}}, False, None),
+            ({'declaration': {'status': 'complete'}}, False, None),
+        )
+    )
+    def test_banner_on_submission_lot_page_shows_link_to_declaration(
+        self, count_unanswered, declaration, should_show_declaration_link, declaration_link_url
+    ):
+        self.login()
+
+        self.data_api_client.get_framework.return_value = self.framework(status='open')
+        self.data_api_client.get_supplier.return_value = SupplierStub().single_result_response()
+        self.data_api_client.get_supplier_declaration.return_value = declaration
+        self.data_api_client.find_draft_services_iter.return_value = [
+            {'serviceName': 'draft', 'lotSlug': 'scs', 'status': 'submitted'}
+        ]
+
+        submissions = self.client.get('/suppliers/frameworks/g-cloud-7/submissions')
+
+        if should_show_declaration_link:
+            doc = html.fromstring(submissions.get_data(as_text=True))
+            assert doc.xpath('//*[@class="banner-information-without-action"]')
+            decl_element = doc.xpath(
+                "//*[contains(@class,'banner-content')][contains(normalize-space(string()), $text)]",
+                text="make your supplier declaration",
+            )
+            assert decl_element[0].xpath('.//a[@href=$url]', url=declaration_link_url)
+
+        else:
+            # Application is done - don't show warning banner
+            assert "Your application is not complete" not in submissions.get_data(as_text=True)
+
+    @pytest.mark.parametrize(
+        "incomplete_declaration,expected_url",
+        (
+            ({}, "/suppliers/frameworks/g-cloud-7/declaration/start"),
+            ({"status": "started"}, "/suppliers/frameworks/g-cloud-7/declaration")
+        )
+    )
+    def test_drafts_list_completed(self, count_unanswered, incomplete_declaration, expected_url):
+        self.login()
+
+        count_unanswered.return_value = 0, 1
+
+        self.data_api_client.get_framework.return_value = self.framework(status='open')
+        self.data_api_client.get_supplier_declaration.return_value = {'declaration': incomplete_declaration}
+        self.data_api_client.find_draft_services_iter.return_value = [
+            {'serviceName': 'draft', 'lotSlug': 'scs', 'status': 'submitted'}
+        ]
+        self.data_api_client.get_supplier.return_value = SupplierStub(
+            company_details_confirmed=False
+        ).single_result_response()
+
+        submissions = self.client.get('/suppliers/frameworks/g-cloud-7/submissions')
+
+        submissions_html = submissions.get_data(as_text=True)
+
+        assert u'1 service marked as complete' in submissions_html
+        assert u'draft service' not in submissions_html
+        assert "Your application is not complete" in submissions_html
+
+        doc = html.fromstring(submissions_html)
+        assert doc.xpath('//*[@class="banner-information-without-action"]')
+        decl_element = doc.xpath(
+            "//*[contains(@class,'banner-content')][contains(normalize-space(string()), $text)]",
+            text="make your supplier declaration",
+        )
+        assert decl_element[0].xpath('.//a[@href=$url]', url=expected_url)
+
+    def test_drafts_list_completed_with_declaration_status(self, count_unanswered):
+        self.login()
+
+        self.data_api_client.get_framework.return_value = self.framework(status='open')
+        self.data_api_client.get_supplier_declaration.return_value = {'declaration': {'status': 'complete'}}
+        self.data_api_client.find_draft_services_iter.return_value = [
+            {'serviceName': 'draft', 'lotSlug': 'scs', 'status': 'submitted'}
+        ]
+        self.data_api_client.get_supplier.return_value = SupplierStub(
+            company_details_confirmed=False
+        ).single_result_response()
+
+        submissions = self.client.get('/suppliers/frameworks/g-cloud-7/submissions')
+        submissions_html = submissions.get_data(as_text=True)
+
+        assert u'1 service will be submitted' in submissions_html
+        assert u'1 complete service was submitted' not in submissions_html
+        assert u'browse-list-item-status-happy' in submissions_html
+        assert "Your application is not complete" not in submissions_html
+
+    def test_drafts_list_services_were_submitted(self, count_unanswered):
+        self.login()
+
+        self.data_api_client.get_framework.return_value = self.framework(status='standstill')
+        self.data_api_client.get_supplier_declaration.return_value = {'declaration': {'status': 'complete'}}
+        self.data_api_client.find_draft_services_iter.return_value = [
+            {'serviceName': 'draft', 'lotSlug': 'scs', 'status': 'not-submitted'},
+            {'serviceName': 'draft', 'lotSlug': 'scs', 'status': 'submitted'},
+        ]
+
+        submissions = self.client.get('/suppliers/frameworks/g-cloud-7/submissions')
+
+        assert u'1 complete service was submitted' in submissions.get_data(as_text=True)
+
+    def test_dos_drafts_list_with_open_framework(self, count_unanswered):
+        self.login()
+
+        self.data_api_client.get_framework.return_value = self.framework(
+            slug='digital-outcomes-and-specialists',
+            status='open'
+        )
+        self.data_api_client.get_supplier_declaration.return_value = {'declaration': {'status': 'complete'}}
+        self.data_api_client.get_supplier.return_value = SupplierStub().single_result_response()
+        self.data_api_client.find_draft_services_iter.return_value = [
+            {'serviceName': 'draft', 'lotSlug': 'digital-specialists', 'status': 'submitted'}
+        ]
+
+        submissions = self.client.get('/suppliers/frameworks/digital-outcomes-and-specialists/submissions')
+
+        assert u'This will be submitted' in submissions.get_data(as_text=True)
+        assert u'browse-list-item-status-happy' in submissions.get_data(as_text=True)
+        assert u'Apply to provide' in submissions.get_data(as_text=True)
+        assert "Your application is not complete" not in submissions.get_data(as_text=True)
+
+    def test_dos_drafts_list_with_closed_framework(self, count_unanswered):
+        self.login()
+
+        self.data_api_client.get_framework.return_value = self.framework(
+            slug="digital-outcomes-and-specialists",
+            status='pending'
+        )
+        self.data_api_client.get_supplier_declaration.return_value = {'declaration': {'status': 'complete'}}
+        self.data_api_client.find_draft_services_iter.return_value = [
+            {'serviceName': 'draft', 'lotSlug': 'digital-specialists', 'status': 'not-submitted'},
+            {'serviceName': 'draft', 'lotSlug': 'digital-specialists', 'status': 'submitted'},
+        ]
+
+        submissions = self.client.get('/suppliers/frameworks/digital-outcomes-and-specialists/submissions')
+
+        assert submissions.status_code == 200
+        assert u'Submitted' in submissions.get_data(as_text=True)
+        assert u'Apply to provide' not in submissions.get_data(as_text=True)
+
+
+@mock.patch('app.main.views.frameworks.count_unanswered_questions')
 class TestServicesList(BaseApplicationTest, MockEnsureApplicationCompanyDetailsHaveBeenConfirmedMixin):
 
     def setup_method(self, method):
@@ -3964,37 +4166,10 @@ class TestServicesList(BaseApplicationTest, MockEnsureApplicationCompanyDetailsH
             {'serviceName': 'draft', 'lotSlug': 'scs', 'status': 'not-submitted'}
         ]
 
-        submissions = self.client.get('/suppliers/frameworks/g-cloud-7/submissions')
         lot_page = self.client.get('/suppliers/frameworks/g-cloud-7/submissions/scs')
 
         assert u'Service can be moved to complete' not in lot_page.get_data(as_text=True)
         assert u'4 unanswered questions' in lot_page.get_data(as_text=True)
-
-        assert u'1 draft service' in submissions.get_data(as_text=True)
-        assert u'complete service' not in submissions.get_data(as_text=True)
-
-    @pytest.mark.parametrize('framework_slug, show_service_data', (
-        ('digital-outcomes-and-specialists-2', 0),
-        ('g-cloud-9', 1),
-    ))
-    def test_submission_lots_page_shows_use_of_service_data_if_g_cloud_family(
-        self, count_unanswered, framework_slug, show_service_data
-    ):
-        self.login()
-        self.data_api_client.get_framework.return_value = self.framework(slug=framework_slug, status="open")
-        self.data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
-            framework_slug=framework_slug
-        )
-
-        res = self.client.get(f"/suppliers/frameworks/{framework_slug}/submissions")
-        assert res.status_code == 200
-
-        doc = html.fromstring(res.get_data(as_text=True))
-        use_of_data = doc.xpath('//div[contains(@class, "use-of-service-data")]')
-        assert len(use_of_data) == show_service_data
-
-        if show_service_data:
-            assert 'The service information you provide here:' in use_of_data[0].text_content()
 
     def test_drafts_list_can_be_completed(self, count_unanswered):
         self.login()
@@ -4032,136 +4207,11 @@ class TestServicesList(BaseApplicationTest, MockEnsureApplicationCompanyDetailsH
             company_details_confirmed=False
         ).single_result_response()
 
-        submissions = self.client.get('/suppliers/frameworks/g-cloud-7/submissions')
         lot_page = self.client.get('/suppliers/frameworks/g-cloud-7/submissions/scs')
 
-        submissions_html = submissions.get_data(as_text=True)
         lot_page_html = lot_page.get_data(as_text=True)
-
         assert u'Service can be moved to complete' not in lot_page_html
-
-        assert u'1 service marked as complete' in submissions_html
-        assert u'draft service' not in submissions_html
-
-        self._assert_incomplete_application_banner(submissions_html, decl_item_href=expected_url)
         self._assert_incomplete_application_banner(lot_page_html, decl_item_href=expected_url)
-
-    def test_drafts_list_completed_with_declaration_status(self, count_unanswered):
-        self.login()
-
-        self.data_api_client.get_framework.return_value = self.framework(status='open')
-        self.data_api_client.get_supplier_declaration.return_value = {'declaration': {'status': 'complete'}}
-        self.data_api_client.find_draft_services_iter.return_value = [
-            {'serviceName': 'draft', 'lotSlug': 'scs', 'status': 'submitted'}
-        ]
-        self.data_api_client.get_supplier.return_value = SupplierStub(
-            company_details_confirmed=False
-        ).single_result_response()
-
-        submissions = self.client.get('/suppliers/frameworks/g-cloud-7/submissions')
-        submissions_html = submissions.get_data(as_text=True)
-
-        assert u'1 service will be submitted' in submissions_html
-        assert u'1 complete service was submitted' not in submissions_html
-        assert u'browse-list-item-status-happy' in submissions_html
-
-        self._assert_incomplete_application_banner_not_visible(submissions_html)
-
-    def test_drafts_list_services_were_submitted(self, count_unanswered):
-        self.login()
-
-        self.data_api_client.get_framework.return_value = self.framework(status='standstill')
-        self.data_api_client.get_supplier_declaration.return_value = {'declaration': {'status': 'complete'}}
-        self.data_api_client.find_draft_services_iter.return_value = [
-            {'serviceName': 'draft', 'lotSlug': 'scs', 'status': 'not-submitted'},
-            {'serviceName': 'draft', 'lotSlug': 'scs', 'status': 'submitted'},
-        ]
-
-        submissions = self.client.get('/suppliers/frameworks/g-cloud-7/submissions')
-
-        assert u'1 complete service was submitted' in submissions.get_data(as_text=True)
-
-    def test_dos_drafts_list_with_open_framework(self, count_unanswered):
-        self.login()
-
-        self.data_api_client.get_framework.return_value = self.framework(
-            slug='digital-outcomes-and-specialists',
-            status='open'
-        )
-        self.data_api_client.get_supplier_declaration.return_value = {'declaration': {'status': 'complete'}}
-        self.data_api_client.get_supplier.return_value = SupplierStub().single_result_response()
-        self.data_api_client.find_draft_services_iter.return_value = [
-            {'serviceName': 'draft', 'lotSlug': 'digital-specialists', 'status': 'submitted'}
-        ]
-
-        submissions = self.client.get('/suppliers/frameworks/digital-outcomes-and-specialists/submissions')
-
-        assert u'This will be submitted' in submissions.get_data(as_text=True)
-        assert u'browse-list-item-status-happy' in submissions.get_data(as_text=True)
-        assert u'Apply to provide' in submissions.get_data(as_text=True)
-
-        self._assert_incomplete_application_banner_not_visible(submissions.get_data(as_text=True))
-
-    def test_dos_drafts_list_with_closed_framework(self, count_unanswered):
-        self.login()
-
-        self.data_api_client.get_framework.return_value = self.framework(
-            slug="digital-outcomes-and-specialists",
-            status='pending'
-        )
-        self.data_api_client.get_supplier_declaration.return_value = {'declaration': {'status': 'complete'}}
-        self.data_api_client.find_draft_services_iter.return_value = [
-            {'serviceName': 'draft', 'lotSlug': 'digital-specialists', 'status': 'not-submitted'},
-            {'serviceName': 'draft', 'lotSlug': 'digital-specialists', 'status': 'submitted'},
-        ]
-
-        submissions = self.client.get('/suppliers/frameworks/digital-outcomes-and-specialists/submissions')
-
-        assert submissions.status_code == 200
-        assert u'Submitted' in submissions.get_data(as_text=True)
-        assert u'Apply to provide' not in submissions.get_data(as_text=True)
-
-    @pytest.mark.parametrize('declaration,'
-                             'should_show_declaration_link,'
-                             'declaration_link_url',
-                             (
-                                 ({'declaration': {}},
-                                  True, '/suppliers/frameworks/g-cloud-7/declaration/start'),
-                                 ({'declaration': {'status': 'started'}},
-                                  True, '/suppliers/frameworks/g-cloud-7/declaration'),
-                                 ({'declaration': {}},
-                                  True, '/suppliers/frameworks/g-cloud-7/declaration/start'),
-                                 ({'declaration': {'status': 'started'}},
-                                  True, '/suppliers/frameworks/g-cloud-7/declaration'),
-                                 ({'declaration': {'status': 'complete'}},
-                                  False, None),
-                                 ({'declaration': {'status': 'complete'}},
-                                  False, None),
-                             ))
-    def test_banner_on_service_pages_shows_link_to_declaration(self,
-                                                               count_unanswered,
-                                                               declaration,
-                                                               should_show_declaration_link,
-                                                               declaration_link_url):
-        self.login()
-
-        self.data_api_client.get_framework.return_value = self.framework(status='open')
-        self.data_api_client.get_supplier.return_value = SupplierStub().single_result_response()
-        self.data_api_client.get_supplier_declaration.return_value = declaration
-        self.data_api_client.find_draft_services_iter.return_value = [
-            {'serviceName': 'draft', 'lotSlug': 'scs', 'status': 'submitted'}
-        ]
-
-        submissions = self.client.get('/suppliers/frameworks/g-cloud-7/submissions')
-
-        if should_show_declaration_link:
-            self._assert_incomplete_application_banner(
-                submissions.get_data(as_text=True),
-                decl_item_href=declaration_link_url
-            )
-
-        else:
-            self._assert_incomplete_application_banner_not_visible(submissions.get_data(as_text=True))
 
     @pytest.mark.parametrize(
         ('copied', 'link_shown'),
