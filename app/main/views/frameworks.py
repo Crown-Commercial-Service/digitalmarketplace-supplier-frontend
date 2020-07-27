@@ -245,8 +245,6 @@ def framework_submission_lots(framework_slug):
     application_made = len(complete_drafts) > 0 and declaration_status == 'complete'
     if framework['status'] not in ["open", "pending", "standstill"]:
         abort(404)
-    if framework['status'] == 'pending' and not application_made:
-        abort(404)
 
     lots = [
         dict(lot,
@@ -282,6 +280,7 @@ def framework_submission_lots(framework_slug):
         declaration_status=declaration_status,
         framework=framework,
         lots=lots,
+        application_made=application_made
     ), 200
 
 
@@ -293,8 +292,6 @@ def framework_submission_services(framework_slug, lot_slug):
 
     drafts, complete_drafts = get_lot_drafts(data_api_client, framework_slug, lot_slug)
     declaration_status = get_declaration_status(data_api_client, framework_slug)
-    if framework['status'] == 'pending' and declaration_status != 'complete':
-        abort(404)
 
     try:
         previous_framework_slug = content_loader.get_metadata(framework['slug'], 'copy_services', 'source_framework')

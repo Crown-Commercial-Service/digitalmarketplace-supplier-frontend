@@ -30,13 +30,18 @@
 
 {% block mainContent %}
 
+{% if framework.status == 'open' %}
   {% include "partials/service_warning.html" %}
+{% endif %}
 
   <div class="govuk-grid-row">
     <div class="govuk-grid-column-two-thirds">
       <h1 class="govuk-heading-l">Your {{ framework.name }} services</h1>
         {% if framework.family == 'g-cloud' %}
           <div class="use-of-service-data">
+            {% if framework.status == 'pending' and not application_made %}
+              <p class="govuk-body">The services below were not submitted.</p>
+            {% else %}
             <p class="govuk-body">The service information you provide here:</p>
             <ul class="govuk-list govuk-list--bullet">
               <li>will be public</li>
@@ -44,6 +49,7 @@
               <li>will appear on your service description page </li>
               <li>should help buyers review and compare services</li>
             </ul>
+            {% endif %}
           </div>
         {% endif %}
     </div>
