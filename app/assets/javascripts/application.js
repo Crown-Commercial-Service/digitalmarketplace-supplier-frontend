@@ -15,8 +15,8 @@
 //= require ../../../node_modules/govuk_frontend_toolkit/javascripts/govuk/stick-at-top-when-scrolling.js
 //= require ../../../node_modules/digitalmarketplace-frontend-toolkit/toolkit/javascripts/shim-links-with-button-role.js
 //= require ../../../node_modules/digitalmarketplace-frontend-toolkit/toolkit/javascripts/show-hide-content.js
-//= require ../../../node_modules/digitalmarketplace-govuk-frontend/govuk-frontend/all.js
-//= require ../../../node_modules/digitalmarketplace-govuk-frontend/digitalmarketplace/digitalmarketplace-govuk-frontend.js
+//= require ../../../node_modules/digitalmarketplace-govuk-frontend/govuk/all.js
+//= require ../../../node_modules/digitalmarketplace-govuk-frontend/digitalmarketplace/all.js
 //= require _selection-buttons.js
 //= require _stick-at-top-when-scrolling.js
 //= require _stop-scrolling-at-footer.js

@@ -53,7 +53,7 @@ $govuk-compatibility-govukelements: true;
 // https://github.com/alphagov/govuk-frontend/blob/v2.13.0/src/settings/_global-styles.scss
 // https://github.com/alphagov/govuk-frontend/blob/v2.13.0/src/core/_global-styles.scss
 $govuk-global-styles: true;
-@import "node_modules/digitalmarketplace-govuk-frontend/govuk-frontend/all";
+@import "node_modules/digitalmarketplace-govuk-frontend/govuk/all";
 
 // Digital Marketplace Components
 @import "node_modules/digitalmarketplace-govuk-frontend/digitalmarketplace/all";
