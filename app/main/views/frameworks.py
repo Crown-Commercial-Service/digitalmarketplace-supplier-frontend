@@ -59,7 +59,11 @@ from ..helpers.services import (
 )
 from ..helpers.suppliers import supplier_company_details_are_complete
 from ..helpers.validation import get_validator
-from ..forms.frameworks import SignerDetailsForm, ContractReviewForm, AcceptAgreementVariationForm, ReuseDeclarationForm
+from ..forms.frameworks import (SignerDetailsForm,
+                                ContractReviewForm,
+                                AcceptAgreementVariationForm,
+                                ReuseDeclarationForm,
+                                LegalAuthorityForm)
 
 CLARIFICATION_QUESTION_NAME = 'clarification_question'
 
@@ -1214,3 +1218,20 @@ def view_contract_variation(framework_slug, variation_slug):
 @login_required
 def opportunities_dashboard_deprecated(framework_slug):
     return redirect(url_for('external.opportunities_dashboard', framework_slug=framework_slug), code=301)
+
+
+@main.route('/frameworks/<framework_slug>/legal-authority', methods=['GET', 'POST'])
+@login_required
+def legal_authority(framework_slug):
+    form = LegalAuthorityForm()
+    errors = get_errors_from_wtform(form)
+    if request.method == 'POST' and form.validate():
+        response = form.legal_authority.data
+        if response == 'no':
+            return render_template("frameworks/legal_authority_no.html")
+    return render_template(
+        "frameworks/legal_authority.html",
+        framework_slug=framework_slug,
+        form=form,
+        errors=errors
+    ), 400 if errors else 200

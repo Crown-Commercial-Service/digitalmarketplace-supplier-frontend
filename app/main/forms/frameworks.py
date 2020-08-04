@@ -1,8 +1,8 @@
 from flask_wtf import FlaskForm
 from wtforms import HiddenField
-from wtforms.validators import DataRequired, Length
+from wtforms.validators import DataRequired, Length, InputRequired
 
-from dmutils.forms.fields import DMBooleanField, DMStripWhitespaceStringField
+from dmutils.forms.fields import DMBooleanField, DMStripWhitespaceStringField, DMRadioField
 from dmutils.forms.widgets import DMSelectionButtonBase
 
 
@@ -76,3 +76,22 @@ class OneServiceLimitCopyServiceForm(FlaskForm):
                                                 "Roles won’t be copied if they have new questions."
         else:
             self.copy_service.question_advice = "You still have to review your service and answer any new questions."
+
+
+class LegalAuthorityForm(FlaskForm):
+    OPTIONS = [
+        {
+            "value": "yes",
+            "label": "Yes",
+        },
+        {
+            "value": "no",
+            "label": "No",
+        },
+    ]
+    legal_authority = DMRadioField(
+        "Do you have the legal authority to sign on behalf of your company?",
+        hint="For example, you are a director or company secretary.",
+        validators=[InputRequired(message="Select yes if you have the legal authority"
+                                          " to sign on behalf of your company")],
+        options=OPTIONS)
