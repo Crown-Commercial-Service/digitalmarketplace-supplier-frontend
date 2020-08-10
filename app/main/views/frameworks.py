@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 from collections import OrderedDict
 from datetime import datetime, timedelta
+
+from dmutils.errors import render_error_page
 from itertools import chain
 
 from dateutil.parser import parse as date_parse
@@ -1223,6 +1225,9 @@ def opportunities_dashboard_deprecated(framework_slug):
 @main.route('/frameworks/<framework_slug>/legal-authority', methods=['GET', 'POST'])
 @login_required
 def legal_authority(framework_slug):
+    supplier_framework_info = get_supplier_framework_info(data_api_client, framework_slug)
+    if not supplier_framework_info['onFramework']:
+        return render_error_page(status_code=400, error_message="You must be on the framework to sign agreement.")
     form = LegalAuthorityForm()
     errors = get_errors_from_wtform(form)
     if request.method == 'POST' and form.validate():
