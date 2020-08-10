@@ -1234,6 +1234,8 @@ def legal_authority(framework_slug):
         response = form.legal_authority.data
         if response == 'no':
             return render_template("frameworks/legal_authority_no.html")
+        if response == 'yes':
+            return redirect(f'/frameworks/{framework_slug}/sign-framework-agreement')
     return render_template(
         "frameworks/legal_authority.html",
         framework_slug=framework_slug,
