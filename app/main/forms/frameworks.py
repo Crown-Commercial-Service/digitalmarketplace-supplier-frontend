@@ -3,7 +3,7 @@ from wtforms import HiddenField
 from wtforms.validators import DataRequired, Length, InputRequired
 
 from dmutils.forms.fields import DMBooleanField, DMStripWhitespaceStringField, DMRadioField
-from dmutils.forms.widgets import DMSelectionButtonBase
+from dmutils.forms.widgets import DMSelectionButtonBase, DMCheckboxInput
 
 
 class SignerDetailsForm(FlaskForm):
@@ -95,3 +95,26 @@ class LegalAuthorityForm(FlaskForm):
         validators=[InputRequired(message="Select yes if you have the legal authority"
                                           " to sign on behalf of your company")],
         options=OPTIONS)
+
+
+class SignFrameworkAgreementForm(FlaskForm):
+    signer_name = DMStripWhitespaceStringField(
+        "Your full name",
+        validators=[
+            DataRequired(message="You must provide your full name."),
+            Length(max=255, message="You must provide a name under 256 characters."),
+        ],
+    )
+    signer_role = DMStripWhitespaceStringField(
+        "Your role in the company",
+        validators=[
+            DataRequired(message="You must provide your role in the company."),
+            Length(max=255, message="You must provide a role under 256 characters."),
+        ],
+    )
+    signer_terms_and_conditions = DMCheckboxInput(
+        "I accept the terms and conditions of the Framework Agreement",
+        validators=[
+            InputRequired(message="You must accept the terms and conditions of the Framework Agreement.")
+        ]
+    )

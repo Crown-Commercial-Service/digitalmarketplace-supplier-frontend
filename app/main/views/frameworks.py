@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from collections import OrderedDict
 from datetime import datetime, timedelta
+from pprint import pprint
 
 from dmutils.errors import render_error_page
 from itertools import chain
@@ -65,7 +66,7 @@ from ..forms.frameworks import (SignerDetailsForm,
                                 ContractReviewForm,
                                 AcceptAgreementVariationForm,
                                 ReuseDeclarationForm,
-                                LegalAuthorityForm)
+                                LegalAuthorityForm, SignFrameworkAgreementForm)
 
 CLARIFICATION_QUESTION_NAME = 'clarification_question'
 
@@ -1225,6 +1226,7 @@ def opportunities_dashboard_deprecated(framework_slug):
 @main.route('/frameworks/<framework_slug>/legal-authority', methods=['GET', 'POST'])
 @login_required
 def legal_authority(framework_slug):
+    framework = get_framework_or_404(data_api_client, framework_slug)
     supplier_framework_info = get_supplier_framework_info(data_api_client, framework_slug)
     if not supplier_framework_info['onFramework']:
         return render_error_page(status_code=400, error_message="You must be on the framework to sign agreement.")
@@ -1235,10 +1237,30 @@ def legal_authority(framework_slug):
         if response == 'no':
             return render_template("frameworks/legal_authority_no.html")
         if response == 'yes':
-            return redirect(f'/frameworks/{framework_slug}/sign-framework-agreement')
+            return redirect(url_for('.sign_framework_agreement', framework_slug=framework_slug))
     return render_template(
         "frameworks/legal_authority.html",
         framework_slug=framework_slug,
+        framework=framework,
         form=form,
         errors=errors
     ), 400 if errors else 200
+
+
+@main.route('/frameworks/<framework_slug>/sign-framework-agreement', methods=['GET', 'POST'])
+@login_required
+def sign_framework_agreement(framework_slug):
+    framework = get_framework_or_404(data_api_client, framework_slug)
+    supplier_framework_info = get_supplier_framework_info(data_api_client, framework_slug)
+    if not supplier_framework_info['onFramework']:
+        return render_error_page(status_code=400, error_message="You must be on the framework to sign agreement.")
+    form = SignFrameworkAgreementForm()
+    errors = get_errors_from_wtform(form)
+    return render_template(
+        "frameworks/sign_framework_agreement.html",
+        framework_slug=framework_slug,
+        framework=framework,
+        form=form,
+        errors=errors
+    ), 400 if errors else 200
+
