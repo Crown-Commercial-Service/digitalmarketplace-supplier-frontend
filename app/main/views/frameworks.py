@@ -1260,11 +1260,15 @@ def sign_framework_agreement(framework_slug):
     company_details = get_company_details_from_supplier(supplier)
     form = SignFrameworkAgreementForm()
     errors = get_errors_from_wtform(form)
+    contract_title = {
+        'g-cloud-12': 'Framework Agreement'
+    }
     return render_template(
         "frameworks/sign_framework_agreement.html",
         supplier_framework_info=supplier_framework_info,
         company_details=company_details,
         framework_slug=framework_slug,
+        contract_title=contract_title.get(framework_slug),
         framework=framework,
         form=form,
         errors=errors
