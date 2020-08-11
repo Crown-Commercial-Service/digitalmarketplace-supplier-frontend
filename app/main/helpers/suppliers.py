@@ -46,3 +46,22 @@ def supplier_company_details_are_complete(supplier_data):
              for f in
              contact_required_fields])
     )
+
+
+def get_company_details_from_supplier(supplier):
+    address = {"country": supplier.get("registrationCountry")}
+    if supplier.get('contactInformation'):
+        address.update({
+            "street_address_line_1": supplier['contactInformation'][0].get('address1'),
+            "locality": supplier["contactInformation"][0].get("city"),
+            "postcode": supplier["contactInformation"][0].get("postcode"),
+        })
+    return {
+        "registration_number": (
+                supplier.get("companiesHouseNumber")
+                or
+                supplier.get("otherCompanyRegistrationNumber")
+        ),
+        "registered_name": supplier.get("registeredName"),
+        "address": address
+    }

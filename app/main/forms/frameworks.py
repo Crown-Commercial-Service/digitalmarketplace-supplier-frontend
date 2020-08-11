@@ -112,9 +112,9 @@ class SignFrameworkAgreementForm(FlaskForm):
             Length(max=255, message="You must provide a role under 256 characters."),
         ],
     )
-    signer_terms_and_conditions = DMCheckboxInput(
+    signer_terms_and_conditions = DMBooleanField(
         "I accept the terms and conditions of the Framework Agreement",
         validators=[
-            InputRequired(message="You must accept the terms and conditions of the Framework Agreement.")
+            DataRequired(message="You must accept the terms and conditions of the Framework Agreement.")
         ]
     )

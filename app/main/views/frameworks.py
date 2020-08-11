@@ -60,7 +60,7 @@ from ..helpers.services import (
     get_lot_drafts,
     get_signed_document_url,
 )
-from ..helpers.suppliers import supplier_company_details_are_complete
+from ..helpers.suppliers import supplier_company_details_are_complete, get_company_details_from_supplier
 from ..helpers.validation import get_validator
 from ..forms.frameworks import (SignerDetailsForm,
                                 ContractReviewForm,
@@ -1254,10 +1254,16 @@ def sign_framework_agreement(framework_slug):
     supplier_framework_info = get_supplier_framework_info(data_api_client, framework_slug)
     if not supplier_framework_info['onFramework']:
         return render_error_page(status_code=400, error_message="You must be on the framework to sign agreement.")
+
+    supplier_id = supplier_framework_info['supplierId']
+    supplier = data_api_client.get_supplier(supplier_id)["suppliers"]
+    company_details = get_company_details_from_supplier(supplier)
     form = SignFrameworkAgreementForm()
     errors = get_errors_from_wtform(form)
     return render_template(
         "frameworks/sign_framework_agreement.html",
+        supplier_framework_info=supplier_framework_info,
+        company_details=company_details,
         framework_slug=framework_slug,
         framework=framework,
         form=form,
