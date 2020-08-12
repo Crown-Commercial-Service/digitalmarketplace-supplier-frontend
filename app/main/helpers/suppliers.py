@@ -58,9 +58,9 @@ def get_company_details_from_supplier(supplier):
         })
     return {
         "registration_number": (
-                supplier.get("companiesHouseNumber")
-                or
-                supplier.get("otherCompanyRegistrationNumber")
+            supplier.get("companiesHouseNumber")
+            or
+            supplier.get("otherCompanyRegistrationNumber")
         ),
         "registered_name": supplier.get("registeredName"),
         "address": address

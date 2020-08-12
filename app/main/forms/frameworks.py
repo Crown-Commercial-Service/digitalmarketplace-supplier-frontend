@@ -3,7 +3,7 @@ from wtforms import HiddenField
 from wtforms.validators import DataRequired, Length, InputRequired
 
 from dmutils.forms.fields import DMBooleanField, DMStripWhitespaceStringField, DMRadioField
-from dmutils.forms.widgets import DMSelectionButtonBase, DMCheckboxInput
+from dmutils.forms.widgets import DMSelectionButtonBase
 
 
 class SignerDetailsForm(FlaskForm):

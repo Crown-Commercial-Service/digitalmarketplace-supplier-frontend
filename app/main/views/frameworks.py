@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 from collections import OrderedDict
 from datetime import datetime, timedelta
-from pprint import pprint
 
 from dmutils.errors import render_error_page
 from itertools import chain
@@ -1254,9 +1253,7 @@ def sign_framework_agreement(framework_slug):
     if not get_supplier_on_framework_from_info:
         return render_error_page(status_code=400, error_message="You must be on the framework to sign agreement.")
 
-    supplier_framework_info = get_supplier_framework_info(data_api_client, framework_slug)
-    supplier_id = supplier_framework_info['supplierId']
-    supplier = data_api_client.get_supplier(supplier_id)["suppliers"]
+    supplier = data_api_client.get_supplier(current_user.supplier_id)["suppliers"]
     company_details = get_company_details_from_supplier(supplier)
     form = SignFrameworkAgreementForm()
     errors = get_errors_from_wtform(form)
@@ -1270,16 +1267,27 @@ def sign_framework_agreement(framework_slug):
         'g-cloud-12': {'file_size': '962KB', 'page_count': 65}
     }
 
+    # TODO: Make this more efficient by allowing the API to filter by lot
+    _drafts, complete_drafts = get_drafts(data_api_client, framework_slug)
+
+    lots = [
+        dict(lot,
+             complete_count=count_drafts_by_lot(complete_drafts, lot['slug']))
+        for lot in framework['lots']]
+
+    completed_lots = [
+        lot["name"]
+        for lot in lots if lot['complete_count'] > 0]
+
     return render_template(
         "frameworks/sign_framework_agreement.html",
-        supplier_framework_info=supplier_framework_info,
         company_details=company_details,
         framework_slug=framework_slug,
         contract_title=contract_title.get(framework_slug),
         framework_pdf_url=framework_pdf_url,
         framework_pdf_metadata=framework_pdf_metadata.get(framework_slug),
         framework=framework,
+        completed_lots=completed_lots,
         form=form,
         errors=errors
     ), 400 if errors else 200
-
