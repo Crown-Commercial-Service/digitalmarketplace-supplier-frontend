@@ -32,7 +32,16 @@
     <h1 class="govuk-heading-xl">Supplier appointment terms</h1>
     {% with company_details=company_details %}
         {% include "frameworks/_framework_agreement_legal_text_{0}.html".format(framework_slug) %}
+        <p class="govuk-clearfix">
+            <img style="float:left; border: 4px solid #ccc; margin-right: 10px;" alt="" src="{{ framework_pdf_metadata.thumbnail_url }}">
+            <a href="{{ framework_pdf_url }}">
+                Read {{ framework.name }} {{  contract_title }}
+            </a>
+            <br>
+            <span class="govuk-body-s">PDF, {{ framework_pdf_metadata.file_size }}, {{ framework_pdf_metadata.page_count }} pages</span>
+        </p>
     {% endwith %}
+
 
     <form method="POST" action="{{ url_for(".sign_framework_agreement", framework_slug=framework_slug) }}">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>

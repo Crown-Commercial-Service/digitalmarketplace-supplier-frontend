@@ -1260,8 +1260,14 @@ def sign_framework_agreement(framework_slug):
     company_details = get_company_details_from_supplier(supplier)
     form = SignFrameworkAgreementForm()
     errors = get_errors_from_wtform(form)
+    framework_pdf_url = content_loader.get_message(framework_slug, 'urls').get('framework_agreement_pdf_url')
     contract_title = {
         'g-cloud-12': 'Framework Agreement'
+    }
+
+    # TODO: can we derive this metadata programmatically?
+    framework_pdf_metadata = {
+        'g-cloud-12': {'file_size': '962KB', 'page_count': 65, 'thumbnail_url': "#"}
     }
     return render_template(
         "frameworks/sign_framework_agreement.html",
@@ -1269,6 +1275,8 @@ def sign_framework_agreement(framework_slug):
         company_details=company_details,
         framework_slug=framework_slug,
         contract_title=contract_title.get(framework_slug),
+        framework_pdf_url=framework_pdf_url,
+        framework_pdf_metadata=framework_pdf_metadata.get(framework_slug),
         framework=framework,
         form=form,
         errors=errors
