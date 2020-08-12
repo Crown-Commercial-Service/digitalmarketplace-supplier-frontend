@@ -1251,10 +1251,10 @@ def legal_authority(framework_slug):
 @login_required
 def sign_framework_agreement(framework_slug):
     framework = get_framework_or_404(data_api_client, framework_slug)
-    supplier_framework_info = get_supplier_framework_info(data_api_client, framework_slug)
-    if not supplier_framework_info['onFramework']:
+    if not get_supplier_on_framework_from_info:
         return render_error_page(status_code=400, error_message="You must be on the framework to sign agreement.")
 
+    supplier_framework_info = get_supplier_framework_info(data_api_client, framework_slug)
     supplier_id = supplier_framework_info['supplierId']
     supplier = data_api_client.get_supplier(supplier_id)["suppliers"]
     company_details = get_company_details_from_supplier(supplier)
@@ -1269,6 +1269,7 @@ def sign_framework_agreement(framework_slug):
     framework_pdf_metadata = {
         'g-cloud-12': {'file_size': '962KB', 'page_count': 65}
     }
+
     return render_template(
         "frameworks/sign_framework_agreement.html",
         supplier_framework_info=supplier_framework_info,
