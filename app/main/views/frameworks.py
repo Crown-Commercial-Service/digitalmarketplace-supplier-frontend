@@ -27,7 +27,7 @@ from dmutils.email.exceptions import EmailError
 from dmutils.email.helpers import hash_string
 from dmutils.env_helpers import get_web_url_from_stage
 from dmutils.flask import timed_render_template as render_template
-from dmutils.formats import datetimeformat, displaytimeformat, monthyearformat
+from dmutils.formats import datetimeformat, displaytimeformat, monthyearformat, dateformat
 from dmutils.forms.helpers import get_errors_from_wtform, remove_csrf_token
 from dmutils.timing import logged_duration
 
@@ -1261,9 +1261,10 @@ def sign_framework_agreement(framework_slug):
     form = SignFrameworkAgreementForm()
     errors = get_errors_from_wtform(form)
     framework_pdf_url = content_loader.get_message(framework_slug, 'urls').get('framework_agreement_pdf_url')
-    contract_title = {
+    contract_titles = {
         'g-cloud-12': 'Framework Agreement'
     }
+    contract_title = contract_titles.get(framework_slug)
 
     # TODO: can we derive this metadata programmatically?
     framework_pdf_metadata = {
@@ -1300,13 +1301,34 @@ def sign_framework_agreement(framework_slug):
         data_api_client.sign_framework_agreement(
             agreement_id, current_user.email_address, {'uploaderUserId': current_user.id}
         )
+
+        # Send confirmation email
+        supplier_users = data_api_client.find_users_iter(supplier_id=current_user.supplier_id)
+        framework_dashboard_url = url_for('.framework_dashboard', framework_slug=framework_slug, _external=True)
+        framework_live_date = dateformat(framework.get('frameworkLiveAtUTC'))
+        notify_client = DMNotifyClient()
+        for address in [user['emailAddress'] for user in supplier_users if user['active']]:
+            notify_client.send_email(
+                to_email_address=address,
+                template_name_or_id="sign_framework_agreement_confirmation",
+                personalisation={
+                    "framework_name": framework['name'],
+                    "signer_name": form.data.get('signerName'),
+                    "company_name": company_details.get('registered_name'),
+                    "contract_title": contract_title,
+                    "submitted_datetime": datetimeformat(datetime.utcnow()),
+                    "framework_dashboard_url": framework_dashboard_url,
+                    "framework_live_date": framework_live_date
+                },
+            )
+
         return render_template("frameworks/sign_framework_agreement_confirmation.html")
 
     return render_template(
         "frameworks/sign_framework_agreement.html",
         company_details=company_details,
         framework_slug=framework_slug,
-        contract_title=contract_title.get(framework_slug),
+        contract_title=contract_title,
         framework_pdf_url=framework_pdf_url,
         framework_pdf_metadata=framework_pdf_metadata.get(framework_slug),
         framework=framework,
