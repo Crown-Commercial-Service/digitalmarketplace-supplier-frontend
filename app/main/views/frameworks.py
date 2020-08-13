@@ -1300,7 +1300,7 @@ def sign_framework_agreement(framework_slug):
         data_api_client.sign_framework_agreement(
             agreement_id, current_user.email_address, {'uploaderUserId': current_user.id}
         )
-        return render_template("frameworks/legal_authority_no.html")
+        return render_template("frameworks/sign_framework_agreement_confirmation.html")
 
     return render_template(
         "frameworks/sign_framework_agreement.html",
