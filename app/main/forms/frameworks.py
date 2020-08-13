@@ -98,14 +98,17 @@ class LegalAuthorityForm(FlaskForm):
 
 
 class SignFrameworkAgreementForm(FlaskForm):
-    signer_name = DMStripWhitespaceStringField(
+
+    # Intended use of camel case here to match expected API fields
+    signerName = DMStripWhitespaceStringField(
         "Your full name",
         validators=[
             DataRequired(message="You must provide your full name."),
             Length(max=255, message="You must provide a name under 256 characters."),
         ],
     )
-    signer_role = DMStripWhitespaceStringField(
+
+    signerRole = DMStripWhitespaceStringField(
         "Your role in the company",
         validators=[
             DataRequired(message="You must provide your role in the company."),

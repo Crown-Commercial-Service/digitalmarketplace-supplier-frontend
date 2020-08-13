@@ -45,8 +45,8 @@
 
     <form method="POST" action="{{ url_for(".sign_framework_agreement", framework_slug=framework_slug) }}">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-        {{ form.signer_name }}
-        {{ form.signer_role }}
+        {{ form.signerName }}
+        {{ form.signerRole }}
         {{ form.signer_terms_and_conditions }}
         {{ govukButton({
           "text": "Sign agreement"

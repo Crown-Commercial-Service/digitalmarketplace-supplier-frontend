@@ -1253,6 +1253,9 @@ def sign_framework_agreement(framework_slug):
     if not get_supplier_on_framework_from_info:
         return render_error_page(status_code=400, error_message="You must be on the framework to sign agreement.")
 
+    if not framework.get('frameworkAgreementVersion'):
+        abort(404, error_message="The framework agreement was not found")
+
     supplier = data_api_client.get_supplier(current_user.supplier_id)["suppliers"]
     company_details = get_company_details_from_supplier(supplier)
     form = SignFrameworkAgreementForm()
@@ -1278,6 +1281,26 @@ def sign_framework_agreement(framework_slug):
     completed_lots = [
         lot["name"]
         for lot in lots if lot['complete_count'] > 0]
+
+    if form.validate_on_submit():
+        # For an e-signature we create, update and sign the agreement immediately following submission
+        agreement_id = data_api_client.create_framework_agreement(
+            current_user.supplier_id, framework["slug"], current_user.email_address
+        )["agreement"]["id"]
+
+        signed_agreement_details = {k: v for k, v in form.data.items() if k in ['signerRole', 'signerName']}
+        agreement_details = {
+            "signedAgreementDetails": signed_agreement_details
+        }
+
+        data_api_client.update_framework_agreement(
+            agreement_id, agreement_details, current_user.email_address
+        )
+
+        data_api_client.sign_framework_agreement(
+            agreement_id, current_user.email_address, {'uploaderUserId': current_user.id}
+        )
+        return render_template("frameworks/legal_authority_no.html")
 
     return render_template(
         "frameworks/sign_framework_agreement.html",
