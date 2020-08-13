@@ -52,7 +52,8 @@ from ..helpers.frameworks import (
     register_interest_in_framework,
     return_supplier_framework_info_if_on_framework_or_abort,
     returned_agreement_email_recipients,
-    return_404_if_applications_closed
+    return_404_if_applications_closed,
+    check_framework_supports_e_signature_or_404
 )
 from ..helpers.services import (
     get_drafts,
@@ -1226,6 +1227,7 @@ def opportunities_dashboard_deprecated(framework_slug):
 @login_required
 def legal_authority(framework_slug):
     framework = get_framework_or_404(data_api_client, framework_slug)
+    check_framework_supports_e_signature_or_404(framework_slug)
     supplier_framework_info = get_supplier_framework_info(data_api_client, framework_slug)
     if not supplier_framework_info['onFramework']:
         return render_error_page(status_code=400, error_message="You must be on the framework to sign agreement.")
@@ -1250,6 +1252,7 @@ def legal_authority(framework_slug):
 @login_required
 def sign_framework_agreement(framework_slug):
     framework = get_framework_or_404(data_api_client, framework_slug)
+    check_framework_supports_e_signature_or_404(framework_slug)
     if not get_supplier_on_framework_from_info:
         return render_error_page(status_code=400, error_message="You must be on the framework to sign agreement.")
 

@@ -473,3 +473,9 @@ def return_404_if_applications_closed(data_api_client_callable):
                 return func(*args, **kwargs)
         return decorated_view
     return real_decorator
+
+
+def check_framework_supports_e_signature_or_404(framework_slug):
+    e_signature_frameworks = ['g-cloud-12']
+    if framework_slug not in e_signature_frameworks:
+        abort(404)
