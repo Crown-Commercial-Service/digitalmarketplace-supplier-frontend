@@ -5758,3 +5758,37 @@ class TestReuseFrameworkSupplierDeclarationForm(BaseApplicationTest):
             data = MultiDict({'framework_slug': 'digital-outcomes-and-specialists', 'reuse': falsey_value})
             form = ReuseDeclarationForm(data)
             assert form.reuse.data is False
+
+
+class TestSignatureLegalAuthority(BaseApplicationTest):
+    """Tests for app.main.views.frameworks.legal_authority."""
+
+    def setup_method(self, method):
+        super().setup_method(method)
+        self.data_api_client_patch = mock.patch('app.main.views.frameworks.data_api_client', autospec=True)
+        self.data_api_client = self.data_api_client_patch.start()
+
+    def teardown_method(self, method):
+        self.data_api_client_patch.stop()
+        super().teardown_method(method)
+
+    @mock.patch('dmutils.s3.S3')
+    @pytest.mark.parametrize(
+        ('framework_slug', 'on_framework', 'status_code'),
+        (
+                ('g-cloud-11', True, 404),
+                ('g-cloud-12', True, 200),
+                ('g-cloud-12', False, 400),
+        )
+    )
+    def test_only_works_for_supported_frameworks(self, s3, framework_slug, on_framework, status_code):
+        self.login()
+        self.data_api_client.get_framework.return_value = self.framework(status='standstill', slug=framework_slug)
+        self.data_api_client.find_draft_services_iter.return_value = [
+            {'serviceName': 'A service', 'status': 'submitted', 'lotSlug': 'iaas'}
+        ]
+        self.data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
+            on_framework=on_framework)
+
+        res = self.client.get(f"/suppliers/frameworks/{framework_slug}/legal-authority")
+        assert res.status_code == status_code
