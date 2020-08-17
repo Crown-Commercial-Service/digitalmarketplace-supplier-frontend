@@ -166,9 +166,11 @@ def framework_dashboard(framework_slug):
 
     signed_agreement_document_name = None
     if supplier_is_on_framework and supplier_framework_info['agreementReturned']:
-        signed_agreement_document_name = degenerate_document_path_and_return_doc_name(
-            supplier_framework_info['agreementPath']
-        )
+        # Frameworks supporting e-signature will not have agreementPath
+        if supplier_framework_info['agreementPath']:
+            signed_agreement_document_name = degenerate_document_path_and_return_doc_name(
+                supplier_framework_info['agreementPath']
+            )
 
     communications_folder = "{}/communications".format(framework_slug)
     key_list = s3.S3(current_app.config['DM_COMMUNICATIONS_BUCKET']).list(communications_folder, load_timestamps=True)

@@ -1051,8 +1051,7 @@ class TestFrameworksDashboardPendingStandstill(BaseApplicationTest):
         data = res.get_data(as_text=True)
 
         assert (
-            'Your application was successful. You must return a signed framework agreement signature page before '
-            'you can sell services on the Digital Marketplace.'
+            'Your application was successful.'
         ) in data
         assert 'Download your application award letter (.pdf)' in data
         assert 'This letter is a record of your successful G-Cloud 7 application.' in data
@@ -5776,9 +5775,9 @@ class TestSignatureLegalAuthority(BaseApplicationTest):
     @pytest.mark.parametrize(
         ('framework_slug', 'on_framework', 'status_code'),
         (
-                ('g-cloud-11', True, 404),
-                ('g-cloud-12', True, 200),
-                ('g-cloud-12', False, 400),
+            ('g-cloud-11', True, 404),
+            ('g-cloud-12', True, 200),
+            ('g-cloud-12', False, 400),
         )
     )
     def test_only_works_for_supported_frameworks(self, s3, framework_slug, on_framework, status_code):

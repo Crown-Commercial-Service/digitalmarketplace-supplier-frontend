@@ -3,22 +3,24 @@
     <h2 class="summary-item-heading">Legal documents</h2>
 
   {% if framework.frameworkAgreementVersion %}
-    <div class="dmspeak">
-    {% if countersigned_agreement_file %}
-      <p class="govuk-body">
-        Your original and counterpart signature pages, and the standard framework
-        agreement, form a complete, legal contract.
-      </p>
-    {% else %}
-      <p class="govuk-body">
-        Your framework agreement signature page has been sent to
-        the Crown Commercial Service (<abbr title="Crown Commercial Service">CCS</abbr>).
-        They’ll check and countersign the agreement, or contact you if there’s a
-        problem. You don’t need to wait for <abbr title="Crown Commercial Service">CCS</abbr> to
-        countersign your agreement before you start selling services.
-      </p>
-    {% endif %}
-    </div>
+      {% if signed_agreement_document_name %}
+            <div class="dmspeak">
+            {% if countersigned_agreement_file %}
+              <p class="govuk-body">
+                Your original and counterpart signature pages, and the standard framework
+                agreement, form a complete, legal contract.
+              </p>
+            {% else %}
+              <p class="govuk-body">
+                Your framework agreement signature page has been sent to
+                the Crown Commercial Service (<abbr title="Crown Commercial Service">CCS</abbr>).
+                They’ll check and countersign the agreement, or contact you if there’s a
+                problem. You don’t need to wait for <abbr title="Crown Commercial Service">CCS</abbr> to
+                countersign your agreement before you start selling services.
+              </p>
+            {% endif %}
+            </div>
+        {% endif %}
 
     {% if not countersigned_agreement_file %}
     {% import "toolkit/summary-table.html" as summary %}
@@ -70,6 +72,7 @@
       </p>
     {% endif %}
       <p class="govuk-body">
+      {% if signed_agreement_document_name %}
         <a class="govuk-link" href="{{ url_for('.download_agreement_file', framework_slug=framework.slug, document_name=signed_agreement_document_name) }}" target="_blank">
           {% if framework.frameworkAgreementVersion %}
             Download your ‘original’ framework agreement signature page
@@ -80,6 +83,7 @@
         <br/>
         The agreement signed by your company
       </p>
+    {% endif %}
     {% if countersigned_agreement_file %}
       <p class="govuk-body">
         <a class="govuk-link" href="{{ url_for('.download_agreement_file', framework_slug=framework.slug, document_name=countersigned_agreement_file) }}" target="_blank">
