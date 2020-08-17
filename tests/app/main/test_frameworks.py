@@ -5792,6 +5792,47 @@ class TestSignatureLegalAuthority(BaseApplicationTest):
         res = self.client.get(f"/suppliers/frameworks/{framework_slug}/legal-authority")
         assert res.status_code == status_code
 
+    @mock.patch('dmutils.s3.S3')
+    def test_post_yes_redirects_to_signing_page(self, s3):
+        framework_slug = 'g-cloud-12'
+        self.login()
+        self.data_api_client.get_framework.return_value = self.framework(status='standstill',
+                                                                         slug=framework_slug,
+                                                                         framework_agreement_version="1")
+        self.data_api_client.find_draft_services_iter.return_value = [
+            {'serviceName': 'A service', 'status': 'submitted', 'lotSlug': 'iaas'}
+        ]
+        self.data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
+            on_framework=True)
+
+        res = self.client.get(f"/suppliers/frameworks/{framework_slug}/legal-authority")
+        assert res.status_code == 200
+        res = self.client.post(f"/suppliers/frameworks/{framework_slug}/legal-authority",
+                               data={'legal_authority': 'yes'})
+        assert res.status_code == 302
+        assert res.location == 'http://localhost/suppliers/frameworks/g-cloud-12/sign-framework-agreement'    \
+
+
+    @mock.patch('dmutils.s3.S3')
+    def test_post_no_shows_info(self, s3):
+        framework_slug = 'g-cloud-12'
+        self.login()
+        self.data_api_client.get_framework.return_value = self.framework(status='standstill',
+                                                                         slug=framework_slug,
+                                                                         framework_agreement_version="1")
+        self.data_api_client.find_draft_services_iter.return_value = [
+            {'serviceName': 'A service', 'status': 'submitted', 'lotSlug': 'iaas'}
+        ]
+        self.data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
+            on_framework=True)
+
+        res = self.client.get(f"/suppliers/frameworks/{framework_slug}/legal-authority")
+        assert res.status_code == 200
+        res = self.client.post(f"/suppliers/frameworks/{framework_slug}/legal-authority",
+                               data={'legal_authority': 'no'})
+        assert res.status_code == 200
+        assert "You cannot sign the Framework Agreement" in res.get_data(as_text=True)
+
 
 class TestSignFrameworkAgreement(BaseApplicationTest):
     """Tests for app.main.views.frameworks.sign_framework_agreement"""
