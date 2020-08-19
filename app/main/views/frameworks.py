@@ -163,7 +163,8 @@ def framework_dashboard(framework_slug):
             supplier_framework_info['agreementPath']
         )
 
-    key_list = s3.S3(current_app.config['DM_COMMUNICATIONS_BUCKET']).list(framework_slug, load_timestamps=True)
+    communications_folder = "{}/communications".format(framework_slug)
+    key_list = s3.S3(current_app.config['DM_COMMUNICATIONS_BUCKET']).list(communications_folder, load_timestamps=True)
     key_list.reverse()
 
     base_communications_files = {

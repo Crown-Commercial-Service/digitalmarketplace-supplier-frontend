@@ -353,6 +353,9 @@ class TestFrameworksDashboardOpenApplications(BaseApplicationTest):
             "//main//table[normalize-space(string(./caption))=$b]",
             b="Agreement details",
         )
+        assert s3.return_value.list.call_args_list == [
+            mock.call("g-cloud-7/communications", load_timestamps=True)
+        ]
 
     def test_downloads_shown_open_framework_clarification_questions_closed(self, s3):
         files = [
@@ -438,6 +441,10 @@ class TestFrameworksDashboardOpenApplications(BaseApplicationTest):
         assert not doc.xpath("//main[contains(normalize-space(string()), $a)]",
                              a="until 5pm BST, Tuesday 22 September 2015")
         assert not doc.xpath("//main//table[normalize-space(string(./caption))=$b]", b="Agreement details")
+
+        assert s3.return_value.list.call_args_list == [
+            mock.call("g-cloud-7/communications", load_timestamps=True)
+        ]
 
     def test_final_agreement_download_shown_open_framework(self, s3):
         files = [
