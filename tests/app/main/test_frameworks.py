@@ -5813,8 +5813,7 @@ class TestSignatureLegalAuthority(BaseApplicationTest):
         assert res.location == 'http://localhost/suppliers/frameworks/g-cloud-12/sign-framework-agreement'    \
 
 
-    @mock.patch('dmutils.s3.S3')
-    def test_post_no_shows_info(self, s3):
+    def test_post_no_shows_info(self):
         framework_slug = 'g-cloud-12'
         self.login()
         self.data_api_client.get_framework.return_value = self.framework(status='standstill',
@@ -5832,6 +5831,23 @@ class TestSignatureLegalAuthority(BaseApplicationTest):
                                data={'legal_authority': 'no'})
         assert res.status_code == 200
         assert "You cannot sign the Framework Agreement" in res.get_data(as_text=True)
+
+    def test_post_no_response_shows_error(self):
+        framework_slug = 'g-cloud-12'
+        self.login()
+        self.data_api_client.get_framework.return_value = self.framework(status='standstill',
+                                                                         slug=framework_slug,
+                                                                         framework_agreement_version="1")
+        self.data_api_client.find_draft_services_iter.return_value = [
+            {'serviceName': 'A service', 'status': 'submitted', 'lotSlug': 'iaas'}
+        ]
+        self.data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
+            on_framework=True)
+        res = self.client.post(f"/suppliers/frameworks/{framework_slug}/legal-authority",
+                               data={})
+        assert res.status_code == 400
+        assert "Select yes if you have the legal authority to sign on behalf of your company" in res.get_data(
+            as_text=True)
 
 
 class TestSignFrameworkAgreement(BaseApplicationTest):
@@ -5867,6 +5883,24 @@ class TestSignFrameworkAgreement(BaseApplicationTest):
 
         res = self.client.get(f"/suppliers/frameworks/{framework_slug}/sign-framework-agreement")
         assert res.status_code == status_code
+
+    def test_shows_error_messages(self):
+        self.login()
+        self.data_api_client.get_framework.return_value = self.framework(status='standstill',
+                                                                         slug='g-cloud-12',
+                                                                         framework_agreement_version="1")
+        self.data_api_client.find_draft_services_iter.return_value = [
+            {'serviceName': 'A service', 'status': 'submitted', 'lotSlug': 'iaas'}
+        ]
+        self.data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
+            on_framework=True)
+
+        res = self.client.post("/suppliers/frameworks/g-cloud-12/sign-framework-agreement", data={})
+        assert res.status_code == 400
+        text = res.get_data(as_text=True)
+        assert 'You must provide your full name.' in text
+        assert 'You must provide your role in the company.' in text
+        assert 'You must accept the terms and conditions of the Framework Agreement.' in text
 
     def test_post_signs_agreement(self):
         self.data_api_client.create_framework_agreement.return_value = {"agreement": {"id": 789}}

@@ -1234,13 +1234,13 @@ def legal_authority(framework_slug):
     if not get_supplier_on_framework_from_info(supplier_framework):
         return render_error_page(status_code=400, error_message="You must be on the framework to sign agreement.")
     form = LegalAuthorityForm()
-    errors = get_errors_from_wtform(form)
-    if request.method == 'POST' and form.validate():
+    if form.validate_on_submit():
         response = form.legal_authority.data
         if response == 'no':
             return render_template("frameworks/legal_authority_no.html")
         if response == 'yes':
             return redirect(url_for('.sign_framework_agreement', framework_slug=framework_slug))
+    errors = get_errors_from_wtform(form)
     return render_template(
         "frameworks/legal_authority.html",
         framework_slug=framework_slug,
@@ -1265,7 +1265,6 @@ def sign_framework_agreement(framework_slug):
     supplier = data_api_client.get_supplier(current_user.supplier_id)["suppliers"]
     company_details = get_company_details_from_supplier(supplier)
     form = SignFrameworkAgreementForm()
-    errors = get_errors_from_wtform(form)
     framework_pdf_url = content_loader.get_message(framework_slug, 'urls').get('framework_agreement_pdf_url')
     contract_titles = {
         'g-cloud-12': 'Framework Agreement'
@@ -1332,6 +1331,7 @@ def sign_framework_agreement(framework_slug):
                                framework=framework,
                                contract_title=contract_title)
 
+    errors = get_errors_from_wtform(form)
     return render_template(
         "frameworks/sign_framework_agreement.html",
         company_details=company_details,
