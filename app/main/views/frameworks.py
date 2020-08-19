@@ -1328,7 +1328,9 @@ def sign_framework_agreement(framework_slug):
                 },
             )
 
-        return render_template("frameworks/sign_framework_agreement_confirmation.html")
+        return render_template("frameworks/sign_framework_agreement_confirmation.html",
+                               framework=framework,
+                               contract_title=contract_title)
 
     return render_template(
         "frameworks/sign_framework_agreement.html",
