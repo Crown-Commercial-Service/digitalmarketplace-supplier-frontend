@@ -5846,7 +5846,6 @@ class TestSignFrameworkAgreement(BaseApplicationTest):
         self.data_api_client_patch.stop()
         super().teardown_method(method)
 
-    @mock.patch('dmutils.s3.S3')
     @pytest.mark.parametrize(
         ('framework_slug', 'on_framework', 'status_code'),
         (
@@ -5855,7 +5854,7 @@ class TestSignFrameworkAgreement(BaseApplicationTest):
             ('g-cloud-12', False, 400),
         )
     )
-    def test_only_works_for_supported_frameworks(self, s3, framework_slug, on_framework, status_code):
+    def test_only_works_for_supported_frameworks(self, framework_slug, on_framework, status_code):
         self.login()
         self.data_api_client.get_framework.return_value = self.framework(status='standstill',
                                                                          slug=framework_slug,
@@ -5868,3 +5867,26 @@ class TestSignFrameworkAgreement(BaseApplicationTest):
 
         res = self.client.get(f"/suppliers/frameworks/{framework_slug}/sign-framework-agreement")
         assert res.status_code == status_code
+
+    def test_post_signs_agreement(self):
+        self.login()
+        self.data_api_client.get_framework.return_value = self.framework(status='standstill',
+                                                                         slug='g-cloud-12',
+                                                                         framework_agreement_version="1")
+        self.data_api_client.find_draft_services_iter.return_value = [
+            {'serviceName': 'A service', 'status': 'submitted', 'lotSlug': 'iaas'}
+        ]
+        self.data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
+            on_framework=True)
+
+        res = self.client.get(f"/suppliers/frameworks/g-cloud-12/sign-framework-agreement")
+        assert res.status_code == 200
+        res = self.client.post(f"/suppliers/frameworks/g-cloud-12/sign-framework-agreement",
+                               data={"signerName": "Jane Doe",
+                                     "signerRole": "Director",
+                                     "signer_terms_and_conditions": "True"})
+        self.data_api_client.create_framework_agreement.return_value = {"agreement": {"id": 789}}
+        self.data_api_client.create_framework_agreement.assert_called_once_with(1234, 'g-cloud-12', 'email@email.com')
+
+        assert res.status_code == 200
+        assert "You’ve signed the G-Cloud 12 Framework Agreement" in res.get_data(as_text=True)
