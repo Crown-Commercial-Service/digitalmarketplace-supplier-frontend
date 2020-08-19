@@ -5898,8 +5898,8 @@ class TestSignFrameworkAgreement(BaseApplicationTest):
         res = self.client.post("/suppliers/frameworks/g-cloud-12/sign-framework-agreement", data={})
         assert res.status_code == 400
         text = res.get_data(as_text=True)
-        assert 'You must provide your full name.' in text
-        assert 'You must provide your role in the company.' in text
+        assert 'Enter your full name.' in text
+        assert 'Enter your role in the company.' in text
         assert 'You must accept the terms and conditions of the Framework Agreement.' in text
 
     def test_post_signs_agreement(self):

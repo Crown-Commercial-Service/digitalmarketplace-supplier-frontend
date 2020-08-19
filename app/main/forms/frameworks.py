@@ -103,16 +103,16 @@ class SignFrameworkAgreementForm(FlaskForm):
     signerName = DMStripWhitespaceStringField(
         "Your full name",
         validators=[
-            DataRequired(message="You must provide your full name."),
-            Length(max=255, message="You must provide a name under 256 characters."),
+            DataRequired(message="Enter your full name."),
+            Length(max=255, message="Name must be under 256 characters."),
         ],
     )
 
     signerRole = DMStripWhitespaceStringField(
         "Your role in the company",
         validators=[
-            DataRequired(message="You must provide your role in the company."),
-            Length(max=255, message="You must provide a role under 256 characters."),
+            DataRequired(message="Enter your role in the company."),
+            Length(max=255, message="Role must be under 256 characters."),
         ],
     )
     signer_terms_and_conditions = DMBooleanField(
