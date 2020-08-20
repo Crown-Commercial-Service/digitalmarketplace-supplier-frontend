@@ -5771,7 +5771,6 @@ class TestSignatureLegalAuthority(BaseApplicationTest):
         self.data_api_client_patch.stop()
         super().teardown_method(method)
 
-    @mock.patch('dmutils.s3.S3')
     @pytest.mark.parametrize(
         ('framework_slug', 'on_framework', 'status_code'),
         (
@@ -5780,7 +5779,7 @@ class TestSignatureLegalAuthority(BaseApplicationTest):
             ('g-cloud-12', False, 400),
         )
     )
-    def test_only_works_for_supported_frameworks(self, s3, framework_slug, on_framework, status_code):
+    def test_only_works_for_supported_frameworks(self, framework_slug, on_framework, status_code):
         self.login()
         self.data_api_client.get_framework.return_value = self.framework(status='standstill', slug=framework_slug)
         self.data_api_client.find_draft_services_iter.return_value = [
@@ -5792,8 +5791,7 @@ class TestSignatureLegalAuthority(BaseApplicationTest):
         res = self.client.get(f"/suppliers/frameworks/{framework_slug}/legal-authority")
         assert res.status_code == status_code
 
-    @mock.patch('dmutils.s3.S3')
-    def test_post_yes_redirects_to_signing_page(self, s3):
+    def test_post_yes_redirects_to_signing_page(self):
         framework_slug = 'g-cloud-12'
         self.login()
         self.data_api_client.get_framework.return_value = self.framework(status='standstill',
