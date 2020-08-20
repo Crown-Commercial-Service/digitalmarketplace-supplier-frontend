@@ -4,7 +4,6 @@
 
   {% if framework.frameworkAgreementVersion %}
       {% if signed_agreement_document_name %}
-            <div class="dmspeak">
             {% if countersigned_agreement_file %}
               <p class="govuk-body">
                 Your original and counterpart signature pages, and the standard framework
@@ -19,7 +18,6 @@
                 countersign your agreement before you start selling services.
               </p>
             {% endif %}
-            </div>
         {% endif %}
 
     {% if not countersigned_agreement_file %}
