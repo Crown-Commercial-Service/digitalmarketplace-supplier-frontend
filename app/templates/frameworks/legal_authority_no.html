@@ -20,7 +20,7 @@
         "href": url_for(".framework_dashboard", framework_slug=framework.slug)
       },
       {
-        "text": "Sign agreement"
+        "text": "Legal authority to sign"
       }
     ]
   }) }}
@@ -29,5 +29,5 @@
 {% block mainContent %}
     <h1 class="govuk-heading-xl">You cannot sign the Framework Agreement</h1>
     <p class="govuk-body">Only someone with legal authority in your company, like a director or company secretary, can sign the Framework Agreement.</p>
-    <a href="/suppliers">Return to Digital Marketplace account</a>
+    <a class="govuk-link" href="{{url_for('.dashboard')}}">Return to Digital Marketplace account</a>
 {% endblock %}
