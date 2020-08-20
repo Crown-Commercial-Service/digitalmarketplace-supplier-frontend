@@ -5875,9 +5875,9 @@ class TestSignFrameworkAgreement(BaseApplicationTest):
         self.data_api_client.get_framework.return_value = self.framework(status='standstill',
                                                                          slug=framework_slug,
                                                                          framework_agreement_version="1")
-        self.data_api_client.find_draft_services_iter.return_value = [
-            {'serviceName': 'A service', 'status': 'submitted', 'lotSlug': 'iaas'}
-        ]
+        self.data_api_client.find_draft_services_by_framework.return_value = {
+            'meta': {'total': 1}
+        }
         self.data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
             on_framework=on_framework)
 
@@ -5889,9 +5889,9 @@ class TestSignFrameworkAgreement(BaseApplicationTest):
         self.data_api_client.get_framework.return_value = self.framework(status='standstill',
                                                                          slug='g-cloud-12',
                                                                          framework_agreement_version="1")
-        self.data_api_client.find_draft_services_iter.return_value = [
-            {'serviceName': 'A service', 'status': 'submitted', 'lotSlug': 'iaas'}
-        ]
+        self.data_api_client.find_draft_services_by_framework.return_value = {
+            'meta': {'total': 1}
+        }
         self.data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
             on_framework=True)
 
@@ -5906,9 +5906,9 @@ class TestSignFrameworkAgreement(BaseApplicationTest):
         self.data_api_client.create_framework_agreement.return_value = {"agreement": {"id": 789}}
         self.data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
             on_framework=True)
-        self.data_api_client.find_draft_services_iter.return_value = [
-            {'serviceName': 'A service', 'status': 'submitted', 'lotSlug': 'iaas'}
-        ]
+        self.data_api_client.find_draft_services_by_framework.return_value = {
+            'meta': {'total': 1}
+        }
         self.data_api_client.get_framework.return_value = self.framework(status='standstill',
                                                                          slug='g-cloud-12',
                                                                          framework_agreement_version="1")
@@ -5948,9 +5948,9 @@ class TestSignFrameworkAgreement(BaseApplicationTest):
         self.data_api_client.create_framework_agreement.return_value = {"agreement": {"id": 789}}
         self.data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
             on_framework=True)
-        self.data_api_client.find_draft_services_iter.return_value = [
-            {'serviceName': 'A service', 'status': 'submitted', 'lotSlug': 'iaas'}
-        ]
+        self.data_api_client.find_draft_services_by_framework.return_value = {
+            'meta': {'total': 1}
+        }
         self.data_api_client.get_framework.return_value = self.framework(status='standstill',
                                                                          slug='g-cloud-12',
                                                                          framework_agreement_version="1")

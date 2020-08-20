@@ -1275,18 +1275,16 @@ def sign_framework_agreement(framework_slug):
     framework_pdf_metadata = {
         'g-cloud-12': {'file_size': '962KB', 'page_count': 65}
     }
-
-    # TODO: Make this more efficient by allowing the API to filter by lot
-    _drafts, complete_drafts = get_drafts(data_api_client, framework_slug)
-
-    lots = [
-        dict(lot,
-             complete_count=count_drafts_by_lot(complete_drafts, lot['slug']))
-        for lot in framework['lots']]
-
-    completed_lots = [
-        lot["name"]
-        for lot in lots if lot['complete_count'] > 0]
+    lots = framework['lots']
+    completed_lots = []
+    for lot in lots:
+        has_submitted = data_api_client.find_draft_services_by_framework(framework_slug=framework_slug,
+                                                                         status="submitted",
+                                                                         supplier_id=current_user.supplier_id,
+                                                                         lot=lot['slug'],
+                                                                         page=1)['meta']['total'] > 0
+        if has_submitted:
+            completed_lots.append(lot['name'])
 
     if form.validate_on_submit():
         # For an e-signature we create, update and sign the agreement immediately following submission
