@@ -5936,3 +5936,31 @@ class TestSignFrameworkAgreement(BaseApplicationTest):
 
         assert res.status_code == 200
         assert "You’ve signed the G-Cloud 12 Framework Agreement" in res.get_data(as_text=True)
+
+    @mock.patch('app.main.views.frameworks.DMNotifyClient', autospec=True)
+    def test_sign_framework_agreement_sends_notify_emails(self, mock_dmnotifyclient_class):
+        mock_dmnotifyclient_instance = mock_dmnotifyclient_class.return_value
+        self.data_api_client.find_users_iter.return_value = [
+            {'emailAddress': 'email1', 'active': True},
+            {'emailAddress': 'email2', 'active': True},
+            {'emailAddress': 'email3', 'active': False}
+        ]
+        self.data_api_client.create_framework_agreement.return_value = {"agreement": {"id": 789}}
+        self.data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
+            on_framework=True)
+        self.data_api_client.find_draft_services_iter.return_value = [
+            {'serviceName': 'A service', 'status': 'submitted', 'lotSlug': 'iaas'}
+        ]
+        self.data_api_client.get_framework.return_value = self.framework(status='standstill',
+                                                                         slug='g-cloud-12',
+                                                                         framework_agreement_version="1")
+
+        self.login()
+        self.client.post("/suppliers/frameworks/g-cloud-12/sign-framework-agreement",
+                         data={"signerName": "Jane Doe",
+                               "signerRole": "Director",
+                               "signer_terms_and_conditions": "True"})
+
+        assert mock_dmnotifyclient_instance.send_email.call_count == 2
+        assert (mock_dmnotifyclient_instance.send_email.call_args[1].get('template_name_or_id') ==
+                'sign_framework_agreement_confirmation')
