@@ -44,7 +44,7 @@
     {% endwith %}
 
 
-    <form method="POST" action="{{ url_for(".sign_framework_agreement", framework_slug=framework_slug) }}">
+    <form method="POST" novalidate action="{{ url_for(".sign_framework_agreement", framework_slug=framework_slug) }}">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
         {{ form.signerName }}
         {{ form.signerRole }}
