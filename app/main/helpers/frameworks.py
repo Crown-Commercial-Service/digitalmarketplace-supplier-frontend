@@ -476,6 +476,5 @@ def return_404_if_applications_closed(data_api_client_callable):
 
 
 def check_framework_supports_e_signature_or_404(framework_slug):
-    e_signature_frameworks = ['g-cloud-12']
-    if framework_slug not in e_signature_frameworks:
+    if framework_slug not in current_app.config['E_SIGNATURE_FRAMEWORKS']:
         abort(404)
