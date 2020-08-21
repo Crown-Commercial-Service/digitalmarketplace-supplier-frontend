@@ -32,6 +32,9 @@
     <span class="govuk-caption-xl">{{ framework.name }} {{ contract_title }}</span>
     <h1 class="govuk-heading-xl">Supplier appointment terms</h1>
     {% with company_details=company_details %}
+        <p class="govuk-!-font-weight-bold">
+            If any of the information about your company is incorrect contact <a href="mailto:cloud_digital@crowncommercial.gov.uk">cloud_digital@crowncommercial.gov.uk</a> before signing.
+        </p>
         {% include "frameworks/_framework_agreement_legal_text_{0}.html".format(framework_slug) %}
         <p class="govuk-clearfix">
             <a href="{{ framework_pdf_url }}">
