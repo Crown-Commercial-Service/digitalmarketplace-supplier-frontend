@@ -35,7 +35,7 @@
         {% include "frameworks/_framework_agreement_legal_text_{0}.html".format(framework_slug) %}
         <p class="govuk-clearfix">
             <a href="{{ framework_pdf_url }}">
-            <img style="float:left; border: 4px solid #ccc; margin-right: 10px;" alt="" src="{{ url_for('static', filename='images/pdf-thumbnails/{0}.png'.format(framework_slug)) }}">
+            <img class="framework-agreement-thumbnail" alt="" src="{{ url_for('static', filename='images/pdf-thumbnails/{0}.png'.format(framework_slug)) }}">
                 Read {{ framework.name }} {{  contract_title }}
             </a>
             <br>
