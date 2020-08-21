@@ -5788,7 +5788,7 @@ class TestSignatureLegalAuthority(BaseApplicationTest):
         self.data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
             on_framework=on_framework)
 
-        res = self.client.get(f"/suppliers/frameworks/{framework_slug}/legal-authority")
+        res = self.client.get(f"/suppliers/frameworks/{framework_slug}/start-framework-agreement-signing")
         assert res.status_code == status_code
 
     def test_post_yes_redirects_to_signing_page(self):
@@ -5803,9 +5803,9 @@ class TestSignatureLegalAuthority(BaseApplicationTest):
         self.data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
             on_framework=True)
 
-        res = self.client.get(f"/suppliers/frameworks/{framework_slug}/legal-authority")
+        res = self.client.get(f"/suppliers/frameworks/{framework_slug}/start-framework-agreement-signing")
         assert res.status_code == 200
-        res = self.client.post(f"/suppliers/frameworks/{framework_slug}/legal-authority",
+        res = self.client.post(f"/suppliers/frameworks/{framework_slug}/start-framework-agreement-signing",
                                data={'legal_authority': 'yes'})
         assert res.status_code == 302
         assert res.location == 'http://localhost/suppliers/frameworks/g-cloud-12/sign-framework-agreement'    \
@@ -5823,9 +5823,9 @@ class TestSignatureLegalAuthority(BaseApplicationTest):
         self.data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
             on_framework=True)
 
-        res = self.client.get(f"/suppliers/frameworks/{framework_slug}/legal-authority")
+        res = self.client.get(f"/suppliers/frameworks/{framework_slug}/start-framework-agreement-signing")
         assert res.status_code == 200
-        res = self.client.post(f"/suppliers/frameworks/{framework_slug}/legal-authority",
+        res = self.client.post(f"/suppliers/frameworks/{framework_slug}/start-framework-agreement-signing",
                                data={'legal_authority': 'no'})
         assert res.status_code == 200
         assert "You cannot sign the Framework Agreement" in res.get_data(as_text=True)
@@ -5841,7 +5841,7 @@ class TestSignatureLegalAuthority(BaseApplicationTest):
         ]
         self.data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
             on_framework=True)
-        res = self.client.post(f"/suppliers/frameworks/{framework_slug}/legal-authority",
+        res = self.client.post(f"/suppliers/frameworks/{framework_slug}/start-framework-agreement-signing",
                                data={})
         assert res.status_code == 400
         assert "Select yes if you have the legal authority to sign on behalf of your company" in res.get_data(

@@ -1225,7 +1225,7 @@ def opportunities_dashboard_deprecated(framework_slug):
     return redirect(url_for('external.opportunities_dashboard', framework_slug=framework_slug), code=301)
 
 
-@main.route('/frameworks/<framework_slug>/legal-authority', methods=['GET', 'POST'])
+@main.route('/frameworks/<framework_slug>/start-framework-agreement-signing', methods=['GET', 'POST'])
 @login_required
 def legal_authority(framework_slug):
     framework = get_framework_or_404(data_api_client, framework_slug)
