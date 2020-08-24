@@ -217,6 +217,7 @@ def framework_dashboard(framework_slug):
         )
         for label, d in base_communications_files.items()
     }
+    is_e_signature_supported_framework = framework_slug in current_app.config['E_SIGNATURE_FRAMEWORKS']
 
     return render_template(
         "frameworks/dashboard.html",
@@ -240,7 +241,8 @@ def framework_dashboard(framework_slug):
         supplier_is_on_framework=supplier_is_on_framework,
         supplier_company_details_complete=supplier_company_details_are_complete(supplier),
         application_company_details_confirmed=application_company_details_confirmed,
-        custom_dimensions=custom_dimensions
+        custom_dimensions=custom_dimensions,
+        is_e_signature_supported_framework=is_e_signature_supported_framework
     ), 200
 
 
