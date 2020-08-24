@@ -53,7 +53,8 @@ from ..helpers.frameworks import (
     return_supplier_framework_info_if_on_framework_or_abort,
     returned_agreement_email_recipients,
     return_404_if_applications_closed,
-    check_framework_supports_e_signature_or_404
+    check_framework_supports_e_signature_or_404,
+    is_e_signature_supported_framework
 )
 from ..helpers.services import (
     get_drafts,
@@ -217,7 +218,6 @@ def framework_dashboard(framework_slug):
         )
         for label, d in base_communications_files.items()
     }
-    is_e_signature_supported_framework = framework_slug in current_app.config['E_SIGNATURE_FRAMEWORKS']
 
     return render_template(
         "frameworks/dashboard.html",
@@ -242,7 +242,7 @@ def framework_dashboard(framework_slug):
         supplier_company_details_complete=supplier_company_details_are_complete(supplier),
         application_company_details_confirmed=application_company_details_confirmed,
         custom_dimensions=custom_dimensions,
-        is_e_signature_supported_framework=is_e_signature_supported_framework
+        is_e_signature_supported_framework=is_e_signature_supported_framework(framework_slug)
     ), 200
 
 
