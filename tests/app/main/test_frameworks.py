@@ -5933,7 +5933,8 @@ class TestSignFrameworkAgreement(BaseApplicationTest):
         )
 
         assert res.status_code == 200
-        assert "You’ve signed the G-Cloud 12 Framework Agreement" in res.get_data(as_text=True)
+        doc = html.fromstring(res.get_data(as_text=True))
+        assert doc.xpath("//h1")[0].text_content().strip() == "You’ve signed the G-Cloud 12 Framework Agreement"
 
     @mock.patch('app.main.views.frameworks.DMNotifyClient', autospec=True)
     def test_sign_framework_agreement_sends_notify_emails(self, mock_dmnotifyclient_class):
