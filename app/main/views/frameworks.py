@@ -1231,7 +1231,7 @@ def opportunities_dashboard_deprecated(framework_slug):
 @main.route('/frameworks/<framework_slug>/start-framework-agreement-signing', methods=['GET', 'POST'])
 @login_required
 def legal_authority(framework_slug):
-    framework = get_framework_or_404(data_api_client, framework_slug)
+    framework = get_framework_or_404(data_api_client, framework_slug, allowed_statuses=['standstill', 'live'])
     check_framework_supports_e_signature_or_404(framework_slug)
     supplier_framework = get_supplier_framework_info(data_api_client, framework_slug)
     if not get_supplier_on_framework_from_info(supplier_framework):
@@ -1272,7 +1272,7 @@ def legal_authority(framework_slug):
 @main.route('/frameworks/<framework_slug>/sign-framework-agreement', methods=['GET', 'POST'])
 @login_required
 def sign_framework_agreement(framework_slug):
-    framework = get_framework_or_404(data_api_client, framework_slug)
+    framework = get_framework_or_404(data_api_client, framework_slug, allowed_statuses=['standstill', 'live'])
     check_framework_supports_e_signature_or_404(framework_slug)
     supplier_framework = get_supplier_framework_info(data_api_client, framework_slug)
     if not get_supplier_on_framework_from_info(supplier_framework):
