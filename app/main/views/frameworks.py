@@ -28,7 +28,7 @@ from dmutils.email.helpers import hash_string
 from dmutils.env_helpers import get_web_url_from_stage
 from dmutils.flask import timed_render_template as render_template
 from dmutils.formats import datetimeformat, displaytimeformat, monthyearformat, dateformat
-from dmutils.forms.helpers import get_errors_from_wtform, remove_csrf_token
+from dmutils.forms.helpers import get_errors_from_wtform, remove_csrf_token, govuk_options
 from dmutils.timing import logged_duration
 
 from ... import data_api_client
@@ -67,7 +67,8 @@ from ..forms.frameworks import (SignerDetailsForm,
                                 ContractReviewForm,
                                 AcceptAgreementVariationForm,
                                 ReuseDeclarationForm,
-                                LegalAuthorityForm, SignFrameworkAgreementForm)
+                                LegalAuthorityForm,
+                                SignFrameworkAgreementForm)
 
 CLARIFICATION_QUESTION_NAME = 'clarification_question'
 
@@ -1236,6 +1237,20 @@ def legal_authority(framework_slug):
     if not get_supplier_on_framework_from_info(supplier_framework):
         return render_error_page(status_code=400, error_message="You must be on the framework to sign agreement.")
     form = LegalAuthorityForm()
+    legal_authority_gov_uk_radios = {
+        "fieldset":
+            {"legend": {
+                "text": LegalAuthorityForm.HEADING,
+                "isPageHeading": "true",
+                "classes": "govuk-fieldset__legend--l"
+            }
+            },
+        "idPrefix": "input-legal_authority",
+        "name": "legal_authority",
+        "hint": {"text": LegalAuthorityForm.HINT},
+        "classes": "govuk-radios--inline",
+        "items": govuk_options(LegalAuthorityForm.OPTIONS)
+    }
     if form.validate_on_submit():
         response = form.legal_authority.data
         if response == 'no':
@@ -1249,7 +1264,8 @@ def legal_authority(framework_slug):
         framework_slug=framework_slug,
         framework=framework,
         form=form,
-        errors=errors
+        errors=errors,
+        legal_authority_gov_uk_radios=legal_authority_gov_uk_radios
     ), 400 if errors else 200
 
 

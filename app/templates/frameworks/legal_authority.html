@@ -27,10 +27,12 @@
 {% endblock %}
 
 {% block mainContent %}
-    {% include 'toolkit/forms/validation.html' %}
+    {{ govukErrorSummary({
+            "errorList": errors.values()
+     }) if errors }}
     <form method="POST" novalidate action="{{ url_for(".legal_authority", framework_slug=framework_slug) }}">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-        {{ form.legal_authority }}
+        {{ govukRadios(legal_authority_gov_uk_radios) }}
         {{ govukButton({
           "text": "Continue"
         }) }}

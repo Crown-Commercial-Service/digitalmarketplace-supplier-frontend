@@ -79,6 +79,8 @@ class OneServiceLimitCopyServiceForm(FlaskForm):
 
 
 class LegalAuthorityForm(FlaskForm):
+    HEADING = 'Do you have the legal authority to sign on behalf of your company?'
+    HINT = "For example, you are a director or company secretary."
     OPTIONS = [
         {
             "value": "yes",
@@ -90,8 +92,8 @@ class LegalAuthorityForm(FlaskForm):
         },
     ]
     legal_authority = DMRadioField(
-        "Do you have the legal authority to sign on behalf of your company?",
-        hint="For example, you are a director or company secretary.",
+        HEADING,
+        hint=HINT,
         validators=[InputRequired(message="Select yes if you have the legal authority"
                                           " to sign on behalf of your company")],
         options=OPTIONS)
