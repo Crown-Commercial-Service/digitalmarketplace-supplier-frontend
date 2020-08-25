@@ -5782,9 +5782,6 @@ class TestSignatureLegalAuthority(BaseApplicationTest):
     def test_only_works_for_supported_frameworks(self, framework_slug, on_framework, status_code):
         self.login()
         self.data_api_client.get_framework.return_value = self.framework(status='standstill', slug=framework_slug)
-        self.data_api_client.find_draft_services_iter.return_value = [
-            {'serviceName': 'A service', 'status': 'submitted', 'lotSlug': 'iaas'}
-        ]
         self.data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
             on_framework=on_framework)
 
@@ -5797,14 +5794,9 @@ class TestSignatureLegalAuthority(BaseApplicationTest):
         self.data_api_client.get_framework.return_value = self.framework(status='standstill',
                                                                          slug=framework_slug,
                                                                          framework_agreement_version="1")
-        self.data_api_client.find_draft_services_iter.return_value = [
-            {'serviceName': 'A service', 'status': 'submitted', 'lotSlug': 'iaas'}
-        ]
         self.data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
             on_framework=True)
 
-        res = self.client.get(f"/suppliers/frameworks/{framework_slug}/start-framework-agreement-signing")
-        assert res.status_code == 200
         res = self.client.post(f"/suppliers/frameworks/{framework_slug}/start-framework-agreement-signing",
                                data={'legal_authority': 'yes'})
         assert res.status_code == 302
@@ -5817,14 +5809,9 @@ class TestSignatureLegalAuthority(BaseApplicationTest):
         self.data_api_client.get_framework.return_value = self.framework(status='standstill',
                                                                          slug=framework_slug,
                                                                          framework_agreement_version="1")
-        self.data_api_client.find_draft_services_iter.return_value = [
-            {'serviceName': 'A service', 'status': 'submitted', 'lotSlug': 'iaas'}
-        ]
         self.data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
             on_framework=True)
 
-        res = self.client.get(f"/suppliers/frameworks/{framework_slug}/start-framework-agreement-signing")
-        assert res.status_code == 200
         res = self.client.post(f"/suppliers/frameworks/{framework_slug}/start-framework-agreement-signing",
                                data={'legal_authority': 'no'})
         assert res.status_code == 200
@@ -5836,9 +5823,6 @@ class TestSignatureLegalAuthority(BaseApplicationTest):
         self.data_api_client.get_framework.return_value = self.framework(status='standstill',
                                                                          slug=framework_slug,
                                                                          framework_agreement_version="1")
-        self.data_api_client.find_draft_services_iter.return_value = [
-            {'serviceName': 'A service', 'status': 'submitted', 'lotSlug': 'iaas'}
-        ]
         self.data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
             on_framework=True)
         res = self.client.post(f"/suppliers/frameworks/{framework_slug}/start-framework-agreement-signing",
@@ -5921,7 +5905,7 @@ class TestSignFrameworkAgreement(BaseApplicationTest):
 
         self.data_api_client.create_framework_agreement.assert_called_once_with(1234, 'g-cloud-12', 'email@email.com')
 
-        self.data_api_client.update_framework_agreement.assert_called_with(789, {
+        self.data_api_client.update_framework_agreement.assert_called_once_with(789, {
             "signedAgreementDetails": {"signerName": "Jane Doe",
                                        "signerRole": "Director"}},
             "email@email.com")
