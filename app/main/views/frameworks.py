@@ -1239,7 +1239,8 @@ def legal_authority(framework_slug):
     if form.validate_on_submit():
         response = form.legal_authority.data
         if response == 'no':
-            return render_template("frameworks/legal_authority_no.html")
+            return render_template("frameworks/legal_authority_no.html",
+                                   framework=framework)
         if response == 'yes':
             return redirect(url_for('.sign_framework_agreement', framework_slug=framework_slug))
     errors = get_errors_from_wtform(form)
