@@ -1,0 +1,33 @@
+{% extends "_base_page.html" %}
+
+{% block pageTitle %}
+    {{ framework.name }} You cannot sign the Framework Agreement – Digital Marketplace
+{% endblock %}
+
+{% block breadcrumb %}
+    {{ govukBreadcrumbs({
+    "items": [
+      {
+        "text": "Digital Marketplace",
+        "href": "/"
+      },
+      {
+        "text": "Your account",
+        "href": url_for('.dashboard')
+      },
+      {
+        "text": framework.name,
+        "href": url_for(".framework_dashboard", framework_slug=framework.slug)
+      },
+      {
+        "text": "Legal authority to sign"
+      }
+    ]
+  }) }}
+{% endblock %}
+
+{% block mainContent %}
+    <h1 class="govuk-heading-xl">You cannot sign the Framework Agreement</h1>
+    <p class="govuk-body">Only someone with legal authority in your company, like a director or company secretary, can sign the Framework Agreement.</p>
+    <a class="govuk-link" href="{{url_for('.dashboard')}}">Return to Digital Marketplace account</a>
+{% endblock %}

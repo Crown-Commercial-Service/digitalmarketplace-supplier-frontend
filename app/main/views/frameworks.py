@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 from collections import OrderedDict
 from datetime import datetime, timedelta
+
+from dmutils.errors import render_error_page
 from itertools import chain
 
 from dateutil.parser import parse as date_parse
@@ -25,8 +27,8 @@ from dmutils.email.exceptions import EmailError
 from dmutils.email.helpers import hash_string
 from dmutils.env_helpers import get_web_url_from_stage
 from dmutils.flask import timed_render_template as render_template
-from dmutils.formats import datetimeformat, displaytimeformat, monthyearformat
-from dmutils.forms.helpers import get_errors_from_wtform, remove_csrf_token
+from dmutils.formats import datetimeformat, displaytimeformat, monthyearformat, dateformat
+from dmutils.forms.helpers import get_errors_from_wtform, remove_csrf_token, govuk_options
 from dmutils.timing import logged_duration
 
 from ... import data_api_client
@@ -50,16 +52,23 @@ from ..helpers.frameworks import (
     register_interest_in_framework,
     return_supplier_framework_info_if_on_framework_or_abort,
     returned_agreement_email_recipients,
-    return_404_if_applications_closed
+    return_404_if_applications_closed,
+    check_framework_supports_e_signature_or_404,
+    is_e_signature_supported_framework
 )
 from ..helpers.services import (
     get_drafts,
     get_lot_drafts,
     get_signed_document_url,
 )
-from ..helpers.suppliers import supplier_company_details_are_complete
+from ..helpers.suppliers import supplier_company_details_are_complete, get_company_details_from_supplier
 from ..helpers.validation import get_validator
-from ..forms.frameworks import SignerDetailsForm, ContractReviewForm, AcceptAgreementVariationForm, ReuseDeclarationForm
+from ..forms.frameworks import (SignerDetailsForm,
+                                ContractReviewForm,
+                                AcceptAgreementVariationForm,
+                                ReuseDeclarationForm,
+                                LegalAuthorityForm,
+                                SignFrameworkAgreementForm)
 
 CLARIFICATION_QUESTION_NAME = 'clarification_question'
 
@@ -159,9 +168,11 @@ def framework_dashboard(framework_slug):
 
     signed_agreement_document_name = None
     if supplier_is_on_framework and supplier_framework_info['agreementReturned']:
-        signed_agreement_document_name = degenerate_document_path_and_return_doc_name(
-            supplier_framework_info['agreementPath']
-        )
+        # Frameworks supporting e-signature will not have agreementPath
+        if supplier_framework_info['agreementPath']:
+            signed_agreement_document_name = degenerate_document_path_and_return_doc_name(
+                supplier_framework_info['agreementPath']
+            )
 
     communications_folder = "{}/communications".format(framework_slug)
     key_list = s3.S3(current_app.config['DM_COMMUNICATIONS_BUCKET']).list(communications_folder, load_timestamps=True)
@@ -231,7 +242,8 @@ def framework_dashboard(framework_slug):
         supplier_is_on_framework=supplier_is_on_framework,
         supplier_company_details_complete=supplier_company_details_are_complete(supplier),
         application_company_details_confirmed=application_company_details_confirmed,
-        custom_dimensions=custom_dimensions
+        custom_dimensions=custom_dimensions,
+        is_e_signature_supported_framework=is_e_signature_supported_framework(framework_slug)
     ), 200
 
 
@@ -1214,3 +1226,138 @@ def view_contract_variation(framework_slug, variation_slug):
 @login_required
 def opportunities_dashboard_deprecated(framework_slug):
     return redirect(url_for('external.opportunities_dashboard', framework_slug=framework_slug), code=301)
+
+
+@main.route('/frameworks/<framework_slug>/start-framework-agreement-signing', methods=['GET', 'POST'])
+@login_required
+def legal_authority(framework_slug):
+    framework = get_framework_or_404(data_api_client, framework_slug, allowed_statuses=['standstill', 'live'])
+    check_framework_supports_e_signature_or_404(framework_slug)
+    supplier_framework = get_supplier_framework_info(data_api_client, framework_slug)
+    if not get_supplier_on_framework_from_info(supplier_framework):
+        return render_error_page(status_code=400, error_message="You must be on the framework to sign agreement.")
+    form = LegalAuthorityForm()
+    legal_authority_gov_uk_radios = {
+        "fieldset":
+            {"legend": {
+                "text": LegalAuthorityForm.HEADING,
+                "isPageHeading": "true",
+                "classes": "govuk-fieldset__legend--l"
+            }
+            },
+        "idPrefix": "input-legal_authority",
+        "name": "legal_authority",
+        "hint": {"text": LegalAuthorityForm.HINT},
+        "classes": "govuk-radios--inline",
+        "items": govuk_options(LegalAuthorityForm.OPTIONS)
+    }
+    if form.validate_on_submit():
+        response = form.legal_authority.data
+        if response == 'no':
+            return render_template("frameworks/legal_authority_no.html",
+                                   framework=framework)
+        if response == 'yes':
+            return redirect(url_for('.sign_framework_agreement', framework_slug=framework_slug))
+    errors = get_errors_from_wtform(form)
+    return render_template(
+        "frameworks/legal_authority.html",
+        framework_slug=framework_slug,
+        framework=framework,
+        form=form,
+        errors=errors,
+        legal_authority_gov_uk_radios=legal_authority_gov_uk_radios
+    ), 400 if errors else 200
+
+
+@main.route('/frameworks/<framework_slug>/sign-framework-agreement', methods=['GET', 'POST'])
+@login_required
+def sign_framework_agreement(framework_slug):
+    framework = get_framework_or_404(data_api_client, framework_slug, allowed_statuses=['standstill', 'live'])
+    check_framework_supports_e_signature_or_404(framework_slug)
+    supplier_framework = get_supplier_framework_info(data_api_client, framework_slug)
+    if not get_supplier_on_framework_from_info(supplier_framework):
+        return render_error_page(status_code=400, error_message="You must be on the framework to sign agreement.")
+
+    if not framework.get('frameworkAgreementVersion'):
+        abort(404, error_message="The framework agreement was not found")
+
+    supplier = data_api_client.get_supplier(current_user.supplier_id)["suppliers"]
+    company_details = get_company_details_from_supplier(supplier)
+    form = SignFrameworkAgreementForm()
+    framework_pdf_url = content_loader.get_message(framework_slug, 'urls').get('framework_agreement_pdf_url')
+    contract_titles = {
+        'g-cloud-12': 'Framework Agreement'
+    }
+    contract_title = contract_titles.get(framework_slug)
+
+    # TODO: can we derive this metadata programmatically?
+    framework_pdf_metadata = {
+        'g-cloud-12': {'file_size': '962KB', 'page_count': 65}
+    }
+    lots = framework['lots']
+    completed_lots = []
+    for lot in lots:
+        has_submitted = data_api_client.find_draft_services_by_framework(framework_slug=framework_slug,
+                                                                         status="submitted",
+                                                                         supplier_id=current_user.supplier_id,
+                                                                         lot=lot['slug'],
+                                                                         page=1)['meta']['total'] > 0
+        if has_submitted:
+            completed_lots.append(lot['name'])
+
+    if form.validate_on_submit():
+        # For an e-signature we create, update and sign the agreement immediately following submission
+        agreement_id = data_api_client.create_framework_agreement(
+            current_user.supplier_id, framework["slug"], current_user.email_address
+        )["agreement"]["id"]
+
+        signed_agreement_details = {k: v for k, v in form.data.items() if k in ['signerRole', 'signerName']}
+        agreement_details = {
+            "signedAgreementDetails": signed_agreement_details
+        }
+
+        data_api_client.update_framework_agreement(
+            agreement_id, agreement_details, current_user.email_address
+        )
+
+        data_api_client.sign_framework_agreement(
+            agreement_id, current_user.email_address, {'uploaderUserId': current_user.id}
+        )
+
+        # Send confirmation email
+        supplier_users = data_api_client.find_users_iter(supplier_id=current_user.supplier_id)
+        framework_dashboard_url = url_for('.framework_dashboard', framework_slug=framework_slug, _external=True)
+        framework_live_date = dateformat(framework.get('frameworkLiveAtUTC'))
+        notify_client = DMNotifyClient()
+        for address in [user['emailAddress'] for user in supplier_users if user['active']]:
+            notify_client.send_email(
+                to_email_address=address,
+                template_name_or_id="sign_framework_agreement_confirmation",
+                personalisation={
+                    "framework_name": framework['name'],
+                    "signer_name": form.data.get('signerName'),
+                    "company_name": company_details.get('registered_name'),
+                    "contract_title": contract_title,
+                    "submitted_datetime": datetimeformat(datetime.utcnow()),
+                    "framework_dashboard_url": framework_dashboard_url,
+                    "framework_live_date": framework_live_date
+                },
+            )
+
+        return render_template("frameworks/sign_framework_agreement_confirmation.html",
+                               framework=framework,
+                               contract_title=contract_title)
+
+    errors = get_errors_from_wtform(form)
+    return render_template(
+        "frameworks/sign_framework_agreement.html",
+        company_details=company_details,
+        framework_slug=framework_slug,
+        contract_title=contract_title,
+        framework_pdf_url=framework_pdf_url,
+        framework_pdf_metadata=framework_pdf_metadata.get(framework_slug),
+        framework=framework,
+        completed_lots=completed_lots,
+        form=form,
+        errors=errors
+    ), 400 if errors else 200

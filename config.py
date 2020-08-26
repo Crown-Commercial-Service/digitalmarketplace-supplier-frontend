@@ -40,8 +40,11 @@ class Config(object):
         'g-cloud-application-started': '7362aad7-1ffa-4e36-8ddd-d16cc5305175',
         'digital-outcomes-and-specialists-application-started': '1920c708-66a9-466e-a0ae-3bd13d31e32d',
         'framework-clarification-question': "8574484f-9907-44c0-b9d5-1120beb64ef0",
-        'framework-application-question': '6681d4a1-6e30-407f-9e8b-3f6633d73546'
+        'framework-application-question': '6681d4a1-6e30-407f-9e8b-3f6633d73546',
+        'sign_framework_agreement_confirmation': 'bbc77101-4585-4d1e-80c4-43045ea9550f'
     }
+
+    E_SIGNATURE_FRAMEWORKS = ['g-cloud-12']
 
     DM_AGREEMENTS_BUCKET = None
     DM_COMMUNICATIONS_BUCKET = None

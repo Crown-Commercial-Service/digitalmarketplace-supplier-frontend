@@ -1,8 +1,8 @@
 from flask_wtf import FlaskForm
 from wtforms import HiddenField
-from wtforms.validators import DataRequired, Length
+from wtforms.validators import DataRequired, Length, InputRequired
 
-from dmutils.forms.fields import DMBooleanField, DMStripWhitespaceStringField
+from dmutils.forms.fields import DMBooleanField, DMStripWhitespaceStringField, DMRadioField
 from dmutils.forms.widgets import DMSelectionButtonBase
 
 
@@ -76,3 +76,50 @@ class OneServiceLimitCopyServiceForm(FlaskForm):
                                                 "Roles won’t be copied if they have new questions."
         else:
             self.copy_service.question_advice = "You still have to review your service and answer any new questions."
+
+
+class LegalAuthorityForm(FlaskForm):
+    HEADING = 'Do you have the legal authority to sign on behalf of your company?'
+    HINT = "For example, you are a director or company secretary."
+    OPTIONS = [
+        {
+            "value": "yes",
+            "label": "Yes",
+        },
+        {
+            "value": "no",
+            "label": "No",
+        },
+    ]
+    legal_authority = DMRadioField(
+        HEADING,
+        hint=HINT,
+        validators=[InputRequired(message="Select yes if you have the legal authority"
+                                          " to sign on behalf of your company")],
+        options=OPTIONS)
+
+
+class SignFrameworkAgreementForm(FlaskForm):
+
+    # Intended use of camel case here to match expected API fields
+    signerName = DMStripWhitespaceStringField(
+        "Your full name",
+        validators=[
+            DataRequired(message="Enter your full name."),
+            Length(max=255, message="Name must be under 256 characters."),
+        ],
+    )
+
+    signerRole = DMStripWhitespaceStringField(
+        "Your role in the company",
+        validators=[
+            DataRequired(message="Enter your role in the company."),
+            Length(max=255, message="Role must be under 256 characters."),
+        ],
+    )
+    signer_terms_and_conditions = DMBooleanField(
+        "I accept the terms and conditions of the Framework Agreement",
+        validators=[
+            DataRequired(message="You must accept the terms and conditions of the Framework Agreement.")
+        ]
+    )

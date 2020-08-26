@@ -1,0 +1,40 @@
+{% extends "_base_page.html" %}
+
+{% block pageTitle %}
+    {{ framework.name }} Legal authority – Digital Marketplace
+{% endblock %}
+
+{% block breadcrumb %}
+    {{ govukBreadcrumbs({
+    "items": [
+      {
+        "text": "Digital Marketplace",
+        "href": "/"
+      },
+      {
+        "text": "Your account",
+        "href": url_for('.dashboard')
+      },
+      {
+        "text": framework.name,
+        "href": url_for(".framework_dashboard", framework_slug=framework.slug)
+      },
+      {
+        "text": "Legal authority to sign"
+      }
+    ]
+  }) }}
+{% endblock %}
+
+{% block mainContent %}
+    {{ govukErrorSummary({
+            "errorList": errors.values()
+     }) if errors }}
+    <form method="POST" novalidate action="{{ url_for(".legal_authority", framework_slug=framework_slug) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+        {{ govukRadios(legal_authority_gov_uk_radios) }}
+        {{ govukButton({
+          "text": "Continue"
+        }) }}
+    </form>
+{% endblock %}

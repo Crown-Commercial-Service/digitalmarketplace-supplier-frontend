@@ -17,7 +17,7 @@
 
     {% elif framework.status == 'standstill' %}
       {% if supplier_is_on_framework %}
-        <p class="govuk-body">Your application was successful. You must return a signed framework agreement signature page before you can sell services on the Digital Marketplace.</p>
+        <p class="govuk-body">Your application was successful.</p>
       {% else %}
         <p class="govuk-body">You made your supplier declaration and submitted {{ counts.complete }} {{ 'service' if counts.complete == 1 else 'services' }}.</p>
       {% endif %}

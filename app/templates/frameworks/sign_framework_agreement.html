@@ -1,0 +1,60 @@
+{% extends "_base_page.html" %}
+
+{% block pageTitle %}
+    {{ framework.name }} Sign agreement – Digital Marketplace
+{% endblock %}
+
+{% block breadcrumb %}
+    {{ govukBreadcrumbs({
+    "items": [
+      {
+        "text": "Digital Marketplace",
+        "href": "/"
+      },
+      {
+        "text": "Your account",
+        "href": url_for('.dashboard')
+      },
+      {
+        "text": framework.name,
+        "href": url_for(".framework_dashboard", framework_slug=framework.slug)
+      },
+      {
+        "text": "Sign agreement"
+      }
+    ]
+  }) }}
+{% endblock %}
+
+
+{% block mainContent %}
+    {% include 'toolkit/forms/validation.html' %}
+    <span class="govuk-caption-xl">{{ framework.name }} {{ contract_title }}</span>
+    <h1 class="govuk-heading-xl">Supplier appointment terms</h1>
+    {% with company_details=company_details %}
+        <p class="govuk-!-font-weight-bold">
+            If any of the information about your company is incorrect contact <a href="mailto:cloud_digital@crowncommercial.gov.uk">cloud_digital@crowncommercial.gov.uk</a> before signing.
+        </p>
+        {% include "frameworks/_framework_agreement_legal_text_{0}.html".format(framework_slug) %}
+        <p class="govuk-clearfix">
+            <a href="{{ framework_pdf_url }}">
+            <img class="framework-agreement-thumbnail" alt="" src="{{ url_for('static', filename='images/pdf-thumbnails/{0}.png'.format(framework_slug)) }}">
+                Read the {{ framework.name }} {{  contract_title }}
+            </a>
+            <br>
+            <span class="govuk-body-s"><abbr title="Portable Document Format">PDF</abbr>, {{ framework_pdf_metadata.file_size }}, {{ framework_pdf_metadata.page_count }} pages</span>
+        </p>
+    {% endwith %}
+
+
+    <form method="POST" novalidate action="{{ url_for(".sign_framework_agreement", framework_slug=framework_slug) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+        {{ form.signerName }}
+        {{ form.signerRole }}
+        {{ form.signer_terms_and_conditions }}
+        {{ govukButton({
+          "text": "Sign agreement"
+        }) }}
+    </form>
+{% endblock %}
+
