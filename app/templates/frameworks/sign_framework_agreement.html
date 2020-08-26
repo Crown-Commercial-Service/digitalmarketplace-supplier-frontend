@@ -39,7 +39,7 @@
         <p class="govuk-clearfix">
             <a href="{{ framework_pdf_url }}">
             <img class="framework-agreement-thumbnail" alt="" src="{{ url_for('static', filename='images/pdf-thumbnails/{0}.png'.format(framework_slug)) }}">
-                Read {{ framework.name }} {{  contract_title }}
+                Read the {{ framework.name }} {{  contract_title }}
             </a>
             <br>
             <span class="govuk-body-s"><abbr title="Portable Document Format">PDF</abbr>, {{ framework_pdf_metadata.file_size }}, {{ framework_pdf_metadata.page_count }} pages</span>
