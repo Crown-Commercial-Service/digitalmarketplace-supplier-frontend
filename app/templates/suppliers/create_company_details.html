@@ -47,6 +47,7 @@
             question = "Company name",
             name = "company_name",
             value = form.company_name.data,
+            autocomplete = "new-supplier-organisation",
             error = errors.get("company_name", {}).get("message", None),
             hint = "This is how buyers will see your company’s name on the Digital&nbsp;Marketplace"|safe
         %}
