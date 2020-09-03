@@ -5992,3 +5992,28 @@ class TestSignFrameworkAgreement(BaseApplicationTest):
         assert mock_dmnotifyclient_instance.send_email.call_count == 2
         assert (mock_dmnotifyclient_instance.send_email.call_args[1].get('template_name_or_id') ==
                 'sign_framework_agreement_confirmation')
+
+    def test_agreement_text_contains_supplier_details(self):
+        self.data_api_client.get_framework.return_value = self.framework(status='standstill',
+                                                                         slug='g-cloud-12',
+                                                                         framework_agreement_version="1")
+        self.data_api_client.find_draft_services_by_framework.return_value = {
+            'meta': {'total': 1}
+        }
+        self.data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(on_framework=True)
+
+        self.data_api_client.get_supplier.return_value = {'suppliers': {'registeredName': 'Acme Company',
+                                                                        'companiesHouseNumber': '87654321',
+                                                                        'contactInformation':
+                                                                            [{'address1': '10 Downing Street',
+                                                                              'city': 'London',
+                                                                              'postcode': 'SW1A 2AA'
+                                                                              }]}}
+
+        self.login()
+        res = self.client.get("/suppliers/frameworks/g-cloud-12/sign-framework-agreement")
+        text = res.get_data(as_text=True)
+        assert "Cloud hosting, Cloud software, Cloud support" in text
+        assert "Acme Company" in text
+        assert "87654321" in text
+        assert "10 Downing Street, London, SW1A 2AA" in text
