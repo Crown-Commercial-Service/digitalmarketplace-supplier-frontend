@@ -15,7 +15,7 @@
 
 
 <p>
-    registered address: {{ [company_details.address.get('street_address_line_1'), company_details.address.get('locality'), company_details.address.get('postcode'), company_details.address.get('country')|sub_country_codes] | join(', ') }}
+    registered address: {{ [company_details.address.get('street_address_line_1'), company_details.address.get('locality'), company_details.address.get('postcode')] | join(', ') }}
 </p>
 
 

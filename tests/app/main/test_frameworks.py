@@ -6004,7 +6004,6 @@ class TestSignFrameworkAgreement(BaseApplicationTest):
 
         self.data_api_client.get_supplier.return_value = {'suppliers': {'registeredName': 'Acme Company',
                                                                         'companiesHouseNumber': '87654321',
-                                                                        'registrationCountry': 'country:GB',
                                                                         'contactInformation':
                                                                             [{'address1': '10 Downing Street',
                                                                               'city': 'London',
@@ -6017,4 +6016,4 @@ class TestSignFrameworkAgreement(BaseApplicationTest):
         assert "Cloud hosting, Cloud software, Cloud support" in text
         assert "Acme Company" in text
         assert "87654321" in text
-        assert "10 Downing Street, London, SW1A 2AA, United Kingdom" in text
+        assert "10 Downing Street, London, SW1A 2AA" in text
