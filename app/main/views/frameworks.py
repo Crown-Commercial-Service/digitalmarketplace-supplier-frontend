@@ -1237,20 +1237,6 @@ def legal_authority(framework_slug):
     if not get_supplier_on_framework_from_info(supplier_framework):
         return render_error_page(status_code=400, error_message="You must be on the framework to sign agreement.")
     form = LegalAuthorityForm()
-    legal_authority_gov_uk_radios = {
-        "fieldset":
-            {"legend": {
-                "text": LegalAuthorityForm.HEADING,
-                "isPageHeading": "true",
-                "classes": "govuk-fieldset__legend--l"
-            }
-            },
-        "idPrefix": "input-legal_authority",
-        "name": "legal_authority",
-        "hint": {"text": LegalAuthorityForm.HINT},
-        "classes": "govuk-radios--inline",
-        "items": govuk_options(LegalAuthorityForm.OPTIONS)
-    }
     if form.validate_on_submit():
         response = form.legal_authority.data
         if response == 'no':
@@ -1259,6 +1245,22 @@ def legal_authority(framework_slug):
         if response == 'yes':
             return redirect(url_for('.sign_framework_agreement', framework_slug=framework_slug))
     errors = get_errors_from_wtform(form)
+    field_name = "legal_authority"
+    legal_authority_gov_uk_radios = {
+        "fieldset":
+            {"legend": {
+                "text": LegalAuthorityForm.HEADING,
+                "isPageHeading": "true",
+                "classes": "govuk-fieldset__legend--l"
+            }
+            },
+        "idPrefix": f"input-{field_name}",
+        "name": field_name,
+        "hint": {"text": LegalAuthorityForm.HINT},
+        "classes": "govuk-radios--inline",
+        "items": govuk_options(LegalAuthorityForm.OPTIONS),
+        "errorMessage": errors.get(field_name)['errorMessage'] if errors else None
+    }
     return render_template(
         "frameworks/legal_authority.html",
         framework_slug=framework_slug,
