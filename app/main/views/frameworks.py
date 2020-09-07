@@ -1245,6 +1245,7 @@ def legal_authority(framework_slug):
         if response == 'yes':
             return redirect(url_for('.sign_framework_agreement', framework_slug=framework_slug))
     errors = get_errors_from_wtform(form)
+    field_name = "legal_authority"
     legal_authority_gov_uk_radios = {
         "fieldset":
             {"legend": {
@@ -1253,12 +1254,12 @@ def legal_authority(framework_slug):
                 "classes": "govuk-fieldset__legend--l"
             }
             },
-        "idPrefix": "input-legal_authority",
-        "name": "legal_authority",
+        "idPrefix": f"input-{field_name}",
+        "name": field_name,
         "hint": {"text": LegalAuthorityForm.HINT},
         "classes": "govuk-radios--inline",
         "items": govuk_options(LegalAuthorityForm.OPTIONS),
-        "errorMessage": list(errors.values())[0]['errorMessage'] if errors else None
+        "errorMessage": errors.get(field_name)['errorMessage'] if errors else None
     }
     return render_template(
         "frameworks/legal_authority.html",
