@@ -1237,6 +1237,14 @@ def legal_authority(framework_slug):
     if not get_supplier_on_framework_from_info(supplier_framework):
         return render_error_page(status_code=400, error_message="You must be on the framework to sign agreement.")
     form = LegalAuthorityForm()
+    if form.validate_on_submit():
+        response = form.legal_authority.data
+        if response == 'no':
+            return render_template("frameworks/legal_authority_no.html",
+                                   framework=framework)
+        if response == 'yes':
+            return redirect(url_for('.sign_framework_agreement', framework_slug=framework_slug))
+    errors = get_errors_from_wtform(form)
     legal_authority_gov_uk_radios = {
         "fieldset":
             {"legend": {
@@ -1249,16 +1257,9 @@ def legal_authority(framework_slug):
         "name": "legal_authority",
         "hint": {"text": LegalAuthorityForm.HINT},
         "classes": "govuk-radios--inline",
-        "items": govuk_options(LegalAuthorityForm.OPTIONS)
+        "items": govuk_options(LegalAuthorityForm.OPTIONS),
+        "errorMessage": list(errors.values())[0]['errorMessage'] if errors else None
     }
-    if form.validate_on_submit():
-        response = form.legal_authority.data
-        if response == 'no':
-            return render_template("frameworks/legal_authority_no.html",
-                                   framework=framework)
-        if response == 'yes':
-            return redirect(url_for('.sign_framework_agreement', framework_slug=framework_slug))
-    errors = get_errors_from_wtform(form)
     return render_template(
         "frameworks/legal_authority.html",
         framework_slug=framework_slug,
