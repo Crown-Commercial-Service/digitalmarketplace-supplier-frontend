@@ -1294,7 +1294,7 @@ def sign_framework_agreement(framework_slug):
 
     # TODO: can we derive this metadata programmatically?
     framework_pdf_metadata = {
-        'g-cloud-12': {'file_size': '962KB', 'page_count': 65}
+        'g-cloud-12': {'file_size': '801KB', 'page_count': 64}
     }
     lots = framework['lots']
     completed_lots = []
