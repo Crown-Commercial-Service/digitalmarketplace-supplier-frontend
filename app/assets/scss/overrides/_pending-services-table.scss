@@ -1,0 +1,29 @@
+// Expand borders of summary table incomplete rows to fill the whole row, rather than just the text span
+
+.pending-services-table {
+  table {
+    border-collapse: separate;
+    border-spacing: 0 5px;
+    border-top: 1px solid $govuk-border-colour;
+    border-bottom: 1px solid $govuk-border-colour;
+    thead {
+      @include govuk-visually-hidden;
+    }
+    .summary-item-row-incomplete .summary-item-field-first {
+      border-left: 3px solid $govuk-error-colour;
+    }
+    .summary-item-row-incomplete .summary-item-field-first span {
+      border-left: none;
+    }
+    tbody::before {
+      height: 0px;
+      display: table-row;
+      content: ''
+    }
+    tbody::after {
+      height: 4px;
+      display: table-row;
+      content: '';
+    }
+  }
+}

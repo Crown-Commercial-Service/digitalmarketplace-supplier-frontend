@@ -73,6 +73,7 @@ $govuk-global-styles: true;
 @import "overrides/_notifications_banner";
 @import "overrides/_temporary-messages";
 @import "overrides/_task-list";
+@import "overrides/_pending-services-table";
 
 // Misc styles
 .authorisation-form-wrapper {
