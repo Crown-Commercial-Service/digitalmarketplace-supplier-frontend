@@ -1,7 +1,7 @@
 {% extends "_base_page.html" %}
 {% import "toolkit/summary-table.html" as summary %}
 {% block pageTitle %}
-  Company details – Digital Marketplace
+  Your company details – Digital Marketplace
 {% endblock %}
 
 {% block breadcrumb %}
@@ -23,11 +23,11 @@
           "href": url_for(".framework_dashboard", framework_slug=currently_applying_to.slug)
         },
         {
-          "text": "Company details"
+          "text": "Your company details"
         }
       ]}) }}
     {% else %}
-      {{ govukBreadcrumbs({"items": items + [{"text": "Company details"}]}) }}
+      {{ govukBreadcrumbs({"items": items + [{"text": "Your company details"}]}) }}
     {% endif %}
   {% endwith %}
 {% endblock %}
@@ -36,7 +36,7 @@
 {% block mainContent %}
   <div class='govuk-grid-row'>
     <div class='govuk-grid-column-full{% if currently_applying_to or (supplier_company_details_complete and not supplier_company_details_confirmed) %} padding-bottom-small{% endif %}'>
-      <h1 class="govuk-heading-l">Company details</h1>
+      <h1 class="govuk-heading-l">Your company details</h1>
 
 {{ summary.heading("What buyers will see", id="what_buyers_will_see") }}
 {{ summary.top_link('Edit', url_for('.edit_what_buyers_will_see')) }}
