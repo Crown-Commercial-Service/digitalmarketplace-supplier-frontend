@@ -618,7 +618,7 @@ class TestSupplierDetails(BaseApplicationTest):
 
         assert document.xpath(
             "//a[normalize-space(string())=$t][@href=$u][contains(@class, $c)]",
-            t="Change",
+            t="Edit",
             u="/suppliers/what-buyers-will-see/edit",
             c="summary-change-link",
         )
@@ -799,7 +799,7 @@ class TestSupplierDetails(BaseApplicationTest):
         page_html = response.get_data(as_text=True)
         document = html.fromstring(page_html)
         answer_required_link = document.xpath(
-            "//span[text()='{}']/following::td[2]/span/a[text()='Change']".format(question)
+            "//span[text()='{}']/following::td[2]/span/a[text()='Edit']".format(question)
         )
 
         assert answer_required_link
