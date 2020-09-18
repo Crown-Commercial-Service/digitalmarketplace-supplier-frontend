@@ -502,7 +502,7 @@ class TestSuppliersDashboard(BaseApplicationTest):
         assert u"Live from Monday 23 November 2015" not in first_row
         assert u"99 services submitted" in first_row
         assert u"You must sign the framework agreement to sell these services" not in first_row
-        assert u"View your documents" in first_row
+        assert u"View your services" in first_row
 
     def test_shows_gcloud_7_in_standstill_application_passed(self):
         self.data_api_client.get_supplier.side_effect = get_supplier
