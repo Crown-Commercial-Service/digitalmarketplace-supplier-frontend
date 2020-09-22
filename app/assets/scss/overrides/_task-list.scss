@@ -1,6 +1,5 @@
 // TODO: Remove when task lists incorporated into digitalmarketplace-govuk-frontend
 
-$indicator-colour: $black;
 
 %dm-task-list-indicator {
   @include bold-16;
@@ -10,7 +9,6 @@ $indicator-colour: $black;
   right: 0;
   top: $gutter - 2px;
   margin-top: -15px;
-  border: 2px solid $indicator-colour;
   pointer-events: none;
   z-index: 2;
   min-width: 20%;
@@ -62,7 +60,7 @@ $indicator-colour: $black;
 
   &-indicator-completed {
     @extend %dm-task-list-indicator;
-    background-color: $indicator-colour;
+    background-color: govuk-shade(govuk-colour("blue"), 30);
     color: $grey-4;
     // Just a pinch of letter spacing to make reversed-out text a bit
     // easier to read
@@ -71,8 +69,14 @@ $indicator-colour: $black;
 
   &-indicator-not-completed {
     @extend %dm-task-list-indicator;
-    background-color: $white;
-    color: $indicator-colour;
+    background-color: govuk-tint(govuk-colour("blue"), 80);
+    color: govuk-shade(govuk-colour("blue"), 30);
+  }
+
+  &-indicator-todo {
+    @extend %dm-task-list-indicator;
+    background-color: govuk-tint(govuk-colour("grey-1"), 90);
+    color: $black;
   }
 
 }
