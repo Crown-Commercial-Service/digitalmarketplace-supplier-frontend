@@ -55,7 +55,7 @@
         {# Supplier details exist from a previous framework application, but haven't yet been confirmed for this one #}
         <strong class="dm-task-list-indicator-completed" id="dm-companydetails-inprogress">In progress</strong>
       {% else %}
-        <strong class="dm-task-list-indicator-not-completed" id="dm-companydetails-todo">To do</strong>
+        <strong class="dm-task-list-indicator-todo" id="dm-companydetails-todo">To do</strong>
       {% endif %}
     </li>
     <li class="dm-task-list-item">
@@ -71,9 +71,9 @@
         {% endif %}
       </span>
       {% if not application_company_details_confirmed %}
-        <strong class="dm-task-list-indicator-not-completed" id="dm-declaration-cantstart">Can't start yet</strong>
+        <strong class="dm-task-list-indicator-todo" id="dm-declaration-cantstart">Can't start yet</strong>
       {% elif declaration_status == 'unstarted' %}
-        <strong class="dm-task-list-indicator-not-completed" id="dm-declaration-todo">To do</strong>
+        <strong class="dm-task-list-indicator-todo" id="dm-declaration-todo">To do</strong>
       {% elif declaration_status == 'started' %}
         <strong class="dm-task-list-indicator-not-completed" id="dm-declaration-inprogress">In progress</strong>
       {% elif declaration_status == 'complete' %}
@@ -91,9 +91,9 @@
         {% endif %}
       </span>
       {% if not application_company_details_confirmed %}
-        <strong class="dm-task-list-indicator-not-completed" id="dm-services-cantstart">Can't start yet</strong>
+        <strong class="dm-task-list-indicator-todo" id="dm-services-cantstart">Can't start yet</strong>
       {% elif not counts.draft and not counts.complete %}
-        <strong class="dm-task-list-indicator-not-completed" id="dm-services-todo">To do</strong>
+        <strong class="dm-task-list-indicator-todo" id="dm-services-todo">To do</strong>
       {% elif counts.draft %}
         <strong class="dm-task-list-indicator-not-completed" id="dm-services-inprogress">In progress</strong>
       {% else %}
