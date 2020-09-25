@@ -1,25 +1,38 @@
 {% for framework in frameworks.dos3 + frameworks.live %}
-{% if framework.onFramework %}
-  <h3 class="heading-xmedium">{{ framework.name }}</h3>
-  <p class="govuk-body">
-  {% if framework.needs_to_complete_declaration %}
-    {% set sign_agreement_route = url_for('.legal_authority', framework_slug=framework.slug) if framework.is_e_signature_supported else url_for('.framework_agreement', framework_slug=framework.slug) %}
-    <a class="govuk-link" href="{{ sign_agreement_route }}">
-      You must sign the framework agreement to sell these services
-    </a>
-  {% else %}
-    {% if framework.framework == 'digital-outcomes-and-specialists' %}
-      <a class="govuk-link" href="{{ url_for('external.opportunities_dashboard', framework_slug=framework.slug) }}">View your opportunities</a><br>
+  {% if framework.onFramework %}
+    <h3 class="heading-xmedium">{{ framework.name }}</h3>
+    {% if framework.needs_to_return_agreement %}
+      {% set sign_agreement_route = url_for('.legal_authority', framework_slug=framework.slug) if framework.is_e_signature_supported else url_for('.framework_agreement', framework_slug=framework.slug) %}
+      <p class="govuk-body">
+        <a class="govuk-link" href="{{ sign_agreement_route }}">
+        You must sign the framework agreement to sell these services
+        </a>
+      </p>
     {% endif %}
-    {% if not framework.slug == 'digital-outcomes-and-specialists-3' %}
-      <a class="govuk-link" href="{{ url_for('.list_services', framework_slug=framework.slug) }}">View services</a><br>
-      <a class="govuk-link" href="{{ url_for('.framework_dashboard', framework_slug=framework.slug) }}">View documents and ask a question</a>
-    {% endif %}
+    <ul class="govuk-list">
+      {% if framework.framework == 'digital-outcomes-and-specialists' %}
+      <li>
+        <a class="govuk-link" href="{{ url_for('external.opportunities_dashboard', framework_slug=framework.slug) }}">
+          View your opportunities
+        </a>
+      </li>
+      {% endif %}
+      {% if not framework.slug == 'digital-outcomes-and-specialists-3' %}
+      <li>
+        <a class="govuk-link" href="{{ url_for('.list_services', framework_slug=framework.slug) }}">
+        View services
+        </a>
+      </li>
+      <li>
+        <a class="govuk-link" href="{{ url_for('.framework_dashboard', framework_slug=framework.slug) }}">
+        View documents
+        </a>
+      </li>
+    </ul>
   {% endif %}
-  </p>
-{% endif %}
 {% else %}
   <p class="govuk-body">
     You don't have any services on the Digital Marketplace
   </p>
+{% endif %}
 {% endfor %}

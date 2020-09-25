@@ -249,7 +249,7 @@ class TestSuppliersDashboard(BaseApplicationTest):
                 "//h3[normalize-space(string())=$f]"
                 "/..//a[normalize-space(string())=$t1]",
                 f="Digital Outcomes and Specialists 3",
-                t1="View documents and ask a question",
+                t1="View documents",
             )
         else:
             assert not document.xpath("//h3[normalize-space(string())='Digital Outcomes and Specialists 3']")
@@ -1105,7 +1105,7 @@ class TestSupplierOpportunitiesDashboardLink(BaseApplicationTest):
             u1="/suppliers/opportunities/frameworks/digital-outcomes-and-specialists-4",
             t2="View services",
             u2="/suppliers/frameworks/digital-outcomes-and-specialists-4/services",
-            t3="View documents and ask a question",
+            t3="View documents",
             u3="/suppliers/frameworks/digital-outcomes-and-specialists-4",
         )
 
@@ -1113,7 +1113,6 @@ class TestSupplierOpportunitiesDashboardLink(BaseApplicationTest):
         'incorrect_data',
         (
             {'onFramework': False},
-            {'services_count': 0},
             {'frameworkSlug': 'not-dos'}
         )
     )

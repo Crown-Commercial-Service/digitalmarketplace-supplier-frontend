@@ -31,7 +31,7 @@ from ..helpers.frameworks import (
     get_frameworks_by_status,
     get_frameworks_closed_and_open_for_applications,
     get_unconfirmed_open_supplier_frameworks,
-    is_e_signature_supported_framework
+    is_e_signature_supported_framework,
 )
 from ..helpers.suppliers import (
     COUNTRY_TUPLE,
@@ -92,7 +92,7 @@ def dashboard():
             'needs_to_return_agreement': (
                 framework.get('onFramework') and framework.get('agreementReturned') is False
             ),
-            'is_e_signature_supported': is_e_signature_supported_framework(framework['slug'])
+            'is_e_signature_supported': is_e_signature_supported_framework(framework['slug']),
         })
 
     if "currently_applying_to" in session:
