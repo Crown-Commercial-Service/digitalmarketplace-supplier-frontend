@@ -16,7 +16,7 @@ contextlib2==0.6.0.post1  # via digitalmarketplace-utils
 cryptography==2.3.1       # via digitalmarketplace-utils
 defusedxml==0.6.0         # via odfpy
 git+https://github.com/alphagov/digitalmarketplace-apiclient.git@21.8.0#egg=digitalmarketplace-apiclient==21.8.0  # via -r requirements.in
-git+https://github.com/alphagov/digitalmarketplace-content-loader.git@7.3.0#egg=digitalmarketplace-content-loader==7.3.0  # via -r requirements.in
+git+https://github.com/alphagov/digitalmarketplace-content-loader.git@7.22.0#egg=digitalmarketplace-content-loader==7.22.0  # via -r requirements.in
 git+https://github.com/alphagov/digitalmarketplace-utils.git@52.10.0#egg=digitalmarketplace-utils==52.10.0  # via -r requirements.in, digitalmarketplace-content-loader
 docopt==0.6.2             # via notifications-python-client
 docutils==0.15.2          # via botocore
@@ -33,7 +33,7 @@ git+https://github.com/alphagov/govuk-frontend-jinja.git@v0.5.2-alpha#egg=govuk-
 idna==2.9                 # via cryptography, requests
 inflection==0.3.1         # via digitalmarketplace-content-loader
 itsdangerous==1.1.0       # via -r requirements.in, flask, flask-wtf
-jinja2==2.10.3            # via digitalmarketplace-content-loader, flask, govuk-frontend-jinja
+jinja2==2.11.2            # via digitalmarketplace-content-loader, flask, govuk-frontend-jinja
 jmespath==0.9.4           # via boto3, botocore
 mailchimp3==3.0.6         # via digitalmarketplace-utils
 markdown==2.6.11          # via digitalmarketplace-content-loader

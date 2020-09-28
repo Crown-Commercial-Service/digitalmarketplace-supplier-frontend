@@ -31,7 +31,7 @@ from ..helpers.frameworks import (
     get_frameworks_by_status,
     get_frameworks_closed_and_open_for_applications,
     get_unconfirmed_open_supplier_frameworks,
-    is_e_signature_supported_framework
+    is_e_signature_supported_framework,
 )
 from ..helpers.suppliers import (
     COUNTRY_TUPLE,
@@ -89,10 +89,10 @@ def dashboard():
                 and framework['declaration'].get('status') == 'complete'
                 and framework.get('complete_drafts_count') > 0
             ),
-            'needs_to_complete_declaration': (
+            'needs_to_return_agreement': (
                 framework.get('onFramework') and framework.get('agreementReturned') is False
             ),
-            'is_e_signature_supported': is_e_signature_supported_framework(framework['slug'])
+            'is_e_signature_supported': is_e_signature_supported_framework(framework['slug']),
         })
 
     if "currently_applying_to" in session:
@@ -108,7 +108,7 @@ def dashboard():
             'open': get_frameworks_by_status(all_frameworks, 'open'),
             'pending': get_frameworks_by_status(all_frameworks, 'pending'),
             'standstill': get_frameworks_by_status(all_frameworks, 'standstill', 'made_application'),
-            'live': get_frameworks_by_status(all_frameworks, 'live', 'services_count'),
+            'live': get_frameworks_by_status(all_frameworks, 'live', 'onFramework'),
             'dos3': [
                 f for f in all_frameworks if f['slug'] == 'digital-outcomes-and-specialists-3' and f.get('onFramework')
             ],
