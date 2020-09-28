@@ -89,7 +89,7 @@ def dashboard():
                 and framework['declaration'].get('status') == 'complete'
                 and framework.get('complete_drafts_count') > 0
             ),
-            'needs_to_complete_declaration': (
+            'needs_to_return_agreement': (
                 framework.get('onFramework') and framework.get('agreementReturned') is False
             ),
             'is_e_signature_supported': is_e_signature_supported_framework(framework['slug'])
