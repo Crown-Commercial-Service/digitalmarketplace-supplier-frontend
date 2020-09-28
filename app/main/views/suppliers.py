@@ -108,7 +108,7 @@ def dashboard():
             'open': get_frameworks_by_status(all_frameworks, 'open'),
             'pending': get_frameworks_by_status(all_frameworks, 'pending'),
             'standstill': get_frameworks_by_status(all_frameworks, 'standstill', 'made_application'),
-            'live': get_frameworks_by_status(all_frameworks, 'live', 'services_count'),
+            'live': get_frameworks_by_status(all_frameworks, 'live', 'onFramework'),
             'dos3': [
                 f for f in all_frameworks if f['slug'] == 'digital-outcomes-and-specialists-3' and f.get('onFramework')
             ],
