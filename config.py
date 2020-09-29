@@ -44,7 +44,7 @@ class Config(object):
         'sign_framework_agreement_confirmation': 'bbc77101-4585-4d1e-80c4-43045ea9550f'
     }
 
-    E_SIGNATURE_FRAMEWORKS = ['g-cloud-12']
+    E_SIGNATURE_FRAMEWORKS = ['g-cloud-12', 'digital-outcomes-and-specialists-5']
 
     DM_AGREEMENTS_BUCKET = None
     DM_COMMUNICATIONS_BUCKET = None
