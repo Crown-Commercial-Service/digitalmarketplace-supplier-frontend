@@ -1235,7 +1235,7 @@ def legal_authority(framework_slug):
     check_framework_supports_e_signature_or_404(framework_slug)
     supplier_framework = get_supplier_framework_info(data_api_client, framework_slug)
     if not get_supplier_on_framework_from_info(supplier_framework):
-        return render_error_page(status_code=400, error_message="You must be on the framework to sign agreement.")
+        return render_error_page(status_code=400, error_message="You must be on the framework to sign the agreement.")
     form = LegalAuthorityForm()
     if form.validate_on_submit():
         response = form.legal_authority.data
@@ -1278,7 +1278,7 @@ def sign_framework_agreement(framework_slug):
     check_framework_supports_e_signature_or_404(framework_slug)
     supplier_framework = get_supplier_framework_info(data_api_client, framework_slug)
     if not get_supplier_on_framework_from_info(supplier_framework):
-        return render_error_page(status_code=400, error_message="You must be on the framework to sign agreement.")
+        return render_error_page(status_code=400, error_message="You must be on the framework to sign the agreement.")
 
     if not framework.get('frameworkAgreementVersion'):
         abort(404, error_message="The framework agreement was not found")
