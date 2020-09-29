@@ -21,35 +21,38 @@
         {% endif %}
 
     {% if not countersigned_agreement_file %}
-    {% import "toolkit/summary-table.html" as summary %}
-    {% call(item) summary.mapping_table(
-      caption='Agreement details',
-      field_headings=[
-        'Label',
-        'Value'
-      ],
-      field_headings_visible=False
-    ) %}
-      {% call summary.row() %}
-        {{ summary.field_name('Person who signed') }}
-        {% call summary.field() %}
-          <p class="govuk-body">{{ supplier_framework.agreementDetails.signerName }}</p>
-          <p class="govuk-body">{{ supplier_framework.agreementDetails.signerRole }}</p>
-        {% endcall %}
-      {% endcall %}
-      {% call summary.row() %}
-        {{ summary.field_name('Submitted by') }}
-        {% call summary.field() %}
-          <p class="govuk-body">{{ supplier_framework.agreementDetails.uploaderUserName }}</p>
-          <p class="govuk-body">{{ supplier_framework.agreementDetails.uploaderUserEmail }}</p>
-          <p class="govuk-body">{{ supplier_framework.agreementReturnedAt|datetimeformat }}</p>
-        {% endcall %}
-      {% endcall %}
-      {% call summary.row() %}
-        {{ summary.field_name('Countersignature') }}
-        {{ summary.field_name('Waiting for CCS to countersign') }}
-      {% endcall %}
-    {% endcall %}
+      {{ govukSummaryList({
+        "attributes": { "aria-label": "Agreement details" },
+        "rows": [
+          {
+            "key": {
+              "text": "Person who signed"
+            },
+            "value": {
+              "html": '<p class="govuk-body">' + supplier_framework.agreementDetails.signerName + '</p>
+                      <p class="govuk-body">' + supplier_framework.agreementDetails.signerRole + '</p>'
+            }
+          },
+          {
+            "key": {
+              "text": "Submitted by"
+            },
+            "value": {
+              "html": '<p class="govuk-body">' + supplier_framework.agreementDetails.uploaderUserName + '</p>
+                      <p class="govuk-body">' + supplier_framework.agreementDetails.uploaderUserEmail + '</p>
+                      <p class="govuk-body">' + supplier_framework.agreementReturnedAt|datetimeformat + '</p>'
+            }
+          },
+          {
+            "key": {
+              "text": "Countersignature"
+            },
+            "value": {
+              "text": 'Waiting for CCS to countersign'
+            }
+          }
+        ]
+      })}}
     {% endif %}
   {% endif %}
 

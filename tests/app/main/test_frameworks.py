@@ -803,11 +803,13 @@ class TestFrameworksDashboardPendingStandstill(BaseApplicationTest):
     def _extract_signing_details_table_rows(doc):
         return tuple(
             tuple(
-                td_th_elem.xpath("normalize-space(string())")
-                for td_th_elem in tr_elem.xpath("td|th")
+                td_th_dt_dd_elem.xpath("normalize-space(string())")
+                for td_th_dt_dd_elem in tr_elem.xpath("td|th|dt|dd")
             )
             for tr_elem in doc.xpath(
-                "//main//table[normalize-space(string(./caption))=$b]/tbody/tr",
+                ("//main//table[normalize-space(string(./caption))=$b]/tbody/tr"
+                 "|"
+                 "//main//dl/div[@class='govuk-summary-list__row']"),
                 b="Agreement details",
             )
         )
