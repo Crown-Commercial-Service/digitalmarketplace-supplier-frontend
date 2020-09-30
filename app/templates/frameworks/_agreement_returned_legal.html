@@ -3,19 +3,30 @@
     <h2 class="summary-item-heading">Legal documents</h2>
 
   {% if framework.frameworkAgreementVersion %}
-      {% if signed_agreement_document_name %}
+      {# e-signature frameworks don't use signed_agreement_document_name but supplier_framework.agreementReturned check above should be sufficient #}
+      {% if signed_agreement_document_name or is_e_signature_supported_framework  %}
             {% if countersigned_agreement_file %}
               <p class="govuk-body">
+                {%  if is_e_signature_supported_framework %}
+                Your signed framework agreement forms a complete legal contract.
+                {% else %}
                 Your original and counterpart signature pages, and the standard framework
                 agreement, form a complete, legal contract.
+                {%  endif %}
               </p>
             {% else %}
               <p class="govuk-body">
-                Your framework agreement signature page has been sent to
-                the Crown Commercial Service (<abbr title="Crown Commercial Service">CCS</abbr>).
-                They’ll check and countersign the agreement, or contact you if there’s a
-                problem. You don’t need to wait for <abbr title="Crown Commercial Service">CCS</abbr> to
-                countersign your agreement before you start selling services.
+                  {% if is_e_signature_supported_framework %}
+                  Your signed framework agreement will be sent to Crown Commercial Service (<abbr title="Crown Commercial Service">CCS</abbr>) to be countersigned.
+                  We'll email you when the countersigned agreement is available.
+                  You'll need to wait for <abbr title="Crown Commercial Service">CCS</abbr> to countersign your agreement before you can sell services.
+                  {% else %}
+                  Your framework agreement signature page has been sent to
+                  the Crown Commercial Service (<abbr title="Crown Commercial Service">CCS</abbr>).
+                  They’ll check and countersign the agreement, or contact you if there’s a
+                  problem. You don’t need to wait for <abbr title="Crown Commercial Service">CCS</abbr> to
+                  countersign your agreement before you start selling services.
+                  {% endif %}
               </p>
             {% endif %}
         {% endif %}
@@ -72,8 +83,8 @@
         </a>
       </p>
     {% endif %}
+    {% if signed_agreement_document_name %}
       <p class="govuk-body">
-      {% if signed_agreement_document_name %}
         <a class="govuk-link" href="{{ url_for('.download_agreement_file', framework_slug=framework.slug, document_name=signed_agreement_document_name) }}" target="_blank">
           {% if framework.frameworkAgreementVersion %}
             Download your ‘original’ framework agreement signature page
@@ -89,13 +100,21 @@
       <p class="govuk-body">
         <a class="govuk-link" href="{{ url_for('.download_agreement_file', framework_slug=framework.slug, document_name=countersigned_agreement_file) }}" target="_blank">
           {% if framework.frameworkAgreementVersion %}
-            Download your ‘counterpart’ framework agreement signature page
+                {% if is_e_signature_supported_framework %}
+                 Download your signed framework agreement
+                {% else %}
+                  Download your ‘counterpart’ framework agreement signature page
+                {% endif %}
           {% else %}
             Download your countersigned framework agreement
           {% endif %}
         </a>
         <br/>
-        The agreement signed by the Crown Commercial Service
+        {% if e_signature_supported_framework %}
+        This agreement is signed by the Crown Commercial Service.
+        {% else %}
+        The agreement signed by the Crown Commercial Service.
+        {% endif %}
       </p>
     {% endif %}
     {% if countersigned_agreement_file and not framework.frameworkAgreementVersion %}
