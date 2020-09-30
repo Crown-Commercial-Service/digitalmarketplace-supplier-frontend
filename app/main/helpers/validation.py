@@ -286,6 +286,22 @@ class DOS5Validator(SharedValidator):
     """Following an accessibility review, a number of questions and answers were changed for DOS 5"""
     email_validation_fields = {"contactEmailContractNotice", "contactEmail"}
 
+    number_fields = [("subcontracting30DayPayments", 0, 100)]
+
+    def formatting_errors(self, answers):
+        error_map = super(DOS5Validator, self).formatting_errors(answers)
+
+        for field, minimum, maximum in self.number_fields:
+            try:
+                number = float(self.answers.get(field))
+            except ValueError:
+                error_map[field] = 'invalid_format'
+            else:
+                if number > maximum or number < minimum:
+                    error_map[field] = 'invalid_format'
+
+        return error_map
+
 
 VALIDATORS = {
     "g-cloud-7": G7Validator,

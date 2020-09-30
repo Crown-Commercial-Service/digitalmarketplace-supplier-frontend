@@ -19,7 +19,7 @@ def submission():
     dos5["outsideIR35"] = True
     dos5["employmentStatus"] = True
     dos5['contact'] = "Blah"
-    dos5['subcontracting30DayPayments'] = True
+    dos5['subcontracting30DayPayments'] = "100"
     dos5['subcontractingInvoicesPaid'] = True
     dos5['contactEmail'] = 'Blah@example.com'
 
@@ -43,3 +43,23 @@ def test_invalid_email_addresses_cause_errors(content, submission):
         'contactEmail': 'invalid_format',
         'contactEmailContractNotice': 'invalid_format',
     }
+
+
+@pytest.mark.parametrize("number_field_value", [
+    "0",
+    "100",
+    "3.14159",
+])
+def test_subcontracting_payment_percent_is_valid(content, submission, number_field_value):
+    submission['subcontracting30DayPayments'] = number_field_value
+    assert DOS5Validator(content, submission).errors() == {}
+
+
+@pytest.mark.parametrize("number_field_value", [
+    "-42",
+    "1000",
+    "not a number",
+])
+def test_subcontracting_payment_percent_is_invalid(content, submission, number_field_value):
+    submission['subcontracting30DayPayments'] = number_field_value
+    assert DOS5Validator(content, submission).errors() == {'subcontracting30DayPayments': 'invalid_format'}
