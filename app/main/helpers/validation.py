@@ -282,6 +282,11 @@ class G12Validator(SharedValidator):
         return errors_map
 
 
+class DOS5Validator(SharedValidator):
+    """Following an accessibility review, a number of questions and answers were changed for DOS 5"""
+    email_validation_fields = {"contactEmailContractNotice", "contactEmail"}
+
+
 VALIDATORS = {
     "g-cloud-7": G7Validator,
     "g-cloud-8": SharedValidator,
@@ -293,5 +298,5 @@ VALIDATORS = {
     "g-cloud-11": SharedValidator,
     "digital-outcomes-and-specialists-4": SharedValidator,
     "g-cloud-12": G12Validator,
-    "digital-outcomes-and-specialists-5": SharedValidator,
+    "digital-outcomes-and-specialists-5": DOS5Validator,
 }
