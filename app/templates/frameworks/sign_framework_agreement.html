@@ -46,15 +46,18 @@
         </p>
     {% endwith %}
 
-
-    <form method="POST" novalidate action="{{ url_for(".sign_framework_agreement", framework_slug=framework_slug) }}">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-        {{ form.signerName }}
-        {{ form.signerRole }}
-        {{ form.signer_terms_and_conditions }}
-        {{ govukButton({
-          "text": "Sign agreement"
-        }) }}
-    </form>
+    <div class="govuk-grid-row">
+        <div class="govuk-grid-column-two-thirds">
+            <form method="POST" novalidate action="{{ url_for(".sign_framework_agreement", framework_slug=framework_slug) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                {{ form.signerName }}
+                {{ form.signerRole }}
+                {{ form.signer_terms_and_conditions }}
+                {{ govukButton({
+                  "text": "Sign agreement"
+                }) }}
+            </form>
+        </div>
+    </div>
 {% endblock %}
 
