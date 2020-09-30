@@ -5929,7 +5929,7 @@ class TestSignFrameworkAgreement(BaseApplicationTest):
         text = res.get_data(as_text=True)
         assert 'Enter your full name.' in text
         assert 'Enter your role in the company.' in text
-        assert 'You must accept the terms and conditions of the Framework Agreement.' in text
+        assert 'Accept the terms and conditions of the Framework Agreement.' in text
 
     def test_post_signs_agreement(self):
         self.data_api_client.create_framework_agreement.return_value = {"agreement": {"id": 789}}

@@ -29,6 +29,8 @@
 
 {% block mainContent %}
     {% include 'toolkit/forms/validation.html' %}
+    <div class="govuk-grid-row">
+    <div class="govuk-grid-column-two-thirds">
     <span class="govuk-caption-xl">{{ framework.name }} {{ contract_title }}</span>
     <h1 class="govuk-heading-xl">Supplier appointment terms</h1>
         <p class="govuk-!-font-weight-bold">
@@ -45,16 +47,16 @@
             <span class="govuk-body-s"><abbr title="Portable Document Format">PDF</abbr>, {{ framework_pdf_metadata.file_size }}, {{ framework_pdf_metadata.page_count }} pages</span>
         </p>
     {% endwith %}
-
-
-    <form method="POST" novalidate action="{{ url_for(".sign_framework_agreement", framework_slug=framework_slug) }}">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
-        {{ form.signerName }}
-        {{ form.signerRole }}
-        {{ form.signer_terms_and_conditions }}
-        {{ govukButton({
-          "text": "Sign agreement"
-        }) }}
-    </form>
+            <form method="POST" novalidate action="{{ url_for(".sign_framework_agreement", framework_slug=framework_slug) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+                {{ form.signerName }}
+                {{ form.signerRole }}
+                {{ form.signer_terms_and_conditions }}
+                {{ govukButton({
+                  "text": "Sign agreement"
+                }) }}
+            </form>
+        </div>
+        </div>
 {% endblock %}
 

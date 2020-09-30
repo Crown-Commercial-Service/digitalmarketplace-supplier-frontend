@@ -120,6 +120,6 @@ class SignFrameworkAgreementForm(FlaskForm):
     signer_terms_and_conditions = DMBooleanField(
         "I accept the terms and conditions of the Framework Agreement",
         validators=[
-            DataRequired(message="You must accept the terms and conditions of the Framework Agreement.")
+            DataRequired(message="Accept the terms and conditions of the Framework Agreement.")
         ]
     )
