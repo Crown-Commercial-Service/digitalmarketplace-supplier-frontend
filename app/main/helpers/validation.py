@@ -293,4 +293,5 @@ VALIDATORS = {
     "g-cloud-11": SharedValidator,
     "digital-outcomes-and-specialists-4": SharedValidator,
     "g-cloud-12": G12Validator,
+    "digital-outcomes-and-specialists-5": SharedValidator,
 }
