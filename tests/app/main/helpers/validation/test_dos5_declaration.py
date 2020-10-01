@@ -19,6 +19,7 @@ def submission():
     dos5["outsideIR35"] = True
     dos5["employmentStatus"] = True
     dos5['contact'] = "Blah"
+    dos5['subcontracting'] = 'as a prime contractor, using third parties (subcontractors) to provide some services'
     dos5['subcontracting30DayPayments'] = True
     dos5['subcontractingInvoicesPaid'] = "100"
     dos5['contactEmail'] = 'Blah@example.com'
@@ -67,6 +68,17 @@ def test_subcontracting_payment_percent_is_invalid(content, submission, number_f
     assert DOS5Validator(content, submission).errors() == {'subcontractingInvoicesPaid': 'not_a_number'}
 
 
-def test_subcontracting_payment_fails_when_absent(content, submission):
+def test_subcontracting_payment_fails_when_absent_and_required(content, submission):
+    submission['subcontracting30DayPayments'] = None
     submission['subcontractingInvoicesPaid'] = None
-    assert DOS5Validator(content, submission).errors() == {'subcontractingInvoicesPaid': 'answer_required'}
+    assert DOS5Validator(content, submission).errors() == {
+        'subcontractingInvoicesPaid': 'answer_required',
+        'subcontracting30DayPayments': 'answer_required'
+    }
+
+
+def test_subcontracting_payment_passes_when_absent_and_not_required(content, submission):
+    submission['subcontracting'] = 'yourself without the use of third parties (subcontractors)'
+    submission['subcontracting30DayPayments'] = None
+    submission['subcontractingInvoicesPaid'] = None
+    assert DOS5Validator(content, submission).errors() == {}

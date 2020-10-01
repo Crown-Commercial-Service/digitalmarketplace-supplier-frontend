@@ -300,6 +300,25 @@ class DOS5Validator(SharedValidator):
     email_validation_fields = {"contactEmailContractNotice", "contactEmail"}
     percentage_fields = ["subcontractingInvoicesPaid"]
 
+    optional_fields = SharedValidator.optional_fields.union({
+        "subcontracting30DayPayments",
+        "subcontractingInvoicesPaid"}
+    )
+
+    def get_required_fields(self):
+        req_fields = super(DOS5Validator, self).get_required_fields()
+
+        # as per subcontracting configuration on digitalmarketplace-frameworks
+        if self.answers.get("subcontracting") in [
+            "as a prime contractor, using third parties (subcontractors) to provide some services",
+            "as part of a consortium or special purpose vehicle, using third parties (subcontractors) to provide some "
+            "services"
+        ]:
+            req_fields.add("subcontracting30DayPayments")
+            req_fields.add("subcontractingInvoicesPaid")
+
+        return req_fields
+
     def formatting_errors(self, answers):
         error_map = super(DOS5Validator, self).formatting_errors(answers)
 
