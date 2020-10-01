@@ -282,33 +282,31 @@ class G12Validator(SharedValidator):
         return errors_map
 
 
+def is_valid_percentage(value):
+    # Design System guidance is that we should allow users to provide answers with or without units.
+    if isinstance(value, str):
+        value = value.rstrip('%')
+
+    try:
+        number = float(value)
+    except ValueError:
+        return False
+    else:
+        return 0 <= number <= 100
+
+
 class DOS5Validator(SharedValidator):
     """Following an accessibility review, a number of questions and answers were changed for DOS 5"""
     email_validation_fields = {"contactEmailContractNotice", "contactEmail"}
     percentage_fields = ["subcontractingInvoicesPaid"]
 
-    def is_valid_percentage(self, field):
-        value = self.answers.get(field)
-
-        # Design System guidance is that we should allow users to provide answers with or without units.
-        if isinstance(value, str):
-            value = value.rstrip('%')
-
-        try:
-            number = float(value)
-        except ValueError:
-            return False
-        else:
-            return 0 <= number <= 100
-
     def formatting_errors(self, answers):
         error_map = super(DOS5Validator, self).formatting_errors(answers)
 
-        error_map.update({
-            field: 'invalid_format'
-            for field in self.percentage_fields
-            if not self.is_valid_percentage(field)
-        })
+        for field in self.percentage_fields:
+            value = self.answers.get(field)
+            if value is not None and not is_valid_percentage(value):
+                error_map[field] = 'invalid_format'
 
         return error_map
 
