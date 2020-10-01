@@ -286,7 +286,7 @@ class DOS5Validator(SharedValidator):
     """Following an accessibility review, a number of questions and answers were changed for DOS 5"""
     email_validation_fields = {"contactEmailContractNotice", "contactEmail"}
 
-    number_fields = [("subcontracting30DayPayments", 0, 100)]
+    number_fields = [("subcontractingInvoicesPaid", 0, 100)]
 
     def formatting_errors(self, answers):
         error_map = super(DOS5Validator, self).formatting_errors(answers)
