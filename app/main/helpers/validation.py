@@ -285,20 +285,26 @@ class G12Validator(SharedValidator):
 class DOS5Validator(SharedValidator):
     """Following an accessibility review, a number of questions and answers were changed for DOS 5"""
     email_validation_fields = {"contactEmailContractNotice", "contactEmail"}
+    percentage_fields = ["subcontractingInvoicesPaid"]
 
-    number_fields = [("subcontractingInvoicesPaid", 0, 100)]
+    def is_valid_percentage(self, field):
+        value = self.answers.get(field)
+
+        try:
+            number = float(value)
+        except ValueError:
+            return False
+        else:
+            return 0 <= number <= 100
 
     def formatting_errors(self, answers):
         error_map = super(DOS5Validator, self).formatting_errors(answers)
 
-        for field, minimum, maximum in self.number_fields:
-            try:
-                number = float(self.answers.get(field))
-            except ValueError:
-                error_map[field] = 'invalid_format'
-            else:
-                if number > maximum or number < minimum:
-                    error_map[field] = 'invalid_format'
+        error_map.update({
+            field: 'invalid_format'
+            for field in self.percentage_fields
+            if not self.is_valid_percentage(field)
+        })
 
         return error_map
 
