@@ -282,6 +282,54 @@ class G12Validator(SharedValidator):
         return errors_map
 
 
+def is_valid_percentage(value):
+    # Design System guidance is that we should allow users to provide answers with or without units.
+    if isinstance(value, str):
+        value = value.rstrip('%')
+
+    try:
+        number = float(value)
+    except ValueError:
+        return False
+    else:
+        return 0 <= number <= 100
+
+
+class DOS5Validator(SharedValidator):
+    """Following an accessibility review, a number of questions and answers were changed for DOS 5"""
+    email_validation_fields = {"contactEmailContractNotice", "contactEmail"}
+    percentage_fields = ["subcontractingInvoicesPaid"]
+
+    optional_fields = SharedValidator.optional_fields.union({
+        "subcontracting30DayPayments",
+        "subcontractingInvoicesPaid"}
+    )
+
+    def get_required_fields(self):
+        req_fields = super(DOS5Validator, self).get_required_fields()
+
+        # as per subcontracting configuration on digitalmarketplace-frameworks
+        if self.answers.get("subcontracting") in [
+            "as a prime contractor, using third parties (subcontractors) to provide some services",
+            "as part of a consortium or special purpose vehicle, using third parties (subcontractors) to provide some "
+            "services"
+        ]:
+            req_fields.add("subcontracting30DayPayments")
+            req_fields.add("subcontractingInvoicesPaid")
+
+        return req_fields
+
+    def formatting_errors(self, answers):
+        error_map = super(DOS5Validator, self).formatting_errors(answers)
+
+        for field in self.percentage_fields:
+            value = self.answers.get(field)
+            if value is not None and not is_valid_percentage(value):
+                error_map[field] = 'not_a_number'
+
+        return error_map
+
+
 VALIDATORS = {
     "g-cloud-7": G7Validator,
     "g-cloud-8": SharedValidator,
@@ -293,4 +341,5 @@ VALIDATORS = {
     "g-cloud-11": SharedValidator,
     "digital-outcomes-and-specialists-4": SharedValidator,
     "g-cloud-12": G12Validator,
+    "digital-outcomes-and-specialists-5": DOS5Validator,
 }
