@@ -49,6 +49,8 @@ def test_invalid_email_addresses_cause_errors(content, submission):
     "0",
     "100",
     "3.14159",
+    "50%",
+    40,
 ])
 def test_subcontracting_payment_percent_is_valid(content, submission, number_field_value):
     submission['subcontractingInvoicesPaid'] = number_field_value

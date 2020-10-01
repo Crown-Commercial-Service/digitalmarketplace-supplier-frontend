@@ -290,6 +290,10 @@ class DOS5Validator(SharedValidator):
     def is_valid_percentage(self, field):
         value = self.answers.get(field)
 
+        # Design System guidance is that we should allow users to provide answers with or without units.
+        if isinstance(value, str):
+            value = value.rstrip('%')
+
         try:
             number = float(value)
         except ValueError:
