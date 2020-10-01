@@ -64,7 +64,7 @@ def test_subcontracting_payment_percent_is_valid(content, submission, number_fie
 ])
 def test_subcontracting_payment_percent_is_invalid(content, submission, number_field_value):
     submission['subcontractingInvoicesPaid'] = number_field_value
-    assert DOS5Validator(content, submission).errors() == {'subcontractingInvoicesPaid': 'invalid_format'}
+    assert DOS5Validator(content, submission).errors() == {'subcontractingInvoicesPaid': 'not_a_number'}
 
 
 def test_subcontracting_payment_fails_when_absent(content, submission):

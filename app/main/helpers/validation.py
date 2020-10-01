@@ -306,7 +306,7 @@ class DOS5Validator(SharedValidator):
         for field in self.percentage_fields:
             value = self.answers.get(field)
             if value is not None and not is_valid_percentage(value):
-                error_map[field] = 'invalid_format'
+                error_map[field] = 'not_a_number'
 
         return error_map
 
