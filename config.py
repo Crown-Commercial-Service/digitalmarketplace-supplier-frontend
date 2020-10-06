@@ -37,8 +37,7 @@ class Config(object):
         "create_user_account": "84f5d812-df9d-4ab8-804a-06f64f5abd30",
         "invite_contributor": "5eefe42d-1694-4388-8908-991cdfba0a71",
         "framework_agreement_signature_page": "08929c93-f9e7-4b40-b75f-418659308324",
-        'g-cloud-application-started': '7362aad7-1ffa-4e36-8ddd-d16cc5305175',
-        'digital-outcomes-and-specialists-application-started': '1920c708-66a9-466e-a0ae-3bd13d31e32d',
+        'framework-application-started': '9c8237fa-d854-4388-babb-14a0f252d133',
         'framework-clarification-question': "8574484f-9907-44c0-b9d5-1120beb64ef0",
         'framework-application-question': '6681d4a1-6e30-407f-9e8b-3f6633d73546',
         'sign_framework_agreement_confirmation': 'bbc77101-4585-4d1e-80c4-43045ea9550f'
