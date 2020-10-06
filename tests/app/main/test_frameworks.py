@@ -126,7 +126,7 @@ class TestFrameworksDashboard(BaseApplicationTest):
             {'emailAddress': 'email3', 'active': False}
         ]
         mock_dmnotifyclient_instance = mock_dmnotifyclient_class.return_value
-        mock_dmnotifyclient_instance.templates = {'g-cloud-application-started': '123456789'}
+        mock_dmnotifyclient_instance.templates = {'framework-application-started': '123456789'}
         res = self.client.post("/suppliers/frameworks/g-cloud-7")
 
         self.data_api_client.register_framework_interest.assert_called_once_with(

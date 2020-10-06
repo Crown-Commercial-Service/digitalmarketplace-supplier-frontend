@@ -107,8 +107,9 @@ def framework_dashboard(framework_slug):
         for address in [user['emailAddress'] for user in supplier_users if user['active']]:
             notify_client.send_email(
                 to_email_address=address,
-                template_name_or_id=notify_client.templates[f"{framework['family']}-application-started"],
+                template_name_or_id=notify_client.templates["framework-application-started"],
                 personalisation={
+                    'framework_name': framework['name'],
                     'framework_applications_close_date': framework['applicationsCloseAt'],
                     'framework_clarification_questions_close_date': framework['clarificationsCloseAt'],
                 },
