@@ -18,11 +18,12 @@ def submission():
     dos5["helpBuyersComplyTechnologyCodesOfPractice"] = True
     dos5["outsideIR35"] = True
     dos5["employmentStatus"] = True
-    dos5['contact'] = "Blah"
+    dos5["incorrectTaxReturns"] = False
+    dos5["safeguardingOfficialInformation"] = True
+    dos5["employersLiabilityInsurance"] = True
     dos5['subcontracting'] = 'as a prime contractor, using third parties (subcontractors) to provide some services'
     dos5['subcontracting30DayPayments'] = True
     dos5['subcontractingInvoicesPaid'] = "100"
-    dos5['contactEmail'] = 'Blah@example.com'
 
     return dos5
 
@@ -34,16 +35,6 @@ def content():
 
 def test_no_error_if_correct(content, submission):
     assert DOS5Validator(content, submission).errors() == {}
-
-
-def test_invalid_email_addresses_cause_errors(content, submission):
-    submission['contactEmail'] = 'not an email'
-    submission['contactEmailContractNotice'] = "not an email"
-
-    assert DOS5Validator(content, submission).errors() == {
-        'contactEmail': 'invalid_format',
-        'contactEmailContractNotice': 'invalid_format',
-    }
 
 
 @pytest.mark.parametrize("number_field_value", [
