@@ -297,7 +297,6 @@ def is_valid_percentage(value):
 
 class DOS5Validator(SharedValidator):
     """Following an accessibility review, a number of questions and answers were changed for DOS 5"""
-    email_validation_fields = {"contactEmailContractNotice", "contactEmail"}
     percentage_fields = ["subcontractingInvoicesPaid"]
 
     optional_fields = SharedValidator.optional_fields.union({
