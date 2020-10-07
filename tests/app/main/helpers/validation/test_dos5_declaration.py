@@ -19,6 +19,9 @@ def submission():
     dos5["outsideIR35"] = True
     dos5["employmentStatus"] = True
     dos5['contact'] = "Blah"
+    dos5["incorrectTaxReturns"] = False
+    dos5["safeguardingOfficialInformation"] = True
+    dos5["employersLiabilityInsurance"] = True
     dos5['subcontracting'] = 'as a prime contractor, using third parties (subcontractors) to provide some services'
     dos5['subcontracting30DayPayments'] = True
     dos5['subcontractingInvoicesPaid'] = "100"
