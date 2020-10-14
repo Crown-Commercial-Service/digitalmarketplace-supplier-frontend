@@ -143,12 +143,12 @@ class G7Validator(DeclarationValidator):
     """
     Validator for G-Cloud 7.
     """
-    optional_fields = set([
+    optional_fields = {
         "SQ1-1p-i", "SQ1-1p-ii", "SQ1-1p-iii", "SQ1-1p-iv",
         "SQ1-1q-i", "SQ1-1q-ii", "SQ1-1q-iii", "SQ1-1q-iv", "SQ1-1cii", "SQ1-1i-ii",
         "SQ1-1j-i", "SQ1-1j-ii", "SQ4-1c", "SQ3-1k", "SQ1-1i-i"
-    ])
-    email_validation_fields = set(['SQ1-1o', 'SQ1-2b'])
+    }
+    email_validation_fields = {'SQ1-1o', 'SQ1-2b'}
     character_limit = 5000
 
     def get_required_fields(self):
@@ -191,13 +191,13 @@ class G7Validator(DeclarationValidator):
 
 
 class DOSValidator(DeclarationValidator):
-    optional_fields = set([
+    optional_fields = {
         "mitigatingFactors", "mitigatingFactors2", "mitigatingFactors3", "tradingStatusOther",
         "modernSlaveryStatement", "modernSlaveryStatementOptional", "modernSlaveryReportingRequirements",
         # Registered in UK = no
         "appropriateTradeRegisters", "appropriateTradeRegistersNumber",
         "licenceOrMemberRequired", "licenceOrMemberRequiredDetails",
-    ])
+    }
 
     dependent_fields = {
         # If you responded yes to any of questions 22 to 34
@@ -220,7 +220,7 @@ class DOSValidator(DeclarationValidator):
         ],
     }
 
-    email_validation_fields = set(["contactEmailContractNotice", "primaryContactEmail"])
+    email_validation_fields = {"contactEmailContractNotice", "primaryContactEmail"}
     character_limit = 5000
 
     def get_required_fields(self):
