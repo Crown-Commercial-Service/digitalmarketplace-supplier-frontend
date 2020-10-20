@@ -1,6 +1,7 @@
 from functools import reduce
 from operator import add
 import re
+from typing import Any, List, Dict, Set, Tuple
 
 from werkzeug.datastructures import ImmutableOrderedMultiDict
 
@@ -29,13 +30,13 @@ class DeclarationValidator(object):
         self.content = content
         self.answers = answers
 
-    def get_error_messages_for_page(self, section):
+    def get_error_messages_for_page(self, section) -> ImmutableOrderedMultiDict:
         all_errors = self.get_error_messages()
         page_ids = section.get_question_ids()
         page_errors = ImmutableOrderedMultiDict(filter(lambda err: err[0] in page_ids, all_errors))
         return page_errors
 
-    def get_error_messages(self):
+    def get_error_messages(self) -> List[Tuple[str, dict]]:
         raw_errors_map = self.errors()
         errors_map = list()
         for question_id in self.all_fields():
@@ -51,7 +52,7 @@ class DeclarationValidator(object):
 
         return errors_map
 
-    def get_error_message(self, question_id, message_key):
+    def get_error_message(self, question_id: str, message_key: str) -> str:
         for validation in self.content.get_question(question_id).get('validations', []):
             if validation['name'] == message_key:
                 return validation['message']
@@ -63,14 +64,14 @@ class DeclarationValidator(object):
         return default_messages.get(
             message_key, 'There was a problem with the answer to this question')
 
-    def all_fields(self):
+    def all_fields(self) -> List[str]:
         return reduce(add, (section.get_question_ids() for section in self.content))
 
-    def fields_with_values(self):
+    def fields_with_values(self) -> Set[str]:
         return set(key for key, value in self.answers.items()
                    if value is not None and (not isinstance(value, str) or len(value) > 0))
 
-    def errors(self):
+    def errors(self) -> Dict[str, str]:
         errors_map = {}
         errors_map.update(self.character_limit_errors())
         errors_map.update(self.word_limit_errors())
@@ -78,7 +79,7 @@ class DeclarationValidator(object):
         errors_map.update(self.answer_required_errors())
         return errors_map
 
-    def answer_required_errors(self):
+    def answer_required_errors(self) -> Dict[str, str]:
         req_fields = self.get_required_fields()
         filled_fields = self.fields_with_values()
         errors_map = {}
@@ -88,7 +89,7 @@ class DeclarationValidator(object):
 
         return errors_map
 
-    def character_limit_errors(self):
+    def character_limit_errors(self) -> Dict[str, str]:
         errors_map = {}
         for question_id in self.all_fields():
             if self.content.get_question(question_id).get('type') in ['text', 'textbox_large']:
@@ -98,7 +99,7 @@ class DeclarationValidator(object):
 
         return errors_map
 
-    def word_limit_errors(self):
+    def word_limit_errors(self) -> Dict[str, str]:
         errors_map = {}
         for question_id in self.all_fields():
             question = self.content.get_question(question_id)
@@ -111,7 +112,7 @@ class DeclarationValidator(object):
 
         return errors_map
 
-    def formatting_errors(self, answers):
+    def formatting_errors(self, answers) -> Dict[str, str]:
         errors_map = {}
         if self.email_validation_fields is not None and len(self.email_validation_fields) > 0:
             for field in self.email_validation_fields:
@@ -126,7 +127,7 @@ class DeclarationValidator(object):
                     errors_map[field] = 'invalid_format'
         return errors_map
 
-    def get_required_fields(self):
+    def get_required_fields(self) -> Set[str]:
         try:
             req_fields = self.required_fields
         except AttributeError:
@@ -143,15 +144,15 @@ class G7Validator(DeclarationValidator):
     """
     Validator for G-Cloud 7.
     """
-    optional_fields = set([
+    optional_fields = {
         "SQ1-1p-i", "SQ1-1p-ii", "SQ1-1p-iii", "SQ1-1p-iv",
         "SQ1-1q-i", "SQ1-1q-ii", "SQ1-1q-iii", "SQ1-1q-iv", "SQ1-1cii", "SQ1-1i-ii",
         "SQ1-1j-i", "SQ1-1j-ii", "SQ4-1c", "SQ3-1k", "SQ1-1i-i"
-    ])
-    email_validation_fields = set(['SQ1-1o', 'SQ1-2b'])
+    }
+    email_validation_fields = {'SQ1-1o', 'SQ1-2b'}
     character_limit = 5000
 
-    def get_required_fields(self):
+    def get_required_fields(self) -> Set[str]:
         req_fields = super(G7Validator, self).get_required_fields()
 
         #  If you answered other to question 19 (trading status)
@@ -191,13 +192,13 @@ class G7Validator(DeclarationValidator):
 
 
 class DOSValidator(DeclarationValidator):
-    optional_fields = set([
+    optional_fields = {
         "mitigatingFactors", "mitigatingFactors2", "mitigatingFactors3", "tradingStatusOther",
         "modernSlaveryStatement", "modernSlaveryStatementOptional", "modernSlaveryReportingRequirements",
         # Registered in UK = no
         "appropriateTradeRegisters", "appropriateTradeRegistersNumber",
         "licenceOrMemberRequired", "licenceOrMemberRequiredDetails",
-    ])
+    }
 
     dependent_fields = {
         # If you responded yes to any of questions 22 to 34
@@ -220,10 +221,10 @@ class DOSValidator(DeclarationValidator):
         ],
     }
 
-    email_validation_fields = set(["contactEmailContractNotice", "primaryContactEmail"])
+    email_validation_fields = {"contactEmailContractNotice", "primaryContactEmail"}
     character_limit = 5000
 
-    def get_required_fields(self):
+    def get_required_fields(self) -> Set[str]:
         req_fields = super(DOSValidator, self).get_required_fields()
 
         for target_field, fields in self.dependent_fields.items():
@@ -263,7 +264,7 @@ class SharedValidator(DOSValidator):
 
 class G12Validator(SharedValidator):
 
-    def errors(self):
+    def errors(self) -> Dict[str, str]:
 
         errors_map = super().errors()
 
@@ -282,7 +283,7 @@ class G12Validator(SharedValidator):
         return errors_map
 
 
-def is_valid_percentage(value):
+def is_valid_percentage(value: Any) -> bool:
     # Design System guidance is that we should allow users to provide answers with or without units.
     if isinstance(value, str):
         value = value.rstrip('%')
@@ -304,7 +305,7 @@ class DOS5Validator(SharedValidator):
         "subcontractingInvoicesPaid"}
     )
 
-    def get_required_fields(self):
+    def get_required_fields(self) -> Set[str]:
         req_fields = super(DOS5Validator, self).get_required_fields()
 
         # as per subcontracting configuration on digitalmarketplace-frameworks
@@ -318,7 +319,7 @@ class DOS5Validator(SharedValidator):
 
         return req_fields
 
-    def formatting_errors(self, answers):
+    def formatting_errors(self, answers) -> Dict[str, str]:
         error_map = super(DOS5Validator, self).formatting_errors(answers)
 
         for field in self.percentage_fields:
