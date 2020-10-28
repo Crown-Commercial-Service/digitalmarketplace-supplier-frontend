@@ -137,11 +137,20 @@ class Development(Config):
     DM_DATA_API_AUTH_TOKEN = "myToken"
     DM_API_AUTH_TOKEN = "myToken"
 
+    DM_S3_ENDPOINT_URL = (  # use envvars to set this, defaults to using AWS
+        f"http://localhost:{os.environ['DM_S3_ENDPOINT_PORT']}"
+        if os.getenv("DM_S3_ENDPOINT_PORT") else None
+    )
+
     DM_SUBMISSIONS_BUCKET = "digitalmarketplace-dev-uploads"
     DM_COMMUNICATIONS_BUCKET = "digitalmarketplace-dev-uploads"
     DM_AGREEMENTS_BUCKET = "digitalmarketplace-dev-uploads"
     DM_DOCUMENTS_BUCKET = "digitalmarketplace-dev-uploads"
-    DM_ASSETS_URL = "https://{}.s3-eu-west-1.amazonaws.com".format(DM_SUBMISSIONS_BUCKET)
+    DM_ASSETS_URL = (
+        f"{DM_S3_ENDPOINT_URL}"
+        if DM_S3_ENDPOINT_URL else
+        f"https://{DM_SUBMISSIONS_BUCKET}.s3-eu-west-1.amazonaws.com"
+    )
 
     DM_NOTIFY_API_KEY = "not_a_real_key-00000000-fake-uuid-0000-000000000000"
 
