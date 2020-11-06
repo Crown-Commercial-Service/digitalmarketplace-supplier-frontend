@@ -32,7 +32,8 @@
     }) }}
   {% endblock %}
   {{ dmHeader({
-    "role": current_user.role | default(None)
+    "role": current_user.role | default(None),
+    "active": request.path
   }) }}
 {% endblock %}
 
