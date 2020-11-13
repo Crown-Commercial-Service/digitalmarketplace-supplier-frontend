@@ -27,6 +27,8 @@ class Config(object):
     DM_DATA_API_URL = None
     DM_DATA_API_AUTH_TOKEN = None
     DM_NOTIFY_API_KEY = None
+    DM_REDIS_SERVICE_NAME = None
+
     DM_CLARIFICATION_QUESTION_EMAIL = 'clarification-questions@example.gov.uk'
     DM_FRAMEWORK_AGREEMENTS_EMAIL = 'enquiries@example.com'
     DM_COMPANY_DETAILS_CHANGE_EMAIL = 'cloud_digital@crowncommercial.gov.uk'
