@@ -1,35 +1,35 @@
 {% if supplier_is_on_framework and framework.status in ['standstill', 'live'] and supplier_framework.agreementReturned %}
-  <div>
-    <h2 class="summary-item-heading">Legal documents</h2>
+<div>
+  <h2 class="govuk-heading-m">Legal documents</h2>
 
   {% if framework.frameworkAgreementVersion %}
-      {# e-signature frameworks don't use signed_agreement_document_name but supplier_framework.agreementReturned check above should be sufficient #}
-      {% if signed_agreement_document_name or is_e_signature_supported_framework  %}
-            {% if countersigned_agreement_file %}
-              <p class="govuk-body">
-                {%  if is_e_signature_supported_framework %}
-                Your signed framework agreement forms a complete legal contract.
-                {% else %}
-                Your original and counterpart signature pages, and the standard framework
-                agreement, form a complete, legal contract.
-                {%  endif %}
-              </p>
+    {# e-signature frameworks don't use signed_agreement_document_name but supplier_framework.agreementReturned check above should be sufficient #}
+    {% if signed_agreement_document_name or is_e_signature_supported_framework  %}
+        {% if countersigned_agreement_file %}
+          <p class="govuk-body">
+            {% if is_e_signature_supported_framework %}
+            Your signed framework agreement forms a complete legal contract.
             {% else %}
-              <p class="govuk-body">
-                  {% if is_e_signature_supported_framework %}
-                  Your signed framework agreement will be sent to Crown Commercial Service (<abbr title="Crown Commercial Service">CCS</abbr>) to be countersigned.
-                  We'll email you when the countersigned agreement is available.
-                  You'll need to wait for <abbr title="Crown Commercial Service">CCS</abbr> to countersign your agreement before you can sell services.
-                  {% else %}
-                  Your framework agreement signature page has been sent to
-                  the Crown Commercial Service (<abbr title="Crown Commercial Service">CCS</abbr>).
-                  They’ll check and countersign the agreement, or contact you if there’s a
-                  problem. You don’t need to wait for <abbr title="Crown Commercial Service">CCS</abbr> to
-                  countersign your agreement before you start selling services.
-                  {% endif %}
-              </p>
+            Your original and counterpart signature pages, and the standard framework
+            agreement, form a complete, legal contract.
             {% endif %}
+          </p>
+        {% else %}
+          <p class="govuk-body">
+              {% if is_e_signature_supported_framework %}
+              Your signed framework agreement will be sent to Crown Commercial Service (<abbr title="Crown Commercial Service">CCS</abbr>) to be countersigned.
+              We'll email you when the countersigned agreement is available.
+              You'll need to wait for <abbr title="Crown Commercial Service">CCS</abbr> to countersign your agreement before you can sell services.
+              {% else %}
+              Your framework agreement signature page has been sent to
+              the Crown Commercial Service (<abbr title="Crown Commercial Service">CCS</abbr>).
+              They’ll check and countersign the agreement, or contact you if there’s a
+              problem. You don’t need to wait for <abbr title="Crown Commercial Service">CCS</abbr> to
+              countersign your agreement before you start selling services.
+              {% endif %}
+          </p>
         {% endif %}
+    {% endif %}
 
     {% if not countersigned_agreement_file %}
       {{ govukSummaryList({
@@ -66,85 +66,108 @@
       })}}
     {% endif %}
   {% endif %}
-
-    <div class="dmspeak">
-    {% if framework_urls.framework_agreement_url %}
-      {# newer frameworks should have the final agreement published as a web page #}
-      <p class="govuk-body">
-        <a class="govuk-link" href="{{ framework_urls.framework_agreement_url }}">
-          Read the standard framework agreement
-        </a>
-      </p>
-    {% elif communications_files.final_agreement.last_modified %}
-      {# older frameworks will still have to point to a file that came from the old supplier pack #}
-      <p class="govuk-body">
-        <a class="govuk-link" href="{{ url_for('.download_supplier_file', filepath=communications_files.final_agreement.filename, framework_slug=framework.slug) }}">
-          Download the standard framework agreement
-        </a>
-      </p>
-    {% endif %}
-    {% if signed_agreement_document_name %}
-      <p class="govuk-body">
-        <a class="govuk-link" href="{{ url_for('.download_agreement_file', framework_slug=framework.slug, document_name=signed_agreement_document_name) }}" target="_blank">
-          {% if framework.frameworkAgreementVersion %}
-            Download your ‘original’ framework agreement signature page
-          {% else %}
-            Download your signed framework agreement
-          {% endif %}
-        </a>
-        <br/>
-        The agreement signed by your company
-      </p>
-    {% endif %}
-    {% if countersigned_agreement_file %}
-      <p class="govuk-body">
-        <a class="govuk-link" href="{{ url_for('.download_agreement_file', framework_slug=framework.slug, document_name=countersigned_agreement_file) }}" target="_blank">
-          {% if framework.frameworkAgreementVersion %}
-                {% if is_e_signature_supported_framework %}
-                 Download your signed framework agreement
-                {% else %}
-                  Download your ‘counterpart’ framework agreement signature page
-                {% endif %}
-          {% else %}
-            Download your countersigned framework agreement
-          {% endif %}
-        </a>
-        <br/>
-        {% if e_signature_supported_framework %}
-        This agreement is signed by the Crown Commercial Service.
-        {% else %}
-        The agreement signed by the Crown Commercial Service.
-        {% endif %}
-      </p>
-    {% endif %}
-    {% if countersigned_agreement_file and not framework.frameworkAgreementVersion %}
-      <p class="govuk-body">
-        <a class="govuk-link" href="{{ url_for('.download_agreement_file', framework_slug=framework.slug, document_name=result_letter_filename) }}" target="_blank">
-          Download your application result letter
-        </a>
-      </p>
-    {% endif %}
-    {% for variation in framework.variations %}
+  
+  {% if framework_urls.framework_agreement_url %}
+    {# newer frameworks should have the final agreement published as a web page #}
     <p class="govuk-body">
-      <a class="govuk-link" href="{{ url_for('.view_contract_variation', framework_slug=framework.slug, variation_slug=variation) }}">
-      {% if framework.variations[variation].get('countersignedAt') and supplier_framework.agreedVariations.get(variation).agreedAt %}
-        View the signed contract variation
-      {% else %}
-        Read the proposed contract variation
-      {% endif %}
+      <a class="govuk-link" href="{{ framework_urls.framework_agreement_url }}">
+        Read the standard framework agreement
       </a>
     </p>
-    {% endfor %}
-    {% if communications_files.final_call_off.last_modified %}
-      <p class="govuk-body">
-        <a class="govuk-link" href="{{ url_for('.download_supplier_file', filepath=communications_files.final_call_off.filename, framework_slug=framework.slug) }}">Download the call-off contract template</a>
-      </p>
-    {% endif %}
-    {% if not countersigned_agreement_file %}
-      <p class="govuk-body">
-        You can start selling your {{ framework.name }} services on the Digital Marketplace from {{ framework.frameworkLiveAt }}.
-      </p>
-    {% endif %}
-    </div>
-  </div>
+  {% elif communications_files.final_agreement.last_modified %}
+    {# older frameworks will still have to point to a file that came from the old supplier pack #}
+    {{dmAttachment({
+      "link": {
+        "classes": "govuk-!-font-size-19",
+        "href": url_for('.download_supplier_file', filepath=communications_files.final_agreement.filename, framework_slug=framework.slug),
+        "text": "Download the standard framework agreement",
+      },
+      "headingTag": "h3",
+      "contentType": "application/pdf",
+      "alternativeFormatContactEmail": "help@digitalmarketplace.service.gov.uk"
+    })}}
+  {% endif %}
+  {% if signed_agreement_document_name %}
+    {{dmAttachment({
+      "link": {
+        "classes": "govuk-!-font-size-19",
+        "href": url_for('.download_agreement_file', framework_slug=framework.slug, document_name=signed_agreement_document_name),
+        "text": "Download your ‘original’ framework agreement signature page" if framework.frameworkAgreementVersion else "Download your signed framework agreement",
+      },
+      "headingTag": "h3",
+      "contentType": "application/pdf",
+      "alternativeFormatContactEmail": "help@digitalmarketplace.service.gov.uk",
+      "description": {
+        "text": "The agreement signed by your company"
+      }
+    })}}
+  {% endif %}
+  {% if countersigned_agreement_file %}
+    {% set signed_message %}
+      {% if framework.frameworkAgreementVersion %}
+        {% if is_e_signature_supported_framework %}
+          Download your signed framework agreement
+        {% else %}
+          Download your ‘counterpart’ framework agreement signature page
+        {% endif %}
+      {% else %}
+        Download your countersigned framework agreement
+      {% endif %}
+    {% endset %}
+    {{dmAttachment({
+      "link": {
+        "classes": "govuk-!-font-size-19",
+        "href": url_for('.download_agreement_file', framework_slug=framework.slug, document_name=countersigned_agreement_file),
+        "text": signed_message,
+      },
+      "headingTag": "h3",
+      "contentType": "application/pdf",
+      "alternativeFormatContactEmail": "help@digitalmarketplace.service.gov.uk",
+      "description": {
+        "text": "This agreement is signed by the Crown Commercial Service." if e_signature_supported_framework else "The agreement signed by the Crown Commercial Service."
+      }
+    })}}
+  {% endif %}
+  {% if countersigned_agreement_file and not framework.frameworkAgreementVersion %}
+    {{dmAttachment({
+      "link": {
+        "classes": "govuk-!-font-size-19",
+        "href": url_for('.download_agreement_file', framework_slug=framework.slug, document_name=result_letter_filename),
+        "text": "Download your application result letter",
+      },
+      "headingTag": "h3",
+      "contentType": "application/pdf",
+      "alternativeFormatContactEmail": "help@digitalmarketplace.service.gov.uk"
+    })}}
+  {% endif %}
+  {% for variation in framework.variations %}
+    {{dmAttachment({
+      "link": {
+        "classes": "govuk-!-font-size-19",
+        "href": url_for('.view_contract_variation', framework_slug=framework.slug, variation_slug=variation),
+        "text": "View the signed contract variation" if (framework.variations[variation].get('countersignedAt') and supplier_framework.agreedVariations.get(variation).agreedAt) else 'Read the proposed contract variation',
+      },
+      "headingTag": "h3",
+      "contentType": "application/pdf",
+      "alternativeFormatContactEmail": "help@digitalmarketplace.service.gov.uk"
+    })}}
+  {% endfor %}
+  {% if communications_files.final_call_off.last_modified %}
+    {{dmAttachment({
+      "link": {
+        "classes": "govuk-!-font-size-19",
+        "href": url_for('.download_supplier_file', filepath=communications_files.final_call_off.filename, framework_slug=framework.slug),
+        "text": "Download the call-off contract template",
+      },
+      "headingTag": "h3",
+      "contentType": "application/pdf",
+      "alternativeFormatContactEmail": "help@digitalmarketplace.service.gov.uk"
+    })}}
+  {% endif %}
+  {% if not countersigned_agreement_file %}
+    <p class="govuk-body">
+      You can start selling your {{ framework.name }} services on the Digital Marketplace from {{ framework.frameworkLiveAt }}.
+    </p>
+  {% endif %}
+</div>
 {% endif %}

@@ -61,13 +61,25 @@ def _extract_guidance_links(doc):
                 (
                     item_li.xpath("normalize-space(string(.//a))") or None,
                     item_li.xpath("string(.//a/@href)") or None,
-                    item_li.xpath("normalize-space(string(.//time))") or None,
-                    item_li.xpath("string(.//time/@datetime)") or None,
+                    item_li.xpath(
+                        (
+                            "normalize-space(string(.//time"
+                            " | "
+                            "./following-sibling::p[@class='dm-attachment__metadata']//time))"
+                        )
+                    ) or None,
+                    item_li.xpath(
+                        (
+                            "string(.//time/@datetime"
+                            " | "
+                            "./following-sibling::p[@class='dm-attachment__metadata']//time/@datetime)"
+                        )
+                    ) or None,
                 )
-                for item_li in section_li.xpath(".//p[.//a]")
+                for item_li in section_li.xpath(".//p[.//a] | .//h3[.//a]")
             ),
         )
-        for section_li in doc.xpath("//main//*[./h2][.//p//a]")
+        for section_li in doc.xpath("//main//*[./h2][.//p//a | .//section[@class='dm-attachment']//a]")
     )
 
 

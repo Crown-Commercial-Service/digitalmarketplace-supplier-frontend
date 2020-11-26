@@ -1,6 +1,6 @@
-<div class="dmspeak">
+<div>
   <div>
-    <h2 id="guidance" class="heading-xmedium">Guidance</h2>
+    <h2 id="guidance" class="govuk-heading-m">Guidance</h2>
 
     {% if communications_files.invitation.last_modified %}
     <p class="govuk-body">
@@ -29,75 +29,87 @@
 #}
 {% if framework.status == 'pending' or not supplier_is_on_framework %}
   <div>
-    <h2 id="legal-documents" class="heading-xmedium">Legal documents</h2>
+    <h2 id="legal-documents" class="govuk-heading-m">Legal documents</h2>
 
     {% if communications_files.final_agreement.last_modified %}
-    <p class="govuk-body">
-      <a class="govuk-link" href="{{ url_for('.download_supplier_file', filepath=communications_files.final_agreement.filename, framework_slug=framework.slug) }}">
-        Download the framework agreement
-      </a>
-      <br/>
-      Read the agreement between the Crown Commercial Service (<abbr title="Crown Commercial Service">CCS</abbr>) and suppliers.
-      <br/>
-      <span class="hint">
-        Last updated
-        <time datetime="{{ communications_files.final_agreement.last_modified }}">
-          {{ communications_files.final_agreement.last_modified|dateformat }}
-        </time>
-      </span>
-    </p>
+    {{dmAttachment({
+      "link": {
+        "classes": "govuk-!-font-size-19",
+        "href": url_for('.download_supplier_file', filepath=communications_files.final_agreement.filename, framework_slug=framework.slug),
+        "text": "Download the framework agreement",
+      },
+      "headingTag": "h3",
+      "contentType": "application/pdf",
+      "lastUpdated": {
+        "datetime": communications_files.final_agreement.last_modified,
+        "text": communications_files.final_agreement.last_modified|dateformat
+      },
+      "alternativeFormatContactEmail": "help@digitalmarketplace.service.gov.uk",
+      "description": {
+        "html": 'Read the agreement between the Crown Commercial Service (<abbr title="Crown Commercial Service">CCS</abbr>) and suppliers.'
+      }
+    })}}
     {% elif communications_files.proposed_agreement.last_modified %}
-    <p class="govuk-body">
-      <a class="govuk-link" href="{{ url_for('.download_supplier_file', filepath=communications_files.proposed_agreement.filename, framework_slug=framework.slug) }}">
-        Download the proposed framework agreement
-      </a>
-      <br/>
-      Read the proposed agreement between the Crown Commercial Service (<abbr title="Crown Commercial Service">CCS</abbr>) and suppliers.
-      <br/>
-      <span class="hint">
-        Last updated
-        <time datetime="{{ communications_files.proposed_agreement.last_modified }}">
-          {{ communications_files.proposed_agreement.last_modified|dateformat }}
-        </time>
-      </span>
-    </p>
+    {{dmAttachment({
+      "link": {
+        "classes": "govuk-!-font-size-19",
+        "href": url_for('.download_supplier_file', filepath=communications_files.proposed_agreement.filename, framework_slug=framework.slug),
+        "text": "Download the proposed framework agreement",
+      },
+      "headingTag": "h3",
+      "contentType": "application/pdf",
+      "lastUpdated": {
+        "datetime": communications_files.proposed_agreement.last_modified,
+        "text": communications_files.proposed_agreement.last_modified|dateformat
+      },
+      "alternativeFormatContactEmail": "help@digitalmarketplace.service.gov.uk",
+      "description": {
+        "html": 'Read the proposed agreement between the Crown Commercial Service (<abbr title="Crown Commercial Service">CCS</abbr>) and suppliers.'
+      }
+    })}}
     {% endif %}
 
     {% if communications_files.final_call_off.last_modified %}
-    <p class="govuk-body">
-      <a class="govuk-link" href="{{ url_for('.download_supplier_file', filepath=communications_files.final_call_off.filename, framework_slug=framework.slug) }}">
-        Download the ‘call-off’ contract
-      </a>
-      <br/>
-      Read the contract between a buyer and a supplier.
-      <br/>
-      <span class="hint">
-        Last updated
-        <time datetime="{{ communications_files.final_call_off.last_modified }}">
-          {{ communications_files.final_call_off.last_modified|dateformat }}
-        </time>
-      </span>
-    </p>
+    {{dmAttachment({
+      "link": {
+        "classes": "govuk-!-font-size-19",
+        "href": url_for('.download_supplier_file', filepath=communications_files.final_call_off.filename, framework_slug=framework.slug),
+        "text": "Download the ‘call-off’ contract",
+      },
+      "headingTag": "h3",
+      "contentType": "application/pdf",
+      "lastUpdated": {
+        "datetime": communications_files.final_call_off.last_modified,
+        "text": communications_files.final_call_off.last_modified|dateformat
+      },
+      "alternativeFormatContactEmail": "help@digitalmarketplace.service.gov.uk",
+      "description": {
+        "text": 'Read the contract between a buyer and a supplier.'
+      }
+    })}}
     {% elif communications_files.proposed_call_off.last_modified %}
-    <p class="govuk-body">
-      <a class="govuk-link" href="{{ url_for('.download_supplier_file', filepath=communications_files.proposed_call_off.filename, framework_slug=framework.slug) }}">
-        Download the proposed ‘call-off’ contract
-      </a>
-      <br/>
-      Read the proposed contract between a buyer and a supplier.
-      <br/>
-      <span class="hint">
-        Last updated
-        <time datetime="{{ communications_files.proposed_call_off.last_modified }}">
-          {{ communications_files.proposed_call_off.last_modified|dateformat }}
-        </time>
-      </span>
-    </p>
+    {{dmAttachment({
+      "link": {
+        "classes": "govuk-!-font-size-19",
+        "href": url_for('.download_supplier_file', filepath=communications_files.proposed_call_off.filename, framework_slug=framework.slug),
+        "text": "Download the proposed ‘call-off’ contract",
+      },
+      "headingTag": "h3",
+      "contentType": "application/pdf",
+      "lastUpdated": {
+        "datetime": communications_files.proposed_call_off.last_modified,
+        "text": communications_files.proposed_call_off.last_modified|dateformat
+      },
+      "alternativeFormatContactEmail": "help@digitalmarketplace.service.gov.uk",
+      "description": {
+        "text": 'Read the proposed contract between a buyer and a supplier.'
+      }
+    })}}
     {% endif %}
   </div>
 {% endif %}
   <div>
-    <h2 id="communications" class="heading-xmedium" class="heading-xmedium">Communications</h2>
+    <h2 id="communications" class="govuk-heading-m">Communications</h2>
 
     {% if framework.status == "open" and framework.clarificationQuestionsOpen %}
     <p class="govuk-body">
@@ -113,7 +125,7 @@
         clarification questions
       </a>
       {% if communications_files.supplier_updates.last_modified %}
-      <span class="hint">
+      <span class="govuk-hint">
         Last updated
         <time datetime="{{ communications_files.supplier_updates.last_modified }}">
           {{ communications_files.supplier_updates.last_modified|dateformat }}
@@ -124,15 +136,19 @@
   </div>
 {% if communications_files.reporting_template.last_modified %}
   <div>
-  <h2 id="reporting" class="heading-xmedium">Reporting</h2>
-    <p class="govuk-body">
-      <a class="govuk-link" href="{{ url_for('.download_supplier_file', filepath=communications_files.reporting_template.filename, framework_slug=framework.slug) }}">
-        Download the reporting template
-      </a>
-      <br/>
-      You’ll need to send monthly ‘management information’ about the contracts
-      you’ve been working on to CCS.
-    </p>
+  <h2 id="reporting" class="govuk-heading-m">Reporting</h2>
+    {{dmAttachment({
+      "link": {
+        "classes": "govuk-!-font-size-19",
+        "href": url_for('.download_supplier_file', filepath=communications_files.reporting_template.filename, framework_slug=framework.slug),
+        "text": "Download the reporting template",
+      },
+      "headingTag": "h3",
+      "alternativeFormatContactEmail": "help@digitalmarketplace.service.gov.uk",
+      "description": {
+        "text": 'You’ll need to send monthly ‘management information’ about the contracts you’ve been working on to CCS.'
+      }
+    })}}
   </div>
 {% endif %}
 </div>
