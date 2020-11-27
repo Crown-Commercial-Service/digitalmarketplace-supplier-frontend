@@ -254,6 +254,39 @@ class TestSuppliersDashboard(BaseApplicationTest):
         else:
             assert not document.xpath("//h3[normalize-space(string())='Digital Outcomes and Specialists 3']")
 
+    def test_shows_correct_expired_framework(self):
+        self.data_api_client.get_supplier.side_effect = get_supplier
+        self.data_api_client.find_frameworks.return_value = {
+            "frameworks": [
+                FrameworkStub(
+                    status='expired',
+                    slug='digital-outcomes-and-specialists-2',
+                    frameworkExpiresAtUTC='2000-01-01T01:00:00.000000Z'
+                ).response(),
+                FrameworkStub(
+                    status='expired',
+                    slug='digital-outcomes-and-specialists-1',
+                    frameworkExpiresAtUTC='2001-01-01T01:00:00.000000Z'
+                ).response(),
+            ]
+        }
+        self.data_api_client.get_supplier_frameworks.return_value = {
+            'frameworkInterest': [
+                {'frameworkSlug': 'digital-outcomes-and-specialists-1', 'onFramework': True},
+                {'frameworkSlug': 'digital-outcomes-and-specialists-2', 'onFramework': True},
+            ]
+        }
+
+        self.login()
+
+        response = self.client.get("/suppliers")
+        assert response.status_code == 200
+
+        document = html.fromstring(response.get_data(as_text=True))
+
+        assert document.xpath("//h3[normalize-space(string())='Digital Outcomes and Specialists 1']")
+        assert not document.xpath("//h3[normalize-space(string())='Digital Outcomes and Specialists 2']")
+
     def test_shows_gcloud_7_application_button(self):
         self.data_api_client.get_framework_interest.return_value = {'frameworks': []}
         self.data_api_client.get_supplier.side_effect = get_supplier
