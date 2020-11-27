@@ -1,5 +1,4 @@
 {% extends "_base_page.html" %}
-{% import "toolkit/summary-table.html" as summary %}
 
 {% block pageTitle %}
   {{ framework.name }} updates – Digital Marketplace
@@ -51,7 +50,7 @@
   </div>
 
   <div class="govuk-grid-row">
-    <div class="govuk-grid-column-full updates-document-tables">
+    <div class="govuk-grid-column-full">
       {% set sections = [
         {
           "heading": "Communications",
@@ -66,27 +65,41 @@
       ] %}
 
       {% for section in sections %}
-        {{ summary.heading(section.heading) }}
-        {% call(item) summary.list_table(
-          section.files,
-          caption=section.heading,
-          empty_message=section.empty_message,
-          field_headings=[
-            "Last modified",
-            "File"
-          ],
-          field_headings_visible=False
-        ) %}
-          {% call summary.row() %}
-            {{ summary.field_name(item.last_modified|dateformat) }}
-            {% call summary.field() %}
-              <a href="{{ url_for('.download_supplier_file', filepath=item.path, framework_slug=framework.slug) }}" class="document-link-with-icon">
-                <span class='document-icon'>{{ item.ext }}<span> document:</span></span>
-                {{ item.filename }}
-              </a>
-            {% endcall %}
-          {% endcall %}
-        {% endcall %}
+        {% if not section.files %}
+          <h2 class="govuk-heading-m">{{ section.heading }}</h2>
+          <p class="govuk-body">{{ section.empty_message }}</p>
+        {% else %}
+        <table class="govuk-table">
+          <caption class="govuk-table__caption govuk-heading-m">
+            <span>{{ section.heading }}</span>
+            {% if section.files %}
+            <p class="govuk-body">
+              If you use assistive technology (such as a screen reader) and need a version of these documents in a more accessible format, please email <a href="mailto:help@digitalmarketplace.service.gov.uk" target="_blank" class="govuk-link">help@digitalmarketplace.service.gov.uk</a>. Please tell us what format you need. It will help us if you say what assistive technology you use.
+            </p>
+            {% endif %}
+          </caption>
+          <tbody>
+            {% for file in section.files %}
+            <tr class="govuk-table__row">
+              <td class="govuk-table__cell">{{ file.last_modified|dateformat }}</td>
+              <td class="govuk-table__cell">
+                {{dmAttachment({
+                  "link": {
+                    "classes": "govuk-!-font-size-16",
+                    "href": url_for('.download_supplier_file', filepath=file.path, framework_slug=framework.slug),
+                    "text": file.filename
+                  },
+                  "contentType": file.ext | upper,
+                  "headingTag": 'p',
+                  "thumbnailSize": "small"
+                })}}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        {% endif %}
+
       {% endfor %}
       <p class="hint">
         {% if framework.clarificationQuestionsOpen %}
@@ -106,17 +119,13 @@
         <div class="govuk-grid-row">
 
           <div class="govuk-grid-column-two-thirds">
-            {{ summary.heading("Ask a clarification question") }}
-            <br />
+            <h2 class="govuk-heading-m">Ask a clarification question</h2>
             <p class="govuk-body">Ask a clarification question if you need a better understanding of:</p>
-            <br />
             <ul class="govuk-list govuk-list--bullet">
               <li>the legal documents</li>
               <li>your responsibilities as a supplier</li>
             </ul>
-            <br />
             <p class="govuk-body">There’s a different way to:</p>
-            <br />
             <ul class="govuk-list govuk-list--bullet">
               <li>
                 <a class="govuk-link" href="{{ framework_urls.supplier_guide_url }}">find out about the application process and eligibility</a>
@@ -138,9 +147,7 @@
                 {% include "toolkit/forms/textbox.html" %}
               {% endwith %}
             <p class="govuk-body">You can ask clarification questions until {{ framework.clarificationsCloseAt }}.</p>
-            <br />
             <p class="govuk-body">Answers are published to this page around twice a week, alongside answers to questions from other suppliers.</p>
-            <br />
             <p class="govuk-body">All responses will be published by {{ framework.clarificationsPublishAt }}.</p>
               {{ govukButton({
                 "text": "Ask a question"
@@ -155,10 +162,9 @@
 
         <div class="govuk-grid-row">
           <div class="govuk-grid-column-two-thirds">
-            {{ summary.heading("Contact us") }}
+            <h2 class="govuk-heading-m">Contact us</h2>
 
             <p class="govuk-body">Contact the support team if <a class="govuk-link" href="{{ url_for('external.help') }}">there’s a problem with your account or to update your details</a>.</p>
-            <br />
             <p class="govuk-body"><a class="govuk-link" href="{{ url_for('.framework_dashboard', framework_slug=framework.slug) }}">Return to {{ framework.name }} application</a></p>
 
           </div>
