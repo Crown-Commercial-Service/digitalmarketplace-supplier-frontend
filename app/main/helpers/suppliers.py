@@ -1,5 +1,8 @@
 import os
 import json
+from typing import Union
+
+from flask import current_app
 
 
 def load_countries():
@@ -65,3 +68,9 @@ def get_company_details_from_supplier(supplier):
         "registered_name": supplier.get("registeredName"),
         "address": address
     }
+
+
+def is_g12_recovery_supplier(supplier_id: Union[str, int]) -> bool:
+    supplier_ids = current_app.config.get('DM_G12_RECOVERY_SUPPLIER_IDS') or ''
+
+    return str(supplier_id) in supplier_ids.split(sep=',')
