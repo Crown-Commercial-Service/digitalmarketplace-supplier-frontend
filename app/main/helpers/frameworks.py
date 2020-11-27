@@ -3,7 +3,7 @@ from datetime import datetime
 from functools import wraps
 from itertools import chain, islice, groupby
 import re
-from typing import Optional, Container
+from typing import Optional, Container, Dict, List
 
 from flask import abort, current_app, render_template, request
 from flask_login import current_user
@@ -199,10 +199,26 @@ def question_references(data, get_question):
     return data.__class__(references)
 
 
-def get_frameworks_by_status(frameworks, status, extra_condition=False):
+def get_frameworks_by_status(
+        frameworks: List[Dict],
+        status: str,
+        extra_condition: Optional[str] = None
+) -> List[Dict]:
     return list(
         filter(lambda i: i['status'] == status and (i.get(extra_condition) if extra_condition else True), frameworks)
     )
+
+
+def get_most_recent_expired_dos_framework(all_frameworks: List[Dict]) -> List[Dict]:
+    expired_dos = [
+        f for f in get_frameworks_by_status(all_frameworks, 'expired', 'onFramework')
+        if f['family'] == 'digital-outcomes-and-specialists'
+    ]
+
+    if expired_dos:
+        return [sorted(expired_dos, key=lambda f: f['frameworkExpiresAtUTC'], reverse=True)[0]]
+
+    return []
 
 
 def count_drafts_by_lot(drafts, lotSlug):

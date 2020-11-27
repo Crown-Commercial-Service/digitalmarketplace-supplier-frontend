@@ -30,6 +30,7 @@ from ..forms.suppliers import (
 from ..helpers.frameworks import (
     get_frameworks_by_status,
     get_frameworks_closed_and_open_for_applications,
+    get_most_recent_expired_dos_framework,
     get_unconfirmed_open_supplier_frameworks,
     is_e_signature_supported_framework,
 )
@@ -98,8 +99,6 @@ def dashboard():
     if "currently_applying_to" in session:
         del session["currently_applying_to"]
 
-    # TODO remove the `dos3` key from the frameworks dict below. It's a temporary fix until a better designed solution
-    # can be implemented.
     return render_template(
         "suppliers/dashboard.html",
         supplier=supplier,
@@ -109,9 +108,7 @@ def dashboard():
             'pending': get_frameworks_by_status(all_frameworks, 'pending'),
             'standstill': get_frameworks_by_status(all_frameworks, 'standstill', 'made_application'),
             'live': get_frameworks_by_status(all_frameworks, 'live', 'onFramework'),
-            'dos3': [
-                f for f in all_frameworks if f['slug'] == 'digital-outcomes-and-specialists-3' and f.get('onFramework')
-            ],
+            'last_dos': get_most_recent_expired_dos_framework(all_frameworks),
         }
     ), 200
 

@@ -1,4 +1,4 @@
-{% for framework in frameworks.dos3 + frameworks.live %}
+{% for framework in frameworks.last_dos + frameworks.live %}
   {% if framework.onFramework %}
     <h3 class="heading-xmedium">{{ framework.name }}</h3>
     {% if framework.needs_to_return_agreement %}
@@ -17,7 +17,7 @@
         </a>
       </li>
       {% endif %}
-      {% if not framework.slug == 'digital-outcomes-and-specialists-3' %}
+      {% if framework in frameworks.live %}
       <li>
         <a class="govuk-link" href="{{ url_for('.list_services', framework_slug=framework.slug) }}">
         View services
