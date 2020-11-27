@@ -45,11 +45,15 @@ frontend-build: npm-install
 	npm run --silent frontend-build:${GULP_ENVIRONMENT}
 
 .PHONY: test
-test: show-environment frontend-build test-flake8 test-python test-javascript
+test: show-environment frontend-build test-flake8 test-mypy test-python test-javascript
 
 .PHONY: test-flake8
 test-flake8: virtualenv requirements-dev
 	${VIRTUALENV_ROOT}/bin/flake8 .
+
+.PHONY: test-mypy
+test-mypy: virtualenv requirements-dev
+	${VIRTUALENV_ROOT}/bin/mypy app/
 
 .PHONY: test-python
 test-python: virtualenv requirements-dev
