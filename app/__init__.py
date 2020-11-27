@@ -10,7 +10,7 @@ from dmutils.user import User
 
 from govuk_frontend_jinja.flask_ext import init_govuk_frontend
 
-from config import configs
+from config import configs  # type: ignore
 
 data_api_client = dmapiclient.DataAPIClient()
 login_manager = LoginManager()
