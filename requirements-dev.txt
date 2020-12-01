@@ -25,7 +25,7 @@ mccabe==0.6.1             # via flake8
 mock==3.0.5               # via -r requirements-dev.in
 more-itertools==8.2.0     # via pytest
 mypy-extensions==0.4.3    # via mypy
-mypy==0.790               # via -r requirements-dev.in
+mypy==0.782               # via -r requirements-dev.in
 packaging==20.1           # via pytest
 pathtools==0.1.2          # via watchdog
 pip-tools==5.4.0          # via -r requirements-dev.in
