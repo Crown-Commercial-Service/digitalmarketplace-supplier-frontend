@@ -1,4 +1,5 @@
 # coding=utf-8
+# type: ignore
 
 import os
 import jinja2

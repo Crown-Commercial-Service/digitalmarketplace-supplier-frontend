@@ -1,7 +1,7 @@
 from functools import reduce
 from operator import add
 import re
-from typing import Any, List, Dict, Set, Tuple
+from typing import Any, List, Dict, Set, Tuple, Optional
 
 from werkzeug.datastructures import ImmutableOrderedMultiDict
 
@@ -20,11 +20,11 @@ def get_validator(framework, content, answers):
 
 
 class DeclarationValidator(object):
-    email_validation_fields = []
-    number_string_fields = []
-    character_limit = None
-    word_limit = None
-    optional_fields = set([])
+    email_validation_fields: Set[str] = set()
+    number_string_fields: List[Tuple[str, int]] = []
+    character_limit: Optional[int] = None
+    word_limit: Optional[int] = None
+    optional_fields: Set[str] = set()
 
     def __init__(self, content, answers):
         self.content = content
@@ -33,8 +33,7 @@ class DeclarationValidator(object):
     def get_error_messages_for_page(self, section) -> ImmutableOrderedMultiDict:
         all_errors = self.get_error_messages()
         page_ids = section.get_question_ids()
-        page_errors = ImmutableOrderedMultiDict(filter(lambda err: err[0] in page_ids, all_errors))
-        return page_errors
+        return ImmutableOrderedMultiDict(filter(lambda err: err[0] in page_ids, all_errors))
 
     def get_error_messages(self) -> List[Tuple[str, dict]]:
         raw_errors_map = self.errors()
@@ -55,7 +54,7 @@ class DeclarationValidator(object):
     def get_error_message(self, question_id: str, message_key: str) -> str:
         for validation in self.content.get_question(question_id).get('validations', []):
             if validation['name'] == message_key:
-                return validation['message']
+                return validation['message']  # type: ignore
         default_messages = {
             'answer_required': 'You need to answer this question.',
             'under_character_limit': 'Your answer must be no more than {} characters.'.format(self.character_limit),
@@ -129,7 +128,7 @@ class DeclarationValidator(object):
 
     def get_required_fields(self) -> Set[str]:
         try:
-            req_fields = self.required_fields
+            req_fields = self.required_fields  # type: ignore
         except AttributeError:
             req_fields = set(self.all_fields())
 
@@ -137,7 +136,7 @@ class DeclarationValidator(object):
         if self.optional_fields is not None:
             req_fields -= set(self.optional_fields)
 
-        return req_fields
+        return req_fields  # type: ignore
 
 
 class G7Validator(DeclarationValidator):
