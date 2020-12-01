@@ -71,6 +71,15 @@ def get_company_details_from_supplier(supplier):
 
 
 def is_g12_recovery_supplier(supplier_id: Union[str, int]) -> bool:
-    supplier_ids = current_app.config.get('DM_G12_RECOVERY_SUPPLIER_IDS') or ''
+    supplier_ids_string = current_app.config.get('DM_G12_RECOVERY_SUPPLIER_IDS') or ''
 
-    return str(supplier_id) in supplier_ids.split(sep=',')
+    try:
+        supplier_ids = [int(s) for s in supplier_ids_string.split(sep=',')]
+    except AttributeError as e:
+        current_app.logger.error("DM_G12_RECOVERY_SUPPLIER_IDS not a string", extra={'error': str(e)})
+        return False
+    except ValueError as e:
+        current_app.logger.error("DM_G12_RECOVERY_SUPPLIER_IDS not a list of supplier IDs", extra={'error': str(e)})
+        return False
+
+    return int(supplier_id) in supplier_ids
