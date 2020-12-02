@@ -16,10 +16,11 @@ jobs:
     - name: Install Ubuntu packages
       run: sudo apt-get install libxml2-dev libxslt1-dev python-dev
 
-    - name: Use Node.js
-      uses: actions/setup-node@v1
-      with:
-        node-version: '${{ steps.nvm.outputs.NVMRC }}'
+    - name: Install Node dependencies
+      shell: bash -l {0}
+      run: |
+        nvm install
+        make npm-install
 
     - uses: actions/cache@v2
       with:
