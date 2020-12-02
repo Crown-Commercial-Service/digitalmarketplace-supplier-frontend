@@ -17,6 +17,7 @@ jobs:
       run: sudo apt-get install libxml2-dev libxslt1-dev python-dev
 
     - name: Install Node dependencies
+      shell: bash -l {0}
       run: |
         nvm install
         make npm-install
