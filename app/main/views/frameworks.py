@@ -297,6 +297,11 @@ def framework_submission_lots(framework_slug):
         application_made=application_made
     ), 200
 
+@main.route('/frameworks/g-cloud-12/draft-services', methods=['GET'])
+@login_required
+@EnsureApplicationCompanyDetailsHaveBeenConfirmed(data_api_client)
+def g12_recovery_draft_services():
+    abort(503)
 
 @main.route('/frameworks/<framework_slug>/submissions/<lot_slug>', methods=['GET'])
 @login_required
