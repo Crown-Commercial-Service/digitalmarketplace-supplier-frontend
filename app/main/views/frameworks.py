@@ -319,7 +319,43 @@ def g12_recovery_draft_services(framework_slug):
     if not is_g12_recovery_supplier(current_user.supplier_id):
         abort(404)
 
-    return "Hello world"
+    lots = [
+        dict(lot,
+             draft_count=count_drafts_by_lot(drafts, lot['slug']),
+             complete_count=count_drafts_by_lot(complete_drafts, lot['slug']))
+        for lot in framework['lots']
+    ]
+
+    lot_question = {
+        option["value"]: option
+        for option in ContentQuestion(content_loader.get_question(framework_slug, 'services', 'lot')).get('options')
+    }
+
+    lots = [{
+        "title": lot_question[lot['slug']]['label'],
+        'body': lot_question[lot['slug']]['description'],
+        "link": url_for('.framework_submission_services', framework_slug=framework_slug, lot_slug=lot['slug']),
+        "statuses": get_statuses_for_lot(
+            lot['oneServiceLimit'],
+            lot['draft_count'],
+            lot['complete_count'],
+            declaration_status,
+            framework['status'],
+            lot['name'],
+            lot['unitSingular'],
+            lot['unitPlural']
+        ),
+    } for lot in lots]
+
+    return render_template(
+        "frameworks/submission_lots.html",
+        complete_drafts=list(reversed(complete_drafts)),
+        drafts=list(reversed(drafts)),
+        declaration_status=declaration_status,
+        framework=framework,
+        lots=lots,
+        application_made=application_made
+    ), 200
 
 @main.route('/frameworks/<framework_slug>/submissions/<lot_slug>', methods=['GET'])
 @login_required

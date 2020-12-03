@@ -4183,6 +4183,21 @@ class TestG12RecoveryDraftServices(BaseApplicationTest, MockEnsureApplicationCom
             response = self.client.get('/suppliers/frameworks/g-cloud-12/draft-services')
         assert response.status_code == response_code
 
+    def test_page_renders(self, count_unanswered):
+        self.login(supplier_id=577184)
+        self.data_api_client.get_framework.return_value = FrameworkStub(slug="g-cloud-12", status="live").single_result_response()
+
+        with self.app.app_context():
+            response = self.client.get('/suppliers/frameworks/g-cloud-12/draft-services')
+
+        doc = html.fromstring(response.get_data(as_text=True))
+
+        assert doc.cssselect("h1:contains('Your G-Cloud 12 services')")
+        assert [el.text for el in doc.cssselect(".browse-list a")] == [
+            "Cloud hosting", "Cloud software", "Cloud support"
+        ]
+
+
 
 @mock.patch('app.main.views.frameworks.count_unanswered_questions')
 class TestFrameworkSubmissionServices(BaseApplicationTest, MockEnsureApplicationCompanyDetailsHaveBeenConfirmedMixin):
