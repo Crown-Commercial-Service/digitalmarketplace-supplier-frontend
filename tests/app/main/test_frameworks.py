@@ -4141,6 +4141,41 @@ class TestFrameworkSubmissionLots(BaseApplicationTest, MockEnsureApplicationComp
         assert u'Submitted' in submissions.get_data(as_text=True)
         assert u'Apply to provide' not in submissions.get_data(as_text=True)
 
+ 
+@mock.patch('app.main.views.frameworks.count_unanswered_questions')
+class TestG12RecoveryDraftServices(BaseApplicationTest, MockEnsureApplicationCompanyDetailsHaveBeenConfirmedMixin):
+
+    def setup_method(self, method):
+        super().setup_method(method)
+        self.get_metadata_patch = mock.patch('app.main.views.frameworks.content_loader.get_metadata')
+        self.get_metadata = self.get_metadata_patch.start()
+        self.get_metadata.return_value = 'g-cloud-12'
+        self.data_api_client_patch = mock.patch('app.main.views.frameworks.data_api_client', autospec=True)
+        self.data_api_client = self.data_api_client_patch.start()
+
+    def teardown_method(self, method):
+        self.data_api_client_patch.stop()
+        super().teardown_method(method)
+        self.get_metadata_patch.stop()
+
+    @pytest.mark.parametrize('status, response_code', [('open', 404), ('live', 200)])
+    def test_page_exists(self, count_unanswered, status, response_code):
+        self.login(supplier_id=577184)
+        self.data_api_client.get_framework.return_value = self.framework(slug='g-cloud-12', status=status)
+
+        with self.app.app_context():
+            response = self.client.get('/suppliers/frameworks/g-cloud-12/draft-services')
+        assert response.status_code == response_code
+
+    @pytest.mark.parametrize('supplier_id, response_code', [(1, 404), (577184, 200)])
+    def test_page_exists_for_recovery_suppliers_only(self, count_unanswered, supplier_id, response_code):
+        self.login(supplier_id=supplier_id)
+        self.data_api_client.get_framework.return_value = self.framework(slug='g-cloud-12', status='live')
+
+        with self.app.app_context():
+            response = self.client.get('/suppliers/frameworks/g-cloud-12/draft-services')
+        assert response.status_code == response_code
+
 
 @mock.patch('app.main.views.frameworks.count_unanswered_questions')
 class TestFrameworkSubmissionServices(BaseApplicationTest, MockEnsureApplicationCompanyDetailsHaveBeenConfirmedMixin):

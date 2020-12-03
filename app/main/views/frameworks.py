@@ -61,7 +61,11 @@ from ..helpers.services import (
     get_lot_drafts,
     get_signed_document_url,
 )
-from ..helpers.suppliers import supplier_company_details_are_complete, get_company_details_from_supplier
+from ..helpers.suppliers import (
+    supplier_company_details_are_complete,
+    get_company_details_from_supplier,
+    is_g12_recovery_supplier,
+)
 from ..helpers.validation import get_validator
 from ..forms.frameworks import (SignerDetailsForm,
                                 ContractReviewForm,
@@ -301,7 +305,19 @@ def framework_submission_lots(framework_slug):
 @login_required
 @EnsureApplicationCompanyDetailsHaveBeenConfirmed(data_api_client)
 def g12_recovery_draft_services():
-    abort(503)
+    framework_slug = 'g-cloud-12'
+    framework = get_framework_or_404(data_api_client, framework_slug)
+
+    drafts, complete_drafts = get_drafts(data_api_client, framework_slug)
+    declaration_status = get_declaration_status(data_api_client, framework_slug)
+    application_made = len(complete_drafts) > 0 and declaration_status == 'complete'
+    if framework['status'] != 'live':
+        abort(404)
+
+    if not is_g12_recovery_supplier(current_user.supplier_id):
+        abort(404)
+
+    return "Hello world"
 
 @main.route('/frameworks/<framework_slug>/submissions/<lot_slug>', methods=['GET'])
 @login_required
