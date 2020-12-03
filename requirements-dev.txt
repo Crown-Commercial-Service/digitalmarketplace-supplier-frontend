@@ -10,7 +10,6 @@ attrs==19.3.0             # via pytest
 certifi==2019.11.28       # via -c requirements.txt, requests
 chardet==3.0.4            # via -c requirements.txt, requests
 click==7.0                # via -c requirements.txt, pip-tools
-coverage==4.5.3           # via -r requirements-dev.in, pytest-cov
 cssselect==1.0.3          # via -r requirements-dev.in
 git+https://github.com/alphagov/digitalmarketplace-test-utils.git@2.8.0#egg=digitalmarketplace-test-utils==2.8.0  # via -r requirements-dev.in
 entrypoints==0.3          # via flake8
@@ -32,8 +31,7 @@ py==1.8.1                 # via pytest
 pycodestyle==2.5.0        # via flake8
 pyflakes==2.1.1           # via flake8
 pyparsing==2.4.6          # via packaging
-pytest-cov==2.7.1         # via -r requirements-dev.in
-pytest==4.6.3             # via -r requirements-dev.in, pytest-cov
+pytest==4.6.3             # via -r requirements-dev.in
 python-dateutil==2.8.1    # via -c requirements.txt, freezegun
 python-dotenv==0.10.3     # via -r requirements-dev.in
 pyyaml==5.3.1             # via -c requirements.txt, watchdog
