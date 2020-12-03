@@ -4167,6 +4167,13 @@ class TestG12RecoveryDraftServices(BaseApplicationTest, MockEnsureApplicationCom
             response = self.client.get('/suppliers/frameworks/g-cloud-12/draft-services')
         assert response.status_code == response_code
 
+    def test_page_exists_only_for_g_cloud_12(self, count_unanswered):
+        self.login(supplier_id=577184)
+
+        with self.app.app_context():
+            response = self.client.get('/suppliers/frameworks/g-cloud-11/draft-services')
+        assert response.status_code == 404
+
     @pytest.mark.parametrize('supplier_id, response_code', [(1, 404), (577184, 200)])
     def test_page_exists_for_recovery_suppliers_only(self, count_unanswered, supplier_id, response_code):
         self.login(supplier_id=supplier_id)

@@ -301,11 +301,13 @@ def framework_submission_lots(framework_slug):
         application_made=application_made
     ), 200
 
-@main.route('/frameworks/g-cloud-12/draft-services', methods=['GET'])
+@main.route('/frameworks/<framework_slug>/draft-services', methods=['GET'])
 @login_required
 @EnsureApplicationCompanyDetailsHaveBeenConfirmed(data_api_client)
-def g12_recovery_draft_services():
-    framework_slug = 'g-cloud-12'
+def g12_recovery_draft_services(framework_slug):
+    if framework_slug != "g-cloud-12":
+        abort(404)
+
     framework = get_framework_or_404(data_api_client, framework_slug)
 
     drafts, complete_drafts = get_drafts(data_api_client, framework_slug)
