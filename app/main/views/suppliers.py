@@ -69,15 +69,25 @@ def dashboard():
 
     supplier['g12_recovery'] = is_g12_recovery_supplier(supplier['id'])
 
-    all_frameworks = sorted(
+    all_frameworks = list(sorted(
         data_api_client.find_frameworks()['frameworks'],
         key=lambda framework: framework['slug'],
         reverse=True
-    )
+    ))
     supplier_frameworks = {
         framework['frameworkSlug']: framework
         for framework in data_api_client.get_supplier_frameworks(current_user.supplier_id)['frameworkInterest']
     }
+
+    # g12 should always be in frameworks.live for recovery suppliers
+    if supplier["g12_recovery"]:
+        if "g-cloud-12" not in supplier_frameworks:
+            g12 = next(filter(lambda f: f["slug"] == "g-cloud-12", all_frameworks), None)
+            if g12:
+                supplier_frameworks["g-cloud-12"] = g12
+            del g12
+        if "g-cloud-12" in supplier_frameworks:
+            supplier_frameworks["g-cloud-12"]["onFramework"] = True
 
     for framework in all_frameworks:
         framework.update(
