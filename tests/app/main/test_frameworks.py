@@ -4197,6 +4197,29 @@ class TestG12RecoveryDraftServices(BaseApplicationTest, MockEnsureApplicationCom
             "Cloud hosting", "Cloud software", "Cloud support"
         ]
 
+    def test_lot_status_includes_number_of_draft_and_completed_services(self, count_unanswered):
+        self.login(supplier_id=577184)
+        self.data_api_client.get_framework.return_value = FrameworkStub(slug="g-cloud-12", status="live").single_result_response()
+
+        self.data_api_client.get_supplier_declaration.return_value = {'declaration': {'status': 'complete'}}
+        self.data_api_client.find_draft_services_iter.return_value = [
+            {'serviceName': 'draft', 'lotSlug': 'cloud-hosting', 'status': 'not-submitted'},
+            {'serviceName': 'completed', 'lotSlug': 'cloud-hosting', 'status': 'submitted'},
+        ]
+        self.data_api_client.get_supplier.return_value = SupplierStub(
+            company_details_confirmed=False
+        ).single_result_response()
+
+        with self.app.app_context():
+            response = self.client.get('/suppliers/frameworks/g-cloud-12/draft-services')
+
+        raw_html = response.get_data(as_text=True)
+
+        assert "1 draft service" in raw_html
+        assert "1 service will be submitted" in raw_html
+        assert "1 complete service was submitted" not in raw_html
+        assert 'browse-list-item-status-happy' in raw_html
+        assert "Your application is not complete" not in raw_html
 
 
 @mock.patch('app.main.views.frameworks.count_unanswered_questions')

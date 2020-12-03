@@ -340,7 +340,7 @@ def g12_recovery_draft_services(framework_slug):
             lot['draft_count'],
             lot['complete_count'],
             declaration_status,
-            framework['status'],
+            "open",  # we want the statuses as if the framework were open
             lot['name'],
             lot['unitSingular'],
             lot['unitPlural']
