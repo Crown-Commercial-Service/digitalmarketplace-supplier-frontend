@@ -1,6 +1,5 @@
 # Digital Marketplace Supplier Frontend
 
-[![Coverage Status](https://coveralls.io/repos/alphagov/digitalmarketplace-supplier-frontend/badge.svg?branch=master&service=github)](https://coveralls.io/github/alphagov/digitalmarketplace-supplier-frontend?branch=master)
 ![Python 3.6](https://img.shields.io/badge/python-3.6-blue.svg)
 
 Frontend application for the Digital Marketplace.
