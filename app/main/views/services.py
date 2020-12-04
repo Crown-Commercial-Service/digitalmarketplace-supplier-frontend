@@ -14,6 +14,7 @@ from dmutils.flask import timed_render_template as render_template
 from dmutils.forms.helpers import get_errors_from_wtform
 from dmutils.errors import render_error_page
 
+from ..helpers.suppliers import is_g12_recovery_supplier
 from ... import data_api_client
 from ...main import main, content_loader
 from ..helpers import login_required
@@ -429,7 +430,12 @@ def copy_draft_service(framework_slug, lot_slug, service_id):
 @EnsureApplicationCompanyDetailsHaveBeenConfirmed(data_api_client)
 @return_404_if_applications_closed(lambda: data_api_client)
 def complete_draft_service(framework_slug, lot_slug, service_id):
-    framework, lot = get_framework_and_lot_or_404(data_api_client, framework_slug, lot_slug, allowed_statuses=['open'])
+    if framework_slug == "g-cloud-12" and is_g12_recovery_supplier(current_user.supplier_id):
+        framework, lot = get_framework_and_lot_or_404(data_api_client, framework_slug, lot_slug,
+                                                      allowed_statuses=['open', 'live'])
+    else:
+        framework, lot = get_framework_and_lot_or_404(data_api_client, framework_slug, lot_slug,
+                                                      allowed_statuses=['open'])
 
     # Suppliers must have registered interest in a framework before they can complete draft services
     if not get_supplier_framework_info(data_api_client, framework_slug):
