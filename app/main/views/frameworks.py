@@ -301,6 +301,7 @@ def framework_submission_lots(framework_slug):
         application_made=application_made
     ), 200
 
+
 @main.route('/frameworks/<framework_slug>/draft-services', methods=['GET'])
 @login_required
 @EnsureApplicationCompanyDetailsHaveBeenConfirmed(data_api_client)
@@ -356,6 +357,7 @@ def g12_recovery_draft_services(framework_slug):
         lots=lots,
         application_made=application_made
     ), 200
+
 
 @main.route('/frameworks/<framework_slug>/submissions/<lot_slug>', methods=['GET'])
 @login_required

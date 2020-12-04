@@ -4141,7 +4141,7 @@ class TestFrameworkSubmissionLots(BaseApplicationTest, MockEnsureApplicationComp
         assert u'Submitted' in submissions.get_data(as_text=True)
         assert u'Apply to provide' not in submissions.get_data(as_text=True)
 
- 
+
 @mock.patch('app.main.views.frameworks.count_unanswered_questions')
 class TestG12RecoveryDraftServices(BaseApplicationTest, MockEnsureApplicationCompanyDetailsHaveBeenConfirmedMixin):
 
@@ -4185,7 +4185,8 @@ class TestG12RecoveryDraftServices(BaseApplicationTest, MockEnsureApplicationCom
 
     def test_page_renders(self, count_unanswered):
         self.login(supplier_id=577184)
-        self.data_api_client.get_framework.return_value = FrameworkStub(slug="g-cloud-12", status="live").single_result_response()
+        self.data_api_client.get_framework.return_value = FrameworkStub(slug="g-cloud-12", status="live")\
+            .single_result_response()
 
         with self.app.app_context():
             response = self.client.get('/suppliers/frameworks/g-cloud-12/draft-services')
@@ -4199,7 +4200,8 @@ class TestG12RecoveryDraftServices(BaseApplicationTest, MockEnsureApplicationCom
 
     def test_lot_status_includes_number_of_draft_and_completed_services(self, count_unanswered):
         self.login(supplier_id=577184)
-        self.data_api_client.get_framework.return_value = FrameworkStub(slug="g-cloud-12", status="live").single_result_response()
+        self.data_api_client.get_framework.return_value = FrameworkStub(slug="g-cloud-12", status="live")\
+            .single_result_response()
 
         self.data_api_client.get_supplier_declaration.return_value = {'declaration': {'status': 'complete'}}
         self.data_api_client.find_draft_services_iter.return_value = [
