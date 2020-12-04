@@ -61,13 +61,25 @@ def _extract_guidance_links(doc):
                 (
                     item_li.xpath("normalize-space(string(.//a))") or None,
                     item_li.xpath("string(.//a/@href)") or None,
-                    item_li.xpath("normalize-space(string(.//time))") or None,
-                    item_li.xpath("string(.//time/@datetime)") or None,
+                    item_li.xpath(
+                        (
+                            "normalize-space(string(.//time"
+                            " | "
+                            "./following-sibling::p[@class='dm-attachment__metadata']//time))"
+                        )
+                    ) or None,
+                    item_li.xpath(
+                        (
+                            "string(.//time/@datetime"
+                            " | "
+                            "./following-sibling::p[@class='dm-attachment__metadata']//time/@datetime)"
+                        )
+                    ) or None,
                 )
-                for item_li in section_li.xpath(".//p[.//a]")
+                for item_li in section_li.xpath(".//p[.//a] | .//h3[.//a]")
             ),
         )
-        for section_li in doc.xpath("//main//*[./h2][.//p//a]")
+        for section_li in doc.xpath("//main//*[./h2][.//p//a | .//section[@class='dm-attachment']//a]")
     )
 
 
@@ -3532,14 +3544,14 @@ class TestFrameworkUpdatesPage(BaseApplicationTest):
 
         assert self.strip_all_whitespace('G-Cloud 7 updates') in self.strip_all_whitespace(doc.xpath('//h1')[0].text)
 
-        headers = doc.xpath('//div[contains(@class, "updates-document-tables")]/h2[@class="summary-item-heading"]')
+        headers = doc.xpath('//div[@class="govuk-grid-column-full"]//h2 | //table//caption//span')
         assert len(headers) == 2
 
         assert self.strip_all_whitespace(headers[0].text) == 'Communications'
         assert self.strip_all_whitespace(headers[1].text) == 'Clarificationquestionsandanswers'
 
         if check_for_tables:
-            table_captions = doc.xpath('//div[contains(@class, "updates-document-tables")]/table/caption')
+            table_captions = doc.xpath('//div/table/caption/span')
             assert len(table_captions) == 2
             assert self.strip_all_whitespace(table_captions[0].text) == 'Communications'
             assert self.strip_all_whitespace(table_captions[1].text) == 'Clarificationquestionsandanswers'
@@ -3574,12 +3586,12 @@ class TestFrameworkUpdatesPage(BaseApplicationTest):
         response_text = self.strip_all_whitespace(response.get_data(as_text=True))
 
         assert (
-            self.strip_all_whitespace('<p class="summary-item-no-content">No communications have been sent out.</p>')
+            self.strip_all_whitespace('<p class="govuk-body">No communications have been sent out.</p>')
             in response_text
         )
         assert (
             self.strip_all_whitespace(
-                '<p class="summary-item-no-content">No clarification questions and answers have been posted yet.</p>'
+                '<p class="govuk-body">No clarification questions and answers have been posted yet.</p>'
             )
             in response_text
         )
