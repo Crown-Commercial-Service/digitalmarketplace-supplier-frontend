@@ -1356,7 +1356,8 @@ def sign_framework_agreement(framework_slug):
     form = SignFrameworkAgreementForm()
     framework_pdf_url = content_loader.get_message(framework_slug, 'urls').get('framework_agreement_pdf_url')
     contract_titles = {
-        'g-cloud-12': 'Framework Agreement'
+        'g-cloud-12': 'Framework Agreement',
+        'digital-outcomes-and-specialists-5': 'Framework Agreement Form'
     }
     contract_title = contract_titles.get(framework_slug)
 
