@@ -128,11 +128,10 @@ class TestSuppliersDashboard(BaseApplicationTest):
         self.login()
 
         res = self.client.get("/suppliers")
-        data = self.strip_all_whitespace(res.get_data(as_text=True))
+        doc = html.fromstring(res.get_data(as_text=True))
 
-        assert '<pclass="banner-message">Thisisanerror</p>' in data
-        assert '<pclass="banner-message">Thisisasuccess</p>' in data
-
+        assert doc.cssselect(".dm-alert:contains('This is an error')")
+        assert doc.cssselect(".dm-alert:contains('This is a success')")
 
     def test_shows_edit_buttons(self):
         self.data_api_client.get_supplier.side_effect = get_supplier
@@ -2420,13 +2419,15 @@ class TestJoinOpenFrameworkNotificationMailingList(BaseApplicationTest):
             )
             assert not doc.xpath("//*[contains(@class, 'validation-message')]")
 
-            assert doc.xpath(
-                "//*[contains(@class, 'banner-destructive-without-action')][contains(normalize-space(string()), $t)]//"
-                "a[@href=$m][normalize-space(string())=$e]",
-                t=expected_message,
-                m=f"mailto:{current_app.config['SUPPORT_EMAIL_ADDRESS']}",
-                e=f"{current_app.config['SUPPORT_EMAIL_ADDRESS']}",
-            )
+            # test flash message content
+            flash_messages = doc.cssselect(".dm-alert")
+            assert len(flash_messages) == 1
+            assert "dm-alert--error" in flash_messages[0].classes
+            assert expected_message in flash_messages[0].cssselect(".dm-alert__body")[0].text.strip()
+
+            email_address_link = flash_messages[0].cssselect("a")[0]
+            assert email_address_link.text == current_app.config["SUPPORT_EMAIL_ADDRESS"]
+            assert email_address_link.attrib["href"] == f"mailto:{current_app.config['SUPPORT_EMAIL_ADDRESS']}"
 
             # flash message should have been consumed by view's own page rendering
             self.assert_no_flashes()

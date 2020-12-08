@@ -3746,7 +3746,7 @@ class TestSendClarificationQuestionEmail(BaseApplicationTest):
 
         clarification_question = 'This is a clarification question.'
         with freeze_time('2019-07-02 01:02:03'):
-            response = self._send_email(message=clarification_question)
+            res = self._send_email(message=clarification_question)
 
         # Assert Notify email 1 is sent (clarification question)
         # Assert Notify email 2 is sent (receipt)
@@ -3799,12 +3799,16 @@ class TestSendClarificationQuestionEmail(BaseApplicationTest):
             data={"question": clarification_question, 'framework': 'g-cloud-7'}
         )
 
-        assert response.status_code == 200
+        assert res.status_code == 200
         # Assert flash message
-        assert self.strip_all_whitespace(
-            '<p class="banner-message">Your clarification question has been sent. Answers to all ' +
-            'clarification questions will be published on this page.</p>'
-        ) in self.strip_all_whitespace(response.get_data(as_text=True))
+        doc = html.fromstring(res.get_data(as_text=True))
+        flash_message = doc.cssselect(".dm-alert")[0]
+        assert (
+            flash_message.cssselect(".dm-alert__title")[0].text.strip()
+            ==
+            "Your clarification question has been sent. Answers to all "
+            "clarification questions will be published on this page."
+        )
 
     def test_email_not_sent_if_clarification_questions_closed(self, notify_send_email):
         self.data_api_client.get_framework.return_value = self.framework(
@@ -5557,8 +5561,8 @@ class TestContractVariation(BaseApplicationTest):
         assert mocked_notify_client.send_email.called
         assert res.status_code == 200
         assert len(
-            doc.xpath('//p[@class="banner-message"][contains(text(), "You have accepted the proposed changes.")]')
-        ) == 1, res.get_data(as_text=True)
+            doc.cssselect(".dm-alert:contains('You have accepted the proposed changes.')")
+        ) == 1
 
     @mock.patch('app.main.views.frameworks.DMNotifyClient', autospec=True)
     def test_api_is_not_called_and_no_email_sent_for_subsequent_posts(self, mocked_notify_class):
