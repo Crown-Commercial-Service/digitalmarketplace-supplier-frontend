@@ -49,7 +49,20 @@
 {% endblock %}
 
 {% block content %}
-  {% include "toolkit/flash_messages.html" %}
+  {% block flashMessages %}
+    {% with
+       messages = get_flashed_messages(with_categories=True),
+       titles = {"error": "There is a problem"}
+    %}
+      {% for category, message in messages %}
+        {{ dmAlert({
+          "titleHtml": titles.get(category) or message,
+          "html": message if category in titles else None,
+          "type": category,
+        }) }}
+      {% endfor %}
+    {% endwith %}
+  {% endblock flashMessages %}
   {% block mainContent %}{% endblock %}
 {% endblock %}
 
