@@ -2952,12 +2952,6 @@ class TestDeclarationSubmit(BaseApplicationTest, MockEnsureApplicationCompanyDet
 
         # this will be the response from the redirected-to view
         assert response.status_code == 200
-        doc = html.fromstring(response.get_data(as_text=True))
-
-        assert doc.xpath(
-            "//*[@data-analytics='trackPageView'][@data-url=$k]",
-            k="/suppliers/frameworks/g-cloud-9/declaration_complete",
-        )
 
     @pytest.mark.parametrize("framework_status", ("standstill", "pending", "live", "expired",))
     def test_closed_framework_state(self, framework_status):

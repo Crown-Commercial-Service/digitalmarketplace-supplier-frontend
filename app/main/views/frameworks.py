@@ -637,8 +637,6 @@ def framework_supplier_declaration_submit(framework_slug):
         current_user.email_address,
     )
 
-    flash_key = "{}/declaration_complete".format(url_for('.framework_dashboard', framework_slug=framework['slug']))
-    flash(flash_key, "track-page-view")
     return redirect(url_for('.framework_dashboard', framework_slug=framework['slug']))
 
 

@@ -118,7 +118,6 @@ class TestSuppliersDashboard(BaseApplicationTest):
             session['_flashes'] = [
                 ('error', 'This is an error'),
                 ('success', 'This is a success'),
-                ('track-page-view', '/suppliers?account-created=true')
             ]
 
         self.data_api_client.get_framework.return_value = self.framework('open')
@@ -133,26 +132,7 @@ class TestSuppliersDashboard(BaseApplicationTest):
 
         assert '<pclass="banner-message">Thisisanerror</p>' in data
         assert '<pclass="banner-message">Thisisasuccess</p>' in data
-        assert '<pclass="banner-message">account-created</p>' not in data
 
-    def test_data_analytics_track_page_view_is_shown_if_account_created_flag_flash_message(self):
-        with self.client.session_transaction() as session:
-            session['_flashes'] = [('track-page-view', '/suppliers?account-created=true')]
-
-        self.login()
-
-        res = self.client.get("/suppliers")
-        data = res.get_data(as_text=True)
-
-        assert 'data-analytics="trackPageView" data-url="/suppliers?account-created=true"' in data
-
-    def test_data_analytics_track_page_view_is_not_shown_if_no_account_created_flag_flash_message(self):
-        self.login()
-
-        res = self.client.get("/suppliers")
-        data = res.get_data(as_text=True)
-
-        assert 'data-analytics="trackPageView" data-url="/suppliers?account-created=true"' not in data
 
     def test_shows_edit_buttons(self):
         self.data_api_client.get_supplier.side_effect = get_supplier
