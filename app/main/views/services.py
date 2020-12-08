@@ -153,7 +153,7 @@ def remove_service(framework_slug, service_id):
 
         updated_service = updated_service.get('services')
 
-        flash(SERVICE_REMOVED_MESSAGE.format(service_name=updated_service.get('serviceName')), 'remove_service')
+        flash(SERVICE_REMOVED_MESSAGE.format(service_name=updated_service.get('serviceName')), "success")
 
         return redirect(url_for(".list_services", framework_slug=service["frameworkSlug"]))
 
