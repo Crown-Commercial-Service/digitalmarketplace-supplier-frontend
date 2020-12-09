@@ -153,7 +153,7 @@ def remove_service(framework_slug, service_id):
 
         updated_service = updated_service.get('services')
 
-        flash(SERVICE_REMOVED_MESSAGE.format(service_name=updated_service.get('serviceName')), 'remove_service')
+        flash(SERVICE_REMOVED_MESSAGE.format(service_name=updated_service.get('serviceName')), "success")
 
         return redirect(url_for(".list_services", framework_slug=service["frameworkSlug"]))
 
@@ -449,11 +449,6 @@ def complete_draft_service(framework_slug, lot_slug, service_id):
     )
 
     flash(SERVICE_COMPLETED_MESSAGE.format(service_name=draft.get('serviceName') or draft.get('lotName')), "success")
-    flash("/".join((
-        url_for(".framework_submission_lots", framework_slug=framework['slug']),
-        lot_slug,
-        "complete",
-    )), "track-page-view")
 
     if lot['oneServiceLimit']:
         return redirect(url_for(".framework_submission_lots", framework_slug=framework['slug']))
@@ -711,17 +706,6 @@ def remove_subsection(framework_slug, lot_slug, service_id, section_id, question
             section_name=containing_section.name.lower(),
             service_name=(draft.get("serviceName") or draft.get("lotName")).lower(),
         ), "error")
-        flash("/".join((
-            url_for(
-                ".remove_subsection",
-                framework_slug=framework_slug,
-                lot_slug=lot_slug,
-                service_id=service_id,
-                section_id=section_id,
-                question_slug=question_slug,
-            ),
-            "remove-last-subsection-attempt",
-        )), "track-page-view")
 
     if request.args.get("confirm") and request.method == "POST":
         # Remove the section
