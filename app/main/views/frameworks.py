@@ -1353,6 +1353,7 @@ def sign_framework_agreement(framework_slug):
 
     supplier = data_api_client.get_supplier(current_user.supplier_id)["suppliers"]
     company_details = get_company_details_from_supplier(supplier)
+    declaration = data_api_client.get_supplier_declaration(current_user.supplier_id, framework_slug)
     form = SignFrameworkAgreementForm()
     framework_pdf_url = content_loader.get_message(framework_slug, 'urls').get('framework_agreement_pdf_url')
     contract_titles = {
@@ -1423,6 +1424,7 @@ def sign_framework_agreement(framework_slug):
     return render_template(
         "frameworks/sign_framework_agreement.html",
         company_details=company_details,
+        declaration=declaration,
         framework_slug=framework_slug,
         contract_title=contract_title,
         framework_pdf_url=framework_pdf_url,
