@@ -11,7 +11,13 @@ import mock
 import pytest
 
 from dmapiclient import HTTPError
-from dmtestutils.api_model_stubs import FrameworkStub, LotStub, SupplierStub, ServiceStub
+from dmtestutils.api_model_stubs import (
+    DraftServiceStub,
+    FrameworkStub,
+    LotStub,
+    SupplierStub,
+    ServiceStub,
+)
 from dmtestutils.fixtures import valid_pdf_bytes, valid_odt_bytes
 
 from app.main.helpers.services import parse_document_upload_time
@@ -1632,6 +1638,35 @@ class TestEditDraftService(BaseApplicationTest, MockEnsureApplicationCompanyDeta
             })
         assert res.status_code == 404
 
+    def test_g12_recovery_supplier_can_edit_draft_service(self, s3):
+        recovery_supplier_id = 577184
+        self.login(supplier_id=recovery_supplier_id)
+
+        g12_draft_service = empty_g9_draft_service()
+        g12_draft_service['frameworkSlug'] = 'g-cloud-12'
+        g12_draft_service['supplierId'] = recovery_supplier_id
+
+        self.data_api_client.get_framework.return_value = self.framework(status='live', slug='g-cloud-12')
+        self.data_api_client.get_draft_service.return_value = {'services': g12_draft_service}
+        self.data_api_client.get_supplier_framework_info.return_value = {
+            'frameworkInterest': {'onFramework': True}
+        }
+
+        res = self.client.post(
+            "/suppliers/frameworks/g-cloud-12/submissions/cloud-hosting/1/edit/about-your-service/service-description",
+            data={
+                "serviceDescription": "This is the service.",
+            }
+        )
+
+        assert res.status_code == 302
+        self.data_api_client.update_draft_service.assert_called_once_with(
+            "1",
+            {"serviceDescription": "This is the service."},
+            "email@email.com",
+            page_questions=["serviceDescription"]
+        )
+
     def test_draft_section_cannot_be_edited_if_not_open(self, s3):
         self.data_api_client.get_framework.return_value = self.framework(status='other')
         self.data_api_client.get_draft_service.return_value = self.empty_draft
@@ -2984,3 +3019,58 @@ class TestCopyAllPreviousServices(CopyingPreviousServicesSetup,
                 message.format(draft_count='3', framework_name='G-Cloud 10'), "success"
             )
         ]
+
+
+class TestG12RecoveryDraftServices(
+    BaseApplicationTest,
+    MockEnsureApplicationCompanyDetailsHaveBeenConfirmedMixin
+):
+    def setup_method(self, method):
+        super().setup_method(method)
+        self.data_api_client_patch = mock.patch('app.main.views.services.data_api_client', autospec=True)
+        self.data_api_client = self.data_api_client_patch.start()
+
+    def teardown_method(self, method):
+        self.data_api_client_patch.stop()
+        super().teardown_method(method)
+
+    @pytest.mark.parametrize("framework_slug, framework_status, supplier_id, allows_edits", (
+        ("g-cloud-12", "live", 577184, True),      # allows edits for g12 recovery supplier
+        ("g-cloud-12", "live", 1, False),          # does not allow edits if not g12 recovery supplier
+        ("g-cloud-12", "pending", 577184, False),  # does not allow edits if not live
+        ("g-cloud-12", "open", 577184, True),      # still allows edits if g12 open
+        ("g-cloud-11", "live", 577184, False),     # does not allow edits if live but not g12
+    ))
+    def test_submission_page_allows_edits_for_g12_recovery_suppliers(
+        self,
+        framework_slug,
+        framework_status,
+        supplier_id,
+        allows_edits,
+    ):
+        self.login(supplier_id=supplier_id)
+        self.data_api_client.get_framework.return_value = self.framework(
+            slug=framework_slug, status=framework_status
+        )
+
+        get_draft_service_response = DraftServiceStub(
+            framework_slug=framework_slug, supplier_id=supplier_id
+        ).single_result_response()
+        get_draft_service_response["auditEvents"] = {
+            "createdAt": "2020-01-01T17:26:32.422424Z",
+            "userName": "Supplier User",
+        }
+        get_draft_service_response["validationErrors"] = {}
+        self.data_api_client.get_draft_service.return_value = get_draft_service_response
+
+        with self.app.app_context():
+            res = self.client.get(f"/suppliers/frameworks/{framework_slug}/submissions/cloud-software/1234")
+
+        assert res.status_code == 200
+
+        doc = html.fromstring(res.get_data(as_text=True))
+
+        if allows_edits:
+            assert doc.cssselect("a:contains('Edit')")
+        else:
+            assert not doc.cssselect("a:contains('Edit')")
