@@ -4221,6 +4221,51 @@ class TestG12RecoveryDraftServices(BaseApplicationTest, MockEnsureApplicationCom
         assert 'browse-list-item-status-happy' in raw_html
         assert "Your application is not complete" not in raw_html
 
+    @pytest.mark.parametrize("framework_slug, framework_status, supplier_id, expected_response", (
+        ("g-cloud-12", "live", 577184, 200),  # exists for g12 recovery supplier
+        ("g-cloud-12", "live", 1, 404),       # raises 404 if not g12 recovery supplier
+        ("g-cloud-11", "live", 577184, 404),  # raises 404 if not g12
+        ("g-cloud-12", "open", 577184, 404),  # raises 404 if not live
+    ))
+    def test_services_page_exists(
+        self,
+        count_unanswered,
+        framework_slug,
+        framework_status,
+        supplier_id,
+        expected_response,
+    ):
+        self.login(supplier_id=supplier_id)
+        self.data_api_client.get_framework.return_value = self.framework(slug=framework_slug, status=framework_status)
+
+        with self.app.app_context():
+            res = self.client.get(f"/suppliers/frameworks/{framework_slug}/draft-services/cloud-support")
+
+        assert res.status_code == expected_response
+
+    @pytest.mark.parametrize("lot_slug", (
+        "cloud-hosting", "cloud-software", "cloud-support",
+    ))
+    def test_services_page_renders(
+        self,
+        count_unanswered,
+        lot_slug,
+    ):
+        self.login(supplier_id=577184)
+        self.data_api_client.get_framework.return_value = self.framework(slug="g-cloud-12", status="live")
+
+        with self.app.app_context():
+            res = self.client.get(f"/suppliers/frameworks/g-cloud-12/draft-services/{lot_slug}")
+
+        assert res.status_code == 200
+
+        doc = html.fromstring(res.get_data(as_text=True))
+        assert doc.cssselect("h2:contains('Draft services')")
+        assert doc.cssselect("h2:contains('Complete services')") \
+            and not doc.cssselect("h2:contains('Submitted services')")
+
+        assert doc.cssselect("a:contains('Add a service')")
+
 
 @mock.patch('app.main.views.frameworks.count_unanswered_questions')
 class TestFrameworkSubmissionServices(BaseApplicationTest, MockEnsureApplicationCompanyDetailsHaveBeenConfirmedMixin):
