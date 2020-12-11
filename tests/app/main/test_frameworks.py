@@ -4221,27 +4221,37 @@ class TestG12RecoveryDraftServices(BaseApplicationTest, MockEnsureApplicationCom
         assert 'browse-list-item-status-happy' in raw_html
         assert "Your application is not complete" not in raw_html
 
-    @pytest.mark.parametrize("framework_slug, framework_status, supplier_id, expected_response", (
-        ("g-cloud-12", "live", 577184, 200),  # exists for g12 recovery supplier
-        ("g-cloud-12", "live", 1, 404),       # raises 404 if not g12 recovery supplier
-        ("g-cloud-11", "live", 577184, 404),  # raises 404 if not g12
-        ("g-cloud-12", "open", 577184, 404),  # raises 404 if not live
+    @pytest.mark.parametrize("framework_slug, framework_status, supplier_id, allows_edits", (
+        ("g-cloud-12", "live", 577184, True),      # allows edits for g12 recovery supplier
+        ("g-cloud-12", "live", 1, False),          # does not allow edits if not g12 recovery supplier
+        ("g-cloud-12", "pending", 577184, False),  # does not allow edits if g12 not live
+        ("g-cloud-11", "live", 1, False),          # does not allow edits if live but not g12
+        ("g-cloud-11", "open", 1, True),           # still allows edits for open fw
     ))
-    def test_services_page_exists(
+    def test_services_page_allows_edits_for_g12_recovery_suppliers(
         self,
         count_unanswered,
         framework_slug,
         framework_status,
         supplier_id,
-        expected_response,
+        allows_edits,
     ):
         self.login(supplier_id=supplier_id)
         self.data_api_client.get_framework.return_value = self.framework(slug=framework_slug, status=framework_status)
 
         with self.app.app_context():
-            res = self.client.get(f"/suppliers/frameworks/{framework_slug}/draft-services/cloud-support")
+            res = self.client.get(f"/suppliers/frameworks/{framework_slug}/submissions/cloud-support")
 
-        assert res.status_code == expected_response
+        assert res.status_code == 200
+
+        doc = html.fromstring(res.get_data(as_text=True))
+
+        if allows_edits:
+            assert doc.cssselect("h2:contains('Complete services')")
+            assert doc.cssselect("p:contains('You haven’t marked any services as complete yet.')")
+        else:
+            assert not doc.cssselect("h2:contains('Complete services')")
+            assert doc.cssselect("p:contains('You didn’t mark any services as complete.')")
 
     @pytest.mark.parametrize("lot_slug", (
         "cloud-hosting", "cloud-software", "cloud-support",
@@ -4255,7 +4265,7 @@ class TestG12RecoveryDraftServices(BaseApplicationTest, MockEnsureApplicationCom
         self.data_api_client.get_framework.return_value = self.framework(slug="g-cloud-12", status="live")
 
         with self.app.app_context():
-            res = self.client.get(f"/suppliers/frameworks/g-cloud-12/draft-services/{lot_slug}")
+            res = self.client.get(f"/suppliers/frameworks/g-cloud-12/submissions/{lot_slug}")
 
         assert res.status_code == 200
 
