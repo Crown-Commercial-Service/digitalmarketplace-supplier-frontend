@@ -14,6 +14,7 @@ from dmutils.formats import DATETIME_FORMAT
 from dmcontent.errors import ContentNotFoundError
 
 from ...main import content_loader
+from .suppliers import is_g12_recovery_supplier
 
 
 def get_framework_or_404(client, framework_slug, allowed_statuses=None):
@@ -460,7 +461,8 @@ def return_404_if_applications_closed(data_api_client_callable):
             framework_slug = kwargs['framework_slug']
             framework = get_framework_or_404(data_api_client, framework_slug)
 
-            if not framework['status'] == 'open':
+            if not (framework['status'] == 'open' or
+                    (is_g12_recovery_supplier(current_user.supplier_id) and framework_slug == "g-cloud-12")):
                 current_app.logger.info(
                     'Supplier {supplier_id} requested "{method} {path}" after {framework_slug} applications closed.',
                     extra={
