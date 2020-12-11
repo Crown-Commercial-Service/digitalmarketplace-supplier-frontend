@@ -1368,7 +1368,6 @@ def sign_framework_agreement(framework_slug):
     }
     lots = framework['lots']
     completed_lots = []
-    completed_lot_numbers = []
     for number, lot in enumerate(lots, start=1):
         has_submitted = data_api_client.find_draft_services_by_framework(framework_slug=framework_slug,
                                                                          status="submitted",
@@ -1376,8 +1375,7 @@ def sign_framework_agreement(framework_slug):
                                                                          lot=lot['slug'],
                                                                          page=1)['meta']['total'] > 0
         if has_submitted:
-            completed_lots.append(lot['name'])
-            completed_lot_numbers.append(number)
+            completed_lots.append(f"Lot {number}: {lot['name']}")
 
     if form.validate_on_submit():
         # For an e-signature we create, update and sign the agreement immediately following submission
@@ -1433,7 +1431,6 @@ def sign_framework_agreement(framework_slug):
         framework_pdf_metadata=framework_pdf_metadata.get(framework_slug),
         framework=framework,
         completed_lots=completed_lots,
-        completed_lot_numbers=completed_lot_numbers,
         form=form,
         errors=errors
     ), 400 if errors else 200
