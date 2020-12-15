@@ -1,7 +1,7 @@
 {% extends "_base_page.html" %}
 
 {% block pageTitle %}
-    {{ framework.name }} Sign agreement – Digital Marketplace
+    {{ framework.name }} {{ title }} – Digital Marketplace
 {% endblock %}
 
 {% block breadcrumb %}
@@ -20,7 +20,7 @@
         "href": url_for(".framework_dashboard", framework_slug=framework.slug)
       },
       {
-        "text": "Sign agreement"
+        "text": title
       }
     ]
   }) }}
@@ -53,7 +53,7 @@
                 {{ form.signerRole }}
                 {{ form.signer_terms_and_conditions }}
                 {{ govukButton({
-                  "text": "Sign agreement"
+                  "text": title
                 }) }}
             </form>
         </div>

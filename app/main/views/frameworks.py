@@ -1355,11 +1355,14 @@ def sign_framework_agreement(framework_slug):
     company_details = get_company_details_from_supplier(supplier)
     declaration = data_api_client.get_supplier_declaration(current_user.supplier_id, framework_slug).get('declaration')
     framework_pdf_url = content_loader.get_message(framework_slug, 'urls').get('framework_agreement_pdf_url')
-    contract_titles = {
-        'g-cloud-12': 'Framework Agreement',
-        'digital-outcomes-and-specialists-5': 'Framework Agreement Form'
+    framework_specific_labels = {
+        'g-cloud-12': {'title': 'Sign agreement',
+                       'contract_title': 'Framework Agreement'},
+        'digital-outcomes-and-specialists-5': {'title': 'Sign contract',
+                                               'contract_title': 'Framework Contract'}
     }
-    contract_title = contract_titles.get(framework_slug)
+    contract_title = framework_specific_labels.get(framework_slug).get('contract_title')
+    title = framework_specific_labels.get(framework_slug).get('title')
     form = SignFrameworkAgreementForm(contract_title)
 
     # TODO: can we derive this metadata programmatically?
@@ -1427,6 +1430,7 @@ def sign_framework_agreement(framework_slug):
         declaration=declaration,
         framework_slug=framework_slug,
         contract_title=contract_title,
+        title=title,
         framework_pdf_url=framework_pdf_url,
         framework_pdf_metadata=framework_pdf_metadata.get(framework_slug),
         framework=framework,
