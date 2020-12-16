@@ -1,14 +1,3 @@
 {% for framework in frameworks.coming %}
   {# add banners/cards here for messages to suppliers about upcoming frameworks #}
 {% endfor %}
-
-{% if supplier.g12_recovery %}
-  {% with
-    main = true,
-    header_level = "h2",
-    messages = ['This is a placeholder'],
-    heading = "G-Cloud 12 recovery"
-  %}
-    {% include "toolkit/temporary-message.html" %}
-  {% endwith %}
-{% endif %}
