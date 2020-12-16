@@ -14,7 +14,7 @@ from dmutils.flask import timed_render_template as render_template
 from dmutils.forms.helpers import get_errors_from_wtform
 from dmutils.errors import render_error_page
 
-from ..helpers.suppliers import is_g12_recovery_supplier
+from ..helpers.suppliers import is_g12_recovery_supplier, g12_recovery_time_remaining
 from ... import data_api_client
 from ...main import main, content_loader
 from ..helpers import login_required
@@ -67,14 +67,15 @@ def list_services(framework_slug):
         framework=framework_slug,
     )["services"]
 
-    # We only need to know whether they are a G12 recovery supplier or not.
-    supplier = {'g12_recovery': is_g12_recovery_supplier(current_user.supplier_id)}
+    g12_recovery = None
+    if is_g12_recovery_supplier(current_user.supplier_id):
+        g12_recovery = {'time_remaining': g12_recovery_time_remaining()}
 
     return render_template(
         "services/list_services.html",
         services=suppliers_services,
         framework=framework,
-        supplier=supplier,
+        g12_recovery=g12_recovery,
     ), 200
 
 
@@ -533,6 +534,7 @@ def view_service_submission(framework_slug, lot_slug, service_id):
     update_framework_with_formatted_dates(framework)
 
     # check if g12 recovery supplier
+    g12_recovery = None
     if (
         framework_slug == "g-cloud-12"
         and framework["status"] == "live"
@@ -540,6 +542,7 @@ def view_service_submission(framework_slug, lot_slug, service_id):
     ):
         # we want this page to appear as it would if g12 were open
         framework["status"] = "open"
+        g12_recovery = {'time_remaining': g12_recovery_time_remaining()}
 
     try:
         data = data_api_client.get_draft_service(service_id)
@@ -574,7 +577,8 @@ def view_service_submission(framework_slug, lot_slug, service_id):
         unanswered_optional=unanswered_optional,
         can_mark_complete=not validation_errors,
         delete_requested=delete_requested,
-        declaration_status=get_declaration_status(data_api_client, framework['slug'])
+        declaration_status=get_declaration_status(data_api_client, framework['slug']),
+        g12_recovery=g12_recovery,
     ), 200
 
 
