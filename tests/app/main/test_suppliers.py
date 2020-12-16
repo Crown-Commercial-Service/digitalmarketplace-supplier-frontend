@@ -670,7 +670,7 @@ class TestSuppliersDashboard(BaseApplicationTest):
             response = self.client.get("/suppliers")
         doc = html.fromstring(response.get_data(as_text=True))
 
-        assert doc.cssselect("p.banner-message:contains('You have until')")
+        assert doc.cssselect("p.banner-message:contains('You need to mark your services as complete')")
 
     def test_supplier_cannot_see_banner(self):
         self.data_api_client.get_supplier.return_value = get_supplier(id=1)
@@ -680,7 +680,7 @@ class TestSuppliersDashboard(BaseApplicationTest):
             response = self.client.get("/suppliers")
         doc = html.fromstring(response.get_data(as_text=True))
 
-        assert not doc.cssselect("p.banner-message:contains('You have until')")
+        assert not doc.cssselect("p.banner-message:contains('You need to mark your services as complete')")
 
 
 class TestSupplierDetails(BaseApplicationTest):

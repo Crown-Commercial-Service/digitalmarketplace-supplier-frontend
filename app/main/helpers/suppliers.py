@@ -1,6 +1,7 @@
 import os
 import json
 from typing import Union
+from datetime import datetime, timedelta
 
 from flask import current_app
 
@@ -83,3 +84,28 @@ def is_g12_recovery_supplier(supplier_id: Union[str, int]) -> bool:
         return False
 
     return int(supplier_id) in supplier_ids
+
+
+G12_RECOVERY_DEADLINE = datetime(year=2525, month=1, day=1, hour=17)
+
+
+def g12_recovery_time_remaining() -> str:
+    return format_g12_recovery_time_remaining(G12_RECOVERY_DEADLINE - datetime.now())
+
+
+def format_g12_recovery_time_remaining(time_to_deadline: timedelta) -> str:
+    if time_to_deadline.days > 0:
+        number, unit = time_to_deadline.days, 'day'
+    elif time_to_deadline.seconds / 3600 >= 1:
+        number, unit = int(time_to_deadline.seconds / 3600), 'hour'
+    elif time_to_deadline.seconds / 60 >= 1:
+        number, unit = int(time_to_deadline.seconds / 60), 'minute'
+    elif time_to_deadline.seconds >= 0:
+        number, unit = time_to_deadline.seconds, 'second'
+    else:
+        number, unit = 0, 'second'
+
+    if number != 1:
+        unit += 's'
+
+    return f'{number} {unit}'
