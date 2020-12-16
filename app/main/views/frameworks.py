@@ -54,7 +54,7 @@ from ..helpers.frameworks import (
     returned_agreement_email_recipients,
     return_404_if_applications_closed,
     check_framework_supports_e_signature_or_404,
-    is_e_signature_supported_framework
+    is_e_signature_supported_framework, get_completed_lots
 )
 from ..helpers.services import (
     get_drafts,
@@ -1375,16 +1375,9 @@ def sign_framework_agreement(framework_slug):
         'g-cloud-12': {'file_size': '487KB', 'page_count': 62},
         'digital-outcomes-and-specialists-5': {'file_size': '97KB', 'page_count': 8}
     }
+
     lots = framework['lots']
-    completed_lots = []
-    for number, lot in enumerate(lots, start=1):
-        has_submitted = data_api_client.find_draft_services_by_framework(framework_slug=framework_slug,
-                                                                         status="submitted",
-                                                                         supplier_id=current_user.supplier_id,
-                                                                         lot=lot['slug'],
-                                                                         page=1)['meta']['total'] > 0
-        if has_submitted:
-            completed_lots.append(f"Lot {number}: {lot['name']}")
+    completed_lots = get_completed_lots(data_api_client, lots, framework_slug, current_user.supplier_id)
 
     if form.validate_on_submit():
         # For an e-signature we create, update and sign the agreement immediately following submission
