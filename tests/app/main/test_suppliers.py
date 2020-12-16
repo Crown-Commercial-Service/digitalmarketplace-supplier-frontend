@@ -606,26 +606,6 @@ class TestSuppliersDashboard(BaseApplicationTest):
         assert continue_link
         assert continue_link[0].values()[0] == "/suppliers/frameworks/digital-outcomes-and-specialists"
 
-    def test_shows_placeholder_to_recovery_supplier(self):
-        self.data_api_client.get_supplier.return_value = get_supplier(id='577184')  # Test.DM_G12_RECOVERY_SUPPLIER_IDS
-        self.login()
-
-        with self.app.app_context():
-            response = self.client.get("/suppliers")
-            document = html.fromstring(response.get_data(as_text=True))
-
-            assert document.xpath("//h2[normalize-space(string())='G-Cloud 12 recovery']")
-
-    def test_does_not_show_placeholder(self):
-        self.data_api_client.get_supplier.return_value = get_supplier(id='123456')
-        self.login()
-
-        with self.app.app_context():
-            response = self.client.get("/suppliers")
-            document = html.fromstring(response.get_data(as_text=True))
-
-            assert not document.xpath("//h2[normalize-space(string())='G-Cloud 12 recovery']")
-
     @pytest.mark.parametrize("framework_interest, on_framework", (
         (False, False),
         (True, False),
