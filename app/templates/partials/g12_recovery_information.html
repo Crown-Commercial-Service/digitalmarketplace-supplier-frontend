@@ -1,9 +1,9 @@
-{% if supplier.g12_recovery %}
+{% if g12_recovery %}
   <div class="wrapper">
     {# TODO: replace with govukNotificationBanner #}
     {%
       with
-      message = 'You have until 23:59 on 1 January 2525 to complete <a href="'|safe + url_for('.list_services', framework_slug='g-cloud-12') + '">your additional G12 services</a>.'|safe,
+      message = 'You have ' + g12_recovery.time_remaining + ' left to finish your application.<br>You need to mark your services as complete to finish your application. <a href="'|safe + url_for('.list_services', framework_slug='g-cloud-12') + '">View your services.</a>'|safe,
       type = 'information'
     %}
       {% include 'toolkit/notification-banner.html' %}

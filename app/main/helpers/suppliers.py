@@ -86,7 +86,7 @@ def is_g12_recovery_supplier(supplier_id: Union[str, int]) -> bool:
     return int(supplier_id) in supplier_ids
 
 
-G12_RECOVERY_DEADLINE = datetime(year=2025, month=1, day=1, hour=17)
+G12_RECOVERY_DEADLINE = datetime(year=2525, month=1, day=1, hour=17)
 
 
 def g12_recovery_time_remaining() -> str:

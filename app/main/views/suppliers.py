@@ -38,7 +38,7 @@ from ..helpers.suppliers import (
     COUNTRY_TUPLE,
     get_country_name_from_country_code,
     supplier_company_details_are_complete,
-    is_g12_recovery_supplier,
+    is_g12_recovery_supplier, g12_recovery_time_remaining,
 )
 from ..helpers import login_required
 
@@ -112,6 +112,10 @@ def dashboard():
     if "currently_applying_to" in session:
         del session["currently_applying_to"]
 
+    g12_recovery = None
+    if supplier['g12_recovery']:
+        g12_recovery = {'time_remaining': g12_recovery_time_remaining()}
+
     return render_template(
         "suppliers/dashboard.html",
         supplier=supplier,
@@ -122,7 +126,8 @@ def dashboard():
             'standstill': get_frameworks_by_status(all_frameworks, 'standstill', 'made_application'),
             'live': get_frameworks_by_status(all_frameworks, 'live', 'onFramework'),
             'last_dos': get_most_recent_expired_dos_framework(all_frameworks),
-        }
+        },
+        g12_recovery=g12_recovery,
     ), 200
 
 
