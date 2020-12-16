@@ -31,7 +31,7 @@
     {% include 'toolkit/forms/validation.html' %}
     <div class="govuk-grid-row">
     <div class="govuk-grid-column-two-thirds">
-    <span class="govuk-caption-xl"><span style="white-space:nowrap">{{ framework.name }}</span> <span style="white-space:nowrap">{{ form_title }}</span></span>
+    <span class="govuk-caption-xl"><span style="white-space:nowrap">{{ framework.name }}</span> <span style="white-space:nowrap">{{ contract_title }}</span></span>
     <h1 class="govuk-heading-xl">Supplier appointment terms</h1>
         <p class="govuk-!-font-weight-bold">
             If any of the information about your company is incorrect contact <a href="mailto:cloud_digital@crowncommercial.gov.uk">cloud_digital@crowncommercial.gov.uk</a> before signing.
@@ -41,7 +41,7 @@
         <p class="govuk-clearfix">
             <a href="{{ framework_pdf_url }}">
             <img class="framework-agreement-thumbnail" alt="" src="{{ url_for('static', filename='images/pdf-thumbnails/{0}.png'.format(framework_slug)) }}">
-                Read the {{ framework.name }} {{  form_title }}
+                Read the {{ framework.name }} {{  contract_title }}
             </a>
             <br>
             <span class="govuk-body-s"><abbr title="Portable Document Format">PDF</abbr>, {{ framework_pdf_metadata.file_size }}, {{ framework_pdf_metadata.page_count }} pages</span>
