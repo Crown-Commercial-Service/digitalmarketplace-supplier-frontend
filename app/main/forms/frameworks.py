@@ -107,7 +107,6 @@ class SignFrameworkAgreementForm(FlaskForm):
                                                                  f" {contract_title}."
 
     # Intended use of camel case here to match expected API fields
-
     signerName = DMStripWhitespaceStringField(
         "Your full name",
         validators=[
