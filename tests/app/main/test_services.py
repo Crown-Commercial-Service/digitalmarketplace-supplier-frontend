@@ -324,6 +324,211 @@ class TestListServices(BaseApplicationTest):
         )
 
 
+class TestG12RecoveryListServices(BaseApplicationTest):
+
+    def setup_method(self, method):
+        super().setup_method(method)
+        self.data_api_client_patch = mock.patch('app.main.views.services.data_api_client', autospec=True)
+        self.data_api_client = self.data_api_client_patch.start()
+
+        self.data_api_client.get_framework.return_value = self.framework(status="live", slug="g-cloud-12")
+
+    def teardown_method(self, method):
+        self.data_api_client_patch.stop()
+        super().teardown_method(method)
+
+    @pytest.fixture
+    def g12_recovery_supplier_id(self):
+        return 577184
+
+    def test_page_exists(self, g12_recovery_supplier_id):
+        self.login(supplier_id=g12_recovery_supplier_id)
+
+        res = self.client.get("/suppliers/frameworks/g-cloud-12/all-services")
+
+        assert res.status_code == 200
+
+    def test_page_does_not_exist_if_not_g12_recovery_supplier(self):
+        self.login(supplier_id=1)
+
+        res = self.client.get("/suppliers/frameworks/g-cloud-12/all-services")
+
+        assert res.status_code == 404
+
+    def test_page_does_not_exist_if_not_g12(self, g12_recovery_supplier_id):
+        self.login(supplier_id=g12_recovery_supplier_id)
+
+        res = self.client.get("/suppliers/frameworks/g-cloud-11/all-services")
+
+        assert res.status_code == 404
+
+    def test_list_services_view_redirects_to_all_services_view_if_g12_recovery_supplier(self, g12_recovery_supplier_id):
+        self.login(supplier_id=g12_recovery_supplier_id)
+
+        res = self.client.get("/suppliers/frameworks/g-cloud-12/services")
+
+        assert res.status_code == 302
+        assert res.location.endswith("/suppliers/frameworks/g-cloud-12/all-services")
+
+    def test_list_services_view_does_not_redirect_to_all_services_view_if_not_g12_recovery_supplier(self):
+        self.login(supplier_id=1)
+
+        res = self.client.get("/suppliers/frameworks/g-cloud-12/services")
+
+        assert res.status_code != 302
+        assert res.location is None
+
+    def test_page_has_draft_and_completed_and_live_services(self, g12_recovery_supplier_id):
+        self.login(supplier_id=g12_recovery_supplier_id)
+        self.data_api_client.find_draft_services_iter.return_value = [
+            DraftServiceStub(
+                service_name="My unsubmitted service",
+                framework_slug="g-cloud-12"
+            ).response(),
+            DraftServiceStub(
+                service_name="My submitted service",
+                framework_slug="g-cloud-12",
+                status="submitted"
+            ).response(),
+        ]
+        self.data_api_client.find_services.return_value = {"services": [
+            ServiceStub(
+                service_name="My live service",
+                framework_slug="g-cloud-12"
+            ).response(),
+        ]}
+
+        res = self.client.get("/suppliers/frameworks/g-cloud-12/all-services")
+
+        document = html.fromstring(res.get_data(as_text=True))
+
+        assert document.xpath(
+            "//h1[normalize-space(string())=$t]",
+            t="Your G-Cloud 12 services",
+        )
+
+        draft_services_caption = document.xpath(
+            "//h2[normalize-space(string())=$t]",
+            t="Draft services",
+        )[0]
+        draft_services_table = draft_services_caption.getnext()
+        assert draft_services_table.tag == "table"
+        assert [
+            td.text_content().strip() for td in
+            draft_services_table.cssselect("tbody tr td:first-child")
+        ] == [
+            "My unsubmitted service",
+        ]
+
+        complete_services_caption = document.xpath(
+            "//h2[normalize-space(string())=$t]",
+            t="Complete services",
+        )[0]
+        complete_services_table = complete_services_caption.getnext()
+        assert complete_services_table.tag == "table"
+        assert [
+            td.text_content().strip() for td in
+            complete_services_table.cssselect("tbody tr td:first-child")
+        ] == [
+            "My submitted service",
+        ]
+
+        live_services_caption = document.xpath(
+            "//h2[normalize-space(string())=$t]",
+            t="Live services",
+        )[0]
+        live_services_table = live_services_caption.getnext()
+        assert live_services_table.tag == "table"
+        assert [
+            td.text_content().strip() for td in
+            live_services_table.cssselect("tbody tr td:first-child")
+        ] == [
+            "My live service",
+        ]
+
+    def test_no_link_to_add_services_or_button_to_copy_services(self, g12_recovery_supplier_id):
+        self.login(supplier_id=g12_recovery_supplier_id)
+
+        self.data_api_client.find_draft_services_iter.return_value = [
+            DraftServiceStub(
+                service_name="My unsubmitted service",
+                framework_slug="g-cloud-12"
+            ).response(),
+            DraftServiceStub(
+                service_name="My submitted service",
+                framework_slug="g-cloud-12",
+                status="submitted"
+            ).response(),
+        ]
+        self.data_api_client.find_services.return_value = {"services": [
+            ServiceStub(
+                service_name="My live service",
+                framework_slug="g-cloud-12"
+            ).response(),
+        ]}
+
+        res = self.client.get("/suppliers/frameworks/g-cloud-12/all-services")
+
+        document = html.fromstring(res.get_data(as_text=True))
+
+        assert not document.cssselect("a:contains('Add a service')")
+        assert not document.cssselect("input:contains('Make a copy')")
+
+    def test_draft_services_table_shows_number_of_unanswered_questions(
+        self, g12_recovery_supplier_id
+    ):
+        self.login(supplier_id=g12_recovery_supplier_id)
+
+        self.data_api_client.find_draft_services_iter.return_value = [
+            DraftServiceStub(
+                service_name="My unsubmitted service",
+                framework_slug="g-cloud-12"
+            ).response(),
+        ]
+        self.data_api_client.find_services.return_value = {"services": []}
+
+        res = self.client.get("/suppliers/frameworks/g-cloud-12/all-services")
+
+        document = html.fromstring(res.get_data(as_text=True))
+
+        draft_services_table = document.xpath(
+            "//h2[normalize-space(string())=$t]",
+            t="Draft services",
+        )[0].getnext()
+
+        assert "74 unanswered questions" in draft_services_table.text_content()
+
+    @mock.patch('app.main.views.services.count_unanswered_questions')
+    def test_draft_services_table_shows_when_service_can_be_marked_as_complete(
+        self, count_unanswered_questions, g12_recovery_supplier_id
+    ):
+        self.login(supplier_id=g12_recovery_supplier_id)
+
+        self.data_api_client.find_draft_services_iter.return_value = [
+            DraftServiceStub(
+                service_name="My unsubmitted service",
+                framework_slug="g-cloud-12"
+            ).response(),
+        ]
+        self.data_api_client.find_services.return_value = {"services": []}
+
+        # returns a tuple of integers representing
+        # respectively the number of unanswered-and-required questions and the number
+        # of unanswered-but-optional questions.
+        count_unanswered_questions.return_value = (0, 0)
+
+        res = self.client.get("/suppliers/frameworks/g-cloud-12/all-services")
+
+        document = html.fromstring(res.get_data(as_text=True))
+
+        draft_services_table = document.xpath(
+            "//h2[normalize-space(string())=$t]",
+            t="Draft services",
+        )[0].getnext()
+
+        assert "Service can be marked as complete" in draft_services_table.text_content()
+
+
 class _BaseTestSupplierEditRemoveService(BaseApplicationTest):
     def _setup_service(
         self,
