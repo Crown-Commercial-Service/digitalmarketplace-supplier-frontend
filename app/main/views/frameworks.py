@@ -1354,7 +1354,7 @@ def sign_framework_agreement(framework_slug):
     supplier = data_api_client.get_supplier(current_user.supplier_id)["suppliers"]
     company_details = get_company_details_from_supplier(supplier)
     declaration = data_api_client.get_supplier_declaration(current_user.supplier_id, framework_slug).get('declaration')
-    framework_pdf_url = content_loader.get_message(framework_slug, 'urls').get('framework_agreement_pdf_url')
+    framework_urls = content_loader.get_message(framework_slug, 'urls')
     framework_specific_labels = {
         'g-cloud-12': {'title': 'Sign agreement',
                        'contract_title': 'Framework Agreement',
@@ -1370,7 +1370,6 @@ def sign_framework_agreement(framework_slug):
         'digital-outcomes-and-specialists-5': {'file_size': '97KB', 'page_count': 8}
     }
     contract_title = framework_specific_labels.get(framework_slug).get('contract_title')
-    framework_govuk_url = framework.get('frameworkAgreementDetails').get('frameworkURL')
 
     form = SignFrameworkAgreementForm(contract_title)
 
@@ -1428,8 +1427,8 @@ def sign_framework_agreement(framework_slug):
         title=framework_specific_labels.get(framework_slug).get('title'),
         contract_title=contract_title,
         include_govuk_link=framework_specific_labels.get(framework_slug).get('include_govuk_link'),
-        framework_govuk_url=framework_govuk_url,
-        framework_pdf_url=framework_pdf_url,
+        framework_govuk_url=framework_urls.get('framework_agreement_url'),
+        framework_pdf_url=framework_urls.get('framework_agreement_pdf_url'),
         framework_pdf_metadata=framework_pdf_metadata.get(framework_slug),
         framework=framework,
         completed_lots=completed_lots,
