@@ -25,6 +25,7 @@
 {% endblock %}
 
 {% block mainContent %}
+{% include "partials/g12_recovery_information.html" %}
   <div class="govuk-grid-row">
     <div class="govuk-grid-column-two-thirds">
       <h1 class="govuk-heading-l">Your {{ framework.name }} services</h1>
@@ -50,12 +51,19 @@
     {% call summary.row() %}
       {{ summary.service_link(draft.serviceName,
                               url_for(".view_service_submission", framework_slug=framework.slug, lot_slug=draft.lot, service_id=draft.id)) }}
+      {% if draft.unanswered_required %}
+        {{ summary.text(submission.multiline_string(
+          submission.unanswered_required_text(draft.unanswered_required, draft.unanswered_optional),
+          submission.unanswered_optional_text(draft.unanswered_required, draft.unanswered_optional)
+        )) }}
+      {% else %}
+        <td class="summary-item-field">
+        <strong class="app-text--can-be-marked-as-complete">
+          {{ submission.can_be_completed_text(draft.unanswered_required, "open") }}
 
-      {{ summary.text(submission.multiline_string(
-        submission.can_be_completed_text(draft.unanswered_required, "open"),
-        submission.unanswered_required_text(draft.unanswered_required, draft.unanswered_optional),
-        submission.unanswered_optional_text(draft.unanswered_required, draft.unanswered_optional)
-      )) }}
+        </strong>
+        </td>
+      {% endif %}
     {% endcall %}
   {% endcall %}
 
@@ -65,9 +73,7 @@
     caption="Complete services",
     empty_message="You haven’t marked any services as complete yet." if framework.status == 'open' else "You didn’t mark any services as complete.",
     field_headings=[
-        "Service name",
-        "Progress",
-        "Make a copy"
+        "Service name"
     ],
     field_headings_visible=False
   ) %}
@@ -76,19 +82,6 @@
           draft.serviceName,
           url_for(".view_service_submission", framework_slug=framework.slug, lot_slug=draft.lot, service_id=draft.id)
       ) }}
-      {% if framework.status == 'open' %}
-        {% call summary.field(action=True) %}
-          <form method="post" action="{{ url_for('.copy_draft_service', framework_slug=framework.slug, lot_slug=draft.lot, service_id=draft.id) }}">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token_value or csrf_token() }}" />
-            {{ govukButton({
-              "text": "Make a copy",
-              "classes": "govuk-!-margin-0",
-            }) }}
-          </form>
-        {% endcall %}
-      {% else %}
-        {{ summary.text() }}
-      {% endif %}
     {% endcall %}
   {% endcall %}
 

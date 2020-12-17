@@ -526,7 +526,24 @@ class TestG12RecoveryListServices(BaseApplicationTest):
             t="Draft services",
         )[0].getnext()
 
-        assert "Service can be marked as complete" in draft_services_table.text_content()
+        draft_service_progress = draft_services_table.cssselect("tbody tr")[0].cssselect("td")[1]
+
+        assert "Service can be marked as complete" in draft_service_progress.text_content()
+        assert draft_service_progress.cssselect("strong")
+        assert draft_service_progress.cssselect(".app-text--can-be-marked-as-complete")
+
+    def test_list_all_services_page_has_banner(self, g12_recovery_supplier_id):
+        self.login(supplier_id=g12_recovery_supplier_id)
+
+        self.data_api_client.find_draft_services_iter.return_value = []
+        self.data_api_client.find_services.return_value = {"services": []}
+
+        res = self.client.get("/suppliers/frameworks/g-cloud-12/all-services")
+
+        document = html.fromstring(res.get_data(as_text=True))
+
+        assert document.cssselect("p.banner-message:contains('You have')")
+        assert document.cssselect("p.banner-message:contains('left to finish your application')")
 
 
 class _BaseTestSupplierEditRemoveService(BaseApplicationTest):

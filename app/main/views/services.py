@@ -112,12 +112,16 @@ def list_all_services(framework_slug):
             'unanswered_optional': unanswered_optional,
         })
 
+    # Only G12 recovery suppliers can access this route, so always show the banner
+    g12_recovery = {'time_remaining': g12_recovery_time_remaining()}
+
     return render_template(
         "services/list_all_services.html",
         framework=framework,
         drafts=drafts,
         complete_drafts=complete_drafts,
         services=suppliers_services,
+        g12_recovery=g12_recovery
     ), 200
 
 
