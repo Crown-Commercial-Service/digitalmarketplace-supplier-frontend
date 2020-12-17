@@ -59,16 +59,14 @@ def frameworks_by_slug(client):
 
 def get_completed_lots(client, lots, framework_slug, supplier_id):
     """Return an array of completed lot names for a supplier"""
-    completed_lots = []
-    for number, lot in enumerate(lots, start=1):
-        has_submitted = client.find_draft_services_by_framework(framework_slug=framework_slug,
-                                                                status="submitted",
-                                                                supplier_id=supplier_id,
-                                                                lot=lot['slug'],
-                                                                page=1)['meta']['total'] > 0
-        if has_submitted:
-            completed_lots.append(f"Lot {number}: {lot['name']}")
-    return completed_lots
+    def has_submitted(lot):
+        return client.find_draft_services_by_framework(framework_slug=framework_slug,
+                                                       status="submitted",
+                                                       supplier_id=supplier_id,
+                                                       lot=lot['slug'],
+                                                       page=1)['meta']['total'] > 0
+
+    return [f"Lot {number}: {lot['name']}" for number, lot in enumerate(lots, start=1) if has_submitted(lot)]
 
 
 def get_framework_lot_or_404(framework, lot_slug):
