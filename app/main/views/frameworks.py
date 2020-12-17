@@ -1363,21 +1363,18 @@ def sign_framework_agreement(framework_slug):
                                                'contract_title': 'Framework Award Form',
                                                'include_govuk_link': True}
     }
-    contract_title = framework_specific_labels.get(framework_slug).get('contract_title')
-    title = framework_specific_labels.get(framework_slug).get('title')
-    include_govuk_link = framework_specific_labels.get(framework_slug).get('include_govuk_link')
-    framework_govuk_url = framework.get('frameworkAgreementDetails').get('frameworkURL')
-
-    form = SignFrameworkAgreementForm(contract_title)
 
     # TODO: can we derive this metadata programmatically or from framework content? https://trello.com/c/lctIBcq9
     framework_pdf_metadata = {
         'g-cloud-12': {'file_size': '487KB', 'page_count': 62},
         'digital-outcomes-and-specialists-5': {'file_size': '97KB', 'page_count': 8}
     }
+    contract_title = framework_specific_labels.get(framework_slug).get('contract_title')
+    framework_govuk_url = framework.get('frameworkAgreementDetails').get('frameworkURL')
 
-    lots = framework['lots']
-    completed_lots = get_completed_lots(data_api_client, lots, framework_slug, current_user.supplier_id)
+    form = SignFrameworkAgreementForm(contract_title)
+
+    completed_lots = get_completed_lots(data_api_client, framework['lots'], framework_slug, current_user.supplier_id)
 
     if form.validate_on_submit():
         # For an e-signature we create, update and sign the agreement immediately following submission
@@ -1428,9 +1425,9 @@ def sign_framework_agreement(framework_slug):
         company_details=company_details,
         declaration=declaration,
         framework_slug=framework_slug,
-        title=title,
+        title=framework_specific_labels.get(framework_slug).get('title'),
         contract_title=contract_title,
-        include_govuk_link=include_govuk_link,
+        include_govuk_link=framework_specific_labels.get(framework_slug).get('include_govuk_link'),
         framework_govuk_url=framework_govuk_url,
         framework_pdf_url=framework_pdf_url,
         framework_pdf_metadata=framework_pdf_metadata.get(framework_slug),
