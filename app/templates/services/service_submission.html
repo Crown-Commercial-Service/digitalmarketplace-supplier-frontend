@@ -41,6 +41,8 @@
     {% endif %}
   {% endwith %}
 
+  {% include "partials/g12_recovery_information.html" %}
+
   {% if service_data.status == 'submitted' and declaration_status != 'complete' and framework.status == 'open' %}
     <div class="wrapper">
       {%
