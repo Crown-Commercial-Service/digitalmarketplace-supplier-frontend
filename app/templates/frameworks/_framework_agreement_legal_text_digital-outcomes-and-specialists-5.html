@@ -1,0 +1,18 @@
+<ol class="govuk-list govuk-list--number">
+ <li><strong>CCS</strong>: The Minister for the Cabinet Office represented by its executive agency the Crown Commercial Service (CCS). Its offices are on: 9th Floor, The Capital, Old Hall Street, Liverpool L3 9PP.</li>   
+ <li><strong>Supplier</strong>: {{ company_details['registered_name'] }}<br />
+    address: {{ [company_details.address.get('street_address_line_1'), company_details.address.get('locality'), company_details.address.get('postcode')] | join(', ') }}<br />
+    registration number: {{  company_details['registration_number'] }}
+</li>
+<li><strong>Framework Contract</strong>: This framework contract between CCS and the Supplier allows the Supplier to be considered for Call-Off Contracts
+     to supply the Deliverables in {{ completed_lots | join(', ') }}.
+     You cannot deliver in any other Lot under this Contract. Any references made to other Lots in this Contract do not apply. This opportunity is advertised in the Contract Notice in the Official Journal of the European Union reference 2020/S 197-478606 (OJEU Contract Notice).
+</li>
+<li><strong>Deliverables</strong>: See Framework Schedule 1 (Specification) for further details.</li>
+<li><strong>Framework Start Date</strong>: 20 January 2021</li>
+<li><strong>Framework Expiry Date</strong>: 23:59 on 19 January 2022</li>
+<li><strong>Framework Initial Period</strong>: From Framework Start Date to Framework Expiry Date, inclusive.</li>
+<li><strong>Framework Optional Extension Period</strong>: Up to twelve (12) months, by CCS giving written notice to Suppliers.</li>
+</ol>
+<p>18. <strong>Supplier Authorised Representative</strong>: {{ declaration.get('contactNameContractNotice') }}, {{ declaration.get('contactEmailContractNotice') }}</p>
+<p>The finalised Framework Award Form includes an electronically signed Framework Award Form. It is electronically signed by the Supplier when they made the legal declaration confirming their agreement to the Digital Outcomes and Specialists 5 Framework Award Form, and countersigned by the Crown Commercial Service.</p>

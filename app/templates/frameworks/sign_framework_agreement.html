@@ -1,7 +1,7 @@
 {% extends "_base_page.html" %}
 
 {% block pageTitle %}
-    {{ framework.name }} Sign agreement – Digital Marketplace
+    {{ framework.name }} {{ title }} – Digital Marketplace
 {% endblock %}
 
 {% block breadcrumb %}
@@ -20,7 +20,7 @@
         "href": url_for(".framework_dashboard", framework_slug=framework.slug)
       },
       {
-        "text": "Sign agreement"
+        "text": title
       }
     ]
   }) }}
@@ -31,12 +31,12 @@
     {% include 'toolkit/forms/validation.html' %}
     <div class="govuk-grid-row">
     <div class="govuk-grid-column-two-thirds">
-    <span class="govuk-caption-xl">{{ framework.name }} {{ contract_title }}</span>
+    <span class="govuk-caption-xl"><span style="white-space:nowrap">{{ framework.name }}</span> <span style="white-space:nowrap">{{ contract_title }}</span></span>
     <h1 class="govuk-heading-xl">Supplier appointment terms</h1>
         <p class="govuk-!-font-weight-bold">
             If any of the information about your company is incorrect contact <a href="mailto:cloud_digital@crowncommercial.gov.uk">cloud_digital@crowncommercial.gov.uk</a> before signing.
         </p>
-    {% with company_details=company_details %}
+    {% with company_details=company_details, declaration=declaration %}
         {% include "frameworks/_framework_agreement_legal_text_{0}.html".format(framework_slug) %}
         <p class="govuk-clearfix">
             <a href="{{ framework_pdf_url }}">
@@ -47,13 +47,18 @@
             <span class="govuk-body-s"><abbr title="Portable Document Format">PDF</abbr>, {{ framework_pdf_metadata.file_size }}, {{ framework_pdf_metadata.page_count }} pages</span>
         </p>
     {% endwith %}
+        {% if include_govuk_link %}
+            {% with framework_govuk_url=framework_govuk_url %}
+                {% include "frameworks/_framework_agreement_govuk_link_{0}.html".format(framework_slug) %}
+            {% endwith %}
+        {% endif %}
             <form method="POST" novalidate action="{{ url_for(".sign_framework_agreement", framework_slug=framework_slug) }}">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
                 {{ form.signerName }}
                 {{ form.signerRole }}
                 {{ form.signer_terms_and_conditions }}
                 {{ govukButton({
-                  "text": "Sign agreement"
+                  "text": title
                 }) }}
             </form>
         </div>

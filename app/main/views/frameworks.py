@@ -54,7 +54,7 @@ from ..helpers.frameworks import (
     returned_agreement_email_recipients,
     return_404_if_applications_closed,
     check_framework_supports_e_signature_or_404,
-    is_e_signature_supported_framework
+    is_e_signature_supported_framework, get_completed_lots
 )
 from ..helpers.services import (
     get_drafts,
@@ -1353,27 +1353,27 @@ def sign_framework_agreement(framework_slug):
 
     supplier = data_api_client.get_supplier(current_user.supplier_id)["suppliers"]
     company_details = get_company_details_from_supplier(supplier)
-    form = SignFrameworkAgreementForm()
-    framework_pdf_url = content_loader.get_message(framework_slug, 'urls').get('framework_agreement_pdf_url')
-    contract_titles = {
-        'g-cloud-12': 'Framework Agreement'
+    declaration = data_api_client.get_supplier_declaration(current_user.supplier_id, framework_slug).get('declaration')
+    framework_urls = content_loader.get_message(framework_slug, 'urls')
+    framework_specific_labels = {
+        'g-cloud-12': {'title': 'Sign agreement',
+                       'contract_title': 'Framework Agreement',
+                       'include_govuk_link': False},
+        'digital-outcomes-and-specialists-5': {'title': 'Sign contract',
+                                               'contract_title': 'Framework Award Form',
+                                               'include_govuk_link': True}
     }
-    contract_title = contract_titles.get(framework_slug)
 
-    # TODO: can we derive this metadata programmatically?
+    # TODO: can we derive this metadata programmatically or from framework content? https://trello.com/c/lctIBcq9
     framework_pdf_metadata = {
-        'g-cloud-12': {'file_size': '487KB', 'page_count': 62}
+        'g-cloud-12': {'file_size': '487KB', 'page_count': 62},
+        'digital-outcomes-and-specialists-5': {'file_size': '97KB', 'page_count': 8}
     }
-    lots = framework['lots']
-    completed_lots = []
-    for lot in lots:
-        has_submitted = data_api_client.find_draft_services_by_framework(framework_slug=framework_slug,
-                                                                         status="submitted",
-                                                                         supplier_id=current_user.supplier_id,
-                                                                         lot=lot['slug'],
-                                                                         page=1)['meta']['total'] > 0
-        if has_submitted:
-            completed_lots.append(lot['name'])
+    contract_title = framework_specific_labels.get(framework_slug).get('contract_title')
+
+    form = SignFrameworkAgreementForm(contract_title)
+
+    completed_lots = get_completed_lots(data_api_client, framework['lots'], framework_slug, current_user.supplier_id)
 
     if form.validate_on_submit():
         # For an e-signature we create, update and sign the agreement immediately following submission
@@ -1422,9 +1422,13 @@ def sign_framework_agreement(framework_slug):
     return render_template(
         "frameworks/sign_framework_agreement.html",
         company_details=company_details,
+        declaration=declaration,
         framework_slug=framework_slug,
+        title=framework_specific_labels.get(framework_slug).get('title'),
         contract_title=contract_title,
-        framework_pdf_url=framework_pdf_url,
+        include_govuk_link=framework_specific_labels.get(framework_slug).get('include_govuk_link'),
+        framework_govuk_url=framework_urls.get('framework_agreement_url'),
+        framework_pdf_url=framework_urls.get('framework_agreement_pdf_url'),
         framework_pdf_metadata=framework_pdf_metadata.get(framework_slug),
         framework=framework,
         completed_lots=completed_lots,

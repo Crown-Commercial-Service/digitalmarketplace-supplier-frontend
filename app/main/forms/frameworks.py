@@ -100,6 +100,11 @@ class LegalAuthorityForm(FlaskForm):
 
 
 class SignFrameworkAgreementForm(FlaskForm):
+    def __init__(self, contract_title, **kw):
+        super(SignFrameworkAgreementForm, self).__init__(**kw)
+        self.signer_terms_and_conditions.label.text = f"I accept the terms and conditions of the {contract_title}"
+        self.signer_terms_and_conditions.validators[0].message = f"Accept the terms and conditions of the" \
+                                                                 f" {contract_title}."
 
     # Intended use of camel case here to match expected API fields
     signerName = DMStripWhitespaceStringField(
@@ -118,8 +123,7 @@ class SignFrameworkAgreementForm(FlaskForm):
         ],
     )
     signer_terms_and_conditions = DMBooleanField(
-        "I accept the terms and conditions of the Framework Agreement",
         validators=[
-            DataRequired(message="Accept the terms and conditions of the Framework Agreement.")
+            DataRequired()
         ]
     )

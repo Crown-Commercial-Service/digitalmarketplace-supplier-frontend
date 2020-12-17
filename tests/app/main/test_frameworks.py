@@ -6162,7 +6162,7 @@ class TestSignFrameworkAgreement(BaseApplicationTest):
         self.login()
         res = self.client.get("/suppliers/frameworks/g-cloud-12/sign-framework-agreement")
         text = res.get_data(as_text=True)
-        assert "Cloud hosting, Cloud software, Cloud support" in text
+        assert "Lot 1: Cloud hosting, Lot 2: Cloud software, Lot 3: Cloud support" in text
         assert "Acme Company" in text
         assert "87654321" in text
         assert "10 Downing Street, London, SW1A 2AA" in text
