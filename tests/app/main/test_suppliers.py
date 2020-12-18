@@ -631,15 +631,12 @@ class TestSuppliersDashboard(BaseApplicationTest):
             assert doc.xpath(
                 "//h3[normalize-space(string())=$f]"
                 "[(following::a)[1][normalize-space(string())=$t1][@href=$u1]]"
-                "[(following::a)[2][normalize-space(string())=$t2][@href=$u2]]"
-                "[(following::a)[3][normalize-space(string())=$t3][@href=$u3]]",
+                "[(following::a)[2][normalize-space(string())=$t2][@href=$u2]]",
                 f="G-Cloud 12",
-                t1="Add a service",
-                u1="/suppliers/frameworks/g-cloud-12/draft-services",
-                t2="View services",
-                u2="/suppliers/frameworks/g-cloud-12/services",
-                t3="View documents",
-                u3="/suppliers/frameworks/g-cloud-12",
+                t1="View services",
+                u1="/suppliers/frameworks/g-cloud-12/services",
+                t2="View documents",
+                u2="/suppliers/frameworks/g-cloud-12",
             )
 
     def test_recovery_supplier_sees_banner(self):
