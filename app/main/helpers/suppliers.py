@@ -86,7 +86,7 @@ def is_g12_recovery_supplier(supplier_id: Union[str, int]) -> bool:
     return int(supplier_id) in supplier_ids
 
 
-G12_RECOVERY_DEADLINE = datetime(year=2525, month=1, day=1, hour=17)
+G12_RECOVERY_DEADLINE = datetime(year=1970, month=1, day=1, hour=17)
 
 
 def g12_recovery_time_remaining() -> str:
@@ -94,13 +94,13 @@ def g12_recovery_time_remaining() -> str:
 
 
 def format_g12_recovery_time_remaining(time_to_deadline: timedelta) -> str:
-    if time_to_deadline.days > 0:
+    if time_to_deadline / timedelta(days=1) >= 1:
         number, unit = time_to_deadline.days, 'day'
-    elif time_to_deadline.seconds / 3600 >= 1:
+    elif time_to_deadline / timedelta(hours=1) >= 1:
         number, unit = int(time_to_deadline.seconds / 3600), 'hour'
-    elif time_to_deadline.seconds / 60 >= 1:
+    elif time_to_deadline / timedelta(minutes=1) >= 1:
         number, unit = int(time_to_deadline.seconds / 60), 'minute'
-    elif time_to_deadline.seconds >= 0:
+    elif time_to_deadline / timedelta(seconds=1) >= 0:
         number, unit = time_to_deadline.seconds, 'second'
     else:
         number, unit = 0, 'second'
