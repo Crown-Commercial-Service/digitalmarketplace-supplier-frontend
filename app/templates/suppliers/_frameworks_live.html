@@ -18,6 +18,13 @@
       </li>
       {% endif %}
       {% if framework in frameworks.live %}
+      {% if framework.slug == "g-cloud-12" and supplier.g12_recovery %}
+      <li>
+        <a class="govuk-link" href="{{ url_for('.g12_recovery_draft_services', framework_slug='g-cloud-12') }}">
+        Add a service
+        </a>
+      </li>
+      {% endif %}
       <li>
         <a class="govuk-link" href="{{ url_for('.list_services', framework_slug=framework.slug) }}">
         View services

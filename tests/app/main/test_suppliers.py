@@ -606,6 +606,42 @@ class TestSuppliersDashboard(BaseApplicationTest):
         assert continue_link
         assert continue_link[0].values()[0] == "/suppliers/frameworks/digital-outcomes-and-specialists"
 
+    @pytest.mark.parametrize("framework_interest, on_framework", (
+        (False, False),
+        (True, False),
+        (True, True),
+    ))
+    def test_recovery_supplier_sees_g12_links(self, framework_interest, on_framework):
+        g12 = FrameworkStub(status="live", slug="g-cloud-12").response()
+        g12["frameworkSlug"] = "g-cloud-12"
+        self.data_api_client.get_supplier_frameworks.return_value = {
+            "frameworkInterest": [{**g12, "onFramework": on_framework}] if framework_interest else []
+        }
+        self.data_api_client.find_frameworks.return_value = {
+            "frameworks": [g12]
+        }
+
+        self.data_api_client.get_supplier.return_value = get_supplier(id='577184')  # Test.DM_G12_RECOVERY_SUPPLIER_IDS
+        self.login()
+
+        with self.app.app_context():
+            response = self.client.get("/suppliers")
+            doc = html.fromstring(response.get_data(as_text=True))
+
+            assert doc.xpath(
+                "//h3[normalize-space(string())=$f]"
+                "[(following::a)[1][normalize-space(string())=$t1][@href=$u1]]"
+                "[(following::a)[2][normalize-space(string())=$t2][@href=$u2]]"
+                "[(following::a)[3][normalize-space(string())=$t3][@href=$u3]]",
+                f="G-Cloud 12",
+                t1="Add a service",
+                u1="/suppliers/frameworks/g-cloud-12/draft-services",
+                t2="View services",
+                u2="/suppliers/frameworks/g-cloud-12/services",
+                t3="View documents",
+                u3="/suppliers/frameworks/g-cloud-12",
+            )
+
     def test_recovery_supplier_sees_banner(self):
         self.data_api_client.get_supplier.return_value = get_supplier(id=577184)  # Test.DM_G12_RECOVERY_SUPPLIER_IDS
         self.login()
