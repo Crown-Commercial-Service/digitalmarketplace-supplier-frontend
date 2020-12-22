@@ -86,8 +86,6 @@ def dashboard():
             if g12:
                 supplier_frameworks["g-cloud-12"] = g12
             del g12
-        if "g-cloud-12" in supplier_frameworks:
-            supplier_frameworks["g-cloud-12"]["onFramework"] = True
 
     for framework in all_frameworks:
         framework.update(
@@ -108,6 +106,8 @@ def dashboard():
             ),
             'is_e_signature_supported': is_e_signature_supported_framework(framework['slug']),
         })
+        if framework['slug'] == 'g-cloud-12' and supplier["g12_recovery"]:
+            framework['onFramework'] = True
 
     if "currently_applying_to" in session:
         del session["currently_applying_to"]
