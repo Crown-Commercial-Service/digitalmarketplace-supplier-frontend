@@ -9,7 +9,7 @@
   "dependencies": {
     "colors": "1.1.2",
     "del": "^5.1.0",
-    "digitalmarketplace-frameworks": "github:alphagov/digitalmarketplace-frameworks#v17.17.9",
+    "digitalmarketplace-frameworks": "github:alphagov/digitalmarketplace-frameworks#v18.1.5",
     "digitalmarketplace-frontend-toolkit": "https://github.com/alphagov/digitalmarketplace-frontend-toolkit.git#v36.1.0",
     "digitalmarketplace-govuk-frontend": "^2.8.0",
     "govuk-country-and-territory-autocomplete": "0.4.0",
