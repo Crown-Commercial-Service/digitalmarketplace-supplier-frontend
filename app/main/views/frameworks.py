@@ -1355,12 +1355,11 @@ def sign_framework_agreement(framework_slug):
     company_details = get_company_details_from_supplier(supplier)
     declaration = data_api_client.get_supplier_declaration(current_user.supplier_id, framework_slug).get('declaration')
     framework_urls = content_loader.get_message(framework_slug, 'urls')
+    contract_title = content_loader.get_message(framework_slug, 'e-signature', 'framework_contract_title')
     framework_specific_labels = {
         'g-cloud-12': {'title': 'Sign agreement',
-                       'contract_title': 'Framework Agreement',
                        'include_govuk_link': False},
         'digital-outcomes-and-specialists-5': {'title': 'Sign contract',
-                                               'contract_title': 'Framework Award Form',
                                                'include_govuk_link': True}
     }
 
@@ -1369,7 +1368,6 @@ def sign_framework_agreement(framework_slug):
         'g-cloud-12': {'file_size': '487KB', 'page_count': 62},
         'digital-outcomes-and-specialists-5': {'file_size': '97KB', 'page_count': 8}
     }
-    contract_title = framework_specific_labels.get(framework_slug).get('contract_title')
 
     form = SignFrameworkAgreementForm(contract_title)
 
