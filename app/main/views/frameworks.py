@@ -224,6 +224,10 @@ def framework_dashboard(framework_slug):
         )
         for label, d in base_communications_files.items()
     }
+    if is_e_signature_supported_framework(framework_slug):
+        contract_title = content_loader.get_message(framework_slug, 'e-signature', 'framework_contract_title')
+    else:
+        contract_title = None
 
     return render_template(
         "frameworks/dashboard.html",
@@ -248,7 +252,8 @@ def framework_dashboard(framework_slug):
         supplier_company_details_complete=supplier_company_details_are_complete(supplier),
         application_company_details_confirmed=application_company_details_confirmed,
         custom_dimensions=custom_dimensions,
-        is_e_signature_supported_framework=is_e_signature_supported_framework(framework_slug)
+        is_e_signature_supported_framework=is_e_signature_supported_framework(framework_slug),
+        contract_title=contract_title
     ), 200
 
 
