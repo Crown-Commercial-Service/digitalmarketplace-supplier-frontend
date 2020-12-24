@@ -17,7 +17,7 @@
         {% else %}
           <p class="govuk-body">
               {% if is_e_signature_supported_framework %}
-              Your signed framework agreement will be sent to Crown Commercial Service (<abbr title="Crown Commercial Service">CCS</abbr>) to be countersigned.
+              Your signed {{ contract_title }} will be sent to Crown Commercial Service (<abbr title="Crown Commercial Service">CCS</abbr>) to be countersigned.
               We'll email you when the countersigned agreement is available.
               You'll need to wait for <abbr title="Crown Commercial Service">CCS</abbr> to countersign your agreement before you can sell services.
               {% else %}
@@ -71,7 +71,7 @@
     {# newer frameworks should have the final agreement published as a web page #}
     <p class="govuk-body">
       <a class="govuk-link" href="{{ framework_urls.framework_agreement_url }}">
-        Read the standard framework agreement
+        Read the standard {{ contract_title }}
       </a>
     </p>
   {% elif communications_files.final_agreement.last_modified %}
@@ -106,7 +106,7 @@
     {% set signed_message %}
       {% if framework.frameworkAgreementVersion %}
         {% if is_e_signature_supported_framework %}
-          Download your signed framework agreement
+          Download your signed {{ contract_title }}
         {% else %}
           Download your ‘counterpart’ framework agreement signature page
         {% endif %}

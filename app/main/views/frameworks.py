@@ -227,7 +227,7 @@ def framework_dashboard(framework_slug):
     if is_e_signature_supported_framework(framework_slug):
         contract_title = content_loader.get_message(framework_slug, 'e-signature', 'framework_contract_title')
     else:
-        contract_title = None
+        contract_title = 'framework agreement'
 
     return render_template(
         "frameworks/dashboard.html",
