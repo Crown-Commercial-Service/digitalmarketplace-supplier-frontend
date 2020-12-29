@@ -9,9 +9,6 @@ jobs:
     steps:
     - uses: actions/checkout@v2
 
-    - name: Install Ubuntu packages
-      run: sudo apt-get install libxml2-dev libxslt1-dev python-dev
-
     - name: Install Node dependencies
       shell: bash -l {0}
       run: |
