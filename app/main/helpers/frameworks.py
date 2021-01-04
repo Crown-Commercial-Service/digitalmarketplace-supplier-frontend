@@ -505,10 +505,10 @@ def return_404_if_applications_closed(data_api_client_callable):
     return real_decorator
 
 
-def is_e_signature_supported_framework(framework_slug):
-    return framework_slug in current_app.config['E_SIGNATURE_FRAMEWORKS']
+def is_e_signature_supported_framework(framework):
+    return framework['isESignatureSupported']
 
 
-def check_framework_supports_e_signature_or_404(framework_slug):
-    if not is_e_signature_supported_framework(framework_slug):
+def check_framework_supports_e_signature_or_404(framework):
+    if not framework['isESignatureSupported']:
         abort(404)

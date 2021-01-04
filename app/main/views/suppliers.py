@@ -104,7 +104,7 @@ def dashboard():
             'needs_to_return_agreement': (
                 framework.get('onFramework') and framework.get('agreementReturned') is False
             ),
-            'is_e_signature_supported': is_e_signature_supported_framework(framework['slug']),
+            'is_e_signature_supported': is_e_signature_supported_framework(framework),
         })
         if framework['slug'] == 'g-cloud-12' and supplier["g12_recovery"]:
             framework['onFramework'] = True

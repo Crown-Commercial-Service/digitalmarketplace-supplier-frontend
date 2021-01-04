@@ -5933,7 +5933,9 @@ class TestSignatureLegalAuthority(BaseApplicationTest):
     )
     def test_only_works_for_live_and_standstill_frameworks(self, framework_status, status_code):
         self.login()
-        self.data_api_client.get_framework.return_value = self.framework(status=framework_status, slug='g-cloud-12')
+        self.data_api_client.get_framework.return_value = self.framework(status=framework_status,
+                                                                         slug='g-cloud-12',
+                                                                         is_e_signature_supported=True)
         self.data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
             on_framework=True)
 
@@ -5941,20 +5943,23 @@ class TestSignatureLegalAuthority(BaseApplicationTest):
         assert res.status_code == status_code
 
     @pytest.mark.parametrize(
-        ('framework_slug', 'on_framework', 'status_code'),
+        ('is_e_signature_supported', 'on_framework', 'status_code'),
         (
-            ('g-cloud-11', True, 404),
-            ('g-cloud-12', True, 200),
-            ('g-cloud-12', False, 400),
+            (False, True, 404),
+            (True, True, 200),
+            (True, False, 400),
         )
     )
-    def test_only_works_for_supported_frameworks(self, framework_slug, on_framework, status_code):
+    def test_only_works_for_supported_frameworks(self, is_e_signature_supported, on_framework, status_code):
         self.login()
-        self.data_api_client.get_framework.return_value = self.framework(status='standstill', slug=framework_slug)
+        self.data_api_client.get_framework.return_value = self.framework(
+            status='standstill',
+            slug='g-cloud-12',
+            is_e_signature_supported=is_e_signature_supported)
         self.data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
             on_framework=on_framework)
 
-        res = self.client.get(f"/suppliers/frameworks/{framework_slug}/start-framework-agreement-signing")
+        res = self.client.get(f"/suppliers/frameworks/g-cloud-12/start-framework-agreement-signing")
         assert res.status_code == status_code
 
     def test_post_yes_redirects_to_signing_page(self):
@@ -5962,7 +5967,8 @@ class TestSignatureLegalAuthority(BaseApplicationTest):
         self.login()
         self.data_api_client.get_framework.return_value = self.framework(status='standstill',
                                                                          slug=framework_slug,
-                                                                         framework_agreement_version="1")
+                                                                         framework_agreement_version="1",
+                                                                         is_e_signature_supported=True)
         self.data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
             on_framework=True)
 
@@ -5977,7 +5983,8 @@ class TestSignatureLegalAuthority(BaseApplicationTest):
         self.login()
         self.data_api_client.get_framework.return_value = self.framework(status='standstill',
                                                                          slug=framework_slug,
-                                                                         framework_agreement_version="1")
+                                                                         framework_agreement_version="1",
+                                                                         is_e_signature_supported=True)
         self.data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
             on_framework=True)
 
@@ -5991,7 +5998,8 @@ class TestSignatureLegalAuthority(BaseApplicationTest):
         self.login()
         self.data_api_client.get_framework.return_value = self.framework(status='standstill',
                                                                          slug=framework_slug,
-                                                                         framework_agreement_version="1")
+                                                                         framework_agreement_version="1",
+                                                                         is_e_signature_supported=True)
         self.data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
             on_framework=True)
         res = self.client.post(f"/suppliers/frameworks/{framework_slug}/start-framework-agreement-signing",
@@ -6014,25 +6022,27 @@ class TestSignFrameworkAgreement(BaseApplicationTest):
         super().teardown_method(method)
 
     @pytest.mark.parametrize(
-        ('framework_slug', 'on_framework', 'status_code'),
+        ('is_e_signature_supported', 'on_framework', 'status_code'),
         (
-            ('g-cloud-11', True, 404),
-            ('g-cloud-12', True, 200),
-            ('g-cloud-12', False, 400),
+            (False, True, 404),
+            (True, True, 200),
+            (True, False, 400),
         )
     )
-    def test_only_works_for_supported_frameworks(self, framework_slug, on_framework, status_code):
+    def test_only_works_for_supported_frameworks(self, is_e_signature_supported, on_framework, status_code):
         self.login()
-        self.data_api_client.get_framework.return_value = self.framework(status='standstill',
-                                                                         slug=framework_slug,
-                                                                         framework_agreement_version="1")
+        self.data_api_client.get_framework.return_value = self.framework(
+            status='standstill',
+            slug='g-cloud-12',
+            framework_agreement_version="1",
+            is_e_signature_supported=is_e_signature_supported)
         self.data_api_client.find_draft_services_by_framework.return_value = {
             'meta': {'total': 1}
         }
         self.data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
             on_framework=on_framework)
 
-        res = self.client.get(f"/suppliers/frameworks/{framework_slug}/sign-framework-agreement")
+        res = self.client.get(f"/suppliers/frameworks/g-cloud-12/sign-framework-agreement")
         assert res.status_code == status_code
 
     @pytest.mark.parametrize(
@@ -6049,7 +6059,8 @@ class TestSignFrameworkAgreement(BaseApplicationTest):
     def test_only_works_for_live_and_standstill_frameworks(self, framework_status, status_code):
         self.data_api_client.get_framework.return_value = self.framework(status=framework_status,
                                                                          slug='g-cloud-12',
-                                                                         framework_agreement_version="1")
+                                                                         framework_agreement_version="1",
+                                                                         is_e_signature_supported=True)
         self.data_api_client.find_draft_services_by_framework.return_value = {
             'meta': {'total': 1}
         }
@@ -6064,7 +6075,8 @@ class TestSignFrameworkAgreement(BaseApplicationTest):
         self.login()
         self.data_api_client.get_framework.return_value = self.framework(status='standstill',
                                                                          slug='g-cloud-12',
-                                                                         framework_agreement_version="1")
+                                                                         framework_agreement_version="1",
+                                                                         is_e_signature_supported=True)
         self.data_api_client.find_draft_services_by_framework.return_value = {
             'meta': {'total': 1}
         }
@@ -6087,7 +6099,8 @@ class TestSignFrameworkAgreement(BaseApplicationTest):
         }
         self.data_api_client.get_framework.return_value = self.framework(status='standstill',
                                                                          slug='g-cloud-12',
-                                                                         framework_agreement_version="1")
+                                                                         framework_agreement_version="1",
+                                                                         is_e_signature_supported=True)
 
         self.login()
         res = self.client.get("/suppliers/frameworks/g-cloud-12/sign-framework-agreement")
@@ -6130,7 +6143,8 @@ class TestSignFrameworkAgreement(BaseApplicationTest):
         }
         self.data_api_client.get_framework.return_value = self.framework(status='standstill',
                                                                          slug='g-cloud-12',
-                                                                         framework_agreement_version="1")
+                                                                         framework_agreement_version="1",
+                                                                         is_e_signature_supported=True)
 
         self.login()
         self.client.post("/suppliers/frameworks/g-cloud-12/sign-framework-agreement",
@@ -6145,7 +6159,8 @@ class TestSignFrameworkAgreement(BaseApplicationTest):
     def test_agreement_text_contains_supplier_details(self):
         self.data_api_client.get_framework.return_value = self.framework(status='standstill',
                                                                          slug='g-cloud-12',
-                                                                         framework_agreement_version="1")
+                                                                         framework_agreement_version="1",
+                                                                         is_e_signature_supported=True)
         self.data_api_client.find_draft_services_by_framework.return_value = {
             'meta': {'total': 1}
         }

@@ -624,6 +624,7 @@ class TestSuppliersDashboard(BaseApplicationTest):
             slug="g-cloud-12",
             frameworkSlug="g-cloud-12",
             agreementReturned=agreement_returned,
+            isESignatureSupported=True
         ).response()
         self.data_api_client.get_supplier_frameworks.return_value = {
             "frameworkInterest": [{**g12, "onFramework": on_framework}] if framework_interest else []
