@@ -32,7 +32,6 @@ from ..helpers.frameworks import (
     get_frameworks_closed_and_open_for_applications,
     get_most_recent_expired_dos_framework,
     get_unconfirmed_open_supplier_frameworks,
-    is_e_signature_supported_framework,
 )
 from ..helpers.suppliers import (
     COUNTRY_TUPLE,
@@ -104,7 +103,6 @@ def dashboard():
             'needs_to_return_agreement': (
                 framework.get('onFramework') and framework.get('agreementReturned') is False
             ),
-            'is_e_signature_supported': is_e_signature_supported_framework(framework),
         })
         if framework['slug'] == 'g-cloud-12' and supplier["g12_recovery"]:
             framework['onFramework'] = True

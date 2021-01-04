@@ -4,10 +4,10 @@
 
   {% if framework.frameworkAgreementVersion %}
     {# e-signature frameworks don't use signed_agreement_document_name but supplier_framework.agreementReturned check above should be sufficient #}
-    {% if signed_agreement_document_name or is_e_signature_supported_framework  %}
+    {% if signed_agreement_document_name or framework['isESignatureSupported']  %}
         {% if countersigned_agreement_file %}
           <p class="govuk-body">
-            {% if is_e_signature_supported_framework %}
+            {% if framework['isESignatureSupported'] %}
             Your signed framework agreement forms a complete legal contract.
             {% else %}
             Your original and counterpart signature pages, and the standard framework
@@ -16,7 +16,7 @@
           </p>
         {% else %}
           <p class="govuk-body">
-              {% if is_e_signature_supported_framework %}
+              {% if framework['isESignatureSupported'] %}
               Your signed {{ contract_title }} will be sent to Crown Commercial Service (<abbr title="Crown Commercial Service">CCS</abbr>) to be countersigned.
               We'll email you when the countersigned agreement is available.
               You'll need to wait for <abbr title="Crown Commercial Service">CCS</abbr> to countersign your agreement before you can sell services.
@@ -105,7 +105,7 @@
   {% if countersigned_agreement_file %}
     {% set signed_message %}
       {% if framework.frameworkAgreementVersion %}
-        {% if is_e_signature_supported_framework %}
+        {% if framework['isESignatureSupported'] %}
           Download your signed {{ contract_title }}
         {% else %}
           Download your ‘counterpart’ framework agreement signature page
@@ -124,7 +124,7 @@
       "contentType": "application/pdf",
       "alternativeFormatContactEmail": "info@crowncommercial.gov.uk",
       "description": {
-        "text": "This agreement is signed by the Crown Commercial Service." if e_signature_supported_framework else "The agreement signed by the Crown Commercial Service."
+        "text": "This agreement is signed by the Crown Commercial Service." if framework['isESignatureSupported'] else "The agreement signed by the Crown Commercial Service."
       }
     })}}
   {% endif %}
