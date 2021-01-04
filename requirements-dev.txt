@@ -24,7 +24,7 @@ click==7.0
     #   pip-tools
 cssselect==1.0.3
     # via -r requirements-dev.in
-git+https://github.com/alphagov/digitalmarketplace-test-utils.git@2.8.2#egg=digitalmarketplace-test-utils==2.8.2
+digitalmarketplace-test-utils==2.8.2
     # via -r requirements-dev.in
 entrypoints==0.3
     # via flake8
