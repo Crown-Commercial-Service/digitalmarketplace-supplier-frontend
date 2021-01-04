@@ -4,56 +4,143 @@
 #
 #    pip-compile requirements.in
 #
-blinker==1.4              # via gds-metrics
-boto3==1.12.3             # via digitalmarketplace-utils
-botocore==1.15.3          # via boto3, s3transfer
-cachelib==0.1.1           # via flask-session
-certifi==2019.11.28       # via requests
-cffi==1.14.0              # via cryptography
-chardet==3.0.4            # via requests
-click==7.0                # via flask
-contextlib2==0.6.0.post1  # via digitalmarketplace-utils
-cryptography==3.2.1       # via digitalmarketplace-utils
-defusedxml==0.6.0         # via odfpy
-git+https://github.com/alphagov/digitalmarketplace-apiclient.git@21.8.0#egg=digitalmarketplace-apiclient==21.8.0  # via -r requirements.in
-git+https://github.com/alphagov/digitalmarketplace-content-loader.git@7.25.0#egg=digitalmarketplace-content-loader==7.25.0  # via -r requirements.in
-git+https://github.com/alphagov/digitalmarketplace-utils.git@56.0.0#egg=digitalmarketplace-utils==56.0.0  # via -r requirements.in, digitalmarketplace-content-loader
-docopt==0.6.2             # via notifications-python-client
-docutils==0.15.2          # via botocore
-flask-gzip==0.2           # via digitalmarketplace-utils
-flask-login==0.5.0        # via -r requirements.in, digitalmarketplace-utils
-flask-session==0.3.2      # via digitalmarketplace-utils
-flask-wtf==0.14.3         # via -r requirements.in, digitalmarketplace-utils
-flask==1.0.4              # via -r requirements.in, digitalmarketplace-content-loader, digitalmarketplace-utils, flask-gzip, flask-login, flask-session, flask-wtf, gds-metrics
-fleep==1.0.1              # via digitalmarketplace-utils
-future==0.18.2            # via notifications-python-client
-gds-metrics==0.2.0        # via digitalmarketplace-utils
-govuk-country-register==0.5.0  # via digitalmarketplace-utils
-git+https://github.com/alphagov/govuk-frontend-jinja.git@v0.5.2-alpha#egg=govuk-frontend-jinja==0.5.2-alpha  # via -r requirements.in
-idna==2.9                 # via requests
-inflection==0.3.1         # via digitalmarketplace-content-loader
-itsdangerous==1.1.0       # via -r requirements.in, flask, flask-wtf
-jinja2==2.11.2            # via digitalmarketplace-content-loader, flask, govuk-frontend-jinja
-jmespath==0.9.4           # via boto3, botocore
-mailchimp3==3.0.6         # via digitalmarketplace-utils
-markdown==2.6.11          # via digitalmarketplace-content-loader
-markupsafe==1.1.1         # via jinja2
-monotonic==1.5            # via notifications-python-client
-notifications-python-client==5.5.1  # via digitalmarketplace-utils
-odfpy==1.4.1              # via digitalmarketplace-utils
-prometheus-client==0.2.0  # via gds-metrics
-pycparser==2.19           # via cffi
-pyjwt==1.7.1              # via notifications-python-client
-python-dateutil==2.8.1    # via botocore
-python-json-logger==0.1.11  # via digitalmarketplace-utils
-pytz==2019.3              # via digitalmarketplace-utils
-pyyaml==5.3.1             # via digitalmarketplace-content-loader
-redis==3.5.3              # via digitalmarketplace-utils
-requests==2.23.0          # via digitalmarketplace-apiclient, digitalmarketplace-utils, mailchimp3, notifications-python-client
-s3transfer==0.3.3         # via boto3
-six==1.14.0               # via cryptography, python-dateutil
-unicodecsv==0.14.1        # via digitalmarketplace-utils
-urllib3==1.25.10          # via botocore, requests
-werkzeug==1.0.0           # via digitalmarketplace-utils, flask
-workdays==1.4             # via digitalmarketplace-utils
-wtforms==2.2.1            # via flask-wtf
+blinker==1.4
+    # via gds-metrics
+boto3==1.12.3
+    # via digitalmarketplace-utils
+botocore==1.15.3
+    # via
+    #   boto3
+    #   s3transfer
+cachelib==0.1.1
+    # via flask-session
+certifi==2019.11.28
+    # via requests
+cffi==1.14.0
+    # via cryptography
+chardet==3.0.4
+    # via requests
+click==7.0
+    # via flask
+contextlib2==0.6.0.post1
+    # via digitalmarketplace-utils
+cryptography==3.2.1
+    # via digitalmarketplace-utils
+defusedxml==0.6.0
+    # via odfpy
+git+https://github.com/alphagov/digitalmarketplace-apiclient.git@21.8.0#egg=digitalmarketplace-apiclient==21.8.0
+    # via -r requirements.in
+git+https://github.com/alphagov/digitalmarketplace-content-loader.git@7.25.0#egg=digitalmarketplace-content-loader==7.25.0
+    # via -r requirements.in
+git+https://github.com/alphagov/digitalmarketplace-utils.git@56.0.0#egg=digitalmarketplace-utils==56.0.0
+    # via
+    #   -r requirements.in
+    #   digitalmarketplace-content-loader
+docopt==0.6.2
+    # via notifications-python-client
+docutils==0.15.2
+    # via botocore
+flask-gzip==0.2
+    # via digitalmarketplace-utils
+flask-login==0.5.0
+    # via
+    #   -r requirements.in
+    #   digitalmarketplace-utils
+flask-session==0.3.2
+    # via digitalmarketplace-utils
+flask-wtf==0.14.3
+    # via
+    #   -r requirements.in
+    #   digitalmarketplace-utils
+flask==1.0.4
+    # via
+    #   -r requirements.in
+    #   digitalmarketplace-content-loader
+    #   digitalmarketplace-utils
+    #   flask-gzip
+    #   flask-login
+    #   flask-session
+    #   flask-wtf
+    #   gds-metrics
+fleep==1.0.1
+    # via digitalmarketplace-utils
+future==0.18.2
+    # via notifications-python-client
+gds-metrics==0.2.0
+    # via digitalmarketplace-utils
+govuk-country-register==0.5.0
+    # via digitalmarketplace-utils
+git+https://github.com/alphagov/govuk-frontend-jinja.git@v0.5.2-alpha#egg=govuk-frontend-jinja==0.5.2-alpha
+    # via -r requirements.in
+idna==2.9
+    # via requests
+inflection==0.3.1
+    # via digitalmarketplace-content-loader
+itsdangerous==1.1.0
+    # via
+    #   -r requirements.in
+    #   flask
+    #   flask-wtf
+jinja2==2.11.2
+    # via
+    #   digitalmarketplace-content-loader
+    #   flask
+    #   govuk-frontend-jinja
+jmespath==0.9.4
+    # via
+    #   boto3
+    #   botocore
+mailchimp3==3.0.6
+    # via digitalmarketplace-utils
+markdown==2.6.11
+    # via digitalmarketplace-content-loader
+markupsafe==1.1.1
+    # via jinja2
+monotonic==1.5
+    # via notifications-python-client
+notifications-python-client==5.5.1
+    # via digitalmarketplace-utils
+odfpy==1.4.1
+    # via digitalmarketplace-utils
+prometheus-client==0.2.0
+    # via gds-metrics
+pycparser==2.19
+    # via cffi
+pyjwt==1.7.1
+    # via notifications-python-client
+python-dateutil==2.8.1
+    # via botocore
+python-json-logger==0.1.11
+    # via digitalmarketplace-utils
+pytz==2019.3
+    # via digitalmarketplace-utils
+pyyaml==5.3.1
+    # via digitalmarketplace-content-loader
+redis==3.5.3
+    # via digitalmarketplace-utils
+requests==2.23.0
+    # via
+    #   digitalmarketplace-apiclient
+    #   digitalmarketplace-utils
+    #   mailchimp3
+    #   notifications-python-client
+s3transfer==0.3.3
+    # via boto3
+six==1.14.0
+    # via
+    #   cryptography
+    #   python-dateutil
+unicodecsv==0.14.1
+    # via digitalmarketplace-utils
+urllib3==1.25.10
+    # via
+    #   botocore
+    #   requests
+werkzeug==1.0.0
+    # via
+    #   digitalmarketplace-utils
+    #   flask
+workdays==1.4
+    # via digitalmarketplace-utils
+wtforms==2.2.1
+    # via flask-wtf
