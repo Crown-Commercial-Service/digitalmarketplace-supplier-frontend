@@ -39,12 +39,12 @@
     {% with company_details=company_details, declaration=declaration %}
         {% include "frameworks/_framework_agreement_legal_text_{0}.html".format(framework_slug) %}
         <p class="govuk-clearfix">
-            <a href="{{ framework_pdf_url }}">
+            <a href="{{ framework_file_url }}">
             <img class="framework-agreement-thumbnail" alt="" src="{{ url_for('static', filename='images/pdf-thumbnails/{0}.png'.format(framework_slug)) }}">
                 Read the {{ framework.name }} {{  contract_title }}
             </a>
             <br>
-            <span class="govuk-body-s"><abbr title="Portable Document Format">PDF</abbr>, {{ framework_pdf_metadata.file_size }}, {{ framework_pdf_metadata.page_count }} pages</span>
+            <span class="govuk-body-s"><abbr title="{{ framework_file_metadata.file_format }}">{{ framework_file_metadata.file_extension }}</abbr>, {{ framework_file_metadata.file_size }}, {{ framework_file_metadata.page_count }} pages</span>
         </p>
     {% endwith %}
         {% if include_govuk_link %}
