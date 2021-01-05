@@ -508,3 +508,10 @@ def return_404_if_applications_closed(data_api_client_callable):
 def check_framework_supports_e_signature_or_404(framework):
     if not framework['isESignatureSupported']:
         abort(404)
+
+
+def get_framework_contract_title(framework):
+    if framework['isESignatureSupported']:
+        return content_loader.get_message(framework['slug'], 'e-signature', 'framework_contract_title')
+    else:
+        return 'Framework Agreement'

@@ -54,7 +54,7 @@ from ..helpers.frameworks import (
     returned_agreement_email_recipients,
     return_404_if_applications_closed,
     check_framework_supports_e_signature_or_404,
-    get_completed_lots
+    get_completed_lots, get_framework_contract_title
 )
 from ..helpers.services import (
     get_drafts,
@@ -224,10 +224,7 @@ def framework_dashboard(framework_slug):
         )
         for label, d in base_communications_files.items()
     }
-    if framework['isESignatureSupported']:
-        contract_title = content_loader.get_message(framework_slug, 'e-signature', 'framework_contract_title')
-    else:
-        contract_title = 'framework agreement'
+    contract_title = get_framework_contract_title(framework)
 
     return render_template(
         "frameworks/dashboard.html",
