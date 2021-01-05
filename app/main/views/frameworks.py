@@ -1368,9 +1368,15 @@ def sign_framework_agreement(framework_slug):
     }
 
     # TODO: can we derive this metadata programmatically or from framework content? https://trello.com/c/lctIBcq9
-    framework_pdf_metadata = {
-        'g-cloud-12': {'file_size': '487KB', 'page_count': 62},
-        'digital-outcomes-and-specialists-5': {'file_size': '97KB', 'page_count': 8}
+    framework_file_metadata = {
+        'g-cloud-12': {'file_size': '487KB',
+                       'page_count': 62,
+                       'file_extension': 'PDF',
+                       'file_format': 'Portable Document Format'},
+        'digital-outcomes-and-specialists-5': {'file_size': '48KB',
+                                               'page_count': 10,
+                                               'file_extension': 'ODT',
+                                               'file_format': 'OpenDocument Text'}
     }
 
     form = SignFrameworkAgreementForm(contract_title)
@@ -1430,8 +1436,8 @@ def sign_framework_agreement(framework_slug):
         contract_title=contract_title,
         include_govuk_link=framework_specific_labels.get(framework_slug).get('include_govuk_link'),
         framework_govuk_url=framework_urls.get('framework_agreement_url'),
-        framework_pdf_url=framework_urls.get('framework_agreement_pdf_url'),
-        framework_pdf_metadata=framework_pdf_metadata.get(framework_slug),
+        framework_file_url=framework_urls.get('framework_agreement_pdf_url'),
+        framework_file_metadata=framework_file_metadata.get(framework_slug),
         framework=framework,
         completed_lots=completed_lots,
         form=form,
