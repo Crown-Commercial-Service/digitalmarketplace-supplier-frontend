@@ -344,9 +344,10 @@ class BaseApplicationTest:
     def framework(
             status='open',
             slug='g-cloud-7',
+            is_e_signature_supported=False,
             name=None,
             clarification_questions_open=True,
-            framework_agreement_version=None
+            framework_agreement_version=None,
     ):
         if 'g-cloud-' in slug:
             if int(slug.split('-')[-1]) >= 9:
@@ -370,7 +371,8 @@ class BaseApplicationTest:
             clarifications_close_at=datetime(2015, 9, 22, 16),
             clarifications_publish_at=datetime(2015, 9, 29, 16),
             framework_live_at=datetime(2015, 11, 23, 12),
-            framework_expires_at=datetime(2016, 11, 23, 12)
+            framework_expires_at=datetime(2016, 11, 23, 12),
+            isESignatureSupported=is_e_signature_supported
         ).single_result_response()
 
     @staticmethod

@@ -54,7 +54,7 @@ from ..helpers.frameworks import (
     returned_agreement_email_recipients,
     return_404_if_applications_closed,
     check_framework_supports_e_signature_or_404,
-    is_e_signature_supported_framework, get_completed_lots
+    get_completed_lots
 )
 from ..helpers.services import (
     get_drafts,
@@ -224,7 +224,7 @@ def framework_dashboard(framework_slug):
         )
         for label, d in base_communications_files.items()
     }
-    if is_e_signature_supported_framework(framework_slug):
+    if framework['isESignatureSupported']:
         contract_title = content_loader.get_message(framework_slug, 'e-signature', 'framework_contract_title')
     else:
         contract_title = 'framework agreement'
@@ -252,7 +252,6 @@ def framework_dashboard(framework_slug):
         supplier_company_details_complete=supplier_company_details_are_complete(supplier),
         application_company_details_confirmed=application_company_details_confirmed,
         custom_dimensions=custom_dimensions,
-        is_e_signature_supported_framework=is_e_signature_supported_framework(framework_slug),
         contract_title=contract_title
     ), 200
 
@@ -1305,7 +1304,7 @@ def opportunities_dashboard_deprecated(framework_slug):
 @login_required
 def legal_authority(framework_slug):
     framework = get_framework_or_404(data_api_client, framework_slug, allowed_statuses=['standstill', 'live'])
-    check_framework_supports_e_signature_or_404(framework_slug)
+    check_framework_supports_e_signature_or_404(framework)
     supplier_framework = get_supplier_framework_info(data_api_client, framework_slug)
     if not get_supplier_on_framework_from_info(supplier_framework):
         return render_error_page(status_code=400, error_message="You must be on the framework to sign the agreement.")
@@ -1348,7 +1347,7 @@ def legal_authority(framework_slug):
 @login_required
 def sign_framework_agreement(framework_slug):
     framework = get_framework_or_404(data_api_client, framework_slug, allowed_statuses=['standstill', 'live'])
-    check_framework_supports_e_signature_or_404(framework_slug)
+    check_framework_supports_e_signature_or_404(framework)
     supplier_framework = get_supplier_framework_info(data_api_client, framework_slug)
     if not get_supplier_on_framework_from_info(supplier_framework):
         return render_error_page(status_code=400, error_message="You must be on the framework to sign the agreement.")
