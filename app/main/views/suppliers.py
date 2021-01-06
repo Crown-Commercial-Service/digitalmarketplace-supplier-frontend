@@ -31,7 +31,7 @@ from ..helpers.frameworks import (
     get_frameworks_by_status,
     get_frameworks_closed_and_open_for_applications,
     get_most_recent_expired_dos_framework,
-    get_unconfirmed_open_supplier_frameworks,
+    get_unconfirmed_open_supplier_frameworks, get_framework_contract_title,
 )
 from ..helpers.suppliers import (
     COUNTRY_TUPLE,
@@ -103,6 +103,7 @@ def dashboard():
             'needs_to_return_agreement': (
                 framework.get('onFramework') and framework.get('agreementReturned') is False
             ),
+            'contract_title': get_framework_contract_title(framework)
         })
         if framework['slug'] == 'g-cloud-12' and supplier["g12_recovery"]:
             framework['onFramework'] = True
