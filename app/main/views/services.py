@@ -112,6 +112,13 @@ def list_all_services(framework_slug):
             'unanswered_optional': unanswered_optional,
         })
 
+    # We only want drafts that they have completed as part of G12 recovery to
+    # show up in "Complete services" table (live services go in a separate table)
+    complete_drafts = [
+        draft for draft in complete_drafts
+        if "serviceId" not in complete_drafts
+    ]
+
     # Only G12 recovery suppliers can access this route, so always show the banner
     g12_recovery = {'time_remaining': g12_recovery_time_remaining()}
 
