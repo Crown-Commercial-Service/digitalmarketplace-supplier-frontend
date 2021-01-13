@@ -116,7 +116,7 @@ def list_all_services(framework_slug):
     # show up in "Complete services" table (live services go in a separate table)
     complete_drafts = [
         draft for draft in complete_drafts
-        if "serviceId" not in complete_drafts
+        if "serviceId" not in draft
     ]
 
     # Only G12 recovery suppliers can access this route, so always show the banner
