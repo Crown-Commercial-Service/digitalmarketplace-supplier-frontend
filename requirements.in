@@ -6,7 +6,7 @@ Flask-Login==0.5.0
 Flask-WTF==0.14.3
 itsdangerous==1.1.0
 
+digitalmarketplace-content-loader
 git+https://github.com/alphagov/digitalmarketplace-utils.git@56.0.0#egg=digitalmarketplace-utils==56.0.0
-git+https://github.com/alphagov/digitalmarketplace-content-loader.git@7.25.0#egg=digitalmarketplace-content-loader==7.25.0
 git+https://github.com/alphagov/digitalmarketplace-apiclient.git@21.8.0#egg=digitalmarketplace-apiclient==21.8.0
 git+https://github.com/alphagov/govuk-frontend-jinja.git@v0.5.2-alpha#egg=govuk-frontend-jinja==0.5.2-alpha
