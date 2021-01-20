@@ -23,7 +23,6 @@ from dmutils.documents import (
 from dmutils.email.dm_notify import DMNotifyClient
 from dmutils.email.exceptions import EmailError
 from dmutils.email.helpers import hash_string
-from dmutils.env_helpers import get_web_url_from_stage
 from dmutils.flask import timed_render_template as render_template
 from dmutils.formats import datetimeformat, displaytimeformat, monthyearformat, dateformat
 from dmutils.forms.helpers import get_errors_from_wtform, remove_csrf_token, govuk_options
@@ -66,7 +65,6 @@ from ..helpers.suppliers import (
 )
 from ..helpers.validation import get_validator
 from ..forms.frameworks import (SignerDetailsForm,
-                                ContractReviewForm,
                                 AcceptAgreementVariationForm,
                                 ReuseDeclarationForm,
                                 LegalAuthorityForm,
@@ -1049,11 +1047,6 @@ def signer_details(framework_slug, agreement_id):
             agreement_id, agreement_details, current_user.email_address
         )
 
-        # If they have already uploaded a file then let them go to straight to the contract review
-        # page as they are likely editing their signer details
-        if agreement.get('signedAgreementPath'):
-            return redirect(url_for(".contract_review", framework_slug=framework_slug, agreement_id=agreement_id))
-
         abort(404)
 
     errors = get_errors_from_wtform(form)
@@ -1066,89 +1059,6 @@ def signer_details(framework_slug, agreement_id):
         framework=framework,
         supplier_framework=supplier_framework,
         supplier_registered_name=get_supplier_registered_name_from_declaration(supplier_framework['declaration']),
-    ), 400 if errors else 200
-
-
-@main.route('/frameworks/<framework_slug>/<int:agreement_id>/contract-review', methods=['GET', 'POST'])
-@login_required
-def contract_review(framework_slug, agreement_id):
-    framework = get_framework_or_404(data_api_client, framework_slug, allowed_statuses=['standstill', 'live'])
-    update_framework_with_formatted_dates(framework)
-    # if there's no frameworkAgreementVersion key it means we're pre-G-Cloud 8 and shouldn't be using this route
-    if not framework.get('frameworkAgreementVersion'):
-        abort(404)
-    supplier_framework = return_supplier_framework_info_if_on_framework_or_abort(data_api_client, framework_slug)
-    agreement = data_api_client.get_framework_agreement(agreement_id)['agreement']
-    check_agreement_is_related_to_supplier_framework_or_abort(agreement, supplier_framework)
-
-    # if framework agreement doesn't have a name or a role or the agreement file, then 404
-    if not (
-        agreement.get('signedAgreementDetails')
-        and agreement['signedAgreementDetails'].get('signerName')
-        and agreement['signedAgreementDetails'].get('signerRole')
-        and agreement.get('signedAgreementPath')
-    ):
-        abort(404)
-
-    agreements_bucket = s3.S3(current_app.config['DM_AGREEMENTS_BUCKET'])
-    signature_page = agreements_bucket.get_key(agreement['signedAgreementPath'])
-
-    supplier_registered_name = get_supplier_registered_name_from_declaration(supplier_framework['declaration'])
-
-    form = ContractReviewForm(supplier_registered_name=supplier_registered_name)
-
-    if form.validate_on_submit():
-        data_api_client.sign_framework_agreement(
-            agreement_id, current_user.email_address, {'uploaderUserId': current_user.id}
-        )
-
-        notify_client = DMNotifyClient()
-        for email_address in returned_agreement_email_recipients(supplier_framework):
-            try:
-                notify_client.send_email(
-                    to_email_address=email_address,
-                    template_name_or_id="framework_agreement_signature_page",
-                    personalisation={
-                        "framework_name": framework['name'],
-                        "framework_slug": framework['slug'],
-                        "framework_updates_url": (
-                            get_web_url_from_stage(current_app.config["DM_ENVIRONMENT"])
-                            + url_for(".framework_updates", framework_slug=framework["slug"])
-                        ),
-                    },
-                    reference=f"contract-review-agreement-{hash_string(email_address)}"
-                )
-            except EmailError:
-                # We don't need to handle this as the email is only informational,
-                # and failures are already logged by DMNotifyClient
-                pass
-
-        session.pop('signature_page', None)
-
-        flash(AGREEMENT_RETURNED_MESSAGE, "success")
-
-        # Redirect to contract variation if it has not been signed
-        if (framework.get('variations') and not supplier_framework['agreedVariations']):
-            variation_slug = list(framework['variations'].keys())[0]
-            return redirect(url_for(
-                '.view_contract_variation',
-                framework_slug=framework_slug,
-                variation_slug=variation_slug
-            ))
-
-        return redirect(url_for(".framework_dashboard", framework_slug=framework_slug))
-
-    errors = get_errors_from_wtform(form)
-
-    return render_template(
-        "frameworks/contract_review.html",
-        agreement=agreement,
-        form=form,
-        errors=errors,
-        framework=framework,
-        signature_page=signature_page,
-        supplier_framework=supplier_framework,
-        supplier_registered_name=supplier_registered_name,
     ), 400 if errors else 200
 
 
