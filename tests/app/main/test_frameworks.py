@@ -1891,10 +1891,8 @@ class TestFrameworkAgreement(BaseApplicationTest):
         self.data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(on_framework=True)
 
         res = self.client.get("/suppliers/frameworks/g-cloud-7/agreement")
-        data = res.get_data(as_text=True)
 
         assert res.status_code == 200
-        assert u'Return your signed signature page' in data
 
     def test_page_returns_404_if_framework_in_wrong_state(self):
         self.login()
@@ -1927,7 +1925,6 @@ class TestFrameworkAgreement(BaseApplicationTest):
         data = res.get_data(as_text=True)
 
         assert res.status_code == 200
-        assert u'Return your signed signature page' in data
         assert u'Send document to CCS' not in data
 
     def test_two_lots_passed_on_contract_start_page(self):
@@ -4462,55 +4459,6 @@ class TestFrameworkSubmissionServices(BaseApplicationTest, MockEnsureApplication
 
         res = self.client.get('/suppliers/frameworks/g-cloud-10/submissions/cloud-hosting')
         assert res.status_code == 500
-
-
-class TestCreateFrameworkAgreement(BaseApplicationTest):
-
-    def setup_method(self, method):
-        super().setup_method(method)
-        self.data_api_client_patch = mock.patch('app.main.views.frameworks.data_api_client', autospec=True)
-        self.data_api_client = self.data_api_client_patch.start()
-
-    def teardown_method(self, method):
-        self.data_api_client_patch.stop()
-        super().teardown_method(method)
-
-    def test_creates_framework_agreement_and_redirects_to_signer_details_page(self):
-        self.login()
-
-        self.data_api_client.get_framework.return_value = self.framework(
-            slug='g-cloud-8',
-            status='standstill',
-            framework_agreement_version="1.0"
-        )
-        self.data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(on_framework=True)
-        self.data_api_client.create_framework_agreement.return_value = {"agreement": {"id": 789}}
-
-        res = self.client.post("/suppliers/frameworks/g-cloud-8/create-agreement")
-
-        self.data_api_client.create_framework_agreement.assert_called_once_with(1234, 'g-cloud-8', 'email@email.com')
-        assert res.status_code == 404
-
-    def test_404_if_supplier_not_on_framework(self):
-        self.login()
-
-        self.data_api_client.get_framework.return_value = self.framework(status='standstill')
-        self.data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
-            on_framework=False)
-
-        res = self.client.post("/suppliers/frameworks/g-cloud-8/create-agreement")
-        assert res.status_code == 404
-
-    @pytest.mark.parametrize('status', ('coming', 'open', 'pending', 'expired'))
-    def test_404_if_framework_in_wrong_state(self, status):
-        self.login()
-        # Suppliers can only sign agreements in 'standstill' and 'live' lifecycle statuses
-        self.data_api_client.get_framework.return_value = self.framework(status=status)
-        self.data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
-            on_framework=True)
-
-        res = self.client.post("/suppliers/frameworks/g-cloud-8/create-agreement")
-        assert res.status_code == 404
 
 
 class TestContractVariation(BaseApplicationTest):

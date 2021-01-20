@@ -57,39 +57,6 @@
 
       <div>
         <h2 class="summary-item-heading">What you need to do</h2>
-
-        <form method="post" action="{{ url_for(".create_framework_agreement", framework_slug=framework.slug) }}">
-          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
-          {%
-            with
-            verbose = true,
-            items = [
-              {
-                  "body": "Sign your framework agreement signature page.",
-                  "top": "The person signing must have the authority to agree to the framework terms, eg director or company secretary.",
-                  "documents": [
-                      {
-                          "title": "Signature page",
-                          "link": (url_for('.download_agreement_file', framework_slug=framework.slug, document_name=signature_page_filename)),
-                          "file_type": "PDF",
-                          "download": True
-                      }
-                  ],
-                  "bottom": "You can review the rest of the <a class='govuk-link' href='{}'>framework agreement</a> on GOV.UK.".format(framework_urls.framework_agreement_url)|safe
-              },
-              {
-                  "body": "Return your signed signature page and give the details of the person who signed it.",
-                  "bottom": govukButton({
-                    "text": "Return your signed signature page",
-                    "value": "Return your signed signature page",
-                  }),
-              }
-            ]
-          %}
-            {% include "toolkit/instruction-list.html" %}
-          {% endwith %}
-        </form>
-
       </div>
 
     </div>

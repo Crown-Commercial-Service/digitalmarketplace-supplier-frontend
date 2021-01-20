@@ -25,14 +25,13 @@ from dmutils.email.exceptions import EmailError
 from dmutils.email.helpers import hash_string
 from dmutils.flask import timed_render_template as render_template
 from dmutils.formats import datetimeformat, displaytimeformat, monthyearformat, dateformat
-from dmutils.forms.helpers import get_errors_from_wtform, remove_csrf_token, govuk_options
+from dmutils.forms.helpers import get_errors_from_wtform, govuk_options
 from dmutils.timing import logged_duration
 
 from ... import data_api_client
 from ...main import main, content_loader
 from ..helpers import login_required
 from ..helpers.frameworks import (
-    check_agreement_is_related_to_supplier_framework_or_abort,
     count_drafts_by_lot,
     EnsureApplicationCompanyDetailsHaveBeenConfirmed,
     get_declaration_status,
@@ -64,8 +63,7 @@ from ..helpers.suppliers import (
     is_g12_recovery_supplier,
 )
 from ..helpers.validation import get_validator
-from ..forms.frameworks import (SignerDetailsForm,
-                                AcceptAgreementVariationForm,
+from ..forms.frameworks import (AcceptAgreementVariationForm,
                                 ReuseDeclarationForm,
                                 LegalAuthorityForm,
                                 SignFrameworkAgreementForm)
@@ -1005,22 +1003,6 @@ def framework_agreement(framework_slug):
         supplier_framework=supplier_framework,
         supplier_registered_name=get_supplier_registered_name_from_declaration(supplier_framework['declaration']),
     ), 200
-
-
-@main.route('/frameworks/<framework_slug>/create-agreement', methods=['POST'])
-@login_required
-def create_framework_agreement(framework_slug):
-    framework = get_framework_or_404(data_api_client, framework_slug, allowed_statuses=['standstill', 'live'])
-    # if there's no frameworkAgreementVersion key it means we're pre-G-Cloud 8 and shouldn't be using this route
-    if not framework.get('frameworkAgreementVersion'):
-        abort(404)
-    return_supplier_framework_info_if_on_framework_or_abort(data_api_client, framework_slug)
-
-    agreement_id = data_api_client.create_framework_agreement(
-        current_user.supplier_id, framework["slug"], current_user.email_address
-    )["agreement"]["id"]
-
-    abort(404)
 
 
 @main.route('/frameworks/<framework_slug>/contract-variation/<variation_slug>', methods=['GET', 'POST'])
