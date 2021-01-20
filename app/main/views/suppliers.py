@@ -551,7 +551,7 @@ def duns_number():
                 organization = direct_plus_client.get_organization_by_duns_number(form.duns_number.data)
                 if organization is not None:
                     company_name = organization['primaryName']
-            except KeyError:
+            except (KeyError, ValueError):
                 # An unexpected error. Something other than supplier data in the response.
                 # Allow the user to proceed with the entered duns numer and skip this part of sign up.
                 session[form.duns_number.name] = form.duns_number.data

@@ -32,7 +32,7 @@ git+https://github.com/alphagov/digitalmarketplace-apiclient.git@21.8.0#egg=digi
     # via -r requirements.in
 digitalmarketplace-content-loader==7.28.1
     # via -r requirements.in
-git+https://github.com/alphagov/digitalmarketplace-utils.git@56.0.0#egg=digitalmarketplace-utils==56.0.0
+git+https://github.com/alphagov/digitalmarketplace-utils.git@56.1.1#egg=digitalmarketplace-utils==56.1.1
     # via
     #   -r requirements.in
     #   digitalmarketplace-content-loader
