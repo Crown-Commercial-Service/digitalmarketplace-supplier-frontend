@@ -18,7 +18,7 @@ from dmapiclient import (
 from dmapiclient.audit import AuditTypes
 from dmcontent.errors import ContentNotFoundError
 from dmtestutils.api_model_stubs import FrameworkStub, SupplierStub
-from dmtestutils.fixtures import valid_jpeg_bytes, valid_pdf_bytes
+from dmtestutils.fixtures import valid_pdf_bytes
 from dmutils.email.exceptions import EmailError
 from dmutils.s3 import S3ResponseError
 
@@ -4618,7 +4618,7 @@ class TestSignerDetailsPage(BaseApplicationTest):
             "/suppliers/frameworks/g-cloud-8/234/signer-details",
             data={'signerName': "J" * 255, 'signerRole': "J" * 255}
         )
-        assert res.status_code == 302
+        assert res.status_code == 404
 
         # 256 characters should be an error
         res = self.client.post(
@@ -4641,7 +4641,7 @@ class TestSignerDetailsPage(BaseApplicationTest):
 
         self.login()
         res = self.client.post("/suppliers/frameworks/g-cloud-8/234/signer-details", data=signer_details)
-        assert res.status_code == 302
+        assert res.status_code == 404
 
         self.data_api_client.update_framework_agreement.assert_called_with(
             234,
@@ -4660,8 +4660,7 @@ class TestSignerDetailsPage(BaseApplicationTest):
         self.login()
         res = self.client.post("/suppliers/frameworks/g-cloud-8/234/signer-details", data=signer_details)
 
-        assert res.status_code == 302
-        assert "suppliers/frameworks/g-cloud-8/234/signature-upload" in res.location
+        assert res.status_code == 404
         self.data_api_client.update_framework_agreement.assert_called_with(
             234,
             {'signedAgreementDetails': {'signerName': 'Josh Moss', 'signerRole': 'The Boss'}},
@@ -4721,211 +4720,7 @@ class TestSignerDetailsPage(BaseApplicationTest):
 
         res = self.client.post("/suppliers/frameworks/g-cloud-8/234/signer-details", data=signer_details)
 
-        assert res.status_code == 302
-        assert "suppliers/frameworks/g-cloud-8/234/signature-upload" in res.location
-
-
-@mock.patch("app.main.views.frameworks.return_supplier_framework_info_if_on_framework_or_abort")
-@mock.patch('dmutils.s3.S3')
-class TestSignatureUploadPage(BaseApplicationTest):
-
-    def setup_method(self, method):
-        super().setup_method(method)
-        self.data_api_client_patch = mock.patch('app.main.views.frameworks.data_api_client', autospec=True)
-        self.data_api_client = self.data_api_client_patch.start()
-
-    def teardown_method(self, method):
-        self.data_api_client_patch.stop()
-        super().teardown_method(method)
-
-    @mock.patch('app.main.views.frameworks.check_agreement_is_related_to_supplier_framework_or_abort')
-    def test_we_abort_if_agreement_does_not_match_supplier_framework(
-        self, check_agreement_is_related_to_supplier_framework_or_abort, s3, return_supplier_framework
-    ):
-        self.login()
-        self.data_api_client.get_framework.return_value = get_g_cloud_8()
-        self.data_api_client.get_framework_agreement.return_value = self.framework_agreement(supplier_id=2345)
-        supplier_framework = self.supplier_framework(framework_slug='g-cloud-8', on_framework=True)['frameworkInterest']
-        return_supplier_framework.return_value = supplier_framework
-        s3.return_value.get_key.return_value = None
-
-        self.client.get("/suppliers/frameworks/g-cloud-8/234/signature-upload")
-        # This call will abort because supplier_framework has mismatched supplier_id 1234
-        check_agreement_is_related_to_supplier_framework_or_abort.assert_called_with(
-            self.framework_agreement(supplier_id=2345)['agreement'],
-            supplier_framework
-        )
-
-    @mock.patch('app.main.views.frameworks.generate_timestamped_document_upload_path')
-    @mock.patch('app.main.views.frameworks.session', new_callable=dict)
-    def test_upload_signature_page(
-        self, session, generate_timestamped_document_upload_path, s3, return_supplier_framework
-    ):
-        self.login()
-
-        self.data_api_client.get_framework.return_value = get_g_cloud_8()
-        self.data_api_client.get_framework_agreement.return_value = self.framework_agreement()
-        return_supplier_framework.return_value = self.supplier_framework(
-            framework_slug='g-cloud-8',
-            on_framework=True
-        )['frameworkInterest']
-        generate_timestamped_document_upload_path.return_value = 'my/path.jpg'
-
-        res = self.client.post(
-            '/suppliers/frameworks/g-cloud-8/234/signature-upload',
-            data={'signature_page': (BytesIO(valid_jpeg_bytes), 'test.jpg')}
-        )
-
-        generate_timestamped_document_upload_path.assert_called_once_with(
-            'g-cloud-8',
-            1234,
-            'agreements',
-            'signed-framework-agreement.jpg'
-        )
-
-        s3.return_value.save.assert_called_with(
-            'my/path.jpg',
-            mock.ANY,
-            download_filename='Supplier_Nme-1234-signed-signature-page.jpg',
-            acl='bucket-owner-full-control',
-            disposition_type='inline'
-        )
-        self.data_api_client.update_framework_agreement.assert_called_with(
-            234,
-            {"signedAgreementPath": 'my/path.jpg'},
-            'email@email.com'
-        )
-
-        assert session['signature_page'] == 'test.jpg'
-        assert res.status_code == 302
-        assert res.location == 'http://localhost/suppliers/frameworks/g-cloud-8/234/contract-review'
-
-    def test_signature_upload_returns_400_if_no_file_is_chosen(self, s3, return_supplier_framework):
-        self.login()
-
-        self.data_api_client.get_framework.return_value = get_g_cloud_8()
-        self.data_api_client.get_framework_agreement.return_value = self.framework_agreement()
-        return_supplier_framework.return_value = self.supplier_framework(
-            framework_slug='g-cloud-8',
-            on_framework=True
-        )['frameworkInterest']
-        s3.return_value.get_key.return_value = None  # No signature file has been previously uploaded
-
-        res = self.client.post(
-            '/suppliers/frameworks/g-cloud-8/234/signature-upload',
-            data={}
-        )
-
-        assert res.status_code == 400
-        assert 'You must choose a file to upload' in res.get_data(as_text=True)
-
-    def test_signature_upload_returns_400_if_file_is_not_image_or_pdf(self, s3, return_supplier_framework):
-        self.login()
-
-        self.data_api_client.get_framework.return_value = get_g_cloud_8()
-        self.data_api_client.get_framework_agreement.return_value = self.framework_agreement()
-        return_supplier_framework.return_value = self.supplier_framework(
-            framework_slug='g-cloud-8',
-            on_framework=True
-        )['frameworkInterest']
-        s3.return_value.get_key.return_value = None   # No signature file has been previously uploaded
-
-        res = self.client.post(
-            '/suppliers/frameworks/g-cloud-8/234/signature-upload',
-            data={'signature_page': (BytesIO(b'asdf'), 'test.txt')}  # Non-empty file called test.txt
-        )
-
-        assert res.status_code == 400
-        assert 'The file must be a PDF, JPG or PNG' in res.get_data(as_text=True)
-
-    @mock.patch('app.main.views.frameworks.file_is_less_than_5mb', return_value=False)
-    @mock.patch('app.main.views.frameworks.file_is_image', return_value=True)
-    def test_signature_upload_returns_400_if_file_is_larger_than_5mb(
-        self, file_is_less_than_5mb, file_is_image, s3, return_supplier_framework
-    ):
-        self.login()
-
-        self.data_api_client.get_framework.return_value = get_g_cloud_8()
-        self.data_api_client.get_framework_agreement.return_value = self.framework_agreement()
-        return_supplier_framework.return_value = self.supplier_framework(
-            framework_slug='g-cloud-8',
-            on_framework=True
-        )['frameworkInterest']
-        s3.return_value.get_key.return_value = None   # No signature file has been previously uploaded
-
-        res = self.client.post(
-            '/suppliers/frameworks/g-cloud-8/234/signature-upload',
-            data={'signature_page': (BytesIO(valid_jpeg_bytes), 'test.jpg')}
-        )
-
-        assert res.status_code == 400
-        assert 'The file must be less than 5MB' in res.get_data(as_text=True)
-
-    def test_signature_page_displays_uploaded_filename_and_timestamp(self, s3, return_supplier_framework):
-        self.data_api_client.get_framework.return_value = get_g_cloud_8()
-        self.data_api_client.get_framework_agreement.return_value = self.framework_agreement(
-            signed_agreement_path='already/uploaded/file/path.pdf'
-        )
-        return_supplier_framework.return_value = self.supplier_framework(
-            framework_slug='g-cloud-8',
-            on_framework=True
-        )['frameworkInterest']
-
-        s3.return_value.get_key.return_value = {'last_modified': '2016-07-10T21:18:00.000000Z'}
-
-        self.login()
-
-        with self.client.session_transaction() as sess:
-            sess['signature_page'] = 'test.pdf'
-
-        res = self.client.get('/suppliers/frameworks/g-cloud-8/234/signature-upload')
-
-        s3.return_value.get_key.assert_called_with('already/uploaded/file/path.pdf')
-        assert res.status_code == 200
-        assert "test.pdf, uploaded Sunday 10 July 2016 at 10:18pm" in res.get_data(as_text=True)
-
-    def test_signature_page_displays_file_upload_timestamp_if_no_filename_in_session(
-        self, s3, return_supplier_framework
-    ):
-        self.data_api_client.get_framework.return_value = get_g_cloud_8()
-        self.data_api_client.get_framework_agreement.return_value = self.framework_agreement(
-            signed_agreement_path='already/uploaded/file/path.pdf'
-        )
-        return_supplier_framework.return_value = self.supplier_framework(
-            framework_slug='g-cloud-8',
-            on_framework=True
-        )['frameworkInterest']
-
-        s3.return_value.get_key.return_value = {'last_modified': '2016-07-10T21:18:00.000000Z'}
-
-        self.login()
-        res = self.client.get('/suppliers/frameworks/g-cloud-8/234/signature-upload')
-        s3.return_value.get_key.assert_called_with('already/uploaded/file/path.pdf')
-        assert res.status_code == 200
-        assert "Uploaded Sunday 10 July 2016 at 10:18pm" in res.get_data(as_text=True)
-
-    def test_signature_page_allows_continuation_without_file_chosen_to_be_uploaded_if_an_uploaded_file_already_exists(
-        self, s3, return_supplier_framework
-    ):
-        self.data_api_client.get_framework.return_value = get_g_cloud_8()
-        self.data_api_client.get_framework_agreement.return_value = self.framework_agreement(
-            signed_agreement_path='already/uploaded/file/path.pdf'
-        )
-        return_supplier_framework.return_value = self.supplier_framework(
-            framework_slug='g-cloud-8',
-            on_framework=True
-        )['frameworkInterest']
-
-        s3.return_value.get_key.return_value = {'last_modified': '2016-07-10T21:18:00.000000Z'}
-
-        self.login()
-        res = self.client.post(
-            '/suppliers/frameworks/g-cloud-8/234/signature-upload',
-            data={'signature_page': (BytesIO(valid_jpeg_bytes), '')}
-        )
-        s3.return_value.get_key.assert_called_with('already/uploaded/file/path.pdf')
-        assert res.status_code == 302
-        assert res.location == 'http://localhost/suppliers/frameworks/g-cloud-8/234/contract-review'
+        assert res.status_code == 404
 
 
 @mock.patch("app.main.views.frameworks.return_supplier_framework_info_if_on_framework_or_abort")

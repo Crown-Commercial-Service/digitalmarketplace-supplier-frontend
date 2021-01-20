@@ -60,7 +60,6 @@
       {% else %}
         {{ summary.field_name( "Uploaded {}".format(signature_page.last_modified|datetimeformat) if signature_page else None) }}
       {% endif %}
-      {{ summary.edit_link("Change", url_for('.signature_upload', framework_slug=framework.slug, agreement_id=agreement.id), hidden_text="signature") }}
     {% endcall %}
   {% endcall %}
 </div>
