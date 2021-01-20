@@ -1020,46 +1020,7 @@ def create_framework_agreement(framework_slug):
         current_user.supplier_id, framework["slug"], current_user.email_address
     )["agreement"]["id"]
 
-    return redirect(url_for('.signer_details', framework_slug=framework_slug, agreement_id=agreement_id))
-
-
-@main.route('/frameworks/<framework_slug>/<int:agreement_id>/signer-details', methods=['GET', 'POST'])
-@login_required
-def signer_details(framework_slug, agreement_id):
-    framework = get_framework_or_404(data_api_client, framework_slug, allowed_statuses=['standstill', 'live'])
-    # if there's no frameworkAgreementVersion key it means we're pre-G-Cloud 8 and shouldn't be using this route
-    if not framework.get('frameworkAgreementVersion'):
-        abort(404)
-
-    supplier_framework = return_supplier_framework_info_if_on_framework_or_abort(data_api_client, framework_slug)
-    agreement = data_api_client.get_framework_agreement(agreement_id)['agreement']
-    check_agreement_is_related_to_supplier_framework_or_abort(agreement, supplier_framework)
-
-    prefill_data = agreement.get("signedAgreementDetails", {})
-
-    form = SignerDetailsForm(data=prefill_data)
-
-    if form.validate_on_submit():
-        agreement_details = {
-            "signedAgreementDetails": remove_csrf_token(form.data)
-        }
-        data_api_client.update_framework_agreement(
-            agreement_id, agreement_details, current_user.email_address
-        )
-
-        abort(404)
-
-    errors = get_errors_from_wtform(form)
-
-    return render_template(
-        "frameworks/signer_details.html",
-        agreement=agreement,
-        form=form,
-        errors=errors,
-        framework=framework,
-        supplier_framework=supplier_framework,
-        supplier_registered_name=get_supplier_registered_name_from_declaration(supplier_framework['declaration']),
-    ), 400 if errors else 200
+    abort(404)
 
 
 @main.route('/frameworks/<framework_slug>/contract-variation/<variation_slug>', methods=['GET', 'POST'])
