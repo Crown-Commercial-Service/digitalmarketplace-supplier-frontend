@@ -5,7 +5,6 @@ from datetime import datetime, timedelta
 from dmutils.errors import render_error_page
 from itertools import chain
 
-from dateutil.parser import parse as date_parse
 from flask import request, abort, flash, redirect, url_for, current_app, session
 from flask_login import current_user
 
@@ -17,8 +16,8 @@ from dmcontent.utils import count_unanswered_questions
 from dmutils import s3
 from dmutils.dates import update_framework_with_formatted_dates
 from dmutils.documents import (
-    RESULT_LETTER_FILENAME, SIGNATURE_PAGE_FILENAME, get_document_path, degenerate_document_path_and_return_doc_name,
-    get_signed_url, upload_declaration_documents
+    RESULT_LETTER_FILENAME, get_document_path, degenerate_document_path_and_return_doc_name, get_signed_url,
+    upload_declaration_documents
 )
 from dmutils.email.dm_notify import DMNotifyClient
 from dmutils.email.exceptions import EmailError
@@ -966,43 +965,6 @@ def framework_updates_email_clarification_question(framework_slug):
 
     flash(MESSAGE_SENT_QS_OPEN_MESSAGE, 'success')
     return framework_updates(framework['slug'])
-
-
-@main.route('/frameworks/<framework_slug>/agreement', methods=['GET'])
-@login_required
-def framework_agreement(framework_slug):
-    framework = get_framework_or_404(data_api_client, framework_slug, allowed_statuses=['standstill', 'live'])
-    supplier_framework = return_supplier_framework_info_if_on_framework_or_abort(data_api_client, framework_slug)
-
-    if supplier_framework['agreementReturned']:
-        supplier_framework['agreementReturnedAt'] = datetimeformat(
-            date_parse(supplier_framework['agreementReturnedAt'])
-        )
-
-    def lot_result(drafts_for_lot):
-        if any(draft['status'] == 'submitted' for draft in drafts_for_lot):
-            return 'Successful'
-        elif any(draft['status'] == 'failed' for draft in drafts_for_lot):
-            return 'Unsuccessful'
-        else:
-            return 'No application'
-
-    drafts, complete_drafts = get_drafts(data_api_client, framework_slug)
-    complete_drafts_by_lot = {
-        lot['slug']: [draft for draft in complete_drafts if draft['lotSlug'] == lot['slug']]
-        for lot in framework['lots']
-    }
-    lot_results = {k: lot_result(v) for k, v in complete_drafts_by_lot.items()}
-
-    return render_template(
-        'frameworks/contract_start.html',
-        signature_page_filename=SIGNATURE_PAGE_FILENAME,
-        framework=framework,
-        framework_urls=content_loader.get_message(framework_slug, 'urls'),
-        lots=[{'name': lot['name'], 'result': lot_results[lot['slug']]} for lot in framework['lots']],
-        supplier_framework=supplier_framework,
-        supplier_registered_name=get_supplier_registered_name_from_declaration(supplier_framework['declaration']),
-    ), 200
 
 
 @main.route('/frameworks/<framework_slug>/contract-variation/<variation_slug>', methods=['GET', 'POST'])
