@@ -5,7 +5,7 @@ from flask_wtf import FlaskForm
 from wtforms import StringField
 from wtforms.validators import Length
 from app.main.helpers.suppliers import get_country_name_from_country_code, supplier_company_details_are_complete, \
-    is_g12_recovery_supplier, format_g12_recovery_time_remaining
+    is_g12_recovery_supplier, format_g12_recovery_time_remaining, get_g12_recovery_draft_ids
 
 from dmtestutils.api_model_stubs import SupplierStub
 
@@ -73,6 +73,25 @@ class TestG12RecoverySupplier(BaseApplicationTest):
         with self.app.app_context():
             self.app.config['DM_G12_RECOVERY_SUPPLIER_IDS'] = g12_recovery_supplier_ids
             assert is_g12_recovery_supplier('123456') is expected_result
+
+
+class TestG12RecoveryDrafts(BaseApplicationTest):
+    @pytest.mark.parametrize(
+        'draft_ids_config, expected_result',
+        [
+            (None, set()),
+            ('', set()),
+            (42, set()),
+            ('12:32', set()),
+            ([123456, 789012], set()),
+            ('123456', {123456}),
+            ('123456,789012', {123456, 789012}),
+        ]
+    )
+    def test_returns_expected_value_for_input(self, draft_ids_config, expected_result):
+        with self.app.app_context():
+            self.app.config['DM_G12_RECOVERY_DRAFT_IDS'] = draft_ids_config
+            assert get_g12_recovery_draft_ids() == expected_result
 
 
 class TestG12TimeRemainingFormatting:
