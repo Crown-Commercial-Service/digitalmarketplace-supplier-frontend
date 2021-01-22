@@ -324,7 +324,24 @@ class TestListServices(BaseApplicationTest):
         )
 
 
+def assert_table(doc, name, expected_contents):
+    table_caption = doc.xpath(
+        "//h2[normalize-space(string())=$t]",
+        t=name,
+    )[0]
+    if expected_contents:
+        table = table_caption.getnext()
+        assert table.tag == "table"
+        assert [
+            td.text_content().strip() for td in
+            table.cssselect("tbody tr td:first-child")
+        ] == expected_contents
+    else:
+        assert table_caption.getnext().tag == "p"
+
+
 class TestG12RecoveryListServices(BaseApplicationTest):
+    g12_recovery_draft_id = 123456
 
     def setup_method(self, method):
         super().setup_method(method)
@@ -378,28 +395,49 @@ class TestG12RecoveryListServices(BaseApplicationTest):
         assert res.status_code != 302
         assert res.location is None
 
-    def test_page_has_draft_and_completed_and_live_services(self, g12_recovery_supplier_id):
+    @pytest.mark.parametrize("draft_id,status,draft_services,completed_services", [
+        (1, "submitted", [], []),
+        (g12_recovery_draft_id, "submitted", [], ["test"]),
+        (1, "not-submitted", [], []),
+        (g12_recovery_draft_id, "not-submitted", ["test"], []),
+    ])
+    def test_page_has_correct_drafts(
+            self,
+            g12_recovery_supplier_id,
+            draft_id,
+            status,
+            draft_services,
+            completed_services
+    ):
         self.login(supplier_id=g12_recovery_supplier_id)
         self.data_api_client.find_draft_services_iter.return_value = [
             DraftServiceStub(
-                service_name="My unsubmitted service",
-                framework_slug="g-cloud-12"
-            ).response(),
-            DraftServiceStub(
-                service_name="My submitted service",
+                id=draft_id,
+                service_name="test",
                 framework_slug="g-cloud-12",
-                status="submitted"
+                status=status,
             ).response(),
         ]
+        self.data_api_client.find_services.return_value = {"services": []}
+
+        res = self.client.get("/suppliers/frameworks/g-cloud-12/all-services")
+        document = html.fromstring(res.get_data(as_text=True))
+
+        assert_table(document, "Draft services", draft_services)
+        assert_table(document, "Complete services", completed_services)
+        assert_table(document, "Live services", [])
+
+    def test_page_shows_live_services(self, g12_recovery_supplier_id):
+        self.login(supplier_id=g12_recovery_supplier_id)
+        self.data_api_client.find_draft_services_iter.return_value = []
         self.data_api_client.find_services.return_value = {"services": [
             ServiceStub(
-                service_name="My live service",
+                service_name="live service",
                 framework_slug="g-cloud-12"
             ).response(),
         ]}
 
         res = self.client.get("/suppliers/frameworks/g-cloud-12/all-services")
-
         document = html.fromstring(res.get_data(as_text=True))
 
         assert document.xpath(
@@ -407,44 +445,7 @@ class TestG12RecoveryListServices(BaseApplicationTest):
             t="Your G-Cloud 12 services",
         )
 
-        draft_services_caption = document.xpath(
-            "//h2[normalize-space(string())=$t]",
-            t="Draft services",
-        )[0]
-        draft_services_table = draft_services_caption.getnext()
-        assert draft_services_table.tag == "table"
-        assert [
-            td.text_content().strip() for td in
-            draft_services_table.cssselect("tbody tr td:first-child")
-        ] == [
-            "My unsubmitted service",
-        ]
-
-        complete_services_caption = document.xpath(
-            "//h2[normalize-space(string())=$t]",
-            t="Complete services",
-        )[0]
-        complete_services_table = complete_services_caption.getnext()
-        assert complete_services_table.tag == "table"
-        assert [
-            td.text_content().strip() for td in
-            complete_services_table.cssselect("tbody tr td:first-child")
-        ] == [
-            "My submitted service",
-        ]
-
-        live_services_caption = document.xpath(
-            "//h2[normalize-space(string())=$t]",
-            t="Live services",
-        )[0]
-        live_services_table = live_services_caption.getnext()
-        assert live_services_table.tag == "table"
-        assert [
-            td.text_content().strip() for td in
-            live_services_table.cssselect("tbody tr td:first-child")
-        ] == [
-            "My live service",
-        ]
+        assert_table(document, "Live services", ["live service"])
 
     def test_no_link_to_add_services_or_button_to_copy_services(self, g12_recovery_supplier_id):
         self.login(supplier_id=g12_recovery_supplier_id)
@@ -482,7 +483,8 @@ class TestG12RecoveryListServices(BaseApplicationTest):
         self.data_api_client.find_draft_services_iter.return_value = [
             DraftServiceStub(
                 service_name="My unsubmitted service",
-                framework_slug="g-cloud-12"
+                framework_slug="g-cloud-12",
+                id=self.g12_recovery_draft_id,
             ).response(),
         ]
         self.data_api_client.find_services.return_value = {"services": []}
@@ -507,7 +509,8 @@ class TestG12RecoveryListServices(BaseApplicationTest):
         self.data_api_client.find_draft_services_iter.return_value = [
             DraftServiceStub(
                 service_name="My unsubmitted service",
-                framework_slug="g-cloud-12"
+                framework_slug="g-cloud-12",
+                id=self.g12_recovery_draft_id,
             ).response(),
         ]
         self.data_api_client.find_services.return_value = {"services": []}
