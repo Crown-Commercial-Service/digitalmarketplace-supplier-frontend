@@ -14,7 +14,7 @@
   {% endif %}
 
   {% if supplier_is_on_framework and not supplier_framework.agreementReturned %}
-  {% set sign_agreement_route = url_for('.legal_authority', framework_slug=framework.slug) if framework['isESignatureSupported'] else url_for('.framework_agreement', framework_slug=framework.slug) %}
+  {% set sign_agreement_route = url_for('.legal_authority', framework_slug=framework.slug) %}
   <li class="browse-list-item">
     <a class="browse-list-item-link" href="{{ sign_agreement_route }}">
       <span>Sign and return your {{ contract_title | lower }}</span>

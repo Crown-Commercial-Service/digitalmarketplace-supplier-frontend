@@ -5,7 +5,6 @@ from datetime import datetime, timedelta
 from dmutils.errors import render_error_page
 from itertools import chain
 
-from dateutil.parser import parse as date_parse
 from flask import request, abort, flash, redirect, url_for, current_app, session
 from flask_login import current_user
 
@@ -17,25 +16,21 @@ from dmcontent.utils import count_unanswered_questions
 from dmutils import s3
 from dmutils.dates import update_framework_with_formatted_dates
 from dmutils.documents import (
-    RESULT_LETTER_FILENAME, SIGNED_AGREEMENT_PREFIX, SIGNED_SIGNATURE_PAGE_PREFIX,
-    SIGNATURE_PAGE_FILENAME, get_document_path, generate_timestamped_document_upload_path,
-    degenerate_document_path_and_return_doc_name, get_signed_url, get_extension, file_is_less_than_5mb,
-    file_is_image, file_is_pdf, sanitise_supplier_name, upload_declaration_documents
+    RESULT_LETTER_FILENAME, get_document_path, degenerate_document_path_and_return_doc_name, get_signed_url,
+    upload_declaration_documents
 )
 from dmutils.email.dm_notify import DMNotifyClient
 from dmutils.email.exceptions import EmailError
 from dmutils.email.helpers import hash_string
-from dmutils.env_helpers import get_web_url_from_stage
 from dmutils.flask import timed_render_template as render_template
 from dmutils.formats import datetimeformat, displaytimeformat, monthyearformat, dateformat
-from dmutils.forms.helpers import get_errors_from_wtform, remove_csrf_token, govuk_options
+from dmutils.forms.helpers import get_errors_from_wtform, govuk_options
 from dmutils.timing import logged_duration
 
 from ... import data_api_client
 from ...main import main, content_loader
 from ..helpers import login_required
 from ..helpers.frameworks import (
-    check_agreement_is_related_to_supplier_framework_or_abort,
     count_drafts_by_lot,
     EnsureApplicationCompanyDetailsHaveBeenConfirmed,
     get_declaration_status,
@@ -67,9 +62,7 @@ from ..helpers.suppliers import (
     is_g12_recovery_supplier,
 )
 from ..helpers.validation import get_validator
-from ..forms.frameworks import (SignerDetailsForm,
-                                ContractReviewForm,
-                                AcceptAgreementVariationForm,
+from ..forms.frameworks import (AcceptAgreementVariationForm,
                                 ReuseDeclarationForm,
                                 LegalAuthorityForm,
                                 SignFrameworkAgreementForm)
@@ -972,254 +965,6 @@ def framework_updates_email_clarification_question(framework_slug):
 
     flash(MESSAGE_SENT_QS_OPEN_MESSAGE, 'success')
     return framework_updates(framework['slug'])
-
-
-@main.route('/frameworks/<framework_slug>/agreement', methods=['GET'])
-@login_required
-def framework_agreement(framework_slug):
-    framework = get_framework_or_404(data_api_client, framework_slug, allowed_statuses=['standstill', 'live'])
-    supplier_framework = return_supplier_framework_info_if_on_framework_or_abort(data_api_client, framework_slug)
-
-    if supplier_framework['agreementReturned']:
-        supplier_framework['agreementReturnedAt'] = datetimeformat(
-            date_parse(supplier_framework['agreementReturnedAt'])
-        )
-
-    def lot_result(drafts_for_lot):
-        if any(draft['status'] == 'submitted' for draft in drafts_for_lot):
-            return 'Successful'
-        elif any(draft['status'] == 'failed' for draft in drafts_for_lot):
-            return 'Unsuccessful'
-        else:
-            return 'No application'
-
-    drafts, complete_drafts = get_drafts(data_api_client, framework_slug)
-    complete_drafts_by_lot = {
-        lot['slug']: [draft for draft in complete_drafts if draft['lotSlug'] == lot['slug']]
-        for lot in framework['lots']
-    }
-    lot_results = {k: lot_result(v) for k, v in complete_drafts_by_lot.items()}
-
-    return render_template(
-        'frameworks/contract_start.html',
-        signature_page_filename=SIGNATURE_PAGE_FILENAME,
-        framework=framework,
-        framework_urls=content_loader.get_message(framework_slug, 'urls'),
-        lots=[{'name': lot['name'], 'result': lot_results[lot['slug']]} for lot in framework['lots']],
-        supplier_framework=supplier_framework,
-        supplier_registered_name=get_supplier_registered_name_from_declaration(supplier_framework['declaration']),
-    ), 200
-
-
-@main.route('/frameworks/<framework_slug>/create-agreement', methods=['POST'])
-@login_required
-def create_framework_agreement(framework_slug):
-    framework = get_framework_or_404(data_api_client, framework_slug, allowed_statuses=['standstill', 'live'])
-    # if there's no frameworkAgreementVersion key it means we're pre-G-Cloud 8 and shouldn't be using this route
-    if not framework.get('frameworkAgreementVersion'):
-        abort(404)
-    return_supplier_framework_info_if_on_framework_or_abort(data_api_client, framework_slug)
-
-    agreement_id = data_api_client.create_framework_agreement(
-        current_user.supplier_id, framework["slug"], current_user.email_address
-    )["agreement"]["id"]
-
-    return redirect(url_for('.signer_details', framework_slug=framework_slug, agreement_id=agreement_id))
-
-
-@main.route('/frameworks/<framework_slug>/<int:agreement_id>/signer-details', methods=['GET', 'POST'])
-@login_required
-def signer_details(framework_slug, agreement_id):
-    framework = get_framework_or_404(data_api_client, framework_slug, allowed_statuses=['standstill', 'live'])
-    # if there's no frameworkAgreementVersion key it means we're pre-G-Cloud 8 and shouldn't be using this route
-    if not framework.get('frameworkAgreementVersion'):
-        abort(404)
-
-    supplier_framework = return_supplier_framework_info_if_on_framework_or_abort(data_api_client, framework_slug)
-    agreement = data_api_client.get_framework_agreement(agreement_id)['agreement']
-    check_agreement_is_related_to_supplier_framework_or_abort(agreement, supplier_framework)
-
-    prefill_data = agreement.get("signedAgreementDetails", {})
-
-    form = SignerDetailsForm(data=prefill_data)
-
-    if form.validate_on_submit():
-        agreement_details = {
-            "signedAgreementDetails": remove_csrf_token(form.data)
-        }
-        data_api_client.update_framework_agreement(
-            agreement_id, agreement_details, current_user.email_address
-        )
-
-        # If they have already uploaded a file then let them go to straight to the contract review
-        # page as they are likely editing their signer details
-        if agreement.get('signedAgreementPath'):
-            return redirect(url_for(".contract_review", framework_slug=framework_slug, agreement_id=agreement_id))
-
-        return redirect(url_for(".signature_upload", framework_slug=framework_slug, agreement_id=agreement_id))
-
-    errors = get_errors_from_wtform(form)
-
-    return render_template(
-        "frameworks/signer_details.html",
-        agreement=agreement,
-        form=form,
-        errors=errors,
-        framework=framework,
-        supplier_framework=supplier_framework,
-        supplier_registered_name=get_supplier_registered_name_from_declaration(supplier_framework['declaration']),
-    ), 400 if errors else 200
-
-
-@main.route('/frameworks/<framework_slug>/<int:agreement_id>/signature-upload', methods=['GET', 'POST'])
-@login_required
-def signature_upload(framework_slug, agreement_id):
-    framework = get_framework_or_404(data_api_client, framework_slug, allowed_statuses=['standstill', 'live'])
-    # if there's no frameworkAgreementVersion key it means we're pre-G-Cloud 8 and shouldn't be using this route
-    if not framework.get('frameworkAgreementVersion'):
-        abort(404)
-    supplier_framework = return_supplier_framework_info_if_on_framework_or_abort(data_api_client, framework_slug)
-    agreement = data_api_client.get_framework_agreement(agreement_id)['agreement']
-    check_agreement_is_related_to_supplier_framework_or_abort(agreement, supplier_framework)
-
-    agreements_bucket = s3.S3(current_app.config['DM_AGREEMENTS_BUCKET'])
-    agreement_path = agreement.get('signedAgreementPath')
-    existing_signature_page = agreements_bucket.get_key(agreement_path) if agreement_path else None
-    upload_error = None
-    if request.method == 'POST':
-        fresh_signature_page = request.files.get('signature_page')
-
-        # No file chosen for upload and file already exists on s3 so can use existing and progress
-        if not (fresh_signature_page and fresh_signature_page.filename) and existing_signature_page:
-            return redirect(url_for(".contract_review", framework_slug=framework_slug, agreement_id=agreement_id))
-
-        # Validate file
-        if not fresh_signature_page:
-            upload_error = "You must choose a file to upload"
-        elif not file_is_image(fresh_signature_page) and not file_is_pdf(fresh_signature_page):
-            upload_error = "The file must be a PDF, JPG or PNG"
-        elif not file_is_less_than_5mb(fresh_signature_page):
-            upload_error = "The file must be less than 5MB"
-
-        # If all looks good then upload the file and proceed to next step of signing
-        if not upload_error:
-            extension = get_extension(fresh_signature_page.filename)
-            upload_path = generate_timestamped_document_upload_path(
-                framework_slug,
-                current_user.supplier_id,
-                'agreements',
-                '{}{}'.format(SIGNED_AGREEMENT_PREFIX, extension)
-            )
-            agreements_bucket.save(
-                upload_path,
-                fresh_signature_page,
-                acl='bucket-owner-full-control',
-                download_filename='{}-{}-{}{}'.format(
-                    sanitise_supplier_name(current_user.supplier_name),
-                    current_user.supplier_id,
-                    SIGNED_SIGNATURE_PAGE_PREFIX,
-                    extension
-                ),
-                disposition_type='inline'  # Embeddeding PDFs in admin pages requires 'inline' and not 'attachment'
-            )
-
-            data_api_client.update_framework_agreement(agreement_id, {"signedAgreementPath": upload_path},
-                                                       current_user.email_address)
-
-            session['signature_page'] = fresh_signature_page.filename
-
-            return redirect(url_for(".contract_review", framework_slug=framework_slug, agreement_id=agreement_id))
-
-    return render_template(
-        "frameworks/signature_upload.html",
-        agreement=agreement,
-        framework=framework,
-        signature_page=existing_signature_page,
-        upload_error=upload_error,
-    ), 400 if upload_error else 200
-
-
-@main.route('/frameworks/<framework_slug>/<int:agreement_id>/contract-review', methods=['GET', 'POST'])
-@login_required
-def contract_review(framework_slug, agreement_id):
-    framework = get_framework_or_404(data_api_client, framework_slug, allowed_statuses=['standstill', 'live'])
-    update_framework_with_formatted_dates(framework)
-    # if there's no frameworkAgreementVersion key it means we're pre-G-Cloud 8 and shouldn't be using this route
-    if not framework.get('frameworkAgreementVersion'):
-        abort(404)
-    supplier_framework = return_supplier_framework_info_if_on_framework_or_abort(data_api_client, framework_slug)
-    agreement = data_api_client.get_framework_agreement(agreement_id)['agreement']
-    check_agreement_is_related_to_supplier_framework_or_abort(agreement, supplier_framework)
-
-    # if framework agreement doesn't have a name or a role or the agreement file, then 404
-    if not (
-        agreement.get('signedAgreementDetails')
-        and agreement['signedAgreementDetails'].get('signerName')
-        and agreement['signedAgreementDetails'].get('signerRole')
-        and agreement.get('signedAgreementPath')
-    ):
-        abort(404)
-
-    agreements_bucket = s3.S3(current_app.config['DM_AGREEMENTS_BUCKET'])
-    signature_page = agreements_bucket.get_key(agreement['signedAgreementPath'])
-
-    supplier_registered_name = get_supplier_registered_name_from_declaration(supplier_framework['declaration'])
-
-    form = ContractReviewForm(supplier_registered_name=supplier_registered_name)
-
-    if form.validate_on_submit():
-        data_api_client.sign_framework_agreement(
-            agreement_id, current_user.email_address, {'uploaderUserId': current_user.id}
-        )
-
-        notify_client = DMNotifyClient()
-        for email_address in returned_agreement_email_recipients(supplier_framework):
-            try:
-                notify_client.send_email(
-                    to_email_address=email_address,
-                    template_name_or_id="framework_agreement_signature_page",
-                    personalisation={
-                        "framework_name": framework['name'],
-                        "framework_slug": framework['slug'],
-                        "framework_updates_url": (
-                            get_web_url_from_stage(current_app.config["DM_ENVIRONMENT"])
-                            + url_for(".framework_updates", framework_slug=framework["slug"])
-                        ),
-                    },
-                    reference=f"contract-review-agreement-{hash_string(email_address)}"
-                )
-            except EmailError:
-                # We don't need to handle this as the email is only informational,
-                # and failures are already logged by DMNotifyClient
-                pass
-
-        session.pop('signature_page', None)
-
-        flash(AGREEMENT_RETURNED_MESSAGE, "success")
-
-        # Redirect to contract variation if it has not been signed
-        if (framework.get('variations') and not supplier_framework['agreedVariations']):
-            variation_slug = list(framework['variations'].keys())[0]
-            return redirect(url_for(
-                '.view_contract_variation',
-                framework_slug=framework_slug,
-                variation_slug=variation_slug
-            ))
-
-        return redirect(url_for(".framework_dashboard", framework_slug=framework_slug))
-
-    errors = get_errors_from_wtform(form)
-
-    return render_template(
-        "frameworks/contract_review.html",
-        agreement=agreement,
-        form=form,
-        errors=errors,
-        framework=framework,
-        signature_page=signature_page,
-        supplier_framework=supplier_framework,
-        supplier_registered_name=supplier_registered_name,
-    ), 400 if errors else 200
 
 
 @main.route('/frameworks/<framework_slug>/contract-variation/<variation_slug>', methods=['GET', 'POST'])
