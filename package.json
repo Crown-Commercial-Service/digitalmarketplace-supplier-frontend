@@ -10,7 +10,7 @@
     "colors": "1.1.2",
     "del": "^5.1.0",
     "digitalmarketplace-frameworks": "github:alphagov/digitalmarketplace-frameworks#v18.1.6",
-    "digitalmarketplace-frontend-toolkit": "https://github.com/alphagov/digitalmarketplace-frontend-toolkit.git#v36.1.0",
+    "digitalmarketplace-frontend-toolkit": "^36.1.2",
     "digitalmarketplace-govuk-frontend": "^2.8.0",
     "govuk-country-and-territory-autocomplete": "0.4.0",
     "govuk-elements-sass": "3.0.3",
