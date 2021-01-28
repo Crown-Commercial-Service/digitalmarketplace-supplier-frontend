@@ -93,6 +93,7 @@ class Config(object):
     DM_APP_NAME = 'supplier-frontend'
 
     DM_G12_RECOVERY_SUPPLIER_IDS = None
+    DM_G12_RECOVERY_DRAFT_IDS = None
 
     @staticmethod
     def init_app(app):
@@ -121,7 +122,7 @@ class Test(Config):
     SHARED_EMAIL_KEY = "KEY"
 
     DM_MAILCHIMP_USERNAME = 'not_a_real_username'
-    DM_MAILCHIMP_API_KEY = 'not_a_real_key'
+    DM_MAILCHIMP_API_KEY = 'not_a_real_key'  # pragma: allowlist secret
     DM_MAILCHIMP_OPEN_FRAMEWORK_NOTIFICATION_MAILING_LIST_ID = "not_a_real_mailing_list"
 
     DM_DATA_API_AUTH_TOKEN = 'myToken'
@@ -131,6 +132,7 @@ class Test(Config):
     DM_ASSETS_URL = 'http://asset-host'
 
     DM_G12_RECOVERY_SUPPLIER_IDS = "577184"
+    DM_G12_RECOVERY_DRAFT_IDS = "123456"
 
 
 class Development(Config):
@@ -163,13 +165,14 @@ class Development(Config):
     SECRET_KEY = 'verySecretKey'
 
     DM_MAILCHIMP_USERNAME = 'not_a_real_username'
-    DM_MAILCHIMP_API_KEY = 'not_a_real_key'
+    DM_MAILCHIMP_API_KEY = 'not_a_real_key'  # pragma: allowlist secret
     DM_MAILCHIMP_OPEN_FRAMEWORK_NOTIFICATION_MAILING_LIST_ID = "not_a_real_mailing_list"
 
     DM_DNB_API_USERNAME = 'not_a_real_username'
-    DM_DNB_API_PASSWORD = 'not_a_real_password'
+    DM_DNB_API_PASSWORD = 'not_a_real_password'  # pragma: allowlist secret
 
     DM_G12_RECOVERY_SUPPLIER_IDS = "577184"
+    DM_G12_RECOVERY_DRAFT_IDS = "123456"
 
 
 class Live(Config):

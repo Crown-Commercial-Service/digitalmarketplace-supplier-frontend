@@ -14,7 +14,7 @@ from dmutils.flask import timed_render_template as render_template
 from dmutils.forms.helpers import get_errors_from_wtform
 from dmutils.errors import render_error_page
 
-from ..helpers.suppliers import is_g12_recovery_supplier, g12_recovery_time_remaining
+from ..helpers.suppliers import is_g12_recovery_supplier, g12_recovery_time_remaining, get_g12_recovery_draft_ids
 from ... import data_api_client
 from ...main import main, content_loader
 from ..helpers import login_required
@@ -97,6 +97,10 @@ def list_all_services(framework_slug):
     )["services"]
 
     drafts, complete_drafts = get_drafts(data_api_client, framework_slug)
+
+    g12_draft_allow_list = get_g12_recovery_draft_ids()
+    drafts = [draft for draft in drafts if draft["id"] in g12_draft_allow_list]
+    complete_drafts = [draft for draft in complete_drafts if draft["id"] in g12_draft_allow_list]
 
     service_sections = content_loader.get_manifest(
         framework_slug,
