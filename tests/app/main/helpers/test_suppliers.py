@@ -5,11 +5,10 @@ from flask_wtf import FlaskForm
 from wtforms import StringField
 from wtforms.validators import Length
 from app.main.helpers.suppliers import get_country_name_from_country_code, supplier_company_details_are_complete, \
-    format_g12_recovery_time_remaining
+    is_g12_recovery_supplier, format_g12_recovery_time_remaining, get_g12_recovery_draft_ids
 
 from dmtestutils.api_model_stubs import SupplierStub
 
-from config import extract_list_of_ids
 from tests.app.helpers import BaseApplicationTest
 
 
@@ -57,9 +56,30 @@ class FormForTest(FlaskForm):
     ])
 
 
-class TestExtractListFromConfig(BaseApplicationTest):
+class TestG12RecoverySupplier(BaseApplicationTest):
     @pytest.mark.parametrize(
-        'config_input, expected_result',
+        'g12_recovery_supplier_ids, expected_result',
+        [
+            (None, False),
+            ('', False),
+            (42, False),
+            ('12:32', False),
+            ([123456, 789012], False),
+            ('123456', True),
+            ('123456,789012', True),
+            ('123456, 789012', True),
+            ('123456,\n789012', True),
+        ]
+    )
+    def test_returns_expected_value_for_input(self, g12_recovery_supplier_ids, expected_result):
+        with self.app.app_context():
+            self.app.config['DM_G12_RECOVERY_SUPPLIER_IDS'] = g12_recovery_supplier_ids
+            assert is_g12_recovery_supplier('123456') is expected_result
+
+
+class TestG12RecoveryDrafts(BaseApplicationTest):
+    @pytest.mark.parametrize(
+        'draft_ids_config, expected_result',
         [
             (None, set()),
             ('', set()),
@@ -72,10 +92,10 @@ class TestExtractListFromConfig(BaseApplicationTest):
             ('123456,\n789012', {123456, 789012}),
         ]
     )
-    def test_returns_expected_value_for_input(self, config_input, expected_result):
+    def test_returns_expected_value_for_input(self, draft_ids_config, expected_result):
         with self.app.app_context():
-            self.app.config['TEST'] = config_input
-            assert extract_list_of_ids(self.app, 'TEST') == expected_result
+            self.app.config['DM_G12_RECOVERY_DRAFT_IDS'] = draft_ids_config
+            assert get_g12_recovery_draft_ids() == expected_result
 
 
 class TestG12TimeRemainingFormatting:
