@@ -128,8 +128,8 @@ class Config(object):
         ])
         app.jinja_loader = jinja_loader
 
-        app.config["DM_G12_RECOVERY_SUPPLIER_IDS"] = extract_list_of_ids(app, "DM_G12_RECOVERY_SUPPLIER_IDS")
-        app.config["DM_G12_RECOVERY_DRAFT_IDS"] = extract_list_of_ids(app, "DM_G12_RECOVERY_DRAFT_IDS")
+        app.config["G12_RECOVERY_SUPPLIER_IDS"] = extract_list_of_ids(app, "DM_G12_RECOVERY_SUPPLIER_IDS")
+        app.config["G12_RECOVERY_DRAFT_IDS"] = extract_list_of_ids(app, "DM_G12_RECOVERY_DRAFT_IDS")
 
 
 class Test(Config):
