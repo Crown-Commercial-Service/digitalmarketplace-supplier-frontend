@@ -67,6 +67,8 @@ class TestG12RecoverySupplier(BaseApplicationTest):
             ([123456, 789012], False),
             ('123456', True),
             ('123456,789012', True),
+            ('123456, 789012', True),
+            ('123456,\n789012', True),
         ]
     )
     def test_returns_expected_value_for_input(self, g12_recovery_supplier_ids, expected_result):
@@ -86,6 +88,8 @@ class TestG12RecoveryDrafts(BaseApplicationTest):
             ([123456, 789012], set()),
             ('123456', {123456}),
             ('123456,789012', {123456, 789012}),
+            ('123456, 789012', {123456, 789012}),
+            ('123456,\n789012', {123456, 789012}),
         ]
     )
     def test_returns_expected_value_for_input(self, draft_ids_config, expected_result):
