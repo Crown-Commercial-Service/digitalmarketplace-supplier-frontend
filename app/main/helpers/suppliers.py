@@ -72,11 +72,11 @@ def get_company_details_from_supplier(supplier):
 
 
 def is_g12_recovery_supplier(supplier_id: Union[str, int]) -> bool:
-    return int(supplier_id) in current_app.config['G12_RECOVERY_SUPPLIER_IDS']
+    return int(supplier_id) in current_app.config['DM_G12_RECOVERY_SUPPLIER_IDS']
 
 
 def is_g12_recovery_draft(draft_id: Union[str, int]) -> bool:
-    return int(draft_id) in current_app.config['G12_RECOVERY_DRAFT_IDS']
+    return int(draft_id) in current_app.config['DM_G12_RECOVERY_DRAFT_IDS']
 
 
 G12_RECOVERY_DEADLINE = datetime(year=1970, month=1, day=1, hour=17)
