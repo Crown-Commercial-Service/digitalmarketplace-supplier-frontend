@@ -1,6 +1,6 @@
 import os
 import json
-from typing import Union
+from typing import Union, Set
 from datetime import datetime, timedelta
 
 from flask import current_app
@@ -72,11 +72,30 @@ def get_company_details_from_supplier(supplier):
 
 
 def is_g12_recovery_supplier(supplier_id: Union[str, int]) -> bool:
-    return int(supplier_id) in current_app.config['DM_G12_RECOVERY_SUPPLIER_IDS']
+    supplier_ids_string = current_app.config.get('DM_G12_RECOVERY_SUPPLIER_IDS') or ''
+
+    try:
+        supplier_ids = [int(s) for s in supplier_ids_string.split(sep=',')]
+    except AttributeError as e:
+        current_app.logger.error("DM_G12_RECOVERY_SUPPLIER_IDS not a string", extra={'error': str(e)})
+        return False
+    except ValueError as e:
+        current_app.logger.error("DM_G12_RECOVERY_SUPPLIER_IDS not a list of supplier IDs", extra={'error': str(e)})
+        return False
+
+    return int(supplier_id) in supplier_ids
 
 
-def is_g12_recovery_draft(draft_id: Union[str, int]) -> bool:
-    return int(draft_id) in current_app.config['DM_G12_RECOVERY_DRAFT_IDS']
+def get_g12_recovery_draft_ids() -> Set[int]:
+    draft_ids_string = current_app.config.get('DM_G12_RECOVERY_DRAFT_IDS') or ''
+
+    try:
+        return {int(s) for s in draft_ids_string.split(sep=',')}
+    except AttributeError as e:
+        current_app.logger.error("DM_G12_RECOVERY_DRAFT_IDS not a string", extra={'error': str(e)})
+    except ValueError as e:
+        current_app.logger.error("DM_G12_RECOVERY_DRAFT_IDS not a list of draft IDs", extra={'error': str(e)})
+    return set()
 
 
 G12_RECOVERY_DEADLINE = datetime(year=1970, month=1, day=1, hour=17)

@@ -2,26 +2,9 @@
 # type: ignore
 
 import os
-from typing import Set
-
 import jinja2
 from dmutils.status import get_version_label
 from dmutils.asset_fingerprint import AssetFingerprinter
-
-
-def extract_list_of_ids(current_app, config_key) -> Set[int]:
-    """
-    Lists of IDs are provided as comma-separated strings to allow them to be passed in via environment variables.
-    """
-    ids_string = current_app.config.get(config_key) or ''
-
-    try:
-        return {int(s) for s in ids_string.split(sep=',')}
-    except AttributeError as e:
-        current_app.logger.error(f"{config_key} not a string", extra={'error': str(e)})
-    except ValueError as e:
-        current_app.logger.error(f"{config_key} not a list of IDs", extra={'error': str(e)})
-    return set()
 
 
 class Config(object):
@@ -127,9 +110,6 @@ class Config(object):
             jinja2.PrefixLoader({'govuk': jinja2.FileSystemLoader(govuk_frontend)})
         ])
         app.jinja_loader = jinja_loader
-
-        app.config["DM_G12_RECOVERY_SUPPLIER_IDS"] = extract_list_of_ids(app, "DM_G12_RECOVERY_SUPPLIER_IDS")
-        app.config["DM_G12_RECOVERY_DRAFT_IDS"] = extract_list_of_ids(app, "DM_G12_RECOVERY_DRAFT_IDS")
 
 
 class Test(Config):
