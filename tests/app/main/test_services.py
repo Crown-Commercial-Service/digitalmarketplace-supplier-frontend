@@ -535,14 +535,26 @@ class TestG12RecoveryListServices(BaseApplicationTest):
         assert draft_service_progress.cssselect("strong")
         assert draft_service_progress.cssselect(".app-text--can-be-marked-as-complete")
 
-    def test_list_all_services_page_has_banner(self, g12_recovery_supplier_id):
+    def test_recovery_supplier_with_no_unsubmitted_drafts_sees_completed_banner(self, g12_recovery_supplier_id):
         self.login(supplier_id=g12_recovery_supplier_id)
 
-        self.data_api_client.find_draft_services_iter.return_value = []
+        self.data_api_client.find_draft_services_by_framework_iter.return_value = []
         self.data_api_client.find_services.return_value = {"services": []}
 
         res = self.client.get("/suppliers/frameworks/g-cloud-12/all-services")
 
+        document = html.fromstring(res.get_data(as_text=True))
+
+        assert document.cssselect("p.banner-message:contains('Thank you for completing your application')")
+
+    def test_recovery_supplier_with_unsubmitted_drafts_sees_reminder_banner(self, g12_recovery_supplier_id):
+        self.data_api_client.find_draft_services_by_framework_iter.return_value = [
+            DraftServiceStub(id=self.g12_recovery_draft_id, status="not-submitted").response(),
+            DraftServiceStub(id=self.g12_recovery_draft_id, status="submitted").response(),
+        ]
+        self.login(supplier_id=g12_recovery_supplier_id)
+
+        res = self.client.get("/suppliers/frameworks/g-cloud-12/all-services")
         document = html.fromstring(res.get_data(as_text=True))
 
         assert document.cssselect("p.banner-message:contains('You have')")
