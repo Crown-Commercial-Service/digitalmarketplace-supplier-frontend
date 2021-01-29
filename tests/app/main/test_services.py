@@ -324,20 +324,24 @@ class TestListServices(BaseApplicationTest):
         )
 
 
-def assert_table(doc, name, expected_contents):
-    table_caption = doc.xpath(
+def assert_table(doc, name, expected_contents, table_paragraph=False):
+    table_header = doc.xpath(
         "//h2[normalize-space(string())=$t]",
         t=name,
     )[0]
     if expected_contents:
-        table = table_caption.getnext()
+        if table_paragraph:
+            assert table_header.getnext().tag == "p"
+            table_header = table_header.getnext()
+
+        table = table_header.getnext()
         assert table.tag == "table"
         assert [
             td.text_content().strip() for td in
             table.cssselect("tbody tr td:first-child")
         ] == expected_contents
     else:
-        assert table_caption.getnext().tag == "p"
+        assert table_header.getnext().tag == "p"
 
 
 class TestG12RecoveryListServices(BaseApplicationTest):
@@ -423,8 +427,8 @@ class TestG12RecoveryListServices(BaseApplicationTest):
         res = self.client.get("/suppliers/frameworks/g-cloud-12/all-services")
         document = html.fromstring(res.get_data(as_text=True))
 
-        assert_table(document, "Draft services", draft_services)
-        assert_table(document, "Complete services", completed_services)
+        assert_table(document, "Draft services", draft_services, table_paragraph=bool(draft_services))
+        assert_table(document, "Complete services", completed_services, table_paragraph=bool(completed_services))
         assert_table(document, "Live services", [])
 
     def test_page_shows_live_services(self, g12_recovery_supplier_id):
@@ -496,7 +500,7 @@ class TestG12RecoveryListServices(BaseApplicationTest):
         draft_services_table = document.xpath(
             "//h2[normalize-space(string())=$t]",
             t="Draft services",
-        )[0].getnext()
+        )[0].getnext().getnext()
 
         assert "74 unanswered questions" in draft_services_table.text_content()
 
@@ -527,38 +531,13 @@ class TestG12RecoveryListServices(BaseApplicationTest):
         draft_services_table = document.xpath(
             "//h2[normalize-space(string())=$t]",
             t="Draft services",
-        )[0].getnext()
+        )[0].getnext().getnext()
 
         draft_service_progress = draft_services_table.cssselect("tbody tr")[0].cssselect("td")[1]
 
         assert "Service can be marked as complete" in draft_service_progress.text_content()
         assert draft_service_progress.cssselect("strong")
         assert draft_service_progress.cssselect(".app-text--can-be-marked-as-complete")
-
-    def test_recovery_supplier_with_no_unsubmitted_drafts_sees_completed_banner(self, g12_recovery_supplier_id):
-        self.login(supplier_id=g12_recovery_supplier_id)
-
-        self.data_api_client.find_draft_services_by_framework_iter.return_value = []
-        self.data_api_client.find_services.return_value = {"services": []}
-
-        res = self.client.get("/suppliers/frameworks/g-cloud-12/all-services")
-
-        document = html.fromstring(res.get_data(as_text=True))
-
-        assert document.cssselect("p.banner-message:contains('Thank you for completing your application')")
-
-    def test_recovery_supplier_with_unsubmitted_drafts_sees_reminder_banner(self, g12_recovery_supplier_id):
-        self.data_api_client.find_draft_services_by_framework_iter.return_value = [
-            DraftServiceStub(id=self.g12_recovery_draft_id, status="not-submitted").response(),
-            DraftServiceStub(id=self.g12_recovery_draft_id, status="submitted").response(),
-        ]
-        self.login(supplier_id=g12_recovery_supplier_id)
-
-        res = self.client.get("/suppliers/frameworks/g-cloud-12/all-services")
-        document = html.fromstring(res.get_data(as_text=True))
-
-        assert document.cssselect("p.banner-message:contains('You have')")
-        assert document.cssselect("p.banner-message:contains('left to finish your application')")
 
 
 class _BaseTestSupplierEditRemoveService(BaseApplicationTest):
