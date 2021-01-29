@@ -10,7 +10,7 @@ from werkzeug.exceptions import ServiceUnavailable
 
 from dmapiclient import APIError, HTTPError
 from dmapiclient.audit import AuditTypes
-from dmtestutils.api_model_stubs import FrameworkStub, SupplierFrameworkStub
+from dmtestutils.api_model_stubs import FrameworkStub, SupplierFrameworkStub, DraftServiceStub
 
 from tests.app.helpers import BaseApplicationTest, assert_args_and_return
 from app.main.forms.suppliers import CompanyOrganisationSizeForm, CompanyTradingStatusForm
@@ -669,6 +669,9 @@ class TestSuppliersDashboard(BaseApplicationTest):
 
     def test_recovery_supplier_sees_banner(self, g12_recovery_supplier_id):
         self.data_api_client.get_supplier.return_value = get_supplier(id=g12_recovery_supplier_id)
+        self.data_api_client.find_draft_services_by_framework_iter.return_value = [
+            DraftServiceStub(id=123456, status="not-submitted").response()
+        ]
         self.login()
 
         with self.app.app_context():
