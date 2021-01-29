@@ -125,11 +125,10 @@ def format_g12_recovery_time_remaining(time_to_deadline: timedelta) -> str:
 
 
 def count_unsubmitted_g12_recovery_drafts(data_api_client: DataAPIClient, supplier_id: int) -> int:
-    unsubmitted_recovery_drafts = [
-        draft for draft in
+    unsubmitted_draft_ids = {
+        draft["id"] for draft in
         data_api_client.find_draft_services_by_framework_iter(
             framework_slug="g-cloud-12", supplier_id=supplier_id, status="not-submitted"
         )
-        if draft["id"] in get_g12_recovery_draft_ids()
-    ]
-    return len(unsubmitted_recovery_drafts)
+    }
+    return len(unsubmitted_draft_ids.intersection(get_g12_recovery_draft_ids()))
