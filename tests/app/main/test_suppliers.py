@@ -117,6 +117,10 @@ class TestSuppliersDashboard(BaseApplicationTest):
     def g12_recovery_supplier_id(self):
         return 577184
 
+    @pytest.fixture
+    def g12_recovery_draft_ids(self):
+        return 123456, 123457
+
     def test_error_and_success_flashed_messages_only_are_shown_in_banner_messages(self):
         with self.client.session_transaction() as session:
             session['_flashes'] = [
