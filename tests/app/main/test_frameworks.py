@@ -5079,7 +5079,7 @@ class TestSignFrameworkAgreement(BaseApplicationTest):
         assert 'Enter your role in the company.' in text
         assert 'Accept the terms and conditions of the Framework Agreement.' in text
 
-    def test_post_signs_agreement(self):
+    def test_post_signs_and_approves_agreement(self):
         self.data_api_client.create_framework_agreement.return_value = {"agreement": {"id": 789}}
         self.data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
             on_framework=True)
@@ -5110,6 +5110,12 @@ class TestSignFrameworkAgreement(BaseApplicationTest):
             789,
             'email@email.com',
             {'uploaderUserId': 123}
+        )
+
+        self.data_api_client.approve_agreement_for_countersignature.assert_called_once_with(
+            789,
+            "supplier-frontend e-signature flow",
+            64041
         )
 
         assert res.status_code == 200

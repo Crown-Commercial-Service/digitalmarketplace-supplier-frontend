@@ -82,6 +82,9 @@ CUSTOM_DIMENSION_IDENTIFIERS = {
     "supplierFrameworkApplicationStage": 29
 }
 
+# CCS Sourcing Admin user using developer team email
+AUTOMATED_COUNTERSIGNING_USER_ID = 64041
+
 
 @main.route('/frameworks/<framework_slug>', methods=['GET', 'POST'])
 @login_required
@@ -1127,7 +1130,7 @@ def sign_framework_agreement(framework_slug):
     completed_lots = get_completed_lots(data_api_client, framework['lots'], framework_slug, current_user.supplier_id)
 
     if form.validate_on_submit():
-        # For an e-signature we create, update and sign the agreement immediately following submission
+        # For an e-signature we create, update, sign and approve the agreement immediately following submission
         agreement_id = data_api_client.create_framework_agreement(
             current_user.supplier_id, framework["slug"], current_user.email_address
         )["agreement"]["id"]
@@ -1144,6 +1147,12 @@ def sign_framework_agreement(framework_slug):
         data_api_client.sign_framework_agreement(
             agreement_id, current_user.email_address, {'uploaderUserId': current_user.id}
         )
+
+        data_api_client.approve_agreement_for_countersignature(
+            agreement_id,
+            "supplier-frontend e-signature flow",
+            AUTOMATED_COUNTERSIGNING_USER_ID
+        )["agreement"]
 
         # Send confirmation email
         supplier_users = data_api_client.find_users_iter(supplier_id=current_user.supplier_id)
