@@ -31,14 +31,14 @@
     </div>
   </div>
 
+  <p>You have {{ g12_recovery.time_remaining }} left to finish your application.</p>
+  <p>You need to mark your draft services as complete to finish your application.</p>
+
   {{ summary.heading("Draft services") }}
   {% if framework.status == 'open' %}
     {{ summary.top_link("Add a service", url_for(".start_new_draft_service", framework_slug=framework.slug, lot_slug=lot.slug)) }}
   {% elif framework.status == 'pending' %}
     <p class="hint">These services were not completed</p>
-  {% endif %}
-  {% if drafts %}
-    <p>You have {{ g12_recovery.time_remaining }} left to finish your application. You need to mark your draft services as complete to finish your application.</p>
   {% endif %}
   {% call(draft) summary.list_table(
     drafts,
@@ -70,9 +70,7 @@
   {% endcall %}
 
   {{ summary.heading("Complete services") }}
-  {% if complete_drafts %}
-    <p>Your completed draft services will be automatically submitted in {{ g12_recovery.time_remaining }}. You may edit them until then.</p>
-  {% endif %}
+  <p class="hint">Services will appear here when you mark them complete. These services are not live.</p>
   {% call(draft) summary.list_table(
     complete_drafts,
     caption="Complete services",

@@ -324,13 +324,14 @@ class TestListServices(BaseApplicationTest):
         )
 
 
-def assert_table(doc, name, expected_contents, table_paragraph=False):
+def assert_table(doc, name, expected_contents, has_hint_text=False):
     table_header = doc.xpath(
         "//h2[normalize-space(string())=$t]",
         t=name,
     )[0]
     if expected_contents:
-        if table_paragraph:
+        if has_hint_text:
+            # Skip hint text
             assert table_header.getnext().tag == "p"
             table_header = table_header.getnext()
 
@@ -427,8 +428,8 @@ class TestG12RecoveryListServices(BaseApplicationTest):
         res = self.client.get("/suppliers/frameworks/g-cloud-12/all-services")
         document = html.fromstring(res.get_data(as_text=True))
 
-        assert_table(document, "Draft services", draft_services, table_paragraph=bool(draft_services))
-        assert_table(document, "Complete services", completed_services, table_paragraph=bool(completed_services))
+        assert_table(document, "Draft services", draft_services)
+        assert_table(document, "Complete services", completed_services, has_hint_text=True)
         assert_table(document, "Live services", [])
 
     def test_page_shows_live_services(self, g12_recovery_supplier_id):
@@ -500,7 +501,7 @@ class TestG12RecoveryListServices(BaseApplicationTest):
         draft_services_table = document.xpath(
             "//h2[normalize-space(string())=$t]",
             t="Draft services",
-        )[0].getnext().getnext()
+        )[0].getnext()
 
         assert "74 unanswered questions" in draft_services_table.text_content()
 
@@ -531,7 +532,7 @@ class TestG12RecoveryListServices(BaseApplicationTest):
         draft_services_table = document.xpath(
             "//h2[normalize-space(string())=$t]",
             t="Draft services",
-        )[0].getnext().getnext()
+        )[0].getnext()
 
         draft_service_progress = draft_services_table.cssselect("tbody tr")[0].cssselect("td")[1]
 
