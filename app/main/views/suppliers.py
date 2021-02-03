@@ -38,7 +38,7 @@ from ..helpers.suppliers import (
     get_country_name_from_country_code,
     supplier_company_details_are_complete,
     is_g12_recovery_supplier, g12_recovery_time_remaining,
-    count_unsubmitted_g12_recovery_drafts,
+    count_g12_recovery_drafts_by_status,
 )
 from ..helpers import login_required
 
@@ -114,9 +114,12 @@ def dashboard():
 
     g12_recovery = None
     if supplier['g12_recovery']:
+        not_submitted_count, submitted_count = count_g12_recovery_drafts_by_status(data_api_client,
+                                                                                   current_user.supplier_id)
         g12_recovery = {
             'time_remaining': g12_recovery_time_remaining(),
-            'drafts_remaining': count_unsubmitted_g12_recovery_drafts(data_api_client, current_user.supplier_id)
+            'not_submitted_drafts': not_submitted_count,
+            'submitted_drafts': submitted_count
         }
 
     return render_template(

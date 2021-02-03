@@ -1,6 +1,6 @@
 import os
 import json
-from typing import Union, Set
+from typing import Union, Set, Tuple
 from datetime import datetime, timedelta
 
 from flask import current_app
@@ -124,11 +124,27 @@ def format_g12_recovery_time_remaining(time_to_deadline: timedelta) -> str:
     return f'{number} {unit}'
 
 
-def count_unsubmitted_g12_recovery_drafts(data_api_client: DataAPIClient, supplier_id: int) -> int:
-    unsubmitted_draft_ids = {
+def count_g12_recovery_drafts_by_status(data_api_client: DataAPIClient, supplier_id: int) -> Tuple[int, int]:
+    """
+    Counts the number of a supplier's G12 recovery draft services which are either
+    'submitted' or 'not-submitted'
+
+    Returns
+    -------
+    A tuple (not_submitted_count, submitted_count)
+    """
+    g12_recovery_draft_ids = get_g12_recovery_draft_ids()
+    drafts = [
+        draft for draft in data_api_client.find_draft_services_iter(supplier_id=supplier_id, framework="g-cloud-12")
+    ]
+    not_submitted_ids = {
         draft["id"] for draft in
-        data_api_client.find_draft_services_by_framework_iter(
-            framework_slug="g-cloud-12", supplier_id=supplier_id, status="not-submitted"
-        )
-    }
-    return len(unsubmitted_draft_ids.intersection(get_g12_recovery_draft_ids()))
+        drafts if draft["status"] == "not-submitted"
+    }.intersection(g12_recovery_draft_ids)
+
+    submitted_ids = {
+        draft["id"] for draft in
+        drafts if draft["status"] == "submitted"
+    }.intersection(g12_recovery_draft_ids)
+
+    return len(not_submitted_ids), len(submitted_ids)
