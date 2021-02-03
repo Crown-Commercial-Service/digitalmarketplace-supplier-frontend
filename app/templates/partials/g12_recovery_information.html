@@ -4,7 +4,7 @@
     {% if g12_recovery.not_submitted_drafts == 0 %}
       {%
         with
-        message = 'You have marked all your services as complete. Your services will be automatically submitted on 25 February.',
+        message = 'You have marked all your services as complete. Your services will be automatically submitted at 2pm on 25 February 2021.',
         type = 'success'
       %}
         {% include 'toolkit/notification-banner.html' %}
@@ -13,7 +13,7 @@
       {% with service = " service" if g12_recovery.submitted_drafts == 1 else " services" %}
         {%
           with
-          message = "You have marked " + g12_recovery.submitted_drafts|string + service + " as complete. Your services will be automatically submitted on 25 February."|safe,
+          message = "You have marked " + g12_recovery.submitted_drafts|string + service + " as complete. Your services will be automatically submitted at 2pm on 25 February 2021."|safe,
           type = 'success'
         %}
           {% include 'toolkit/notification-banner.html' %}
