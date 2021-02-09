@@ -9,18 +9,22 @@ jobs:
     steps:
     - uses: actions/checkout@v2
 
-    - name: Install Node dependencies
-      shell: bash -l {0}
-      run: |
-        nvm install
-        make npm-install
-
-    - uses: actions/cache@v2
+    - name: Setup Node cache
+      uses: actions/cache@v2
+      id: node-cache
       with:
         path: ~/.npm
         key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
         restore-keys: |
           ${{ runner.os }}-node-
+    
+    - name: Install Node version
+      shell: bash -l {0}
+      run: nvm install
+
+    - name: Install Node dependencies
+      run:  make npm-install
+      if: steps.node-cache.outputs.cache-hit != 'true'
 
     - name: Setup python (${{ matrix.python-version }})
       uses: actions/setup-python@v2
