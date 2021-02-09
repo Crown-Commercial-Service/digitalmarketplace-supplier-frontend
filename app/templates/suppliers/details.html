@@ -166,7 +166,7 @@
             'items': [{
                 'href': url_for(".edit_supplier_registration_number"),
                 'text': 'Change' if company_details.get('registration_number') else 'Answer required',
-                'visuallyHiddenText': 'registration number'
+                'visuallyHiddenText': 'registration number' if company_details.get('registration_number') else 'for registration number'
                 }
             ]
         }
