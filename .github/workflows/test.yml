@@ -22,10 +22,6 @@ jobs:
       shell: bash -l {0}
       run: nvm install
 
-    - name: Install Node dependencies
-      run:  make npm-install
-      if: steps.node-cache.outputs.cache-hit != 'true'
-
     - name: Setup python (${{ matrix.python-version }})
       uses: actions/setup-python@v2
       with:
