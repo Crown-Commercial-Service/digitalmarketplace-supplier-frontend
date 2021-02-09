@@ -791,7 +791,11 @@ class TestSupplierDetails(BaseApplicationTest):
             "Open for business",  # Trading status
             "Small",  # Size
         ):
+            # Property exists on page
             assert document.xpath("//*[normalize-space(string())=$t]", t=property_str), property_str
+            # Property has associated Change link
+            assert document.xpath(f"//dd[normalize-space(text())='{property_str}']/following-sibling::dd/a/text()")[0]\
+                .strip() == 'Change'
 
         # Registration number not shown if Companies House ID exists
         assert "BEL153" not in page_html
