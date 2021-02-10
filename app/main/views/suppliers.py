@@ -38,7 +38,7 @@ from ..helpers.suppliers import (
     get_country_name_from_country_code,
     supplier_company_details_are_complete,
     is_g12_recovery_supplier, g12_recovery_time_remaining,
-    count_g12_recovery_drafts_by_status,
+    count_g12_recovery_drafts_by_status, get_company_details_from_supplier,
 )
 from ..helpers import login_required
 
@@ -169,6 +169,7 @@ def supplier_details():
         unconfirmed_open_supplier_framework_names=[
             fw['frameworkName'] for fw in unconfirmed_open_supplier_frameworks
         ],
+        company_details=get_company_details_from_supplier(supplier)
     ), 200
 
 

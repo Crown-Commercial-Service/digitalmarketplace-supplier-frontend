@@ -777,21 +777,12 @@ class TestSupplierDetails(BaseApplicationTest):
         page_html = res.get_data(as_text=True)
         document = html.fromstring(page_html)
 
-        assert document.xpath(
-            "//a[normalize-space(string())=$t][@href=$u][contains(@class, $c)]",
-            t="Edit",
-            u="/suppliers/what-buyers-will-see/edit",
-            c="summary-change-link",
-        )
-
         for property_str in (
             # "Company details" section at the top
+            # Address elements are tested separately in `test_shows_address_details()` due to HTML structure
             "Supplier Person",  # Contact name
             "supplier@user.dmdev",  # Contact email
             "0800123123",  # Phone number
-            "1 Street",  # Address: "2 Building" and "Supplierland" are not shown, even though in contactInformation
-            "Supplierville",  # Town or City
-            "11 AB",  # Postcode
             "Supplier Description",  # Supplier summary
             # "Registration information" section
             "Official Name Inc",  # Registered company name
@@ -800,7 +791,11 @@ class TestSupplierDetails(BaseApplicationTest):
             "Open for business",  # Trading status
             "Small",  # Size
         ):
+            # Property exists on page
             assert document.xpath("//*[normalize-space(string())=$t]", t=property_str), property_str
+            # Property has associated Change link
+            assert document.xpath(f"//dd[normalize-space(text())='{property_str}']/following-sibling::dd/a/text()")[0]\
+                .strip() == 'Edit'
 
         # Registration number not shown if Companies House ID exists
         assert "BEL153" not in page_html
@@ -817,7 +812,8 @@ class TestSupplierDetails(BaseApplicationTest):
         assert res.status_code == 200
         page_html = res.get_data(as_text=True)
         document = html.fromstring(page_html)
-        assert document.xpath("//span[text()='Registration number']/following::td[1]/span[text()='42, EARTH']")
+        assert document.xpath("//dt[normalize-space(text())='Registration number']/following-sibling::dd")[0]. \
+            text.strip() == '42, EARTH'
 
     def test_shows_united_kingdom_for_old_style_country_code(self):
         self.data_api_client.get_supplier.return_value = get_supplier(
@@ -829,7 +825,8 @@ class TestSupplierDetails(BaseApplicationTest):
         assert res.status_code == 200
         page_html = res.get_data(as_text=True)
         document = html.fromstring(page_html)
-        assert document.xpath("//*[normalize-space(string())='United Kingdom']")  # Country United Kingdom is shown
+        # Country United Kingdom is shown
+        assert document.xpath("//*/node()[normalize-space(string())='United Kingdom']")
 
     def test_handles_supplier_with_no_registration_country_key(self):
         supplier = get_supplier()
@@ -850,16 +847,13 @@ class TestSupplierDetails(BaseApplicationTest):
         assert response.status_code == 200
         page_html = response.get_data(as_text=True)
         document = html.fromstring(page_html)
+        address = (document.
+                   xpath("//dt[normalize-space(text())='Registered company address']/following-sibling::dd/text()"))
 
-        street = document.xpath("//span[text()='Registered company address']/following::td[1]/span/p/span[1]")
-        town = document.xpath("//span[text()='Registered company address']/following::td[1]/span/p/span[2]")
-        postcode = document.xpath("//span[text()='Registered company address']/following::td[1]/span/p/span[3]")
-        country = document.xpath("//span[text()='Registered company address']/following::td[1]/span/p/span[4]")
-
-        assert "1 Street" in street[0].text
-        assert "Supplierville" in town[0].text
-        assert "11 AB" in postcode[0].text
-        assert "United Kingdom" in country[0].text
+        assert "1 Street" in address[0]
+        assert "Supplierville" in address[1]
+        assert "11 AB" in address[2]
+        assert "United Kingdom" in address[3]
 
     @pytest.mark.parametrize(
         "question,null_attribute,link_address",
@@ -884,12 +878,11 @@ class TestSupplierDetails(BaseApplicationTest):
         assert response.status_code == 200
         page_html = response.get_data(as_text=True)
         document = html.fromstring(page_html)
-        answer_required_link = document.xpath(
-            "//span[text()='{}']/following::td[1]/span/a[text()='Answer required']".format(question)
-        )
+        answer_required_link = document.xpath(f"//dt[normalize-space(text())='{question}']/following-sibling::dd[2]/a")
 
         assert answer_required_link
-        assert answer_required_link[0].values()[0] == link_address
+        assert answer_required_link[0].values()[1] == link_address
+        assert answer_required_link[0].text.strip() == 'Answer required'
 
     @pytest.mark.parametrize(
         "question,filled_in_attribute,link_address",
@@ -960,20 +953,20 @@ class TestSupplierDetails(BaseApplicationTest):
         page_html = response.get_data(as_text=True)
         document = html.fromstring(page_html)
         answer_required_link = document.xpath(
-            "//span[text()='{}']/following::td[2]/span/a[text()='Edit']".format(question)
+            f"//dt[normalize-space(text())='{question}']/following-sibling::dd[2]/a"
         )
 
         assert answer_required_link
-        assert answer_required_link[0].values()[0] == link_address
+        assert answer_required_link[0].values()[1] == link_address
 
     @pytest.mark.parametrize(
-        "summary,is_hint_visible",
+        "summary,expected_key",
         [
-            ({"description": "Our company is the best for digital ponies."}, False),
-            ({"description": ""}, True),
+            ({"description": "Our company is the best for digital ponies."}, 'Summary'),
+            ({"description": ""}, 'Summary (optional)'),
         ]
     )
-    def test_hint_text_for_summary_only_visible_if_field_empty(self, summary, is_hint_visible):
+    def test_hint_text_for_summary_only_visible_if_field_empty(self, summary, expected_key):
         self.data_api_client.get_supplier.return_value = get_supplier(**summary)
 
         self.login()
@@ -982,8 +975,7 @@ class TestSupplierDetails(BaseApplicationTest):
         assert response.status_code == 200
         page_html = response.get_data(as_text=True)
         document = html.fromstring(page_html)
-        optional_hint_text = (document.xpath("//span[text()='Summary']/following::td[2]/span")[0].text).strip()
-        assert bool(optional_hint_text) == is_hint_visible
+        assert document.xpath(f"*//dt[normalize-space(text())='{expected_key}']")
 
     @pytest.mark.parametrize(
         "framework_slug,framework_name,link_address",
