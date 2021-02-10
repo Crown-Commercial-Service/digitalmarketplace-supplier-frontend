@@ -49,7 +49,7 @@
               'actions': {
                   'items': [{
                     'href': url_for('.edit_what_buyers_will_see', _anchor = 'contactName'),
-                    'text': 'Change',
+                    'text': 'Edit',
                     'visuallyHiddenText': 'contact name'
                     }]}
             },
@@ -63,7 +63,7 @@
               'actions': {
                     'items': [{
                         'href': url_for('.edit_what_buyers_will_see', _anchor = 'email'),
-                        'text': 'Change',
+                        'text': 'Edit',
                         'visuallyHiddenText': 'contact email'
                         }]}
                 },
@@ -77,7 +77,7 @@
               'actions': {
                     'items': [{
                         'href': url_for('.edit_what_buyers_will_see', _anchor = 'phoneNumber'),
-                        'text': 'Change',
+                        'text': 'Edit',
                         'visuallyHiddenText': 'contact phone number'
                         }]}
             },
@@ -92,7 +92,7 @@
                     'items': [
                     {
                         'href': url_for('.edit_what_buyers_will_see', _anchor = 'description'),
-                        'text': 'Change (optional)' if not supplier.description else 'Change',
+                        'text': 'Change (optional)' if not supplier.description else 'Edit',
                         'visuallyHiddenText': 'summary'
                         }]}
             },
@@ -111,7 +111,7 @@
               'actions': {
                   'items': [{
                     'href': url_for('.edit_supplier_registered_name'),
-                    'text': 'Change' if supplier.registeredName else 'Answer required',
+                    'text': 'Edit' if supplier.registeredName else 'Answer required',
                     'visuallyHiddenText': 'registered company name' if supplier.registeredName else 'for registered company name'
                     }]}
                 },
@@ -125,7 +125,7 @@
               'actions': {
                     'items': [{
                         'href': url_for(".edit_registered_address"),
-                        'text': 'Change' if has_address else 'Answer required',
+                        'text': 'Edit' if has_address else 'Answer required',
                         'visuallyHiddenText': 'registered company address' if has_address else 'for registered company address'
                         }]}
             },
@@ -139,7 +139,7 @@
               'actions': {
                     'items': [{
                         'href': url_for(".edit_supplier_registration_number"),
-                        'text': 'Change' if company_details.get('registration_number') else 'Answer required',
+                        'text': 'Edit' if company_details.get('registration_number') else 'Answer required',
                         'visuallyHiddenText': 'registration number' if company_details.get('registration_number') else 'for registration number'
                         }]}
                 },
@@ -154,7 +154,7 @@
                     'items': [
                     {
                         'href': url_for(".edit_supplier_trading_status"),
-                        'text': 'Change' if supplier.tradingStatus else 'Answer required',
+                        'text': 'Edit' if supplier.tradingStatus else 'Answer required',
                         'visuallyHiddenText': 'trading status' if supplier.tradingStatus else 'for trading status'
                         }]}
             },
@@ -169,7 +169,7 @@
                     'items': [
                     {
                         'href': url_for(".edit_supplier_organisation_size"),
-                        'text': 'Change' if supplier.organisationSize else 'Answer required',
+                        'text': 'Edit' if supplier.organisationSize else 'Answer required',
                         'visuallyHiddenText': 'company size' if supplier.organisationSize else 'for company size'
                         }]}
             },
@@ -184,7 +184,7 @@
                     'items': [
                     {
                         'href': url_for(".edit_supplier_duns_number"),
-                        'text': 'Change' if supplier.dunsNumber else 'Answer required',
+                        'text': 'Edit' if supplier.dunsNumber else 'Answer required',
                         'visuallyHiddenText': 'DUNS number' if supplier.dunsNumber else 'for DUNS number'
                         }]}
                 },

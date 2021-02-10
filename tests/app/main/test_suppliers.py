@@ -795,7 +795,7 @@ class TestSupplierDetails(BaseApplicationTest):
             assert document.xpath("//*[normalize-space(string())=$t]", t=property_str), property_str
             # Property has associated Change link
             assert document.xpath(f"//dd[normalize-space(text())='{property_str}']/following-sibling::dd/a/text()")[0]\
-                .strip() == 'Change'
+                .strip() == 'Edit'
 
         # Registration number not shown if Companies House ID exists
         assert "BEL153" not in page_html
@@ -962,7 +962,7 @@ class TestSupplierDetails(BaseApplicationTest):
     @pytest.mark.parametrize(
         "summary,link_text",
         [
-            ({"description": "Our company is the best for digital ponies."}, 'Change'),
+            ({"description": "Our company is the best for digital ponies."}, 'Edit'),
             ({"description": ""}, 'Change (optional)'),
         ]
     )
