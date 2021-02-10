@@ -83,7 +83,7 @@
             },
             {
               'key': {
-                'text': "Summary"
+                'text': "Summary" if supplier.description else "Summary (optional)"
               },
               'value': {
                 'text': supplier.description
@@ -92,7 +92,7 @@
                     'items': [
                     {
                         'href': url_for('.edit_what_buyers_will_see', _anchor = 'description'),
-                        'text': 'Change (optional)' if not supplier.description else 'Edit',
+                        'text': 'Edit',
                         'visuallyHiddenText': 'summary'
                         }]}
             },

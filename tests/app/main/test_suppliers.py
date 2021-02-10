@@ -960,13 +960,13 @@ class TestSupplierDetails(BaseApplicationTest):
         assert answer_required_link[0].values()[1] == link_address
 
     @pytest.mark.parametrize(
-        "summary,link_text",
+        "summary,expected_key",
         [
-            ({"description": "Our company is the best for digital ponies."}, 'Edit'),
-            ({"description": ""}, 'Change (optional)'),
+            ({"description": "Our company is the best for digital ponies."}, 'Summary'),
+            ({"description": ""}, 'Summary (optional)'),
         ]
     )
-    def test_hint_text_for_summary_only_visible_if_field_empty(self, summary, link_text):
+    def test_hint_text_for_summary_only_visible_if_field_empty(self, summary, expected_key):
         self.data_api_client.get_supplier.return_value = get_supplier(**summary)
 
         self.login()
@@ -975,9 +975,7 @@ class TestSupplierDetails(BaseApplicationTest):
         assert response.status_code == 200
         page_html = response.get_data(as_text=True)
         document = html.fromstring(page_html)
-        actual_link_text = document.xpath("//dt[normalize-space(text())='Summary']/following-sibling::dd[2]/a")[0].\
-            text.strip()
-        assert link_text == actual_link_text
+        assert document.xpath(f"*//dt[normalize-space(text())='{expected_key}']")
 
     @pytest.mark.parametrize(
         "framework_slug,framework_name,link_address",
