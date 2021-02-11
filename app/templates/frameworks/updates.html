@@ -27,22 +27,6 @@
 {% endblock %}
 
 {% block mainContent %}
-
-  {% if error_message %}
-    {%
-      with
-      errors = {
-        "clarification_question_name": {
-          "input_name": clarification_question_name,
-          "question": "Ask a {} clarification question".format(framework.name)
-        }
-      },
-      lede = "There was a problem with your submitted question"
-    %}
-      {% include "toolkit/forms/validation.html" %}
-    {% endwith %}
-  {% endif %}
-
   <div class="govuk-grid-row">
     <div class="govuk-grid-column-two-thirds">
       <h1 class="govuk-heading-l">{{ framework.name }} updates</h1>

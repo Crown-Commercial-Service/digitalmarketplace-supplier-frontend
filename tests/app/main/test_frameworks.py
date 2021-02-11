@@ -3625,6 +3625,22 @@ class TestFrameworkUpdatesPage(BaseApplicationTest):
         assert response.status_code == 200
         assert ('Contact the support team' in data) == contact_link_shown
 
+    def test_clarification_question_validation_errors_appear(self, s3):
+        self.data_api_client.get_framework.return_value = self.framework('live', clarification_questions_open=True)
+        self.login()
+        form_data = {
+            "clarification_question": None
+        }
+        response = self.client.post("suppliers/frameworks/g-cloud-7/updates", data=form_data)
+        data = response.get_data(as_text=True)
+        assert response.status_code == 400
+        assert "There was a problem with your submitted question" in data
+        doc = html.fromstring(data)
+        error_links = doc.xpath("//ul[contains(@class, 'govuk-error-summary__list')]/li/a")
+        assert len(error_links) == 1
+        assert error_links[0].text_content() == "Add text if you want to ask a question."
+        assert error_links[0].get("href") == "#clarification_question"
+
 
 @mock.patch('app.main.views.frameworks.DMNotifyClient.send_email', autospec=True)
 class TestSendClarificationQuestionEmail(BaseApplicationTest):

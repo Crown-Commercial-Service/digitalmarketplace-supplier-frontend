@@ -840,6 +840,12 @@ def framework_updates(framework_slug, error_message=None, default_textbox_value=
         file['path'] = '/'.join(path_parts[2:])
         files[path_parts[3]].append(file)
 
+    errors = {CLARIFICATION_QUESTION_NAME: {
+        "text": error_message,
+        "href": "#" + CLARIFICATION_QUESTION_NAME,
+        "errorMessage": error_message,
+    }} if error_message else {}
+
     return render_template(
         "frameworks/updates.html",
         framework=framework,
@@ -847,6 +853,8 @@ def framework_updates(framework_slug, error_message=None, default_textbox_value=
         clarification_question_name=CLARIFICATION_QUESTION_NAME,
         clarification_question_value=default_textbox_value,
         error_message=error_message,
+        errors=errors,
+        error_title="There was a problem with your submitted question",
         files=files,
         agreement_countersigned=bool(supplier_framework_info and supplier_framework_info['countersignedPath']),
     ), 200 if not error_message else 400
@@ -867,7 +875,7 @@ def framework_updates_email_clarification_question(framework_slug):
     clarification_question = request.form.get(CLARIFICATION_QUESTION_NAME, '').strip()
 
     if not clarification_question:
-        return framework_updates(framework_slug, "Add text if you want to ask a question.")
+        return framework_updates(framework_slug, error_message="Add text if you want to ask a question.")
     elif len(clarification_question) > 5000:
         return framework_updates(
             framework_slug,
