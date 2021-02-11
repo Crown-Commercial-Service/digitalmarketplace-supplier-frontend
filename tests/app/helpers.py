@@ -542,13 +542,14 @@ class BaseApplicationTest:
 
     def assert_single_question_page_validation_errors(self,
                                                       res,
-                                                      title="There was a problem with your answer to:",
+                                                      title="There is a problem",
                                                       question_name="",
                                                       validation_message=""
                                                       ):
         doc = html.fromstring(res.get_data(as_text=True))
-        masthead_heading = doc.xpath('normalize-space(//h2[@class="validation-masthead-heading"]/text())')
-        masthead_link_text = doc.xpath('normalize-space(string(//a[@class="validation-masthead-link"]))')
+        masthead_heading = doc.xpath('normalize-space(//h2[@class="govuk-error-summary__title"]/text())')
+        masthead_link_text = doc.xpath(
+            "normalize-space(//ul[contains(@class, 'govuk-error-summary__list')]/li/a/text())")
         validation_text = doc.xpath('normalize-space(//span[@class="validation-message"]/text())')
 
         assert res.status_code == 400
