@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 from dmutils.errors import render_error_page
 from itertools import chain
 
+from dmutils.forms.errors import govuk_errors
 from flask import request, abort, flash, redirect, url_for, current_app, session
 from flask_login import current_user
 
@@ -710,7 +711,7 @@ def framework_supplier_declaration_edit(framework_slug, section_id):
             )
 
             if document_errors:
-                errors = section.get_error_messages(document_errors, question_descriptor_from="question")
+                errors = govuk_errors(section.get_error_messages(document_errors, question_descriptor_from="question"))
             else:
                 submitted_answers.update(uploaded_documents)
 
@@ -719,7 +720,7 @@ def framework_supplier_declaration_edit(framework_slug, section_id):
         # TODO: combine document errors with other validation errors
         # If no document errors, look for other errors
         if not errors:
-            errors = validator.get_error_messages_for_page(section)
+            errors = govuk_errors(validator.get_error_messages_for_page(section))
             # Handle bug for pre-existing files - the filepath value is not included in the POST data,
             # so this fails validation if the user has resubmitted without changes (or changed a different field).
             # If the user *does* change the file, any errors will be picked up by the 'document_errors' section above
