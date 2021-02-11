@@ -63,6 +63,14 @@
       {% endfor %}
     {% endwith %}
   {% endblock flashMessages %}
+  {% block errorSummary %}
+    {% if errors %}
+      {{ govukErrorSummary({
+      "titleText": "There is a problem",
+      "errorList": errors.values(),
+    }) }}
+    {% endif %}
+  {% endblock %}
   {% block mainContent %}{% endblock %}
 {% endblock %}
 
