@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta
 
+from dmutils.forms.errors import govuk_errors
 from flask import request, redirect, url_for, abort, flash, current_app, Markup
 from flask_login import current_user
 
@@ -727,7 +728,7 @@ def edit_service_submission(framework_slug, lot_slug, service_id, section_id, qu
                 )
             except HTTPError as e:
                 update_data = section.unformat_data(update_data)
-                errors = section.get_error_messages(e.message, question_descriptor_from="question")
+                errors = govuk_errors(section.get_error_messages(e.message, question_descriptor_from="question"))
 
         if not errors:
             if next_question and not force_return_to_summary:
