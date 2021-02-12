@@ -28,16 +28,6 @@
 
 {% block mainContent %}
 <div class="govuk-grid-row">
-  {% if errors.get("duns_number", {}).get("message", None) == 'DUNS number already used' %}
-    {% with lede = "A supplier account already exists with that DUNS number",
-            description = 'If you no longer have your account details, or if you think this may be an error, email <a class="govuk-link" href="mailto:{support_email_address}?subject=DUNS%20number%20question" title="Please contact {support_email_address}">{support_email_address}</a>'.format(support_email_address=support_email_address)|safe
-    %}
-      {% include 'toolkit/forms/validation.html' %}
-    {% endwith %}
-  {% elif errors %}
-    {% include 'toolkit/forms/validation.html' %}
-  {% endif %}
-
   <div class="govuk-grid-column-two-thirds">
     <h1 class="govuk-heading-l">Enter your DUNS number</h1>
 

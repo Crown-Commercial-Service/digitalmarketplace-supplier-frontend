@@ -1865,6 +1865,7 @@ class TestCreateSupplier(BaseApplicationTest):
         page = res.get_data(as_text=True)
         assert "A supplier account already exists with that DUNS number" in page
         assert "DUNS number already used" in page
+        assert "If you no longer have your account details, or if you think this may be an error," in page
 
     def test_direct_plus_api_call(self):
         with self.app.app_context(), mock.patch(self.direct_plus_api_method, return_value=None) as client_call_mock:

@@ -580,12 +580,22 @@ def duns_number():
                 'duns_errors': ",".join(form.duns_number.errors)})
 
     errors = get_errors_from_wtform(form)
+    error_title = None
+    error_description = None
+    if errors.get("duns_number", {}).get("message", None) == 'DUNS number already used':
+        error_title = "A supplier account already exists with that DUNS number"
+        support_email_address = current_app.config['SUPPORT_EMAIL_ADDRESS']
+        error_description = Markup(
+            'If you no longer have your account details, or if you think this may be an error, '
+            f'email <a class="govuk-link" href="mailto:{support_email_address}?subject=DUNS%20number%20question" '
+            f'title="Please contact {support_email_address}">{support_email_address}</a>')
 
     return render_template(
         "suppliers/create_duns_number.html",
         form=form,
         errors=errors,
-        support_email_address=current_app.config['SUPPORT_EMAIL_ADDRESS']
+        error_title=error_title,
+        error_description=error_description
     ), 200 if not errors else 400
 
 
