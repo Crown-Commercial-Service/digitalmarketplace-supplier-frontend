@@ -855,6 +855,19 @@ class TestSupplierDetails(BaseApplicationTest):
         assert "11 AB" in address[2]
         assert "United Kingdom" in address[3]
 
+    def test_handles_supplier_with_no_address_details(self):
+        supplier = get_supplier()
+        supplier_contact_information = supplier["suppliers"]["contactInformation"][0]
+        del supplier_contact_information["address1"]
+        del supplier_contact_information["city"]
+        del supplier_contact_information["postcode"]
+        self.data_api_client.get_supplier.return_value = supplier
+
+        self.login()
+
+        res = self.client.get("/suppliers/details")
+        assert res.status_code == 200
+
     @pytest.mark.parametrize(
         "question,null_attribute,link_address",
         [
