@@ -120,7 +120,7 @@
                 'text': "Registered company address"
               },
               'value': {
-                'html': '<br />'.join([supplier.contact.get("address1"), supplier.contact.get("city"), supplier.contact.get("postcode"), country_name])
+                'html': '<br />'.join([supplier.contact.get("address1"), supplier.contact.get("city"), supplier.contact.get("postcode"), country_name]|select)
               },
               'actions': {
                     'items': [{
