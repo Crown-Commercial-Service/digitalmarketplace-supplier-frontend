@@ -76,15 +76,11 @@ def list_services(framework_slug):
         framework=framework_slug,
     )["services"]
 
-    g12_recovery = None
-    if is_g12_recovery_supplier(current_user.supplier_id):
-        g12_recovery = {'time_remaining': g12_recovery_time_remaining()}
-
     return render_template(
         "services/list_services.html",
         services=suppliers_services,
         framework=framework,
-        g12_recovery=g12_recovery,
+        g12_recovery=None,  # don't show banner on this page
     ), 200
 
 
