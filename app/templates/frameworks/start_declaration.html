@@ -29,16 +29,13 @@
 {% endblock %}
 
 {% block mainContent %}
-  <div class="govuk-grid-row framework-dashboard">
+  <div class="govuk-grid-row">
     <div class="govuk-grid-column-two-thirds">
       <h1 class="govuk-heading-l">{{ self.page_title_inner() }}</h1>
 
       <p class="govuk-body">You must make the supplier declaration to confirm you’re eligible to provide services through {{ framework.name }}.</p>
-      <br>
       <p class="govuk-body">You can come back and change your answers before the application deadline at {{ framework.applicationsCloseAt | nbsp }}.</p>
-      <br>
       <p class="govuk-body">After the application deadline, the Crown Commercial Service will review your answers and let you know if your application has been successful.</p>
-      <br><br>
       {{ govukButton({
         "text": "Start your declaration",
         "href": url_for(".reuse_framework_supplier_declaration", framework_slug=framework.slug),
