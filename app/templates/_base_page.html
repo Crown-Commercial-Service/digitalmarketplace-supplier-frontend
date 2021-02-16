@@ -66,10 +66,10 @@
   {% block errorSummary %}
     {% if errors %}
       {{ govukErrorSummary({
-      "titleText": error_title or "There is a problem",
-      "descriptionText": error_description or None,
-      "errorList": errors.values(),
-    }) }}
+        "titleText": error_title or "There is a problem",
+        "descriptionText": error_description or None,
+        "errorList": errors.values(),
+      }) }}
     {% endif %}
   {% endblock %}
   {% block mainContent %}{% endblock %}
