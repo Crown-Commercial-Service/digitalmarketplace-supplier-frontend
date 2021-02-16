@@ -37,14 +37,11 @@
 
       <p class="govuk-body">In {{ old_framework_application_close_date|nbsp }}, your organisation completed a declaration for {{ old_framework.name }}.</p>
       <p class="govuk-body">You can reuse some of the answers from that declaration.</p>
-      <br>
       <p class="govuk-body">You’ll need to:</p>
       <ul class="govuk-list govuk-list--bullet">
         <li>review the answers you gave before and make sure they’re still correct</li>
         <li>provide some new answers for this declaration</li>
       </ul>
-      <br>
-      <br>
 
       <form method="POST" action="{{ url_for(".reuse_framework_supplier_declaration_post", framework_slug=current_framework.slug) }}">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
