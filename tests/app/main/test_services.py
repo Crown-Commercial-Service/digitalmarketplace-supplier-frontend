@@ -1728,7 +1728,7 @@ class TestCompleteDraft(BaseApplicationTest, MockEnsureApplicationCompanyDetails
         res = self.client.post('/suppliers/frameworks/g-cloud-7/submissions/scs/1/complete')
         assert res.status_code == 404
 
-    def test_g12_recovery_supplier_can_complete_draft(self):
+    def test_g12_recovery_supplier_cannot_complete_draft(self):
         recovery_supplier_id = 577184
         g12 = FrameworkStub(status="live", slug="g-cloud-12").single_result_response()
         g12_draft_service = empty_g9_draft_service()
@@ -1746,9 +1746,7 @@ class TestCompleteDraft(BaseApplicationTest, MockEnsureApplicationCompanyDetails
         }
 
         res = self.client.post('/suppliers/frameworks/g-cloud-12/submissions/cloud-hosting/1/complete')
-        assert res.status_code == 302
-        assert 'lot=cloud-hosting' in res.location
-        assert '/suppliers/frameworks/g-cloud-12/submissions' in res.location
+        assert res.status_code == 404
 
     def test_cannot_complete_draft_if_no_supplier_framework(self):
         self.data_api_client.get_supplier_framework_info.return_value = {'frameworkInterest': {}}
@@ -1855,7 +1853,7 @@ class TestEditDraftService(BaseApplicationTest, MockEnsureApplicationCompanyDeta
             })
         assert res.status_code == 404
 
-    def test_g12_recovery_supplier_can_edit_draft_service(self, s3):
+    def test_g12_recovery_supplier_cannot_edit_draft_service(self, s3):
         recovery_supplier_id = 577184
         self.login(supplier_id=recovery_supplier_id)
 
@@ -1876,13 +1874,7 @@ class TestEditDraftService(BaseApplicationTest, MockEnsureApplicationCompanyDeta
             }
         )
 
-        assert res.status_code == 302
-        self.data_api_client.update_draft_service.assert_called_once_with(
-            "1",
-            {"serviceDescription": "This is the service."},
-            "email@email.com",
-            page_questions=["serviceDescription"]
-        )
+        assert res.status_code == 404
 
     def test_draft_section_cannot_be_edited_if_not_open(self, s3):
         self.data_api_client.get_framework.return_value = self.framework(status='other')
