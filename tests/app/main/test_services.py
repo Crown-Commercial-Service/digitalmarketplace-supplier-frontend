@@ -1728,14 +1728,12 @@ class TestCompleteDraft(BaseApplicationTest, MockEnsureApplicationCompanyDetails
         res = self.client.post('/suppliers/frameworks/g-cloud-7/submissions/scs/1/complete')
         assert res.status_code == 404
 
-    def test_g12_recovery_supplier_can_complete_draft(self):
+    def setup_g12_recovery_supplier(self):
         recovery_supplier_id = 577184
         g12 = FrameworkStub(status="live", slug="g-cloud-12").single_result_response()
         g12_draft_service = empty_g9_draft_service()
         g12_draft_service["frameworkSlug"] = "g-cloud-12"
         g12_draft_service["supplierId"] = recovery_supplier_id
-        self.login(supplier_id=recovery_supplier_id)
-
         self.data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
             supplier_id=recovery_supplier_id, framework_slug='g-cloud-12'
         )
@@ -1744,11 +1742,27 @@ class TestCompleteDraft(BaseApplicationTest, MockEnsureApplicationCompanyDetails
         self.data_api_client.get_supplier_framework_info.return_value = {
             'frameworkInterest': {'onFramework': True}
         }
+        return recovery_supplier_id
 
-        res = self.client.post('/suppliers/frameworks/g-cloud-12/submissions/cloud-hosting/1/complete')
+    def test_g12_recovery_supplier_can_complete_draft_before_deadline(self):
+        recovery_supplier_id = self.setup_g12_recovery_supplier()
+
+        with freeze_time(datetime(2021, 2, 24)):
+            self.login(supplier_id=recovery_supplier_id)
+            res = self.client.post('/suppliers/frameworks/g-cloud-12/submissions/cloud-hosting/1/complete')
+
         assert res.status_code == 302
         assert 'lot=cloud-hosting' in res.location
         assert '/suppliers/frameworks/g-cloud-12/submissions' in res.location
+
+    def test_g12_recovery_supplier_cannot_complete_draft_after_deadline(self):
+        recovery_supplier_id = self.setup_g12_recovery_supplier()
+
+        with freeze_time(datetime(2021, 2, 26)):
+            self.login(supplier_id=recovery_supplier_id)
+            res = self.client.post('/suppliers/frameworks/g-cloud-12/submissions/cloud-hosting/1/complete')
+
+        assert res.status_code == 404
 
     def test_cannot_complete_draft_if_no_supplier_framework(self):
         self.data_api_client.get_supplier_framework_info.return_value = {'frameworkInterest': {}}
@@ -1855,9 +1869,8 @@ class TestEditDraftService(BaseApplicationTest, MockEnsureApplicationCompanyDeta
             })
         assert res.status_code == 404
 
-    def test_g12_recovery_supplier_can_edit_draft_service(self, s3):
+    def setup_g12_recovery_supplier(self):
         recovery_supplier_id = 577184
-        self.login(supplier_id=recovery_supplier_id)
 
         g12_draft_service = empty_g9_draft_service()
         g12_draft_service['frameworkSlug'] = 'g-cloud-12'
@@ -1868,13 +1881,20 @@ class TestEditDraftService(BaseApplicationTest, MockEnsureApplicationCompanyDeta
         self.data_api_client.get_supplier_framework_info.return_value = {
             'frameworkInterest': {'onFramework': True}
         }
+        return recovery_supplier_id
 
-        res = self.client.post(
-            "/suppliers/frameworks/g-cloud-12/submissions/cloud-hosting/1/edit/about-your-service/service-description",
-            data={
-                "serviceDescription": "This is the service.",
-            }
-        )
+    def test_g12_recovery_supplier_can_edit_draft_service_before_deadline(self, s3):
+        recovery_supplier_id = self.setup_g12_recovery_supplier()
+
+        with freeze_time(datetime(2021, 2, 24)):
+            self.login(supplier_id=recovery_supplier_id)
+            res = self.client.post(
+                "/suppliers/frameworks/g-cloud-12/submissions/cloud-hosting/1/edit/about-your-service/"
+                "service-description",
+                data={
+                    "serviceDescription": "This is the service.",
+                }
+            )
 
         assert res.status_code == 302
         self.data_api_client.update_draft_service.assert_called_once_with(
@@ -1883,6 +1903,21 @@ class TestEditDraftService(BaseApplicationTest, MockEnsureApplicationCompanyDeta
             "email@email.com",
             page_questions=["serviceDescription"]
         )
+
+    def test_g12_recovery_supplier_cannot_edit_draft_service_after_deadline(self, s3):
+        recovery_supplier_id = self.setup_g12_recovery_supplier()
+
+        with freeze_time(datetime(2021, 2, 26)):
+            self.login(supplier_id=recovery_supplier_id)
+            res = self.client.post(
+                "/suppliers/frameworks/g-cloud-12/submissions/cloud-hosting/1/edit/about-your-service/"
+                "service-description",
+                data={
+                    "serviceDescription": "This is the service.",
+                }
+            )
+
+        assert res.status_code == 404
 
     def test_draft_section_cannot_be_edited_if_not_open(self, s3):
         self.data_api_client.get_framework.return_value = self.framework(status='other')
