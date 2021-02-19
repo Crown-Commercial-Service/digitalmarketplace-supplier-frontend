@@ -71,16 +71,6 @@
       </div>
     </div>
   {% endif %}
-  {% if error %}
-    <div class="govuk-grid-column-full">
-      {% with
-        lede = error,
-        errors = {}
-      %}
-        {% include "toolkit/forms/validation.html" %}
-      {% endwith %}
-    </div>
-  {% endif %}
 {% endblock %}
 
 {% block edit_link %}

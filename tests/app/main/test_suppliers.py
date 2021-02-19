@@ -1492,18 +1492,16 @@ class TestSupplierUpdate(BaseApplicationTest):
 
         doc = html.fromstring(response)
 
-        for content in [
-            ("validation-masthead-link", "Contact name"),
-            ("validation-masthead-link", "Contact email address"),
-            ("validation-masthead-link", "Contact phone number"),
-            ("validation-message", "Enter a contact name."),
-            ("validation-message", "Enter an email address."),
-            ("validation-message", "Enter a phone number."),
+        for xpath_selector, expected_content in [
+            ("[contains(@class, 'govuk-error-summary__list')]/li/a", "Enter a contact name."),
+            ("[contains(@class, 'govuk-error-summary__list')]/li/a", "Enter an email address."),
+            ("[contains(@class, 'govuk-error-summary__list')]/li/a", "Enter a phone number."),
+            ("[@class='validation-message']", "Enter a contact name."),
+            ("[@class='validation-message']", "Enter an email address."),
+            ("[@class='validation-message']", "Enter a phone number."),
         ]:
             assert doc.xpath(
-                "//*[@class=$t][normalize-space(string())=$c]",
-                t=content[0],
-                c=content[1],
+                f"//*{xpath_selector}[normalize-space(string())='{expected_content}']"
             )
 
         assert self.data_api_client.update_supplier.called is False
@@ -1522,16 +1520,14 @@ class TestSupplierUpdate(BaseApplicationTest):
 
         doc = html.fromstring(response)
 
-        for content in [
-            ("validation-masthead-link", "Contact phone number"),
-            ("validation-masthead-link", "Contact name"),
-            ("validation-message", "Enter a phone number under 20 characters."),
-            ("validation-message", "Enter a contact name under 256 characters."),
+        for xpath_selector, expected_content in [
+            ("[contains(@class, 'govuk-error-summary__list')]/li/a", "Enter a phone number under 20 characters."),
+            ("[contains(@class, 'govuk-error-summary__list')]/li/a", "Enter a contact name under 256 characters."),
+            ("[@class='validation-message']", "Enter a contact name under 256 characters."),
+            ("[@class='validation-message']", "Enter a phone number under 20 characters."),
         ]:
             assert doc.xpath(
-                "//*[@class=$t][normalize-space(string())=$c]",
-                t=content[0],
-                c=content[1],
+                f"//*{xpath_selector}[normalize-space(string())='{expected_content}']"
             )
 
         assert self.data_api_client.update_supplier.called is False
@@ -1547,14 +1543,12 @@ class TestSupplierUpdate(BaseApplicationTest):
 
         doc = html.fromstring(response)
 
-        for content in [
-            ("validation-masthead-link", "Contact email address"),
-            ("validation-message", "Enter a valid email address."),
+        for xpath_selector, expected_content in [
+            ("[contains(@class, 'govuk-error-summary__list')]/li/a", "Enter a valid email address."),
+            ("[@class='validation-message']", "Enter a valid email address."),
         ]:
             assert doc.xpath(
-                "//*[@class=$t][normalize-space(string())=$c]",
-                t=content[0],
-                c=content[1],
+                f"//*{xpath_selector}[normalize-space(string())='{expected_content}']"
             )
 
         assert self.data_api_client.update_supplier.called is False
@@ -1851,7 +1845,7 @@ class TestCreateSupplier(BaseApplicationTest):
 
         self.assert_single_question_page_validation_errors(
             res,
-            question_name="DUNS Number",
+            question_name="Enter your 9 digit DUNS number.",
             validation_message="Enter your 9 digit DUNS number."
         )
 
@@ -1865,6 +1859,7 @@ class TestCreateSupplier(BaseApplicationTest):
         page = res.get_data(as_text=True)
         assert "A supplier account already exists with that DUNS number" in page
         assert "DUNS number already used" in page
+        assert "If you no longer have your account details, or if you think this may be an error," in page
 
     def test_direct_plus_api_call(self):
         with self.app.app_context(), mock.patch(self.direct_plus_api_method, return_value=None) as client_call_mock:
@@ -2753,7 +2748,7 @@ class TestSupplierEditOrganisationSize(BaseApplicationTest):
 
         self.assert_single_question_page_validation_errors(
             res,
-            question_name="What size is your organisation?",
+            question_name=expected_error,
             validation_message=expected_error
         )
 
@@ -2816,7 +2811,7 @@ class TestSupplierAddRegisteredCompanyName(BaseApplicationTest):
 
         self.assert_single_question_page_validation_errors(
             res,
-            question_name="Registered company name",
+            question_name="Enter your registered company name.",
             validation_message="Enter your registered company name."
         )
         assert self.data_api_client.update_supplier.call_args_list == []
@@ -2913,7 +2908,7 @@ class TestSupplierEditTradingStatus(BaseApplicationTest):
         assert error[0].text.strip() == expected_error, 'The validation message is not as anticipated.'
 
         self.assert_single_question_page_validation_errors(res,
-                                                           question_name="What’s your trading status?",
+                                                           question_name=expected_error,
                                                            validation_message=expected_error)
 
     @pytest.mark.parametrize('trading_status', (None, 'limited company (LTD)', 'other'))
@@ -2988,7 +2983,7 @@ class TestSupplierAddRegistrationNumber(BaseApplicationTest):
                  'companies_house_number': '',
                  'other_company_registration_number': ''
                  },
-                'Are you registered with Companies House?',
+                'You need to answer this question.',
                 'You need to answer this question.'
             ),
             (
@@ -2996,7 +2991,7 @@ class TestSupplierAddRegistrationNumber(BaseApplicationTest):
                  'companies_house_number': '',
                  'other_company_registration_number': ''
                  },
-                'Companies House number',
+                'Enter a Companies House number.',
                 'Enter a Companies House number.'
             ),
             (
@@ -3004,7 +2999,7 @@ class TestSupplierAddRegistrationNumber(BaseApplicationTest):
                  'companies_house_number': '123456789',
                  'other_company_registration_number': ''
                  },
-                'Companies House number',
+                'Enter your 8 digit Companies House number.',
                 'Enter your 8 digit Companies House number.'
             ),
             (
@@ -3012,7 +3007,7 @@ class TestSupplierAddRegistrationNumber(BaseApplicationTest):
                  'companies_house_number': '',
                  'other_company_registration_number': 'a' * 256
                  },
-                'Other company registration number',
+                'Enter a registration number under 256 characters.',
                 'Enter a registration number under 256 characters.'
             )
         )
@@ -3034,6 +3029,11 @@ class TestSupplierAddRegistrationNumber(BaseApplicationTest):
             validation_message=validation_message
         )
         assert self.data_api_client.update_supplier.call_args_list == []
+
+        # Assert the links in the error summary point to elements on the page
+        doc = html.fromstring(res.get_data(as_text=True))
+        summary_link = doc.xpath("//ul[contains(@class, 'govuk-error-summary__list')]/li/a/@href")[0]
+        assert doc.cssselect(summary_link)
 
     @pytest.mark.parametrize(
         'complete_data, expected_post',
