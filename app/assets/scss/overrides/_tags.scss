@@ -1,0 +1,21 @@
+/**
+ * Newer versions of the design system replace .govuk-tag--inactive with .govuk-tag--grey.
+ * In addition, there are other tag colours available.
+ *
+ * .govuk-tag--inactive is deprecated
+ *
+ * Other tag colours are used at least in the Task List pattern.
+ *
+ * TODO: When we update the Design System to 3.x.x, we should remove these overrides
+ */
+
+ .govuk-tag--grey,
+ .govuk-tag--inactive {
+     color: govuk-shade(govuk-colour("grey-1"), 30);
+     background: govuk-tint(govuk-colour("grey-1"), 90);
+ }
+ 
+ .govuk-tag--blue {
+     color: govuk-shade(govuk-colour("blue"), 30);
+     background: govuk-tint(govuk-colour("blue"), 80);
+ }
