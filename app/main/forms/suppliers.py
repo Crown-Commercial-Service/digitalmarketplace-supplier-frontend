@@ -91,11 +91,13 @@ class AddCompanyRegisteredNameForm(FlaskForm):
 class AddCompanyRegistrationNumberForm(FlaskForm):
     has_companies_house_number = RadioField(
         "Are you registered with Companies House?",
+        id="input-has_companies_house_number-1",
         validators=[InputRequired(message="You need to answer this question.")],
         choices=[('Yes', 'Yes'), ('No', 'No')]
     )
     companies_house_number = DMStripWhitespaceStringField(
         'Companies House number',
+        id="input-has_companies_house_number-1-companies_house_number",
         default='',
         validators=[
             Optional(),
@@ -106,6 +108,7 @@ class AddCompanyRegistrationNumberForm(FlaskForm):
     )
     other_company_registration_number = DMStripWhitespaceStringField(
         'Other company registration number',
+        id="input-has_companies_house_number-2-other_company_registration_number",
         default='',
         validators=[
             Optional(),

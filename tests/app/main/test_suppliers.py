@@ -3030,6 +3030,11 @@ class TestSupplierAddRegistrationNumber(BaseApplicationTest):
         )
         assert self.data_api_client.update_supplier.call_args_list == []
 
+        # Assert the links in the error summary point to elements on the page
+        doc = html.fromstring(res.get_data(as_text=True))
+        summary_link = doc.xpath("//ul[contains(@class, 'govuk-error-summary__list')]/li/a/@href")[0]
+        assert doc.cssselect(summary_link)
+
     @pytest.mark.parametrize(
         'complete_data, expected_post',
         (
