@@ -3287,28 +3287,34 @@ class TestSupplierDeclaration(BaseApplicationTest, MockEnsureApplicationCompanyD
 
         assert res.status_code == 400
 
-    @mock.patch('app.main.helpers.validation.G7Validator.get_error_messages_for_page')
-    def test_post_with_validation_errors(self, get_error_messages_for_page):
+    def test_post_with_validation_errors(self):
         """Test that answers are not saved if there are errors
 
         For unit tests of the validation see :mod:`tests.app.main.helpers.test_frameworks`
         """
         self.login()
 
-        self.data_api_client.get_framework.return_value = self.framework(status='open')
-        get_error_messages_for_page.return_value = {'PR1': {'input_name': 'PR1', 'message': 'this is invalid'}}
+        self.data_api_client.get_framework.return_value = self.framework(slug="g-cloud-12", status="open")
+
+        # Missing answers to 'offerServicesYourselves' and 'fullAccountability'
+        declaration_answers = {
+            "servicesHaveOrSupportCloudHostingCloudSoftware": True,
+            "servicesHaveOrSupportCloudSupport": True,
+            "servicesDoNotInclude": True
+        }
 
         res = self.client.post(
-            '/suppliers/frameworks/g-cloud-7/declaration/edit/g-cloud-7-essentials',
-            data=FULL_G7_SUBMISSION
+            '/suppliers/frameworks/g-cloud-12/declaration/edit/providing-suitable-services',
+            data=declaration_answers
         )
 
         assert res.status_code == 400
         assert self.data_api_client.set_supplier_declaration.called is False
 
         doc = html.fromstring(res.get_data(as_text=True))
-        elems = doc.cssselect('#input-PR1-1')
-        assert elems[0].value == 'True'
+        error_questions = doc.xpath("//ul[contains(@class, 'govuk-error-summary__list')]/li/a")
+        assert len(error_questions) == 2
+        assert error_questions[0].text == "Question 4"
 
     def test_post_invalidating_previously_valid_page(self):
         self.login()

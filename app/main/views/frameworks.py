@@ -758,6 +758,21 @@ def framework_supplier_declaration_edit(framework_slug, section_id):
                 # Return to the overview.
                 return redirect(url_for('.framework_supplier_declaration_overview', framework_slug=framework_slug))
 
+    if errors:
+        # On this page only, we want to show the question name in the error summary banner rather than
+        # the error message that instructs users what to do. This is because the declaration questions
+        # have many radio buttons per page and all the error messages are the same. It is more useful
+        # for the user to see the question name than for them to see 'You must answer this question'
+        # repeated many times.
+        # Replace the error text with the question name. This changes the text in the summary box
+        # and keeps the error message with instructions by the question.
+        updated_errors = OrderedDict()
+        for key, value in errors.items():
+            value["text"] = value["question"]
+            updated_errors[key] = value
+
+        errors = updated_errors
+
     session_timeout = displaytimeformat(datetime.utcnow() + timedelta(hours=1))
     return render_template(
         "frameworks/edit_declaration_section.html",
