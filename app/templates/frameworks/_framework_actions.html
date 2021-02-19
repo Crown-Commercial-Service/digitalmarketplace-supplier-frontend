@@ -42,23 +42,24 @@
       }}
     {% endif %}
   {% endif %}
-  <ul class="dm-task-list">
-    <li class="dm-task-list-item">
+  <h2 class="govuk-heading-m">Application progress</h2>
+  <ul class="dm-task-list dm-task-list__items">
+    <li class="dm-task-list__item">
       <span class="dm-task-list__task-name">
         <a href="{{ url_for('.supplier_details') }}">
           Confirm your company details
         </a>
       </span>
       {% if application_company_details_confirmed %}
-        <strong class="dm-task-list-indicator-completed" id="dm-companydetails-done">Done</strong>
+        <strong class="govuk-tag dm-task-list__tag" id="dm-companydetails-done">Completed</strong>
       {% elif supplier_company_details_complete %}
         {# Supplier details exist from a previous framework application, but haven't yet been confirmed for this one #}
-        <strong class="dm-task-list-indicator-completed" id="dm-companydetails-inprogress">In progress</strong>
+        <strong class="govuk-tag govuk-tag--blue dm-task-list__tag" id="dm-companydetails-inprogress">In progress</strong>
       {% else %}
-        <strong class="dm-task-list-indicator-todo" id="dm-companydetails-todo">To do</strong>
+        <strong class="govuk-tag govuk-tag--grey dm-task-list__tag" id="dm-companydetails-todo">Not started</strong>
       {% endif %}
     </li>
-    <li class="dm-task-list-item">
+    <li class="dm-task-list__item">
       <span class="dm-task-list__task-name">
         {% if application_company_details_confirmed %}
           {% if declaration_status == 'unstarted' %}
@@ -71,16 +72,16 @@
         {% endif %}
       </span>
       {% if not application_company_details_confirmed %}
-        <strong class="dm-task-list-indicator-todo" id="dm-declaration-cantstart">Can't start yet</strong>
+        <strong class="govuk-tag govuk-tag--grey dm-task-list__tag" id="dm-declaration-cantstart">Cannot start yet</strong>
       {% elif declaration_status == 'unstarted' %}
-        <strong class="dm-task-list-indicator-todo" id="dm-declaration-todo">To do</strong>
+        <strong class="govuk-tag govuk-tag--grey dm-task-list__tag" id="dm-declaration-todo">Not started</strong>
       {% elif declaration_status == 'started' %}
-        <strong class="dm-task-list-indicator-not-completed" id="dm-declaration-inprogress">In progress</strong>
+        <strong class="govuk-tag govuk-tag--blue dm-task-list__tag" id="dm-declaration-inprogress">In progress</strong>
       {% elif declaration_status == 'complete' %}
-        <strong class="dm-task-list-indicator-completed" id="dm-declaration-done">Done</strong>
+        <strong class="govuk-tag dm-task-list__tag" id="dm-declaration-done">Completed</strong>
       {% endif %}
     </li>
-    <li class="dm-task-list-item">
+    <li class="dm-task-list__item">
       <span class="dm-task-list__task-name">
         {% if application_company_details_confirmed %}
         <a href="{{ url_for('.framework_submission_lots', framework_slug=framework.slug) }}">
@@ -91,13 +92,13 @@
         {% endif %}
       </span>
       {% if not application_company_details_confirmed %}
-        <strong class="dm-task-list-indicator-todo" id="dm-services-cantstart">Can't start yet</strong>
+        <strong class="govuk-tag govuk-tag--grey dm-task-list__tag" id="dm-services-cantstart">Cannot start yet</strong>
       {% elif not counts.draft and not counts.complete %}
-        <strong class="dm-task-list-indicator-todo" id="dm-services-todo">To do</strong>
+        <strong class="govuk-tag govuk-tag--grey dm-task-list__tag" id="dm-services-todo">Not started</strong>
       {% elif counts.draft %}
-        <strong class="dm-task-list-indicator-not-completed" id="dm-services-inprogress">In progress</strong>
+        <strong class="govuk-tag govuk-tag--blue dm-task-list__tag" id="dm-services-inprogress">In progress</strong>
       {% else %}
-        <strong class="dm-task-list-indicator-completed" id="dm-services-done">{{ counts.complete }} {{ pluralize(counts.complete, 'service', 'services') }}</strong>
+        <strong class="govuk-tag dm-task-list__tag" id="dm-services-done">{{ counts.complete }} {{ pluralize(counts.complete, 'service', 'services') }}</strong>
       {% endif %}
     </li>
   </ul>
