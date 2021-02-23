@@ -1,82 +1,104 @@
 // TODO: Remove when task lists incorporated into digitalmarketplace-govuk-frontend
 
-
-%dm-task-list-indicator {
-  @include bold-16;
-  display: inline-block;
-  padding: 3px 8px 1px 8px;
-  position: absolute;
-  right: 0;
-  top: $gutter - 2px;
-  margin-top: -15px;
-  pointer-events: none;
-  z-index: 2;
-  min-width: 20%;
-  text-align: center;
-}
-
 .dm-task-list {
+  list-style-type: none;
+  padding-left: 0;
+  margin-top: 0;
+  margin-bottom: 0;
+  
+  h2:first-of-type {
+    margin-top: 0;
+  }
 
-  border-top: 1px solid $border-colour;
-  margin: $gutter 0;
+  &__section {
+    @include govuk-responsive-margin(7, "bottom");
 
-  &-item {
+    h2 {
+      display: table;
+      @include govuk-font($size:24, $weight: bold);
+      @include govuk-responsive-margin(4, "bottom");
+    }
+  }
 
-    position: relative;
+  &__section-number {
+      display: table-cell;
 
-    a {
-      border-bottom: 1px solid $border-colour;
-      display: block;
-      padding: $gutter-half 0;
-      padding-right: 20%;
-      position: relative;
-
-      &:hover {
-        color: $link-hover-colour;
+      @include govuk-media-query($from: tablet) {
+          min-width: govuk-spacing(6);
+          padding-right: 0;
       }
+  }
 
-      &:focus {
-        outline: none;
-        color: $black;
-        box-shadow: -3px 0 0 0 $focus-colour, 3px 0 0 0 $focus-colour;
-        border-color: transparent;
-        top: -1px;
-        margin-bottom: -2px;
-        padding-top: $gutter-half + 1px;
-        padding-bottom: $gutter-half + 1px;
-      }
+  &__text {
+    @include govuk-font($size: 19);
+    padding-left: 0;
+    @include govuk-media-query($from: tablet) {
+      padding-left: govuk-spacing(6);
+    }
+  }
 
+  &__links {
+    padding-left: 0;
+    @include govuk-media-query($from: tablet) {
+      padding-left: govuk-spacing(6);
+    }
+  }
+
+  &__link {
+    display: inline-block;
+    @include govuk-font($size: 19);
+  }
+
+  &__items {
+    @include govuk-font($size: 19);
+    list-style: none;
+    padding-left: 0;
+    @include govuk-media-query($from: tablet) {
+      padding-left: govuk-spacing(6);
+    }
+  }
+
+  &__items.dm-task-list {
+    @include govuk-media-query($from: tablet) {
+      padding-left: 0;
     }
 
-    span.dm-task-list__text {
-      border-bottom: 1px solid $border-colour;
-      display: block;
-      padding: $gutter-half 0;
-      padding-right: 20%;
-      position: relative;
+    .dm-task-list__text {
+      @include govuk-media-query($from: tablet) {
+        padding-left: 0;
+      }
     }
 
+    padding-bottom: govuk-spacing(6);
   }
 
-  &-indicator-completed {
-    @extend %dm-task-list-indicator;
-    background-color: govuk-shade(govuk-colour("blue"), 30);
-    color: $grey-4;
-    // Just a pinch of letter spacing to make reversed-out text a bit
-    // easier to read
-    letter-spacing: 0.02em;
+  &__item {
+    border-bottom: 1px solid $govuk-border-colour;
+    margin-bottom: 0 !important;
+    padding-top: govuk-spacing(2);
+    padding-bottom: govuk-spacing(2);
+    @include govuk-clearfix;
   }
 
-  &-indicator-not-completed {
-    @extend %dm-task-list-indicator;
-    background-color: govuk-tint(govuk-colour("blue"), 80);
-    color: govuk-shade(govuk-colour("blue"), 30);
+  &__item:first-child {
+    border-top: 1px solid $govuk-border-colour;
   }
 
-  &-indicator-todo {
-    @extend %dm-task-list-indicator;
-    background-color: govuk-tint(govuk-colour("grey-1"), 90);
-    color: $black;
+  &__task-name {
+    display: block;
+    @include govuk-media-query($from: 450px) {
+      float: left;
+    }
   }
 
+  &__tag {
+    margin-top: govuk-spacing(2);
+    margin-bottom: govuk-spacing(1);
+  
+    @include govuk-media-query($from: 450px) {
+      float: right;
+      margin-top: 0;
+      margin-bottom: 0;
+    }
+  }
 }

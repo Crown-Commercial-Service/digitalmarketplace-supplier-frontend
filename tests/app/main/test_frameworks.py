@@ -79,7 +79,13 @@ def _extract_guidance_links(doc):
                 for item_li in section_li.xpath(".//p[.//a] | .//h3[.//a]")
             ),
         )
-        for section_li in doc.xpath("//main//*[./h2][.//p//a | .//section[@class='dm-attachment']//a]")
+        for section_li in doc.xpath(
+            (
+                "//main//*[./h2[not(text()='Application progress')]][.//p//a"
+                "|"
+                "//section[@class='dm-attachment']//a]"
+            )
+        )
     )
 
 
@@ -241,7 +247,7 @@ class TestFrameworksDashboardOpenApplications(BaseApplicationTest):
         assert res.status_code == 200
 
         doc = html.fromstring(res.get_data(as_text=True))
-        assert len(doc.xpath('//main//strong[@id="dm-declaration-done"][contains(text(), "Done")]')) == 1
+        assert len(doc.xpath('//main//strong[@id="dm-declaration-done"][contains(text(), "Completed")]')) == 1
 
     def test_declaration_status_when_started_for_open_framework(self, s3):
         self.login()
