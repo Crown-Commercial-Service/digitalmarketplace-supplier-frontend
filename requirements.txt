@@ -28,7 +28,7 @@ cryptography==3.3.2
     # via digitalmarketplace-utils
 defusedxml==0.6.0
     # via odfpy
-git+https://github.com/alphagov/digitalmarketplace-apiclient.git@21.8.0#egg=digitalmarketplace-apiclient==21.8.0
+git+https://github.com/alphagov/digitalmarketplace-apiclient.git@21.11.1#egg=digitalmarketplace-apiclient==21.11.1
     # via -r requirements.in
 digitalmarketplace-content-loader==7.30.1
     # via -r requirements.in
