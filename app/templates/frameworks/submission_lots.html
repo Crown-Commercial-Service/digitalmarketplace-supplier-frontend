@@ -37,31 +37,25 @@
   <div class="govuk-grid-row">
     <div class="govuk-grid-column-two-thirds">
       <h1 class="govuk-heading-l">Your {{ framework.name }} services</h1>
-        {% if framework.family == 'g-cloud' %}
-          <div class="use-of-service-data">
-            {% if framework.status == 'pending' and not application_made %}
-              <p class="govuk-body">The services below were not submitted.</p>
-            {% else %}
-            <p class="govuk-body">The service information you provide here:</p>
-            <ul class="govuk-list govuk-list--bullet">
-              <li>will be public</li>
-              <li>may be used as filters</li>
-              <li>will appear on your service description page </li>
-              <li>should help buyers review and compare services</li>
-            </ul>
-            {% endif %}
-          </div>
-        {% endif %}
-    </div>
-  </div>
-  <div class="govuk-grid-row">
-    <div class="govuk-grid-column-two-thirds framework-lots-table">
-      {% with items = lots %}
-        {% include "toolkit/browse-list.html" %}
-      {% endwith %}
-<p class="govuk-body">&nbsp;</p>
-    <a class="govuk-link" href="{{ url_for('.framework_dashboard', framework_slug=framework.slug) }}">Back to {{ framework.name }} application</a>
-
+      {% if framework.family == 'g-cloud' %}
+        <div class="use-of-service-data">
+          {% if framework.status == 'pending' and not application_made %}
+            <p class="govuk-body">The services below were not submitted.</p>
+          {% else %}
+          <p class="govuk-body">The service information you provide here:</p>
+          <ul class="govuk-list govuk-list--bullet">
+            <li>will be public</li>
+            <li>may be used as filters</li>
+            <li>will appear on your service description page </li>
+            <li>should help buyers review and compare services</li>
+          </ul>
+          {% endif %}
+        </div>
+      {% endif %}
+      {{ govukButton({
+        "text": "Add a service",
+        "href": url_for('.choose_draft_service_lot', framework_slug=framework.slug)
+      })}}
     </div>
   </div>
 
