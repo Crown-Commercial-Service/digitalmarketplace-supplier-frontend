@@ -6,6 +6,7 @@ from flask_login import current_user
 
 from dmapiclient import HTTPError
 from dmcontent.content_loader import ContentNotFoundError
+from dmcontent.questions import ContentQuestion
 from dmcontent.utils import count_unanswered_questions
 from dmutils import s3
 from dmutils.dates import update_framework_with_formatted_dates
@@ -305,6 +306,58 @@ def redirect_direct_service_urls(service_id, trailing_path):
 
 
 #  ####################  CREATING NEW DRAFT SERVICES ##########################
+
+@main.route('/frameworks/<framework_slug>/submissions/service-type', methods=['GET', 'POST'])
+@login_required
+@EnsureApplicationCompanyDetailsHaveBeenConfirmed(data_api_client)
+def choose_draft_service_lot(framework_slug):
+    framework = get_framework_or_404(data_api_client, framework_slug)
+
+    if framework['status'] not in ["open", "pending", "standstill"]:
+        abort(404)
+
+    errors = {}
+    status_code = 200
+
+    lot_question = {
+        option["value"]: option
+        for option in ContentQuestion(content_loader.get_question(framework_slug, 'services', 'lot')).get('options')
+    }
+
+    lots = [
+        {
+        "text": lot_question[lot['slug']]['label'] if framework["status"] == "open" else lot["name"],
+        "value": lot['slug'],
+        "hint": {
+            "html": lot_question[lot['slug']]['description']
+        }
+        } for lot in framework['lots'] if framework["status"] == "open" or (lot['draft_count'] + lot['complete_count']) > 0]
+
+    if request.method == 'POST':
+        if "lot_slug" in request.form:
+            return redirect(
+                url_for(
+                    ".framework_submission_services",
+                    framework_slug=framework['slug'],
+                    lot_slug=request.form['lot_slug']
+                )
+            )
+        else:
+            errors = {
+                "lot_slug": {
+                    "text": "Select a type of service",
+                    "href": "#lot_slug-1",
+                    "errorMessage": "Select a type of service"
+                }
+            }
+            status_code = 400
+
+    return render_template(
+        "services/choose_service_lot.html",
+        framework=framework,
+        lots=lots,
+        errors=errors
+    ), status_code
 
 
 @main.route('/frameworks/<framework_slug>/submissions/<lot_slug>/create', methods=['GET', 'POST'])
