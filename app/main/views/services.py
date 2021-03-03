@@ -19,7 +19,7 @@ from ..helpers.suppliers import (
     is_g12_recovery_supplier,
     g12_recovery_time_remaining,
     get_g12_recovery_draft_ids,
-    count_g12_recovery_drafts_by_status, G12_RECOVERY_DEADLINE, is_g12_recovery_open,
+    count_g12_recovery_drafts_by_status, G12_RECOVERY_DEADLINE,
 )
 from ... import data_api_client
 from ...main import main, content_loader
@@ -500,7 +500,7 @@ def copy_draft_service(framework_slug, lot_slug, service_id):
 @EnsureApplicationCompanyDetailsHaveBeenConfirmed(data_api_client)
 @return_404_if_applications_closed(lambda: data_api_client)
 def complete_draft_service(framework_slug, lot_slug, service_id):
-    if framework_slug == "g-cloud-12" and is_g12_recovery_open() and is_g12_recovery_supplier(current_user.supplier_id):
+    if framework_slug == "g-cloud-12" and is_g12_recovery_supplier(current_user.supplier_id):
         framework, lot = get_framework_and_lot_or_404(data_api_client, framework_slug, lot_slug,
                                                       allowed_statuses=['open', 'live'])
     else:
@@ -666,7 +666,7 @@ def edit_service_submission(framework_slug, lot_slug, service_id, section_id, qu
         Also accepts URL parameter `force_continue_button` which will allow rendering of a 'Save and continue' button,
         used for when copying services.
     """
-    if framework_slug == 'g-cloud-12' and is_g12_recovery_open() and is_g12_recovery_supplier(current_user.supplier_id):
+    if framework_slug == 'g-cloud-12' and is_g12_recovery_supplier(current_user.supplier_id):
         framework, lot = get_framework_and_lot_or_404(data_api_client, framework_slug, lot_slug,
                                                       allowed_statuses=['open', 'live'])
     else:

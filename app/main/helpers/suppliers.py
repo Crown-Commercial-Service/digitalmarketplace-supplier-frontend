@@ -102,10 +102,6 @@ def get_g12_recovery_draft_ids() -> Set[int]:
 G12_RECOVERY_DEADLINE = datetime(year=2021, month=2, day=25, hour=14)
 
 
-def is_g12_recovery_open() -> bool:
-    return datetime.now() <= G12_RECOVERY_DEADLINE
-
-
 def g12_recovery_time_remaining() -> str:
     return format_g12_recovery_time_remaining(G12_RECOVERY_DEADLINE - datetime.now())
 
