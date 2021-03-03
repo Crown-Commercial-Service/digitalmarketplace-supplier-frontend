@@ -92,8 +92,6 @@ class Config(object):
     DM_LOG_PATH = None
     DM_APP_NAME = 'supplier-frontend'
 
-    DM_G12_RECOVERY_SUPPLIER_IDS = None
-
     @staticmethod
     def init_app(app):
         repo_root = os.path.abspath(os.path.dirname(__file__))
@@ -129,8 +127,6 @@ class Test(Config):
     SECRET_KEY = 'not_very_secret'
 
     DM_ASSETS_URL = 'http://asset-host'
-
-    DM_G12_RECOVERY_SUPPLIER_IDS = "577184"
 
 
 class Development(Config):
@@ -168,8 +164,6 @@ class Development(Config):
 
     DM_DNB_API_USERNAME = 'not_a_real_username'
     DM_DNB_API_PASSWORD = 'not_a_real_password'
-
-    DM_G12_RECOVERY_SUPPLIER_IDS = "577184"
 
 
 class Live(Config):

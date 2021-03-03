@@ -610,63 +610,6 @@ class TestSuppliersDashboard(BaseApplicationTest):
         assert continue_link
         assert continue_link[0].values()[0] == "/suppliers/frameworks/digital-outcomes-and-specialists"
 
-    @pytest.mark.parametrize("framework_interest, on_framework, agreement_returned", (
-        (False, False, False),
-        (True, False, False),
-        (True, True, False),
-        (True, True, True),
-    ))
-    def test_recovery_supplier_sees_g12_links(
-            self, framework_interest, on_framework, agreement_returned, g12_recovery_supplier_id
-    ):
-        g12 = FrameworkStub(
-            status="live",
-            slug="g-cloud-12",
-            frameworkSlug="g-cloud-12",
-            agreementReturned=agreement_returned,
-            isESignatureSupported=True
-        ).response()
-        self.data_api_client.get_supplier_frameworks.return_value = {
-            "frameworkInterest": [{**g12, "onFramework": on_framework}] if framework_interest else []
-        }
-        self.data_api_client.find_frameworks.return_value = {
-            "frameworks": [g12]
-        }
-
-        self.data_api_client.get_supplier.return_value = get_supplier(id=g12_recovery_supplier_id)
-        self.login()
-
-        with self.app.app_context():
-            response = self.client.get("/suppliers")
-        raw_html = response.get_data(as_text=True)
-        doc = html.fromstring(raw_html)
-
-        if on_framework and not agreement_returned:
-            assert doc.xpath(
-                "//h3[normalize-space(string())=$f]"
-                "[(following::a)[1][normalize-space(string())=$t1][@href=$u1]]"
-                "[(following::a)[2][normalize-space(string())=$t2][@href=$u2]]"
-                "[(following::a)[3][normalize-space(string())=$t3][@href=$u3]]",
-                f="G-Cloud 12",
-                t1="You must sign the framework agreement to sell these services",
-                u1="/suppliers/frameworks/g-cloud-12/start-framework-agreement-signing",
-                t2="View services",
-                u2="/suppliers/frameworks/g-cloud-12/services",
-                t3="View documents",
-                u3="/suppliers/frameworks/g-cloud-12",
-            )
-        else:
-            assert doc.xpath(
-                "//h3[normalize-space(string())=$f]"
-                "[(following::a)[1][normalize-space(string())=$t1][@href=$u1]]"
-                "[(following::a)[2][normalize-space(string())=$t2][@href=$u2]]",
-                f="G-Cloud 12",
-                t1="View services",
-                u1="/suppliers/frameworks/g-cloud-12/services",
-                t2="View documents",
-                u2="/suppliers/frameworks/g-cloud-12",
-            )
-
 
 class TestSupplierDetails(BaseApplicationTest):
 

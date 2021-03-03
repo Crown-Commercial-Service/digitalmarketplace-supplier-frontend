@@ -37,7 +37,6 @@ from ..helpers.suppliers import (
     COUNTRY_TUPLE,
     get_country_name_from_country_code,
     supplier_company_details_are_complete,
-    is_g12_recovery_supplier,
     get_company_details_from_supplier
 )
 from ..helpers import login_required
@@ -66,8 +65,6 @@ def dashboard():
         current_user.supplier_id
     )['suppliers']
     supplier['contact'] = supplier['contactInformation'][0]
-
-    supplier['g12_recovery'] = is_g12_recovery_supplier(supplier['id'])
 
     all_frameworks = sorted(
         data_api_client.find_frameworks()['frameworks'],

@@ -2,12 +2,9 @@ import pytest
 from flask_wtf import FlaskForm
 from wtforms import StringField
 from wtforms.validators import Length
-from app.main.helpers.suppliers import get_country_name_from_country_code, supplier_company_details_are_complete, \
-    is_g12_recovery_supplier
+from app.main.helpers.suppliers import get_country_name_from_country_code, supplier_company_details_are_complete
 
 from dmtestutils.api_model_stubs import SupplierStub
-
-from tests.app.helpers import BaseApplicationTest
 
 
 class TestGetCountryNameFromCountryCode:
@@ -52,22 +49,3 @@ class FormForTest(FlaskForm):
     field_three = StringField('Field three?', validators=[
         Length(max=5, message="Field three must be under 5 characters.")
     ])
-
-
-class TestG12RecoverySupplier(BaseApplicationTest):
-    @pytest.mark.parametrize(
-        'g12_recovery_supplier_ids, expected_result',
-        [
-            (None, False),
-            ('', False),
-            (42, False),
-            ('12:32', False),
-            ([123456, 789012], False),
-            ('123456', True),
-            ('123456,789012', True),
-        ]
-    )
-    def test_returns_expected_value_for_input(self, g12_recovery_supplier_ids, expected_result):
-        with self.app.app_context():
-            self.app.config['DM_G12_RECOVERY_SUPPLIER_IDS'] = g12_recovery_supplier_ids
-            assert is_g12_recovery_supplier('123456') is expected_result
