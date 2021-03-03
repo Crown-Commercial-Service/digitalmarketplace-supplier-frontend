@@ -667,26 +667,6 @@ class TestSuppliersDashboard(BaseApplicationTest):
                 u2="/suppliers/frameworks/g-cloud-12",
             )
 
-    def test_recovery_supplier_sees_banner(self, g12_recovery_supplier_id):
-        self.data_api_client.get_supplier.return_value = get_supplier(id=g12_recovery_supplier_id)
-        self.login()
-
-        with self.app.app_context():
-            response = self.client.get("/suppliers")
-        doc = html.fromstring(response.get_data(as_text=True))
-
-        assert doc.cssselect("p.banner-message:contains('You have until')")
-
-    def test_supplier_cannot_see_banner(self):
-        self.data_api_client.get_supplier.return_value = get_supplier(id=1)
-        self.login()
-
-        with self.app.app_context():
-            response = self.client.get("/suppliers")
-        doc = html.fromstring(response.get_data(as_text=True))
-
-        assert not doc.cssselect("p.banner-message:contains('You have until')")
-
 
 class TestSupplierDetails(BaseApplicationTest):
 

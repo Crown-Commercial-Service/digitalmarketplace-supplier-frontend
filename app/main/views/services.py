@@ -68,14 +68,10 @@ def list_services(framework_slug):
         framework=framework_slug,
     )["services"]
 
-    # We only need to know whether they are a G12 recovery supplier or not.
-    supplier = {'g12_recovery': is_g12_recovery_supplier(current_user.supplier_id)}
-
     return render_template(
         "services/list_services.html",
         services=suppliers_services,
         framework=framework,
-        supplier=supplier,
     ), 200
 
 
