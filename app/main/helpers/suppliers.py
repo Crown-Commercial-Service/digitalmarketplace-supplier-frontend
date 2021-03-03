@@ -99,7 +99,7 @@ def get_g12_recovery_draft_ids() -> Set[int]:
     return set()
 
 
-G12_RECOVERY_DEADLINE = datetime(year=2021, month=2, day=25, hour=14)
+G12_RECOVERY_DEADLINE = datetime(year=1970, month=1, day=1, hour=17)
 
 
 def g12_recovery_time_remaining() -> str:
