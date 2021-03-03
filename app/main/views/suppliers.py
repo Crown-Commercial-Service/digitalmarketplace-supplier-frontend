@@ -95,8 +95,6 @@ def dashboard():
             ),
             'contract_title': get_framework_contract_title(framework)
         })
-        if framework['slug'] == 'g-cloud-12' and supplier["g12_recovery"]:
-            framework['onFramework'] = True
 
     if "currently_applying_to" in session:
         del session["currently_applying_to"]

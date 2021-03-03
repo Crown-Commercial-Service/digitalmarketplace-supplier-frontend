@@ -113,10 +113,6 @@ class TestSuppliersDashboard(BaseApplicationTest):
         self.data_api_client_patch.stop()
         super().teardown_method(method)
 
-    @pytest.fixture
-    def g12_recovery_supplier_id(self):
-        return 577184
-
     def test_error_and_success_flashed_messages_only_are_shown_in_banner_messages(self):
         with self.client.session_transaction() as session:
             session['_flashes'] = [
