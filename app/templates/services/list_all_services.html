@@ -25,14 +25,12 @@
 {% endblock %}
 
 {% block mainContent %}
+{% include "partials/g12_recovery_information.html" %}
   <div class="govuk-grid-row">
     <div class="govuk-grid-column-two-thirds">
       <h1 class="govuk-heading-l">Your {{ framework.name }} services</h1>
     </div>
   </div>
-
-  <p>You have {{ g12_recovery.time_remaining }} left to finish your application.</p>
-  <p>You need to mark your draft services as complete to finish your application.</p>
 
   {{ summary.heading("Draft services") }}
   {% if framework.status == 'open' %}
@@ -70,7 +68,6 @@
   {% endcall %}
 
   {{ summary.heading("Complete services") }}
-  <p class="hint">Services will appear here when you mark them complete. These services are not live.</p>
   {% call(draft) summary.list_table(
     complete_drafts,
     caption="Complete services",
