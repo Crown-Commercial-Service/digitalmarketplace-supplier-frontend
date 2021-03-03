@@ -19,7 +19,7 @@ from ..helpers.suppliers import (
     is_g12_recovery_supplier,
     g12_recovery_time_remaining,
     get_g12_recovery_draft_ids,
-    count_g12_recovery_drafts_by_status,
+    count_unsubmitted_g12_recovery_drafts,
 )
 from ... import data_api_client
 from ...main import main, content_loader
@@ -130,12 +130,9 @@ def list_all_services(framework_slug):
     ]
 
     # Only G12 recovery suppliers can access this route, so always show the banner
-    not_submitted_count, submitted_count = count_g12_recovery_drafts_by_status(data_api_client,
-                                                                               current_user.supplier_id)
     g12_recovery = {
         'time_remaining': g12_recovery_time_remaining(),
-        'not_submitted_drafts': not_submitted_count,
-        'submitted_drafts': submitted_count
+        'drafts_remaining': count_unsubmitted_g12_recovery_drafts(data_api_client, current_user.supplier_id)
     }
 
     return render_template(
@@ -611,12 +608,9 @@ def view_service_submission(framework_slug, lot_slug, service_id):
     ):
         # we want this page to appear as it would if g12 were open
         framework["status"] = "open"
-        not_submitted_count, submitted_count = count_g12_recovery_drafts_by_status(data_api_client,
-                                                                                   current_user.supplier_id)
         g12_recovery = {
             'time_remaining': g12_recovery_time_remaining(),
-            'not_submitted_drafts': not_submitted_count,
-            'submitted_drafts': submitted_count
+            'drafts_remaining': count_unsubmitted_g12_recovery_drafts(data_api_client, current_user.supplier_id)
         }
 
     try:

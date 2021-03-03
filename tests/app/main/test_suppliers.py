@@ -117,10 +117,6 @@ class TestSuppliersDashboard(BaseApplicationTest):
     def g12_recovery_supplier_id(self):
         return 577184
 
-    @pytest.fixture
-    def g12_recovery_draft_ids(self):
-        return 123456, 123457
-
     def test_error_and_success_flashed_messages_only_are_shown_in_banner_messages(self):
         with self.client.session_transaction() as session:
             session['_flashes'] = [
@@ -673,7 +669,7 @@ class TestSuppliersDashboard(BaseApplicationTest):
 
     def test_recovery_supplier_sees_banner(self, g12_recovery_supplier_id):
         self.data_api_client.get_supplier.return_value = get_supplier(id=g12_recovery_supplier_id)
-        self.data_api_client.find_draft_services_iter.return_value = [
+        self.data_api_client.find_draft_services_by_framework_iter.return_value = [
             DraftServiceStub(id=123456, status="not-submitted").response()
         ]
         self.login()
@@ -693,67 +689,6 @@ class TestSuppliersDashboard(BaseApplicationTest):
         doc = html.fromstring(response.get_data(as_text=True))
 
         assert not doc.cssselect("p.banner-message:contains('You need to mark your services as complete')")
-
-    def test_recovery_supplier_with_one_submitted_draft_sees_x_completed_banner(self, g12_recovery_supplier_id,
-                                                                                g12_recovery_draft_ids):
-        self.login(supplier_id=g12_recovery_supplier_id)
-
-        self.data_api_client.find_draft_services_iter.return_value = [
-            DraftServiceStub(id=g12_recovery_draft_ids[0], status="submitted").response(),
-            DraftServiceStub(id=g12_recovery_draft_ids[0], status="not-submitted").response(),
-        ]
-        self.data_api_client.find_services.return_value = {"services": []}
-
-        res = self.client.get("/suppliers")
-
-        document = html.fromstring(res.get_data(as_text=True))
-
-        assert document.cssselect("p.banner-message:contains('You have marked 1 service as complete')")
-
-    def test_recovery_supplier_with_two_submitted_drafts_sees_x_completed_banner(self, g12_recovery_supplier_id,
-                                                                                 g12_recovery_draft_ids):
-        self.login(supplier_id=g12_recovery_supplier_id)
-
-        self.data_api_client.find_draft_services_iter.return_value = [
-            DraftServiceStub(id=g12_recovery_draft_ids[0], status="submitted").response(),
-            DraftServiceStub(id=g12_recovery_draft_ids[1], status="submitted").response(),
-            DraftServiceStub(id=g12_recovery_draft_ids[0], status="not-submitted").response(),
-        ]
-        self.data_api_client.find_services.return_value = {"services": []}
-
-        res = self.client.get("/suppliers")
-
-        document = html.fromstring(res.get_data(as_text=True))
-
-        assert document.cssselect("p.banner-message:contains('You have marked 2 services as complete')")
-
-    def test_recovery_supplier_with_all_submitted_drafts_sees_all_completed_banner(self, g12_recovery_supplier_id,
-                                                                                   g12_recovery_draft_ids):
-        self.login(supplier_id=g12_recovery_supplier_id)
-
-        self.data_api_client.find_draft_services_iter.return_value = [
-            DraftServiceStub(id=g12_recovery_draft_ids[0], status="submitted").response()
-        ]
-        self.data_api_client.find_services.return_value = {"services": []}
-
-        res = self.client.get("/suppliers")
-
-        document = html.fromstring(res.get_data(as_text=True))
-
-        assert document.cssselect("p.banner-message:contains('You have marked all your services as complete')")
-
-    def test_recovery_supplier_with_no_completed_drafts_sees_reminder_banner(self, g12_recovery_supplier_id,
-                                                                             g12_recovery_draft_ids):
-        self.data_api_client.find_draft_services_iter.return_value = [
-            DraftServiceStub(id=g12_recovery_draft_ids[0], status="not-submitted").response()
-        ]
-        self.login(supplier_id=g12_recovery_supplier_id)
-
-        res = self.client.get("/suppliers")
-        document = html.fromstring(res.get_data(as_text=True))
-
-        assert document.cssselect("p.banner-message:contains('You have')")
-        assert document.cssselect("p.banner-message:contains('left to finish your application')")
 
 
 class TestSupplierDetails(BaseApplicationTest):

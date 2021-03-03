@@ -132,7 +132,7 @@ class Test(Config):
     DM_ASSETS_URL = 'http://asset-host'
 
     DM_G12_RECOVERY_SUPPLIER_IDS = "577184"
-    DM_G12_RECOVERY_DRAFT_IDS = "123456,123457"
+    DM_G12_RECOVERY_DRAFT_IDS = "123456"
 
 
 class Development(Config):
