@@ -2,7 +2,7 @@
 
 {% block pageTitle %}
   {% block page_title_inner %}
-    Reusing answers from an earlier declaration
+    {{ form.reuse.label.text }}
   {% endblock %} – Digital Marketplace
 {% endblock %}
 
@@ -22,7 +22,7 @@
         "href": url_for(".framework_dashboard", framework_slug=current_framework.slug)
       },
       {
-        "text": "Reusing answers from an earlier declaration"
+        "text": form.reuse.label.text
       }
     ]
   }) }}
@@ -31,7 +31,7 @@
 {% block mainContent %}
   <div class="govuk-grid-row">
     <div class="govuk-grid-column-two-thirds">
-      <h1 class="govuk-heading-l">{{ self.page_title_inner() }}</h1>
+      <h1 class="govuk-heading-l">{{ form.reuse.label.text }}</h1>
 
       <p class="govuk-body">In {{ old_framework_application_close_date|nbsp }}, your organisation completed a declaration for {{ old_framework.name }}.</p>
       <p class="govuk-body">You can reuse some of the answers from that declaration.</p>
@@ -41,11 +41,25 @@
         <li>provide some new answers for this declaration</li>
       </ul>
 
-      <form method="POST" action="{{ url_for(".reuse_framework_supplier_declaration_post", framework_slug=current_framework.slug) }}">
+      <form method="POST" action="{{ url_for('.reuse_framework_supplier_declaration_post', framework_slug=current_framework.slug) }}">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
         <input type="hidden" name="old_framework_slug" value="{{ old_framework.slug }}"/>
 
-        {{ form.reuse }}
+        {{ govukRadios({
+          "classes": "govuk-radios--inline",
+          "idPrefix": "input-" + form.reuse.name,
+          "name": form.reuse.name,
+          "fieldset": {
+            "legend": {
+              "text": form.reuse.label.text,
+              "classes": "govuk-visually-hidden"
+            }
+          },
+          "items": [
+            {"text": "Yes", "value": "yes"},
+            {"text": "No", "value": "no"},
+          ]
+        }) }}
 
         {{ govukButton({
           "text": "Save and continue"

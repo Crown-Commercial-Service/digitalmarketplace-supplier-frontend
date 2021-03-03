@@ -9,7 +9,6 @@ from urllib.parse import urljoin
 from freezegun import freeze_time
 from lxml import html
 import pytest
-from werkzeug.datastructures import MultiDict
 
 from dmapiclient import (
     APIError,
@@ -22,7 +21,6 @@ from dmtestutils.fixtures import valid_pdf_bytes
 from dmutils.email.exceptions import EmailError
 from dmutils.s3 import S3ResponseError
 
-from app.main.forms.frameworks import ReuseDeclarationForm
 from ..helpers import (
     BaseApplicationTest,
     MockEnsureApplicationCompanyDetailsHaveBeenConfirmedMixin,
@@ -4728,11 +4726,11 @@ class TestReuseFrameworkSupplierDeclarationPost(BaseApplicationTest,
         self.data_api_client_patch.stop()
         super().teardown_method(method)
 
-    def test_reuse_false(self):
+    def test_reuse_no(self):
         """Assert that the redirect happens and the client sets the prefill pref to None."""
         self.data_api_client.get_framework.return_value = self.framework()
 
-        data = {'reuse': 'False', 'old_framework_slug': 'should-not-be-used'}
+        data = {'reuse': 'no', 'old_framework_slug': 'should-not-be-used'}
         resp = self.client.post('/suppliers/frameworks/g-cloud-9/declaration/reuse', data=data)
 
         assert resp.location.endswith('/suppliers/frameworks/g-cloud-9/declaration')
@@ -4743,9 +4741,9 @@ class TestReuseFrameworkSupplierDeclarationPost(BaseApplicationTest,
             'email@email.com'
         )
 
-    def test_reuse_true(self):
+    def test_reuse_yes(self):
         """Assert that the redirect happens and the client sets the prefill pref to the desired framework slug."""
-        data = {'reuse': True, 'old_framework_slug': 'digital-outcomes-and-specialists-2'}
+        data = {'reuse': 'yes', 'old_framework_slug': 'digital-outcomes-and-specialists-2'}
         self.data_api_client.get_supplier_framework_info.return_value = {
             'frameworkInterest': {
                 'x_field': 'foo',
@@ -4777,7 +4775,7 @@ class TestReuseFrameworkSupplierDeclarationPost(BaseApplicationTest,
 
     def test_reuse_invalid_framework_post(self):
         """Assert 404 for non reusable framework."""
-        data = {'reuse': 'true', 'old_framework_slug': 'digital-outcomes-and-specialists'}
+        data = {'reuse': 'yes', 'old_framework_slug': 'digital-outcomes-and-specialists'}
 
         # A framework with allowDeclarationReuse as False
         self.data_api_client.get_framework.return_value = {
@@ -4795,7 +4793,7 @@ class TestReuseFrameworkSupplierDeclarationPost(BaseApplicationTest,
 
     def test_reuse_non_existent_framework_post(self):
         """Assert 404 for non existent framework."""
-        data = {'reuse': 'true', 'old_framework_slug': 'digital-outcomes-and-specialists-1000000'}
+        data = {'reuse': 'yes', 'old_framework_slug': 'digital-outcomes-and-specialists-1000000'}
         # Attach does not exist.
         self.data_api_client.get_framework.side_effect = [self.framework(), HTTPError()]
 
@@ -4811,7 +4809,7 @@ class TestReuseFrameworkSupplierDeclarationPost(BaseApplicationTest,
 
     def test_reuse_non_existent_declaration_post(self):
         """Assert 404 for non existent declaration."""
-        data = {'reuse': 'true', 'old_framework_slug': 'digital-outcomes-and-specialists-2'}
+        data = {'reuse': 'yes', 'old_framework_slug': 'digital-outcomes-and-specialists-2'}
         framework_response = {'frameworks': {'status': 'open', 'x_field': 'foo', 'allowDeclarationReuse': True}}
         self.data_api_client.get_framework.return_value = framework_response
 
@@ -4830,17 +4828,6 @@ class TestReuseFrameworkSupplierDeclarationPost(BaseApplicationTest,
         self.data_api_client.get_supplier_framework_info.assert_called_once_with(
             1234, 'digital-outcomes-and-specialists-2'
         )
-
-
-class TestReuseFrameworkSupplierDeclarationForm(BaseApplicationTest):
-    """Tests for app.main.forms.frameworks.ReuseDeclarationForm form."""
-
-    @pytest.mark.parametrize('falsey_value', ('False', '', 'false'))
-    def test_false_values(self, falsey_value):
-        with self.app.test_request_context():
-            data = MultiDict({'framework_slug': 'digital-outcomes-and-specialists', 'reuse': falsey_value})
-            form = ReuseDeclarationForm(data)
-            assert form.reuse.data is False
 
 
 class TestSignatureLegalAuthority(BaseApplicationTest):
