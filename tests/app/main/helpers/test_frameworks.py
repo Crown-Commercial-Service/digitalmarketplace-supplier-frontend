@@ -766,7 +766,6 @@ class TestEnsureApplicationCompanyDetailsHaveBeenConfirmed(BaseApplicationTest):
             'main.framework_supplier_declaration_overview',
             'main.framework_supplier_declaration_submit',
             'main.framework_supplier_declaration_edit',
-            'main.g12_recovery_draft_services'
         }
 
         from app.main.helpers.frameworks import EnsureApplicationCompanyDetailsHaveBeenConfirmed as decorator_class
