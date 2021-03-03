@@ -11,8 +11,16 @@
         "href": url_for('.dashboard')
       },
       {
-        "text": "Your " + framework.name + " services",
-        "href": url_for(".list_all_services", framework_slug=framework.slug)
+        "text": "Apply to " + framework.name,
+        "href": url_for(".framework_dashboard", framework_slug=framework.slug)
+      },
+      {
+        "text": "Services",
+        "href": url_for(".framework_submission_lots", framework_slug=framework.slug)
+      },
+      {
+        "text": lot.name,
+        "href": url_for(".framework_submission_services", framework_slug=framework.slug, lot_slug=lot.slug)
       }
     ]
   %}
