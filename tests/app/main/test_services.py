@@ -2483,26 +2483,6 @@ class TestShowDraftService(BaseApplicationTest, MockEnsureApplicationCompanyDeta
         doc = html.fromstring(res.get_data(as_text=True))
         assert not doc.xpath("//form//button[normalize-space(string())=$t]", t="Mark as complete")
 
-    def test_no_remove_draft_service_button_for_g12_recovery_supplier(self):
-        g12_recovery_supplier_id = 577184
-        self.login(supplier_id=g12_recovery_supplier_id)
-        self.data_api_client.get_framework.return_value = self.framework(status="live", slug="g-cloud-12")
-
-        g12_draft_service = DraftServiceStub(
-            service_name="My draft service",
-            framework_slug="g-cloud-12",
-            supplier_id=g12_recovery_supplier_id
-        ).single_result_response()
-        g12_draft_service["auditEvents"] = None
-        g12_draft_service["validationErrors"] = None
-        self.data_api_client.get_draft_service.return_value = g12_draft_service
-
-        res = self.client.get("/suppliers/frameworks/g-cloud-12/submissions/cloud-software/1")
-        doc = html.fromstring(res.get_data(as_text=True))
-
-        assert res.status_code == 200
-        assert not doc.xpath("//form//button[normalize-space(string())=$t]", t="Remove draft service")
-
     @mock.patch('app.main.views.services.count_unanswered_questions')
     def test_shows_g7_message_if_pending_and_service_is_in_draft(self, count_unanswered):
         self.data_api_client.get_framework.return_value = self.framework(status='pending')
