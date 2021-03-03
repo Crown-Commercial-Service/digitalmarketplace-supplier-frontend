@@ -10,23 +10,16 @@ from dmcontent.utils import count_unanswered_questions
 from dmutils import s3
 from dmutils.dates import update_framework_with_formatted_dates
 from dmutils.documents import upload_service_documents
-from dmutils.formats import displaytimeformat, utctoshorttimelongdateformat
+from dmutils.formats import displaytimeformat
 from dmutils.flask import timed_render_template as render_template
 from dmutils.forms.helpers import get_errors_from_wtform
 from dmutils.errors import render_error_page
 
-from ..helpers.suppliers import (
-    is_g12_recovery_supplier,
-    g12_recovery_time_remaining,
-    get_g12_recovery_draft_ids,
-    count_g12_recovery_drafts_by_status, G12_RECOVERY_DEADLINE, is_g12_recovery_open,
-)
 from ... import data_api_client
 from ...main import main, content_loader
 from ..helpers import login_required
 from ..helpers.services import (
     copy_service_from_previous_framework,
-    get_drafts,
     get_lot_drafts,
     get_signed_document_url,
     is_service_associated_with_supplier,
@@ -67,9 +60,6 @@ ALL_SERVICES_ADDED_MESSAGE = (
 @main.route("/frameworks/<string:framework_slug>/services")
 @login_required
 def list_services(framework_slug):
-    if is_g12_recovery_supplier(current_user.supplier_id) and framework_slug == "g-cloud-12":
-        return redirect(url_for(".list_all_services", framework_slug=framework_slug))
-
     framework = get_framework_or_404(data_api_client, framework_slug, allowed_statuses=['live'])
 
     suppliers_services = data_api_client.find_services(
@@ -81,66 +71,6 @@ def list_services(framework_slug):
         "services/list_services.html",
         services=suppliers_services,
         framework=framework,
-        g12_recovery=None,  # don't show banner on this page
-    ), 200
-
-
-@main.route("/frameworks/<string:framework_slug>/all-services")
-@login_required
-def list_all_services(framework_slug):
-    if not (is_g12_recovery_supplier(current_user.supplier_id) and framework_slug == "g-cloud-12"):
-        abort(404)
-
-    framework = get_framework_or_404(data_api_client, framework_slug, allowed_statuses=['live'])
-
-    suppliers_services = data_api_client.find_services(
-        supplier_id=current_user.supplier_id,
-        framework=framework_slug,
-    )["services"]
-
-    drafts, complete_drafts = get_drafts(data_api_client, framework_slug)
-
-    g12_draft_allow_list = get_g12_recovery_draft_ids()
-    drafts = [draft for draft in drafts if draft["id"] in g12_draft_allow_list]
-    complete_drafts = [draft for draft in complete_drafts if draft["id"] in g12_draft_allow_list]
-
-    service_sections = content_loader.get_manifest(
-        framework_slug,
-        'edit_submission',
-    )
-
-    for draft in drafts:
-        sections = service_sections.filter(context={'lot': draft["lotSlug"]}).summary(draft, inplace_allowed=True)
-
-        unanswered_required, unanswered_optional = count_unanswered_questions(sections)
-        draft.update({
-            'unanswered_required': unanswered_required,
-            'unanswered_optional': unanswered_optional,
-        })
-
-    # We only want drafts that they have completed as part of G12 recovery to
-    # show up in "Complete services" table (live services go in a separate table)
-    complete_drafts = [
-        draft for draft in complete_drafts
-        if "serviceId" not in draft
-    ]
-
-    # Only G12 recovery suppliers can access this route, so always show the banner
-    not_submitted_count, submitted_count = count_g12_recovery_drafts_by_status(data_api_client,
-                                                                               current_user.supplier_id)
-    g12_recovery = {
-        'time_remaining': g12_recovery_time_remaining(),
-        'not_submitted_drafts': not_submitted_count,
-        'submitted_drafts': submitted_count
-    }
-
-    return render_template(
-        "services/list_all_services.html",
-        framework=framework,
-        drafts=drafts,
-        complete_drafts=complete_drafts,
-        services=suppliers_services,
-        g12_recovery=g12_recovery
     ), 200
 
 
@@ -500,12 +430,7 @@ def copy_draft_service(framework_slug, lot_slug, service_id):
 @EnsureApplicationCompanyDetailsHaveBeenConfirmed(data_api_client)
 @return_404_if_applications_closed(lambda: data_api_client)
 def complete_draft_service(framework_slug, lot_slug, service_id):
-    if framework_slug == "g-cloud-12" and is_g12_recovery_open() and is_g12_recovery_supplier(current_user.supplier_id):
-        framework, lot = get_framework_and_lot_or_404(data_api_client, framework_slug, lot_slug,
-                                                      allowed_statuses=['open', 'live'])
-    else:
-        framework, lot = get_framework_and_lot_or_404(data_api_client, framework_slug, lot_slug,
-                                                      allowed_statuses=['open'])
+    framework, lot = get_framework_and_lot_or_404(data_api_client, framework_slug, lot_slug, allowed_statuses=['open'])
 
     # Suppliers must have registered interest in a framework before they can complete draft services
     if not get_supplier_framework_info(data_api_client, framework_slug):
@@ -598,24 +523,6 @@ def view_service_submission(framework_slug, lot_slug, service_id):
     framework, lot = get_framework_and_lot_or_404(data_api_client, framework_slug, lot_slug)
     update_framework_with_formatted_dates(framework)
 
-    # check if g12 recovery supplier
-    g12_recovery = None
-    if (
-        framework_slug == "g-cloud-12"
-        and framework["status"] == "live"
-        and is_g12_recovery_supplier(current_user.supplier_id)
-    ):
-        # we want this page to appear as it would if g12 were open
-        framework["status"] = "open"
-        framework["applicationsCloseAt"] = utctoshorttimelongdateformat(G12_RECOVERY_DEADLINE)
-        not_submitted_count, submitted_count = count_g12_recovery_drafts_by_status(data_api_client,
-                                                                                   current_user.supplier_id)
-        g12_recovery = {
-            'time_remaining': g12_recovery_time_remaining(),
-            'not_submitted_drafts': not_submitted_count,
-            'submitted_drafts': submitted_count
-        }
-
     try:
         data = data_api_client.get_draft_service(service_id)
         draft, last_edit, validation_errors = data['services'], data['auditEvents'], data['validationErrors']
@@ -649,8 +556,7 @@ def view_service_submission(framework_slug, lot_slug, service_id):
         unanswered_optional=unanswered_optional,
         can_mark_complete=not validation_errors,
         delete_requested=delete_requested,
-        declaration_status=get_declaration_status(data_api_client, framework['slug']),
-        g12_recovery=g12_recovery,
+        declaration_status=get_declaration_status(data_api_client, framework['slug'])
     ), 200
 
 
@@ -666,12 +572,7 @@ def edit_service_submission(framework_slug, lot_slug, service_id, section_id, qu
         Also accepts URL parameter `force_continue_button` which will allow rendering of a 'Save and continue' button,
         used for when copying services.
     """
-    if framework_slug == 'g-cloud-12' and is_g12_recovery_open() and is_g12_recovery_supplier(current_user.supplier_id):
-        framework, lot = get_framework_and_lot_or_404(data_api_client, framework_slug, lot_slug,
-                                                      allowed_statuses=['open', 'live'])
-    else:
-        framework, lot = get_framework_and_lot_or_404(data_api_client, framework_slug, lot_slug,
-                                                      allowed_statuses=['open'])
+    framework, lot = get_framework_and_lot_or_404(data_api_client, framework_slug, lot_slug, allowed_statuses=['open'])
 
     # Suppliers must have registered interest in a framework before they can edit draft services
     if not get_supplier_framework_info(data_api_client, framework_slug):

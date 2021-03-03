@@ -17,8 +17,12 @@
         "href": url_for('.dashboard')
       },
       {
-        "text": "Your " + framework.name + " services",
-        "href": url_for(".list_all_services", framework_slug=framework.slug)
+        "text": "Apply to " + framework.name,
+        "href": url_for(".framework_dashboard", framework_slug=framework.slug)
+      },
+      {
+        "text": "Services",
+        "href": url_for(".framework_submission_lots", framework_slug=framework.slug)
       }
     ]
   %}
@@ -27,13 +31,15 @@
     {% else %}
       {{ govukBreadcrumbs({"items": items + [
         {
+          "text": service_data.lotName,
+          "href": url_for(".framework_submission_services", framework_slug=framework.slug, lot_slug=service_data.lot)
+          },
+        {
           "text": service_data.get('serviceName', service_data['lotName'])
         }
       ]}) }}
     {% endif %}
   {% endwith %}
-
-  {% include "partials/g12_recovery_information.html" %}
 
   {% if service_data.status == 'submitted' and declaration_status != 'complete' and framework.status == 'open' %}
     <div class="wrapper">
@@ -191,7 +197,7 @@
             {% include "partials/complete_service.html" %}
           </div>
         {% endif %}
-        {% if framework.status == 'open' and not g12_recovery %}
+        {% if framework.status == 'open' %}
         <form action="{{ url_for('.delete_draft_service', framework_slug=framework.slug, lot_slug=service_data.lot, service_id=service_id ) }}" method="POST">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
           {{ govukButton({

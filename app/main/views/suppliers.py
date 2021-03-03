@@ -37,8 +37,7 @@ from ..helpers.suppliers import (
     COUNTRY_TUPLE,
     get_country_name_from_country_code,
     supplier_company_details_are_complete,
-    is_g12_recovery_supplier, g12_recovery_time_remaining,
-    count_g12_recovery_drafts_by_status, get_company_details_from_supplier,
+    get_company_details_from_supplier
 )
 from ..helpers import login_required
 
@@ -67,25 +66,15 @@ def dashboard():
     )['suppliers']
     supplier['contact'] = supplier['contactInformation'][0]
 
-    supplier['g12_recovery'] = is_g12_recovery_supplier(supplier['id'])
-
-    all_frameworks = list(sorted(
+    all_frameworks = sorted(
         data_api_client.find_frameworks()['frameworks'],
         key=lambda framework: framework['slug'],
         reverse=True
-    ))
+    )
     supplier_frameworks = {
         framework['frameworkSlug']: framework
         for framework in data_api_client.get_supplier_frameworks(current_user.supplier_id)['frameworkInterest']
     }
-
-    # g12 should always be in frameworks.live for recovery suppliers
-    if supplier["g12_recovery"]:
-        if "g-cloud-12" not in supplier_frameworks:
-            g12 = next(filter(lambda f: f["slug"] == "g-cloud-12", all_frameworks), None)
-            if g12:
-                supplier_frameworks["g-cloud-12"] = g12
-            del g12
 
     for framework in all_frameworks:
         framework.update(
@@ -106,21 +95,9 @@ def dashboard():
             ),
             'contract_title': get_framework_contract_title(framework)
         })
-        if framework['slug'] == 'g-cloud-12' and supplier["g12_recovery"]:
-            framework['onFramework'] = True
 
     if "currently_applying_to" in session:
         del session["currently_applying_to"]
-
-    g12_recovery = None
-    if supplier['g12_recovery']:
-        not_submitted_count, submitted_count = count_g12_recovery_drafts_by_status(data_api_client,
-                                                                                   current_user.supplier_id)
-        g12_recovery = {
-            'time_remaining': g12_recovery_time_remaining(),
-            'not_submitted_drafts': not_submitted_count,
-            'submitted_drafts': submitted_count
-        }
 
     return render_template(
         "suppliers/dashboard.html",
@@ -132,8 +109,7 @@ def dashboard():
             'standstill': get_frameworks_by_status(all_frameworks, 'standstill', 'made_application'),
             'live': get_frameworks_by_status(all_frameworks, 'live', 'onFramework'),
             'last_dos': get_most_recent_expired_dos_framework(all_frameworks),
-        },
-        g12_recovery=g12_recovery,
+        }
     ), 200
 
 

@@ -92,9 +92,6 @@ class Config(object):
     DM_LOG_PATH = None
     DM_APP_NAME = 'supplier-frontend'
 
-    DM_G12_RECOVERY_SUPPLIER_IDS = None
-    DM_G12_RECOVERY_DRAFT_IDS = None
-
     @staticmethod
     def init_app(app):
         repo_root = os.path.abspath(os.path.dirname(__file__))
@@ -130,9 +127,6 @@ class Test(Config):
     SECRET_KEY = 'not_very_secret'
 
     DM_ASSETS_URL = 'http://asset-host'
-
-    DM_G12_RECOVERY_SUPPLIER_IDS = "577184"
-    DM_G12_RECOVERY_DRAFT_IDS = "123456,123457"
 
 
 class Development(Config):
@@ -170,9 +164,6 @@ class Development(Config):
 
     DM_DNB_API_USERNAME = 'not_a_real_username'
     DM_DNB_API_PASSWORD = 'not_a_real_password'  # pragma: allowlist secret
-
-    DM_G12_RECOVERY_SUPPLIER_IDS = "577184"
-    DM_G12_RECOVERY_DRAFT_IDS = "123456"
 
 
 class Live(Config):

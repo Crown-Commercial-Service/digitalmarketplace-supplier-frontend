@@ -1,10 +1,5 @@
 import os
 import json
-from typing import Union, Set, Tuple
-from datetime import datetime, timedelta
-
-from flask import current_app
-from dmapiclient import DataAPIClient
 
 
 def load_countries():
@@ -70,85 +65,3 @@ def get_company_details_from_supplier(supplier):
         "registered_name": supplier.get("registeredName"),
         "address": address
     }
-
-
-def is_g12_recovery_supplier(supplier_id: Union[str, int]) -> bool:
-    supplier_ids_string = current_app.config.get('DM_G12_RECOVERY_SUPPLIER_IDS') or ''
-
-    try:
-        supplier_ids = [int(s) for s in supplier_ids_string.split(sep=',')]
-    except AttributeError as e:
-        current_app.logger.error("DM_G12_RECOVERY_SUPPLIER_IDS not a string", extra={'error': str(e)})
-        return False
-    except ValueError as e:
-        current_app.logger.error("DM_G12_RECOVERY_SUPPLIER_IDS not a list of supplier IDs", extra={'error': str(e)})
-        return False
-
-    return int(supplier_id) in supplier_ids
-
-
-def get_g12_recovery_draft_ids() -> Set[int]:
-    draft_ids_string = current_app.config.get('DM_G12_RECOVERY_DRAFT_IDS') or ''
-
-    try:
-        return {int(s) for s in draft_ids_string.split(sep=',')}
-    except AttributeError as e:
-        current_app.logger.error("DM_G12_RECOVERY_DRAFT_IDS not a string", extra={'error': str(e)})
-    except ValueError as e:
-        current_app.logger.error("DM_G12_RECOVERY_DRAFT_IDS not a list of draft IDs", extra={'error': str(e)})
-    return set()
-
-
-G12_RECOVERY_DEADLINE = datetime(year=2021, month=2, day=25, hour=14)
-
-
-def is_g12_recovery_open() -> bool:
-    return datetime.now() <= G12_RECOVERY_DEADLINE
-
-
-def g12_recovery_time_remaining() -> str:
-    return format_g12_recovery_time_remaining(G12_RECOVERY_DEADLINE - datetime.now())
-
-
-def format_g12_recovery_time_remaining(time_to_deadline: timedelta) -> str:
-    if time_to_deadline / timedelta(days=1) >= 1:
-        number, unit = time_to_deadline.days, 'day'
-    elif time_to_deadline / timedelta(hours=1) >= 1:
-        number, unit = int(time_to_deadline.seconds / 3600), 'hour'
-    elif time_to_deadline / timedelta(minutes=1) >= 1:
-        number, unit = int(time_to_deadline.seconds / 60), 'minute'
-    elif time_to_deadline / timedelta(seconds=1) >= 0:
-        number, unit = time_to_deadline.seconds, 'second'
-    else:
-        number, unit = 0, 'second'
-
-    if number != 1:
-        unit += 's'
-
-    return f'{number} {unit}'
-
-
-def count_g12_recovery_drafts_by_status(data_api_client: DataAPIClient, supplier_id: int) -> Tuple[int, int]:
-    """
-    Counts the number of a supplier's G12 recovery draft services which are either
-    'submitted' or 'not-submitted'
-
-    Returns
-    -------
-    A tuple (not_submitted_count, submitted_count)
-    """
-    g12_recovery_draft_ids = get_g12_recovery_draft_ids()
-    drafts = [
-        draft for draft in data_api_client.find_draft_services_iter(supplier_id=supplier_id, framework="g-cloud-12")
-    ]
-    not_submitted_ids = {
-        draft["id"] for draft in
-        drafts if draft["status"] == "not-submitted"
-    }.intersection(g12_recovery_draft_ids)
-
-    submitted_ids = {
-        draft["id"] for draft in
-        drafts if draft["status"] == "submitted"
-    }.intersection(g12_recovery_draft_ids)
-
-    return len(not_submitted_ids), len(submitted_ids)

@@ -57,11 +57,7 @@ from ..helpers.services import (
     get_lot_drafts,
     get_signed_document_url,
 )
-from ..helpers.suppliers import (
-    supplier_company_details_are_complete,
-    get_company_details_from_supplier,
-    is_g12_recovery_supplier,
-)
+from ..helpers.suppliers import supplier_company_details_are_complete, get_company_details_from_supplier
 from ..helpers.validation import get_validator
 from ..forms.frameworks import (AcceptAgreementVariationForm,
                                 ReuseDeclarationForm,
@@ -253,10 +249,6 @@ def framework_dashboard(framework_slug):
 def framework_submission_lots(framework_slug):
     framework = get_framework_or_404(data_api_client, framework_slug)
 
-    if is_g12_recovery_supplier(current_user.supplier_id) and framework_slug == "g-cloud-12":
-        # this page will 404 if g12 recovery suppliers try to visit it, so let's avoid that
-        return redirect(url_for(".list_all_services", framework_slug=framework_slug))
-
     drafts, complete_drafts = get_drafts(data_api_client, framework_slug)
     declaration_status = get_declaration_status(data_api_client, framework_slug)
     application_made = len(complete_drafts) > 0 and declaration_status == 'complete'
@@ -301,73 +293,11 @@ def framework_submission_lots(framework_slug):
     ), 200
 
 
-@main.route('/frameworks/<framework_slug>/draft-services', methods=['GET'])
-@login_required
-@EnsureApplicationCompanyDetailsHaveBeenConfirmed(data_api_client)
-def g12_recovery_draft_services(framework_slug):
-    if framework_slug != "g-cloud-12":
-        abort(404)
-
-    framework = get_framework_or_404(data_api_client, framework_slug)
-
-    drafts, complete_drafts = get_drafts(data_api_client, framework_slug)
-    declaration_status = get_declaration_status(data_api_client, framework_slug)
-    application_made = len(complete_drafts) > 0 and declaration_status == 'complete'
-    if framework['status'] != 'live':
-        abort(404)
-
-    if not is_g12_recovery_supplier(current_user.supplier_id):
-        abort(404)
-
-    lots = [
-        dict(lot,
-             draft_count=count_drafts_by_lot(drafts, lot['slug']),
-             complete_count=count_drafts_by_lot(complete_drafts, lot['slug']))
-        for lot in framework['lots']
-    ]
-
-    lot_question = {
-        option["value"]: option
-        for option in ContentQuestion(content_loader.get_question(framework_slug, 'services', 'lot')).get('options')
-    }
-
-    lots = [{
-        "title": lot_question[lot['slug']]['label'],
-        'body': lot_question[lot['slug']]['description'],
-        "link": url_for('.framework_submission_services', framework_slug=framework_slug, lot_slug=lot['slug']),
-        "statuses": get_statuses_for_lot(
-            lot['oneServiceLimit'],
-            lot['draft_count'],
-            lot['complete_count'],
-            declaration_status,
-            "open",  # we want the statuses as if the framework were open
-            lot['name'],
-            lot['unitSingular'],
-            lot['unitPlural']
-        ),
-    } for lot in lots]
-
-    return render_template(
-        "frameworks/submission_lots.html",
-        complete_drafts=list(reversed(complete_drafts)),
-        drafts=list(reversed(drafts)),
-        declaration_status=declaration_status,
-        framework=framework,
-        lots=lots,
-        application_made=application_made
-    ), 200
-
-
 @main.route('/frameworks/<framework_slug>/submissions/<lot_slug>', methods=['GET'])
 @login_required
 @EnsureApplicationCompanyDetailsHaveBeenConfirmed(data_api_client)
 def framework_submission_services(framework_slug, lot_slug):
     framework, lot = get_framework_and_lot_or_404(data_api_client, framework_slug, lot_slug)
-
-    if is_g12_recovery_supplier(current_user.supplier_id) and framework_slug == "g-cloud-12":
-        # g12 recovery suppliers should not be able to add new services,
-        # so they have no need to see this page
-        return redirect(url_for(".list_all_services", framework_slug=framework_slug))
 
     drafts, complete_drafts = get_lot_drafts(data_api_client, framework_slug, lot_slug)
     declaration_status = get_declaration_status(data_api_client, framework_slug)

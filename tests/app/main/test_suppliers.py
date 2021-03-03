@@ -10,7 +10,7 @@ from werkzeug.exceptions import ServiceUnavailable
 
 from dmapiclient import APIError, HTTPError
 from dmapiclient.audit import AuditTypes
-from dmtestutils.api_model_stubs import FrameworkStub, SupplierFrameworkStub, DraftServiceStub
+from dmtestutils.api_model_stubs import FrameworkStub, SupplierFrameworkStub
 
 from tests.app.helpers import BaseApplicationTest, assert_args_and_return
 from app.main.forms.suppliers import CompanyOrganisationSizeForm, CompanyTradingStatusForm
@@ -112,14 +112,6 @@ class TestSuppliersDashboard(BaseApplicationTest):
     def teardown_method(self, method):
         self.data_api_client_patch.stop()
         super().teardown_method(method)
-
-    @pytest.fixture
-    def g12_recovery_supplier_id(self):
-        return 577184
-
-    @pytest.fixture
-    def g12_recovery_draft_ids(self):
-        return 123456, 123457
 
     def test_error_and_success_flashed_messages_only_are_shown_in_banner_messages(self):
         with self.client.session_transaction() as session:
@@ -613,147 +605,6 @@ class TestSuppliersDashboard(BaseApplicationTest):
         )
         assert continue_link
         assert continue_link[0].values()[0] == "/suppliers/frameworks/digital-outcomes-and-specialists"
-
-    @pytest.mark.parametrize("framework_interest, on_framework, agreement_returned", (
-        (False, False, False),
-        (True, False, False),
-        (True, True, False),
-        (True, True, True),
-    ))
-    def test_recovery_supplier_sees_g12_links(
-            self, framework_interest, on_framework, agreement_returned, g12_recovery_supplier_id
-    ):
-        g12 = FrameworkStub(
-            status="live",
-            slug="g-cloud-12",
-            frameworkSlug="g-cloud-12",
-            agreementReturned=agreement_returned,
-            isESignatureSupported=True
-        ).response()
-        self.data_api_client.get_supplier_frameworks.return_value = {
-            "frameworkInterest": [{**g12, "onFramework": on_framework}] if framework_interest else []
-        }
-        self.data_api_client.find_frameworks.return_value = {
-            "frameworks": [g12]
-        }
-
-        self.data_api_client.get_supplier.return_value = get_supplier(id=g12_recovery_supplier_id)
-        self.login()
-
-        with self.app.app_context():
-            response = self.client.get("/suppliers")
-        raw_html = response.get_data(as_text=True)
-        doc = html.fromstring(raw_html)
-
-        if on_framework and not agreement_returned:
-            assert doc.xpath(
-                "//h3[normalize-space(string())=$f]"
-                "[(following::a)[1][normalize-space(string())=$t1][@href=$u1]]"
-                "[(following::a)[2][normalize-space(string())=$t2][@href=$u2]]"
-                "[(following::a)[3][normalize-space(string())=$t3][@href=$u3]]",
-                f="G-Cloud 12",
-                t1="You must sign the framework agreement to sell these services",
-                u1="/suppliers/frameworks/g-cloud-12/start-framework-agreement-signing",
-                t2="View services",
-                u2="/suppliers/frameworks/g-cloud-12/services",
-                t3="View documents",
-                u3="/suppliers/frameworks/g-cloud-12",
-            )
-        else:
-            assert doc.xpath(
-                "//h3[normalize-space(string())=$f]"
-                "[(following::a)[1][normalize-space(string())=$t1][@href=$u1]]"
-                "[(following::a)[2][normalize-space(string())=$t2][@href=$u2]]",
-                f="G-Cloud 12",
-                t1="View services",
-                u1="/suppliers/frameworks/g-cloud-12/services",
-                t2="View documents",
-                u2="/suppliers/frameworks/g-cloud-12",
-            )
-
-    def test_recovery_supplier_sees_banner(self, g12_recovery_supplier_id):
-        self.data_api_client.get_supplier.return_value = get_supplier(id=g12_recovery_supplier_id)
-        self.data_api_client.find_draft_services_iter.return_value = [
-            DraftServiceStub(id=123456, status="not-submitted").response()
-        ]
-        self.login()
-
-        with self.app.app_context():
-            response = self.client.get("/suppliers")
-        doc = html.fromstring(response.get_data(as_text=True))
-
-        assert doc.cssselect("p.banner-message:contains('You need to mark your services as complete')")
-
-    def test_supplier_cannot_see_banner(self):
-        self.data_api_client.get_supplier.return_value = get_supplier(id=1)
-        self.login()
-
-        with self.app.app_context():
-            response = self.client.get("/suppliers")
-        doc = html.fromstring(response.get_data(as_text=True))
-
-        assert not doc.cssselect("p.banner-message:contains('You need to mark your services as complete')")
-
-    def test_recovery_supplier_with_one_submitted_draft_sees_x_completed_banner(self, g12_recovery_supplier_id,
-                                                                                g12_recovery_draft_ids):
-        self.login(supplier_id=g12_recovery_supplier_id)
-
-        self.data_api_client.find_draft_services_iter.return_value = [
-            DraftServiceStub(id=g12_recovery_draft_ids[0], status="submitted").response(),
-            DraftServiceStub(id=g12_recovery_draft_ids[0], status="not-submitted").response(),
-        ]
-        self.data_api_client.find_services.return_value = {"services": []}
-
-        res = self.client.get("/suppliers")
-
-        document = html.fromstring(res.get_data(as_text=True))
-
-        assert document.cssselect("p.banner-message:contains('You have marked 1 service as complete')")
-
-    def test_recovery_supplier_with_two_submitted_drafts_sees_x_completed_banner(self, g12_recovery_supplier_id,
-                                                                                 g12_recovery_draft_ids):
-        self.login(supplier_id=g12_recovery_supplier_id)
-
-        self.data_api_client.find_draft_services_iter.return_value = [
-            DraftServiceStub(id=g12_recovery_draft_ids[0], status="submitted").response(),
-            DraftServiceStub(id=g12_recovery_draft_ids[1], status="submitted").response(),
-            DraftServiceStub(id=g12_recovery_draft_ids[0], status="not-submitted").response(),
-        ]
-        self.data_api_client.find_services.return_value = {"services": []}
-
-        res = self.client.get("/suppliers")
-
-        document = html.fromstring(res.get_data(as_text=True))
-
-        assert document.cssselect("p.banner-message:contains('You have marked 2 services as complete')")
-
-    def test_recovery_supplier_with_all_submitted_drafts_sees_all_completed_banner(self, g12_recovery_supplier_id,
-                                                                                   g12_recovery_draft_ids):
-        self.login(supplier_id=g12_recovery_supplier_id)
-
-        self.data_api_client.find_draft_services_iter.return_value = [
-            DraftServiceStub(id=g12_recovery_draft_ids[0], status="submitted").response()
-        ]
-        self.data_api_client.find_services.return_value = {"services": []}
-
-        res = self.client.get("/suppliers")
-
-        document = html.fromstring(res.get_data(as_text=True))
-
-        assert document.cssselect("p.banner-message:contains('You have marked all your services as complete')")
-
-    def test_recovery_supplier_with_no_completed_drafts_sees_reminder_banner(self, g12_recovery_supplier_id,
-                                                                             g12_recovery_draft_ids):
-        self.data_api_client.find_draft_services_iter.return_value = [
-            DraftServiceStub(id=g12_recovery_draft_ids[0], status="not-submitted").response()
-        ]
-        self.login(supplier_id=g12_recovery_supplier_id)
-
-        res = self.client.get("/suppliers")
-        document = html.fromstring(res.get_data(as_text=True))
-
-        assert document.cssselect("p.banner-message:contains('You have')")
-        assert document.cssselect("p.banner-message:contains('left to finish your application')")
 
 
 class TestSupplierDetails(BaseApplicationTest):
