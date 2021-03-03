@@ -21,7 +21,6 @@ from ...main import main, content_loader
 from ..helpers import login_required
 from ..helpers.services import (
     copy_service_from_previous_framework,
-    get_drafts,
     get_lot_drafts,
     get_signed_document_url,
     is_service_associated_with_supplier,
@@ -62,9 +61,6 @@ ALL_SERVICES_ADDED_MESSAGE = (
 @main.route("/frameworks/<string:framework_slug>/services")
 @login_required
 def list_services(framework_slug):
-    if is_g12_recovery_supplier(current_user.supplier_id) and framework_slug == "g-cloud-12":
-        return redirect(url_for(".list_all_services", framework_slug=framework_slug))
-
     framework = get_framework_or_404(data_api_client, framework_slug, allowed_statuses=['live'])
 
     suppliers_services = data_api_client.find_services(
@@ -81,48 +77,6 @@ def list_services(framework_slug):
         services=suppliers_services,
         framework=framework,
         g12_recovery=g12_recovery,
-    ), 200
-
-
-@main.route("/frameworks/<string:framework_slug>/all-services")
-@login_required
-def list_all_services(framework_slug):
-    if not (is_g12_recovery_supplier(current_user.supplier_id) and framework_slug == "g-cloud-12"):
-        abort(404)
-
-    framework = get_framework_or_404(data_api_client, framework_slug, allowed_statuses=['live'])
-
-    suppliers_services = data_api_client.find_services(
-        supplier_id=current_user.supplier_id,
-        framework=framework_slug,
-    )["services"]
-
-    drafts, complete_drafts = get_drafts(data_api_client, framework_slug)
-
-    service_sections = content_loader.get_manifest(
-        framework_slug,
-        'edit_submission',
-    )
-
-    for draft in drafts:
-        sections = service_sections.filter(context={'lot': draft["lotSlug"]}).summary(draft, inplace_allowed=True)
-
-        unanswered_required, unanswered_optional = count_unanswered_questions(sections)
-        draft.update({
-            'unanswered_required': unanswered_required,
-            'unanswered_optional': unanswered_optional,
-        })
-
-    # Only G12 recovery suppliers can access this route, so always show the banner
-    g12_recovery = {'time_remaining': g12_recovery_time_remaining()}
-
-    return render_template(
-        "services/list_all_services.html",
-        framework=framework,
-        drafts=drafts,
-        complete_drafts=complete_drafts,
-        services=suppliers_services,
-        g12_recovery=g12_recovery
     ), 200
 
 
