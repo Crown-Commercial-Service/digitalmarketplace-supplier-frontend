@@ -269,6 +269,7 @@ def framework_submission_lots(framework_slug):
 
     lots = [{
         "title": lot_question[lot['slug']]['label'] if framework["status"] == "open" else lot["name"],
+        "slug": lot['slug'],
         'body': lot_question[lot['slug']]['description'],
         "link": url_for('.framework_submission_services', framework_slug=framework_slug, lot_slug=lot['slug']),
         "statuses": get_statuses_for_lot(
