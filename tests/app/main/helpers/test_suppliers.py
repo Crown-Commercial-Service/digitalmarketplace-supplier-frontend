@@ -87,8 +87,6 @@ class TestG12TimeRemainingFormatting:
             (timedelta(seconds=10), '10 seconds'),
             (timedelta(seconds=1), '1 second'),
             (timedelta(days=-1), '0 seconds'),
-            (timedelta(days=-1, hours=10), '0 seconds'),
-            (timedelta(hours=-1, minutes=10), '0 seconds'),
         ]
     )
     def test_returns_expected_value_for_input(self, time_to_deadline, expected_result):
