@@ -360,14 +360,6 @@ def g12_recovery_draft_services(framework_slug):
 def framework_submission_services(framework_slug, lot_slug):
     framework, lot = get_framework_and_lot_or_404(data_api_client, framework_slug, lot_slug)
 
-    if (
-        framework_slug == "g-cloud-12"
-        and framework["status"] == "live"
-        and is_g12_recovery_supplier(current_user.supplier_id)
-    ):
-        # we want this page to appear as it would if g12 were open
-        framework["status"] = "open"
-
     drafts, complete_drafts = get_lot_drafts(data_api_client, framework_slug, lot_slug)
     declaration_status = get_declaration_status(data_api_client, framework_slug)
 

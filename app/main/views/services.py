@@ -15,7 +15,6 @@ from dmutils.flask import timed_render_template as render_template
 from dmutils.forms.helpers import get_errors_from_wtform
 from dmutils.errors import render_error_page
 
-from ..helpers.suppliers import is_g12_recovery_supplier
 from ... import data_api_client
 from ...main import main, content_loader
 from ..helpers import login_required
@@ -431,12 +430,7 @@ def copy_draft_service(framework_slug, lot_slug, service_id):
 @EnsureApplicationCompanyDetailsHaveBeenConfirmed(data_api_client)
 @return_404_if_applications_closed(lambda: data_api_client)
 def complete_draft_service(framework_slug, lot_slug, service_id):
-    if framework_slug == "g-cloud-12" and is_g12_recovery_supplier(current_user.supplier_id):
-        framework, lot = get_framework_and_lot_or_404(data_api_client, framework_slug, lot_slug,
-                                                      allowed_statuses=['open', 'live'])
-    else:
-        framework, lot = get_framework_and_lot_or_404(data_api_client, framework_slug, lot_slug,
-                                                      allowed_statuses=['open'])
+    framework, lot = get_framework_and_lot_or_404(data_api_client, framework_slug, lot_slug, allowed_statuses=['open'])
 
     # Suppliers must have registered interest in a framework before they can complete draft services
     if not get_supplier_framework_info(data_api_client, framework_slug):
@@ -529,15 +523,6 @@ def view_service_submission(framework_slug, lot_slug, service_id):
     framework, lot = get_framework_and_lot_or_404(data_api_client, framework_slug, lot_slug)
     update_framework_with_formatted_dates(framework)
 
-    # check if g12 recovery supplier
-    if (
-        framework_slug == "g-cloud-12"
-        and framework["status"] == "live"
-        and is_g12_recovery_supplier(current_user.supplier_id)
-    ):
-        # we want this page to appear as it would if g12 were open
-        framework["status"] = "open"
-
     try:
         data = data_api_client.get_draft_service(service_id)
         draft, last_edit, validation_errors = data['services'], data['auditEvents'], data['validationErrors']
@@ -587,12 +572,7 @@ def edit_service_submission(framework_slug, lot_slug, service_id, section_id, qu
         Also accepts URL parameter `force_continue_button` which will allow rendering of a 'Save and continue' button,
         used for when copying services.
     """
-    if framework_slug == 'g-cloud-12' and is_g12_recovery_supplier(current_user.supplier_id):
-        framework, lot = get_framework_and_lot_or_404(data_api_client, framework_slug, lot_slug,
-                                                      allowed_statuses=['open', 'live'])
-    else:
-        framework, lot = get_framework_and_lot_or_404(data_api_client, framework_slug, lot_slug,
-                                                      allowed_statuses=['open'])
+    framework, lot = get_framework_and_lot_or_404(data_api_client, framework_slug, lot_slug, allowed_statuses=['open'])
 
     # Suppliers must have registered interest in a framework before they can edit draft services
     if not get_supplier_framework_info(data_api_client, framework_slug):

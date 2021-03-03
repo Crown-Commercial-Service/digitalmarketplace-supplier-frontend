@@ -869,21 +869,6 @@ class TestReturn404IfApplicationClosed(BaseApplicationTest):
         ]
         assert response[1] == 404
 
-    @mock.patch('app.main.helpers.frameworks.current_user')
-    def test_allows_g12_recovery_supplier_to_view_g12_while_not_open(self, current_user_mock):
-        self.data_api_client_mock.get_framework.return_value =\
-            FrameworkStub(status="live", slug="g-cloud-12").single_result_response()
-        current_user_mock.supplier_id = 577184
-
-        @return_404_if_applications_closed(lambda: self.data_api_client_mock)
-        def view_function(framework_slug):
-            return "Ok", 200
-
-        with self.app.test_request_context('/suppliers'):
-            response = view_function(framework_slug='g-cloud-12')
-
-        assert response[1] == 200
-
     @pytest.mark.parametrize('status', ('pending', 'standstill', 'live'))
     @pytest.mark.parametrize('content_set', (True, False))
     @mock.patch('app.main.helpers.frameworks.content_loader', autospec=True)
