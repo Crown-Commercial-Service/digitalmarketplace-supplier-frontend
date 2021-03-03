@@ -1,22 +1,12 @@
 {% if g12_recovery %}
   <div class="wrapper">
     {# TODO: replace with govukNotificationBanner #}
-    {% if g12_recovery.drafts_remaining == 0 %}
-      {%
-        with
-        message = 'Thank you for completing your application.',
-        type = 'success'
-      %}
-        {% include 'toolkit/notification-banner.html' %}
-      {% endwith %}
-    {% else %}
-      {%
-        with
-        message = 'You have ' + g12_recovery.time_remaining + ' left to finish your application.<br><br>You need to mark your services as complete to finish your application. <a href="'|safe + url_for('.list_services', framework_slug='g-cloud-12') + '">View your services.</a>'|safe,
-        type = 'information'
-      %}
-        {% include 'toolkit/notification-banner.html' %}
-      {% endwith %}
-    {% endif %}
+    {%
+      with
+      message = 'You have ' + g12_recovery.time_remaining + ' left to finish your application.<br><br>You need to mark your services as complete to finish your application. <a href="'|safe + url_for('.list_services', framework_slug='g-cloud-12') + '">View your services.</a>'|safe,
+      type = 'information'
+    %}
+      {% include 'toolkit/notification-banner.html' %}
+    {% endwith %}
   </div>
 {% endif %}

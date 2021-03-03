@@ -15,12 +15,7 @@ from dmutils.flask import timed_render_template as render_template
 from dmutils.forms.helpers import get_errors_from_wtform
 from dmutils.errors import render_error_page
 
-from ..helpers.suppliers import (
-    is_g12_recovery_supplier,
-    g12_recovery_time_remaining,
-    get_g12_recovery_draft_ids,
-    count_unsubmitted_g12_recovery_drafts,
-)
+from ..helpers.suppliers import is_g12_recovery_supplier, g12_recovery_time_remaining, get_g12_recovery_draft_ids
 from ... import data_api_client
 from ...main import main, content_loader
 from ..helpers import login_required
@@ -130,10 +125,7 @@ def list_all_services(framework_slug):
     ]
 
     # Only G12 recovery suppliers can access this route, so always show the banner
-    g12_recovery = {
-        'time_remaining': g12_recovery_time_remaining(),
-        'drafts_remaining': count_unsubmitted_g12_recovery_drafts(data_api_client, current_user.supplier_id)
-    }
+    g12_recovery = {'time_remaining': g12_recovery_time_remaining()}
 
     return render_template(
         "services/list_all_services.html",
@@ -608,10 +600,7 @@ def view_service_submission(framework_slug, lot_slug, service_id):
     ):
         # we want this page to appear as it would if g12 were open
         framework["status"] = "open"
-        g12_recovery = {
-            'time_remaining': g12_recovery_time_remaining(),
-            'drafts_remaining': count_unsubmitted_g12_recovery_drafts(data_api_client, current_user.supplier_id)
-        }
+        g12_recovery = {'time_remaining': g12_recovery_time_remaining()}
 
     try:
         data = data_api_client.get_draft_service(service_id)
