@@ -1,9 +1,7 @@
 {% extends "_base_page.html" %}
 
 {% block pageTitle %}
-  {% block page_title_inner %}
-    {{ form.reuse.label.text }}
-  {% endblock %} – Digital Marketplace
+    {% if errors %}Error: {% endif %}{{ form.reuse.label.text }} – Digital Marketplace
 {% endblock %}
 
 {% block breadcrumb %}
@@ -31,15 +29,15 @@
 {% block mainContent %}
   <div class="govuk-grid-row">
     <div class="govuk-grid-column-two-thirds">
-      <h1 class="govuk-heading-l">{{ form.reuse.label.text }}</h1>
-
-      <p class="govuk-body">In {{ old_framework_application_close_date|nbsp }}, your organisation completed a declaration for {{ old_framework.name }}.</p>
-      <p class="govuk-body">You can reuse some of the answers from that declaration.</p>
-      <p class="govuk-body">You’ll need to:</p>
-      <ul class="govuk-list govuk-list--bullet">
-        <li>review the answers you gave before and make sure they’re still correct</li>
-        <li>provide some new answers for this declaration</li>
-      </ul>
+      {% set question_advice %}
+        <p class="govuk-body">In {{ old_framework_application_close_date|nbsp }}, your organisation completed a declaration for {{ old_framework.name }}.</p>
+        <p class="govuk-body">You can reuse some of the answers from that declaration.</p>
+        <p class="govuk-body">You’ll need to:</p>
+        <ul class="govuk-list govuk-list--bullet">
+          <li>review the answers you gave before and make sure they’re still correct</li>
+          <li>provide some new answers for this declaration</li>
+        </ul>
+      {% endset %}
 
       <form method="POST" action="{{ url_for('.reuse_framework_supplier_declaration_post', framework_slug=current_framework.slug) }}">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
@@ -49,10 +47,15 @@
           "classes": "govuk-radios--inline",
           "idPrefix": "input-" + form.reuse.name,
           "name": form.reuse.name,
+          "hint": {
+            "html": question_advice,
+            "classes": "dm-question-advice",
+          },
           "fieldset": {
             "legend": {
               "text": form.reuse.label.text,
-              "classes": "govuk-visually-hidden"
+              "classes": "govuk-fieldset__legend--l",
+              "isPageHeading": true,
             }
           },
           "errorMessage": {
