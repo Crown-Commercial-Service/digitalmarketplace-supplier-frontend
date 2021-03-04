@@ -17,28 +17,48 @@ _local = Local()
 
 
 def _load_dos(master_cl):
-    master_cl.load_manifest('digital-outcomes-and-specialists', 'declaration', 'declaration')
-    master_cl.load_manifest('digital-outcomes-and-specialists', 'services', 'edit_submission')
-    master_cl.load_manifest('digital-outcomes-and-specialists', 'briefs', 'edit_brief')
+    master_cl.lazy_load_manifests(
+        'digital-outcomes-and-specialists',
+        {
+            'declaration': 'declaration',
+            'edit_submission': 'services',
+            'edit_brief': 'briefs',
+        },
+    )
     master_cl.load_messages('digital-outcomes-and-specialists', ['urls'])
 
-    master_cl.load_manifest('digital-outcomes-and-specialists-2', 'declaration', 'declaration')
-    master_cl.load_manifest('digital-outcomes-and-specialists-2', 'services', 'edit_submission')
-    master_cl.load_manifest('digital-outcomes-and-specialists-2', 'services', 'edit_service')
-    master_cl.load_manifest('digital-outcomes-and-specialists-2', 'briefs', 'edit_brief')
+    master_cl.lazy_load_manifests(
+        'digital-outcomes-and-specialists-2',
+        {
+            'declaration': 'declaration',
+            'edit_submission': 'services',
+            'edit_service': 'services',
+            'edit_brief': 'briefs',
+        },
+    )
     master_cl.load_messages('digital-outcomes-and-specialists-2', ['urls'])
 
-    master_cl.load_manifest('digital-outcomes-and-specialists-3', 'declaration', 'declaration')
-    master_cl.load_manifest('digital-outcomes-and-specialists-3', 'services', 'edit_submission')
-    master_cl.load_manifest('digital-outcomes-and-specialists-3', 'services', 'edit_service')
-    master_cl.load_manifest('digital-outcomes-and-specialists-3', 'briefs', 'edit_brief')
+    master_cl.lazy_load_manifests(
+        'digital-outcomes-and-specialists-3',
+        {
+            'declaration': 'declaration',
+            'edit_submission': 'services',
+            'edit_service': 'services',
+            'edit_brief': 'briefs',
+        },
+    )
     master_cl.load_messages('digital-outcomes-and-specialists-3', ['urls'])
     master_cl.load_metadata('digital-outcomes-and-specialists-3', ['copy_services', 'following_framework'])
 
-    master_cl.load_manifest('digital-outcomes-and-specialists-4', 'declaration', 'declaration')
-    master_cl.load_manifest('digital-outcomes-and-specialists-4', 'services', 'edit_submission')
-    master_cl.load_manifest('digital-outcomes-and-specialists-4', 'services', 'edit_service')
-    master_cl.load_manifest('digital-outcomes-and-specialists-4', 'briefs', 'edit_brief')
+    master_cl.lazy_load_manifests(
+        'digital-outcomes-and-specialists-4',
+        {
+            'declaration': 'declaration',
+            'edit_submission': 'services',
+            'edit_service': 'services',
+            'edit_brief': 'briefs',
+        },
+    )
     master_cl.load_messages('digital-outcomes-and-specialists-4', ['urls'])
     master_cl.load_metadata('digital-outcomes-and-specialists-4', ['copy_services', 'following_framework'])
 
@@ -51,33 +71,63 @@ def _load_dos(master_cl):
 
 
 def _load_g_cloud(master_cl):
-    master_cl.load_manifest('g-cloud-6', 'services', 'edit_service')
+    master_cl.lazy_load_manifests(
+        'g-cloud-6',
+        {
+            'edit_service': 'services',
+        },
+    )
     master_cl.load_messages('g-cloud-6', ['urls'])
 
-    master_cl.load_manifest('g-cloud-7', 'services', 'edit_service')
-    master_cl.load_manifest('g-cloud-7', 'services', 'edit_submission')
-    master_cl.load_manifest('g-cloud-7', 'declaration', 'declaration')
+    master_cl.lazy_load_manifests(
+        'g-cloud-7',
+        {
+            'edit_service': 'services',
+            'edit_submission': 'services',
+            'declaration': 'declaration',
+        },
+    )
     master_cl.load_messages('g-cloud-7', ['urls'])
 
-    master_cl.load_manifest('g-cloud-8', 'services', 'edit_service')
-    master_cl.load_manifest('g-cloud-8', 'services', 'edit_submission')
-    master_cl.load_manifest('g-cloud-8', 'declaration', 'declaration')
+    master_cl.lazy_load_manifests(
+        'g-cloud-8',
+        {
+            'edit_service': 'services',
+            'edit_submission': 'services',
+            'declaration': 'declaration',
+        },
+    )
     master_cl.load_messages('g-cloud-8', ['urls'])
 
-    master_cl.load_manifest('g-cloud-9', 'services', 'edit_service')
-    master_cl.load_manifest('g-cloud-9', 'services', 'edit_submission')
-    master_cl.load_manifest('g-cloud-9', 'declaration', 'declaration')
+    master_cl.lazy_load_manifests(
+        'g-cloud-9',
+        {
+            'edit_service': 'services',
+            'edit_submission': 'services',
+            'declaration': 'declaration',
+        },
+    )
     master_cl.load_messages('g-cloud-9', ['urls', 'advice'])
 
-    master_cl.load_manifest('g-cloud-10', 'services', 'edit_service')
-    master_cl.load_manifest('g-cloud-10', 'services', 'edit_submission')
-    master_cl.load_manifest('g-cloud-10', 'declaration', 'declaration')
+    master_cl.lazy_load_manifests(
+        'g-cloud-10',
+        {
+            'edit_service': 'services',
+            'edit_submission': 'services',
+            'declaration': 'declaration',
+        },
+    )
     master_cl.load_messages('g-cloud-10', ['urls', 'advice'])
     master_cl.load_metadata('g-cloud-10', ['copy_services'])
 
-    master_cl.load_manifest('g-cloud-11', 'services', 'edit_service')
-    master_cl.load_manifest('g-cloud-11', 'services', 'edit_submission')
-    master_cl.load_manifest('g-cloud-11', 'declaration', 'declaration')
+    master_cl.lazy_load_manifests(
+        'g-cloud-11',
+        {
+            'edit_service': 'services',
+            'edit_submission': 'services',
+            'declaration': 'declaration',
+        },
+    )
     master_cl.load_messages('g-cloud-11', ['urls', 'advice'])
     master_cl.load_metadata('g-cloud-11', ['copy_services', 'following_framework'])
 
