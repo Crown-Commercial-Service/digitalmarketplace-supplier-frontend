@@ -55,6 +55,9 @@
               "classes": "govuk-visually-hidden"
             }
           },
+          "errorMessage": {
+            "text": errors.get(form.reuse.name, {}).get('message', None)
+          } if errors,
           "items": [
             {"text": "Yes", "value": "yes"},
             {"text": "No", "value": "no"},
