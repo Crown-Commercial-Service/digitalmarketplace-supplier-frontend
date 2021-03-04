@@ -326,12 +326,14 @@ def choose_draft_service_lot(framework_slug):
 
     lots = [
         {
-        "text": lot_question[lot['slug']]['label'] if framework["status"] == "open" else lot["name"],
-        "value": lot['slug'],
-        "hint": {
-            "html": lot_question[lot['slug']]['description']
-        }
-        } for lot in framework['lots'] if framework["status"] == "open" or (lot['draft_count'] + lot['complete_count']) > 0]
+            "text": lot_question[lot['slug']]['label'] if framework["status"] == "open" else lot["name"],
+            "value": lot['slug'],
+            "hint": {
+                "html": lot_question[lot['slug']]['description']
+            }
+        } for lot in framework['lots']
+        if framework["status"] == "open" or (lot['draft_count'] + lot['complete_count']) > 0
+    ]
 
     if request.method == 'POST':
         if "lot_slug" in request.form:

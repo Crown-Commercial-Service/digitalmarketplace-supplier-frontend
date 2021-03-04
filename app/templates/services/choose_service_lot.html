@@ -36,6 +36,7 @@
       
       {{ govukRadios({
         "name": "lot_slug",
+        "classes": "dm-radios--description-hint",
         "errorMessage": {
           "text": errors['lot_slug'].errorMessage
         } if errors['lot_slug'],
