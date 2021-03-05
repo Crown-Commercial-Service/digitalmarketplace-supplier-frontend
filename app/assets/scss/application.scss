@@ -24,7 +24,6 @@ $path: "/suppliers/static/images/";
 @import "toolkit/_instruction-list.scss";
 @import "toolkit/_notification-banners.scss";
 @import "toolkit/_proposition-header.scss";
-@import "toolkit/_secondary-action-link.scss";
 @import "toolkit/_service-id.scss";
 @import "toolkit/_temporary-message.scss";
 @import "toolkit/_text-diff.scss";
@@ -66,7 +65,6 @@ $govuk-global-styles: true;
 @import "_single-summary-page.scss";
 @import "_supplier-declaration.scss";
 @import "_updates.scss";
-@import "_view-service-link.scss";
 
 // Overrides
 @import "overrides/_list-entry";

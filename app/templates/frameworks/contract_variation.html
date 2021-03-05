@@ -145,18 +145,17 @@
 
           {% else %}
 
-            <p class="padding-bottom-small">&nbsp;</p>
+            <p class="govuk-body">
+              <a class="govuk-link govuk-link--no-visited-state"
+                 href="{{ url_for('.framework_dashboard', framework_slug=framework.slug) }}"
+              >
+                Return to your documents page
+              </a>
+            </p>
 
-            {%
-              with
-                url = url_for(".framework_dashboard", framework_slug=framework.slug),
-                text = "Return to your documents page"
-            %}
-              {% include "toolkit/secondary-action-link.html" %}
-            {% endwith %}
           {% endif %}
 
-          </div>
+        </div>
       </div>
 
 {% endblock %}

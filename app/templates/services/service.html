@@ -57,18 +57,17 @@
 {% block before_sections %}
   {% if service_data.frameworkFamily != "digital-outcomes-and-specialists" %}
     <div class="govuk-grid-column-two-thirds">
-      <div class="view-service-link">
-        {%
-          with
-          url = "/g-cloud/services/{}".format(service_id),
-          text = "View service page on the Digital Marketplace"
-        %}
-          {% include "toolkit/secondary-action-link.html" %}
-        {% endwith %}
-      </div>
-      <div class="dmspeak">
-        <p class="govuk-body">You can edit how you describe your service but you can’t change the service itself or how it works.</p>
-      </div>
+
+      <p class="govuk-body govuk-!-margin-bottom-6">
+        <a class="govuk-link" href="/g-cloud/services/{{service_id}}">
+          View service page on the Digital Marketplace
+        </a>
+      </p>
+
+      <p class="govuk-body">
+        You can edit how you describe your service but you can’t change the service itself or how it works.
+      </p>
+
     </div>
   {% endif %}
 {% endblock %}

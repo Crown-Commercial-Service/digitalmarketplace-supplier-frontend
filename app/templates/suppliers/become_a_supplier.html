@@ -33,13 +33,13 @@
           </div>
         {% endfor %}
 
-        {%
-          with
-          url = url_for("main.create_new_supplier"),
-          text = "Create a supplier account"
-        %}
-          {% include "toolkit/secondary-action-link.html" %}
-        {% endwith %}
+        <p class="govuk-body">
+          <a class="govuk-link"
+             href="{{ url_for('main.create_new_supplier') }}"
+          >
+            Create a supplier account
+          </a>
+        </p>
 
         {% if closed_fwks %}
 
@@ -68,13 +68,13 @@
       {% endif %}
 
       {% if closed_fwks %}
-        {%
-          with
-          url = url_for("main.join_open_framework_notification_mailing_list"),
-          text = "Get notifications when applications are opening"
-        %}
-          {% include "toolkit/secondary-action-link.html" %}
-        {% endwith %}
+        <p class="govuk-body">
+          <a class="govuk-link"
+             href="{{ url_for('main.join_open_framework_notification_mailing_list') }}"
+          >
+            Get notifications when applications are opening
+          </a>
+        </p>
       {% endif %}
     </div>
   </div>

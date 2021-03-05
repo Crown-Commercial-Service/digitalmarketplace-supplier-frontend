@@ -207,21 +207,24 @@
         </form>
         {% endif %}
       </div>
-      {% if lot.oneServiceLimit %}
-        {% set back_to_service_url = url_for(".framework_submission_lots", framework_slug=framework.slug) %}
-        {% set back_to_service_link_text = 'Back to application' %}
-      {% else %}
-        {% set back_to_service_url = url_for(".framework_submission_services", framework_slug=framework.slug, lot_slug=service_data.lot) %}
-        {% set back_to_service_link_text = 'Back to {}'.format(service_data['lotName']|lower) %}
-      {% endif %}
+
       <div class="govuk-grid-column-two-thirds">
-          {%
-            with
-            url = back_to_service_url,
-            text = back_to_service_link_text
-          %}
-            {% include "toolkit/secondary-action-link.html" %}
-          {% endwith %}
+        {% if lot.oneServiceLimit %}
+          {% set back_to_service_url = url_for(".framework_submission_lots", framework_slug=framework.slug) %}
+          {% set back_to_service_link_text = 'Back to application' %}
+        {% else %}
+          {% set back_to_service_url = url_for(".framework_submission_services", framework_slug=framework.slug, lot_slug=service_data.lot) %}
+          {% set back_to_service_link_text = 'Back to {}'.format(service_data['lotName']|lower) %}
+        {% endif %}
+
+        <p class="govuk-body">
+          <a class="govuk-link govuk-link--no-visited-state"
+             href="{{ back_to_service_url }}"
+          >
+            {{ back_to_service_link_text }}
+          </a>
+        </p>
+
       </div>
 
   {% endif %}

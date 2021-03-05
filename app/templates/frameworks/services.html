@@ -149,11 +149,14 @@
     {% endcall %}
   {% endcall %}
 
-  {%
-    with
-    url = url_for(".framework_submission_lots", framework_slug=framework.slug),
-    text = "Back to application"
-  %}
-    {% include "toolkit/secondary-action-link.html" %}
-  {% endwith %}
+  <hr class="govuk-section-break govuk-section-break--m">
+
+  <p class="govuk-body">
+    <a class="govuk-link govuk-link--no-visited-state"
+       href="{{ url_for('.framework_submission_lots', framework_slug=framework.slug) }}"
+    >
+      Back to application
+    </a>
+  </p>
+
 {% endblock %}
