@@ -1,5 +1,8 @@
 {% extends "_base_page.html" %}
-{% import "macros/toolkit_forms.html" as forms %}
+
+{% from "govuk/components/character-count/macro.njk" import govukCharacterCount %}
+{% from "govuk/components/fieldset/macro.njk" import govukFieldset %}
+{% from "govuk/components/label/macro.njk" import govukLabel %}
 
 {% block pageTitle %}
   {{ framework.name }} supplier declaration – Digital Marketplace
@@ -51,24 +54,9 @@
                 {{ section.description|question_references(get_question) }}
               </div>
             {% endif %}
-            {% for question in section.questions %}
-                {{ forms[question.type](
-                    question,
-                    declaration_answers,
-                    errors if errors and (errors[question.id] or question.type == 'multiquestion') else {},
-                    question_number=question.number,
-                    get_question=get_question,
-                    message=(
-                            "This answer is from your {} declaration".format(name_of_framework_that_section_has_been_prefilled_from)
-                        if
-                            name_of_framework_that_section_has_been_prefilled_from and (declaration_answers.get(question.id) is not none or question.type == 'multiquestion')
-                        else
-                            None
-                            )
-                   )
-                }}
 
-            {% endfor %}
+
+            {{ render(form_html) }}
 
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
 
