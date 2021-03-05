@@ -877,9 +877,9 @@ class TestSupplierDetails(BaseApplicationTest):
 
         page_html = response.get_data(as_text=True)
         document = html.fromstring(page_html)
-        return_link = (document.xpath("//a[text()='Return to your {} application']".format(framework_name)))
+        return_link = (document.xpath(f"//a[contains(text(), 'Return to your {framework_name} application')]"))
         assert return_link
-        assert return_link[0].values()[0] == link_address
+        assert return_link[0].attrib["href"] == link_address
 
     def test_back_to_application_link_not_visible_if_currently_applying_to_not_in_session(self):
         self.data_api_client.get_supplier.return_value = get_supplier()

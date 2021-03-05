@@ -47,13 +47,13 @@
         if you want to change your {{ completed_data_description }}.</p>
       </div>
 
-      {%
-        with
-        url = url_for('.supplier_details'),
-        text = "Return to company details"
-      %}
-        {% include "toolkit/secondary-action-link.html" %}
-      {% endwith %}
+      <p class="govuk-body">
+        <a class="govuk-link govuk-link--no-visited-state"
+           href="{{ url_for('.supplier_details') }}"
+        >
+          Return to company details
+        </a>
+      </p>
 
     </div>
   </div>

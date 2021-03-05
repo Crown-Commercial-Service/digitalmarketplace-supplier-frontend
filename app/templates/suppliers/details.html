@@ -230,14 +230,13 @@
   {% if currently_applying_to %}
   <div class='govuk-grid-row'>
     <div class='govuk-grid-column-two-thirds'>
-    {%
-       with
-       url = url_for(".framework_dashboard", framework_slug=currently_applying_to.slug),
-       text = "Return to your {} application".format(currently_applying_to.name),
-       bigger = false
-     %}
-       {% include "toolkit/secondary-action-link.html" %}
-    {% endwith %}
+      <p class="govuk-body">
+        <a class="govuk-link govuk-link--no-visited-state"
+           href="{{ url_for('.framework_dashboard', framework_slug=currently_applying_to.slug) }}"
+        >
+          Return to your {{ currently_applying_to.name }} application
+        </a>
+      </p>
     </div>
   </div>
   {% endif %}
