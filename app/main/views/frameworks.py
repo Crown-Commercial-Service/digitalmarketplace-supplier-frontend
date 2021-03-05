@@ -792,7 +792,15 @@ def framework_supplier_declaration_edit(framework_slug, section_id):
     form_html = []
     for question in section.questions:
         h = govuk_frontend.from_question(question, all_answers, errors, is_page_heading=False)
-        label_or_legend = h["fieldset"]["legend"] if "fieldset" in h else h["label"]
+
+        # we want to use a class to style numbered questions
+        if "fieldset" in h:
+            label_or_legend = h["fieldset"]["legend"]
+            h["fieldset"]["classes"] = "dm-numbered-question {}".format(h['fieldset'].get('classes', ''))
+        else:
+            label_or_legend = h["label"]
+            h["label"]["classes"] = "dm-numbered-question {}".format(h['label'].get('classes', ''))
+
         params = h["params"]
 
         # we allow question references in the question label, hint, and error message

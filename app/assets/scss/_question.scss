@@ -1,0 +1,88 @@
+/*
+ * Some of our questions display a notice (when there are no errors) informing the user when
+ * a question has been autofilled based on a previous declaration.
+ * To achieve this, we use the error message and apply some custom classes. 
+ *
+ * TODO: This is not ideal and we should review this to find a better solution.
+ */
+.dm-form-group--notice {
+    border-left: $govuk-border-width-form-group-error solid govuk-colour("blue");
+}
+
+.dm-error-message--notice {
+    color: govuk-colour("blue");
+}
+
+.dm-numbered-question {
+    /*
+     * For questions which aren't marked up, set the font size consistently
+     */
+    legend {
+        @include govuk-font($size: 19);
+    }
+
+    /* 
+     * Some questions are marked up, so paragraphs flow underneath the number. We want them to display
+     * next to it instead.
+     */
+    legend p:first-of-type {
+        display: inline;
+    }
+
+    /*
+     * Hack to get rid of spacing under lists in legends (ideally, these wouldn't be in the legend anyway)
+     */
+    legend ul {
+        margin-bottom: 0;
+    }
+
+    &__number {
+        @include govuk-font($size: 19, $weight: bold);
+        padding-right: govuk-spacing(1);
+
+        &:after {
+            content: "."
+        }
+
+        @include govuk-media-query($from: desktop) {
+            position: absolute;
+            left: govuk-spacing(6) * -1;
+            &:after {
+                content: ""
+            }
+        }
+    }
+
+    @include govuk-media-query($from: desktop) {
+        position: relative;
+        /*
+         * Rather than shifting the number left, outside of the content border, shift the rest of the content to
+         * the right.
+         */
+        margin-left: govuk-spacing(6);
+        /*
+         * Override for govuk-elements, which sets this to 100%, causing it to overflow
+         * TODO: Remove once govuk-elements is removed.
+         */
+        width: auto;
+    }
+}
+
+label.dm-numbered-question {
+    margin-bottom: govuk-spacing(2);
+
+    p:first-of-type {
+        display: inline;
+    }
+
+    /*
+     * The way we generate labels puts the field component immediately after the label.
+     * This is potentially a bit brittle.
+     */
+    & + div {
+        @include govuk-media-query($from: desktop) {
+            margin-left: govuk-spacing(6);
+            right: govuk-spacing(6);
+        }
+    }
+}
