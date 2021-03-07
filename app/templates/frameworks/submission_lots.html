@@ -187,6 +187,9 @@
           "rows": ns.lots
         })}}
       {% endif %}
+      <p class="govuk-body">
+        <a class="govuk-link" href="{{ url_for('.framework_dashboard', framework_slug=framework.slug) }}">Back to {{ framework.name }} application</a>
+      </p>
     </div>
   </div>
 

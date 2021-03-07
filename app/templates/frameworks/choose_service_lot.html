@@ -1,7 +1,7 @@
 {% extends "_base_page.html" %}
 
 {% block pageTitle %}
-  Your {{ framework.name }} services – Digital Marketplace
+  {% if errors %} Error: {% endif %}Your {{ framework.name }} services – Digital Marketplace
 {% endblock %}
 
 {% block breadcrumb %}
@@ -18,6 +18,10 @@
       {
         "text": ("Apply to " + framework.name) if framework.status == "open" else ("Your " + framework.name + " application"),
         "href": url_for(".framework_dashboard", framework_slug=framework.slug)
+      },
+      {
+        "text": ("Your " + framework.name + " services"),
+        "href": url_for(".framework_submission_lots", framework_slug=framework.slug)
       },
       {
         "text": "Choose a service type"
@@ -55,7 +59,7 @@
       })}}
     </form>
     <p class="govuk-body">
-      <a class="govuk-link" href="{{ url_for('.framework_dashboard', framework_slug=framework.slug) }}">Back to {{ framework.name }} application</a>
+      <a class="govuk-link" href="{{ url_for('.framework_submission_lots', framework_slug=framework.slug) }}">Back to your {{ framework.name }} services</a>
     </p>
   </div>
 </div>
