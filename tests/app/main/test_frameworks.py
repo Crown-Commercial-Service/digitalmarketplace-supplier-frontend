@@ -3882,6 +3882,129 @@ class TestSendClarificationQuestionEmail(BaseApplicationTest):
         assert response.status_code == 200
 
 
+class TestFrameworkChooseLotsOrServices(BaseApplicationTest, MockEnsureApplicationCompanyDetailsHaveBeenConfirmedMixin):
+
+    def setup_method(self, method):
+        super().setup_method(method)
+        self.get_metadata_patch = mock.patch('app.main.views.frameworks.content_loader.get_metadata')
+        self.get_metadata = self.get_metadata_patch.start()
+        self.get_metadata.return_value = 'g-cloud-6'
+        self.data_api_client_patch = mock.patch('app.main.views.frameworks.data_api_client', autospec=True)
+        self.data_api_client = self.data_api_client_patch.start()
+
+    def teardown_method(self, method):
+        self.data_api_client_patch.stop()
+        super().teardown_method(method)
+        self.get_metadata_patch.stop()
+
+    def test_choose_lot_form(self):
+        self.login()
+
+        self.data_api_client.get_framework.return_value = self.framework(
+            slug='digital-outcomes-and-specialists',
+            status='open'
+        )
+
+        choose_lot_form = self.client.get(
+            '/suppliers/frameworks/digital-outcomes-and-specialists/submissions/service-type'
+        )
+        doc = html.fromstring(choose_lot_form.get_data(as_text=True))
+
+        assert doc.cssselect('h1')[0].text_content().strip() == u'What type of service do you want to add?'
+        radio_values = [radio.get('value') for radio in doc.cssselect('input[type="radio"]')]
+
+        assert radio_values == [
+            'digital-outcomes',
+            'digital-specialists',
+            'user-research-studios',
+            'user-research-participants'
+        ]
+
+        assert doc.cssselect('main form button[type="submit"]')[0].text_content().strip() == "Save and continue"
+        assert doc.cssselect(
+            'form + p a'
+        )[0].get('href') == "/suppliers/frameworks/digital-outcomes-and-specialists/submissions"
+
+    def test_choose_service_form(self):
+        self.login()
+        self.data_api_client.get_framework.return_value = self.framework(status='open', slug='g-cloud-12')
+
+        choose_service_form = self.client.get('/suppliers/frameworks/g-cloud-12/submissions/service-type')
+        doc = html.fromstring(choose_service_form.get_data(as_text=True))
+
+        assert doc.cssselect('h1')[0].text_content().strip() == u'What type of service do you want to add?'
+        radio_values = [radio.get('value') for radio in doc.cssselect('input[type="radio"]')]
+
+        assert radio_values == [
+            'cloud-hosting',
+            'cloud-software',
+            'cloud-support'
+        ]
+
+        assert doc.cssselect('main form button[type="submit"]')[0].text_content().strip() == "Save and continue"
+        assert doc.cssselect('form + p a')[0].get('href') == "/suppliers/frameworks/g-cloud-12/submissions"
+
+    def test_choose_lot_form_error_if_no_lot_chosen(self):
+        self.login()
+
+        self.data_api_client.get_framework.return_value = self.framework(
+            slug='digital-outcomes-and-specialists',
+            status='open'
+        )
+
+        choose_service_form = self.client.post(
+            '/suppliers/frameworks/digital-outcomes-and-specialists/submissions/service-type', data={}
+        )
+        doc = html.fromstring(choose_service_form.get_data(as_text=True))
+
+        assert choose_service_form.status_code == 400
+        assert doc.cssselect('title')[0].text_content().strip().startswith('Error: ')
+        assert doc.cssselect('.govuk-error-summary a')[0].text_content().strip() == "Select a type of service"
+        assert len(doc.cssselect('input[type="radio"][checked]')) == 0
+        assert len(doc.cssselect('input[type="radio"]:not([checked])')) == 4
+
+    def test_choose_service_form_error_if_no_service_category_chosen(self):
+        self.login()
+        self.data_api_client.get_framework.return_value = self.framework(status='open', slug='g-cloud-12')
+
+        choose_service_form = self.client.post('/suppliers/frameworks/g-cloud-12/submissions/service-type', data={})
+        doc = html.fromstring(choose_service_form.get_data(as_text=True))
+
+        assert choose_service_form.status_code == 400
+        assert doc.cssselect('title')[0].text_content().strip().startswith('Error: ')
+        assert doc.cssselect('.govuk-error-summary a')[0].text_content().strip() == "Select a type of service"
+        assert len(doc.cssselect('input[type="radio"][checked]')) == 0
+        assert len(doc.cssselect('input[type="radio"]:not([checked])')) == 3
+
+    def test_choose_service_form_redirect_on_submit(self):
+        self.login()
+        self.data_api_client.get_framework.return_value = self.framework(status='open', slug='g-cloud-12')
+
+        res = self.client.post(
+            '/suppliers/frameworks/g-cloud-12/submissions/service-type',
+            data={"lot_slug": "cloud-hosting"}
+        )
+
+        assert res.status_code == 302
+        assert '/suppliers/frameworks/g-cloud-12/submissions/cloud-hosting' in res.location
+
+    def test_choose_lot_form_redirect_on_submit(self):
+        self.login()
+
+        self.data_api_client.get_framework.return_value = self.framework(
+            slug='digital-outcomes-and-specialists',
+            status='open'
+        )
+
+        res = self.client.post(
+            '/suppliers/frameworks/digital-outcomes-and-specialists/submissions/service-type',
+            data={"lot_slug": "digital-specialists"}
+        )
+
+        assert res.status_code == 302
+        assert '/suppliers/frameworks/digital-outcomes-and-specialists/submissions/digital-specialists' in res.location
+
+
 @mock.patch('app.main.views.frameworks.count_unanswered_questions')
 class TestFrameworkSubmissionLots(BaseApplicationTest, MockEnsureApplicationCompanyDetailsHaveBeenConfirmedMixin):
 
@@ -3909,8 +4032,8 @@ class TestFrameworkSubmissionLots(BaseApplicationTest, MockEnsureApplicationComp
 
         submissions = self.client.get('/suppliers/frameworks/g-cloud-7/submissions')
 
-        assert u'1 draft service' in submissions.get_data(as_text=True)
-        assert u'complete service' not in submissions.get_data(as_text=True)
+        assert u'Drafts (1)' in submissions.get_data(as_text=True)
+        assert u'You haven’t marked any services as complete yet.' in submissions.get_data(as_text=True)
 
     @pytest.mark.parametrize('framework_slug, show_service_data', (
         ('digital-outcomes-and-specialists-2', 0),
@@ -3933,7 +4056,19 @@ class TestFrameworkSubmissionLots(BaseApplicationTest, MockEnsureApplicationComp
         assert len(use_of_data) == show_service_data
 
         if show_service_data:
-            assert 'The service information you provide here:' in use_of_data[0].text_content()
+            assert 'The service information you provide in your application:' in use_of_data[0].text_content()
+
+    def test_add_service_button(self, count_unanswered):
+        self.login()
+
+        self.data_api_client.get_framework.return_value = self.framework(status='open')
+        submissions = self.client.get('/suppliers/frameworks/g-cloud-7/submissions')
+
+        doc = html.fromstring(submissions.get_data(as_text=True))
+
+        add_service_button = doc.xpath('//a[contains(text(), "Add a service")]')[0]
+
+        assert add_service_button.attrib["href"] == "/suppliers/frameworks/g-cloud-7/submissions/service-type"
 
     @pytest.mark.parametrize(
         'declaration, should_show_declaration_link, declaration_link_url',
@@ -3998,8 +4133,8 @@ class TestFrameworkSubmissionLots(BaseApplicationTest, MockEnsureApplicationComp
 
         submissions_html = submissions.get_data(as_text=True)
 
-        assert u'1 service marked as complete' in submissions_html
-        assert u'draft service' not in submissions_html
+        assert u'Ready for submission (1)' in submissions_html
+        assert u'You haven’t added any draft services yet.' in submissions_html
         assert "Your application is not complete" in submissions_html
 
         doc = html.fromstring(submissions_html)
@@ -4025,9 +4160,8 @@ class TestFrameworkSubmissionLots(BaseApplicationTest, MockEnsureApplicationComp
         submissions = self.client.get('/suppliers/frameworks/g-cloud-7/submissions')
         submissions_html = submissions.get_data(as_text=True)
 
-        assert u'1 service will be submitted' in submissions_html
+        assert u'Ready for submission (1)' in submissions_html
         assert u'1 complete service was submitted' not in submissions_html
-        assert u'browse-list-item-status-happy' in submissions_html
         assert "Your application is not complete" not in submissions_html
 
     def test_drafts_list_services_were_submitted(self, count_unanswered):
@@ -4041,6 +4175,8 @@ class TestFrameworkSubmissionLots(BaseApplicationTest, MockEnsureApplicationComp
         ]
 
         submissions = self.client.get('/suppliers/frameworks/g-cloud-7/submissions')
+
+        print(submissions.get_data(as_text=True))
 
         assert u'1 complete service was submitted' in submissions.get_data(as_text=True)
 
@@ -4059,10 +4195,10 @@ class TestFrameworkSubmissionLots(BaseApplicationTest, MockEnsureApplicationComp
 
         submissions = self.client.get('/suppliers/frameworks/digital-outcomes-and-specialists/submissions')
 
-        assert u'This will be submitted' in submissions.get_data(as_text=True)
-        assert u'browse-list-item-status-happy' in submissions.get_data(as_text=True)
-        assert u'Apply to provide' in submissions.get_data(as_text=True)
+        assert u'Ready for submission (1)' in submissions.get_data(as_text=True)
+        assert u'You haven’t marked any services as complete yet.' not in submissions.get_data(as_text=True)
         assert "Your application is not complete" not in submissions.get_data(as_text=True)
+        assert "You haven’t added any draft services yet." in submissions.get_data(as_text=True)
 
     def test_dos_drafts_list_with_closed_framework(self, count_unanswered):
         self.login()
