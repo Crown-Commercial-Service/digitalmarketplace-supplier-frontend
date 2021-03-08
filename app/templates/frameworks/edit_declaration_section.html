@@ -33,12 +33,9 @@
 
 {% block mainContent %}
   {% if name_of_framework_that_section_has_been_prefilled_from %}
-    {% with
-       message = "Answers on this page are from an earlier declaration and need review.",
-       type = "information"
-    %}
-      {% include "toolkit/notification-banner.html" %}
-    {% endwith %}
+    {{ dmBanner({
+        "title": "Answers on this page are from an earlier declaration and need review.",
+    }) }}
   {% endif %}
 
   <form method="post" enctype="multipart/form-data" class="supplier-declaration" action="#" {# remove any fragment identifier as validation messages are at the top #}>
