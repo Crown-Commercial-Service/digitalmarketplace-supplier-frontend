@@ -2984,7 +2984,7 @@ class TestSupplierDeclaration(BaseApplicationTest, MockEnsureApplicationCompanyD
         assert len(doc.xpath('//input[@id="input-organisedCrime-2"][@value="False"]/@checked')) == 1
 
         # Blue banner message is shown at top of page
-        assert doc.xpath('normalize-space(string(//div[@class="banner-information-without-action"]))') == \
+        assert doc.xpath('normalize-space(string(//section[@class="dm-banner"]))') == \
             "Answers on this page are from an earlier declaration and need review."
 
         # Blue information messages are shown next to each question
@@ -3051,7 +3051,7 @@ class TestSupplierDeclaration(BaseApplicationTest, MockEnsureApplicationCompanyD
         assert len(doc.xpath('//input[@id="input-terrorism-2"]/@checked')) == 0
 
         # Blue banner message is shown at top of page
-        assert doc.xpath('normalize-space(string(//div[@class="banner-information-without-action"]))') == \
+        assert doc.xpath('normalize-space(string(//section[@class="dm-banner"]))') == \
             "Answers on this page are from an earlier declaration and need review."
 
         # Blue information messages are shown next to pre-filled questions only
