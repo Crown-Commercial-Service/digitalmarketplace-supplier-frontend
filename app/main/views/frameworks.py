@@ -448,8 +448,8 @@ def reuse_framework_supplier_declaration_post(framework_slug):
             old_framework=old_framework,
             old_framework_application_close_date=monthyearformat(old_framework['applicationsCloseAtUTC']),
         ), 400
-    if form.reuse.data:
-        # They clicked OK! Check the POST data.
+    if form.reuse.data == "yes":
+        # They clicked 'Yes'! Check the POST data.
         try:
             framework_ok = data_api_client.get_framework(
                 form.old_framework_slug.data

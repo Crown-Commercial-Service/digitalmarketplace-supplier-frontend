@@ -1,9 +1,9 @@
 {% extends "_base_page.html" %}
 
+{% set page_name = "Reusing answers from an earlier declaration" %}
+
 {% block pageTitle %}
-  {% block page_title_inner %}
-    Reusing answers from an earlier declaration
-  {% endblock %} – Digital Marketplace
+    {% if errors %}Error: {% endif %}{{ page_name }} – Digital Marketplace
 {% endblock %}
 
 {% block breadcrumb %}
@@ -22,7 +22,7 @@
         "href": url_for(".framework_dashboard", framework_slug=current_framework.slug)
       },
       {
-        "text": "Reusing answers from an earlier declaration"
+        "text": page_name
       }
     ]
   }) }}
@@ -31,7 +31,7 @@
 {% block mainContent %}
   <div class="govuk-grid-row">
     <div class="govuk-grid-column-two-thirds">
-      <h1 class="govuk-heading-l">{{ self.page_title_inner() }}</h1>
+      <h1 class="govuk-heading-l">{{ page_name }}</h1>
 
       <p class="govuk-body">In {{ old_framework_application_close_date|nbsp }}, your organisation completed a declaration for {{ old_framework.name }}.</p>
       <p class="govuk-body">You can reuse some of the answers from that declaration.</p>
@@ -41,11 +41,31 @@
         <li>provide some new answers for this declaration</li>
       </ul>
 
-      <form method="POST" action="{{ url_for(".reuse_framework_supplier_declaration_post", framework_slug=current_framework.slug) }}">
+      <form method="POST" action="{{ url_for('.reuse_framework_supplier_declaration_post', framework_slug=current_framework.slug) }}">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
         <input type="hidden" name="old_framework_slug" value="{{ old_framework.slug }}"/>
 
-        {{ form.reuse }}
+        {{ govukRadios({
+          "classes": "govuk-radios--inline",
+          "idPrefix": "input-" + form.reuse.name,
+          "name": form.reuse.name,
+          "hint": {
+            "html": question_advice,
+          },
+          "fieldset": {
+            "legend": {
+              "text": form.reuse.label.text,
+              "classes": "govuk-fieldset__legend--m",
+            }
+          },
+          "errorMessage": {
+            "text": errors.get(form.reuse.name, {}).get('message', None)
+          } if errors,
+          "items": [
+            {"text": "Yes", "value": "yes"},
+            {"text": "No", "value": "no"},
+          ]
+        }) }}
 
         {{ govukButton({
           "text": "Save and continue"

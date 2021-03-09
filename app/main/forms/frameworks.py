@@ -1,5 +1,5 @@
 from flask_wtf import FlaskForm
-from wtforms import HiddenField
+from wtforms import HiddenField, RadioField
 from wtforms.validators import DataRequired, Length, InputRequired
 
 from dmutils.forms.fields import DMBooleanField, DMStripWhitespaceStringField, DMRadioField
@@ -52,10 +52,11 @@ class ReuseDeclarationForm(FlaskForm):
     reuse.
     """
 
-    reuse = DMBooleanField(
+    reuse = RadioField(
         "Do you want to reuse the answers from your earlier declaration?",
-        false_values=("False", "false", ""),
-        widget=DMSelectionButtonBase(type="boolean"),
+        id="input-reuse-1",  # TODO: change to input-reuse when on govuk-frontend~3
+        choices=[("yes", "Yes"), ("no", "No")],
+        validators=[InputRequired("Select yes if you want to reuse your earlier answers")],
     )
     old_framework_slug = HiddenField()
 
