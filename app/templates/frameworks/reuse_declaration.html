@@ -1,7 +1,9 @@
 {% extends "_base_page.html" %}
 
+{% set page_name = "Reusing answers from an earlier declaration" %}
+
 {% block pageTitle %}
-    {% if errors %}Error: {% endif %}{{ form.reuse.label.text }} – Digital Marketplace
+    {% if errors %}Error: {% endif %}{{ page_name }} – Digital Marketplace
 {% endblock %}
 
 {% block breadcrumb %}
@@ -20,7 +22,7 @@
         "href": url_for(".framework_dashboard", framework_slug=current_framework.slug)
       },
       {
-        "text": form.reuse.label.text
+        "text": page_name
       }
     ]
   }) }}
@@ -29,15 +31,15 @@
 {% block mainContent %}
   <div class="govuk-grid-row">
     <div class="govuk-grid-column-two-thirds">
-      {% set question_advice %}
-        <p class="govuk-body">In {{ old_framework_application_close_date|nbsp }}, your organisation completed a declaration for {{ old_framework.name }}.</p>
-        <p class="govuk-body">You can reuse some of the answers from that declaration.</p>
-        <p class="govuk-body">You’ll need to:</p>
-        <ul class="govuk-list govuk-list--bullet">
-          <li>review the answers you gave before and make sure they’re still correct</li>
-          <li>provide some new answers for this declaration</li>
-        </ul>
-      {% endset %}
+      <h1 class="govuk-heading-l">{{ page_name }}</h1>
+
+      <p class="govuk-body">In {{ old_framework_application_close_date|nbsp }}, your organisation completed a declaration for {{ old_framework.name }}.</p>
+      <p class="govuk-body">You can reuse some of the answers from that declaration.</p>
+      <p class="govuk-body">You’ll need to:</p>
+      <ul class="govuk-list govuk-list--bullet">
+        <li>review the answers you gave before and make sure they’re still correct</li>
+        <li>provide some new answers for this declaration</li>
+      </ul>
 
       <form method="POST" action="{{ url_for('.reuse_framework_supplier_declaration_post', framework_slug=current_framework.slug) }}">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
@@ -53,8 +55,7 @@
           "fieldset": {
             "legend": {
               "text": form.reuse.label.text,
-              "classes": "govuk-fieldset__legend--l",
-              "isPageHeading": true,
+              "classes": "govuk-fieldset__legend--m",
             }
           },
           "errorMessage": {
