@@ -11,6 +11,7 @@ from werkzeug.exceptions import ServiceUnavailable
 from dmapiclient import APIError, HTTPError
 from dmapiclient.audit import AuditTypes
 from dmtestutils.api_model_stubs import FrameworkStub, SupplierFrameworkStub
+from dmutils import direct_plus_client
 
 from tests.app.helpers import BaseApplicationTest, assert_args_and_return
 from app.main.forms.suppliers import CompanyOrganisationSizeForm, CompanyTradingStatusForm
@@ -1657,6 +1658,13 @@ class TestCreateSupplier(BaseApplicationTest):
 
     direct_plus_api_method = 'app.main.views.suppliers.direct_plus_client.get_organization_by_duns_number'
 
+    @pytest.fixture
+    def get_organization_by_duns_number(self):
+        with self.app.app_context(), mock.patch(
+            self.direct_plus_api_method, return_value={"primaryName": "COMPANY NAME LTD"}
+        ) as get_organization_by_duns_number:
+            yield get_organization_by_duns_number
+
     def setup_method(self, method):
         super().setup_method(method)
         self.data_api_client_patch = mock.patch('app.main.views.suppliers.data_api_client', autospec=True)
@@ -1700,11 +1708,9 @@ class TestCreateSupplier(BaseApplicationTest):
             validation_message="Enter your 9 digit DUNS number."
         )
 
-    def test_should_be_an_error_if_duns_number_in_use(self):
-        with self.app.app_context():
-            with mock.patch(self.direct_plus_api_method, return_value={'primaryName': 'COMPANY LTD'}):
-                self.data_api_client.find_suppliers.return_value = {"suppliers": ["one supplier", "two suppliers"]}
-                res = self.client.post("/suppliers/create/duns-number", data={'duns_number': "123456789"})
+    def test_should_be_an_error_if_duns_number_in_use(self, get_organization_by_duns_number):
+        self.data_api_client.find_suppliers.return_value = {"suppliers": ["one supplier", "two suppliers"]}
+        res = self.client.post("/suppliers/create/duns-number", data={'duns_number': "123456789"})
 
         assert res.status_code == 400
         page = res.get_data(as_text=True)
@@ -1712,73 +1718,54 @@ class TestCreateSupplier(BaseApplicationTest):
         assert "DUNS number already used" in page
         assert "If you no longer have your account details, or if you think this may be an error," in page
 
-    def test_direct_plus_api_call(self):
-        with self.app.app_context(), mock.patch(self.direct_plus_api_method, return_value=None) as client_call_mock:
-            self.client.post("/suppliers/create/duns-number", data={'duns_number': "123456789"})
-            client_call_mock.assert_called_once_with('123456789')
+    def test_direct_plus_api_call(self, get_organization_by_duns_number):
+        self.client.post("/suppliers/create/duns-number", data={'duns_number': "123456789"})
+        get_organization_by_duns_number.assert_called_once_with('123456789')
 
-    def test_marketplace_data_api_call(self):
-        with self.app.app_context(), mock.patch(self.direct_plus_api_method, return_value=None):
-            self.client.post("/suppliers/create/duns-number", data={'duns_number': "123456789"})
-            self.data_api_client.find_suppliers.assert_called_once_with(duns_number="123456789")
+    def test_marketplace_data_api_call(self, get_organization_by_duns_number):
+        self.client.post("/suppliers/create/duns-number", data={'duns_number': "123456789"})
+        self.data_api_client.find_suppliers.assert_called_once_with(duns_number="123456789")
 
-    def test_should_be_an_error_if_duns_number_not_found(self):
-        with self.app.app_context():
-            with mock.patch(self.direct_plus_api_method, return_value=None):
-                res = self.client.post("/suppliers/create/duns-number", data={'duns_number': "123456789"})
+    def test_should_be_an_error_if_duns_number_not_found(self, get_organization_by_duns_number):
+        get_organization_by_duns_number.side_effect = direct_plus_client.DUNSNumberNotFound
+        res = self.client.post("/suppliers/create/duns-number", data={'duns_number': "123456789"})
 
         assert res.status_code == 400
         page = res.get_data(as_text=True)
         assert "DUNS number not found" in page
 
-    unexpected_responses = (
-        {'error': {'errorCode': '90000'}},
-        {'error': {
-            'errorCode': '40105',
-            'errorMessage': 'Requested product not available due to insufficient data'
-        }},
-        {'error': {
-            'errorCode': '40002',
-            'errorMessage': 'The requested D-U-N-S Number cannot be returned as it has been deleted'
-        }}
-    )
-
-    @pytest.mark.parametrize('return_value', unexpected_responses)
-    def test_skips_dnb_api_validation_if_unexpected_response(self, return_value):
-        with self.app.app_context():
-            with mock.patch(self.direct_plus_api_method, return_value=return_value):
-                self.data_api_client.find_suppliers.return_value = {"suppliers": []}
-                res = self.client.post("/suppliers/create/duns-number", data={'duns_number': "123456789"})
+    def test_skips_dnb_api_validation_if_unexpected_error(self, get_organization_by_duns_number):
+        get_organization_by_duns_number.side_effect = direct_plus_client.DirectPlusError
+        self.data_api_client.find_suppliers.return_value = {"suppliers": []}
+        res = self.client.post("/suppliers/create/duns-number", data={'duns_number': "123456789"})
 
         assert res.status_code == 302
         assert res.location == 'http://localhost/suppliers/create/company-details'
 
-    @pytest.mark.parametrize('return_value', unexpected_responses)
-    def test_duns_added_to_session_if_unexpected_response(self, return_value):
-        with self.app.app_context(), self.client as c:
-            with mock.patch(self.direct_plus_api_method, return_value=return_value):
-                with c.session_transaction() as sess:
-                    with pytest.raises(KeyError):
-                        sess['duns_number']
-                self.data_api_client.find_suppliers.return_value = {"suppliers": []}
-                c.post("/suppliers/create/duns-number", data={'duns_number': "123456789"})
+    def test_duns_added_to_session_if_unexpected_error(self, get_organization_by_duns_number):
+        get_organization_by_duns_number.side_effect = direct_plus_client.DirectPlusError
+
+        with self.client as c:
+            with c.session_transaction() as sess:
+                with pytest.raises(KeyError):
+                    sess['duns_number']
+
+            self.data_api_client.find_suppliers.return_value = {"suppliers": []}
+            c.post("/suppliers/create/duns-number", data={'duns_number': "123456789"})
 
             assert session['duns_number'] == '123456789'
 
-    def test_should_allow_nine_digit_duns_number(self):
+    def test_should_allow_nine_digit_duns_number(self, get_organization_by_duns_number):
         self.data_api_client.find_suppliers.return_value = {"suppliers": []}
-        with self.app.app_context():
-            with mock.patch(self.direct_plus_api_method, return_value={'primaryName': 'COMPANY LTD'}):
-                res = self.client.post("/suppliers/create/duns-number", data={'duns_number': "123456789"})
+
+        res = self.client.post("/suppliers/create/duns-number", data={'duns_number': "123456789"})
 
         assert res.status_code == 302
         assert res.location == 'http://localhost/suppliers/create/confirm-company'
 
-    def test_should_allow_duns_numbers_that_start_with_zero(self):
+    def test_should_allow_duns_numbers_that_start_with_zero(self, get_organization_by_duns_number):
         self.data_api_client.find_suppliers.return_value = {"suppliers": []}
-        with self.app.app_context():
-            with mock.patch(self.direct_plus_api_method, return_value={'primaryName': '0 COMPANY LTD'}):
-                res = self.client.post("/suppliers/create/duns-number", data={'duns_number': "012345678"})
+        res = self.client.post("/suppliers/create/duns-number", data={'duns_number': "012345678"})
 
         assert res.status_code == 302
         assert res.location == 'http://localhost/suppliers/create/confirm-company'
@@ -1803,10 +1790,9 @@ class TestCreateSupplier(BaseApplicationTest):
                 c.post("/suppliers/create/duns-number", data={'duns_number': "123456789"})
             assert session['company_name'] == '0 COMPANY LTD'
 
-    @pytest.mark.parametrize('return_value', unexpected_responses)
-    def test_should_not_add_company_name_to_session_if_unexpected_response(self, return_value):
+    def test_should_not_add_company_name_to_session_if_unexpected_error(self):
         with self.app.app_context(), self.client as c:
-            with mock.patch(self.direct_plus_api_method, return_value=return_value):
+            with mock.patch(self.direct_plus_api_method, side_effect=direct_plus_client.DirectPlusError):
                 with c.session_transaction() as sess:
                     with pytest.raises(KeyError):
                         sess['company_name']
