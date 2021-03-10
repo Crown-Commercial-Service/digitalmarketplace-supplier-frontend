@@ -7,6 +7,9 @@ from flask_login import current_user
 from dmapiclient.audit import AuditTypes
 from dmcontent.content_loader import ContentNotFoundError
 from dmutils.dates import update_framework_with_formatted_dates
+from dmutils.direct_plus_client import (
+    DirectPlusError, DUNSNumberNotFound, DUNSNumberInvalid,
+)
 from dmutils.email import send_user_account_email
 from dmutils.email.dm_mailchimp import DMMailChimpClient
 from dmutils.flask import timed_render_template as render_template
@@ -533,16 +536,15 @@ def duns_number():
             # Otherwise the number is good, add the 'primaryName' to the session and continue
             try:
                 organization = direct_plus_client.get_organization_by_duns_number(form.duns_number.data)
-                if organization is not None:
-                    company_name = organization['primaryName']
-            except (KeyError, ValueError):
+                company_name = organization['primaryName']
+            except (DUNSNumberInvalid, DUNSNumberNotFound):
+                form.duns_number.errors = ["DUNS number not found"]
+            except (DirectPlusError, KeyError, ValueError):
                 # An unexpected error. Something other than supplier data in the response.
                 # Allow the user to proceed with the entered duns numer and skip this part of sign up.
                 session[form.duns_number.name] = form.duns_number.data
                 return redirect(url_for(".company_details"))
 
-            if organization is None:
-                form.duns_number.errors = ["DUNS number not found"]
             else:
                 # Success
                 session[form.duns_number.name] = form.duns_number.data
