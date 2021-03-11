@@ -795,7 +795,7 @@ def join_open_framework_notification_mailing_list():
             # If no status code supplied, something has probably gone wrong
             status = mc_response.get('status_code', 503)
             # fall through to re-display form with error
-    else:
+    elif request.method == "POST":
         status = 400
         # fall through to re-display form with errors
 

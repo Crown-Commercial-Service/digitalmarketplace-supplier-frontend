@@ -2222,7 +2222,7 @@ class TestJoinOpenFrameworkNotificationMailingList(BaseApplicationTest):
         response = self.client.get(
             "/suppliers/mailing-list",
         )
-        assert response.status_code == 400
+        assert response.status_code == 200
         doc = html.fromstring(response.get_data(as_text=True), base_url="/suppliers/mailing-list")
 
         assert not doc.xpath(
