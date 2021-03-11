@@ -2121,41 +2121,50 @@ class TestDeclarationOverview(BaseApplicationTest, MockEnsureApplicationCompanyD
             given a section (full text) name, returns that section's relevant information in a tuple (format described
             in comments)
         """
+
+        table_xpath = "//dl[preceding::h2[1][normalize-space(string())=$section_title]]"
+        edit_as_xpath = (
+            "//span[@class='dm-section-action-link'][preceding::h2[1][normalize-space(string())=$section_title]]"
+        )
+        caption_xpath = "normalize-space(string(./preceding::h2[1]))"
+        row_heading_xpath = "normalize-space(string(./dt))"
+        row_value_xpath = "normalize-space(string(./dd))"
+        row_a_element_xpath = "./dd//a"
+        row_a_href_xpath = "./dd//a/@href"
+        row_li_element_xpath = "./dd//li"
+        rows_xpath = ".//div[contains(@class,'govuk-summary-list__row')]"
+
         tables = doc.xpath(
-            "//table[preceding::h2[1][normalize-space(string())=$section_title]]",
+            table_xpath,
             section_title=section_title,
         )
         assert len(tables) == 1
         table = tables[0]
 
         edit_as = doc.xpath(
-            "//a[@class='summary-change-link'][preceding::h2[1][normalize-space(string())=$section_title]]",
+            edit_as_xpath,
             section_title=section_title,
         )
         assert ([a.xpath("normalize-space(string())") for a in edit_as] == ["Edit"]) is expect_edit_link
 
         return (
             # table caption text
-            table.xpath("normalize-space(string(./caption))"),
+            table.xpath(caption_xpath),
             # "Edit" link href
             edit_as[0].xpath("@href")[0] if expect_edit_link else None,
             tuple(
                 (
                     # contents of row heading
-                    row.xpath("normalize-space(string(./td[@class='summary-item-field-first']))"),
+                    row.xpath(row_heading_xpath),
                     # full text contents of row "value"
-                    row.xpath("normalize-space(string(./td[@class='summary-item-field']))"),
+                    row.xpath(row_value_xpath),
                     # full text contents of each a element in row value
-                    tuple(a.xpath("normalize-space(string())") for a in row.xpath(
-                        "./td[@class='summary-item-field']//a"
-                    )),
+                    tuple(a.xpath("normalize-space(string())") for a in row.xpath(row_a_element_xpath)),
                     # href of each a element in row value
-                    tuple(row.xpath("./td[@class='summary-item-field']//a/@href")),
+                    tuple(row.xpath(row_a_href_xpath)),
                     # full text contents of each li element in row value
-                    tuple(li.xpath("normalize-space(string())") for li in row.xpath(
-                        "./td[@class='summary-item-field']//li"
-                    )),
-                ) for row in table.xpath(".//tr[contains(@class,'summary-item-row')]")
+                    tuple(li.xpath("normalize-space(string())") for li in row.xpath(row_li_element_xpath)),
+                ) for row in table.xpath(rows_xpath)
             )
         )
 
