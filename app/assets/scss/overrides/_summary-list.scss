@@ -1,0 +1,46 @@
+/*
+ * On smaller screens, it's difficult to discern headings from summary
+ * list keys, so we size up the headings
+ */
+ .dm-summary-list-heading {
+    @include govuk-media-query($until: tablet) {
+        font-size: 22px;
+        margin-top: 10px;
+    }
+}
+
+/*
+ * A top border more clearly delineates the multiple data lists per page
+ * from their headings and other context.
+ */
+.dm-govuk-summary-list--top-border {
+    border-top: 1px solid $govuk-border-colour;
+
+    @include govuk-media-query($until: tablet) {
+        padding-top: govuk-spacing(3)
+    }
+}
+/*
+ * We de-bold the questions to avoid bombarding users with emphasised text
+ * and to help the headings stand out.
+ */
+.dm-govuk-summary-list .govuk-summary-list__key {
+    @include govuk-media-query($from: tablet) {
+        font-weight: $govuk-font-weight-regular;
+    }
+}
+
+/*
+ * When a summary list is empty, we display a paragraph styled to look like
+ * a row.
+ */
+.dm-no-summary-content {
+    color: $govuk-secondary-text-colour;
+    @include govuk-font(16);
+    margin-bottom: govuk-spacing(7);
+    border-top: 1px solid $govuk-border-colour;
+    border-bottom: 1px solid $govuk-border-colour;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    max-width: 100%;
+  }
