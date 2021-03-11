@@ -72,56 +72,28 @@
   </div>
   <div class="govuk-grid-row">
     <div class="govuk-grid-column-full">
-      {% import "toolkit/summary-table.html" as summary %}
+
       {% for section_slug, (section, section_errors) in sections_errors.items() %}
-        {{ summary.heading(section.name, id=section.slug) }}
-        {% if section.editable %}
-          {% if framework.status == 'open' %}
-            {{ summary.top_link("Edit", url_for(".framework_supplier_declaration_edit", framework_slug=framework.slug, section_id=section.id), hidden_text=section.name) }}
-          {% endif %}
-        {% endif %}
-        {% if section.summary_page_description %}
-          {{ summary.description(section.summary_page_description) }}
-        {% endif %}
-        {% call(question) summary.list_table(
-          section.questions,
-          caption=section.name,
-          field_headings=[
-            "Question",
-            "Answer",
-          ],
-          field_headings_visible=False
-        ) %}
-          {% call summary.row() %}
-            {{ summary.field_name(question.label|question_references(section.get_question)) }}
-            {% if section.editable %}
-              {% if framework.status == 'open' and section_errors %}
-                {% call summary.field() %}
-                  {# We don't want a question anchor on the first question of each section; it should take them
-                     to the top of the page so all content is visible #}
-                  {% if section.questions[0].id == question.id -%}
-                    <a class="govuk-link" href="{{ url_for(".framework_supplier_declaration_edit", framework_slug=framework.slug, section_id=section.id) }}">
-                  {% else -%}
-                    <a class="govuk-link" href="{{ url_for(".framework_supplier_declaration_edit", framework_slug=framework.slug, section_id=section.id, _anchor=question.id) }}">
-                  {%- endif -%}
-                  {% if supplier_framework.prefillDeclarationFromFrameworkSlug and section.prefill %}
-                    Review answer
-                  {% else %}
-                    Answer question
-                  {% endif %}
-                  </a>
-                {% endcall %}
-              {% elif not question.is_empty %}
-                {{ summary[question.type](question.value) }}
-              {% else %}
-                {# We need to call this (even if with nothing) to add the final column to the row, otherwise the row
-                   terminates early and the line separators between rows do not span the entire width of the table. #}
-                {% call summary.field(action=True) %}
-                {% endcall %}
-              {% endif %}
+        <h2 class="govuk-heading-m dm-summary-list-heading" id="{{ section.slug }}">
+          {{ section.name }}
+          {% if section.editable %}
+            {% if framework.status == 'open' %}
+              <span class="dm-section-action-link">
+                <a class="govuk-link" href="{{ url_for('.framework_supplier_declaration_edit', framework_slug=framework.slug, section_id=section.id)}}">
+                  Edit
+                  <span class="govuk-visually-hidden">{{ section.name }}</span>
+                </a>
+              </span>
             {% endif %}
-          {% endcall %}
-        {% endcall %}
+          {% endif %}
+        </h2>
+        {% if section.summary_page_description %}
+          <p class="govuk-body">{{ section.summary_page_description }}</p>
+        {% endif %}
+        {{ govukSummaryList({
+          "rows": section.summary_list,
+          "classes": "dm-govuk-summary-list dm-govuk-summary-list--top-border govuk-!-margin-bottom-9"
+        })}}
       {% endfor %}
 
       <hr class="govuk-section-break govuk-section-break--m">

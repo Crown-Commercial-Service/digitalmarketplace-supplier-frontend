@@ -13,6 +13,7 @@ from dmapiclient import APIError, HTTPError
 from dmapiclient.audit import AuditTypes
 from dmcontent.questions import ContentQuestion
 from dmcontent.errors import ContentNotFoundError
+from dmcontent.html import to_summary_list_row
 from dmcontent.utils import count_unanswered_questions
 from dmutils import s3
 from dmutils.dates import update_framework_with_formatted_dates
@@ -528,6 +529,25 @@ def framework_supplier_declaration_overview(framework_slug):
             errors = declaration_validator.get_error_messages_for_page(section)
 
         sections_errors[section.slug] = (section, errors)
+
+        # Create govukSummaryList-friendly fields
+        section.summary_list = []
+        for question in section.questions:
+            if sf["prefillDeclarationFromFrameworkSlug"] and section.prefill:
+                question.empty_message = "Review answer"
+            else:
+                question.empty_message = "Answer question"
+            section.summary_list.append(
+                to_summary_list_row(
+                    question,
+                    action_link=url_for(
+                        ".framework_supplier_declaration_edit",
+                        framework_slug=framework_slug,
+                        section_id=section.id,
+                        _anchor=question.id if section.questions[0].id != question.id else None
+                    ) if framework["status"] == "open" and sections_errors else None
+                )
+            )
 
     return render_template(
         "frameworks/declaration_overview.html",
