@@ -1,0 +1,12 @@
+/*
+ * On some pages, we use a table with action links.
+ * We want to style all the action links to be right-aligned.
+ */
+
+.dm-action-link {
+    text-align: right;
+}
+
+.dm-section-action-link {
+    float: right;
+}
