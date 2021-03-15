@@ -76,17 +76,17 @@
       {% for section_slug, (section, section_errors) in sections_errors.items() %}
         <h2 class="govuk-heading-m dm-summary-list-heading" id="{{ section.slug }}">
           {{ section.name }}
-          {% if section.editable %}
-            {% if framework.status == 'open' %}
-              <span class="dm-section-action-link">
-                <a class="govuk-link" href="{{ url_for('.framework_supplier_declaration_edit', framework_slug=framework.slug, section_id=section.id)}}">
-                  Edit
-                  <span class="govuk-visually-hidden">{{ section.name }}</span>
-                </a>
-              </span>
-            {% endif %}
-          {% endif %}
         </h2>
+        {% if section.editable %}
+          {% if framework.status == 'open' %}
+          <div class="dm-section-action-link">
+            <a class="govuk-link" href="{{ url_for('.framework_supplier_declaration_edit', framework_slug=framework.slug, section_id=section.id)}}">
+              Edit
+              <span class="govuk-visually-hidden">{{ section.name }}</span>
+            </a>
+          </div>
+          {% endif %}
+        {% endif %}
         {% if section.summary_page_description %}
           <p class="govuk-body">{{ section.summary_page_description }}</p>
         {% endif %}
