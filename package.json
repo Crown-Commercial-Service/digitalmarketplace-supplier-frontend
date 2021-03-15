@@ -7,7 +7,7 @@
     "node": "^10.18.1"
   },
   "dependencies": {
-    "colors": "1.1.2",
+    "colors": "1.4.0",
     "del": "^6.0.0",
     "digitalmarketplace-frameworks": "github:alphagov/digitalmarketplace-frameworks#v18.1.6",
     "digitalmarketplace-frontend-toolkit": "^36.1.2",
