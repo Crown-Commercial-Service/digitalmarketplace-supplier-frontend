@@ -45,7 +45,7 @@ from ..helpers.frameworks import (
     get_statuses_for_lot,
     get_supplier_framework_info,
     get_supplier_on_framework_from_info,
-    get_supplier_registered_name_from_declaration,
+    get_supplier_registered_name_from_declaration, question_references,
     register_interest_in_framework,
     return_supplier_framework_info_if_on_framework_or_abort,
     returned_agreement_email_recipients,
@@ -548,6 +548,13 @@ def framework_supplier_declaration_overview(framework_slug):
                     ) if framework["status"] == "open" and sections_errors else None
                 )
             )
+
+        # We need to parse key text for question references. This isn't optimal, but references only apply to
+        # this app, so holding off on centralising this logic to the Content Loader.
+        def label_question_reference(row):
+            row["key"]["text"] = question_references(row.get("key", {}).get("text", ""), section.get_question)
+            return row
+        section.summary_list = list(map(label_question_reference, section.summary_list))
 
     return render_template(
         "frameworks/declaration_overview.html",
