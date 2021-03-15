@@ -68,9 +68,9 @@
         {% if framework.family == "g-cloud" %}
 
           {% set head = [
-            {"text": "Name", "classes": "govuk-!-width-one-half"},
-            {"text": "Lot", "classes": "govuk-!-width-one-quarter"},
-            {"text": "", "classes": "govuk-!-width-one-quarter"}
+            {"text": "Name", "classes": "govuk-!-width-one-third"},
+            {"text": "Lot"},
+            {"text": ""}
           ] %}
 
           {% for draft in drafts|sort(attribute="serviceName") %}
@@ -101,9 +101,9 @@
         {% else %}
 
           {% set head = [
-            {"text": "Lot", "classes": "govuk-!-width-one-quarter"},
-            {"text": "Name", "classes": "govuk-!-width-one-half"},
-            {"text": "", "classes": "govuk-!-width-one-quarter"}
+            {"text": "Lot", "classes": "govuk-!-width-one-third"},
+            {"text": "Name"},
+            {"text": ""}
           ] %}
 
           {% for draft in drafts|sort(attribute="lotName") %}
@@ -138,7 +138,7 @@
           {{ govukTable({
             "head": head,
             "rows": ns.drafts_rows,
-            "classes": "govuk-!-margin-bottom-6"
+            "classes": "dm-table govuk-!-margin-bottom-6"
           })}}
         {% else %}
           <h2 class="govuk-heading-m">Drafts</h2>
@@ -151,7 +151,8 @@
 
           {{ govukTable({
             "head": head,
-            "rows": ns.complete_drafts_rows
+            "rows": ns.complete_drafts_rows,
+            "classes": "dm-table"
           })}}
         {% else %}
           <h2 class="govuk-heading-m">Ready for submission</h2>

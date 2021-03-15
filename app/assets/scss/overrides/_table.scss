@@ -6,3 +6,18 @@
 .dm-action-link {
     text-align: right;
 }
+
+/*
+ * On /frameworks/<framework_slug>/submissions we override the table width
+ * in order to make the multiple tables on the page look consistent.
+ * The GOV.UK Design System width overrides default to 100%, so on small screens,
+ * the override ends up making things go wonky.
+ * This overrides THAT override.
+ */
+
+ .dm-table {
+    .govuk-\!-width-one-third {
+        width: 33.33% !important;
+    }
+ }
+
