@@ -23,7 +23,7 @@
     "gulp-shell": "^0.7.1",
     "gulp-sourcemaps": "^3.0.0",
     "gulp-uglify": "^3.0.2",
-    "jquery": "3.5.0"
+    "jquery": "3.6.0"
   },
   "scripts": {
     "frontend-build:development": "gulp build:development",
