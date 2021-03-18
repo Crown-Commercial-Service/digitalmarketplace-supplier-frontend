@@ -1,0 +1,32 @@
+/*
+ * On some pages, we use a table with action links.
+ * We want to style all the action links to be right-aligned.
+ */
+
+.dm-action-link {
+    @include govuk-media-query($from: tablet) {
+        text-align: right;
+    }
+}
+
+.dm-section-action-link {
+    margin-bottom: govuk-spacing(3);
+    @include govuk-media-query($from: tablet) {
+
+        float: right;
+        width: auto;
+
+        a {
+            @include govuk-font($size: 24, $weight: bold);
+        }
+    }
+}
+
+/*
+ * We want headings next to action links to display inline
+ */
+ .dm-summary-list-heading {
+    @include govuk-media-query($from: tablet) {
+        display: inline-block;
+    }
+ }

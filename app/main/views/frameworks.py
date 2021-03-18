@@ -13,6 +13,7 @@ from dmapiclient import APIError, HTTPError
 from dmapiclient.audit import AuditTypes
 from dmcontent.questions import ContentQuestion
 from dmcontent.errors import ContentNotFoundError
+from dmcontent.html import to_summary_list_row
 from dmcontent.utils import count_unanswered_questions
 from dmutils import s3
 from dmutils.dates import update_framework_with_formatted_dates
@@ -44,7 +45,7 @@ from ..helpers.frameworks import (
     get_statuses_for_lot,
     get_supplier_framework_info,
     get_supplier_on_framework_from_info,
-    get_supplier_registered_name_from_declaration,
+    get_supplier_registered_name_from_declaration, question_references,
     register_interest_in_framework,
     return_supplier_framework_info_if_on_framework_or_abort,
     returned_agreement_email_recipients,
@@ -528,6 +529,32 @@ def framework_supplier_declaration_overview(framework_slug):
             errors = declaration_validator.get_error_messages_for_page(section)
 
         sections_errors[section.slug] = (section, errors)
+
+        # Create govukSummaryList-friendly fields
+        section.summary_list = []
+        for question in section.questions:
+            if sf["prefillDeclarationFromFrameworkSlug"] and section.prefill:
+                question.empty_message = "Review answer"
+            else:
+                question.empty_message = "Answer question"
+            section.summary_list.append(
+                to_summary_list_row(
+                    question,
+                    action_link=url_for(
+                        ".framework_supplier_declaration_edit",
+                        framework_slug=framework_slug,
+                        section_id=section.id,
+                        _anchor=question.id if section.questions[0].id != question.id else None
+                    ) if framework["status"] == "open" and sections_errors else None
+                )
+            )
+
+        # We need to parse key text for question references. This isn't optimal, but references only apply to
+        # this app, so holding off on centralising this logic to the Content Loader.
+        def label_question_reference(row):
+            row["key"]["text"] = question_references(row.get("key", {}).get("text", ""), section.get_question)
+            return row
+        section.summary_list = list(map(label_question_reference, section.summary_list))
 
     return render_template(
         "frameworks/declaration_overview.html",
