@@ -1,0 +1,67 @@
+{% extends "_base_page.html" %}
+
+{% block pageTitle %}
+  {% if errors %} Error: {% endif %}Your {{ framework.name }} services – Digital Marketplace
+{% endblock %}
+
+{% block breadcrumb %}
+  {{ govukBreadcrumbs({
+    "items": [
+      {
+        "text": "Digital Marketplace",
+        "href": "/"
+      },
+      {
+        "text": "Your account",
+        "href": url_for('.dashboard')
+      },
+      {
+        "text": ("Apply to " + framework.name) if framework.status == "open" else ("Your " + framework.name + " application"),
+        "href": url_for(".framework_dashboard", framework_slug=framework.slug)
+      },
+      {
+        "text": ("Your " + framework.name + " services"),
+        "href": url_for(".framework_submission_lots", framework_slug=framework.slug)
+      },
+      {
+        "text": "Choose a service type"
+      }
+    ]
+  }) }}
+{% endblock %}
+
+{% block mainContent %}
+
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-two-thirds"> 
+    <form method="post" enctype="multipart/form-data" action="{{ request.path }}" novalidate>
+      
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+      
+      {{ govukRadios({
+        "name": "lot_slug",
+        "classes": "dm-radios--description-hint",
+        "errorMessage": {
+          "text": errors['lot_slug'].errorMessage
+        } if errors['lot_slug'],
+        "fieldset": {
+          "legend": {
+            "text": "What type of service do you want to add?",
+            "isPageHeading": true,
+            "classes": "govuk-fieldset__legend--l"
+          }
+        },
+        "items": lots
+      })}}
+      
+      {{ govukButton({
+        "text": "Save and continue"
+      })}}
+    </form>
+    <p class="govuk-body">
+      <a class="govuk-link" href="{{ url_for('.framework_submission_lots', framework_slug=framework.slug) }}">Back to your {{ framework.name }} services</a>
+    </p>
+  </div>
+</div>
+
+{% endblock %}

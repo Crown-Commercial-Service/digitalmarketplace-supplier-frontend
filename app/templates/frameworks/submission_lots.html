@@ -34,34 +34,163 @@
   {% include "partials/service_warning.html" %}
 {% endif %}
 
-  <div class="govuk-grid-row">
+  <div class="govuk-grid-row govuk-!-margin-bottom-6">
     <div class="govuk-grid-column-two-thirds">
       <h1 class="govuk-heading-l">Your {{ framework.name }} services</h1>
-        {% if framework.family == 'g-cloud' %}
-          <div class="use-of-service-data">
-            {% if framework.status == 'pending' and not application_made %}
-              <p class="govuk-body">The services below were not submitted.</p>
-            {% else %}
-            <p class="govuk-body">The service information you provide here:</p>
-            <ul class="govuk-list govuk-list--bullet">
-              <li>will be public</li>
-              <li>may be used as filters</li>
-              <li>will appear on your service description page </li>
-              <li>should help buyers review and compare services</li>
-            </ul>
-            {% endif %}
-          </div>
-        {% endif %}
+      {% if framework.family == 'g-cloud' %}
+        <div class="use-of-service-data">
+          {% if framework.status == 'pending' and not application_made %}
+            <p class="govuk-body">The services below were not submitted.</p>
+          {% else %}
+          <p class="govuk-body">The service information you provide in your application:</p>
+          <ul class="govuk-list govuk-list--bullet">
+            <li>will be on your public service description page</li>
+            <li>will help buyers review and compare services</li>
+            <li>may be used as filters in search</li>
+          </ul>
+          {% endif %}
+        </div>
+      {% endif %}
+      {% if framework.status == 'open' %}
+        {{ govukButton({
+          "text": "Add a service",
+          "href": url_for('.choose_draft_service_lot', framework_slug=framework.slug)
+        })}}
+      {% endif %}
     </div>
   </div>
   <div class="govuk-grid-row">
-    <div class="govuk-grid-column-two-thirds framework-lots-table">
-      {% with items = lots %}
-        {% include "toolkit/browse-list.html" %}
-      {% endwith %}
-<p class="govuk-body">&nbsp;</p>
-    <a class="govuk-link" href="{{ url_for('.framework_dashboard', framework_slug=framework.slug) }}">Back to {{ framework.name }} application</a>
+    <div class="govuk-grid-column-two-thirds">
 
+      {% if framework.status == 'open' %}
+        {% set ns = namespace(complete_drafts_rows = [], drafts_rows = [], head = []) %}
+
+        {% if framework.family == "g-cloud" %}
+
+          {% set head = [
+            {"text": "Name", "classes": "govuk-!-width-one-third"},
+            {"text": "Lot"},
+            {"text": ""}
+          ] %}
+
+          {% for draft in drafts|sort(attribute="serviceName") %}
+            {% set row = ns.drafts_rows.append(
+              [
+                {"text": draft["serviceName"]},
+                {"text": draft["lotName"]},
+                {
+                  "html": '<a href="' + url_for(".view_service_submission", framework_slug=framework.slug, lot_slug=draft.lot, service_id=draft["id"]) + '">Edit</a>',
+                  "classes": "dm-action-link"
+                }
+              ]
+            )%}
+          {% endfor %}
+          
+          {% for draft in complete_drafts|sort(attribute="serviceName") %}
+            {% set row = ns.complete_drafts_rows.append(
+              [
+                {"text": draft["serviceName"]},
+                {"text": draft["lotName"]},
+                {
+                  "html": '<a href="' + url_for(".view_service_submission", framework_slug=framework.slug, lot_slug=draft.lot, service_id=draft["id"]) + '">Edit</a>',
+                  "classes": "dm-action-link"
+                }
+              ]
+            )%}
+          {% endfor %}
+        {% else %}
+
+          {% set head = [
+            {"text": "Lot", "classes": "govuk-!-width-one-third"},
+            {"text": "Name"},
+            {"text": ""}
+          ] %}
+
+          {% for draft in drafts|sort(attribute="lotName") %}
+            {% set row = ns.drafts_rows.append(
+              [
+                {"text": draft["lotName"]},
+                {"text": draft["serviceName"] if draft["serviceName"] else ""},
+                {
+                  "html": '<a href="' + url_for(".view_service_submission", framework_slug=framework.slug, lot_slug=draft.lot, service_id=draft["id"]) + '">Edit</a>',
+                  "classes": "dm-action-link"
+                }
+              ]
+            )%}
+          {% endfor %}
+
+          {% for draft in complete_drafts|sort(attribute="lotName") %}
+              {% set row = ns.complete_drafts_rows.append(
+                [
+                  {"text": draft["lotName"]},
+                  {"text": draft["serviceName"] if draft["serviceName"] else ""},
+                  {
+                    "html": '<a href="' + url_for(".view_service_submission", framework_slug=framework.slug, lot_slug=draft.lot, service_id=draft["id"]) + '">Edit</a>',
+                    "classes": "dm-action-link"
+                  }
+                ]
+              )%}
+          {% endfor %}
+        {% endif %}
+
+        {% if drafts %}
+          <h2 class="govuk-heading-m">Drafts ({{drafts|length}})</h2>
+          {{ govukTable({
+            "head": head,
+            "rows": ns.drafts_rows,
+            "classes": "dm-table govuk-!-margin-bottom-6"
+          })}}
+        {% else %}
+          <h2 class="govuk-heading-m">Drafts</h2>
+          <p class="govuk-body">You haven’t added any draft services yet.</p>
+        {% endif %}
+
+        {% if complete_drafts %}
+          <h2 class="govuk-heading-m">Ready for submission{% if complete_drafts %} ({{complete_drafts|length}}) {% endif %}</h2>
+          <p class="govuk-body">These services will be submitted and can be edited before the deadline</p>
+
+          {{ govukTable({
+            "head": head,
+            "rows": ns.complete_drafts_rows,
+            "classes": "dm-table"
+          })}}
+        {% else %}
+          <h2 class="govuk-heading-m">Ready for submission</h2>
+          <p class="govuk-body">You haven’t marked any services as complete yet.</p>
+        {% endif %}
+      {% endif %}
+
+      {% if framework.status == 'standstill' or framework.status == 'pending' %}
+        {% set ns = namespace(lots = []) %}
+        {% for lot in lots %}
+          {% set row = ns.lots.append(
+          
+            {
+              "key": {
+                "text": lot.title, 
+              },
+              "value": {
+                "text": lot.statuses[0].title
+              },
+              "actions": {
+                "items": [
+                  {
+                    "href": url_for(".framework_submission_services", framework_slug=framework.slug, lot_slug=lot.slug),
+                    "text": "View",
+                    "visuallyHiddenText": "your submitted " + lot.title + " services"
+                  }
+                ]
+              }
+            }
+          )%}
+        {% endfor %}
+        {{ govukSummaryList({
+          "rows": ns.lots
+        })}}
+      {% endif %}
+      <p class="govuk-body">
+        <a class="govuk-link" href="{{ url_for('.framework_dashboard', framework_slug=framework.slug) }}">Back to {{ framework.name }} application</a>
+      </p>
     </div>
   </div>
 

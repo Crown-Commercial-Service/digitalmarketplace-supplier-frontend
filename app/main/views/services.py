@@ -306,7 +306,6 @@ def redirect_direct_service_urls(service_id, trailing_path):
 
 #  ####################  CREATING NEW DRAFT SERVICES ##########################
 
-
 @main.route('/frameworks/<framework_slug>/submissions/<lot_slug>/create', methods=['GET', 'POST'])
 @login_required
 @EnsureApplicationCompanyDetailsHaveBeenConfirmed(data_api_client)

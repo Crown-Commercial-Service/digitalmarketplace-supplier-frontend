@@ -1,0 +1,12 @@
+/*
+ * On the What type of service do you want to add? page, we want to display the question
+ * description as hint text, but it's already got classes applied to the HTML. So we want
+ * to reinstate the govuk-hint colour to conform with other hints.
+ *
+ * It may be better to remove these classes in the content loader before they get into
+ * this app.
+ */
+.dm-radios--description-hint .govuk-radios__hint .govuk-body,
+.dm-radios--description-hint .govuk-radios__hint .govuk-list {
+    color: $govuk-secondary-text-colour;
+}

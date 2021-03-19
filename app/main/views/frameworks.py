@@ -269,6 +269,7 @@ def framework_submission_lots(framework_slug):
 
     lots = [{
         "title": lot_question[lot['slug']]['label'] if framework["status"] == "open" else lot["name"],
+        "slug": lot['slug'],
         'body': lot_question[lot['slug']]['description'],
         "link": url_for('.framework_submission_services', framework_slug=framework_slug, lot_slug=lot['slug']),
         "statuses": get_statuses_for_lot(
@@ -292,6 +293,61 @@ def framework_submission_lots(framework_slug):
         lots=lots,
         application_made=application_made
     ), 200
+
+
+@main.route('/frameworks/<framework_slug>/submissions/service-type', methods=['GET', 'POST'])
+@login_required
+@EnsureApplicationCompanyDetailsHaveBeenConfirmed(data_api_client)
+def choose_draft_service_lot(framework_slug):
+    framework = get_framework_or_404(data_api_client, framework_slug)
+
+    if framework['status'] not in ["open"]:
+        abort(404)
+
+    errors = {}
+    status_code = 200
+
+    lot_question = {
+        option["value"]: option
+        for option in ContentQuestion(content_loader.get_question(framework_slug, 'services', 'lot')).get('options')
+    }
+
+    lots = [
+        {
+            "text": lot_question[lot['slug']]['label'] if framework["status"] == "open" else lot["name"],
+            "value": lot['slug'],
+            "hint": {
+                "html": lot_question[lot['slug']]['description']
+            }
+        } for lot in framework['lots']
+        if framework["status"] == "open" or (lot['draft_count'] + lot['complete_count']) > 0
+    ]
+
+    if request.method == 'POST':
+        if "lot_slug" in request.form:
+            return redirect(
+                url_for(
+                    ".framework_submission_services",
+                    framework_slug=framework['slug'],
+                    lot_slug=request.form['lot_slug']
+                )
+            )
+        else:
+            errors = {
+                "lot_slug": {
+                    "text": "Select a type of service",
+                    "href": "#lot_slug-1",
+                    "errorMessage": "Select a type of service"
+                }
+            }
+            status_code = 400
+
+    return render_template(
+        "frameworks/choose_service_lot.html",
+        framework=framework,
+        lots=lots,
+        errors=errors
+    ), status_code
 
 
 @main.route('/frameworks/<framework_slug>/submissions/<lot_slug>', methods=['GET'])
