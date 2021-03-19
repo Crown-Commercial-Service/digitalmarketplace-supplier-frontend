@@ -550,15 +550,20 @@ class BaseApplicationTest:
         masthead_heading = doc.xpath('normalize-space(//h2[@class="govuk-error-summary__title"]/text())')
         masthead_link_text = doc.xpath(
             "normalize-space(//ul[contains(@class, 'govuk-error-summary__list')]/li/a/text())")
-        validation_text = doc.xpath('normalize-space(//span[@class="validation-message"]/text())')
+        error_message_span = doc.xpath('//span[@class="govuk-error-message"]')
+        # TODO: When all error messages are govuk-frontend, we can simplify this
+        if error_message_span:
+            error_message = error_message_span[0].text_content().strip()
+        else:
+            error_message = doc.xpath('normalize-space(//span[@class="validation-message"]/text())')
 
         assert res.status_code == 400
         assert masthead_heading and title == masthead_heading, \
             f"Expected '{title}' == '{masthead_heading}'"
         assert masthead_link_text and question_name == masthead_link_text, \
             f"Expected '{question_name}' == '{masthead_link_text}'"
-        assert validation_text and validation_message == validation_text, \
-            f"Expected '{validation_message}' == '{validation_text}'"
+        assert error_message and validation_message == error_message, \
+            f"Expected '{validation_message}' == '{error_message}'"
 
 
 class FakeMail(object):
