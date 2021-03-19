@@ -1,7 +1,7 @@
 {% extends "_base_page.html" %}
 
 {% block pageTitle %}
-  Registered company name – Digital Marketplace
+  {% if errors %}Error: {% endif %}Registered company name – Digital Marketplace
 {% endblock %}
 
 {% block breadcrumb %}
@@ -27,32 +27,34 @@
 {% endblock %}
 
 {% block mainContent %}
-<div class="single-question-page">
-  <div class="govuk-grid-row">
-    <div class="govuk-grid-column-two-thirds">
-      <h1 class="govuk-heading-l">Registered company name</h1>
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-two-thirds">
 
-      <form method="POST" action="{{ url_for('.edit_supplier_registered_name') }}">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+    <form method="POST" action="{{ url_for('.edit_supplier_registered_name') }}" novalidate>
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
 
-        {%
-          with
-          name = "registered_company_name",
-          question = "Registered company name",
-          value = form.registered_company_name.data,
-          error = errors.get("registered_company_name", {}).get("message", None),
-          question_advice = "This could be different to your trading name."
-        %}
-          {% include "toolkit/forms/textbox.html" %}
-        {% endwith %}
+      {{ govukInput({
+        "label": {
+          "text": form.registered_company_name.label.text,
+          "classes": "govuk-label--l",
+          "attributes": {"id": form.registered_company_name.name},
+          "isPageHeading": true
+        },
+        "hint": {
+          "text": "This could be different to your trading name."
+        },
+        "id": "input-" + form.registered_company_name.name,
+        "name": form.registered_company_name.name,
+        "errorMessage": errors.registered_company_name.errorMessage if errors.registered_company_name.errorMessage,
+        "value": form.registered_company_name.data if form.registered_company_name.data
+      })}}
 
-        {{ govukButton({
-          "text": "Save and return",
-        }) }}
+      {{ govukButton({
+        "text": "Save and return",
+      }) }}
 
-        <p class="govuk-body"><a class="govuk-link" href="{{ url_for('.supplier_details') }}">Return to company details</a></p>
-      </form>
-    </div>
+      <p class="govuk-body"><a class="govuk-link" href="{{ url_for('.supplier_details') }}">Return to company details</a></p>
+    </form>
   </div>
 </div>
 
