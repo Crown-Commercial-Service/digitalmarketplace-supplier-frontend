@@ -51,29 +51,31 @@
       {{ form.postcode }}
 
       {# TODO: make sure this is using the standard GOV.UK design system location autocomplete #}
-      {% if form.country.errors %}
-      <div class="validation-wrapper">
-        <style>
-          #location-autocomplete {border: 5px solid #B10E1E;}
-          .autocomplete__hint {border: 5px solid;}
-        </style>
+
+      {% set ns = namespace(countries = []) %}
+      {% if not form.country.data %}
+        {% set c = ns.countries.append({"value": "", "text": "", "selected": not form.country.data }) %}
       {% endif %}
 
-      <div class="question" id="country">
-        <span class="question-heading" id="country-label">Country</span>
-        {{ forms.field_errors(form.country.name, errors=form.country.errors) }}
-        <select name="country" id="location-autocomplete" class="location-autocomplete-fallback">
-        {% if not form.country.data %}
-          <option value="" selected="selected"></option>
-        {% endif %}
-        {% for country in countries %}
-          <option value="{{country[1]}}"{% if form.country.data == country[1]%} selected="selected"{% endif %}>{{country[0]}}</option>
-        {% endfor %}
-        </select>
-      </div>
-      {% if form.country.errors %}
-      </div>
-      {% endif %}
+      {% for country in countries %}
+        {% set c = ns.countries.append({"value": country[1], "text": country[0], "selected": form.country.data == country[1] }) %}
+      {% endfor %}
+
+      {{ govukSelect({
+        "id": "input-" + form.country.name,
+        "name": form.country.name,
+        "classes": "location-autocomplete-fallback govuk-input--width-10",
+        "label": {
+          "text": "Country",
+          "classes": "govuk-label--m",
+        },
+        "hint": {
+          "text": form.country.hint
+        } if form.country.hint,
+        "items": ns.countries,
+        "errorMessage": errors.country.errorMessage if errors.country.errorMessage,
+        "value": form.country.data if form.country.data
+      })}}
 
       {{ govukButton({
         "text": "Save and return",

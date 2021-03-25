@@ -96,20 +96,6 @@ $govuk-global-styles: true;
   padding-bottom: 10px;
 }
 
-// These styles are to customise the country picker widget supplied by registers. The country picker's styles are
-// included in a separate stylesheet which is brought in by the country picker npm package. This makes is difficult
-// to update the source, so we do it here. It's important that the country picker's style sheet is loaded in the
-// template before our own CSS, so the styles defined here override and take precedence.
-#location-autocomplete, .autocomplete__hint {
-  padding: 9px;
-}
-
-.location-autocomplete-fallback {
-  @include core-19;
-  width: 100%;
-  height: 42px;
-}
-
 .browse-list-item-link {
   text-decoration: underline;
 }
