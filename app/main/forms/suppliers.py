@@ -252,8 +252,16 @@ class CompanyTradingStatusForm(FlaskForm):
         },
     ]
 
-    trading_status = DMRadioField(
+    trading_status = RadioField(
         "What’s your trading status?",
-        hint="This information will be used to find out about the types of companies on frameworks.",
         validators=[InputRequired(message="You must choose a trading status.")],
-        options=OPTIONS)
+        choices=[(option["value"], option["label"]) for option in OPTIONS],
+        id="input-trading_status-1"  # TODO: change to input-reuse when on govuk-frontend~3
+    )
+
+    def get_items(self):
+        return [
+            {'value': value, 'text': text, 'checked': checked}
+            for (value, text, checked)
+            in self.trading_status.iter_choices()
+        ]
