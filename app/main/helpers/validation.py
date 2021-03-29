@@ -44,6 +44,7 @@ class DeclarationValidator(object):
                 validation_message = self.get_error_message(question_id, raw_errors_map[question_id])
                 errors_map.append((question_id, {
                     'input_name': question_id,
+                    'href': self.content.get_question(question_id).get('href') or None,
                     'question': "Question {}".format(question_number)
                     if question_number else self.content.get_question(question_id).get('question'),
                     'message': validation_message,
