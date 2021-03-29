@@ -2154,7 +2154,7 @@ class TestCreateSupplier(BaseApplicationTest):
             res = c.get("/suppliers/create/complete")
 
             assert res.status_code == 200
-            assert 'An email has been sent to my@email.com' in res.get_data(as_text=True)
+            assert 'my@email.com' in res.get_data(as_text=True)
             assert 'other_stuff' not in session
 
     def test_should_show_email_address_even_when_refreshed(self):
@@ -2165,12 +2165,12 @@ class TestCreateSupplier(BaseApplicationTest):
             res = c.get('/suppliers/create/complete')
 
             assert res.status_code == 200
-            assert 'An email has been sent to my-email@example.com' in res.get_data(as_text=True)
+            assert 'my-email@example.com' in res.get_data(as_text=True)
 
             res = c.get('/suppliers/create/complete')
 
             assert res.status_code == 200
-            assert 'An email has been sent to my-email@example.com' in res.get_data(as_text=True)
+            assert 'my-email@example.com' in res.get_data(as_text=True)
 
 
 class TestJoinOpenFrameworkNotificationMailingList(BaseApplicationTest):
@@ -2474,13 +2474,13 @@ class TestBecomeASupplier(BaseApplicationTest):
         self.data_api_client.find_frameworks.assert_called_once_with()
 
         # Check right headings are there
-        assert u'Services you can apply to sell' in data
-        assert u'Services you can’t apply to sell at the moment' not in data
-        assert u'You can’t apply to sell anything at the moment' not in data
+        assert 'Services you can apply to sell' in data
+        assert 'Services you can’t apply to sell at the moment' not in data
+        assert 'You cannot create a supplier account at the moment' not in data
 
         # Check the right framework content is there
-        assert u'Digital Outcomes and Specialists is opening for applications.' in data
-        assert u'G-Cloud is open for applications.' in data
+        assert 'Digital Outcomes and Specialists is opening for applications.' in data
+        assert 'G-Cloud is open for applications.' in data
 
         # Check the right calls to action are there
         assert 'Create a supplier account' in data
@@ -2502,13 +2502,13 @@ class TestBecomeASupplier(BaseApplicationTest):
         self.data_api_client.find_frameworks.assert_called_once_with()
 
         # Check right headings are there
-        assert u'You can’t apply to sell anything at the moment' in data
-        assert u'Services you can apply to sell' not in data
-        assert u'Services you can’t apply to sell at the moment' not in data
+        assert 'You cannot create a supplier account at the moment' in data
+        assert 'Services you can apply to sell' not in data
+        assert 'Services you can’t apply to sell at the moment' not in data
 
         # Check the right framework content is there
-        assert u'Digital Outcomes and Specialists is closed for applications.' in data
-        assert u'G-Cloud is closed for applications.' in data
+        assert 'Digital Outcomes and Specialists is closed for applications.' in data
+        assert 'G-Cloud is closed for applications.' in data
 
         # Check the right calls to action are there
         assert 'Create a supplier account' not in data
@@ -2530,13 +2530,13 @@ class TestBecomeASupplier(BaseApplicationTest):
         self.data_api_client.find_frameworks.assert_called_once_with()
 
         # Check right headings are there
-        assert u'Services you can apply to sell' in data
-        assert u'Services you can’t apply to sell at the moment' in data
-        assert u'You can’t apply to sell anything at the moment' not in data
+        assert 'Services you can apply to sell' in data
+        assert 'Services you can’t apply to sell at the moment' in data
+        assert 'You cannot create a supplier account at the moment' not in data
 
         # Check the right framework content is there
-        assert u'Digital Outcomes and Specialists is closed for applications.' in data
-        assert u'G-Cloud is open for applications.' in data
+        assert 'Digital Outcomes and Specialists is closed for applications.' in data
+        assert 'G-Cloud is open for applications.' in data
 
         # Check the right calls to action are there
         assert 'Create a supplier account' in data
