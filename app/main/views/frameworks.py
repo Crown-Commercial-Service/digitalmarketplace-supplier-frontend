@@ -790,49 +790,62 @@ def framework_supplier_declaration_edit(framework_slug, section_id):
 
     # prepare the govuk-frontend macro calls for this page with some customizations
     form_html = []
-    for question in section.questions:
-        h = govuk_frontend.from_question(question, all_answers, errors, is_page_heading=False)
 
-        # we want to use a class to style numbered questions
-        if "fieldset" in h:
-            label_or_legend = h["fieldset"]["legend"]
-            h["fieldset"]["classes"] = "dm-numbered-question {}".format(h['fieldset'].get('classes', ''))
+    def adjust_params(question_data):
+        if isinstance(question_data, list):
+            for q in question_data:
+                adjust_params(q)
         else:
-            label_or_legend = h["label"]
-            h["label"]["classes"] = "dm-numbered-question {}".format(h['label'].get('classes', ''))
+            # we want to use a class to style numbered questions
+            if "fieldset" in question_data:
+                label_or_legend = question_data["fieldset"]["legend"]
+                question_data["fieldset"]["classes"] = (
+                    "dm-numbered-question {}".format(question_data['fieldset'].get('classes', ''))
+                )
+            else:
+                label_or_legend = question_data["label"]
+                question_data["label"]["classes"] = (
+                    "dm-numbered-question {}".format(question_data['label'].get('classes', ''))
+                )
 
-        params = h["params"]
+            params = question_data["params"]
 
-        # we allow question references in the question label, hint, and error message
-        label_or_legend["text"] = question_references(label_or_legend["text"], content.get_question)
-        if "hint" in params:
-            params["hint"]["text"] = question_references(params["hint"]["text"], content.get_question)
-        if "errorMessage" in params:
-            params["errorMessage"]["text"] = question_references(params["errorMessage"]["text"], content.get_question)
+            # we allow question references in the question label, hint, and error message
+            label_or_legend["text"] = question_references(label_or_legend["text"], content.get_question)
+            if "hint" in params:
+                params["hint"]["text"] = question_references(params["hint"]["text"], content.get_question)
+            if "errorMessage" in params:
+                params["errorMessage"]["text"] = question_references(
+                    params["errorMessage"]["text"], content.get_question
+                )
 
-        # we want question numbers in the label
-        label_or_legend["html"] = (
-            Markup(f'<span class="dm-numbered-question__number">{question.number}</span> ')
-            + label_or_legend["text"]
-        )
-        del label_or_legend["text"]
+            # we want question numbers in the label
+            label_or_legend["html"] = (
+                Markup(f'<span class="dm-numbered-question__number">{question.number}</span> ')
+                + label_or_legend["text"]
+            )
+            del label_or_legend["text"]
 
-        # we add a 'message' to each question which is prefilled
-        if (
-            (question.id not in errors)
-            and name_of_framework_that_section_has_been_prefilled_from
-            and (question.id in all_answers)
-        ):
-            # this is a misuse of error message component but I can't think of a better way right now
-            params["formGroup"] = {"classes": "dm-form-group--notice"}
-            params["errorMessage"] = {
-                "classes": "dm-error-message--notice",
-                "text": "This answer is from your {} declaration".format(
-                    name_of_framework_that_section_has_been_prefilled_from),
-                "visuallyHiddenText": "Notice",
-            }
+            # we add a 'message' to each question which is prefilled
+            if (
+                (question.id not in errors)
+                and name_of_framework_that_section_has_been_prefilled_from
+                and (question.id in all_answers)
+            ):
+                # this is a misuse of error message component but I can't think of a better way right now
+                params["formGroup"] = {"classes": "dm-form-group--notice"}
+                params["errorMessage"] = {
+                    "classes": "dm-error-message--notice",
+                    "text": "This answer is from your {} declaration".format(
+                        name_of_framework_that_section_has_been_prefilled_from),
+                    "visuallyHiddenText": "Notice",
+                }
+        return question_data
 
-        form_html.append(h)
+    for question in section.questions:
+        question_data = govuk_frontend.from_question(question, all_answers, errors, is_page_heading=False)
+
+        form_html.append(adjust_params(question_data))
 
     session_timeout = displaytimeformat(datetime.utcnow() + timedelta(hours=1))
     return render_template(
