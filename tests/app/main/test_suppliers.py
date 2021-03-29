@@ -1347,10 +1347,7 @@ class TestSupplierUpdate(BaseApplicationTest):
         for xpath_selector, expected_content in [
             ("[contains(@class, 'govuk-error-summary__list')]/li/a", "Enter a contact name."),
             ("[contains(@class, 'govuk-error-summary__list')]/li/a", "Enter an email address."),
-            ("[contains(@class, 'govuk-error-summary__list')]/li/a", "Enter a phone number."),
-            ("[@class='validation-message']", "Enter a contact name."),
-            ("[@class='validation-message']", "Enter an email address."),
-            ("[@class='validation-message']", "Enter a phone number."),
+            ("[contains(@class, 'govuk-error-summary__list')]/li/a", "Enter a phone number.")
         ]:
             assert doc.xpath(
                 f"//*{xpath_selector}[normalize-space(string())='{expected_content}']"
@@ -1374,9 +1371,7 @@ class TestSupplierUpdate(BaseApplicationTest):
 
         for xpath_selector, expected_content in [
             ("[contains(@class, 'govuk-error-summary__list')]/li/a", "Enter a phone number under 20 characters."),
-            ("[contains(@class, 'govuk-error-summary__list')]/li/a", "Enter a contact name under 256 characters."),
-            ("[@class='validation-message']", "Enter a contact name under 256 characters."),
-            ("[@class='validation-message']", "Enter a phone number under 20 characters."),
+            ("[contains(@class, 'govuk-error-summary__list')]/li/a", "Enter a contact name under 256 characters.")
         ]:
             assert doc.xpath(
                 f"//*{xpath_selector}[normalize-space(string())='{expected_content}']"
@@ -1396,8 +1391,7 @@ class TestSupplierUpdate(BaseApplicationTest):
         doc = html.fromstring(response)
 
         for xpath_selector, expected_content in [
-            ("[contains(@class, 'govuk-error-summary__list')]/li/a", "Enter a valid email address."),
-            ("[@class='validation-message']", "Enter a valid email address."),
+            ("[contains(@class, 'govuk-error-summary__list')]/li/a", "Enter a valid email address.")
         ]:
             assert doc.xpath(
                 f"//*{xpath_selector}[normalize-space(string())='{expected_content}']"
@@ -2649,7 +2643,7 @@ class TestSupplierAddRegisteredCompanyName(BaseApplicationTest):
         self.assert_single_question_page_validation_errors(
             res,
             question_name="Enter your registered company name.",
-            validation_message="Enter your registered company name."
+            validation_message="Error: Enter your registered company name."
         )
         assert self.data_api_client.update_supplier.call_args_list == []
 
@@ -2683,7 +2677,7 @@ class TestSupplierAddRegisteredCompanyName(BaseApplicationTest):
         page_heading = doc.xpath('//h1')
 
         assert res.status_code == 200
-        assert page_heading[0].text.strip() == "Registered company name"
+        assert page_heading[0].text_content().strip() == "Registered company name"
         assert doc.xpath('//form[@action="/suppliers/registered-company-name/edit"]')
         assert self.data_api_client.update_supplier.call_args_list == []
 
@@ -2941,7 +2935,7 @@ class TestSupplierAddRegistrationNumber(BaseApplicationTest):
         page_heading = doc.xpath('//h1')
 
         assert res.status_code == 200
-        assert page_heading[0].text.strip() == "Are you registered with Companies House?"
+        assert page_heading[0].text_content().strip() == "Are you registered with Companies House?"
         assert doc.xpath('//form[@action="/suppliers/registration-number/edit"]')
         assert self.data_api_client.update_supplier.call_args_list == []
 

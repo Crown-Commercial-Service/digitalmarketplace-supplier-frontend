@@ -6,7 +6,7 @@
   {{ super() }}
 {% endblock %}
 {% block pageTitle %}
-  Registered address – Digital Marketplace
+  {% if errors %}Error: {% endif %}Registered address – Digital Marketplace
 {% endblock %}
 
 {% block breadcrumb %}
@@ -34,59 +34,110 @@
 
 {% block mainContent %}
   <div class="govuk-grid-row">
-    <div class="govuk-grid-column-full">
-      <h1 class="govuk-heading-l">What is your registered office address?</h1>
-    </div>
-  </div>
-
-  <form action="{{ url_for('.edit_registered_address') }}" method="post">
-
-  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
-
-  <div class="govuk-grid-row">
     <div class="govuk-grid-column-two-thirds">
 
-      {{ form.street }}
-      {{ form.city }}
-      {{ form.postcode }}
+      <form action="{{ url_for('.edit_registered_address') }}" method="post" novalidate>
 
-      {# TODO: make sure this is using the standard GOV.UK design system location autocomplete #}
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
 
-      {% set ns = namespace(countries = []) %}
-      {% if not form.country.data %}
-        {% set c = ns.countries.append({"value": "", "text": "", "selected": not form.country.data }) %}
-      {% endif %}
+        {% call govukFieldset({
+          "legend": {
+            "text": "What is your registered office address?",
+            "classes": "govuk-fieldset__legend--l",
+            "isPageHeading": true
+          }
+        }) %}
 
-      {% for country in countries %}
-        {% set c = ns.countries.append({"value": country[1], "text": country[0], "selected": form.country.data == country[1] }) %}
-      {% endfor %}
+          {{ govukInput({
+            "label": {
+              "text": form.street.label.text,
+              "classes": "govuk-label--m",
+              "attributes": {"id": form.street.name}
+            },
+            "hint": {
+              "text": form.street.hint
+            },
+            "id": "input-" + form.street.name,
+            "name": form.street.name,
+            "autocomplete": "street-address",
+            "errorMessage": errors.street.errorMessage if errors.street.errorMessage,
+            "value": form.street.data if form.street.data
+          })}}
 
-      {{ govukSelect({
-        "id": "input-" + form.country.name,
-        "name": form.country.name,
-        "classes": "location-autocomplete-fallback govuk-input--width-10",
-        "label": {
-          "text": "Country",
-          "classes": "govuk-label--m",
-        },
-        "hint": {
-          "text": form.country.hint
-        } if form.country.hint,
-        "items": ns.countries,
-        "errorMessage": errors.country.errorMessage if errors.country.errorMessage,
-        "value": form.country.data if form.country.data
-      })}}
+          {{ govukInput({
+            "label": {
+              "text": form.city.label.text,
+              "classes": "govuk-label--m",
+              "attributes": {"id": form.city.name}
+            },
+            "hint": {
+              "text": form.city.hint
+            },
+            "classes": "govuk-!-width-two-thirds",
+            "id": "input-" + form.city.name,
+            "name": form.city.name,
+            "autocomplete": "address-town",
+            "errorMessage": errors.city.errorMessage if errors.city.errorMessage,
+            "value": form.city.data if form.city.data
+          })}}
 
-      {{ govukButton({
-        "text": "Save and return",
-      }) }}
+          {{ govukInput({
+            "label": {
+              "text": form.postcode.label.text,
+              "classes": "govuk-label--m",
+              "attributes": {"id": form.postcode.name}
+            },
+            "hint": {
+              "text": form.postcode.hint
+            },
+            "classes": "govuk-input--width-10",
+            "id": "input-" + form.postcode.name,
+            "name": form.postcode.name,
+            "autocomplete": "address-town",
+            "errorMessage": errors.postcode.errorMessage if errors.postcode.errorMessage,
+            "value": form.postcode.data if form.postcode.data
+          })}}
+
+          {# TODO: make sure this is using the standard GOV.UK design system location autocomplete #}
+
+          {% set ns = namespace(countries = []) %}
+          {% if not form.country.data %}
+            {% set c = ns.countries.append({"value": "", "text": "", "selected": not form.country.data }) %}
+          {% endif %}
+
+          {% for country in countries %}
+            {% set c = ns.countries.append({"value": country[1], "text": country[0], "selected": form.country.data == country[1] }) %}
+          {% endfor %}
+
+          {{ govukSelect({
+            "id": "input-" + form.country.name,
+            "name": form.country.name,
+            "classes": "location-autocomplete-fallback govuk-input--width-10",
+            "label": {
+              "text": "Country",
+              "classes": "govuk-label--m",
+            },
+            "hint": {
+              "text": form.country.hint
+            } if form.country.hint,
+            "items": ns.countries,
+            "errorMessage": errors.country.errorMessage if errors.country.errorMessage,
+            "value": form.country.data if form.country.data
+          })}}
+
+        {% endcall %}
+
+        {{ govukButton({
+          "text": "Save and return",
+        }) }}
+        <p class="govuk-body">
+          <a class="govuk-link" href="{{ url_for('.supplier_details') }}">Return to company details</a>
+        </p>
+
+      </form>
 
     </div>
   </div>
-  <p class="govuk-body">
-    <a class="govuk-link" href="{{ url_for('.supplier_details') }}">Return to company details</a>
-  </p>
-</form>
 {% endblock %}
 
 {% block pageScripts %}

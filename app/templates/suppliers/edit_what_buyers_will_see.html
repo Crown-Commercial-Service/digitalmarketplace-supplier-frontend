@@ -1,8 +1,7 @@
 {% extends "_base_page.html" %}
-{% import "toolkit/forms/macros/forms.html" as forms %}
 
 {% block pageTitle %}
-  What buyers will see – Digital Marketplace
+  {% if errors %} Error: {% endif %}What buyers will see – Digital Marketplace
 {% endblock %}
 
 {% block breadcrumb %}
@@ -32,35 +31,95 @@
   <div class="govuk-grid-row">
     <div class="govuk-grid-column-full">
       <h1 class="govuk-heading-xl">What buyers will see</h1>
-
-      <div class="dmspeak">
-        <p class="govuk-body">This information will be visible on the Digital Marketplace.</p>
-        <p class="govuk-body">You can change it at any time.</p>
-      </div>
+      <p class="govuk-body">This information will be visible on the Digital Marketplace.</p>
+      <p class="govuk-body">You can change it at any time.</p>
     </div>
   </div>
-
-  <form action="{{ url_for('.edit_what_buyers_will_see') }}" method="post">
-
-  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
 
   <div class="govuk-grid-row">
     <div class="govuk-grid-column-two-thirds">
 
-      {{ form.contactName }}
-      {{ form.email }}
-      {{ form.phoneNumber }}
-      {{ form.description }}
+      <form action="{{ url_for('.edit_what_buyers_will_see') }}" method="post" novalidate>
+
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+
+        {{ govukInput({
+          "label": {
+            "text": form.contactName.label.text,
+            "classes": "govuk-label--m",
+            "attributes": {"id": form.contactName.name}
+          },
+          "hint": {
+            "text": form.contactName.hint
+          },
+          "id": "input-" + form.contactName.name,
+          "name": form.contactName.name,
+          "errorMessage": errors.contactName.errorMessage if errors.contactName.errorMessage,
+          "value": form.contactName.data if form.contactName.data
+        })}}
+
+        {{ govukInput({
+          "label": {
+            "text": form.email.label.text,
+            "classes": "govuk-label--m",
+            "attributes": {"id": form.email.name}
+          },
+          "hint": {
+            "text": form.email.hint
+          },
+          "autocomplete": "email",
+          "id": "input-" + form.email.name,
+          "name": form.email.name,
+          "type": "email",
+          "spellcheck": false,
+          "errorMessage": errors.email.errorMessage if errors.email.errorMessage,
+          "value": form.email.data if form.email.data
+        })}}
+
+        {{ govukInput({
+          "label": {
+            "text": form.phoneNumber.label.text,
+            "classes": "govuk-label--m",
+            "attributes": {"id": form.phoneNumber.name}
+          },
+          "hint": {
+            "text": form.phoneNumber.hint
+          },
+          "autocomplete": "tel",
+          "id": "input-" + form.phoneNumber.name,
+          "name": form.phoneNumber.name,
+          "type": "tel",
+          "errorMessage": errors.phoneNumber.errorMessage if errors.phoneNumber.errorMessage,
+          "value": form.phoneNumber.data if form.phoneNumber.data
+        })}}
+
+        {{ govukCharacterCount({
+          "label": {
+            "text": form.description.question,
+            "classes": "govuk-label--m",
+            "attributes": {"id": "description"}
+          },
+          "hint": {
+            "html": form.description.hint,
+            "classes": "dm-question-advice"
+          },
+          "errorMessage": errors.description.errorMessage,
+          "id": "input-" + form.description.name,
+          "name": form.description.name,
+          "value": form.description.data if form.description.data,
+          "maxwords": 50
+        }) }}
+
+        {{ govukButton({
+          "text": "Save and return",
+        }) }}
+        <p class="govuk-body">
+          <a class="govuk-link" href="{{ url_for('.supplier_details') }}">Return to company details</a>
+        </p>
+
+      </form>
 
     </div>
   </div>
-
-  {{ govukButton({
-    "text": "Save and return",
-  }) }}
-  <p class="govuk-body">
-    <a class="govuk-link" href="{{ url_for('.supplier_details') }}">Return to company details</a>
-  </p>
-  </form>
 
 {% endblock %}
