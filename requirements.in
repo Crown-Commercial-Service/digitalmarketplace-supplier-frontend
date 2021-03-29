@@ -9,4 +9,4 @@ itsdangerous==1.1.0
 digitalmarketplace-apiclient
 digitalmarketplace-content-loader
 digitalmarketplace-utils>=57.0.0
-git+https://github.com/alphagov/govuk-frontend-jinja.git@v0.5.2-alpha#egg=govuk-frontend-jinja==0.5.2-alpha
+git+https://github.com/alphagov/govuk-frontend-jinja.git@v0.5.8-alpha#egg=govuk-frontend-jinja==0.5.8-alpha

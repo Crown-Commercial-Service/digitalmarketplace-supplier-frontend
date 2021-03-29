@@ -70,7 +70,7 @@ gds-metrics==0.2.0
     # via digitalmarketplace-utils
 govuk-country-register==0.5.0
     # via digitalmarketplace-utils
-git+https://github.com/alphagov/govuk-frontend-jinja.git@v0.5.2-alpha#egg=govuk-frontend-jinja==0.5.2-alpha
+git+https://github.com/alphagov/govuk-frontend-jinja.git@v0.5.8-alpha#egg=govuk-frontend-jinja==0.5.8-alpha
     # via -r requirements.in
 idna==2.9
     # via requests
