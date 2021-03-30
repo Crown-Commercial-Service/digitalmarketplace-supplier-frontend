@@ -33,7 +33,7 @@
 <div class="single-question-page">
   <div class="govuk-grid-row">
     <div class="govuk-grid-column-two-thirds">
-      <form method="POST" action="{{ url_for('.edit_supplier_trading_status') }}">
+      <form method="POST" action="{{ url_for('.edit_supplier_trading_status') }}" novalidate>
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
 
         {{ govukRadios({
