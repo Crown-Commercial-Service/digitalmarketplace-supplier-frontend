@@ -58,7 +58,7 @@
             name = "contact_name",
             value = form.contact_name.data,
             error = errors.get("contact_name", {}).get("message", None),
-            hint = "This can be the name of the person or team you want buyers to contact"
+            hint = "This should be the name of the person you want buyers to contact"
         %}
         {% include "toolkit/forms/textbox.html" %}
         {% endwith %}
@@ -79,7 +79,8 @@
             question = "Contact phone number",
             name = "phone_number",
             value = form.phone_number.data,
-            error = errors.get("phone_number", {}).get("message", None)
+            error = errors.get("phone_number", {}).get("message", None),
+            hint = "This is the phone number buyers will use to contact you"
         %}
         {% include "toolkit/forms/textbox.html" %}
         {% endwith %}

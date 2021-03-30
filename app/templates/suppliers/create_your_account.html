@@ -34,7 +34,7 @@
     <h1 class="govuk-heading-l">Create login</h1>
 
     <div class="dmspeak">
-       <p class="govuk-body">You’ll use this to sign in to your company’s supplier account.</p>
+       <p class="govuk-body">Use your work email address to create your account.</p>
        <p class="govuk-body">It won’t be visible on the Digital Marketplace.</p>
        <p class="govuk-body">You can add other email addresses to your supplier account later.</p>
     </div>
@@ -45,7 +45,8 @@
           question = "Your email address",
           name = "email_address",
           value = email_address,
-          error = errors.get("email_address", {}).get("message", None)
+          error = errors.get("email_address", {}).get("message", None),
+          hint = "This should be your individual work email address"
       %}
         {% include "toolkit/forms/textbox.html" %}
       {% endwith %}

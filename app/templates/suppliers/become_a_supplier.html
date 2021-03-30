@@ -24,13 +24,11 @@
       <h1 class="govuk-heading-l">Become a supplier</h1>
 
       {% if open_fwks or opening_fwks %}
-        <div class="dmspeak">
-          <h2 class="heading-xmedium padding-bottom-small">Services you can apply to sell</h2>
+
+        <h2 class="govuk-heading-m">Services you can apply to sell</h2>
 
         {% for framework in open_fwks + opening_fwks %}
-          <div {% if not loop.last %} class="padding-bottom-small"{% endif %}>
-            {{ content_loader.get_message(framework.slug, 'become-a-supplier', framework.status) }}
-          </div>
+          {{ content_loader.get_message(framework.slug, 'become-a-supplier', framework.status) }}
         {% endfor %}
 
         <p class="govuk-body">
@@ -42,29 +40,21 @@
         </p>
 
         {% if closed_fwks %}
-
-            <h2 class="heading-xmedium padding-bottom-small">Services you can’t apply to sell at the moment</h2>
+          <h2 class="govuk-heading-m">Services you can’t apply to sell at the moment</h2>
 
           {% for framework in closed_fwks %}
-            <div {% if not loop.last %} class="padding-bottom-small"{% endif %}>
-              {{ content_loader.get_message(framework.slug, 'become-a-supplier', framework.status) }}
-            </div>
+            {{ content_loader.get_message(framework.slug, 'become-a-supplier', framework.status) }}
           {% endfor %}
-
         {% endif %}
-        </div>
 
       {% else %}
-        <div class="dmspeak">
-          <h2 class="heading-xmedium padding-bottom-small">You can’t apply to sell anything at the moment</h2>
 
-          {% for framework in closed_fwks %}
-            <div {% if not loop.last %} class="padding-bottom-small"{% endif %}>
-              {{ content_loader.get_message(framework.slug, 'become-a-supplier', framework.status) }}
-            </div>
-          {% endfor %}
+        <h2 class="govuk-heading-m">You cannot create a supplier account at the moment</h2>
 
-        </div>
+        {% for framework in closed_fwks %}
+          {{ content_loader.get_message(framework.slug, 'become-a-supplier', framework.status) }}
+        {% endfor %}
+
       {% endif %}
 
       {% if closed_fwks %}
@@ -76,7 +66,6 @@
           </a>
         </p>
       {% endif %}
-    </div>
   </div>
 </div>
 {% endblock %}
