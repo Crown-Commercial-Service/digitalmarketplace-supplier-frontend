@@ -562,8 +562,8 @@ class BaseApplicationTest:
             f"Expected '{title}' == '{masthead_heading}'"
         assert masthead_link_text and question_name == masthead_link_text, \
             f"Expected '{question_name}' == '{masthead_link_text}'"
-        assert error_message and validation_message == error_message, \
-            f"Expected '{validation_message}' == '{error_message}'"
+        assert error_message and validation_message in error_message, \
+            f"Expected '{validation_message}' in '{error_message}'"
 
 
 class FakeMail(object):

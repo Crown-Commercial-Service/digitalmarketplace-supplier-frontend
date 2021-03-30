@@ -1,7 +1,9 @@
 {% extends "_base_page.html" %}
 
+{% set page_name = "Trading status" %}
+
 {% block pageTitle %}
-  Trading status – Digital Marketplace
+  {% if errors %}Error: {% endif %}{{ page_name }} – Digital Marketplace
 {% endblock %}
 
 {% block breadcrumb %}
@@ -20,7 +22,7 @@
         "href": url_for('.supplier_details')
       },
       {
-        "text": "Trading status"
+        "text": page_name
       }
     ]
   }) }}
@@ -28,23 +30,36 @@
 
 {% block mainContent %}
 
-<div class="single-question-page">
-  <div class="govuk-grid-row">
-    <div class="govuk-grid-column-two-thirds">
-      <h1 class="govuk-heading-l">What&rsquo;s your trading status?</h1>
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-two-thirds">
+    <form method="POST" action="{{ url_for('.edit_supplier_trading_status') }}" novalidate>
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
 
-      <form method="POST" action="{{ url_for('.edit_supplier_trading_status') }}">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+      {{ govukRadios({
+        "idPrefix": "input-" + form.trading_status.name,
+        "name": form.trading_status.name,
+        "hint": {
+          "text": "This information will be used to find out about the types of companies on frameworks.",
+        },
+        "fieldset": {
+          "legend": {
+            "text": form.trading_status.label.text,
+            "classes": "govuk-fieldset__legend--l",
+            "isPageHeading": true,
+          }
+        },
+        "errorMessage": {
+            "text": errors.get(form.trading_status.name, {}).get('message', None)
+          } if errors,
+        "items": form.get_items()
+      }) }}
 
-        {{ form.trading_status }}
+      {{ govukButton({
+        "text": "Save and return",
+      }) }}
 
-        {{ govukButton({
-          "text": "Save and return",
-        }) }}
-
-        <p class="govuk-body"><a class="govuk-link" href="{{ url_for('.supplier_details') }}">Return to company details</a></p>
-      </form>
-    </div>
+      <p class="govuk-body"><a class="govuk-link" href="{{ url_for('.supplier_details') }}">Return to company details</a></p>
+    </form>
   </div>
 </div>
 

@@ -428,7 +428,6 @@ def edit_supplier_organisation_size():
 @main.route('/trading-status/edit', methods=['GET', 'POST'])
 @login_required
 def edit_supplier_trading_status():
-
     prefill_data = {}
     if request.method == "GET":
         supplier = data_api_client.get_supplier(current_user.supplier_id)['suppliers']
