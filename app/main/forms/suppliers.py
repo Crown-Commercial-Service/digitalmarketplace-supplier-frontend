@@ -1,5 +1,3 @@
-from itertools import zip_longest
-
 from flask_wtf import FlaskForm
 from wtforms import RadioField
 from wtforms.validators import AnyOf, InputRequired, Length, Optional, Regexp, ValidationError
@@ -221,14 +219,6 @@ class CompanyOrganisationSizeForm(FlaskForm):
         id="input-organisation_size-1"  # TODO: change to input-organisation_size when on govuk-frontend~3
     )
 
-    def get_items(self):
-        # Will throw an exception if the two input iterators are of different length, but that should never happen.
-        return [
-            {'value': value, 'text': text, 'checked': checked, 'hint': {'text': option['description']}}
-            for ((value, text, checked), option)
-            in zip_longest(self.organisation_size.iter_choices(), self.OPTIONS)
-        ]
-
 
 class CompanyTradingStatusForm(FlaskForm):
     OPTIONS = [
@@ -268,10 +258,3 @@ class CompanyTradingStatusForm(FlaskForm):
         choices=[(option["value"], option["label"]) for option in OPTIONS],
         id="input-trading_status-1"  # TODO: change to input-trading_status when on govuk-frontend~3
     )
-
-    def get_items(self):
-        return [
-            {'value': value, 'text': text, 'checked': checked}
-            for (value, text, checked)
-            in self.trading_status.iter_choices()
-        ]

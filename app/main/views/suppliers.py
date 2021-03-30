@@ -13,7 +13,7 @@ from dmutils.direct_plus_client import (
 from dmutils.email import send_user_account_email
 from dmutils.email.dm_mailchimp import DMMailChimpClient
 from dmutils.flask import timed_render_template as render_template
-from dmutils.forms.helpers import get_errors_from_wtform
+from dmutils.forms.helpers import get_errors_from_wtform, govuk_options
 from dmutils.errors import render_error_page
 
 from ...main import main, content_loader, direct_plus_client
@@ -395,7 +395,12 @@ def edit_what_buyers_will_see():
 @main.route('/organisation-size/edit', methods=['GET', 'POST'])
 @login_required
 def edit_supplier_organisation_size():
-    form = CompanyOrganisationSizeForm()
+    prefill_data = {}
+    if request.method == "GET":
+        supplier = data_api_client.get_supplier(current_user.supplier_id)['suppliers']
+        prefill_data = {"organisation_size": supplier.get("organisationSize")}
+
+    form = CompanyOrganisationSizeForm(data=prefill_data)
 
     if request.method == 'POST':
         if form.validate_on_submit():
@@ -413,8 +418,7 @@ def edit_supplier_organisation_size():
                 'osize_errors': ",".join(form.organisation_size.errors)
             })
 
-    supplier = data_api_client.get_supplier(current_user.supplier_id)['suppliers']
-    form.organisation_size.data = supplier.get('organisationSize', None)
+    form.organisation_size.govuk_options = govuk_options(options=form.OPTIONS, data=form.organisation_size.data)
 
     errors = get_errors_from_wtform(form)
 
@@ -450,6 +454,7 @@ def edit_supplier_trading_status():
                 'tstatus_errors': ",".join(form.trading_status.errors)
             })
 
+    form.trading_status.govuk_options = govuk_options(options=form.OPTIONS, data=form.trading_status.data)
     errors = get_errors_from_wtform(form)
 
     return render_template(

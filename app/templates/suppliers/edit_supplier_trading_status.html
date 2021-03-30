@@ -51,7 +51,7 @@
         "errorMessage": {
             "text": errors.get(form.trading_status.name, {}).get('message', None)
           } if errors,
-        "items": form.get_items()
+        "items": form.trading_status.govuk_options,
       }) }}
 
       {{ govukButton({

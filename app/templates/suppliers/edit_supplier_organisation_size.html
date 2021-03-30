@@ -50,7 +50,7 @@
         "errorMessage": {
             "text": errors.get(form.organisation_size.name, {}).get('message', None)
           } if errors,
-        "items": form.get_items()
+        "items": form.organisation_size.govuk_options,
       }) }}
 
       {{ govukButton({
