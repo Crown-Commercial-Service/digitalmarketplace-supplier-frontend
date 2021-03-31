@@ -2571,11 +2571,12 @@ class TestSupplierEditOrganisationSize(BaseApplicationTest):
         res = self.client.post("/suppliers/organisation-size/edit",
                                data={'organisation_size': organisation_size} if organisation_size else {})
         doc = html.fromstring(res.get_data(as_text=True))
-        error = doc.xpath('//span[@id="error-organisation_size"]')
+        error = doc.xpath('//span[@id="input-organisation_size-error"]')
 
         assert len(error) == 1, 'Only one validation message should be shown.'
 
-        assert error[0].text.strip() == expected_error, 'The validation message is not as anticipated.'
+        assert error[0].text_content().strip() == f"Error: {expected_error}", \
+            'The validation message is not as anticipated.'
 
         self.assert_single_question_page_validation_errors(
             res,

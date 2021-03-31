@@ -2,7 +2,7 @@ from flask_wtf import FlaskForm
 from wtforms import RadioField
 from wtforms.validators import AnyOf, InputRequired, Length, Optional, Regexp, ValidationError
 
-from dmutils.forms.fields import DMBooleanField, DMStripWhitespaceStringField, DMEmailField, DMRadioField
+from dmutils.forms.fields import DMBooleanField, DMStripWhitespaceStringField, DMEmailField
 from dmutils.forms.validators import EmailValidator
 from dmutils.forms.widgets import DMTextArea
 from ..helpers.suppliers import COUNTRY_TUPLE
@@ -212,12 +212,12 @@ class CompanyOrganisationSizeForm(FlaskForm):
         },
     ]
 
-    organisation_size = DMRadioField(
+    organisation_size = RadioField(
         "What size is your organisation?",
-        hint="This information will be used to report on the number of contracts that go"
-        " to small and medium sized enterprises (SMEs).",
         validators=[InputRequired(message="You must choose an organisation size.")],
-        options=OPTIONS)
+        choices=[(option["value"], option["label"]) for option in OPTIONS],
+        id="input-organisation_size-1"  # TODO: change to input-organisation_size when on govuk-frontend~3
+    )
 
 
 class CompanyTradingStatusForm(FlaskForm):
@@ -256,12 +256,5 @@ class CompanyTradingStatusForm(FlaskForm):
         "What’s your trading status?",
         validators=[InputRequired(message="You must choose a trading status.")],
         choices=[(option["value"], option["label"]) for option in OPTIONS],
-        id="input-trading_status-1"  # TODO: change to input-reuse when on govuk-frontend~3
+        id="input-trading_status-1"  # TODO: change to input-trading_status when on govuk-frontend~3
     )
-
-    def get_items(self):
-        return [
-            {'value': value, 'text': text, 'checked': checked}
-            for (value, text, checked)
-            in self.trading_status.iter_choices()
-        ]
