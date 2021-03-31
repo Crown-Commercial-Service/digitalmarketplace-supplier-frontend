@@ -1345,10 +1345,11 @@ class TestSupplierUpdate(BaseApplicationTest):
         doc = html.fromstring(response)
 
         for xpath_selector, expected_content in [
-            ("[contains(@class, 'govuk-error-summary__list')]/li/a", "Enter a contact name."),
-            ("[contains(@class, 'govuk-error-summary__list')]/li/a", "Enter an email address."),
-            ("[contains(@class, 'govuk-error-summary__list')]/li/a", "Enter a phone number.")
+            ("[contains(@class, 'govuk-error-summary__list')]/li/a", "Enter a contact name"),
+            ("[contains(@class, 'govuk-error-summary__list')]/li/a", "Enter an email address"),
+            ("[contains(@class, 'govuk-error-summary__list')]/li/a", "Enter a phone number")
         ]:
+
             assert doc.xpath(
                 f"//*{xpath_selector}[normalize-space(string())='{expected_content}']"
             )
@@ -1370,8 +1371,8 @@ class TestSupplierUpdate(BaseApplicationTest):
         doc = html.fromstring(response)
 
         for xpath_selector, expected_content in [
-            ("[contains(@class, 'govuk-error-summary__list')]/li/a", "Enter a phone number under 20 characters."),
-            ("[contains(@class, 'govuk-error-summary__list')]/li/a", "Enter a contact name under 256 characters.")
+            ("[contains(@class, 'govuk-error-summary__list')]/li/a", "Phone number must be 20 characters or fewer"),
+            ("[contains(@class, 'govuk-error-summary__list')]/li/a", "Contact name must be 255 characters or fewer")
         ]:
             assert doc.xpath(
                 f"//*{xpath_selector}[normalize-space(string())='{expected_content}']"
@@ -1391,7 +1392,8 @@ class TestSupplierUpdate(BaseApplicationTest):
         doc = html.fromstring(response)
 
         for xpath_selector, expected_content in [
-            ("[contains(@class, 'govuk-error-summary__list')]/li/a", "Enter a valid email address.")
+            ("[contains(@class, 'govuk-error-summary__list')]/li/a",
+             "Enter an email address in the correct format, like name@example.com")
         ]:
             assert doc.xpath(
                 f"//*{xpath_selector}[normalize-space(string())='{expected_content}']"
@@ -1563,8 +1565,8 @@ class TestEditSupplierRegisteredAddress(BaseApplicationTest):
         })
 
         assert status == 400
-        assert "Enter a town or city." in response
-        assert "Enter a country." in response
+        assert "Enter a town or city" in response
+        assert "Enter a country" in response
 
         assert self.data_api_client.update_supplier.called is False
         assert self.data_api_client.update_contact_information.called is False
@@ -1592,9 +1594,9 @@ class TestEditSupplierRegisteredAddress(BaseApplicationTest):
         assert status == status_code
 
         validation_messages = [
-            "Enter a building and street name under 256 characters.",
-            "Enter a town or city name under 256 characters.",
-            "Enter a valid postcode under 15 characters.",
+            "Building and street name must be 255 characters or fewer",
+            "Town or city name must be 255 characters or fewer",
+            "Postcode must be 15 characters or fewer",
         ]
         for message in validation_messages:
             assert (message in response) == validation_error_returned
@@ -1621,7 +1623,7 @@ class TestEditSupplierRegisteredAddress(BaseApplicationTest):
         })
 
         assert status == 400
-        assert "Enter a country." in response
+        assert "Enter a country" in response
 
         assert self.data_api_client.update_supplier.called is False
         assert self.data_api_client.update_contact_information.called is False
@@ -1685,8 +1687,15 @@ class TestCreateSupplier(BaseApplicationTest):
         res = self.client.get("/suppliers/create/company-details")
         assert res.status_code == 200
 
-    @pytest.mark.parametrize('duns_number', [None, 'invalid', '12345678', '1234567890'])
-    def test_should_be_an_error_if_missing_or_invalid_duns_number(self, duns_number):
+    @pytest.mark.parametrize(
+        "duns_number,expected_message",
+        [(None, 'Enter your 9 digit DUNS number'),
+         ('invalid', 'DUNS number must be 9 digits'),
+         ('12345678', 'DUNS number must be 9 digits'),
+         ('1234567890', 'DUNS number must be 9 digits'),
+         ],
+    )
+    def test_should_be_an_error_if_missing_or_invalid_duns_number(self, duns_number, expected_message):
         """Ensures that validation on duns number prevents submission of:
         1) No value
         2) Non-numerics
@@ -1698,8 +1707,8 @@ class TestCreateSupplier(BaseApplicationTest):
 
         self.assert_single_question_page_validation_errors(
             res,
-            question_name="Enter your 9 digit DUNS number.",
-            validation_message="Enter your 9 digit DUNS number."
+            question_name=expected_message,
+            validation_message=expected_message
         )
 
     def test_should_be_an_error_if_duns_number_in_use(self, get_organization_by_duns_number):
@@ -1837,7 +1846,7 @@ class TestCreateSupplier(BaseApplicationTest):
             }
         )
         assert res.status_code == 400
-        assert "Enter your company name." in res.get_data(as_text=True)
+        assert "Enter your company name" in res.get_data(as_text=True)
 
     def test_should_not_allow_contact_details_with_too_long_company_name(self):
         twofiftysix = "a" * 256
@@ -1851,7 +1860,7 @@ class TestCreateSupplier(BaseApplicationTest):
             }
         )
         assert res.status_code == 400
-        assert "Enter a company name under 256 characters." in res.get_data(as_text=True)
+        assert "Company name must be 255 characters or fewer" in res.get_data(as_text=True)
 
     def test_should_not_allow_contact_details_without_contact_name(self):
         res = self.client.post(
@@ -1863,7 +1872,7 @@ class TestCreateSupplier(BaseApplicationTest):
             }
         )
         assert res.status_code == 400
-        assert "Enter a contact name." in res.get_data(as_text=True)
+        assert "Enter a contact name" in res.get_data(as_text=True)
 
     def test_should_not_allow_contact_details_with_too_long_contact_name(self):
         twofiftysix = "a" * 256
@@ -1877,7 +1886,7 @@ class TestCreateSupplier(BaseApplicationTest):
             }
         )
         assert res.status_code == 400
-        assert "Enter a contact name under 256 characters." in res.get_data(as_text=True)
+        assert "Contact name must be 255 characters or fewer" in res.get_data(as_text=True)
 
     def test_should_not_allow_contact_details_without_email(self):
         res = self.client.post(
@@ -1889,7 +1898,7 @@ class TestCreateSupplier(BaseApplicationTest):
             }
         )
         assert res.status_code == 400
-        assert "Enter an email address." in res.get_data(as_text=True)
+        assert "Enter an email address" in res.get_data(as_text=True)
 
     def test_should_not_allow_contact_details_with_invalid_email(self):
         res = self.client.post(
@@ -1902,7 +1911,7 @@ class TestCreateSupplier(BaseApplicationTest):
             }
         )
         assert res.status_code == 400
-        assert "Enter a valid email address." in res.get_data(as_text=True)
+        assert "Enter an email address in the correct format, like name@example.com" in res.get_data(as_text=True)
 
     def test_should_not_allow_contact_details_without_phone_number(self):
         res = self.client.post(
@@ -1914,7 +1923,7 @@ class TestCreateSupplier(BaseApplicationTest):
             }
         )
         assert res.status_code == 400
-        assert "Enter a phone number." in res.get_data(as_text=True)
+        assert "Enter a phone number" in res.get_data(as_text=True)
 
     def test_should_not_allow_contact_details_with_too_long_phone_number(self):
         twentyone = "a" * 21
@@ -1928,7 +1937,7 @@ class TestCreateSupplier(BaseApplicationTest):
             }
         )
         assert res.status_code == 400
-        assert "Enter a phone number under 20 characters." in res.get_data(as_text=True)
+        assert "Phone number must be 20 characters or fewer" in res.get_data(as_text=True)
 
     def test_should_show_multiple_errors(self):
         res = self.client.post(
@@ -1937,10 +1946,10 @@ class TestCreateSupplier(BaseApplicationTest):
         )
 
         assert res.status_code == 400
-        assert "Enter your company name." in res.get_data(as_text=True)
-        assert "Enter a phone number." in res.get_data(as_text=True)
-        assert "Enter an email address." in res.get_data(as_text=True)
-        assert "Enter a contact name." in res.get_data(as_text=True)
+        assert "Enter your company name" in res.get_data(as_text=True)
+        assert "Enter a phone number" in res.get_data(as_text=True)
+        assert "Enter an email address" in res.get_data(as_text=True)
+        assert "Enter a contact name" in res.get_data(as_text=True)
 
     def test_should_populate_duns_from_session(self):
         with self.client.session_transaction() as sess:
@@ -2076,7 +2085,7 @@ class TestCreateSupplier(BaseApplicationTest):
             data={}
         )
         assert res.status_code == 400
-        assert "Enter an email address." in res.get_data(as_text=True)
+        assert "Enter an email address" in res.get_data(as_text=True)
 
     def test_should_not_allow_incorrect_email_address(self):
         with self.client.session_transaction() as sess:
@@ -2089,7 +2098,7 @@ class TestCreateSupplier(BaseApplicationTest):
             }
         )
         assert res.status_code == 400
-        assert "Enter a valid email address." in res.get_data(as_text=True)
+        assert "Enter an email address in the correct format, like name@example.com" in res.get_data(as_text=True)
 
     @mock.patch("app.main.suppliers.send_user_account_email")
     def test_should_allow_correct_email_address(self, send_user_account_email):
@@ -2237,8 +2246,8 @@ class TestJoinOpenFrameworkNotificationMailingList(BaseApplicationTest):
         self.assert_no_flashes()
 
     @pytest.mark.parametrize("email_address_value,expected_validation_message", (
-        ("pint@twopence", "Enter a valid email address.",),
-        ("", "Enter an email address.",),
+        ("pint@twopence", "Enter an email address in the correct format, like name@example.com",),
+        ("", "Enter an email address",),
     ))
     @mock.patch("app.main.views.suppliers.DMMailChimpClient")
     def test_post_invalid_email(
@@ -2562,7 +2571,7 @@ class TestSupplierEditOrganisationSize(BaseApplicationTest):
 
     @pytest.mark.parametrize('organisation_size, expected_error',
                              (
-                                 (None, "You must choose an organisation size."),
+                                 (None, "Select an organisation size"),
                                  ('blah', "Not a valid choice")
                              ))
     def test_missing_or_invalid_choice_shows_validation(self, organisation_size, expected_error):
@@ -2643,8 +2652,8 @@ class TestSupplierAddRegisteredCompanyName(BaseApplicationTest):
 
         self.assert_single_question_page_validation_errors(
             res,
-            question_name="Enter your registered company name.",
-            validation_message="Error: Enter your registered company name."
+            question_name="Enter your registered company name",
+            validation_message="Error: Enter your registered company name"
         )
         assert self.data_api_client.update_supplier.call_args_list == []
 
@@ -2724,7 +2733,7 @@ class TestSupplierEditTradingStatus(BaseApplicationTest):
 
     @pytest.mark.parametrize('trading_status, expected_error',
                              (
-                                 (None, "You must choose a trading status."),
+                                 (None, "Select a trading status"),
                                  ('blah', "Not a valid choice")
                              ))
     def test_missing_or_invalid_choice_shows_validation(self, trading_status, expected_error):
@@ -2816,32 +2825,32 @@ class TestSupplierAddRegistrationNumber(BaseApplicationTest):
                  'companies_house_number': '',
                  'other_company_registration_number': ''
                  },
-                'You need to answer this question.',
-                'You need to answer this question.'
+                'Select yes if you are registered with Companies House',
+                'Select yes if you are registered with Companies House'
             ),
             (
                 {'has_companies_house_number': 'Yes',
                  'companies_house_number': '',
                  'other_company_registration_number': ''
                  },
-                'Enter a Companies House number.',
-                'Enter a Companies House number.'
+                'Enter a Companies House number',
+                'Enter a Companies House number'
             ),
             (
                 {'has_companies_house_number': 'Yes',
                  'companies_house_number': '123456789',
                  'other_company_registration_number': ''
                  },
-                'Enter your 8 digit Companies House number.',
-                'Enter your 8 digit Companies House number.'
+                "Companies House number must be 8 characters",
+                "Companies House number must be 8 characters"
             ),
             (
                 {'has_companies_house_number': 'No',
                  'companies_house_number': '',
                  'other_company_registration_number': 'a' * 256
                  },
-                'Enter a registration number under 256 characters.',
-                'Enter a registration number under 256 characters.'
+                'Registration number must be 255 characters or fewer',
+                'Registration number must be 255 characters or fewer'
             )
         )
     )
