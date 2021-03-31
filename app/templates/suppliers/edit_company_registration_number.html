@@ -1,7 +1,9 @@
 {% extends "_base_page.html" %}
 
+{% set page_name = "Company registration number" %}
+
 {% block pageTitle %}
-  Company registration number – Digital Marketplace
+  {% if errors %}Error: {% endif %}{{ page_name }} – Digital Marketplace
 {% endblock %}
 
 {% block breadcrumb %}
@@ -20,7 +22,7 @@
         "href": url_for('.supplier_details')
       },
       {
-        "text": "Company registration number"
+        "text": page_name,
       }
     ]
   }) }}
