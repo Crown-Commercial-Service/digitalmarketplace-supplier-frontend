@@ -31,42 +31,71 @@
 <div class="single-question-page">
   <div class="govuk-grid-row">
     <div class="govuk-grid-column-two-thirds">
-      <h1 class="govuk-heading-l">Are you registered with Companies House?</h1>
-
-      <form method="POST" action="{{ url_for('.edit_supplier_registration_number') }}">
+      <form method="POST" action="{{ url_for('.edit_supplier_registration_number') }}" novalidate>
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
 
-        {%
-          with
-          name = "has_companies_house_number",
-          type = "radio",
-          value = form.has_companies_house_number.data,
-          error = errors.get("has_companies_house_number", {}).get("message", None),
-          options = [
-          {
-              "label": "Yes",
-              "reveal": {
-                "name": "companies_house_number",
-                "question": "Companies House number",
-                "hint": "<a class='govuk-link' href='https://beta.companieshouse.gov.uk/search/companies'>Find your 8 digit Companies House number</a>"|safe,
-                "value": form.companies_house_number.data,
-                "error": errors.get("companies_house_number", {}).get("message", None),
-              }
+        {% set companiesHouseNumberHtml %}
+        {{ govukInput({
+          "id": form.companies_house_number.id,
+          "name": form.companies_house_number.name,
+          "label": {
+            "text": "Companies House number"
           },
-          {
-              "label": "No",
-              "reveal": {
-                "name": "other_company_registration_number",
-                "question": "Enter a number that can be used to identify your business and provide details of the organisation that issued it.",
-                "hint": "For example, ‘0123456789, Unique Taxpayer Reference, HMRC, UK’",
-                "value": form.other_company_registration_number.data,
-                "error": errors.get("other_company_registration_number", {}).get("message", None),
-              }
-          }
-        ]
-      %}
-        {% include "toolkit/forms/selection-buttons.html" %}
-      {% endwith %}
+          "hint": {
+            "html": "<a class='govuk-link' href='https://beta.companieshouse.gov.uk/search/companies'>Find your 8 digit Companies House number</a>"|safe,
+          },
+          "value": form.companies_house_number.data if form.companies_house_number.data,
+          "errorMessage": {
+            "text": errors.get(form.companies_house_number.name, {}).get('message', None)
+          } if errors and form.companies_house_number.name in errors,
+        }) }}
+        {% endset -%}
+
+        {% set otherCompanyRegistrationNumberHtml %}
+        {{ govukInput({
+          "id": form.other_company_registration_number.id,
+          "name": form.other_company_registration_number.name,
+          "label": {
+            "text": "Enter a number that can be used to identify your business and provide details of the organisation that issued it."
+          },
+          "hint": {
+            "text": "For example, ‘0123456789, Unique Taxpayer Reference, HMRC, UK’",
+          },
+          "value": form.other_company_registration_number.data if form.other_company_registration_number.data,
+          "errorMessage": {
+            "text": errors.get(form.other_company_registration_number.name, {}).get('message', None)
+          } if errors and form.other_company_registration_number.name in errors,
+        }) }}
+        {% endset -%}
+
+        {{ govukRadios({
+          "idPrefix": "input-" + form.has_companies_house_number.name,
+          "name": form.has_companies_house_number.name,
+          "fieldset": {
+            "legend": {
+              "text": form.has_companies_house_number.label.text,
+              "classes": "govuk-fieldset__legend--l",
+              "isPageHeading": true,
+            }
+          },
+          "errorMessage": {
+              "text": errors.get(form.has_companies_house_number.name, {}).get('message', None)
+            } if errors and form.has_companies_house_number.name in errors,
+          "items": [
+            {
+              "value": "Yes",
+              "text": "Yes",
+              "conditional": {"html": companiesHouseNumberHtml},
+              "checked": form.has_companies_house_number.data == "Yes",
+            },
+            {
+              "value": "No",
+              "text": "No",
+              "conditional": {"html": otherCompanyRegistrationNumberHtml},
+              "checked": form.has_companies_house_number.data == "No",
+            },
+          ]
+        }) }}
 
         {{ govukButton({
           "text": "Save and return",
