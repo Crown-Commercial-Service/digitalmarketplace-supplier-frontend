@@ -831,6 +831,7 @@ def framework_supplier_declaration_edit(framework_slug, section_id):
                 (question.id not in errors)
                 and name_of_framework_that_section_has_been_prefilled_from
                 and (question.id in all_answers)
+                and (question.id in declaration_to_reuse)
             ):
                 # this is a misuse of error message component but I can't think of a better way right now
                 params["formGroup"] = {"classes": "dm-form-group--notice"}
