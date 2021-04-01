@@ -543,7 +543,6 @@ class BaseApplicationTest:
     def assert_single_question_page_validation_errors(self,
                                                       res,
                                                       title="There is a problem",
-                                                      question_name="",
                                                       validation_message=""
                                                       ):
         doc = html.fromstring(res.get_data(as_text=True))
@@ -560,8 +559,8 @@ class BaseApplicationTest:
         assert res.status_code == 400
         assert masthead_heading and title == masthead_heading, \
             f"Expected '{title}' == '{masthead_heading}'"
-        assert masthead_link_text and question_name == masthead_link_text, \
-            f"Expected '{question_name}' == '{masthead_link_text}'"
+        assert masthead_link_text and validation_message == masthead_link_text, \
+            f"Expected '{validation_message}' == '{masthead_link_text}'"
         assert error_message and validation_message in error_message, \
             f"Expected '{validation_message}' in '{error_message}'"
 

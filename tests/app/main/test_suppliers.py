@@ -1705,11 +1705,7 @@ class TestCreateSupplier(BaseApplicationTest):
             data={'duns_number': duns_number} if duns_number else {}
         )
 
-        self.assert_single_question_page_validation_errors(
-            res,
-            question_name=expected_message,
-            validation_message=expected_message
-        )
+        self.assert_single_question_page_validation_errors(res, validation_message=expected_message)
 
     def test_should_be_an_error_if_duns_number_in_use(self, get_organization_by_duns_number):
         self.data_api_client.find_suppliers.return_value = {"suppliers": ["one supplier", "two suppliers"]}
@@ -2587,11 +2583,7 @@ class TestSupplierEditOrganisationSize(BaseApplicationTest):
         assert error[0].text_content().strip() == f"Error: {expected_error}", \
             'The validation message is not as anticipated.'
 
-        self.assert_single_question_page_validation_errors(
-            res,
-            question_name=expected_error,
-            validation_message=expected_error
-        )
+        self.assert_single_question_page_validation_errors(res, validation_message=expected_error)
 
     @pytest.mark.parametrize('size', (None, 'micro', 'small', 'medium', 'large'))
     def test_post_choice_triggers_api_supplier_update_and_redirect(self, size):
@@ -2650,11 +2642,7 @@ class TestSupplierAddRegisteredCompanyName(BaseApplicationTest):
 
         res = self.client.post("/suppliers/registered-company-name/edit")
 
-        self.assert_single_question_page_validation_errors(
-            res,
-            question_name="Enter your registered company name",
-            validation_message="Error: Enter your registered company name"
-        )
+        self.assert_single_question_page_validation_errors(res, validation_message="Enter your registered company name")
         assert self.data_api_client.update_supplier.call_args_list == []
 
     def test_post_input_triggers_api_supplier_update_and_redirect(self):
@@ -2749,9 +2737,7 @@ class TestSupplierEditTradingStatus(BaseApplicationTest):
         assert error[0].text_content().strip() == f"Error: {expected_error}", \
             'The validation message is not as anticipated.'
 
-        self.assert_single_question_page_validation_errors(res,
-                                                           question_name=expected_error,
-                                                           validation_message=expected_error)
+        self.assert_single_question_page_validation_errors(res, validation_message=expected_error)
 
     @pytest.mark.parametrize('trading_status', (None, 'limited company (LTD)', 'other'))
     def test_post_choice_triggers_api_supplier_update_and_redirect(self, trading_status):
@@ -2865,11 +2851,7 @@ class TestSupplierAddRegistrationNumber(BaseApplicationTest):
 
         res = self.client.post("/suppliers/registration-number/edit", data=incomplete_data)
 
-        self.assert_single_question_page_validation_errors(
-            res,
-            question_name=question_mentioned,
-            validation_message=validation_message
-        )
+        self.assert_single_question_page_validation_errors(res, validation_message=validation_message)
         assert self.data_api_client.update_supplier.call_args_list == []
 
         # Assert the links in the error summary point to elements on the page
