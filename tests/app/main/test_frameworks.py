@@ -2995,11 +2995,11 @@ class TestSupplierDeclaration(BaseApplicationTest, MockEnsureApplicationCompanyD
             "Answers on this page are from an earlier declaration and need review."
 
         # Blue information messages are shown next to each question
-        info_messages = doc.xpath('//div[@class="message-wrapper"]//span[@class="message-content"]')
+        info_messages = doc.xpath('//span[contains(@class, "dm-error-message--notice")]')
         assert len(info_messages) == 5
         for message in info_messages:
-            assert self.strip_all_whitespace(message.text) == self.strip_all_whitespace(
-                "This answer is from your Digital Stuff 2 declaration"
+            assert self.strip_all_whitespace(message.text_content()) == self.strip_all_whitespace(
+                "Notice: This answer is from your Digital Stuff 2 declaration"
             )
 
     def test_get_with_with_partially_prefilled_answers(self):
@@ -3062,11 +3062,11 @@ class TestSupplierDeclaration(BaseApplicationTest, MockEnsureApplicationCompanyD
             "Answers on this page are from an earlier declaration and need review."
 
         # Blue information messages are shown next to pre-filled questions only
-        info_messages = doc.xpath('//div[@class="message-wrapper"]//span[@class="message-content"]')
+        info_messages = doc.xpath('//span[contains(@class, "dm-error-message--notice")]')
         assert len(info_messages) == 3
         for message in info_messages:
-            assert self.strip_all_whitespace(message.text) == self.strip_all_whitespace(
-                "This answer is from your Digital Stuff 2 declaration"
+            assert self.strip_all_whitespace(message.text_content()) == self.strip_all_whitespace(
+                "Notice: This answer is from your Digital Stuff 2 declaration"
             )
 
     def test_answers_not_prefilled_if_section_has_already_been_saved(self):
@@ -3404,7 +3404,7 @@ class TestSupplierDeclaration(BaseApplicationTest, MockEnsureApplicationCompanyD
         assert res.status_code == 400
         doc = html.fromstring(res.get_data(as_text=True))
         assert len(doc.xpath(
-            "//*[contains(@class,'validation-message')][contains(normalize-space(string()), $text)]",
+            "//*[contains(@class,'govuk-error-message')][contains(normalize-space(string()), $text)]",
             text="Your document is not in an open format.",
         )) == 1
         assert self.data_api_client.set_supplier_declaration.called is False
