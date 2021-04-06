@@ -102,7 +102,7 @@ class AddCompanyRegistrationNumberForm(FlaskForm):
         validators=[
             Optional(),
             Regexp(r'^([0-9]{2}|[A-Za-z]{2})[0-9]{6}$',
-                   message="Companies House number must be 8 characters"
+                   message="Your Companies House number must be 8 characters"
                    )
         ]
     )
@@ -165,7 +165,7 @@ class CompanyPublicContactInformationForm(FlaskForm):
 class DunsNumberForm(FlaskForm):
     duns_number = DMStripWhitespaceStringField('DUNS Number', validators=[
         InputRequired(message="Enter your 9 digit DUNS number"),
-        Regexp(r'^\d{9}$', message="DUNS number must be 9 digits"),
+        Regexp(r'^\d{9}$', message="Your DUNS number must be 9 digits"),
     ])
 
 

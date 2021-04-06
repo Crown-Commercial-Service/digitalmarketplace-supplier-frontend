@@ -1690,9 +1690,9 @@ class TestCreateSupplier(BaseApplicationTest):
     @pytest.mark.parametrize(
         "duns_number,expected_message",
         [(None, 'Enter your 9 digit DUNS number'),
-         ('invalid', 'DUNS number must be 9 digits'),
-         ('12345678', 'DUNS number must be 9 digits'),
-         ('1234567890', 'DUNS number must be 9 digits'),
+         ('invalid', 'Your DUNS number must be 9 digits'),
+         ('12345678', 'Your DUNS number must be 9 digits'),
+         ('1234567890', 'Your DUNS number must be 9 digits'),
          ],
     )
     def test_should_be_an_error_if_missing_or_invalid_duns_number(self, duns_number, expected_message):
@@ -2827,8 +2827,8 @@ class TestSupplierAddRegistrationNumber(BaseApplicationTest):
                  'companies_house_number': '123456789',
                  'other_company_registration_number': ''
                  },
-                "Companies House number must be 8 characters",
-                "Companies House number must be 8 characters"
+                "Your Companies House number must be 8 characters",
+                "Your Companies House number must be 8 characters"
             ),
             (
                 {'has_companies_house_number': 'No',
