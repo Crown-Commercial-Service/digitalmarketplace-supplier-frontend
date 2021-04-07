@@ -243,7 +243,7 @@ def update_section(framework_slug, service_id, section_id):
     errors = None
     # This utils method filters out any empty documents and validates against service document rules
     uploaded_documents, document_errors = upload_service_documents(
-        s3.S3(current_app.config['DM_DOCUMENTS_BUCKET']),
+        s3.S3(current_app.config['DM_DOCUMENTS_BUCKET'], endpoint_url=current_app.config.get("DM_S3_ENDPOINT_URL")),
         'documents',
         current_app.config['DM_ASSETS_URL'],
         service,

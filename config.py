@@ -139,7 +139,7 @@ class Development(Config):
     DM_API_AUTH_TOKEN = "myToken"
 
     DM_S3_ENDPOINT_URL = (  # use envvars to set this, defaults to using AWS
-        f"http://localhost:{os.environ['DM_S3_ENDPOINT_PORT']}"
+        f"http://s3.localhost.localstack.cloud:{os.environ['DM_S3_ENDPOINT_PORT']}"
         if os.getenv("DM_S3_ENDPOINT_PORT") else None
     )
 
@@ -148,8 +148,8 @@ class Development(Config):
     DM_AGREEMENTS_BUCKET = "digitalmarketplace-dev-uploads"
     DM_DOCUMENTS_BUCKET = "digitalmarketplace-dev-uploads"
     DM_ASSETS_URL = (
-        f"{DM_S3_ENDPOINT_URL}"
-        if DM_S3_ENDPOINT_URL else
+        f"http://{DM_SUBMISSIONS_BUCKET}.s3.localhost.localstack.cloud:{os.environ['DM_S3_ENDPOINT_PORT']}"
+        if os.getenv("DM_S3_ENDPOINT_PORT") else
         f"https://{DM_SUBMISSIONS_BUCKET}.s3-eu-west-1.amazonaws.com"
     )
 
