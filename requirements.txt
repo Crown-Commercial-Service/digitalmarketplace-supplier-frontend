@@ -30,7 +30,7 @@ defusedxml==0.6.0
     # via odfpy
 digitalmarketplace-apiclient==21.13.0
     # via -r requirements.in
-digitalmarketplace-content-loader==7.34.0
+digitalmarketplace-content-loader==8.0.0
     # via -r requirements.in
 digitalmarketplace-utils==58.0.0
     # via
