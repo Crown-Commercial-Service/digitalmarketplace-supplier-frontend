@@ -1,1 +1,1 @@
-FROM digitalmarketplace/base-frontend:9.6.1
+FROM digitalmarketplace/base-frontend:10.0.0
