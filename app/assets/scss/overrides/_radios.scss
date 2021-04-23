@@ -10,3 +10,13 @@
 .dm-radios--description-hint .govuk-radios__hint .govuk-list {
     color: $govuk-secondary-text-colour;
 }
+
+/*
+ * We have multiple conditional questions on one option in the declaration journey.
+ * Because of the way content loader generates questions we end up with no spacing
+ * beneath the conditional fieldset. This fixes that, but might become unnecessary
+ * if we redesign the question.
+ */
+.govuk-radios__conditional fieldset {
+    margin-bottom: govuk-spacing(6);
+}
