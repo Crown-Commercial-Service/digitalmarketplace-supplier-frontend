@@ -11,7 +11,7 @@
     "del": "^6.0.0",
     "digitalmarketplace-frameworks": "^18.2.2",
     "digitalmarketplace-frontend-toolkit": "^36.1.2",
-    "digitalmarketplace-govuk-frontend": "^2.9.0",
+    "digitalmarketplace-govuk-frontend": "^2.9.2",
     "govuk_frontend_toolkit": "5.0.3",
     "govuk-country-and-territory-autocomplete": "1.0.1",
     "govuk-elements-sass": "3.0.3",
