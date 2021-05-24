@@ -42,15 +42,14 @@
   {% endwith %}
 
   {% if service_data.status == 'submitted' and declaration_status != 'complete' and framework.status == 'open' %}
-    <div class="wrapper">
-      {%
-        with
-        message = 'You need to <a class="govuk-link" href="'|safe + url_for('.framework_supplier_declaration_overview', framework_slug=framework.slug) + '">make the supplier&nbsp;declaration</a> before '|safe + service_data.get('serviceName', service_data['lotName'])|lower + ' can be submitted',
-        type = 'warning'
-      %}
-        {% include 'toolkit/notification-banner.html' %}
-      {% endwith %}
-    </div>
+    {% set declaration_warning_content %}
+      You need to <a class="govuk-link" href="{{ url_for('.framework_supplier_declaration_overview', framework_slug=framework.slug) }}">make the supplier&nbsp;declaration</a> before {{ service_data.get('serviceName', service_data['lotName'])|lower }} can be submitted
+    {% endset %}  
+
+    {{ dmBanner({
+      "title": "Your application is not complete",
+      "html": declaration_warning_content
+    })}}
   {% endif %}
 
   {% if framework.status == 'pending' %}
