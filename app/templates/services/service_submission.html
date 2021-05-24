@@ -43,7 +43,7 @@
 
   {% if service_data.status == 'submitted' and declaration_status != 'complete' and framework.status == 'open' %}
     {% set declaration_warning_content %}
-      You need to <a class="govuk-link" href="{{ url_for('.framework_supplier_declaration_overview', framework_slug=framework.slug) }}">make the supplier&nbsp;declaration</a> before {{ service_data.get('serviceName', service_data['lotName'])|lower }} can be submitted
+      You need to <a class="govuk-link" href="{{ url_for('.framework_supplier_declaration_overview', framework_slug=framework.slug) }}">make the supplier&nbsp;declaration</a> before {{ service_data.get('serviceName', service_data['lotName'])|lower }} can be submitted.
     {% endset %}  
 
     {{ dmBanner({
@@ -53,25 +53,18 @@
   {% endif %}
 
   {% if framework.status == 'pending' %}
-    <div class="wrapper">
-      <aside role="complementary" class="temporary-message" aria-labelledby="temporary-message-heading">
-        {% if service_data.status == 'submitted' %}
-          <h2 class="temporary-message-heading" id="temporary-message-heading">
-            This service was submitted
-          </h2>
-          <p class="temporary-message-message">
-            If your application is successful, it will be available on the Digital Marketplace when {{ framework.name }} goes live.
-          </p>
-        {% else %}
-          <h2 class="temporary-message-heading" id="temporary-message-heading">
-            This service was not submitted
-          </h2>
-          <p class="temporary-message-message">
-            It wasn't marked as complete at the deadline.
-          </p>
-        {% endif %}
-      </aside>
-    </div>
+    {% if service_data.status == 'submitted' %}
+      {% set service_status_banner_title = "This service was submitted" %}
+      {% set service_status_banner_content = "If your application is successful, it will be available on the Digital Marketplace when " + framework.name + " goes live." %}
+    {% else %}
+      {% set service_status_banner_title = "This service was not submitted" %}
+      {% set service_status_banner_content = "It wasn't marked as complete at the deadline." %}
+    {% endif %} 
+
+    {{ dmBanner({
+      "title": service_status_banner_title,
+      "html": service_status_banner_content
+    })}}
   {% endif %}
 {% endblock %}
 
