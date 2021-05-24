@@ -4021,6 +4021,23 @@ class TestFrameworkSubmissionLots(BaseApplicationTest, MockEnsureApplicationComp
         super().teardown_method(method)
         self.get_metadata_patch.stop()
 
+    def _assert_incomplete_application_banner(self,
+                                              response_html,
+                                              decl_item_href=None):
+        doc = html.fromstring(response_html)
+        assert "Your application is not complete" in response_html
+        assert doc.xpath('//*[@class="dm-banner"]')
+
+        decl_element = doc.xpath(
+            "//*[contains(@class,'dm-banner__body')][contains(normalize-space(string()), $text)]",
+            text="make your supplier declaration",
+        )
+
+        assert decl_element
+
+        if decl_item_href:
+            assert decl_element[0].xpath('.//a[@href=$url]', url=decl_item_href)
+
     def test_drafts_list_progress_count(self, count_unanswered):
         self.login()
 
@@ -4096,13 +4113,10 @@ class TestFrameworkSubmissionLots(BaseApplicationTest, MockEnsureApplicationComp
         submissions = self.client.get('/suppliers/frameworks/g-cloud-7/submissions')
 
         if should_show_declaration_link:
-            doc = html.fromstring(submissions.get_data(as_text=True))
-            assert doc.xpath('//*[@class="banner-information-without-action"]')
-            decl_element = doc.xpath(
-                "//*[contains(@class,'banner-content')][contains(normalize-space(string()), $text)]",
-                text="make your supplier declaration",
+            self._assert_incomplete_application_banner(
+                submissions.get_data(as_text=True),
+                decl_item_href=declaration_link_url
             )
-            assert decl_element[0].xpath('.//a[@href=$url]', url=declaration_link_url)
 
         else:
             # Application is done - don't show warning banner
@@ -4135,15 +4149,8 @@ class TestFrameworkSubmissionLots(BaseApplicationTest, MockEnsureApplicationComp
 
         assert u'Ready for submission (1)' in submissions_html
         assert u'You haven’t added any draft services yet.' in submissions_html
-        assert "Your application is not complete" in submissions_html
 
-        doc = html.fromstring(submissions_html)
-        assert doc.xpath('//*[@class="banner-information-without-action"]')
-        decl_element = doc.xpath(
-            "//*[contains(@class,'banner-content')][contains(normalize-space(string()), $text)]",
-            text="make your supplier declaration",
-        )
-        assert decl_element[0].xpath('.//a[@href=$url]', url=expected_url)
+        self._assert_incomplete_application_banner(submissions_html, decl_item_href=expected_url)
 
     def test_drafts_list_completed_with_declaration_status(self, count_unanswered):
         self.login()
@@ -4244,10 +4251,10 @@ class TestFrameworkSubmissionServices(BaseApplicationTest, MockEnsureApplication
                                               decl_item_href=None):
         doc = html.fromstring(response_html)
         assert "Your application is not complete" in response_html
-        assert doc.xpath('//*[@class="banner-information-without-action"]')
+        assert doc.xpath('//*[@class="dm-banner"]')
 
         decl_element = doc.xpath(
-            "//*[contains(@class,'banner-content')][contains(normalize-space(string()), $text)]",
+            "//*[contains(@class,'dm-banner__body')][contains(normalize-space(string()), $text)]",
             text="make your supplier declaration",
         )
 
