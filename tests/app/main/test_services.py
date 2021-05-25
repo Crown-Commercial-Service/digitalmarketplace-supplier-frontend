@@ -2212,14 +2212,14 @@ class TestShowDraftService(BaseApplicationTest, MockEnsureApplicationCompanyDeta
         res = self.client.get('/suppliers/frameworks/g-cloud-7/submissions/scs/1')
 
         doc = html.fromstring(res.get_data(as_text=True))
-        message = doc.xpath('//aside[@class="temporary-message"]')
+        message = doc.xpath('//section[@class="dm-banner"]')
 
         assert len(message) > 0
         assert u"This service was not submitted" in message[0].xpath(
-            'h2[@class="temporary-message-heading"]/text()'
+            'h2[contains(@class, "dm-banner__title")]/text()'
         )[0]
         assert u"It wasn't marked as complete at the deadline." in message[0].xpath(
-            'p[@class="temporary-message-message"]/text()'
+            'div[@class="dm-banner__body"]/text()'
         )[0]
 
     @mock.patch('app.main.views.services.count_unanswered_questions')
@@ -2230,12 +2230,12 @@ class TestShowDraftService(BaseApplicationTest, MockEnsureApplicationCompanyDeta
         res = self.client.get('/suppliers/frameworks/g-cloud-7/submissions/scs/2')
 
         doc = html.fromstring(res.get_data(as_text=True))
-        message = doc.xpath('//aside[@class="temporary-message"]')
+        message = doc.xpath('//section[@class="dm-banner"]')
 
         assert len(message) > 0
-        assert u"This service was submitted" in message[0].xpath('h2[@class="temporary-message-heading"]/text()')[0]
+        assert u"This service was submitted" in message[0].xpath('h2[contains(@class, "dm-banner__title")]/text()')[0]
         assert u"If your application is successful, it will be available on the Digital Marketplace when " \
-            u"G-Cloud 7 goes live." in message[0].xpath('p[@class="temporary-message-message"]/text()')[0]
+            u"G-Cloud 7 goes live." in message[0].xpath('div[@class="dm-banner__body"]/text()')[0]
 
 
 class TestDeleteDraftService(BaseApplicationTest, MockEnsureApplicationCompanyDetailsHaveBeenConfirmedMixin):
@@ -2575,10 +2575,10 @@ class TestGetListPreviousServices(BaseApplicationTest, MockEnsureApplicationComp
         doc = html.fromstring(res.get_data(as_text=True))
 
         banner = doc.xpath(
-            "//div[@class='banner-information-without-action']/h2[normalize-space()='Your application is not complete']"
+            "//section[@class='dm-banner']/h2[normalize-space()='Your application is not complete']"
         )
         declaration = doc.xpath(
-            "//div[@class='banner-information-without-action']//a[normalize-space()='make your supplier declaration']"
+            "//section[@class='dm-banner']//a[normalize-space()='make your supplier declaration']"
         )
 
         if banner_present:

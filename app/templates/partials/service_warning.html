@@ -1,16 +1,11 @@
 {% if declaration_status != 'complete' %}
+  {% set declaration_url = url_for('.framework_start_supplier_declaration' if declaration_status == 'unstarted' else '.framework_supplier_declaration_overview', framework_slug=framework.slug) %}
   {% set banner_content %}
-  You still need to <a class="govuk-link" href="{% if declaration_status == 'unstarted' %}{{ url_for('.framework_start_supplier_declaration', framework_slug=framework.slug) }}{% else %}{{ url_for('.framework_supplier_declaration_overview', framework_slug=framework.slug) }}{% endif %}">make your supplier declaration</a>.
+    You still need to <a class="govuk-link" href="{{ declaration_url }}">make your supplier declaration</a>.
   {% endset %}
 
-  {% with declaration_url = url_for('.framework_start_supplier_declaration' if declaration_status == 'unstarted' else '.framework_supplier_declaration_overview', framework_slug=framework.slug) %}
-    {%
-      with
-      heading = "Your application is not complete",
-      banner_content = banner_content|safe,
-      type = 'information'
-    %}
-      {% include 'toolkit/notification-banner.html' %}
-    {% endwith %}
-  {% endwith %}
+  {{ dmBanner({
+    "title": "Your application is not complete",
+    "html": banner_content
+  })}}
 {% endif %}
