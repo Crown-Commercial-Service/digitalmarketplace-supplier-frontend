@@ -32,7 +32,7 @@ digitalmarketplace-apiclient==22.0.0
     # via -r requirements.in
 digitalmarketplace-content-loader==8.0.0
     # via -r requirements.in
-digitalmarketplace-utils==58.0.0
+digitalmarketplace-utils==58.1.0
     # via
     #   -r requirements.in
     #   digitalmarketplace-content-loader
@@ -90,7 +90,7 @@ jmespath==0.9.4
     # via
     #   boto3
     #   botocore
-mailchimp3==3.0.6
+mailchimp3==3.0.14
     # via digitalmarketplace-utils
 markdown==2.6.11
     # via digitalmarketplace-content-loader
