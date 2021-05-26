@@ -2237,16 +2237,27 @@ class TestDeleteDraftService(BaseApplicationTest, MockEnsureApplicationCompanyDe
         self.data_api_client_patch.stop()
         super().teardown_method(method)
 
-    def test_delete_button_redirects_with_are_you_sure(self):
+    def test_delete_draft_warning_page_displays_correctly(self):
         self.data_api_client.get_draft_service.return_value = self.draft_to_delete
+        res = self.client.get('/suppliers/frameworks/g-cloud-7/submissions/scs/1/delete')
 
-        res = self.client.post(
-            '/suppliers/frameworks/g-cloud-7/submissions/scs/1/delete',
-            data={})
-        assert res.status_code == 302
-        assert '/frameworks/g-cloud-7/submissions/scs/1?delete_requested=True' in res.location
-        res2 = self.client.get('/suppliers/frameworks/g-cloud-7/submissions/scs/1?delete_requested=True')
-        assert b"Are you sure you want to remove this service?" in res2.get_data()
+        assert res.status_code == 200
+        doc = html.fromstring(res.get_data(as_text=True))
+
+        page_title = doc.xpath('//h1')[0].text_content()
+        title_caption = doc.cssselect('span.govuk-caption-xl')[0].text_content()
+        assert title_caption == self.draft_to_delete['services'].get('serviceName')
+        assert page_title == "Are you sure you want to remove this service?"
+
+        assert len(doc.cssselect('form[action="/suppliers/frameworks/g-cloud-7/submissions/scs/1/delete"]')) == 1
+
+        submit_button = doc.cssselect('button[name="delete_confirmed"]')
+        cancel_link = doc.xpath("//a[normalize-space()='Cancel']")
+
+        assert len(submit_button) == 1
+        assert len(cancel_link) == 1
+
+        assert cancel_link[0].attrib['href'] == "/suppliers/frameworks/g-cloud-7/submissions/scs/1"
 
     def test_cannot_delete_if_not_open(self):
         self.data_api_client.get_framework.return_value = self.framework(status='other')

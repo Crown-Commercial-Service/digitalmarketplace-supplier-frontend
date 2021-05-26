@@ -434,6 +434,31 @@ def complete_draft_service(framework_slug, lot_slug, service_id):
                                 lot=lot_slug))
 
 
+@main.route('/frameworks/<framework_slug>/submissions/<lot_slug>/<service_id>/delete', methods=['GET'])
+@login_required
+@EnsureApplicationCompanyDetailsHaveBeenConfirmed(data_api_client)
+@return_404_if_applications_closed(lambda: data_api_client)
+def delete_draft_service_warning(framework_slug, lot_slug, service_id):
+    framework, lot = get_framework_and_lot_or_404(data_api_client, framework_slug, lot_slug, allowed_statuses=['open'])
+
+    draft = get_draft_service_or_404(data_api_client, service_id, framework_slug, lot_slug)
+
+    if draft['lotSlug'] != lot_slug or draft['frameworkSlug'] != framework_slug:
+        abort(404)
+
+    if not is_service_associated_with_supplier(draft):
+        abort(404)
+
+    return render_template(
+        "services/delete_draft_service.html",
+        framework=framework,
+        service_id=service_id,
+        service_data=draft,
+        lot_slug=lot_slug,
+        lot=lot
+    )
+
+
 @main.route('/frameworks/<framework_slug>/submissions/<lot_slug>/<service_id>/delete', methods=['POST'])
 @login_required
 @EnsureApplicationCompanyDetailsHaveBeenConfirmed(data_api_client)
@@ -443,6 +468,11 @@ def delete_draft_service(framework_slug, lot_slug, service_id):
 
     draft = get_draft_service_or_404(data_api_client, service_id, framework_slug, lot_slug)
 
+    if draft['lotSlug'] != lot_slug or draft['frameworkSlug'] != framework_slug:
+        abort(404)
+
+    if not is_service_associated_with_supplier(draft):
+        abort(404)
     if request.form.get('delete_confirmed') == 'true':
         data_api_client.delete_draft_service(
             service_id,
@@ -505,7 +535,6 @@ def view_service_submission(framework_slug, lot_slug, service_id):
     ).filter(draft, inplace_allowed=True).summary(draft, inplace_allowed=True)
 
     unanswered_required, unanswered_optional = count_unanswered_questions(sections)
-    delete_requested = True if request.args.get('delete_requested') else False
 
     return render_template(
         "services/service_submission.html",
@@ -519,7 +548,6 @@ def view_service_submission(framework_slug, lot_slug, service_id):
         unanswered_required=unanswered_required,
         unanswered_optional=unanswered_optional,
         can_mark_complete=not validation_errors,
-        delete_requested=delete_requested,
         declaration_status=get_declaration_status(data_api_client, framework['slug'])
     ), 200
 

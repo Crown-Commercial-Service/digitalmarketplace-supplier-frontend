@@ -767,6 +767,7 @@ class TestEnsureApplicationCompanyDetailsHaveBeenConfirmed(BaseApplicationTest):
             'main.start_new_draft_service',
             'main.copy_draft_service',
             'main.complete_draft_service',
+            'main.delete_draft_service_warning',
             'main.delete_draft_service',
             'main.service_submission_document',
             'main.download_declaration_document',
