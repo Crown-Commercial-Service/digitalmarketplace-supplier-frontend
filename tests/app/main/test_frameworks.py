@@ -3572,10 +3572,10 @@ class TestFrameworkUpdatesPage(BaseApplicationTest):
         doc = html.fromstring(response.get_data(as_text=True))
         self._assert_page_title_and_table_headings(doc)
 
-        [communications_table, clarifications_table] = doc.xpath('//table[contains(@class, "govuk-table")]')
+        [communications_table, clarifications_table] = doc.xpath('//table[@data-name="updates-documents"]')
 
         def assert_updates_table_contains_files(table, files):
-            item_rows = table.findall('.//tr[@class="govuk-table__row"]')
+            item_rows = table.findall('.//tr')
             assert len(item_rows) == len(files)
 
             # test that the file names and urls are right
