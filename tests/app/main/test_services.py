@@ -1962,6 +1962,41 @@ class TestEditDraftService(BaseApplicationTest, MockEnsureApplicationCompanyDeta
             page_questions=['agileCoachLocations', 'agileCoachPriceMax', 'agileCoachPriceMin']
         )
 
+    def test_remove_subsection_warning_page_displays_correctly(self, s3):
+        self.data_api_client.get_framework.return_value = self.framework(
+            status='open', slug='digital-outcomes-and-specialists'
+        )
+
+        self.data_api_client.get_draft_service.return_value = self.multiquestion_draft
+
+        res = self.client.get(
+            '/suppliers/frameworks/digital-outcomes-and-specialists/submissions/' +
+            'digital-specialists/1/remove/individual-specialist-roles/agile-coach'
+        )
+
+        assert res.status_code == 200
+        doc = html.fromstring(res.get_data(as_text=True))
+
+        page_title = doc.xpath('//h1')[0].text_content()
+        title_caption = doc.cssselect('span.govuk-caption-xl')[0].text_content()
+        assert title_caption == "Digital specialists - Individual specialist roles"
+        assert page_title == "Are you sure you want to remove agile coach?"
+
+        assert len(doc.cssselect(
+            'form[action="/suppliers/frameworks/digital-outcomes-and-specialists/submissions/digital-specialists/1' +
+            '/remove/individual-specialist-roles/agile-coach"]'
+            )) == 1
+
+        submit_button = doc.cssselect('button[name="remove_confirmed"]')
+        cancel_link = doc.xpath("//a[normalize-space()='Cancel']")
+
+        assert len(submit_button) == 1
+        assert len(cancel_link) == 1
+
+        assert cancel_link[0].attrib['href'] == (
+            "/suppliers/frameworks/digital-outcomes-and-specialists/submissions/digital-specialists/1"
+        )
+
     def test_remove_subsection(self, s3):
         self.data_api_client.get_framework.return_value = self.framework(
             status='open', slug='digital-outcomes-and-specialists'
@@ -2052,7 +2087,8 @@ class TestEditDraftService(BaseApplicationTest, MockEnsureApplicationCompanyDeta
         self.data_api_client.get_draft_service.side_effect = HTTPError(mock.Mock(status_code=504))
         res = self.client.post(
             '/suppliers/frameworks/digital-outcomes-and-specialists/submissions/' +
-            'digital-specialists/1/remove/individual-specialist-roles/agile-coach?confirm=True')
+            'digital-specialists/1/remove/individual-specialist-roles/agile-coach',
+            data={'remove_confirmed': 'true'})
         assert res.status_code == 504
 
     def test_fails_if_api_update_fails(self, s3):
@@ -2060,7 +2096,8 @@ class TestEditDraftService(BaseApplicationTest, MockEnsureApplicationCompanyDeta
         self.data_api_client.update_draft_service.side_effect = HTTPError(mock.Mock(status_code=504))
         res = self.client.post(
             '/suppliers/frameworks/digital-outcomes-and-specialists/submissions/' +
-            'digital-specialists/1/remove/individual-specialist-roles/agile-coach?confirm=True')
+            'digital-specialists/1/remove/individual-specialist-roles/agile-coach',
+            data={'remove_confirmed': 'true'})
         assert res.status_code == 504
 
     @pytest.mark.parametrize(

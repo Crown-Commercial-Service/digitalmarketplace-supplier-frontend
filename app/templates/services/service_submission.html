@@ -140,7 +140,7 @@
   {% if framework.status == 'open' %}
     {% if section.edit_questions and not question.is_empty %}
       {% if lot.oneServiceLimit %}
-        {{ summary.remove_link('Remove', url_for(".remove_subsection", framework_slug=framework.slug, lot_slug=service_data.lot, service_id=service_id, section_id=section.id, question_slug=question.slug)) }}
+        {{ summary.remove_link('Remove', url_for(".remove_subsection_warning", framework_slug=framework.slug, lot_slug=service_data.lot, service_id=service_id, section_id=section.id, question_slug=question.slug)) }}
       {% endif %}
       {{ summary.edit_link('Edit', url_for(".edit_service_submission", framework_slug=framework.slug, lot_slug=service_data.lot, service_id=service_id, section_id=section.id, question_slug=question.slug)) }}
     {% elif section.edit_questions and lot.oneServiceLimit %}

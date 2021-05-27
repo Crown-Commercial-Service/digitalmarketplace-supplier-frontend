@@ -773,6 +773,7 @@ class TestEnsureApplicationCompanyDetailsHaveBeenConfirmed(BaseApplicationTest):
             'main.download_declaration_document',
             'main.view_service_submission',
             'main.edit_service_submission',
+            'main.remove_subsection_warning',
             'main.remove_subsection',
             'main.previous_services',
             'main.copy_previous_service',

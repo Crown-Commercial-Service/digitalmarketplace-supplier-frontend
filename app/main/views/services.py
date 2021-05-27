@@ -473,7 +473,8 @@ def delete_draft_service(framework_slug, lot_slug, service_id):
 
     if not is_service_associated_with_supplier(draft):
         abort(404)
-    if request.form.get('delete_confirmed') == 'true':
+
+    if request.form.get('delete_confirmed'):
         data_api_client.delete_draft_service(
             service_id,
             current_user.email_address
@@ -540,7 +541,6 @@ def view_service_submission(framework_slug, lot_slug, service_id):
         "services/service_submission.html",
         framework=framework,
         lot=lot,
-        confirm_remove=request.args.get("confirm_remove", None),
         service_id=service_id,
         service_data=draft,
         last_edit=last_edit,
@@ -651,7 +651,68 @@ def edit_service_submission(framework_slug, lot_slug, service_id, section_id, qu
 
 
 @main.route('/frameworks/<framework_slug>/submissions/<lot_slug>/<service_id>/remove/<section_id>/<question_slug>',
-            methods=['GET', 'POST'])
+            methods=['GET'])
+@login_required
+@EnsureApplicationCompanyDetailsHaveBeenConfirmed(data_api_client)
+@return_404_if_applications_closed(lambda: data_api_client)
+def remove_subsection_warning(framework_slug, lot_slug, service_id, section_id, question_slug):
+    framework, lot = get_framework_and_lot_or_404(data_api_client, framework_slug, lot_slug, allowed_statuses=['open'])
+
+    # Suppliers must have registered interest in a framework before they can edit draft services
+    if not get_supplier_framework_info(data_api_client, framework_slug):
+        abort(404)
+
+    try:
+        draft = data_api_client.get_draft_service(service_id)['services']
+    except HTTPError as e:
+        abort(e.status_code)
+
+    if not is_service_associated_with_supplier(draft):
+        abort(404)
+
+    content = content_loader.get_manifest(framework_slug, 'edit_submission').filter(draft, inplace_allowed=True)
+    section = content.get_section(section_id)
+    containing_section = section
+    if section and (question_slug is not None):
+        section = section.get_question_as_section(question_slug)
+    if section is None or not section.editable:
+        abort(404)
+
+    question_to_remove = content.get_question_by_slug(question_slug)
+    fields_to_remove = question_to_remove.form_fields
+
+    section_responses = [field for field in containing_section.get_field_names() if field in draft]
+    fields_remaining_after_removal = [field for field in section_responses if field not in fields_to_remove]
+
+    if draft['status'] == 'not-submitted' or len(fields_remaining_after_removal) > 0:
+        return render_template(
+            "services/delete_draft_service_subsection.html",
+            question_to_remove=question_to_remove,
+            question_slug=question_slug,
+            section_name=containing_section.name,
+            section_id=section_id,
+            framework=framework,
+            service_id=service_id,
+            service_data=draft,
+            lot_slug=lot_slug,
+            lot=lot
+        )
+    else:
+        flash(REMOVE_LAST_SUBSECTION_ERROR_MESSAGE.format(
+            section_name=containing_section.name.lower(),
+            service_name=(draft.get("serviceName") or draft.get("lotName")).lower(),
+        ), "error")
+
+        return redirect(
+            url_for('.view_service_submission',
+                    framework_slug=framework_slug,
+                    lot_slug=lot_slug,
+                    service_id=service_id
+                    ))
+
+
+@main.route('/frameworks/<framework_slug>/submissions/<lot_slug>/<service_id>/remove/<section_id>/<question_slug>',
+            methods=['POST'])
 @login_required
 @EnsureApplicationCompanyDetailsHaveBeenConfirmed(data_api_client)
 @return_404_if_applications_closed(lambda: data_api_client)
@@ -677,7 +738,7 @@ def remove_subsection(framework_slug, lot_slug, service_id, section_id, question
             service_name=(draft.get("serviceName") or draft.get("lotName")).lower(),
         ), "error")
 
-    if request.args.get("confirm") and request.method == "POST":
+    if request.form.get("remove_confirmed"):
         # Remove the section
         update_json = {field: None for field in fields_to_remove}
         try:
@@ -694,31 +755,11 @@ def remove_subsection(framework_slug, lot_slug, service_id, section_id, question
             else:
                 abort(e.status_code)
 
-    else:
-        section_responses = [field for field in containing_section.get_field_names() if field in draft]
-        fields_remaining_after_removal = [field for field in section_responses if field not in fields_to_remove]
-
-        if draft['status'] == 'not-submitted' or len(fields_remaining_after_removal) > 0:
-            # Show page with "Are you sure?" message and button
-            return redirect(
-                url_for('.view_service_submission',
-                        framework_slug=framework_slug,
-                        lot_slug=lot_slug,
-                        service_id=service_id,
-                        confirm_remove=question_slug,
-                        section_id=section_id
-                        )
-            )
-        else:
-            # You can't remove the last one
-            set_remove_last_subsection_error_message()
-
     return redirect(
         url_for('.view_service_submission',
                 framework_slug=framework_slug,
                 lot_slug=lot_slug,
-                service_id=service_id,
-                confirm_remove=None
+                service_id=service_id
                 ))
 
 
