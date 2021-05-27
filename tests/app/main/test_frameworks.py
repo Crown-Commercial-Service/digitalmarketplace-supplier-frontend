@@ -3548,58 +3548,22 @@ class TestFrameworkUpdatesPage(BaseApplicationTest):
     def test_the_tables_should_be_displayed_correctly(self, s3):
         self.data_api_client.get_framework.return_value = self.framework('open')
 
-        files = [
+        communications_files = [
             ('updates/communications/', 'file 1', 'odt'),
-            ('updates/communications/', 'file 2', 'odt'),
+            ('updates/communications/', 'file 2', 'pdf'),
+            ('updates/communications/', 'clarifications file', 'odt')
+        ]
+        clarifications_files = [
             ('updates/clarifications/', 'file 3', 'odt'),
-            ('updates/clarifications/', 'file 4', 'odt'),
-        ]
-
-        # the communications table is always before the clarifications table
-        s3.return_value.list.return_value = [
-            _return_fake_s3_file_dict("g-cloud-7/communications/{}".format(section), filename, ext)
-            for section, filename, ext
-            in files
-        ]
-
-        self.login()
-
-        response = self.client.get('/suppliers/frameworks/g-cloud-7/updates')
-        doc = html.fromstring(response.get_data(as_text=True))
-        self._assert_page_title_and_table_headings(doc)
-
-        tables = doc.xpath('//div[contains(@class, "updates-document-tables")]/table')
-
-        # test that for each table, we have the right number of rows
-        for table in tables:
-            item_rows = table.findall('.//tr[@class="summary-item-row"]')
-            assert len(item_rows) == 2
-
-            # test that the file names and urls are right
-            for row in item_rows:
-                section, filename, ext = files.pop(0)
-                filename_link = row.find('.//a[@class="document-link-with-icon"]')
-
-                assert filename in filename_link.text_content()
-                assert filename_link.get('href') == '/suppliers/frameworks/g-cloud-7/files/{}{}.{}'.format(
-                    section,
-                    filename.replace(' ', '%20'),
-                    ext,
-                )
-
-    def test_names_with_the_section_name_in_them_will_display_correctly(self, s3):
-        self.data_api_client.get_framework.return_value = self.framework('open')
-
-        # for example: 'g-cloud-7-updates/clarifications/communications%20file.odf'
-        files = [
-            ('updates/communications/', 'clarifications file', 'odt'),
+            ('updates/clarifications/', 'file 4', 'pdf'),
             ('updates/clarifications/', 'communications file', 'odt')
         ]
 
         s3.return_value.list.return_value = [
             _return_fake_s3_file_dict("g-cloud-7/communications/{}".format(section), filename, ext)
             for section, filename, ext
-            in files
+            # the communications table is always before the clarifications table
+            in communications_files + clarifications_files
         ]
 
         self.login()
@@ -3608,17 +3572,15 @@ class TestFrameworkUpdatesPage(BaseApplicationTest):
         doc = html.fromstring(response.get_data(as_text=True))
         self._assert_page_title_and_table_headings(doc)
 
-        tables = doc.xpath('//div[contains(@class, "updates-document-tables")]/table')
+        [communications_table, clarifications_table] = doc.xpath('//table[contains(@class, "govuk-table")]')
 
-        # test that for each table, we have the right number of rows
-        for table in tables:
-            item_rows = table.findall('.//tr[@class="summary-item-row"]')
-            assert len(item_rows) == 1
+        def assert_updates_table_contains_files(table, files):
+            item_rows = table.findall('.//tr[@class="govuk-table__row"]')
+            assert len(item_rows) == len(files)
 
             # test that the file names and urls are right
-            for row in item_rows:
-                section, filename, ext = files.pop(0)
-                filename_link = row.find('.//a[@class="document-link-with-icon"]')
+            for row, (section, filename, ext) in zip(item_rows, files):
+                filename_link = row.find('.//div[@class="dm-attachment__details"]/p/a')
 
                 assert filename in filename_link.text_content()
                 assert filename_link.get('href') == '/suppliers/frameworks/g-cloud-7/files/{}{}.{}'.format(
@@ -3626,6 +3588,9 @@ class TestFrameworkUpdatesPage(BaseApplicationTest):
                     filename.replace(' ', '%20'),
                     ext,
                 )
+
+        assert_updates_table_contains_files(communications_table, communications_files)
+        assert_updates_table_contains_files(clarifications_table, clarifications_files)
 
     @pytest.mark.parametrize('countersigned_path, contact_link_shown', [("path", False), (None, True)])
     def test_contact_link_only_shown_if_countersigned_agreement_is_not_yet_returned(
