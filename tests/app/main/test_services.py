@@ -1356,12 +1356,6 @@ class TestCreateDraftService(BaseApplicationTest, MockEnsureApplicationCompanyDe
         res = self.client.get('/suppliers/frameworks/g-cloud-7/submissions/scs/create')
         assert res.status_code == 404
 
-    def test_can_not_get_create_draft_service_page_if_no_supplier_framework(self):
-        self.data_api_client.get_framework.return_value = self.framework(status='open')
-        self.data_api_client.get_supplier_framework_info.return_value = {'frameworkInterest': {}}
-        res = self.client.get('/suppliers/frameworks/g-cloud-7/submissions/scs/create')
-        assert res.status_code == 404
-
     def _test_post_create_draft_service(self, data, if_error_expected):
         self.data_api_client.get_framework.return_value = self.framework(status='open')
         self.data_api_client.create_new_draft_service.return_value = {"services": empty_g7_draft_service()}
@@ -1756,15 +1750,6 @@ class TestEditDraftService(BaseApplicationTest, MockEnsureApplicationCompanyDeta
         )
         assert res.status_code == 404
 
-    def test_edit_draft_section_with_no_supplier_framework_404(self, s3):
-        self.data_api_client.get_draft_service.return_value = self.empty_draft
-        self.data_api_client.get_supplier_framework_info.return_value = {'frameworkInterest': {}}
-
-        res = self.client.get(
-            '/suppliers/frameworks/g-cloud-7/submissions/scs/1/edit/service-definition'
-        )
-        assert res.status_code == 404
-
     def test_update_in_section_with_more_questions_redirects_to_next_question_in_section(self, s3):
         self.data_api_client.get_framework.return_value = self.framework(slug='g-cloud-9', status='open')
         self.data_api_client.get_draft_service.return_value = self.empty_g9_draft
@@ -2062,19 +2047,6 @@ class TestEditDraftService(BaseApplicationTest, MockEnsureApplicationCompanyDeta
 
         assert res.status_code == 404
         assert self.data_api_client.update_draft_service.called is False
-
-    def test_can_not_remove_subsection_if_no_supplier_framework(self, s3):
-        self.data_api_client.get_framework.return_value = self.framework(
-            status='open', slug='digital-outcomes-and-specialists'
-        )
-        self.data_api_client.get_draft_service.return_value = self.multiquestion_draft
-        self.data_api_client.get_supplier_framework_info.return_value = {'frameworkInterest': {}}
-
-        res = self.client.get(
-            '/suppliers/frameworks/digital-outcomes-and-specialists/submissions/' +
-            'digital-specialists/1/remove/individual-specialist-roles/agile-coach'
-        )
-        assert res.status_code == 404
 
     def test_fails_if_api_get_fails(self, s3):
         self.data_api_client.get_draft_service.side_effect = HTTPError(mock.Mock(status_code=504))
@@ -2930,15 +2902,6 @@ class TestCopyAllPreviousServices(CopyingPreviousServicesSetup,
     def test_returns_404_if_lot_not_found(self):
         res = self.client.post(
             '/suppliers/frameworks/g-cloud-10/submissions/sausage/copy-all-previous-framework-services'
-        )
-
-        assert res.status_code == 404
-
-    def test_returns_404_if_no_supplier_framework_interest(self):
-        self.data_api_client.get_supplier_framework_info.return_value = {'frameworkInterest': {}}
-
-        res = self.client.post(
-            '/suppliers/frameworks/g-cloud-10/submissions/cloud-hosting/copy-all-previous-framework-services'
         )
 
         assert res.status_code == 404
