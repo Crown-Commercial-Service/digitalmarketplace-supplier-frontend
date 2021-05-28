@@ -1,0 +1,73 @@
+{% extends "_base_page.html" %}
+
+{% block pageTitle %}
+  {{ framework.name }}: Are you sure you want to copy all your {{ source_framework.name }} {{ lot.name | lower }} services? – Digital Marketplace
+{% endblock %}
+
+{% block breadcrumb %}
+  {{ govukBreadcrumbs({
+    "items": [
+      {
+        "text": "Digital Marketplace",
+        "href": "/"
+      },
+      {
+        "text": "Your account",
+        "href": url_for('.dashboard')
+      },
+      {
+        "text": "Apply to " + framework.name,
+        "href": url_for(".framework_dashboard", framework_slug=framework.slug)
+      },
+      {
+        "text": "Services",
+        "href": url_for(".framework_submission_lots", framework_slug=framework.slug)
+      },
+      {
+        "text": lot.name,
+        "href": url_for(".framework_submission_services", framework_slug=framework.slug, lot_slug=lot.slug)
+      },
+      {
+        "text": "Copy your {} services".format(source_framework.name),
+        "href": url_for(".previous_services", framework_slug=framework.slug, lot_slug=lot.slug)
+      },
+      {
+        "text": "Are you sure you want to copy all your {} services?".format(lot.name.lower())
+      }
+    ]
+  }) }}
+{% endblock %}
+
+{% block mainContent %}
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-two-thirds">
+    <span class="govuk-caption-l">{{ framework.name }}</span>
+    <h1 class="govuk-heading-l">Are you sure you want to copy all your {{ source_framework.name }} {{ lot.name | lower }} services to {{ framework.name }}?</h1>
+ 
+    {{ govukWarningText({
+    "text": "You will need to review and confirm each service before submitting.",
+    "iconFallbackText": "Warning",
+    "classes": "govuk-!-margin-bottom-8"
+    }) }}
+
+    <form method="post" action="{{ url_for('.copy_all_previous_services', framework_slug=framework.slug, lot_slug=lot.slug) }}" novalidate>
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+
+        {{ govukButton({
+            "text": "Yes, add all services",
+            "classes": "govuk-!-margin-right-3",
+            "name": "copy_confirmed",
+            "value": "true",
+            "attributes": {
+              "data-analytics": "trackEvent",
+              "data-analytics-category": "Copy services",
+              "data-analytics-action": "Copy all",
+              "data-analytics-label": "Count: {}".format(previous_services_still_to_copy|length),
+            },
+        }) }}
+
+        <a class="govuk-button govuk-button--secondary" href="{{ url_for('.previous_services', framework_slug=framework.slug, lot_slug=lot.slug) }}">Cancel</a>
+    </form>
+  </div>
+</div>
+{% endblock %}

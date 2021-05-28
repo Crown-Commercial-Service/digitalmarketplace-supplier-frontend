@@ -1982,10 +1982,12 @@ class TestEditDraftService(BaseApplicationTest, MockEnsureApplicationCompanyDeta
         assert title_caption == "Digital specialists - Individual specialist roles"
         assert page_title == "Are you sure you want to remove agile coach?"
 
-        assert len(doc.cssselect(
-            'form[action="/suppliers/frameworks/digital-outcomes-and-specialists/submissions/digital-specialists/1' +
-            '/remove/individual-specialist-roles/agile-coach"]'
-            )) == 1
+        assert len(
+            doc.cssselect(
+                'form[action="/suppliers/frameworks/digital-outcomes-and-specialists/submissions/' +
+                'digital-specialists/1/remove/individual-specialist-roles/agile-coach"]'
+            )
+        ) == 1
 
         submit_button = doc.cssselect('button[name="remove_confirmed"]')
         cancel_link = doc.xpath("//a[normalize-space()='Cancel']")
@@ -2004,33 +2006,17 @@ class TestEditDraftService(BaseApplicationTest, MockEnsureApplicationCompanyDeta
 
         self.data_api_client.get_draft_service.return_value = self.multiquestion_draft
 
-        res = self.client.get(
+        res = self.client.post(
             '/suppliers/frameworks/digital-outcomes-and-specialists/submissions/' +
-            'digital-specialists/1/remove/individual-specialist-roles/agile-coach'
+            'digital-specialists/1/remove/individual-specialist-roles/agile-coach',
+            data={"remove_confirmed": "true"}
         )
 
         assert res.status_code == 302
-        assert(
-            '/suppliers/frameworks/digital-outcomes-and-specialists/submissions/digital-specialists/1?' in res.location
-        )
-        assert('section_id=individual-specialist-roles' in res.location)
-        assert('confirm_remove=agile-coach' in res.location)
-
-        res2 = self.client.get(
-            '/suppliers/frameworks/digital-outcomes-and-specialists/submissions/' +
-            'digital-specialists/1?section_id=specialists&confirm_remove=agile-coach'
-        )
-        assert res2.status_code == 200
-        assert u'Are you sure you want to remove agile coach?' in res2.get_data(as_text=True)
-
-        res3 = self.client.post(
-            '/suppliers/frameworks/digital-outcomes-and-specialists/submissions/' +
-            'digital-specialists/1/remove/individual-specialist-roles/agile-coach?confirm=True')
-
-        assert res3.status_code == 302
-        assert(res3.location.endswith(
+        assert(res.location.endswith(
             '/suppliers/frameworks/digital-outcomes-and-specialists/submissions/digital-specialists/1')
         )
+
         self.data_api_client.update_draft_service.assert_called_once_with(
             '1',
             {
@@ -2434,7 +2420,7 @@ class TestGetListPreviousServices(BaseApplicationTest, MockEnsureApplicationComp
 
         add_all_link = doc.xpath("//a[@class='summary-change-link'][normalize-space()='Add all your services']")[0]
         assert add_all_link.attrib['href'] == \
-            '/suppliers/frameworks/g-cloud-10/submissions/cloud-hosting/previous-services?copy_all=True'
+            '/suppliers/frameworks/g-cloud-10/submissions/cloud-hosting/copy-all-previous-framework-services'
 
         service_links = doc.xpath("//td[@class='summary-item-field-first-half']//a")
         assert [service.text for service in service_links] == ['One', 'Two', 'Three']
@@ -2542,11 +2528,11 @@ class TestGetListPreviousServices(BaseApplicationTest, MockEnsureApplicationComp
         assert res.status_code == 302
         assert res.location == 'http://localhost/suppliers/frameworks/g-cloud-10/submissions/cloud-hosting'
 
-    def test_shows_confirmation_banner_and_button_when_copying_all(self, get_metadata):
+    def test_copy_all_warning_page_displays_correctly(self, get_metadata):
         self.data_api_client.get_framework.side_effect = [
-            self.framework(slug='g-cloud-10'),
-            self.framework(slug='g-cloud-10'),
-            self.framework(slug='g-cloud-9'),
+            self.framework(slug='g-cloud-12'),
+            self.framework(slug='g-cloud-12'),
+            self.framework(slug='g-cloud-11'),
         ]
         self.data_api_client.find_services.return_value = {
             'services': [
@@ -2555,22 +2541,35 @@ class TestGetListPreviousServices(BaseApplicationTest, MockEnsureApplicationComp
                 {'serviceName': 'Service three', 'copiedToFollowingFramework': False},
             ],
         }
-        get_metadata.return_value = 'g-cloud-9'
+        get_metadata.return_value = 'g-cloud-11'
 
         res = self.client.get(
-            '/suppliers/frameworks/g-cloud-10/submissions/cloud-hosting/previous-services?copy_all=True'
+            '/suppliers/frameworks/g-cloud-12/submissions/cloud-hosting/copy-all-previous-framework-services'
         )
         assert res.status_code == 200
 
         doc = html.fromstring(res.get_data(as_text=True))
 
-        assert doc.xpath(
-            "//p[@class='banner-message']"
-            "[normalize-space()='Are you sure you want to add all your cloud hosting services?']"
-        )
-        assert doc.xpath(
-            "//form[@method='POST']//button[normalize-space(string())=$t]",
-            t="Yes, add all services",
+        page_title = doc.xpath('//h1')[0].text_content()
+        title_caption = doc.cssselect('span.govuk-caption-l')[0].text_content()
+        assert title_caption == "G-Cloud 12"
+        assert page_title == "Are you sure you want to copy all your G-Cloud 11 cloud hosting services to G-Cloud 12?"
+
+        assert len(
+            doc.cssselect(
+                'form[action="/suppliers/frameworks/g-cloud-12/submissions/' +
+                'cloud-hosting/copy-all-previous-framework-services"]'
+            )
+        ) == 1
+
+        submit_button = doc.cssselect('button[name="copy_confirmed"]')
+        cancel_link = doc.xpath("//a[normalize-space()='Cancel']")
+
+        assert len(submit_button) == 1
+        assert len(cancel_link) == 1
+
+        assert cancel_link[0].attrib['href'] == (
+            "/suppliers/frameworks/g-cloud-12/submissions/cloud-hosting/previous-services"
         )
 
     @pytest.mark.parametrize('declaration_status,banner_present', (('complete', False), ('incomplete', True)))

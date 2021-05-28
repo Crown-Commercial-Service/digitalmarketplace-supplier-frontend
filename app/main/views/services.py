@@ -821,8 +821,6 @@ def previous_services(framework_slug, lot_slug):
             # Should not be POSTing to this view if not a one service lot
             abort(400)
 
-    copy_all = request.args.get('copy_all', None)
-
     errors = get_errors_from_wtform(form) if form else {}
 
     return render_template(
@@ -831,7 +829,6 @@ def previous_services(framework_slug, lot_slug):
         lot=lot,
         source_framework=source_framework,
         previous_services_still_to_copy=previous_services_still_to_copy,
-        copy_all=copy_all,
         declaration_status=get_declaration_status(data_api_client, framework_slug),
         form=form,
         errors=errors
@@ -851,6 +848,24 @@ def copy_previous_service(framework_slug, lot_slug, service_id):
     flash(MULTI_SERVICE_LOT_SINGLE_SERVICE_ADDED_MESSAGE.format(framework_name=framework['name']), "success")
 
     return redirect(url_for(".previous_services", framework_slug=framework_slug, lot_slug=lot_slug))
+
+
+@main.route('/frameworks/<framework_slug>/submissions/<lot_slug>/copy-all-previous-framework-services',
+            methods=['GET'])
+@login_required
+@EnsureApplicationCompanyDetailsHaveBeenConfirmed(data_api_client)
+@return_404_if_applications_closed(lambda: data_api_client)
+def copy_all_previous_services_warning(framework_slug, lot_slug):
+    framework, lot = get_framework_and_lot_or_404(data_api_client, framework_slug, lot_slug, allowed_statuses=['open'])
+    source_framework_slug = content_loader.get_metadata(framework['slug'], 'copy_services', 'source_framework')
+    source_framework = get_framework_or_500(data_api_client, source_framework_slug, logger=current_app.logger)
+
+    return render_template(
+        "services/copy_all_services_warning.html",
+        framework=framework,
+        lot=lot,
+        source_framework=source_framework
+    )
 
 
 @main.route('/frameworks/<framework_slug>/submissions/<lot_slug>/copy-all-previous-framework-services',

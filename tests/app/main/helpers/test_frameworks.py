@@ -777,6 +777,7 @@ class TestEnsureApplicationCompanyDetailsHaveBeenConfirmed(BaseApplicationTest):
             'main.remove_subsection',
             'main.previous_services',
             'main.copy_previous_service',
+            'main.copy_all_previous_services_warning',
             'main.copy_all_previous_services',
             'main.choose_draft_service_lot',
             'main.framework_submission_lots',

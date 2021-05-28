@@ -30,7 +30,7 @@
         "href": url_for(".framework_submission_services", framework_slug=framework.slug, lot_slug=lot.slug)
       },
       {
-        "text": "Copy your {} services".format(framework.name)
+        "text": "Copy your {} services".format(source_framework.name)
       }
     ]
   }) }}
@@ -82,36 +82,13 @@
       </div>
     </div>
   {% else %}
-    {% if copy_all %}
-      <form action="{{ url_for('.copy_all_previous_services', framework_slug=framework.slug, lot_slug=lot.slug) }}" method="POST">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
-        {%
-          with
-          message = "Are you sure you want to add all your {} services?".format(lot.name|lower),
-          type = "success",
-          action = govukButton({
-            "text": "Yes, add all services",
-            "classes": "app-banner-action",
-            "attributes": {
-              "data-analytics": "trackEvent",
-              "data-analytics-category": "Copy services",
-              "data-analytics-action": "Copy all",
-              "data-analytics-label": "Count: {}".format(previous_services_still_to_copy|length),
-            },
-          })
-        %}
-          {% include "toolkit/notification-banner.html" %}
-        {% endwith %}
-      </form>
-    {% endif %}
-
     {% include "partials/service_warning.html" %}
 
     <h1 class="govuk-heading-l">Previous {{ lot.name|lower }} services</h1>
 
     {{ summary.heading("Your services from {}".format(source_framework.name)) }}
     {% if previous_services_still_to_copy|length > 1 %}
-      {{ summary.top_link("Add all your services", url_for('.previous_services', framework_slug=framework.slug, lot_slug=lot.slug, copy_all=True)) }}
+      {{ summary.top_link("Add all your services", url_for('.copy_all_previous_services_warning', framework_slug=framework.slug, lot_slug=lot.slug)) }}
     {% endif %}
     {% call(service) summary.list_table(
       previous_services_still_to_copy,
