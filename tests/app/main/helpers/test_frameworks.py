@@ -727,6 +727,24 @@ class TestEnsureApplicationCompanyDetailsHaveBeenConfirmed(BaseApplicationTest):
 
         assert e.value.code == 400
 
+    def test_validator_raises_404_if_supplier_not_on_framework(self):
+        @EnsureApplicationCompanyDetailsHaveBeenConfirmed(self.data_api_client_mock)
+        def some_func(framework_slug):
+            pass
+
+        self.data_api_client_mock.get_supplier_framework_info.side_effect = HTTPError(
+            mock.Mock(status_code=404), 'Supplier framework info not found'
+        )
+
+        with mock.patch('app.main.helpers.frameworks.current_user') as current_user_patch:
+            current_user_patch.return_value.is_authenticated = True
+            current_user_patch.supplier_id.return_value = 1
+
+            with pytest.raises(HTTPError) as e:
+                some_func(framework_slug='g-cloud-12')
+
+        assert e.value.status_code == 404
+
     def test_validator_returns_true_if_application_company_details_are_confirmed(self):
         decorator = EnsureApplicationCompanyDetailsHaveBeenConfirmed(self.data_api_client_mock)
 
