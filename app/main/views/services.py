@@ -22,7 +22,7 @@ from ..helpers.services import (
     copy_service_from_previous_framework,
     get_lot_drafts,
     get_signed_document_url,
-    is_service_associated_with_supplier,
+    is_service_associated_with_supplier, get_draft_service_or_404,
 )
 from ..helpers.frameworks import (
     get_framework_and_lot_or_404,
@@ -377,13 +377,7 @@ def start_new_draft_service(framework_slug, lot_slug):
 def copy_draft_service(framework_slug, lot_slug, service_id):
     framework, lot = get_framework_and_lot_or_404(data_api_client, framework_slug, lot_slug, allowed_statuses=['open'])
 
-    draft = data_api_client.get_draft_service(service_id).get('services')
-
-    if draft['lotSlug'] != lot_slug or draft['frameworkSlug'] != framework_slug:
-        abort(404)
-
-    if not is_service_associated_with_supplier(draft):
-        abort(404)
+    draft = get_draft_service_or_404(data_api_client, service_id, framework_slug, lot_slug)
 
     content = content_loader.get_manifest(framework_slug, 'edit_submission').filter(
         {'lot': lot['slug']},
@@ -422,13 +416,7 @@ def copy_draft_service(framework_slug, lot_slug, service_id):
 def complete_draft_service(framework_slug, lot_slug, service_id):
     framework, lot = get_framework_and_lot_or_404(data_api_client, framework_slug, lot_slug, allowed_statuses=['open'])
 
-    draft = data_api_client.get_draft_service(service_id).get('services')
-
-    if draft['lotSlug'] != lot_slug or draft['frameworkSlug'] != framework_slug:
-        abort(404)
-
-    if not is_service_associated_with_supplier(draft):
-        abort(404)
+    draft = get_draft_service_or_404(data_api_client, service_id, framework_slug, lot_slug)
 
     data_api_client.complete_draft_service(
         service_id,
@@ -453,13 +441,7 @@ def complete_draft_service(framework_slug, lot_slug, service_id):
 def delete_draft_service(framework_slug, lot_slug, service_id):
     framework, lot = get_framework_and_lot_or_404(data_api_client, framework_slug, lot_slug, allowed_statuses=['open'])
 
-    draft = data_api_client.get_draft_service(service_id).get('services')
-
-    if draft['lotSlug'] != lot_slug or draft['frameworkSlug'] != framework_slug:
-        abort(404)
-
-    if not is_service_associated_with_supplier(draft):
-        abort(404)
+    draft = get_draft_service_or_404(data_api_client, service_id, framework_slug, lot_slug)
 
     if request.form.get('delete_confirmed') == 'true':
         data_api_client.delete_draft_service(
@@ -560,16 +542,7 @@ def edit_service_submission(framework_slug, lot_slug, service_id, section_id, qu
     force_continue_button = request.args.get('force_continue_button')
     next_question = None
 
-    try:
-        draft = data_api_client.get_draft_service(service_id)['services']
-    except HTTPError as e:
-        abort(e.status_code)
-
-    if draft['lotSlug'] != lot_slug or draft['frameworkSlug'] != framework_slug:
-        abort(404)
-
-    if not is_service_associated_with_supplier(draft):
-        abort(404)
+    draft = get_draft_service_or_404(data_api_client, service_id, framework_slug, lot_slug)
 
     content = content_loader.get_manifest(framework_slug, 'edit_submission').filter(draft, inplace_allowed=True)
     section = content.get_section(section_id)
@@ -655,13 +628,7 @@ def edit_service_submission(framework_slug, lot_slug, service_id, section_id, qu
 @EnsureApplicationCompanyDetailsHaveBeenConfirmed(data_api_client)
 @return_404_if_applications_closed(lambda: data_api_client)
 def remove_subsection(framework_slug, lot_slug, service_id, section_id, question_slug):
-    try:
-        draft = data_api_client.get_draft_service(service_id)['services']
-    except HTTPError as e:
-        abort(e.status_code)
-
-    if not is_service_associated_with_supplier(draft):
-        abort(404)
+    draft = get_draft_service_or_404(data_api_client, service_id, framework_slug, lot_slug)
 
     content = content_loader.get_manifest(framework_slug, 'edit_submission').filter(draft, inplace_allowed=True)
     section = content.get_section(section_id)
