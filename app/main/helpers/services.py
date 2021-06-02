@@ -2,6 +2,7 @@ from datetime import datetime
 import re
 import urllib.parse as urlparse
 
+from dmapiclient import HTTPError
 from flask import abort, current_app
 from flask_login import current_user
 
@@ -29,6 +30,21 @@ def get_lot_drafts(apiclient, framework_slug, lot_slug):
         [draft for draft in drafts if draft['lotSlug'] == lot_slug],
         [draft for draft in complete_drafts if draft['lotSlug'] == lot_slug]
     )
+
+
+def get_draft_service_or_404(data_api_client, service_id, framework_slug, lot_slug):
+    try:
+        draft = data_api_client.get_draft_service(service_id).get('services')
+    except HTTPError as e:
+        abort(e.status_code)
+
+    if draft['lotSlug'] != lot_slug or draft['frameworkSlug'] != framework_slug:
+        abort(404)
+
+    if not is_service_associated_with_supplier(draft):
+        abort(404)
+
+    return draft
 
 
 def is_service_associated_with_supplier(service):
