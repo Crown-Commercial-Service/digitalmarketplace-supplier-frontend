@@ -43,7 +43,7 @@
 
     <div class="govuk-grid-row">
       <div class="govuk-grid-column-two-thirds">
-        <form method="POST" action="{{ url_for('.previous_services', framework_slug=framework.slug, lot_slug=lot.slug) }}">
+        <form method="POST" action="{{ url_for('.previous_services', framework_slug=framework.slug, lot_slug=lot.slug) }} novalidate">
           <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
 
           {{ govukRadios({
