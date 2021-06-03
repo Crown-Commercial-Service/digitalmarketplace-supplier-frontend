@@ -43,25 +43,42 @@
 
     <div class="govuk-grid-row">
       <div class="govuk-grid-column-two-thirds">
-        <div class="single-question-page">
-          <h1 class="govuk-heading-l">{{ form.copy_service.label }}</h1>
+        <form method="POST" action="{{ url_for('.previous_services', framework_slug=framework.slug, lot_slug=lot.slug) }} novalidate">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
 
-          <form method="POST" action="{{ url_for('.previous_services', framework_slug=framework.slug, lot_slug=lot.slug) }}">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}"/>
+          {{ govukRadios({
+            "idPrefix": "input-" + form.copy_service.name,
+            "name": form.copy_service.name,
+            "hint": {
+              "text": form.copy_service.description,
+            },
+            "items": [
+              {"text": "Yes", "value": "yes"},
+              {"text": "No", "value": "no"},
+            ],
+            "fieldset": {
+              "legend": {
+                "text": form.copy_service.label.text,
+                "classes": "govuk-fieldset__legend--l",
+                "isPageHeading": true,
+              }
+            },
+            "errorMessage": {
+                "text": errors.get(form.copy_service.name, {}).get('message', None)
+              } if errors,
 
-            {{ form.copy_service }}
+          }) }}
 
-            {{ govukButton({
-              "text": "Save and continue",
-              "attributes": {
-                "data-analytics": "trackEvent",
-                "data-analytics-category": "Copy services",
-                "data-analytics-action": "Copy one lot service",
-                "data-analytics-label": lot.slug,
-              },
-            }) }}
-          </form>
-        </div>
+          {{ govukButton({
+            "text": "Save and continue",
+            "attributes": {
+              "data-analytics": "trackEvent",
+              "data-analytics-category": "Copy services",
+              "data-analytics-action": "Copy one lot service",
+              "data-analytics-label": lot.slug,
+            },
+          }) }}
+        </form>
       </div>
     </div>
   {% else %}

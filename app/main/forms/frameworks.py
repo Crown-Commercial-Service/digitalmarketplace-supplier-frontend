@@ -3,7 +3,6 @@ from wtforms import HiddenField, RadioField
 from wtforms.validators import DataRequired, Length, InputRequired
 
 from dmutils.forms.fields import DMBooleanField, DMStripWhitespaceStringField, DMRadioField
-from dmutils.forms.widgets import DMSelectionButtonBase
 
 
 class AcceptAgreementVariationForm(FlaskForm):
@@ -30,21 +29,21 @@ class ReuseDeclarationForm(FlaskForm):
 
 
 class OneServiceLimitCopyServiceForm(FlaskForm):
-
-    copy_service = DMBooleanField(
-        "Do you want to reuse your previous {lot_name} service?",
-        false_values=("False", "false", ""),
-        widget=DMSelectionButtonBase(type="boolean"),
+    copy_service = RadioField(
+        id="input-copy_service-1",  # TODO: change to input-copy_service when on govuk-frontend~3
+        choices=[("yes", "Yes"), ("no", "No")],
+        validators=[InputRequired("Select yes if you want to reuse your previous service")],
     )
 
     def __init__(self, lot_name, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.copy_service.question = self.copy_service.question.format(lot_name=lot_name)
+        self.copy_service.label.text = f"Do you want to reuse your previous {lot_name} service?"
+
         if lot_name == 'digital specialists':
-            self.copy_service.question_advice = "You’ll need to review your previous answers. " \
-                                                "Roles won’t be copied if they have new questions."
+            self.copy_service.description = "You’ll need to review your previous answers. " \
+                                            "Roles won’t be copied if they have new questions."
         else:
-            self.copy_service.question_advice = "You still have to review your service and answer any new questions."
+            self.copy_service.description = "You still have to review your service and answer any new questions."
 
 
 class LegalAuthorityForm(FlaskForm):
