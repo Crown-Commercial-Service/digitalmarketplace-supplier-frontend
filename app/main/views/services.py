@@ -438,7 +438,7 @@ def complete_draft_service(framework_slug, lot_slug, service_id):
 @login_required
 @EnsureApplicationCompanyDetailsHaveBeenConfirmed(data_api_client)
 @return_404_if_applications_closed(lambda: data_api_client)
-def delete_draft_service_warning(framework_slug, lot_slug, service_id):
+def confirm_draft_service_delete(framework_slug, lot_slug, service_id):
     framework, lot = get_framework_and_lot_or_404(data_api_client, framework_slug, lot_slug, allowed_statuses=['open'])
 
     draft = get_draft_service_or_404(data_api_client, service_id, framework_slug, lot_slug)
@@ -655,15 +655,11 @@ def edit_service_submission(framework_slug, lot_slug, service_id, section_id, qu
 @login_required
 @EnsureApplicationCompanyDetailsHaveBeenConfirmed(data_api_client)
 @return_404_if_applications_closed(lambda: data_api_client)
-def remove_subsection_warning(framework_slug, lot_slug, service_id, section_id, question_slug):
+def confirm_subsection_remove(framework_slug, lot_slug, service_id, section_id, question_slug):
     framework, lot = get_framework_and_lot_or_404(data_api_client, framework_slug, lot_slug, allowed_statuses=['open'])
 
-    # Suppliers must have registered interest in a framework before they can edit draft services
-    if not get_supplier_framework_info(data_api_client, framework_slug):
-        abort(404)
-
     try:
-        draft = data_api_client.get_draft_service(service_id)['services']
+        draft = get_draft_service_or_404(data_api_client, service_id, framework_slug, lot_slug)
     except HTTPError as e:
         abort(e.status_code)
 
@@ -730,14 +726,6 @@ def remove_subsection(framework_slug, lot_slug, service_id, section_id, question
     question_to_remove = content.get_question_by_slug(question_slug)
     fields_to_remove = question_to_remove.form_fields
 
-    # simply defining this as an inner function so we can avoid having to manually pass around the umpteen variables
-    # it depends on instead pulling them from the outer scope
-    def set_remove_last_subsection_error_message():
-        flash(REMOVE_LAST_SUBSECTION_ERROR_MESSAGE.format(
-            section_name=containing_section.name.lower(),
-            service_name=(draft.get("serviceName") or draft.get("lotName")).lower(),
-        ), "error")
-
     if request.form.get("remove_confirmed"):
         # Remove the section
         update_json = {field: None for field in fields_to_remove}
@@ -751,7 +739,10 @@ def remove_subsection(framework_slug, lot_slug, service_id, section_id, question
         except HTTPError as e:
             if e.status_code == 400:
                 # You can't remove the last one
-                set_remove_last_subsection_error_message()
+                flash(REMOVE_LAST_SUBSECTION_ERROR_MESSAGE.format(
+                    section_name=containing_section.name.lower(),
+                    service_name=(draft.get("serviceName") or draft.get("lotName")).lower(),
+                ), "error")
             else:
                 abort(e.status_code)
 
@@ -855,7 +846,7 @@ def copy_previous_service(framework_slug, lot_slug, service_id):
 @login_required
 @EnsureApplicationCompanyDetailsHaveBeenConfirmed(data_api_client)
 @return_404_if_applications_closed(lambda: data_api_client)
-def copy_all_previous_services_warning(framework_slug, lot_slug):
+def confirm_copy_all_previous_services(framework_slug, lot_slug):
     framework, lot = get_framework_and_lot_or_404(data_api_client, framework_slug, lot_slug, allowed_statuses=['open'])
     source_framework_slug = content_loader.get_metadata(framework['slug'], 'copy_services', 'source_framework')
     source_framework = get_framework_or_500(data_api_client, source_framework_slug, logger=current_app.logger)

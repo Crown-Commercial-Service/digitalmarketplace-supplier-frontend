@@ -1962,7 +1962,7 @@ class TestEditDraftService(BaseApplicationTest, MockEnsureApplicationCompanyDeta
             page_questions=['agileCoachLocations', 'agileCoachPriceMax', 'agileCoachPriceMin']
         )
 
-    def test_remove_subsection_warning_page_displays_correctly(self, s3):
+    def test_confirm_subsection_remove_page_displays_correctly(self, s3):
         self.data_api_client.get_framework.return_value = self.framework(
             status='open', slug='digital-outcomes-and-specialists'
         )
@@ -2561,12 +2561,6 @@ class TestGetListPreviousServices(BaseApplicationTest, MockEnsureApplicationComp
                 'cloud-hosting/copy-all-previous-framework-services"]'
             )
         ) == 1
-
-        submit_button = doc.cssselect('button[name="copy_confirmed"]')
-        cancel_link = doc.xpath("//a[normalize-space()='Cancel']")
-
-        assert len(submit_button) == 1
-        assert len(cancel_link) == 1
 
         assert cancel_link[0].attrib['href'] == (
             "/suppliers/frameworks/g-cloud-12/submissions/cloud-hosting/previous-services"

@@ -88,7 +88,7 @@
 
     {{ summary.heading("Your services from {}".format(source_framework.name)) }}
     {% if previous_services_still_to_copy|length > 1 %}
-      {{ summary.top_link("Add all your services", url_for('.copy_all_previous_services_warning', framework_slug=framework.slug, lot_slug=lot.slug)) }}
+      {{ summary.top_link("Add all your services", url_for('.confirm_copy_all_previous_services', framework_slug=framework.slug, lot_slug=lot.slug)) }}
     {% endif %}
     {% call(service) summary.list_table(
       previous_services_still_to_copy,
