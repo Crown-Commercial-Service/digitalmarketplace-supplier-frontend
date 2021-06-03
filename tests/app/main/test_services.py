@@ -1962,7 +1962,7 @@ class TestEditDraftService(BaseApplicationTest, MockEnsureApplicationCompanyDeta
             page_questions=['agileCoachLocations', 'agileCoachPriceMax', 'agileCoachPriceMin']
         )
 
-    def test_confirm_subsection_remove_page_displays_correctly(self, s3):
+    def test_service_submission_page_remove_subsection_button_gets_confirmation_page(self, s3):
         self.data_api_client.get_framework.return_value = self.framework(
             status='open', slug='digital-outcomes-and-specialists'
         )
@@ -1974,30 +1974,13 @@ class TestEditDraftService(BaseApplicationTest, MockEnsureApplicationCompanyDeta
             'digital-specialists/1/remove/individual-specialist-roles/agile-coach'
         )
 
+        self.data_api_client.update_draft_service.return_value.assert_not_called()
         assert res.status_code == 200
+
         doc = html.fromstring(res.get_data(as_text=True))
 
         page_title = doc.xpath('//h1')[0].text_content()
-        title_caption = doc.cssselect('span.govuk-caption-xl')[0].text_content()
-        assert title_caption == "Digital specialists - Individual specialist roles"
         assert page_title == "Are you sure you want to remove agile coach?"
-
-        assert len(
-            doc.cssselect(
-                'form[action="/suppliers/frameworks/digital-outcomes-and-specialists/submissions/' +
-                'digital-specialists/1/remove/individual-specialist-roles/agile-coach"]'
-            )
-        ) == 1
-
-        submit_button = doc.cssselect('button[name="remove_confirmed"]')
-        cancel_link = doc.xpath("//a[normalize-space()='Cancel']")
-
-        assert len(submit_button) == 1
-        assert len(cancel_link) == 1
-
-        assert cancel_link[0].attrib['href'] == (
-            "/suppliers/frameworks/digital-outcomes-and-specialists/submissions/digital-specialists/1"
-        )
 
     def test_remove_subsection(self, s3):
         self.data_api_client.get_framework.return_value = self.framework(
@@ -2260,28 +2243,6 @@ class TestDeleteDraftService(BaseApplicationTest, MockEnsureApplicationCompanyDe
         self.data_api_client_patch.stop()
         super().teardown_method(method)
 
-    def test_delete_draft_warning_page_displays_correctly(self):
-        self.data_api_client.get_draft_service.return_value = self.draft_to_delete
-        res = self.client.get('/suppliers/frameworks/g-cloud-7/submissions/scs/1/delete')
-
-        assert res.status_code == 200
-        doc = html.fromstring(res.get_data(as_text=True))
-
-        page_title = doc.xpath('//h1')[0].text_content()
-        title_caption = doc.cssselect('span.govuk-caption-xl')[0].text_content()
-        assert title_caption == self.draft_to_delete['services'].get('serviceName')
-        assert page_title == "Are you sure you want to remove this service?"
-
-        assert len(doc.cssselect('form[action="/suppliers/frameworks/g-cloud-7/submissions/scs/1/delete"]')) == 1
-
-        submit_button = doc.cssselect('button[name="delete_confirmed"]')
-        cancel_link = doc.xpath("//a[normalize-space()='Cancel']")
-
-        assert len(submit_button) == 1
-        assert len(cancel_link) == 1
-
-        assert cancel_link[0].attrib['href'] == "/suppliers/frameworks/g-cloud-7/submissions/scs/1"
-
     def test_cannot_delete_if_not_open(self):
         self.data_api_client.get_framework.return_value = self.framework(status='other')
         self.data_api_client.get_draft_service.return_value = self.draft_to_delete
@@ -2296,6 +2257,18 @@ class TestDeleteDraftService(BaseApplicationTest, MockEnsureApplicationCompanyDe
 
         res = self.client.post('/suppliers/frameworks/g-cloud-7/submissions/scs/1/delete')
         assert res.status_code == 404
+
+    def test_service_submission_page_delete_button_gets_confirmation_page(self):
+        self.data_api_client.get_draft_service.return_value = self.draft_to_delete
+        res = self.client.get('/suppliers/frameworks/g-cloud-7/submissions/scs/1/delete')
+
+        self.data_api_client.delete_draft_service.assert_not_called()
+        assert res.status_code == 200
+
+        doc = html.fromstring(res.get_data(as_text=True))
+
+        page_title = doc.xpath('//h1')[0].text_content()
+        assert page_title == "Are you sure you want to remove this service?"
 
     def test_confirm_delete_button_deletes_and_redirects_to_dashboard(self):
         self.data_api_client.get_draft_service.return_value = self.draft_to_delete
@@ -2528,7 +2501,7 @@ class TestGetListPreviousServices(BaseApplicationTest, MockEnsureApplicationComp
         assert res.status_code == 302
         assert res.location == 'http://localhost/suppliers/frameworks/g-cloud-10/submissions/cloud-hosting'
 
-    def test_copy_all_warning_page_displays_correctly(self, get_metadata):
+    def test_services_page_copy_all_button_gets_confirmation_page(self, get_metadata):
         self.data_api_client.get_framework.side_effect = [
             self.framework(slug='g-cloud-12'),
             self.framework(slug='g-cloud-12'),
@@ -2548,23 +2521,13 @@ class TestGetListPreviousServices(BaseApplicationTest, MockEnsureApplicationComp
         )
         assert res.status_code == 200
 
+        self.data_api_client.update_draft_service.return_value.assert_not_called()
+        assert res.status_code == 200
+
         doc = html.fromstring(res.get_data(as_text=True))
 
         page_title = doc.xpath('//h1')[0].text_content()
-        title_caption = doc.cssselect('span.govuk-caption-l')[0].text_content()
-        assert title_caption == "G-Cloud 12"
         assert page_title == "Are you sure you want to copy all your G-Cloud 11 cloud hosting services to G-Cloud 12?"
-
-        assert len(
-            doc.cssselect(
-                'form[action="/suppliers/frameworks/g-cloud-12/submissions/' +
-                'cloud-hosting/copy-all-previous-framework-services"]'
-            )
-        ) == 1
-
-        assert cancel_link[0].attrib['href'] == (
-            "/suppliers/frameworks/g-cloud-12/submissions/cloud-hosting/previous-services"
-        )
 
     @pytest.mark.parametrize('declaration_status,banner_present', (('complete', False), ('incomplete', True)))
     def test_shows_service_warning_in_correct_conditions(
