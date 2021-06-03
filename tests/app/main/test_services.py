@@ -2441,8 +2441,10 @@ class TestGetListPreviousServices(BaseApplicationTest, MockEnsureApplicationComp
 
         assert res.status_code == 200
         assert doc.xpath(f"//h1[normalize-space()='Do you want to reuse your previous {lot_name} service?']")
-        assert doc.xpath(f"//span[@class='question-advice'][normalize-space()='{question_advice}']")
-        assert [re.sub(r"\W", "", label.text) for label in doc.xpath("//label[@class='radio']")] == ["Yes", "No"]
+        assert doc.xpath(f"//span[@class='govuk-hint'][normalize-space()='{question_advice}']")
+        assert [
+            re.sub(r"\W", "", label.text) for label in doc.xpath("//div[@class='govuk-radios']//label")
+        ] == ["Yes", "No"]
         assert doc.xpath("//form//button[normalize-space(string())=$t]", t="Save and continue")
 
     def test_returns_404_if_framework_not_found(self, get_metadata):
@@ -2586,7 +2588,7 @@ class TestPostListPreviousService(BaseApplicationTest, MockEnsureApplicationComp
         res = self.client.post(
             '/suppliers/frameworks/digital-outcomes-and-specialists-3/'
             'submissions/digital-outcomes/previous-services',
-            data={'copy_service': True},
+            data={'copy_service': 'yes'},
         )
 
         assert res.status_code == 302
@@ -2612,7 +2614,7 @@ class TestPostListPreviousService(BaseApplicationTest, MockEnsureApplicationComp
     def test_creates_new_draft_for_one_service_lot_if_copy_false(self, copy_service_from_previous_framework):
         res = self.client.post(
             '/suppliers/frameworks/digital-outcomes-and-specialists-3/submissions/digital-outcomes/previous-services',
-            data={'copy_service': False},
+            data={'copy_service': 'no'},
         )
 
         assert res.status_code == 302
@@ -2626,7 +2628,7 @@ class TestPostListPreviousService(BaseApplicationTest, MockEnsureApplicationComp
         res = self.client.post(
             '/suppliers/frameworks/digital-outcomes-and-specialists-3/'
             'submissions/user-research-studios/previous-services',
-            data={'copy_service': False},
+            data={'copy_service': 'no'},
         )
 
         assert res.status_code == 400
@@ -2662,15 +2664,14 @@ class TestPostListPreviousService(BaseApplicationTest, MockEnsureApplicationComp
         )
 
     @mock.patch('app.main.views.services.copy_service_from_previous_framework')
-    def test_form_validation_treats_a_blank_answer_as_a_no(self, copy_service_from_previous_framework):
+    def test_form_validation_rejects_a_blank_answer(self, copy_service_from_previous_framework):
         res = self.client.post(
             '/suppliers/frameworks/digital-outcomes-and-specialists-3/'
             'submissions/digital-outcomes/previous-services',
             data={},
         )
 
-        assert res.status_code == 302
-        assert '/suppliers/frameworks/digital-outcomes-and-specialists-3/submissions/digital-outcomes' in res.location
+        assert res.status_code == 400
         assert copy_service_from_previous_framework.call_args_list == []
 
 

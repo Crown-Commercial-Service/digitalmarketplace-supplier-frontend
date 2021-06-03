@@ -729,7 +729,7 @@ def previous_services(framework_slug, lot_slug):
                     error_message=f"You already have a draft {lot['name'].lower()} service."
                 )
             if form.validate_on_submit():
-                if form.copy_service.data is True:
+                if form.copy_service.data == 'yes':
                     copy_service_from_previous_framework(
                         data_api_client,
                         content_loader,
