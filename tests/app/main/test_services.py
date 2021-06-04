@@ -191,7 +191,7 @@ class TestListServices(BaseApplicationTest):
             t=u"Your G-Cloud 909 services",
         )
         assert document.xpath(
-            "//*[contains(@class, 'summary-item-no-content')][normalize-space(string())=$t]",
+            "//p[contains(@class, 'govuk-body')][normalize-space(string())=$t]",
             t=u"You don’t have any G-Cloud 909 services on the Digital Marketplace",
         )
 
@@ -239,11 +239,11 @@ class TestListServices(BaseApplicationTest):
             t=u"Your G-Cloud 909 services",
         )
         assert document.xpath(
-            "//td[contains(@class, 'summary-item-field')][normalize-space(string())=$t]",
+            "//td[contains(@class, 'govuk-table__cell')][normalize-space(string())=$t]",
             t=u"Software as a Service",
         )
         assert document.xpath(
-            "//td[contains(@class, 'summary-item-field')][normalize-space(string())=$t]",
+            "//td[contains(@class, 'govuk-table__cell')][normalize-space(string())=$t]",
             t=u"Service name 123",
         )
 
@@ -309,7 +309,7 @@ class TestListServices(BaseApplicationTest):
 
         document = html.fromstring(res.get_data(as_text=True))
         assert document.xpath(
-            "//td[contains(@class, 'summary-item-field')][normalize-space(string())=$t]",
+            "//td[contains(@class, 'govuk-table__cell')][normalize-space(string())=$t]",
             t="Special Lot Name",
         )
         self.data_api_client.find_services.assert_called_once_with(
