@@ -188,11 +188,11 @@ class TestListServices(BaseApplicationTest):
         document = html.fromstring(res.get_data(as_text=True))
         assert document.xpath(
             "//h1[normalize-space(string())=$t]",
-            t=u"Your G-Cloud 909 services",
+            t="Your G-Cloud 909 services",
         )
         assert document.xpath(
             "//p[contains(@class, 'govuk-body')][normalize-space(string())=$t]",
-            t=u"You don’t have any G-Cloud 909 services on the Digital Marketplace",
+            t="You don’t have any G-Cloud 909 services on the Digital Marketplace",
         )
 
         self.data_api_client.find_services.assert_called_once_with(
@@ -236,15 +236,15 @@ class TestListServices(BaseApplicationTest):
         document = html.fromstring(res.get_data(as_text=True))
         assert document.xpath(
             "//h1[normalize-space(string())=$t]",
-            t=u"Your G-Cloud 909 services",
+            t="Your G-Cloud 909 services",
         )
         assert document.xpath(
             "//td[contains(@class, 'govuk-table__cell')][normalize-space(string())=$t]",
-            t=u"Software as a Service",
+            t="Software as a Service",
         )
         assert document.xpath(
             "//td[contains(@class, 'govuk-table__cell')][normalize-space(string())=$t]",
-            t=u"Service name 123",
+            t="Service name 123",
         )
 
         self.data_api_client.find_services.assert_called_once_with(
@@ -1346,7 +1346,7 @@ class TestCreateDraftService(BaseApplicationTest, MockEnsureApplicationCompanyDe
 
         res = self.client.get('/suppliers/frameworks/g-cloud-7/submissions/scs/create')
         assert res.status_code == 200
-        assert u'Service name' in res.get_data(as_text=True)
+        assert 'Service name' in res.get_data(as_text=True)
 
         assert self._validation_error not in res.get_data(as_text=True)
 
@@ -1565,13 +1565,13 @@ class TestEditDraftService(BaseApplicationTest, MockEnsureApplicationCompanyDeta
 
     def test_update_without_changes_is_not_sent_to_the_api(self, s3):
         draft = self.empty_draft['services'].copy()
-        draft.update({'serviceSummary': u"summary"})
+        draft.update({'serviceSummary': "summary"})
         self.data_api_client.get_draft_service.return_value = {'services': draft}
 
         res = self.client.post(
             '/suppliers/frameworks/g-cloud-7/submissions/scs/1/edit/service-description',
             data={
-                'serviceSummary': u"summary",
+                'serviceSummary': "summary",
             })
 
         assert res.status_code == 302
@@ -2134,7 +2134,7 @@ class TestShowDraftService(BaseApplicationTest, MockEnsureApplicationCompanyDeta
         assert res.status_code == 200
         service_price_row_xpath = '//tr[contains(.//span/text(), "Service price")]'
         service_price_xpath = service_price_row_xpath + '/td[@class="summary-item-field"]/span/text()'
-        assert document.xpath(service_price_xpath)[0].strip() == u"£12.50 to £15 a person a second"
+        assert document.xpath(service_price_xpath)[0].strip() == "£12.50 to £15 a person a second"
 
     @mock.patch('app.main.views.services.count_unanswered_questions')
     def test_unanswered_questions_count(self, count_unanswered):
@@ -2143,7 +2143,7 @@ class TestShowDraftService(BaseApplicationTest, MockEnsureApplicationCompanyDeta
         count_unanswered.return_value = 1, 2
         res = self.client.get('/suppliers/frameworks/g-cloud-7/submissions/scs/1')
 
-        assert u'3 unanswered questions' in res.get_data(as_text=True), \
+        assert '3 unanswered questions' in res.get_data(as_text=True), \
             "'3 unanswered questions' not found in html"
 
     @mock.patch('app.main.views.services.count_unanswered_questions')
@@ -2193,10 +2193,10 @@ class TestShowDraftService(BaseApplicationTest, MockEnsureApplicationCompanyDeta
         message = doc.xpath('//section[@class="dm-banner"]')
 
         assert len(message) > 0
-        assert u"This service was not submitted" in message[0].xpath(
+        assert "This service was not submitted" in message[0].xpath(
             'h2[contains(@class, "dm-banner__title")]/text()'
         )[0]
-        assert u"It wasn't marked as complete at the deadline." in message[0].xpath(
+        assert "It wasn't marked as complete at the deadline." in message[0].xpath(
             'div[@class="dm-banner__body"]/text()'
         )[0]
 
@@ -2211,9 +2211,9 @@ class TestShowDraftService(BaseApplicationTest, MockEnsureApplicationCompanyDeta
         message = doc.xpath('//section[@class="dm-banner"]')
 
         assert len(message) > 0
-        assert u"This service was submitted" in message[0].xpath('h2[contains(@class, "dm-banner__title")]/text()')[0]
-        assert u"If your application is successful, it will be available on the Digital Marketplace when " \
-            u"G-Cloud 7 goes live." in message[0].xpath('div[@class="dm-banner__body"]/text()')[0]
+        assert "This service was submitted" in message[0].xpath('h2[contains(@class, "dm-banner__title")]/text()')[0]
+        assert "If your application is successful, it will be available on the Digital Marketplace when " \
+            "G-Cloud 7 goes live." in message[0].xpath('div[@class="dm-banner__body"]/text()')[0]
 
 
 class TestDeleteDraftService(BaseApplicationTest, MockEnsureApplicationCompanyDetailsHaveBeenConfirmedMixin):
