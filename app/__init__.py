@@ -5,6 +5,7 @@ from flask_login import LoginManager
 from flask_wtf.csrf import CSRFProtect
 
 import dmapiclient
+import dmcontent.govuk_frontend
 from dmutils import init_app
 from dmutils.user import User
 
@@ -54,6 +55,11 @@ def create_app(config_name):
 
     gds_metrics.init_app(application)
     csrf.init_app(application)
+
+    # We want to be able to access this function from within all templates
+    application.jinja_env.globals["render_question"] = (
+        dmcontent.govuk_frontend.render_question
+    )
 
     @application.before_request
     def remove_trailing_slash():

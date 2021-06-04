@@ -594,7 +594,9 @@ def edit_service_submission(framework_slug, lot_slug, service_id, section_id, qu
                 public=False)
 
             if document_errors:
-                errors = section.get_error_messages(document_errors, question_descriptor_from="question")
+                errors = govuk_errors(
+                    section.get_error_messages(document_errors, question_descriptor_from="question")
+                )
             else:
                 update_data.update(uploaded_documents)
 

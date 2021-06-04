@@ -14,7 +14,7 @@
       <h1 class="govuk-heading-l">{{ section.name }}</h1>
 
       {% if section.description %}
-        <div class="section-description">
+        <div class="govuk-body">
           {{ section.description }}
         </div>
       {% endif %}
@@ -23,17 +23,13 @@
   </div>
 
   <div>
-    <form method="post" enctype="multipart/form-data" action="{{ request.path }}">
+    <form method="post" enctype="multipart/form-data" action="{{ request.path }}" novalidate>
 
       <div class="govuk-grid-row">
         <div class="govuk-grid-column-two-thirds">
 
             {% for question in section.questions %}
-              {% if errors and (errors[question.id] or question.type == 'multiquestion') %}
-                {{ forms[question.type](question, service_data, errors) }}
-              {% else %}
-                {{ forms[question.type](question, service_data, {}) }}
-              {% endif %}
+              {{ render_question(question, service_data, errors, is_page_heading=False) }}
             {% endfor %}
 
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
