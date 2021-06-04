@@ -1,0 +1,65 @@
+{% extends "_base_page.html" %}
+
+{% block pageTitle %}
+  {{ service_data.serviceName or service_data.lotName }}: Are you sure you want to remove {{ question_to_remove.label|lower }}? – Digital Marketplace
+{% endblock %}
+
+{% block breadcrumb %}
+  {{ govukBreadcrumbs(
+    {
+      "items": [
+        {
+          "text": "Digital Marketplace",
+          "href": "/"
+        },
+        {
+          "text": "Your account",
+          "href": url_for('.dashboard')
+        },
+        {
+          "text": "Apply to " + framework.name,
+          "href": url_for(".framework_dashboard", framework_slug=framework.slug)
+        },
+        {
+          "text": "Services",
+          "href": url_for(".framework_submission_lots", framework_slug=framework.slug)
+        },
+        {
+          "text": service_data.get('serviceName', service_data['lotName']),
+          "href": url_for(".framework_submission_services", framework_slug=framework.slug, lot_slug=service_data.lot)
+        },
+        {
+          "text": section_name + ': Remove ' + question_to_remove.label.lower()
+        }
+      ]
+    }
+  )}}
+{% endblock %}
+
+{% block mainContent %}
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-two-thirds">
+    <span class="govuk-caption-xl">{{ service_data.serviceName or service_data.lotName }} - {{ section_name }}</span>
+    <h1 class="govuk-heading-xl">Are you sure you want to remove {{ question_to_remove.label|lower }}?</h1>
+ 
+    {{ govukWarningText({
+    "text": "This action is final and cannot be undone.",
+    "iconFallbackText": "Warning",
+    "classes": "govuk-!-margin-bottom-8"
+    }) }}
+
+    <form method="post" action="{{ url_for('.remove_subsection', framework_slug=framework.slug, lot_slug=lot_slug, service_id=service_id, section_id=section_id, question_slug=question_slug) }}" novalidate>
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+
+        {{ govukButton({
+            "text": "Yes, remove " + question_to_remove.label.lower(),
+            "classes": "govuk-button--warning govuk-!-margin-right-3",
+            "name": "remove_confirmed",
+            "value": "true"
+        }) }}
+
+        <a class="govuk-button govuk-button--secondary" href="{{ url_for('.view_service_submission', framework_slug=framework.slug, lot_slug=lot_slug, service_id=service_id) }}">Cancel</a>
+    </form>
+  </div>
+</div>
+{% endblock %}

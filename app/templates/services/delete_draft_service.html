@@ -1,0 +1,77 @@
+{% extends "_base_page.html" %}
+
+{% block pageTitle %}
+  {{ service_data.serviceName or service_data.lotName }}: Are you sure you want to remove {{ service_data.lotName.lower() if lot.oneServiceLimit else 'this {}'.format(lot.unitSingular) }}? – Digital Marketplace
+{% endblock %}
+
+{% block breadcrumb %}
+  {% with items = [
+    {
+      "text": "Digital Marketplace",
+      "href": "/"
+    },
+    {
+      "text": "Your account",
+      "href": url_for('.dashboard')
+    },
+    {
+      "text": "Apply to " + framework.name,
+      "href": url_for(".framework_dashboard", framework_slug=framework.slug)
+    },
+    {
+      "text": "Services",
+      "href": url_for(".framework_submission_lots", framework_slug=framework.slug)
+    }
+  ]
+  %}
+    {% if lot.oneServiceLimit %}
+      {{ govukBreadcrumbs({"items": items + [
+        {
+          "text": service_data.get('serviceName', service_data['lotName']),
+          "href": url_for(".framework_submission_services", framework_slug=framework.slug, lot_slug=service_data.lot)
+        },
+        {
+          "text": "Remove draft service"
+        }
+      ]}) }}
+    {% else %}
+      {{ govukBreadcrumbs({"items": items + [
+        {
+          "text": service_data.lotName,
+          "href": url_for(".framework_submission_services", framework_slug=framework.slug, lot_slug=service_data.lot)
+          },
+        {
+          "text": "Remove draft service"
+        }
+      ]}) }}
+    {% endif %}
+  {% endwith %}
+{% endblock %}
+
+{% block mainContent %}
+<div class="govuk-grid-row">
+  <div class="govuk-grid-column-two-thirds">
+    <span class="govuk-caption-xl">{{ service_data.serviceName or service_data.lotName }}</span>
+    <h1 class="govuk-heading-xl">Are you sure you want to remove this service?</h1>
+ 
+    {{ govukWarningText({
+    "text": "This action is final and cannot be undone.",
+    "iconFallbackText": "Warning",
+    "classes": "govuk-!-margin-bottom-8"
+    }) }}
+
+    <form method="post" action="{{ url_for('.delete_draft_service', framework_slug=framework.slug, lot_slug=lot_slug, service_id=service_id) }}" novalidate>
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+
+        {{ govukButton({
+            "text": "Yes, remove " + service_data.lotName.lower() if lot.oneServiceLimit else 'Yes, remove this {}'.format(lot.unitSingular),
+            "classes": "govuk-button--warning govuk-!-margin-right-3",
+            "name": "delete_confirmed",
+            "value": "true"
+        }) }}
+
+        <a class="govuk-button govuk-button--secondary" href="{{ url_for('.view_service_submission', framework_slug=framework.slug, lot_slug=lot_slug, service_id=service_id) }}">Cancel</a>
+    </form>
+  </div>
+</div>
+{% endblock %}

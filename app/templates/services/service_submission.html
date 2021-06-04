@@ -109,26 +109,6 @@
   </div>
 {% endblock %}
 
-{% block before_heading %}
-  {% if delete_requested %}
-    <div class="govuk-grid-column-full">
-      <form action="{{ url_for('.delete_draft_service', framework_slug=framework.slug, lot_slug=service_data.lot, service_id=service_id ) }}" method="POST">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
-        <input type="hidden" name="delete_confirmed" value="true" />
-        <div class="banner-destructive-with-action">
-          <p class="banner-message">
-            Are you sure you want to remove {{ service_data.lotName.lower() if lot.oneServiceLimit else 'this {}'.format(lot.unitSingular) }}?
-          </p>
-          {{ govukButton({
-            "text": "Yes, remove",
-            "classes": "govuk-button--warning app-banner-action",
-          }) }}
-        </div>
-      </form>
-    </div>
-  {% endif %}
-{% endblock %}
-
 {% block edit_link %}
   {% if framework.status == 'open' %}
     {{ summary.top_link("Edit", url_for(".edit_service_submission", framework_slug=framework.slug, lot_slug=service_data.lot, service_id=service_id, section_id=section.id, hidden_text=section.name)) }}
@@ -160,7 +140,7 @@
   {% if framework.status == 'open' %}
     {% if section.edit_questions and not question.is_empty %}
       {% if lot.oneServiceLimit %}
-        {{ summary.remove_link('Remove', url_for(".remove_subsection", framework_slug=framework.slug, lot_slug=service_data.lot, service_id=service_id, section_id=section.id, question_slug=question.slug)) }}
+        {{ summary.remove_link('Remove', url_for(".confirm_subsection_remove", framework_slug=framework.slug, lot_slug=service_data.lot, service_id=service_id, section_id=section.id, question_slug=question.slug)) }}
       {% endif %}
       {{ summary.edit_link('Edit', url_for(".edit_service_submission", framework_slug=framework.slug, lot_slug=service_data.lot, service_id=service_id, section_id=section.id, question_slug=question.slug)) }}
     {% elif section.edit_questions and lot.oneServiceLimit %}
@@ -178,46 +158,43 @@
 {% endblock %}
 
 {% block after_sections %}
-  {% if not delete_requested %}
-
-      <div class="govuk-grid-column-two-thirds">
-        &nbsp;
+  <div class="govuk-grid-column-two-thirds">
+    &nbsp;
+  </div>
+  <div class="govuk-grid-column-one-third delete-draft-button">
+    {% if service_data.status == 'not-submitted' and can_mark_complete and framework.status == 'open' %}
+      <div class="space-underneath">
+        {% include "partials/complete_service.html" %}
       </div>
-      <div class="govuk-grid-column-one-third delete-draft-button">
-        {% if service_data.status == 'not-submitted' and can_mark_complete and framework.status == 'open' %}
-          <div class="space-underneath">
-            {% include "partials/complete_service.html" %}
-          </div>
-        {% endif %}
-        {% if framework.status == 'open' %}
-        <form action="{{ url_for('.delete_draft_service', framework_slug=framework.slug, lot_slug=service_data.lot, service_id=service_id ) }}" method="POST">
-          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
-          {{ govukButton({
-            "text": "Remove draft service",
-            "classes": "govuk-button--warning button-destructive",
-          }) }}
-        </form>
-        {% endif %}
-      </div>
+    {% endif %}
+    {% if framework.status == 'open' %}
+    <form action="{{ url_for('.confirm_draft_service_delete', framework_slug=framework.slug, lot_slug=service_data.lot, service_id=service_id ) }}" method="GET" novalidate>
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+      {{ govukButton({
+        "text": "Remove draft service",
+        "classes": "govuk-button--warning button-destructive",
+        "name": "delete_confirmed"
+      }) }}
+    </form>
+    {% endif %}
+  </div>
 
-      <div class="govuk-grid-column-two-thirds">
-        {% if lot.oneServiceLimit %}
-          {% set back_to_service_url = url_for(".framework_submission_lots", framework_slug=framework.slug) %}
-          {% set back_to_service_link_text = 'Back to application' %}
-        {% else %}
-          {% set back_to_service_url = url_for(".framework_submission_services", framework_slug=framework.slug, lot_slug=service_data.lot) %}
-          {% set back_to_service_link_text = 'Back to {}'.format(service_data['lotName']|lower) %}
-        {% endif %}
+  <div class="govuk-grid-column-two-thirds">
+    {% if lot.oneServiceLimit %}
+      {% set back_to_service_url = url_for(".framework_submission_lots", framework_slug=framework.slug) %}
+      {% set back_to_service_link_text = 'Back to application' %}
+    {% else %}
+      {% set back_to_service_url = url_for(".framework_submission_services", framework_slug=framework.slug, lot_slug=service_data.lot) %}
+      {% set back_to_service_link_text = 'Back to {}'.format(service_data['lotName']|lower) %}
+    {% endif %}
 
-        <p class="govuk-body">
-          <a class="govuk-link govuk-link--no-visited-state"
-             href="{{ back_to_service_url }}"
-          >
-            {{ back_to_service_link_text }}
-          </a>
-        </p>
+    <p class="govuk-body">
+      <a class="govuk-link govuk-link--no-visited-state"
+          href="{{ back_to_service_url }}"
+      >
+        {{ back_to_service_link_text }}
+      </a>
+    </p>
 
-      </div>
-
-  {% endif %}
+  </div>
 {% endblock %}

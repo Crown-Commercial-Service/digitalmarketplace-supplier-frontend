@@ -434,6 +434,31 @@ def complete_draft_service(framework_slug, lot_slug, service_id):
                                 lot=lot_slug))
 
 
+@main.route('/frameworks/<framework_slug>/submissions/<lot_slug>/<service_id>/delete', methods=['GET'])
+@login_required
+@EnsureApplicationCompanyDetailsHaveBeenConfirmed(data_api_client)
+@return_404_if_applications_closed(lambda: data_api_client)
+def confirm_draft_service_delete(framework_slug, lot_slug, service_id):
+    framework, lot = get_framework_and_lot_or_404(data_api_client, framework_slug, lot_slug, allowed_statuses=['open'])
+
+    draft = get_draft_service_or_404(data_api_client, service_id, framework_slug, lot_slug)
+
+    if draft['lotSlug'] != lot_slug or draft['frameworkSlug'] != framework_slug:
+        abort(404)
+
+    if not is_service_associated_with_supplier(draft):
+        abort(404)
+
+    return render_template(
+        "services/delete_draft_service.html",
+        framework=framework,
+        service_id=service_id,
+        service_data=draft,
+        lot_slug=lot_slug,
+        lot=lot
+    )
+
+
 @main.route('/frameworks/<framework_slug>/submissions/<lot_slug>/<service_id>/delete', methods=['POST'])
 @login_required
 @EnsureApplicationCompanyDetailsHaveBeenConfirmed(data_api_client)
@@ -443,7 +468,13 @@ def delete_draft_service(framework_slug, lot_slug, service_id):
 
     draft = get_draft_service_or_404(data_api_client, service_id, framework_slug, lot_slug)
 
-    if request.form.get('delete_confirmed') == 'true':
+    if draft['lotSlug'] != lot_slug or draft['frameworkSlug'] != framework_slug:
+        abort(404)
+
+    if not is_service_associated_with_supplier(draft):
+        abort(404)
+
+    if request.form.get('delete_confirmed'):
         data_api_client.delete_draft_service(
             service_id,
             current_user.email_address
@@ -505,13 +536,11 @@ def view_service_submission(framework_slug, lot_slug, service_id):
     ).filter(draft, inplace_allowed=True).summary(draft, inplace_allowed=True)
 
     unanswered_required, unanswered_optional = count_unanswered_questions(sections)
-    delete_requested = True if request.args.get('delete_requested') else False
 
     return render_template(
         "services/service_submission.html",
         framework=framework,
         lot=lot,
-        confirm_remove=request.args.get("confirm_remove", None),
         service_id=service_id,
         service_data=draft,
         last_edit=last_edit,
@@ -519,7 +548,6 @@ def view_service_submission(framework_slug, lot_slug, service_id):
         unanswered_required=unanswered_required,
         unanswered_optional=unanswered_optional,
         can_mark_complete=not validation_errors,
-        delete_requested=delete_requested,
         declaration_status=get_declaration_status(data_api_client, framework['slug'])
     ), 200
 
@@ -623,7 +651,64 @@ def edit_service_submission(framework_slug, lot_slug, service_id, section_id, qu
 
 
 @main.route('/frameworks/<framework_slug>/submissions/<lot_slug>/<service_id>/remove/<section_id>/<question_slug>',
-            methods=['GET', 'POST'])
+            methods=['GET'])
+@login_required
+@EnsureApplicationCompanyDetailsHaveBeenConfirmed(data_api_client)
+@return_404_if_applications_closed(lambda: data_api_client)
+def confirm_subsection_remove(framework_slug, lot_slug, service_id, section_id, question_slug):
+    framework, lot = get_framework_and_lot_or_404(data_api_client, framework_slug, lot_slug, allowed_statuses=['open'])
+
+    try:
+        draft = get_draft_service_or_404(data_api_client, service_id, framework_slug, lot_slug)
+    except HTTPError as e:
+        abort(e.status_code)
+
+    if not is_service_associated_with_supplier(draft):
+        abort(404)
+
+    content = content_loader.get_manifest(framework_slug, 'edit_submission').filter(draft, inplace_allowed=True)
+    section = content.get_section(section_id)
+    containing_section = section
+    if section and (question_slug is not None):
+        section = section.get_question_as_section(question_slug)
+    if section is None or not section.editable:
+        abort(404)
+
+    question_to_remove = content.get_question_by_slug(question_slug)
+    fields_to_remove = question_to_remove.form_fields
+
+    section_responses = [field for field in containing_section.get_field_names() if field in draft]
+    fields_remaining_after_removal = [field for field in section_responses if field not in fields_to_remove]
+
+    if draft['status'] == 'not-submitted' or len(fields_remaining_after_removal) > 0:
+        return render_template(
+            "services/delete_draft_service_subsection.html",
+            question_to_remove=question_to_remove,
+            question_slug=question_slug,
+            section_name=containing_section.name,
+            section_id=section_id,
+            framework=framework,
+            service_id=service_id,
+            service_data=draft,
+            lot_slug=lot_slug,
+            lot=lot
+        )
+    else:
+        flash(REMOVE_LAST_SUBSECTION_ERROR_MESSAGE.format(
+            section_name=containing_section.name.lower(),
+            service_name=(draft.get("serviceName") or draft.get("lotName")).lower(),
+        ), "error")
+
+        return redirect(
+            url_for('.view_service_submission',
+                    framework_slug=framework_slug,
+                    lot_slug=lot_slug,
+                    service_id=service_id
+                    ))
+
+
+@main.route('/frameworks/<framework_slug>/submissions/<lot_slug>/<service_id>/remove/<section_id>/<question_slug>',
+            methods=['POST'])
 @login_required
 @EnsureApplicationCompanyDetailsHaveBeenConfirmed(data_api_client)
 @return_404_if_applications_closed(lambda: data_api_client)
@@ -641,15 +726,7 @@ def remove_subsection(framework_slug, lot_slug, service_id, section_id, question
     question_to_remove = content.get_question_by_slug(question_slug)
     fields_to_remove = question_to_remove.form_fields
 
-    # simply defining this as an inner function so we can avoid having to manually pass around the umpteen variables
-    # it depends on instead pulling them from the outer scope
-    def set_remove_last_subsection_error_message():
-        flash(REMOVE_LAST_SUBSECTION_ERROR_MESSAGE.format(
-            section_name=containing_section.name.lower(),
-            service_name=(draft.get("serviceName") or draft.get("lotName")).lower(),
-        ), "error")
-
-    if request.args.get("confirm") and request.method == "POST":
+    if request.form.get("remove_confirmed"):
         # Remove the section
         update_json = {field: None for field in fields_to_remove}
         try:
@@ -662,35 +739,18 @@ def remove_subsection(framework_slug, lot_slug, service_id, section_id, question
         except HTTPError as e:
             if e.status_code == 400:
                 # You can't remove the last one
-                set_remove_last_subsection_error_message()
+                flash(REMOVE_LAST_SUBSECTION_ERROR_MESSAGE.format(
+                    section_name=containing_section.name.lower(),
+                    service_name=(draft.get("serviceName") or draft.get("lotName")).lower(),
+                ), "error")
             else:
                 abort(e.status_code)
-
-    else:
-        section_responses = [field for field in containing_section.get_field_names() if field in draft]
-        fields_remaining_after_removal = [field for field in section_responses if field not in fields_to_remove]
-
-        if draft['status'] == 'not-submitted' or len(fields_remaining_after_removal) > 0:
-            # Show page with "Are you sure?" message and button
-            return redirect(
-                url_for('.view_service_submission',
-                        framework_slug=framework_slug,
-                        lot_slug=lot_slug,
-                        service_id=service_id,
-                        confirm_remove=question_slug,
-                        section_id=section_id
-                        )
-            )
-        else:
-            # You can't remove the last one
-            set_remove_last_subsection_error_message()
 
     return redirect(
         url_for('.view_service_submission',
                 framework_slug=framework_slug,
                 lot_slug=lot_slug,
-                service_id=service_id,
-                confirm_remove=None
+                service_id=service_id
                 ))
 
 
@@ -752,8 +812,6 @@ def previous_services(framework_slug, lot_slug):
             # Should not be POSTing to this view if not a one service lot
             abort(400)
 
-    copy_all = request.args.get('copy_all', None)
-
     errors = get_errors_from_wtform(form) if form else {}
 
     return render_template(
@@ -762,7 +820,6 @@ def previous_services(framework_slug, lot_slug):
         lot=lot,
         source_framework=source_framework,
         previous_services_still_to_copy=previous_services_still_to_copy,
-        copy_all=copy_all,
         declaration_status=get_declaration_status(data_api_client, framework_slug),
         form=form,
         errors=errors
@@ -782,6 +839,24 @@ def copy_previous_service(framework_slug, lot_slug, service_id):
     flash(MULTI_SERVICE_LOT_SINGLE_SERVICE_ADDED_MESSAGE.format(framework_name=framework['name']), "success")
 
     return redirect(url_for(".previous_services", framework_slug=framework_slug, lot_slug=lot_slug))
+
+
+@main.route('/frameworks/<framework_slug>/submissions/<lot_slug>/copy-all-previous-framework-services',
+            methods=['GET'])
+@login_required
+@EnsureApplicationCompanyDetailsHaveBeenConfirmed(data_api_client)
+@return_404_if_applications_closed(lambda: data_api_client)
+def confirm_copy_all_previous_services(framework_slug, lot_slug):
+    framework, lot = get_framework_and_lot_or_404(data_api_client, framework_slug, lot_slug, allowed_statuses=['open'])
+    source_framework_slug = content_loader.get_metadata(framework['slug'], 'copy_services', 'source_framework')
+    source_framework = get_framework_or_500(data_api_client, source_framework_slug, logger=current_app.logger)
+
+    return render_template(
+        "services/copy_all_services_warning.html",
+        framework=framework,
+        lot=lot,
+        source_framework=source_framework
+    )
 
 
 @main.route('/frameworks/<framework_slug>/submissions/<lot_slug>/copy-all-previous-framework-services',
