@@ -29,7 +29,15 @@
         <div class="govuk-grid-column-two-thirds">
 
             {% for question in section.questions %}
-              {{ render_question(question, service_data, errors, is_page_heading=False) }}
+              {% if question.type == "checkbox_tree" or question.type == "pricing" %}
+                {% if errors and errors[question.id] %}
+                  {{ forms[question.type](question, service_data, errors) }}
+                {% else %}
+                  {{ forms[question.type](question, service_data, {}) }}
+                {% endif %}
+              {% else %}
+                {{ render_question(question, service_data, errors, is_page_heading=False) }}
+              {% endif %}
             {% endfor %}
 
             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
