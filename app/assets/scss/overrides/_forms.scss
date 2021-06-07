@@ -1,0 +1,21 @@
+/*
+ * Content loader automatically adds govuk-frontend classes to YAML-generated
+ * content. Some of that content, including hints, ends up as <p> tags, which
+ * have `class="govuk-body"` added. If there are <p> tags in a legend, it 
+ * introduce an extra gap after the paragraph that looks incorrect, since the 
+ * legend itself already has a margin-bottom. So get rid of the margin-bottom
+ * on the <p> tag.
+ */
+fieldset legend.govuk-fieldset__legend p:last-child {
+    margin-bottom: 0;
+}
+
+/*
+ * Content loader automatically adds govuk-frontend classes to YAML-generated
+ * content. Some of that content, including hints, ends up as <p> tags, which
+ * have `class="govuk-body"` added. This overrides hint text colour, so we have
+ * to make sure hints look correct.
+ */
+.govuk-hint .govuk-body {
+    color: $govuk-secondary-text-colour
+}
