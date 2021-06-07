@@ -1107,10 +1107,10 @@ class TestSupplierEditUpdateServiceSection(BaseApplicationTest):
             t="Return to service summary",
         )
 
-        assert len(document.xpath('//span[@class="validation-message"]')) == 2
+        assert len(document.xpath('//span[@class="govuk-error-message"]')) == 2
         assert len(document.xpath(
-            '//span[@class="validation-message"][normalize-space(string())=$t]',
-            t="You need to answer this question.",
+            '//span[@class="govuk-error-message"][normalize-space(string())=$t]',
+            t="Error: You need to answer this question.",
         )) == 2
         self.assert_no_flashes()
 
@@ -1144,8 +1144,8 @@ class TestSupplierEditUpdateServiceSection(BaseApplicationTest):
         assert res.status_code == 400
         document = html.fromstring(res.get_data(as_text=True))
         assert document.xpath(
-            '//span[@class="validation-message"]/text()'
-        )[0].strip() == "Your description must be no more than 50 words."
+            '//span[@class="govuk-error-message"]'
+        )[0].text_content().strip() == "Error: Your description must be no more than 50 words."
         self.assert_no_flashes()
 
     def test_update_non_existent_service_returns_404(self, s3):
@@ -1671,9 +1671,8 @@ class TestEditDraftService(BaseApplicationTest, MockEnsureApplicationCompanyDeta
             '/suppliers/frameworks/g-cloud-7/submissions/scs/1/edit/service-definition'
         )
         document = html.fromstring(response.get_data(as_text=True))
-
         assert response.status_code == 200
-        assert len(document.cssselect('p.file-upload-existing-value')) == 1
+        assert len(document.xpath('//p[contains(text(), "Previously uploaded file:")]')) == 1
 
     def test_display_file_upload_with_no_existing_file(self, s3):
         self.data_api_client.get_draft_service.return_value = self.empty_draft
@@ -1900,9 +1899,9 @@ class TestEditDraftService(BaseApplicationTest, MockEnsureApplicationCompanyDeta
 
         assert res.status_code == 200
         document = html.fromstring(res.get_data(as_text=True))
-        assert "You need to answer this question." == document.xpath(
-            '//span[@class="validation-message"]/text()'
-        )[0].strip()
+        assert "Error: You need to answer this question." == document.xpath(
+            '//span[@class="govuk-error-message"]'
+        )[0].text_content().strip()
 
     def test_update_with_under_50_words_error(self, s3):
         self.data_api_client.get_draft_service.return_value = self.empty_draft
@@ -1915,9 +1914,9 @@ class TestEditDraftService(BaseApplicationTest, MockEnsureApplicationCompanyDeta
 
         assert res.status_code == 200
         document = html.fromstring(res.get_data(as_text=True))
-        assert "Your description must be no more than 50 words." == document.xpath(
-            '//span[@class="validation-message"]/text()'
-        )[0].strip()
+        assert "Error: Your description must be no more than 50 words." == document.xpath(
+            '//span[@class="govuk-error-message"]'
+        )[0].text_content().strip()
 
     @pytest.mark.parametrize("field,error,expected_message", (
         ('priceMin', 'answer_required', 'Minimum price requires an answer.',),
