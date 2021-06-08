@@ -1,4 +1,5 @@
 {% extends "_base_page.html" %}
+{% import "toolkit/summary-table.html" as summary %}
 
 {% block pageTitle %}
   Current services – Digital Marketplace
@@ -29,32 +30,35 @@
     </div>
   </div>
 
-  {% if services %}
-    {% set ns = namespace(rows = []) %}
-    {% for service in services %}
-      {% set service_link %}
-        <a class="govuk-link" href="{{ url_for('.edit_service', framework_slug=service['frameworkSlug'], service_id=service['id']) }}">{{ service.serviceName }}</a>
-      {% endset %}
+  {% set empty_message %}
+    You don’t have any {{ framework.name }} services on the Digital Marketplace
+  {% endset %}
+  {% call(item) summary.list_table(
+    services,
+    caption='Current services',
+    field_headings=[
+      'Name',
+      'Lot',
+      summary.hidden_field_heading("Status")
+    ],
+    field_headings_visible=True,
+    empty_message=empty_message
+  ) %}
+    {% call summary.row() %}
+      {{ summary.service_link(
+          item.serviceName or item.lotName,
+          url_for('.edit_service', framework_slug=item.frameworkSlug, service_id=item.id)
+      ) }}
 
-      {% set row = ns.rows.append(
-        [
-            {"html": service_link},
-            {"text": service.get("lotName") or service["lot"]},
-            {"text": "Live" if service["status"] == "published" else "Removed"},
-        ]
-      ) %}
-    {% endfor %}
+      {{ summary.text(item.lotName or item.lot) }}
 
-    {{ govukTable({
-      'head': [
-        {'text': "Name", "classes": "govuk-!-width-one-half "},
-        {'text': "Lot"},
-        {'text': "Status"},
-      ],
-      'rows': ns.rows,
-      "classes": "dm-table govuk-!-margin-bottom-6",
-    }) }}
-  {% else %}
-    <p class="govuk-body">You don’t have any {{ framework.name }} services on the Digital Marketplace</p>
-  {% endif %}
+      {% call summary.field(action=True) %}
+        {% if item.status == "published" %}
+          Live
+        {% else %}
+          Removed
+        {% endif %}
+      {% endcall %}
+    {% endcall %}
+  {% endcall %}
 {% endblock %}
