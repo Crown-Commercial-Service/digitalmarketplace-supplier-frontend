@@ -33,7 +33,7 @@
     {% set ns = namespace(rows = []) %}
     {% for service in services %}
       {% set service_link %}
-        <a class="govuk-link" href="{{ url_for('.edit_service', framework_slug=service['frameworkSlug'], service_id=service['id']) }}">{{ service.serviceName }}</a>
+        <a class="govuk-link" href="{{ url_for('.edit_service', framework_slug=service['frameworkSlug'], service_id=service['id']) }}">{{ service.serviceName or service.lotName }}</a>
       {% endset %}
 
       {% set row = ns.rows.append(

@@ -170,6 +170,8 @@ class TestListServices(BaseApplicationTest):
                 "g-cloud-909": self.framework(status="live", slug="g-cloud-909"),
                 "g-cloud-890": self.framework(status="open", slug="g-cloud-890"),
                 "g-cloud-870": self.framework(status="expired", slug="g-cloud-870"),
+                "digital-outcomes-and-specialists-100":
+                    self.framework(status="live", slug="digital-outcomes-and-specialists-100"),
             }[framework_slug]
         except KeyError:
             raise HTTPError(mock.Mock(status_code=404))
@@ -250,6 +252,30 @@ class TestListServices(BaseApplicationTest):
         self.data_api_client.find_services.assert_called_once_with(
             supplier_id=1234,
             framework="g-cloud-909",
+        )
+
+    def test_shows_service_for_single_service_lot(self):
+        self.login()
+
+        self.data_api_client.get_framework.side_effect = self._mock_get_framework_side_effect
+        self.data_api_client.find_services.return_value = {
+            'services': [{
+                'status': 'published',
+                'id': '123',
+                'lotSlug': 'digital-outcomes',
+                'lotName': 'Digital Outcomes',
+                'frameworkName': "digital-outcomes-and-specialists-100",
+                'frameworkSlug': "digital-outcomes-and-specialists-100",
+            }]
+        }
+
+        res = self.client.get("/suppliers/frameworks/digital-outcomes-and-specialists-100/services")
+        assert res.status_code == 200
+
+        document = html.fromstring(res.get_data(as_text=True))
+        assert document.xpath(
+            "//td[contains(@class, 'govuk-table__cell')][normalize-space(string())=$t]//a",
+            t="Digital Outcomes",
         )
 
     def test_should_not_be_able_to_see_page_if_user_inactive(self):
