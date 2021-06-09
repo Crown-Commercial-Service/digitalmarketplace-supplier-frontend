@@ -3255,7 +3255,8 @@ class TestSupplierDeclaration(BaseApplicationTest, MockEnsureApplicationCompanyD
                     'modernSlaveryReportingRequirements': None,
                     'mitigatingFactors3': None,
                     'modernSlaveryStatement': None,
-                    'modernSlaveryStatementOptional': 'http://localhost/suppliers/assets/g-cloud-11/documents/1234/modern-slavery-statement-2017-11-12-1314.pdf'  # noqa
+                    'modernSlaveryStatementOptional':
+                        'http://asset-host/g-cloud-11/documents/1234/modern-slavery-statement-2017-11-12-1314.pdf'
                 },
                 "email@email.com"
             )
