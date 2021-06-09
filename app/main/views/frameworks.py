@@ -713,12 +713,11 @@ def framework_supplier_declaration_edit(framework_slug, section_id):
 
         # File fields won't be returned by `section.get_data` so handle these separately
         if request.files:
-            documents_url = url_for('.dashboard', _external=True) + '/assets/'
             # This utils method filters out any empty documents and validates against service document rules
             uploaded_documents, document_errors = upload_declaration_documents(
                 s3.S3(current_app.config['DM_DOCUMENTS_BUCKET']),
                 'documents',
-                documents_url,
+                current_app.config['DM_ASSETS_URL'],
                 request.files,
                 section,
                 framework_slug,
@@ -897,6 +896,9 @@ def download_agreement_file(framework_slug, document_name):
 def download_declaration_document(framework_slug, supplier_id, document_name):
     """
     Equivalent to services.service_submission_document for retrieving declaration files uploaded to S3
+
+    The document bucket's contents are already public. So from G13/DOS6, we no longer use this endpoint. Retained for
+    back-compatibility.
     """
     if current_user.supplier_id != supplier_id:
         abort(404)
