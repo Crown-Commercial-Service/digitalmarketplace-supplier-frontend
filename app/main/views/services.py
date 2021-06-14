@@ -325,7 +325,7 @@ def start_new_draft_service(framework_slug, lot_slug):
         if section is None:
             abort(404)
 
-        section = section.get_question_as_section(section.get_next_question_slug())
+        section = section.get_question_as_section_containing_itself(section.get_next_question_slug())
 
     session_timeout = displaytimeformat(datetime.utcnow() + timedelta(hours=1))
 
@@ -576,7 +576,7 @@ def edit_service_submission(framework_slug, lot_slug, service_id, section_id, qu
     section = content.get_section(section_id)
     if section and (question_slug is not None):
         next_question = section.get_question_by_slug(section.get_next_question_slug(question_slug))
-        section = section.get_question_as_section(question_slug)
+        section = section.get_question_as_section_containing_itself(question_slug)
 
     if section is None or not section.editable:
         abort(404)
@@ -670,7 +670,7 @@ def confirm_subsection_remove(framework_slug, lot_slug, service_id, section_id, 
     section = content.get_section(section_id)
     containing_section = section
     if section and (question_slug is not None):
-        section = section.get_question_as_section(question_slug)
+        section = section.get_question_as_section_containing_itself(question_slug)
     if section is None or not section.editable:
         abort(404)
 
@@ -719,7 +719,7 @@ def remove_subsection(framework_slug, lot_slug, service_id, section_id, question
     section = content.get_section(section_id)
     containing_section = section
     if section and (question_slug is not None):
-        section = section.get_question_as_section(question_slug)
+        section = section.get_question_as_section_containing_itself(question_slug)
     if section is None or not section.editable:
         abort(404)
 
