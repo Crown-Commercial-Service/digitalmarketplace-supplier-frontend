@@ -36,7 +36,7 @@
                   {{ forms[question.type](question, service_data, {}) }}
                 {% endif %}
               {% else %}
-                {{ render_question(question, service_data, errors, is_page_heading=False) }}
+                {{ render_question(question, service_data, errors, is_page_heading=False, label_classes=["govuk-label--m"], legend_classes=["govuk-fieldset__legend--m"]) }}
               {% endif %}
             {% endfor %}
 
