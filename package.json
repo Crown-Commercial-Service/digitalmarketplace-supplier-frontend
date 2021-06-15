@@ -21,7 +21,6 @@
     "gulp-include": "^2.4.1",
     "gulp-sass": "^4.1.0",
     "gulp-shell": "^0.8.0",
-    "gulp-sourcemaps": "^3.0.0",
     "gulp-uglify": "^3.0.2",
     "jquery": "3.6.0"
   },
