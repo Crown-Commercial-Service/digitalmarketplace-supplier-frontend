@@ -1,5 +1,4 @@
 {% extends "_base_page.html" %}
-{% import "toolkit/summary-table.html" as summary %}
 {% import "macros/submission.html" as submission %}
 
 {% block pageTitle %}
@@ -39,7 +38,10 @@
   {% endif %}
 
   <h1 class="govuk-heading-l">{{ lot.name }} services</h1>
-
+{{ govukButton({
+      "text": "Add a service",
+      "href": url_for(".start_new_draft_service", framework_slug=framework.slug, lot_slug=lot.slug)
+ }) }}
   {% if framework.status == 'pending' %}
     <div class="summary-item-lede">
       <div class="govuk-grid-row">
@@ -65,91 +67,124 @@
     </p>
   {% endif %}
 
-  {{ summary.heading("Draft services") }}
+  <h2 class="govuk-heading-m">Draft services</h2>
   {% if framework.status == 'open' %}
-    {{ summary.top_link("Add a service", url_for(".start_new_draft_service", framework_slug=framework.slug, lot_slug=lot.slug)) }}
-  {% elif framework.status == 'pending' %}
-    <p class="hint">These services were not completed</p>
-  {% endif %}
-  {% call(draft) summary.list_table(
-    drafts,
-    caption="Draft services",
-    empty_message="You haven’t added any services yet." if framework.status == 'open' else "You didn’t add any services.",
-    field_headings=[
-        "Service name",
-        "Progress",
-        "Make a copy"
-    ],
-    field_headings_visible=False
-  ) %}
-    {% call summary.row() %}
-      {{ summary.service_link(draft.serviceName,
-                              url_for(".view_service_submission", framework_slug=framework.slug, lot_slug=draft.lot, service_id=draft.id)) }}
+  {% set ns = namespace(draft_rows = []) %}
+  {% for draft in drafts %}
+    {% set service_link %}
+    <a class="govuk-link" href="{{ url_for('.view_service_submission', framework_slug=framework.slug, lot_slug=draft.lot, service_id=draft.id) }}">{{ draft.serviceName }}</a>
+    {% endset %}
+    {% set make_copy_button %}
+        {% set button_html %}
+          Make a copy<span class="govuk-visually-hidden"> of {{ draft.serviceName }}</span>
+        {% endset %}
+    <form method="post" action="{{ url_for('.copy_draft_service', framework_slug=framework.slug, lot_slug=draft.lot, service_id=draft.id) }}">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token_value or csrf_token() }}" />
+    {{ govukButton({
+      "html": button_html,
+      "classes": "govuk-!-margin-0",
+    }) }}
+    </form>
+    {% endset %}
 
-      {% if framework.status == 'open' %}
-        {{ summary.text(submission.multiline_string(
-          submission.can_be_completed_text(draft.unanswered_required, framework.status),
+    {% set row = ns.draft_rows.append(
+      [
+          {"html": service_link},
+          {"html": submission.multiline_string(submission.can_be_completed_text(draft.unanswered_required, framework.status),
           submission.unanswered_required_text(draft.unanswered_required, draft.unanswered_optional),
-          submission.unanswered_optional_text(draft.unanswered_required, draft.unanswered_optional)
-        )) }}
-        {% call summary.field(action=True) %}
-          <form method="post" action="{{ url_for('.copy_draft_service', framework_slug=framework.slug, lot_slug=draft.lot, service_id=draft.id) }}">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token_value or csrf_token() }}" />
-            {{ govukButton({
-              "text": "Make a copy",
-              "classes": "govuk-!-margin-0",
-            }) }}
-          </form>
-        {% endcall %}
-      {% else %}
-        {{ summary.text() }}
-        {{ summary.text() }}
-      {% endif %}
-    {% endcall %}
-  {% endcall %}
+          submission.unanswered_optional_text(draft.unanswered_required, draft.unanswered_optional))},
+          {"html": make_copy_button,
+           "classes": 'dm-app-align-right'}
+      ]
+    ) %}
+{% endfor %}
 
-  {% if framework.status == 'open' %}
-    {{ summary.heading("Complete services") }}
-  {% elif framework.status == 'pending' or 'standstill' %}
-    {% if declaration_status == 'complete' %}
-      {{ summary.heading("Submitted services") }}
+
+    {% if not drafts %}
+       <p class="govuk-body">
+      {{"You haven’t added any services yet." if framework.status == 'open' else "You didn’t add any services."}}
+      </p>
     {% else %}
-      {{ summary.heading("Completed services") }}
+    {{ govukTable({
+      'head': [
+        {'text': "Service name"},
+        {'text': "Progress"},
+        {'html': '<span class="govuk-visually-hidden">Make a copy</span>'}
+      ],
+      'rows': ns.draft_rows,
+      "classes": "dm-table govuk-!-margin-bottom-6",
+    }) }}
+    {% endif %}
+  {% elif framework.status == 'pending' or framework.status == 'standstill' %}
+    <p class="hint">These services were not completed</p>
+    <ul class="govuk-list">
+    {% for draft in drafts  %}
+    <li>
+      <a class="govuk-link" href="{{ url_for('.view_service_submission', framework_slug=framework.slug, lot_slug=draft.lot, service_id=draft.id) }}">{{ draft.serviceName }}</a>
+    </li>
+    {% endfor %}
+    </ul>
+  {% endif %}
+  
+  {% if framework.status == 'open' %}
+      <h2 class="govuk-heading-m">Complete services</h2>
+  {% elif framework.status == 'pending' or framework.status == 'standstill' %}
+    {% if declaration_status == 'complete' %}
+        <h2 class="govuk-heading-m">Submitted services</h2>
+    {% else %}
+        <h2 class="govuk-heading-m">Completed services</h2>
     {% endif %}
   {% endif %}
-  {% call(draft) summary.list_table(
-    complete_drafts,
-    caption="Complete services",
-    empty_message="You haven’t marked any services as complete yet." if framework.status == 'open' else "You didn’t mark any services as complete.",
-    field_headings=[
-        "Service name",
-        "Progress",
-        "Make a copy"
-    ],
-    field_headings_visible=False
-  ) %}
-    {% call summary.row() %}
-      {{ summary.service_link(
-          draft.serviceName,
-          url_for(".view_service_submission", framework_slug=framework.slug, lot_slug=draft.lot, service_id=draft.id)
-      ) }}
-      {% if framework.status == 'open' %}
-        {% call summary.field(action=True) %}
-          <form method="post" action="{{ url_for('.copy_draft_service', framework_slug=framework.slug, lot_slug=draft.lot, service_id=draft.id) }}">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token_value or csrf_token() }}" />
-            {{ govukButton({
-              "text": "Make a copy",
-              "classes": "govuk-!-margin-0",
-            }) }}
-          </form>
-        {% endcall %}
-      {% else %}
-        {{ summary.text() }}
-      {% endif %}
-    {% endcall %}
-  {% endcall %}
 
-  <hr class="govuk-section-break govuk-section-break--m">
+  {% if not complete_drafts %}
+  {{ "You haven’t marked any services as complete yet." if framework.status == 'open' else "You didn’t mark any services as complete."  }}
+  {% endif %}
+  {% set ns = namespace(completed_rows = []) %}
+   {% if framework.status == 'open' %}
+    {% for complete_draft in complete_drafts %}
+    {% set service_link %}
+    <a class="govuk-link" href="{{ url_for('.view_service_submission', framework_slug=framework.slug, lot_slug=draft.lot, service_id=draft.id) }}">{{ complete_draft.serviceName }}</a>
+    {% endset %}
+    {% set make_copy_button %}
+        {% set button_html %}
+            Make a copy<span class="govuk-visually-hidden"> of {{ complete_draft.serviceName }}</span>
+        {% endset %}
+    <form method="post" action="{{ url_for('.copy_draft_service', framework_slug=framework.slug, lot_slug=complete_draft.lot, service_id=complete_draft.id) }}">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token_value or csrf_token() }}" />
+        {{ govukButton({
+          "html": button_html,
+          "classes": "govuk-!-margin-0",
+        }) }}
+    </form>
+    {% endset %}
+        {% set row = ns.completed_rows.append(
+        [
+          {"html": service_link},
+          {"html": make_copy_button,
+          "classes": 'dm-app-align-right'}
+        ]
+    ) %}
+{% endfor %}
+{{ govukTable({
+'head': [
+{'text': "Service name"},
+{'html': '<span class="govuk-visually-hidden">Make a copy</span>'}
+],
+'rows': ns.completed_rows,
+"classes": "dm-table govuk-!-margin-bottom-6",
+}) }}
+    {% elif framework.status == 'pending' or 'standstill' %}
+    <ul class="govuk-list">
+        {% for complete_draft in complete_drafts  %}
+            <li>
+                <a class="govuk-link" href="{{ url_for('.view_service_submission', framework_slug=framework.slug, lot_slug=complete_draft.lot, service_id=draft.id) }}">{{ complete_draft.serviceName }}</a>
+            </li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+
+
+        <hr class="govuk-section-break govuk-section-break--m">
 
   <p class="govuk-body">
     <a class="govuk-link govuk-link--no-visited-state"
