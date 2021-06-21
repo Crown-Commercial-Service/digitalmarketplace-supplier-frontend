@@ -2415,13 +2415,13 @@ class TestGetListPreviousServices(BaseApplicationTest, MockEnsureApplicationComp
         doc = html.fromstring(res.get_data(as_text=True))
 
         assert doc.xpath("//h1[normalize-space()='Previous cloud hosting services']")
-        assert doc.xpath("//h2[@class='summary-item-heading'][normalize-space()='Your services from G-Cloud 9']")
+        assert doc.xpath("//h2[@data-name='summary-item-heading'][normalize-space()='Your services from G-Cloud 9']")
 
-        add_all_link = doc.xpath("//a[@class='summary-change-link'][normalize-space()='Add all your services']")[0]
+        add_all_link = doc.xpath("//a[@data-name='add-all-services'][normalize-space()='Add all your services']")[0]
         assert add_all_link.attrib['href'] == \
             '/suppliers/frameworks/g-cloud-10/submissions/cloud-hosting/copy-all-previous-framework-services'
 
-        service_links = doc.xpath("//td[@class='summary-item-field-first-half']//a")
+        service_links = doc.xpath("//td//a")
         assert [service.text for service in service_links] == ['One', 'Two', 'Three']
 
         add_service_forms = doc.xpath(
