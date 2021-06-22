@@ -90,7 +90,7 @@
         "data-name": 'add-all-services'
         }
     }) }}
-<h2 class="govuk-heading-m" data-name="summary-item-heading">{{ "Your services from {}".format(source_framework.name) }}</h2>
+
 {% if previous_services_still_to_copy|length > 1 %}
     {% endif %}
       {% set ns = namespace(service_rows = []) %}
@@ -123,6 +123,8 @@
           ) %}
       {% endfor %}
       {{ govukTable({
+        'caption': "Your services from {}".format(source_framework.name),
+        'captionClasses': "govuk-table__caption--l",
         'head': [
         {'text': "Service name"},
         {'html': '<span class="govuk-visually-hidden">Add to ' + framework.name + '</span>'}

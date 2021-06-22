@@ -2415,7 +2415,7 @@ class TestGetListPreviousServices(BaseApplicationTest, MockEnsureApplicationComp
         doc = html.fromstring(res.get_data(as_text=True))
 
         assert doc.xpath("//h1[normalize-space()='Previous cloud hosting services']")
-        assert doc.xpath("//h2[@data-name='summary-item-heading'][normalize-space()='Your services from G-Cloud 9']")
+        assert doc.xpath("//table/caption[normalize-space()='Your services from G-Cloud 9']")
 
         add_all_link = doc.xpath("//a[@data-name='add-all-services'][normalize-space()='Add all your services']")[0]
         assert add_all_link.attrib['href'] == \
