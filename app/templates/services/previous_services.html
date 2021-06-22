@@ -1,9 +1,7 @@
 {% extends "_base_page.html" %}
-{% import "toolkit/summary-table.html" as summary %}
-{% import "macros/submission.html" as submission %}
 
 {% block pageTitle %}
-  Copy your {{ framework.name }} services – Digital Marketplace
+  Copy your {{ source_framework.name }} services – Digital Marketplace
 {% endblock %}
 
 {% block breadcrumb %}
@@ -84,41 +82,55 @@
   {% else %}
     {% include "partials/service_warning.html" %}
 
-    <h1 class="govuk-heading-l">Previous {{ lot.name|lower }} services</h1>
+<h1 class="govuk-heading-l">Previous {{ lot.name|lower }} services</h1>
+    {{ govukButton({
+    'text': 'Add all your services',
+    'href': url_for('.confirm_copy_all_previous_services', framework_slug=framework.slug, lot_slug=lot.slug),
+    "attributes": {
+        "data-name": 'add-all-services'
+        }
+    }) }}
 
-    {{ summary.heading("Your services from {}".format(source_framework.name)) }}
-    {% if previous_services_still_to_copy|length > 1 %}
-      {{ summary.top_link("Add all your services", url_for('.confirm_copy_all_previous_services', framework_slug=framework.slug, lot_slug=lot.slug)) }}
+{% if previous_services_still_to_copy|length > 1 %}
     {% endif %}
-    {% call(service) summary.list_table(
-      previous_services_still_to_copy,
-      caption="Previous framework services",
-      field_headings=[
-          "Service name",
-          "Add to " + framework.name,
-      ],
-      field_headings_visible=False
-    ) %}
-      {% call summary.row() %}
-        {{ summary.service_link(service.serviceName,
-                                url_for(".edit_service", framework_slug=source_framework.slug, service_id=service.id)) }}
-        {% call summary.field(action=True) %}
-          <form method="post" action="{{ url_for('.copy_previous_service', framework_slug=framework.slug, lot_slug=service.lot, service_id=service.id) }}">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token_value or csrf_token() }}" />
-            {{ govukButton({
-              "text": "Add",
-              "classes": "govuk-button--secondary govuk-!-margin-0",
-              "attributes": {
-                "data-analytics": "trackEvent",
-                "data-analytics-category": "Copy services",
-                "data-analytics-action": "Copy individual",
-                "data-analytics-label": "ID: {}".format(service.id),
-              },
-            }) }}
-          </form>
-        {% endcall %}
-      {% endcall %}
-    {% endcall %}
+      {% set ns = namespace(service_rows = []) %}
+      {% for service in previous_services_still_to_copy %}
+          {% set service_link %}
+            <a href="{{ url_for(".edit_service", framework_slug=source_framework.slug, service_id=service.id) }}">{{ service.serviceName }}</a>
+          {% endset %}
+          {% set add_button %}
+            <form method="post" action="{{ url_for('.copy_previous_service', framework_slug=framework.slug, lot_slug=service.lot, service_id=service.id) }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token_value or csrf_token() }}" />
+                {{ govukButton({
+                          "html": 'Add<span class="govuk-visually-hidden"> {} to {}</span>'.format(service.serviceName, framework.name),
+                          "classes": "govuk-button--secondary govuk-!-margin-0",
+                          "attributes": {
+                            "data-analytics": "trackEvent",
+                            "data-analytics-category": "Copy services",
+                            "data-analytics-action": "Copy individual",
+                            "data-analytics-label": "ID: {}".format(service.id),
+                          },
+                        }) }}
+            </form>
+          {% endset %}
+
+          {% set row = ns.service_rows.append(
+          [
+          {'html': service_link},
+          {'html': add_button}
+          ]
+
+          ) %}
+      {% endfor %}
+      {{ govukTable({
+        'caption': "Your services from {}".format(source_framework.name),
+        'captionClasses': "govuk-table__caption--m",
+        'head': [
+        {'text': "Service name"},
+        {'html': '<span class="govuk-visually-hidden">Add to ' + framework.name + '</span>'}
+        ],
+        'rows': ns.service_rows,
+        }) }}
 
     <hr class="govuk-section-break govuk-section-break--m">
 
