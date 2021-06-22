@@ -2425,8 +2425,7 @@ class TestGetListPreviousServices(BaseApplicationTest, MockEnsureApplicationComp
         assert [service.text for service in service_links] == ['One', 'Two', 'Three']
 
         add_service_forms = doc.xpath(
-            "//form[@method='post'][.//button[normalize-space(string())=$t]][.//input[@name='csrf_token']]",
-            t="Add",
+            "//table//form[@method='post']"
         )
         assert len(add_service_forms) == 3
         assert all(
