@@ -84,7 +84,7 @@
 
 <h1 class="govuk-heading-l">Previous {{ lot.name|lower }} services</h1>
     {{ govukButton({
-    'text': 'Add all your services',
+    'text': 'Add all your {} services'.format(source_framework.name),
     'href': url_for('.confirm_copy_all_previous_services', framework_slug=framework.slug, lot_slug=lot.slug),
     "attributes": {
         "data-name": 'add-all-services'
