@@ -21,3 +21,14 @@
     }
  }
 
+/*
+ * GOV UK table caption modifiers are only available in govuk-frontend v3.12
+ * We use this modifier on our previous services table, so we can add our
+ * own override.
+ * @TODO: When we have updated to govuk-frontend v3.12, we should remove
+ * this.
+ */
+.govuk-table__caption--m {
+    @include govuk-font($size: 24, $weight: bold);
+    margin-bottom: govuk-spacing(3);
+}
