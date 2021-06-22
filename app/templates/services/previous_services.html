@@ -102,7 +102,7 @@
             <form method="post" action="{{ url_for('.copy_previous_service', framework_slug=framework.slug, lot_slug=service.lot, service_id=service.id) }}">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token_value or csrf_token() }}" />
                 {{ govukButton({
-                          "text": "Add",
+                          "html": 'Add<span class="govuk-visually-hidden"> {} to {}</span>'.format(service.serviceName, framework.name),
                           "classes": "govuk-button--secondary govuk-!-margin-0",
                           "attributes": {
                             "data-analytics": "trackEvent",
