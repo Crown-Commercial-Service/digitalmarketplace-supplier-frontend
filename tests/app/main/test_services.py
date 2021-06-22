@@ -2417,7 +2417,7 @@ class TestGetListPreviousServices(BaseApplicationTest, MockEnsureApplicationComp
         assert doc.xpath("//h1[normalize-space()='Previous cloud hosting services']")
         assert doc.xpath("//table/caption[normalize-space()='Your services from G-Cloud 9']")
 
-        add_all_link = doc.xpath("//a[@data-name='add-all-services']")[0]
+        add_all_link = doc.xpath("//a[@data-name='add-all-services'][normalize-space()='Add all your services']")[0]
         assert add_all_link.attrib['href'] == \
             '/suppliers/frameworks/g-cloud-10/submissions/cloud-hosting/copy-all-previous-framework-services'
 
