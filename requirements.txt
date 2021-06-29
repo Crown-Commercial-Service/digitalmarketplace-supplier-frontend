@@ -30,7 +30,7 @@ defusedxml==0.6.0
     # via odfpy
 digitalmarketplace-apiclient==22.1.0
     # via -r requirements.in
-digitalmarketplace-content-loader==8.2.0
+digitalmarketplace-content-loader==8.2.1
     # via -r requirements.in
 digitalmarketplace-utils==59.1.0
     # via
@@ -40,6 +40,16 @@ docopt==0.6.2
     # via notifications-python-client
 docutils==0.15.2
     # via botocore
+flask==1.1.4
+    # via
+    #   -r requirements.in
+    #   digitalmarketplace-content-loader
+    #   digitalmarketplace-utils
+    #   flask-gzip
+    #   flask-login
+    #   flask-session
+    #   flask-wtf
+    #   gds-metrics
 flask-gzip==0.2
     # via digitalmarketplace-utils
 flask-login==0.5.0
@@ -52,16 +62,6 @@ flask-wtf==0.15.1
     # via
     #   -r requirements.in
     #   digitalmarketplace-utils
-flask==1.1.4
-    # via
-    #   -r requirements.in
-    #   digitalmarketplace-content-loader
-    #   digitalmarketplace-utils
-    #   flask-gzip
-    #   flask-login
-    #   flask-session
-    #   flask-wtf
-    #   gds-metrics
 fleep==1.0.1
     # via digitalmarketplace-utils
 future==0.18.2
