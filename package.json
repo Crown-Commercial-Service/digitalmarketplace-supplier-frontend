@@ -12,17 +12,18 @@
     "digitalmarketplace-frameworks": "^18.3.1",
     "digitalmarketplace-frontend-toolkit": "^36.1.2",
     "digitalmarketplace-govuk-frontend": "^2.9.2",
-    "govuk_frontend_toolkit": "5.0.3",
     "govuk-country-and-territory-autocomplete": "1.0.1",
     "govuk-elements-sass": "3.0.3",
     "govuk-frontend": "2.13.0",
+    "govuk_frontend_toolkit": "5.0.3",
     "gulp": "^4.0.2",
     "gulp-filelog": "0.4.1",
     "gulp-include": "^2.4.1",
-    "gulp-sass": "^4.1.0",
+    "gulp-sass": "^5.0.0",
     "gulp-shell": "^0.8.0",
     "gulp-uglify": "^3.0.2",
-    "jquery": "3.6.0"
+    "jquery": "3.6.0",
+    "sass": "^1.35.1"
   },
   "scripts": {
     "frontend-build:development": "gulp build:development",
