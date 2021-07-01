@@ -28,7 +28,7 @@ cryptography==3.3.2
     # via digitalmarketplace-utils
 defusedxml==0.6.0
     # via odfpy
-digitalmarketplace-apiclient==22.1.0
+digitalmarketplace-apiclient==22.2.0
     # via -r requirements.in
 digitalmarketplace-content-loader==8.2.1
     # via -r requirements.in
