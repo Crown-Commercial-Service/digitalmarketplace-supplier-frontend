@@ -32,7 +32,7 @@
     "test": "standard \"gulpfile.js\""
   },
   "devDependencies": {
-    "jest": "^27.0.5",
+    "jest": "^27.0.6",
     "standard": "^16.0.3"
   },
   "standard": {
