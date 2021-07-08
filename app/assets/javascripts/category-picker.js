@@ -26,7 +26,6 @@
     this.save_last_state()
     $(this._categories).each(function () {
       var category = this
-      var subcategories
       if ($.inArray(category.value, category_names) !== -1) {
         category.checked = !category.checked
       }
