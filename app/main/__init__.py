@@ -137,6 +137,12 @@ def _load_g_cloud(primary_cl):
     primary_cl.load_messages('g-cloud-12', ['urls', 'advice', 'e-signature'])
     primary_cl.load_metadata('g-cloud-12', ['copy_services', 'following_framework'])
 
+    primary_cl.load_manifest('g-cloud-13', 'services', 'edit_service')
+    primary_cl.load_manifest('g-cloud-13', 'services', 'edit_submission')
+    primary_cl.load_manifest('g-cloud-13', 'declaration', 'declaration')
+    primary_cl.load_messages('g-cloud-13', ['urls', 'advice', 'e-signature'])
+    primary_cl.load_metadata('g-cloud-13', ['copy_services', 'following_framework'])
+
 
 def _make_content_loader_factory():
     primary_cl = ContentLoader('app/content')
