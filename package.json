@@ -9,7 +9,7 @@
   "dependencies": {
     "colors": "1.4.0",
     "del": "^6.0.0",
-    "digitalmarketplace-frameworks": "^18.3.1",
+    "digitalmarketplace-frameworks": "^18.4.1",
     "digitalmarketplace-frontend-toolkit": "^36.1.2",
     "digitalmarketplace-govuk-frontend": "^2.9.2",
     "govuk-country-and-territory-autocomplete": "1.0.1",
