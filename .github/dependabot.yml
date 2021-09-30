@@ -8,6 +8,11 @@ updates:
   open-pull-requests-limit: 10
   allow:
   - dependency-type: production
+  ignore:
+  - dependency-name: govuk-frontend
+    update-types: ["version-update:semver-major"]
+  - dependency-name: digitalmarketplace-govuk-frontend
+    update-types: ["version-update:semver-major"]
 - package-ecosystem: "npm"
   directory: "/"
   schedule:
