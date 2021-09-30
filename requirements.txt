@@ -6,9 +6,9 @@
 #
 blinker==1.4
     # via gds-metrics
-boto3==1.12.3
+boto3==1.18.51
     # via digitalmarketplace-utils
-botocore==1.15.3
+botocore==1.21.51
     # via
     #   boto3
     #   s3transfer
@@ -18,7 +18,7 @@ certifi==2019.11.28
     # via requests
 cffi==1.14.0
     # via cryptography
-chardet==3.0.4
+charset-normalizer==2.0.6
     # via requests
 click==7.0
     # via flask
@@ -38,18 +38,6 @@ digitalmarketplace-utils==59.2.0
     #   digitalmarketplace-content-loader
 docopt==0.6.2
     # via notifications-python-client
-docutils==0.15.2
-    # via botocore
-flask==1.1.4
-    # via
-    #   -r requirements.in
-    #   digitalmarketplace-content-loader
-    #   digitalmarketplace-utils
-    #   flask-gzip
-    #   flask-login
-    #   flask-session
-    #   flask-wtf
-    #   gds-metrics
 flask-gzip==0.2
     # via digitalmarketplace-utils
 flask-login==0.5.0
@@ -62,6 +50,16 @@ flask-wtf==0.15.1
     # via
     #   -r requirements.in
     #   digitalmarketplace-utils
+flask==1.1.4
+    # via
+    #   -r requirements.in
+    #   digitalmarketplace-content-loader
+    #   digitalmarketplace-utils
+    #   flask-gzip
+    #   flask-login
+    #   flask-session
+    #   flask-wtf
+    #   gds-metrics
 fleep==1.0.1
     # via digitalmarketplace-utils
 future==0.18.2
@@ -118,13 +116,13 @@ pyyaml==5.4.1
     # via digitalmarketplace-content-loader
 redis==3.5.3
     # via digitalmarketplace-utils
-requests==2.23.0
+requests==2.26.0
     # via
     #   digitalmarketplace-apiclient
     #   digitalmarketplace-utils
     #   mailchimp3
     #   notifications-python-client
-s3transfer==0.3.3
+s3transfer==0.5.0
     # via boto3
 six==1.14.0
     # via
@@ -132,7 +130,7 @@ six==1.14.0
     #   python-dateutil
 unicodecsv==0.14.1
     # via digitalmarketplace-utils
-urllib3==1.25.10
+urllib3==1.26.7
     # via
     #   botocore
     #   requests
