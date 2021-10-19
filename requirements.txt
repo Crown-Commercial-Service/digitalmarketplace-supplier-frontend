@@ -32,12 +32,22 @@ digitalmarketplace-apiclient==22.2.0
     # via -r requirements.in
 digitalmarketplace-content-loader==8.2.2
     # via -r requirements.in
-digitalmarketplace-utils==59.2.0
+digitalmarketplace-utils==60.0.0
     # via
     #   -r requirements.in
     #   digitalmarketplace-content-loader
 docopt==0.6.2
     # via notifications-python-client
+flask==1.1.4
+    # via
+    #   -r requirements.in
+    #   digitalmarketplace-content-loader
+    #   digitalmarketplace-utils
+    #   flask-gzip
+    #   flask-login
+    #   flask-session
+    #   flask-wtf
+    #   gds-metrics
 flask-gzip==0.2
     # via digitalmarketplace-utils
 flask-login==0.5.0
@@ -50,16 +60,6 @@ flask-wtf==0.15.1
     # via
     #   -r requirements.in
     #   digitalmarketplace-utils
-flask==1.1.4
-    # via
-    #   -r requirements.in
-    #   digitalmarketplace-content-loader
-    #   digitalmarketplace-utils
-    #   flask-gzip
-    #   flask-login
-    #   flask-session
-    #   flask-wtf
-    #   gds-metrics
 fleep==1.0.1
     # via digitalmarketplace-utils
 future==0.18.2
@@ -68,7 +68,7 @@ gds-metrics==0.2.0
     # via digitalmarketplace-utils
 govuk-country-register==0.5.0
     # via digitalmarketplace-utils
-git+https://github.com/alphagov/govuk-frontend-jinja.git@v0.5.8-alpha#egg=govuk-frontend-jinja==0.5.8-alpha
+govuk-frontend-jinja @ git+https://github.com/alphagov/govuk-frontend-jinja.git@v0.5.8-alpha
     # via -r requirements.in
 idna==2.9
     # via requests
