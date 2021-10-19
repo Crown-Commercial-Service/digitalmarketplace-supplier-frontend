@@ -9,9 +9,9 @@ updates:
   allow:
   - dependency-type: production
   ignore:
-  - dependency-name: govuk-frontend
+  - dependency-name: "govuk-frontend"
     update-types: ["version-update:semver-major"]
-  - dependency-name: digitalmarketplace-govuk-frontend
+  - dependency-name: "digitalmarketplace-govuk-frontend"
     update-types: ["version-update:semver-major"]
 - package-ecosystem: "npm"
   directory: "/"
