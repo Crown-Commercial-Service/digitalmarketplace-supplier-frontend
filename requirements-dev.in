@@ -1,7 +1,5 @@
 -c requirements.txt
 
-pip-tools>=5.4.0
-
 cssselect
 flake8
 freezegun
