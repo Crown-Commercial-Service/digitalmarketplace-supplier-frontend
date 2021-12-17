@@ -34,7 +34,7 @@ idna==2.9
     #   requests
 importlib-metadata==1.5.0
     # via pytest
-lxml==4.6.3
+lxml==4.6.5
     # via -r requirements-dev.in
 mccabe==0.6.1
     # via flake8
@@ -42,10 +42,10 @@ mock==3.0.5
     # via -r requirements-dev.in
 more-itertools==8.2.0
     # via pytest
-mypy-extensions==0.4.3
-    # via mypy
 mypy==0.782
     # via -r requirements-dev.in
+mypy-extensions==0.4.3
+    # via mypy
 packaging==20.1
     # via pytest
 pathtools==0.1.2
@@ -72,12 +72,12 @@ pyyaml==5.4.1
     # via
     #   -c requirements.txt
     #   watchdog
-requests-mock==1.6.0
-    # via -r requirements-dev.in
 requests==2.26.0
     # via
     #   -c requirements.txt
     #   requests-mock
+requests-mock==1.6.0
+    # via -r requirements-dev.in
 six==1.14.0
     # via
     #   -c requirements.txt
