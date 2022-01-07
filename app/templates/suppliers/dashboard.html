@@ -19,6 +19,14 @@
 
 {% block mainContent %}
 
+  {% if are_new_frameworks_live %}
+    <div class="govuk-grid-row">
+      <div class="govuk-grid-column-two-thirds">
+        {{ dmNewFrameworkBanner() }}
+      </div>
+    </div>
+  {% endif %}
+
   <div class="govuk-grid-row">
     <div class="govuk-grid-column-full">
       <span class="govuk-caption-xl">{{ current_user.email_address }}</span>

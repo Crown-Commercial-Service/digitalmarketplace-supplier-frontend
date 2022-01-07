@@ -15,6 +15,7 @@ from dmutils.email.dm_mailchimp import DMMailChimpClient
 from dmutils.flask import timed_render_template as render_template
 from dmutils.forms.helpers import get_errors_from_wtform, govuk_options
 from dmutils.errors import render_error_page
+from dmutils.dmp_so_status import are_new_frameworks_live
 
 from ...main import main, content_loader, direct_plus_client
 from ... import data_api_client
@@ -112,7 +113,8 @@ def dashboard():
             'standstill': get_frameworks_by_status(all_frameworks, 'standstill', 'made_application'),
             'live': get_frameworks_by_status(all_frameworks, 'live', 'onFramework'),
             'last_dos': get_most_recent_expired_dos_framework(all_frameworks),
-        }
+        },
+        are_new_frameworks_live=are_new_frameworks_live(request.args)
     ), 200
 
 
