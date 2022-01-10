@@ -7,7 +7,7 @@
     "node": "^10.18.1"
   },
   "dependencies": {
-    "colors": "1.4.0",
+    "colors": "1.4.2",
     "del": "^6.0.0",
     "digitalmarketplace-frameworks": "^18.4.1",
     "digitalmarketplace-frontend-toolkit": "^36.1.2",
