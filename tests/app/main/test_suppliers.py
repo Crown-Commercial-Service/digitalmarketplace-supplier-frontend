@@ -7,7 +7,6 @@ from lxml import html
 import mock
 import pytest
 from werkzeug.exceptions import ServiceUnavailable
-from freezegun import freeze_time
 
 from dmapiclient import APIError, HTTPError
 from dmapiclient.audit import AuditTypes
@@ -608,45 +607,30 @@ class TestSuppliersDashboard(BaseApplicationTest):
         assert continue_link
         assert continue_link[0].values()[0] == "/suppliers/frameworks/digital-outcomes-and-specialists"
 
-    @freeze_time('2022-01-04')
-    def test_should_not_show_banner_if_before_go_live_date(self):
+    @mock.patch('app.main.views.suppliers.are_new_frameworks_live')
+    def test_should_hide_banner_when_not_needed(self, are_new_frameworks_live):
+        are_new_frameworks_live.return_value = False
         self.login()
 
         res = self.client.get("/suppliers")
         assert res.status_code == 200
         assert "Important supplier information" not in res.get_data(as_text=True)
 
-    @freeze_time('2022-01-14')
-    def test_should_show_banner_if_on_go_live_date(self):
+    @mock.patch('app.main.views.suppliers.are_new_frameworks_live')
+    def test_should_show_banner_when_needed(self, are_new_frameworks_live):
+        are_new_frameworks_live.return_value = True
         self.login()
 
         res = self.client.get("/suppliers")
         assert res.status_code == 200
         assert "Important supplier information" in res.get_data(as_text=True)
 
-    @freeze_time('2022-01-15')
-    def test_should_show_banner_if_after_go_live_date(self):
+    @mock.patch('app.main.views.suppliers.are_new_frameworks_live')
+    def test_should_pass_through_request_parameters(self, are_new_frameworks_live):
+        are_new_frameworks_live.return_value = True
         self.login()
-
-        res = self.client.get("/suppliers")
-        assert res.status_code == 200
-        assert "Important supplier information" in res.get_data(as_text=True)
-
-    @freeze_time('2022-01-04')
-    def test_should_show_banner_if_before_date_and_go_live_param(self):
-        self.login()
-
-        res = self.client.get("/suppliers?show_dmp_so_banner=true")
-        assert res.status_code == 200
-        assert "Important supplier information" in res.get_data(as_text=True)
-
-    @freeze_time('2022-01-04')
-    def test_should_not_show_banner_if_before_date_and_not_go_live_param(self):
-        self.login()
-
-        res = self.client.get("/suppliers?show_dos6_live=true")
-        assert res.status_code == 200
-        assert "Important supplier information" not in res.get_data(as_text=True)
+        self.client.get("/suppliers?show_dmp_so_banner=true")
+        assert are_new_frameworks_live.call_args[0][0].to_dict() == {"show_dmp_so_banner": 'true'}
 
 
 class TestSupplierDetails(BaseApplicationTest):
