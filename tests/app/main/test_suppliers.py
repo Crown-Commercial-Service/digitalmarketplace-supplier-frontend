@@ -614,7 +614,7 @@ class TestSuppliersDashboard(BaseApplicationTest):
 
         res = self.client.get("/suppliers")
         assert res.status_code == 200
-        assert "Important supplier information" not in res.get_data(as_text=True)
+        assert "Important information" not in res.get_data(as_text=True)
 
     @mock.patch('app.main.views.suppliers.are_new_frameworks_live')
     def test_should_show_banner_when_needed(self, are_new_frameworks_live):
@@ -623,7 +623,7 @@ class TestSuppliersDashboard(BaseApplicationTest):
 
         res = self.client.get("/suppliers")
         assert res.status_code == 200
-        assert "Important supplier information" in res.get_data(as_text=True)
+        assert "Important information" in res.get_data(as_text=True)
 
     @mock.patch('app.main.views.suppliers.are_new_frameworks_live')
     def test_should_pass_through_request_parameters(self, are_new_frameworks_live):
