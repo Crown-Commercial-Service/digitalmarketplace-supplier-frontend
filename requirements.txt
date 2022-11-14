@@ -32,7 +32,7 @@ digitalmarketplace-apiclient==23.2.0
     # via -r requirements.in
 digitalmarketplace-content-loader==9.1.0
     # via -r requirements.in
-digitalmarketplace-utils==60.9.0
+digitalmarketplace-utils==60.11.0
     # via
     #   -r requirements.in
     #   digitalmarketplace-content-loader
@@ -91,7 +91,9 @@ mailchimp3==3.0.17
 markdown==2.6.11
     # via digitalmarketplace-content-loader
 markupsafe==1.1.1
-    # via jinja2
+    # via
+    #   jinja2
+    #   wtforms
 notifications-python-client==6.3.0
     # via digitalmarketplace-utils
 odfpy==1.4.1
