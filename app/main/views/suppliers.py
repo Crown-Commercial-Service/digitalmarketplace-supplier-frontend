@@ -103,6 +103,10 @@ def dashboard():
     if "currently_applying_to" in session:
         del session["currently_applying_to"]
 
+    g_cloud_framework_live = [
+        framework for framework in get_frameworks_by_status(all_frameworks, 'live') if framework['family'] == 'g-cloud'
+    ]
+
     return render_template(
         "suppliers/dashboard.html",
         supplier=supplier,
@@ -114,6 +118,7 @@ def dashboard():
             'live': get_frameworks_by_status(all_frameworks, 'live', 'onFramework'),
             'last_dos': get_most_recent_expired_dos_framework(all_frameworks),
         },
+        g_cloud_framework_live=g_cloud_framework_live,
         are_new_frameworks_live=are_new_frameworks_live(request.args)
     ), 200
 
