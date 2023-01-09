@@ -27,7 +27,7 @@ jobs:
         restore-keys: venv-${{ runner.os }}-${{ matrix.python-version }}-
 
     - name: Setup python (${{ matrix.python-version }})
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v4
       with:
         python-version: ${{ matrix.python-version }}
 
