@@ -70,14 +70,14 @@ class EditRegisteredAddressForm(FlaskForm):
         AnyOf(values=[country[1] for country in COUNTRY_TUPLE], message="Enter a valid country"),
     ])
 
-    def validate(self):
+    def validate(self, extra_validators=None):
         # If a user is trying to change the country and enters an invalid option (blank or not a country),
         # and submits the form, the country field is not submitted with the form.
         # The old value will be re-populated in the field (with the validation error message).
         # This could be confusing if there are multiple fields with errors, so clear the field for now.
         if not self.country.raw_data:
             self.country.data = ''
-        return super(EditRegisteredAddressForm, self).validate()
+        return super(EditRegisteredAddressForm, self).validate(extra_validators=extra_validators)
 
 
 # "Add" rather than "Edit" because this information can only be set once by a supplier
@@ -116,7 +116,7 @@ class AddCompanyRegistrationNumberForm(FlaskForm):
         ]
     )
 
-    def validate(self):
+    def validate(self, extra_validators=None):
         # If the form has been re-submitted following an error on a field which is now hidden we need to clear the
         # previously entered data before validating
         # For example, a user had an error submitting CH number but is now submitting other registration number,
@@ -130,7 +130,7 @@ class AddCompanyRegistrationNumberForm(FlaskForm):
             self.companies_house_number.data = ""
 
         valid = True
-        if not super(AddCompanyRegistrationNumberForm, self).validate():
+        if not super(AddCompanyRegistrationNumberForm, self).validate(extra_validators=extra_validators):
             valid = False
         if self.has_companies_house_number.data == "Yes" and not self.companies_house_number.data:
             self.companies_house_number.errors.append('Enter a Companies House number')
