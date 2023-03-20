@@ -32,7 +32,7 @@ digitalmarketplace-apiclient==23.2.0
     # via -r requirements.in
 digitalmarketplace-content-loader==9.2.0
     # via -r requirements.in
-digitalmarketplace-utils==60.11.0
+digitalmarketplace-utils==60.11.1
     # via
     #   -r requirements.in
     #   digitalmarketplace-content-loader
