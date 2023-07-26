@@ -14,7 +14,7 @@ botocore==1.21.51
     #   s3transfer
 cachelib==0.1.1
     # via flask-session
-certifi==2019.11.28
+certifi==2023.7.22
     # via requests
 cffi==1.14.0
     # via cryptography
