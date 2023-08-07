@@ -23,7 +23,7 @@
     "gulp-shell": "^0.8.0",
     "gulp-uglify": "^3.0.2",
     "jquery": "3.6.4",
-    "sass": "^1.59.2"
+    "sass": "^1.64.2"
   },
   "scripts": {
     "frontend-build:development": "gulp build:development",
