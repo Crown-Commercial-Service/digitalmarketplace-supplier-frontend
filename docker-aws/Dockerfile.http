@@ -1,0 +1,4 @@
+FROM mcbhenwood/dmp-http-buildstatic as buildstatic
+
+FROM mcbhenwood/dmp-http-frontend
+COPY --from=buildstatic ${APP_DIR}/app/static ${APP_DIR}/static
