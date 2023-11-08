@@ -1,3 +1,4 @@
+import os
 import re
 
 from flask import Flask, request, redirect, session
@@ -40,15 +41,21 @@ def create_app(config_name):
     from .main import main as main_blueprint
     from .status import status as status_blueprint
     from dmutils.external import external as external_blueprint
+    from .healthcheck import healthcheck as healthcheck_blueprint
 
     application.register_blueprint(metrics_blueprint, url_prefix='/suppliers')
     application.register_blueprint(main_blueprint, url_prefix='/suppliers')
     application.register_blueprint(status_blueprint, url_prefix='/suppliers')
+    application.register_blueprint(healthcheck_blueprint, url_prefix='/healthcheck')
 
     # Must be registered last so that any routes declared in the app are registered first (i.e. take precedence over
     # the external NotImplemented routes in the dm-utils external blueprint).
     application.register_blueprint(external_blueprint)
 
+    # In native AWS we need to stipulate the absolute login URL as per:
+    #   https://flask-login.readthedocs.io/en/latest/#flask_login.LoginManager.login_view
+    if login_view := os.getenv("DM_LOGIN_URL"):
+        login_manager.login_view = login_view
     login_manager.login_message = None  # don't flash message to user
     main_blueprint.config = application.config.copy()
 
