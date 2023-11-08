@@ -1347,7 +1347,7 @@ class TestSupplierEditUpdateServiceSectionG9(BaseApplicationTest):
 
             doc = html.fromstring(
                 self.client.get(
-                    f"/suppliers/frameworks/g-cloud-9/services/321/edit/documents",
+                    "/suppliers/frameworks/g-cloud-9/services/321/edit/documents",
                 ).data
             )
 
@@ -2022,8 +2022,8 @@ class TestEditDraftService(BaseApplicationTest, MockEnsureApplicationCompanyDeta
         )
 
         assert res.status_code == 302
-        assert(res.location.endswith(
-            '/suppliers/frameworks/digital-outcomes-and-specialists/submissions/digital-specialists/1')
+        assert res.location.endswith(
+            '/suppliers/frameworks/digital-outcomes-and-specialists/submissions/digital-specialists/1'
         )
 
         self.data_api_client.update_draft_service.assert_called_once_with(
