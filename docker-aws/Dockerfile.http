@@ -1,4 +1,5 @@
-FROM mcbhenwood/dmp-http-buildstatic as buildstatic
+# Base builds are defined in https://github.com/Crown-Commercial-Service/ccs-digitalmarketplace-aws-docker-base
+FROM digitalmarketplace/dmp-http-buildstatic:1.0.0 as buildstatic
 
-FROM mcbhenwood/dmp-http-frontend
+FROM digitalmarketplace/dmp-http-frontend:1.0.0
 COPY --from=buildstatic ${APP_DIR}/app/static ${APP_DIR}/static
