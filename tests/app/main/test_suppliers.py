@@ -1027,7 +1027,7 @@ class TestSupplierDetails(BaseApplicationTest):
         response = self.client.post('/suppliers/details')
 
         assert response.status_code == 302
-        assert response.location == f"http://localhost/suppliers/details"
+        assert response.location == "http://localhost/suppliers/details"
         assert self.data_api_client.update_supplier.call_args_list == [
             mock.call(supplier_id=1234, supplier={'companyDetailsConfirmed': True}, user="email@email.com"),
         ]

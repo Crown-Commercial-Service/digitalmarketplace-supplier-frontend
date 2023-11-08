@@ -2565,11 +2565,13 @@ class TestDeclarationOverview(BaseApplicationTest, MockEnsureApplicationCompanyD
                 ),
             ),
         ) for declaration_status in ("started", "complete",)),
-    ) for prefill_fw_slug, q_link_text_prefillable_section in (
-        # test all of the previous combinations with two possible values of prefill_fw_slug
-        (None, "Answer question",),
-        ("some-previous-framework", "Review answer",),
-    )))
+        ) for prefill_fw_slug, q_link_text_prefillable_section in (
+            # test all of the previous combinations with two possible values of prefill_fw_slug
+            (None, "Answer question",),
+            ("some-previous-framework", "Review answer",),
+        )
+        )
+    )
 
     # this is more straightforward than _common_parametrization because we only have to care about non-open frameworks
     # G7 doesn't (yet?) have any "short names" for questions and so will be listing the answers in the
@@ -3445,7 +3447,7 @@ class TestSupplierDeclaration(BaseApplicationTest, MockEnsureApplicationCompanyD
             self.login()  # need to login after freezing time
 
             doc = html.fromstring(
-                self.client.get(f"/suppliers/frameworks/g-cloud-11/declaration/edit/contact-details").data
+                self.client.get("/suppliers/frameworks/g-cloud-11/declaration/edit/contact-details").data
             )
 
         assert "2:14pm GMT" in doc.xpath("string(.//div[@id='session-timeout-warning'])")
@@ -4999,7 +5001,7 @@ class TestSignatureLegalAuthority(BaseApplicationTest):
         self.data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
             on_framework=on_framework)
 
-        res = self.client.get(f"/suppliers/frameworks/g-cloud-12/start-framework-agreement-signing")
+        res = self.client.get("/suppliers/frameworks/g-cloud-12/start-framework-agreement-signing")
         assert res.status_code == status_code
 
     def test_post_yes_redirects_to_signing_page(self):
@@ -5082,7 +5084,7 @@ class TestSignFrameworkAgreement(BaseApplicationTest):
         self.data_api_client.get_supplier_framework_info.return_value = self.supplier_framework(
             on_framework=on_framework)
 
-        res = self.client.get(f"/suppliers/frameworks/g-cloud-12/sign-framework-agreement")
+        res = self.client.get("/suppliers/frameworks/g-cloud-12/sign-framework-agreement")
         assert res.status_code == status_code
 
     @pytest.mark.parametrize(

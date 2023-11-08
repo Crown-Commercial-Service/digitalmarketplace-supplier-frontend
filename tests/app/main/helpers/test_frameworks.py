@@ -818,7 +818,7 @@ class TestEnsureApplicationCompanyDetailsHaveBeenConfirmed(BaseApplicationTest):
                                     view_callable()
 
                                 except Exception as e:
-                                    if type(e) == HTTPException:
+                                    if isinstance(e, HTTPException):
                                         assert e.value.code != 500 and e.value.description != (
                                             "There was a problem accessing this page of your application. Please try "
                                             "again later."
@@ -946,13 +946,16 @@ class TestReturn404IfApplicationClosed(BaseApplicationTest):
     ):
         decorated_views = {
             'main.edit_service_submission',
+            'main.confirm_subsection_remove',
             'main.remove_subsection',
             'main.delete_draft_service',
             'main.start_new_draft_service',
             'main.previous_services',
             'main.complete_draft_service',
+            'main.confirm_draft_service_delete',
             'main.copy_draft_service',
             'main.copy_previous_service',
+            'main.confirm_copy_all_previous_services',
             'main.copy_all_previous_services',
             'main.framework_supplier_declaration_submit',
             'main.framework_start_supplier_declaration',
@@ -991,7 +994,7 @@ class TestReturn404IfApplicationClosed(BaseApplicationTest):
                                 response = view_callable()
 
                             except Exception as e:
-                                if type(e) == HTTPException:
+                                if isinstance(e, HTTPException):
                                     assert e.value.code != 500 and e.value.description != (
                                         "There was a problem accessing this page of your application. Please try "
                                         "again later."
