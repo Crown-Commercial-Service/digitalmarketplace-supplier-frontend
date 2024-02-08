@@ -3,7 +3,7 @@
 
 Flask>=1.1,<2
 Flask-Login==0.6.1
-Flask-WTF==1.1.1
+Flask-WTF==1.2.1
 itsdangerous
 
 digitalmarketplace-apiclient
