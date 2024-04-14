@@ -68,7 +68,7 @@ govuk-country-register==0.5.0
     # via digitalmarketplace-utils
 govuk-frontend-jinja @ git+https://github.com/Crown-Commercial-Service/govuk-frontend-jinja.git@v0.5.8-alpha
     # via -r requirements.in
-idna==2.9
+idna==3.7
     # via requests
 inflection==0.3.1
     # via digitalmarketplace-content-loader
