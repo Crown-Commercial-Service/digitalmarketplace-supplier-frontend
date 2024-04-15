@@ -1,7 +1,7 @@
 # Base builds are defined in https://github.com/Crown-Commercial-Service/ccs-digitalmarketplace-aws-docker-base
-FROM 473251818902.dkr.ecr.eu-west-2.amazonaws.com/dmp-base-http-buildstatic:latest as buildstatic
+FROM 473251818902.dkr.ecr.eu-west-2.amazonaws.com/dmp-base-http-buildstatic:1.0.0 as buildstatic
 COPY . .
 RUN ./scripts/build.sh
 
-FROM 473251818902.dkr.ecr.eu-west-2.amazonaws.com/dmp-base-http-frontend:latest
+FROM 473251818902.dkr.ecr.eu-west-2.amazonaws.com/dmp-base-http-frontend:1.0.0
 COPY --from=buildstatic ${APP_DIR}/app/static ${APP_DIR}/static
