@@ -126,7 +126,7 @@ six==1.14.0
     # via python-dateutil
 unicodecsv==0.14.1
     # via digitalmarketplace-utils
-urllib3==1.26.7
+urllib3==1.26.19
     # via
     #   botocore
     #   requests
